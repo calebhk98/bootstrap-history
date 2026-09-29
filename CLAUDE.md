@@ -185,6 +185,8 @@ rename changed only names, via bytecode). Plan: `docs/architecture/NAMING_PLAN.m
 - **Measure, don't remember.** Claims about the codebase are measured. Every
   number in prose was computed by the simulator, and carries the command that
   produced it.
+- **Slow checks count too.** The default run skips them; run `--slow` before
+  merging anything that touches the economy, money, farming or population.
 - **Green tests do not mean unchanged behaviour.** The suite asserts on
   outputs and messages. `sim/perf_fingerprint.py` checks the simulation
   itself (it does not cover the protocol layer).
