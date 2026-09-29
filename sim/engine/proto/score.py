@@ -2,7 +2,7 @@
 
 import math
 
-from ..data import ANNUAL_WAGE, closure, critical_path, topo_order
+from ..data import closure, critical_path, topo_order
 
 from .state import _agent_end_reason
 from .util import _fmt_num, _wrap
@@ -170,7 +170,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # civilisation's currency is a different scale (civs/*.json: "denarius",
     # "wu zhu cash", "hacksilver by weight", "cacao bean and cotton cloth",
     # each with its own wage_index/price_index multiplier on the shared wage
-    # table, data.ANNUAL_WAGE) - comparing raw capital across civilisations
+    # table) - comparing raw capital across civilisations
     # would be comparing different units with the same name. Deflating by
     # one ordinary worker-year IN THIS CIVILISATION'S OWN MONEY (an
     # artisan's annual wage, scaled by this civ's live price_index and
@@ -182,7 +182,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # calibration save's 4.41 million worker-years, rounded to a clean
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
-    reference_wage = max(1e-6, ANNUAL_WAGE.get("artisan", 250.0)
+    reference_wage = max(1e-6, sim.base_annual_wage("artisan")
                           * max(1e-6, float(sim.price_index))
                           * max(1e-6, float(sim.wage_index)))
     worker_years = max(0.0, sim.capital) / reference_wage

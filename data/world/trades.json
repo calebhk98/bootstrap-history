@@ -1,62 +1,109 @@
 {
-  "_doc": "Canonical trade identity and availability metadata. Temporary wage compatibility values still come from data/prices.json, which is scheduled for deletion; adding or describing a trade must never require editing it.",
+  "_doc": "Canonical trade identity, availability and training time. training_years is the years of apprenticeship or schooling before a person is productive in the trade (an estimate of the skill, not a wage); a trade that states none takes its family's median. Wages are not stored here: sim/world/wages.py derives them.",
   "trades": {
-    "artisan": {"family": "craft"},
-    "carpenter": {"family": "craft"},
+    "artisan": {
+      "family": "craft",
+      "training_years": 4
+    },
+    "carpenter": {
+      "family": "craft",
+      "training_years": 5
+    },
     "chemist": {
       "family": "scholar",
       "initially_absent": true,
-      "note": "Does not exist yet; you must create this trade."
+      "note": "Does not exist yet; you must create this trade.",
+      "training_years": 8
     },
     "electrician": {
       "family": "craft",
       "initially_absent": true,
-      "note": "Does not exist. Cannot exist until Module 50 does."
+      "note": "Does not exist. Cannot exist until Module 50 does.",
+      "training_years": 6
     },
     "engineer": {
       "family": "scholar",
       "initially_absent": true,
-      "note": "Does not exist as a paid civilian profession. A developed state may keep military and hydraulic engineers under its own employ; a private one is your invention."
+      "note": "Does not exist as a paid civilian profession. A developed state may keep military and hydraulic engineers under its own employ; a private one is your invention.",
+      "training_years": 8
     },
     "engraver": {
       "family": "craft",
-      "note": "Die and seal cutter. Skilled ones already exist wherever there is a minting or sealing tradition; they become your punchcutters."
+      "note": "Die and seal cutter. Skilled ones already exist wherever there is a minting or sealing tradition; they become your punchcutters.",
+      "training_years": 6
     },
-    "furnaceman": {"family": "craft"},
-    "glassblower": {"family": "craft"},
-    "labourer": {"family": "labour"},
+    "furnaceman": {
+      "family": "craft",
+      "training_years": 2
+    },
+    "glassblower": {
+      "family": "craft",
+      "training_years": 6
+    },
+    "labourer": {
+      "family": "labour",
+      "training_years": 0
+    },
     "machinist": {
       "family": "craft",
       "initially_absent": true,
-      "note": "Does not exist yet; you must create this trade."
+      "note": "Does not exist yet; you must create this trade.",
+      "training_years": 6
     },
     "mason": {
       "family": "craft",
-      "note": "Abundant and good wherever there is a serious stone-building tradition; scarcer and dearer where building is mostly wood."
+      "note": "Abundant and good wherever there is a serious stone-building tradition; scarcer and dearer where building is mostly wood.",
+      "training_years": 5
     },
-    "master": {"family": "craft"},
+    "master": {
+      "family": "craft",
+      "training_years": 7
+    },
     "merchant": {
       "family": "scholar",
-      "note": "Agent and factor, paid on commission in practice."
+      "note": "Agent and factor, paid on commission in practice.",
+      "training_years": 4
     },
     "millwright": {
       "family": "craft",
-      "note": "Water-mill builder. Scarce wherever milling by water is already established; the scarcest useful trade you can hire."
+      "note": "Water-mill builder. Scarce wherever milling by water is already established; the scarcest useful trade you can hire.",
+      "training_years": 5
     },
-    "miner": {"family": "labour"},
+    "miner": {
+      "family": "labour",
+      "training_years": 1
+    },
     "optician": {
       "family": "craft",
       "initially_absent": true,
-      "note": "Does not exist yet. You must create this trade from glassworkers."
+      "note": "Does not exist yet. You must create this trade from glassworkers.",
+      "training_years": 6
     },
     "plumber": {
       "family": "craft",
-      "note": "Lead worker. Skilled and numerous wherever lead pipe-making is already an established trade (Roman plumbarii are the best-attested case); scarce or nonexistent elsewhere."
+      "note": "Lead worker. Skilled and numerous wherever lead pipe-making is already an established trade (Roman plumbarii are the best-attested case); scarce or nonexistent elsewhere.",
+      "training_years": 4
     },
-    "potter": {"family": "craft"},
-    "sailor": {"family": "labour", "note": "Cheap and abundant."},
-    "scholar": {"family": "scholar"},
-    "scribe": {"family": "scholar"},
-    "smith": {"family": "craft"}
+    "potter": {
+      "family": "craft",
+      "training_years": 3
+    },
+    "sailor": {
+      "family": "labour",
+      "note": "Cheap and abundant.",
+      "training_years": 2
+    },
+    "scholar": {
+      "family": "scholar",
+      "training_years": 8
+    },
+    "scribe": {
+      "family": "scholar",
+      "training_years": 5
+    },
+    "smith": {
+      "family": "craft",
+      "training_years": 5
+    }
   }
 }

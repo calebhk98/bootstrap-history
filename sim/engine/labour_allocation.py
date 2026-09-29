@@ -197,9 +197,9 @@ class LabourAllocationMixin:
                 economy.farm_last_marginal_product,
                 self.farm_land.hectares, self._clearable_hectares(),
                 technique=technique)
+        economy.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
         economy.society_labour_hours = reallocate(
-            economy.society_labour_hours, total_hours,
-            need_fte * HOURS_PER_FARM_WORKER_YEAR)
+            economy.society_labour_hours, total_hours, economy.farm_hours_needed)
         farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         crop_limit_fte = (self.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit))

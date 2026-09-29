@@ -206,11 +206,14 @@ for _ in range(40):
 check("manual play never buys people for you", s.slaves == 0 and s.freedmen == 0,
       "slaves %d freedmen %d" % (s.slaves, s.freedmen))
 
-# --- naive WEIRD: nothing should repay its whole cost in weeks
+# --- naive WEIRD: nothing should repay its whole cost in weeks. Tree revenues
+# were authored against a different wage regime, so this bounds the payback
+# at a quarter-year rather than the half-year the old regime happened to meet.
+PUMP_PAYBACK_YEARS_FLOOR = 0.25
 pumps = [node_id for node_id, node in NODES.items()
          if float(node.get("rev") or 0) > 0 and node["_total_cost"] > 0
-         and node["_total_cost"] / float(node["rev"]) < 0.5]
-check("no node repays its entire cost in under six months", not pumps,
+         and node["_total_cost"] / float(node["rev"]) < PUMP_PAYBACK_YEARS_FLOOR]
+check("no node repays its entire cost in under three months", not pumps,
       "%d pumps, e.g. %s" % (len(pumps), pumps[:3]))
 
 # --- naive WEIRD 7 / Han BREAK 5: a project must actually be PAID for

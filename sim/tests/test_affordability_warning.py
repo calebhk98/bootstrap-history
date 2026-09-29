@@ -78,15 +78,17 @@ check("...and a household with huge funding_capacity() but committed_spend() "
       "committed_spend() too, and does not just check funding_capacity() alone",
       len(_room_short_on_committed.active) == 0, list(_room_short_on_committed.active))
 
-# --- THE ROME OPENING, REPRODUCED EXACTLY: scientific_method (230) then
-# units_standards (444) on a poor_scholar's 400 denarii. Individually,
-# on_credit correctly says the SECOND start alone only needs to borrow 44 -
-# and that figure is honest about that one project. It says nothing about
-# scientific_method's own 230 still unpaid and drawing on the identical
-# purse the same year, which is the whole of what sank this opening.
-s = sim(capital=400.0)
+# --- The Rome opening: scientific_method then units_standards on a purse that
+# covers the second alone only just short. on_credit prices the second start
+# alone; the aggregate warning must also count the first's unpaid cost, which
+# draws on the same purse in the same year.
+_probe = sim()
+_sci_cost = _probe.project_cost("scientific_method")
+_units_cost = _probe.project_cost("units_standards")
+_purse = round(_units_cost) - 44.0     # just short of the second project alone
+s = sim(capital=_purse)
 r_sci = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
-check("set-up: scientific_method alone needed no warning, on 400 denarii",
+check("set-up: scientific_method alone needed no warning on a purse just short of units_standards",
       r_sci["ok"] and "total_committed_across_active_work" not in r_sci, r_sci)
 r_units = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "units_standards"})
 check("set-up: on_credit still prices the second start alone, correctly, "
@@ -99,10 +101,10 @@ check("...but starting the second foundation on top of the first DOES warn "
       _agg is not None, r_units)
 check("...naming the true combined total (both projects' own cost_left), "
       "not just this one project's bill",
-      _agg and abs(_agg["you_have_promised"] - (230.0 + 444.0)) < 1.0,
+      _agg and abs(_agg["you_have_promised"] - (_sci_cost + _units_cost)) < 1.0,
       _agg)
 check("...against what is actually held right now, not a padded estimate",
-      _agg and abs(_agg["you_currently_hold"] - 400.0) < 1.0, _agg)
+      _agg and abs(_agg["you_currently_hold"] - _purse) < 1.0, _agg)
 check("...and the credit this combination is likely to draw is bigger than "
       "the single-project on_credit forecast alone suggested",
       _agg and _agg["likely_to_draw_on_credit_between_them"]

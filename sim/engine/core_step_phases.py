@@ -28,7 +28,6 @@ from .invariants import check_labour_market_invariants
 class StepContext:
     """Immutable dependencies used by the turn phases."""
     trade_family: object
-    wages: dict
     invariant_checker: object
 
 
@@ -1737,7 +1736,7 @@ class StepPhasesMixin:
         if self.state.household.bondage_years_left > 0:
             self.state.household.bondage_years_left -= 1
             paid = self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE *\
-                (self.step_context.wages.get("labourer", self.BONDAGE_LABOURER_WAGE_DEFAULT) * self.BONDAGE_WAGE_MARKUP) * self.wage_index * self.price_index
+                (self.wage_per_hour("labourer") * self.BONDAGE_WAGE_MARKUP) * self.wage_index * self.price_index
             self.state.household.bondage_debt = max(0.0, self.state.household.bondage_debt - paid)
             if self.state.household.bondage_debt <= 0 and self.state.household.bondage_years_left > 0:
                 self.state.household.bondage_years_left = 0     # paid early

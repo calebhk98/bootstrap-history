@@ -19,7 +19,7 @@ ProductionMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence, and for why this lives in a separate file.
 """
-from .data import ANNUAL_WAGE, trade_family
+from .data import trade_family
 from sim.constants import declare
 
 
@@ -273,13 +273,6 @@ class ProductionMixin:
             "labour for the specific tasks involved, which varied hugely "
             "by trade and is not modelled here; 0.7 is a plausible-feeling "
             "discount, not a measurement.")
-    DEFAULT_ARTISAN_WAGE_FALLBACK = declare(
-        "DEFAULT_ARTISAN_WAGE_FALLBACK", 250.0, kind="temporary_heuristic",
-        unit="denarii/year", source=None, confidence="D",
-        why="As DEFAULT_ANNUAL_WAGE_FALLBACK, specifically for the generic "
-            "'artisan' trade freedmen and slaves are costed against - lower "
-            "than the craft fallback because 'artisan' is treated as the "
-            "least skilled craft tier. Not sourced to any attested wage.")
     WORKSHOP_WAGE_MARKUP_BASE = declare(
         "WORKSHOP_WAGE_MARKUP_BASE", 1.55, kind="temporary_heuristic",
         unit="output denarii per denarius of craft wages", source=None,
@@ -319,9 +312,9 @@ class ProductionMixin:
         wage = 0.0
         for trade, count in household.employees.items():
             if trade_family(trade) == "craft":
-                wage += count * ANNUAL_WAGE.get(trade, self.DEFAULT_ANNUAL_WAGE_FALLBACK)
+                wage += count * self.base_annual_wage(trade)
         wage += ((household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE)
-                 * ANNUAL_WAGE.get("artisan", self.DEFAULT_ARTISAN_WAGE_FALLBACK))
+                 * self.base_annual_wage("artisan"))
         mark = self.WORKSHOP_WAGE_MARKUP_BASE
         if self.running("interchangeable_parts"):  mark += self.WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS
         if self.running("power_grid"):             mark += self.WORKSHOP_MARKUP_BONUS_POWER_GRID

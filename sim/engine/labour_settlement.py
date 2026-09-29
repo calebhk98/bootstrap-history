@@ -118,7 +118,7 @@ class SettlementMixin:
         # Local contracts and the local market's memory stay behind.
         household.commissioned = {}
         household.contract_hours = {}
-        household._labour_pressure = {}
+        household.labour_pressure_records = {}
         household.familiarity *= self.RELOCATION_STANDING_RETAINED
         household.protection *= self.RELOCATION_STANDING_RETAINED
         household.base_tile = tile

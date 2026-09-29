@@ -1012,7 +1012,8 @@ check("staff are not let go while there is still credit to pay them",
 s = sim(capital=6000.0)
 s.policy["auto_hire"] = False
 s.hire("smith", 5)
-s.capital = -s.credit_limit() * 0.35
+# Means that cover living costs and a bit over half the payroll.
+s.capital = -s.credit_limit() + (s.living_cost() - s.wage_bill()) + 0.6 * s.wage_bill()
 _b3 = sum(s.employees.values())
 s.step()
 check("an unaffordable payroll is trimmed to what you can pay, not emptied",
@@ -1262,7 +1263,7 @@ check("selling half your hours costs you half the practice, not all of it",
 # 6. `buy mine` spent every denarius you had and handed back a fraction of the
 #    mine you asked for, without asking. A command you typed is not a standing
 #    order to spend everything.
-_mn, _, _ = proto([{"cmd": "buy", "what": "mine", "material": "coal", "n": 500},
+_mn, _, _ = proto([{"cmd": "buy", "what": "mine", "material": "copper", "n": 500},
                    {"cmd": "state"}])
 check("a mine you cannot pay for is refused, not part-bought with all your money",
       _mn[0].get("ok") is False and "Nothing was changed" in (_mn[0].get("error") or "")

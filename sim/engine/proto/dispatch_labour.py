@@ -9,7 +9,7 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
-from ..data import ANNUAL_WAGE, TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
+from ..data import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state import _staff_fraction_note
 from .util import _num, _qty
 
@@ -157,7 +157,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
              "you_employ": round(sim.employees.get(trade, 0.0), 2)}
         if long:
             entry["wage_foundation"] = {
-                "base_for_skill_and_difficulty": ANNUAL_WAGE.get(trade, 375.0),
+                "base_for_skill_and_difficulty": round(sim.base_annual_wage(trade), 2),
                 **{factor_key: round(value, 3) for factor_key, value in sim.wage_cost_factors(trade).items()},
                 "demographic_scarcity": round(sim.wage_index, 3),
                 "local_trade_scarcity": round(_lpf, 3),
@@ -203,7 +203,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                             "back down" % trade)
         if long:
             entry.update({"kind": trade_family(trade),
-                      "wage_per_hour": round(WAGES[trade] * sim.wage_index
+                      "wage_per_hour": round(sim.wage_per_hour(trade) * sim.wage_index
                                              * sim.price_index, 3),
                       # SPLIT, because the total includes your own people
                       # and calling all of it "the market" made hiring look

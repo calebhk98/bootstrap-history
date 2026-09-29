@@ -27,7 +27,6 @@ grouping evidence.
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model
-from .data import WAGES
 from . import purchase_rule
 
 
@@ -146,7 +145,7 @@ class MiningMixin:
             price = self._book_price_per_kg(mat)
             if price is None or price <= 0:
                 return None, None
-        wage = WAGES[self.MINE_TRADE]
+        wage = self.wage_per_hour(self.MINE_TRADE)
         build_hours, running_hours = self._mine_labour_hours_per_tonne(mat)
         opex = self.MINE_OPEX_PER_T.get(mat, running_hours * wage)
         return build_hours * wage, opex

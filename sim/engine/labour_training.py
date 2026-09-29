@@ -631,7 +631,7 @@ class TrainingMixin:
                 spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
                 if spare < hours:
                     continue
-                if best is None or WAGES[trade] < WAGES[best]:
+                if best is None or self.wage_per_hour(trade) < self.wage_per_hour(best):
                     best = trade
             if best is None:
                 continue
@@ -707,7 +707,7 @@ class TrainingMixin:
         # A shop charges more for a one-off than it pays its own man for a
         # year, and more again if you are buying deep into what the local
         # market can spare this year (see labour_price_factor).
-        fee = (hours * WAGES[trade] * self.COMMISSION_PREMIUM_MULTIPLIER
+        fee = (hours * self.wage_per_hour(trade) * self.COMMISSION_PREMIUM_MULTIPLIER
               * self.wage_index * self.price_index
               * self.labour_price_factor(trade))
         if fee > self.spending_power("buy"):

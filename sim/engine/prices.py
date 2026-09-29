@@ -10,6 +10,11 @@ imports it - and it is deliberately the ONLY new surface this round touches
 beyond `sim/engine/data.py`, per this change's own scope: economy.py, which
 actually spends a price on something, is another agent's file this round.
 
+THE WAGE ARGUMENT (`prices_json` below) is a wage document in the book's
+shape, built by `sim.world.wages.WageSchedule.document()`, so the solver and
+payroll read one wage vector. Its labourer rate is the money value of one
+labour hour.
+
 THE INTERFACE. One function matters to a caller:
 
     solved_prices(held_technology_ids, prices_json)   -> a SolvedPrices
@@ -192,6 +197,8 @@ if REPO_ROOT not in sys.path:
 
 from sim import joint_allocation, solve_prices              # noqa: E402
 from sim.validate_production import load_production             # noqa: E402
+from sim.world import wages                                     # noqa: E402
+from sim.engine import wage_provider                            # noqa: E402
 
 
 class SolvedPrices(object):
@@ -309,10 +316,9 @@ def solver_trade_registry(production_entries: ProductionEntries) -> Dict[str, An
 
 
 def denarii_per_labour_hour(prices_json: Dict[str, Any]) -> float:
-    """Denarii one hour of unskilled (`labourer`) labour is worth, read from
-    `prices.json`'s own wage table - the one number LABOUR-HOURS TO DENARII
-    in the module docstring needs, read in exactly one place so there is
-    exactly one place to check it is read correctly."""
+    """Money one hour of unskilled (`labourer`) labour costs in the wage
+    document: the labour-market wage provider's own labourer wage, the one
+    number LABOUR-HOURS TO DENARII in the module docstring needs."""
     return (prices_json["wage_rates_denarii_per_hour"]
             [solve_prices.NUMERAIRE_TRADE]["rate"])
 
@@ -353,7 +359,10 @@ def solved_prices(held_technology_ids: Iterable[str],
 
     gate_nodes_held = frozenset(all_gate_nodes(production_entries)
                                 & set(held_technology_ids))
-    cache_key = (gate_nodes_held, civilization_id)
+    document_ratios = solve_prices.wage_ratios_by_trade(prices_json)
+    # Wages move with the labour market, so the cache is keyed on them too.
+    cache_key = (gate_nodes_held, civilization_id,
+                 tuple(sorted(document_ratios.items())))
 
     cached = _SOLVE_CACHE.get(cache_key)
     if cached is not None and cached[0] is production_entries:
@@ -367,13 +376,13 @@ def solved_prices(held_technology_ids: Iterable[str],
     available_entries, _unreached, _unclassified = \
         solve_prices.techniques_available_to(production_entries, gate_nodes_held)
     producers_of = solve_prices.build_producers_index(available_entries)
-    wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
-    # Trade identity is independent of the legacy wage calibration.  Supply a
-    # family-relative transitional rate for newly registered mod trades.
-    from .catalog import transitional_wage_rates
+    wage_by_trade = dict(document_ratios)
+    # A trade the document does not list is paid by the same training rule
+    # the labour market uses.
     registry = solver_trade_registry(production_entries)
-    base_hourly = {trade: ratio for trade, ratio in wage_by_trade.items()}
-    wage_by_trade = transitional_wage_rates(registry, base_hourly)
+    training_years = wage_provider.training_years_by_trade(registry)
+    for trade in registry:
+        wage_by_trade.setdefault(trade, wages.training_premium(training_years[trade]))
 
     # RENT. See RENT WAS MISSING FROM THIS FILE in the module docstring:
     # `main()` in sim/solve_prices.py computes exactly these two dicts and

@@ -29,9 +29,9 @@ from .mods import get_ordered_mods, load_mod_tree
 from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
+from . import wage_provider
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
-                      load_trade_registry,
-                      transitional_wage_rates, validate_mod_material_paths)
+                      load_trade_registry, validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
 # dictionary read straight from a JSON file (tech_tree.json, prices.json,
@@ -160,52 +160,9 @@ def _load_tech_effects() -> JSONDict:
 TECH_EFFECTS: JSONDict = _load_tech_effects()
 
 
-def _load_wages() -> Dict[str, float]:
-    """The wage table, skipping the _note entry that is a bare string.
-
-    My first version did `v["rate"]` over every entry, hit the explanatory
-    _note string, raised, and a bare `except` turned that into an empty dict. So
-    every trade reported "no such trade" and the error helpfully listed nothing
-    at all. Swallowing an exception into a silent empty default is the same
-    failure as the save file writing nulls: the bug is the except, not the data.
-    """
-    with open(PRICES) as source:
-        prices_data = json.load(source)
-    return {key: value["rate"] for key, value in prices_data["wage_rates_denarii_per_hour"].items()
-            if isinstance(value, dict) and "rate" in value}
-
-
-WAGES: Dict[str, float] = _load_wages()
-
-
-def _load_annual_wages() -> Dict[str, float]:
-    """What a year of one person of each trade actually costs.
-
-    Two columns in prices.json disagree with each other by about half: `rate` is
-    denarii an hour, `day_hs` is sestertii a day, and rate x 10 hours is
-    consistently 1.5x day_hs / 4. The day figure is the better sourced of the
-    two (it is what the wage evidence is actually quoted in), so annual pay
-    comes from that where it exists, and only falls back to the hourly rate
-    where it does not.
-    """
-    with open(PRICES) as source:
-        prices_data = json.load(source)
-    out: Dict[str, float] = {}
-    for trade, value in prices_data["wage_rates_denarii_per_hour"].items():
-        if not isinstance(value, dict):
-            continue
-        if "day_hs" in value:
-            out[trade] = value["day_hs"] / 4.0 * 250.0     # 4 sestertii to the denarius
-        elif "rate" in value:
-            out[trade] = value["rate"] * 2500.0
-    return out
-
-
-ANNUAL_WAGE: Dict[str, float] = _load_annual_wages()
-
-
 _TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR), MODDIR,
                                       nodes=load_mod_tree_nodes(ROOT, MODDIR))
+TRADE_REGISTRY = _TRADE_REGISTRY
 
 # Trade identity, availability, and explanatory text belong to the trade
 # registry, not to the legacy table that temporarily supplies their wages.
@@ -224,13 +181,22 @@ TRADES_ABSENT: FrozenSet[str] = frozenset(
 TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family
                                 for trade_id, trade in _TRADE_REGISTRY.items()}
 
-# Transitional provider: identity comes from the registry, while monetary
-# wages still use legacy inputs scheduled for deletion. A new trade inherits
-# its family's median rate until the dynamic labour market supplies one.
-WAGES = transitional_wage_rates(_TRADE_REGISTRY, WAGES)
-for _trade_id in _TRADE_REGISTRY:
-    if _trade_id not in ANNUAL_WAGE:
-        ANNUAL_WAGE[_trade_id] = WAGES[_trade_id] * 2500.0
+def _book_food_price_per_kg() -> float:
+    # The one book price the wage floor still needs, until food is priced by
+    # the solver.
+    with open(PRICES) as source:
+        goods = json.load(source)["purchase_prices_denarii"]
+    return goods[wage_provider.FOOD_PRICE_MATERIAL]["p"]
+
+
+FOOD_PRICE_PER_KG: float = _book_food_price_per_kg()
+
+# Starting wages: the labour-market schedule before any year has passed.
+# Sim carries the live schedule; these serve tools and validation.
+_STARTING_SCHEDULE = wage_provider.build_schedule(_TRADE_REGISTRY, FOOD_PRICE_PER_KG)
+WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
+ANNUAL_WAGE: Dict[str, float] = {
+    trade: _STARTING_SCHEDULE.annual_wage(trade) for trade in WAGES}
 
 
 def trade_family(trade: str) -> str:
@@ -388,7 +354,7 @@ def load(use_solved_prices: bool = False,
     if use_solved_prices or not required_materials.issubset(goods):
         from . import prices as price_solver
         goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, goods, prices,
+            held_technology_ids, goods, _STARTING_SCHEDULE.document(),
             civilization_id=civilization_id)
     production = load_production_catalog(ROOT, MODDIR)
     load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
@@ -443,7 +409,7 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
     prices, goods = _book_prices()
     from . import prices as price_solver
     _goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, goods, prices, civilization_id=civilization_id)
+        held_technology_ids, goods, _STARTING_SCHEDULE.document(), civilization_id=civilization_id)
     return provenance
 
 
@@ -463,7 +429,7 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
     prices, book_goods = _book_prices()
     from . import prices as price_solver
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, book_goods, prices,
+        held_technology_ids, book_goods, _STARTING_SCHEDULE.document(),
         civilization_id=civilization_id)
     return goods
 

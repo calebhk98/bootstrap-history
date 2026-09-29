@@ -370,7 +370,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
     sub-mixin reads through self
     (done_in_order/_done_changed/_operating_changed/_reset_operating,
     alongside _InvalidatingSet above, which the last two use), and a
-    handful of constants (PRACTICE_SHARE, DEFAULT_ANNUAL_WAGE_FALLBACK,
+    handful of constants (PRACTICE_SHARE,
     FOREST_COST_PER_HA)
     that are genuinely read from more than one sub-mixin, so moving any
     one of them into a single sub-mixin would leave the others reaching
@@ -593,15 +593,6 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
             "fraction) and then kept because the whole opening of the game "
             "is now calibrated around it - moving it requires re-tuning "
             "the early game, not just picking a better number.")
-    DEFAULT_ANNUAL_WAGE_FALLBACK = declare(
-        "DEFAULT_ANNUAL_WAGE_FALLBACK", 375.0, kind="temporary_heuristic",
-        unit="denarii/year", source=None, confidence="D",
-        why="Stand-in annual wage for a craft trade that ANNUAL_WAGE (see "
-            "labour.py, outside this file's scope) has no entry for, so a "
-            "missing trade does not crash the workshop-output or "
-            "stall-diagnosis wage sums. A round, plausible mid-table wage, "
-            "not sourced to any specific trade.")
-
 
     # ~1 iugerum of woodland per 0.25 ha. Named so that `quote forest` and the
     # purchase itself cannot drift apart: a player must be able to ask the

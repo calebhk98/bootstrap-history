@@ -21,6 +21,7 @@ class Trade:
     id: str
     family: str = "craft"
     training: Optional[str] = None
+    training_years: Optional[float] = None
     note: str = ""
     initially_absent: bool = False
     source: str = ""
@@ -30,6 +31,7 @@ def _trade_from(trade_id: str, metadata: Mapping[str, Any], source: str) -> Trad
     return Trade(trade_id,
                  family=metadata.get("family", "craft"),
                  training=metadata.get("training"),
+                 training_years=metadata.get("training_years"),
                  note=metadata.get("note", ""),
                  initially_absent=bool(metadata.get("initially_absent", False)),
                  source=source)
@@ -124,7 +126,7 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
 
     ``trade_families.json`` remains a supported shorthand.  Mods may instead
     use ``data/world/trades.json`` with a ``trades`` object whose values carry
-    ``family`` and optional ``training`` metadata.
+    ``family`` and optional ``training`` and ``training_years`` metadata.
     """
     mods_dir = mods_dir or os.path.join(root, "mods")
     manifests = get_ordered_mods(mods_dir)
@@ -181,25 +183,6 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
             for trade_id in (capital.get("build_labour_hours") or {}):
                 registry.setdefault(trade_id, Trade(trade_id, source="production capital"))
     return registry
-
-
-def transitional_wage_rates(registry: Mapping[str, Trade],
-                            legacy_rates: Mapping[str, float]) -> Dict[str, float]:
-    """Inject temporary wages for registered trades while equilibrium wages evolve.
-
-    Legacy rates are economic inputs, not identity or calibration targets.
-    A trade absent from the legacy table receives its family's median solely as
-    a compatibility bridge until the labour market replaces this provider.
-    """
-    rates = dict(legacy_rates)
-    for trade_id, trade in registry.items():
-        if trade_id in rates:
-            continue
-        family_rates = [rate for known, rate in rates.items()
-                        if registry.get(known, Trade(known)).family == trade.family]
-        rates[trade_id] = (sorted(family_rates)[len(family_rates) // 2]
-                           if family_rates else rates.get("labourer", 0.05))
-    return rates
 
 
 def reset_catalog_caches() -> None:
