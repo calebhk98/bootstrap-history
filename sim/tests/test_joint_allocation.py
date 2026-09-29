@@ -2,7 +2,9 @@
 
 Joint-process cost is split by demand-derived value, not by mass.
 """
+import functools
 import unittest
+import warnings
 
 from sim import joint_allocation, simulator, solve_prices
 from sim.world import demand
@@ -147,7 +149,18 @@ class DemandAnchorsTests(unittest.TestCase):
         self.assertGreater(prices["gem_kg"], 100.0 * prices["main_kg"])
 
 
+@functools.lru_cache(maxsize=None)
 def solve_ungated(with_anchors):
+    """One full solve per anchor setting per run; callers must not mutate it.
+    Warnings raised during the solve are kept on the result."""
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        solved = _solve_ungated_once(with_anchors)
+    solved.warnings = [str(item.message) for item in caught]
+    return solved
+
+
+def _solve_ungated_once(with_anchors):
     entries, _duplicates = solve_prices.load_production()
     _tree, prices_json, _nodes, _wages, _goods = simulator.load()
     wages = solve_prices.wage_ratios_by_trade(prices_json)

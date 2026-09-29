@@ -101,18 +101,17 @@ def _timed_subprocess_run(*a, **kw):
 subprocess.run = _timed_subprocess_run
 _PROFILE_OUT = os.environ.get("ROME_TEST_PROFILE")
 
-# --- --jobs N: how many of the independent subprocess calls identified below
-# (each a fresh `proto()`/subprocess.run() with no shared session file, and
-# every one of them already independent of the others - that is what "fresh
-# session" means) may run at once. This does NOT reorder anything a human or
-# a diff would see: _par_map always returns results in the same order the
-# inputs were given, in the same order check() is then called on them, so
-# `--jobs 1` (the default) and `--jobs 4` print byte-identical output and
-# differ only in wall time. Real parallelism, not merely concurrency: each
-# unit of work is a CHILD PROCESS, so N of them genuinely run on N cores at
-# once - the GIL never enters into it, because the only thing this process's
-# own threads do is sit in os.waitpid.
-JOBS = 1
+# --jobs N: how many independent child processes may run at once. Results
+# keep input order, so output is identical for any N; the default is the
+# cores this process may use, and --jobs 1 runs everything sequentially.
+def _available_cores():
+    try:
+        return max(1, len(os.sched_getaffinity(0)))
+    except AttributeError:
+        return max(1, os.cpu_count() or 1)
+
+
+JOBS = _available_cores()
 for _jobs_argi, _jobs_arg in enumerate(sys.argv):
     if _jobs_arg == "--jobs" and _jobs_argi + 1 < len(sys.argv):
         try:

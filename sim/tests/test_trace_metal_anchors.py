@@ -89,16 +89,14 @@ class TraceMetalRealDataTests(unittest.TestCase):
 
     def test_germanium_and_indium_are_anchored_or_flagged_with_a_warning(self):
         anchors = joint_allocation.build_demand_anchors()
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            run = solve_ungated(True)
+        run = solve_ungated(True)
         flagged = set(run.unanchored)
         for material in ("germanium_g", "indium_g"):
             if material in anchors.supply_by_material:
                 continue
             self.assertIn(material, flagged)
             self.assertTrue(
-                any(material in str(item.message) for item in caught),
+                any(material in message for message in run.warnings),
                 "no warning names %s" % material)
 
 

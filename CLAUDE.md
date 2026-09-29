@@ -200,7 +200,7 @@ Most scripts take `--help`. The ones used most:
 ```bash
 python3 sim/simulator.py validate          # after EVERY edit to data/
 python3 sim/validate_production.py         # production data errors and coverage (--todo for gaps)
-python3 sim/test_regressions.py --jobs 4   # full suite in parallel (--list for topics, --only a,b for some, --slow for slow checks)
+python3 sim/test_regressions.py            # full suite, parallel across available cores (--jobs 1 sequential, --list, --only a,b, --slow)
 python3 sim/perf_fingerprint.py record before.json   # then `check before.json` to prove behaviour unchanged
 python3 sim/audit_costs.py                 # how much of the cost base is calculated
 python3 sim/treetool.py judge              # judge tree nodes (--write to commit)
