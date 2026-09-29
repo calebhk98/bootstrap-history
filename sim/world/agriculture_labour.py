@@ -261,15 +261,14 @@ def farmland_for_population(
     population changes - see sim/engine/core.py's own comment on why
     `farm_land` is constructed once, not every year.
 
-    `land_quality` is the parcel's yield multiplier; the area is divided by
-    it so poorer ground is farmed more widely and the starting population
-    is still fed. `arable_hectares_ceiling`, when given, caps the area at
+    `land_quality` is the parcel's yield multiplier only; it does not change
+    the area. `arable_hectares_ceiling`, when given, caps the area at
     what the territory holds, so a civilisation that cannot be fed from its
     own ground starts short rather than inventing land.
     """
     workers_fte = farm_workers_fte_for_population(
         adult_equivalent_population, crop, soil, rotation, toolkit, storage_technique)
-    hectares = hectares_cropped_per_farm_worker(crop, toolkit) * workers_fte / land_quality
+    hectares = hectares_cropped_per_farm_worker(crop, toolkit) * workers_fte
     if arable_hectares_ceiling is not None:
         hectares = min(hectares, arable_hectares_ceiling)
     return Land(hectares, land_quality)

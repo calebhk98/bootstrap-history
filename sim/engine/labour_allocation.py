@@ -14,6 +14,9 @@ FARM_TRADE = workforce_spinup.FARM_TRADE
 
 HOURS_PER_FARM_WORKER_YEAR = agriculture.ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
 
+# temporary_heuristic: fixed pass count for the average-year food-balance search.
+FOOD_BALANCE_ITERATIONS = 4
+
 
 def farm_workers_needed(baseline_fte, current_fte, shortfall_kg,
                         marginal_product_kg_per_hour, land_hectares):
@@ -60,22 +63,48 @@ def reallocate(hours_by_trade, total_hours, farm_hours_needed):
 class LabourAllocationMixin:
     """Sim method that sizes this year's farm workforce."""
 
+    def _expected_year_farm_need(self, share_fte, adult_equivalent_population):
+        """Farm workers that feed the population in an average-weather year
+        on this land, found by repeating the labour market's shortfall
+        response against the harvest model, starting from the population-
+        share workforce."""
+        fte = share_fte
+        for _ in range(FOOD_BALANCE_ITERATIONS):
+            fte = self._food_balance_step(fte, adult_equivalent_population)
+        return fte
+
+    def _food_balance_step(self, baseline_fte, adult_equivalent_population):
+        hectares_per_worker = agriculture.hectares_cropped_per_farm_worker()
+        hectares_worked = min(self.farm_land.hectares, baseline_fte * hectares_per_worker)
+        worked_land = agriculture.Land(hectares_worked, quality=self.farm_land.quality)
+        year = agriculture.Storage(stock_kg=0.0, seed=0).step(
+            worked_land, hectares_worked * agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE,
+            adult_equivalent_population, worker_count=baseline_fte,
+            reserve_target_kg=agriculture.granary_capacity_kg(
+                adult_equivalent_population * agriculture.annual_food_demand_kg_per_person()),
+            weather_multiplier=1.0)
+        return farm_workers_needed(
+            baseline_fte, baseline_fte, year.food_shortfall_kg,
+            year.marginal_product_last_hour_kg_per_hour, self.farm_land.hectares)
+
     def _allocate_farm_workforce(self, adult_equivalent_population):
         """Farm FTE for this year, after the labour market reacts to last
         year's harvest."""
         economy = self.state.economy
-        baseline_fte = agriculture.farm_workers_fte_for_population(
+        baseline_fte = self._expected_year_farm_need(
+            agriculture.farm_workers_fte_for_population(adult_equivalent_population),
             adult_equivalent_population)
         total_hours = self.population.working_age * HOURS_PER_FARM_WORKER_YEAR
-        baseline_farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)
         if not economy.society_labour_hours:
+            # Start from the food balance for this land.
+            farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)
             economy.society_labour_hours = starting_hours(
                 labour_market.production_data(), self.civ["starting_techs"],
-                total_hours, baseline_farm_hours)
+                total_hours, farm_hours)
         last_year = self._last_farm_year
         current_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         if last_year is None:
-            need_fte = baseline_fte
+            need_fte = current_fte
         else:
             need_fte = farm_workers_needed(
                 baseline_fte, current_fte, last_year.food_shortfall_kg,

@@ -153,6 +153,8 @@ check("...and it is actually gone from the list, not just zeroed in place",
 # pay the founder, and tops up a turn where some of it was already sold by
 # hand instead of selling the whole directive again on top.
 s = sim(capital=1e7)
+# Fed by its own farm, so no hunger reprices wages during the step.
+s.farm_land.quality, s.farm_land.hectares = 1.3, s.farm_land.hectares * 2.0
 _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "work",
                                   "hours": 100, "trade": "labourer"})
 check("allocate accepts a standing work-for-wages order naming a trade",
