@@ -1,5 +1,6 @@
 """Builds the wage schedule from what the engine already knows: the trade
-registry, the food price and the population's age structure.
+registry, the civilisation, the price solver and the population's age
+structure.
 
 The schedule itself lives in sim.world.wages and is actor-agnostic; this is
 the glue that supplies its inputs.
@@ -7,11 +8,12 @@ the glue that supplies its inputs.
 import functools
 import json
 import os
+import warnings
 from typing import Any, Dict, Mapping, Optional
 
 from sim.world import demand, demography, wages
 
-# Same source the food price for the household's own cost of living uses.
+# The staple the subsistence basket is priced in.
 FOOD_PRICE_MATERIAL = "wheat_kg"
 
 REFERENCE_POPULATION = 10000.0
@@ -22,13 +24,40 @@ _CIVILISATION_DIRECTORY = os.path.join(
 
 
 @functools.lru_cache(maxsize=None)
-def reference_discount_rate() -> float:
-    """The default civilisation's starting interest rate, for the context-free
-    wage table tools and the price solver use when no civilisation is in play."""
+def reference_civilisation() -> Dict[str, Any]:
+    """The default civilisation's own file, for the context-free wage table
+    tools and the price solver use when no civilisation is in play."""
     from .settings import CONFIG_DEFAULTS
     path = os.path.join(_CIVILISATION_DIRECTORY, CONFIG_DEFAULTS["default_civ"] + ".json")
     with open(path, encoding="utf-8") as handle:
-        return float(json.load(handle)["starting_interest_rate"])
+        return json.load(handle)
+
+
+def reference_discount_rate() -> float:
+    return float(reference_civilisation()["starting_interest_rate"])
+
+
+def validate_coin_standard(civ: Mapping[str, Any]) -> None:
+    """Raise ValueError unless the civilisation states what its unit of money
+    is worth in a physical material, with a source."""
+    name = civ.get("id", "?")
+    standard = civ.get("coin_standard")
+    if not isinstance(standard, dict):
+        raise ValueError("civilization %r must declare a coin_standard (the material "
+                         "and mass one unit of its money stands for)" % name)
+    material = standard.get("material")
+    if not isinstance(material, str) or not material:
+        raise ValueError("civilization %r coin_standard needs a material" % name)
+    mass = standard.get("kg_per_unit")
+    if isinstance(mass, bool) or not isinstance(mass, (int, float)) or mass <= 0:
+        raise ValueError("civilization %r coin_standard needs a positive kg_per_unit" % name)
+    if not isinstance(standard.get("source"), str) or not standard["source"].strip():
+        raise ValueError("civilization %r coin_standard needs a source" % name)
+
+
+def coin_standard(civ: Mapping[str, Any]) -> Dict[str, Any]:
+    validate_coin_standard(civ)
+    return civ["coin_standard"]
 
 
 @functools.lru_cache(maxsize=None)
@@ -45,12 +74,44 @@ def training_years_by_trade(registry: Mapping[str, Any]) -> Dict[str, float]:
         {trade_id: trade.family for trade_id, trade in registry.items()})
 
 
-def build_schedule(registry: Mapping[str, Any], food_price_per_kg: float,
-                   discount_rate: float,
-                   tightness_factors: Optional[Dict[str, float]] = None) -> wages.WageSchedule:
-    floor = wages.subsistence_wage_per_hour(
+def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
+                   tightness_factors: Optional[Dict[str, float]] = None,
+                   production_entries: Optional[Mapping[str, Any]] = None
+                   ) -> wages.WageSchedule:
+    """The civilisation's opening wage schedule.
+
+    Costs are solved in labour hours, the numeraire being one hour of the
+    unskilled trade, so no money enters until the last step. Closure: the
+    wage floor needs the staple's cost, and that cost is built from labour
+    at wages, but in numeraire hours the unskilled wage is 1 by definition,
+    so the staple solves once from the training premiums alone. The real-wage
+    condition is then a plain number: the hours of work needed to buy the
+    subsistence basket per hour worked. Below 1 the market wage clears it;
+    above 1 the floor lifts the unskilled wage. Money is anchored to the
+    coin: one unit is `kg_per_unit` of the coin material, worth its solved
+    labour hours, so a labour hour is the reciprocal of that in money.
+    """
+    from . import prices as price_solver
+    standard = coin_standard(civ)
+    civilisation_id = civ.get("id")
+    opening = wages.WageSchedule(
+        training_years_by_trade(registry), 1.0, 0.0, civ["starting_interest_rate"])
+    with warnings.catch_warnings():
+        # Catalogue diagnostics belong to the solver tools, not to every start-up.
+        warnings.simplefilter("ignore")
+        solved = price_solver.solved_prices(
+            civ["starting_techs"], opening.ratio_document(),
+            production_entries=production_entries, civilization_id=civilisation_id)
+    for role, material in (("staple", FOOD_PRICE_MATERIAL), ("coin", standard["material"])):
+        if material not in solved.resolvable_materials:
+            raise ValueError(
+                "civilization %r cannot price its %s %s with its starting technologies"
+                % (civilisation_id, role, material))
+    hours_per_kg = solved.prices_in_labour_hours
+    coin_hours = standard["kg_per_unit"] * hours_per_kg[standard["material"]]
+    subsistence_hours = wages.subsistence_wage_per_hour(
         demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR,
-        food_price_per_kg, people_fed_per_worker())
+        hours_per_kg[FOOD_PRICE_MATERIAL], people_fed_per_worker())
     return wages.WageSchedule(
-        training_years_by_trade(registry), floor, discount_rate=discount_rate,
-        tightness_factors=tightness_factors)
+        training_years_by_trade(registry), 1.0 / coin_hours, subsistence_hours,
+        civ["starting_interest_rate"], tightness_factors=tightness_factors)

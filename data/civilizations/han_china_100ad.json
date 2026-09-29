@@ -17,6 +17,11 @@
     "printing": 0.6
   },
   "currency": "wu zhu cash",
+  "coin_standard": {
+    "material": "bronze_kg",
+    "kg_per_unit": 0.0033,
+    "source": "Wu zhu cash were cast copper alloy coins of five zhu, about 3 to 3.5 g (Hartill, Cast Chinese Coins, 2005; Wang Yuqing on Han coinage). Confidence C: weights drifted across the period."
+  },
   "debt_bondage": true,
   "fire_quarter": "timber wards of the capital",
   "handicap_remedies": {

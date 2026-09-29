@@ -2,8 +2,8 @@
 
 Each tool runs in a subprocess where opening prices.json raises, so a tool
 that still reaches the file (directly or through the main loader) fails here.
-Cost figures that need wages or solved prices must be reported as unavailable
-rather than read from the book.
+Wages and solved prices come from the wage provider and the solver, so cost
+figures are still produced with the book unreadable.
 """
 from .harness import *  # noqa: F401,F403
 
@@ -38,13 +38,13 @@ check("treetool judge runs with the price book unreadable",
       (_judge.stdout + _judge.stderr)[-400:])
 
 _audit = _run_without_book("audit_costs.py")
-check("audit_costs runs with the price book unreadable and says costs are unavailable",
-      _audit.returncode == 0 and "unavailable" in _audit.stdout,
+check("audit_costs prices the cost base with the price book unreadable",
+      _audit.returncode == 0 and "unavailable" not in _audit.stdout,
       (_audit.stdout + _audit.stderr)[-400:])
 
 _report = _run_without_book("solve_prices.py", "--why", "iron_bar_kg")
-check("solve_prices reports unavailable wages instead of crashing without the price book",
-      _report.returncode != 0 and "unavailable" in _report.stdout and "Traceback" not in _report.stderr,
+check("solve_prices explains a price from the wage provider without the price book",
+      _report.returncode == 0 and "labour-hours" in _report.stdout and "Traceback" not in _report.stderr,
       (_report.stdout + _report.stderr)[-400:])
 
 _merge = _run_without_book("treetool.py", "merge")

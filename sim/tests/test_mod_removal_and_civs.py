@@ -298,7 +298,8 @@ class CivilizationModTests(ModTestBase):
 
     def test_new_civ_is_still_added(self):
         self.add_mod("test_acme_k3f9", civs={"test_acme_k3f9:land": {"id": "test_acme_k3f9:land", "starting_techs": [],
-                                       "starting_interest_rate": 0.1, "starting_tax_share": 0.05}})
+                                       "starting_interest_rate": 0.1, "starting_tax_share": 0.05,
+                                       "coin_standard": {"material": "silver_kg", "kg_per_unit": 0.003, "source": "test"}}})
         self.assertIn("test_acme_k3f9:land", self.ids())
         self.assertEqual("test_acme_k3f9:land", self.load("test_acme_k3f9:land")["id"])
 

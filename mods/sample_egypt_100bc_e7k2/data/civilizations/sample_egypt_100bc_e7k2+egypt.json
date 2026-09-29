@@ -16,6 +16,11 @@
     "structures": 0.75
   },
   "currency": "denarius",
+  "coin_standard": {
+    "material": "silver_kg",
+    "kg_per_unit": 0.0029,
+    "source": "The sample scenario names the denarius as its currency, so it takes Rome's standard. Fine silver in one denarius under Trajan: about 3.2 g at roughly nine tenths fineness (Butcher and Ponting, The Metallurgy of Roman Silver Coinage, Cambridge 2014). Confidence C: fineness varied by issue."
+  },
   "debt_bondage": false,
   "fire_quarter": "insula district, where the tenements stand six storeys in wood",
   "handicap_remedies": {

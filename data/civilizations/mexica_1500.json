@@ -21,6 +21,11 @@
     "transport": 2.2
   },
   "currency": "cacao bean and cotton cloth",
+  "coin_standard": {
+    "material": "cotton_fabric_kg",
+    "kg_per_unit": 0.4,
+    "source": "The quachtli, a cotton mantle, was the large-denomination unit beside cacao beans (Berdan, The Aztec Merchant, and Aztec Imperial Strategies). Cacao is not in the production catalogue, so the mantle stands for the unit. Its mass is an estimate for a light mantle. Confidence D."
+  },
   "debt_bondage": true,
   "fire_quarter": "reed and adobe quarter by the canal",
   "handicap_remedies": {

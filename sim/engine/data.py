@@ -20,7 +20,7 @@ No third-party dependencies. Python 3.8+.
 Design notes and the full protocol: sim/PROTOCOL.md
 """
 
-import json, math, os, sys
+import functools, json, math, os, sys
 sys.setrecursionlimit(20000)
 import collections
 from collections import deque
@@ -181,23 +181,14 @@ TRADES_ABSENT: FrozenSet[str] = frozenset(
 TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family
                                 for trade_id, trade in _TRADE_REGISTRY.items()}
 
-def _book_food_price_per_kg() -> float:
-    # The one book price the wage floor still needs, until food is priced by
-    # the solver.
-    with open(PRICES) as source:
-        goods = json.load(source)["purchase_prices_denarii"]
-    return goods[wage_provider.FOOD_PRICE_MATERIAL]["p"]
-
-
-FOOD_PRICE_PER_KG: float = _book_food_price_per_kg()
-
 # Starting wages: the labour-market schedule before any year has passed.
 # Sim carries the live schedule; these serve tools and validation.
 _STARTING_SCHEDULE = wage_provider.build_schedule(
-    _TRADE_REGISTRY, FOOD_PRICE_PER_KG, wage_provider.reference_discount_rate())
+    _TRADE_REGISTRY, wage_provider.reference_civilisation())
 WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
 ANNUAL_WAGE: Dict[str, float] = {
     trade: _STARTING_SCHEDULE.annual_wage(trade) for trade in WAGES}
+MONEY_PER_LABOUR_HOUR: float = _STARTING_SCHEDULE.money_per_labour_hour
 
 
 def trade_family(trade: str) -> str:
@@ -237,6 +228,14 @@ MONEY_SHORT_WORDS: Dict[str, str] = {
 def money_word(civ: Optional[JSONDict]) -> str:
     cur = (civ or {}).get("currency") or "denarius"
     return MONEY_WORDS.get(cur, cur)
+
+
+@functools.lru_cache(maxsize=None)
+def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wages.WageSchedule:
+    """The opening wage schedule of a civilisation (the default one if none)."""
+    if civilization_id is None:
+        return _STARTING_SCHEDULE
+    return wage_provider.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
 
 
 def money_short(civ: Optional[JSONDict]) -> str:
@@ -279,6 +278,7 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
         raise ValueError("civilization %r repeats starting technologies: %s"
                          % (civ.get("id", name), ", ".join(duplicates)))
     check_starting_techs(civ, get_ordered_mods(MODDIR))
+    wage_provider.validate_coin_standard(civ)
     for field in ("starting_interest_rate", "starting_tax_share"):
         if not isinstance(civ.get(field), (int, float)) or isinstance(civ.get(field), bool):
             raise ValueError("civilization %r must declare a numeric %s"
@@ -347,7 +347,8 @@ def load(use_solved_prices: bool = False,
     with open(PRICES) as source:
         prices = json.load(source)
     nodes = {node["id"]: node for node in tree["nodes"]}
-    wages = dict(WAGES)
+    schedule = starting_schedule(civilization_id)
+    wages = schedule.wages_per_hour()
     goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
              if not key.startswith("_")}
     required_materials = {material for node in nodes.values()
@@ -355,7 +356,7 @@ def load(use_solved_prices: bool = False,
     if use_solved_prices or not required_materials.issubset(goods):
         from . import prices as price_solver
         goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, goods, _STARTING_SCHEDULE.document(),
+            held_technology_ids, goods, schedule.document(),
             civilization_id=civilization_id)
     production = load_production_catalog(ROOT, MODDIR)
     load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
@@ -410,7 +411,8 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
     prices, goods = _book_prices()
     from . import prices as price_solver
     _goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, goods, _STARTING_SCHEDULE.document(), civilization_id=civilization_id)
+        held_technology_ids, goods, starting_schedule(civilization_id).document(),
+        civilization_id=civilization_id)
     return provenance
 
 
@@ -430,7 +432,7 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
     prices, book_goods = _book_prices()
     from . import prices as price_solver
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, book_goods, _STARTING_SCHEDULE.document(),
+        held_technology_ids, book_goods, starting_schedule(civilization_id).document(),
         civilization_id=civilization_id)
     return goods
 

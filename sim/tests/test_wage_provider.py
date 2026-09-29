@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from sim.engine import catalog, prices as engine_prices, wage_provider
+from sim.engine import catalog, data, prices as engine_prices, wage_provider
 from sim.solve_prices_core import wage_ratios_by_trade
 from sim.world import wages
 
@@ -16,7 +16,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 
 
 def _schedule(training_years, floor=1.0):
-    return wages.WageSchedule(training_years, floor, 0.10)
+    return wages.WageSchedule(training_years, floor, 1.0, 0.10)
 
 
 class TightnessTests(unittest.TestCase):
@@ -73,12 +73,6 @@ class TrainingPremiumTests(unittest.TestCase):
 
 class ProviderTests(unittest.TestCase):
 
-    def test_floor_follows_the_food_price(self):
-        registry = catalog.load_trade_registry(ROOT)
-        cheap = wage_provider.build_schedule(registry, 0.1, 0.10)
-        dear = wage_provider.build_schedule(registry, 0.2, 0.10)
-        self.assertAlmostEqual(dear.wage_per_hour("labourer") / cheap.wage_per_hour("labourer"), 2.0)
-
     def test_a_mod_trade_gets_a_wage_with_no_wage_table_entry(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -97,7 +91,7 @@ class ProviderTests(unittest.TestCase):
                 "test_acme_k3f9:clockmaker": {"family": "craft"},
                 "test_acme_k3f9:surveyor": {"family": "craft", "training_years": 9}}}))
             registry = catalog.load_trade_registry(str(root), mods_dir=str(root / "mods"))
-        schedule = wage_provider.build_schedule(registry, 0.13, 0.10)
+        schedule = wage_provider.build_schedule(registry, data.load_civ("rome_100ad"))
         self.assertGreater(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), schedule.floor_per_hour)
         # A trade that states no training takes its family's median.
         self.assertEqual(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), schedule.wage_per_hour("smith"))
@@ -124,9 +118,9 @@ class EngineWageTests(unittest.TestCase):
             engine.wage_per_hour("smith") * engine.HOURS_PER_PERSON_YEAR
             * engine.wage_cost_factors("smith")["weighted"]
             * engine.price_index * engine.wage_index)
-        # The price solver's money conversion is the same labourer wage.
+        # The price solver's money conversion is the schedule's coin-anchored rate.
         self.assertEqual(engine_prices.denarii_per_labour_hour(engine.wage_document()),
-                         engine.wage_per_hour("labourer"))
+                         engine.wage_schedule().money_per_labour_hour)
 
     def test_a_tight_trade_pays_more_next_year(self):
         engine = self.sim

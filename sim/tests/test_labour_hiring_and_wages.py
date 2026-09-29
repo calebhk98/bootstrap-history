@@ -95,6 +95,7 @@ check("the quote for a scarce trade forecasts what hiring one now would "
       _fc0.get("hiring_moves_the_price") is True
       and _fc0["a_year_of_one_after_you_hire_one"] > _fc0["a_year_of_one"],
       (_fc0.get("a_year_of_one"), _fc0.get("a_year_of_one_after_you_hire_one")))
+s_fc.capital = 1.2 * _fc0["a_year_of_one_after_you_hire_one"]   # enough to afford the hire at any wage scale
 check("...and it is the real forecast, not a guess: hiring one for real "
       "lands within a rounding error of the number just quoted",
       abs(S._agent_dispatch(s_fc, NODES,

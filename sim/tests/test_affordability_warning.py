@@ -116,7 +116,8 @@ check("...framed as a warning the player can act on, not a refusal",
 # --- NO WARNING for a single project, however large: the aggregate question
 # only makes sense once more than one thing is drawing on the same purse,
 # and on_credit above already answers the single-project case on its own.
-s = sim(capital=50.0)
+_single_cost = sim().project_cost("arithmetic_positional")
+s = sim(capital=round(_single_cost * 0.8))
 s.done.add("sc2_notation_positional")
 s._done_changed()
 r_one = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "arithmetic_positional"})

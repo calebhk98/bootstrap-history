@@ -50,18 +50,27 @@ civilisation's own interest rate should replace it. Tree `rev` values were
 authored against the old wages, so revenue-to-cost paybacks moved (see the
 relaxed pump check in `sim/tests/test_early_playtest.py`).
 
-### 2. Remove the denarius conversion anchor (partly done)
+### 2. Remove the denarius conversion anchor (done)
 
-- [x] `denarii_per_labour_hour` reads the wage document's labourer rate,
-  which the provider derives from the food price, the subsistence quantity
-  and the population's dependency ratio; no wage literal remains.
-- [ ] That food price is still the book's `wheat_kg` (read once in
-  `sim/engine/data.py`), so the money unit is anchored to a book price.
-  Finishing this means pricing food through the solver in labour hours and
-  anchoring money to a physical standard (a coin's silver content priced by
-  the solver), then converting to money only at the display edge. Until then
-  solved material prices in money move with the provider's labourer wage
-  while book-priced materials do not.
+- [x] The wage floor's food price is the staple's solved cost in labour hours
+  (its recipe and land rent), not a book price. `wage_provider.build_schedule`
+  documents the closure: in numeraire hours the unskilled wage is 1, so food
+  solves once from training premiums alone and the real-wage condition is the
+  hours of work needed to buy the subsistence basket per hour worked.
+- [x] Money is anchored to each civilisation's `coin_standard` (material, mass
+  per unit, source). A labour hour in money is the reciprocal of the coin's
+  solved labour hours; costs stay in labour hours until the display edge
+  (`hours_to_denarii` reads the document's `money_per_labour_hour`). A mod
+  civilisation without a standard fails to load with a clear error.
+- [x] `_book_food_price_per_kg` and `FOOD_PRICE_PER_KG` are gone;
+  `sim/tests/test_wage_floor_and_coin_standard.py` runs wages with the book's
+  wheat entry removed or changed.
+
+What still limits it: the coin's value is fixed at the opening technology, so
+later improvements to the coin metal's production do not deflate the currency
+(a labelled simplification: money supply and debasement are not modelled).
+The book goods table is still in denarii, so a book-priced fallback for a gated
+material is not in the civilisation's own unit.
 
 ### 3. Make endogenous material prices the only runtime path
 

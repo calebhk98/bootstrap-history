@@ -8,7 +8,7 @@ from sim.engine.catalog import (load_production_catalog, load_trade_registry,
                                 material_namespace,
                                 validate_mod_material_paths)
 from sim.engine.mods import get_ordered_mods, load_mod_tree
-from sim.engine import prices, wage_provider
+from sim.engine import data, prices, wage_provider
 from sim.validate_production import check
 from sim.world import demand, labour_market
 
@@ -60,7 +60,8 @@ class ModEconomicCatalogTests(unittest.TestCase):
     def test_new_material_chain_is_solved_and_visible_everywhere(self):
         production = load_production_catalog(str(self.root), str(self.root / "mods"))
         self.assertIn("test_acme_k3f9:ingot", material_namespace(production, self.nodes))
-        price_book = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 1.0}}}
+        price_book = {"wage_rates_denarii_per_hour": {"labourer": {"rate": 1.0}},
+                      "money_per_labour_hour": 1.0}
         solved = prices.solved_prices([], price_book, production_entries=production)
         self.assertIn("test_acme_k3f9:ingot", solved.resolvable_materials)
         goods, provenance = prices.priced_goods_table([], {}, price_book, production_entries=production)
@@ -93,7 +94,7 @@ class ModEconomicCatalogTests(unittest.TestCase):
         self.assertIn("test_acme_k3f9:clockmaker", registry)
         self.assertTrue(registry["test_acme_k3f9:clockmaker"].initially_absent)
         self.assertIn("established", registry["test_acme_k3f9:clockmaker"].note)
-        schedule = wage_provider.build_schedule(registry, 0.13, 0.10)
+        schedule = wage_provider.build_schedule(registry, data.load_civ("rome_100ad"))
         self.assertGreater(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), 0)
 
     def test_base_trade_registry_owns_identity_and_availability(self):

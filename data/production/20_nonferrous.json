@@ -36,7 +36,7 @@
      "build_materials": {
       "stone_kg": 10000.0,
       "clay_kg": 3000.0,
-      "iron_bar_kg": 200.0
+      "iron_bloom_kg": 200.0
      },
      "build_labour_hours": {
       "mason": 250.0,
