@@ -112,39 +112,6 @@ def _split_by_value(outputs, reference_prices, total_cost):
             for name, quantity in outputs.items()}
 
 
-class DemandAnchors:
-    """Market-clearing prices for goods with a household demand curve."""
-
-    def __init__(self, bins, basket, supply_by_material):
-        self.bins = bins
-        self.basket = basket
-        self.supply_by_material = supply_by_material
-
-    def prices(self, current_prices):
-        """{material: clearing price} at this round's solved prices."""
-        known = {}
-        for good in self.basket:
-            if good.name in current_prices:
-                known[good.name] = current_prices[good.name]
-            elif good.subsistence_quantity_per_capita_per_year > 0:
-                return {}
-            else:
-                # No floor, so this price cannot move another good's clearing price.
-                known[good.name] = 1.0
-        anchors = {}
-        for good in self.basket:
-            supply = self.supply_by_material.get(good.name)
-            if not supply:
-                continue
-            others = {name: price for name, price in known.items() if name != good.name}
-            try:
-                anchors[good.name] = demand.market_clearing_price(
-                    good, supply, others, self.bins, self.basket)
-            except ValueError:
-                continue
-        return anchors
-
-
 def _annual_supply(material, resources):
     """Annual supply in the material's own unit, from the first table naming it."""
     for table in resources:
@@ -156,37 +123,47 @@ def _annual_supply(material, resources):
     return None
 
 
-def build_demand_anchors(civilization_id=None, basket=None,
-                         supply_by_material=None):
-    """DemandAnchors for a civilisation, or None when nothing is anchorable.
-
-    Only basket goods with a known annual supply and no subsistence floor
-    are anchored; staples are priced by their own recipes. Supply is in the
-    good's own unit.
-    """
-    basket = basket or demand.DEFAULT_BASKET
-    if supply_by_material is None:
-        with open(deposits.RESOURCES_FILE) as handle:
-            resources = json.load(handle)
-        tables = [resources["empire_output_100ad"],
-                  resources.get("placer_metal_output_reference", {})]
-        supply_by_material = {}
-        for good in basket:
-            supply = _annual_supply(good.name, tables)
-            if supply:
-                supply_by_material[good.name] = supply
-    supply_by_material = {
-        good.name: supply_by_material[good.name] for good in basket
-        if good.name in supply_by_material
-        and good.subsistence_quantity_per_capita_per_year == 0}
-    if not supply_by_material:
-        return None
+def _civilisation(civilization_id):
     path = os.path.join(_ROOT, "data", "civilizations", "%s.json" % civilization_id)
     if not civilization_id or not os.path.exists(path):
         path = os.path.join(
             _ROOT, "data", "civilizations", "%s.json" % DEFAULT_CIVILIZATION)
     with open(path) as handle:
-        population = json.load(handle)["population"]
+        return json.load(handle)
+
+
+def build_demand_anchors(civilization_id=None, supply_by_material=None):
+    """NeedDemandAnchors for a civilisation, or None when nothing is anchorable.
+
+    Demand comes from the needs data (data/world/needs.json and mods), the
+    recipe graph, and the technologies the civilisation could pursue next.
+    Supply, in each good's own unit, comes from a good's declared
+    `supply_per_year`, else from the resource tables.
+    """
+    from sim.engine import catalog, need_data
+    from sim.world import need_demand
+    production = demand.production_data()
+    needs = need_data.load_needs(_ROOT)
+    declared = need_demand.declared_supply(needs, production)
+    if supply_by_material is None:
+        with open(deposits.RESOURCES_FILE) as handle:
+            resources = json.load(handle)
+        tables = [resources["empire_output_100ad"],
+                  resources.get("placer_metal_output_reference", {})]
+        outputs = {material for entry in production.values() for material in entry["outputs"]}
+        supply_by_material = {}
+        for material in sorted(outputs):
+            supply = _annual_supply(material, tables)
+            if supply:
+                supply_by_material[material] = supply
+    table_supply = set(supply_by_material) - set(declared)
+    supply_by_material = dict(supply_by_material, **declared)
+    if not supply_by_material:
+        return None
+    civilisation = _civilisation(civilization_id)
     bins = demand.income_bins(
-        float(population), MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR)
-    return DemandAnchors(bins, basket, supply_by_material)
+        float(civilisation["population"]), MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR)
+    technology_demand = need_demand.technology_material_demand(
+        catalog.load_mod_tree_nodes(_ROOT), set(civilisation.get("starting_techs") or ()))
+    model = need_demand.NeedDemandModel(needs, production, bins, technology_demand)
+    return need_demand.NeedDemandAnchors(model, supply_by_material, table_supply)

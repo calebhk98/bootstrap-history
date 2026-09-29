@@ -7,7 +7,7 @@ import unittest
 import warnings
 
 from sim import joint_allocation, simulator, solve_prices
-from sim.world import demand
+from sim.world import demand, need_demand
 
 
 def joint_entry():
@@ -102,24 +102,28 @@ class CapAnchorsTests(unittest.TestCase):
         self.assertIsNone(joint_allocation.cap_anchors(None, {"gem_kg": 70.0}))
 
 
+GEM_NEEDS = {"needs": {"ornament": {"surplus_budget_share": 1.0}},
+             "goods": {"gem_kg": {"satisfies": {"ornament": 1.0}}}}
+
+
 class DemandAnchorsTests(unittest.TestCase):
 
-    def anchors(self, supply_kg):
-        bins = demand.income_bins(1_000_000.0, 500.0)
-        basket = (demand.FOOD, demand.Good("gem_kg", 0.0, 0.70))
-        return joint_allocation.DemandAnchors(bins, basket, {"gem_kg": supply_kg})
+    def anchors(self, supply_kg, table_supply=()):
+        model = need_demand.NeedDemandModel(
+            GEM_NEEDS, {"smelt": joint_entry()}, demand.income_bins(1_000_000.0, 500.0))
+        return need_demand.NeedDemandAnchors(model, {"gem_kg": supply_kg} if supply_kg else {}, table_supply)
 
     def test_scarcer_supply_gives_a_higher_anchor(self):
-        prices = {"wheat_kg": 0.5}
+        prices = {"gem_kg": 1.0}
         scarce = self.anchors(10.0).prices(prices)["gem_kg"]
         plentiful = self.anchors(1000.0).prices(prices)["gem_kg"]
         self.assertGreater(scarce, plentiful)
 
     def test_a_good_with_no_known_supply_gets_no_anchor(self):
-        anchors = joint_allocation.DemandAnchors(
-            demand.income_bins(1_000_000.0, 500.0),
-            (demand.FOOD, demand.Good("gem_kg", 0.0, 0.70)), {})
-        self.assertEqual(anchors.prices({"wheat_kg": 0.5}), {})
+        self.assertEqual(self.anchors(None).prices({"gem_kg": 1.0}), {})
+
+    def test_a_table_supplied_good_supplied_beyond_demand_is_left_unanchored(self):
+        self.assertEqual(self.anchors(1e15, ("gem_kg",)).prices({"gem_kg": 1.0}), {})
 
     def test_a_direct_route_caps_the_anchor_in_a_solved_joint_recipe(self):
         # Direct route: 1 kg gem costs 20 hours; the joint smelt's anchor says 400.
@@ -141,7 +145,6 @@ class DemandAnchorsTests(unittest.TestCase):
         wages = {"labourer": 1.0}
         producers = solve_prices.build_producers_index(entries)
         resolvable = {"main_kg", "gem_kg"}
-        # wheat is not solved here, so anchor prices come from a stub.
         anchors = self.anchors(50.0)
         anchors.prices = lambda _prices: {"gem_kg": 400.0}
         prices, _i, _r, _c = solve_prices.solve(
@@ -247,7 +250,7 @@ class RealDataJointSmeltTests(unittest.TestCase):
         for material in ("germanium_g", "indium_g", "coal_tar_kg"):
             self.assertIn(material, self.unanchored_after)
 
-    def test_platinum_is_anchored_by_its_basket_entry(self):
+    def test_platinum_is_anchored_by_the_ornament_need(self):
         self.assertNotIn("platinum_g", self.unanchored_after)
 
 

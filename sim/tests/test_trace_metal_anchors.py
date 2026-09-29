@@ -73,9 +73,9 @@ class TraceMetalRealDataTests(unittest.TestCase):
             cls.unanchored_run = solve_ungated(False)
             cls.anchored_run = solve_ungated(True)
 
-    def test_platinum_is_a_basket_good_with_a_supply_figure(self):
-        self.assertIn("platinum_g", [good.name for good in demand.DEFAULT_BASKET])
+    def test_platinum_satisfies_a_need_and_has_a_supply_figure(self):
         anchors = joint_allocation.build_demand_anchors()
+        self.assertIn("platinum_g", anchors.model.effectiveness["ornament"])
         self.assertIn("platinum_g", anchors.supply_by_material)
 
     def test_platinum_costs_more_per_gram_than_nickel(self):

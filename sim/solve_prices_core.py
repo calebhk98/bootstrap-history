@@ -1244,7 +1244,8 @@ def _solve_round_candidates(production_entries, recipe_ids_in_order, resolvable_
 
 
 def _solve_round_update_prices(resolvable_materials, prices, candidates_by_material,
-                               damping, chosen_recipe_by_material):
+                               damping, chosen_recipe_by_material,
+                               production_entries=None, scarcity_floor=None):
     new_prices = {}
     max_relative_change = 0.0
     for material in resolvable_materials:
@@ -1254,6 +1255,11 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
             continue
         best_price, best_recipe = min(candidates, key=lambda pair: pair[0])
         chosen_recipe_by_material[material] = best_recipe
+        # A sole-output good cannot recover a scarcity rent through a joint split,
+        # so its price is held at or above what its limited supply clears at.
+        if (scarcity_floor and material in scarcity_floor
+                and len(production_entries[best_recipe]["outputs"]) == 1):
+            best_price = max(best_price, scarcity_floor[material])
         damped_price = (1.0 - damping) * prices[material] + damping * best_price
         new_prices[material] = damped_price
         previous_price = prices[material]
@@ -1329,9 +1335,11 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
             demand_anchor_price_by_material=(
                 demand_anchors.prices(prices) if demand_anchors else None))
 
+        floor_source = getattr(demand_anchors, "scarcity_floor_prices", None)
         prices, final_residual = _solve_round_update_prices(
             resolvable_materials, prices, candidates_by_material, damping,
-            chosen_recipe_by_material)
+            chosen_recipe_by_material, production_entries,
+            floor_source(prices) if floor_source else None)
         if final_residual < tolerance:
             break
 

@@ -42,6 +42,7 @@ Pins the subsistence cliff and Engel-curve floor as current behaviour; invert, d
 """
 import unittest
 
+from sim.tests import demand_fixtures as fixtures
 from sim.world import demand
 
 
@@ -77,7 +78,7 @@ class SubsistenceFloorIsNowTradeableTests(unittest.TestCase):
         # demand.py's own default good) and a cheap PHONE (no biological
         # floor at all, priced far below a year's committed food spending).
         self.food = demand.Good(
-            "wheat_kg", demand.FOOD.subsistence_quantity_per_capita_per_year, 0.95)
+            "wheat_kg", fixtures.FOOD.subsistence_quantity_per_capita_per_year, 0.95)
         self.phone = demand.Good("phone", 0.0, 0.05)
         self.basket = (self.food, self.phone)
         demand.validate_basket(self.basket)
@@ -253,7 +254,7 @@ class EngelCurveFloorsAtTheMarginalBudgetShareTests(unittest.TestCase):
     A + B/income shape applied to a fixed-supply good's price instead of a
     budget share. That means food's budget share can fall a long way as
     income rises (Engel's Law holds in DIRECTION), but it can never fall
-    below FOOD's own marginal_budget_share (0.30, read from demand.FOOD
+    below FOOD's own marginal_budget_share (0.30, read from fixtures.FOOD
     rather than hardcoded here, since the constant that sets it is being
     renamed elsewhere in this same branch - see DEMAND_AT_SCALE.md's own
     closing note) at ANY income, however large - see
@@ -267,7 +268,7 @@ class EngelCurveFloorsAtTheMarginalBudgetShareTests(unittest.TestCase):
     """
 
     def setUp(self):
-        self.basket = demand.DEFAULT_BASKET
+        self.basket = fixtures.BASKET
         wheat_price_per_kg = demand._illustrative_recursive_labour_content_price_per_kg(
             "wheat_kg")
         self.prices = {"wheat_kg": wheat_price_per_kg, "manufactures": 1.0, "platinum_g": 1.0,
@@ -282,7 +283,7 @@ class EngelCurveFloorsAtTheMarginalBudgetShareTests(unittest.TestCase):
             population=1.0, income_per_capita_per_year=income_per_capita,
             population_percentile_from_top=(0.0, 1.0)),)
         return demand.household_budget_share(
-            demand.FOOD, self.prices, single_bin, self.basket)
+            fixtures.FOOD, self.prices, single_bin, self.basket)
 
     def test_food_share_keeps_falling_across_industrial_and_modern_income_multiples(self):
         # The DIRECTION is right - Engel's Law holds qualitatively across
@@ -298,7 +299,7 @@ class EngelCurveFloorsAtTheMarginalBudgetShareTests(unittest.TestCase):
         # stand in for a modern economy - food's share is still barely
         # above 30%, not the roughly 10-13% real modern economies show.
         food_share_at_extreme_income = self._food_budget_share_at_income_multiple(1_000_000.0)
-        food_marginal_budget_share = demand.FOOD.marginal_budget_share
+        food_marginal_budget_share = fixtures.FOOD.marginal_budget_share
         self.assertGreater(food_share_at_extreme_income, food_marginal_budget_share)
         self.assertAlmostEqual(
             food_share_at_extreme_income, food_marginal_budget_share, delta=0.001,
@@ -323,7 +324,7 @@ class SoftenedFloorOnTheRealDefaultBasketTests(unittest.TestCase):
     """
 
     def setUp(self):
-        self.basket = demand.DEFAULT_BASKET
+        self.basket = fixtures.BASKET
         wheat_price_per_kg = demand._illustrative_recursive_labour_content_price_per_kg(
             "wheat_kg")
         self.prices = {"wheat_kg": wheat_price_per_kg, "manufactures": 1.0, "platinum_g": 1.0,
@@ -378,7 +379,7 @@ class NumeraireInvarianceConfirmsTheAtlantisCaseTests(unittest.TestCase):
     """
 
     def test_quantities_demanded_are_unchanged_by_a_uniform_unit_of_account_change(self):
-        basket = demand.DEFAULT_BASKET
+        basket = fixtures.BASKET
         wheat_price_per_kg = demand._illustrative_recursive_labour_content_price_per_kg(
             "wheat_kg")
         prices_in_labour_hours = {
@@ -419,11 +420,11 @@ class NumeraireInvarianceConfirmsTheAtlantisCaseTests(unittest.TestCase):
         supply_quantity = 500.0
 
         price_in_labour_hours = demand.market_clearing_price(
-            demand.SILVER, supply_quantity, other_prices_in_labour_hours,
-            bins_in_labour_hours, demand.DEFAULT_BASKET)
+            fixtures.SILVER, supply_quantity, other_prices_in_labour_hours,
+            bins_in_labour_hours, fixtures.BASKET)
         price_in_shells = demand.market_clearing_price(
-            demand.SILVER, supply_quantity, other_prices_in_shells,
-            bins_in_shells, demand.DEFAULT_BASKET)
+            fixtures.SILVER, supply_quantity, other_prices_in_shells,
+            bins_in_shells, fixtures.BASKET)
 
         self.assertAlmostEqual(
             price_in_shells / price_in_labour_hours, shells_per_labour_hour, places=6)

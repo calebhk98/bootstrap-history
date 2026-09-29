@@ -54,6 +54,14 @@ A mod may provide:
   descriptive metadata belong here; a wage is deliberately not part of trade
   identity.
 
+* `data/world/needs.json`: `needs` (household spending categories, ids
+  `<mod_id>:<name>`, each with a `surplus_budget_share` weight) and `goods`
+  (`satisfies`: {need: effectiveness per unit}, optional `supply_per_year`).
+  A recipe entry may carry `satisfies` and `supply_per_year` for its main
+  output instead. Demand for the good, the demand it derives for its inputs
+  through recipes, and a scarcity price where its supply is limited follow
+  from these; no basket entry is needed. See `sim/world/need_demand.py`.
+
 New technology, recipe, civilization, and trade ids must be
 `<mod_id>:<name>`. A technology or recipe may instead deliberately patch an existing
 id with `"override": true`; an override is a deep merge that changes only the
