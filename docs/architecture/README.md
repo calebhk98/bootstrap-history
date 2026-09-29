@@ -18,6 +18,7 @@ is now. None of this is an approved plan yet.
 | `WIRING_MILESTONE_4.md` | What wiring demography and agriculture into the engine actually broke and fixed, commit by commit. Feeds Milestone 4 in `STATE_OF_THE_PROJECT.md`. | Ours |
 | `DEMAND_AT_SCALE.md` | Whether `sim/world/demand.py`'s household-demand model holds outside Roman Egypt, against the stakeholder's own critique. | Ours |
 | `MAP_AND_WEATHER.md` | Why the map and the weather model are two disconnected systems, and what it would take to join them. | Ours |
+| `ECONOMY_MODEL_SURVEY.md` | How other models and games price goods, set wages, split joint products and create starting conditions, with what to borrow for each of our modules. | Ours, from external sources |
 
 Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
 `PRICES_JSON_DELETION.md` is its concrete exit checklist for the legacy file;
