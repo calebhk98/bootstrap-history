@@ -1,6 +1,7 @@
 """rush_fiscal_controls: regression checks, run with `--only rush_fiscal_controls`."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.purchase_rule import purchase_budget as _purchase_budget
+from sim.engine.state import serialize_state
 
 _START_CAPITAL = 20000.0
 
@@ -99,3 +100,34 @@ check("'start all' is the rush alias and keeps its options",
       (_parsed, _error))
 _parsed, _error = _PT("start scientific_method")
 check("'start <id>' is unchanged", (_parsed or {}).get("cmd") == "start", (_parsed, _error))
+
+# --- preview and a real run agree near the credit margin
+for _margin_capital in (150.0, 400.0, 900.0, 2500.0):
+    _preview_ids = [row["id"] for row in
+                    _rush(sim(capital=_margin_capital), limit=50, preview=True)["would_start"]]
+    _real_ids = [row["id"] for row in _rush(sim(capital=_margin_capital), limit=50)["started"]]
+    check("rush preview matches the real run at capital %d" % _margin_capital,
+          _preview_ids == _real_ids and len(_real_ids) > 0, (_preview_ids, _real_ids))
+_margin_sim = sim(capital=400.0)
+check("start_refusal is None for a startable, affordable project and changes nothing",
+      _margin_sim.start_refusal("units_standards") is None and not _margin_sim.active)
+check("start_refusal counts extra_owed against the credit ceiling",
+      "you already owe" in (_margin_sim.start_refusal("units_standards", extra_owed=1e9) or ""))
+
+# --- preview rolls back everything, including the priority order and the saved state
+_roll = sim(capital=400.0)
+_order_before = list(_roll.order)
+
+
+def _sections(sim_state):
+    """The serialised game sections, without the metadata a save stamps on."""
+    blob = serialize_state(sim_state.state)
+    return json.dumps({key: value for key, value in blob.items() if not key.startswith("_")},
+                      sort_keys=True, default=str)
+
+
+_blob_before = _sections(_roll)
+_rush(_roll, limit=50, preview=True)
+check("rush preview leaves the priority order untouched", _roll.order == _order_before)
+check("rush preview leaves the serialised game state identical",
+      _sections(_roll) == _blob_before)

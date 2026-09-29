@@ -9,9 +9,13 @@ name protocol.py's shim re-exports - and imports these handlers back from
 here. Behaviour is unchanged and moved verbatim.
 """
 
+import os
+import tempfile
+
 from ..data import downstream_count
 from ..purchase_rule import purchase_budget
 from .nodes import _did_you_mean
+from .saveload import load_state, save_state
 from .util import _flag
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
@@ -340,6 +344,33 @@ def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far):
     return None
 
 
+def _rush_preview(sim, nodes, cmd, ended):
+    """Run the real rush, then roll the game back to how it was.
+
+    Credit, costs and availability all move as projects begin, so only the
+    real start path can say what a rush would start.
+    """
+    saved_order = list(sim.order)
+    with tempfile.TemporaryDirectory() as folder:
+        snapshot = os.path.join(folder, "snapshot.json")
+        save_state(sim, snapshot)
+        try:
+            result = _cmd_rush(sim, nodes, dict(cmd, preview=False), ended)
+        finally:
+            load_state(sim, snapshot)
+            sim.order[:] = saved_order
+    if result.get("preview") or not result.get("ok"):
+        return result
+    return {"ok": True, "preview": True, "nothing_changed": True,
+            "count_would_start": result["count_started"],
+            "would_start": result["started"],
+            "total_cost": result["total_cost"],
+            "total_annual_draw": result["total_annual_draw"],
+            "count_not_started": result["count_not_started"],
+            "not_started": result["not_started"],
+            "how_to_confirm": "Repeat the same rush without 'preview' to begin these."}
+
+
 def _cmd_rush(sim, nodes, cmd, ended):
     # BULK START, FOG-SAFE: a late game can have dozens of things
     # startable at once, with nothing to do but type `start <id>`
@@ -363,7 +394,8 @@ def _cmd_rush(sim, nodes, cmd, ended):
     if cap_error:
         return {"ok": False, "error": cap_error}
     capped = any(value is not None for value in caps.values())
-    preview_only = _flag(cmd.get("preview"))
+    if _flag(cmd.get("preview")):
+        return _rush_preview(sim, nodes, cmd, ended)
     _memo = {}
     _ok = [node_id for node_id in sim.order if sim.can_start(node_id, _memo=_memo)]
     # HIGHEST-LEVERAGE FIRST, INTERNALLY ONLY. This never shows a player
@@ -403,11 +435,8 @@ def _cmd_rush(sim, nodes, cmd, ended):
     started, not_started = [], []
     _owed = 0.0
     total_cost = total_draw = 0.0
-    # budget fixed up front, from the shared purchase rule, so the reserve holds as projects start
+    # budget fixed up front from the shared purchase rule, so the reserve holds as projects start
     budget = purchase_budget(sim)
-    # a preview walks the same rules without beginning anything
-    credit_room = (max(0.0, sim.capital) + sim.credit_limit()
-                   - sim.committed_spend())
     for node_id in _ok:
         if limit is not None and len(started) >= limit:
             break
@@ -429,24 +458,12 @@ def _cmd_rush(sim, nodes, cmd, ended):
                        % (len(started), "{:,.0f}".format(_owed),
                           "{:,.0f}".format(sim.director_pool()))})
             continue
-        if preview_only:
-            if total_cost + cost_left > credit_room:
-                not_started.append({"id": node_id, "why": "not begun: beyond "
-                                    "what cash and credit could carry"})
-                continue
-            ok2, why = True, ""
-        else:
-            ok2, why = sim.start_project(node_id)
+        ok2, why = sim.start_project(node_id)
         if ok2:
             _owed += nodes[node_id]["ph"]
             total_cost += cost_left
             total_draw += annual_draw
             node = nodes[node_id]
-            if preview_only:
-                started.append({"id": node_id, "name": node["name"],
-                                "cost": round(cost_left, 1),
-                                "annual_draw": round(annual_draw, 1)})
-                continue
             # SAY SO, for the same reason the single-id `start` does: a
             # player reading `log` back should see every begun-work as a
             # choice they made, not a completion that appeared unasked.
@@ -454,17 +471,10 @@ def _cmd_rush(sim, nodes, cmd, ended):
                 sim.log.append((sim.year, "started: %s" % node["name"]))
             started.append({"id": node_id, "name": node["name"],
                             "cost": round(sim.active.get(node_id, {}).get(
-                                "cost_left", sim.project_cost(node_id)), 1)})
+                                "cost_left", sim.project_cost(node_id)), 1),
+                            "annual_draw": round(annual_draw, 1)})
         else:
             not_started.append({"id": node_id, "why": why})
-    if preview_only:
-        return {"ok": True, "preview": True, "nothing_changed": True,
-                "count_would_start": len(started), "would_start": started,
-                "total_cost": round(total_cost, 1),
-                "total_annual_draw": round(total_draw, 1),
-                "count_not_started": len(not_started),
-                "not_started": not_started,
-                "how_to_confirm": "Repeat the same rush without 'preview' to begin these."}
     return {"ok": True, "started": started, "count_started": len(started),
             "total_cost": round(total_cost, 1),
             "total_annual_draw": round(total_draw, 1),
