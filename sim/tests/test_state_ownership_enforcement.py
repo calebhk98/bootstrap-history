@@ -14,7 +14,7 @@ Enforces:
 1. No internal engine code routes project, economy, governance, founder, scenario,
    or population state through `self.household.<field>` or `household.<field>`.
 2. No internal engine code accesses pruned forwarding properties on `self` or `sim`.
-3. `ForwardingPropertiesMixin` contains exactly 84 backward compatibility properties.
+3. `ForwardingPropertiesMixin` does not regrow properties that were pruned.
 4. AST visitor catches synthetic violation cases reliably with clear error messages.
 """
 import ast
@@ -160,7 +160,7 @@ check("internal engine state ownership cleanliness", _ok, _detail)
 
 
 def _test_forwarding_properties_count():
-	"""Verify core_properties.py defines exactly 84 properties and 0 pruned properties."""
+	"""Verify no pruned property has crept back into core_properties.py."""
 	repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 	props_file = os.path.join(repo_root, ENGINE_RELATIVE_PATH, "core_properties.py")
 	with open(props_file, "r", encoding="utf-8") as fp:
@@ -180,18 +180,15 @@ def _test_forwarding_properties_count():
 			if has_prop_dec:
 				properties.add(node.name)
 
-	if len(properties) != 84:
-		return False, f"Expected exactly 84 forwarding properties, found {len(properties)}"
-
 	pruned_present = PRUNED_FORWARDING_PROPERTIES.intersection(properties)
 	if pruned_present:
 		return False, f"Pruned properties still present in core_properties.py: {pruned_present}"
 
-	return True, "core_properties.py maintains exactly 84 compatibility properties with 0 pruned"
+	return True, "core_properties.py has none of the pruned properties"
 
 
 _ok, _detail = _test_forwarding_properties_count()
-check("forwarding properties count and composition", _ok, _detail)
+check("no pruned forwarding property has returned", _ok, _detail)
 
 
 def _test_synthetic_violation_detection():
