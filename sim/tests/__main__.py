@@ -80,6 +80,7 @@ TOPICS = [
     "interface_honesty",
     "fog_leak3",
     "fog_scrub_prefix",
+    "research_filters",
     "parallelism_note",
     "sort_nearest",
     "labour_productivity",
