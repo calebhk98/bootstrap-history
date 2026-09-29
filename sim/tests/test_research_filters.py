@@ -202,19 +202,19 @@ def _tag_mod(parent, mod_id, tags):
 
 _weaving_ids = sorted(node_id for node_id, node in NODES.items() if node["cat"] == "weaving")
 with tempfile.TemporaryDirectory() as _mods_tmp:
-    _tag_mod(_mods_tmp, "arcane", {
-        "arcane_sorcery": {"cats": ["weaving"], "words": ["spell"]},
+    _tag_mod(_mods_tmp, "test_arcane_k3f9", {
+        "test_arcane_k3f9:sorcery": {"cats": ["weaving"], "words": ["spell"]},
         "agriculture": {"cats": ["metallurgy"], "words": ["scythe"]}})
     _topic_tags.use_mods_dir(_mods_tmp)
     try:
         _merged = _topic_tags.current()
-        check("a mod adds a new tag", "arcane_sorcery" in _merged, sorted(_merged))
+        check("a mod adds a new tag", "test_arcane_k3f9:sorcery" in _merged, sorted(_merged))
         check("a mod extends an existing tag without dropping its categories",
               "metallurgy" in _merged["agriculture"]["cats"]
               and "soil" in _merged["agriculture"]["cats"]
               and "scythe" in _merged["agriculture"]["words"])
         _mod_sim = sim(capital=1_000_000.0)
-        _new = _ask(_mod_sim, state="blocked", tag="arcane_sorcery", all=True)
+        _new = _ask(_mod_sim, state="blocked", tag="test_arcane_k3f9:sorcery", all=True)
         _new_ids = sorted(row["id"] for row in _rows(_new) or [])
         _expected = sorted(node_id for node_id in _weaving_ids
                            if node_id not in _mod_sim.done and node_id not in _mod_sim.active
@@ -222,7 +222,7 @@ with tempfile.TemporaryDirectory() as _mods_tmp:
         check("`available tag:<new>` finds the new tag's nodes",
               bool(_new_ids) and _new_ids == _expected, (_new.get("error"), len(_new_ids)))
         check("...and their rows carry the new tag",
-              all("arcane_sorcery" in row["tags"] for row in _rows(_new)))
+              all("test_arcane_k3f9:sorcery" in row["tags"] for row in _rows(_new)))
         _spell = _ask(_mod_sim, find="spell", state="blocked", all=True)
         check("a mod's search word reaches the tag's nodes",
               bool(_rows(_spell)), _spell.get("error"))
@@ -232,13 +232,13 @@ with tempfile.TemporaryDirectory() as _mods_tmp:
     finally:
         _topic_tags.use_mods_dir(None)
     check("the default tags come back once the mod is gone",
-          "arcane_sorcery" not in _topic_tags.current())
+          "test_arcane_k3f9:sorcery" not in _topic_tags.current())
 
 with tempfile.TemporaryDirectory() as _bad_tmp:
-    _tag_mod(_bad_tmp, "arcane", {"sorcery": {"cats": ["weaving"]}})
+    _tag_mod(_bad_tmp, "test_arcane_k3f9", {"sorcery": {"cats": ["weaving"]}})
     _refused = False
     try:
         _topic_tags.load_topic_tags(ROOT, _bad_tmp)
     except _ModError:
         _refused = True
-    check("a new tag without the mod id prefix is refused", _refused)
+    check("a new tag outside the mod namespace is refused", _refused)

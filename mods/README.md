@@ -5,11 +5,33 @@ folder to disable that mod; no registry or Python edit is required. The loader
 orders mods by dependencies and then by id, rejects missing dependencies,
 dependency cycles, declared conflicts, and ambiguous duplicate ids.
 
+## Ids and namespaces
+
+A mod id has the form `<author>_<name>_<suffix>`: lowercase letters, digits and
+underscores, starting with a letter, ending in a random suffix of four or more
+lowercase letters or digits (for example `ana_steamage_k3f9`). The random suffix
+is what keeps two authors who never spoke from picking the same id; make one up
+rather than choosing a word. The loader rejects any other shape with a message
+saying so. A mod id never contains `:`.
+
+Every new technology, recipe, material, civilisation, trade or topic tag a mod
+creates is named `<mod_id>:<name>`, for example `ana_steamage_k3f9:boiler`. The
+`:` cannot occur in a mod id, so a namespace belongs to exactly one mod and a
+mod can never create an id inside another's. The name part is lowercase letters,
+digits and underscores, starting with a letter. Players type the full id.
+A civilisation's file name writes the `:` as `+`
+(`ana_steamage_k3f9+realm.json`), since `:` is not portable in file names.
+
+A mod that uses another mod's ids anywhere in its data files (a prerequisite,
+a material, a goal node, a starting technology, a recipe input) must list that
+mod in `dependencies`, directly or through a chain of dependencies; otherwise
+the load fails with an error naming both mods.
+
 A manifest has this shape:
 
 ```json
 {
-  "id": "example_mod",
+  "id": "ana_example_k3f9",
   "name": "Example Mod",
   "version": "1.0.0",
   "dependencies": [],
@@ -32,8 +54,8 @@ A mod may provide:
   descriptive metadata belong here; a wage is deliberately not part of trade
   identity.
 
-New technology, recipe, civilization, and trade ids must start with
-`<mod_id>_`. A technology or recipe may instead deliberately patch an existing
+New technology, recipe, civilization, and trade ids must be
+`<mod_id>:<name>`. A technology or recipe may instead deliberately patch an existing
 id with `"override": true`; an override is a deep merge that changes only the
 fields it names (defaults apply to new nodes only) and fails if its target does
 not exist. Technology nodes may also use `"replaces": "existing_id"`, which is
@@ -71,9 +93,8 @@ an error naming both mods; declare a dependency to choose a winner.
 
 ## Civilisations
 
-A file `data/civilizations/<id>.json` is a new civilisation (id prefixed with
-the mod id) unless it carries `"override": true`, in which case it patches the
-existing civilisation of that id (base or from another mod) by deep merge,
+A file `data/civilizations/<id>.json` is a new civilisation (namespaced with the mod id) unless it carries `"override": true`, in which case it patches the
+existing civilisation of that id (base or from another mod; write `:` as `+` in the file name) by deep merge,
 changing only the named fields; lists such as `starting_techs` are replaced
 whole. Unrelated mods patching the same field are an error naming both. A
 patch with `"hidden": true` keeps the civilisation out of the new-game menu and

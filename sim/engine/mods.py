@@ -2,11 +2,11 @@
 import copy
 import json
 import os
-import re
 from typing import Any, Dict, Iterable, List
 
 from .mods_base import (ModError, ModManifest, check_not_removed, claim_fields, claim_removal,
                         deep_merge, removed_by)
+from .mods_ids import check_declared_dependencies, check_mod_id, check_new_id
 from .mods_goals import apply_goal_entries
 from .mods_remove import (RECIPE, TECH, check_recipe_references, check_tree_references)
 
@@ -19,8 +19,7 @@ def _manifest(path: str) -> ModManifest:
     if missing:
         raise ModError("%s is missing manifest fields: %s" % (path, ", ".join(missing)))
     mod_id = raw["id"]
-    if not isinstance(mod_id, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", mod_id):
-        raise ModError("%s has invalid mod id %r" % (path, mod_id))
+    check_mod_id(mod_id, path)
     for key in ("dependencies", "conflicts"):
         if not isinstance(raw[key], list) or not all(isinstance(item, str) for item in raw[key]):
             raise ModError("%s field %s must be a list of mod ids" % (path, key))
@@ -52,6 +51,8 @@ def get_ordered_mods(mods_dir: str) -> List[ModManifest]:
             raise ModError("mod %s conflicts with installed mods: %s" %
                            (manifest.id, ", ".join(conflicts)))
 
+    check_declared_dependencies(manifests.values())
+
     ordered: List[ModManifest] = []
     visiting, visited = set(), set()
 
@@ -77,12 +78,6 @@ def _json_files(directory: str) -> Iterable[str]:
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".json"):
                 yield os.path.join(directory, filename)
-
-
-def _check_new_id(manifest: ModManifest, item_id: str, override: bool, path: str) -> None:
-    if not override and not item_id.startswith(manifest.id + "_"):
-        raise ModError("%s introduces un-prefixed id %r; expected %s_* or override=true" %
-                       (path, item_id, manifest.id))
 
 
 def _node_defaults(node: Dict[str, Any]) -> Dict[str, Any]:
@@ -131,7 +126,7 @@ def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest]) -
                     _remove(nodes, claims, TECH, node_id, manifest, by_id, path)
                     continue
                 override = node.get("override") is True or "replaces" in node
-                _check_new_id(manifest, node_id, override, path)
+                check_new_id(manifest, node_id, override, path)
                 if override:
                     check_not_removed(claims, TECH, node_id, manifest, by_id)
                 if override and node_id not in nodes:
@@ -175,7 +170,7 @@ def load_mod_production(base: Dict[str, Any], manifests: Iterable[ModManifest]) 
                     _remove(merged, claims, RECIPE, entry_id, manifest, by_id, path)
                     continue
                 override = entry.get("override") is True
-                _check_new_id(manifest, entry_id, override, path)
+                check_new_id(manifest, entry_id, override, path)
                 if override:
                     check_not_removed(claims, RECIPE, entry_id, manifest, by_id)
                 if override and entry_id not in merged:

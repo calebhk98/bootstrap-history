@@ -1,6 +1,6 @@
 [
   {
-    "id": "solar_future_silicon_cell",
+    "id": "sample_solar_future_v9x3:silicon_cell",
     "name": "Silicon photovoltaic cell",
     "cat": "power_station",
     "pre": [
@@ -29,11 +29,11 @@
     ]
   },
   {
-    "id": "solar_future_panel_array",
+    "id": "sample_solar_future_v9x3:panel_array",
     "name": "Modular solar panel array",
     "cat": "power_station",
     "pre": [
-      "solar_future_silicon_cell",
+      "sample_solar_future_v9x3:silicon_cell",
       "power_grid"
     ],
     "note": "Wire photovoltaic cells into maintainable grid-connected arrays.",
@@ -63,11 +63,11 @@
     }
   },
   {
-    "id": "solar_future_all_solar_goal",
+    "id": "sample_solar_future_v9x3:all_solar_goal",
     "name": "An all-solar electricity supply",
     "cat": "power_station",
     "pre": [
-      "solar_future_panel_array"
+      "sample_solar_future_v9x3:panel_array"
     ],
     "note": "A measured goal reached when essentially all available electrical generation is solar.",
     "ph": 0,

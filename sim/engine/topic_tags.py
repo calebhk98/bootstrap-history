@@ -1,6 +1,6 @@
 """Topic tags: broad groupings of node categories, from data/world/topic_tags.json and mods.
 
-A mod adds a tag (id prefixed with the mod id) or extends an existing tag's
+A mod adds a tag (id namespaced as `<mod_id>:<name>`) or extends an existing tag's
 categories and words. Merging is additive.
 """
 
@@ -9,6 +9,7 @@ import os
 from typing import Dict, Optional
 
 from .mods import ModError, get_ordered_mods
+from .mods_ids import check_new_id
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _mods_dir = os.path.join(_ROOT, "mods")
@@ -32,8 +33,8 @@ def load_topic_tags(root: str, mods_dir: Optional[str] = None) -> Dict[str, Dict
             if not isinstance(spec, dict):
                 raise ModError("%s: tag %r must be an object with cats and words" % (path, tag))
             if tag not in merged:
-                if manifest and not tag.startswith(manifest.id + "_"):
-                    raise ModError("%s introduces un-prefixed tag id %r" % (path, tag))
+                if manifest:
+                    check_new_id(manifest, tag, False, path)
                 merged[tag] = {"cats": [], "words": []}
             for key in ("cats", "words"):
                 for item in spec.get(key) or ():

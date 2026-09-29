@@ -14,7 +14,7 @@ class GoalOverrideTests(ModTestBase):
         return {goal["node"]: goal for goal in tree["meta"]["goals"]}
 
     def test_override_changes_only_named_fields(self):
-        self.add_mod("acme", goals=[{"node": "c", "override": True, "name": "Renamed"}])
+        self.add_mod("test_acme_k3f9", goals=[{"node": "c", "override": True, "name": "Renamed"}])
         goals = self.goals()
         self.assertEqual("Renamed", goals["c"]["name"])
         self.assertEqual("A", goals["a"]["name"])
@@ -23,42 +23,42 @@ class GoalOverrideTests(ModTestBase):
     def test_nested_null_deletes_a_key(self):
         base = copy.deepcopy(BASE_TREE)
         base["meta"]["goals"][0]["extra"] = {"keep": 1, "drop": 2}
-        self.add_mod("acme", goals=[{"node": "c", "override": True, "extra": {"drop": None}}])
+        self.add_mod("test_acme_k3f9", goals=[{"node": "c", "override": True, "extra": {"drop": None}}])
         goal = {g["node"]: g for g in load_mod_tree(base, self.manifests())["meta"]["goals"]}["c"]
         self.assertEqual({"keep": 1}, goal["extra"])
 
     def test_override_of_missing_goal_is_an_error(self):
-        self.add_mod("acme", goals=[{"node": "d", "override": True, "name": "X"}])
+        self.add_mod("test_acme_k3f9", goals=[{"node": "d", "override": True, "name": "X"}])
         with self.assertRaises(ModError) as caught:
             self.goals()
         self.assertIn("d", str(caught.exception))
 
     def test_unrelated_mods_on_same_field_name_both(self):
-        for mod_id in ("acme", "zeta"):
+        for mod_id in ("test_acme_k3f9", "test_zeta_k3f9"):
             self.add_mod(mod_id, goals=[{"node": "c", "override": True, "name": mod_id}])
         with self.assertRaises(ModError) as caught:
             self.goals()
-        for word in ("acme", "zeta", "name", "c"):
+        for word in ("test_acme_k3f9", "test_zeta_k3f9", "name", "c"):
             self.assertIn(word, str(caught.exception))
 
     def test_different_fields_merge(self):
-        self.add_mod("acme", goals=[{"node": "c", "override": True, "name": "N"}])
-        self.add_mod("zeta", goals=[{"node": "c", "override": True, "blurb": "B"}])
+        self.add_mod("test_acme_k3f9", goals=[{"node": "c", "override": True, "name": "N"}])
+        self.add_mod("test_zeta_k3f9", goals=[{"node": "c", "override": True, "blurb": "B"}])
         goal = self.goals()["c"]
         self.assertEqual(("N", "B"), (goal["name"], goal["blurb"]))
 
     def test_dependent_mod_wins(self):
-        self.add_mod("acme", goals=[{"node": "c", "override": True, "name": "one"}])
-        self.add_mod("zeta", dependencies=["acme"],
+        self.add_mod("test_acme_k3f9", goals=[{"node": "c", "override": True, "name": "one"}])
+        self.add_mod("test_zeta_k3f9", dependencies=["test_acme_k3f9"],
                      goals=[{"node": "c", "override": True, "name": "two"}])
         self.assertEqual("two", self.goals()["c"]["name"])
 
     def test_override_of_goal_removed_by_unrelated_mod_names_both(self):
-        self.add_mod("acme", goals=[{"node": "c", "remove": True}])
-        self.add_mod("zeta", goals=[{"node": "c", "override": True, "name": "X"}])
+        self.add_mod("test_acme_k3f9", goals=[{"node": "c", "remove": True}])
+        self.add_mod("test_zeta_k3f9", goals=[{"node": "c", "override": True, "name": "X"}])
         with self.assertRaises(ModError) as caught:
             self.goals()
-        for word in ("acme", "zeta"):
+        for word in ("test_acme_k3f9", "test_zeta_k3f9"):
             self.assertIn(word, str(caught.exception))
 
 
@@ -79,43 +79,43 @@ class TradeOverrideTests(ModTestBase):
         return load_trade_registry(str(self.root), production, str(self.mods_dir))
 
     def test_override_changes_only_named_fields(self):
-        self.add_mod("acme", trades={"smith": {"override": True, "note": "new"}})
+        self.add_mod("test_acme_k3f9", trades={"smith": {"override": True, "note": "new"}})
         smith = self.registry()["smith"]
         self.assertEqual(("new", "craft", "apprentice"),
                          (smith.note, smith.family, smith.training))
 
     def test_override_of_missing_trade_is_an_error(self):
-        self.add_mod("acme", trades={"baker": {"override": True, "note": "x"}})
+        self.add_mod("test_acme_k3f9", trades={"baker": {"override": True, "note": "x"}})
         with self.assertRaises(ModError) as caught:
             self.registry()
         self.assertIn("baker", str(caught.exception))
 
     def test_unrelated_mods_on_same_field_name_both(self):
-        for mod_id in ("acme", "zeta"):
+        for mod_id in ("test_acme_k3f9", "test_zeta_k3f9"):
             self.add_mod(mod_id, trades={"smith": {"override": True, "note": mod_id}})
         with self.assertRaises(ModError) as caught:
             self.registry()
-        for word in ("acme", "zeta", "note", "smith"):
+        for word in ("test_acme_k3f9", "test_zeta_k3f9", "note", "smith"):
             self.assertIn(word, str(caught.exception))
 
     def test_different_fields_merge(self):
-        self.add_mod("acme", trades={"smith": {"override": True, "note": "n"}})
-        self.add_mod("zeta", trades={"smith": {"override": True, "family": "scholar"}})
+        self.add_mod("test_acme_k3f9", trades={"smith": {"override": True, "note": "n"}})
+        self.add_mod("test_zeta_k3f9", trades={"smith": {"override": True, "family": "scholar"}})
         smith = self.registry()["smith"]
         self.assertEqual(("n", "scholar"), (smith.note, smith.family))
 
     def test_dependent_mod_wins(self):
-        self.add_mod("acme", trades={"smith": {"override": True, "note": "one"}})
-        self.add_mod("zeta", dependencies=["acme"],
+        self.add_mod("test_acme_k3f9", trades={"smith": {"override": True, "note": "one"}})
+        self.add_mod("test_zeta_k3f9", dependencies=["test_acme_k3f9"],
                      trades={"smith": {"override": True, "note": "two"}})
         self.assertEqual("two", self.registry()["smith"].note)
 
     def test_override_of_trade_removed_by_unrelated_mod_names_both(self):
-        self.add_mod("acme", trades={"scribe": {"remove": True}})
-        self.add_mod("zeta", trades={"scribe": {"override": True, "note": "x"}})
+        self.add_mod("test_acme_k3f9", trades={"scribe": {"remove": True}})
+        self.add_mod("test_zeta_k3f9", trades={"scribe": {"override": True, "note": "x"}})
         with self.assertRaises(ModError) as caught:
             self.registry()
-        for word in ("acme", "zeta"):
+        for word in ("test_acme_k3f9", "test_zeta_k3f9"):
             self.assertIn(word, str(caught.exception))
 
 
