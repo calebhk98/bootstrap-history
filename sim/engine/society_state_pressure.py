@@ -115,12 +115,17 @@ ALARM_IDENTITY_COVER_MULTIPLIER = declare(
 
 
 class StatePressureMixin:
-    def state_interest(self, node_record):
+    def state_trait_weights(self):
+        """What the state cares about, per trait, for this civilisation."""
         weights = self.value_weights
         state_weights = dict(self.STATE_WEIGHTS)
         state_weights.update({"military": weights["w_military"], "labour_saving": weights["w_labour_saving"],
                   "information": weights["w_information"], "commerce": weights["w_commerce"],
                   "religious_adjacent": STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT * weights["w_religious_rigidity"]})
+        return state_weights
+
+    def state_interest(self, node_record):
+        state_weights = self.state_trait_weights()
         return sum(state_weights.get(trait, 0.0) for trait in node_record.get("traits", []))
 
     def alarm_of(self, node_record):

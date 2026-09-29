@@ -20,6 +20,8 @@ from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
 					 Optional, Set, Tuple, TypedDict)
 
 from ..economy import _InvalidatingSet, _InvalidatingDict
+from .base import Actor
+from .policy import IdlePolicy
 from sim.engine.state import (
 	ActiveProjectState,
 	SimulationState,
@@ -206,7 +208,7 @@ _LAZY_FIELDS: Set[str] = {
 }
 
 
-class Household:
+class Household(Actor):
 	"""The founder's household: money, staff, knowledge, plant and standing.
 
 	In the live state architecture, Household delegates all persistent state
@@ -223,6 +225,8 @@ class Household:
 		state: Optional[SimulationState] = None,
 		sim: Optional[Any] = None,
 	) -> None:
+		# The founder's choices arrive as commands, so the household idles.
+		Actor.__init__(self, IdlePolicy())
 		self._sim = sim
 		if state is not None:
 			self._state = state
@@ -293,6 +297,35 @@ class Household:
 		self._stock_throttle_sig: Any = None
 		self._last_buy_refusal: Any = None
 		self._said_stack_caution: Any = None
+
+	kind = "household"
+
+	@property
+	def money(self) -> float:
+		return self.capital
+
+	@money.setter
+	def money(self, value: float) -> None:
+		self.capital = value
+
+	@property
+	def workforce(self) -> Any:
+		return self.employees
+
+	@property
+	def knowledge(self) -> Any:
+		return self.done
+
+	@property
+	def concerns(self) -> Any:
+		return self.operating
+
+	@property
+	def works(self) -> Any:
+		return self.active
+
+	def imitation_worth(self, node_id: str, world: Any) -> float:
+		return 0.0
 
 	@property
 	def capital(self) -> float:

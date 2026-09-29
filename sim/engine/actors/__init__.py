@@ -1,15 +1,18 @@
-"""Economic actors: things that can own money, knowledge, staff and plant.
+"""Economic actors: things that own money, staff and know-how, and decide.
 
-Today there is exactly one, `Household` - the founder and their family, as an
-economic actor distinct from the world they arrived in. It exists as its own
-package (rather than one more class tacked onto `sim/engine/`) because the
-whole point of pulling it out of `Sim` is that a government, a firm or a
-second household should be able to import the same class later without
-importing the simulation engine along with it. See
-`docs/architecture/HOUSEHOLD_EXTRACTION.md` for why this move happened and
-`docs/architecture/SIM_STATE_INVENTORY.md` for exactly which fields it holds
-and which stayed on `Sim`.
+`Actor` is the shared base. `Household` is the founder's, `Government` a
+country's state, `Firm` an independent business. Each decides through a
+`Policy`, so a player, an AI or a mod can drive any of them. Design:
+`docs/architecture/ACTORS.md`.
 """
+from .base import Actor, RecordedActor
+from .firm import Firm
+from .government import Government
 from .household import Household
+from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy, ValuePolicy, register_policy
+from .registry import ActorRegistry
+from .world import SimWorld
 
-__all__ = ["Household"]
+__all__ = ["Actor", "RecordedActor", "Household", "Firm", "Government",
+           "Policy", "ValuePolicy", "CallbackPolicy", "IdlePolicy", "Option",
+           "Decision", "register_policy", "ActorRegistry", "SimWorld"]
