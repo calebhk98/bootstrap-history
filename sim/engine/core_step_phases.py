@@ -434,8 +434,7 @@ class StepPhasesMixin:
                         # never built and `mothball` says there is nothing
                         # to shut. If that node gates a whole branch,
                         # `available` reads "0 startable now" indefinitely.
-                        self.state.projects.operating.discard(node_id)
-                        self.state.projects.mothballed.add(node_id)   # you can buy it back
+                        self.close_work(node_id, self.CLOSED_LOSS_MAKING)
                         shed.append(node_id)
                     if shed:
                         # NAME THEM, for the same reason as shed_loss_makers and
