@@ -28,23 +28,75 @@ MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
         "number for every civilisation.")
 
 
+def mass_in_kg(material, quantity):
+    """Quantity as kilograms, read from the material's unit suffix."""
+    # TEMPORARY HEURISTIC: only the _g suffix is converted; other units count as kg.
+    return quantity / 1000.0 if material.endswith("_g") else quantity
+
+
 def allocate_joint_cost(outputs, current_prices, total_cost,
-                        anchor_price_by_material=None):
-    """{material: price per unit} splitting `total_cost` over `outputs`."""
+                        anchor_price_by_material=None, input_cost=0.0):
+    """{material: price per unit} splitting `total_cost` over `outputs`.
+
+    `input_cost` (the batch's material inputs) sets a floor: no output is
+    valued below its share of the input mass, since its atoms came from them.
+    """
     anchors = anchor_price_by_material or {}
     anchored = {name for name in outputs if name in anchors}
     if not anchored:
-        return _split_by_value(outputs, current_prices, total_cost)
-    if len(anchored) == len(outputs):
-        reference_prices = anchors
+        prices = _split_by_value(outputs, current_prices, total_cost)
     else:
-        # Standalone unit cost of the batch, in place of a solved price.
-        # TEMPORARY HEURISTIC: mixes kg and g outputs by raw quantity.
-        standalone_unit_cost = total_cost / sum(outputs.values())
-        reference_prices = {
-            name: anchors[name] if name in anchored else standalone_unit_cost
-            for name in outputs}
-    return _split_by_value(outputs, reference_prices, total_cost)
+        if len(anchored) == len(outputs):
+            reference_prices = anchors
+        else:
+            # Standalone unit cost of the batch, in place of a solved price.
+            # TEMPORARY HEURISTIC: mixes kg and g outputs by raw quantity.
+            standalone_unit_cost = total_cost / sum(outputs.values())
+            reference_prices = {
+                name: anchors[name] if name in anchored else standalone_unit_cost
+                for name in outputs}
+        prices = _split_by_value(outputs, reference_prices, total_cost)
+    return _apply_input_floor(outputs, prices, total_cost, input_cost)
+
+
+def _apply_input_floor(outputs, prices, total_cost, input_cost):
+    if input_cost <= 0 or len(outputs) < 2:
+        return prices
+    mass = {name: mass_in_kg(name, quantity) for name, quantity in outputs.items()}
+    total_mass = sum(mass.values())
+    if total_mass <= 0:
+        return prices
+    floor = {name: min(input_cost, total_cost) * mass[name] / total_mass for name in outputs}
+    value = {name: prices[name] * quantity for name, quantity in outputs.items()}
+    # Outputs under their floor are lifted to it; the deficit comes out of
+    # the surplus above floor of the rest, proportionally.
+    for _round in range(len(outputs)):
+        short = {name for name in outputs if value[name] < floor[name] * (1 - 1e-12)}
+        if not short:
+            break
+        deficit = sum(floor[name] - value[name] for name in short)
+        surplus = {name: value[name] - floor[name] for name in outputs if name not in short}
+        total_surplus = sum(surplus.values())
+        if total_surplus <= 0:
+            break
+        for name in short:
+            value[name] = floor[name]
+        for name, extra in surplus.items():
+            value[name] -= deficit * extra / total_surplus
+    return {name: value[name] / quantity for name, quantity in outputs.items()}
+
+
+def cap_anchors(anchor_price_by_material, direct_price_by_material):
+    """Anchors, each held at or below the cheapest sole-output route's price.
+
+    A joint recipe cannot value a byproduct above what making it directly
+    costs. Sole-output routes never depend on an anchor, so the cap cannot
+    feed back into the price it is capped by.
+    """
+    if anchor_price_by_material is None:
+        return None
+    return {name: min(price, direct_price_by_material.get(name, price))
+            for name, price in anchor_price_by_material.items()}
 
 
 def _split_by_value(outputs, reference_prices, total_cost):
