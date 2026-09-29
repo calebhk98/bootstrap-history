@@ -353,7 +353,7 @@ def load(use_solved_prices: bool = False,
     manifests = get_ordered_mods(MODDIR)
     check_all_civilizations(CIVDIR, manifests)
     with open(TREE) as source:
-        tree = load_mod_tree(json.load(source), manifests)
+        tree = load_mod_tree(json.load(source), manifests, copy_base=False)
     with open(PRICES) as source:
         prices = json.load(source)
     nodes = {node["id"]: node for node in tree["nodes"]}

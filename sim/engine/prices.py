@@ -151,6 +151,7 @@ correctness fix, not a widening of the wiring's scope: no new material is
 priced, no new switch is flipped, `use_solved_prices` is still `False` by
 default in `sim/engine/data.py`.
 """
+import json
 import os
 import sys
 from typing import Any, Dict, FrozenSet, Iterable, Optional, Set, Tuple
@@ -197,6 +198,7 @@ from sim import joint_allocation, solve_prices              # noqa: E402
 from sim.validate_production import load_production             # noqa: E402
 from sim.world import wages                                     # noqa: E402
 from sim.engine import wage_provider                            # noqa: E402
+from sim.engine import solve_cache                              # noqa: E402
 
 
 class SolvedPrices(object):
@@ -324,43 +326,10 @@ def hours_to_denarii(price_in_labour_hours: float, prices_json: Dict[str, Any]) 
     return price_in_labour_hours * denarii_per_labour_hour(prices_json)
 
 
-def solved_prices(held_technology_ids: Iterable[str],
-                  prices_json: Dict[str, Any],
-                  production_entries: Optional[ProductionEntries] = None,
-                  civilization_id: Optional[str] = None) -> SolvedPrices:
-    """A `SolvedPrices` for this held-technology set, solving on a cache
-    miss and returning the cached vector on a hit. See CACHE KEY in the
-    module docstring: the cache is keyed on the intersection of
-    `held_technology_ids` with `all_gate_nodes`, together with
-    `civilization_id`, not on the full held-technology set, which is what
-    keeps a whole game's worth of calls to a bound few dozen solves.
-
-    `civilization_id` decides whose territory `land_rent_hours_per_iugerum`
-    prices (see RENT NEEDS A CIVILIZATION in the module docstring); it
-    defaults to `None`, which resolves to `solve_prices.
-    DEFAULT_LAND_CIVILIZATION` (Rome), matching what the CLI does when
-    `--civ` is omitted. Passing `held_technology_ids` from a civilization's
-    `starting_techs` without ALSO passing that civilization's own id here
-    would silently price its land as Rome's - the parameter is separate
-    from `held_technology_ids` on purpose, so a caller cannot get this
-    right by accident and cannot get it wrong without a value showing up
-    somewhere to say so.
-    """
-    if production_entries is None:
-        production_entries = _default_production_entries()
-    civilization_id = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
-
-    gate_nodes_held = frozenset(all_gate_nodes(production_entries)
-                                & set(held_technology_ids))
-    document_ratios = solve_prices.wage_ratios_by_trade(prices_json)
-    # Wages move with the labour market, so the cache is keyed on them too.
-    cache_key = (gate_nodes_held, civilization_id,
-                 tuple(sorted(document_ratios.items())))
-
-    cached = _SOLVE_CACHE.get(cache_key)
-    if cached is not None and cached[0] is production_entries:
-        return cached[1]
-
+def _solve_to_json(production_entries: ProductionEntries,
+                   gate_nodes_held: FrozenSet[str], civilization_id: str,
+                   document_ratios: Dict[str, float]) -> Dict[str, Any]:
+    """Run the solver for one held-gate set; the result is JSON-able."""
     # `gate_nodes_held` is exactly the right thing to hand
     # `techniques_available_to` as `reached_nodes`: every `requires_node` it
     # will ever check membership for is, by `all_gate_nodes`'s own
@@ -398,12 +367,73 @@ def solved_prices(held_technology_ids: Iterable[str],
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
         demand_anchors=joint_allocation.build_demand_anchors(civilization_id))
 
+    return {
+        "prices_in_labour_hours": prices_in_labour_hours,
+        "resolvable_materials": sorted(resolvable_materials),
+        "chosen_recipe_by_material": chosen_recipe_by_material,
+        "converged": residual < solve_prices.CONVERGENCE_TOLERANCE,
+        "iterations_run": iterations_run,
+    }
+
+
+def solved_prices(held_technology_ids: Iterable[str],
+                  prices_json: Dict[str, Any],
+                  production_entries: Optional[ProductionEntries] = None,
+                  civilization_id: Optional[str] = None) -> SolvedPrices:
+    """A `SolvedPrices` for this held-technology set, solving on a cache
+    miss and returning the cached vector on a hit. See CACHE KEY in the
+    module docstring: the cache is keyed on the intersection of
+    `held_technology_ids` with `all_gate_nodes`, together with
+    `civilization_id`, not on the full held-technology set, which is what
+    keeps a whole game's worth of calls to a bound few dozen solves.
+
+    `civilization_id` decides whose territory `land_rent_hours_per_iugerum`
+    prices (see RENT NEEDS A CIVILIZATION in the module docstring); it
+    defaults to `None`, which resolves to `solve_prices.
+    DEFAULT_LAND_CIVILIZATION` (Rome), matching what the CLI does when
+    `--civ` is omitted. Passing `held_technology_ids` from a civilization's
+    `starting_techs` without ALSO passing that civilization's own id here
+    would silently price its land as Rome's - the parameter is separate
+    from `held_technology_ids` on purpose, so a caller cannot get this
+    right by accident and cannot get it wrong without a value showing up
+    somewhere to say so.
+    """
+    if production_entries is None:
+        production_entries = _default_production_entries()
+    civilization_id = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
+
+    gate_nodes_held = frozenset(all_gate_nodes(production_entries)
+                                & set(held_technology_ids))
+    document_ratios = solve_prices.wage_ratios_by_trade(prices_json)
+    # Wages move with the labour market, so the cache is keyed on them too.
+    cache_key = (gate_nodes_held, civilization_id,
+                 tuple(sorted(document_ratios.items())))
+
+    cached = _SOLVE_CACHE.get(cache_key)
+    if cached is not None and cached[0] is production_entries:
+        return cached[1]
+
+    def compute() -> Dict[str, Any]:
+        return _solve_to_json(production_entries, gate_nodes_held,
+                              civilization_id, document_ratios)
+    if production_entries is _DEFAULT_PRODUCTION_ENTRIES:
+        # Only the committed catalogue is persisted; synthetic catalogues are not.
+        try:
+            key = solve_cache.solve_key({
+                "production": production_entries, "gates": sorted(gate_nodes_held),
+                "civilization": civilization_id, "wage_ratios": document_ratios})
+        except OSError:
+            key = None  # an input file cannot be read: solve without the cache
+        stored = (solve_cache.cached_json(key, compute) if key
+                  else json.loads(json.dumps(compute())))
+    else:
+        stored = json.loads(json.dumps(compute()))
     result = SolvedPrices(
-        prices_in_labour_hours=prices_in_labour_hours,
-        resolvable_materials=resolvable_materials,
-        chosen_recipe_by_material=chosen_recipe_by_material,
-        converged=residual < solve_prices.CONVERGENCE_TOLERANCE,
-        iterations_run=iterations_run,
+        prices_in_labour_hours=stored["prices_in_labour_hours"],
+        resolvable_materials=set(stored["resolvable_materials"]),
+        chosen_recipe_by_material=stored["chosen_recipe_by_material"],
+        converged=stored["converged"],
+        iterations_run=stored["iterations_run"],
         gate_nodes_held=gate_nodes_held,
         civilization_id=civilization_id)
     _SOLVE_CACHE[cache_key] = (production_entries, result)

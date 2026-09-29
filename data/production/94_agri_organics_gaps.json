@@ -179,10 +179,10 @@
    "conf": "C",
    "requires_node": null
   },
-  "basic_slag": {
+  "basic_slag_kg": {
    "outputs": {
     "steel_plate_kg": 4500.0,
-    "basic_slag": 1000.0
+    "basic_slag_kg": 1000.0
    },
    "inputs": {
     "pig_iron_kg": 5000.0,
@@ -196,9 +196,9 @@
    "conf": "C",
    "requires_node": "met_basic_lining_phosphorus"
   },
-  "mat_tar": {
+  "wood_tar_kg": {
    "outputs": {
-    "mat_tar": 1000.0,
+    "wood_tar_kg": 1000.0,
     "charcoal_kg": 2500.0
    },
    "inputs": {

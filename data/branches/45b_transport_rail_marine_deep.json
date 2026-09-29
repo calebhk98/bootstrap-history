@@ -1982,7 +1982,7 @@
   },
   "mat": {
    "cordage_kg": 100,
-   "mat_tar": 80
+   "wood_tar_kg": 80
   },
   "build_yrs": 0.8,
   "adopt_yrs": 1,

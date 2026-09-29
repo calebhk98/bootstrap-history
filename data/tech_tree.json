@@ -603,7 +603,7 @@
         "chemist": 150.0
       },
       "mat": {
-        "basic_slag": 800.0
+        "basic_slag_kg": 800.0
       },
       "name": "Basic slag",
       "note": "A recycling of blast-furnace slag waste that becomes a double amendment of phosphate and lime simultaneously",
@@ -110917,7 +110917,7 @@
       },
       "mat": {
         "cordage_kg": 100.0,
-        "mat_tar": 80.0
+        "wood_tar_kg": 80.0
       },
       "name": "Caulking with oakum",
       "note": "Oakum is unraveled rope fiber. Sailors drive it into seams with mallets and chisels, then seal over with tar. Leaks can be caulked at sea. The kernel is that the seam must be sealed from both sides, or water seeps past the caulking; hulls have internal seams that must also be caulked after the hull is built.",
