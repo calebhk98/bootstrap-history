@@ -1,6 +1,6 @@
 # `rush` needs fiscal controls and strategy modes
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_rush_fiscal_controls.py
 
 `rush limit:10` respected a count limit but nearly emptied the treasury because a "high leverage" item included an ~81k industrial-charcoal project. The command correctly labels itself approximate, but count is not the relevant risk metric.
 

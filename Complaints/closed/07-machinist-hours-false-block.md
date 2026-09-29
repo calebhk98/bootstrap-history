@@ -1,6 +1,6 @@
 # Trade-hours status falsely reports machinists as booked
 
-**Status:** partly - own audit line says partly; `reports/RESOLUTION_AUDIT_01_26.md` says fixed, re-verify
+**Status:** closed - pinned by sim/tests/test_round2_policy_hazards_options.py
 
 **Type:** Status/constraint bug  
 **Priority:** High

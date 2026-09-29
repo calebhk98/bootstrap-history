@@ -1,6 +1,6 @@
 # The mod system adds content but cannot change rules or remove content
 
-**Status:** open
+**Status:** partly - removal feature now works (pinned by test_mod_removal_and_civs), but defects A and B remain (override field reset and silent last-wins)
 
 **Source:** playtester report that mods are "heavily restricted": no runnable
 code, no magic or elves, cannot change or hide Rome, cannot really change the
