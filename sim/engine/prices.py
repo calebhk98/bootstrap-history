@@ -85,16 +85,14 @@ before trusting it. A caller that hands in a DIFFERENT `production_entries`
 object (a test building synthetic data, mainly) can never collide with a
 real one that happens to reuse the same gate-node ids.
 
-LABOUR-HOURS TO DENARII, AND WHY THIS DIRECTION IS THE RIGHT ONE.
-`sim/solve_prices.py` prices everything in labour-hours - one hour of
-`labourer`, its numeraire, by construction equals 1.0 - because that is a
-number a recipe graph can actually produce: relative amounts of unskilled
-effort. Every consumer of `goods` in `sim/engine/economy.py` is in denarii. A
-solved number in hours becomes a denarii figure by multiplying by the labourer
-wage rate (denarii per hour); dividing, or using another trade's rate, would
-silently rescale every solved price.
-`denarii_per_labour_hour` below is the one place that rate is read, so there
-is exactly one line to check rather than one per caller.
+LABOUR-HOURS TO DENARII. `sim/solve_prices.py` prices everything in
+labour-hours - one hour of `labourer`, its numeraire, equals 1.0 - because a
+recipe graph can produce relative amounts of unskilled effort. Money enters
+only here, at the edge: the wage document carries `money_per_labour_hour`,
+which `sim.engine.wage_provider.build_schedule` derives from the
+civilisation's coin (the coin material's solved labour hours per kg times the
+coin's mass), so a price in money is its labour hours times that rate.
+`denarii_per_labour_hour` is the one place the rate is read.
 
 THIS MODULE DOES NOT DECIDE WHICH MATERIALS GET REPLACED - THAT SWITCH
 LIVES IN `data.py`, AND IS OFF BY DEFAULT. `priced_goods_table` overlays a
@@ -316,18 +314,13 @@ def solver_trade_registry(production_entries: ProductionEntries) -> Dict[str, An
 
 
 def denarii_per_labour_hour(prices_json: Dict[str, Any]) -> float:
-    """Money one hour of unskilled (`labourer`) labour costs in the wage
-    document: the labour-market wage provider's own labourer wage, the one
-    number LABOUR-HOURS TO DENARII in the module docstring needs."""
-    return (prices_json["wage_rates_denarii_per_hour"]
-            [solve_prices.NUMERAIRE_TRADE]["rate"])
+    """Money one labour hour is worth: the wage document's coin-anchored
+    conversion (see LABOUR-HOURS TO DENARII in the module docstring)."""
+    return prices_json["money_per_labour_hour"]
 
 
 def hours_to_denarii(price_in_labour_hours: float, prices_json: Dict[str, Any]) -> float:
-    """`price_hours * labourer_denarii_per_hour` - see LABOUR-HOURS TO
-    DENARII in the module docstring for why multiplication, not division, is
-    the correct direction and why the labourer rate specifically is the
-    right rate to multiply by."""
+    """Labour hours times the money one labour hour is worth."""
     return price_in_labour_hours * denarii_per_labour_hour(prices_json)
 
 

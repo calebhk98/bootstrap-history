@@ -15,7 +15,7 @@ household-room ceiling; this file only prices the trade once a person is
 in it.
 """
 from . import wage_provider
-from .data import FOOD_PRICE_PER_KG, TRADE_REGISTRY, WAGES
+from .data import TRADE_REGISTRY, WAGES
 from sim.constants import declare
 
 
@@ -285,8 +285,7 @@ class WagesMixin:
         cached = getattr(self, "_wage_schedule_cache", None)
         if cached is None or cached.tightness_factors is not factors:
             cached = self._wage_schedule_cache = wage_provider.build_schedule(
-                TRADE_REGISTRY, FOOD_PRICE_PER_KG, self.civ["starting_interest_rate"],
-                tightness_factors=factors)
+                TRADE_REGISTRY, self.civ, tightness_factors=factors)
         return cached
 
     def wage_per_hour(self, trade):

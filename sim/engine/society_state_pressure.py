@@ -868,8 +868,8 @@ class StatePressureMixin:
     # not a quarter-million one - see the measured trajectories in this
     # section's own commit for where Rome and Han actually cross it.
     HOUSEHOLD_WEALTH_SATURATES_AT = declare(
-        "HOUSEHOLD_WEALTH_SATURATES_AT", 10000000.0, kind="temporary_heuristic",
-        unit="denarii", source=None,
+        "HOUSEHOLD_WEALTH_SATURATES_AT", 100800.0, kind="temporary_heuristic",
+        unit="labourer-years of the opening wage", source=None,
         confidence="D",
         why="Capital at which household_scale()'s wealth term saturates - "
             "ten times prominence_hazard's own 250,000-denarii 'visibly "
@@ -902,7 +902,7 @@ class StatePressureMixin:
         head_s = min(1.0, math.sqrt(max(0.0, head)
                                     / self.HOUSEHOLD_HEADCOUNT_SATURATES_AT))
         wealth_s = min(1.0, max(0.0, self.state.household.capital)
-                       / self.HOUSEHOLD_WEALTH_SATURATES_AT)
+                       / (self.HOUSEHOLD_WEALTH_SATURATES_AT * self.base_annual_wage("labourer")))
         danger = self.cfg["eminence_danger"]
         emin_s = min(1.0, max(0.0, self.state.household.eminence) / danger)
         return (self.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_s

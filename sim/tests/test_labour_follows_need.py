@@ -40,7 +40,7 @@ class HoursFollowNeedTests(unittest.TestCase):
         self.assertLess(gaps[-1], 0.05 * gaps[0])
 
     def test_wage_rises_then_eases_back_as_hours_answer(self):
-        schedule = wages.WageSchedule({"smith": 5.0, "potter": 5.0}, 1.0, 0.10)
+        schedule = wages.WageSchedule({"smith": 5.0, "potter": 5.0}, 1.0, 1.0, 0.10)
         hours = {FARM: 500.0, "smith": 50.0, "potter": 450.0}
         needs = _needs(300.0, 200.0)
         series = []

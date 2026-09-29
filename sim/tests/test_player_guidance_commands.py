@@ -267,9 +267,11 @@ check("...and with work in hand and money it says nothing is holding you up",
 check("...and names the cheapest thing you could actually begin",
       _rs[0].get("and_the_cheapest_thing_you_could_start_now") in NODES,
       _rs[0].get("and_the_cheapest_thing_you_could_start_now"))
-_rs2, _, _ = proto([{"cmd": "start", "id": "identity_cover"},
-                    {"cmd": "step", "years": 3},
-                    {"cmd": "stuck"}])
+_s_red = sim(capital=round(0.3 * sim().project_cost("identity_cover")))   # thin purse at any wage scale
+_s_red.start_project("identity_cover")
+for _ in range(3):
+    _s_red.step()
+_rs2 = [S._agent_dispatch(_s_red, NODES, {"cmd": "stuck"})]
 _held = _rs2[-1]["what_is_holding_you_up"]
 check("...and once you are committed and in the red it names both",
       not isinstance(_held, str)

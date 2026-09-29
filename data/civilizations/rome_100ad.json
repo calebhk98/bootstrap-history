@@ -16,6 +16,11 @@
     "structures": 0.75
   },
   "currency": "denarius",
+  "coin_standard": {
+    "material": "silver_kg",
+    "kg_per_unit": 0.0027,
+    "source": "Fine silver in one denarius: Trajan's reform, dated to AD 100 by Butcher and Ponting, lowered fineness to about 80% at about 3.2 g, so about 2.6 to 2.7 g of silver (The Metallurgy of Roman Silver Coinage, CUP 2014, ch. 15; and their paper 'The Reforms of Trajan and the End of the Pre-Neronian Denarius'). 100 AD sits at the reform boundary; the pre-reform denarius held about 2.9 g. Confidence medium-low on the post-reform fineness."
+  },
   "debt_bondage": false,
   "fire_quarter": "insula district, where the tenements stand six storeys in wood",
   "handicap_remedies": {

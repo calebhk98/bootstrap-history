@@ -42,8 +42,11 @@ def runtime_wages():
 
 
 def wage_document(wages):
-    """The wage-table shape the solver's wage-ratio helpers read."""
-    return {"wage_rates_denarii_per_hour": {trade: {"rate": rate} for trade, rate in wages.items()}}
+    """The wage-table shape the solver's wage-ratio helpers read, with the
+    default civilisation's coin-anchored money per labour hour."""
+    from sim.engine import data
+    return {"wage_rates_denarii_per_hour": {trade: {"rate": rate} for trade, rate in wages.items()},
+            "money_per_labour_hour": data.MONEY_PER_LABOUR_HOUR}
 
 
 def solved_material_prices(node_ids, wages):

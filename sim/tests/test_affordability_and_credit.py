@@ -79,7 +79,7 @@ check("...and says what its 'afford' figure means",
       "credit" in str(_q[0].get("afford_means")), _q[0].get("afford_means"))
 _hint = str((_q[1].get("to_see_more") or {}).get("what you can pay for", ""))
 check("the AFFORD hint uses the rule `start` uses, since it is about starting",
-      str(int(sim(capital=400.0).spending_power("start"))).replace(",", "")
+      str(int(sim().spending_power("start"))).replace(",", "")
       in _hint.replace(",", ""), _hint)
 
 # --- BREAK: the arrears banner quoted 46 a year against a ledger Net/yr of
@@ -580,7 +580,7 @@ check("a lender does not cut your line because you took a job this year",
 # denarii and about 800 founder-hours vanish, with scientific_method dying 115
 # denarii short of done and every hour already spent, and `stop` losing the
 # same thing so no branch saved it.
-s_ce = sim()
+s_ce = sim(capital=round(0.3 * sim().project_cost("identity_cover")))   # part-payable, whatever the wage scale
 s_ce.start_project("identity_cover")
 for _ in range(3):
     s_ce.step()

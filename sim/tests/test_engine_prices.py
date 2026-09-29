@@ -30,7 +30,7 @@ import unittest
 from sim.engine import data, prices as engine_prices
 
 
-def _prices_json(labourer_rate=2.0, smith_rate=4.0):
+def _prices_json(labourer_rate=2.0, smith_rate=4.0, money_per_labour_hour=None):
     """A minimal prices.json-shaped dict: just enough for
     wage_ratios_by_trade and denarii_per_labour_hour to read."""
     return {
@@ -38,6 +38,8 @@ def _prices_json(labourer_rate=2.0, smith_rate=4.0):
             "labourer": {"rate": labourer_rate},
             "smith": {"rate": smith_rate},
         },
+        "money_per_labour_hour": (labourer_rate if money_per_labour_hour is None
+                                  else money_per_labour_hour),
         "purchase_prices_denarii": {},
     }
 
@@ -133,28 +135,24 @@ class CacheKeyingTests(unittest.TestCase):
 
 
 class ConversionTests(unittest.TestCase):
-    """LABOUR-HOURS TO DENARII: multiply by the labourer rate, matching
-    the reverse of dividing by it."""
+    """LABOUR-HOURS TO DENARII: multiply by the document's coin-anchored
+    money per labour hour."""
 
-    def test_one_labour_hour_is_worth_the_labourer_rate_in_denarii(self):
-        prices_json = _prices_json(labourer_rate=3.5)
+    def test_one_labour_hour_is_worth_the_documents_money_per_hour(self):
+        prices_json = _prices_json(money_per_labour_hour=3.5)
         self.assertEqual(
             engine_prices.hours_to_denarii(1.0, prices_json), 3.5)
 
-    def test_round_trips_against_division_by_the_labourer_rate(self):
-        # hours = denarii / rate, so converting back must return the original.
-        prices_json = _prices_json(labourer_rate=2.5)
-        rate = prices_json["wage_rates_denarii_per_hour"]["labourer"]["rate"]
+    def test_round_trips_against_division_by_the_money_per_hour(self):
+        prices_json = _prices_json(money_per_labour_hour=2.5)
         denarii = 40.0
-        hours = denarii / rate
+        hours = denarii / 2.5
         self.assertAlmostEqual(
             engine_prices.hours_to_denarii(hours, prices_json), denarii)
 
-    def test_the_smith_rate_is_not_used_for_the_labourer_conversion(self):
-        # A wrong-rate bug (using whatever trade happened to be handy)
-        # would rescale every solved price silently - the exact mistake the
-        # module docstring calls out.
-        prices_json = _prices_json(labourer_rate=2.0, smith_rate=9.0)
+    def test_wage_rates_are_not_used_for_the_conversion(self):
+        prices_json = _prices_json(labourer_rate=7.0, smith_rate=9.0,
+                                   money_per_labour_hour=2.0)
         self.assertEqual(engine_prices.denarii_per_labour_hour(prices_json), 2.0)
 
 

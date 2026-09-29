@@ -21,6 +21,11 @@
     "transport": 2.2
   },
   "currency": "cacao bean and cotton cloth",
+  "coin_standard": {
+    "material": "cotton_fabric_kg",
+    "kg_per_unit": 0.4,
+    "source": "TEMPORARY HEURISTIC. The quachtli (cotton mantle) had no attested mass; the mass here is an unattested estimate. Attested relations: about 100 cacao beans per quachtli (65 to 100 for common grades, Florentine Codex), and about 20 quachtli a year's subsistence. Cotton fabric stands in as the material because cacao is not in the production catalogue; replace with cacao when it is. Confidence low."
+  },
   "debt_bondage": true,
   "fire_quarter": "reed and adobe quarter by the canal",
   "handicap_remedies": {

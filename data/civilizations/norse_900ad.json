@@ -21,6 +21,11 @@
     "structures": 1.7
   },
   "currency": "hacksilver by weight",
+  "coin_standard": {
+    "material": "silver_kg",
+    "kg_per_unit": 0.025,
+    "source": "Money was weighed silver (hacksilver, ingots, arm rings) valued by weight. The unit here is the eyrir (ounce) at about 25 g, a later-formalised unit, with reconstructions of 24 to 27 g (Kilger; Graham-Campbell). Confidence medium."
+  },
   "debt_bondage": true,
   "fire_quarter": "longhouses by the shore",
   "handicap_remedies": {

@@ -80,7 +80,7 @@ check("...and it took longer than its calendar floor, because it crawled",
 # abandoned enterprise" - so when the creditors were about to take everything,
 # stopping something yourself cost exactly as much as letting them, and `stop`
 # was never the right move. The site does not un-dig itself either way.
-s_sp = sim()
+s_sp = sim(capital=round(0.3 * sim().project_cost("identity_cover")))   # part-payable at any wage scale
 s_sp.start_project("identity_cover")
 for _ in range(2):
     s_sp.step()

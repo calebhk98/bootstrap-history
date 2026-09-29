@@ -16,6 +16,11 @@
     "textiles": 0.7
   },
   "currency": "sterling penny",
+  "coin_standard": {
+    "material": "silver_kg",
+    "kg_per_unit": 0.00135,
+    "source": "The sterling penny of Edward I: 22.5 troy grains (about 1.46 g) at 0.925 fineness (Spufford, Money and its Use in Medieval Europe, 1988). Confidence B."
+  },
   "debt_bondage": false,
   "fire_quarter": "thatched lanes behind the market",
   "handicap_remedies": {

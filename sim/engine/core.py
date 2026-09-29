@@ -3,7 +3,7 @@ import collections, math, os, random, sys
 
 from sim.constants import declare
 from sim.engine.state import SimulationState, ActiveProjectState
-from .data import (DEFAULTS, load_civ, load_geography, load_resources,
+from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
                    TECH_EFFECTS)
 
 from sim.world import demography
@@ -450,8 +450,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # method of it can be passed down right now. See Household.__init__'s
         # own docstring for why the callback travels this way instead of the
         # household reaching back up for it.
+        start_money = config["start_capital"]
+        if start_money is None:
+            start_money = kit_capital(config["start_kit"], self.civ)
         self.household = Household(
-            starting_capital=float(config["start_capital"]) * self.price_index,
+            starting_capital=float(start_money) * self.price_index,
             operating_changed=self._operating_changed,
             active_changed=self._active_changed,
             workforce_changed=self._workforce_changed,
