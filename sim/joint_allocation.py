@@ -35,11 +35,11 @@ def mass_in_kg(material, quantity):
 
 
 def allocate_joint_cost(outputs, current_prices, total_cost,
-                        anchor_price_by_material=None, input_cost=0.0):
+                        anchor_price_by_material=None):
     """{material: price per unit} splitting `total_cost` over `outputs`.
 
-    `input_cost` (the batch's material inputs) sets a floor: no output is
-    valued below its share of the input mass, since its atoms came from them.
+    Outputs only have to recover the batch together; a bulk waste may carry
+    far less than its mass share.
     """
     anchors = anchor_price_by_material or {}
     anchored = {name for name in outputs if name in anchors}
@@ -56,34 +56,7 @@ def allocate_joint_cost(outputs, current_prices, total_cost,
                 name: anchors[name] if name in anchored else standalone_unit_cost
                 for name in outputs}
         prices = _split_by_value(outputs, reference_prices, total_cost)
-    return _apply_input_floor(outputs, prices, total_cost, input_cost)
-
-
-def _apply_input_floor(outputs, prices, total_cost, input_cost):
-    if input_cost <= 0 or len(outputs) < 2:
-        return prices
-    mass = {name: mass_in_kg(name, quantity) for name, quantity in outputs.items()}
-    total_mass = sum(mass.values())
-    if total_mass <= 0:
-        return prices
-    floor = {name: min(input_cost, total_cost) * mass[name] / total_mass for name in outputs}
-    value = {name: prices[name] * quantity for name, quantity in outputs.items()}
-    # Outputs under their floor are lifted to it; the deficit comes out of
-    # the surplus above floor of the rest, proportionally.
-    for _round in range(len(outputs)):
-        short = {name for name in outputs if value[name] < floor[name] * (1 - 1e-12)}
-        if not short:
-            break
-        deficit = sum(floor[name] - value[name] for name in short)
-        surplus = {name: value[name] - floor[name] for name in outputs if name not in short}
-        total_surplus = sum(surplus.values())
-        if total_surplus <= 0:
-            break
-        for name in short:
-            value[name] = floor[name]
-        for name, extra in surplus.items():
-            value[name] -= deficit * extra / total_surplus
-    return {name: value[name] / quantity for name, quantity in outputs.items()}
+    return prices
 
 
 def cap_anchors(anchor_price_by_material, direct_price_by_material):
