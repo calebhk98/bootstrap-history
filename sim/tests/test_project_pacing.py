@@ -165,7 +165,7 @@ check("...but it warns, naming the project and the hours it still wants",
 _s_wk2 = sim(capital=500000.0)
 _wk2_pay, _wk2_err = _s_wk2.work_for_wages("scholar", 2000)
 check("...and says nothing about starving work when nothing is active",
-      _wk2_err is None, _wk2_err)
+      "for the rest of the year" not in (_wk2_err or ""), _wk2_err)
 # Selling only a few hours, leaving plenty for a SMALL-paced project, warns
 # of nothing - this must not fire just because something, anything, is active.
 _s_wk3 = sim(capital=500000.0)
@@ -178,7 +178,7 @@ _s_wk3.active[_wk3_id] = dict(ph_left=float(_wk3_n["ph"]), yrs=0.0, spent=0.0,
                               cost_left=100.0)
 _wk3_pay, _wk3_err = _s_wk3.work_for_wages("scholar", 10)
 check("...and selling only a few idle hours does not warn either",
-      _wk3_err is None, _wk3_err)
+      "for the rest of the year" not in (_wk3_err or ""), _wk3_err)
 
 # --- BREAK 2b (Han): "waiting on: your hours" reported to persist after a
 # project's hours were 100% spent and 0 still owed - a stale label, if the

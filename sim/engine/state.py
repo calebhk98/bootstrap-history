@@ -213,6 +213,7 @@ class HouseholdState:
 	granted_staff: Optional[Dict[str, float]] = None
 	hours_this_year: Optional[Dict[str, float]] = None
 	trade_schools: Optional[int] = None
+	labour_pressure_records: Dict[str, Any] = field(default_factory=dict)
 	worker_housing_places: Optional[int] = None
 	_said_deputies: int = 0
 	_said_near_limit: Optional[bool] = None
@@ -313,6 +314,7 @@ class EconomyState:
 	farm_hectares: Optional[float] = None
 	farm_stock_kg: float = 0.0
 	society_labour_hours: Dict[str, float] = field(default_factory=dict)
+	wage_tightness_factors: Dict[str, float] = field(default_factory=dict)
 	_dashboard_history: Optional[List[Any]] = None
 
 

@@ -1,6 +1,6 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
-from ..data import ANNUAL_WAGE, WAGES, trade_family
+from ..data import WAGES, trade_family
 
 from .state import _agent_state
 
@@ -731,7 +731,7 @@ def _agent_economy(sim, cmd=None):
         out["wages_by_trade"] = [
             {"trade": trade, "a_year_of_one": round(sim.annual_wage(trade), 0),
              "wage_foundation": {
-                 "base_for_skill_and_difficulty": ANNUAL_WAGE.get(trade, 375.0),
+                 "base_for_skill_and_difficulty": round(sim.base_annual_wage(trade), 2),
                  **{factor_key: round(value, 3) for factor_key, value in sim.wage_cost_factors(trade).items()},
                  "demographic_scarcity": round(sim.wage_index, 3),
                  "local_trade_scarcity": round(sim.labour_price_factor(trade), 3)}}

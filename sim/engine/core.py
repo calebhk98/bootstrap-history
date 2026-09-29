@@ -47,7 +47,7 @@ from .projects import ProjectsMixin
 from .society import SocietyMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
-from .data import trade_family, WAGES
+from .data import trade_family
 from .invariants import check_simulation_invariants
 from .actors import Household
 
@@ -276,7 +276,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._demography = demography
         self._tech_effects = TECH_EFFECTS
         self.step_context = StepContext(
-            trade_family=trade_family, wages=dict(WAGES),
+            trade_family=trade_family,
             invariant_checker=check_simulation_invariants)
         self.debug = __debug__ if debug is None else bool(debug)
         self.events = events
@@ -1597,6 +1597,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # so a stale or missing value right after a fresh `Sim()` (before
         # this method has run once) costs nothing correctness-sensitive.
         self._last_farm_year = farm_year
+        self.update_wages()
 
         # Same diagnostic-only status as `_last_farm_year` just above (not a
         # SAVE_FIELDS member, recomputed fresh every year) - kept so a test
@@ -2102,13 +2103,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "while serving out a debt-bondage term. Tuned to leave some "
             "hours for the founder's own affairs even in bondage; not "
             "measured.")
-    BONDAGE_LABOURER_WAGE_DEFAULT = declare(
-        "BONDAGE_LABOURER_WAGE_DEFAULT", 0.075, kind="temporary_heuristic",
-        unit="denarii/hour at price_index=1.0", source=None,
-        confidence="D",
-        why="Fallback labourer wage rate for computing bondage repayment "
-            "if WAGES has no 'labourer' entry - WAGES normally does carry "
-            "one, so this only matters as a defensive default.")
     BONDAGE_WAGE_MARKUP = declare(
         "BONDAGE_WAGE_MARKUP", 1.2, kind="temporary_heuristic",
         unit="dimensionless multiplier", source=None, confidence="D",

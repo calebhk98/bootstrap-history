@@ -5,10 +5,10 @@ import tempfile
 import unittest
 
 from sim.engine.catalog import (load_production_catalog, load_trade_registry,
-                                material_namespace, transitional_wage_rates,
+                                material_namespace,
                                 validate_mod_material_paths)
 from sim.engine.mods import get_ordered_mods, load_mod_tree
-from sim.engine import prices
+from sim.engine import prices, wage_provider
 from sim.validate_production import check
 from sim.world import demand, labour_market
 
@@ -93,17 +93,13 @@ class ModEconomicCatalogTests(unittest.TestCase):
         self.assertIn("acme_clockmaker", registry)
         self.assertTrue(registry["acme_clockmaker"].initially_absent)
         self.assertIn("established", registry["acme_clockmaker"].note)
-        self.assertNotIn("acme_clockmaker", {"labourer": 1.0})
-        rates = transitional_wage_rates(registry, {"labourer": 1.0})
-        self.assertGreater(rates["acme_clockmaker"], 0)
+        schedule = wage_provider.build_schedule(registry, 0.13)
+        self.assertGreater(schedule.wage_per_hour("acme_clockmaker"), 0)
 
     def test_base_trade_registry_owns_identity_and_availability(self):
         repo = Path(__file__).resolve().parents[2]
         registry = load_trade_registry(str(repo), mods_dir=str(repo / "mods"))
-        price_book = json.loads((repo / "data/prices.json").read_text())
-        calibrated = {trade for trade in price_book["wage_rates_denarii_per_hour"]
-                      if not trade.startswith("_")}
-        self.assertEqual(calibrated, set(registry))
+        self.assertTrue({"labourer", "smith", "scribe", "engineer"} <= set(registry))
         self.assertEqual(
             {"chemist", "electrician", "engineer", "machinist", "optician"},
             {trade.id for trade in registry.values() if trade.initially_absent})

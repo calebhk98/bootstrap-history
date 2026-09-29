@@ -22,26 +22,46 @@ Deletion is complete only when all of these are true:
 
 ## Remaining production blockers
 
-### 1. Replace the wage inputs
+### 1. Replace the wage inputs (done)
 
-`sim/engine/data.py` still opens the file at import time to build `WAGES` and
-`ANNUAL_WAGE`. Those globals feed hiring, training, payroll, freight, production,
-credit, scoring, and protocol output. The dynamic labour market must become the
-provider for both hourly and annual trade costs. Trade identity and initial
-availability have already moved to `data/world/trades.json`; no replacement
-wage table should be added there.
+- [x] `sim/world/wages.py` is the wage provider: wage per hour is a subsistence
+  floor times a training premium times a tightness factor. The floor is the
+  cost of feeding a worker and dependants from the food model; the premium
+  repays training years forgone (`training_years` in `data/world/trades.json`,
+  family median when a trade states none); the tightness factor moves each
+  year with the gap between a trade's need and its hours.
+- [x] One seam for the engine: `Sim.wage_per_hour(trade)`,
+  `Sim.base_annual_wage(trade)` and `Sim.wage_document()` feed payroll, hiring,
+  training, commissions, freight, mining, production, credit, scoring and
+  protocol output. `data.WAGES` / `data.ANNUAL_WAGE` are the starting
+  schedule for tools, no longer a book table.
+- [x] The price solver reads the same wage vector through
+  `WageSchedule.document()`; `sim/engine/prices.py` keys its cache on it and
+  pays an unlisted trade by the same training rule.
+- [x] `sim/tests/test_wage_provider.py` runs the engine with the wage section
+  of the book removed.
 
-The price solver also derives skilled/unskilled wage ratios from the old wage
-table. It must instead consume the same labour-market wage provider as the live
-engine so project costs and payroll cannot disagree.
+What still limits it: only `Sim.update_wages` moves tightness, and
+`sim/engine/labour_allocation.py` reallocates non-farm hours toward their
+current split rather than toward the need `update_wages` measures, so wages
+signal scarcity but hours do not yet answer. Feeding the need shares into
+`reallocate` closes that loop. The discount rate is a labelled default; a
+civilisation's own interest rate should replace it. Tree `rev` values were
+authored against the old wages, so revenue-to-cost paybacks moved (see the
+relaxed pump check in `sim/tests/test_early_playtest.py`).
 
-### 2. Remove the denarius conversion anchor
+### 2. Remove the denarius conversion anchor (partly done)
 
-Solved material costs are expressed in labour-hours, then multiplied by the old
-`labourer` rate to return to denarii. Choose and implement one authoritative
-unit boundary: keep real costs in labour-hours internally and convert at the UI
-edge, or derive a current money wage from the model. A replacement literal
-`denarii_per_labour_hour` would only move the dependency and does not count.
+- [x] `denarii_per_labour_hour` reads the wage document's labourer rate,
+  which the provider derives from the food price, the subsistence quantity
+  and the population's dependency ratio; no wage literal remains.
+- [ ] That food price is still the book's `wheat_kg` (read once in
+  `sim/engine/data.py`), so the money unit is anchored to a book price.
+  Finishing this means pricing food through the solver in labour hours and
+  anchoring money to a physical standard (a coin's silver content priced by
+  the solver), then converting to money only at the display edge. Until then
+  solved material prices in money move with the provider's labourer wage
+  while book-priced materials do not.
 
 ### 3. Make endogenous material prices the only runtime path
 
@@ -85,8 +105,8 @@ built.
 - [x] `sim/tests/test_tools_without_price_book.py` runs each tool with the file
   unreadable.
 
-Remaining: the wage provider (`sim.engine.data.WAGES`) still reads the file
-until blocker 1 lands, so tools that need wages report unavailable without it.
+The wage provider no longer reads the file's wage section, so these tools
+get wages without it.
 
 ### 6. Remove comparison and test readers
 

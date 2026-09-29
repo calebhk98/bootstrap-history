@@ -293,8 +293,8 @@ def _meets_capability_floor(material, entry, floor_by_carrier):
 def wage_ratios_by_trade(prices_json):
     """{trade: hours of unskilled labour one hour of this trade is worth}.
 
-    `prices.json`'s wage table is denarii per hour, one static number per
-    trade with no notion of unskilled labour as a unit. Dividing every rate
+    The wage document is money per hour per trade, with no notion of
+    unskilled labour as a unit. Dividing every rate
     by the unskilled (`labourer`) rate turns it into what the design doc
     calls the numeraire: `wage_of("labourer")` is 1.0 by construction, and
     every other trade is stated as how many labourer-hours it is worth,

@@ -17,7 +17,7 @@ CreditMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
-from .data import ANNUAL_WAGE, WAGES
+from .data import WAGES
 from sim.constants import declare
 
 
@@ -782,10 +782,10 @@ class CreditMixin:
             # which job, and takes the cheapest trade in the table by
             # default, is advice that can be followed into a loss.
             trades = [trade for trade in WAGES if self.trade_available(trade)]
-            best_trade = max(trades, key=lambda trade: ANNUAL_WAGE.get(trade, self.DEFAULT_ANNUAL_WAGE_FALLBACK),
+            best_trade = max(trades, key=self.base_annual_wage,
                          default=None)
             if best_trade:
-                rate = ANNUAL_WAGE[best_trade] / self.HOURS_PER_PERSON_YEAR
+                rate = self.base_annual_wage(best_trade) / self.HOURS_PER_PERSON_YEAR
                 would_earn = (pool * rate * self.price_index * self.wage_index
                               * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                                            household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))

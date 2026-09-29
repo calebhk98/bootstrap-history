@@ -98,6 +98,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"granted_staff": "household",
 	"hours_this_year": "household",
 	"trade_schools": "household",
+	"labour_pressure_records": "household",
 	"worker_housing_places": "household",
 	"_said_deputies": "household",
 	"_said_near_limit": "household",

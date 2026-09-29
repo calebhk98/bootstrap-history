@@ -57,8 +57,7 @@ class PopulationMixin:
             "recovers from a demand shock, which nothing here measures.")
 
     def labour_pressure(self, trade):
-        rec = getattr(self.household, "_labour_pressure", None)
-        rec = rec.get(trade) if rec else None
+        rec = self.household.labour_pressure_records.get(trade)
         if not rec:
             return 0.0
         hours, year = rec
@@ -66,9 +65,7 @@ class PopulationMixin:
         return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
 
     def _add_labour_pressure(self, trade, hours):
-        pressures = getattr(self.household, "_labour_pressure", None)
-        if pressures is None:
-            pressures = self.household._labour_pressure = {}
+        pressures = self.household.labour_pressure_records
         pressures[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.state.scenario.year)
 
     LABOUR_PRESSURE_SHARE_CAP = declare(

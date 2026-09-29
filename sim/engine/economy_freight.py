@@ -58,7 +58,7 @@ account of this hazard.
 """
 import math
 
-from .data import haversine_km, WAGES
+from .data import haversine_km
 from . import commodities as _commod
 from sim.constants import declare
 from . import purchase_rule
@@ -324,7 +324,7 @@ class FreightMixin:
             return 0.0
         inputs = self._land_freight_physical_inputs()
         feed_price_per_kg = self._book_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
-        driver_wage_per_hour = WAGES.get(self.FREIGHT_DRIVER_WAGE_TRADE, 0.0)
+        driver_wage_per_hour = self.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
         denarii_per_tonne_km = (inputs.feed_kg_per_tonne_km * feed_price_per_kg
                                  + inputs.driver_hours_per_tonne_km * driver_wage_per_hour)
         denarii_per_tonne = denarii_per_tonne_km * distance_km
