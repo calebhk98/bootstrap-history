@@ -973,8 +973,9 @@ class Workforce(object):
     __slots__ = ("hours_by_trade",)
 
     def __init__(self, hours_by_trade: Dict[str, float]) -> None:
+        # Sorted so sums do not depend on insertion or load order.
         self.hours_by_trade = {trade: float(hours)
-                               for trade, hours in hours_by_trade.items()}
+                               for trade, hours in sorted(hours_by_trade.items())}
 
     def __repr__(self) -> str:
         return "Workforce(%r)" % (self.hours_by_trade,)
@@ -1090,7 +1091,8 @@ class Workforce(object):
         recompute it from this dict's own fields.
         """
         minimum_absorption_hours_by_trade = minimum_absorption_hours_by_trade or {}
-        all_trades = set(self.hours_by_trade) | set(hours_required_by_trade)
+        # Sorted so the float sums do not depend on string hash order.
+        all_trades = sorted(set(self.hours_by_trade) | set(hours_required_by_trade))
         hours_before = {trade: self.hours_by_trade.get(trade, 0.0) for trade in all_trades}
         hours_required = {trade: hours_required_by_trade.get(trade, 0.0) for trade in all_trades}
         total_hours_before = sum(hours_before.values())
