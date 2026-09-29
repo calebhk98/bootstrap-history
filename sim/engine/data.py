@@ -351,11 +351,27 @@ def load(use_solved_prices: bool = False,
              if not key.startswith("_")}
     required_materials = {material for node in nodes.values()
                           for material in (node.get("mat") or {})}
-    if use_solved_prices or not required_materials.issubset(goods):
+    if use_solved_prices:
         from . import prices as price_solver
         goods, _provenance = price_solver.priced_goods_table(
             held_technology_ids, goods, _STARTING_SCHEDULE.document(),
             civilization_id=civilization_id)
+    elif not required_materials.issubset(goods):
+        # Book prices stay; the solver only fills materials the book lacks.
+        from . import prices as price_solver
+        book_goods = dict(goods)
+        solved_goods, _provenance = price_solver.priced_goods_table(
+            held_technology_ids, book_goods, _STARTING_SCHEDULE.document(),
+            civilization_id=civilization_id)
+        goods.update({material: solved_goods[material]
+                      for material in required_materials - set(goods) if material in solved_goods})
+        unresolved = required_materials - set(goods)
+        if unresolved:
+            # TRANSITIONAL: price era-gated materials as if every technology were held.
+            era_free_goods, _provenance = price_solver.priced_goods_table(
+                list(nodes), book_goods, _STARTING_SCHEDULE.document(), civilization_id=civilization_id)
+            goods.update({material: era_free_goods[material]
+                          for material in unresolved if material in era_free_goods})
     production = load_production_catalog(ROOT, MODDIR)
     load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
@@ -372,7 +388,8 @@ def load(use_solved_prices: bool = False,
                                  "technologies" % (node["id"], material))
     for node in nodes.values():
         node["_labour_cost"] = sum(wages[trade] * hours for trade, hours in node["lab"].items())
-        node["_material_cost"] = sum(goods[material] * quantity for material, quantity in node["mat"].items())
+        # TRANSITIONAL: a material the price solver cannot resolve counts as free, so the cost is a lower bound.
+        node["_material_cost"] = sum(goods.get(material, 0.0) * quantity for material, quantity in node["mat"].items())
         node["_total_cost"] = node["_labour_cost"] + node["_material_cost"] + node["cap"]
         node["_hired_hours"] = sum(node["lab"].values())
     return tree, prices, nodes, wages, goods

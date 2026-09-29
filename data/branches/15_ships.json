@@ -4,7 +4,7 @@
   "name": "Large merchant sailing ships",
   "cat": "ships",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -29,7 +29,7 @@
   "name": "Mortise-and-tenon hull construction",
   "cat": "ships",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -54,7 +54,7 @@
   "name": "Square sail with brails",
   "cat": "ships",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -79,7 +79,7 @@
   "name": "Spritsail",
   "cat": "ships",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -106,7 +106,7 @@
   "pre": [
    "mat_lead"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {
@@ -133,7 +133,7 @@
   "name": "Steering oars",
   "cat": "ships",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -158,7 +158,7 @@
   "name": "Anchor",
   "cat": "ships",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -183,7 +183,7 @@
   "name": "Sounding lines",
   "cat": "ships",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -208,7 +208,7 @@
   "name": "Coastal pilotage",
   "cat": "navigation",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -233,7 +233,7 @@
   "name": "Pharos lighthouse",
   "cat": "navigation",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -260,7 +260,7 @@
   "pre": [
    "mat_pozzolana"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -284,7 +284,7 @@
   "name": "Monsoon route to India",
   "cat": "navigation",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -313,7 +313,7 @@
    "cap_tol_1mm",
    "sea_skeleton_first"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "carpenter": 200,
@@ -404,7 +404,7 @@
    "tr_fore_aft_rig",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 60,
   "lab": {
    "carpenter": 200.0,
@@ -438,7 +438,7 @@
   "pre": [
    "sea_bowsprit"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 40,
   "lab": {
    "artisan": 100
@@ -470,7 +470,7 @@
    "tr_fore_aft_rig",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "carpenter": 400
@@ -557,7 +557,7 @@
    "sea_mortise_tenon",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "artisan": 800.0,
@@ -590,7 +590,7 @@
   "name": "Lodestone knowledge",
   "cat": "navigation",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 20,
   "lab": {
    "scholar": 80
@@ -619,7 +619,7 @@
   "pre": [
    "sea_lodestone"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 60,
   "lab": {
    "artisan": 120,
@@ -652,7 +652,7 @@
   "pre": [
    "opt_water_clock"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 30,
   "lab": {
    "artisan": 50
@@ -683,7 +683,7 @@
   "pre": [
    "sea_magnetic_compass"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 40,
   "lab": {
    "artisan": 60,
@@ -715,7 +715,7 @@
   "pre": [
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "artisan": 150,
@@ -749,7 +749,7 @@
    "sea_cross_staff",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "artisan": 200,
@@ -813,7 +813,7 @@
   "pre": [
    "sea_dry_compass_card"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "artisan": 150,
@@ -847,7 +847,7 @@
   "pre": [
    "sea_magnetic_compass"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "scholar": 400,
@@ -880,7 +880,7 @@
    "sea_charts_navigation",
    "geometry_analytic"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 180,
   "lab": {
    "scholar": 350,
@@ -913,7 +913,7 @@
    "sea_sounding_lines",
    "sea_charts_navigation"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "artisan": 200,
@@ -946,7 +946,7 @@
    "mat_pozzolana",
    "water_power_scale"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 300,
   "lab": {
    "carpenter": 800,
@@ -1012,7 +1012,7 @@
    "sea_astronomical_tables",
    "master_screw"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "scholar": 400
@@ -1138,7 +1138,7 @@
    "finery_puddling",
    "tr_riveted_plating"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "smith": 600,
@@ -1172,7 +1172,7 @@
   "pre": [
    "sea_iron_hull"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "carpenter": 400,
@@ -1266,7 +1266,7 @@
    "interchangeable_parts",
    "cap_tol_10um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 280,
   "lab": {
    "machinist": 600,
@@ -1301,7 +1301,7 @@
    "cap_tol_10um",
    "sea_fuel_oil_burner"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "machinist": 500,
@@ -1368,9 +1368,10 @@
    "sea_compartmented_hull",
    "sea_diving_suit",
    "mil_torpedo",
-   "steam_watt"
+   "steam_watt",
+   "cap_tol_10um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 300,
   "lab": {
    "smith": 800,
@@ -1391,7 +1392,7 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "A small strong hull that submerges; propelled by electric motors on batteries or a diesel on the surface; requires precise depth control, air supply, and crew training; first military use in WWI.",
+  "note": "A small strong hull that submerges; propelled by electric motors on batteries or a diesel on the surface; requires precise depth control, air supply, and crew training; first military use in WWI. [REVIEWED: prerequisite(s) cap_tol_10um added by a reviewer working node by node. Reason: pressure hull requires slide rest and micrometer precision for structural integrity at depth]",
   "traits": [
    "commerce",
    "infrastructure"
@@ -1433,9 +1434,10 @@
   "cat": "navigation",
   "pre": [
    "vacuum_tube",
-   "sea_electromagnetic_wave_theory"
+   "sea_electromagnetic_wave_theory",
+   "cap_measure_time_ms"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "scholar": 400,
@@ -1455,7 +1457,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Transmit an acoustic pulse into water, listen for the echo; measures depth and detects underwater objects; replaces the lead-line and adds a new dimension to navigation.",
+  "note": "Transmit an acoustic pulse into water, listen for the echo; measures depth and detects underwater objects; replaces the lead-line and adds a new dimension to navigation. [REVIEWED: prerequisite(s) cap_measure_time_ms added by a reviewer working node by node. Reason: echo sounding requires millisecond timing for distance measurement]",
   "traits": [
    "commerce",
    "infrastructure"
@@ -1509,7 +1511,7 @@
    "cap_measure_light",
    "arc_light_lamp"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 180,
   "lab": {
    "artisan": 400,
@@ -1543,7 +1545,7 @@
   "pre": [
    "sea_harbours_pozzolana"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 60,
   "lab": {
    "carpenter": 150,
@@ -1637,7 +1639,7 @@
   "pre": [
    "sea_anchor"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "carpenter": 300,
@@ -1667,7 +1669,7 @@
    "sea_diving_bell",
    "cap_power_steam"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 180,
   "lab": {
    "artisan": 400,
@@ -1697,7 +1699,7 @@
   "pre": [
    "newtonian_mechanics"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 400,
   "lab": {
    "scholar": 800
@@ -1760,7 +1762,7 @@
    "mat_petroleum_refined",
    "cap_heat_1600"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 140,
   "lab": {
    "smith": 300,
@@ -1794,7 +1796,7 @@
   "pre": [
    "em_theory"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "scholar": 500

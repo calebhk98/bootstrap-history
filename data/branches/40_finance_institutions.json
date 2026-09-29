@@ -7,7 +7,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -30,7 +30,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150.0,
   "lab": {
    "scribe": 60.0
@@ -56,7 +56,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -105,7 +105,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -128,7 +128,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -151,7 +151,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -174,7 +174,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -197,7 +197,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -220,7 +220,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 600.0,
   "lab": {
    "scribe": 200.0
@@ -275,7 +275,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "scribe": 200
@@ -305,7 +305,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "scribe": 300,
@@ -336,7 +336,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "scribe": 200
@@ -366,7 +366,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "scribe": 100
@@ -397,7 +397,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -427,7 +427,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
@@ -457,7 +457,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 100,
@@ -487,7 +487,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 80,
@@ -517,7 +517,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 150,
@@ -548,7 +548,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -580,7 +580,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -609,7 +609,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
@@ -672,7 +672,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 250,
@@ -700,7 +700,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
@@ -731,7 +731,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 300,
@@ -761,7 +761,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 150,
@@ -791,7 +791,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -820,7 +820,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 250,
   "lab": {
    "merchant": 400,
@@ -851,7 +851,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 250,
@@ -883,7 +883,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 100
@@ -910,7 +910,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
@@ -942,7 +942,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -972,7 +972,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
@@ -1003,7 +1003,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -1065,7 +1065,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -1095,7 +1095,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 150,
@@ -1125,7 +1125,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 200,
@@ -1155,7 +1155,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
@@ -1185,7 +1185,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 160,
   "lab": {
    "merchant": 200,
@@ -1213,7 +1213,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 60,
   "lab": {
    "merchant": 100
@@ -1240,7 +1240,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "scribe": 150
@@ -1267,7 +1267,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 100,
@@ -1295,7 +1295,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "scribe": 200
@@ -1324,7 +1324,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 150,
@@ -1386,7 +1386,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "scribe": 200
@@ -1414,7 +1414,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "scribe": 100
@@ -1441,7 +1441,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150
@@ -1468,7 +1468,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 60,
   "lab": {
    "scribe": 50
@@ -1495,7 +1495,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -1521,7 +1521,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -1584,7 +1584,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 200
@@ -1612,7 +1612,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 150,
@@ -1640,7 +1640,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
@@ -1763,7 +1763,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 200,
@@ -1824,7 +1824,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 150
@@ -1852,7 +1852,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -1887,7 +1887,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 160,
   "lab": {
    "merchant": 200,
@@ -1920,7 +1920,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "scribe": 150
@@ -1952,7 +1952,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "scholar": 200,
@@ -1985,7 +1985,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "scribe": 300,
@@ -2020,7 +2020,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
@@ -2082,7 +2082,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "engraver": 200,
@@ -2116,7 +2116,7 @@
    "information",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -2150,7 +2150,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
@@ -2183,7 +2183,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 200,
@@ -2217,7 +2217,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 200
@@ -2249,7 +2249,7 @@
    "commerce",
    "spectacle"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -2311,7 +2311,7 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150
@@ -2341,7 +2341,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -2373,7 +2373,7 @@
    "commerce",
    "spectacle"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 130,
   "lab": {
    "merchant": 200,
@@ -2437,7 +2437,7 @@
    "commerce",
    "spectacle"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 250
@@ -2463,7 +2463,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
@@ -2495,7 +2495,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -2529,7 +2529,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -2563,7 +2563,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 250,
   "lab": {
    "merchant": 350,
@@ -2598,7 +2598,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 300,
   "lab": {
    "merchant": 400,
@@ -2632,7 +2632,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 250,
@@ -2696,7 +2696,7 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 200,
@@ -2726,7 +2726,7 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150
@@ -2756,7 +2756,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 200
@@ -2786,7 +2786,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 300,
@@ -2819,7 +2819,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -2850,7 +2850,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 400,
@@ -2879,7 +2879,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150
@@ -2910,7 +2910,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
@@ -2940,7 +2940,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300
@@ -2996,7 +2996,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "scribe": 80

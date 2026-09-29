@@ -244,7 +244,10 @@ class EngineDefaultBehaviourUnchangedTests(unittest.TestCase):
         book_goods = {key: value["p"]
                       for key, value in prices_json["purchase_prices_denarii"].items()
                       if not key.startswith("_")}
-        self.assertEqual(goods, book_goods)
+        # Book prices are untouched; the solver only adds materials the book lacks.
+        self.assertEqual({key: goods[key] for key in book_goods}, book_goods)
+        required = {material for node in nodes.values() for material in node["mat"]}
+        self.assertTrue(set(goods) - set(book_goods) <= required)
 
 
 class RealDataIntegrationTests(unittest.TestCase):

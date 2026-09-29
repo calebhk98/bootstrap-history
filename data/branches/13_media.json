@@ -4,7 +4,7 @@
   "name": "Papyrus sheets",
   "cat": "media_base",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -29,7 +29,7 @@
   "name": "Parchment sheets",
   "cat": "media_base",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -54,7 +54,7 @@
   "name": "Wax tablets",
   "cat": "media_base",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -79,7 +79,7 @@
   "name": "Codex binding",
   "cat": "media_base",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -104,7 +104,7 @@
   "name": "Scribal copying",
   "cat": "scripting",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -125,7 +125,7 @@
   "name": "Carbon ink",
   "cat": "ink",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -146,7 +146,7 @@
   "name": "Seals and stamps",
   "cat": "marking",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -167,7 +167,7 @@
   "name": "Mosaic and fresco",
   "cat": "visual",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -188,7 +188,7 @@
   "name": "Sculpture",
   "cat": "visual",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -209,7 +209,7 @@
   "name": "Theatre and pantomime",
   "cat": "visual",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -230,7 +230,7 @@
   "name": "Woodblock carving",
   "cat": "relief",
   "pre": [],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 120,
   "lab": {
    "artisan": 200
@@ -262,7 +262,7 @@
    "prn_woodblock_carving",
    "prn_carbon_ink"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 60,
   "lab": {
    "artisan": 100
@@ -293,7 +293,7 @@
   "pre": [
    "rag_paper"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 80,
   "lab": {
    "artisan": 300
@@ -322,7 +322,7 @@
    "rag_paper",
    "cap_power_water"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 100,
   "lab": {
    "smith": 150,
@@ -352,7 +352,7 @@
    "rag_paper",
    "mat_alum"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 50,
   "lab": {
    "artisan": 100
@@ -382,7 +382,7 @@
    "mat_brass",
    "prn_hand_papermaking"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 150,
   "lab": {
    "smith": 250,
@@ -413,7 +413,7 @@
    "cap_power_steam",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 400,
   "lab": {
    "machinist": 800,
@@ -446,7 +446,7 @@
   "pre": [
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 120,
   "lab": {
    "furnaceman": 300
@@ -505,7 +505,7 @@
   "pre": [
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 200,
   "lab": {
    "smith": 300,
@@ -535,7 +535,7 @@
    "prn_type_punch",
    "mat_brass"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 60,
   "lab": {
    "smith": 100
@@ -563,7 +563,7 @@
    "prn_type_matrix",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 80,
   "lab": {
    "smith": 150
@@ -597,7 +597,7 @@
    "mat_tin",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 100,
   "lab": {
    "smith": 200,
@@ -659,7 +659,7 @@
    "if_printing_ink",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 200,
   "lab": {
    "smith": 300,
@@ -752,7 +752,7 @@
    "if_movable_type",
    "mat_lead"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 120,
   "lab": {
    "artisan": 200,
@@ -844,7 +844,7 @@
    "prn_type_metal_alloy",
    "cap_power_electric"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 500,
   "lab": {
    "machinist": 800
@@ -876,7 +876,7 @@
    "cap_tol_100um",
    "mat_copper"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 300,
   "lab": {
    "artisan": 600
@@ -908,7 +908,7 @@
    "prn_intaglio_engraving",
    "nitric_acid"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 200,
   "lab": {
    "artisan": 300,
@@ -972,7 +972,7 @@
    "if_lithography",
    "cap_power_steam"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 250,
   "lab": {
    "machinist": 400,
@@ -1033,7 +1033,7 @@
   "pre": [
    "if_halftone_screen"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 200,
   "lab": {
    "artisan": 400,
@@ -1063,7 +1063,7 @@
    "printing_press",
    "corpus_dispersed"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 400,
   "lab": {
    "scribe": 200,
@@ -1183,7 +1183,7 @@
    "photography",
    "camera_obscura"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 250,
   "lab": {
    "artisan": 450,
@@ -1218,7 +1218,7 @@
    "if_silver_halide_sensitivity",
    "mat_glass_soda"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 200,
   "lab": {
    "artisan": 350,
@@ -1309,7 +1309,7 @@
    "if_celluloid_roll_film",
    "lens_grinding"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 150,
   "lab": {
    "artisan": 250
@@ -1340,7 +1340,7 @@
   "pre": [
    "if_celluloid_roll_film"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 250,
   "lab": {
    "chemist": 400
@@ -1370,7 +1370,7 @@
   "pre": [
    "lens_grinding"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 120,
   "lab": {
    "artisan": 200
@@ -1403,7 +1403,7 @@
    "cap_tol_100um",
    "crank_conrod"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 180,
   "lab": {
    "machinist": 300
@@ -1433,7 +1433,7 @@
   "pre": [
    "prn_intermittent_motion"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 100,
   "lab": {
    "machinist": 200
@@ -1464,7 +1464,7 @@
    "prn_cinema_shutter",
    "arc_light_lamp"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 120,
   "lab": {
    "artisan": 250
@@ -1496,7 +1496,7 @@
    "prn_cinema_projection",
    "arc_light_lamp"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 300,
   "lab": {
    "carpenter": 400,
@@ -1528,7 +1528,7 @@
   "pre": [
    "mat_nitrocellulose"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 100,
   "lab": {
    "chemist": 200
@@ -1554,7 +1554,7 @@
    "cap_power_steam",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 250,
   "lab": {
    "machinist": 400
@@ -1614,7 +1614,7 @@
   "pre": [
    "electromagnet"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 120,
   "lab": {
    "artisan": 250
@@ -1647,7 +1647,7 @@
    "if_disc_record",
    "electromagnet"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 200,
   "lab": {
    "artisan": 350
@@ -1707,7 +1707,7 @@
   "pre": [
    "radio"
   ],
-  "kb": "",
+  "kb": "80_information_printing.md",
   "ph": 300,
   "lab": {
    "scholar": 300

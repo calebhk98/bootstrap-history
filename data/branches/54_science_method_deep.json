@@ -7,7 +7,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Digits hold different values by position; ten is one and zero",
+  "kb": "60_mathematics_method.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -28,7 +28,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Zero is a digit, not absence",
+  "kb": "60_mathematics_method.md",
   "ph": 40,
   "lab": {
    "scribe": 80
@@ -51,7 +51,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Numbers less than zero; rules for addition and multiplication",
+  "kb": "60_mathematics_method.md",
   "ph": 50,
   "lab": {
    "scribe": 100
@@ -74,7 +74,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Tenths, hundredths, thousandths as a continuation of positional notation past zero",
+  "kb": "60_mathematics_method.md",
   "ph": 45,
   "lab": {
    "scribe": 90
@@ -98,7 +98,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Standardizing a marker between whole and fractional parts",
+  "kb": "60_mathematics_method.md",
   "ph": 20,
   "lab": {
    "scribe": 40
@@ -121,7 +121,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Symbol = means both sides have the same value",
+  "kb": "60_mathematics_method.md",
   "ph": 30,
   "lab": {
    "scribe": 60
@@ -144,7 +144,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Standardized marks for operations instead of words",
+  "kb": "60_mathematics_method.md",
   "ph": 35,
   "lab": {
    "scribe": 70
@@ -167,7 +167,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Small superscript numbers for powers; x squared is x\u00b2",
+  "kb": "60_mathematics_method.md",
   "ph": 45,
   "lab": {
    "scribe": 90
@@ -191,7 +191,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Radical sign \u221a for square, cube, and nth roots",
+  "kb": "60_mathematics_method.md",
   "ph": 40,
   "lab": {
    "scribe": 80
@@ -216,7 +216,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Writing 0.0000314 as 3.14 \u00d7 10\u207b\u2075 or 3.14 E-5",
+  "kb": "60_mathematics_method.md",
   "ph": 60,
   "lab": {
    "scribe": 120
@@ -241,7 +241,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Decimal prefixes; base 10 throughout; no accidents like 12 inches to a foot",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
    "engineer": 200,
@@ -268,7 +268,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Treating dimensions as algebraic quantities; force = mass times acceleration means newtons = kg\u22c5m/s\u00b2",
+  "kb": "60_mathematics_method.md",
   "ph": 70,
   "lab": {
    "engineer": 150
@@ -292,7 +292,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Recording measurement uncertainty by digit count; multiplication and division rules for combining measurements",
+  "kb": "60_mathematics_method.md",
   "ph": 90,
   "lab": {
    "chemist": 200,
@@ -317,7 +317,7 @@
   "traits": [
    "information"
   ],
-  "kb": "If x has uncertainty \u0394x and y = f(x), then \u0394y = |df/dx| \u0394x; rules for multiple variables",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "engineer": 250
@@ -365,7 +365,7 @@
   "traits": [
    "information"
   ],
-  "kb": "ax\u00b2 + bx + c = 0 has solution x = (-b \u00b1 \u221a(b\u00b2 - 4ac)) / 2a",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
    "scribe": 150
@@ -389,7 +389,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Expressions like x\u00b3 - 6x\u00b2 + 11x - 6 = (x-1)(x-2)(x-3); finding roots",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scribe": 180
@@ -414,7 +414,7 @@
   "traits": [
    "information"
   ],
-  "kb": "(x + y)\u207f expands to a sum of terms with binomial coefficients C(n,k)",
+  "kb": "60_mathematics_method.md",
   "ph": 90,
   "lab": {
    "scribe": 170
@@ -438,7 +438,7 @@
   "traits": [
    "information"
   ],
-  "kb": "If b^x = a, then log_b(a) = x; rules: log(xy) = log(x) + log(y)",
+  "kb": "60_mathematics_method.md",
   "ph": 70,
   "lab": {
    "scribe": 140
@@ -461,7 +461,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Sum of infinitely many terms: 1 + 1/2 + 1/4 + ... = 2; when does it converge?",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scribe": 180
@@ -485,7 +485,7 @@
   "traits": [
    "information"
   ],
-  "kb": "As x \u2192 a, f(x) \u2192 L means values cluster arbitrarily close to L; formal: for any \u03b5 > 0, choose \u03b4 > 0 such that |x - a| < \u03b4 implies |f(x) - L| < \u03b5",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "scribe": 200
@@ -509,7 +509,7 @@
   "traits": [
    "information"
   ],
-  "kb": "f'(x) = lim[h\u21920] (f(x+h) - f(x)) / h; rules: product, chain, quotient",
+  "kb": "60_mathematics_method.md",
   "ph": 140,
   "lab": {
    "scribe": 240
@@ -534,7 +534,7 @@
   "traits": [
    "information"
   ],
-  "kb": "\u222bf(x)dx is the area under f; fundamental theorem: antiderivative of f has derivative f",
+  "kb": "60_mathematics_method.md",
   "ph": 150,
   "lab": {
    "scribe": 250
@@ -559,7 +559,7 @@
   "traits": [
    "information"
   ],
-  "kb": "d/dx \u222bf = f and \u222bdf/dx = f; connects rate of change to total change",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scribe": 150
@@ -583,7 +583,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Equations like y' = -ky describe decay or growth; separation of variables, integrating factors",
+  "kb": "60_mathematics_method.md",
   "ph": 150,
   "lab": {
    "scribe": 250
@@ -608,7 +608,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Equations with derivatives with respect to multiple variables; heat, wave, Laplace equations",
+  "kb": "60_mathematics_method.md",
   "ph": 200,
   "lab": {
    "scribe": 300
@@ -633,7 +633,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Any periodic function is a sum of sines and cosines with the right amplitudes and phases",
+  "kb": "60_mathematics_method.md",
   "ph": 160,
   "lab": {
    "scribe": 280
@@ -656,7 +656,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Generalizing Fourier series to non-periodic signals; converting between time and frequency domains",
+  "kb": "60_mathematics_method.md",
   "ph": 170,
   "lab": {
    "scribe": 290
@@ -680,7 +680,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Quadratics always have solutions in complex numbers; polar form re^(i\u03b8); Euler's e^(i\u03b8) = cos \u03b8 + i sin \u03b8",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scribe": 200
@@ -704,7 +704,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Directed quantities; dot product a\u00b7b = |a||b|cos(angle); cross product a\u00d7b perpendicular to both",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "scribe": 220
@@ -728,7 +728,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Rectangular arrays of numbers; AB is not the same as BA; determinant measures invertibility",
+  "kb": "60_mathematics_method.md",
   "ph": 130,
   "lab": {
    "scribe": 240
@@ -752,7 +752,7 @@
   "traits": [
    "information"
   ],
-  "kb": "det(A) = 0 means A is singular (non-invertible); A\u207b\u00b9 exists if det(A) \u2260 0",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scribe": 200
@@ -777,7 +777,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Generalizing scalars, vectors, matrices; stress is a tensor (force per unit area in each direction)",
+  "kb": "60_mathematics_method.md",
   "ph": 180,
   "lab": {
    "scribe": 300
@@ -801,7 +801,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Algorithms to find roots or solve equations when closed forms do not exist; choosing method depends on smoothness and number of solutions",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "scholar": 200
@@ -826,7 +826,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Given n points, unique polynomial of degree n-1 passes through them; Newton forward differences for tables",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scholar": 180
@@ -850,7 +850,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Minimize sum of squared errors between data points and model; normal equations from setting derivatives to zero",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scholar": 200
@@ -874,7 +874,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Representing curves as equations: circle is x\u00b2 + y\u00b2 = r\u00b2; line is ax + by + c = 0",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
    "scribe": 150
@@ -899,7 +899,7 @@
   "traits": [
    "information"
   ],
-  "kb": "All are second-degree equations ax\u00b2 + bxy + cy\u00b2 + dx + ey + f = 0; eccentricity e determines shape",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scribe": 180
@@ -923,7 +923,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "sin, cos, tan; inverse functions; tables for every degree or tenth of degree; identities like sin\u00b2 + cos\u00b2 = 1",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scholar": 200,
@@ -950,7 +950,7 @@
    "military",
    "commerce"
   ],
-  "kb": "Solving triangles on a sphere; great circles; spherical excess; rhumb line vs. geodesic",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "scholar": 220
@@ -975,7 +975,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Three orthographic views (top, front, side) fully describe a 3D object; sections; auxiliary views",
+  "kb": "60_mathematics_method.md",
   "ph": 130,
   "lab": {
    "engineer": 220,
@@ -1002,7 +1002,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Gauss, Lobachevsky, Riemann: parallel postulate is independent; curved spaces have their own geometry",
+  "kb": "60_mathematics_method.md",
   "ph": 150,
   "lab": {
    "scholar": 260
@@ -1028,7 +1028,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Curvature, torsion, geodesics, Gaussian curvature, first and second fundamental forms",
+  "kb": "60_mathematics_method.md",
   "ph": 170,
   "lab": {
    "scholar": 300
@@ -1052,7 +1052,7 @@
   "traits": [
    "information"
   ],
-  "kb": "nPr = n!/(n-r)!, nCr = n!/(r!(n-r)!); binomial coefficients C(n,k)",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
    "scholar": 150
@@ -1077,7 +1077,7 @@
   "traits": [
    "information"
   ],
-  "kb": "P(A or B) = P(A) + P(B) - P(A and B); P(A|B) = P(A and B)/P(B); Bayes' theorem",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scholar": 200
@@ -1101,7 +1101,7 @@
   "traits": [
    "information"
   ],
-  "kb": "f(x) = (1/(\u03c3\u221a(2\u03c0))) exp(-(x-\u03bc)\u00b2/(2\u03c3\u00b2)); most natural distribution for sums of independent errors",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scholar": 200
@@ -1126,7 +1126,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Sum of many independent random variables is approximately normal, regardless of their individual distributions",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "scholar": 220
@@ -1149,7 +1149,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Mean \u03bc = sum/n; variance \u03c3\u00b2 = average squared deviation; standard deviation \u03c3 = \u221a(variance)",
+  "kb": "60_mathematics_method.md",
   "ph": 60,
   "lab": {
    "scholar": 120
@@ -1173,7 +1173,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Pearson r = \u03a3(x-\u03bcx)(y-\u03bcy) / (n \u03c3x \u03c3y); r ranges from -1 to +1; r\u00b2 is fraction of variance explained",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scholar": 180
@@ -1197,7 +1197,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "y = a + bx where b = r(\u03c3y/\u03c3x); minimizes squared vertical distances",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scholar": 200
@@ -1221,7 +1221,7 @@
   "traits": [
    "information"
   ],
-  "kb": "t = (mean1 - mean2) / (SE of difference); compares two small samples",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "scholar": 220
@@ -1246,7 +1246,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Partitions variance into groups and residuals; F-test whether group means differ",
+  "kb": "60_mathematics_method.md",
   "ph": 140,
   "lab": {
    "scholar": 250
@@ -1270,7 +1270,7 @@
   "traits": [
    "information"
   ],
-  "kb": "SE = \u03c3/\u221an; determines precision of sample mean estimate; confidence interval is mean \u00b1 t*SE",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scholar": 200
@@ -1293,7 +1293,7 @@
   "traits": [
    "information"
   ],
-  "kb": "95% CI is estimate \u00b1 1.96 SE; if we repeat the survey 100 times, about 95 contain the true value",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scholar": 180
@@ -1316,7 +1316,7 @@
   "traits": [
    "information"
   ],
-  "kb": "p is probability of data if null hypothesis is true; p < 0.05 usually means reject null",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "scholar": 220
@@ -1339,7 +1339,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Assigning subjects to treatment or control by random mechanism ensures balance on unknown confounders",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
    "scholar": 160
@@ -1362,7 +1362,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Divide subjects into homogeneous blocks, randomise within block, to reduce variance from known confounders",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scholar": 180
@@ -1386,7 +1386,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Run the same experiment without treatment to measure placebo effect and natural variation",
+  "kb": "60_mathematics_method.md",
   "ph": 70,
   "lab": {
    "scholar": 140
@@ -1409,7 +1409,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Neither subject nor experimenter knows who got treatment; reveals biases in observation and reporting",
+  "kb": "60_mathematics_method.md",
   "ph": 90,
   "lab": {
    "scholar": 170
@@ -1432,7 +1432,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Probability of death at each age; lx survivors at age x; ex life expectancy",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scholar": 300
@@ -1457,7 +1457,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Plot process output over time with control limits (\u03bc \u00b1 3\u03c3); trends or excursions signal problems",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "engineer": 200

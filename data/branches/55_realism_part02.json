@@ -10,7 +10,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "tx2_cashmere_goat_stock",
-  "kb": "",
+  "kb": "90_textiles.md",
   "lab": {
    "artisan": 200.0
   },
@@ -42,7 +42,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "tx2_jute_seed_stock",
-  "kb": "",
+  "kb": "90_textiles.md",
   "lab": {
    "artisan": 200.0
   },
@@ -74,7 +74,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "tx2_angora_goat_stock",
-  "kb": "",
+  "kb": "90_textiles.md",
   "lab": {
    "artisan": 200.0
   },
@@ -106,7 +106,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "tx2_ramie_plant_stock",
-  "kb": "",
+  "kb": "90_textiles.md",
   "lab": {
    "artisan": 200.0
   },
@@ -138,7 +138,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "tx2_silkworm_stock",
-  "kb": "",
+  "kb": "90_textiles.md",
   "lab": {
    "artisan": 200.0
   },
@@ -170,7 +170,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "ag2_guano_deposit_access",
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "lab": {
    "artisan": 200.0
   },
@@ -202,7 +202,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "ag2_hop_stock",
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "lab": {
    "artisan": 200.0
   },
@@ -234,7 +234,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "ag2_pyrethrum_stock",
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "lab": {
    "artisan": 200.0
   },
@@ -266,7 +266,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "fud_whaling_gear",
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "lab": {
    "artisan": 200.0
   },
@@ -298,7 +298,7 @@
   "dev_years": null,
   "gov": 0,
   "id": "lnd_nailed_horseshoe",
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "lab": {
    "artisan": 200.0
   },

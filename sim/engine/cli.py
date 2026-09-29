@@ -27,7 +27,8 @@ tested reason `cmd_sweep` cannot move into cli_analysis.py alongside
 import collections, json, math, os, random
 from collections import defaultdict
 
-from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
+from .catalog import load_production_catalog
+from .data import (ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
                    hard_pre, load, load_civ, resolve_goal,
                    STARTING_KITS, STRATS, topo_order, win_condition_describe)
 
@@ -393,11 +394,17 @@ def _check_node_prereqs(node_id, node_record, nodes):
     return errs
 
 
-def _check_node_materials(node_id, node_record, goods):
-    errs = []
+def _check_node_materials(node_id, node_record, goods, producible):
+    """A material nothing declares is an error; a declared one the solver cannot price yet is a warning."""
+    errs, warns = [], []
     for material_id in node_record["mat"]:
-        if material_id not in goods: errs.append("%s: unpriced material %s" % (node_id, material_id))
-    return errs
+        if material_id in goods:
+            continue
+        if material_id in producible:
+            warns.append("%s: material %s has a production entry but no solved price (cost is a lower bound)" % (node_id, material_id))
+        else:
+            errs.append("%s: unpriced material %s" % (node_id, material_id))
+    return errs, warns
 
 
 def _check_node_trades(node_id, node_record, wages):
@@ -431,14 +438,16 @@ def _check_node_required_fields(node_id, node_record):
     return errs
 
 
-def _validate_nodes(nodes, goods, wages):
+def _validate_nodes(nodes, goods, wages, producible=()):
     """Run every per-node check and gather what each one finds. One function
     per check, so a check that finds nothing just contributes nothing -
     nobody has to remember to guard the call site."""
     errs, warns = [], []
     for node_id, node_record in nodes.items():
         errs += _check_node_prereqs(node_id, node_record, nodes)
-        errs += _check_node_materials(node_id, node_record, goods)
+        material_errs, material_warns = _check_node_materials(node_id, node_record, goods, producible)
+        errs += material_errs
+        warns += material_warns
         errs += _check_node_trades(node_id, node_record, wages)
         errs += _check_node_risk(node_id, node_record)
         warns += _check_node_confidence(node_id, node_record)
@@ -541,13 +550,17 @@ def _validate_reachability(args, errs, nodes, goal_rows):
 def _print_validate_ok(errs):
     if not errs:
         print()
-        print("OK: tree is a valid DAG, fully priced, every selectable goal's "
+        print("OK: tree is a valid DAG, every material declared, every selectable goal's "
               "closure and critical path compute cleanly.")
 
 
 def cmd_validate(args):
     tree, prices, nodes, wages, goods = load()
-    errs, warns = _validate_nodes(nodes, goods, wages)
+    production = load_production_catalog(ROOT, MODDIR)
+    producible = set(production)
+    for entry in production.values():
+        producible.update((entry.get("outputs") or {}).keys())
+    errs, warns = _validate_nodes(nodes, goods, wages, producible)
     errs += _validate_topo_order(nodes)
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs

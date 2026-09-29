@@ -144,6 +144,7 @@ check("ignore_trade accepts a node that is startable but for the trade alone",
 ok_norm, why_norm = s.start_reason("ag2_hydrometer")
 check("without ignore_trade the same node is refused specifically for the trade",
       not ok_norm and "optician" in why_norm, why_norm)
+s.done.update(NODES["ag2_cold_store"]["pre"])  # prerequisites held, so only staffing can refuse
 ok_staff, why_staff = s.start_reason("ag2_cold_store", ignore_trade=True)
 check("ignore_trade still refuses a node blocked by missing STAFF, not just the trade",
       not ok_staff and "craftsmen" in why_staff, why_staff)
@@ -1435,12 +1436,13 @@ check("you cannot commit to more work than cash and credit could ever cover",
 # prerequisites regardless of how `done` was populated, so a candidate with
 # unmet prerequisites makes restore_work silently refuse and charge nothing -
 # which reads as exactly the bug this check exists to catch, for a completely
-# different reason. md2_sand_filtration has no prerequisite, is not
+# different reason. md2_sand_filtration is not
 # auto-granted (its `ph` is not zero), and keeps real mining-establishment
 # upkeep under the audit, so it is named directly rather than found.
 s = sim(civ="england_1300", capital=50000.0)
 _free = ["md2_sand_filtration"]
 s.done.add(_free[0])
+s.done.update(NODES[_free[0]]["pre"])  # restore_work refuses while a prerequisite is unmet
 s._done_changed()
 s.mothball_work(_free[0])
 _cap = s.capital

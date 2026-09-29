@@ -1,6 +1,6 @@
 # Eighty-three technologies make glass out of nothing
 
-**Status:** partly - merge --dry-run has no blocking events (pinned by test_branch_merge_blocking_events); merge --write still blocked by tree-only kb links, review notes and prerequisites, see below
+**Status:** closed - merge --dry-run has no blocking events (test_branch_merge_blocking_events) and the branches reproduce data/tech_tree.json node for node (test_branch_merge_authority)
 
 `treetool.py merge` dropped anything it could not resolve and wrote the tree
 anyway. It printed a warning per drop, the warnings scrolled past, and the
@@ -38,7 +38,7 @@ The worst single case is soda glass:
     glass_blower                 12   unknown trade
 
 Eighty-three nodes declare that they need soda glass. `data/prices.json` has
-no entry for it under any spelling `data/branches/ALIASES.json` maps, so the
+no entry for it under any spelling the alias table (since deleted) mapped, so the
 merge deleted the requirement from all eighty-three and priced each of them
 as though glass were not involved. A laboratory that needs glassware, a tube
 that needs a sealed envelope and a window that needs a pane have all been
@@ -74,7 +74,7 @@ Some are a missing family. `purchase_prices_denarii` holds exactly one glass
 entry, `glass_raw_kg`, and the tree asks for soda, borosilicate, lead and
 labware glass as four separate materials with four different difficulties,
 which is correct of the tree and is the whole reason the capability rungs
-exist. `ALIASES.json` already does this job for steel, mapping
+exist. The alias table did this job for steel before it was deleted, mapping
 `mat_bulk_steel`, `mat_steel_plate_kg`, `steel_bar_kg` and `steel_ball_kg`
 onto `steel_plate_kg`. Nothing does it for glass.
 
@@ -140,7 +140,10 @@ Every prerequisite removed from `data/branches/` while clearing merge events
 is listed in `Complaints/reports/54-dropped-prerequisites.md` for review.
 Entries marked "node gained" were replaced by a real node id.
 
-`merge --write` is still unsafe: `data/tech_tree.json` carries knowledge
-links, review notes and judge-added prerequisites that exist only in the
-tree, so writing from the branches would drop them. Port those into the
-branches (or make merge keep them) before writing.
+The tree-only knowledge links, review notes and judge-added prerequisites
+were ported into the branches, and `merge --write` was run. The branches are
+now the full source of truth: `CommittedTreeMatchesBranches` fails if the
+committed tree and a fresh merge ever differ. Prerequisites that would close a
+cycle were not ported. Materials with a production entry that the price solver
+cannot yet resolve are listed by `python3 sim/simulator.py validate` as warnings
+(node cost is a lower bound); that gap belongs to the production data.

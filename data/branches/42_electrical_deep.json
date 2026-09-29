@@ -34,7 +34,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Resistance by length and gauge of wire wound on form; repeatable and stable",
+  "kb": "50_electricity.md",
   "ph": 40,
   "lab": {
    "machinist": 120
@@ -76,7 +76,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Finely divided carbon and binder; cheap and smaller than wirewound",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "chemist": 80,
@@ -136,7 +136,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Variable resistance by moving contact along resistive track",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "machinist": 200,
@@ -194,7 +194,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Helical or toroidal winding with screw-driven contact; voltage division without drawing significant current",
+  "kb": "50_electricity.md",
   "ph": 180.0,
   "lab": {
    "artisan": 120.0,
@@ -248,7 +248,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Stacked mica sheets between foil plates; excellent dielectric and stability",
+  "kb": "50_electricity.md",
   "ph": 50,
   "lab": {
    "artisan": 120,
@@ -301,7 +301,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Paper impregnated with oil between foil sheets, rolled and sealed",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "artisan": 100,
@@ -330,7 +330,8 @@
   "name": "Electrolytic capacitor aluminium",
   "cat": "component",
   "pre": [
-   "sulfuric_retort"
+   "sulfuric_retort",
+   "mat_aluminium"
   ],
   "req_any": [
    {
@@ -344,7 +345,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Thin oxide layer on aluminium foil anodized in ammonia or glycerol solution; large capacitance in small volume",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "chemist": 200,
@@ -397,7 +398,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Parallel plates rotating through fixed plates; capacitance varies by overlap and gap",
+  "kb": "50_electricity.md",
   "ph": 70,
   "lab": {
    "machinist": 180,
@@ -446,7 +447,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Wire wound on insulated form with no core; inductance by geometry alone",
+  "kb": "50_electricity.md",
   "ph": 30,
   "lab": {
    "electrician": 60
@@ -502,7 +503,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Wire wound on iron core; current saturation and hysteresis loss but much higher inductance",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "machinist": 120,
@@ -546,7 +547,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Soft ferrite from calcined iron oxides or iron powder in binder; high permeability, low eddy loss, stable across temperature",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "chemist": 100,
@@ -590,7 +591,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Piezoelectric quartz plate resonating at MHz or kHz; frequency-selective element",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "optician": 150,
@@ -641,7 +642,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Electromagnet pulls armature to make or break electrical contacts; low power input controls high power load",
+  "kb": "50_electricity.md",
   "ph": 50,
   "lab": {
    "machinist": 100,
@@ -694,7 +695,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Large relay for motor control; multiple contacts; arc suppression; thermal overload protection",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "machinist": 150,
@@ -745,7 +746,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Knife blade on hinge makes hard contact with clips; manual on-off",
+  "kb": "50_electricity.md",
   "ph": 20,
   "lab": {
    "smith": 60
@@ -793,7 +794,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Bimetallic strip heats and bends to trip latch; trips at set current",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "artisan": 100,
@@ -836,7 +837,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Solenoid pulls latch immediately on fault current; instantaneous protection",
+  "kb": "50_electricity.md",
   "ph": 70,
   "lab": {
    "machinist": 120,
@@ -938,7 +939,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Air gap or horn gap connected across line to ground; provides low impedance path for transient",
+  "kb": "50_electricity.md",
   "ph": 50,
   "lab": {
    "artisan": 80
@@ -988,7 +989,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Porcelain pin insulator for overhead lines; high voltage creepage path",
+  "kb": "50_electricity.md",
   "ph": 40,
   "lab": {
    "potter": 100,
@@ -1038,7 +1039,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Conductor passes through bushings at transformer terminals; oil-impregnated paper and porcelain",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "potter": 120,
@@ -1091,7 +1092,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Detachable mated connector with contact safety and intermateability",
+  "kb": "50_electricity.md",
   "ph": 70,
   "lab": {
    "machinist": 150,
@@ -1143,7 +1144,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Photolithographic pattern on copper foil; chemical or mechanical removal to leave tracks",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 200,
@@ -1193,7 +1194,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Two coils loosely coupled through air; impedance transformation low but isolation high",
+  "kb": "50_electricity.md",
   "ph": 40,
   "lab": {
    "electrician": 60
@@ -1242,7 +1243,7 @@
    "infrastructure",
    "commerce"
   ],
-  "kb": "Field coil connected in parallel with armature; load increase strengthens field",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "engineer": 200,
@@ -1292,7 +1293,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Field coil in series with armature load; current through field regulates voltage",
+  "kb": "50_electricity.md",
   "ph": 75,
   "lab": {
    "engineer": 200,
@@ -1335,7 +1336,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Shunt and series field coils on same poles; combines voltage stability with current response",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 250,
@@ -1394,7 +1395,7 @@
    "infrastructure",
    "commerce"
   ],
-  "kb": "Rotating magnet with stationary armature; brushes only on excitation field, not output",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 300,
@@ -1445,7 +1446,7 @@
    "infrastructure",
    "labour_saving"
   ],
-  "kb": "Rotor poles lock to rotating magnetic field of stator; runs at exact line frequency when loaded within pull-out torque",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "engineer": 280,
@@ -1497,7 +1498,7 @@
    "infrastructure",
    "labour_saving"
   ],
-  "kb": "Short-circuited rotor bars in slots run at speed slightly below synchronous due to slip",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 250,
@@ -1548,7 +1549,7 @@
    "infrastructure",
    "labour_saving"
   ],
-  "kb": "Rotor has external slip rings; external resistance limits starting current and enables speed control",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 300,
@@ -1599,7 +1600,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Series-wound motor with commutator; runs on AC or DC; speed varies with load and frequency",
+  "kb": "50_electricity.md",
   "ph": 90,
   "lab": {
    "engineer": 220,
@@ -1650,7 +1651,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Multi-phase coils pull magnetic rotor to discrete positions; one step per pulse",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 250,
@@ -1700,7 +1701,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Motor with position feedback and closed-loop control; servo law adjusts command",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 300,
@@ -1805,7 +1806,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Thermionic emission from mercury cathode; conducts only one way; high current capacity",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 200,
@@ -1862,7 +1863,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Asymmetric conductivity of metal-oxide junction; solid state, no vacuum required",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "chemist": 150,
@@ -1913,7 +1914,7 @@
    "infrastructure",
    "commerce"
   ],
-  "kb": "Two outer wires at opposite voltage; neutral wire at half voltage to each outer; halves wire mass for same power",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 300,
@@ -1964,7 +1965,7 @@
    "infrastructure",
    "commerce"
   ],
-  "kb": "Distribution loops back to supply; allows isolating section without losing power to whole ring",
+  "kb": "50_electricity.md",
   "ph": 130,
   "lab": {
    "engineer": 320,
@@ -2019,7 +2020,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Transforms high transmission voltage to lower distribution voltage; tap changer adjusts ratio under load",
+  "kb": "50_electricity.md",
   "ph": 140,
   "lab": {
    "engineer": 350,
@@ -2071,7 +2072,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Motor-driven switch selects transformer tap ratio while load still connected",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 250,
@@ -2120,7 +2121,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Compares current in and current out; trips if difference exceeds threshold; protects transformer windings",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "engineer": 280,
@@ -2170,7 +2171,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Low-resistance path to ground; protects personnel from neutral shift and lightning",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "engineer": 200,
@@ -2222,7 +2223,7 @@
    "infrastructure",
    "commerce"
   ],
-  "kb": "Capacitor in parallel with inductive load shifts phase angle toward unity; reduces transmission losses",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 240,
@@ -2271,7 +2272,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Two-phase motor runs fast when voltages out of phase; pointer speed and direction indicate phase angle",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "engineer": 200,
@@ -2321,7 +2322,7 @@
    "infrastructure",
    "information"
   ],
-  "kb": "Central control station directs power plant output to match demand; communication to remote plants",
+  "kb": "50_electricity.md",
   "ph": 150,
   "lab": {
    "engineer": 400,
@@ -2357,7 +2358,7 @@
    "infrastructure",
    "commerce"
   ],
-  "kb": "Agreement on supply voltage: 110V or 230V single phase, 380V three-phase; allows interchangeable equipment",
+  "kb": "50_electricity.md",
   "ph": 200,
   "lab": {
    "engineer": 500,
@@ -2392,7 +2393,7 @@
    "infrastructure",
    "commerce"
   ],
-  "kb": "Agreement on AC frequency: 50 Hz in continental Europe, 60 Hz in Americas; locks synchronous motors to line frequency",
+  "kb": "50_electricity.md",
   "ph": 180,
   "lab": {
    "engineer": 480
@@ -2443,7 +2444,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Coil moving in field; deflection proportional to current; damping spring prevents oscillation",
+  "kb": "50_electricity.md",
   "ph": 70,
   "lab": {
    "machinist": 150,
@@ -2492,7 +2493,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Iron vane moves in non-uniform field; deflection approximately proportional to current squared",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "machinist": 120,
@@ -2540,7 +2541,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Two coils: fixed carries load current, moving carries proportional current; deflection is product, hence power",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "machinist": 200,
@@ -2590,7 +2591,7 @@
    "infrastructure",
    "commerce"
   ],
-  "kb": "Aluminium rotor torque proportional to power; gear train integrates into kWh readout",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "engineer": 250,
@@ -2637,7 +2638,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Hand-cranked generator applies DC voltage; measures leakage resistance",
+  "kb": "50_electricity.md",
   "ph": 90,
   "lab": {
    "engineer": 220,
@@ -2685,7 +2686,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "AC source; four-arm bridge with null detector; unknown impedance from balance condition",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 280,
@@ -2730,7 +2731,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Cadmium-mercury amalgam negative, mercurous sulfate positive; EMF 1.0186V at 20C",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "chemist": 200,
@@ -2779,7 +2780,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Manganin wire has minimal temperature coefficient and stable value",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "machinist": 200,
@@ -2829,7 +2830,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Unknown voltage balanced against known by adjusting potentiometer; null condition indicates equality",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 240,
@@ -2874,7 +2875,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "High inertia permits coil swing to measure total flux linkage change",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "machinist": 220,
@@ -2923,7 +2924,7 @@
    "infrastructure",
    "information"
   ],
-  "kb": "Fine conducting string in strong field; pen records displacement on moving paper",
+  "kb": "50_electricity.md",
   "ph": 130,
   "lab": {
    "engineer": 300,
@@ -2978,7 +2979,7 @@
    "infrastructure",
    "information"
   ],
-  "kb": "Electron beam deflected by electric or magnetic field; shows waveform on phosphor screen",
+  "kb": "50_electricity.md",
   "ph": 150,
   "lab": {
    "engineer": 400,
@@ -3026,7 +3027,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Triode cathode follower draws negligible grid current; high input impedance",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 280,
@@ -3071,7 +3072,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Heated filament emits electrons; plate collects them; blocks reverse current",
+  "kb": "50_electricity.md",
   "ph": 70,
   "lab": {
    "engineer": 180,
@@ -3127,7 +3128,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Grid between filament and plate controls electron current; small voltage change controls large plate current",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 240,
@@ -3176,7 +3177,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Screen grid between grid and plate reduces interelectrode capacitance; suppressor grid reduces secondary emission",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "engineer": 280,
@@ -3219,7 +3220,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Added suppressor grid eliminates tetrode kink; remote cutoff possible; higher gains",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 300,
@@ -3274,7 +3275,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Beam forming electrodes focus electron beam; lower plate resistance; higher power than pentode",
+  "kb": "50_electricity.md",
   "ph": 130,
   "lab": {
    "engineer": 320,
@@ -3324,7 +3325,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Gas breakdown initiated by grid pulse; current continues until anode voltage drops",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 250,
@@ -3375,7 +3376,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Photon releases electron from cathode; cascade through dynodes multiplies current",
+  "kb": "50_electricity.md",
   "ph": 140,
   "lab": {
    "engineer": 350,
@@ -3424,7 +3425,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Electron beam modulated by input cavity; power extracted at output cavity",
+  "kb": "50_electricity.md",
   "ph": 150,
   "lab": {
    "engineer": 400,
@@ -3473,7 +3474,7 @@
    "infrastructure",
    "military"
   ],
-  "kb": "Electrons spiral in crossed electric and magnetic fields; oscillate in cavity at microwave frequency",
+  "kb": "50_electricity.md",
   "ph": 160,
   "lab": {
    "engineer": 420,
@@ -3523,7 +3524,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Electron beam interacts with electromagnetic wave on slow-wave structure; gain throughout tube length",
+  "kb": "50_electricity.md",
   "ph": 170,
   "lab": {
    "engineer": 450,
@@ -3579,7 +3580,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Photons generate electron-hole pairs across junction; small current proportional to light intensity",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "chemist": 160,
@@ -3630,7 +3631,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Oxide resistance decreases sharply with temperature; NTC provides temperature compensation or measurement",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "chemist": 220,
@@ -3679,7 +3680,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Resistance decreases sharply above threshold voltage; nonlinear protection element",
+  "kb": "50_electricity.md",
   "ph": 90,
   "lab": {
    "chemist": 200,
@@ -3717,7 +3718,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Series or parallel LC; impedance minimum (series) or maximum (parallel) at resonance; high Q at resonance",
+  "kb": "50_electricity.md",
   "ph": 100.0,
   "lab": {
    "electrician": 270.0,
@@ -3754,7 +3755,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Bandwidth equals resonant frequency divided by Q; high Q means sharp selectivity",
+  "kb": "50_electricity.md",
   "ph": 70,
   "lab": {
    "engineer": 180
@@ -3785,7 +3786,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Time constant RC determines cutoff frequency; one pole rolloff 20dB/decade",
+  "kb": "50_electricity.md",
   "ph": 50,
   "lab": {
    "engineer": 120
@@ -3818,7 +3819,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Series resonant for band-pass in series path; parallel resonant for notch in shunt",
+  "kb": "50_electricity.md",
   "ph": 70,
   "lab": {
    "engineer": 170
@@ -3858,7 +3859,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Voltage gain equals amplification factor times load impedance; current gain is cathode bias divider dependent",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "engineer": 200,
@@ -3897,7 +3898,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Output fed back to input in phase opposition; reduces gain but improves linearity and stability spectacularly",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 250
@@ -3936,7 +3937,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Positive feedback regenerates input; tuned circuit sets frequency",
+  "kb": "50_electricity.md",
   "ph": 90,
   "lab": {
    "engineer": 220,
@@ -3985,7 +3986,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Two cross-coupled amplifiers with capacitor timing; bistable switching or free-running oscillation",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "engineer": 270,
@@ -4027,7 +4028,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Two stable states; external pulse switches state; remains until next pulse",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 290
@@ -4064,7 +4065,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Chain of flip-flops divides frequency by powers of two; counting pulses into decades",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 250
@@ -4110,7 +4111,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Two frequencies mixed in nonlinear device; difference and sum frequencies output",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "engineer": 200,
@@ -4158,7 +4159,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "AM envelope detection by rectifier and RC filter; product detection for SSB and CW",
+  "kb": "50_electricity.md",
   "ph": 75,
   "lab": {
    "engineer": 180,
@@ -4205,7 +4206,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Symmetrical tuned circuits above and below center frequency; output voltage proportional to frequency deviation",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 240,
@@ -4251,7 +4252,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "AM: varies RF amplitude with modulation; FM: varies RF frequency; PM: varies RF phase",
+  "kb": "50_electricity.md",
   "ph": 90,
   "lab": {
    "engineer": 220,
@@ -4299,7 +4300,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Full-wave rectification; L-C or RC filter removes ripple",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "engineer": 200,
@@ -4349,7 +4350,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Zener holds constant voltage across load; series regulator controls pass device to maintain output",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 250,
@@ -4395,7 +4396,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Transformer turns ratio or L-network adjusts impedance to maximum power transfer",
+  "kb": "50_electricity.md",
   "ph": 70,
   "lab": {
    "engineer": 170,
@@ -4447,7 +4448,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Two-conductor transmission line has characteristic impedance; reflection-less termination at load",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 240,
@@ -4496,7 +4497,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Metal tube confines electromagnetic wave; lower loss than coax at microwave frequencies",
+  "kb": "50_electricity.md",
   "ph": 130,
   "lab": {
    "engineer": 320,
@@ -4544,7 +4545,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Dipole and loop antennas; gain and directivity patterns; impedance matching to feedline",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "engineer": 270,
@@ -4596,7 +4597,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "High current DC arc melts metal; electrode supplies filler or as shield; heat record high",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 280,
@@ -4646,7 +4647,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "High current passes through sheets at overlap; resistance heating melts metal",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "engineer": 260,
@@ -4694,7 +4695,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "AC current in coil induces currents in metallic workpiece; eddy current heating",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 240,
@@ -4741,7 +4742,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "High-frequency AC field polarises molecules in insulating material; molecular motion generates heat",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 300,
@@ -4790,7 +4791,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Cathode reduction deposits metal from solution; anode dissolution provides metal ions",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "engineer": 200,
@@ -4838,7 +4839,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Reverse electroplating: anodic dissolution removes material with smooth finish",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 240,
@@ -4886,7 +4887,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Strong electric field ionises gas and charges dust particles; particles move to collection electrode",
+  "kb": "50_electricity.md",
   "ph": 130,
   "lab": {
    "engineer": 320,
@@ -4944,7 +4945,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "AC induction motor powered from pantograph; speed controlled by frequency and voltage",
+  "kb": "50_electricity.md",
   "ph": 150,
   "lab": {
    "engineer": 350,
@@ -4995,7 +4996,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Bus motor powered from overhead two-wire catenary; less power than rail but no track installation",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "engineer": 300,
@@ -5045,7 +5046,7 @@
    "labour_saving",
    "infrastructure"
   ],
-  "kb": "Motor with speed reduction and brake; controlled acceleration and deceleration",
+  "kb": "50_electricity.md",
   "ph": 130,
   "lab": {
    "engineer": 310,
@@ -5095,7 +5096,7 @@
    "labour_saving",
    "commerce"
   ],
-  "kb": "Universal AC-DC motor in handheld drill with speed control",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 240,
@@ -5151,7 +5152,7 @@
    "spectacle",
    "luxury"
   ],
-  "kb": "Voice coil moves in magnetic field; cone amplifies displacement into sound pressure",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "engineer": 260,
@@ -5202,7 +5203,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Sound-driven diaphragm compresses carbon granules; resistance varies with pressure",
+  "kb": "50_electricity.md",
   "ph": 70,
   "lab": {
    "artisan": 140,
@@ -5249,7 +5250,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Coil in field moves with diaphragm; induced voltage proportional to sound velocity",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 240,
@@ -5297,7 +5298,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Thin diaphragm moves relative to fixed plate; capacitance variation amplified by high-impedance amplifier",
+  "kb": "50_electricity.md",
   "ph": 130,
   "lab": {
    "engineer": 310,
@@ -5345,7 +5346,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Thin ribbon suspended in field; velocity-sensitive output; figure-eight polar pattern",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "engineer": 270,
@@ -5394,7 +5395,7 @@
    "information",
    "infrastructure"
   ],
-  "kb": "Electromechanical stepping relays route calls; bank-and-wiper selector or crossbar matrix",
+  "kb": "50_electricity.md",
   "ph": 200,
   "lab": {
    "engineer": 500,
@@ -5447,7 +5448,7 @@
    "military",
    "infrastructure"
   ],
-  "kb": "Pulsed RF transmitted; reflected echo received and displayed on CRT with range proportional to time delay",
+  "kb": "50_electricity.md",
   "ph": 200,
   "lab": {
    "engineer": 500,
@@ -5503,7 +5504,7 @@
    "military",
    "infrastructure"
   ],
-  "kb": "Ultrasonic pulse transmitted; echo received and time-to-range conversion displays contacts",
+  "kb": "50_electricity.md",
   "ph": 180,
   "lab": {
    "engineer": 450,
@@ -5548,7 +5549,7 @@
    "spectacle",
    "information"
   ],
-  "kb": "Photons release electrons from photocathode; current proportional to light intensity",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "engineer": 250,
@@ -5604,7 +5605,7 @@
    "medical",
    "infrastructure"
   ],
-  "kb": "Accelerated electrons strike metal target; bremsstrahlung X-rays produced",
+  "kb": "50_electricity.md",
   "ph": 150,
   "lab": {
    "engineer": 350,
@@ -5659,7 +5660,7 @@
    "information",
    "infrastructure"
   ],
-  "kb": "Electron beam focused by magnetic lenses; specimen scattering imaged on fluorescent screen or photographic plate",
+  "kb": "50_electricity.md",
   "ph": 200,
   "lab": {
    "engineer": 500,
