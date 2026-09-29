@@ -364,6 +364,34 @@ class PopulationState:
 
 
 @dataclass
+class ActorRecord:
+	"""Persistent state shared by every non-founder actor (a firm, a government)."""
+	kind: str = "firm"
+	name: str = ""
+	policy_kind: str = "value"
+	money: float = 0.0
+	workforce: Dict[str, float] = field(default_factory=dict)
+	knowledge: Set[str] = field(default_factory=set)
+	concerns: Set[str] = field(default_factory=set)
+	# node id -> copy work in progress (hours_left, money_left, years, ...)
+	works: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+	failed_copies: Dict[str, int] = field(default_factory=dict)
+	opened_year: Dict[str, int] = field(default_factory=dict)
+	target: Optional[str] = None
+	location: Optional[str] = None
+	exited_year: Optional[int] = None
+	loss_years: int = 0
+	founded_year: Optional[int] = None
+	last_margin: float = 0.0
+
+
+@dataclass
+class ActorsState:
+	"""Every actor other than the founder's household, keyed by actor id."""
+	records: Dict[str, ActorRecord] = field(default_factory=dict)
+
+
+@dataclass
 class SimulationState:
 	"""Root coordinator aggregating authoritative persistent subsystem states."""
 	household: HouseholdState
@@ -373,6 +401,7 @@ class SimulationState:
 	founder: Optional[FounderState] = None
 	scenario: Optional[ScenarioState] = None
 	population: Optional[PopulationState] = None
+	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
 	_goal: Optional[str] = None
 	_civ_live: Dict[str, Any] = field(default_factory=dict)
@@ -391,6 +420,7 @@ ALL_STATE_CLASSES = (
 	FounderState,
 	ScenarioState,
 	PopulationState,
+	ActorsState,
 )
 
 

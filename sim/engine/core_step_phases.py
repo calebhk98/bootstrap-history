@@ -490,6 +490,7 @@ class StepPhasesMixin:
         # a year's schooling gain is visible to this same year's teaching
         # decisions rather than lagging a full step behind them.
         self.advance_society(self.state.scenario.year)
+        self.advance_actors(self.state.scenario.year)
         # 2c. THRESHOLD GOALS. A node carrying a `win_condition` (see
         # data.py's WIN_CONDITION_LABELS and tech_tree.json's own goals
         # using one) is never built - start_reason refuses it outright -

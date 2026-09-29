@@ -40,6 +40,7 @@ from .labour import LabourMixin
 from .labour_allocation import LabourAllocationMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
+from .society_actors import ActorsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
 from .data import trade_family
@@ -191,7 +192,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
-          ProjectsMixin, SocietyMixin, ForwardingPropertiesMixin,
+          ProjectsMixin, SocietyMixin, ActorsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
@@ -281,7 +282,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.civ = civ or load_civ()
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
-            SimulationState, HouseholdState, ProjectsState,
+            SimulationState, HouseholdState, ProjectsState, ActorsState,
             EconomyState, GovernanceState, FounderState,
             ScenarioState, PopulationState
         )
@@ -293,6 +294,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             founder=FounderState(),
             scenario=ScenarioState(),
             population=PopulationState(),
+            actors=ActorsState(),
             _civ=self.civ.get("id"),
             _version=3,
         )

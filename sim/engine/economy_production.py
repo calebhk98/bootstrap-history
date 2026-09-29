@@ -404,6 +404,13 @@ class ProductionMixin:
             "what a workshop makes'), not fitted to any measured "
             "productivity data.")
 
+    def concern_takings(self, node_id, ramp):
+        """Yearly takings of one concern at a given ramp, before market saturation."""
+        economy = self.state.economy
+        return (self.nodes[node_id]["rev"] * ramp
+                * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
+                * economy.output_factor * self.price_index)
+
     def revenue_sources(self):
         """Where the money actually comes from, itemised.
 
@@ -428,8 +435,7 @@ class ProductionMixin:
                 ramp = self.PRACTICE_SHARE
             else:
                 ramp = self.venture_ramp(node_id)
-            amt = (node["rev"] * ramp * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * economy.output_factor
-                   * self.price_index)
+            amt = self.concern_takings(node_id, ramp)
             if practice:
                 amt *= self.practice_attention()
             else:
