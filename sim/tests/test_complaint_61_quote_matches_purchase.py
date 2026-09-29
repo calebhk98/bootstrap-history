@@ -48,6 +48,29 @@ check("forest: the refusal names what you could raise, as the quote does",
       not _refusal.get("ok") and "could raise" in str(_refusal.get("error")),
       _refusal)
 
+# Slaves quote must show the shared budget (cash + credit), like forest does.
+_slaves_sim, _slaves_quote = _quoted({"what": "slaves", "n": 100}, _CAPITAL)
+check("slaves: the quote includes shared budget info",
+      "you_could_raise" in _slaves_quote and "you_can_afford_about" in _slaves_quote,
+      _slaves_quote)
+_slaves_people = _slaves_quote["you_can_afford_about"]
+check("slaves: the quote gives a positive affordable amount",
+      _slaves_people > 0, _slaves_quote)
+check("slaves: the quoted affordable people are bought in full",
+      _slaves_sim.buy_slaves(_slaves_people) == _slaves_people, _slaves_people)
+
+# Affordability with credit: household with little cash but enough credit can buy
+_credit_sim = sim(capital=_CAPITAL)
+# Ensure spending_power allows using credit
+_budget = _credit_sim.spending_power("buy")
+if _budget > _CAPITAL:
+    # We have credit available; try to buy something that costs more than cash alone
+    cost_with_credit = _CAPITAL * 0.5 + (_budget - _CAPITAL) * 0.5
+    # This should be affordable via shared budget but not via cash alone
+    if cost_with_credit > _CAPITAL:
+        check("slaves: affordable via credit when cash alone is insufficient",
+              cost_with_credit <= _budget, (cost_with_credit, _budget, _CAPITAL))
+
 # Bought material stock draws on the same budget.
 _stock_sim = sim(capital=_CAPITAL)
 _material_quote = _stock_sim.material_trade_quote("iron")

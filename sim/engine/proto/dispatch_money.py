@@ -393,9 +393,26 @@ def _cmd_quote(sim, nodes, cmd, ended):
         n_s, err_s = _qty(cmd, "n", 1)
         if err_s:
             return {"ok": False, "error": err_s}
+        budget = purchase_rule.purchase_budget(sim)
+        per_person_base = sim.SLAVE_BASE_PRICE_DENARII * sim.price_index
+        lower, upper = 0.0, budget / max(per_person_base, 1e-9)
+        affordable = 0.0
+        for _ in range(20):
+            mid = (lower + upper) / 2.0
+            cost = sim.slave_quote(mid)
+            if cost <= budget:
+                affordable = mid
+                lower = mid
+            else:
+                upper = mid
+        affordable = int(affordable)
         return {"ok": True, "what": "slaves", "people": n_s,
                 "to_buy_them": round(sim.slave_quote(n_s), 1),
+                "per_person_base": round(per_person_base, 2),
                 "you_have": round(sim.capital, 1),
+                "you_could_raise": round(budget, 1),
+                "you_can_afford_about": affordable,
+                "afford_means": purchase_rule.afford_means(),
                 "note": "The price rises with how many you take at once, and "
                         "they are worth nothing to you for the first few "
                         "years while they learn the work. Freeing them "
