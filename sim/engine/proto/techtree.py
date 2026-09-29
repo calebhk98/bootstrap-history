@@ -158,9 +158,9 @@ def _fog_revenue_estimate(sim, node_id):
     real = node["rev"]
     if real <= 0:
         return None          # nothing to estimate; a non-earner is a non-earner under fog too
-    key = "%s|%s|%.1f|%s" % (sim.civ.get("id") or sim.civ.get("name") or "civ",
+    key = "%s|%s|%s|%s" % (sim.civ.get("id") or sim.civ.get("name") or "civ",
                              sim.goal or "",
-                             sim.cfg.get("start_capital", 0.0), node_id)
+                             sim.cfg.get("start_capital") or sim.cfg.get("start_kit"), node_id)
     digest = hashlib.sha256(key.encode("utf-8")).digest()
     half = {"A": 0.30, "B": 0.55}.get(node.get("conf"), 0.85)
     lo_frac = 0.35 + (digest[0] / 255.0) * 0.55

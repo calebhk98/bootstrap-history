@@ -15,11 +15,11 @@
     "printing": 1.3,
     "structures": 0.75
   },
-  "currency": "denarius",
+  "currency": "Ptolemaic silver tetradrachm",
   "coin_standard": {
     "material": "silver_kg",
-    "kg_per_unit": 0.0029,
-    "source": "The sample scenario names the denarius as its currency, so it takes Rome's standard. Fine silver in one denarius under Trajan: about 3.2 g at roughly nine tenths fineness (Butcher and Ponting, The Metallurgy of Roman Silver Coinage, Cambridge 2014). Confidence C: fineness varied by issue."
+    "kg_per_unit": 0.012,
+    "source": "Ptolemaic silver tetradrachm: about 13.7 g (a Ptolemy X example weighs 13.67 g) at roughly 0.9 fineness, about 12 g of silver (Wikipedia, Ptolemaic coinage; wildwinds, Ptolemy X; Kelsey Museum blog on Ptolemaic currency). Confidence low on fineness."
   },
   "debt_bondage": false,
   "fire_quarter": "insula district, where the tenements stand six storeys in wood",

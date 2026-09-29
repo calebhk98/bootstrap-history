@@ -169,7 +169,7 @@ def _play_build_sim(args):
            "horizon_years": horizon}
     kit = getattr(args, "kit", None)
     if kit:
-        cfg["start_capital"] = STARTING_KITS[kit]["den"]
+        cfg["start_kit"] = kit
     sim = Sim(nodes, order,
             DetRNG(args.seed) if getattr(args, "deterministic", False) else random.Random(args.seed),
             events=True, bounty_set=set(),
@@ -263,24 +263,12 @@ def _play_print_welcome(sim, kit):
                 "employees, no slaves, and nobody who owes you anything. "
                 "What you have is everything you know."
                 % (sim.year, sim.capital, money_word(sim.civ))))
-    # THE KIT SAID 4,000 AND YOU ARRIVED WITH 3,000, SILENTLY. Every
-    # kit's figure (STARTING_KITS) is priced in Rome 100 AD denarii, the
-    # same currency project_cost and everything else is calibrated
-    # through - see price_index's own comment in data.py - and is then
-    # converted at THIS civilisation's prices before a denarius of it
-    # ever reaches the ledger. A blind Han playthrough picked "merchant,
-    # 4,000 den" off the kit list and read "You arrive ... with 3000
-    # cash" one screen later with no statement anywhere that the two
-    # numbers were the same kit. The arithmetic was always right; only
-    # the silence was a bug.
-    if kit and abs(sim.price_index - 1.0) > 0.002:
-        _quoted = STARTING_KITS.get(kit, {}).get("den")
-        if _quoted:
-            print(_wrap('The "%s" kit is quoted in Rome\'s prices (%d den); '
-                        "here, prices run at %.3gx Rome's, so that arrived "
-                        "as %d %s, not %d."
-                        % (kit, _quoted, sim.price_index, sim.capital,
-                           money_word(sim.civ), _quoted)))
+    # A kit is a number of labourer-years, so it is stated here in the
+    # civilisation's own money at its own opening wage.
+    if kit and kit in STARTING_KITS:
+        print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %d %s.'
+                    % (kit, STARTING_KITS[kit]["labourer_years"], sim.capital,
+                       money_word(sim.civ))))
     print()
     # `open` BELONGS IN THE OPENING. Finishing a project earns you
     # nothing until you open its doors, auto_open ships off for a player
@@ -768,7 +756,7 @@ def cmd_civs(args):
         print()
     print("starting kits (--kit):")
     for kit_id, kit_data in STARTING_KITS.items():
-        print("   %-14s %9s den   %s" % (kit_id, f"{kit_data['den']:,}", kit_data["desc"]))
+        print("   %-14s %9s labourer-years   %s" % (kit_id, f"{kit_data['labourer_years']:,.1f}", kit_data["desc"]))
     return 0
 
 
@@ -972,7 +960,7 @@ def _new_game_ask_kit(cfg):
     print("-" * 78)
     print("   WHAT YOU ARRIVED WITH")
     for name, kit in STARTING_KITS.items():
-        print("      %-14s %9s den" % (name, f"{kit['den']:,}"))
+        print("      %-14s %9s labourer-years" % (name, f"{kit['labourer_years']:,.1f}"))
         if kit.get("desc"):
             print(_wrap(kit["desc"], indent="         "))
     kit_default = cfg.get("default_kit", "poor_scholar")

@@ -898,7 +898,7 @@ def _run_trials(nodes, order, bounties, goal, args, deterministic):
         rng = DetRNG(args.seed + i) if deterministic else random.Random(args.seed + i)
         run_result = Sim(nodes, order, rng, events=not args.no_events,
                 cfg={"immortal": not args.mortal,
-                     "start_capital": STARTING_KITS[args.kit]["den"]},
+                     "start_kit": args.kit},
                 civ=load_civ(args.civ),
                 bounty_set=(set() if args.no_bounties else bounties)).run(goal, args.horizon)
         res.append(run_result)
@@ -1007,8 +1007,9 @@ def cmd_compare(args):
                    DetRNG(args.seed + i) if deterministic else random.Random(args.seed + i),
                    events=True,
                    cfg={"immortal": not getattr(args, "mortal", False),
-                        "start_capital": STARTING_KITS.get(getattr(args,"kit","poor_scholar"),
-                                                           STARTING_KITS["poor_scholar"])["den"]},
+                        "start_kit": (getattr(args, "kit", "poor_scholar")
+                                      if getattr(args, "kit", "poor_scholar") in STARTING_KITS
+                                      else "poor_scholar")},
                    civ=load_civ(getattr(args, "civ", "rome_100ad")),
                    bounty_set=bounties).run(goal, args.horizon)
                for i in range(args.mc)]

@@ -178,6 +178,38 @@ class tempfile_civ(object):
         self.directory.cleanup()
 
 
+class OpeningCapitalTests(unittest.TestCase):
+
+    def _sim(self, civ_name, kit):
+        import random
+        from sim.tests import harness
+        from sim.engine.core import Sim
+        return Sim(harness.NODES, harness.ORDER, random.Random(1), events=False, manual=True,
+                   civ=data.load_civ(civ_name), cfg={"start_kit": kit})
+
+    def test_a_kit_is_labourer_years_of_the_opening_wage(self):
+        civ = data.load_civ("rome_100ad")
+        expected = (data.STARTING_KITS["merchant"]["labourer_years"]
+                    * _schedule(civ).annual_wage("labourer"))
+        self.assertAlmostEqual(data.kit_capital("merchant", civ), expected)
+
+    def test_kit_money_follows_the_coin(self):
+        civ = data.load_civ("rome_100ad")
+        heavier = copy.deepcopy(civ)
+        heavier["coin_standard"]["kg_per_unit"] *= 2.0
+        self.assertAlmostEqual(data.kit_capital("artisan", heavier) * 2.0,
+                               data.kit_capital("artisan", civ))
+
+    def test_every_funded_kit_affords_a_skilled_hire_for_a_year(self):
+        for civ_name in CIVILISATIONS + ["sample_egypt_100bc_e7k2:egypt"]:
+            for kit, kit_data in data.STARTING_KITS.items():
+                if kit_data["labourer_years"] <= 0.0:
+                    continue
+                engine = self._sim(civ_name, kit)
+                self.assertGreaterEqual(
+                    engine.household.capital, engine.annual_wage("smith"), (civ_name, kit))
+
+
 _BOOK_RUNNER = """
 import builtins, io, json, sys
 mode = sys.argv[1]

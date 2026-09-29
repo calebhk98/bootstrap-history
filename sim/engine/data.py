@@ -69,8 +69,8 @@ class StartingKit(TypedDict):
     """One entry of `STARTING_KITS`, below - a fixed two-field schema every
     entry actually has (checked against every kit in this module and every
     read site in cli.py/cli_interactive.py/cli_agent.py, all of which read
-    exactly `["den"]` and/or `["desc"]` and nothing else)."""
-    den: int
+    exactly `["labourer_years"]` and/or `["desc"]` and nothing else)."""
+    labourer_years: float
     desc: str
 
 
@@ -86,7 +86,8 @@ class SimulationDefaults(TypedDict):
     founder_life_mean: float
     founder_life_sd: float
     start_year: int
-    start_capital: int
+    start_capital: Optional[float]
+    start_kit: str
     founder_arrival_age: int
     founder_hours_per_year: int
     director_hours_per_year: int
@@ -211,6 +212,7 @@ MONEY_WORDS: Dict[str, str] = {
     "wu zhu cash": "cash",
     "hacksilver by weight": "in hacksilver",
     "cacao bean and cotton cloth": "in cacao beans",
+    "Ptolemaic silver tetradrachm": "tetradrachms",
 }
 
 
@@ -222,6 +224,7 @@ MONEY_WORDS: Dict[str, str] = {
 MONEY_SHORT_WORDS: Dict[str, str] = {
     "denarius": "den", "sterling penny": "pence", "wu zhu cash": "cash",
     "hacksilver by weight": "hacksilver", "cacao bean and cotton cloth": "beans",
+    "Ptolemaic silver tetradrachm": "tetradr",
 }
 
 
@@ -236,6 +239,13 @@ def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wa
     if civilization_id is None:
         return _STARTING_SCHEDULE
     return wage_provider.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
+
+
+def kit_capital(kit_id: str, civ: JSONDict) -> float:
+    """Opening money of a kit for a civilisation: its labourer-years times the
+    civilisation's opening annual labourer wage."""
+    schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    return STARTING_KITS[kit_id]["labourer_years"] * schedule.annual_wage("labourer")
 
 
 def money_short(civ: Optional[JSONDict]) -> str:
@@ -784,13 +794,18 @@ def win_condition_describe(node_record: JSONDict) -> str:
 # Simulation
 # ----------------------------------------------------------------------------
 
+# A kit is stated in labourer-years: the years of an unskilled worker's wage it
+# represents at the civilisation's opening wage, which is anchored to the
+# coin's physical content. The figures keep the earlier kit sizes relative to
+# the earlier labourer wage; none is tuned to history. `kit_capital` converts
+# them to money.
 STARTING_KITS: Dict[str, StartingKit] = {
-    "destitute":   {"den": 0,     "desc": "the clothes you stand in. You must earn your first meal."},
-    "poor_scholar":{"den": 400,   "desc": "DEFAULT. A few months' subsistence, a knife, a lens, a codex of notes. About what a working teacher has."},
-    "artisan":     {"den": 1200,  "desc": "enough to rent a workshop and buy a first set of tools."},
-    "merchant":    {"den": 4000,  "desc": "a modest trading capital. You can fund one real venture."},
-    "rich_merchant":{"den": 20000,"desc": "wealthy but well under the equestrian census of 100,000."},
-    "equestrian":  {"den": 100000,"desc": "the equestrian census exactly. Conspicuous."},
+    "destitute":   {"labourer_years": 0.0, "desc": "the clothes you stand in. You must earn your first meal."},
+    "poor_scholar":{"labourer_years": 4.033, "desc": "DEFAULT. A few months' subsistence, a knife, a lens, a codex of notes. About what a working teacher has."},
+    "artisan":     {"labourer_years": 12.10, "desc": "enough to rent a workshop and buy a first set of tools."},
+    "merchant":    {"labourer_years": 40.33, "desc": "a modest trading capital. You can fund one real venture."},
+    "rich_merchant":{"labourer_years": 201.6, "desc": "wealthy but well under the equestrian census of 100,000."},
+    "equestrian":  {"labourer_years": 1008.0, "desc": "the equestrian census exactly. Conspicuous."},
     # "the medians sit inside the noise band" is not true of the whole kit
     # range: measured on the finish, not just the opening - Rome, 8 runs a
     # kit, one seed - the median year the transistor is reached runs 476
@@ -799,7 +814,7 @@ STARTING_KITS: Dict[str, StartingKit] = {
     # claim is true of the middle of the range and false at the top of it,
     # which is exactly the kind of statement that should not be made in one
     # sentence about "the whole kit range".
-    "absurd":      {"den": 1000000,"desc": "four senatorial fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a million denarii buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
+    "absurd":      {"labourer_years": 10081.0, "desc": "four senatorial fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a million denarii buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
 }
 
 DEFAULTS: SimulationDefaults = dict(
@@ -813,7 +828,8 @@ DEFAULTS: SimulationDefaults = dict(
     start_year=100,
     # DEFAULT IS A POOR SCHOLAR. Arriving with a noble's fortune is a strange
     # premise and the sweep shows it is also a worse one. Pick a kit with --kit.
-    start_capital=400,
+    start_capital=None,        # money override; None takes it from `start_kit`
+    start_kit="poor_scholar",
     founder_arrival_age=35,
     # 2,000, NOT 2,400: everyone you HIRE is modelled at HOURS_PER_PERSON_YEAR
     # = 2,000 - "a 10-hour day, 250 days, less feasts" - and the founder must

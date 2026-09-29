@@ -10,18 +10,18 @@ from .harness import *  # noqa: F401,F403
 # =============================================================================
 from sim.engine.protocol import _agent_log as _AL
 
-r, _, _ = proto([{"cmd": "hire", "trade": "labourer", "n": 1},
-                 {"cmd": "start", "id": "units_standards"},
+r, _, _ = proto([{"cmd": "start", "id": "units_standards"},
+                 {"cmd": "hire", "trade": "smith", "n": 2},
                  {"cmd": "step", "years": 1},
-                 {"cmd": "fire", "trade": "labourer", "n": 1},
+                 {"cmd": "fire", "trade": "smith", "n": 1},
                  {"cmd": "log"}])
 _entries = r[-1].get("entries") or []
 check("log records what the player did - starting, hiring, letting go - not "
       "just what the engine did on its own",
       any("started" in entry["what"] for entry in _entries)
-      and any("labourer" in entry["what"] and "taken on" in entry["what"]
+      and any("smith" in entry["what"] and "taken on" in entry["what"]
               for entry in _entries)
-      and any("labourer" in entry["what"] and "go" in entry["what"]
+      and any("smith" in entry["what"] and "go" in entry["what"]
               for entry in _entries),
       _entries)
 check("log defaults to most-recent-first",

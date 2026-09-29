@@ -66,6 +66,11 @@ relaxed pump check in `sim/tests/test_early_playtest.py`).
   `sim/tests/test_wage_floor_and_coin_standard.py` runs wages with the book's
   wheat entry removed or changed.
 
+Opening kits are stated in labourer-years (`STARTING_KITS`, `data.kit_capital`)
+and convert through the civilisation's own wage. Other money constants in the
+engine and the tree's `rev` are still authored in book denarii; the household
+wealth scale of `state_notice` was converted, the rest have not been audited.
+
 What still limits it: the coin's value is fixed at the opening technology, so
 later improvements to the coin metal's production do not deflate the currency
 (a labelled simplification: money supply and debasement are not modelled).

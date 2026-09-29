@@ -24,7 +24,7 @@
   "coin_standard": {
     "material": "silver_kg",
     "kg_per_unit": 0.025,
-    "source": "Unit taken as one Viking-age ounce (eyrir) of silver by weight, about 24 to 27 g across the metrological reconstructions (Kilger, Viking-Age weight systems; Graham-Campbell on hacksilver). Confidence D: the unit is a weight, not a coin."
+    "source": "Money was weighed silver (hacksilver, ingots, arm rings) valued by weight. The unit here is the eyrir (ounce) at about 25 g, a later-formalised unit, with reconstructions of 24 to 27 g (Kilger; Graham-Campbell). Confidence medium."
   },
   "debt_bondage": true,
   "fire_quarter": "longhouses by the shore",

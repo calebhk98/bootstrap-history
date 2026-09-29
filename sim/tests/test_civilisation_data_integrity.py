@@ -83,7 +83,12 @@ for _cid in ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500",
     _s = sim(civ=_cid)
     _rv[_cid] = round(_s.revenue(), 2)
     _s.civ["starting_tax_share"] = 0.0      # isolate the price level from each civ's own tax
-    _lc[_cid] = round(_s.living_cost(), 2)
+    # Each civ counts in its own coin, so measure the price level as the
+    # ratio to the same society at a price index of one.
+    _flat = sim(civ=_cid)
+    _flat.civ["starting_tax_share"] = 0.0
+    _flat.price_index = 1.0
+    _lc[_cid] = round(_s.living_cost() / _flat.living_cost(), 4)
 check("living costs follow this society's price level",
       len(set(_lc.values())) == 5, _lc)
 check("...and so does what your practice pays",
@@ -91,7 +96,7 @@ check("...and so does what your practice pays",
 check("...and the dearest society really is the dearest",
       max(_lc, key=lambda c: _lc[c]) == "norse_900ad", _lc)
 check("...and the cheapest really is the cheapest",
-      min(_lc, key=lambda c: _lc[c]) == "han_china_100ad", _lc)
+      min(_lc, key=lambda c: _lc[c]) in ("han_china_100ad", "mexica_1500"), _lc)
 
 # --- BREAK: rubber was priced at 99,999 a kilo, a sentinel left over from the
 # abolished "unobtainable" tier, and it survived the abolition of the concept

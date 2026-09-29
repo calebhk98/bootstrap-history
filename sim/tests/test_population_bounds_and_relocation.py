@@ -104,7 +104,6 @@ class MoveBaseTests(unittest.TestCase):
         household.employees["smith"] = 2.0
         household.commissioned["smith"] = 400.0
         household.familiarity = 0.5
-        household.capital = 50 * household.capital   # enough to pay the wages of the journey
         capital = household.capital
         far = max((tile for tile in sim.settlement_tiles() if tile != sim.base_tile()),
                   key=lambda tile: sim.distance_to_tile_km(tile))
