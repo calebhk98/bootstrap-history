@@ -133,25 +133,7 @@ check("...and it still says the thing it was built to say, that every limit "
       "is one household's reach into one town",
       "ONE town's labour market" in _pop_note, _pop_note[:160])
 
-# NOTHING FOLLOWS: a RUNNER'S EPILOGUE here - the === banner, the
-# "N checks, N failures" summary, the slowest-five table, the FAILED list,
-# the subprocess tally, the --profile dump, and `sys.exit(1 if FAILURES
-# else 0)` - is exactly the bug this guards against. sim/tests/__main__.py
-# already prints all of that. A `sys.exit` here instead reaches this
-# module, prints a plausible summary, and TERMINATES, so the ten topics
-# listed after "demographics" in __main__.TOPICS never run. Ninety-three
-# checks - every complaints_* module, dynamic_wages, economic_levers_inventory,
-# explicit_starting_techs and all four realism_part modules - would never
-# once execute in a full-suite run, and the run would say "0 failures" on
-# its way out.
-#
-# The failure mode is worth naming because it is not "the tests fail". It is
-# "the tests report success for work they did not do", which is the only kind
-# of test failure that gets more dangerous the longer it survives. The TOPICS
-# list even carries a comment about an EARLIER round of the same bug, where
-# those modules existed on disk but were not registered; registering them
-# alone would not fix it, because the run would still stop here.
-#
+# A topic module that prints a summary or exits stops every later topic from running.
 # A topic module must only run checks. Printing and exiting belong to the
 # runner, and sim/tests/test_suite_portability.py now fails if any topic module
 # calls sys.exit at import time.

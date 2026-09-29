@@ -505,15 +505,6 @@ instructions to invert rather than delete. A third class confirms the
 Atlantis finding (SS3) as ordinary regression coverage, since there is
 nothing wrong there to pin.
 
-**This file is not yet registered in `sim/tests/__main__.py`'s `TOPICS`
-list**, so `python3 sim/test_regressions.py` does not run it yet. The task
-that produced this document explicitly excluded editing that file. The line
-that needs adding is one entry, alongside `"demand"` at line 125:
-
-```python
-    "demand_at_scale",
-```
-
 **`sim/constants.py` needs no change.** This document's tests use plain
 numbers for their own scenario construction (income multiples, a
 conversion factor, an illustrative phone price), the same way
