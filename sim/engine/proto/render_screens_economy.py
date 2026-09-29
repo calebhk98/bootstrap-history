@@ -411,8 +411,8 @@ def render_mines(out):
                         row.get("utilization") or "-",
                         "yes" if row.get("actually_supplying_demand") else "no",
                         _fmt_num(row["costs_you_a_year"]),
-                        "   (ready %s)" % _fmt_num(row["ready_in"])
-                        if row.get("ready_in") else ""))
+                        "   (commissions during %s)" % _fmt_num(row["commissions_during_year"])
+                        if row.get("commissions_during_year") else ""))
         lines.append("")
         lines.append("  they cost %s den/yr in all, against revenue of %s"
                  % (_fmt_num(out.get("they_cost_you_a_year_in_all")),
@@ -425,7 +425,7 @@ def render_mines(out):
     if pend:
         lines.append("")
         lines.append("  still being sunk: "
-                 + ", ".join("%s (ready %s)" % (material, _fmt_num(ready_year))
+                 + ", ".join("%s (commissions during %s)" % (material, _fmt_num(ready_year))
                              for material, ready_year in pend.items()))
     if out.get("note"):
         lines.append("")

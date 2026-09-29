@@ -886,7 +886,10 @@ class StepPhasesMixin:
                                     in self.MATERIAL_CHECKS.items()
                                     if bucket == self.state.economy.binding))
                 short = sum(dem.get(material, 0.0) for material in keys)
-                want = max(0.0, short - self.mine_capacity.get(self.state.economy.binding, 0.0))
+                # Shafts already sinking count, so a tranche about to
+                # commission is not ordered twice.
+                want = max(0.0, short - self.mine_capacity.get(self.state.economy.binding, 0.0)
+                           - self.state.economy.mine_pending.get(self.state.economy.binding, 0.0))
                 self.open_mine(self.state.economy.binding, min(want, self.state.household.capital * 0.25
                                                  / max(1.0, self.MINE_CAPEX_PER_T_YR[self.state.economy.binding])))
                 # Iron and the base metals are smelted with charcoal, so the

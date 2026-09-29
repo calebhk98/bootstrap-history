@@ -154,7 +154,9 @@ def _buy_mine(sim, cmd, quantity):
     reply = {"ok": True, "material": mat,
              "you_asked_for_t_per_yr": asked,
              "commissioned_t_per_yr": round(got, 2),
-             "ready_year": ready,
+             # Commissioned during that year's annual resolution, so a
+             # query shows the capacity from the following year.
+             "commissions_during_year": ready,
              "years_until_producing": (None if ready is None
                                        else round(ready - sim.year, 1)),
              "already_producing_t_per_yr": round(sim.mine_capacity.get(mat, 0.0), 2),
