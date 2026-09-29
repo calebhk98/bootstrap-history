@@ -25,6 +25,7 @@ def _staff_after_plague_with_national_coverage(household, national_med_relief,
         household.operating.add("sanitation_antisepsis")
         household._done_changed()
     household.medical_diffusion_relief = lambda: national_med_relief
+    household.civ_diffusion = lambda node_id: national_med_relief
     household.STAFF_LOSS_HAZARD_ANNUAL_CHANCE = 2.0
     household.rng = random.Random(3)
     hazard = _plague_hazard(household)
