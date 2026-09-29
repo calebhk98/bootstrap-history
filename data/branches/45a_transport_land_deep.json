@@ -47,7 +47,7 @@
   "cat": "animal_traction",
   "pre": [
    "mat_leather",
-   "mat_wool"
+   "tex_wool"
   ],
   "traits": [
    "labour_saving"
@@ -79,7 +79,7 @@
   "name": "Whippletree and swingletree",
   "cat": "animal_traction",
   "pre": [
-   "tl_horse_collar",
+   "horse_collar",
    "mat_wrought_iron"
   ],
   "traits": [
@@ -124,7 +124,7 @@
   "name": "Tandem harness for shafts",
   "cat": "animal_traction",
   "pre": [
-   "tl_horse_collar",
+   "horse_collar",
    "mat_leather"
   ],
   "traits": [
@@ -137,7 +137,7 @@
   },
   "mat": {
    "mat_leather": 4,
-   "mat_rope": 2
+   "cordage_kg": 2
   },
   "cap": 350,
   "up": 35,
@@ -211,8 +211,7 @@
   "name": "Improved spoked wheel",
   "cat": "wheels_running_gear",
   "pre": [
-   "mat_wrought_iron",
-   "mat_wood"
+   "mat_wrought_iron"
   ],
   "traits": [
    "labour_saving"
@@ -360,7 +359,7 @@
   "name": "Steam road roller",
   "cat": "roads_surfaces",
   "pre": [
-   "tl_macadam_road",
+   "lnd_macadam",
    "steam_high_pressure",
    "crank_conrod"
   ],
@@ -396,7 +395,7 @@
   "name": "Tarmacadam: tar-bound stone",
   "cat": "roads_surfaces",
   "pre": [
-   "tl_macadam_road",
+   "lnd_macadam",
    "mat_bitumen"
   ],
   "traits": [
@@ -488,9 +487,7 @@
   "id": "tl_kerbing",
   "name": "Kerb and gutter edge",
   "cat": "roads_surfaces",
-  "pre": [
-   "mat_stone"
-  ],
+  "pre": [],
   "traits": [
    "infrastructure"
   ],
@@ -590,8 +587,7 @@
   "name": "Roller bearing: cylindrical",
   "cat": "wheels_running_gear",
   "pre": [
-   "cap_tol_1mm",
-   "mat_steel"
+   "cap_tol_1mm"
   ],
   "traits": [
    "infrastructure"
@@ -1219,8 +1215,7 @@
   "name": "Handbrake: lever and cable",
   "cat": "carriage_engineering",
   "pre": [
-   "mat_wrought_iron",
-   "mat_rope"
+   "mat_wrought_iron"
   ],
   "traits": [
    "labour_saving"
@@ -1232,7 +1227,7 @@
   },
   "mat": {
    "iron_bar_kg": 0.5,
-   "mat_rope": 1
+   "cordage_kg": 1
   },
   "cap": 500,
   "up": 50,
@@ -2151,7 +2146,7 @@
   "cat": "motor_subsystems",
   "pre": [
    "tl_water_pump",
-   "mat_rubber",
+   "mat_rubber_coagulated",
    "tl_vulcanized_rubber"
   ],
   "traits": [
@@ -2481,9 +2476,7 @@
   "id": "tl_air_filter",
   "name": "Air filter: intake cleaning",
   "cat": "motor_subsystems",
-  "pre": [
-   "mat_cloth"
-  ],
+  "pre": [],
   "traits": [],
   "kb": "86_transport_deep.md#tl_carburettor",
   "ph": 60,
@@ -2555,7 +2548,7 @@
   "cat": "motor_subsystems",
   "pre": [
    "crank_conrod",
-   "mat_rubber",
+   "mat_rubber_coagulated",
    "tl_vulcanized_rubber"
   ],
   "traits": [
@@ -2599,7 +2592,7 @@
    "optician": 150
   },
   "mat": {
-   "mat_glass_soda": 1
+   "glass_raw_kg": 1
   },
   "cap": 800,
   "up": 80,
@@ -2630,7 +2623,7 @@
    "electrician": 100
   },
   "mat": {
-   "mat_glass_soda": 0.1
+   "glass_raw_kg": 0.1
   },
   "cap": 500,
   "up": 50,
@@ -2650,7 +2643,7 @@
   "name": "Omnibus: passenger coach",
   "cat": "vehicle_types",
   "pre": [
-   "tl_horse_collar",
+   "horse_collar",
    "tl_elliptic_spring",
    "fin_ferry",
    "lnd_air_brake",
@@ -3040,7 +3033,7 @@
   "kb": "86_transport_deep.md#tl_omnibus",
   "ph": 180,
   "lab": {
-   "mechanic": 250
+   "machinist": 250
   },
   "mat": {
    "steel_plate_kg": 8
@@ -3547,7 +3540,6 @@
   "cat": "motor_subsystems",
   "pre": [
    "mat_lead",
-   "mat_sulfuric_acid",
    "cap_power_electric"
   ],
   "traits": [],
@@ -3797,8 +3789,7 @@
   "name": "Wire rope brake cable",
   "cat": "carriage_engineering",
   "pre": [
-   "mat_wrought_iron",
-   "mat_rope"
+   "mat_wrought_iron"
   ],
   "traits": [],
   "kb": "86_transport_deep.md#tl_brake_shoe",

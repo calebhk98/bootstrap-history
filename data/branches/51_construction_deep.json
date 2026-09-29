@@ -185,7 +185,7 @@
    "mason": 80
   },
   "mat": {
-   "mat_gypsum": 60
+   "plaster_kg": 60
   },
   "cap": 150,
   "up": 25,
@@ -249,7 +249,7 @@
   "mat": {
    "mat_lime": 40,
    "mat_sand": 100,
-   "mat_marble_dust": 50
+   "calcite_kg": 50
   },
   "cap": 300,
   "up": 50,
@@ -806,7 +806,7 @@
   "name": "Rolled iron or steel I beam",
   "cat": "structural",
   "pre": [
-   "bessemer_openhearth"
+   "mat_bulk_steel"
   ],
   "traits": [
    "labour_saving"
@@ -1048,7 +1048,7 @@
   "name": "Curtain wall non-structural facade",
   "cat": "envelope",
   "pre": [
-   "cn_steel_frame_skeleton",
+   "civ_steel_frame",
    "mat_glass_soda"
   ],
   "traits": [
@@ -1697,7 +1697,7 @@
    "carpenter": 80
   },
   "mat": {
-   "mat_cement_portland": 400,
+   "cement_portland_kg": 400,
    "mat_bentonite_slurry": 200
   },
   "cap": 2200,
@@ -1920,7 +1920,7 @@
    "labourer": 150
   },
   "mat": {
-   "mat_clay": 1000
+   "clay_kg": 1000
   },
   "cap": 1200,
   "up": 200,
@@ -1976,7 +1976,7 @@
   "name": "Tunnel by cut and cover",
   "cat": "structures",
   "pre": [
-   "cn_cofferdam"
+   "civ_cofferdam"
   ],
   "traits": [
    "infrastructure"
@@ -2088,7 +2088,7 @@
    "engineer": 60
   },
   "mat": {
-   "mat_cement_portland": 200
+   "cement_portland_kg": 200
   },
   "cap": 1300,
   "up": 220,
@@ -2120,7 +2120,7 @@
    "mason": 100
   },
   "mat": {
-   "mat_cement_portland": 150
+   "cement_portland_kg": 150
   },
   "cap": 1100,
   "up": 180,
@@ -2186,7 +2186,7 @@
   },
   "mat": {
    "mat_wood": 250,
-   "mat_hemp": 100
+   "hemp_fiber_kg": 100
   },
   "cap": 700,
   "up": 100,
@@ -2252,7 +2252,7 @@
   },
   "mat": {
    "mat_wood": 80,
-   "mat_rope": 50
+   "cordage_kg": 50
   },
   "cap": 250,
   "up": 30,
@@ -2284,7 +2284,7 @@
   },
   "mat": {
    "mat_wood": 150,
-   "mat_hemp": 80
+   "hemp_fiber_kg": 80
   },
   "cap": 600,
   "up": 80,
@@ -2524,7 +2524,7 @@
    "mason": 130
   },
   "mat": {
-   "mat_brick": 400
+   "brick_1000": 0.4
   },
   "cap": 1000,
   "up": 150,
@@ -2626,7 +2626,7 @@
   },
   "mat": {
    "cast_iron_kg": 200,
-   "mat_sheet_iron": 150
+   "iron_sheet_kg": 150
   },
   "cap": 1100,
   "up": 180,
@@ -2712,7 +2712,7 @@
   "name": "Plate glass large pane",
   "cat": "envelope",
   "pre": [
-   "glass_lead",
+   "mat_glass_lead",
    "cap_heat_1600"
   ],
   "traits": [
@@ -2725,7 +2725,7 @@
    "optician": 100
   },
   "mat": {
-   "mat_glass_soda": 300
+   "glass_raw_kg": 300
   },
   "cap": 1400,
   "up": 250,
@@ -2777,7 +2777,7 @@
   "cat": "envelope",
   "pre": [
    "cn_timber_truss",
-   "bessemer_openhearth"
+   "mat_bulk_steel"
   ],
   "traits": [
    "labour_saving"
@@ -2790,7 +2790,7 @@
   },
   "mat": {
    "iron_bar_kg": 200,
-   "mat_sheet_iron": 300
+   "iron_sheet_kg": 300
   },
   "cap": 1200,
   "up": 200,
@@ -2855,7 +2855,7 @@
    "engineer": 70
   },
   "mat": {
-   "mat_wood_fibre": 150,
+   "wood_pulp_kg": 150,
    "mat_cork": 100
   },
   "cap": 1100,
@@ -3018,7 +3018,7 @@
    "labourer": 100
   },
   "mat": {
-   "mat_cement_portland": 200
+   "cement_portland_kg": 200
   },
   "cap": 1400,
   "up": 280,
@@ -3084,7 +3084,7 @@
    "master": 200.0
   },
   "mat": {
-   "mat_cement_portland": 200,
+   "cement_portland_kg": 200,
    "steel_plate_kg": 150
   },
   "cap": 1600,
@@ -3178,7 +3178,7 @@
   },
   "mat": {
    "steel_plate_kg": 200,
-   "mat_cement_portland": 250
+   "cement_portland_kg": 250
   },
   "cap": 1900,
   "up": 380,
@@ -3242,7 +3242,7 @@
    "mason": 100
   },
   "mat": {
-   "mat_cement_portland": 300
+   "cement_portland_kg": 300
   },
   "cap": 1500,
   "up": 280,
@@ -3275,7 +3275,7 @@
   },
   "mat": {
    "mat_limestone": 200,
-   "mat_clay": 100
+   "clay_kg": 100
   },
   "cap": 1400,
   "up": 250,

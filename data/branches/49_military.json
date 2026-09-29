@@ -45,7 +45,7 @@
   "mat": {
    "mat_sulfur": 5,
    "mat_charcoal": 8,
-   "saltpetre_kg": 15
+   "nitre_kg": 15
   },
   "cap": 0,
   "up": 0,
@@ -77,7 +77,7 @@
   "mat": {
    "mat_sulfur": 5,
    "mat_charcoal": 8,
-   "saltpetre_kg": 15
+   "nitre_kg": 15
   },
   "cap": 0,
   "up": 0,
@@ -95,7 +95,7 @@
   "name": "Powder mill",
   "cat": "manufacturing",
   "pre": [
-   "corned_powder"
+   "gunpowder"
   ],
   "traits": [
    "military",
@@ -164,7 +164,7 @@
   "name": "Slow match",
   "cat": "weapons",
   "pre": [
-   "mil_corned_powder"
+   "gunpowder"
   ],
   "traits": [
    "military",
@@ -177,7 +177,7 @@
   },
   "mat": {
    "mat_linen": 1,
-   "saltpetre_kg": 0.5,
+   "nitre_kg": 0.5,
    "mat_charcoal": 0.2
   },
   "cap": 0,
@@ -210,7 +210,7 @@
   },
   "mat": {
    "mat_linen": 0.5,
-   "saltpetre_kg": 0.3,
+   "nitre_kg": 0.3,
    "mat_charcoal": 0.1,
    "mat_sulfur": 0.1
   },
@@ -232,7 +232,7 @@
   "name": "Wheel lock mechanism",
   "cat": "weapons",
   "pre": [
-   "mil_corned_powder",
+   "gunpowder",
    "cap_tol_1mm"
   ],
   "traits": [
@@ -246,9 +246,9 @@
    "machinist": 60
   },
   "mat": {
-   "mat_steel": 80,
-   "mat_iron_bar_kg": 60,
-   "mat_spring_steel": 20
+   "steel_plate_kg": 80,
+   "iron_bar_kg": 60,
+   "tool_steel_kg": 20
   },
   "cap": 0,
   "up": 0,
@@ -283,7 +283,7 @@
   },
   "mat": {
    "iron_bar_kg": 40,
-   "mat_spring_steel": 10
+   "tool_steel_kg": 10
   },
   "cap": 0,
   "up": 0,
@@ -317,8 +317,8 @@
    "machinist": 80
   },
   "mat": {
-   "mat_steel": 120,
-   "mat_spring_steel": 30,
+   "steel_plate_kg": 120,
+   "tool_steel_kg": 30,
    "iron_bar_kg": 60
   },
   "cap": 0,
@@ -375,7 +375,7 @@
   "name": "Paper cartridge",
   "cat": "weapons",
   "pre": [
-   "mil_corned_powder",
+   "gunpowder",
    "mat_paper"
   ],
   "traits": [
@@ -388,8 +388,8 @@
   },
   "mat": {
    "paper_kg": 1,
-   "saltpetre_kg": 0.3,
-   "lead_ball_kg": 0.05
+   "nitre_kg": 0.3,
+   "lead_kg": 0.05
   },
   "cap": 0,
   "up": 0,
@@ -410,7 +410,6 @@
   "cat": "weapons",
   "pre": [
    "mil_percussion_cap",
-   "metal_drawing",
    "interchangeable_parts"
   ],
   "traits": [
@@ -425,7 +424,7 @@
   "mat": {
    "brass_kg": 10,
    "lead_kg": 5,
-   "saltpetre_kg": 0.5
+   "nitre_kg": 0.5
   },
   "cap": 0,
   "up": 0,
@@ -445,7 +444,7 @@
   "name": "Centrefire primer",
   "cat": "weapons",
   "pre": [
-   "mil_metallic_cartridge",
+   "mil_cartridge_metallic",
    "cap_tol_10um"
   ],
   "traits": [
@@ -480,8 +479,7 @@
   "name": "Rifling",
   "cat": "weapons",
   "pre": [
-   "cap_tol_100um",
-   "barrel_boring"
+   "cap_tol_100um"
   ],
   "traits": [
    "military"
@@ -493,7 +491,7 @@
    "smith": 60
   },
   "mat": {
-   "mat_steel": 200,
+   "steel_plate_kg": 200,
    "iron_bar_kg": 100
   },
   "cap": 0,
@@ -561,9 +559,9 @@
    "machinist": 80
   },
   "mat": {
-   "mat_steel": 300,
+   "steel_plate_kg": 300,
    "iron_bar_kg": 150,
-   "mat_spring_steel": 40
+   "tool_steel_kg": 40
   },
   "cap": 0,
   "up": 0,
@@ -583,7 +581,7 @@
   "name": "Bolt-action rifle",
   "cat": "weapons",
   "pre": [
-   "mil_metallic_cartridge",
+   "mil_cartridge_metallic",
    "mil_centrefire_primer",
    "cap_tol_10um"
   ],
@@ -599,7 +597,7 @@
   },
   "mat": {
    "steel_plate_kg": 350,
-   "mat_spring_steel": 60
+   "tool_steel_kg": 60
   },
   "cap": 0,
   "up": 0,
@@ -632,8 +630,8 @@
    "smith": 50
   },
   "mat": {
-   "mat_steel": 50,
-   "mat_spring_steel": 15
+   "steel_plate_kg": 50,
+   "tool_steel_kg": 15
   },
   "cap": 0,
   "up": 0,
@@ -654,7 +652,7 @@
   "cat": "weapons",
   "pre": [
    "mil_magazine",
-   "mil_metallic_cartridge"
+   "mil_cartridge_metallic"
   ],
   "traits": [
    "military",
@@ -667,9 +665,9 @@
    "smith": 70
   },
   "mat": {
-   "mat_steel": 320,
+   "steel_plate_kg": 320,
    "iron_bar_kg": 140,
-   "mat_spring_steel": 35
+   "tool_steel_kg": 35
   },
   "cap": 0,
   "up": 0,
@@ -689,7 +687,7 @@
   "name": "Revolver",
   "cat": "weapons",
   "pre": [
-   "mil_metallic_cartridge",
+   "mil_cartridge_metallic",
    "mil_centrefire_primer",
    "cap_tol_10um"
   ],
@@ -705,7 +703,7 @@
   },
   "mat": {
    "steel_plate_kg": 400,
-   "mat_spring_steel": 80
+   "tool_steel_kg": 80
   },
   "cap": 0,
   "up": 0,
@@ -727,8 +725,7 @@
   "pre": [
    "mil_centrefire_primer",
    "mil_magazine",
-   "cap_tol_10um",
-   "recoil_operated_mechanism"
+   "cap_tol_10um"
   ],
   "traits": [
    "military",
@@ -742,7 +739,7 @@
   },
   "mat": {
    "steel_plate_kg": 450,
-   "mat_spring_steel": 100
+   "tool_steel_kg": 100
   },
   "cap": 0,
   "up": 0,
@@ -777,7 +774,7 @@
   },
   "mat": {
    "steel_plate_kg": 1200,
-   "mat_spring_steel": 200
+   "tool_steel_kg": 200
   },
   "cap": 0,
   "up": 0,
@@ -812,7 +809,7 @@
   },
   "mat": {
    "steel_plate_kg": 1100,
-   "mat_spring_steel": 180
+   "tool_steel_kg": 180
   },
   "cap": 0,
   "up": 0,
@@ -879,7 +876,7 @@
   },
   "mat": {
    "steel_plate_kg": 80,
-   "mat_spring_steel": 40
+   "tool_steel_kg": 40
   },
   "cap": 0,
   "up": 0,
@@ -1082,7 +1079,7 @@
   },
   "mat": {
    "steel_plate_kg": 400,
-   "mat_spring_steel": 100
+   "tool_steel_kg": 100
   },
   "cap": 0,
   "up": 0,
@@ -1250,7 +1247,7 @@
   },
   "mat": {
    "mat_linen": 2,
-   "saltpetre_kg": 1,
+   "nitre_kg": 1,
    "mat_sulfur": 0.5
   },
   "cap": 0,
@@ -1437,7 +1434,7 @@
    "machinist": 100
   },
   "mat": {
-   "mat_glass_lead": 20,
+   "glass_lead_kg": 20,
    "brass_kg": 80,
    "steel_plate_kg": 100
   },
@@ -1577,8 +1574,7 @@
    "chemist": 100
   },
   "mat": {
-   "mat_glass_lead": 15,
-   "vacuum_tube": 1,
+   "glass_lead_kg": 15,
    "mat_bronze": 30
   },
   "cap": 0,
@@ -1798,7 +1794,7 @@
    "mason": 120
   },
   "mat": {
-   "mat_cement_portland": 1000,
+   "cement_portland_kg": 1000,
    "mat_sand": 3000,
    "mat_stone": 2000
   },
@@ -2076,8 +2072,7 @@
    "machinist": 140
   },
   "mat": {
-   "steel_plate_kg": 8000,
-   "face_hardened_armour": 2000
+   "steel_plate_kg": 10000
   },
   "cap": 30000,
   "up": 1500,
@@ -2304,7 +2299,7 @@
    "machinist": 80
   },
   "mat": {
-   "mat_glass_lead": 30,
+   "glass_lead_kg": 30,
    "brass_kg": 60
   },
   "cap": 0,
@@ -2384,8 +2379,7 @@
   "name": "ASDIC",
   "cat": "weapons",
   "pre": [
-   "vacuum_tube",
-   "ultrasonic_transducer"
+   "vacuum_tube"
   ],
   "traits": [
    "military"
@@ -2397,8 +2391,7 @@
    "electrician": 140
   },
   "mat": {
-   "vacuum_tube": 4,
-   "mat_quartz": 20,
+   "sand_quartz_kg": 20,
    "brass_kg": 100
   },
   "cap": 0,
@@ -2432,7 +2425,7 @@
   },
   "mat": {
    "cast_iron_kg": 50,
-   "mat_gunpowder": 5
+   "gunpowder_kg": 5
   },
   "cap": 0,
   "up": 0,
@@ -2480,7 +2473,7 @@
   "name": "Tank",
   "cat": "vehicles",
   "pre": [
-   "internal_combustion_engine",
+   "lnd_otto_cycle_four_stroke",
    "mat_bulk_steel"
   ],
   "traits": [
@@ -2512,7 +2505,7 @@
   "name": "Track system",
   "cat": "vehicles",
   "pre": [
-   "internal_combustion_engine",
+   "lnd_otto_cycle_four_stroke",
    "cap_tol_1mm",
    "interchangeable_parts"
   ],
@@ -2664,7 +2657,7 @@
   "name": "Armoured car",
   "cat": "vehicles",
   "pre": [
-   "internal_combustion_engine",
+   "lnd_otto_cycle_four_stroke",
    "mat_bulk_steel"
   ],
   "traits": [
@@ -2696,7 +2689,7 @@
   "cat": "vehicles",
   "pre": [
    "mil_track",
-   "internal_combustion_engine"
+   "lnd_otto_cycle_four_stroke"
   ],
   "traits": [
    "military"
@@ -2770,7 +2763,7 @@
   },
   "mat": {
    "mat_linen": 200,
-   "mat_rope": 500
+   "cordage_kg": 500
   },
   "cap": 0,
   "up": 0,
@@ -2831,7 +2824,7 @@
    "engineer": 90
   },
   "mat": {
-   "mat_glass_lead": 40,
+   "glass_lead_kg": 40,
    "brass_kg": 60
   },
   "cap": 0,
@@ -2894,9 +2887,9 @@
    "machinist": 90
   },
   "mat": {
-   "mat_glass_lead": 50,
+   "glass_lead_kg": 50,
    "brass_kg": 120,
-   "mat_steel": 80
+   "steel_plate_kg": 80
   },
   "cap": 0,
   "up": 0,
@@ -2926,8 +2919,8 @@
    "engineer": 110
   },
   "mat": {
-   "mat_steel": 150,
-   "mat_spring_steel": 40
+   "steel_plate_kg": 150,
+   "tool_steel_kg": 40
   },
   "cap": 0,
   "up": 0,
@@ -2945,7 +2938,7 @@
   "name": "Fighter aircraft",
   "cat": "air",
   "pre": [
-   "aircraft_engine",
+   "air_light_petrol_engine",
    "mil_machine_gun_recoil"
   ],
   "traits": [
@@ -2959,7 +2952,7 @@
   },
   "mat": {
    "mat_aluminium": 400,
-   "mat_fuel": 100
+   "petroleum_refined_kg": 100
   },
   "cap": 5000,
   "up": 0.0,
@@ -2985,7 +2978,7 @@
   "name": "Bomber aircraft",
   "cat": "air",
   "pre": [
-   "aircraft_engine",
+   "air_light_petrol_engine",
    "mil_bomb_sight"
   ],
   "traits": [
@@ -2999,7 +2992,7 @@
   },
   "mat": {
    "mat_aluminium": 800,
-   "mat_fuel": 200
+   "petroleum_refined_kg": 200
   },
   "cap": 10000,
   "up": 0.0,
@@ -3025,7 +3018,7 @@
   "name": "Dive bomber",
   "cat": "air",
   "pre": [
-   "aircraft_engine",
+   "air_light_petrol_engine",
    "mil_bomb_sight"
   ],
   "traits": [
@@ -3039,7 +3032,7 @@
   },
   "mat": {
    "mat_aluminium": 600,
-   "mat_fuel": 120
+   "petroleum_refined_kg": 120
   },
   "cap": 7000,
   "up": 0.0,
@@ -3108,8 +3101,8 @@
    "engineer": 100
   },
   "mat": {
-   "mat_steel": 200,
-   "mat_rope": 100
+   "steel_plate_kg": 200,
+   "cordage_kg": 100
   },
   "cap": 0,
   "up": 0,
@@ -3140,7 +3133,7 @@
    "machinist": 130
   },
   "mat": {
-   "mat_steel": 500
+   "steel_plate_kg": 500
   },
   "cap": 0,
   "up": 0,
@@ -3159,7 +3152,6 @@
   "cat": "weapons",
   "pre": [
    "vacuum_tube",
-   "electromagnetism_theory",
    "if_cathode_ray_tube",
    "if_superheterodyne_receiver"
   ],
@@ -3196,7 +3188,8 @@
   "cat": "weapons",
   "pre": [
    "mil_radar",
-   "telegraph_electric"
+   "telegraph_electric",
+   "vacuum_tube"
   ],
   "traits": [
    "military",
@@ -3209,9 +3202,8 @@
    "electrician": 150
   },
   "mat": {
-   "vacuum_tube": 60,
    "brass_kg": 1000,
-   "mat_steel": 2000
+   "steel_plate_kg": 2000
   },
   "cap": 0,
   "up": 0,
@@ -3231,7 +3223,8 @@
   "name": "IFF system",
   "cat": "weapons",
   "pre": [
-   "mil_radar"
+   "mil_radar",
+   "vacuum_tube"
   ],
   "traits": [
    "military"
@@ -3243,7 +3236,6 @@
    "electrician": 130
   },
   "mat": {
-   "vacuum_tube": 6,
    "brass_kg": 80
   },
   "cap": 0,
@@ -3278,7 +3270,6 @@
   },
   "mat": {
    "cast_iron_kg": 100,
-   "vacuum_tube": 4,
    "brass_kg": 80
   },
   "cap": 0,
@@ -3297,10 +3288,9 @@
   "name": "Ballistic rocket",
   "cat": "weapons",
   "pre": [
-   "rocket_engine",
+   "en_rocket_motor",
    "cap_heat_1600",
-   "cap_tol_100um",
-   "en_rocket_motor"
+   "cap_tol_100um"
   ],
   "traits": [
    "military"
@@ -3332,7 +3322,7 @@
   "name": "Jet fighter aircraft",
   "cat": "air",
   "pre": [
-   "jet_engine",
+   "en_jet_engine",
    "mil_fighter_aircraft"
   ],
   "traits": [
@@ -3345,8 +3335,8 @@
    "machinist": 150
   },
   "mat": {
-   "mat_stainless": 300,
-   "mat_fuel": 120
+   "stainless_steel_kg": 300,
+   "petroleum_refined_kg": 120
   },
   "cap": 8000,
   "up": 0.0,
@@ -3395,8 +3385,7 @@
   "name": "Phosgene gas",
   "cat": "chemical",
   "pre": [
-   "mat_chlorine",
-   "mat_carbon"
+   "mat_chlorine"
   ],
   "traits": [
    "military"
@@ -3429,7 +3418,6 @@
   "name": "Mustard gas",
   "cat": "chemical",
   "pre": [
-   "ethylene_glycol",
    "mat_sulfur",
    "mat_chlorine",
    "mil_artillery_shell"
@@ -3478,7 +3466,7 @@
   "mat": {
    "mat_rubber": 10,
    "mat_charcoal": 5,
-   "mat_glass_lead": 20
+   "glass_lead_kg": 20
   },
   "cap": 0,
   "up": 0,
@@ -3511,7 +3499,7 @@
    "smith": 80
   },
   "mat": {
-   "mat_steel": 80,
+   "steel_plate_kg": 80,
    "mat_petroleum_refined": 20
   },
   "cap": 0,
@@ -3597,8 +3585,6 @@
   "name": "Atomic bomb",
   "cat": "weapons",
   "pre": [
-   "uranium_enrichment",
-   "plutonium_production",
    "cap_tol_100um",
    "in2_ultracentrifuge",
    "mt2_uranium_thorium_extraction",
@@ -3786,7 +3772,8 @@
   "name": "Wireless set",
   "cat": "communications",
   "pre": [
-   "radio"
+   "radio",
+   "vacuum_tube"
   ],
   "traits": [
    "military"
@@ -3798,7 +3785,6 @@
    "electrician": 110
   },
   "mat": {
-   "vacuum_tube": 8,
    "brass_kg": 100,
    "mat_wood": 50
   },
@@ -3859,8 +3845,7 @@
   "kb": "89_remaining_arts.md#mil_cryptanalysis",
   "ph": 110,
   "lab": {
-   "scholar": 130,
-   "mathematician": 110
+   "scholar": 240
   },
   "mat": {},
   "cap": 0,
@@ -3888,8 +3873,7 @@
   "kb": "89_remaining_arts.md#mil_cryptanalysis",
   "ph": 120,
   "lab": {
-   "scholar": 140,
-   "mathematician": 130
+   "scholar": 270
   },
   "mat": {},
   "cap": 0,

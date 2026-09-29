@@ -475,7 +475,7 @@
   "mat": {
    "cast_iron_kg": 100,
    "copper_kg": 50,
-   "wire_copper_kg": 30
+   "copper_wire_kg": 30
   },
   "cap": 1000,
   "up": 200,
@@ -556,7 +556,7 @@
   "name": "Windmill fantail and automatic furling",
   "cat": "power",
   "pre": [
-   "pwr_tower_mill"
+   "en_tower_mill"
   ],
   "kb": "",
   "ph": 200,
@@ -618,7 +618,7 @@
   "cat": "power",
   "pre": [
    "water_power_scale",
-   "pwr_breastshot_wheel"
+   "en_breastshot_wheel"
   ],
   "kb": "",
   "ph": 200,
@@ -713,8 +713,7 @@
   "cat": "power",
   "pre": [
    "pwr_coking",
-   "cap_heat_1100",
-   "pot_ash_soda"
+   "cap_heat_1100"
   ],
   "kb": "",
   "ph": 300,
@@ -843,7 +842,6 @@
   "pre": [
    "pwr_petroleum_seeps",
    "cap_power_steam",
-   "mat_steel_plate_kg",
    "cap_tol_1mm"
   ],
   "kb": "",
@@ -879,8 +877,7 @@
   "cat": "power",
   "pre": [
    "pwr_cable_tool_drilling",
-   "cap_tol_100um",
-   "mat_steel_plate_kg"
+   "cap_tol_100um"
   ],
   "kb": "",
   "ph": 350,
@@ -1007,8 +1004,7 @@
   "cat": "power",
   "pre": [
    "pwr_fuel_oil",
-   "cap_tol_100um",
-   "mat_steel_plate_kg"
+   "cap_tol_100um"
   ],
   "kb": "",
   "ph": 250,
@@ -1357,7 +1353,6 @@
   "cat": "power",
   "pre": [
    "steam_watt",
-   "cap_measure_pressure",
    "cap_measure_len"
   ],
   "kb": "",
@@ -1556,7 +1551,7 @@
   "name": "Selenium photovoltaic effect",
   "cat": "power",
   "pre": [
-   "selenium_metal",
+   "pwr_selenium_metal",
    "cap_heat_1300"
   ],
   "kb": "",
@@ -1626,7 +1621,7 @@
   "cat": "power",
   "pre": [
    "lead_chamber",
-   "sulfuric_acid",
+   "sulfuric_retort",
    "cap_tol_1mm"
   ],
   "kb": "",
@@ -1658,7 +1653,6 @@
   "name": "Nickel-iron battery",
   "cat": "power",
   "pre": [
-   "nickel_metal",
    "potash_soda",
    "cap_tol_100um"
   ],
@@ -1861,7 +1855,7 @@
   "cat": "power",
   "pre": [
    "pwr_high_voltage_transmission",
-   "pwr_transformer",
+   "en_transformer",
    "cap_tol_1mm"
   ],
   "kb": "",
@@ -1892,7 +1886,7 @@
   "name": "Load factor and grid economics",
   "cat": "power",
   "pre": [
-   "pwr_substation",
+   "en_substation",
    "statistics_basic"
   ],
   "kb": "",
@@ -1925,7 +1919,7 @@
   "cat": "power",
   "pre": [
    "motor_transformer_ac",
-   "pwr_substation"
+   "en_substation"
   ],
   "kb": "",
   "ph": 300,
@@ -1959,7 +1953,7 @@
   "name": "Fuel cell (hydrogen-oxygen)",
   "cat": "power",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_measure_elec"
   ],
   "kb": "",
@@ -2010,7 +2004,7 @@
   "pre": [
    "copper_refining",
    "cap_heat_1300",
-   "sulfuric_acid",
+   "sulfuric_retort",
    "cap_heat_1100"
   ],
   "kb": "",
@@ -2054,7 +2048,6 @@
   "pre": [
    "atomic_theory",
    "cap_measure_temp_hi",
-   "mat_uranium",
    "cap_pure_9N"
   ],
   "kb": "",

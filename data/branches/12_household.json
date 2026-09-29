@@ -587,7 +587,6 @@
   "name": "Friction matches",
   "cat": "lighting",
   "pre": [
-   "sulfur_kg",
    "chm_phosphorus_extraction"
   ],
   "kb": "",
@@ -724,9 +723,7 @@
   "id": "hom_eraser_breadcrumb",
   "name": "Eraser, breadcrumb substitute",
   "cat": "writing",
-  "pre": [
-   "wheat_kg"
-  ],
+  "pre": [],
   "kb": "",
   "ph": 30,
   "lab": {},
@@ -1084,7 +1081,6 @@
   "cat": "comfort",
   "pre": [
    "cap_tol_1mm",
-   "drawn_wire",
    "mat_wrought_iron",
    "mfg_wire_drawing",
    "mt2_spring_steel",
@@ -1436,8 +1432,7 @@
   "name": "Fountain pen",
   "cat": "writing",
   "pre": [
-   "cap_tol_100um",
-   "ebonite_or_celluloid"
+   "cap_tol_100um"
   ],
   "kb": "",
   "ph": 130,
@@ -1570,8 +1565,7 @@
   "cat": "personal",
   "pre": [
    "soap_hard",
-   "hom_perfume_distilled",
-   "alum_kg"
+   "hom_perfume_distilled"
   ],
   "kb": "",
   "ph": 70,
@@ -1909,7 +1903,7 @@
   "cat": "sanitation",
   "pre": [
    "steam_high_pressure",
-   "lead_plumbing",
+   "hom_lead_plumbing",
    "cap_power_steam"
   ],
   "kb": "",
@@ -2012,7 +2006,7 @@
   "name": "Home refrigerator, electric",
   "cat": "cooling",
   "pre": [
-   "hom_refrigeration_mechanical",
+   "mat_ice_artificial",
    "motor_transformer_ac",
    "cap_power_electric"
   ],
@@ -2148,7 +2142,6 @@
   "cat": "personal",
   "pre": [
    "soap_hard",
-   "chalk_powder",
    "hom_toothbrush"
   ],
   "kb": "",

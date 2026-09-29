@@ -25,7 +25,7 @@
   "name": "Lung gas exchange",
   "cat": "knowledge",
   "pre": [
-   "circulation",
+   "md2_circulation",
    "microscope_compound"
   ],
   "traits": [
@@ -67,7 +67,7 @@
   "name": "Nervous system structure and function",
   "cat": "knowledge",
   "pre": [
-   "cadaver_dissection",
+   "md2_cadaver_dissection",
    "microscope_compound"
   ],
   "traits": [
@@ -88,8 +88,8 @@
   "name": "Endocrine glands and hormones",
   "cat": "knowledge",
   "pre": [
-   "digestion",
-   "nervous_system"
+   "md2_digestion",
+   "md2_nervous_system"
   ],
   "traits": [
    "medical"
@@ -109,7 +109,7 @@
   "name": "Kidney filtration",
   "cat": "knowledge",
   "pre": [
-   "circulation",
+   "md2_circulation",
    "microscope_compound"
   ],
   "traits": [
@@ -171,7 +171,7 @@
   "name": "Mendelian inheritance laws",
   "cat": "knowledge",
   "pre": [
-   "cell_theory"
+   "md2_cell_theory"
   ],
   "traits": [
    "medical"
@@ -191,7 +191,7 @@
   "name": "Chromosome and heredity",
   "cat": "knowledge",
   "pre": [
-   "mendelian_inheritance",
+   "md2_mendelian_inheritance",
    "microscope_compound"
   ],
   "traits": [
@@ -212,7 +212,7 @@
   "name": "Gene as unit of inheritance",
   "cat": "knowledge",
   "pre": [
-   "chromosome"
+   "md2_chromosome"
   ],
   "traits": [
    "medical"
@@ -232,7 +232,7 @@
   "name": "DNA as hereditary material",
   "cat": "knowledge",
   "pre": [
-   "gene",
+   "md2_gene",
    "atomic_theory"
   ],
   "traits": [
@@ -301,7 +301,7 @@
   "name": "Systematic auscultation",
   "cat": "diagnosis",
   "pre": [
-   "stethoscope"
+   "md2_stethoscope"
   ],
   "traits": [
    "medical"
@@ -352,7 +352,7 @@
   "name": "Sphygmomanometer",
   "cat": "diagnosis",
   "pre": [
-   "clinical_thermometer",
+   "md2_clinical_thermometer",
    "barometer",
    "mat_rubber_coagulated"
   ],
@@ -398,7 +398,7 @@
    "machinist": 100
   },
   "mat": {
-   "mat_glass_soda": 3,
+   "glass_raw_kg": 3,
    "mat_mirror_amalgam": 0.2
   },
   "build_yrs": 1.5,
@@ -424,7 +424,7 @@
    "optician": 100
   },
   "mat": {
-   "mat_glass_soda": 1,
+   "glass_raw_kg": 1,
    "brass_kg": 0.3
   },
   "build_yrs": 0.5,
@@ -454,7 +454,7 @@
    "machinist": 60
   },
   "mat": {
-   "mat_glass_soda": 1.5,
+   "glass_raw_kg": 1.5,
    "mat_mirror_amalgam": 0.5
   },
   "build_yrs": 0.7,
@@ -471,7 +471,7 @@
   "cat": "diagnosis",
   "pre": [
    "lens_grinding",
-   "light_source"
+   "md2_light_source"
   ],
   "traits": [
    "medical",
@@ -484,7 +484,7 @@
    "machinist": 200
   },
   "mat": {
-   "mat_glass_soda": 5,
+   "glass_raw_kg": 5,
    "brass_kg": 2
   },
   "build_yrs": 2,
@@ -500,7 +500,7 @@
   "name": "Cystoscope",
   "cat": "diagnosis",
   "pre": [
-   "endoscope"
+   "md2_endoscope"
   ],
   "traits": [
    "medical"
@@ -512,7 +512,7 @@
    "machinist": 120
   },
   "mat": {
-   "mat_glass_soda": 4,
+   "glass_raw_kg": 4,
    "brass_kg": 1.5
   },
   "build_yrs": 1.5,
@@ -542,7 +542,7 @@
    "master": 150
   },
   "mat": {
-   "mat_glass_soda": 10,
+   "glass_raw_kg": 10,
    "mat_tungsten": 2
   },
   "build_yrs": 3,
@@ -566,7 +566,7 @@
   "name": "Fluoroscopy imaging",
   "cat": "diagnosis",
   "pre": [
-   "xray_plate"
+   "md2_xray_plate"
   ],
   "traits": [
    "medical",
@@ -579,9 +579,9 @@
    "machinist": 200
   },
   "mat": {
-   "mat_glass_lead": 15,
+   "glass_lead_kg": 15,
    "mat_tungsten": 3,
-   "mat_barium_sulfate": 1
+   "barite_kg": 1
   },
   "build_yrs": 3.5,
   "adopt_yrs": 3,
@@ -604,7 +604,7 @@
   "name": "Contrast media",
   "cat": "diagnosis",
   "pre": [
-   "xray_plate",
+   "md2_xray_plate",
    "analytical_chemistry"
   ],
   "traits": [
@@ -616,7 +616,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_barium_sulfate": 5,
+   "barite_kg": 5,
    "mat_iodine_compound": 2
   },
   "build_yrs": 1,
@@ -694,8 +694,8 @@
   "name": "Basal metabolic rate measurement",
   "cat": "diagnosis",
   "pre": [
-   "clinical_thermometer",
-   "spirometer"
+   "md2_clinical_thermometer",
+   "md2_spirometer"
   ],
   "traits": [
    "medical"
@@ -708,7 +708,7 @@
   },
   "mat": {
    "brass_kg": 2,
-   "mat_glass_soda": 5
+   "glass_raw_kg": 5
   },
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -736,7 +736,7 @@
    "master": 100
   },
   "mat": {
-   "mat_glass_soda": 3,
+   "glass_raw_kg": 3,
    "brass_kg": 1
   },
   "build_yrs": 1,
@@ -752,8 +752,8 @@
   "name": "Differential white cell count",
   "cat": "diagnosis",
   "pre": [
-   "haemocytometer",
-   "staining_methylene"
+   "md2_haemocytometer",
+   "md2_staining_methylene"
   ],
   "traits": [
    "medical"
@@ -784,7 +784,7 @@
    "chemist": 80
   },
   "mat": {
-   "mat_glass_soda": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "adopt_yrs": 1,
@@ -823,7 +823,7 @@
   "cat": "diagnosis",
   "pre": [
    "analytical_chemistry",
-   "immunity"
+   "md2_immunity"
   ],
   "traits": [
    "medical"
@@ -847,7 +847,7 @@
   "name": "Tuberculin test",
   "cat": "diagnosis",
   "pre": [
-   "immunity",
+   "md2_immunity",
    "sanitation_antisepsis"
   ],
   "traits": [
@@ -870,7 +870,7 @@
   "name": "Tissue biopsy",
   "cat": "diagnosis",
   "pre": [
-   "cadaver_dissection",
+   "md2_cadaver_dissection",
    "microscope_compound"
   ],
   "traits": [
@@ -895,8 +895,8 @@
   "name": "Frozen section histology",
   "cat": "diagnosis",
   "pre": [
-   "biopsy",
-   "ice_artificial"
+   "md2_biopsy",
+   "mat_ice_artificial"
   ],
   "traits": [
    "medical"
@@ -907,9 +907,7 @@
    "scholar": 200,
    "machinist": 120
   },
-  "mat": {
-   "mat_ice_artificial": 5
-  },
+  "mat": {},
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "dev_years": 12,
@@ -1084,7 +1082,6 @@
   "name": "Synthetic suture",
   "cat": "surgery",
   "pre": [
-   "mat_nylon",
    "analytical_chemistry"
   ],
   "traits": [
@@ -1227,7 +1224,7 @@
   "name": "Blood transfusion",
   "cat": "surgery",
   "pre": [
-   "blood_typing"
+   "md2_blood_typing"
   ],
   "traits": [
    "medical"
@@ -1275,8 +1272,8 @@
   "name": "Blood bank and storage",
   "cat": "surgery",
   "pre": [
-   "blood_typing",
-   "ice_artificial"
+   "md2_blood_typing",
+   "mat_ice_artificial"
   ],
   "traits": [
    "medical",
@@ -1289,7 +1286,7 @@
    "master": 150
   },
   "mat": {
-   "mat_glass_soda": 20,
+   "glass_raw_kg": 20,
    "steel_plate_kg": 50
   },
   "build_yrs": 2.5,
@@ -1305,7 +1302,7 @@
   "cat": "surgery",
   "pre": [
    "analytical_chemistry",
-   "blood_typing"
+   "md2_blood_typing"
   ],
   "traits": [
    "medical"
@@ -1383,7 +1380,7 @@
   "name": "Endotracheal intubation",
   "cat": "surgery",
   "pre": [
-   "laryngoscope",
+   "md2_laryngoscope",
    "mat_rubber_coagulated"
   ],
   "traits": [
@@ -1410,8 +1407,7 @@
   "name": "Spinal anaesthesia",
   "cat": "surgery",
   "pre": [
-   "needle_gauge",
-   "cadaver_dissection"
+   "md2_cadaver_dissection"
   ],
   "traits": [
    "medical"
@@ -1433,9 +1429,7 @@
   "id": "md2_local_anaesthesia",
   "name": "Local infiltration anaesthesia",
   "cat": "surgery",
-  "pre": [
-   "cocaine_isolation"
-  ],
+  "pre": [],
   "traits": [
    "medical"
   ],
@@ -1457,7 +1451,7 @@
   "name": "Appendicectomy",
   "cat": "surgery",
   "pre": [
-   "cadaver_dissection",
+   "md2_cadaver_dissection",
    "sanitation_antisepsis"
   ],
   "traits": [
@@ -1481,7 +1475,7 @@
   "name": "Hernia repair",
   "cat": "surgery",
   "pre": [
-   "cadaver_dissection",
+   "md2_cadaver_dissection",
    "sanitation_antisepsis"
   ],
   "traits": [
@@ -1505,7 +1499,7 @@
   "name": "Gastrectomy",
   "cat": "surgery",
   "pre": [
-   "cadaver_dissection",
+   "md2_cadaver_dissection",
    "sanitation_antisepsis"
   ],
   "traits": [
@@ -1529,8 +1523,7 @@
   "name": "Caesarean section",
   "cat": "surgery",
   "pre": [
-   "cadaver_dissection",
-   "antibiotics_early"
+   "md2_cadaver_dissection"
   ],
   "traits": [
    "medical"
@@ -1553,7 +1546,7 @@
   "name": "Orthopaedic internal fixation",
   "cat": "surgery",
   "pre": [
-   "plaster_cast",
+   "md2_plaster_cast",
    "interchangeable_parts"
   ],
   "traits": [
@@ -1582,7 +1575,7 @@
   "name": "Plaster cast immobilization",
   "cat": "surgery",
   "pre": [
-   "gypsum",
+   "mat_gypsum",
    "med_bone_setting"
   ],
   "traits": [
@@ -1594,7 +1587,7 @@
    "artisan": 120
   },
   "mat": {
-   "mat_gypsum": 10
+   "plaster_kg": 10
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -1609,8 +1602,8 @@
   "name": "Skeletal traction",
   "cat": "surgery",
   "pre": [
-   "wire_drawing",
-   "cadaver_dissection"
+   "mfg_wire_drawing",
+   "md2_cadaver_dissection"
   ],
   "traits": [
    "medical",
@@ -1637,7 +1630,7 @@
   "name": "Skin grafting",
   "cat": "surgery",
   "pre": [
-   "cadaver_dissection",
+   "md2_cadaver_dissection",
    "sanitation_antisepsis"
   ],
   "traits": [
@@ -1662,7 +1655,7 @@
   "cat": "surgery",
   "pre": [
    "lens_grinding",
-   "cadaver_dissection"
+   "md2_cadaver_dissection"
   ],
   "traits": [
    "medical"
@@ -1686,8 +1679,7 @@
   "name": "Thyroidectomy",
   "cat": "surgery",
   "pre": [
-   "cadaver_dissection",
-   "antibiotics_early"
+   "md2_cadaver_dissection"
   ],
   "traits": [
    "medical"
@@ -1710,7 +1702,7 @@
   "name": "Digitalis glycosides",
   "cat": "therapeutics",
   "pre": [
-   "plant_chemistry"
+   "md2_plant_chemistry"
   ],
   "traits": [
    "medical"
@@ -1792,7 +1784,7 @@
   "name": "Salicylate and aspirin",
   "cat": "therapeutics",
   "pre": [
-   "plant_chemistry",
+   "md2_plant_chemistry",
    "analytical_chemistry"
   ],
   "traits": [
@@ -1816,7 +1808,6 @@
   "name": "Barbiturate sedatives",
   "cat": "therapeutics",
   "pre": [
-   "urea_synthesis",
    "analytical_chemistry"
   ],
   "traits": [
@@ -1840,8 +1831,7 @@
   "name": "Insulin extraction",
   "cat": "therapeutics",
   "pre": [
-   "endocrine_system",
-   "pancreas_isolation"
+   "md2_endocrine_system"
   ],
   "traits": [
    "medical"
@@ -1853,7 +1843,7 @@
    "scholar": 150
   },
   "mat": {
-   "mat_glass_soda": 10
+   "glass_raw_kg": 10
   },
   "build_yrs": 2,
   "adopt_yrs": 3,
@@ -1868,8 +1858,7 @@
   "name": "Thyroid hormone extract",
   "cat": "therapeutics",
   "pre": [
-   "endocrine_system",
-   "gland_extraction"
+   "md2_endocrine_system"
   ],
   "traits": [
    "medical"
@@ -1892,7 +1881,6 @@
   "name": "Adrenaline isolation",
   "cat": "therapeutics",
   "pre": [
-   "adrenal_gland",
    "analytical_chemistry"
   ],
   "traits": [
@@ -1916,7 +1904,7 @@
   "name": "Sulphonamide drugs",
   "cat": "therapeutics",
   "pre": [
-   "synthetic_dyes",
+   "mat_dyes_synthetic",
    "analytical_chemistry"
   ],
   "traits": [
@@ -1940,7 +1928,7 @@
   "name": "Penicillin cultivation",
   "cat": "therapeutics",
   "pre": [
-   "microbiology_culture"
+   "md2_microbiology_culture"
   ],
   "traits": [
    "medical"
@@ -1964,8 +1952,8 @@
   "name": "Deep tank fermentation",
   "cat": "therapeutics",
   "pre": [
-   "penicillin_production",
-   "steam_power"
+   "md2_penicillin_production",
+   "cap_power_steam"
   ],
   "traits": [
    "medical",
@@ -1978,7 +1966,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_stainless": 200
+   "stainless_steel_kg": 200
   },
   "build_yrs": 4,
   "adopt_yrs": 2,
@@ -1993,8 +1981,8 @@
   "name": "Freeze-drying penicillin",
   "cat": "therapeutics",
   "pre": [
-   "penicillin_fermentation",
-   "ice_artificial"
+   "md2_penicillin_fermentation",
+   "mat_ice_artificial"
   ],
   "traits": [
    "medical",
@@ -2019,8 +2007,7 @@
   "name": "Streptomycin isolation",
   "cat": "therapeutics",
   "pre": [
-   "microbiology_culture",
-   "tuberculosis_pathogen"
+   "md2_microbiology_culture"
   ],
   "traits": [
    "medical"
@@ -2043,8 +2030,7 @@
   "name": "Antitoxin serum therapy",
   "cat": "therapeutics",
   "pre": [
-   "immunity",
-   "horse_immunization",
+   "md2_immunity",
    "germ_theory",
    "med_blood_groups"
   ],
@@ -2071,7 +2057,7 @@
   "name": "Smallpox vaccine",
   "cat": "therapeutics",
   "pre": [
-   "immunity"
+   "md2_immunity"
   ],
   "traits": [
    "medical"
@@ -2094,8 +2080,7 @@
   "name": "Rabies vaccine",
   "cat": "therapeutics",
   "pre": [
-   "immunity",
-   "brain_culture"
+   "md2_immunity"
   ],
   "traits": [
    "medical"
@@ -2119,8 +2104,8 @@
   "name": "Typhoid vaccine",
   "cat": "therapeutics",
   "pre": [
-   "immunity",
-   "bacterial_culture"
+   "md2_immunity",
+   "md2_microbiology_culture"
   ],
   "traits": [
    "medical"
@@ -2143,8 +2128,8 @@
   "name": "Cholera vaccine",
   "cat": "therapeutics",
   "pre": [
-   "immunity",
-   "bacterial_culture"
+   "md2_immunity",
+   "md2_microbiology_culture"
   ],
   "traits": [
    "medical"
@@ -2167,8 +2152,8 @@
   "name": "Plague vaccine",
   "cat": "therapeutics",
   "pre": [
-   "immunity",
-   "bacterial_culture"
+   "md2_immunity",
+   "md2_microbiology_culture"
   ],
   "traits": [
    "medical"
@@ -2191,8 +2176,7 @@
   "name": "Diphtheria toxoid",
   "cat": "therapeutics",
   "pre": [
-   "immunity",
-   "toxin_production"
+   "md2_immunity"
   ],
   "traits": [
    "medical"
@@ -2215,8 +2199,7 @@
   "name": "Tetanus toxoid",
   "cat": "therapeutics",
   "pre": [
-   "immunity",
-   "toxin_production"
+   "md2_immunity"
   ],
   "traits": [
    "medical"
@@ -2239,8 +2222,8 @@
   "name": "Pertussis vaccine",
   "cat": "therapeutics",
   "pre": [
-   "immunity",
-   "bacterial_culture"
+   "md2_immunity",
+   "md2_microbiology_culture"
   ],
   "traits": [
    "medical"
@@ -2263,8 +2246,7 @@
   "name": "Yellow fever vaccine",
   "cat": "therapeutics",
   "pre": [
-   "immunity",
-   "viral_culture"
+   "md2_immunity"
   ],
   "traits": [
    "medical"
@@ -2287,7 +2269,6 @@
   "name": "Vitamin A and deficiency",
   "cat": "therapeutics",
   "pre": [
-   "fat_soluble_factors",
    "analytical_chemistry"
   ],
   "traits": [
@@ -2312,7 +2293,6 @@
   "name": "Vitamin B1 thiamine",
   "cat": "therapeutics",
   "pre": [
-   "water_soluble_vitamins",
    "analytical_chemistry"
   ],
   "traits": [
@@ -2337,8 +2317,6 @@
   "name": "Vitamin B12 cobalamin",
   "cat": "therapeutics",
   "pre": [
-   "cobalt_isolation",
-   "intrinsic_factor",
    "analytical_chemistry"
   ],
   "traits": [
@@ -2362,7 +2340,6 @@
   "name": "Vitamin C ascorbic acid",
   "cat": "therapeutics",
   "pre": [
-   "plant_ascorbate",
    "analytical_chemistry"
   ],
   "traits": [
@@ -2387,8 +2364,6 @@
   "name": "Vitamin D cholecalciferol",
   "cat": "therapeutics",
   "pre": [
-   "fat_soluble_factors",
-   "sunlight_exposure",
    "analytical_chemistry"
   ],
   "traits": [
@@ -2413,8 +2388,7 @@
   "name": "Iodised salt",
   "cat": "therapeutics",
   "pre": [
-   "thyroid_extract",
-   "salt_purification"
+   "md2_thyroid_extract"
   ],
   "traits": [
    "medical",
@@ -2438,8 +2412,7 @@
   "name": "Oral rehydration solution",
   "cat": "therapeutics",
   "pre": [
-   "digestion",
-   "electrolyte_transport"
+   "md2_digestion"
   ],
   "traits": [
    "medical",
@@ -2463,7 +2436,7 @@
   "name": "Sand filtration",
   "cat": "public_health",
   "pre": [
-   "water_supply"
+   "civ_aqueduct_roman"
   ],
   "traits": [
    "infrastructure"
@@ -2476,7 +2449,7 @@
   },
   "mat": {
    "mat_sand": 500,
-   "mat_gravel": 200
+   "gravel_kg": 200
   },
   "build_yrs": 2,
   "adopt_yrs": 1,
@@ -2490,8 +2463,7 @@
   "name": "Water chlorination",
   "cat": "public_health",
   "pre": [
-   "sand_filtration",
-   "chlorine_production"
+   "md2_sand_filtration"
   ],
   "traits": [
    "infrastructure"
@@ -2514,7 +2486,7 @@
   "name": "Separate sewage collection",
   "cat": "public_health",
   "pre": [
-   "water_supply",
+   "civ_aqueduct_roman",
    "civ_sewer_roman"
   ],
   "traits": [
@@ -2528,7 +2500,7 @@
   },
   "mat": {
    "cast_iron_kg": 100,
-   "mat_ceramic_pipe": 200
+   "ceramic_kg": 200
   },
   "build_yrs": 3,
   "adopt_yrs": 2,
@@ -2542,8 +2514,7 @@
   "name": "Activated sludge treatment",
   "cat": "public_health",
   "pre": [
-   "sewage_separation",
-   "aeration_technology"
+   "md2_sewage_separation"
   ],
   "traits": [
    "infrastructure"
@@ -2570,7 +2541,7 @@
   "cat": "public_health",
   "pre": [
    "thermometer",
-   "steam_power"
+   "cap_power_steam"
   ],
   "traits": [
    "infrastructure",
@@ -2594,7 +2565,7 @@
   "name": "Meat inspection",
   "cat": "public_health",
   "pre": [
-   "cadaver_dissection"
+   "md2_cadaver_dissection"
   ],
   "traits": [
    "infrastructure",
@@ -2642,7 +2613,7 @@
   "name": "Notifiable disease system",
   "cat": "public_health",
   "pre": [
-   "vital_registration"
+   "md2_vital_registration"
   ],
   "traits": [
    "infrastructure",
@@ -2666,7 +2637,7 @@
   "name": "Contact tracing",
   "cat": "public_health",
   "pre": [
-   "notifiable_disease"
+   "md2_notifiable_disease"
   ],
   "traits": [
    "infrastructure",
@@ -2690,7 +2661,6 @@
   "name": "Isolation hospital",
   "cat": "public_health",
   "pre": [
-   "hospital_design",
    "germ_theory",
    "sanitation_antisepsis"
   ],
@@ -2704,7 +2674,7 @@
    "engineer": 200
   },
   "mat": {
-   "mat_brick": 1000,
+   "brick_1000": 1.0,
    "iron_bar_kg": 50
   },
   "build_yrs": 2.5,
@@ -2719,7 +2689,6 @@
   "name": "Vector control",
   "cat": "public_health",
   "pre": [
-   "epidemiology_insect",
    "scientific_method"
   ],
   "traits": [
@@ -2743,7 +2712,7 @@
   "name": "Mosquito bed net",
   "cat": "public_health",
   "pre": [
-   "vector_control"
+   "md2_vector_control"
   ],
   "traits": [
    "infrastructure"
@@ -2780,7 +2749,7 @@
    "mason": 100
   },
   "mat": {
-   "mat_brick": 100
+   "brick_1000": 0.1
   },
   "build_yrs": 0.5,
   "adopt_yrs": 1,
@@ -2795,7 +2764,7 @@
   "cat": "public_health",
   "pre": [
    "sanitation_antisepsis",
-   "autoclave"
+   "md2_autoclave"
   ],
   "traits": [
    "infrastructure"
@@ -2818,7 +2787,6 @@
   "name": "Maternal health clinic",
   "cat": "public_health",
   "pre": [
-   "obstetric_care",
    "germ_theory"
   ],
   "traits": [
@@ -2842,7 +2810,6 @@
   "name": "Child health clinic",
   "cat": "public_health",
   "pre": [
-   "pediatric_care",
    "germ_theory"
   ],
   "traits": [
@@ -2892,7 +2859,7 @@
   "name": "Case series analysis",
   "cat": "method",
   "pre": [
-   "case_record"
+   "md2_case_record"
   ],
   "traits": [
    "information"
@@ -2915,7 +2882,7 @@
   "name": "Cohort study",
   "cat": "method",
   "pre": [
-   "case_series",
+   "md2_case_series",
    "statistics_basic"
   ],
   "traits": [
@@ -2939,7 +2906,7 @@
   "name": "Case-control study",
   "cat": "method",
   "pre": [
-   "case_series",
+   "md2_case_series",
    "statistics_basic"
   ],
   "traits": [
@@ -2964,7 +2931,7 @@
   "cat": "method",
   "pre": [
    "statistics_basic",
-   "blinding"
+   "md2_blinding"
   ],
   "traits": [
    "information"
@@ -2987,7 +2954,7 @@
   "name": "Blinding in trials",
   "cat": "method",
   "pre": [
-   "placebo"
+   "md2_placebo"
   ],
   "traits": [
    "information"
@@ -3010,7 +2977,7 @@
   "name": "Placebo control",
   "cat": "method",
   "pre": [
-   "case_control_study"
+   "md2_case_control_study"
   ],
   "traits": [
    "information"
@@ -3056,7 +3023,7 @@
   "name": "Mortality table",
   "cat": "method",
   "pre": [
-   "vital_registration"
+   "md2_vital_registration"
   ],
   "traits": [
    "information"
@@ -3196,7 +3163,7 @@
   "cat": "method",
   "pre": [
    "analytical_chemistry",
-   "drug_standardisation"
+   "md2_drug_standardisation"
   ],
   "traits": [
    "information"
@@ -3244,7 +3211,7 @@
   "name": "Bioassay",
   "cat": "method",
   "pre": [
-   "drug_standardisation"
+   "md2_drug_standardisation"
   ],
   "traits": [
    "information"
@@ -3267,7 +3234,7 @@
   "name": "Methylene blue staining",
   "cat": "diagnosis",
   "pre": [
-   "synthetic_dyes"
+   "mat_dyes_synthetic"
   ],
   "traits": [
    "medical"
@@ -3344,7 +3311,6 @@
   "name": "Microbiology culture technique",
   "cat": "method",
   "pre": [
-   "sterilization_autoclave",
    "md2_agar_media"
   ],
   "traits": [

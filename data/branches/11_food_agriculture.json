@@ -491,7 +491,7 @@
   "name": "Mechanical winnowing fan",
   "cat": "agriculture",
   "pre": [
-   "fud_threshing_machine",
+   "ag2_threshing_machine",
    "cap_power_human"
   ],
   "kb": "",
@@ -560,7 +560,7 @@
   "cat": "agriculture",
   "pre": [
    "fud_mechanical_reaper",
-   "fud_threshing_machine",
+   "ag2_threshing_machine",
    "fud_winnowing_machine",
    "cap_power_steam"
   ],
@@ -665,7 +665,7 @@
   "name": "Haber process for synthetic ammonia and nitrate",
   "cat": "agriculture",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_power_electric",
    "cap_heat_1600",
    "cap_pure_2N"
@@ -1441,7 +1441,7 @@
   "name": "Drying and concentration of evaporated milk",
   "cat": "preservation",
   "pre": [
-   "fud_pasteurisation",
+   "ag2_pasteurisation",
    "cap_heat_1100"
   ],
   "kb": "",
@@ -1558,7 +1558,7 @@
   "cat": "oils",
   "pre": [
    "fud_vegetable_oil_extraction",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "kb": "",
   "ph": 200,

@@ -656,7 +656,7 @@
   "name": "Platen press",
   "cat": "press",
   "pre": [
-   "prn_oil_based_ink",
+   "if_printing_ink",
    "cap_tol_1mm"
   ],
   "kb": "",
@@ -719,7 +719,7 @@
   "name": "Rotary press",
   "cat": "press",
   "pre": [
-   "prn_cylinder_press"
+   "if_cylinder_press"
   ],
   "kb": "",
   "ph": 300,
@@ -747,7 +747,7 @@
   "name": "Stereotype plate",
   "cat": "reproduction",
   "pre": [
-   "prn_composing_stick",
+   "if_composing_stick",
    "cap_heat_1100",
    "if_movable_type",
    "mat_lead"
@@ -969,7 +969,7 @@
   "name": "Offset lithography",
   "cat": "lithography",
   "pre": [
-   "prn_lithography_stone",
+   "if_lithography",
    "cap_power_steam"
   ],
   "kb": "",
@@ -1031,7 +1031,7 @@
   "name": "Four-colour separation",
   "cat": "colour",
   "pre": [
-   "prn_halftone_screen"
+   "if_halftone_screen"
   ],
   "kb": "",
   "ph": 200,
@@ -1150,7 +1150,7 @@
   "name": "Daguerreotype plate",
   "cat": "photography",
   "pre": [
-   "prn_silver_halide_chemistry",
+   "photography",
    "camera_obscura"
   ],
   "kb": "",
@@ -1180,7 +1180,7 @@
   "name": "Calotype negative-positive",
   "cat": "photography",
   "pre": [
-   "prn_silver_halide_chemistry",
+   "photography",
    "camera_obscura"
   ],
   "kb": "",
@@ -1278,7 +1278,7 @@
   "name": "Roll film on celluloid",
   "cat": "photography",
   "pre": [
-   "prn_gelatin_dry_plate",
+   "if_dry_gelatin_plate",
    "mat_celluloid"
   ],
   "kb": "",
@@ -1306,7 +1306,7 @@
   "name": "Optical enlarger",
   "cat": "photography",
   "pre": [
-   "prn_roll_film_celluloid",
+   "if_celluloid_roll_film",
    "lens_grinding"
   ],
   "kb": "",
@@ -1338,7 +1338,7 @@
   "name": "Colour photography",
   "cat": "photography",
   "pre": [
-   "prn_roll_film_celluloid"
+   "if_celluloid_roll_film"
   ],
   "kb": "",
   "ph": 250,
@@ -1644,7 +1644,7 @@
   "name": "Electrical recording and amplification",
   "cat": "sound",
   "pre": [
-   "prn_disc_record",
+   "if_disc_record",
    "electromagnet"
   ],
   "kb": "",

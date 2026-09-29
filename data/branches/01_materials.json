@@ -1594,8 +1594,7 @@
   "cat": "material",
   "pre": [
    "destructive_distillation",
-   "mat_formaldehyde",
-   "cap_pressure_10atm"
+   "mat_formaldehyde"
   ],
   "kb": "",
   "ph": 150,
@@ -1643,7 +1642,6 @@
   "cat": "material",
   "pre": [
    "mat_petroleum_refined",
-   "cap_pressure_100atm",
    "analytical_chemistry"
   ],
   "kb": "",
@@ -1668,7 +1666,7 @@
   "cat": "material",
   "pre": [
    "mat_bitumen",
-   "distillation_fractional",
+   "en_oil_refining_distillation",
    "cap_heat_1100"
   ],
   "kb": "",
@@ -1799,7 +1797,7 @@
   "cat": "material",
   "pre": [
    "nitric_acid",
-   "mat_glycerol",
+   "chm_glycerol",
    "cap_measure_temp",
    "chm_oleum"
   ],

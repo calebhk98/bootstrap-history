@@ -601,7 +601,6 @@
       "cap_tol_10um",
       "cap_heat_1600",
       "cap_power_electric",
-      "mat_aluminum_oxide",
       "cap_tol_1um",
       "mfg_engine_lathe"
     ],
@@ -1125,7 +1124,7 @@
     "cat": "metrology",
     "pre": [
       "cap_tol_100um",
-      "prc_cylindrical_grinder"
+      "mfg_cylindrical_grinder"
     ],
     "kb": "",
     "ph": 60,
@@ -1396,7 +1395,6 @@
     "cat": "metrology",
     "pre": [
       "cap_tol_1um",
-      "cap_measure_light",
       "lens_grinding",
       "arc_light_lamp"
     ],
@@ -1566,7 +1564,7 @@
     "cat": "metrology",
     "pre": [
       "cap_tol_10um",
-      "prc_dial_indicator"
+      "mfg_dial_indicator"
     ],
     "kb": "",
     "ph": 100,
@@ -1674,7 +1672,7 @@
     "cat": "machine_tools",
     "pre": [
       "prc_surface_grinder",
-      "prc_cylindrical_grinder",
+      "mfg_cylindrical_grinder",
       "cap_tol_10um",
       "interchangeable_parts"
     ],

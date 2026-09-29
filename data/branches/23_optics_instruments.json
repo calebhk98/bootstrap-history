@@ -373,7 +373,7 @@
   "name": "Apochromatic lens (three-glass)",
   "cat": "optics",
   "pre": [
-   "opt_achromatic_doublet",
+   "in2_doublet_lens",
    "cap_tol_1um"
   ],
   "kb": "",
@@ -711,7 +711,7 @@
    "iron_bar_kg": 20.0,
    "brass_kg": 5.0,
    "steel_noric_kg": 8.0,
-   "diamond_kg": 0.01
+   "diamond_g": 10.0
   },
   "cap": 3000,
   "up": 100,
@@ -1344,7 +1344,7 @@
   "pre": [
    "telescope",
    "cap_tol_100um",
-   "transit_instrument"
+   "opt_transit_instrument"
   ],
   "kb": "",
   "ph": 200,
@@ -2017,7 +2017,7 @@
   },
   "mat": {
    "brass_kg": 2.5,
-   "nichrome_wire_kg": 0.3,
+   "nichrome_kg": 0.3,
    "timber_m3": 0.2
   },
   "cap": 1000,

@@ -78,7 +78,7 @@
   "ph": 80,
   "lab": {
    "smith": 400,
-   "master_screw": 100
+   "machinist": 100
   },
   "mat": {
    "iron_bar_kg": 80
@@ -99,7 +99,7 @@
   "name": "Rail rolling in mill",
   "cat": "rail",
   "pre": [
-   "bessemer_openhearth",
+   "mat_bulk_steel",
    "boring_mill",
    "cap_tol_100um"
   ],
@@ -111,7 +111,7 @@
   "ph": 120,
   "lab": {
    "engineer": 400,
-   "master_screw": 150
+   "machinist": 150
   },
   "mat": {
    "steel_plate_kg": 200
@@ -277,7 +277,7 @@
   },
   "mat": {
    "wood_kg": 300,
-   "stone_crushed_kg": 1000
+   "stone_broken_tons": 1.0
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
@@ -326,7 +326,7 @@
   "name": "Points and frog",
   "cat": "rail",
   "pre": [
-   "tr_edge_rail",
+   "lnd_iron_edge_rail",
    "cap_tol_100um",
    "case_hardening"
   ],
@@ -408,7 +408,7 @@
   },
   "mat": {
    "iron_bar_kg": 30,
-   "mat_steel_spring": 10
+   "tool_steel_kg": 10
   },
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -473,7 +473,7 @@
   },
   "mat": {
    "cast_iron_kg": 50,
-   "mat_spring_steel": 15
+   "tool_steel_kg": 15
   },
   "build_yrs": 0.8,
   "adopt_yrs": 3,
@@ -647,8 +647,7 @@
   "ph": 150,
   "lab": {
    "engineer": 400,
-   "smith": 300,
-   "boilermaker": 500
+   "smith": 800
   },
   "mat": {
    "steel_plate_kg": 300
@@ -906,7 +905,7 @@
   "name": "Compound expansion engine",
   "cat": "rail",
   "pre": [
-   "tr_locomotiv_boiler",
+   "tr_locomotive_boiler",
    "cap_tol_100um",
    "cap_heat_1600",
    "en_boiler_water_tube",
@@ -1048,7 +1047,7 @@
   "pre": [
    "copper_refining",
    "cap_tol_100um",
-   "structural_steel_towers"
+   "cn_lattice_truss"
   ],
   "traits": [
    "infrastructure"
@@ -1112,7 +1111,7 @@
   "cat": "rail",
   "pre": [
    "motor_transformer_ac",
-   "internal_combustion_engine",
+   "lnd_diesel_cycle",
    "cap_tol_10um"
   ],
   "traits": [
@@ -1278,7 +1277,8 @@
   "cat": "rail",
   "pre": [
    "tr_track_circuit",
-   "cap_heat_1100"
+   "cap_heat_1100",
+   "electromagnet"
   ],
   "traits": [
    "information",
@@ -1291,9 +1291,7 @@
    "engineer": 400,
    "electrician": 250
   },
-  "mat": {
-   "mat_electromagnet": 40
-  },
+  "mat": {},
   "build_yrs": 1.2,
   "adopt_yrs": 4,
   "dev_years": 20,
@@ -1309,9 +1307,7 @@
   "id": "tr_sleeping_car",
   "name": "Sleeping car for passengers",
   "cat": "rail",
-  "pre": [
-   "wood_construction"
-  ],
+  "pre": [],
   "traits": [
    "luxury",
    "infrastructure"
@@ -1342,8 +1338,7 @@
   "name": "Refrigerated wagon",
   "cat": "rail",
   "pre": [
-   "mat_ice_artificial",
-   "wood_construction"
+   "mat_ice_artificial"
   ],
   "traits": [
    "food",
@@ -1375,7 +1370,6 @@
   "name": "Hopper wagon for bulk minerals",
   "cat": "rail",
   "pre": [
-   "wood_construction",
    "mat_cast_iron",
    "tr_sleeper_ballast",
    "tr_wooden_waggonway"
@@ -1421,7 +1415,7 @@
   "name": "Tank wagon for liquids",
   "cat": "rail",
   "pre": [
-   "riveted_plating",
+   "tr_riveted_plating",
    "cap_tol_100um"
   ],
   "traits": [
@@ -1431,8 +1425,7 @@
   "kb": "86_transport_deep.md#tr_hopper_wagon",
   "ph": 100,
   "lab": {
-   "smith": 300,
-   "boilermaker": 200
+   "smith": 500
   },
   "mat": {
    "iron_bar_kg": 150
@@ -1466,7 +1459,7 @@
    "engineer": 300
   },
   "mat": {
-   "stone_crushed_kg": 2000
+   "stone_broken_tons": 2.0
   },
   "build_yrs": 1.0,
   "adopt_yrs": 2,
@@ -1615,7 +1608,7 @@
   "kb": "Triangular sail with leading edge parallel to the wind",
   "ph": 80.0,
   "lab": {
-   "sailmaker": 200
+   "artisan": 200
   },
   "mat": {
    "linen_kg": 300
@@ -1642,7 +1635,7 @@
   "kb": "86_transport_deep.md#tr_square_rig",
   "ph": 40,
   "lab": {
-   "sailmaker": 250
+   "artisan": 250
   },
   "mat": {
    "linen_kg": 500
@@ -1671,7 +1664,7 @@
   "kb": "Sails aligned with the ship length controlled by a boom",
   "ph": 100.0,
   "lab": {
-   "sailmaker": 200,
+   "artisan": 200,
    "carpenter": 150
   },
   "mat": {
@@ -1705,7 +1698,7 @@
   "kb": "86_transport_deep.md#tr_square_rig",
   "ph": 30,
   "lab": {
-   "sailmaker": 150
+   "artisan": 150
   },
   "mat": {
    "linen_kg": 200
@@ -1734,7 +1727,7 @@
   "kb": "86_transport_deep.md#tr_square_rig",
   "ph": 40,
   "lab": {
-   "sailmaker": 150
+   "artisan": 150
   },
   "mat": {
    "linen_kg": 200
@@ -1765,7 +1758,7 @@
    "sailor": 300
   },
   "mat": {
-   "rope_hemp_kg": 50
+   "cordage_kg": 50
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -1984,11 +1977,11 @@
   "kb": "86_transport_deep.md#tr_carvel_planking",
   "ph": 60,
   "lab": {
-   "sailmaker": 200,
+   "artisan": 200,
    "sailor": 300
   },
   "mat": {
-   "rope_hemp_kg": 100,
+   "cordage_kg": 100,
    "mat_tar": 80
   },
   "build_yrs": 0.8,
@@ -2040,9 +2033,7 @@
   "id": "tr_watertight_bulkhead",
   "name": "Watertight bulkhead",
   "cat": "marine",
-  "pre": [
-   "wood_construction"
-  ],
+  "pre": [],
   "traits": [
    "infrastructure"
   ],
@@ -2070,7 +2061,7 @@
   "name": "Double bottom hull structure",
   "cat": "marine",
   "pre": [
-   "riveted_plating",
+   "tr_riveted_plating",
    "cap_tol_100um"
   ],
   "traits": [
@@ -2102,7 +2093,7 @@
   "cat": "marine",
   "pre": [
    "finery_puddling",
-   "riveted_plating",
+   "tr_riveted_plating",
    "cap_tol_100um"
   ],
   "traits": [
@@ -2111,8 +2102,7 @@
   "kb": "Wrought iron frames and plates riveted into a hull",
   "ph": 200,
   "lab": {
-   "smith": 500,
-   "boilermaker": 300
+   "smith": 800
   },
   "mat": {
    "iron_bar_kg": 600
@@ -2133,8 +2123,8 @@
   "name": "Steel hull construction",
   "cat": "marine",
   "pre": [
-   "bessemer_openhearth",
-   "riveted_plating",
+   "mat_bulk_steel",
+   "tr_riveted_plating",
    "cap_tol_100um"
   ],
   "traits": [
@@ -2178,8 +2168,7 @@
   "kb": "86_transport_deep.md#tr_iron_hull",
   "ph": 150,
   "lab": {
-   "smith": 400,
-   "riveter": 300
+   "smith": 700
   },
   "mat": {
    "iron_bar_kg": 200
@@ -2200,7 +2189,7 @@
   "name": "Welded hull seams",
   "cat": "marine",
   "pre": [
-   "riveted_plating",
+   "tr_riveted_plating",
    "arc_furnace_ferroalloys",
    "cap_tol_100um"
   ],
@@ -2311,7 +2300,7 @@
   "name": "Variable pitch propeller",
   "cat": "marine",
   "pre": [
-   "screw_propeller",
+   "tr_screw_propeller",
    "cap_tol_10um"
   ],
   "traits": [
@@ -2410,7 +2399,7 @@
   "name": "Triple expansion marine engine",
   "cat": "marine",
   "pre": [
-   "marine_engine",
+   "tr_marine_engine",
    "cap_tol_100um"
   ],
   "traits": [
@@ -2454,7 +2443,7 @@
   "ph": 150,
   "lab": {
    "engineer": 350,
-   "boilermaker": 250
+   "smith": 250
   },
   "mat": {
    "steel_plate_kg": 250
@@ -2490,7 +2479,7 @@
   },
   "mat": {
    "steel_plate_kg": 300,
-   "mat_stainless": 100
+   "stainless_steel_kg": 100
   },
   "build_yrs": 2.0,
   "adopt_yrs": 2,
@@ -2508,7 +2497,7 @@
   "name": "Reduction gearing for propeller",
   "cat": "marine",
   "pre": [
-   "screw_propeller",
+   "tr_screw_propeller",
    "cap_tol_10um"
   ],
   "traits": [
@@ -2540,7 +2529,7 @@
   "name": "Marine diesel engine",
   "cat": "marine",
   "pre": [
-   "internal_combustion_engine",
+   "lnd_diesel_cycle",
    "cap_tol_100um",
    "cap_heat_3000"
   ],
@@ -2574,7 +2563,7 @@
   "name": "Ballast tank system",
   "cat": "marine",
   "pre": [
-   "riveted_plating",
+   "tr_riveted_plating",
    "cap_tol_100um"
   ],
   "traits": [
@@ -2604,7 +2593,7 @@
   "name": "Submarine pressure hull",
   "cat": "marine",
   "pre": [
-   "bessemer_openhearth",
+   "mat_bulk_steel",
    "cap_tol_100um"
   ],
   "traits": [
@@ -2615,7 +2604,7 @@
   "ph": 250,
   "lab": {
    "engineer": 500,
-   "boilermaker": 300
+   "smith": 300
   },
   "mat": {
    "steel_plate_kg": 400
@@ -2669,7 +2658,6 @@
   "name": "Lifeboat and davit system",
   "cat": "marine",
   "pre": [
-   "wood_construction",
    "finery_puddling",
    "sea_iron_hull"
   ],
@@ -2738,7 +2726,7 @@
   "name": "Gyrocompass repeater",
   "cat": "marine",
   "pre": [
-   "gyroscope",
+   "in2_gyrocompass",
    "cap_tol_10um"
   ],
   "traits": [
@@ -2783,7 +2771,7 @@
    "sailor": 150
   },
   "mat": {
-   "rope_hemp_kg": 200,
+   "cordage_kg": 200,
    "lead_kg": 50
   },
   "build_yrs": 0.3,
@@ -2815,7 +2803,7 @@
    "optician": 300
   },
   "mat": {
-   "mat_glass_soda": 100,
+   "glass_raw_kg": 100,
    "brass_kg": 30
   },
   "build_yrs": 0.9,
@@ -2834,8 +2822,8 @@
   "name": "Dry dock facility",
   "cat": "marine",
   "pre": [
-   "canal_lock",
-   "water_pumping"
+   "tr_canal_lock",
+   "civ_pumping_station"
   ],
   "traits": [
    "infrastructure"
@@ -2846,7 +2834,7 @@
    "engineer": 400
   },
   "mat": {
-   "stone_crushed_kg": 5000
+   "stone_broken_tons": 5.0
   },
   "build_yrs": 3.0,
   "adopt_yrs": 1,
@@ -2863,9 +2851,7 @@
   "id": "tr_slipway_launch",
   "name": "Slipway for ship launch",
   "cat": "marine",
-  "pre": [
-   "wood_construction"
-  ],
+  "pre": [],
   "traits": [
    "infrastructure"
   ],
@@ -2894,7 +2880,6 @@
   "name": "Canal lock for water level control",
   "cat": "marine",
   "pre": [
-   "wood_construction",
    "finery_puddling",
    "mat_pozzolana",
    "water_power_scale"
@@ -2934,8 +2919,8 @@
   "name": "Canal lift water elevator",
   "cat": "marine",
   "pre": [
-   "canal_lock",
-   "water_pumping",
+   "tr_canal_lock",
+   "civ_pumping_station",
    "cap_power_steam"
   ],
   "traits": [
@@ -2966,7 +2951,7 @@
   "name": "Dredger for channel deepening",
   "cat": "marine",
   "pre": [
-   "screw_propeller",
+   "tr_screw_propeller",
    "cap_power_steam"
   ],
   "traits": [
@@ -2999,7 +2984,7 @@
   "name": "Tug boat for towing",
   "cat": "marine",
   "pre": [
-   "screw_propeller",
+   "tr_screw_propeller",
    "finery_puddling"
   ],
   "traits": [
@@ -3227,12 +3212,12 @@
   "kb": "Highly accurate clock keeping time during voyage for longitude calculation",
   "ph": 250,
   "lab": {
-   "master_screw": 500,
+   "machinist": 500,
    "optician": 200
   },
   "mat": {
    "brass_kg": 200,
-   "mat_steel": 100
+   "steel_plate_kg": 100
   },
   "build_yrs": 1.5,
   "adopt_yrs": 1,
@@ -3287,11 +3272,11 @@
   "kb": "86_transport_deep.md#tr_square_rig",
   "ph": 100,
   "lab": {
-   "sailmaker": 300,
+   "artisan": 300,
    "sailor": 200
   },
   "mat": {
-   "rope_hemp_kg": 400
+   "cordage_kg": 400
   },
   "build_yrs": 0.8,
   "adopt_yrs": 1,
@@ -3309,7 +3294,7 @@
   "name": "Keelson internal keel",
   "cat": "marine",
   "pre": [
-   "frame_first_construction"
+   "tr_frame_first_construction"
   ],
   "traits": [
    "infrastructure"
@@ -3400,10 +3385,10 @@
   "kb": "86_transport_deep.md#tr_bowsprit",
   "ph": 60,
   "lab": {
-   "sailmaker": 200
+   "artisan": 200
   },
   "mat": {
-   "rope_hemp_kg": 50
+   "cordage_kg": 50
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,

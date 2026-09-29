@@ -1,0 +1,242 @@
+{
+ "_note": "Materials that branch nodes consume and no other file here makes. Each entry states its composition or stoichiometry; heat is a physical floor and labour is borrowed from a named neighbouring entry or left out, and says so.",
+ "materials": {
+  "glass_borosilicate_kg": {
+   "outputs": {
+    "glass_borosilicate_kg": 1000.0
+   },
+   "inputs": {
+    "sand_quartz_kg": 810.0,
+    "boric_acid_kg": 230.9,
+    "natron_kg": 184.7
+   },
+   "labour_hours": {
+    "furnaceman": 20.0,
+    "glassblower": 5.0
+   },
+   "thermal_mj": 3000.0,
+   "temperature_needed_c": 1500.0,
+   "basis": "per tonne of melted and fined borosilicate glass ('metal'), before working into objects",
+   "yield_basis": "COMPOSITION AND STOICHIOMETRY. Laboratory borosilicate (the 3.3 expansion-class glass) is about 81% SiO2, 13% B2O3, 4% Na2O and 2% Al2O3 by mass. Silica comes as clean quartz sand at its own mass. Boric oxide comes from boric acid: 2 H3BO3 -> B2O3 + 3 H2O, so 2*61.83/69.62 kg of acid per kg of B2O3. Soda comes from natron (Na2CO3.10H2O), 286.14/61.98 kg per kg of Na2O, the alkali source glass_raw_kg uses. The 2% alumina is left out (an impurity carried in with sand and clay); boron volatilised from the melt is not modelled, so both understate the batch slightly. Melting is thermal_mj at the roughly 1500 C this glass needs, taken as the sensible-plus-latent heat of the batch (about 3 GJ per tonne), a physical floor rather than a furnace efficiency; the crew hours are copied from glass_raw_kg's melt because no separate evidence exists for a hotter one. Furnace capital is not modelled here. Heuristic labour and energy, conf C.",
+   "conf": "C",
+   "requires_node": "glass_borosilicate"
+  },
+  "glass_lead_kg": {
+   "outputs": {
+    "glass_lead_kg": 1000.0
+   },
+   "inputs": {
+    "sand_quartz_kg": 600.0,
+    "lead_kg": 278.5,
+    "natron_kg": 392.4,
+    "wood_kg": 4000.0
+   },
+   "labour_hours": {
+    "furnaceman": 20.0,
+    "glassblower": 5.0
+   },
+   "basis": "per tonne of melted and fined lead crystal (flint glass) metal, before working into objects",
+   "yield_basis": "COMPOSITION AND STOICHIOMETRY. Lead crystal is roughly 60% SiO2, 30% PbO and the remainder alkali flux by mass. Lead enters as metal and is oxidised in the pot, so the lead needed is 207.2/223.2 kg per kg of PbO. The flux is given as sodium oxide from natron (286.14/61.98 kg per kg Na2O) at about the mole equivalent of the potash that traditional flint glass used, since no potash material exists here. Melting reuses glass_raw_kg's fuel and crew, because a lead glass melts in the same 1000-1300 C range with the same pot furnace; the heat figure is therefore that entry's, not a new one. Heuristic fuel and labour, conf C.",
+   "conf": "C",
+   "requires_node": "mat_glass_lead"
+  },
+  "cement_portland_kg": {
+   "outputs": {
+    "cement_portland_kg": 1000.0
+   },
+   "inputs": {
+    "limestone_kg": 1160.1,
+    "clay_kg": 340.0
+   },
+   "labour_hours": {
+    "furnaceman": 10.0,
+    "labourer": 6.0
+   },
+   "thermal_mj": 1750.0,
+   "temperature_needed_c": 1450.0,
+   "basis": "per tonne of ground Portland cement clinker (setting-regulator gypsum not included)",
+   "yield_basis": "COMPOSITION AND STOICHIOMETRY. Portland clinker is about 65% CaO, with silica, alumina and iron oxide making up most of the rest (roughly 29% together). Lime is supplied as limestone at 100.09/56.08 kg CaCO3 per kg of CaO (CO2 driven off). The oxide balance comes from clay taken as about 87% oxide after dehydroxylation (the same water loss porcelain_kg's kaolinite figure uses). Heat is the enthalpy to calcine and clinker the charge, about 1.75 GJ per tonne, a theoretical floor at the roughly 1450 C clinkering needs; real kilns burn several times more. Crew hours are lime_kg's kiln hours because no cement-specific figure exists here. The few percent of gypsum that retards set is omitted. Heuristic labour and energy, conf C.",
+   "conf": "C",
+   "requires_node": "cn_portland_cement"
+  },
+  "stainless_steel_kg": {
+   "outputs": {
+    "stainless_steel_kg": 1000.0
+   },
+   "inputs": {
+    "steel_plate_kg": 754.8,
+    "chromium_kg": 183.6,
+    "nickel_kg": 81.6
+   },
+   "labour_hours": {
+    "furnaceman": 15.0,
+    "smith": 25.0
+   },
+   "thermal_mj": 1300.0,
+   "temperature_needed_c": 1500.0,
+   "basis": "per tonne of austenitic stainless steel (about 18% Cr, 8% Ni, balance iron) cast from its metals",
+   "yield_basis": "COMPOSITION. The 18-8 austenitic grade is defined by its chromium and nickel content, so the recipe is that ratio applied to metal already reduced elsewhere, with the 2% melt loss bronze_kg states for a crucible melt. Steel is taken as the iron balance. Melting is thermal_mj at the sensible-plus-latent heat of iron alloy to about 1500 C (about 1.3 GJ per tonne), a floor, and the crew hours are bronze_kg's melt-and-cast hours. Heuristic labour, conf C.",
+   "conf": "C",
+   "requires_node": "mat_stainless"
+  },
+  "manganin_kg": {
+   "outputs": {
+    "manganin_kg": 1000.0
+   },
+   "inputs": {
+    "copper_kg": 877.2,
+    "manganese_kg": 122.4,
+    "nickel_kg": 20.4
+   },
+   "labour_hours": {
+    "furnaceman": 15.0,
+    "smith": 25.0
+   },
+   "thermal_mj": 600.0,
+   "temperature_needed_c": 1050.0,
+   "basis": "per tonne of manganin resistance alloy (about 86% Cu, 12% Mn, 2% Ni)",
+   "yield_basis": "COMPOSITION. Manganin is defined by its 86/12/2 copper, manganese and nickel ratio, applied to metals reduced elsewhere, with bronze_kg's 2% crucible melt loss. Melting is thermal_mj at the sensible-plus-latent heat of a copper-base alloy to about 1050 C (about 0.6 GJ per tonne), a floor; crew hours are bronze_kg's. Heuristic labour, conf C.",
+   "conf": "C",
+   "requires_node": "mt2_manganin_resistance"
+  },
+  "constantan_kg": {
+   "outputs": {
+    "constantan_kg": 1000.0
+   },
+   "inputs": {
+    "copper_kg": 561.0,
+    "nickel_kg": 459.0
+   },
+   "labour_hours": {
+    "furnaceman": 15.0,
+    "smith": 25.0
+   },
+   "thermal_mj": 800.0,
+   "temperature_needed_c": 1300.0,
+   "basis": "per tonne of constantan (about 55% Cu, 45% Ni)",
+   "yield_basis": "COMPOSITION. Constantan is the copper-nickel alloy near 55/45 by mass, applied to metals reduced elsewhere, with bronze_kg's 2% crucible melt loss. Melting is thermal_mj at the sensible-plus-latent heat of a copper-nickel alloy to about 1300 C (about 0.8 GJ per tonne), a floor; crew hours are bronze_kg's. Heuristic labour, conf C.",
+   "conf": "C",
+   "requires_node": "mt2_constantan_alloy"
+  },
+  "nichrome_kg": {
+   "outputs": {
+    "nichrome_kg": 1000.0
+   },
+   "inputs": {
+    "nickel_kg": 816.0,
+    "chromium_kg": 204.0
+   },
+   "labour_hours": {
+    "furnaceman": 15.0,
+    "smith": 25.0
+   },
+   "thermal_mj": 950.0,
+   "temperature_needed_c": 1450.0,
+   "basis": "per tonne of nichrome resistance alloy (about 80% Ni, 20% Cr)",
+   "yield_basis": "COMPOSITION. Nichrome is the 80/20 nickel-chromium alloy, applied to metals reduced elsewhere, with bronze_kg's 2% crucible melt loss. Melting is thermal_mj at the sensible-plus-latent heat of a nickel alloy to about 1450 C (about 0.95 GJ per tonne), a floor; crew hours are bronze_kg's. Heuristic labour, conf C.",
+   "conf": "C",
+   "requires_node": "mt2_nichrome_alloy"
+  },
+  "type_metal_kg": {
+   "outputs": {
+    "type_metal_kg": 1000.0
+   },
+   "inputs": {
+    "lead_kg": 816.0,
+    "antimony_kg": 153.0,
+    "tin_kg": 51.0
+   },
+   "labour_hours": {
+    "furnaceman": 15.0,
+    "smith": 25.0
+   },
+   "thermal_mj": 100.0,
+   "temperature_needed_c": 400.0,
+   "basis": "per tonne of type metal (about 80% Pb, 15% Sb, 5% Sn)",
+   "yield_basis": "COMPOSITION. Printer's type metal is a low-melting lead-antimony-tin alloy near 80/15/5, applied to metals reduced elsewhere, with bronze_kg's 2% crucible melt loss. It melts near 300 C, so thermal_mj is only the sensible-plus-latent heat of a lead alloy to about 400 C (about 0.1 GJ per tonne), a floor; crew hours are bronze_kg's. Heuristic labour, conf C.",
+   "conf": "C",
+   "requires_node": "mt2_type_metal"
+  },
+  "zinc_sulfide_kg": {
+   "outputs": {
+    "zinc_sulfide_kg": 1000.0
+   },
+   "inputs": {
+    "zinc_kg": 671.0,
+    "sulfur_kg": 329.0
+   },
+   "basis": "per tonne of zinc sulfide made by direct combination of zinc and sulfur",
+   "yield_basis": "STOICHIOMETRY. Zn + S -> ZnS, so 65.38/97.44 kg of zinc and 32.06/97.44 kg of sulfur per kg, assuming complete reaction (the reaction is exothermic and needs no added heat). Labour is not modelled here, a heuristic gap, conf C.",
+   "conf": "C",
+   "requires_node": "mat_zinc"
+  },
+  "silver_nitrate_kg": {
+   "outputs": {
+    "silver_nitrate_kg": 1000.0
+   },
+   "inputs": {
+    "silver_kg": 635.0,
+    "nitric_acid_kg": 494.6
+   },
+   "basis": "per tonne of silver nitrate from silver dissolved in nitric acid",
+   "yield_basis": "STOICHIOMETRY. 3 Ag + 4 HNO3 -> 3 AgNO3 + NO + 2 H2O, so per kg of product 107.87/169.87 kg of silver and (4/3)*63.01/169.87 kg of nitric acid (taken as 100% acid), assuming complete reaction. Crystallising and drying labour is not modelled, a heuristic gap, conf C.",
+   "conf": "C",
+   "requires_node": "nitric_acid"
+  },
+  "phosphoric_acid_kg": {
+   "outputs": {
+    "phosphoric_acid_kg": 1000.0
+   },
+   "inputs": {
+    "bone_ash_kg": 2110.3,
+    "sulfuric_acid_kg": 1501.4
+   },
+   "basis": "per tonne of phosphoric acid (H3PO4 content) from bone ash digested in sulfuric acid",
+   "yield_basis": "STOICHIOMETRY. Ca3(PO4)2 + 3 H2SO4 -> 2 H3PO4 + 3 CaSO4, so per kg of H3PO4 310.18/(2*97.99) kg of tricalcium phosphate and 3*98.08/(2*97.99) kg of sulfuric acid (taken as 100% acid). Bone ash is taken as about 75% tricalcium phosphate, a rough composition, so its mass is that stoichiometric figure divided by 0.75. The gypsum by-product is not credited and filtration labour is not modelled, a heuristic gap, conf C.",
+   "conf": "C",
+   "requires_node": "chm_superphosphate"
+  },
+  "caustic_soda_kg": {
+   "outputs": {
+    "caustic_soda_kg": 1000.0
+   },
+   "inputs": {
+    "sodium_carbonate_kg": 1324.9,
+    "lime_kg": 701.0,
+    "water_kg": 225.2
+   },
+   "basis": "per tonne of sodium hydroxide (NaOH content) from causticising soda ash with lime",
+   "yield_basis": "STOICHIOMETRY. Na2CO3 + CaO + H2O -> 2 NaOH + CaCO3, so per kg of NaOH 105.99/80.00 kg of sodium carbonate, 56.08/80.00 kg of quicklime and 18.02/80.00 kg of water, assuming complete conversion. Evaporating the lye to solid, and labour, are not modelled, a heuristic gap, conf C.",
+   "conf": "C",
+   "requires_node": "chm_caustic_soda"
+  },
+  "gunpowder_kg": {
+   "outputs": {
+    "gunpowder_kg": 1000.0
+   },
+   "inputs": {
+    "nitre_kg": 750.0,
+    "charcoal_kg": 150.0,
+    "sulfur_kg": 100.0
+   },
+   "basis": "per tonne of black powder (75% saltpetre, 15% charcoal, 10% sulfur by mass)",
+   "yield_basis": "COMPOSITION. Black powder is the classical 75/15/10 mixture of saltpetre, charcoal and sulfur by mass; mixing and corning is a physical blend with no reaction and no mass loss. Labour is not modelled, a heuristic gap, conf B on the ratio.",
+   "conf": "B",
+   "requires_node": "gunpowder"
+  },
+  "borax_kg": {
+   "outputs": {
+    "borax_kg": 1000.0
+   },
+   "inputs": {
+    "boric_acid_kg": 648.5,
+    "sodium_carbonate_kg": 277.9,
+    "water_kg": 236.3
+   },
+   "basis": "per tonne of borax decahydrate (Na2B4O7.10H2O) from boric acid and soda",
+   "yield_basis": "STOICHIOMETRY. 4 H3BO3 + Na2CO3 + 5 H2O -> Na2B4O7.10H2O + CO2 (borax decahydrate is 381.37 g/mol), assuming complete reaction. Crystallising labour and heat are not modelled, a heuristic gap, conf C.",
+   "conf": "C",
+   "requires_node": "soda_leblanc"
+  }
+ }
+}

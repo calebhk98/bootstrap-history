@@ -281,7 +281,7 @@
    "scribe": 200
   },
   "mat": {
-   "papyrus": 50
+   "papyrus_sheet": 50
   },
   "cap": 0,
   "up": 0,
@@ -404,7 +404,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 50
+   "parchment_sheet": 50
   },
   "cap": 0,
   "up": 0,
@@ -434,7 +434,7 @@
    "scribe": 50
   },
   "mat": {
-   "parchment": 30
+   "parchment_sheet": 30
   },
   "cap": 0,
   "up": 0,
@@ -464,7 +464,7 @@
    "scribe": 50
   },
   "mat": {
-   "parchment": 20
+   "parchment_sheet": 20
   },
   "cap": 0,
   "up": 0,
@@ -494,7 +494,7 @@
    "scribe": 40
   },
   "mat": {
-   "parchment": 15
+   "parchment_sheet": 15
   },
   "cap": 0,
   "up": 0,
@@ -524,7 +524,7 @@
    "scribe": 50
   },
   "mat": {
-   "parchment": 20
+   "parchment_sheet": 20
   },
   "cap": 0,
   "up": 0,
@@ -555,7 +555,7 @@
    "scribe": 200
   },
   "mat": {
-   "parchment": 200,
+   "parchment_sheet": 200,
    "lead_kg": 50
   },
   "cap": 2000,
@@ -616,7 +616,7 @@
    "scribe": 200
   },
   "mat": {
-   "parchment": 150
+   "parchment_sheet": 150
   },
   "cap": 3000,
   "up": 200,
@@ -648,7 +648,7 @@
    "scribe": 200
   },
   "mat": {
-   "parchment": 300
+   "parchment_sheet": 300
   },
   "cap": 5000,
   "up": 500,
@@ -707,7 +707,7 @@
    "scribe": 50
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -738,7 +738,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 8000,
   "up": 400,
@@ -768,7 +768,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 3000,
   "up": 150,
@@ -949,7 +949,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 4000,
   "up": 200,
@@ -979,7 +979,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 150
+   "parchment_sheet": 150
   },
   "cap": 3000,
   "up": 150,
@@ -1010,7 +1010,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 150
+   "parchment_sheet": 150
   },
   "cap": 5000,
   "up": 250,
@@ -1072,7 +1072,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -1102,7 +1102,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 80
+   "parchment_sheet": 80
   },
   "cap": 0,
   "up": 0,
@@ -1132,7 +1132,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -1162,7 +1162,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 150
+   "parchment_sheet": 150
   },
   "cap": 3000,
   "up": 200,
@@ -1192,7 +1192,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -1361,7 +1361,7 @@
    "scribe": 200
   },
   "mat": {
-   "parchment": 500
+   "parchment_sheet": 500
   },
   "cap": 3000,
   "up": 200,
@@ -1474,7 +1474,7 @@
    "scribe": 50
   },
   "mat": {
-   "parchment": 10
+   "parchment_sheet": 10
   },
   "cap": 0,
   "up": 0,
@@ -1676,7 +1676,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -1740,7 +1740,7 @@
    "chemist": 100
   },
   "mat": {
-   "mat_crucible": 50
+   "ceramic_kg": 50
   },
   "cap": 3000,
   "up": 150,
@@ -1770,7 +1770,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 3000,
   "up": 100,
@@ -1801,7 +1801,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 4000,
   "up": 200,
@@ -2058,7 +2058,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 3000,
   "up": 200,
@@ -2190,8 +2190,8 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 300,
-   "timber": 200
+   "parchment_sheet": 300,
+   "timber_m3": 200
   },
   "cap": 2000,
   "up": 100,
@@ -2224,7 +2224,7 @@
   },
   "mat": {
    "timber_m3": 50,
-   "mat_brick": 1000
+   "brick_1000": 1.0
   },
   "cap": 2000,
   "up": 100,
@@ -2257,7 +2257,7 @@
   },
   "mat": {
    "timber_m3": 300,
-   "mat_brick": 2000
+   "brick_1000": 2.0
   },
   "cap": 8000,
   "up": 400,
@@ -2318,7 +2318,7 @@
   },
   "mat": {
    "timber_m3": 30,
-   "mat_brick": 500
+   "brick_1000": 0.5
   },
   "cap": 2000,
   "up": 100,
@@ -2348,7 +2348,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 2000,
   "up": 100,
@@ -2381,7 +2381,7 @@
   },
   "mat": {
    "timber_m3": 100,
-   "mat_brick": 1000
+   "brick_1000": 1.0
   },
   "cap": 5000,
   "up": 300,
@@ -2471,7 +2471,7 @@
   },
   "mat": {
    "timber_m3": 80,
-   "mat_rope": 100
+   "cordage_kg": 100
   },
   "cap": 2000,
   "up": 150,
@@ -2704,7 +2704,7 @@
   },
   "mat": {
    "timber_m3": 300,
-   "mat_brick": 3000
+   "brick_1000": 3.0
   },
   "cap": 5000,
   "up": 300,
@@ -2733,7 +2733,7 @@
   },
   "mat": {
    "timber_m3": 200,
-   "mat_brick": 2000
+   "brick_1000": 2.0
   },
   "cap": 3000,
   "up": 200,
@@ -2763,7 +2763,7 @@
   },
   "mat": {
    "timber_m3": 50,
-   "mat_brick": 1000
+   "brick_1000": 1.0
   },
   "cap": 2000,
   "up": 150,
@@ -2794,7 +2794,7 @@
   },
   "mat": {
    "timber_m3": 400,
-   "mat_brick": 5000
+   "brick_1000": 5.0
   },
   "cap": 15000,
   "up": 1000,
@@ -2858,7 +2858,7 @@
   },
   "mat": {
    "timber_m3": 2000,
-   "mat_brick": 20000
+   "brick_1000": 20.0
   },
   "cap": 30000,
   "up": 2000,
@@ -2886,7 +2886,7 @@
   },
   "mat": {
    "timber_m3": 50,
-   "mat_brick": 500
+   "brick_1000": 0.5
   },
   "cap": 1500,
   "up": 100,
@@ -2918,7 +2918,7 @@
   },
   "mat": {
    "timber_m3": 300,
-   "mat_brick": 3000
+   "brick_1000": 3.0
   },
   "cap": 8000,
   "up": 500,
@@ -3002,7 +3002,7 @@
    "scribe": 80
   },
   "mat": {
-   "parchment": 30
+   "parchment_sheet": 30
   },
   "cap": 0,
   "up": 0,
@@ -3033,7 +3033,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 1000,
   "up": 50,
@@ -3064,7 +3064,7 @@
    "scribe": 200
   },
   "mat": {
-   "parchment": 500,
+   "parchment_sheet": 500,
    "timber_m3": 200
   },
   "cap": 5000,
@@ -3191,7 +3191,7 @@
   },
   "mat": {
    "timber_m3": 400,
-   "mat_brick": 4000
+   "brick_1000": 4.0
   },
   "cap": 10000,
   "up": 500,
@@ -3222,7 +3222,7 @@
    "merchant": 200
   },
   "mat": {
-   "parchment": 1000
+   "parchment_sheet": 1000
   },
   "cap": 2000,
   "up": 100,
@@ -3308,7 +3308,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 500
+   "parchment_sheet": 500
   },
   "cap": 2000,
   "up": 100,

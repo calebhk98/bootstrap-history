@@ -284,7 +284,7 @@
   "mat": {
    "copper_kg": 4,
    "zinc_kg": 4,
-   "sulfuric_retort": 10,
+   "sulfuric_acid_kg": 10,
    "salt_kg": 2
   },
   "cap": 0,
@@ -466,7 +466,7 @@
    "artisan": 100
   },
   "mat": {
-   "carbon_black_kg": 2,
+   "carbon_kg": 2,
    "iron_bar_kg": 2,
    "brass_kg": 1,
    "mercury_kg": 0.5
@@ -824,7 +824,7 @@
   "cat": "radio",
   "pre": [
    "vacuum_tube",
-   "com_tuned_circuit"
+   "el2_tuned_circuit_resonance_tank"
   ],
   "kb": "",
   "ph": 120,
@@ -885,7 +885,7 @@
   "cat": "radio",
   "pre": [
    "com_continuous_wave",
-   "com_triode_oscillator"
+   "if_triode_oscillator"
   ],
   "kb": "",
   "ph": 100,
@@ -916,8 +916,8 @@
   "cat": "radio",
   "pre": [
    "com_continuous_wave",
-   "com_triode_oscillator",
-   "com_amplitude_modulation"
+   "if_triode_oscillator",
+   "if_amplitude_modulation"
   ],
   "kb": "",
   "ph": 160,
@@ -949,7 +949,7 @@
   "cat": "radio",
   "pre": [
    "com_continuous_wave",
-   "com_triode_oscillator"
+   "if_triode_oscillator"
   ],
   "kb": "",
   "ph": 140,
@@ -979,8 +979,8 @@
   "name": "Broadcasting as an institution - scheduled transmission and profit model",
   "cat": "radio",
   "pre": [
-   "com_superheterodyne_receiver",
-   "com_amplitude_modulation"
+   "if_superheterodyne_receiver",
+   "if_amplitude_modulation"
   ],
   "kb": "",
   "ph": 200,
@@ -1020,7 +1020,7 @@
    "machinist": 150
   },
   "mat": {
-   "glass_boro_kg": 5,
+   "glass_borosilicate_kg": 5,
    "copper_kg": 8,
    "nickel_kg": 1,
    "lead_kg": 2
@@ -1073,7 +1073,7 @@
   "name": "Electronic camera tube (iconoscope) - real-time image capture",
   "cat": "television",
   "pre": [
-   "com_cathode_ray_tube"
+   "if_cathode_ray_tube"
   ],
   "kb": "",
   "ph": 160,
@@ -1082,7 +1082,7 @@
    "machinist": 200
   },
   "mat": {
-   "glass_boro_kg": 8,
+   "glass_borosilicate_kg": 8,
    "copper_kg": 12,
    "silver_kg": 2,
    "clay_kg": 1
@@ -1108,7 +1108,7 @@
   "name": "Raster scan and synchronisation",
   "cat": "television",
   "pre": [
-   "com_cathode_ray_tube",
+   "if_cathode_ray_tube",
    "com_tv_electronic_camera"
   ],
   "kb": "",
@@ -1225,7 +1225,7 @@
    "machinist": 100
   },
   "mat": {
-   "glass_boro_kg": 2,
+   "glass_borosilicate_kg": 2,
    "nickel_kg": 0.5,
    "copper_kg": 2,
    "tungsten_kg": 0.2
@@ -1270,7 +1270,7 @@
    "machinist": 110
   },
   "mat": {
-   "glass_boro_kg": 2.2,
+   "glass_borosilicate_kg": 2.2,
    "nickel_kg": 0.6,
    "copper_kg": 2.2,
    "tungsten_kg": 0.25
@@ -1989,7 +1989,7 @@
    "copper_kg": 200,
    "iron_bar_kg": 200,
    "timber_m3": 8,
-   "glass_boro_kg": 80
+   "glass_borosilicate_kg": 80
   },
   "cap": 100000,
   "up": 0.0,
@@ -2542,7 +2542,7 @@
   },
   "mat": {
    "parchment_sheet": 200,
-   "carbon_black_kg": 5
+   "carbon_kg": 5
   },
   "cap": 2000,
   "up": 0.0,

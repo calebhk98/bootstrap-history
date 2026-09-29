@@ -83,7 +83,7 @@
    "artisan": 60
   },
   "mat": {
-   "mat_carbon_black_kg": 0.05,
+   "carbon_kg": 0.05,
    "mat_celluloid_kg": 0.1
   },
   "cap": 2000,
@@ -225,8 +225,7 @@
   "name": "Fixed mica capacitor",
   "cat": "component",
   "pre": [
-   "mat_mica",
-   "copper_fire_refined"
+   "mat_copper"
   ],
   "req_any": [
    {
@@ -257,7 +256,7 @@
   },
   "mat": {
    "mat_mica_sheet_kg": 0.02,
-   "copper_foil_kg": 0.05
+   "copper_kg": 0.05
   },
   "cap": 1500,
   "up": 200,
@@ -278,7 +277,7 @@
   "cat": "component",
   "pre": [
    "mat_paper",
-   "copper_fire_refined"
+   "mat_copper"
   ],
   "req_any": [
    {
@@ -311,7 +310,7 @@
   "mat": {
    "mat_paper_kg": 0.02,
    "mat_olive_oil_kg": 0.05,
-   "copper_foil_kg": 0.08
+   "copper_kg": 0.08
   },
   "cap": 2000,
   "up": 300,
@@ -331,7 +330,6 @@
   "name": "Electrolytic capacitor aluminium",
   "cat": "component",
   "pre": [
-   "aluminium_metal",
    "sulfuric_retort"
   ],
   "req_any": [
@@ -353,7 +351,7 @@
    "electrician": 100
   },
   "mat": {
-   "mat_aluminium_foil_kg": 0.05,
+   "aluminium_kg": 0.05,
    "mat_glycerol_kg": 0.1,
    "mat_lead_kg": 0.02
   },
@@ -599,7 +597,7 @@
    "engineer": 80
   },
   "mat": {
-   "mat_quartz_kg": 0.02,
+   "sand_quartz_kg": 0.02,
    "mat_silver_kg": 0.001
   },
   "cap": 500,
@@ -651,7 +649,7 @@
   },
   "mat": {
    "copper_wire_kg": 0.1,
-   "mat_steel_kg": 0.1,
+   "steel_plate_kg": 0.1,
    "mat_silver_kg": 0.002
   },
   "cap": 2000,
@@ -674,7 +672,7 @@
   "name": "Industrial contactor and motor starter",
   "cat": "component",
   "pre": [
-   "relay_electromagnetic",
+   "el2_relay_electromagnetic",
    "high_temp_furnace"
   ],
   "req_any": [
@@ -846,7 +844,7 @@
   },
   "mat": {
    "copper_wire_kg": 0.15,
-   "mat_steel_kg": 0.2,
+   "steel_plate_kg": 0.2,
    "mat_silver_kg": 0.003
   },
   "cap": 1200,
@@ -903,7 +901,7 @@
    "artisan": 50
   },
   "mat": {
-   "mat_lead_wire_kg": 0.002,
+   "lead_kg": 0.002,
    "mat_porcelain": 0.01
   },
   "cap": 10000,
@@ -1048,7 +1046,7 @@
   },
   "mat": {
    "mat_porcelain_kg": 0.3,
-   "mat_mineral_oil_kg": 0.5,
+   "oil_mineral_kg": 0.5,
    "mat_paper_kg": 0.1
   },
   "cap": 2000,
@@ -1069,7 +1067,7 @@
   "name": "Portable electrical plug and socket",
   "cat": "component",
   "pre": [
-   "copper_fire_refined",
+   "mat_copper",
    "mat_porcelain"
   ],
   "req_any": [
@@ -1151,7 +1149,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_copper_foil_kg": 0.05,
+   "copper_kg": 0.05,
    "mat_phenolic_paper": 0.1
   },
   "cap": 1000,
@@ -1174,7 +1172,7 @@
   "name": "Air-gap transformer inductive coupling",
   "cat": "machine",
   "pre": [
-   "inductor_air_core"
+   "el2_inductor_air_core"
   ],
   "req_any": [
    {
@@ -1322,8 +1320,8 @@
   "name": "Compound-wound dynamo self-regulating",
   "cat": "machine",
   "pre": [
-   "dynamo_shunt_wound",
-   "dynamo_series_wound"
+   "el2_dynamo_shunt_wound",
+   "el2_dynamo_series_wound"
   ],
   "req_any": [
    {
@@ -1425,7 +1423,7 @@
   "cat": "machine",
   "pre": [
    "motor_transformer_ac",
-   "alternator_rotating_field"
+   "el2_alternator_rotating_field"
   ],
   "req_any": [
    {
@@ -1476,7 +1474,7 @@
   "cat": "machine",
   "pre": [
    "motor_transformer_ac",
-   "synchronous_motor"
+   "el2_synchronous_motor"
   ],
   "req_any": [
    {
@@ -1507,7 +1505,7 @@
   "mat": {
    "mat_cast_iron_kg": 100,
    "copper_wire_kg": 60,
-   "mat_copper_bars_kg": 15
+   "copper_kg": 15
   },
   "cap": 40,
   "up": 8,
@@ -1527,7 +1525,7 @@
   "name": "Wound-rotor induction motor adjustable speed",
   "cat": "machine",
   "pre": [
-   "induction_motor_squirrel_cage",
+   "el2_induction_motor_squirrel_cage",
    "master_screw"
   ],
   "req_any": [
@@ -1578,8 +1576,8 @@
   "name": "Universal motor AC and DC rated",
   "cat": "machine",
   "pre": [
-   "induction_motor_squirrel_cage",
-   "dynamo_series_wound"
+   "el2_induction_motor_squirrel_cage",
+   "el2_dynamo_series_wound"
   ],
   "req_any": [
    {
@@ -1607,7 +1605,7 @@
    "machinist": 150
   },
   "mat": {
-   "mat_steel_kg": 50,
+   "steel_plate_kg": 50,
    "copper_wire_kg": 40,
    "mat_carbon_kg": 0.2
   },
@@ -1629,8 +1627,6 @@
   "name": "Permanent magnet stepper motor",
   "cat": "machine",
   "pre": [
-   "permanent_magnet_alloy",
-   "wound_rotor_motor",
    "cap_power_electric",
    "cap_tol_100um",
    "electromagnet"
@@ -1662,7 +1658,7 @@
   "mat": {
    "mat_alnico_kg": 0.5,
    "copper_wire_kg": 0.3,
-   "mat_steel_kg": 10
+   "steel_plate_kg": 10
   },
   "cap": 80,
   "up": 16,
@@ -1682,8 +1678,7 @@
   "name": "Servo motor with feedback control",
   "cat": "machine",
   "pre": [
-   "stepper_motor_PM",
-   "feedback_system"
+   "el2_stepper_motor_PM"
   ],
   "req_any": [
    {
@@ -1732,8 +1727,8 @@
   "name": "Rotary converter and synchronous converter AC-DC",
   "cat": "machine",
   "pre": [
-   "synchronous_motor",
-   "dynamo_shunt_wound"
+   "el2_synchronous_motor",
+   "el2_dynamo_shunt_wound"
   ],
   "req_any": [
    {
@@ -1813,12 +1808,12 @@
   "ph": 100,
   "lab": {
    "engineer": 200,
-   "glass_blower": 150
+   "glassblower": 150
   },
   "mat": {
    "mat_mercury_kg": 5,
    "mat_copper_kg": 2,
-   "fused_quartz": 1
+   "quartz_tube_kg": 1
   },
   "cap": 60,
   "up": 12,
@@ -1897,7 +1892,7 @@
   "cat": "power_system",
   "pre": [
    "power_grid",
-   "standardised_frequency"
+   "el2_standardised_frequency_nominal"
   ],
   "req_any": [
    {
@@ -1947,7 +1942,7 @@
   "cat": "power_system",
   "pre": [
    "power_grid",
-   "substation"
+   "el2_substation_voltage_regulation"
   ],
   "req_any": [
    {
@@ -1998,7 +1993,7 @@
   "cat": "power_system",
   "pre": [
    "power_grid",
-   "transformer"
+   "en_transformer"
   ],
   "req_any": [
    {
@@ -2030,9 +2025,9 @@
    "machinist": 250
   },
   "mat": {
-   "mat_bulk_steel_kg": 10000,
+   "steel_plate_kg": 10000,
    "copper_wire_kg": 2000,
-   "mat_mineral_oil_kg": 2000
+   "oil_mineral_kg": 2000
   },
   "cap": 10,
   "up": 2,
@@ -2054,8 +2049,9 @@
   "name": "Load tap changer under load",
   "cat": "power_system",
   "pre": [
-   "substation_voltage_regulation",
-   "relay_electromagnetic"
+   "el2_substation_voltage_regulation",
+   "el2_relay_electromagnetic",
+   "motor_transformer_ac"
   ],
   "req_any": [
    {
@@ -2081,7 +2077,6 @@
    "electrician": 150
   },
   "mat": {
-   "motor_transformer_ac": 1,
    "mat_silver_kg": 0.1
   },
   "cap": 60,
@@ -2104,7 +2099,7 @@
   "name": "Differential protective relay overcurrent",
   "cat": "power_system",
   "pre": [
-   "relay_electromagnetic",
+   "el2_relay_electromagnetic",
    "galvanometer"
   ],
   "req_any": [
@@ -2131,7 +2126,7 @@
    "electrician": 180
   },
   "mat": {
-   "mat_bulk_steel_kg": 20,
+   "steel_plate_kg": 20,
    "copper_wire_kg": 5
   },
   "cap": 50,
@@ -2182,7 +2177,7 @@
   },
   "mat": {
    "mat_copper_kg": 100,
-   "mat_wrought_iron_kg": 200
+   "iron_bar_kg": 200
   },
   "cap": 100,
   "up": 20,
@@ -2204,8 +2199,8 @@
   "name": "Power factor correction and reactive power compensation",
   "cat": "power_system",
   "pre": [
-   "capacitor_fixed_paper",
-   "induction_motor_squirrel_cage"
+   "el2_capacitor_fixed_paper",
+   "el2_induction_motor_squirrel_cage"
   ],
   "req_any": [
    {
@@ -2233,7 +2228,6 @@
    "electrician": 140
   },
   "mat": {
-   "capacitor_fixed_paper": 10,
    "mat_copper_kg": 50
   },
   "cap": 80,
@@ -2256,7 +2250,7 @@
   "name": "Synchroscope phase angle indicator",
   "cat": "power_system",
   "pre": [
-   "synchronous_motor",
+   "el2_synchronous_motor",
    "galvanometer"
   ],
   "req_any": [
@@ -2283,7 +2277,6 @@
    "machinist": 120
   },
   "mat": {
-   "synchronous_motor": 1,
    "mat_aluminium": 0.5
   },
   "cap": 100,
@@ -2331,7 +2324,7 @@
   "ph": 150,
   "lab": {
    "engineer": 400,
-   "operator": 300
+   "labourer": 300
   },
   "mat": {
    "copper_wire_km": 1000
@@ -2391,7 +2384,7 @@
   "cat": "power_system",
   "pre": [
    "power_grid",
-   "alternator_rotating_field"
+   "el2_alternator_rotating_field"
   ],
   "req_any": [],
   "traits": [
@@ -2457,8 +2450,8 @@
   },
   "mat": {
    "copper_wire_kg": 0.05,
-   "mat_steel": 0.1,
-   "permanent_magnet": 0.1
+   "steel_plate_kg": 0.1,
+   "lodestone_kg": 0.1
   },
   "cap": 500,
   "up": 100,
@@ -2478,8 +2471,7 @@
   "name": "Moving iron meter fixed scale",
   "cat": "measurement",
   "pre": [
-   "electromagnet",
-   "mat_iron"
+   "electromagnet"
   ],
   "req_any": [
    {
@@ -2528,7 +2520,7 @@
   "cat": "measurement",
   "pre": [
    "galvanometer",
-   "meter_moving_coil"
+   "el2_meter_moving_coil_galvanometer"
   ],
   "req_any": [
    {
@@ -2555,7 +2547,7 @@
   },
   "mat": {
    "copper_wire_kg": 0.15,
-   "mat_steel": 0.15
+   "steel_plate_kg": 0.15
   },
   "cap": 200,
   "up": 40,
@@ -2577,7 +2569,6 @@
   "name": "Energy meter integrating wattmeter",
   "cat": "measurement",
   "pre": [
-   "electrodynamometer_wattmeter",
    "el2_meter_electrodynamometer_wattmeter"
   ],
   "req_any": [
@@ -2605,8 +2596,7 @@
    "machinist": 180
   },
   "mat": {
-   "mat_aluminium": 0.1,
-   "gear_train": 1
+   "mat_aluminium": 0.1
   },
   "cap": 100,
   "up": 20,
@@ -2626,8 +2616,8 @@
   "name": "Megger insulation resistance tester",
   "cat": "measurement",
   "pre": [
-   "meter_moving_coil",
-   "dynamo_series_wound"
+   "el2_meter_moving_coil_galvanometer",
+   "el2_dynamo_series_wound"
   ],
   "req_any": [
    {
@@ -2652,10 +2642,7 @@
    "engineer": 220,
    "machinist": 140
   },
-  "mat": {
-   "dynamo_series_wound": 0.5,
-   "meter_moving_coil": 0.5
-  },
+  "mat": {},
   "cap": 150,
   "up": 30,
   "build_yrs": 0.8,
@@ -2675,7 +2662,9 @@
   "cat": "measurement",
   "pre": [
    "galvanometer",
-   "alternator_rotating_field"
+   "el2_alternator_rotating_field",
+   "el2_rheostat",
+   "el2_capacitor_variable_air"
   ],
   "req_any": [
    {
@@ -2701,11 +2690,7 @@
    "engineer": 280,
    "electrician": 140
   },
-  "mat": {
-   "rheostat": 2,
-   "capacitor_variable_air": 1,
-   "galvanometer": 1
-  },
+  "mat": {},
   "cap": 80,
   "up": 16,
   "build_yrs": 1,
@@ -2773,8 +2758,7 @@
   "name": "Standard resistor manganin coil",
   "cat": "measurement",
   "pre": [
-   "master_screw",
-   "mat_manganin"
+   "master_screw"
   ],
   "req_any": [
    {
@@ -2801,7 +2785,7 @@
    "electrician": 100
   },
   "mat": {
-   "mat_manganin_wire_kg": 0.1,
+   "manganin_kg": 0.1,
    "mat_brass_kg": 0.2
   },
   "cap": 300,
@@ -2822,8 +2806,9 @@
   "name": "Potentiometer method voltage comparison",
   "cat": "measurement",
   "pre": [
-   "potentiometer",
-   "standard_cell_weston"
+   "el2_potentiometer",
+   "el2_standard_cell_weston_saturated",
+   "galvanometer"
   ],
   "req_any": [
    {
@@ -2849,10 +2834,7 @@
    "engineer": 240,
    "electrician": 140
   },
-  "mat": {
-   "potentiometer": 1,
-   "galvanometer": 1
-  },
+  "mat": {},
   "cap": 150,
   "up": 30,
   "build_yrs": 0.5,
@@ -2871,7 +2853,7 @@
   "name": "Ballistic galvanometer pulse integration",
   "cat": "measurement",
   "pre": [
-   "meter_moving_coil",
+   "el2_meter_moving_coil_galvanometer",
    "electromagnet"
   ],
   "req_any": [
@@ -2899,7 +2881,7 @@
   },
   "mat": {
    "copper_wire_kg": 0.1,
-   "mat_steel": 0.2
+   "steel_plate_kg": 0.2
   },
   "cap": 120,
   "up": 24,
@@ -2919,7 +2901,7 @@
   "name": "Oscillograph string galvanometer pen recorder",
   "cat": "measurement",
   "pre": [
-   "meter_moving_coil",
+   "el2_meter_moving_coil_galvanometer",
    "photography"
   ],
   "req_any": [
@@ -2969,8 +2951,7 @@
   "name": "Cathode ray oscilloscope CRO",
   "cat": "measurement",
   "pre": [
-   "vacuum_tube",
-   "deflection_coil"
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -3000,12 +2981,12 @@
   "ph": 150,
   "lab": {
    "engineer": 400,
-   "glass_blower": 200
+   "glassblower": 200
   },
   "mat": {
-   "fused_quartz": 0.5,
+   "quartz_tube_kg": 0.5,
    "copper_wire_kg": 1,
-   "phosphor_powder_kg": 0.01
+   "zinc_sulfide_kg": 0.01
   },
   "cap": 40,
   "up": 8,
@@ -3025,8 +3006,7 @@
   "name": "Thermionic valve voltmeter high impedance",
   "cat": "measurement",
   "pre": [
-   "vacuum_tube",
-   "cathode_follower"
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -3051,10 +3031,7 @@
    "engineer": 280,
    "electrician": 160
   },
-  "mat": {
-   "vacuum_tube": 2,
-   "power_supply_regulated": 1
-  },
+  "mat": {},
   "cap": 100,
   "up": 20,
   "build_yrs": 1,
@@ -3097,10 +3074,9 @@
   "ph": 70,
   "lab": {
    "engineer": 180,
-   "glass_blower": 120
+   "glassblower": 120
   },
   "mat": {
-   "vacuum_tube": 1,
    "mat_copper_kg": 0.05
   },
   "cap": 200,
@@ -3123,7 +3099,8 @@
   "name": "Triode amplifying vacuum tube",
   "cat": "electronics",
   "pre": [
-   "diode_thermionic_rectifying_tube"
+   "el2_diode_thermionic_rectifying_tube",
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -3153,11 +3130,10 @@
   "ph": 100,
   "lab": {
    "engineer": 240,
-   "glass_blower": 180
+   "glassblower": 180
   },
   "mat": {
-   "vacuum_tube": 1,
-   "mat_tungsten_wire_kg": 0.01
+   "tungsten_kg": 0.01
   },
   "cap": 150,
   "up": 30,
@@ -3179,7 +3155,8 @@
   "name": "Tetrode suppressor and screen grid tube",
   "cat": "electronics",
   "pre": [
-   "triode_amplifying_tube"
+   "el2_triode_amplifying_tube",
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -3202,11 +3179,10 @@
   "ph": 110,
   "lab": {
    "engineer": 280,
-   "glass_blower": 200
+   "glassblower": 200
   },
   "mat": {
-   "vacuum_tube": 1,
-   "mat_tungsten_wire_kg": 0.02
+   "tungsten_kg": 0.02
   },
   "cap": 120,
   "up": 24,
@@ -3228,7 +3204,8 @@
   "name": "Pentode output and RF amplifier tube",
   "cat": "electronics",
   "pre": [
-   "tetrode_four_electrode_tube"
+   "el2_tetrode_four_electrode_tube",
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -3245,11 +3222,10 @@
   "ph": 120,
   "lab": {
    "engineer": 300,
-   "glass_blower": 220
+   "glassblower": 220
   },
   "mat": {
-   "vacuum_tube": 1,
-   "mat_tungsten_wire_kg": 0.025
+   "tungsten_kg": 0.025
   },
   "cap": 100,
   "up": 20,
@@ -3271,7 +3247,8 @@
   "name": "Beam tetrode output tube high power",
   "cat": "electronics",
   "pre": [
-   "pentode_five_electrode_tube"
+   "el2_pentode_five_electrode_tube",
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -3300,10 +3277,9 @@
   "ph": 130,
   "lab": {
    "engineer": 320,
-   "glass_blower": 240
+   "glassblower": 240
   },
   "mat": {
-   "vacuum_tube": 1,
    "mat_molybdenum_kg": 0.05
   },
   "cap": 90,
@@ -3326,7 +3302,8 @@
   "name": "Thyratron gas-filled switching tube",
   "cat": "electronics",
   "pre": [
-   "tetrode_four_electrode_tube"
+   "el2_tetrode_four_electrode_tube",
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -3350,10 +3327,9 @@
   "ph": 100,
   "lab": {
    "engineer": 250,
-   "glass_blower": 180
+   "glassblower": 180
   },
   "mat": {
-   "vacuum_tube": 1,
    "mat_xenon_kg": 0.001
   },
   "cap": 120,
@@ -3376,8 +3352,7 @@
   "name": "Photomultiplier single photon detector",
   "cat": "electronics",
   "pre": [
-   "photodiode",
-   "cascade_multiplier",
+   "el2_photodiode_photocell_selenium",
    "cap_vac_1e6",
    "el2_photocell_vacuum_gas_photoelectric",
    "vacuum_tube"
@@ -3403,11 +3378,10 @@
   "ph": 140,
   "lab": {
    "engineer": 350,
-   "glass_blower": 250
+   "glassblower": 250
   },
   "mat": {
-   "vacuum_tube": 1,
-   "mat_cesium_kg": 0.0001
+   "caesium_g": 0.1
   },
   "cap": 60,
   "up": 12,
@@ -3430,7 +3404,7 @@
   "cat": "electronics",
   "pre": [
    "vacuum_tube",
-   "waveguide"
+   "com_waveguide"
   ],
   "req_any": [
    {
@@ -3456,8 +3430,7 @@
    "machinist": 250
   },
   "mat": {
-   "mat_copper_kg": 5,
-   "vacuum_equipment": 1
+   "mat_copper_kg": 5
   },
   "cap": 40,
   "up": 8,
@@ -3479,8 +3452,7 @@
   "name": "Magnetron high-power microwave oscillator",
   "cat": "electronics",
   "pre": [
-   "vacuum_tube",
-   "electron_bunching"
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -3504,11 +3476,11 @@
   "ph": 160,
   "lab": {
    "engineer": 420,
-   "glass_blower": 280
+   "glassblower": 280
   },
   "mat": {
    "mat_copper_kg": 2,
-   "permanent_magnet_kg": 2
+   "lodestone_kg": 2
   },
   "cap": 30,
   "up": 6,
@@ -3530,8 +3502,7 @@
   "name": "Travelling wave tube linear microwave amplifier",
   "cat": "electronics",
   "pre": [
-   "klystron_microwave_amplifier",
-   "slow_wave_structure"
+   "el2_klystron_microwave_amplifier"
   ],
   "req_any": [
    {
@@ -3558,8 +3529,8 @@
    "machinist": 300
   },
   "mat": {
-   "mat_tungsten_wire_kg": 0.5,
-   "permanent_magnet_kg": 3
+   "tungsten_kg": 0.5,
+   "lodestone_kg": 3
   },
   "cap": 25,
   "up": 5,
@@ -3581,8 +3552,7 @@
   "name": "Photodiode and photoelectric cell",
   "cat": "electronics",
   "pre": [
-   "rectifier_metal_layer",
-   "light_sensitive_element"
+   "el2_rectifier_metal_layer"
   ],
   "req_any": [
    {
@@ -3616,7 +3586,7 @@
   },
   "mat": {
    "mat_selenium_kg": 0.05,
-   "mat_glass": 0.1
+   "glass_raw_kg": 0.1
   },
   "cap": 200,
   "up": 40,
@@ -3638,7 +3608,6 @@
   "name": "Thermistor temperature-sensitive resistor",
   "cat": "electronics",
   "pre": [
-   "metal_oxide_semiconductor",
    "analytical_chemistry"
   ],
   "req_any": [
@@ -3668,7 +3637,7 @@
   },
   "mat": {
    "mat_nickel_oxide_kg": 0.01,
-   "mat_nickel_wire_kg": 0.05
+   "nickel_kg": 0.05
   },
   "cap": 150,
   "up": 30,
@@ -3690,8 +3659,6 @@
   "name": "Varistor voltage-dependent resistor",
   "cat": "electronics",
   "pre": [
-   "metal_oxide_semiconductor",
-   "high_voltage_protection",
    "mt2_carborundum_ceramic"
   ],
   "req_any": [
@@ -3720,7 +3687,7 @@
   },
   "mat": {
    "mat_silicon_carbide_kg": 0.02,
-   "mat_ceramic": 0.05
+   "ceramic_kg": 0.05
   },
   "cap": 180,
   "up": 36,
@@ -3742,8 +3709,8 @@
   "name": "Tuned circuit resonance tank LC",
   "cat": "circuit_concept",
   "pre": [
-   "inductor_air_core",
-   "capacitor_variable_air",
+   "el2_inductor_air_core",
+   "el2_capacitor_variable_air",
    "electromagnet"
   ],
   "req_any": [],
@@ -3781,7 +3748,7 @@
   "name": "Resonance and Q factor frequency selectivity",
   "cat": "circuit_concept",
   "pre": [
-   "tuned_circuit_resonance_tank"
+   "el2_tuned_circuit_resonance_tank"
   ],
   "req_any": [],
   "traits": [
@@ -3811,8 +3778,8 @@
   "name": "RC low-pass and high-pass filters",
   "cat": "circuit_concept",
   "pre": [
-   "capacitor_fixed_paper",
-   "resistor_wirewound"
+   "el2_capacitor_fixed_paper",
+   "el2_resistor_wirewound"
   ],
   "req_any": [],
   "traits": [
@@ -3823,10 +3790,7 @@
   "lab": {
    "engineer": 120
   },
-  "mat": {
-   "resistor_wirewound": 1,
-   "capacitor_fixed_paper": 1
-  },
+  "mat": {},
   "cap": 600,
   "up": 0.0,
   "build_yrs": 0.1,
@@ -3845,8 +3809,10 @@
   "name": "Band-pass and notch filters tuned rejection",
   "cat": "circuit_concept",
   "pre": [
-   "tuned_circuit_resonance_tank",
-   "high_pass_filter"
+   "el2_tuned_circuit_resonance_tank",
+   "el2_low_pass_filter_high_pass_filter",
+   "el2_inductor_iron_core",
+   "el2_capacitor_fixed_mica"
   ],
   "req_any": [],
   "traits": [
@@ -3857,10 +3823,7 @@
   "lab": {
    "engineer": 170
   },
-  "mat": {
-   "inductor_iron_core": 1,
-   "capacitor_fixed_mica": 1
-  },
+  "mat": {},
   "cap": 400,
   "up": 0.0,
   "build_yrs": 0.2,
@@ -3879,8 +3842,9 @@
   "name": "Amplifier stage and gain",
   "cat": "circuit_concept",
   "pre": [
-   "triode_amplifying_tube",
-   "load_resistance"
+   "el2_triode_amplifying_tube",
+   "el2_resistor_wirewound",
+   "el2_capacitor_fixed_paper"
   ],
   "req_any": [
    {
@@ -3900,11 +3864,7 @@
    "engineer": 200,
    "electrician": 120
   },
-  "mat": {
-   "triode_amplifying_tube": 1,
-   "resistor_wirewound": 2,
-   "capacitor_fixed_paper": 2
-  },
+  "mat": {},
   "cap": 300,
   "up": 0.0,
   "build_yrs": 0.3,
@@ -3923,7 +3883,7 @@
   "name": "Negative feedback and Blacks 1927 theorem",
   "cat": "circuit_concept",
   "pre": [
-   "amplifier_gain_voltage_current",
+   "el2_amplifier_gain_voltage_current",
    "crank_conrod"
   ],
   "req_any": [
@@ -3961,8 +3921,8 @@
   "name": "Oscillator feedback oscillation and frequency generation",
   "cat": "circuit_concept",
   "pre": [
-   "triode_amplifying_tube",
-   "tuned_circuit_resonance_tank"
+   "el2_triode_amplifying_tube",
+   "el2_tuned_circuit_resonance_tank"
   ],
   "req_any": [
    {
@@ -3982,10 +3942,7 @@
    "engineer": 220,
    "electrician": 130
   },
-  "mat": {
-   "triode_amplifying_tube": 1,
-   "tuned_circuit_resonance_tank": 1
-  },
+  "mat": {},
   "cap": 200,
   "up": 0.0,
   "build_yrs": 0.3,
@@ -4004,7 +3961,10 @@
   "name": "Multivibrator astable and monostable binary circuit",
   "cat": "circuit_concept",
   "pre": [
-   "oscillator_feedback_frequency_generation"
+   "el2_oscillator_feedback_frequency_generation",
+   "el2_triode_amplifying_tube",
+   "el2_capacitor_fixed_paper",
+   "el2_resistor_wirewound"
   ],
   "req_any": [
    {
@@ -4031,11 +3991,7 @@
    "engineer": 270,
    "electrician": 150
   },
-  "mat": {
-   "triode_amplifying_tube": 2,
-   "capacitor_fixed_paper": 2,
-   "resistor_wirewound": 4
-  },
+  "mat": {},
   "cap": 120,
   "up": 0.0,
   "build_yrs": 0.5,
@@ -4054,7 +4010,10 @@
   "name": "Flip-flop latch and binary memory element",
   "cat": "circuit_concept",
   "pre": [
-   "multivibrator_binary_oscillator"
+   "el2_multivibrator_binary_oscillator",
+   "el2_pentode_five_electrode_tube",
+   "el2_resistor_wirewound",
+   "el2_capacitor_fixed_paper"
   ],
   "req_any": [
    {
@@ -4073,11 +4032,7 @@
   "lab": {
    "engineer": 290
   },
-  "mat": {
-   "pentode_five_electrode_tube": 2,
-   "resistor_wirewound": 6,
-   "capacitor_fixed_paper": 2
-  },
+  "mat": {},
   "cap": 100,
   "up": 0.0,
   "build_yrs": 0.6,
@@ -4096,7 +4051,7 @@
   "name": "Counter frequency division and binary scaling",
   "cat": "circuit_concept",
   "pre": [
-   "flip_flop_binary_latch_memory"
+   "el2_flip_flop_binary_latch_memory"
   ],
   "req_any": [
    {
@@ -4114,9 +4069,7 @@
   "lab": {
    "engineer": 250
   },
-  "mat": {
-   "flip_flop_binary_latch_memory": 8
-  },
+  "mat": {},
   "cap": 150,
   "up": 0.0,
   "build_yrs": 1,
@@ -4135,8 +4088,9 @@
   "name": "Mixer frequency conversion and translation",
   "cat": "circuit_concept",
   "pre": [
-   "oscillator_feedback_frequency_generation",
-   "nonlinear_device"
+   "el2_oscillator_feedback_frequency_generation",
+   "el2_diode_thermionic_rectifying_tube",
+   "el2_inductor_air_core"
   ],
   "req_any": [
    {
@@ -4162,10 +4116,7 @@
    "engineer": 200,
    "electrician": 120
   },
-  "mat": {
-   "diode_thermionic_rectifying_tube": 1,
-   "inductor_air_core": 2
-  },
+  "mat": {},
   "cap": 250,
   "up": 0.0,
   "build_yrs": 0.3,
@@ -4184,8 +4135,10 @@
   "name": "Detector and demodulation envelope and product detection",
   "cat": "circuit_concept",
   "pre": [
-   "diode_thermionic_rectifying_tube",
-   "tuned_circuit_resonance_tank"
+   "el2_diode_thermionic_rectifying_tube",
+   "el2_tuned_circuit_resonance_tank",
+   "el2_capacitor_fixed_paper",
+   "el2_resistor_wirewound"
   ],
   "req_any": [
    {
@@ -4211,11 +4164,7 @@
    "engineer": 180,
    "electrician": 100
   },
-  "mat": {
-   "diode_thermionic_rectifying_tube": 1,
-   "capacitor_fixed_paper": 1,
-   "resistor_wirewound": 1
-  },
+  "mat": {},
   "cap": 400,
   "up": 0.0,
   "build_yrs": 0.2,
@@ -4234,8 +4183,10 @@
   "name": "Discriminator and FM demodulation",
   "cat": "circuit_concept",
   "pre": [
-   "detector_demodulation_envelope_product",
-   "tuned_circuit_resonance_tank"
+   "el2_detector_demodulation_envelope_product",
+   "el2_tuned_circuit_resonance_tank",
+   "el2_bandpass_filter_notch_filter",
+   "el2_diode_thermionic_rectifying_tube"
   ],
   "req_any": [
    {
@@ -4260,10 +4211,7 @@
    "engineer": 240,
    "electrician": 130
   },
-  "mat": {
-   "bandpass_filter_notch_filter": 2,
-   "diode_thermionic_rectifying_tube": 2
-  },
+  "mat": {},
   "cap": 180,
   "up": 0.0,
   "build_yrs": 0.4,
@@ -4282,8 +4230,9 @@
   "name": "Modulator amplitude frequency and phase modulation",
   "cat": "circuit_concept",
   "pre": [
-   "oscillator_feedback_frequency_generation",
-   "amplifier_gain_voltage_current"
+   "el2_oscillator_feedback_frequency_generation",
+   "el2_amplifier_gain_voltage_current",
+   "el2_triode_amplifying_tube"
   ],
   "req_any": [
    {
@@ -4308,10 +4257,7 @@
    "engineer": 220,
    "electrician": 120
   },
-  "mat": {
-   "oscillator_feedback_frequency_generation": 1,
-   "triode_amplifying_tube": 1
-  },
+  "mat": {},
   "cap": 200,
   "up": 0.0,
   "build_yrs": 0.3,
@@ -4330,8 +4276,9 @@
   "name": "Power supply rectification and smoothing",
   "cat": "circuit_concept",
   "pre": [
-   "rectifier_metal_layer",
-   "inductor_iron_core"
+   "el2_rectifier_metal_layer",
+   "el2_inductor_iron_core",
+   "el2_capacitor_electrolytic"
   ],
   "req_any": [
    {
@@ -4358,11 +4305,7 @@
    "engineer": 200,
    "electrician": 120
   },
-  "mat": {
-   "rectifier_metal_layer": 2,
-   "inductor_iron_core": 1,
-   "capacitor_electrolytic": 2
-  },
+  "mat": {},
   "cap": 300,
   "up": 0.0,
   "build_yrs": 0.4,
@@ -4383,8 +4326,9 @@
   "name": "Voltage regulation zener shunt and series regulator",
   "cat": "circuit_concept",
   "pre": [
-   "power_supply_rectification_filtering",
-   "cathode_follower"
+   "el2_power_supply_rectification_filtering",
+   "el2_triode_amplifying_tube",
+   "el2_resistor_wirewound"
   ],
   "req_any": [
    {
@@ -4411,11 +4355,7 @@
    "engineer": 250,
    "electrician": 140
   },
-  "mat": {
-   "zener_diode": 1,
-   "triode_amplifying_tube": 1,
-   "resistor_wirewound": 2
-  },
+  "mat": {},
   "cap": 150,
   "up": 0.0,
   "build_yrs": 0.5,
@@ -4434,8 +4374,8 @@
   "name": "Impedance matching transformer and L-network",
   "cat": "circuit_concept",
   "pre": [
-   "transformer_core_air",
-   "inductor_air_core"
+   "el2_transformer_core_air",
+   "el2_inductor_air_core"
   ],
   "req_any": [
    {
@@ -4461,10 +4401,7 @@
    "engineer": 170,
    "electrician": 100
   },
-  "mat": {
-   "transformer_core_air": 1,
-   "inductor_air_core": 1
-  },
+  "mat": {},
   "cap": 400,
   "up": 0.0,
   "build_yrs": 0.2,
@@ -4483,7 +4420,7 @@
   "name": "Transmission line and coaxial cable propagation",
   "cat": "circuit_concept",
   "pre": [
-   "impedance_matching_transformer_network"
+   "el2_impedance_matching_transformer_network"
   ],
   "req_any": [
    {
@@ -4538,8 +4475,7 @@
   "name": "Waveguide rectangular and circular propagation",
   "cat": "circuit_concept",
   "pre": [
-   "transmission_line_coaxial_cable",
-   "microwave_frequency"
+   "el2_transmission_line_coaxial_cable"
   ],
   "req_any": [
    {
@@ -4587,7 +4523,7 @@
   "name": "Antenna patterns radiation and efficiency gain",
   "cat": "circuit_concept",
   "pre": [
-   "transmission_line_coaxial_cable"
+   "el2_transmission_line_coaxial_cable"
   ],
   "req_any": [
    {
@@ -4637,7 +4573,8 @@
   "cat": "application",
   "pre": [
    "arc_furnace_ferroalloys",
-   "power_grid"
+   "power_grid",
+   "el2_dynamo_shunt_wound"
   ],
   "req_any": [
    {
@@ -4666,8 +4603,7 @@
    "machinist": 200
   },
   "mat": {
-   "dynamo_shunt_wound": 1,
-   "mat_steel_kg": 100
+   "steel_plate_kg": 100
   },
   "cap": 60,
   "up": 12,
@@ -4689,8 +4625,7 @@
   "name": "Resistance welding spot and seam fusion",
   "cat": "application",
   "pre": [
-   "power_grid",
-   "high_current_connection"
+   "power_grid"
   ],
   "req_any": [
    {
@@ -4718,7 +4653,6 @@
    "machinist": 180
   },
   "mat": {
-   "power_grid": 1,
    "mat_copper_kg": 50
   },
   "cap": 80,
@@ -4739,8 +4673,8 @@
   "name": "Induction heating and inductive coupling",
   "cat": "application",
   "pre": [
-   "inductor_iron_core",
-   "alternator_rotating_field"
+   "el2_inductor_iron_core",
+   "el2_alternator_rotating_field"
   ],
   "req_any": [
    {
@@ -4767,7 +4701,6 @@
    "electrician": 150
   },
   "mat": {
-   "inductor_iron_core": 1,
    "mat_copper_kg": 50
   },
   "cap": 120,
@@ -4788,8 +4721,7 @@
   "name": "Dielectric heating capacitor field",
   "cat": "application",
   "pre": [
-   "capacitor_fixed_paper",
-   "high_frequency_generator"
+   "el2_capacitor_fixed_paper"
   ],
   "req_any": [
    {
@@ -4815,10 +4747,7 @@
    "engineer": 300,
    "electrician": 180
   },
-  "mat": {
-   "high_frequency_generator": 1,
-   "capacitor_fixed_paper": 2
-  },
+  "mat": {},
   "cap": 100,
   "up": 20,
   "build_yrs": 1.5,
@@ -4839,7 +4768,9 @@
   "name": "Electroplating and electrorefining coating",
   "cat": "application",
   "pre": [
-   "electroplating"
+   "electroplating",
+   "el2_dynamo_shunt_wound",
+   "lead_chamber"
   ],
   "req_any": [
    {
@@ -4865,10 +4796,7 @@
    "engineer": 200,
    "chemist": 150
   },
-  "mat": {
-   "dynamo_shunt_wound": 1,
-   "lead_chamber": 1
-  },
+  "mat": {},
   "cap": 200,
   "up": 40,
   "build_yrs": 1,
@@ -4889,7 +4817,9 @@
   "name": "Electropolishing etching and surface finish",
   "cat": "application",
   "pre": [
-   "electroplating_and_electrorefining"
+   "el2_electroplating_and_electrorefining",
+   "power_grid",
+   "analytical_chemistry"
   ],
   "req_any": [
    {
@@ -4914,10 +4844,7 @@
    "engineer": 240,
    "chemist": 160
   },
-  "mat": {
-   "power_grid": 1,
-   "analytical_chemistry": 1
-  },
+  "mat": {},
   "cap": 150,
   "up": 30,
   "build_yrs": 1,
@@ -4938,7 +4865,6 @@
   "name": "Electrostatic precipitation and dust collection",
   "cat": "application",
   "pre": [
-   "high_voltage_supply",
    "motor_transformer_ac"
   ],
   "req_any": [
@@ -4967,8 +4893,7 @@
    "electrician": 200
   },
   "mat": {
-   "power_supply_high_voltage": 1,
-   "mat_tungsten_kg": 5
+   "tungsten_kg": 5
   },
   "cap": 80,
   "up": 16,
@@ -4990,7 +4915,7 @@
   "name": "Electric locomotive and traction motor",
   "cat": "application",
   "pre": [
-   "induction_motor_squirrel_cage",
+   "el2_induction_motor_squirrel_cage",
    "power_grid"
   ],
   "req_any": [
@@ -5026,8 +4951,6 @@
    "machinist": 250
   },
   "mat": {
-   "induction_motor_squirrel_cage": 4,
-   "power_grid": 1,
    "mat_copper_kg": 500
   },
   "cap": 20,
@@ -5050,7 +4973,8 @@
   "name": "Trolleybus overhead catenary power distribution",
   "cat": "application",
   "pre": [
-   "electric_locomotive_traction_motor"
+   "el2_electric_locomotive_traction_motor",
+   "el2_universal_motor_AC_DC"
   ],
   "req_any": [
    {
@@ -5078,7 +5002,6 @@
    "electrician": 200
   },
   "mat": {
-   "universal_motor": 2,
    "mat_copper_wire_km": 100
   },
   "cap": 60,
@@ -5101,8 +5024,7 @@
   "name": "Electric lift motor and gear reduction",
   "cat": "application",
   "pre": [
-   "induction_motor_squirrel_cage",
-   "speed_reducer_gearbox"
+   "el2_induction_motor_squirrel_cage"
   ],
   "req_any": [
    {
@@ -5130,9 +5052,7 @@
    "machinist": 220
   },
   "mat": {
-   "induction_motor_squirrel_cage": 1,
-   "speed_reducer_gearbox": 1,
-   "mat_steel_kg": 200
+   "steel_plate_kg": 200
   },
   "cap": 40,
   "up": 8,
@@ -5154,7 +5074,7 @@
   "name": "Electric handheld drill and motor",
   "cat": "application",
   "pre": [
-   "universal_motor",
+   "el2_universal_motor_AC_DC",
    "power_grid"
   ],
   "req_any": [
@@ -5182,9 +5102,7 @@
    "machinist": 160
   },
   "mat": {
-   "universal_motor": 1,
-   "speed_reducer_gearbox": 1,
-   "mat_steel_kg": 10
+   "steel_plate_kg": 10
   },
   "cap": 200,
   "up": 40,
@@ -5206,8 +5124,7 @@
   "name": "Loudspeaker moving coil magnetic transducer",
   "cat": "application",
   "pre": [
-   "electromagnet",
-   "cone_diaphragm"
+   "electromagnet"
   ],
   "req_any": [
    {
@@ -5241,7 +5158,7 @@
    "artisan": 180
   },
   "mat": {
-   "permanent_magnet": 1,
+   "lodestone_kg": 1,
    "copper_wire_kg": 0.3,
    "mat_paper_kg": 0.2
   },
@@ -5263,8 +5180,7 @@
   "name": "Carbon contact microphone transmitter",
   "cat": "application",
   "pre": [
-   "carbon_granule",
-   "telephone_transmitter",
+   "if_telephone_transmitter",
    "crude_cell",
    "mat_carbon_black"
   ],
@@ -5293,7 +5209,7 @@
    "electrician": 80
   },
   "mat": {
-   "mat_carbon_black_kg": 0.01,
+   "carbon_kg": 0.01,
    "mat_brass_kg": 0.1
   },
   "cap": 300,
@@ -5314,7 +5230,7 @@
   "name": "Dynamic microphone moving coil induction",
   "cat": "application",
   "pre": [
-   "loudspeaker_moving_coil_magnetic"
+   "el2_loudspeaker_moving_coil_magnetic"
   ],
   "req_any": [
    {
@@ -5340,7 +5256,7 @@
    "artisan": 160
   },
   "mat": {
-   "permanent_magnet": 1,
+   "lodestone_kg": 1,
    "copper_wire_kg": 0.2
   },
   "cap": 180,
@@ -5361,7 +5277,7 @@
   "name": "Condenser microphone electrostatic capacitor",
   "cat": "application",
   "pre": [
-   "capacitor_variable_air"
+   "el2_capacitor_variable_air"
   ],
   "req_any": [
    {
@@ -5388,8 +5304,6 @@
    "artisan": 200
   },
   "mat": {
-   "capacitor_variable_air": 1,
-   "high_voltage_supply": 1,
    "mat_aluminium": 0.1
   },
   "cap": 120,
@@ -5412,7 +5326,7 @@
   "name": "Ribbon microphone velocity transducer",
   "cat": "application",
   "pre": [
-   "loudspeaker_moving_coil_magnetic"
+   "el2_loudspeaker_moving_coil_magnetic"
   ],
   "req_any": [
    {
@@ -5438,8 +5352,8 @@
    "artisan": 180
   },
   "mat": {
-   "permanent_magnet": 1,
-   "mat_aluminium_foil_kg": 0.001
+   "lodestone_kg": 1,
+   "aluminium_kg": 0.001
   },
   "cap": 150,
   "up": 30,
@@ -5459,7 +5373,7 @@
   "name": "Telephone exchange switching and network",
   "cat": "application",
   "pre": [
-   "relay_electromagnetic",
+   "el2_relay_electromagnetic",
    "telegraph_electric"
   ],
   "req_any": [
@@ -5486,10 +5400,7 @@
    "engineer": 500,
    "machinist": 400
   },
-  "mat": {
-   "relay_electromagnetic": 1000,
-   "stepping_relay": 100
-  },
+  "mat": {},
   "cap": 5,
   "up": 1,
   "build_yrs": 5,
@@ -5508,8 +5419,9 @@
   "name": "Radar pulse modulation and detection",
   "cat": "application",
   "pre": [
-   "magnetron_microwave_oscillator",
-   "cathode_ray_tube_oscilloscope"
+   "el2_magnetron_microwave_oscillator",
+   "el2_cathode_ray_tube_oscilloscope",
+   "el2_travelling_wave_tube_linear_amplifier"
   ],
   "req_any": [
    {
@@ -5539,13 +5451,9 @@
   "ph": 200,
   "lab": {
    "engineer": 500,
-   "electronics_tech": 300
+   "electrician": 300
   },
-  "mat": {
-   "magnetron_microwave_oscillator": 1,
-   "travelling_wave_tube_linear_amplifier": 1,
-   "cathode_ray_tube_oscilloscope": 2
-  },
+  "mat": {},
   "cap": 10,
   "up": 2,
   "build_yrs": 3,
@@ -5564,10 +5472,12 @@
   "name": "Sonar acoustic detection and ranging",
   "cat": "application",
   "pre": [
-   "piezo_crystal_transducer",
    "cap_power_electric",
    "el2_amplifier_gain_voltage_current",
-   "el2_triode_amplifying_tube"
+   "el2_triode_amplifying_tube",
+   "el2_quartz_crystal",
+   "el2_pentode_five_electrode_tube",
+   "el2_cathode_ray_tube_oscilloscope"
   ],
   "req_any": [
    {
@@ -5597,13 +5507,9 @@
   "ph": 180,
   "lab": {
    "engineer": 450,
-   "acoustics_tech": 250
+   "electrician": 250
   },
-  "mat": {
-   "quartz_crystal": 10,
-   "pentode_five_electrode_tube": 5,
-   "cathode_ray_tube_oscilloscope": 1
-  },
+  "mat": {},
   "cap": 20,
   "up": 4,
   "build_yrs": 3.5,
@@ -5622,8 +5528,7 @@
   "name": "Photocell vacuum and gas photoelectric tube",
   "cat": "application",
   "pre": [
-   "vacuum_tube",
-   "cathode_follower"
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -5647,11 +5552,10 @@
   "ph": 100,
   "lab": {
    "engineer": 250,
-   "glass_blower": 180
+   "glassblower": 180
   },
   "mat": {
-   "vacuum_tube": 1,
-   "mat_cesium_kg": 0.0001
+   "caesium_g": 0.1
   },
   "cap": 150,
   "up": 30,
@@ -5673,8 +5577,7 @@
   "name": "X-ray tube and cathode ray production",
   "cat": "application",
   "pre": [
-   "vacuum_tube",
-   "high_voltage_power_supply"
+   "vacuum_tube"
   ],
   "req_any": [
    {
@@ -5705,12 +5608,10 @@
   "ph": 150,
   "lab": {
    "engineer": 350,
-   "glass_blower": 250
+   "glassblower": 250
   },
   "mat": {
-   "vacuum_tube": 1,
-   "mat_tungsten_kg": 5,
-   "high_voltage_power_supply": 1
+   "tungsten_kg": 5
   },
   "cap": 60,
   "up": 12,
@@ -5730,8 +5631,9 @@
   "name": "Electron microscope electromagnetic lens",
   "cat": "application",
   "pre": [
-   "cathode_ray_tube_oscilloscope",
-   "high_voltage_power_supply"
+   "el2_cathode_ray_tube_oscilloscope",
+   "electromagnet",
+   "vacuum_pumps"
   ],
   "req_any": [
    {
@@ -5763,12 +5665,7 @@
    "engineer": 500,
    "optician": 300
   },
-  "mat": {
-   "electromagnet": 10,
-   "vacuum_pumps": 1,
-   "high_voltage_power_supply": 1,
-   "fluorescent_screen": 1
-  },
+  "mat": {},
   "cap": 20,
   "up": 4,
   "build_yrs": 4,
