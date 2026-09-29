@@ -49,6 +49,7 @@ import collections
 
 from . import commodities as _commod
 from sim.constants import declare
+from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
@@ -875,7 +876,7 @@ class MaterialSupplyMixin:
         tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
         cost = tonnes * quote["buy_per_tonne"]
         household = self.state.household
-        if tonnes <= 0 or cost > household.capital:
+        if tonnes <= 0 or not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
         self._material_stock()[quote["material"]] += tonnes

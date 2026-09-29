@@ -308,6 +308,8 @@ TOPICS = [
     # five civilisations before, and must now rank with each one's own rent.
     "price_solver_land",
     "complaint_46_forest_area_not_region_count",
+    # Complaints/61: every quoted affordable amount is purchasable as quoted.
+    "complaint_61_quote_matches_purchase",
     # Complaints/42: a civilisation holding a node whose own prerequisites it
     # lacks. Seventeen do. Pinned by name rather than fixed, and failing in
     # both directions, so the count can only move deliberately.

@@ -9,6 +9,7 @@ these live in a separate file).
 """
 
 from .util import _qty
+from .. import purchase_rule
 
 
 def _cmd_bounty(sim, nodes, cmd, ended):
@@ -55,8 +56,9 @@ def _cmd_bounty(sim, nodes, cmd, ended):
 def _buy_forest(sim, cmd, quantity):
     got = sim.buy_forest(quantity)
     if got <= 0:
-        return {"ok": False, "error": "cannot afford %.0f ha of coppice woodland "
-                                      "(you have %.0f denarii)" % (quantity, sim.capital)}
+        cost = quantity * sim.FOREST_COST_PER_HA * sim.price_index
+        return {"ok": False, "error": purchase_rule.refusal_text(
+            sim, "%.0f ha of coppice woodland" % quantity, cost)}
     return {"ok": True, "bought_ha": got, "forest_ha": round(sim.forest_ha, 1),
             "capital": round(sim.capital, 1)}
 
@@ -65,12 +67,9 @@ def _buy_nitre(sim, cmd, quantity):
     got = sim.build_nitre(quantity)
     if got <= 0:
         return {"ok": False,
-                "error": "cannot afford %.0f square metres of nitre bed "
-                         "(that is %s denarii and you have %s). Nothing "
-                         "was changed."
-                         % (quantity, "{:,.0f}".format(quantity * sim.NITRE_COST_PER_M2
-                                                * sim.price_index),
-                            "{:,.0f}".format(sim.capital))}
+                "error": purchase_rule.refusal_text(
+                    sim, "%.0f square metres of nitre bed" % quantity,
+                    quantity * sim.NITRE_COST_PER_M2 * sim.price_index)}
     return {"ok": True, "laid_m2": got,
             "nitre_bed_m2": round(sim.nitre_bed_m2, 1),
             "saltpetre_it_yields_per_year_tonnes":
@@ -135,15 +134,12 @@ def _buy_mine(sim, cmd, quantity):
     price = sim.mine_quote(mat, quantity).get("to_sink_it") if hasattr(sim, "mine_quote") else None
     got = sim.open_mine(mat, quantity, partial=False)
     if got <= 0:
-        if price is not None and price > sim.capital:
+        if price is not None and not purchase_rule.can_pay(sim, price):
             return {"ok": False,
-                    "error": "%.0f tonnes a year of %s costs %s denarii to "
-                             "sink and you have %s. Nothing was changed - ask "
-                             "for what you can pay for, or check the price "
-                             'first with {"cmd":"quote","what":"mine",'
-                             '"material":"%s","n":%g}.'
-                             % (float(quantity), mat, "{:,.0f}".format(price),
-                                "{:,.0f}".format(sim.capital), mat, float(quantity))}
+                    "error": purchase_rule.refusal_text(
+                        sim, "%.0f tonnes a year of %s" % (float(quantity), mat), price)
+                    + ' Check the price first with {"cmd":"quote","what":"mine",'
+                      '"material":"%s","n":%g}.' % (mat, float(quantity))}
         return {"ok": False, "error": "could not commission any %s capacity right now "
                                       "(ceiling reached, or standing too low for a "
                                       "concession that size)" % mat}
@@ -368,9 +364,9 @@ def _cmd_quote(sim, nodes, cmd, ended):
                 "to_buy_it": round(per * n_f, 1),
                 "per_hectare": round(per, 2),
                 "you_have": round(sim.capital, 1),
-                "you_could_raise": round(sim.spending_power("buy"), 1),
-                "you_can_afford_about": round(sim.spending_power("buy") / max(per, 1e-9), 1),
-                "afford_means": "cash plus half the credit line",
+                "you_could_raise": round(purchase_rule.purchase_budget(sim), 1),
+                "you_can_afford_about": purchase_rule.affordable_units(sim, per),
+                "afford_means": purchase_rule.afford_means(),
                 "it_yields_per_hectare_per_year":
                     "%.2f tonnes of charcoal, sustainably" % sim.CHARCOAL_PER_HA,
                 "note": "Coppice is bought once and yields every year after. "
@@ -384,9 +380,9 @@ def _cmd_quote(sim, nodes, cmd, ended):
                 "to_lay_it": round(per_n * n_n, 1),
                 "per_square_metre": round(per_n, 2),
                 "you_have": round(sim.capital, 1),
-                "you_could_raise": round(sim.spending_power("buy"), 1),
-                "you_can_afford_about": round(sim.spending_power("buy") / max(per_n, 1e-9), 0),
-                "afford_means": "cash plus half the credit line",
+                "you_could_raise": round(purchase_rule.purchase_budget(sim), 1),
+                "you_can_afford_about": purchase_rule.affordable_units(sim, per_n, decimals=0),
+                "afford_means": purchase_rule.afford_means(),
                 "it_yields_per_square_metre_per_year":
                     "%.4f tonnes of saltpetre" % sim.NITRE_YIELD_T_PER_M2,
                 "note": "Saltpetre is made, not mined: dung, straw and ash "
