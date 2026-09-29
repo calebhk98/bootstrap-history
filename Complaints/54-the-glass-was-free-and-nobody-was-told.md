@@ -133,3 +133,14 @@ today it refuses.
 The second command prints `['glass_raw_kg']` and `['glassblower']`, which is
 the whole of what this project can price about glass, against a tree that
 names five kinds of it.
+
+## Review list and remaining drift
+
+Every prerequisite removed from `data/branches/` while clearing merge events
+is listed in `Complaints/reports/54-dropped-prerequisites.md` for review.
+Entries marked "node gained" were replaced by a real node id.
+
+`merge --write` is still unsafe: `data/tech_tree.json` carries knowledge
+links, review notes and judge-added prerequisites that exist only in the
+tree, so writing from the branches would drop them. Port those into the
+branches (or make merge keep them) before writing.
