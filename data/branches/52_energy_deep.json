@@ -3494,7 +3494,7 @@
   },
   "mat": {
    "copper_kg": 150,
-   "mat_mica": 100
+   "mica_kg": 100
   },
   "cap": 110,
   "up": 18,

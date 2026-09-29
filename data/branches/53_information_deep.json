@@ -1541,7 +1541,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_magnesium": 20
+   "magnesium_kg": 20
   },
   "cap": 1800,
   "up": 140,
@@ -1577,7 +1577,7 @@
   },
   "mat": {
    "glass_raw_kg": 12,
-   "mat_magnesium": 25
+   "magnesium_kg": 25
   },
   "cap": 3000,
   "up": 240,

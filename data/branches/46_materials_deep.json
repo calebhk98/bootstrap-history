@@ -2094,7 +2094,7 @@
    "furnaceman": 600
   },
   "mat": {
-   "mat_cobalt": 500,
+   "cobalt_kg": 500,
    "mat_chromium": 250,
    "mat_tungsten": 250
   },
@@ -2132,7 +2132,7 @@
   },
   "mat": {
    "mat_tungsten": 600,
-   "mat_vanadium": 100
+   "vanadium_kg": 100
   },
   "build_yrs": 2,
   "dev_years": 32,
@@ -2401,7 +2401,7 @@
   },
   "mat": {
    "cast_iron_kg": 1000,
-   "mat_magnesium": 20
+   "magnesium_kg": 20
   },
   "build_yrs": 1.5,
   "dev_years": 28,
@@ -2479,7 +2479,7 @@
    "chemist": 600
   },
   "mat": {
-   "mat_magnesium": 950
+   "magnesium_kg": 950
   },
   "build_yrs": 2,
   "dev_years": 32,
@@ -2505,7 +2505,7 @@
    "furnaceman": 750
   },
   "mat": {
-   "mat_titanium": 950
+   "titanium_kg": 950
   },
   "build_yrs": 2.5,
   "dev_years": 45,
