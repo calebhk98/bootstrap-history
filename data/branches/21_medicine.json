@@ -6,7 +6,7 @@
   "pre": [
    "mat_bronze"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -32,7 +32,7 @@
   "pre": [
    "med_surgical_kit_good"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -59,7 +59,7 @@
   "pre": [
    "med_surgical_kit_good"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -85,7 +85,7 @@
   "pre": [
    "med_surgical_kit_good"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {
    "artisan": 50
@@ -117,7 +117,7 @@
    "med_surgical_kit_good",
    "mat_linen"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {},
   "mat": {
@@ -145,7 +145,7 @@
   "pre": [
    "sanitation_antisepsis"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "labourer": 400
@@ -177,7 +177,7 @@
   "pre": [
    "mat_olive_oil"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {},
   "mat": {
@@ -205,7 +205,7 @@
   "pre": [
    "mat_olive_oil"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "scholar": 200
@@ -233,7 +233,7 @@
   "pre": [
    "med_surgical_kit_good"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {
    "artisan": 50
@@ -263,7 +263,7 @@
   "pre": [
    "mat_linen"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {
    "artisan": 100
@@ -291,7 +291,7 @@
   "pre": [
    "mat_pozzolana"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -316,7 +316,7 @@
   "name": "Legal protection for physicians",
   "cat": "institutions",
   "pre": [],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -344,7 +344,7 @@
    "med_amputation",
    "mat_linen"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 60,
   "lab": {
    "artisan": 100
@@ -374,9 +374,10 @@
   "pre": [
    "germ_theory",
    "sanitation_antisepsis",
-   "steam_high_pressure"
+   "steam_high_pressure",
+   "cap_measure_temp"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "scholar": 150,
@@ -393,7 +394,7 @@
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "Asepsis: prevention of contamination. Antisepsis: chemical disinfection. Steam sterilization beats carbolic spray because it kills spores, not just surface germs.",
+  "note": "Asepsis: prevention of contamination. Antisepsis: chemical disinfection. Steam sterilization beats carbolic spray because it kills spores, not just surface germs. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring]",
   "traits": [
    "infrastructure",
    "medical"
@@ -408,7 +409,7 @@
    "glass_labware",
    "cap_heat_1300"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "smith": 200,
@@ -443,7 +444,7 @@
    "med_handwashing_semmelweis",
    "med_sterile_technique"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 40,
   "lab": {
    "artisan": 100
@@ -474,7 +475,7 @@
    "germ_theory",
    "sanitation_antisepsis"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "scholar": 100
@@ -505,7 +506,7 @@
    "distillation_alcohol",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "chemist": 200
@@ -558,7 +559,7 @@
    "cap_tol_100um",
    "glass_labware"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "machinist": 200,
@@ -592,7 +593,7 @@
    "germ_theory",
    "med_hypodermic_syringe"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "scholar": 200,
@@ -624,7 +625,7 @@
    "mat_salt",
    "glass_labware"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 60,
   "lab": {
    "chemist": 80
@@ -654,7 +655,7 @@
   "pre": [
    "germ_theory"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 60,
   "lab": {
    "carpenter": 50
@@ -713,7 +714,7 @@
    "mercury_supply",
    "mat_natural_rubber"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "machinist": 150
@@ -755,9 +756,10 @@
   "pre": [
    "lens_grinding",
    "mirror_amalgam",
-   "arc_light_lamp"
+   "arc_light_lamp",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 150.0,
   "lab": {
    "machinist": 200
@@ -776,7 +778,7 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Mirror and lens to view the retina. Reveals aneurysms, cotton-wool spots, diabetic changes. Requires skilled assembly.",
+  "note": "Mirror and lens to view the retina. Reveals aneurysms, cotton-wool spots, diabetic changes. Requires skilled assembly. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lens and mirror optics require precision grinding]",
   "traits": [
    "medical",
    "information"
@@ -791,7 +793,7 @@
    "glass_labware",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "machinist": 300
@@ -825,7 +827,7 @@
    "photography",
    "cap_vac_1torr"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "scholar": 250,
@@ -855,7 +857,7 @@
    "electromagnet",
    "cap_measure_elec"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "scholar": 250,
@@ -890,7 +892,7 @@
    "germ_theory",
    "mat_dyes_synthetic"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "scholar": 150,
@@ -918,9 +920,10 @@
   "pre": [
    "germ_theory",
    "glass_labware",
-   "mat_dyes_synthetic"
+   "mat_dyes_synthetic",
+   "cap_measure_temp"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "scholar": 120
@@ -940,7 +943,7 @@
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice."
+  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium]"
  },
  {
   "id": "med_sterile_technique",
@@ -950,7 +953,7 @@
    "med_asepsis_antisepsis",
    "med_autoclave"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "scholar": 120
@@ -979,7 +982,7 @@
   "pre": [
    "germ_theory"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "scholar": 150
@@ -1034,7 +1037,7 @@
    "germ_theory",
    "statistics_basic"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "scholar": 200
@@ -1066,7 +1069,7 @@
    "med_epidemiology_statistics",
    "scientific_method"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "scholar": 250
@@ -1095,7 +1098,7 @@
    "plague_preparedness",
    "germ_theory"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "labourer": 500
@@ -1128,7 +1131,7 @@
   "pre": [
    "germ_theory"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "labourer": 300
@@ -1159,7 +1162,7 @@
   "pre": [
    "germ_theory"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "scholar": 150
@@ -1189,7 +1192,7 @@
   "pre": [
    "analytical_chemistry"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "chemist": 300
@@ -1231,7 +1234,7 @@
    "nitric_acid",
    "destructive_distillation"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "chemist": 120
@@ -1260,9 +1263,10 @@
   "cat": "pharmacology",
   "pre": [
    "mat_dyes_synthetic",
-   "analytical_chemistry"
+   "analytical_chemistry",
+   "cap_measure_temp"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "chemist": 200
@@ -1280,7 +1284,7 @@
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "First broad-spectrum antibiotic 1935, derived from aniline dyes. Inhibits bacterial folate synthesis. Saves millions from streptococcal and gram-negative infections.",
+  "note": "First broad-spectrum antibiotic 1935, derived from aniline dyes. Inhibits bacterial folate synthesis. Saves millions from streptococcal and gram-negative infections. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management]",
   "traits": [
    "medical"
   ]
@@ -1293,7 +1297,7 @@
    "med_gram_stain_culture",
    "analytical_chemistry"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 250,
   "lab": {
    "chemist": 350
@@ -1325,7 +1329,7 @@
    "med_handwashing_semmelweis",
    "med_obstetric_practice"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "artisan": 150
@@ -1358,7 +1362,7 @@
    "cap_power_electric",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "machinist": 200
@@ -1390,7 +1394,7 @@
   "pre": [
    "lens_grinding"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 60,
   "lab": {
    "machinist": 100
@@ -1418,7 +1422,7 @@
    "med_valetudinaria",
    "med_epidemiology_statistics"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "scribe": 500
@@ -1450,7 +1454,7 @@
    "med_hospital_institution",
    "germ_theory"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "scholar": 200
@@ -1478,7 +1482,7 @@
   "pre": [
    "med_hospital_institution"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "scholar": 300
@@ -1510,7 +1514,7 @@
    "med_medical_education",
    "med_legal_physician"
   ],
-  "kb": "",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "scholar": 150

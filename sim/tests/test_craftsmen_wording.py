@@ -79,6 +79,7 @@ check("...and now also says this is a continuous share of their year, not "
 # and still says "craftsmen" (an existing regression checks this), and now
 # explains the mixed count inline instead of implying a body count alone.
 s_cc = sim(civ="rome_100ad", capital=1e6, manual=True, events=False)
+s_cc.done.update(NODES["ag2_cold_store"]["pre"])  # prerequisites held, so only staffing can refuse
 _ok_cc, _why_cc = s_cc.start_reason("ag2_cold_store", ignore_trade=True)
 check("the craftsmen staffing refusal still refuses for the same reason, "
       "unchanged arithmetic",

@@ -42,6 +42,7 @@ from sim import tool_costs                                       # noqa: E402
 DATA = os.path.join(ROOT, "data")
 BR   = os.path.join(DATA, "branches")
 TREE = os.path.join(DATA, "tech_tree.json")
+TREE_INDENT = 2  # matches the committed data/tech_tree.json layout
 
 def load_trades():
     """Read trade identity from the canonical, mod-aware trade registry."""
@@ -96,13 +97,7 @@ def normalise_v2(node):
 
 # ---------------------------------------------------------------- MERGE
 def load_aliases():
-    """No runtime aliases: source data is canonicalised before merge.
-
-    ``scripts/migrate_data_aliases.py`` retains the historical table solely
-    as repeatable migration input.  Returning empty collections here makes a
-    stale source identifier a validation error instead of silently translating
-    it on every tree rebuild.
-    """
+    """No aliases: a stale source identifier is a merge event, never silently translated."""
     return {}, set()
 
 
@@ -127,9 +122,7 @@ def load_merged_duplicate_ids():
     duplicates and would have resurrected all of them. See the header in
     that file for the full story.
 
-    A missing file means no ids have been deduped yet, not an error - the
-    same "absent means empty" reading load_aliases() already gives a missing
-    ALIASES.json. A branches/ directory built for a small fixture (a test,
+    A missing file means no ids have been deduped yet, not an error. A branches/ directory built for a small fixture (a test,
     or a from-scratch tree with nothing to dedup) is a legitimate state, and
     refusing to merge just because nobody has ever recorded a duplicate
     would make this file mandatory boilerplate rather than a record of an
@@ -169,7 +162,7 @@ def cmd_merge(args):
     losses = []
 
     for filename in sorted(os.listdir(BR)):
-        if not filename.endswith(".json") or filename in ("ALIASES.json", MERGED_DUPLICATE_IDS_FILE):
+        if not filename.endswith(".json") or filename == MERGED_DUPLICATE_IDS_FILE:
             continue
         file_added, file_updated = _merge_process_branch_file(
             filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions)
@@ -497,7 +490,7 @@ def _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns
     base["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
     base["meta"]["goal_node"] = "point_contact_transistor"
     base["meta"]["merged_duplicate_ids"] = retired
-    _write_json(base, TREE, args)
+    _write_json(base, TREE, args, indent=TREE_INDENT)
 
     print("\nmerged  : %d nodes (%d added from branches, %d updated from branches)"
           % (len(nodes), added, updated))
@@ -943,7 +936,7 @@ def cmd_repair(args):
             node.pop(key, None)
         node["_total_cost"] = stored_total_costs[node_id]
     tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
-    _write_json(tree, TREE, args)
+    _write_json(tree, TREE, args, indent=TREE_INDENT)
     print("REPAIR PASS")
     for ident, value in counts.most_common():
         print("   %-32s %d" % (ident, value))
@@ -997,7 +990,7 @@ def cmd_apply_caps(args):
                     " [REVIEWED: prerequisite(s) %s added by a reviewer working node by node. "
                     "Reason: %s]" % (", ".join(got), fix.get("reason", "not given")))
     tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
-    _write_json(tree, TREE, args)
+    _write_json(tree, TREE, args, indent=TREE_INDENT)
     print("APPLY REVIEWER-ASSIGNED PREREQUISITES")
     print("   edges applied                    %d" % applied)
     print("   nodes judged to need none        %d" % empty)

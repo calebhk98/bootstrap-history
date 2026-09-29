@@ -2843,7 +2843,8 @@
   "name": "Building insulation materials",
   "cat": "building_systems",
   "pre": [
-   "cap_measure_temp"
+   "cap_measure_temp",
+   "prn_wood_pulp"
   ],
   "traits": [
    "infrastructure"

@@ -10,7 +10,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Purification by dissolving in hot solvent and cooling to form pure crystals",
+  "kb": "20_chemistry.md",
   "ph": 45,
   "lab": {
    "chemist": 180
@@ -35,7 +35,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Direct phase change from solid to gas, without melting",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 200,
@@ -61,7 +61,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Liquid boils, condenses on cooling finger, returns to pot. Solvent does not escape.",
+  "kb": "20_chemistry.md",
   "ph": 40,
   "lab": {
    "chemist": 100,
@@ -98,7 +98,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Solvent condenses, fills siphon chamber, auto-empties. Repeats hundreds of times. Exhausts the solid.",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 250,
@@ -124,7 +124,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Bubbling steam through solid or liquid, carrying volatile oil, then condensing the mixture",
+  "kb": "20_chemistry.md",
   "ph": 50,
   "lab": {
    "chemist": 120
@@ -150,7 +150,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Distillation at reduced pressure lowers boiling point and prevents thermal decomposition",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 280,
@@ -178,7 +178,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Adding a third liquid to break a constant-boiling mixture",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 200
@@ -204,7 +204,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Crystallising mixtures at different temperatures to separate compounds by solubility difference",
+  "kb": "20_chemistry.md",
   "ph": 70,
   "lab": {
    "chemist": 200
@@ -229,7 +229,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Small dissolved molecules pass through parchment; large molecules do not",
+  "kb": "20_chemistry.md",
   "ph": 45,
   "lab": {
    "chemist": 100
@@ -255,7 +255,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Charged molecules move through a gel toward the electrode of opposite charge",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 280
@@ -293,7 +293,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Liquid solvent carries dissolved compounds up paper at different rates, separating them",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 150
@@ -337,7 +337,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Solvent flows down a column of adsorbent, carrying compounds at different speeds",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 250,
@@ -365,7 +365,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Carrier gas flows through a heated column. Vapours of different compounds emerge at different times.",
+  "kb": "20_chemistry.md",
   "ph": 150,
   "lab": {
    "chemist": 350,
@@ -393,7 +393,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Resin beads swap ions with the solution, removing one ion and adding another",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 300
@@ -427,7 +427,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Shaking a solution with an immiscible solvent transfers target compounds to the new phase",
+  "kb": "20_chemistry.md",
   "ph": 45,
   "lab": {
    "chemist": 100
@@ -452,7 +452,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Spinning a solution accelerates settling of suspended particles by artificial gravity",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 200,
@@ -480,7 +480,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Freezing aqueous solution then evaporating ice under vacuum without melting",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 350,
@@ -507,7 +507,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Isolating and weighing a pure compound to determine the original amount of an element",
+  "kb": "20_chemistry.md",
   "ph": 50,
   "lab": {
    "chemist": 150
@@ -541,7 +541,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Slowly adding a reagent of known concentration until an endpoint colour change occurs",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 180,
@@ -567,7 +567,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Dyes that change colour sharply at specific pH values, used to detect endpoints",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 250
@@ -608,7 +608,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Titrating with an oxidising or reducing agent whose colour change marks the endpoint",
+  "kb": "20_chemistry.md",
   "ph": 80,
   "lab": {
    "chemist": 200
@@ -633,7 +633,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Titrating with a chelating agent that binds metal ions; indicator changes when metal is bound",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 250
@@ -674,7 +674,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Digesting organic matter in sulphuric acid to convert nitrogen to ammonium, then distilling and titrating",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 300
@@ -708,7 +708,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Burning organic compound in oxygen, absorbing CO2 and H2O, weighing them to find C and H",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 320,
@@ -736,7 +736,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Spraying a solution into a flame and measuring the colour of light emitted by the metal ions",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 300,
@@ -762,7 +762,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Comparing the colour intensity of a solution to a standard, or measuring absorbance",
+  "kb": "20_chemistry.md",
   "ph": 75,
   "lab": {
    "chemist": 180
@@ -787,7 +787,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring light absorbance at specific wavelengths to determine concentration",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 320,
@@ -815,7 +815,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Applying a slowly increasing voltage to an electrode in solution; current flow begins when ions are reduced",
+  "kb": "20_chemistry.md",
   "ph": 155,
   "lab": {
    "chemist": 350,
@@ -843,7 +843,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "A thin glass membrane that responds to hydrogen ion concentration, generating a voltage",
+  "kb": "20_chemistry.md",
   "ph": 150,
   "lab": {
    "chemist": 320,
@@ -872,7 +872,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring electrical conductivity of a solution to determine salt concentration",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 200
@@ -897,7 +897,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring refractive index of a solution to determine composition",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 220,
@@ -923,7 +923,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "The temperature at which a pure solid melts is a physical constant that identifies the substance",
+  "kb": "20_chemistry.md",
   "ph": 40,
   "lab": {
    "chemist": 80
@@ -958,7 +958,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising SO2 to SO3 over a catalyst, then absorbing in water to make H2SO4",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 280,
@@ -995,7 +995,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising HCl to Cl2 with air over a heated catalyst",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 250,
@@ -1023,7 +1023,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "Electrolyzing NaOH solution with a flowing mercury cathode to produce Cl2 and NaOH without contamination",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 300,
@@ -1060,7 +1060,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Digesting bauxite in hot NaOH, filtering, acidifying, and calcining to obtain pure Al2O3",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 280,
@@ -1095,7 +1095,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Injecting hot water and compressed air into underground sulphur deposits, liquefying it, and pumping to surface",
+  "kb": "20_chemistry.md",
   "ph": 150,
   "lab": {
    "chemist": 250,
@@ -1131,7 +1131,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising ammonia to nitric acid over a platinum gauze, in two stages",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 300,
@@ -1159,7 +1159,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Passing air through an electric arc to produce nitrogen oxides, then absorbing in water for HNO3",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 250,
@@ -1186,7 +1186,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Reacting calcium carbide with nitrogen gas at high temperature to produce calcium cyanamide",
+  "kb": "20_chemistry.md",
   "ph": 115,
   "lab": {
    "chemist": 280,
@@ -1222,7 +1222,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Converting CO and H2 (syngas) over a catalyst to produce liquid hydrocarbons",
+  "kb": "20_chemistry.md",
   "ph": 145,
   "lab": {
    "chemist": 320,
@@ -1258,7 +1258,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Hydrogenating coal at high temperature and pressure over a catalyst to produce liquid oil",
+  "kb": "20_chemistry.md",
   "ph": 150,
   "lab": {
    "chemist": 330,
@@ -1294,7 +1294,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Heating heavy oil fractions to 700-900 C to break C-C bonds and produce lighter products",
+  "kb": "20_chemistry.md",
   "ph": 150.0,
   "lab": {
    "chemist": 368.0,
@@ -1332,7 +1332,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Cracking oil over a zeolite or clay catalyst at 500 C, selective for gasoline-range products",
+  "kb": "20_chemistry.md",
   "ph": 135,
   "lab": {
    "chemist": 300,
@@ -1367,7 +1367,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Converting low-octane alkanes to high-octane aromatics and branched alkanes over a catalyst at 500 C",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 310,
@@ -1404,7 +1404,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Adding alkyl groups to benzene or toluene using a Lewis acid catalyst",
+  "kb": "20_chemistry.md",
   "ph": 115,
   "lab": {
    "chemist": 260,
@@ -1439,7 +1439,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Converting H2S in refinery tail gas to elemental sulphur by partial oxidation",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 270,
@@ -1476,7 +1476,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "Cooking wood chips in hot caustic soda solution to dissolve lignin, leaving cellulose fibres",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 300,
@@ -1513,7 +1513,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "Cooking wood in bisulphite solution at 150 C to dissolve lignin while preserving cellulose",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 280,
@@ -1556,7 +1556,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Condensing an alcohol with a carboxylic acid in the presence of an acid catalyst to form an ester",
+  "kb": "20_chemistry.md",
   "ph": 55,
   "lab": {
    "chemist": 150
@@ -1599,7 +1599,7 @@
    "labour_saving",
    "commerce"
   ],
-  "kb": "Hydrolyzing fat with alkali to produce glycerol and soap (fatty acid salt)",
+  "kb": "20_chemistry.md",
   "ph": 65,
   "lab": {
    "chemist": 180
@@ -1641,7 +1641,7 @@
    "labour_saving",
    "military"
   ],
-  "kb": "Substituting NO2 groups onto aromatic rings using nitric acid and sulphuric acid",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 240
@@ -1675,7 +1675,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Substituting SO3H groups onto aromatic rings using fuming sulphuric acid",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
@@ -1717,7 +1717,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Substituting Cl or Br groups onto benzene and derivatives using the halogen and a Lewis acid catalyst",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 230
@@ -1757,7 +1757,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Attaching alkyl or acyl groups to aromatic rings using an acylium or alkyl cation generated by Lewis acid",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
@@ -1798,7 +1798,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Condensing two aldehyde or ketone molecules by enolate nucleophilic attack, then dehydrating to unsaturated product",
+  "kb": "20_chemistry.md",
   "ph": 105,
   "lab": {
    "chemist": 270
@@ -1839,7 +1839,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Using an alkyl magnesium halide to nucleophilically attack carbonyls, forming alcohols and amines",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 290
@@ -1880,7 +1880,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Converting aromatic amines to diazonium salts, which couple with aromatic nucleophiles to form azo dyes",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 310
@@ -1921,7 +1921,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Reducing aromatic nitro compounds to amines using iron powder in acetic acid",
+  "kb": "20_chemistry.md",
   "ph": 75,
   "lab": {
    "chemist": 180
@@ -1963,7 +1963,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Adding hydrogen to unsaturated compounds over a catalyst",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
@@ -1995,7 +1995,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Oxidising organic compounds with potassium permanganate, cold or hot",
+  "kb": "20_chemistry.md",
   "ph": 65,
   "lab": {
    "chemist": 160
@@ -2028,7 +2028,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Oxidising alcohols and aldehydes using acidified potassium dichromate",
+  "kb": "20_chemistry.md",
   "ph": 70,
   "lab": {
    "chemist": 170
@@ -2062,7 +2062,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Polymerising alkenes by adding monomer units across the double bond",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 290
@@ -2087,7 +2087,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Polymerising using diol and diacid (or diamine and diacid) with loss of water or HCl",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 310
@@ -2121,7 +2121,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Crosslinking rubber with sulphur at 150-200 C to form a stiffer, more resilient material",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
@@ -2162,7 +2162,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising ethanol to acetic acid, using permanganate or dichromate or air over a catalyst",
+  "kb": "20_chemistry.md",
   "ph": 70,
   "lab": {
    "chemist": 180
@@ -2195,7 +2195,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Producing acetone from isopropanol oxidation or cumene process",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 240
@@ -2253,7 +2253,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Synthesising methanol from CO and H2 over a catalyst",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 310
@@ -2293,7 +2293,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing two ethanol molecules with loss of water, catalysed by conc. H2SO4 at 140 C",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 150
@@ -2334,7 +2334,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Chlorinating acetone or ethanol with hypochlorous acid formed in-situ",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
@@ -2375,7 +2375,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Chlorinating methane or carbon disulfide with chlorine gas at high temperature",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 240
@@ -2416,7 +2416,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Producing phenol from cumene hydroperoxide or by hydrolysing chlorobenzene",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 270
@@ -2498,7 +2498,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Isolating xylene isomers from coal tar or synthesising from toluene",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 220
@@ -2539,7 +2539,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Reducing nitrobenzene to aniline using iron and acetic acid",
+  "kb": "20_chemistry.md",
   "ph": 75,
   "lab": {
    "chemist": 200
@@ -2564,7 +2564,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Synthesising urea from ammonia and CO2 at high pressure",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 240
@@ -2605,7 +2605,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising methanol to formaldehyde over a silver or copper catalyst",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 230
@@ -2629,7 +2629,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Glycerol is produced as a byproduct of soap making and can be synthesised from dihydroxyacetone",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 150
@@ -2662,7 +2662,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Producing citric acid by fermentation of sugar with Aspergillus niger or by chemical synthesis",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
@@ -2696,7 +2696,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Mixing nitrocellulose with camphor or other plasticiser to make a flexible plastic",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 280
@@ -2729,7 +2729,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Dissolving cellulose in NaOH, treating with CS2, then regenerating the cellulose fibre",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 310
@@ -2761,7 +2761,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Acetylating cellulose with acetic anhydride in the presence of sulphuric acid catalyst",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 300
@@ -2801,7 +2801,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing phenol and formaldehyde with ammonia or acid catalyst to form thermosetting resin",
+  "kb": "20_chemistry.md",
   "ph": 135,
   "lab": {
    "chemist": 320
@@ -2836,7 +2836,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing urea and formaldehyde to form a thermosetting resin",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 300
@@ -2870,7 +2870,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising vinyl chloride by free radical addition",
+  "kb": "20_chemistry.md",
   "ph": 200.0,
   "lab": {
    "chemist": 280.0,
@@ -2905,7 +2905,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising styrene by free radical or anionic addition",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 270
@@ -2938,7 +2938,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising ethylene at high pressure and temperature with peroxide catalyst",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 290
@@ -2971,7 +2971,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising methyl methacrylate to form a transparent plastic",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 300
@@ -3003,7 +3003,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing hexamethylene diamine and adipic acid to form polyamide fibre",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 320
@@ -3036,7 +3036,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing ethylene glycol with terephthalic acid or ester to form polyester",
+  "kb": "20_chemistry.md",
   "ph": 135,
   "lab": {
    "chemist": 310
@@ -3069,7 +3069,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising chloroprene to form an elastic rubber with good oil resistance",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 310
@@ -3103,7 +3103,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Copolymerising butadiene and styrene to form a rubber-like elastomer",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 310
@@ -3141,7 +3141,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising organosiloxanes to form silicone oils, rubbers, and resins",
+  "kb": "20_chemistry.md",
   "ph": 145,
   "lab": {
    "chemist": 340
@@ -3167,7 +3167,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring heats of reaction and predicting unknown heats from known ones",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 230
@@ -3194,7 +3194,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring reaction rates and determining the order with respect to each reagent",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 270
@@ -3221,7 +3221,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Understanding that reversible reactions reach an equilibrium where forward and reverse rates are equal",
+  "kb": "20_chemistry.md",
   "ph": 70,
   "lab": {
    "chemist": 180
@@ -3248,7 +3248,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Shifting equilibrium by changing concentration, temperature, or pressure",
+  "kb": "20_chemistry.md",
   "ph": 65,
   "lab": {
    "chemist": 160
@@ -3273,7 +3273,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "The Gibbs phase rule determines the number of degrees of freedom in a multi-phase system",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
@@ -3298,7 +3298,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Boiling point elevation, freezing point depression, osmotic pressure, and vapour pressure lowering depend only on solute number, not identity",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
@@ -3325,7 +3325,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "The mole is the amount of substance equal to the mass in grams numerically equal to the atomic or molecular weight",
+  "kb": "20_chemistry.md",
   "ph": 65,
   "lab": {
    "chemist": 150
@@ -3350,7 +3350,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Ranking metals and other species by their tendency to lose electrons",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
@@ -3377,7 +3377,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "The voltage needed to drive an electrochemical reaction is greater than the theoretical voltage because of activation barriers",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 280
@@ -3405,7 +3405,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "The potential of a half-cell depends on the concentration of ions and the standard potential",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
@@ -3440,7 +3440,7 @@
    "labour_saving",
    "commerce"
   ],
-  "kb": "Electrochemically oxidising a metal anode to form a protective oxide layer",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 300

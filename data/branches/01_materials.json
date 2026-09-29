@@ -1136,7 +1136,8 @@
   "pre": [
    "mat_tool_steel_hss",
    "mat_chromium",
-   "cap_pure_4N"
+   "cap_pure_4N",
+   "cap_heat_1600"
   ],
   "kb": "",
   "ph": 80,
@@ -1152,7 +1153,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Chromium above about 11% forms a self-healing passive oxide. Chemical plant, cutlery, vacuum systems."
+  "note": "Chromium above about 11% forms a self-healing passive oxide. Chemical plant, cutlery, vacuum systems. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: steel with 11% chromium requires 1500-1600 C melting]"
  },
  {
   "id": "mat_zinc",
@@ -1281,7 +1282,8 @@
   "cat": "material",
   "pre": [
    "electrolysis_industrial",
-   "cap_power_grid"
+   "cap_power_grid",
+   "cap_heat_1100"
   ],
   "kb": "",
   "ph": 80,
@@ -1297,7 +1299,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Hall-Heroult in a molten fluoride bath. Cryolite is Greenlandic and unobtainable, so you must synthesise the bath from your own hydrofluoric acid. Before electricity aluminium is a precious metal; after it, it is roofing."
+  "note": "Hall-Heroult in a molten fluoride bath. Cryolite is Greenlandic and unobtainable, so you must synthesise the bath from your own hydrofluoric acid. Before electricity aluminium is a precious metal; after it, it is roofing. [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: Hall-Heroult bath must be maintained at 950-1000 C]"
  },
  {
   "id": "mat_magnesium",
@@ -1739,7 +1741,8 @@
    "destructive_distillation",
    "nitric_acid",
    "analytical_chemistry",
-   "tex_mordanting"
+   "tex_mordanting",
+   "cap_measure_temp"
   ],
   "kb": "",
   "ph": 200,
@@ -1760,7 +1763,7 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Coal tar to benzene to aniline to mauveine and the rest. Historically this single industry funded organic chemistry, created the first industrial research laboratories, and led directly to pharmaceuticals. Enormously profitable and politically harmless.",
+  "note": "Coal tar to benzene to aniline to mauveine and the rest. Historically this single industry funded organic chemistry, created the first industrial research laboratories, and led directly to pharmaceuticals. Enormously profitable and politically harmless. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: coal tar to aniline synthesis involves exothermic reactions needing temperature control]",
   "traits": [
    "commerce",
    "labour_saving",

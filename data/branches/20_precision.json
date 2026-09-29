@@ -8,7 +8,7 @@
       "cap_tol_1mm",
       "cap_power_human"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 80,
     "lab": {
       "carpenter": 200,
@@ -41,7 +41,7 @@
       "cap_tol_1mm",
       "mat_wrought_iron"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 60,
     "lab": {
       "smith": 120,
@@ -75,7 +75,7 @@
       "crank_conrod",
       "prc_treadle_lathe_flywheel"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 40,
     "lab": {
       "smith": 80,
@@ -107,7 +107,7 @@
       "cap_tol_1mm",
       "mat_wrought_iron"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 50,
     "lab": {
       "artisan": 100,
@@ -141,7 +141,7 @@
       "cap_tol_1mm",
       "prc_treadle_lathe_flywheel"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "artisan": 200,
@@ -175,7 +175,7 @@
       "master_screw",
       "cap_tol_100um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 120,
     "lab": {
       "artisan": 250,
@@ -208,7 +208,7 @@
       "crank_conrod",
       "prc_treadle_lathe_flywheel"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 60,
     "lab": {
       "smith": 100,
@@ -242,7 +242,7 @@
       "master_screw",
       "cap_tol_100um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 80,
     "lab": {
       "artisan": 150,
@@ -276,7 +276,7 @@
       "interchangeable_parts",
       "cap_tol_100um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 150,
     "lab": {
       "artisan": 300,
@@ -314,7 +314,7 @@
       "cap_tol_100um",
       "cap_power_steam"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 200,
     "lab": {
       "artisan": 400,
@@ -351,7 +351,7 @@
       "cap_power_water",
       "mat_cast_iron"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 140,
     "lab": {
       "artisan": 300,
@@ -388,7 +388,7 @@
       "cap_tol_100um",
       "crank_conrod"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "artisan": 250,
@@ -423,7 +423,7 @@
       "prc_shaper_machine",
       "cap_tol_100um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 70,
     "lab": {
       "artisan": 150,
@@ -458,7 +458,7 @@
       "cap_tol_100um",
       "cap_power_water"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 160,
     "lab": {
       "artisan": 350,
@@ -496,7 +496,7 @@
       "cap_tol_100um",
       "mat_tool_steel_hss"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 50,
     "lab": {
       "artisan": 100,
@@ -529,7 +529,7 @@
       "cap_tol_100um",
       "interchangeable_parts"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 180,
     "lab": {
       "artisan": 400,
@@ -567,7 +567,7 @@
       "master_screw",
       "cap_tol_100um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "artisan": 200,
@@ -604,7 +604,7 @@
       "cap_tol_1um",
       "mfg_engine_lathe"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 300.0,
     "lab": {
       "artisan": 300.0,
@@ -685,7 +685,7 @@
       "cap_tol_10um",
       "cap_power_electric"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 120,
     "lab": {
       "artisan": 250,
@@ -719,7 +719,7 @@
       "cap_tol_10um",
       "interchangeable_parts"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 150,
     "lab": {
       "artisan": 300,
@@ -756,7 +756,7 @@
       "cap_power_electric",
       "cap_tol_1um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "artisan": 200,
@@ -789,7 +789,7 @@
       "precision_three_plate",
       "cap_tol_10um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 60,
     "lab": {
       "artisan": 150,
@@ -833,7 +833,7 @@
       "master_screw",
       "cap_tol_1mm"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 70,
     "lab": {
       "artisan": 150,
@@ -867,7 +867,7 @@
       "cap_tol_1mm",
       "screw_lathe"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 50,
     "lab": {
       "artisan": 120,
@@ -901,7 +901,7 @@
       "cap_tol_100um",
       "interchangeable_parts"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 80,
     "lab": {
       "artisan": 180,
@@ -934,7 +934,7 @@
       "cap_tol_100um",
       "prc_twist_drill"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 40,
     "lab": {
       "artisan": 100,
@@ -968,7 +968,7 @@
       "prc_drill_press",
       "cap_tol_10um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 110,
     "lab": {
       "artisan": 220,
@@ -1001,7 +1001,7 @@
       "cap_tol_1mm",
       "prc_mandrel_chuck"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 40,
     "lab": {
       "smith": 100,
@@ -1035,7 +1035,7 @@
       "cap_tol_100um",
       "mat_cast_iron"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 200,
     "lab": {
       "artisan": 400,
@@ -1067,7 +1067,7 @@
       "cap_tol_1mm",
       "units_standards"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 30,
     "lab": {
       "artisan": 80,
@@ -1096,7 +1096,7 @@
       "cap_tol_1mm",
       "precision_three_plate"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 50,
     "lab": {
       "artisan": 120,
@@ -1126,7 +1126,7 @@
       "cap_tol_100um",
       "mfg_cylindrical_grinder"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 60,
     "lab": {
       "artisan": 140,
@@ -1188,7 +1188,7 @@
       "master_screw",
       "interchangeable_parts"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 60,
     "lab": {
       "artisan": 120,
@@ -1221,7 +1221,7 @@
       "prc_vernier_caliper",
       "cap_tol_100um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 40,
     "lab": {
       "artisan": 80,
@@ -1286,7 +1286,7 @@
       "lens_grinding",
       "arc_light_lamp"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "artisan": 200,
@@ -1322,7 +1322,7 @@
       "cap_measure_light",
       "precision_three_plate"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 120,
     "lab": {
       "artisan": 250,
@@ -1365,7 +1365,7 @@
       "cap_tol_100um",
       "prc_gauge_blocks_johansson"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 60,
     "lab": {
       "artisan": 120,
@@ -1398,7 +1398,7 @@
       "lens_grinding",
       "arc_light_lamp"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "artisan": 200,
@@ -1433,7 +1433,7 @@
       "arc_light_lamp",
       "telescope"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 110,
     "lab": {
       "artisan": 180,
@@ -1465,7 +1465,7 @@
       "microscope_compound",
       "prc_gauge_blocks_johansson"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 130,
     "lab": {
       "artisan": 220,
@@ -1501,7 +1501,7 @@
       "lens_grinding",
       "arc_light_lamp"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 110,
     "lab": {
       "artisan": 200,
@@ -1533,7 +1533,7 @@
       "cap_tol_100um",
       "prc_gauge_blocks_johansson"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 70,
     "lab": {
       "artisan": 140,
@@ -1566,7 +1566,7 @@
       "cap_tol_10um",
       "mfg_dial_indicator"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "artisan": 180,
@@ -1596,7 +1596,7 @@
       "cap_measure_temp",
       "cap_tol_10um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 200,
     "lab": {
       "smith": 300,
@@ -1632,7 +1632,7 @@
       "units_standards",
       "scientific_method"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 150,
     "lab": {
       "scholar": 200,
@@ -1676,7 +1676,7 @@
       "cap_tol_10um",
       "interchangeable_parts"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 140,
     "lab": {
       "artisan": 280,
@@ -1710,7 +1710,7 @@
       "prc_ball_roller_bearing",
       "cap_tol_10um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 130,
     "lab": {
       "artisan": 240,
@@ -1745,7 +1745,7 @@
       "cap_tol_100um",
       "prc_profile_projector"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "artisan": 180,
@@ -1779,7 +1779,7 @@
       "cap_tol_100um",
       "prc_jig_boring_machine"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 120,
     "lab": {
       "artisan": 250,
@@ -1881,7 +1881,7 @@
       "mat_tool_steel_hss",
       "cap_heat_1300"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "scholar": 150,
@@ -1914,7 +1914,7 @@
     "pre": [
       "cap_tol_100um"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 50,
     "lab": {
       "artisan": 100,
@@ -1949,7 +1949,7 @@
       "cap_tol_1mm",
       "prc_scraped_surface_plate"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 120,
     "lab": {
       "smith": 200,
@@ -1982,7 +1982,7 @@
       "prc_machine_frame_cast_iron",
       "thermodynamics_theory"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 100,
     "lab": {
       "scholar": 150,
@@ -2013,7 +2013,7 @@
       "crank_conrod",
       "cap_tol_1mm"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 80,
     "lab": {
       "artisan": 180,
@@ -2048,7 +2048,7 @@
       "cap_power_steam",
       "cap_measure_light"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 140,
     "lab": {
       "artisan": 280,
@@ -2083,7 +2083,7 @@
       "prc_pantograph_copying",
       "cap_power_electric"
     ],
-    "kb": "",
+    "kb": "40_power_precision.md",
     "ph": 110,
     "lab": {
       "artisan": 220,

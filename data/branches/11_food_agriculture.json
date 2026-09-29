@@ -6,7 +6,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 120,
   "lab": {
    "scribe": 80
@@ -35,7 +35,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "scribe": 200,
@@ -92,7 +92,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 80,
   "lab": {
    "scholar": 100
@@ -120,7 +120,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "labourer": 300,
@@ -152,7 +152,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "labourer": 200,
@@ -183,7 +183,7 @@
   "pre": [
    "fud_nitrogen_fixing_understanding"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "labourer": 150
@@ -211,7 +211,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "labourer": 200
@@ -240,7 +240,7 @@
   "pre": [
    "fud_nitrogen_fixing_understanding"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 80,
   "lab": {
    "labourer": 100
@@ -267,7 +267,7 @@
   "name": "Hay making and dry storage",
   "cat": "agriculture",
   "pre": [],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "labourer": 300
@@ -297,7 +297,7 @@
   "pre": [
    "fud_hay_making_storage"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 150,
   "lab": {
    "labourer": 400,
@@ -329,7 +329,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 120,
   "lab": {
    "labourer": 400,
@@ -362,7 +362,7 @@
    "horse_collar",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "carpenter": 150,
@@ -397,7 +397,7 @@
    "horse_collar",
    "master_screw"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 180,
   "lab": {
    "carpenter": 150.0,
@@ -494,7 +494,7 @@
    "ag2_threshing_machine",
    "cap_power_human"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 150,
   "lab": {
    "carpenter": 100,
@@ -528,7 +528,7 @@
    "horse_collar",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 300,
   "lab": {
    "carpenter": 200,
@@ -595,7 +595,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 80,
   "lab": {
    "labourer": 200
@@ -625,7 +625,7 @@
    "sulfuric_retort",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "chemist": 200,
@@ -670,7 +670,7 @@
    "cap_heat_1600",
    "cap_pure_2N"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 600,
   "lab": {
    "chemist": 400,
@@ -706,7 +706,7 @@
    "boring_mill",
    "crank_conrod"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 250,
   "lab": {
    "carpenter": 200.0,
@@ -751,7 +751,7 @@
   "pre": [
    "fud_roller_mill"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 150,
   "lab": {
    "artisan": 100
@@ -777,9 +777,10 @@
   "name": "Pure yeast culture isolation and maintenance",
   "cat": "fermentation",
   "pre": [
-   "distillation_alcohol"
+   "distillation_alcohol",
+   "cap_measure_temp"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "chemist": 200,
@@ -798,7 +799,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Isolate yeast strain from wild fermentation by serial dilution and propagation in sterile medium. Maintain culture in sealed glass vials. Enables reproducible beer and bread fermentation without wild cultures. Looks like alchemy; requires careful technique and documentation."
+  "note": "Isolate yeast strain from wild fermentation by serial dilution and propagation in sterile medium. Maintain culture in sealed glass vials. Enables reproducible beer and bread fermentation without wild cultures. Looks like alchemy; requires careful technique and documentation. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sterile culture isolation and maintenance requires temperature control of growth medium]"
  },
  {
   "id": "fud_brewing_with_hops",
@@ -807,7 +808,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 120,
   "lab": {
    "artisan": 200
@@ -832,7 +833,7 @@
   "pre": [
    "distillation_alcohol"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 150,
   "lab": {
    "artisan": 200,
@@ -860,7 +861,7 @@
   "pre": [
    "distillation_alcohol"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 80,
   "lab": {
    "artisan": 100
@@ -887,7 +888,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 120,
   "lab": {
    "labourer": 300
@@ -915,7 +916,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "labourer": 200
@@ -941,9 +942,10 @@
   "name": "Sugar beet cultivation and crystallization",
   "cat": "crops",
   "pre": [
-   "fud_sugar_cane_cultivation"
+   "fud_sugar_cane_cultivation",
+   "cap_vac_1torr"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "labourer": 300,
@@ -963,7 +965,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Grow sugar beets in cool northern climates where cane fails. Extract juice, treat with lime and acid to remove impurities (sulfur dioxide helps), evaporate under vacuum, and crystallize. Refinery is capital-intensive. Enables sugar production independent of tropical trade.",
+  "note": "Grow sugar beets in cool northern climates where cane fails. Extract juice, treat with lime and acid to remove impurities (sulfur dioxide helps), evaporate under vacuum, and crystallize. Refinery is capital-intensive. Enables sugar production independent of tropical trade. [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum pan evaporation essential for consistent sugar crystallization]",
   "traits": [
    "food"
   ],
@@ -984,7 +986,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 60,
   "lab": {
    "merchant": 100
@@ -1012,7 +1014,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 60,
   "lab": {
    "merchant": 100
@@ -1104,7 +1106,7 @@
    "fud_bottling_sealed_cork",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "chemist": 150,
@@ -1137,7 +1139,7 @@
    "fud_canning_appert_method",
    "fud_roller_mill"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "smith": 150,
@@ -1170,7 +1172,7 @@
   "pre": [
    "fud_tin_plate_cans"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "smith": 80,
@@ -1230,7 +1232,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 80,
   "lab": {
    "artisan": 100
@@ -1258,7 +1260,7 @@
   "pre": [
    "fud_root_cellar_storage"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 150,
   "lab": {
    "labourer": 400,
@@ -1290,7 +1292,7 @@
   "pre": [
    "fud_ice_house_construction"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "labourer": 300
@@ -1317,7 +1319,7 @@
   "pre": [
    "fud_ice_harvesting_and_cutting"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 120,
   "lab": {
    "merchant": 150,
@@ -1349,7 +1351,7 @@
    "cap_power_steam",
    "thermometer"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 300,
   "lab": {
    "machinist": 250,
@@ -1381,7 +1383,7 @@
    "fud_mechanical_refrigeration",
    "railway"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "engineer": 200,
@@ -1415,7 +1417,7 @@
    "fud_mechanical_refrigeration",
    "fud_ice_house_construction"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 150,
   "lab": {
    "artisan": 100
@@ -1444,7 +1446,7 @@
    "ag2_pasteurisation",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 150,
   "lab": {
    "chemist": 100,
@@ -1473,7 +1475,7 @@
   "name": "Large-scale fish curing and smoking",
   "cat": "preservation",
   "pre": [],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 120,
   "lab": {
    "artisan": 200
@@ -1506,7 +1508,7 @@
    "sea_coastal_pilotage",
    "sea_merchant_ships_large"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 300,
   "lab": {
    "sailor": 400,
@@ -1532,7 +1534,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "artisan": 150
@@ -1560,7 +1562,7 @@
    "fud_vegetable_oil_extraction",
    "cap_gas_o2h2"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "chemist": 200
@@ -1590,7 +1592,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 150,
   "lab": {
    "scribe": 100
@@ -1619,7 +1621,7 @@
   "pre": [
    "fud_enclosure_of_common_land"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "scribe": 200
@@ -1702,7 +1704,7 @@
   "pre": [
    "crop_rotation"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 120,
   "lab": {
    "artisan": 150
@@ -1727,7 +1729,7 @@
   "pre": [
    "civ_arch_roman"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "carpenter": 600.0,
@@ -1761,7 +1763,7 @@
   "pre": [
    "fud_selective_breeding_pedigree"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 200,
   "lab": {
    "labourer": 300
@@ -1790,7 +1792,7 @@
   "pre": [
    "fud_selective_breeding_pedigree"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 180,
   "lab": {
    "labourer": 250
@@ -1818,7 +1820,7 @@
   "pre": [
    "fud_livestock_selective_cattle"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 120,
   "lab": {
    "artisan": 200
@@ -1843,7 +1845,7 @@
   "pre": [
    "fud_livestock_selective_cattle"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "artisan": 150
@@ -1868,7 +1870,7 @@
   "pre": [
    "fud_yeast_pure_culture"
   ],
-  "kb": "",
+  "kb": "75_agriculture_food.md",
   "ph": 100,
   "lab": {
    "artisan": 100

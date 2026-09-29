@@ -4,7 +4,7 @@
   "name": "Oil lamp, simple",
   "cat": "lighting",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -25,7 +25,7 @@
   "name": "Tallow candle",
   "cat": "lighting",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -46,7 +46,7 @@
   "name": "Beeswax candle",
   "cat": "lighting",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -67,7 +67,7 @@
   "name": "Flush latrine with running water",
   "cat": "sanitation",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -88,7 +88,7 @@
   "name": "Lead and ceramic plumbing",
   "cat": "sanitation",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -109,7 +109,7 @@
   "name": "Hypocaust underfloor heating",
   "cat": "heating",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -130,7 +130,7 @@
   "name": "Public bath (thermae)",
   "cat": "sanitation",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -151,7 +151,7 @@
   "name": "Mirror, polished bronze",
   "cat": "personal",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -196,7 +196,7 @@
   "name": "Wooden furniture",
   "cat": "comfort",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -217,7 +217,7 @@
   "name": "Board games, dice games, and pieces",
   "cat": "leisure",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -238,7 +238,7 @@
   "name": "Musical instruments",
   "cat": "leisure",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -262,7 +262,7 @@
   "name": "Perfume by enfleurage",
   "cat": "personal",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -286,7 +286,7 @@
   "name": "Roman cosmetics",
   "cat": "personal",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 20.0,
   "lab": {},
   "mat": {},
@@ -311,7 +311,7 @@
   "name": "Locks and keys",
   "cat": "security",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -363,7 +363,7 @@
   "pre": [
    "cap_heat_0700"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 120,
   "lab": {
    "mason": 200,
@@ -396,7 +396,7 @@
    "blast_furnace",
    "mat_cast_iron"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 100,
   "lab": {
    "mason": 150,
@@ -427,7 +427,7 @@
    "hom_flush_latrine_simple",
    "hom_lead_plumbing"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 60,
   "lab": {
    "artisan": 100,
@@ -460,7 +460,7 @@
    "lens_grinding",
    "opt_plano_convex_lens"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 90,
   "lab": {
    "artisan": 140.0,
@@ -493,7 +493,7 @@
   "pre": [
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -526,7 +526,7 @@
    "mat_paper",
    "mat_graphite_pure"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 80.0,
   "lab": {
    "artisan": 80.0,
@@ -557,7 +557,7 @@
   "pre": [
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 60.0,
   "lab": {
    "artisan": 100.0
@@ -589,7 +589,7 @@
   "pre": [
    "chm_phosphorus_extraction"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 60,
   "lab": {
    "chemist": 80,
@@ -619,7 +619,7 @@
   "pre": [
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 80,
   "lab": {
    "carpenter": 100,
@@ -657,7 +657,7 @@
    "mirror_amalgam",
    "photography"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 150.0,
   "lab": {
    "artisan": 80.0,
@@ -696,7 +696,7 @@
    "mfg_wire_drawing",
    "mt2_spring_steel"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 40,
   "lab": {
    "smith": 50
@@ -724,7 +724,7 @@
   "name": "Eraser, breadcrumb substitute",
   "cat": "writing",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 30,
   "lab": {},
   "mat": {
@@ -750,7 +750,7 @@
    "rag_paper",
    "printing_press"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 60,
   "lab": {
    "scribe": 80,
@@ -784,7 +784,7 @@
    "printing_press",
    "mat_blister_steel"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 100,
   "lab": {
    "artisan": 140.0,
@@ -820,7 +820,7 @@
    "glass_clear",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 100,
   "lab": {
    "artisan": 120,
@@ -852,7 +852,7 @@
    "cap_tol_100um",
    "master_screw"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 200,
   "lab": {
    "master": 300,
@@ -884,7 +884,7 @@
    "cap_tol_1mm",
    "water_power_scale"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 180,
   "lab": {
    "master": 250,
@@ -916,7 +916,7 @@
    "hom_fireplace_chimney",
    "blast_furnace"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 130,
   "lab": {
    "smith": 150,
@@ -950,7 +950,7 @@
    "blast_furnace",
    "cap_heat_1300"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 150,
   "lab": {
    "smith": 140,
@@ -981,7 +981,7 @@
    "clock_pendulum",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 110,
   "lab": {
    "master": 160,
@@ -1015,7 +1015,7 @@
    "hom_lamp_argand",
    "mat_petroleum_refined"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 90,
   "lab": {
    "artisan": 100
@@ -1047,7 +1047,7 @@
    "mat_blister_steel",
    "mat_brass"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 250,
   "lab": {
    "master": 400,
@@ -1086,7 +1086,7 @@
    "mt2_spring_steel",
    "tl_coil_spring"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 120,
   "lab": {
    "artisan": 150,
@@ -1120,7 +1120,7 @@
    "crank_conrod",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 180,
   "lab": {
    "master": 200,
@@ -1157,7 +1157,7 @@
    "distillation_alcohol",
    "hom_perfume_enfleurage"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 140,
   "lab": {
    "chemist": 160,
@@ -1190,7 +1190,7 @@
    "printing_press",
    "rag_paper"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 160,
   "lab": {
    "scribe": 120,
@@ -1226,7 +1226,7 @@
    "cap_tol_1mm",
    "water_power_scale"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 140,
   "lab": {
    "artisan": 160,
@@ -1262,7 +1262,7 @@
    "cap_tol_1mm",
    "mat_wrought_iron"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 100,
   "lab": {
    "artisan": 120,
@@ -1296,7 +1296,7 @@
   "pre": [
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 60,
   "lab": {
    "carpenter": 80,
@@ -1331,7 +1331,7 @@
    "destructive_distillation",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 140,
   "lab": {
    "smith": 140,
@@ -1365,7 +1365,7 @@
    "cap_tol_100um",
    "mat_blister_steel"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 120.0,
   "lab": {
    "artisan": 100.0,
@@ -1400,7 +1400,7 @@
    "cap_tol_100um",
    "mat_brass"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 180,
   "lab": {
    "artisan": 160.0,
@@ -1465,7 +1465,7 @@
    "cap_tol_1mm",
    "mat_wrought_iron"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 100,
   "lab": {
    "artisan": 120,
@@ -1500,7 +1500,7 @@
    "distillation_alcohol",
    "hom_perfume_distilled"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 150,
   "lab": {
    "chemist": 140,
@@ -1533,7 +1533,7 @@
    "soap_hard",
    "hom_perfume_distilled"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 80,
   "lab": {
    "chemist": 100,
@@ -1567,7 +1567,7 @@
    "soap_hard",
    "hom_perfume_distilled"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 70,
   "lab": {
    "chemist": 80,
@@ -1601,7 +1601,7 @@
    "glass_clear",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 120,
   "lab": {
    "glassblower": 140,
@@ -1663,9 +1663,10 @@
   "pre": [
    "arc_light_lamp",
    "power_grid",
-   "cap_power_electric"
+   "cap_power_electric",
+   "cap_vac_1e3"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 150,
   "lab": {
    "master": 180,
@@ -1687,7 +1688,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Incandescent bulbs (Edison carbon, then tungsten filament) or arc lamps. Grid electricity required. Replaces gas lamps and kerosene. Cost per lumen falls; brightness increases. Urban electrification spreads from 1880s onward.",
+  "note": "Incandescent bulbs (Edison carbon, then tungsten filament) or arc lamps. Grid electricity required. Replaces gas lamps and kerosene. Cost per lumen falls; brightness increases. Urban electrification spreads from 1880s onward. [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent filament requires vacuum to prevent oxidation]",
   "traits": [
    "inexplicable",
    "infrastructure"
@@ -1702,7 +1703,7 @@
    "cap_power_electric",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 100,
   "lab": {
    "master": 120,
@@ -1736,7 +1737,7 @@
   "name": "Ceiling punkah, servant-pulled",
   "cat": "comfort",
   "pre": [],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 50,
   "lab": {
    "carpenter": 80
@@ -1766,7 +1767,7 @@
    "cap_power_electric",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 140,
   "lab": {
    "master": 160,
@@ -1802,7 +1803,7 @@
    "motor_transformer_ac",
    "soap_hard"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 200,
   "lab": {
    "master": 250,
@@ -1838,7 +1839,7 @@
    "hom_flush_latrine_simple",
    "hom_latrine_water_trap"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 80,
   "lab": {
    "plumber": 100,
@@ -1871,7 +1872,7 @@
   "pre": [
    "hom_latrine_water_trap"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 180,
   "lab": {
    "artisan": 200,
@@ -1906,7 +1907,7 @@
    "hom_lead_plumbing",
    "cap_power_steam"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 140,
   "lab": {
    "plumber": 150,
@@ -1970,7 +1971,7 @@
    "motor_transformer_ac",
    "cap_power_electric"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 160,
   "lab": {
    "master": 180,
@@ -2010,7 +2011,7 @@
    "motor_transformer_ac",
    "cap_power_electric"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 200,
   "lab": {
    "master": 240,
@@ -2047,7 +2048,7 @@
    "motor_transformer_ac",
    "cap_power_electric"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 130,
   "lab": {
    "artisan": 150,
@@ -2077,7 +2078,7 @@
   "pre": [
    "hom_refrigerator_home_electric"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 160,
   "lab": {
    "master": 180,
@@ -2109,7 +2110,7 @@
    "germ_theory",
    "hom_cosmetics_roman"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 100,
   "lab": {
    "chemist": 120,
@@ -2144,7 +2145,7 @@
    "soap_hard",
    "hom_toothbrush"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 90,
   "lab": {
    "chemist": 100,
@@ -2178,7 +2179,7 @@
    "hom_toys_dolls",
    "mat_paper"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 110,
   "lab": {
    "carpenter": 120,
@@ -2213,7 +2214,7 @@
    "cap_vac_1torr",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "91_household.md",
   "ph": 120,
   "lab": {
    "artisan": 100.0,

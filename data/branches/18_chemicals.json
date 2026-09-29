@@ -8,7 +8,7 @@
       "thermodynamics_theory",
       "crucible_steel"
     ],
-    "kb": "Catalysis speeds reaction by lowering activation energy without being consumed itself",
+    "kb": "20_chemistry.md",
     "ph": 120,
     "lab": {
       "scholar": 200,
@@ -52,7 +52,7 @@
       "mat_wrought_iron",
       "steam_high_pressure"
     ],
-    "kb": "Containment of reaction at elevated temperature and pressure using riveted iron",
+    "kb": "20_chemistry.md",
     "ph": 200,
     "lab": {
       "smith": 400,
@@ -87,7 +87,7 @@
       "mat_brass",
       "master_screw"
     ],
-    "kb": "Spring-loaded metal tube to measure and limit pressure safely",
+    "kb": "20_chemistry.md",
     "ph": 100.0,
     "lab": {
       "artisan": 100.0,
@@ -126,7 +126,7 @@
       "chm_catalyst_concept",
       "chm_pressure_gauge"
     ],
-    "kb": "Catalytic oxidation of SO2 to SO3 across heated platinum at high purity",
+    "kb": "20_chemistry.md",
     "ph": 300,
     "lab": {
       "chemist": 400,
@@ -171,7 +171,7 @@
       "analytical_chemistry",
       "cap_pure_4N"
     ],
-    "kb": "V2O5 on silica support as cheaper alternative to platinum",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "chemist": 200,
@@ -205,7 +205,7 @@
       "chm_contact_sulfuric",
       "lead_chamber"
     ],
-    "kb": "Concentration of sulfuric acid by absorption of SO3 into 100% H2SO4",
+    "kb": "20_chemistry.md",
     "ph": 120,
     "lab": {
       "chemist": 150,
@@ -241,9 +241,10 @@
       "soda_leblanc",
       "distillation_alcohol",
       "chm_pressure_gauge",
-      "mat_ammonia"
+      "mat_ammonia",
+      "cap_heat_0700"
     ],
-    "kb": "Absorbing ammonia in brine, then carbonating to precipitate sodium bicarbonate",
+    "kb": "20_chemistry.md",
     "ph": 250,
     "lab": {
       "chemist": 300,
@@ -264,7 +265,7 @@
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "The genius: ammonia is expensive so you recycle it. Limestone calcines to CO2 which carbonates the ammonia-brine. NaHCO3 precipitates, is filtered, then thermally decomposed to soda ash. The ammonia is recovered by treating the residue with lime and distilling. Leblanc loses all this to slag mountains. Solvay's yield is 80% versus Leblanc's 40%, and the only waste is calcium chloride brines.",
+    "note": "The genius: ammonia is expensive so you recycle it. Limestone calcines to CO2 which carbonates the ammonia-brine. NaHCO3 precipitates, is filtered, then thermally decomposed to soda ash. The ammonia is recovered by treating the residue with lime and distilling. Leblanc loses all this to slag mountains. Solvay's yield is 80% versus Leblanc's 40%, and the only waste is calcium chloride brines. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: limestone calcining produces lime; thermal decomposition of NaHCO3 at low temperature]",
     "traits": [
       "inexplicable",
       "infrastructure"
@@ -278,7 +279,7 @@
       "chm_solvay_process",
       "distillation_alcohol"
     ],
-    "kb": "Distillation column to recover NH3 from mother liquor and recycle to ammonia absorber",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150,
@@ -312,7 +313,7 @@
       "cap_heat_1600",
       "chm_catalyst_concept"
     ],
-    "kb": "Gas-phase oxidation of HCl with air over hot copper chloride catalyst",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "chemist": 200,
@@ -346,7 +347,7 @@
       "hydrochloric_acid",
       "chm_deacon_process"
     ],
-    "kb": "Oxidation of MnCl2 with bleach to regenerate MnO2, closing the chlorine cycle",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150,
@@ -387,7 +388,7 @@
       "soda_leblanc",
       "chm_deacon_process"
     ],
-    "kb": "Absorption of chlorine gas into dry slaked lime to make stable powder",
+    "kb": "20_chemistry.md",
     "ph": 80,
     "lab": {
       "chemist": 120,
@@ -423,7 +424,7 @@
       "cap_tol_1mm",
       "cap_measure_elec"
     ],
-    "kb": "Electrolysis of brine with liquid mercury cathode to produce Cl2 gas and NaOH solution",
+    "kb": "20_chemistry.md",
     "ph": 300,
     "lab": {
       "chemist": 400,
@@ -459,7 +460,7 @@
       "electrolysis_industrial",
       "cap_measure_elec"
     ],
-    "kb": "Electrolysis of brine with asbestos cloth diaphragm separating anode and cathode",
+    "kb": "20_chemistry.md",
     "ph": 250,
     "lab": {
       "chemist": 350,
@@ -493,9 +494,10 @@
     "pre": [
       "chm_chlor_alkali_mercury",
       "potash_soda",
-      "cap_heat_1100"
+      "cap_heat_1100",
+      "cap_vac_1torr"
     ],
-    "kb": "Concentration of dilute NaOH solution to 50% by evaporation under vacuum",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150,
@@ -515,7 +517,7 @@
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Caustic soda boils above 100 C, so direct heating to dryness would decompose it. Vacuum evaporation keeps temperature below 100 C while removing water. The product is chemically pure but must be handled in glass or lead; iron is attacked immediately and dissolved.",
+    "note": "Caustic soda boils above 100 C, so direct heating to dryness would decompose it. Vacuum evaporation keeps temperature below 100 C while removing water. The product is chemically pure but must be handled in glass or lead; iron is attacked immediately and dissolved. [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum evaporation at low temperature to avoid decomposition of caustic soda]",
     "traits": [
       "inexplicable"
     ]
@@ -530,7 +532,7 @@
       "nitric_acid",
       "cap_gas_o2h2"
     ],
-    "kb": "Catalytic oxidation of gaseous ammonia with air over hot platinum gauze",
+    "kb": "20_chemistry.md",
     "ph": 250,
     "lab": {
       "chemist": 300,
@@ -576,7 +578,7 @@
       "chm_pressure_gauge",
       "cap_pure_4N"
     ],
-    "kb": "Synthesis of NH3 from N2 and H2 at 200 atm and 500 C over iron catalyst",
+    "kb": "20_chemistry.md",
     "ph": 400,
     "lab": {
       "chemist": 400,
@@ -612,7 +614,7 @@
       "cap_heat_3000",
       "arc_furnace_ferroalloys"
     ],
-    "kb": "Production of calcium carbide, then reaction with nitrogen gas to make cyanamide",
+    "kb": "20_chemistry.md",
     "ph": 200,
     "lab": {
       "furnaceman": 250,
@@ -646,7 +648,7 @@
       "cap_gas_o2h2",
       "cap_heat_3000"
     ],
-    "kb": "High-temperature arc oxidises nitrogen in air to nitric oxide, absorbed to yield nitric acid",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "furnaceman": 150,
@@ -680,7 +682,7 @@
       "lead_chamber",
       "ag2_bone_meal"
     ],
-    "kb": "Treatment of rock phosphate with sulfuric acid to make soluble phosphate fertiliser",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "artisan": 100.0,
@@ -715,7 +717,7 @@
     "pre": [
       "mining_concession"
     ],
-    "kb": "Extraction of naturally-occurring potassium salt deposits",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "miner": 300,
@@ -747,7 +749,7 @@
       "destructive_distillation",
       "chm_fractionating_column"
     ],
-    "kb": "Separation of coal tar into volatile fractions: benzene, toluene, naphthalene, anthracene",
+    "kb": "20_chemistry.md",
     "ph": 250,
     "lab": {
       "chemist": 300,
@@ -781,7 +783,7 @@
       "cap_heat_1100",
       "cap_tol_1mm"
     ],
-    "kb": "Vertical column with bubble-cap trays to separate liquids by boiling point",
+    "kb": "20_chemistry.md",
     "ph": 200,
     "lab": {
       "machinist": 300,
@@ -815,7 +817,7 @@
       "cap_pure_4N",
       "distillation_alcohol"
     ],
-    "kb": "Fractional distillation of coal tar to isolate pure benzene",
+    "kb": "20_chemistry.md",
     "ph": 80,
     "lab": {
       "chemist": 180.0
@@ -848,7 +850,7 @@
       "cap_gas_o2h2",
       "nitric_acid"
     ],
-    "kb": "Nitration of benzene to nitrobenzene, then reduction with iron and acid",
+    "kb": "20_chemistry.md",
     "ph": 180,
     "lab": {
       "chemist": 250
@@ -880,7 +882,7 @@
       "chm_aniline",
       "nitric_acid"
     ],
-    "kb": "Conversion of aniline to diazonium salts, then coupling with phenols or naphthols",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "chemist": 200
@@ -912,7 +914,7 @@
       "chm_coal_tar_distillation",
       "electrolysis_industrial"
     ],
-    "kb": "Oxidation of anthraquinone to alizarin, a red dye replacing madder root",
+    "kb": "20_chemistry.md",
     "ph": 200,
     "lab": {
       "chemist": 250,
@@ -944,7 +946,7 @@
       "chm_aniline",
       "analytical_chemistry"
     ],
-    "kb": "Fusion of indole intermediate to yield indigo; fusion with molten NaOH at 180 C",
+    "kb": "20_chemistry.md",
     "ph": 220,
     "lab": {
       "chemist": 300,
@@ -976,7 +978,7 @@
       "chm_benzene",
       "chm_oleum"
     ],
-    "kb": "Sulfonation then oxidation of methylbenzene to benzosulfimide",
+    "kb": "20_chemistry.md",
     "ph": 120,
     "lab": {
       "chemist": 180
@@ -1009,7 +1011,7 @@
       "chm_oleum",
       "cap_heat_1100"
     ],
-    "kb": "Sulfonation and alkali fusion to convert benzenesulfonic acid to phenol",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150
@@ -1039,7 +1041,7 @@
     "pre": [
       "chm_salicylic_acid"
     ],
-    "kb": "Acetylation of salicylic acid with acetic anhydride to give acetylsalicylic acid",
+    "kb": "20_chemistry.md",
     "ph": 60,
     "lab": {
       "chemist": 100
@@ -1070,7 +1072,7 @@
       "chm_aniline",
       "chm_salicylic_acid"
     ],
-    "kb": "Sulfonation of aniline derivatives followed by amidation to yield sulfonamides",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "chemist": 200,
@@ -1102,7 +1104,7 @@
     "pre": [
       "cap_measure_time_s"
     ],
-    "kb": "Design choice between continuous reactors and batch kettles based on production rate and product lifetime",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "scholar": 150,
@@ -1133,7 +1135,7 @@
       "lead_metallurgy",
       "cap_tol_1mm"
     ],
-    "kb": "Lined vessels of lead sheet to contain sulfuric acid and chlorine",
+    "kb": "20_chemistry.md",
     "ph": 80,
     "lab": {
       "smith": 150,
@@ -1164,7 +1166,7 @@
     "pre": [
       "mat_porcelain"
     ],
-    "kb": "High-fired stoneware vessels glazed with acid-resistant glaze for chemical storage",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "potter": 200
@@ -1196,7 +1198,7 @@
       "mat_bulk_steel",
       "cap_heat_1600"
     ],
-    "kb": "Fused glass coating on steel for acid resistance and thermal shock resistance",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "glassblower": 200,
@@ -1229,7 +1231,7 @@
       "mat_stainless",
       "mat_bulk_steel"
     ],
-    "kb": "Chromium-nickel stainless steel resistant to most chemicals and oxidising acids",
+    "kb": "20_chemistry.md",
     "ph": 80,
     "lab": {
       "smith": 150
@@ -1260,7 +1262,7 @@
     "pre": [
       "cap_tol_1mm"
     ],
-    "kb": "Packed plates with cloth or paper filter medium under mechanical pressure",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "machinist": 200,
@@ -1294,7 +1296,7 @@
       "cap_tol_100um",
       "cap_power_steam"
     ],
-    "kb": "Rotating cylinder to separate solids from liquids by density, with scroll discharge",
+    "kb": "20_chemistry.md",
     "ph": 200,
     "lab": {
       "machinist": 300
@@ -1326,7 +1328,7 @@
       "cap_heat_1100",
       "cap_measure_temp"
     ],
-    "kb": "Heated tube bundle in liquid to evaporate solvent slowly while concentrating dissolved salts",
+    "kb": "20_chemistry.md",
     "ph": 120,
     "lab": {
       "smith": 150,
@@ -1359,7 +1361,7 @@
     "pre": [
       "cap_measure_temp"
     ],
-    "kb": "Cooling of saturated solution to grow crystals, which are filtered and dried",
+    "kb": "20_chemistry.md",
     "ph": 60,
     "lab": {
       "artisan": 80
@@ -1389,7 +1391,7 @@
       "mat_bulk_steel",
       "chm_formaldehyde_synthesis"
     ],
-    "kb": "Synthetic resin beads with exchangeable ions to remove hardness and trace metals",
+    "kb": "20_chemistry.md",
     "ph": 200,
     "lab": {
       "chemist": 200,
@@ -1421,7 +1423,7 @@
       "analytical_chemistry",
       "cap_pure_4N"
     ],
-    "kb": "Separation of mixtures by differential adsorption on a stationary phase",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150,
@@ -1482,7 +1484,7 @@
     "pre": [
       "soda_leblanc"
     ],
-    "kb": "Recognition that Leblanc produces enormous volumes of CaS and CaSO4 waste requiring regulation",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "scholar": 200
@@ -1511,7 +1513,7 @@
     "pre": [
       "germ_theory"
     ],
-    "kb": "Recognition of specific occupational poisons: phosphorus necrosis, mercury, lead, benzene, chlorine gas",
+    "kb": "20_chemistry.md",
     "ph": 200,
     "lab": {
       "scholar": 300,
@@ -1541,7 +1543,7 @@
     "pre": [
       "gunpowder"
     ],
-    "kb": "Mixture of saltpetre, charcoal and sulfur, corned for stability",
+    "kb": "20_chemistry.md",
     "ph": 0,
     "lab": {},
     "mat": {},
@@ -1567,9 +1569,10 @@
     "cat": "explosives",
     "pre": [
       "nitric_acid",
-      "chm_oleum"
+      "chm_oleum",
+      "cap_measure_temp"
     ],
-    "kb": "Cellulose nitrated with mixed acid to yield highly explosive nitrocellulose",
+    "kb": "20_chemistry.md",
     "ph": 120,
     "lab": {
       "chemist": 180
@@ -1588,7 +1591,7 @@
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Linen is nitrated with mixed acid at 0 C. Temperature control is absolutely critical; deviation to 5 C causes runaway and explosion. Guncotton is more powerful than black powder and is initially unstable, spontaneously heating if stored damp. Modern stabilisation uses diphenylamine to suppress decomposition.",
+    "note": "Linen is nitrated with mixed acid at 0 C. Temperature control is absolutely critical; deviation to 5 C causes runaway and explosion. Guncotton is more powerful than black powder and is initially unstable, spontaneously heating if stored damp. Modern stabilisation uses diphenylamine to suppress decomposition. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: nitration at 0 C with deviation to 5 C causing explosion; critical temperature control needed]",
     "traits": [
       "infrastructure",
       "military"
@@ -1630,7 +1633,7 @@
     "pre": [
       "mat_nitroglycerin"
     ],
-    "kb": "Adsorption of liquid nitroglycerin onto porous diatomaceous earth for safe transport and storage",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150
@@ -1662,7 +1665,7 @@
       "mat_nitroglycerin",
       "chm_guncotton"
     ],
-    "kb": "Stabilisation of nitroglycerin by absorbing into gelatinised nitrocellulose",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150
@@ -1721,9 +1724,10 @@
     "cat": "explosives",
     "pre": [
       "chm_toluene",
-      "chm_oleum"
+      "chm_oleum",
+      "cap_measure_temp"
     ],
-    "kb": "Nitration of toluene in three stages to yield trinitrotoluene",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "chemist": 200
@@ -1741,7 +1745,7 @@
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Toluene is nitrated to mononitrotoluene, then dinitrotoluene, then trinitrotoluene. Each stage requires strong acid and careful temperature control. TNT is relatively stable compared to nitroglycerin and can be melted to pour into shells. Its insensitivity to shock makes it ideal for military use.",
+    "note": "Toluene is nitrated to mononitrotoluene, then dinitrotoluene, then trinitrotoluene. Each stage requires strong acid and careful temperature control. TNT is relatively stable compared to nitroglycerin and can be melted to pour into shells. Its insensitivity to shock makes it ideal for military use. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: exothermic nitration reactions require careful temperature measurement and control]",
     "traits": [
       "infrastructure",
       "military"
@@ -1755,7 +1759,7 @@
       "chm_phenol",
       "chm_oleum"
     ],
-    "kb": "Nitration of phenol to yield picric acid (trinitrophenol)",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150
@@ -1788,7 +1792,7 @@
       "chm_fulminate",
       "cap_tol_1mm"
     ],
-    "kb": "Sealed copper tube containing mercury or lead fulminate to initiate high explosives",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150,
@@ -1822,7 +1826,7 @@
       "mercury_supply",
       "nitric_acid"
     ],
-    "kb": "Reaction of mercury with dilute nitric acid and ethanol to yield mercury fulminate",
+    "kb": "20_chemistry.md",
     "ph": 80,
     "lab": {
       "chemist": 150
@@ -1881,7 +1885,7 @@
     "pre": [
       "analytical_chemistry"
     ],
-    "kb": "Precipitation of casein from milk, hardening with formaldehyde to yield hard plastic",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150
@@ -1915,7 +1919,7 @@
       "destructive_distillation",
       "mat_formaldehyde"
     ],
-    "kb": "Polycondensation of phenol with formaldehyde under heat and pressure in a mould",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "chemist": 200,
@@ -1973,7 +1977,7 @@
       "chm_pressure_vessel",
       "cap_gas_o2h2"
     ],
-    "kb": "Polymerisation of ethylene at 1000 atm and 150 C with organic peroxide initiator",
+    "kb": "20_chemistry.md",
     "ph": 250,
     "lab": {
       "chemist": 300,
@@ -2006,7 +2010,7 @@
       "cap_vac_1torr",
       "mat_ammonia"
     ],
-    "kb": "Polycondensation of adipic acid with hexamethylenediamine to yield nylon fibre",
+    "kb": "20_chemistry.md",
     "ph": 300,
     "lab": {
       "chemist": 400.0,
@@ -2067,7 +2071,7 @@
       "mat_petroleum_refined",
       "soda_leblanc"
     ],
-    "kb": "Sulfonation of long-chain alkene to yield sulfonic acid, then neutralisation to salt",
+    "kb": "20_chemistry.md",
     "ph": 150,
     "lab": {
       "chemist": 200
@@ -2097,9 +2101,10 @@
     "cat": "chemical_engineering",
     "pre": [
       "soap_hard",
-      "cap_pure_4N"
+      "cap_pure_4N",
+      "cap_vac_1torr"
     ],
-    "kb": "Recovery of glycerol from saponification of oils and fats",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150
@@ -2117,7 +2122,7 @@
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Soap manufacture produces a glycerol-rich lye as byproduct. The lye is acidified and glycerol is extracted with ethanol, then distilled under vacuum. Glycerol is a primary feedstock for nitroglycerin and explosives, and also a humectant in textiles and pharmaceuticals.",
+    "note": "Soap manufacture produces a glycerol-rich lye as byproduct. The lye is acidified and glycerol is extracted with ethanol, then distilled under vacuum. Glycerol is a primary feedstock for nitroglycerin and explosives, and also a humectant in textiles and pharmaceuticals. [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum distillation of ethanol-glycerol requires rough vacuum]",
     "traits": [
       "inexplicable"
     ]
@@ -2129,7 +2134,7 @@
     "pre": [
       "chm_phosphorus_extraction"
     ],
-    "kb": "Wooden sticks coated with red phosphorus, antimony sulfide and potassium dichromate",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150,
@@ -2192,7 +2197,7 @@
       "chm_haber_bosch",
       "thermodynamics_theory"
     ],
-    "kb": "Use of ammonia as working fluid in mechanical refrigeration compression cycles",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150,
@@ -2222,7 +2227,7 @@
       "chm_coal_tar_distillation",
       "distillation_alcohol"
     ],
-    "kb": "Fractional distillation of coal tar to isolate methylbenzene",
+    "kb": "20_chemistry.md",
     "ph": 80,
     "lab": {
       "chemist": 190.0
@@ -2253,7 +2258,7 @@
       "chm_coal_tar_distillation",
       "chm_salicylic_acid"
     ],
-    "kb": "Distillation of coal tar yields crude phenol; direct synthesis via benzene sulfonation",
+    "kb": "20_chemistry.md",
     "ph": 120,
     "lab": {
       "chemist": 150
@@ -2283,7 +2288,7 @@
     "pre": [
       "chm_coal_tar_distillation"
     ],
-    "kb": "Distillation of coal tar above 250 C to obtain naphthalene; crystallisation and recrystallisation",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150
@@ -2314,7 +2319,7 @@
     "pre": [
       "chm_coal_tar_distillation"
     ],
-    "kb": "Distillation of coal tar above 280 C and crystallisation to yield anthracene",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150
@@ -2346,7 +2351,7 @@
       "charcoal_industrial",
       "cap_heat_1100"
     ],
-    "kb": "Activation of charcoal by steam or acid washing to create high surface area adsorbent",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "furnaceman": 150,
@@ -2389,7 +2394,7 @@
     "pre": [
       "analytical_chemistry"
     ],
-    "kb": "Use of aluminum sulfate or ferric salts to destabilise colloids and settle suspended solids",
+    "kb": "20_chemistry.md",
     "ph": 60,
     "lab": {
       "chemist": 100
@@ -2419,7 +2424,7 @@
     "pre": [
       "chm_water_coagulation"
     ],
-    "kb": "Passage of coagulated water through layers of sand and gravel to remove particles",
+    "kb": "20_chemistry.md",
     "ph": 60,
     "lab": {
       "artisan": 100
@@ -2450,7 +2455,7 @@
       "chm_deacon_process",
       "chm_bleaching_powder"
     ],
-    "kb": "Addition of chlorine gas or bleaching powder to water to kill pathogens",
+    "kb": "20_chemistry.md",
     "ph": 80,
     "lab": {
       "chemist": 120
@@ -2480,9 +2485,10 @@
     "cat": "organic_chemistry",
     "pre": [
       "distillation_alcohol",
-      "chm_catalyst_concept"
+      "chm_catalyst_concept",
+      "cap_heat_0700"
     ],
-    "kb": "Catalytic oxidation of methanol vapour over silver or copper catalyst",
+    "kb": "20_chemistry.md",
     "ph": 100,
     "lab": {
       "chemist": 150,
@@ -2501,7 +2507,7 @@
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Methanol vapour is oxidised over silver gauze at 600 C. Formaldehyde is produced as an equilibrium mixture with methanol and water; the product is stabilised by dissolving in water as formalin. Formaldehyde is a cross-linking reagent for proteins and cellulose, essential for resins.",
+    "note": "Methanol vapour is oxidised over silver gauze at 600 C. Formaldehyde is produced as an equilibrium mixture with methanol and water; the product is stabilised by dissolving in water as formalin. Formaldehyde is a cross-linking reagent for proteins and cellulose, essential for resins. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: methanol oxidation over silver at 600 C, within pottery kiln range]",
     "traits": [
       "inexplicable"
     ]
@@ -2513,7 +2519,7 @@
     "pre": [
       "cap_heat_1300"
     ],
-    "kb": "Roasting of bone ash with carbon in retort at 1300 C, collecting phosphorus vapour on water",
+    "kb": "20_chemistry.md",
     "ph": 120,
     "lab": {
       "furnaceman": 150

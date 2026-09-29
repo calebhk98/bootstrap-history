@@ -1794,7 +1794,8 @@
   "name": "Tin foil phonograph",
   "cat": "sound",
   "pre": [
-   "if_phonautograph"
+   "if_phonautograph",
+   "mat_aluminium"
   ],
   "traits": [
    "spectacle",

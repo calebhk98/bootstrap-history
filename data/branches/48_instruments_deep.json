@@ -9,7 +9,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Ground and polished spherical single surface",
+  "kb": "30_glass_optics.md",
   "ph": 60,
   "lab": {
    "optician": 200
@@ -45,7 +45,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Crown and flint glass cemented together to correct chromatic aberration",
+  "kb": "30_glass_optics.md",
   "ph": 180.0,
   "lab": {
    "optician": 400,
@@ -80,7 +80,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Three-glass combination corrects to secondary spectrum",
+  "kb": "30_glass_optics.md",
   "ph": 180,
   "lab": {
    "optician": 600,
@@ -116,7 +116,7 @@
   "traits": [
    "spectacle"
   ],
-  "kb": "Rear convergent group and front achromat for high aperture",
+  "kb": "30_glass_optics.md",
   "ph": 90,
   "lab": {
    "optician": 300,
@@ -151,7 +151,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Symmetrical three-element design for uniform field correction",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "optician": 350
@@ -186,7 +186,7 @@
   "traits": [
    "spectacle"
   ],
-  "kb": "Four-element design with cemented doublet",
+  "kb": "30_glass_optics.md",
   "ph": 110,
   "lab": {
    "optician": 380,
@@ -221,7 +221,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Converging front, diverging rear, makes focal length exceed physical length",
+  "kb": "30_glass_optics.md",
   "ph": 85,
   "lab": {
    "optician": 250
@@ -256,7 +256,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Reversed Petzval or symmetrical design, focal length shorter than image diagonal",
+  "kb": "30_glass_optics.md",
   "ph": 130,
   "lab": {
    "optician": 400,
@@ -292,7 +292,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Parabolic surface focuses parallel light to point; thin speculum metal or silvered glass",
+  "kb": "30_glass_optics.md",
   "ph": 140,
   "lab": {
    "optician": 600,
@@ -328,7 +328,7 @@
   "traits": [
    "spectacle"
   ],
-  "kb": "Secondary convex mirror bounces light back through hole in primary",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "optician": 350
@@ -362,7 +362,7 @@
   "traits": [
    "spectacle"
   ],
-  "kb": "Flat mirror at 45 degrees directs focal point to side of tube",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "optician": 280
@@ -396,7 +396,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Aspheric glass plate corrects spherical mirror aberrations; wide field possible",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "optician": 450,
@@ -431,7 +431,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Roof-shaped prism erects image and folds light path for compact binoculars",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "optician": 280,
@@ -465,7 +465,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Two 45-90-45 prisms erect image and separate exit pupils for eye relief",
+  "kb": "30_glass_optics.md",
   "ph": 75,
   "lab": {
    "optician": 260,
@@ -499,7 +499,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Partial reflector divides light into two paths; angle selects wavelength with coatings",
+  "kb": "30_glass_optics.md",
   "ph": 70,
   "lab": {
    "optician": 200,
@@ -534,7 +534,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Birefringent calcite transmits one polarisation state, rejects other",
+  "kb": "30_glass_optics.md",
   "ph": 85,
   "lab": {
    "optician": 300,
@@ -569,7 +569,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Anisotropic crystal retards one polarisation by fraction of wavelength",
+  "kb": "30_glass_optics.md",
   "ph": 70,
   "lab": {
    "optician": 200,
@@ -603,7 +603,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Multilayer dielectric coatings create bandpass filter by coherent reflection",
+  "kb": "30_glass_optics.md",
   "ph": 110,
   "lab": {
    "optician": 350,
@@ -639,7 +639,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Quarter-wave coating reduces reflection from 4% to <0.1% at one wavelength",
+  "kb": "30_glass_optics.md",
   "ph": 90,
   "lab": {
    "optician": 280,
@@ -672,7 +672,7 @@
    "glass_clear"
   ],
   "traits": [],
-  "kb": "Fine lines or dots etched or photographed onto glass plate",
+  "kb": "30_glass_optics.md",
   "ph": 30,
   "lab": {
    "optician": 80
@@ -703,7 +703,7 @@
    "in2_simple_lens"
   ],
   "traits": [],
-  "kb": "Two plano-convex lenses separated by their focal lengths",
+  "kb": "30_glass_optics.md",
   "ph": 40,
   "lab": {
    "optician": 120
@@ -734,7 +734,7 @@
    "in2_doublet_lens"
   ],
   "traits": [],
-  "kb": "Plano-convex field lens and achromatic eyelens",
+  "kb": "30_glass_optics.md",
   "ph": 50,
   "lab": {
    "optician": 160
@@ -766,7 +766,7 @@
    "in2_simple_lens"
   ],
   "traits": [],
-  "kb": "Two identical plano-convex lenses cemented or close-spaced",
+  "kb": "30_glass_optics.md",
   "ph": 40,
   "lab": {
    "optician": 120
@@ -797,7 +797,7 @@
    "in2_triplet_lens"
   ],
   "traits": [],
-  "kb": "Triplet eyelens with wide flat field and high magnification",
+  "kb": "30_glass_optics.md",
   "ph": 70,
   "lab": {
    "optician": 240
@@ -829,7 +829,7 @@
    "in2_triplet_lens"
   ],
   "traits": [],
-  "kb": "Five-element wide field eyepiece with 60-68 degree angle of view",
+  "kb": "30_glass_optics.md",
   "ph": 90,
   "lab": {
    "optician": 320
@@ -861,7 +861,7 @@
    "in2_simple_lens"
   ],
   "traits": [],
-  "kb": "Converging lens below the sample focuses illumination and houses iris diaphragm",
+  "kb": "30_glass_optics.md",
   "ph": 45,
   "lab": {
    "optician": 140
@@ -889,12 +889,13 @@
   "name": "Immersion objective: oil lens",
   "cat": "optics",
   "pre": [
-   "in2_condenser_substage"
+   "in2_condenser_substage",
+   "fused_quartz"
   ],
   "traits": [
    "infrastructure"
   ],
-  "kb": "Objective designed to work through oil between lens and coverslip; refractive index matched",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "optician": 280
@@ -924,12 +925,13 @@
   "name": "Phase contrast objective and annuli",
   "cat": "optics",
   "pre": [
-   "in2_immersion_objective_oil"
+   "in2_immersion_objective_oil",
+   "fused_quartz"
   ],
   "traits": [
    "medical"
   ],
-  "kb": "Annular source and phase plate convert amplitude variations to visible contrast",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "optician": 400,
@@ -962,7 +964,7 @@
    "in2_condenser_substage"
   ],
   "traits": [],
-  "kb": "Light cone with large angle misses objective; only scattered light enters",
+  "kb": "30_glass_optics.md",
   "ph": 70,
   "lab": {
    "optician": 220
@@ -997,7 +999,7 @@
   "traits": [
    "spectacle"
   ],
-  "kb": "Intense line source illuminates specimen at high angle; Tyndall scattering visible",
+  "kb": "30_glass_optics.md",
   "ph": 150.0,
   "lab": {
    "artisan": 140.0,
@@ -1033,7 +1035,7 @@
    "master_screw"
   ],
   "traits": [],
-  "kb": "Blade slides past specimen; spring controls thickness; produces thin sections",
+  "kb": "30_glass_optics.md",
   "ph": 60,
   "lab": {
    "machinist": 200
@@ -1067,7 +1069,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Rotating handle advances specimen by screw; produces ribbons of thin serial sections",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "machinist": 280
@@ -1102,7 +1104,7 @@
   "traits": [
    "spectacle"
   ],
-  "kb": "Vacuum tube with high voltage, electromagnetic lenses focus electron beam",
+  "kb": "30_glass_optics.md",
   "ph": 200,
   "lab": {
    "engineer": 800,
@@ -1138,7 +1140,7 @@
    "met_powder_metallurgy"
   ],
   "traits": [],
-  "kb": "Tungsten filament heated to 2700K; thermionic emission produces electron beam",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "electrician": 350
@@ -1172,7 +1174,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Prism disperses light; objective focuses spectrum onto photographic plate",
+  "kb": "30_glass_optics.md",
   "ph": 85,
   "lab": {
    "optician": 300,
@@ -1206,7 +1208,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Diffraction grating disperses light; objective focuses higher orders onto plate",
+  "kb": "30_glass_optics.md",
   "ph": 110,
   "lab": {
    "optician": 350,
@@ -1275,7 +1277,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Master screw with diamond point advances across glass or metal; grooves separated by wavelength precision",
+  "kb": "30_glass_optics.md",
   "ph": 400.0,
   "lab": {
    "artisan": 250.0,
@@ -1346,7 +1348,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Two parallel silvered surfaces; light bounces many times; sharp resonance peaks",
+  "kb": "30_glass_optics.md",
   "ph": 130,
   "lab": {
    "optician": 420,
@@ -1380,7 +1382,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Ions accelerated and deflected by magnetic field; detection plate measures trajectories",
+  "kb": "30_glass_optics.md",
   "ph": 180,
   "lab": {
    "engineer": 600,
@@ -1415,7 +1417,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Magnetic field bends particles in spiral; RF accelerates between gaps",
+  "kb": "30_glass_optics.md",
   "ph": 250,
   "lab": {
    "engineer": 1000,
@@ -1450,7 +1452,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Moving belt transfers charge to dome; voltage accumulates; sparks at high voltage",
+  "kb": "30_glass_optics.md",
   "ph": 200,
   "lab": {
    "engineer": 700,
@@ -1485,7 +1487,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Sudden expansion cools air to supersaturation; charged particles trigger condensation trails",
+  "kb": "30_glass_optics.md",
   "ph": 140,
   "lab": {
    "engineer": 450,
@@ -1519,7 +1521,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Silver halide grains record particle tracks at nanometer resolution",
+  "kb": "30_glass_optics.md",
   "ph": 70,
   "lab": {
    "chemist": 200
@@ -1552,7 +1554,7 @@
   "traits": [
    "information"
   ],
-  "kb": "X-rays diffract from crystal planes; angles and intensities reveal atomic structure",
+  "kb": "30_glass_optics.md",
   "ph": 130,
   "lab": {
    "optician": 400,
@@ -1586,7 +1588,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Electrons diffract from crystal planes; low energy gives surface sensitivity",
+  "kb": "30_glass_optics.md",
   "ph": 140,
   "lab": {
    "engineer": 450,
@@ -1622,7 +1624,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Rotor spins at 100,000 rpm; centrifugal field separates molecules by size",
+  "kb": "30_glass_optics.md",
   "ph": 180,
   "lab": {
    "engineer": 600,
@@ -1656,7 +1658,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Glass electrode voltage responds to hydrogen ion concentration; amplifier measures millivolts",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "electrician": 350,
@@ -1691,7 +1693,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Electron beam deflected by electric or magnetic fields; strikes phosphor screen",
+  "kb": "30_glass_optics.md",
   "ph": 160,
   "lab": {
    "engineer": 550,
@@ -1725,7 +1727,7 @@
    "copper_refining"
   ],
   "traits": [],
-  "kb": "Wire resistance changes with strain; stretched wire has higher resistance",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "machinist": 250
@@ -1760,7 +1762,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Wheatstone bridge with strain gauge and vacuum tube amplifier measures tiny resistance changes",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "electrician": 400,
@@ -1793,7 +1795,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Contoured duct delivers uniform flow; model attached; forces measured by balance",
+  "kb": "30_glass_optics.md",
   "ph": 150,
   "lab": {
    "engineer": 500,
@@ -1826,7 +1828,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Rupture diaphragm between high and low pressure gas; shock wave propagates",
+  "kb": "30_glass_optics.md",
   "ph": 180,
   "lab": {
    "engineer": 600
@@ -1858,7 +1860,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Long water channel; model on carriage; drag measured against water balance",
+  "kb": "30_glass_optics.md",
   "ph": 140,
   "lab": {
    "engineer": 450
@@ -1891,7 +1893,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Armature driven by AC field; table oscillates at mains frequency; amplitude controlled",
+  "kb": "30_glass_optics.md",
   "ph": 110,
   "lab": {
    "engineer": 350
@@ -1924,7 +1926,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Sample in rotating fixture; stress oscillates sinusoidally; failure recorded vs cycle count",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "engineer": 300
@@ -1956,7 +1958,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Specimen held at fixed stress and temperature; elongation measured vs time",
+  "kb": "30_glass_optics.md",
   "ph": 130,
   "lab": {
    "furnaceman": 400,
@@ -1990,7 +1992,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Hydraulic or screw press confines sample; pressure measured by pressure gauge",
+  "kb": "30_glass_optics.md",
   "ph": 150,
   "lab": {
    "machinist": 450
@@ -2021,7 +2023,7 @@
   "traits": [
    "inexplicable"
   ],
-  "kb": "Vacuum between walls; liquid nitrogen or helium maintains cryogenic temperature",
+  "kb": "30_glass_optics.md",
   "ph": 90,
   "lab": {
    "glassblower": 300,
@@ -2054,7 +2056,7 @@
   "traits": [
    "inexplicable"
   ],
-  "kb": "Gas expands through throttle; cooling is proportional to enthalpy drop",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "machinist": 250
@@ -2086,7 +2088,7 @@
   "traits": [
    "inexplicable"
   ],
-  "kb": "Compressed gas cools against expanding outflow; cascade stages liquefy air",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "engineer": 400
@@ -2118,7 +2120,7 @@
   "traits": [
    "inexplicable"
   ],
-  "kb": "Expander cools more efficiently than Joule-Thomson; some gas expands to do work",
+  "kb": "30_glass_optics.md",
   "ph": 130,
   "lab": {
    "engineer": 420
@@ -2151,7 +2153,7 @@
   "traits": [
    "inexplicable"
   ],
-  "kb": "Magnetic field aligns spins; adiabatic removal of field allows spins to disorder, cooling",
+  "kb": "30_glass_optics.md",
   "ph": 150,
   "lab": {
    "engineer": 500
@@ -2180,7 +2182,7 @@
    "cap_measure_len"
   ],
   "traits": [],
-  "kb": "66 feet (20 m) of steel links; handles at ends; numbered every 10 links",
+  "kb": "30_glass_optics.md",
   "ph": 30,
   "lab": {
    "smith": 100
@@ -2209,7 +2211,7 @@
    "cap_measure_len"
   ],
   "traits": [],
-  "kb": "100-300 feet steel tape; tension handle and brake; gradient mark for slope distance",
+  "kb": "30_glass_optics.md",
   "ph": 40,
   "lab": {
    "smith": 130,
@@ -2239,7 +2241,7 @@
    "cap_tol_1mm"
   ],
   "traits": [],
-  "kb": "Curved tube 90% filled with alcohol; bubble indicates deviation from horizontal",
+  "kb": "30_glass_optics.md",
   "ph": 50,
   "lab": {
    "glassblower": 150
@@ -2277,7 +2279,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Telescope with two perpendicular rotating circles; horizontal and vertical angles",
+  "kb": "30_glass_optics.md",
   "ph": 200.0,
   "lab": {
    "artisan": 150.0,
@@ -2314,7 +2316,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Theodolite with special stadia reticle; staff reading gives distance directly",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "optician": 280,
@@ -2347,7 +2349,7 @@
    "telescope"
   ],
   "traits": [],
-  "kb": "Board on tripod; graphite paper and straightedge; draw map directly in field",
+  "kb": "30_glass_optics.md",
   "ph": 100.0,
   "lab": {
    "artisan": 140.0,
@@ -2381,7 +2383,7 @@
    "in2_plane_table"
   ],
   "traits": [],
-  "kb": "Ruler with telescopic sights; sets direction on map from observation point",
+  "kb": "30_glass_optics.md",
   "ph": 45,
   "lab": {
    "optician": 150
@@ -2411,7 +2413,7 @@
    "in2_theodolite"
   ],
   "traits": [],
-  "kb": "Stable tripod with fixed marks for theodolite centering",
+  "kb": "30_glass_optics.md",
   "ph": 40,
   "lab": {
    "carpenter": 120
@@ -2444,7 +2446,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Known length baseline; correction for slope, temperature, tension; used as reference for triangulation",
+  "kb": "30_glass_optics.md",
   "ph": 90,
   "lab": {
    "scholar": 400
@@ -2477,7 +2479,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Network of triangulation points; height determined by precise levelling",
+  "kb": "30_glass_optics.md",
   "ph": 130,
   "lab": {
    "scholar": 500,
@@ -2511,7 +2513,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Calibrated rod with mm graduations; telescope focuses on graticule; difference of sights gives height difference",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "optician": 280,
@@ -2546,7 +2548,7 @@
    "information",
    "inexplicable"
   ],
-  "kb": "Mass hangs on calibrated spring; period or deflection indicates local gravity",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "machinist": 300
@@ -2574,12 +2576,13 @@
   "cat": "surveying",
   "pre": [
    "cap_tol_100um",
-   "galvanometer"
+   "galvanometer",
+   "fused_quartz"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Magnetic needle suspended by fine quartz fiber; deflection angle measures field",
+  "kb": "30_glass_optics.md",
   "ph": 75,
   "lab": {
    "optician": 220
@@ -2647,7 +2650,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Small spirit level defines horizontal reference when sea horizon is not visible",
+  "kb": "30_glass_optics.md",
   "ph": 40,
   "lab": {
    "glassblower": 120
@@ -2682,7 +2685,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Balance spring oscillator; bimetallic compensation maintains frequency at sea temperature variation",
+  "kb": "30_glass_optics.md",
   "ph": 250.0,
   "lab": {
    "artisan": 600.0,
@@ -2715,7 +2718,7 @@
    "in2_marine_chronometer"
   ],
   "traits": [],
-  "kb": "Lunar distance or lunar occultation gives time; chronometer rate determined",
+  "kb": "30_glass_optics.md",
   "ph": 60,
   "lab": {
    "scholar": 200
@@ -2747,7 +2750,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Weighted rope marked every fathom; bottom sample in cavity of lead",
+  "kb": "30_glass_optics.md",
   "ph": 35,
   "lab": {
    "sailor": 100
@@ -2781,7 +2784,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Spark or transducer emits sound pulse; reflected echo arrives after time proportional to depth",
+  "kb": "30_glass_optics.md",
   "ph": 140,
   "lab": {
    "electrician": 400
@@ -2812,7 +2815,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Rotor spins at high speed; gravity precession aligns axis with meridian",
+  "kb": "30_glass_optics.md",
   "ph": 160,
   "lab": {
    "engineer": 500,
@@ -2845,7 +2848,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Gyroscope spin axis maintains reference; precession from aircraft maneuvers indicated on dial",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "engineer": 400
@@ -2878,7 +2881,7 @@
   "traits": [
    "military"
   ],
-  "kb": "Loop antenna orientation for minimum signal indicates bearing to transmitter",
+  "kb": "30_glass_optics.md",
   "ph": 110,
   "lab": {
    "electrician": 350
@@ -2911,7 +2914,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Camera mounted on gyroscopic platform; vibration isolation allows sharp photos from aircraft",
+  "kb": "30_glass_optics.md",
   "ph": 130,
   "lab": {
    "engineer": 420
@@ -2944,7 +2947,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Pair of aerial photos viewed stereoscopically; parallax gives elevation; comparator measures precise positions",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "optician": 300
@@ -2974,7 +2977,7 @@
    "in2_simple_lens"
   ],
   "traits": [],
-  "kb": "Light source compared to standard candle; intensity by distance inverse-square law",
+  "kb": "30_glass_optics.md",
   "ph": 50,
   "lab": {
    "optician": 160
@@ -3001,12 +3004,13 @@
   "name": "Bolometer: blackened platinum resistance",
   "cat": "measurement",
   "pre": [
-   "micrometer_gauges"
+   "micrometer_gauges",
+   "mat_platinum_bulk"
   ],
   "traits": [
    "inexplicable"
   ],
-  "kb": "Blackened metal foil heated by infrared; resistance change measured",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "electrician": 250
@@ -3037,7 +3041,7 @@
    "vacuum_tube"
   ],
   "traits": [],
-  "kb": "Photon ejects electron from cathode; current proportional to light intensity",
+  "kb": "30_glass_optics.md",
   "ph": 90,
   "lab": {
    "electrician": 300
@@ -3072,7 +3076,7 @@
    "information",
    "inexplicable"
   ],
-  "kb": "Initial photocurrent amplified by secondary emission from dynode chain",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "electrician": 400
@@ -3105,7 +3109,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Spectrum dispersed by grating; many photocells measure intensity at different wavelengths",
+  "kb": "30_glass_optics.md",
   "ph": 130,
   "lab": {
    "electrician": 420
@@ -3134,7 +3138,7 @@
    "electrostatics"
   ],
   "traits": [],
-  "kb": "Gold leaf suspended from high-potential conductor; repulsion angle indicates charge",
+  "kb": "30_glass_optics.md",
   "ph": 45,
   "lab": {
    "optician": 140
@@ -3169,7 +3173,7 @@
    "information",
    "inexplicable"
   ],
-  "kb": "Gas ionised by radiation; ions collected by electric field; current measured",
+  "kb": "30_glass_optics.md",
   "ph": 85,
   "lab": {
    "electrician": 280
@@ -3202,7 +3206,7 @@
    "information",
    "inexplicable"
   ],
-  "kb": "Gas avalanche multiplication in cylindrical electrode; each ion produces 10^6 electrons",
+  "kb": "30_glass_optics.md",
   "ph": 110,
   "lab": {
    "electrician": 350
@@ -3235,7 +3239,7 @@
    "information",
    "inexplicable"
   ],
-  "kb": "Radiation hits crystal; fluorescence photons counted by photomultiplier",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "electrician": 400
@@ -3356,7 +3360,8 @@
   "name": "Torsion balance: vertical fiber suspension",
   "cat": "measurement",
   "pre": [
-   "in2_analytical_balance"
+   "in2_analytical_balance",
+   "fused_quartz"
   ],
   "traits": [
    "information"

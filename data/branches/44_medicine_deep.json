@@ -259,7 +259,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Acoustic instrument for listening to heart, lungs and viscera",
+  "kb": "70_medicine_biology.md",
   "ph": 60,
   "lab": {
    "optician": 40
@@ -286,7 +286,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Tapping body surface to assess underlying organs by resonance",
+  "kb": "70_medicine_biology.md",
   "ph": 40,
   "build_yrs": 0,
   "adopt_yrs": 1,
@@ -306,7 +306,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Listening through stethoscope to recognize normal and abnormal sounds",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "build_yrs": 0,
   "adopt_yrs": 2,
@@ -329,7 +329,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Sealed liquid-in-glass thermometer calibrated for body temperature",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "glassblower": 120
@@ -360,7 +360,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Device for measuring blood pressure",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "optician": 60,
@@ -418,7 +418,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Speculum and magnification for direct ear canal visualization",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "optician": 100
@@ -447,7 +447,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Mirror on handle for indirect visualization of larynx",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "optician": 120,
@@ -477,7 +477,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Straight tube with distal lens for inspecting internal cavities",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "optician": 300,
@@ -505,7 +505,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Specialized rigid endoscope for bladder visualization",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "optician": 150,
@@ -535,7 +535,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Radiograph for imaging bones and soft tissues",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "engineer": 300,
@@ -572,7 +572,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Real-time X-ray imaging on fluorescent screen",
+  "kb": "70_medicine_biology.md",
   "ph": 250,
   "lab": {
    "engineer": 400,
@@ -610,7 +610,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Radiopaque substances to outline hollow organs and blood vessels",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "chemist": 200
@@ -641,7 +641,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Recording of electrical activity of heart",
+  "kb": "70_medicine_biology.md",
   "ph": 250,
   "lab": {
    "engineer": 300,
@@ -671,7 +671,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Recording of electrical activity of brain",
+  "kb": "70_medicine_biology.md",
   "ph": 300,
   "lab": {
    "engineer": 400,
@@ -700,7 +700,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Quantification of resting energy expenditure from oxygen consumption",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "machinist": 80,
@@ -729,7 +729,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Counting chamber for red blood cell enumeration",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "optician": 150,
@@ -758,7 +758,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Classification and counting of white blood cell types",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
@@ -778,7 +778,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Chemical and microscopic examination of urine",
+  "kb": "70_medicine_biology.md",
   "ph": 60,
   "lab": {
    "chemist": 80
@@ -804,7 +804,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Quantification of glucose in blood serum",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "chemist": 150
@@ -828,7 +828,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Complement fixation test for syphilis serology",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "chemist": 200,
@@ -876,7 +876,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Sampling of living tissue for pathological examination",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "scholar": 150,
@@ -901,7 +901,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Rapid histological examination during surgery using cryostat",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "scholar": 200,
@@ -927,7 +927,7 @@
    "medical",
    "labour_saving"
   ],
-  "kb": "Steam sterilization of surgical instruments at pressure",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "engineer": 150,
@@ -957,7 +957,7 @@
    "medical",
    "labour_saving"
   ],
-  "kb": "Rubber glove barrier for surgeon's hands",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "artisan": 100
@@ -983,7 +983,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Gauze mask to reduce respiratory droplet contamination",
+  "kb": "70_medicine_biology.md",
   "ph": 60,
   "lab": {
    "artisan": 40
@@ -1009,7 +1009,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Sterile gown worn by operating surgeon",
+  "kb": "70_medicine_biology.md",
   "ph": 70,
   "lab": {
    "artisan": 60
@@ -1035,7 +1035,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Sterile fabric to define and maintain operative field",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "artisan": 70
@@ -1061,7 +1061,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Absorbable suture from animal intestine",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "artisan": 120
@@ -1087,7 +1087,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Non-absorbable synthetic fiber for wound closure",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "chemist": 200,
@@ -1114,7 +1114,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Clamp or forceps for hemostasis during surgery",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "smith": 100,
@@ -1143,7 +1143,7 @@
    "medical",
    "labour_saving"
   ],
-  "kb": "Mechanical retraction of wound edges without assistant",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "machinist": 150,
@@ -1171,7 +1171,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "High-frequency electrical current for hemostasis and tissue cutting",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "engineer": 250,
@@ -1202,7 +1202,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Pneumatic or mechanical device for limb ischemia during surgery",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "artisan": 90,
@@ -1229,7 +1229,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Transfer of whole blood or components to recipient",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "master": 150
@@ -1253,7 +1253,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "ABO and Rh blood group determination for transfusion safety",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "chemist": 120,
@@ -1279,7 +1279,7 @@
    "medical",
    "infrastructure"
   ],
-  "kb": "Organized collection, testing and preservation of blood units",
+  "kb": "70_medicine_biology.md",
   "ph": 180,
   "lab": {
    "engineer": 200,
@@ -1307,7 +1307,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Sodium citrate solution to prevent clotting in stored blood",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "chemist": 100
@@ -1330,7 +1330,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Sterile 0.9% sodium chloride solution for fluid replacement",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "chemist": 100
@@ -1357,7 +1357,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Device for delivery of anesthetic gases with oxygen",
+  "kb": "70_medicine_biology.md",
   "ph": 250,
   "lab": {
    "engineer": 400,
@@ -1386,7 +1386,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Placement of tube in trachea for controlled ventilation",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "master": 120
@@ -1412,7 +1412,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Injection of local anesthetic into cerebrospinal fluid",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "master": 150
@@ -1433,7 +1433,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Infiltration of local anesthetic into surgical site",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "chemist": 80
@@ -1457,7 +1457,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Surgical removal of inflamed appendix",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "master": 200
@@ -1481,7 +1481,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Surgical closure of abdominal wall defect",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "master": 150
@@ -1505,7 +1505,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Partial or total surgical removal of stomach",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "master": 250
@@ -1528,7 +1528,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Surgical delivery of baby by incision through uterus",
+  "kb": "70_medicine_biology.md",
   "ph": 180,
   "lab": {
    "master": 200
@@ -1553,7 +1553,7 @@
    "medical",
    "labour_saving"
   ],
-  "kb": "Metallic devices for fracture stabilization without external cast",
+  "kb": "70_medicine_biology.md",
   "ph": 180,
   "lab": {
    "machinist": 250,
@@ -1581,7 +1581,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Plaster-of-Paris cast for fracture immobilization",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "artisan": 120
@@ -1609,7 +1609,7 @@
    "medical",
    "labour_saving"
   ],
-  "kb": "Direct pull on bone via pin for fracture reduction and immobilization",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "machinist": 100
@@ -1636,7 +1636,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Transfer of skin from donor to recipient site for wound coverage",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "master": 180
@@ -1660,7 +1660,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Surgical removal of opaque lens",
+  "kb": "70_medicine_biology.md",
   "ph": 160,
   "lab": {
    "optician": 150,
@@ -1684,7 +1684,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Surgical removal of thyroid gland",
+  "kb": "70_medicine_biology.md",
   "ph": 170,
   "lab": {
    "master": 200
@@ -1707,7 +1707,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Cardiac glycosides from foxglove for heart failure",
+  "kb": "70_medicine_biology.md",
   "ph": 140,
   "lab": {
    "chemist": 200
@@ -1733,7 +1733,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Purified alkaloid from opium poppy",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "chemist": 200
@@ -1790,7 +1790,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Salicylic acid and acetyl-salicylic acid for fever and pain",
+  "kb": "70_medicine_biology.md",
   "ph": 130,
   "lab": {
    "chemist": 180
@@ -1813,7 +1813,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Barbituric acid derivatives for sedation and anesthesia",
+  "kb": "70_medicine_biology.md",
   "ph": 160,
   "lab": {
    "chemist": 250
@@ -1836,7 +1836,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Pancreatic hormone for diabetes mellitus",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "chemist": 300,
@@ -1863,7 +1863,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Thyroid tissue or thyroxine for hypothyroidism",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "chemist": 150
@@ -1886,7 +1886,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Epinephrine from adrenal medulla for anaphylaxis and shock",
+  "kb": "70_medicine_biology.md",
   "ph": 140,
   "lab": {
    "chemist": 200
@@ -1910,7 +1910,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Sulfanilamide and derivatives as bacteriostatic agents",
+  "kb": "70_medicine_biology.md",
   "ph": 180,
   "lab": {
    "chemist": 250
@@ -1933,7 +1933,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Mold culture for penicillin production",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "chemist": 300,
@@ -1959,7 +1959,7 @@
    "medical",
    "infrastructure"
   ],
-  "kb": "Large-scale submerged fermentation for penicillin production",
+  "kb": "70_medicine_biology.md",
   "ph": 300,
   "lab": {
    "engineer": 400,
@@ -1988,7 +1988,7 @@
    "medical",
    "labour_saving"
   ],
-  "kb": "Lyophilization for stable penicillin storage and transport",
+  "kb": "70_medicine_biology.md",
   "ph": 220,
   "lab": {
    "engineer": 280,
@@ -2012,7 +2012,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Antibiotic from Streptomyces actinomycete for tuberculosis",
+  "kb": "70_medicine_biology.md",
   "ph": 200,
   "lab": {
    "chemist": 300
@@ -2037,7 +2037,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Specific antibodies raised in animals for passive immunization",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "chemist": 200,
@@ -2062,7 +2062,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Vaccinia virus for active immunity to smallpox",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "scholar": 150
@@ -2085,7 +2085,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Killed rabies virus for post-exposure prophylaxis",
+  "kb": "70_medicine_biology.md",
   "ph": 180,
   "lab": {
    "chemist": 250,
@@ -2110,7 +2110,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Killed Salmonella typhi for typhoid fever prevention",
+  "kb": "70_medicine_biology.md",
   "ph": 140,
   "lab": {
    "chemist": 200
@@ -2134,7 +2134,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Vibrio cholerae inactivated vaccine",
+  "kb": "70_medicine_biology.md",
   "ph": 130,
   "lab": {
    "chemist": 180
@@ -2158,7 +2158,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Yersinia pestis inactivated vaccine",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "chemist": 220
@@ -2181,7 +2181,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Detoxified diphtheria toxin for active immunization",
+  "kb": "70_medicine_biology.md",
   "ph": 160,
   "lab": {
    "chemist": 220
@@ -2204,7 +2204,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Detoxified tetanus toxin for active immunization",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "chemist": 210
@@ -2228,7 +2228,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Killed Bordetella pertussis for whooping cough prevention",
+  "kb": "70_medicine_biology.md",
   "ph": 140,
   "lab": {
    "chemist": 200
@@ -2251,7 +2251,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Live attenuated yellow fever virus for immunization",
+  "kb": "70_medicine_biology.md",
   "ph": 180,
   "lab": {
    "chemist": 280
@@ -2275,7 +2275,7 @@
    "medical",
    "food"
   ],
-  "kb": "Fat-soluble vitamin for vision and epithelial health",
+  "kb": "70_medicine_biology.md",
   "ph": 110,
   "lab": {
    "chemist": 150
@@ -2299,7 +2299,7 @@
    "medical",
    "food"
   ],
-  "kb": "Thiamine for energy metabolism",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "chemist": 140
@@ -2322,7 +2322,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Cobalt-containing vitamin for DNA synthesis and nerve function",
+  "kb": "70_medicine_biology.md",
   "ph": 160,
   "lab": {
    "chemist": 250
@@ -2346,7 +2346,7 @@
    "medical",
    "food"
   ],
-  "kb": "Water-soluble vitamin for collagen synthesis and immunity",
+  "kb": "70_medicine_biology.md",
   "ph": 110,
   "lab": {
    "chemist": 160
@@ -2370,7 +2370,7 @@
    "medical",
    "food"
   ],
-  "kb": "Fat-soluble vitamin for calcium absorption",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "chemist": 170
@@ -2394,7 +2394,7 @@
    "medical",
    "food"
   ],
-  "kb": "Salt with added potassium iodide for goiter prevention",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "chemist": 120
@@ -2418,7 +2418,7 @@
    "medical",
    "food"
   ],
-  "kb": "Glucose-electrolyte solution for diarrheal disease rehydration",
+  "kb": "70_medicine_biology.md",
   "ph": 90,
   "lab": {
    "chemist": 100
@@ -2441,7 +2441,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Slow sand filters for water purification",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "engineer": 200,
@@ -2468,7 +2468,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Chlorine disinfection of water",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "chemist": 150,
@@ -2492,7 +2492,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Separation of storm water and sanitary sewage",
+  "kb": "70_medicine_biology.md",
   "ph": 180,
   "lab": {
    "engineer": 250,
@@ -2519,7 +2519,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Biological sewage treatment with aeration and microorganisms",
+  "kb": "70_medicine_biology.md",
   "ph": 250,
   "lab": {
    "engineer": 350,
@@ -2547,7 +2547,7 @@
    "infrastructure",
    "food"
   ],
-  "kb": "Heat treatment of milk to kill pathogens",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "engineer": 150
@@ -2571,7 +2571,7 @@
    "infrastructure",
    "food"
   ],
-  "kb": "Systematic inspection of slaughtered animals for disease",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "scholar": 120
@@ -2595,7 +2595,7 @@
    "infrastructure",
    "food"
   ],
-  "kb": "Legal standards for food composition and safety",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "scholar": 100
@@ -2619,7 +2619,7 @@
    "infrastructure",
    "information"
   ],
-  "kb": "Legal requirement to report certain infectious diseases",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "scholar": 80
@@ -2643,7 +2643,7 @@
    "infrastructure",
    "information"
   ],
-  "kb": "Identification and monitoring of disease contacts",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "scholar": 150
@@ -2667,7 +2667,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Dedicated facility for infectious disease isolation",
+  "kb": "70_medicine_biology.md",
   "ph": 180,
   "lab": {
    "mason": 300,
@@ -2694,7 +2694,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Elimination or reduction of disease-transmitting insects",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "scholar": 120
@@ -2717,7 +2717,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Mesh net for protection against mosquitoes",
+  "kb": "70_medicine_biology.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -2743,7 +2743,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Designed excrement pit with flyproof superstructure",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "mason": 100
@@ -2769,7 +2769,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Systematic measures to prevent nosocomial infection",
+  "kb": "70_medicine_biology.md",
   "ph": 150,
   "lab": {
    "master": 180
@@ -2793,7 +2793,7 @@
    "infrastructure",
    "medical"
   ],
-  "kb": "Scheduled antenatal and postnatal health services for women",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "master": 150
@@ -2816,7 +2816,7 @@
    "infrastructure",
    "medical"
   ],
-  "kb": "Scheduled immunization and development monitoring for children",
+  "kb": "70_medicine_biology.md",
   "ph": 110,
   "lab": {
    "master": 140
@@ -3239,7 +3239,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Methylene blue dye for visualizing blood cells and microorganisms",
+  "kb": "70_medicine_biology.md",
   "ph": 80,
   "lab": {
    "chemist": 100
@@ -3262,7 +3262,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Instrument to measure lung volumes and flow rates",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "machinist": 140
@@ -3289,7 +3289,7 @@
    "medical",
    "spectacle"
   ],
-  "kb": "Bright light for surgical illumination",
+  "kb": "70_medicine_biology.md",
   "ph": 120,
   "lab": {
    "engineer": 150,
@@ -3339,7 +3339,7 @@
   "traits": [
    "medical"
   ],
-  "kb": "Extraction and isolation of active compounds from plants",
+  "kb": "70_medicine_biology.md",
   "ph": 100,
   "lab": {
    "chemist": 150

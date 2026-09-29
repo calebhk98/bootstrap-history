@@ -4,7 +4,7 @@
   "name": "Ore dressing: crushing and hand sorting",
   "cat": "mining",
   "pre": [],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 20,
   "lab": {
    "labourer": 400
@@ -36,7 +36,7 @@
    "cap_heat_1100",
    "lead_metallurgy"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 60,
   "lab": {
    "smith": 80,
@@ -69,7 +69,7 @@
    "cap_power_water",
    "crank_conrod"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 120,
   "lab": {
    "carpenter": 200,
@@ -105,7 +105,7 @@
    "met_ore_crushing_sorting",
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 80,
   "lab": {
    "artisan": 120,
@@ -139,7 +139,7 @@
    "cap_heat_1100",
    "charcoal_industrial"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 60,
   "lab": {
    "furnaceman": 150,
@@ -170,7 +170,7 @@
    "refractory_fireclay",
    "charcoal_industrial"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 200,
   "lab": {
    "furnaceman": 300,
@@ -204,7 +204,7 @@
    "refractory_fireclay",
    "blast_furnace"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 150,
   "lab": {
    "furnaceman": 200,
@@ -242,7 +242,7 @@
    "cap_power_water",
    "cap_measure_temp"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 300,
   "lab": {
    "artisan": 150.0,
@@ -277,9 +277,10 @@
   "cat": "smelting",
   "pre": [
    "mat_bulk_steel",
-   "met_basic_lining_phosphorus"
+   "met_basic_lining_phosphorus",
+   "cap_heat_1600"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 180,
   "lab": {
    "furnaceman": 250,
@@ -301,7 +302,7 @@
   "sch": 1,
   "art": 1,
   "conf": "A",
-  "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff."
+  "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C]"
  },
  {
   "id": "met_basic_lining_phosphorus",
@@ -311,7 +312,7 @@
    "mat_bulk_steel",
    "analytical_chemistry"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 240,
   "lab": {
    "chemist": 200,
@@ -344,7 +345,7 @@
    "met_reverberatory",
    "refractory_fireclay"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 220,
   "lab": {
    "furnaceman": 300,
@@ -377,7 +378,7 @@
    "high_temp_furnace",
    "cap_heat_1600"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 140,
   "lab": {
    "smith": 200,
@@ -415,7 +416,7 @@
    "mat_cast_iron",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 280,
   "lab": {
    "machinist": 200,
@@ -449,7 +450,7 @@
    "cap_tol_100um",
    "mat_tool_steel_hss"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 200,
   "lab": {
    "machinist": 250,
@@ -480,7 +481,7 @@
    "met_two_high_mill",
    "motor_transformer_ac"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 240,
   "lab": {
    "machinist": 280,
@@ -512,7 +513,7 @@
    "met_three_high_mill",
    "mat_tool_steel_hss"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 200,
   "lab": {
    "machinist": 220,
@@ -543,7 +544,7 @@
    "met_two_high_mill",
    "railway"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 180,
   "lab": {
    "machinist": 200,
@@ -578,7 +579,7 @@
    "met_two_high_mill",
    "cap_power_steam"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 160,
   "lab": {
    "machinist": 180,
@@ -613,7 +614,7 @@
    "met_mannesmann_piercing",
    "cap_power_steam"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 220,
   "lab": {
    "machinist": 240,
@@ -673,9 +674,10 @@
   "cat": "forming",
   "pre": [
    "drawplate_wire",
-   "cap_power_water"
+   "cap_power_water",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 100,
   "lab": {
    "smith": 140,
@@ -696,7 +698,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Anneal a tube, coat with soap as lubricant, draw it through a die on a water-powered wire draw to reduce diameter and thicken walls uniformly. Much slower than rolling but gives excellent surface finish and precise dimensions. The soaped tube must be perfectly round or it jams in the die.",
+  "note": "Anneal a tube, coat with soap as lubricant, draw it through a die on a water-powered wire draw to reduce diameter and thicken walls uniformly. Much slower than rolling but gives excellent surface finish and precise dimensions. The soaped tube must be perfectly round or it jams in the die. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish]",
   "traits": [
    "infrastructure"
   ]
@@ -709,7 +711,7 @@
    "cap_power_water",
    "crank_conrod"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 80,
   "lab": {
    "smith": 120,
@@ -742,7 +744,7 @@
    "cap_power_human",
    "mat_cast_iron"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 280.0,
   "lab": {
    "carpenter": 100.0,
@@ -781,7 +783,7 @@
    "cap_power_steam",
    "case_hardening"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 180,
   "lab": {
    "machinist": 200,
@@ -811,9 +813,10 @@
   "pre": [
    "steam_high_pressure",
    "cap_power_steam",
-   "screw_lathe"
+   "screw_lathe",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 350.0,
   "lab": {
    "engineer": 150.0,
@@ -839,7 +842,7 @@
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "A pump driven by steam fills a cylinder with oil; the incompressible oil presses a ram with immense steady force. An accumulator (air-charged vessel) smooths pulsation and stores energy. Pascal's law means a small pump can generate large forces through a large piston. The limit is seal quality and pipe strength; if oil leaks you lose pressure instantly.",
+  "note": "A pump driven by steam fills a cylinder with oil; the incompressible oil presses a ram with immense steady force. An accumulator (air-charged vessel) smooths pulsation and stores energy. Pascal's law means a small pump can generate large forces through a large piston. The limit is seal quality and pipe strength; if oil leaks you lose pressure instantly. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining]",
   "traits": [
    "labour_saving"
   ]
@@ -854,7 +857,7 @@
    "mat_tool_steel_hss",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 450.0,
   "lab": {
    "engineer": 200.0,
@@ -892,7 +895,7 @@
    "met_annealing_recrystallization",
    "mfg_punch_press"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 350.0,
   "lab": {
    "engineer": 120.0,
@@ -929,7 +932,7 @@
   "pre": [
    "cap_heat_1300"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 80,
   "lab": {
    "artisan": 120,
@@ -961,7 +964,7 @@
    "met_green_sand_mold",
    "cap_heat_0700"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 120,
   "lab": {
    "artisan": 160,
@@ -992,7 +995,7 @@
   "name": "Investment casting and lost wax",
   "cat": "casting",
   "pre": [],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 100,
   "lab": {
    "artisan": 140
@@ -1023,7 +1026,7 @@
    "mat_zinc",
    "cap_heat_1300"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 180,
   "lab": {
    "machinist": 200,
@@ -1057,7 +1060,7 @@
    "met_green_sand_mold",
    "cap_measure_temp"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 100,
   "lab": {
    "artisan": 120,
@@ -1094,7 +1097,7 @@
    "cap_tol_1mm",
    "mt2_sintering_process"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 260,
   "lab": {
    "chemist": 200.0,
@@ -1173,7 +1176,7 @@
    "electroplating",
    "mat_copper"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 100,
   "lab": {
    "chemist": 120,
@@ -1219,7 +1222,7 @@
    "cap_heat_1300",
    "cap_heat_0700"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 120,
   "lab": {
    "smith": 140,
@@ -1260,9 +1263,10 @@
   "cat": "surface_treatment",
   "pre": [
    "electroplating",
-   "mat_tin"
+   "mat_tin",
+   "cap_heat_0700"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 100,
   "lab": {
    "chemist": 120,
@@ -1283,7 +1287,7 @@
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Electroplate iron sheet with tin or dip into molten tin. Tin is non-toxic and corrosion-resistant, so tinned steel is ideal for food storage. The tin coating must be continuous or rust starts at the pin-holes. Electroplated tin plate is thinner and cheaper than dipped; dipped is thicker but more durable. The difference is in the tin-iron bond strength.",
+  "note": "Electroplate iron sheet with tin or dip into molten tin. Tin is non-toxic and corrosion-resistant, so tinned steel is ideal for food storage. The tin coating must be continuous or rust starts at the pin-holes. Electroplated tin plate is thinner and cheaper than dipped; dipped is thicker but more durable. The difference is in the tin-iron bond strength. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range]",
   "traits": [
    "food",
    "commerce"
@@ -1306,7 +1310,7 @@
    "cap_heat_1100",
    "cap_measure_temp"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 100,
   "lab": {
    "furnaceman": 120,
@@ -1337,7 +1341,7 @@
    "cap_measure_temp",
    "water_power_scale"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 140,
   "lab": {
    "smith": 160,
@@ -1373,7 +1377,7 @@
    "case_hardening",
    "cap_measure_temp"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 120,
   "lab": {
    "smith": 140,
@@ -1403,7 +1407,7 @@
    "met_annealing_recrystallization",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 100,
   "lab": {
    "furnaceman": 120,
@@ -1467,7 +1471,7 @@
    "met_phase_diagram_knowledge",
    "atomic_theory"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 280,
   "lab": {
    "scholar": 280,
@@ -1690,7 +1694,7 @@
    "cap_power_water",
    "cap_heat_0700"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 140,
   "lab": {
    "miner": 200,
@@ -1724,7 +1728,7 @@
   "pre": [
    "cap_power_water"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 180,
   "lab": {
    "carpenter": 200,
@@ -1761,7 +1765,7 @@
    "steam_watt",
    "cap_power_steam"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 200,
   "lab": {
    "machinist": 200,
@@ -1795,7 +1799,7 @@
    "gunpowder",
    "nitre_beds"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 120,
   "lab": {
    "miner": 180,
@@ -1829,7 +1833,7 @@
    "mat_nitroglycerin",
    "cap_measure_mass_mg"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 100,
   "lab": {
    "miner": 150,
@@ -1862,7 +1866,7 @@
    "steam_high_pressure",
    "cap_power_steam"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 180,
   "lab": {
    "machinist": 200,
@@ -1896,7 +1900,7 @@
    "met_mine_pumping",
    "met_safety_lamps_ventilation"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 240,
   "lab": {
    "miner": 300,
@@ -2023,9 +2027,10 @@
   "cat": "materials",
   "pre": [
    "cap_heat_1600",
-   "cap_gas_o2h2"
+   "cap_gas_o2h2",
+   "cap_heat_3000"
   ],
-  "kb": "",
+  "kb": "10_metallurgy.md",
   "ph": 200,
   "lab": {
    "chemist": 180,
@@ -2047,7 +2052,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Heat coke and lime to 2000 C in an electric furnace to make calcium carbide, then mix with water and collect the acetylene gas. The carbide reacts violently with water so the generator must be robust and well-designed or it leaks. Acetylene is unstable and cannot be pressurized above 2 atmospheres without risk of explosion, so it must be dissolved in acetone in a porous mass (a carbide lamp cartridge) for transport.",
+  "note": "Heat coke and lime to 2000 C in an electric furnace to make calcium carbide, then mix with water and collect the acetylene gas. The carbide reacts violently with water so the generator must be robust and well-designed or it leaks. Acetylene is unstable and cannot be pressurized above 2 atmospheres without risk of explosion, so it must be dissolved in acetone in a porous mass (a carbide lamp cartridge) for transport. [REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide at 2000 C in electric furnace; current prerequisite insufficient]",
   "traits": [
    "commerce",
    "infrastructure"

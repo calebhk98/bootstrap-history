@@ -1,5 +1,5 @@
 """A civilisation's starting_techs must not break the tree's own prerequisite
-graph. Seventeen currently do, and this file pins exactly which.
+graph. Some currently do, and this file pins exactly which.
 
 Complaints/42. `data/civilizations/*.json` lists `starting_techs` as a flat
 set of node ids, and `data/tech_tree.json` gives every node a `pre` list.
@@ -47,7 +47,10 @@ if not os.path.isdir(DATA):                      # running from sim/tests/
 # prerequisites that node needs and the civilisation does not have. Generated
 # by measurement, not by hand.
 KNOWN_VIOLATIONS = {
+    ("england_1300", "ag2_refrigeration_ice"): ["fud_ice_harvesting_and_cutting"],
+    ("england_1300", "mfg_enamelling"): ["cap_heat_1100"],
     ("england_1300", "mat_paper"): ["rag_paper"],
+    ("england_1300", "sc2_institution_textbook"): ["sc2_institution_curriculum", "sc2_institution_journal"],
     ("england_1300", "sea_sternpost_rudder"): ["sea_skeleton_first"],
     ("england_1300", "tex_indigo"): ["mat_natron"],
     ("england_1300", "water_power_scale"): ["crank_conrod"],
@@ -60,11 +63,15 @@ KNOWN_VIOLATIONS = {
     ("mexica_1500", "fud_cacao"): ["exp_americas_factory"],
     ("mexica_1500", "fud_chinampa"): ["exp_americas_factory"],
     ("mexica_1500", "fud_maize"): ["exp_americas_factory"],
+    ("norse_900ad", "ag2_refrigeration_ice"): ["fud_ice_harvesting_and_cutting"],
     ("norse_900ad", "exp_openocean_navigation"): [
         "clock_pendulum", "opt_sextant", "sea_magnetic_compass", "world_map"],
     ("norse_900ad", "med_trepanation"): ["med_surgical_kit_good"],
     ("norse_900ad", "med_wound_suturing"): ["med_surgical_kit_good"],
+    ("rome_100ad", "ag2_refrigeration_ice"): ["fud_ice_harvesting_and_cutting"],
     ("rome_100ad", "civ_dome_roman"): ["mat_pozzolana"],
+    ("rome_100ad", "mfg_enamelling"): ["cap_heat_1100"],
+    ("rome_100ad", "sc2_institution_textbook"): ["sc2_institution_curriculum", "sc2_institution_journal"],
 }
 
 

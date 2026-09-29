@@ -59,7 +59,7 @@ class BranchMergeBlockingEventTests(unittest.TestCase):
         for category in ZERO_CATEGORIES:
             self.assertEqual(self.events.get(category, []), [], (
                 "merge --dry-run reports %s events. Fix the branch source "
-                "(trade alias in data/branches/ALIASES.json, prerequisite id, or the cycle edge)."
+                "(trade name, prerequisite id, or the cycle edge)."
                 % category))
 
     def test_no_new_undeclared_material(self):
@@ -68,7 +68,7 @@ class BranchMergeBlockingEventTests(unittest.TestCase):
                  if count > KNOWN_UNDECLARED_MATERIALS.get(name, 0)}
         self.assertEqual(worse, {}, (
             "New undeclared material events: %s. Add a production recipe "
-            "in data/production/ or alias the name in data/branches/ALIASES.json." % worse))
+            "in data/production/, or rename the material in the branch." % worse))
 
     def test_a_cleared_material_lowers_the_pin(self):
         counts = measure_undeclared_counts(self.events)
