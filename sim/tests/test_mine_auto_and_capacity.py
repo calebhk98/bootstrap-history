@@ -87,7 +87,7 @@ check("and the other way round",
 
 # 56 guard: a shaft that costs nothing to sink.
 _free_sim = sim(capital=1000.0)
-_free_sim.MINE_CAPEX_PER_T_YR = dict(_free_sim.MINE_CAPEX_PER_T_YR, coal=0.0)
+_free_sim._mine_capex_opex = lambda mat: (0.0, 1.0)
 _free_sim.state.household.capital = -1_000_000.0
 try:
     _free_sunk = _free_sim.open_mine("coal", 5.0, partial=False)

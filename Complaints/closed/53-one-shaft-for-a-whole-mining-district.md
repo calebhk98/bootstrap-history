@@ -1,6 +1,6 @@
 # Laurion opens for the price of one shaft
 
-**Status:** open
+**Status:** closed - build cost is now shafts needed times per-shaft cost
 
 An attempt to derive `MINE_CAPEX_PER_T_YR_*` from `sim/world/deposits.py`'s
 sinking-cost model - six of the eleven §3.1 hardcoded outcomes - produced
@@ -92,3 +92,14 @@ ever legitimately reaches zero.
 
 The rejected work is not in the repository. It was preserved outside it, and
 this file is the part worth keeping.
+
+## Resolution
+
+`sim/world/deposits.py` now costs ONE shaft from depth and rock hardness
+alone (`shaft_cost_labour_hours`), and counts the shafts a district needs
+from the rock it must raise against what one shaft's hoist can lift from that
+depth (`shafts_needed`, `shaft_rock_capacity_tonnes_per_year`). A district is
+charged for all of its shafts. The engine's capex per tonne/year is that
+build cost at the miner wage, output-weighted across a metal's deposits; the
+`MINE_CAPEX_PER_T_YR_*` constants and `GENERIC_MINE_CAPEX_MULTIPLE` are gone.
+Regression: `sim/tests/test_mine_build_cost.py`.
