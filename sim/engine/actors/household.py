@@ -142,6 +142,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_material_stock_ledger": "economy",
 	"farm_hectares": "economy",
 	"farm_stock_kg": "economy",
+	"society_labour_hours": "economy",
 	"_dashboard_history": "economy",
 
 	# GovernanceState

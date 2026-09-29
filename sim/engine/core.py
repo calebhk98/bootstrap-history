@@ -42,6 +42,7 @@ from .economy import EconomyMixin
 from .fog import FogMixin
 from .geography import GeographyMixin
 from .labour import LabourMixin
+from .labour_allocation import LabourAllocationMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
 from .core_properties import ForwardingPropertiesMixin
@@ -196,7 +197,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ForwardingPropertiesMixin,
-          StepPhasesMixin):
+          StepPhasesMixin, LabourAllocationMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -1513,8 +1514,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             self._pop_tech_pending = still
 
         adult_equivalent_population = self._adult_equivalent_population(self.population)
-        farm_workers_fte = self._agriculture.farm_workers_fte_for_population(
-            adult_equivalent_population)
+        farm_workers_fte = self._allocate_farm_workforce(adult_equivalent_population)
         hectares_worked = min(
             self.farm_land.hectares,
             farm_workers_fte * self._agriculture.hectares_cropped_per_farm_worker())
