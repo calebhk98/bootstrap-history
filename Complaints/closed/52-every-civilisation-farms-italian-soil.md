@@ -1,6 +1,6 @@
 # Norse Scandinavia grows wheat on Italian loam
 
-**Status:** open
+**Status:** closed
 
 Found by asking why five civilisations with wildly different geography gave
 the SAME answer. With harvest weather variance removed, the unshocked
@@ -129,3 +129,19 @@ cheapest possible detector for this class of bug, and it cost one probe.
 When several configurations that ought to differ produce the same number to
 nine decimal places, the shared mechanism is not reading its inputs. That is
 worth running deliberately rather than stumbling into.
+
+## What was done, and what is left
+
+Sim.__init__ now takes the arable-weighted mean fertility of the civilisation home_regions (land.territory_farmland), divides the farmed area by it, and caps the area at the arable ground those regions hold. A region with no land block raises KeyError; a civilisation with no home_regions falls back to reference soil (labelled temporary heuristic). Tests: sim/tests/test_farm_land_quality.py.
+
+Remaining: _allocate_farm_workforce (sim/engine/labour_allocation.py) takes its baseline farm workers from farm_workers_fte_for_population, which has no soil input. Poor ground is now farmed more widely by the same number of hands, so poor-soil civilisations start short of labour and decline. Dividing that baseline by the land quality (a probe, not committed) removes most of the decline for every civilisation except Norse, which still shrinks and needs its own look.
+
+## What was done
+
+The farm Land.quality is the arable-weighted mean tile fertility of the civilisation held tiles (land.territory_farmland); the area stays an initial condition, capped at the arable ground held. Soil changes yield only. _allocate_farm_workforce now takes its starting and yearly baseline from an average-weather run of the harvest model on this land (the labour market shortfall response, iterated) instead of the soil-blind population share, so workers are neither started short nor released after one good harvest.
+
+What still binds: the farm area cap (Complaints/133). Tile and region fertility scales also disagree (Complaints/134). Tests: sim/tests/test_farm_land_quality.py.
+
+## Resolution
+
+Closed by Complaints/133 (clearing) and 134 (one fertility scale). The farm quality is the best-first ladder quality of the cleared area.

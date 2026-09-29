@@ -314,6 +314,19 @@ SEED_SOWING_RATE_KG_PER_HA = declare(
         "quoted against - 'four to five times the seed sown' means nothing "
         "without this number.")
 
+CLEARING_LABOUR_HOURS_PER_HECTARE = declare(
+    "CLEARING_LABOUR_HOURS_PER_HECTARE", 1000.0,
+    kind="temporary_heuristic",
+    unit="labour hours per hectare brought under the plough",
+    source="Order of magnitude for hand clearing scrub or woodland and "
+           "breaking new ground with ard-age tools; not derived from data "
+           "in this repository.",
+    confidence="D",
+    why="The labour cost of extending the farmed area: hands beyond what "
+        "the cleared ground can crop are the ones that clear more. To be "
+        "replaced by a recipe in data/production/ once clearing is a "
+        "tracked process.")
+
 FOLD_RETURN_ON_SEED_SOWN = declare(
     "FOLD_RETURN_ON_SEED_SOWN", 4.5,
     kind="biological_parameter",

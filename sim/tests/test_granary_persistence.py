@@ -213,6 +213,10 @@ class GranaryCapacityTests(unittest.TestCase):
 
     def test_farm_stock_kg_never_exceeds_capacity_over_many_good_years(self):
         test_sim = _rome_sim(events=False)
+        # Fertile ground with room to work: a structural surplus, whatever
+        # soil the civilisation's own territory happens to have.
+        test_sim.farm_land.quality = 1.3
+        test_sim.farm_land.hectares *= 2.0
         max_seen_ratio_to_capacity = 0.0
         for year in range(101, 161):
             test_sim._demographic_recovery(year)

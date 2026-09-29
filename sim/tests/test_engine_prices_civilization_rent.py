@@ -92,8 +92,10 @@ class RentIsWiredInTests(unittest.TestCase):
             _starting_techs("rome_100ad"), self.prices_json,
             civilization_id="rome_100ad")
         self.assertIn("iugerum_land", result.prices_in_labour_hours)
+        # Moves with tile fertility (arable-weighted, Complaints/134); re-read
+        # with `python3 sim/solve_prices.py --civ rome_100ad` when tile data moves.
         self.assertAlmostEqual(
-            result.prices_in_labour_hours["iugerum_land"], 35.986, places=2)
+            result.prices_in_labour_hours["iugerum_land"], 36.7475, places=2)
 
     def test_omitting_civilization_id_defaults_to_rome(self):
         with_default = engine_prices.solved_prices(

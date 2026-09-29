@@ -261,6 +261,8 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
         shocked = _rome_sim(events=False)
         shocked_start = shocked.population.total
         shocked.farm_land.hectares *= 0.15
+        # Land lost is lost: no ground left to clear as a way out.
+        shocked._farm_arable_ceiling = shocked.farm_land.hectares
         for year in range(101, 111):
             shocked._demographic_recovery(year)
         shocked_end = shocked.population.total

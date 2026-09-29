@@ -32,7 +32,6 @@
    "land": {
     "land_area_km2": 301000,
     "arable_fraction": 0.23,
-    "fertility_quality_multiplier": 1.0,
     "conf": "C",
     "source": "Land area is modern Italy's. arable_fraction (~23%) is the commonly-cited modern national arable-land share, taken as a proxy for the terrain/climate constraint (Apennine spine versus the Po valley and coastal plains) rather than for anything about who farms it today. fertility_quality_multiplier is DEFINITIONAL, not estimated: data/production/40_organics.json's own wheat_kg entry (577.5 kg/ha net) IS Roman/Italian dry-farmed wheat, so Italia is the 1.0 reference point sim/world/agriculture.py's own Land(hectares, quality=1.0) already uses 'ordinary Mediterranean loam' for - every other region's multiplier is stated relative to this one."
    }
@@ -57,7 +56,6 @@
    "land": {
     "land_area_km2": 981000,
     "arable_fraction": 0.3,
-    "fertility_quality_multiplier": 0.9,
     "conf": "D",
     "source": "Land area sums modern France, Germany and the Low Countries, this region's rough modern equivalents. arable_fraction ~30% reflects temperate lowland (Paris Basin, north German plain) against the Alps, Massif Central and Black Forest. fertility below Italia's 1.0: real loess and river-valley soils here are good, but a cooler, wetter, shorter growing season than the Mediterranean holds ancient dry-farmed grain yield somewhat below it - direction well attested, size a placeholder."
    }
@@ -82,7 +80,6 @@
    "land": {
     "land_area_km2": 230000,
     "arable_fraction": 0.25,
-    "fertility_quality_multiplier": 0.85,
     "conf": "D",
     "source": "Land area is Great Britain's. arable_fraction ~25% (much of Scotland and Wales is upland moor, per this region's own note about it being pastoral country too). fertility below temperate-Continental gaul_germania: a cooler, cloudier maritime climate than even northern Gaul, well attested qualitatively; the multiplier's size is not."
    }
@@ -107,7 +104,6 @@
    "land": {
     "land_area_km2": 596000,
     "arable_fraction": 0.25,
-    "fertility_quality_multiplier": 0.95,
     "conf": "D",
     "source": "Land area sums modern Spain and Portugal. arable_fraction ~25% (fertile Guadalquivir/Ebro valleys and coastal plains against the arid Meseta interior). fertility close to Italia's: genuinely Mediterranean climate, slightly below on account of the drier interior plateau this one region-wide average has to include."
    }
@@ -131,7 +127,6 @@
    "land": {
     "land_area_km2": 5750000,
     "arable_fraction": 0.04,
-    "fertility_quality_multiplier": 1.35,
     "conf": "D",
     "source": "Land area sums modern Morocco, Algeria, Tunisia, Libya and Egypt - overwhelmingly Sahara desert, which is why arable_fraction is only ~4% even though it sums each country's own (very unequal) modern arable share (Morocco and Tunisia's Mediterranean coastal strips are in the high teens per cent; Egypt and Libya are a few per cent, almost entirely the Nile ribbon). fertility is high, not low, because this field prices ONLY the arable sliver, and that sliver is dominated by Nile silt - among the most fertile soil on Earth, the reason Egypt was Rome's breadbasket. 1.35 sits just under sim/world/agriculture.py's own NILE_FLOOD_RECESSION_SOIL_FERTILITY_YIELD_MULTIPLIER (1.4, independently re-derived here rather than imported - see this module's own STANDALONE note), pulled down slightly by the Maghreb coastal share, which is good land but not Nile-grade."
    }
@@ -156,7 +151,6 @@
    "land": {
     "land_area_km2": 915500,
     "arable_fraction": 0.28,
-    "fertility_quality_multiplier": 0.85,
     "conf": "D",
     "source": "Land area sums modern Greece and Turkey. arable_fraction ~28% (Anatolian plateau against genuinely mountainous, thin-soiled Greece). fertility below Italia's: Mediterranean climate, but rockier terrain and thinner soils than the Po valley or Campania - Greek grain dependence on imported (including Egyptian and Black Sea) wheat is the historical symptom of exactly this."
    }
@@ -181,7 +175,6 @@
    "land": {
     "land_area_km2": 744000,
     "arable_fraction": 0.2,
-    "fertility_quality_multiplier": 1.25,
     "conf": "D",
     "source": "Land area sums modern Syria, Iraq, Lebanon, Jordan and Israel/Palestine. arable_fraction ~20% (river valleys and the Levantine coast against the Syrian and Jordanian desert). fertility is high: the Tigris-Euphrates floodplain is the literal Fertile Crescent, agriculture's own place of origin, and irrigated Mesopotamian yields were historically excellent - below north_africa's Nile figure because Nile silt is replenished by an annual flood essentially free of labour, where Mesopotamian irrigation needs continuous canal maintenance to keep delivering it."
    }
@@ -206,7 +199,6 @@
    "land": {
     "land_area_km2": 1220000,
     "arable_fraction": 0.08,
-    "fertility_quality_multiplier": 0.65,
     "conf": "D",
     "source": "Land area sums Sweden, Norway, Denmark and Finland. arable_fraction ~8% (Denmark alone is flat and largely farmable, but it is small; Norway and much of Sweden/Finland are forest, mountain or lake). fertility below Britannia's: a shorter, cooler growing season and more podzolic soils, but this is boreal-temperate farmland actually worked for millennia (southern Sweden, Denmark), not the tundra sim/world/agriculture.py's own ARCTIC_TUNDRA (0.05) describes - the two must not be confused, which is why this number sits well above it."
    }
@@ -230,7 +222,6 @@
    "land": {
     "land_area_km2": 4950000,
     "arable_fraction": 0.02,
-    "fertility_quality_multiplier": 0.5,
     "conf": "D",
     "source": "Land area sums the Arabian Peninsula and the Horn of Africa. arable_fraction ~2% (the Peninsula is almost entirely desert but for a few oases and Yemen's terraced highlands; the Horn's Ethiopian highlands are the real exception). fertility 0.50 blends genuinely decent highland farmland (Ethiopia's volcanic highland soil and reliable highland rainfall historically supported dense population) with marginal desert-margin and oasis farming elsewhere in the region, which is most of its small arable share by area."
    }
@@ -255,7 +246,6 @@
    "land": {
     "land_area_km2": 3350000,
     "arable_fraction": 0.5,
-    "fertility_quality_multiplier": 1.2,
     "conf": "D",
     "source": "Land area sums the Indian subcontinent and Ceylon. arable_fraction ~50% is unusually high among large regions in this file - the Indo-Gangetic plain is one of the largest contiguous alluvial lowlands on Earth, and modern India is repeatedly cited as having one of the highest arable-land shares of any large country, a terrain fact rather than a modern-farming one. fertility is high: Gangetic alluvium plus a monsoon that (unlike Mediterranean dry farming) supports rice, which yields more calories per hectare than wheat under comparable technology - below the Nile's annual-flood figure because monsoon rainfall is a less reliable input than an annual silt flood."
    }
@@ -280,7 +270,6 @@
    "land": {
     "land_area_km2": 3580000,
     "arable_fraction": 0.1,
-    "fertility_quality_multiplier": 0.55,
     "conf": "D",
     "source": "Land area sums Iran, Afghanistan and the Central Asian states this region's own note describes as reached by Silk Road relay. arable_fraction ~10% (river-valley oases - the Oxus and Jaxartes basins above all - against the Iranian plateau's aridity and Afghanistan's mountains). fertility 0.55: oasis irrigation is genuinely productive where it exists, well above true desert, but this is still a water-constrained region overall, not a soil-rich one."
    }
@@ -305,7 +294,6 @@
    "land": {
     "land_area_km2": 9597000,
     "arable_fraction": 0.13,
-    "fertility_quality_multiplier": 1.3,
     "conf": "D",
     "source": "Land area is modern China's. arable_fraction ~13% (the Tibetan plateau, the Gobi and Xinjiang's deserts, and the western mountains dominate China's total area; the arable share is concentrated in the North China Plain, the Loess Plateau and the Yangtze basin). fertility is high, matching this file's own note that 'Shanxi coal and iron are enormous... which is exactly why Han China starts this simulator already holding the blast furnace': Yellow River loess and Yangtze rice-paddy country are both historically exceptional farmland, comparable to the Nile or the Fertile Crescent."
    }
@@ -330,7 +318,6 @@
    "land": {
     "land_area_km2": 6000000,
     "arable_fraction": 0.15,
-    "fertility_quality_multiplier": 0.6,
     "conf": "D",
     "source": "Land area sums the major states of West and Central Africa this region groups (Nigeria, Ghana, Cote d'Ivoire, Senegal, Mali, Cameroon, DR Congo and neighbours). arable_fraction ~15% is a rough share cultivable outside dense rainforest interior and Sahel desert fringe. fertility below Italia's despite abundant rainfall: tropical rainforest soils are well documented in agronomy as heavily leached and nutrient-poor beneath a lush canopy, a genuine pedological fact, not a climate-severity one."
    }
@@ -355,7 +342,6 @@
    "land": {
     "land_area_km2": 2240000,
     "arable_fraction": 0.12,
-    "fertility_quality_multiplier": 1.1,
     "conf": "D",
     "source": "Land area sums Indonesia and Malaysia, this region's own 'Malaya, Indonesia, the Spice Islands' description. arable_fraction ~12% (dense equatorial rainforest limits cleared cropland at this era's technology). fertility above Italia's: volcanic soils on Java and Sumatra are repeatedly cited among the most fertile in the tropics, which is also why Java alone has historically supported extremely dense population."
    }
@@ -380,7 +366,6 @@
    "land": {
     "land_area_km2": 4700000,
     "arable_fraction": 0.1,
-    "fertility_quality_multiplier": 0.7,
     "conf": "D",
     "source": "Land area sums South Africa, Zimbabwe, Zambia, Mozambique, Tanzania and Kenya - this region's own 'East Africa and the Cape' span. arable_fraction ~10% (savanna and semi-arid bushland, much of it historically tsetse-affected and poor for cultivation, dominate; the East African highlands and the Cape's own Mediterranean-climate corner are the exceptions). fertility 0.70: decent highland and highveld grassland soils, below the best alluvial regions but well above true desert or leached rainforest."
    }
@@ -405,7 +390,6 @@
    "land": {
     "land_area_km2": 13000000,
     "arable_fraction": 0.03,
-    "fertility_quality_multiplier": 0.5,
     "conf": "D",
     "source": "Land area is a round figure for Siberia and the Urals. arable_fraction ~3% (permafrost and boreal taiga dominate; only the southern steppe fringe near the Urals and the West Siberian Plain is workable). fertility 0.50: the workable southern fringe includes real steppe soil related to the same chernozem belt sim/world/agriculture.py's own UKRAINIAN_CHERNOZEM describes further west, but a short growing season this far north and this file's own coarse regional average keep it well below that entry's 1.4."
    }
@@ -430,7 +414,6 @@
    "land": {
     "land_area_km2": 2700000,
     "arable_fraction": 0.14,
-    "fertility_quality_multiplier": 0.95,
     "conf": "D",
     "source": "Land area sums Mexico, Central America and the Caribbean islands. arable_fraction ~14% (the Mexican highland valleys and Caribbean coastal plains against arid northern Mexico and tropical forest further south). fertility close to Italia's: the volcanic soils of the Valley of Mexico historically supported one of the densest pre-industrial populations anywhere via chinampa cultivation, offset by the region's large arid and tropical-forest shares elsewhere."
    }
@@ -455,7 +438,6 @@
    "land": {
     "land_area_km2": 17840000,
     "arable_fraction": 0.06,
-    "fertility_quality_multiplier": 0.9,
     "conf": "D",
     "source": "Land area is the South American continent's. arable_fraction is low (~6%) because Amazonia - most of the continent's area - is rainforest whose soil, like West Africa's, is thin and heavily leached beneath the canopy, a well-documented ecological fact; the true farmland is concentrated in the Andean terraces and the Pampas. fertility reflects that smaller arable share rather than Amazonia's much larger area: Andean terracing is workmanlike but not exceptional, the Pampas grassland is excellent (comparable to a prairie Mollisol), and the blend lands close to Italia's baseline."
    }
@@ -479,7 +461,6 @@
    "land": {
     "land_area_km2": 19800000,
     "arable_fraction": 0.12,
-    "fertility_quality_multiplier": 1.1,
     "conf": "D",
     "source": "Land area sums the United States and Canada. arable_fraction ~12% (the Great Plains and eastern woodlands against the Canadian Shield's boreal forest and the northern tundra fringe). fertility above Italia's: North American prairie soils (Mollisols) are geologically comparable to the Ukrainian chernozem sim/world/agriculture.py's own table already treats as exceptional (1.4) - held below that figure here because this region's average also has to include its large boreal and eastern-woodland shares, which are ordinary rather than exceptional."
    }
@@ -503,7 +484,6 @@
    "land": {
     "land_area_km2": 7700000,
     "arable_fraction": 0.06,
-    "fertility_quality_multiplier": 0.6,
     "conf": "D",
     "source": "Land area is Australia's (Pacific islands add negligibly to it). arable_fraction is small (~6%) because the interior is arid to semi-arid desert; the workable land is a coastal fringe, mostly in the southeast and southwest. fertility, for that fringe, is below Italia's: Australian soils are geologically among the oldest and most weathered, and therefore most mineral-depleted, in the world, a well documented pedological fact distinct from the aridity arable_fraction already charges for."
    }
@@ -528,7 +508,6 @@
    "land": {
     "land_area_km2": 2166000,
     "arable_fraction": 0.002,
-    "fertility_quality_multiplier": 0.05,
     "conf": "D",
     "source": "Land area is Greenland's. arable_fraction is close to zero (~80% ice-capped; the ice-free fringe is tundra, of which only a handful of low-Arctic fjord meadows in the far south were ever used at all, historically for hay and grazing rather than grain). fertility matches sim/world/agriculture.py's own ARCTIC_TUNDRA quality multiplier (0.05) exactly, for the same reason that module gives: the limiting factor is growing-season length, not soil fertility, which this single scalar cannot separate from fertility any better here than it can there."
    }
@@ -874,7 +853,7 @@
     "lon": 62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1372,
-    "fertility_quality_multiplier": 0.58,
+    "fertility_quality_multiplier": 0.6286,
     "coastal": false,
     "borders": [
      "afghanistan_01",
@@ -901,7 +880,7 @@
     "lon": 66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2092,
-    "fertility_quality_multiplier": 0.652,
+    "fertility_quality_multiplier": 0.6868,
     "coastal": false,
     "borders": [
      "afghanistan_02",
@@ -928,7 +907,7 @@
     "lon": 70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2416,
-    "fertility_quality_multiplier": 0.706,
+    "fertility_quality_multiplier": 0.7379,
     "coastal": false,
     "borders": [
      "afghanistan_03",
@@ -956,7 +935,7 @@
     "lon": 66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1924,
-    "fertility_quality_multiplier": 0.62,
+    "fertility_quality_multiplier": 0.6915,
     "coastal": false,
     "borders": [
      "afghanistan_03",
@@ -1250,7 +1229,7 @@
     "lon": 2.007,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.124,
-    "fertility_quality_multiplier": 0.546,
+    "fertility_quality_multiplier": 0.5494,
     "coastal": false,
     "borders": [
      "algeria_11",
@@ -1274,7 +1253,7 @@
     "lon": 6.021,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0404,
-    "fertility_quality_multiplier": 0.57,
+    "fertility_quality_multiplier": 0.7158,
     "coastal": false,
     "borders": [
      "algeria_12",
@@ -1298,7 +1277,7 @@
     "lon": 2.2138,
     "land_area_km2": 40020.9,
     "arable_fraction": 0.32,
-    "fertility_quality_multiplier": 0.92,
+    "fertility_quality_multiplier": 0.95,
     "coastal": true,
     "borders": [
      "algeria_13",
@@ -1321,7 +1300,7 @@
     "lon": 6.021,
     "land_area_km2": 52164.5,
     "arable_fraction": 0.3283,
-    "fertility_quality_multiplier": 0.925,
+    "fertility_quality_multiplier": 0.9497,
     "coastal": true,
     "borders": [
      "algeria_14",
@@ -1343,7 +1322,7 @@
     "lon": 14.0491,
     "land_area_km2": 149983.9,
     "arable_fraction": 0.164,
-    "fertility_quality_multiplier": 0.594,
+    "fertility_quality_multiplier": 0.6285,
     "coastal": true,
     "borders": [
      "angola_02",
@@ -1368,7 +1347,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.224,
-    "fertility_quality_multiplier": 0.67,
+    "fertility_quality_multiplier": 0.7,
     "coastal": false,
     "borders": [
      "angola_01",
@@ -1391,7 +1370,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2416,
-    "fertility_quality_multiplier": 0.71,
+    "fertility_quality_multiplier": 0.7447,
     "coastal": false,
     "borders": [
      "angola_02",
@@ -1415,7 +1394,7 @@
     "lon": 14.2487,
     "land_area_km2": 129046.7,
     "arable_fraction": 0.2825,
-    "fertility_quality_multiplier": 0.8167,
+    "fertility_quality_multiplier": 0.8314,
     "coastal": true,
     "borders": [
      "angola_01",
@@ -1439,7 +1418,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3168,
-    "fertility_quality_multiplier": 0.942,
+    "fertility_quality_multiplier": 0.9429,
     "coastal": false,
     "borders": [
      "angola_02",
@@ -1462,7 +1441,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3048,
-    "fertility_quality_multiplier": 0.798,
+    "fertility_quality_multiplier": 0.8004,
     "coastal": false,
     "borders": [
      "angola_03",
@@ -1485,7 +1464,7 @@
     "lon": 14.8931,
     "land_area_km2": 93241.0,
     "arable_fraction": 0.2773,
-    "fertility_quality_multiplier": 0.775,
+    "fertility_quality_multiplier": 0.7811,
     "coastal": true,
     "borders": [
      "angola_04",
@@ -1508,7 +1487,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3,
-    "fertility_quality_multiplier": 0.786,
+    "fertility_quality_multiplier": 0.7868,
     "coastal": false,
     "borders": [
      "angola_05",
@@ -1554,7 +1533,7 @@
     "lon": 14.5163,
     "land_area_km2": 116185.9,
     "arable_fraction": 0.2809,
-    "fertility_quality_multiplier": 0.7273,
+    "fertility_quality_multiplier": 0.7351,
     "coastal": true,
     "borders": [
      "angola_07",
@@ -1619,7 +1598,7 @@
     "lon": -70.4089,
     "land_area_km2": 136250.3,
     "arable_fraction": 0.2113,
-    "fertility_quality_multiplier": 0.5804,
+    "fertility_quality_multiplier": 0.5858,
     "coastal": true,
     "borders": [
      "argentina_03",
@@ -1664,7 +1643,7 @@
     "lon": -70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2234,
-    "fertility_quality_multiplier": 0.66,
+    "fertility_quality_multiplier": 0.7316,
     "coastal": false,
     "borders": [
      "argentina_02",
@@ -1713,7 +1692,7 @@
     "lon": -70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2912,
-    "fertility_quality_multiplier": 0.852,
+    "fertility_quality_multiplier": 0.8754,
     "coastal": false,
     "borders": [
      "argentina_04",
@@ -1738,7 +1717,7 @@
     "lon": -66.6557,
     "land_area_km2": 134342.9,
     "arable_fraction": 0.1836,
-    "fertility_quality_multiplier": 0.5318,
+    "fertility_quality_multiplier": 0.548,
     "coastal": true,
     "borders": [
      "argentina_05",
@@ -1761,7 +1740,7 @@
     "lon": -63.3194,
     "land_area_km2": 34354.0,
     "arable_fraction": 0.2046,
-    "fertility_quality_multiplier": 0.5423,
+    "fertility_quality_multiplier": 0.5492,
     "coastal": true,
     "borders": [
      "argentina_07",
@@ -1782,7 +1761,7 @@
     "lon": -70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2784,
-    "fertility_quality_multiplier": 0.826,
+    "fertility_quality_multiplier": 0.8655,
     "coastal": false,
     "borders": [
      "argentina_06",
@@ -1807,7 +1786,7 @@
     "lon": -66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.246,
-    "fertility_quality_multiplier": 0.678,
+    "fertility_quality_multiplier": 0.7336,
     "coastal": false,
     "borders": [
      "argentina_07",
@@ -1832,7 +1811,7 @@
     "lon": -62.2174,
     "land_area_km2": 141215.5,
     "arable_fraction": 0.344,
-    "fertility_quality_multiplier": 1.032,
+    "fertility_quality_multiplier": 1.0343,
     "coastal": true,
     "borders": [
      "argentina_08",
@@ -1855,7 +1834,7 @@
     "lon": -58.5589,
     "land_area_km2": 90307.4,
     "arable_fraction": 0.3095,
-    "fertility_quality_multiplier": 0.9286,
+    "fertility_quality_multiplier": 0.9323,
     "coastal": true,
     "borders": [
      "argentina_11",
@@ -1876,7 +1855,7 @@
     "lon": -69.993,
     "land_area_km2": 134267.3,
     "arable_fraction": 0.1785,
-    "fertility_quality_multiplier": 0.5563,
+    "fertility_quality_multiplier": 0.826,
     "coastal": true,
     "borders": [
      "argentina_09",
@@ -1902,7 +1881,7 @@
     "lon": -66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2584,
-    "fertility_quality_multiplier": 0.756,
+    "fertility_quality_multiplier": 0.7986,
     "coastal": false,
     "borders": [
      "argentina_10",
@@ -1928,7 +1907,7 @@
     "lon": -62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.338,
-    "fertility_quality_multiplier": 1.01,
+    "fertility_quality_multiplier": 1.0121,
     "coastal": false,
     "borders": [
      "argentina_11",
@@ -1973,7 +1952,7 @@
     "lon": -69.8867,
     "land_area_km2": 121960.6,
     "arable_fraction": 0.042,
-    "fertility_quality_multiplier": 0.318,
+    "fertility_quality_multiplier": 0.6252,
     "coastal": true,
     "borders": [
      "argentina_13",
@@ -1997,7 +1976,7 @@
     "lon": -66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.16,
-    "fertility_quality_multiplier": 0.592,
+    "fertility_quality_multiplier": 0.634,
     "coastal": false,
     "borders": [
      "argentina_14",
@@ -2024,7 +2003,7 @@
     "lon": -62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3296,
-    "fertility_quality_multiplier": 0.982,
+    "fertility_quality_multiplier": 0.984,
     "coastal": false,
     "borders": [
      "argentina_15",
@@ -2069,7 +2048,7 @@
     "lon": -66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.146,
-    "fertility_quality_multiplier": 0.534,
+    "fertility_quality_multiplier": 0.7936,
     "coastal": false,
     "borders": [
      "argentina_18",
@@ -2097,7 +2076,7 @@
     "lon": -62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3092,
-    "fertility_quality_multiplier": 0.92,
+    "fertility_quality_multiplier": 0.9364,
     "coastal": false,
     "borders": [
      "argentina_19",
@@ -2143,7 +2122,7 @@
     "lon": -66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1336,
-    "fertility_quality_multiplier": 0.416,
+    "fertility_quality_multiplier": 0.7572,
     "coastal": false,
     "borders": [
      "argentina_21",
@@ -2169,7 +2148,7 @@
     "lon": -62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.248,
-    "fertility_quality_multiplier": 0.74,
+    "fertility_quality_multiplier": 0.7806,
     "coastal": false,
     "borders": [
      "argentina_22",
@@ -2231,7 +2210,7 @@
     "lon": 142.4979,
     "land_area_km2": 111880.9,
     "arable_fraction": 0.28,
-    "fertility_quality_multiplier": 0.8063,
+    "fertility_quality_multiplier": 0.8293,
     "coastal": true,
     "borders": [
      "australia_02",
@@ -2254,7 +2233,7 @@
     "lon": 146.5119,
     "land_area_km2": 109736.4,
     "arable_fraction": 0.3055,
-    "fertility_quality_multiplier": 0.9114,
+    "fertility_quality_multiplier": 0.9198,
     "coastal": true,
     "borders": [
      "australia_01",
@@ -2298,7 +2277,7 @@
     "lon": 115.9856,
     "land_area_km2": 26744.8,
     "arable_fraction": 0.3294,
-    "fertility_quality_multiplier": 0.9656,
+    "fertility_quality_multiplier": 0.9666,
     "coastal": true,
     "borders": [
      "australia_07",
@@ -2319,7 +2298,7 @@
     "lon": 118.4137,
     "land_area_km2": 111961.5,
     "arable_fraction": 0.2895,
-    "fertility_quality_multiplier": 0.8136,
+    "fertility_quality_multiplier": 0.8509,
     "coastal": true,
     "borders": [
      "australia_06",
@@ -2343,7 +2322,7 @@
     "lon": 122.3646,
     "land_area_km2": 76301.6,
     "arable_fraction": 0.2312,
-    "fertility_quality_multiplier": 0.596,
+    "fertility_quality_multiplier": 0.6125,
     "coastal": true,
     "borders": [
      "australia_07",
@@ -2366,7 +2345,7 @@
     "lon": 125.0827,
     "land_area_km2": 17789.5,
     "arable_fraction": 0.216,
-    "fertility_quality_multiplier": 0.56,
+    "fertility_quality_multiplier": 0.5593,
     "coastal": true,
     "borders": [
      "australia_08",
@@ -2387,7 +2366,7 @@
     "lon": 135.6723,
     "land_area_km2": 53395.7,
     "arable_fraction": 0.25,
-    "fertility_quality_multiplier": 0.67,
+    "fertility_quality_multiplier": 0.7036,
     "coastal": true,
     "borders": [
      "australia_11",
@@ -2408,7 +2387,7 @@
     "lon": 139.0995,
     "land_area_km2": 118649.2,
     "arable_fraction": 0.214,
-    "fertility_quality_multiplier": 0.6025,
+    "fertility_quality_multiplier": 0.6411,
     "coastal": true,
     "borders": [
      "australia_02",
@@ -2433,7 +2412,7 @@
     "lon": 142.4979,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1616,
-    "fertility_quality_multiplier": 0.556,
+    "fertility_quality_multiplier": 0.5574,
     "coastal": false,
     "borders": [
      "australia_03",
@@ -2457,7 +2436,7 @@
     "lon": 146.5119,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2376,
-    "fertility_quality_multiplier": 0.638,
+    "fertility_quality_multiplier": 0.6746,
     "coastal": false,
     "borders": [
      "australia_04",
@@ -2481,7 +2460,7 @@
     "lon": 149.9122,
     "land_area_km2": 108040.3,
     "arable_fraction": 0.3211,
-    "fertility_quality_multiplier": 0.9632,
+    "fertility_quality_multiplier": 0.9689,
     "coastal": true,
     "borders": [
      "australia_05",
@@ -2503,7 +2482,7 @@
     "lon": 115.6942,
     "land_area_km2": 49361.7,
     "arable_fraction": 0.3083,
-    "fertility_quality_multiplier": 0.8889,
+    "fertility_quality_multiplier": 0.9279,
     "coastal": true,
     "borders": [
      "australia_06",
@@ -2525,7 +2504,7 @@
     "lon": 118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.178,
-    "fertility_quality_multiplier": 0.606,
+    "fertility_quality_multiplier": 0.6281,
     "coastal": false,
     "borders": [
      "australia_07",
@@ -2550,7 +2529,7 @@
     "lon": 122.4278,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1144,
-    "fertility_quality_multiplier": 0.574,
+    "fertility_quality_multiplier": 0.592,
     "coastal": false,
     "borders": [
      "australia_08",
@@ -2597,7 +2576,7 @@
     "lon": 130.4558,
     "land_area_km2": 138547.2,
     "arable_fraction": 0.0432,
-    "fertility_quality_multiplier": 0.552,
+    "fertility_quality_multiplier": 0.5593,
     "coastal": true,
     "borders": [
      "australia_18",
@@ -2620,7 +2599,7 @@
     "lon": 134.4698,
     "land_area_km2": 149999.5,
     "arable_fraction": 0.028,
-    "fertility_quality_multiplier": 0.542,
+    "fertility_quality_multiplier": 0.5443,
     "coastal": false,
     "borders": [
      "australia_10",
@@ -2711,7 +2690,7 @@
     "lon": 150.5259,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.318,
-    "fertility_quality_multiplier": 0.954,
+    "fertility_quality_multiplier": 0.9764,
     "coastal": false,
     "borders": [
      "australia_14",
@@ -2735,7 +2714,7 @@
     "lon": 152.8212,
     "land_area_km2": 24541.3,
     "arable_fraction": 0.3437,
-    "fertility_quality_multiplier": 1.0313,
+    "fertility_quality_multiplier": 1.0336,
     "coastal": true,
     "borders": [
      "australia_24",
@@ -2756,7 +2735,7 @@
     "lon": 115.0029,
     "land_area_km2": 92320.8,
     "arable_fraction": 0.0863,
-    "fertility_quality_multiplier": 0.5684,
+    "fertility_quality_multiplier": 0.5927,
     "coastal": true,
     "borders": [
      "australia_15",
@@ -2844,7 +2823,7 @@
     "lon": 130.4558,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0776,
-    "fertility_quality_multiplier": 0.566,
+    "fertility_quality_multiplier": 0.5912,
     "coastal": false,
     "borders": [
      "australia_19",
@@ -2911,7 +2890,7 @@
     "lon": 142.4979,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0416,
-    "fertility_quality_multiplier": 0.556,
+    "fertility_quality_multiplier": 0.5788,
     "coastal": false,
     "borders": [
      "australia_22",
@@ -2956,7 +2935,7 @@
     "lon": 150.5259,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.23,
-    "fertility_quality_multiplier": 0.69,
+    "fertility_quality_multiplier": 0.737,
     "coastal": false,
     "borders": [
      "australia_24",
@@ -3019,7 +2998,7 @@
     "lon": 118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0632,
-    "fertility_quality_multiplier": 0.562,
+    "fertility_quality_multiplier": 0.588,
     "coastal": false,
     "borders": [
      "australia_27",
@@ -3064,7 +3043,7 @@
     "lon": 126.4418,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0488,
-    "fertility_quality_multiplier": 0.558,
+    "fertility_quality_multiplier": 0.5828,
     "coastal": false,
     "borders": [
      "australia_29",
@@ -3153,7 +3132,7 @@
     "lon": 142.4979,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0848,
-    "fertility_quality_multiplier": 0.568,
+    "fertility_quality_multiplier": 0.5925,
     "coastal": false,
     "borders": [
      "australia_33",
@@ -3198,7 +3177,7 @@
     "lon": 149.666,
     "land_area_km2": 94387.1,
     "arable_fraction": 0.2794,
-    "fertility_quality_multiplier": 0.8382,
+    "fertility_quality_multiplier": 0.8984,
     "coastal": true,
     "borders": [
      "australia_35",
@@ -3239,7 +3218,7 @@
     "lon": 122.4278,
     "land_area_km2": 135945.8,
     "arable_fraction": 0.1325,
-    "fertility_quality_multiplier": 0.5812,
+    "fertility_quality_multiplier": 0.5972,
     "coastal": true,
     "borders": [
      "australia_39",
@@ -3284,7 +3263,7 @@
     "lon": 130.4558,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1784,
-    "fertility_quality_multiplier": 0.594,
+    "fertility_quality_multiplier": 0.5993,
     "coastal": false,
     "borders": [
      "australia_41",
@@ -3307,7 +3286,7 @@
     "lon": 134.4698,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1064,
-    "fertility_quality_multiplier": 0.574,
+    "fertility_quality_multiplier": 0.5951,
     "coastal": false,
     "borders": [
      "australia_42",
@@ -3330,7 +3309,7 @@
     "lon": 138.4839,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.128,
-    "fertility_quality_multiplier": 0.58,
+    "fertility_quality_multiplier": 0.5969,
     "coastal": false,
     "borders": [
      "australia_43",
@@ -3353,7 +3332,7 @@
     "lon": 142.4979,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2064,
-    "fertility_quality_multiplier": 0.632,
+    "fertility_quality_multiplier": 0.6519,
     "coastal": false,
     "borders": [
      "australia_44",
@@ -3378,7 +3357,7 @@
     "lon": 146.5119,
     "land_area_km2": 124172.9,
     "arable_fraction": 0.2219,
-    "fertility_quality_multiplier": 0.6571,
+    "fertility_quality_multiplier": 0.6818,
     "coastal": true,
     "borders": [
      "australia_45",
@@ -3401,7 +3380,7 @@
     "lon": 122.7963,
     "land_area_km2": 47867.9,
     "arable_fraction": 0.2143,
-    "fertility_quality_multiplier": 0.6214,
+    "fertility_quality_multiplier": 0.63,
     "coastal": true,
     "borders": [
      "australia_48",
@@ -3422,7 +3401,7 @@
     "lon": 126.4418,
     "land_area_km2": 148980.5,
     "arable_fraction": 0.256,
-    "fertility_quality_multiplier": 0.684,
+    "fertility_quality_multiplier": 0.6984,
     "coastal": false,
     "borders": [
      "australia_49",
@@ -3445,7 +3424,7 @@
     "lon": 130.4558,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.22,
-    "fertility_quality_multiplier": 0.63,
+    "fertility_quality_multiplier": 0.6409,
     "coastal": false,
     "borders": [
      "australia_50",
@@ -3468,7 +3447,7 @@
     "lon": 134.4698,
     "land_area_km2": 149284.1,
     "arable_fraction": 0.212,
-    "fertility_quality_multiplier": 0.618,
+    "fertility_quality_multiplier": 0.6255,
     "coastal": false,
     "borders": [
      "australia_51",
@@ -3491,7 +3470,7 @@
     "lon": 137.8021,
     "land_area_km2": 84952.6,
     "arable_fraction": 0.26,
-    "fertility_quality_multiplier": 0.69,
+    "fertility_quality_multiplier": 0.7038,
     "coastal": true,
     "borders": [
      "australia_52",
@@ -3513,7 +3492,7 @@
     "lon": 142.7987,
     "land_area_km2": 131319.6,
     "arable_fraction": 0.287,
-    "fertility_quality_multiplier": 0.7304,
+    "fertility_quality_multiplier": 0.7364,
     "coastal": true,
     "borders": [
      "australia_53",
@@ -3536,7 +3515,7 @@
     "lon": 145.206,
     "land_area_km2": 47025.5,
     "arable_fraction": 0.3053,
-    "fertility_quality_multiplier": 0.8684,
+    "fertility_quality_multiplier": 0.8802,
     "coastal": true,
     "borders": [
      "australia_54",
@@ -3560,7 +3539,7 @@
     "lon": 126.9487,
     "land_area_km2": 42350.2,
     "arable_fraction": 0.2941,
-    "fertility_quality_multiplier": 0.7412,
+    "fertility_quality_multiplier": 0.744,
     "coastal": true,
     "borders": [
      "australia_56",
@@ -3662,7 +3641,7 @@
     "lon": 14.8319,
     "land_area_km2": 106014.1,
     "arable_fraction": 0.2565,
-    "fertility_quality_multiplier": 0.7912,
+    "fertility_quality_multiplier": 0.9159,
     "coastal": true,
     "borders": [
      "germany_02",
@@ -3689,7 +3668,7 @@
     "lon": 46.1613,
     "land_area_km2": 145145.1,
     "arable_fraction": 0.2352,
-    "fertility_quality_multiplier": 0.724,
+    "fertility_quality_multiplier": 0.8325,
     "coastal": true,
     "borders": [
      "azerbaijan_02",
@@ -3716,7 +3695,7 @@
     "lon": 48.755,
     "land_area_km2": 31574.0,
     "arable_fraction": 0.23,
-    "fertility_quality_multiplier": 0.625,
+    "fertility_quality_multiplier": 0.6348,
     "coastal": true,
     "borders": [
      "azerbaijan_01",
@@ -3739,7 +3718,7 @@
     "lon": 89.3312,
     "land_area_km2": 133647.2,
     "arable_fraction": 0.3017,
-    "fertility_quality_multiplier": 0.8065,
+    "fertility_quality_multiplier": 0.8073,
     "coastal": true,
     "borders": [
      "india_17",
@@ -3806,7 +3785,7 @@
     "lon": 2.007,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.288,
-    "fertility_quality_multiplier": 0.732,
+    "fertility_quality_multiplier": 0.7375,
     "coastal": false,
     "borders": [
      "burkina_faso_01",
@@ -3829,7 +3808,7 @@
     "lon": -66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1428,
-    "fertility_quality_multiplier": 0.534,
+    "fertility_quality_multiplier": 0.6612,
     "coastal": false,
     "borders": [
      "argentina_24",
@@ -3854,7 +3833,7 @@
     "lon": -62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2344,
-    "fertility_quality_multiplier": 0.672,
+    "fertility_quality_multiplier": 0.6957,
     "coastal": false,
     "borders": [
      "argentina_25",
@@ -3878,7 +3857,7 @@
     "lon": -66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2382,
-    "fertility_quality_multiplier": 0.732,
+    "fertility_quality_multiplier": 0.7837,
     "coastal": false,
     "borders": [
      "bolivia_01",
@@ -3907,7 +3886,7 @@
     "lon": -62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.302,
-    "fertility_quality_multiplier": 0.774,
+    "fertility_quality_multiplier": 0.7758,
     "coastal": false,
     "borders": [
      "bolivia_02",
@@ -3999,7 +3978,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1064,
-    "fertility_quality_multiplier": 0.574,
+    "fertility_quality_multiplier": 0.5951,
     "coastal": false,
     "borders": [
      "botswana_02",
@@ -4066,7 +4045,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1928,
-    "fertility_quality_multiplier": 0.598,
+    "fertility_quality_multiplier": 0.5998,
     "coastal": false,
     "borders": [
      "botswana_02",
@@ -4111,7 +4090,7 @@
     "lon": -50.6969,
     "land_area_km2": 63436.2,
     "arable_fraction": 0.3385,
-    "fertility_quality_multiplier": 1.0154,
+    "fertility_quality_multiplier": 1.0193,
     "coastal": true,
     "borders": [
      "brazil_01",
@@ -4154,7 +4133,7 @@
     "lon": -50.4145,
     "land_area_km2": 135308.6,
     "arable_fraction": 0.324,
-    "fertility_quality_multiplier": 0.98,
+    "fertility_quality_multiplier": 0.9926,
     "coastal": true,
     "borders": [
      "brazil_02",
@@ -4177,7 +4156,7 @@
     "lon": -54.1893,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.324,
-    "fertility_quality_multiplier": 0.962,
+    "fertility_quality_multiplier": 0.9759,
     "coastal": false,
     "borders": [
      "brazil_03",
@@ -4202,7 +4181,7 @@
     "lon": -50.1753,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.332,
-    "fertility_quality_multiplier": 0.954,
+    "fertility_quality_multiplier": 0.9633,
     "coastal": false,
     "borders": [
      "brazil_04",
@@ -4226,7 +4205,7 @@
     "lon": -46.6259,
     "land_area_km2": 101970.3,
     "arable_fraction": 0.3276,
-    "fertility_quality_multiplier": 0.9735,
+    "fertility_quality_multiplier": 0.98,
     "coastal": true,
     "borders": [
      "brazil_06",
@@ -4252,7 +4231,7 @@
     "lon": -42.9986,
     "land_area_km2": 35122.8,
     "arable_fraction": 0.3035,
-    "fertility_quality_multiplier": 0.805,
+    "fertility_quality_multiplier": 0.8078,
     "coastal": true,
     "borders": [
      "brazil_07",
@@ -4344,7 +4323,7 @@
     "lon": -46.1613,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3048,
-    "fertility_quality_multiplier": 0.798,
+    "fertility_quality_multiplier": 0.8004,
     "coastal": false,
     "borders": [
      "brazil_07",
@@ -4367,7 +4346,7 @@
     "lon": -42.1632,
     "land_area_km2": 139560.9,
     "arable_fraction": 0.3037,
-    "fertility_quality_multiplier": 0.8104,
+    "fertility_quality_multiplier": 0.8134,
     "coastal": true,
     "borders": [
      "brazil_08",
@@ -4480,7 +4459,7 @@
     "lon": -42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2968,
-    "fertility_quality_multiplier": 0.752,
+    "fertility_quality_multiplier": 0.7546,
     "coastal": false,
     "borders": [
      "brazil_13",
@@ -4504,7 +4483,7 @@
     "lon": -39.6424,
     "land_area_km2": 36049.2,
     "arable_fraction": 0.25,
-    "fertility_quality_multiplier": 0.7524,
+    "fertility_quality_multiplier": 0.7729,
     "coastal": true,
     "borders": [
      "brazil_18",
@@ -4614,7 +4593,7 @@
     "lon": -42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.23,
-    "fertility_quality_multiplier": 0.654,
+    "fertility_quality_multiplier": 0.6743,
     "coastal": false,
     "borders": [
      "brazil_18",
@@ -4638,7 +4617,7 @@
     "lon": -39.5891,
     "land_area_km2": 50475.9,
     "arable_fraction": 0.2192,
-    "fertility_quality_multiplier": 0.7077,
+    "fertility_quality_multiplier": 0.7289,
     "coastal": true,
     "borders": [
      "brazil_19",
@@ -4662,7 +4641,7 @@
     "lon": -70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.282,
-    "fertility_quality_multiplier": 0.786,
+    "fertility_quality_multiplier": 0.7947,
     "coastal": false,
     "borders": [
      "bolivia_07",
@@ -4797,7 +4776,7 @@
     "lon": -42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2048,
-    "fertility_quality_multiplier": 0.616,
+    "fertility_quality_multiplier": 0.6262,
     "coastal": false,
     "borders": [
      "brazil_24",
@@ -4821,7 +4800,7 @@
     "lon": -38.4967,
     "land_area_km2": 125363.8,
     "arable_fraction": 0.2455,
-    "fertility_quality_multiplier": 0.6682,
+    "fertility_quality_multiplier": 0.6833,
     "coastal": true,
     "borders": [
      "brazil_25",
@@ -4843,7 +4822,7 @@
     "lon": -70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.276,
-    "fertility_quality_multiplier": 0.848,
+    "fertility_quality_multiplier": 0.8652,
     "coastal": false,
     "borders": [
      "brazil_26",
@@ -5002,7 +4981,7 @@
     "lon": -42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.236,
-    "fertility_quality_multiplier": 0.654,
+    "fertility_quality_multiplier": 0.6686,
     "coastal": false,
     "borders": [
      "brazil_32",
@@ -5025,7 +5004,7 @@
     "lon": -38.1332,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.26,
-    "fertility_quality_multiplier": 0.69,
+    "fertility_quality_multiplier": 0.7038,
     "coastal": false,
     "borders": [
      "brazil_33",
@@ -5113,7 +5092,7 @@
     "lon": -62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.168,
-    "fertility_quality_multiplier": 0.68,
+    "fertility_quality_multiplier": 0.7036,
     "coastal": false,
     "borders": [
      "brazil_36",
@@ -5136,7 +5115,7 @@
     "lon": -58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.228,
-    "fertility_quality_multiplier": 0.78,
+    "fertility_quality_multiplier": 0.8211,
     "coastal": false,
     "borders": [
      "brazil_37",
@@ -5248,7 +5227,7 @@
     "lon": -38.9256,
     "land_area_km2": 98179.9,
     "arable_fraction": 0.2875,
-    "fertility_quality_multiplier": 0.7312,
+    "fertility_quality_multiplier": 0.737,
     "coastal": true,
     "borders": [
      "brazil_42",
@@ -5314,7 +5293,7 @@
     "lon": -58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.204,
-    "fertility_quality_multiplier": 0.74,
+    "fertility_quality_multiplier": 0.7824,
     "coastal": false,
     "borders": [
      "brazil_47",
@@ -5337,7 +5316,7 @@
     "lon": -54.4026,
     "land_area_km2": 149315.2,
     "arable_fraction": 0.264,
-    "fertility_quality_multiplier": 0.834,
+    "fertility_quality_multiplier": 0.8591,
     "coastal": false,
     "borders": [
      "brazil_48",
@@ -5361,7 +5340,7 @@
     "lon": -49.6962,
     "land_area_km2": 123816.9,
     "arable_fraction": 0.25,
-    "fertility_quality_multiplier": 0.8167,
+    "fertility_quality_multiplier": 0.85,
     "coastal": true,
     "borders": [
      "brazil_49",
@@ -5384,7 +5363,7 @@
     "lon": -46.3866,
     "land_area_km2": 88020.0,
     "arable_fraction": 0.2929,
-    "fertility_quality_multiplier": 0.8381,
+    "fertility_quality_multiplier": 0.8427,
     "coastal": true,
     "borders": [
      "brazil_50",
@@ -5429,7 +5408,7 @@
     "lon": -62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.204,
-    "fertility_quality_multiplier": 0.74,
+    "fertility_quality_multiplier": 0.7824,
     "coastal": false,
     "borders": [
      "brazil_54",
@@ -5452,7 +5431,7 @@
     "lon": -58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.264,
-    "fertility_quality_multiplier": 0.84,
+    "fertility_quality_multiplier": 0.8659,
     "coastal": false,
     "borders": [
      "brazil_55",
@@ -5519,7 +5498,7 @@
     "lon": -51.6625,
     "land_area_km2": 18000.0,
     "arable_fraction": 0.27,
-    "fertility_quality_multiplier": 0.85,
+    "fertility_quality_multiplier": 0.8722,
     "coastal": true,
     "borders": [
      "brazil_63",
@@ -5540,7 +5519,7 @@
     "lon": 26.0792,
     "land_area_km2": 111397.2,
     "arable_fraction": 0.3355,
-    "fertility_quality_multiplier": 0.9925,
+    "fertility_quality_multiplier": 0.9974,
     "coastal": true,
     "borders": [
      "greece_02",
@@ -5566,7 +5545,7 @@
     "lon": -2.007,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.288,
-    "fertility_quality_multiplier": 0.732,
+    "fertility_quality_multiplier": 0.7375,
     "coastal": false,
     "borders": [
      "benin_01",
@@ -5589,7 +5568,7 @@
     "lon": -2.007,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1784,
-    "fertility_quality_multiplier": 0.594,
+    "fertility_quality_multiplier": 0.5993,
     "coastal": false,
     "borders": [
      "burkina_faso_01",
@@ -5658,7 +5637,7 @@
     "lon": 10.4718,
     "land_area_km2": 124351.4,
     "arable_fraction": 0.2982,
-    "fertility_quality_multiplier": 0.8341,
+    "fertility_quality_multiplier": 0.834,
     "coastal": true,
     "borders": [
      "cameroon_02",
@@ -5833,7 +5812,7 @@
     "lon": -126.0421,
     "land_area_km2": 75142.8,
     "arable_fraction": 0.2192,
-    "fertility_quality_multiplier": 0.7,
+    "fertility_quality_multiplier": 0.8496,
     "coastal": true,
     "borders": [
      "canada_07",
@@ -5856,7 +5835,7 @@
     "lon": -122.1376,
     "land_area_km2": 136260.0,
     "arable_fraction": 0.1889,
-    "fertility_quality_multiplier": 0.6674,
+    "fertility_quality_multiplier": 0.7948,
     "coastal": true,
     "borders": [
      "canada_06",
@@ -5885,7 +5864,7 @@
     "lon": -118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.161,
-    "fertility_quality_multiplier": 0.608,
+    "fertility_quality_multiplier": 0.722,
     "coastal": false,
     "borders": [
      "canada_07",
@@ -5912,7 +5891,7 @@
     "lon": -114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1622,
-    "fertility_quality_multiplier": 0.594,
+    "fertility_quality_multiplier": 0.7538,
     "coastal": false,
     "borders": [
      "canada_08",
@@ -5938,7 +5917,7 @@
     "lon": -110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2264,
-    "fertility_quality_multiplier": 0.598,
+    "fertility_quality_multiplier": 0.6051,
     "coastal": false,
     "borders": [
      "canada_09",
@@ -5961,7 +5940,7 @@
     "lon": -106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2504,
-    "fertility_quality_multiplier": 0.778,
+    "fertility_quality_multiplier": 0.7867,
     "coastal": false,
     "borders": [
      "canada_10",
@@ -5984,7 +5963,7 @@
     "lon": -102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2512,
-    "fertility_quality_multiplier": 0.822,
+    "fertility_quality_multiplier": 0.8344,
     "coastal": false,
     "borders": [
      "canada_11",
@@ -6030,7 +6009,7 @@
     "lon": -94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2592,
-    "fertility_quality_multiplier": 0.848,
+    "fertility_quality_multiplier": 0.8481,
     "coastal": false,
     "borders": [
      "canada_13",
@@ -6053,7 +6032,7 @@
     "lon": -90.3156,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2168,
-    "fertility_quality_multiplier": 0.754,
+    "fertility_quality_multiplier": 0.8146,
     "coastal": false,
     "borders": [
      "canada_14",
@@ -6076,7 +6055,7 @@
     "lon": -86.3015,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2168,
-    "fertility_quality_multiplier": 0.754,
+    "fertility_quality_multiplier": 0.8146,
     "coastal": false,
     "borders": [
      "canada_15",
@@ -6121,7 +6100,7 @@
     "lon": -78.2735,
     "land_area_km2": 137824.7,
     "arable_fraction": 0.1974,
-    "fertility_quality_multiplier": 0.7109,
+    "fertility_quality_multiplier": 0.7936,
     "coastal": true,
     "borders": [
      "canada_02",
@@ -6144,7 +6123,7 @@
     "lon": -74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1376,
-    "fertility_quality_multiplier": 0.578,
+    "fertility_quality_multiplier": 0.6919,
     "coastal": false,
     "borders": [
      "canada_03",
@@ -6167,7 +6146,7 @@
     "lon": -70.2454,
     "land_area_km2": 143087.9,
     "arable_fraction": 0.1175,
-    "fertility_quality_multiplier": 0.5333,
+    "fertility_quality_multiplier": 0.6344,
     "coastal": true,
     "borders": [
      "canada_19",
@@ -6190,7 +6169,7 @@
     "lon": -66.2314,
     "land_area_km2": 114015.8,
     "arable_fraction": 0.14,
-    "fertility_quality_multiplier": 0.5833,
+    "fertility_quality_multiplier": 0.6976,
     "coastal": true,
     "borders": [
      "canada_04",
@@ -6213,7 +6192,7 @@
     "lon": -62.2174,
     "land_area_km2": 75536.7,
     "arable_fraction": 0.1012,
-    "fertility_quality_multiplier": 0.4971,
+    "fertility_quality_multiplier": 0.5709,
     "coastal": true,
     "borders": [
      "canada_05",
@@ -6236,7 +6215,7 @@
     "lon": -59.0743,
     "land_area_km2": 91673.3,
     "arable_fraction": 0.1443,
-    "fertility_quality_multiplier": 0.5929,
+    "fertility_quality_multiplier": 0.7074,
     "coastal": true,
     "borders": [
      "canada_22",
@@ -6277,7 +6256,7 @@
     "lon": -129.0512,
     "land_area_km2": 100220.2,
     "arable_fraction": 0.156,
-    "fertility_quality_multiplier": 0.5567,
+    "fertility_quality_multiplier": 0.8073,
     "coastal": true,
     "borders": [
      "canada_26",
@@ -6303,7 +6282,7 @@
     "lon": -126.4418,
     "land_area_km2": 149053.3,
     "arable_fraction": 0.0946,
-    "fertility_quality_multiplier": 0.482,
+    "fertility_quality_multiplier": 0.554,
     "coastal": false,
     "borders": [
      "canada_06",
@@ -6328,7 +6307,7 @@
     "lon": -122.4278,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.113,
-    "fertility_quality_multiplier": 0.514,
+    "fertility_quality_multiplier": 0.6334,
     "coastal": false,
     "borders": [
      "canada_07",
@@ -6352,7 +6331,7 @@
     "lon": -118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1214,
-    "fertility_quality_multiplier": 0.514,
+    "fertility_quality_multiplier": 0.6879,
     "coastal": false,
     "borders": [
      "canada_08",
@@ -6376,7 +6355,7 @@
     "lon": -114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1376,
-    "fertility_quality_multiplier": 0.578,
+    "fertility_quality_multiplier": 0.6919,
     "coastal": false,
     "borders": [
      "canada_09",
@@ -6399,7 +6378,7 @@
     "lon": -110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.152,
-    "fertility_quality_multiplier": 0.61,
+    "fertility_quality_multiplier": 0.7237,
     "coastal": false,
     "borders": [
      "canada_10",
@@ -6422,7 +6401,7 @@
     "lon": -106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.152,
-    "fertility_quality_multiplier": 0.61,
+    "fertility_quality_multiplier": 0.7237,
     "coastal": false,
     "borders": [
      "canada_11",
@@ -6445,7 +6424,7 @@
     "lon": -102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.152,
-    "fertility_quality_multiplier": 0.61,
+    "fertility_quality_multiplier": 0.7237,
     "coastal": false,
     "borders": [
      "canada_12",
@@ -6468,7 +6447,7 @@
     "lon": -98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1448,
-    "fertility_quality_multiplier": 0.594,
+    "fertility_quality_multiplier": 0.7086,
     "coastal": false,
     "borders": [
      "canada_13",
@@ -6491,7 +6470,7 @@
     "lon": -94.3296,
     "land_area_km2": 149106.7,
     "arable_fraction": 0.1088,
-    "fertility_quality_multiplier": 0.514,
+    "fertility_quality_multiplier": 0.6029,
     "coastal": false,
     "borders": [
      "canada_14",
@@ -6665,7 +6644,7 @@
     "lon": -62.2174,
     "land_area_km2": 131629.3,
     "arable_fraction": 0.0675,
-    "fertility_quality_multiplier": 0.3833,
+    "fertility_quality_multiplier": 0.4451,
     "coastal": true,
     "borders": [
      "canada_22",
@@ -6708,7 +6687,7 @@
     "lon": -138.4839,
     "land_area_km2": 113129.2,
     "arable_fraction": 0.0498,
-    "fertility_quality_multiplier": 0.2881,
+    "fertility_quality_multiplier": 0.4519,
     "coastal": true,
     "borders": [
      "canada_45",
@@ -6731,7 +6710,7 @@
     "lon": -134.4698,
     "land_area_km2": 142261.8,
     "arable_fraction": 0.0769,
-    "fertility_quality_multiplier": 0.4292,
+    "fertility_quality_multiplier": 0.5259,
     "coastal": true,
     "borders": [
      "canada_44",
@@ -6755,7 +6734,7 @@
     "lon": -130.4558,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0822,
-    "fertility_quality_multiplier": 0.458,
+    "fertility_quality_multiplier": 0.5152,
     "coastal": false,
     "borders": [
      "canada_25",
@@ -6779,7 +6758,7 @@
     "lon": -126.4418,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0576,
-    "fertility_quality_multiplier": 0.33,
+    "fertility_quality_multiplier": 0.4528,
     "coastal": false,
     "borders": [
      "canada_26",
@@ -6803,7 +6782,7 @@
     "lon": -122.4278,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0808,
-    "fertility_quality_multiplier": 0.454,
+    "fertility_quality_multiplier": 0.455,
     "coastal": false,
     "borders": [
      "canada_27",
@@ -6848,7 +6827,7 @@
     "lon": -114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0824,
-    "fertility_quality_multiplier": 0.462,
+    "fertility_quality_multiplier": 0.4646,
     "coastal": false,
     "borders": [
      "canada_29",
@@ -6980,7 +6959,7 @@
     "lon": -76.7835,
     "land_area_km2": 51075.8,
     "arable_fraction": 0.0383,
-    "fertility_quality_multiplier": 0.2278,
+    "fertility_quality_multiplier": 0.421,
     "coastal": true,
     "borders": [
      "canada_38",
@@ -7001,8 +6980,8 @@
     "lat": 59.6951,
     "lon": -74.2595,
     "land_area_km2": 114387.6,
-    "arable_fraction": 0.0088,
-    "fertility_quality_multiplier": 0.07,
+    "arable_fraction": 0.0087,
+    "fertility_quality_multiplier": 0.2329,
     "coastal": true,
     "borders": [
      "canada_39",
@@ -7025,7 +7004,7 @@
     "lon": -69.6697,
     "land_area_km2": 90198.5,
     "arable_fraction": 0.03,
-    "fertility_quality_multiplier": 0.1833,
+    "fertility_quality_multiplier": 0.4056,
     "coastal": true,
     "borders": [
      "canada_40",
@@ -7091,7 +7070,7 @@
     "lon": -138.4839,
     "land_area_km2": 108158.9,
     "arable_fraction": 0.0638,
-    "fertility_quality_multiplier": 0.362,
+    "fertility_quality_multiplier": 0.4788,
     "coastal": true,
     "borders": [
      "canada_44",
@@ -7114,7 +7093,7 @@
     "lon": -134.4698,
     "land_area_km2": 108629.4,
     "arable_fraction": 0.0752,
-    "fertility_quality_multiplier": 0.422,
+    "fertility_quality_multiplier": 0.4936,
     "coastal": true,
     "borders": [
      "canada_45",
@@ -7137,7 +7116,7 @@
     "lon": -130.4558,
     "land_area_km2": 117185.7,
     "arable_fraction": 0.0738,
-    "fertility_quality_multiplier": 0.414,
+    "fertility_quality_multiplier": 0.5042,
     "coastal": true,
     "borders": [
      "canada_46",
@@ -7160,7 +7139,7 @@
     "lon": -126.4418,
     "land_area_km2": 119309.3,
     "arable_fraction": 0.0615,
-    "fertility_quality_multiplier": 0.35,
+    "fertility_quality_multiplier": 0.4728,
     "coastal": true,
     "borders": [
      "canada_47",
@@ -7183,7 +7162,7 @@
     "lon": -122.4278,
     "land_area_km2": 120972.2,
     "arable_fraction": 0.0673,
-    "fertility_quality_multiplier": 0.38,
+    "fertility_quality_multiplier": 0.4872,
     "coastal": true,
     "borders": [
      "canada_48",
@@ -7207,7 +7186,7 @@
     "lon": -118.4137,
     "land_area_km2": 114193.1,
     "arable_fraction": 0.0563,
-    "fertility_quality_multiplier": 0.32,
+    "fertility_quality_multiplier": 0.5229,
     "coastal": true,
     "borders": [
      "canada_49",
@@ -7231,7 +7210,7 @@
     "lon": -114.3997,
     "land_area_km2": 128517.0,
     "arable_fraction": 0.053,
-    "fertility_quality_multiplier": 0.3045,
+    "fertility_quality_multiplier": 0.4689,
     "coastal": true,
     "borders": [
      "canada_50",
@@ -7255,7 +7234,7 @@
     "lon": -110.3857,
     "land_area_km2": 133670.9,
     "arable_fraction": 0.044,
-    "fertility_quality_multiplier": 0.258,
+    "fertility_quality_multiplier": 0.4282,
     "coastal": true,
     "borders": [
      "canada_51",
@@ -7278,7 +7257,7 @@
     "lon": -106.3717,
     "land_area_km2": 135621.9,
     "arable_fraction": 0.0479,
-    "fertility_quality_multiplier": 0.2786,
+    "fertility_quality_multiplier": 0.4321,
     "coastal": true,
     "borders": [
      "canada_52",
@@ -7301,7 +7280,7 @@
     "lon": -102.3576,
     "land_area_km2": 101855.5,
     "arable_fraction": 0.0238,
-    "fertility_quality_multiplier": 0.15,
+    "fertility_quality_multiplier": 0.3868,
     "coastal": true,
     "borders": [
      "canada_53",
@@ -7324,7 +7303,7 @@
     "lon": -98.3436,
     "land_area_km2": 100375.3,
     "arable_fraction": 0.0271,
-    "fertility_quality_multiplier": 0.1676,
+    "fertility_quality_multiplier": 0.3978,
     "coastal": true,
     "borders": [
      "canada_54",
@@ -7347,7 +7326,7 @@
     "lon": -93.8326,
     "land_area_km2": 126668.8,
     "arable_fraction": 0.0148,
-    "fertility_quality_multiplier": 0.1022,
+    "fertility_quality_multiplier": 0.3324,
     "coastal": true,
     "borders": [
      "canada_55",
@@ -7499,7 +7478,7 @@
     "lon": -66.2314,
     "land_area_km2": 68328.0,
     "arable_fraction": 0.0041,
-    "fertility_quality_multiplier": 0.0409,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "canada_59",
@@ -7522,7 +7501,7 @@
     "lon": -63.1787,
     "land_area_km2": 18796.2,
     "arable_fraction": 0.0043,
-    "fertility_quality_multiplier": 0.0429,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "canada_60",
@@ -7711,7 +7690,7 @@
     "lon": -90.3156,
     "land_area_km2": 59965.0,
     "arable_fraction": 0.004,
-    "fertility_quality_multiplier": 0.04,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "canada_73",
@@ -7754,7 +7733,7 @@
     "lon": -82.2875,
     "land_area_km2": 89988.6,
     "arable_fraction": 0.0047,
-    "fertility_quality_multiplier": 0.0472,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "canada_75",
@@ -7776,7 +7755,7 @@
     "lon": -78.2735,
     "land_area_km2": 68887.5,
     "arable_fraction": 0.0027,
-    "fertility_quality_multiplier": 0.0267,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "canada_76",
@@ -7798,7 +7777,7 @@
     "lon": -74.2595,
     "land_area_km2": 33743.0,
     "arable_fraction": 0.002,
-    "fertility_quality_multiplier": 0.02,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "canada_77",
@@ -7820,7 +7799,7 @@
     "lon": -70.2454,
     "land_area_km2": 36425.2,
     "arable_fraction": 0.0044,
-    "fertility_quality_multiplier": 0.0438,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "canada_78",
@@ -7931,7 +7910,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.24,
-    "fertility_quality_multiplier": 0.66,
+    "fertility_quality_multiplier": 0.675,
     "coastal": false,
     "borders": [
      "central_african_rep_03",
@@ -7954,7 +7933,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.208,
-    "fertility_quality_multiplier": 0.612,
+    "fertility_quality_multiplier": 0.6173,
     "coastal": false,
     "borders": [
      "central_african_rep_04",
@@ -7977,7 +7956,7 @@
     "lon": 14.0491,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0272,
-    "fertility_quality_multiplier": 0.552,
+    "fertility_quality_multiplier": 0.5647,
     "coastal": false,
     "borders": [
      "chad_04",
@@ -8000,7 +7979,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0416,
-    "fertility_quality_multiplier": 0.556,
+    "fertility_quality_multiplier": 0.5788,
     "coastal": false,
     "borders": [
      "chad_01",
@@ -8023,7 +8002,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1136,
-    "fertility_quality_multiplier": 0.576,
+    "fertility_quality_multiplier": 0.5958,
     "coastal": false,
     "borders": [
      "chad_02",
@@ -8135,7 +8114,7 @@
     "lon": -69.1294,
     "land_area_km2": 52831.9,
     "arable_fraction": 0.0587,
-    "fertility_quality_multiplier": 0.225,
+    "fertility_quality_multiplier": 0.7053,
     "coastal": true,
     "borders": [
      "argentina_01",
@@ -8156,7 +8135,7 @@
     "lon": -73.1207,
     "land_area_km2": 89939.6,
     "arable_fraction": 0.0729,
-    "fertility_quality_multiplier": 0.2529,
+    "fertility_quality_multiplier": 0.7169,
     "coastal": true,
     "borders": [
      "argentina_02",
@@ -8179,7 +8158,7 @@
     "lon": -73.001,
     "land_area_km2": 68934.6,
     "arable_fraction": 0.243,
-    "fertility_quality_multiplier": 0.7733,
+    "fertility_quality_multiplier": 0.8355,
     "coastal": true,
     "borders": [
      "argentina_04",
@@ -8201,8 +8180,8 @@
     "lat": -41.3828,
     "lon": -73.059,
     "land_area_km2": 47920.9,
-    "arable_fraction": 0.2962,
-    "fertility_quality_multiplier": 0.8938,
+    "arable_fraction": 0.2963,
+    "fertility_quality_multiplier": 0.8964,
     "coastal": true,
     "borders": [
      "argentina_06",
@@ -8245,7 +8224,7 @@
     "lon": -69.497,
     "land_area_km2": 96089.5,
     "arable_fraction": 0.0135,
-    "fertility_quality_multiplier": 0.2761,
+    "fertility_quality_multiplier": 0.3855,
     "coastal": true,
     "borders": [
      "argentina_17",
@@ -8267,7 +8246,7 @@
     "lon": -69.3942,
     "land_area_km2": 81523.4,
     "arable_fraction": 0.0194,
-    "fertility_quality_multiplier": 0.434,
+    "fertility_quality_multiplier": 0.4459,
     "coastal": true,
     "borders": [
      "argentina_24",
@@ -8289,7 +8268,7 @@
     "lon": -69.1931,
     "land_area_km2": 73079.6,
     "arable_fraction": 0.0146,
-    "fertility_quality_multiplier": 0.31,
+    "fertility_quality_multiplier": 0.4062,
     "coastal": true,
     "borders": [
      "bolivia_01",
@@ -8312,7 +8291,7 @@
     "lon": 109.6704,
     "land_area_km2": 48560.4,
     "arable_fraction": 0.3033,
-    "fertility_quality_multiplier": 0.8333,
+    "fertility_quality_multiplier": 0.8346,
     "coastal": true,
     "borders": [
      "china_04",
@@ -8334,7 +8313,7 @@
     "lon": 102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2928,
-    "fertility_quality_multiplier": 0.878,
+    "fertility_quality_multiplier": 0.8888,
     "coastal": false,
     "borders": [
      "china_03",
@@ -8358,7 +8337,7 @@
     "lon": 106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3184,
-    "fertility_quality_multiplier": 0.946,
+    "fertility_quality_multiplier": 0.9465,
     "coastal": false,
     "borders": [
      "china_02",
@@ -8381,7 +8360,7 @@
     "lon": 110.3857,
     "land_area_km2": 149562.6,
     "arable_fraction": 0.3464,
-    "fertility_quality_multiplier": 1.038,
+    "fertility_quality_multiplier": 1.0389,
     "coastal": false,
     "borders": [
      "china_01",
@@ -8404,7 +8383,7 @@
     "lon": 114.3997,
     "land_area_km2": 115400.8,
     "arable_fraction": 0.3343,
-    "fertility_quality_multiplier": 0.9976,
+    "fertility_quality_multiplier": 0.9999,
     "coastal": true,
     "borders": [
      "china_04",
@@ -8447,7 +8426,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2786,
-    "fertility_quality_multiplier": 0.844,
+    "fertility_quality_multiplier": 0.8819,
     "coastal": false,
     "borders": [
      "china_08",
@@ -8472,7 +8451,7 @@
     "lon": 102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2784,
-    "fertility_quality_multiplier": 0.844,
+    "fertility_quality_multiplier": 0.8474,
     "coastal": false,
     "borders": [
      "china_02",
@@ -8496,7 +8475,7 @@
     "lon": 106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.322,
-    "fertility_quality_multiplier": 0.966,
+    "fertility_quality_multiplier": 0.9735,
     "coastal": false,
     "borders": [
      "china_03",
@@ -8564,7 +8543,7 @@
     "lon": 117.9981,
     "land_area_km2": 132471.7,
     "arable_fraction": 0.3478,
-    "fertility_quality_multiplier": 1.0435,
+    "fertility_quality_multiplier": 1.0444,
     "coastal": true,
     "borders": [
      "china_06",
@@ -8586,7 +8565,7 @@
     "lon": 82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0666,
-    "fertility_quality_multiplier": 0.246,
+    "fertility_quality_multiplier": 0.7839,
     "coastal": false,
     "borders": [
      "china_14",
@@ -8614,7 +8593,7 @@
     "lon": 86.3015,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0346,
-    "fertility_quality_multiplier": 0.13,
+    "fertility_quality_multiplier": 0.4893,
     "coastal": false,
     "borders": [
      "china_13",
@@ -8638,7 +8617,7 @@
     "lon": 90.3156,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.065,
-    "fertility_quality_multiplier": 0.29,
+    "fertility_quality_multiplier": 0.53,
     "coastal": false,
     "borders": [
      "china_14",
@@ -8662,7 +8641,7 @@
     "lon": 94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0568,
-    "fertility_quality_multiplier": 0.254,
+    "fertility_quality_multiplier": 0.6697,
     "coastal": false,
     "borders": [
      "china_15",
@@ -8689,7 +8668,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.074,
-    "fertility_quality_multiplier": 0.292,
+    "fertility_quality_multiplier": 0.6089,
     "coastal": false,
     "borders": [
      "china_07",
@@ -8715,7 +8694,7 @@
     "lon": 102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2098,
-    "fertility_quality_multiplier": 0.674,
+    "fertility_quality_multiplier": 0.8611,
     "coastal": false,
     "borders": [
      "china_08",
@@ -8741,7 +8720,7 @@
     "lon": 106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.33,
-    "fertility_quality_multiplier": 0.984,
+    "fertility_quality_multiplier": 0.9864,
     "coastal": false,
     "borders": [
      "china_09",
@@ -8765,7 +8744,7 @@
     "lon": 110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.334,
-    "fertility_quality_multiplier": 1.0,
+    "fertility_quality_multiplier": 1.0041,
     "coastal": false,
     "borders": [
      "china_10",
@@ -8853,7 +8832,7 @@
     "lon": 82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.016,
-    "fertility_quality_multiplier": 0.134,
+    "fertility_quality_multiplier": 0.405,
     "coastal": false,
     "borders": [
      "china_13",
@@ -8943,7 +8922,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0126,
-    "fertility_quality_multiplier": 0.09,
+    "fertility_quality_multiplier": 0.3675,
     "coastal": false,
     "borders": [
      "china_17",
@@ -8966,7 +8945,7 @@
     "lon": 102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1162,
-    "fertility_quality_multiplier": 0.512,
+    "fertility_quality_multiplier": 0.6779,
     "coastal": false,
     "borders": [
      "china_18",
@@ -8991,7 +8970,7 @@
     "lon": 106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2688,
-    "fertility_quality_multiplier": 0.806,
+    "fertility_quality_multiplier": 0.8321,
     "coastal": false,
     "borders": [
      "china_19",
@@ -9017,7 +8996,7 @@
     "lon": 110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2904,
-    "fertility_quality_multiplier": 0.844,
+    "fertility_quality_multiplier": 0.8704,
     "coastal": false,
     "borders": [
      "china_20",
@@ -9043,7 +9022,7 @@
     "lon": 114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3208,
-    "fertility_quality_multiplier": 0.95,
+    "fertility_quality_multiplier": 0.9565,
     "coastal": false,
     "borders": [
      "china_21",
@@ -9067,7 +9046,7 @@
     "lon": 118.4137,
     "land_area_km2": 137694.2,
     "arable_fraction": 0.3275,
-    "fertility_quality_multiplier": 0.975,
+    "fertility_quality_multiplier": 0.9767,
     "coastal": true,
     "borders": [
      "china_22",
@@ -9089,7 +9068,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0262,
-    "fertility_quality_multiplier": 0.406,
+    "fertility_quality_multiplier": 0.4744,
     "coastal": false,
     "borders": [
      "china_35",
@@ -9113,7 +9092,7 @@
     "lon": 82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0182,
-    "fertility_quality_multiplier": 0.402,
+    "fertility_quality_multiplier": 0.4368,
     "coastal": false,
     "borders": [
      "china_24",
@@ -9136,7 +9115,7 @@
     "lon": 86.3015,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0122,
-    "fertility_quality_multiplier": 0.242,
+    "fertility_quality_multiplier": 0.3648,
     "coastal": false,
     "borders": [
      "china_25",
@@ -9159,7 +9138,7 @@
     "lon": 90.3156,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.011,
-    "fertility_quality_multiplier": 0.21,
+    "fertility_quality_multiplier": 0.3409,
     "coastal": false,
     "borders": [
      "china_26",
@@ -9182,7 +9161,7 @@
     "lon": 94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0182,
-    "fertility_quality_multiplier": 0.402,
+    "fertility_quality_multiplier": 0.4368,
     "coastal": false,
     "borders": [
      "china_27",
@@ -9205,7 +9184,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0756,
-    "fertility_quality_multiplier": 0.258,
+    "fertility_quality_multiplier": 0.5283,
     "coastal": false,
     "borders": [
      "china_28",
@@ -9229,7 +9208,7 @@
     "lon": 102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1056,
-    "fertility_quality_multiplier": 0.442,
+    "fertility_quality_multiplier": 0.5409,
     "coastal": false,
     "borders": [
      "china_29",
@@ -9254,7 +9233,7 @@
     "lon": 106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1504,
-    "fertility_quality_multiplier": 0.544,
+    "fertility_quality_multiplier": 0.5931,
     "coastal": false,
     "borders": [
      "china_30",
@@ -9278,7 +9257,7 @@
     "lon": 110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2312,
-    "fertility_quality_multiplier": 0.636,
+    "fertility_quality_multiplier": 0.6455,
     "coastal": false,
     "borders": [
      "china_31",
@@ -9302,7 +9281,7 @@
     "lon": 114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.232,
-    "fertility_quality_multiplier": 0.646,
+    "fertility_quality_multiplier": 0.6555,
     "coastal": false,
     "borders": [
      "china_32",
@@ -9326,7 +9305,7 @@
     "lon": 117.6803,
     "land_area_km2": 106135.8,
     "arable_fraction": 0.2906,
-    "fertility_quality_multiplier": 0.8324,
+    "fertility_quality_multiplier": 0.8609,
     "coastal": true,
     "borders": [
      "china_33",
@@ -9349,7 +9328,7 @@
     "lon": 121.1527,
     "land_area_km2": 21598.3,
     "arable_fraction": 0.315,
-    "fertility_quality_multiplier": 0.9375,
+    "fertility_quality_multiplier": 0.9389,
     "coastal": true,
     "borders": [
      "china_44",
@@ -9371,7 +9350,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0876,
-    "fertility_quality_multiplier": 0.422,
+    "fertility_quality_multiplier": 0.6317,
     "coastal": false,
     "borders": [
      "china_34",
@@ -9398,7 +9377,7 @@
     "lon": 82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0356,
-    "fertility_quality_multiplier": 0.43,
+    "fertility_quality_multiplier": 0.4927,
     "coastal": false,
     "borders": [
      "china_35",
@@ -9424,7 +9403,7 @@
     "lon": 86.3015,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0386,
-    "fertility_quality_multiplier": 0.446,
+    "fertility_quality_multiplier": 0.5039,
     "coastal": false,
     "borders": [
      "china_36",
@@ -9559,7 +9538,7 @@
     "lon": 110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.18,
-    "fertility_quality_multiplier": 0.53,
+    "fertility_quality_multiplier": 0.5478,
     "coastal": false,
     "borders": [
      "china_42",
@@ -9582,7 +9561,7 @@
     "lon": 114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2184,
-    "fertility_quality_multiplier": 0.608,
+    "fertility_quality_multiplier": 0.62,
     "coastal": false,
     "borders": [
      "china_43",
@@ -9607,7 +9586,7 @@
     "lon": 118.4137,
     "land_area_km2": 143619.1,
     "arable_fraction": 0.2552,
-    "fertility_quality_multiplier": 0.792,
+    "fertility_quality_multiplier": 0.7983,
     "coastal": true,
     "borders": [
      "china_44",
@@ -9631,7 +9610,7 @@
     "lon": 122.4278,
     "land_area_km2": 125942.1,
     "arable_fraction": 0.2733,
-    "fertility_quality_multiplier": 0.831,
+    "fertility_quality_multiplier": 0.8343,
     "coastal": true,
     "borders": [
      "china_45",
@@ -9655,7 +9634,7 @@
     "lon": 126.4418,
     "land_area_km2": 142846.3,
     "arable_fraction": 0.2472,
-    "fertility_quality_multiplier": 0.806,
+    "fertility_quality_multiplier": 0.8141,
     "coastal": true,
     "borders": [
      "china_57",
@@ -9679,7 +9658,7 @@
     "lon": 82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1582,
-    "fertility_quality_multiplier": 0.532,
+    "fertility_quality_multiplier": 0.6611,
     "coastal": false,
     "borders": [
      "china_47",
@@ -9707,7 +9686,7 @@
     "lon": 86.3015,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1368,
-    "fertility_quality_multiplier": 0.506,
+    "fertility_quality_multiplier": 0.5401,
     "coastal": false,
     "borders": [
      "china_48",
@@ -9731,7 +9710,7 @@
     "lon": 90.3156,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0954,
-    "fertility_quality_multiplier": 0.482,
+    "fertility_quality_multiplier": 0.5666,
     "coastal": false,
     "borders": [
      "china_49",
@@ -9757,7 +9736,7 @@
     "lon": 118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2232,
-    "fertility_quality_multiplier": 0.65,
+    "fertility_quality_multiplier": 0.6575,
     "coastal": false,
     "borders": [
      "china_56",
@@ -9781,7 +9760,7 @@
     "lon": 122.4278,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2456,
-    "fertility_quality_multiplier": 0.708,
+    "fertility_quality_multiplier": 0.722,
     "coastal": false,
     "borders": [
      "china_57",
@@ -9805,7 +9784,7 @@
     "lon": 126.4418,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2736,
-    "fertility_quality_multiplier": 0.842,
+    "fertility_quality_multiplier": 0.843,
     "coastal": false,
     "borders": [
      "china_58",
@@ -9828,7 +9807,7 @@
     "lon": 130.4558,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2424,
-    "fertility_quality_multiplier": 0.8,
+    "fertility_quality_multiplier": 0.8074,
     "coastal": false,
     "borders": [
      "china_64",
@@ -9852,7 +9831,7 @@
     "lon": 118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1808,
-    "fertility_quality_multiplier": 0.66,
+    "fertility_quality_multiplier": 0.696,
     "coastal": false,
     "borders": [
      "china_62",
@@ -9876,7 +9855,7 @@
     "lon": 122.4278,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1224,
-    "fertility_quality_multiplier": 0.59,
+    "fertility_quality_multiplier": 0.6284,
     "coastal": false,
     "borders": [
      "china_63",
@@ -9899,7 +9878,7 @@
     "lon": 126.4418,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2232,
-    "fertility_quality_multiplier": 0.77,
+    "fertility_quality_multiplier": 0.7866,
     "coastal": false,
     "borders": [
      "china_64",
@@ -9944,7 +9923,7 @@
     "lon": -77.5703,
     "land_area_km2": 103419.8,
     "arable_fraction": 0.2247,
-    "fertility_quality_multiplier": 0.7737,
+    "fertility_quality_multiplier": 0.8132,
     "coastal": true,
     "borders": [
      "colombia_03",
@@ -9968,7 +9947,7 @@
     "lon": -74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.222,
-    "fertility_quality_multiplier": 0.764,
+    "fertility_quality_multiplier": 0.8041,
     "coastal": false,
     "borders": [
      "colombia_02",
@@ -10015,7 +9994,7 @@
     "lon": -76.7937,
     "land_area_km2": 40570.7,
     "arable_fraction": 0.1571,
-    "fertility_quality_multiplier": 0.6619,
+    "fertility_quality_multiplier": 0.6727,
     "coastal": true,
     "borders": [
      "colombia_02",
@@ -10037,7 +10016,7 @@
     "lon": -74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2394,
-    "fertility_quality_multiplier": 0.772,
+    "fertility_quality_multiplier": 0.8318,
     "coastal": false,
     "borders": [
      "colombia_03",
@@ -10064,7 +10043,7 @@
     "lon": -70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.264,
-    "fertility_quality_multiplier": 0.84,
+    "fertility_quality_multiplier": 0.8659,
     "coastal": false,
     "borders": [
      "colombia_04",
@@ -10087,7 +10066,7 @@
     "lon": -77.2703,
     "land_area_km2": 65366.1,
     "arable_fraction": 0.1667,
-    "fertility_quality_multiplier": 0.6778,
+    "fertility_quality_multiplier": 0.7,
     "coastal": true,
     "borders": [
      "colombia_05",
@@ -10109,7 +10088,7 @@
     "lon": -74.2595,
     "land_area_km2": 149942.5,
     "arable_fraction": 0.258,
-    "fertility_quality_multiplier": 0.788,
+    "fertility_quality_multiplier": 0.8105,
     "coastal": false,
     "borders": [
      "colombia_06",
@@ -10134,7 +10113,7 @@
     "lon": -73.8609,
     "land_area_km2": 86286.9,
     "arable_fraction": 0.2916,
-    "fertility_quality_multiplier": 0.7632,
+    "fertility_quality_multiplier": 0.7634,
     "coastal": true,
     "borders": [
      "colombia_09",
@@ -10220,7 +10199,7 @@
     "lon": 14.0491,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.288,
-    "fertility_quality_multiplier": 0.796,
+    "fertility_quality_multiplier": 0.8021,
     "coastal": false,
     "borders": [
      "cameroon_02",
@@ -10245,7 +10224,7 @@
     "lon": -83.9031,
     "land_area_km2": 34562.2,
     "arable_fraction": 0.1875,
-    "fertility_quality_multiplier": 0.7125,
+    "fertility_quality_multiplier": 0.75,
     "coastal": true,
     "borders": [
      "nicaragua_01",
@@ -10287,7 +10266,7 @@
     "lon": -75.4819,
     "land_area_km2": 30275.0,
     "arable_fraction": 0.27,
-    "fertility_quality_multiplier": 0.76,
+    "fertility_quality_multiplier": 0.7722,
     "coastal": true,
     "borders": [
      "cuba_01",
@@ -10394,7 +10373,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3056,
-    "fertility_quality_multiplier": 0.818,
+    "fertility_quality_multiplier": 0.8207,
     "coastal": false,
     "borders": [
      "angola_09",
@@ -10462,7 +10441,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2984,
-    "fertility_quality_multiplier": 0.77,
+    "fertility_quality_multiplier": 0.7698,
     "coastal": false,
     "borders": [
      "dem_rep_congo_03",
@@ -10553,7 +10532,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.276,
-    "fertility_quality_multiplier": 0.764,
+    "fertility_quality_multiplier": 0.7739,
     "coastal": false,
     "borders": [
      "congo_03",
@@ -10577,7 +10556,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.156,
-    "fertility_quality_multiplier": 0.66,
+    "fertility_quality_multiplier": 0.6692,
     "coastal": false,
     "borders": [
      "dem_rep_congo_06",
@@ -10600,7 +10579,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.222,
-    "fertility_quality_multiplier": 0.77,
+    "fertility_quality_multiplier": 0.8122,
     "coastal": false,
     "borders": [
      "dem_rep_congo_07",
@@ -10623,7 +10602,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2924,
-    "fertility_quality_multiplier": 0.79,
+    "fertility_quality_multiplier": 0.7925,
     "coastal": false,
     "borders": [
      "dem_rep_congo_10",
@@ -10648,7 +10627,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.24,
-    "fertility_quality_multiplier": 0.788,
+    "fertility_quality_multiplier": 0.8225,
     "coastal": false,
     "borders": [
      "central_african_rep_01",
@@ -10673,7 +10652,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.204,
-    "fertility_quality_multiplier": 0.74,
+    "fertility_quality_multiplier": 0.7824,
     "coastal": false,
     "borders": [
      "central_african_rep_02",
@@ -10696,7 +10675,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.198,
-    "fertility_quality_multiplier": 0.73,
+    "fertility_quality_multiplier": 0.7712,
     "coastal": false,
     "borders": [
      "dem_rep_congo_10",
@@ -10719,7 +10698,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.276,
-    "fertility_quality_multiplier": 0.788,
+    "fertility_quality_multiplier": 0.8,
     "coastal": false,
     "borders": [
      "dem_rep_congo_11",
@@ -10768,7 +10747,7 @@
     "lon": -70.7665,
     "land_area_km2": 43945.1,
     "arable_fraction": 0.2143,
-    "fertility_quality_multiplier": 0.7143,
+    "fertility_quality_multiplier": 0.74,
     "coastal": true,
     "borders": [
      "cuba_02"
@@ -10789,7 +10768,7 @@
     "lon": -78.2735,
     "land_area_km2": 147370.1,
     "arable_fraction": 0.2066,
-    "fertility_quality_multiplier": 0.67,
+    "fertility_quality_multiplier": 0.7795,
     "coastal": true,
     "borders": [
      "colombia_02",
@@ -10989,7 +10968,7 @@
     "lon": 34.1192,
     "land_area_km2": 122927.3,
     "arable_fraction": 0.029,
-    "fertility_quality_multiplier": 0.5475,
+    "fertility_quality_multiplier": 0.5638,
     "coastal": true,
     "borders": [
      "egypt_06",
@@ -11013,7 +10992,7 @@
     "lon": 37.6074,
     "land_area_km2": 107523.6,
     "arable_fraction": 0.0295,
-    "fertility_quality_multiplier": 0.5526,
+    "fertility_quality_multiplier": 0.5679,
     "coastal": true,
     "borders": [
      "ethiopia_10",
@@ -11036,7 +11015,7 @@
     "lon": 38.1332,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2392,
-    "fertility_quality_multiplier": 0.702,
+    "fertility_quality_multiplier": 0.7349,
     "coastal": false,
     "borders": [
      "ethiopia_02",
@@ -11063,7 +11042,7 @@
     "lon": 42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.056,
-    "fertility_quality_multiplier": 0.56,
+    "fertility_quality_multiplier": 0.5857,
     "coastal": false,
     "borders": [
      "ethiopia_01",
@@ -11086,7 +11065,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.268,
-    "fertility_quality_multiplier": 0.72,
+    "fertility_quality_multiplier": 0.7343,
     "coastal": false,
     "borders": [
      "ethiopia_04",
@@ -11111,7 +11090,7 @@
     "lon": 38.1332,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.292,
-    "fertility_quality_multiplier": 0.824,
+    "fertility_quality_multiplier": 0.8267,
     "coastal": false,
     "borders": [
      "ethiopia_01",
@@ -11136,7 +11115,7 @@
     "lon": 42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2152,
-    "fertility_quality_multiplier": 0.664,
+    "fertility_quality_multiplier": 0.6996,
     "coastal": false,
     "borders": [
      "ethiopia_02",
@@ -11161,7 +11140,7 @@
     "lon": 46.1613,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0632,
-    "fertility_quality_multiplier": 0.562,
+    "fertility_quality_multiplier": 0.588,
     "coastal": false,
     "borders": [
      "ethiopia_05",
@@ -11184,7 +11163,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2392,
-    "fertility_quality_multiplier": 0.664,
+    "fertility_quality_multiplier": 0.6794,
     "coastal": false,
     "borders": [
      "ethiopia_03",
@@ -11208,7 +11187,7 @@
     "lon": 38.1332,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2872,
-    "fertility_quality_multiplier": 0.826,
+    "fertility_quality_multiplier": 0.8252,
     "coastal": false,
     "borders": [
      "ethiopia_04",
@@ -11232,7 +11211,7 @@
     "lon": 42.0719,
     "land_area_km2": 135151.1,
     "arable_fraction": 0.1148,
-    "fertility_quality_multiplier": 0.5935,
+    "fertility_quality_multiplier": 0.6466,
     "coastal": true,
     "borders": [
      "ethiopia_05",
@@ -11257,7 +11236,7 @@
     "lon": 38.1332,
     "land_area_km2": 149523.5,
     "arable_fraction": 0.2496,
-    "fertility_quality_multiplier": 0.716,
+    "fertility_quality_multiplier": 0.7388,
     "coastal": false,
     "borders": [
      "eritrea_01",
@@ -11283,7 +11262,7 @@
     "lon": 41.046,
     "land_area_km2": 97962.8,
     "arable_fraction": 0.056,
-    "fertility_quality_multiplier": 0.56,
+    "fertility_quality_multiplier": 0.5857,
     "coastal": true,
     "borders": [
      "ethiopia_09",
@@ -11323,7 +11302,7 @@
     "lon": 22.7961,
     "land_area_km2": 61818.4,
     "arable_fraction": 0.188,
-    "fertility_quality_multiplier": 0.69,
+    "fertility_quality_multiplier": 0.7819,
     "coastal": true,
     "borders": [
      "finland_02",
@@ -11346,7 +11325,7 @@
     "lon": 26.0912,
     "land_area_km2": 127829.6,
     "arable_fraction": 0.17,
-    "fertility_quality_multiplier": 0.65,
+    "fertility_quality_multiplier": 0.7559,
     "coastal": true,
     "borders": [
      "belarus_01",
@@ -11411,7 +11390,7 @@
     "lon": 2.007,
     "land_area_km2": 149747.2,
     "arable_fraction": 0.304,
-    "fertility_quality_multiplier": 0.912,
+    "fertility_quality_multiplier": 0.9138,
     "coastal": false,
     "borders": [
      "france_01",
@@ -11434,7 +11413,7 @@
     "lon": 6.021,
     "land_area_km2": 146590.1,
     "arable_fraction": 0.2702,
-    "fertility_quality_multiplier": 0.834,
+    "fertility_quality_multiplier": 0.8997,
     "coastal": true,
     "borders": [
      "france_02",
@@ -11525,7 +11504,7 @@
     "lon": 10.7907,
     "land_area_km2": 89370.7,
     "arable_fraction": 0.287,
-    "fertility_quality_multiplier": 0.8261,
+    "fertility_quality_multiplier": 0.8341,
     "coastal": true,
     "borders": [
      "cameroon_01",
@@ -11571,7 +11550,7 @@
     "lon": 14.0491,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2984,
-    "fertility_quality_multiplier": 0.898,
+    "fertility_quality_multiplier": 0.8983,
     "coastal": false,
     "borders": [
      "austria_01",
@@ -11658,7 +11637,7 @@
     "lon": 22.102,
     "land_area_km2": 53586.7,
     "arable_fraction": 0.3445,
-    "fertility_quality_multiplier": 0.9909,
+    "fertility_quality_multiplier": 0.9916,
     "coastal": true,
     "borders": [
      "greece_02",
@@ -11680,7 +11659,7 @@
     "lon": 22.0771,
     "land_area_km2": 138080.6,
     "arable_fraction": 0.3071,
-    "fertility_quality_multiplier": 0.9208,
+    "fertility_quality_multiplier": 0.9625,
     "coastal": true,
     "borders": [
      "bulgaria_01",
@@ -11727,7 +11706,7 @@
     "lon": -46.1613,
     "land_area_km2": 75992.4,
     "arable_fraction": 0.0061,
-    "fertility_quality_multiplier": 0.0455,
+    "fertility_quality_multiplier": 0.287,
     "coastal": true,
     "borders": [
      "greenland_01",
@@ -11750,7 +11729,7 @@
     "lon": -43.308,
     "land_area_km2": 43450.2,
     "arable_fraction": 0.0042,
-    "fertility_quality_multiplier": 0.0417,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_02",
@@ -11791,7 +11770,7 @@
     "lon": -50.1753,
     "land_area_km2": 134294.6,
     "arable_fraction": 0.0081,
-    "fertility_quality_multiplier": 0.0667,
+    "fertility_quality_multiplier": 0.2141,
     "coastal": true,
     "borders": [
      "greenland_01",
@@ -11814,7 +11793,7 @@
     "lon": -46.1613,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0016,
-    "fertility_quality_multiplier": 0.016,
+    "fertility_quality_multiplier": 0.05,
     "coastal": false,
     "borders": [
      "greenland_02",
@@ -11837,7 +11816,7 @@
     "lon": -42.1473,
     "land_area_km2": 146607.9,
     "arable_fraction": 0.0002,
-    "fertility_quality_multiplier": 0.0021,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_03",
@@ -11860,7 +11839,7 @@
     "lon": -38.1332,
     "land_area_km2": 109982.9,
     "arable_fraction": 0.001,
-    "fertility_quality_multiplier": 0.01,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_07",
@@ -11882,7 +11861,7 @@
     "lon": -34.1192,
     "land_area_km2": 85799.3,
     "arable_fraction": 0.0005,
-    "fertility_quality_multiplier": 0.0045,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_08",
@@ -11904,7 +11883,7 @@
     "lon": -30.1052,
     "land_area_km2": 59735.0,
     "arable_fraction": 0.0006,
-    "fertility_quality_multiplier": 0.0063,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_09",
@@ -11926,7 +11905,7 @@
     "lon": -26.1782,
     "land_area_km2": 39028.5,
     "arable_fraction": 0.0031,
-    "fertility_quality_multiplier": 0.0312,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_10",
@@ -11948,7 +11927,7 @@
     "lon": -66.2314,
     "land_area_km2": 47249.4,
     "arable_fraction": 0.0032,
-    "fertility_quality_multiplier": 0.0316,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "canada_79",
@@ -11970,7 +11949,7 @@
     "lon": -62.2174,
     "land_area_km2": 52607.5,
     "arable_fraction": 0.0014,
-    "fertility_quality_multiplier": 0.0143,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "canada_80",
@@ -11992,7 +11971,7 @@
     "lon": -58.2034,
     "land_area_km2": 66735.9,
     "arable_fraction": 0.0012,
-    "fertility_quality_multiplier": 0.0118,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_13",
@@ -12013,7 +11992,7 @@
     "lon": -54.1893,
     "land_area_km2": 111177.2,
     "arable_fraction": 0.0012,
-    "fertility_quality_multiplier": 0.012,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_04",
@@ -12161,7 +12140,7 @@
     "lon": -26.0912,
     "land_area_km2": 118021.7,
     "arable_fraction": 0.0023,
-    "fertility_quality_multiplier": 0.0229,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_11",
@@ -12204,7 +12183,7 @@
     "lon": -18.0631,
     "land_area_km2": 20626.8,
     "arable_fraction": 0.0044,
-    "fertility_quality_multiplier": 0.0444,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "greenland_23",
@@ -12225,7 +12204,7 @@
     "lon": -90.1678,
     "land_area_km2": 75838.2,
     "arable_fraction": 0.296,
-    "fertility_quality_multiplier": 0.785,
+    "fertility_quality_multiplier": 0.7841,
     "coastal": true,
     "borders": [
      "honduras_01",
@@ -12291,7 +12270,7 @@
     "lon": -58.2034,
     "land_area_km2": 148051.6,
     "arable_fraction": 0.18,
-    "fertility_quality_multiplier": 0.688,
+    "fertility_quality_multiplier": 0.7133,
     "coastal": false,
     "borders": [
      "brazil_61",
@@ -12315,7 +12294,7 @@
     "lon": -59.3523,
     "land_area_km2": 50265.0,
     "arable_fraction": 0.1607,
-    "fertility_quality_multiplier": 0.6679,
+    "fertility_quality_multiplier": 0.6833,
     "coastal": true,
     "borders": [
      "guyana_01",
@@ -12382,7 +12361,7 @@
     "lon": 18.0631,
     "land_area_km2": 149509.4,
     "arable_fraction": 0.316,
-    "fertility_quality_multiplier": 0.948,
+    "fertility_quality_multiplier": 0.9532,
     "coastal": false,
     "borders": [
      "austria_01",
@@ -12426,7 +12405,7 @@
     "lon": -18.0631,
     "land_area_km2": 47521.3,
     "arable_fraction": 0.074,
-    "fertility_quality_multiplier": 0.2875,
+    "fertility_quality_multiplier": 0.6934,
     "coastal": true,
     "borders": [
      "greenland_24",
@@ -12488,7 +12467,7 @@
     "lon": 78.0554,
     "land_area_km2": 123359.4,
     "arable_fraction": 0.2913,
-    "fertility_quality_multiplier": 0.75,
+    "fertility_quality_multiplier": 0.7545,
     "coastal": true,
     "borders": [
      "india_01",
@@ -12510,7 +12489,7 @@
     "lon": 75.4531,
     "land_area_km2": 64309.0,
     "arable_fraction": 0.2895,
-    "fertility_quality_multiplier": 0.8053,
+    "fertility_quality_multiplier": 0.8127,
     "coastal": true,
     "borders": [
      "india_04",
@@ -12532,7 +12511,7 @@
     "lon": 78.2504,
     "land_area_km2": 145853.8,
     "arable_fraction": 0.26,
-    "fertility_quality_multiplier": 0.69,
+    "fertility_quality_multiplier": 0.7038,
     "coastal": true,
     "borders": [
      "india_02",
@@ -12554,7 +12533,7 @@
     "lon": 74.7774,
     "land_area_km2": 110667.0,
     "arable_fraction": 0.2458,
-    "fertility_quality_multiplier": 0.7062,
+    "fertility_quality_multiplier": 0.7297,
     "coastal": true,
     "borders": [
      "india_03",
@@ -12577,7 +12556,7 @@
     "lon": 78.2735,
     "land_area_km2": 149685.1,
     "arable_fraction": 0.244,
-    "fertility_quality_multiplier": 0.666,
+    "fertility_quality_multiplier": 0.6811,
     "coastal": false,
     "borders": [
      "india_04",
@@ -12620,7 +12599,7 @@
     "lon": 71.0148,
     "land_area_km2": 22338.0,
     "arable_fraction": 0.22,
-    "fertility_quality_multiplier": 0.63,
+    "fertility_quality_multiplier": 0.6409,
     "coastal": true,
     "borders": [
      "india_09",
@@ -12642,7 +12621,7 @@
     "lon": 74.5308,
     "land_area_km2": 129731.5,
     "arable_fraction": 0.26,
-    "fertility_quality_multiplier": 0.702,
+    "fertility_quality_multiplier": 0.7177,
     "coastal": true,
     "borders": [
      "india_05",
@@ -12667,7 +12646,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.296,
-    "fertility_quality_multiplier": 0.744,
+    "fertility_quality_multiplier": 0.7459,
     "coastal": false,
     "borders": [
      "india_06",
@@ -12733,7 +12712,7 @@
     "lon": 70.3629,
     "land_area_km2": 128603.9,
     "arable_fraction": 0.1182,
-    "fertility_quality_multiplier": 0.5773,
+    "fertility_quality_multiplier": 0.5962,
     "coastal": true,
     "borders": [
      "india_08",
@@ -12755,7 +12734,7 @@
     "lon": 74.2595,
     "land_area_km2": 148075.8,
     "arable_fraction": 0.2548,
-    "fertility_quality_multiplier": 0.696,
+    "fertility_quality_multiplier": 0.7173,
     "coastal": false,
     "borders": [
      "india_09",
@@ -12781,7 +12760,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.33,
-    "fertility_quality_multiplier": 0.9,
+    "fertility_quality_multiplier": 0.9091,
     "coastal": false,
     "borders": [
      "india_10",
@@ -12805,7 +12784,7 @@
     "lon": 82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3368,
-    "fertility_quality_multiplier": 0.958,
+    "fertility_quality_multiplier": 0.9619,
     "coastal": false,
     "borders": [
      "india_11",
@@ -12829,7 +12808,7 @@
     "lon": 86.3015,
     "land_area_km2": 149344.8,
     "arable_fraction": 0.3116,
-    "fertility_quality_multiplier": 0.856,
+    "fertility_quality_multiplier": 0.8598,
     "coastal": false,
     "borders": [
      "bangladesh_01",
@@ -12853,7 +12832,7 @@
     "lon": 74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.092,
-    "fertility_quality_multiplier": 0.57,
+    "fertility_quality_multiplier": 0.5935,
     "coastal": false,
     "borders": [
      "india_14",
@@ -12876,7 +12855,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2096,
-    "fertility_quality_multiplier": 0.628,
+    "fertility_quality_multiplier": 0.6427,
     "coastal": false,
     "borders": [
      "india_15",
@@ -12899,7 +12878,7 @@
     "lon": 82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3092,
-    "fertility_quality_multiplier": 0.914,
+    "fertility_quality_multiplier": 0.9296,
     "coastal": false,
     "borders": [
      "china_13",
@@ -12923,7 +12902,7 @@
     "lon": 86.3015,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2898,
-    "fertility_quality_multiplier": 0.864,
+    "fertility_quality_multiplier": 0.9378,
     "coastal": false,
     "borders": [
      "china_14",
@@ -12948,7 +12927,7 @@
     "lon": 90.3156,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2386,
-    "fertility_quality_multiplier": 0.724,
+    "fertility_quality_multiplier": 0.9035,
     "coastal": false,
     "borders": [
      "bangladesh_01",
@@ -12975,7 +12954,7 @@
     "lon": 94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3104,
-    "fertility_quality_multiplier": 0.914,
+    "fertility_quality_multiplier": 0.9165,
     "coastal": false,
     "borders": [
      "china_07",
@@ -12999,7 +12978,7 @@
     "lon": 74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1112,
-    "fertility_quality_multiplier": 0.588,
+    "fertility_quality_multiplier": 0.6356,
     "coastal": false,
     "borders": [
      "india_18",
@@ -13023,7 +13002,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2532,
-    "fertility_quality_multiplier": 0.772,
+    "fertility_quality_multiplier": 0.8756,
     "coastal": false,
     "borders": [
      "china_13",
@@ -13051,7 +13030,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0534,
-    "fertility_quality_multiplier": 0.236,
+    "fertility_quality_multiplier": 0.5399,
     "coastal": false,
     "borders": [
      "china_24",
@@ -13077,7 +13056,7 @@
     "lon": 107.3688,
     "land_area_km2": 41065.0,
     "arable_fraction": 0.1969,
-    "fertility_quality_multiplier": 0.7281,
+    "fertility_quality_multiplier": 0.769,
     "coastal": true,
     "borders": [
      "indonesia_02",
@@ -13098,7 +13077,7 @@
     "lon": 110.3857,
     "land_area_km2": 61471.9,
     "arable_fraction": 0.2605,
-    "fertility_quality_multiplier": 0.8263,
+    "fertility_quality_multiplier": 0.853,
     "coastal": true,
     "borders": [
      "indonesia_01",
@@ -13120,7 +13099,7 @@
     "lon": 113.4097,
     "land_area_km2": 34989.1,
     "arable_fraction": 0.2833,
-    "fertility_quality_multiplier": 0.8556,
+    "fertility_quality_multiplier": 0.8676,
     "coastal": true,
     "borders": [
      "indonesia_02",
@@ -13163,7 +13142,7 @@
     "lon": 139.6801,
     "land_area_km2": 56385.9,
     "arable_fraction": 0.175,
-    "fertility_quality_multiplier": 0.6917,
+    "fertility_quality_multiplier": 0.7214,
     "coastal": true,
     "borders": [
      "indonesia_12",
@@ -13246,7 +13225,7 @@
     "lon": 119.9953,
     "land_area_km2": 30755.1,
     "arable_fraction": 0.225,
-    "fertility_quality_multiplier": 0.775,
+    "fertility_quality_multiplier": 0.8167,
     "coastal": true,
     "borders": [
      "indonesia_04",
@@ -13269,7 +13248,7 @@
     "lon": 121.9879,
     "land_area_km2": 34168.9,
     "arable_fraction": 0.2625,
-    "fertility_quality_multiplier": 0.8,
+    "fertility_quality_multiplier": 0.8214,
     "coastal": true,
     "borders": [
      "indonesia_09",
@@ -13311,7 +13290,7 @@
     "lon": 138.4839,
     "land_area_km2": 128865.7,
     "arable_fraction": 0.1873,
-    "fertility_quality_multiplier": 0.7114,
+    "fertility_quality_multiplier": 0.7464,
     "coastal": true,
     "borders": [
      "indonesia_05",
@@ -13420,7 +13399,7 @@
     "lon": 119.869,
     "land_area_km2": 52419.8,
     "arable_fraction": 0.1714,
-    "fertility_quality_multiplier": 0.6857,
+    "fertility_quality_multiplier": 0.7125,
     "coastal": true,
     "borders": [
      "indonesia_09",
@@ -13443,7 +13422,7 @@
     "lon": 121.0897,
     "land_area_km2": 43709.9,
     "arable_fraction": 0.18,
-    "fertility_quality_multiplier": 0.7,
+    "fertility_quality_multiplier": 0.7333,
     "coastal": true,
     "borders": [
      "indonesia_10",
@@ -13484,7 +13463,7 @@
     "lon": 133.2942,
     "land_area_km2": 56078.0,
     "arable_fraction": 0.1625,
-    "fertility_quality_multiplier": 0.6708,
+    "fertility_quality_multiplier": 0.6885,
     "coastal": true,
     "borders": [
      "indonesia_11",
@@ -13631,7 +13610,7 @@
     "lon": 122.4278,
     "land_area_km2": 28578.7,
     "arable_fraction": 0.1588,
-    "fertility_quality_multiplier": 0.6647,
+    "fertility_quality_multiplier": 0.6778,
     "coastal": true,
     "borders": [
      "indonesia_18",
@@ -13693,7 +13672,7 @@
     "lon": 54.4084,
     "land_area_km2": 74036.9,
     "arable_fraction": 0.05,
-    "fertility_quality_multiplier": 0.5583,
+    "fertility_quality_multiplier": 0.5833,
     "coastal": true,
     "borders": [
      "iran_02",
@@ -13759,7 +13738,7 @@
     "lon": 51.1334,
     "land_area_km2": 106744.6,
     "arable_fraction": 0.235,
-    "fertility_quality_multiplier": 0.7667,
+    "fertility_quality_multiplier": 0.8574,
     "coastal": true,
     "borders": [
      "iran_05",
@@ -13784,7 +13763,7 @@
     "lon": 54.1893,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1632,
-    "fertility_quality_multiplier": 0.642,
+    "fertility_quality_multiplier": 0.7797,
     "coastal": false,
     "borders": [
      "iran_01",
@@ -13809,7 +13788,7 @@
     "lon": 58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.076,
-    "fertility_quality_multiplier": 0.578,
+    "fertility_quality_multiplier": 0.6837,
     "coastal": false,
     "borders": [
      "afghanistan_01",
@@ -13834,7 +13813,7 @@
     "lon": 50.1753,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2364,
-    "fertility_quality_multiplier": 0.766,
+    "fertility_quality_multiplier": 0.8777,
     "coastal": false,
     "borders": [
      "iran_04",
@@ -13883,7 +13862,7 @@
     "lon": 58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0912,
-    "fertility_quality_multiplier": 0.552,
+    "fertility_quality_multiplier": 0.5544,
     "coastal": false,
     "borders": [
      "afghanistan_02",
@@ -13907,7 +13886,7 @@
     "lon": 46.1613,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2532,
-    "fertility_quality_multiplier": 0.698,
+    "fertility_quality_multiplier": 0.731,
     "coastal": false,
     "borders": [
      "azerbaijan_01",
@@ -13932,7 +13911,7 @@
     "lon": 49.0111,
     "land_area_km2": 77523.2,
     "arable_fraction": 0.3008,
-    "fertility_quality_multiplier": 0.8731,
+    "fertility_quality_multiplier": 0.899,
     "coastal": true,
     "borders": [
      "azerbaijan_02",
@@ -13957,7 +13936,7 @@
     "lon": 55.0346,
     "land_area_km2": 108050.7,
     "arable_fraction": 0.1522,
-    "fertility_quality_multiplier": 0.5722,
+    "fertility_quality_multiplier": 0.6745,
     "coastal": true,
     "borders": [
      "iran_08",
@@ -13982,7 +13961,7 @@
     "lon": 58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1564,
-    "fertility_quality_multiplier": 0.566,
+    "fertility_quality_multiplier": 0.6179,
     "coastal": false,
     "borders": [
      "iran_09",
@@ -14031,7 +14010,7 @@
     "lon": 42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0344,
-    "fertility_quality_multiplier": 0.554,
+    "fertility_quality_multiplier": 0.5733,
     "coastal": false,
     "borders": [
      "iraq_03",
@@ -14054,7 +14033,7 @@
     "lon": 46.1613,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2416,
-    "fertility_quality_multiplier": 0.762,
+    "fertility_quality_multiplier": 0.8406,
     "coastal": false,
     "borders": [
      "iran_07",
@@ -14119,7 +14098,7 @@
     "lon": 9.0644,
     "land_area_km2": 42132.3,
     "arable_fraction": 0.3457,
-    "fertility_quality_multiplier": 0.9929,
+    "fertility_quality_multiplier": 0.9934,
     "coastal": true,
     "borders": [
      "italy_03",
@@ -14141,7 +14120,7 @@
     "lon": 14.4964,
     "land_area_km2": 69601.6,
     "arable_fraction": 0.3392,
-    "fertility_quality_multiplier": 0.9917,
+    "fertility_quality_multiplier": 0.9942,
     "coastal": true,
     "borders": [
      "austria_01",
@@ -14166,7 +14145,7 @@
     "lon": 17.755,
     "land_area_km2": 60907.1,
     "arable_fraction": 0.34,
-    "fertility_quality_multiplier": 0.9813,
+    "fertility_quality_multiplier": 0.9831,
     "coastal": true,
     "borders": [
      "greece_02",
@@ -14189,7 +14168,7 @@
     "lon": 10.0351,
     "land_area_km2": 134363.4,
     "arable_fraction": 0.2387,
-    "fertility_quality_multiplier": 0.7478,
+    "fertility_quality_multiplier": 0.9575,
     "coastal": true,
     "borders": [
      "austria_01",
@@ -14217,7 +14196,7 @@
     "lon": 131.2086,
     "land_area_km2": 46291.4,
     "arable_fraction": 0.3444,
-    "fertility_quality_multiplier": 1.0333,
+    "fertility_quality_multiplier": 1.0355,
     "coastal": true,
     "borders": [
      "japan_02",
@@ -14239,7 +14218,7 @@
     "lon": 133.3964,
     "land_area_km2": 69950.3,
     "arable_fraction": 0.3471,
-    "fertility_quality_multiplier": 1.0412,
+    "fertility_quality_multiplier": 1.0424,
     "coastal": true,
     "borders": [
      "japan_01",
@@ -14280,7 +14259,7 @@
     "lon": 139.5527,
     "land_area_km2": 86643.3,
     "arable_fraction": 0.3171,
-    "fertility_quality_multiplier": 0.9714,
+    "fertility_quality_multiplier": 0.9829,
     "coastal": true,
     "borders": [
      "japan_03",
@@ -14302,8 +14281,8 @@
     "lat": 37.5827,
     "lon": 140.7554,
     "land_area_km2": 21454.9,
-    "arable_fraction": 0.3438,
-    "fertility_quality_multiplier": 1.0312,
+    "arable_fraction": 0.3437,
+    "fertility_quality_multiplier": 1.0336,
     "coastal": true,
     "borders": [
      "japan_04",
@@ -14324,7 +14303,7 @@
     "lon": 142.0812,
     "land_area_km2": 54461.6,
     "arable_fraction": 0.2789,
-    "fertility_quality_multiplier": 0.8833,
+    "fertility_quality_multiplier": 0.8898,
     "coastal": true,
     "borders": [
      "japan_05",
@@ -14346,7 +14325,7 @@
     "lon": 142.483,
     "land_area_km2": 44487.3,
     "arable_fraction": 0.2343,
-    "fertility_quality_multiplier": 0.7929,
+    "fertility_quality_multiplier": 0.8305,
     "coastal": true,
     "borders": [
      "japan_06",
@@ -14368,7 +14347,7 @@
     "lon": 70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2314,
-    "fertility_quality_multiplier": 0.712,
+    "fertility_quality_multiplier": 0.8196,
     "coastal": false,
     "borders": [
      "kazakhstan_07",
@@ -14396,7 +14375,7 @@
     "lon": 49.1861,
     "land_area_km2": 58598.7,
     "arable_fraction": 0.0867,
-    "fertility_quality_multiplier": 0.4833,
+    "fertility_quality_multiplier": 0.5346,
     "coastal": true,
     "borders": [
      "azerbaijan_02",
@@ -14419,7 +14398,7 @@
     "lon": 54.501,
     "land_area_km2": 138644.9,
     "arable_fraction": 0.0617,
-    "fertility_quality_multiplier": 0.4708,
+    "fertility_quality_multiplier": 0.5243,
     "coastal": true,
     "borders": [
      "kazakhstan_02",
@@ -14442,7 +14421,7 @@
     "lon": 58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.084,
-    "fertility_quality_multiplier": 0.482,
+    "fertility_quality_multiplier": 0.5338,
     "coastal": false,
     "borders": [
      "kazakhstan_03",
@@ -14487,7 +14466,7 @@
     "lon": 66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.052,
-    "fertility_quality_multiplier": 0.466,
+    "fertility_quality_multiplier": 0.5177,
     "coastal": false,
     "borders": [
      "kazakhstan_05",
@@ -14510,7 +14489,7 @@
     "lon": 70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.108,
-    "fertility_quality_multiplier": 0.494,
+    "fertility_quality_multiplier": 0.5396,
     "coastal": false,
     "borders": [
      "kazakhstan_01",
@@ -14533,7 +14512,7 @@
     "lon": 74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.124,
-    "fertility_quality_multiplier": 0.502,
+    "fertility_quality_multiplier": 0.5423,
     "coastal": false,
     "borders": [
      "kazakhstan_07",
@@ -14556,7 +14535,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1992,
-    "fertility_quality_multiplier": 0.608,
+    "fertility_quality_multiplier": 0.6558,
     "coastal": false,
     "borders": [
      "china_46",
@@ -14582,7 +14561,7 @@
     "lon": 50.1753,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.252,
-    "fertility_quality_multiplier": 0.69,
+    "fertility_quality_multiplier": 0.7167,
     "coastal": false,
     "borders": [
      "kazakhstan_02",
@@ -14605,7 +14584,7 @@
     "lon": 54.1893,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2584,
-    "fertility_quality_multiplier": 0.718,
+    "fertility_quality_multiplier": 0.745,
     "coastal": false,
     "borders": [
      "kazakhstan_03",
@@ -14628,7 +14607,7 @@
     "lon": 58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2744,
-    "fertility_quality_multiplier": 0.828,
+    "fertility_quality_multiplier": 0.8399,
     "coastal": false,
     "borders": [
      "kazakhstan_04",
@@ -14652,7 +14631,7 @@
     "lon": 62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2408,
-    "fertility_quality_multiplier": 0.682,
+    "fertility_quality_multiplier": 0.7151,
     "coastal": false,
     "borders": [
      "kazakhstan_05",
@@ -14677,7 +14656,7 @@
     "lon": 66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2584,
-    "fertility_quality_multiplier": 0.768,
+    "fertility_quality_multiplier": 0.7845,
     "coastal": false,
     "borders": [
      "kazakhstan_06",
@@ -14701,7 +14680,7 @@
     "lon": 70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.252,
-    "fertility_quality_multiplier": 0.78,
+    "fertility_quality_multiplier": 0.7895,
     "coastal": false,
     "borders": [
      "kazakhstan_07",
@@ -14725,7 +14704,7 @@
     "lon": 74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.244,
-    "fertility_quality_multiplier": 0.73,
+    "fertility_quality_multiplier": 0.7418,
     "coastal": false,
     "borders": [
      "kazakhstan_08",
@@ -14748,7 +14727,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2312,
-    "fertility_quality_multiplier": 0.69,
+    "fertility_quality_multiplier": 0.7116,
     "coastal": false,
     "borders": [
      "kazakhstan_09",
@@ -14772,7 +14751,7 @@
     "lon": 82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2496,
-    "fertility_quality_multiplier": 0.81,
+    "fertility_quality_multiplier": 0.8237,
     "coastal": false,
     "borders": [
      "china_59",
@@ -14796,7 +14775,7 @@
     "lon": 38.1332,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.24,
-    "fertility_quality_multiplier": 0.692,
+    "fertility_quality_multiplier": 0.7165,
     "coastal": false,
     "borders": [
      "kenya_02",
@@ -14822,7 +14801,7 @@
     "lon": 40.9112,
     "land_area_km2": 51911.8,
     "arable_fraction": 0.25,
-    "fertility_quality_multiplier": 0.675,
+    "fertility_quality_multiplier": 0.69,
     "coastal": true,
     "borders": [
      "kenya_01",
@@ -14843,7 +14822,7 @@
     "lon": 38.1332,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2024,
-    "fertility_quality_multiplier": 0.642,
+    "fertility_quality_multiplier": 0.6706,
     "coastal": false,
     "borders": [
      "ethiopia_01",
@@ -14868,7 +14847,7 @@
     "lon": 74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1498,
-    "fertility_quality_multiplier": 0.56,
+    "fertility_quality_multiplier": 0.7273,
     "coastal": false,
     "borders": [
      "china_46",
@@ -14918,7 +14897,7 @@
     "lon": 102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3056,
-    "fertility_quality_multiplier": 0.83,
+    "fertility_quality_multiplier": 0.8327,
     "coastal": false,
     "borders": [
      "china_02",
@@ -14942,7 +14921,7 @@
     "lon": 33.2188,
     "land_area_km2": 35519.2,
     "arable_fraction": 0.32,
-    "fertility_quality_multiplier": 0.92,
+    "fertility_quality_multiplier": 0.95,
     "coastal": true,
     "borders": [
      "egypt_09",
@@ -15226,7 +15205,7 @@
     "lon": 22.0771,
     "land_area_km2": 149750.8,
     "arable_fraction": 0.0416,
-    "fertility_quality_multiplier": 0.556,
+    "fertility_quality_multiplier": 0.5788,
     "coastal": false,
     "borders": [
      "egypt_07",
@@ -15249,7 +15228,7 @@
     "lon": 13.4435,
     "land_area_km2": 26099.7,
     "arable_fraction": 0.173,
-    "fertility_quality_multiplier": 0.5925,
+    "fertility_quality_multiplier": 0.5991,
     "coastal": true,
     "borders": [
      "italy_01",
@@ -15271,7 +15250,7 @@
     "lon": 21.7558,
     "land_area_km2": 28414.4,
     "arable_fraction": 0.275,
-    "fertility_quality_multiplier": 0.8,
+    "fertility_quality_multiplier": 0.8545,
     "coastal": true,
     "borders": [
      "greece_01",
@@ -15292,7 +15271,7 @@
     "lon": 43.9112,
     "land_area_km2": 21517.4,
     "arable_fraction": 0.19,
-    "fertility_quality_multiplier": 0.5972,
+    "fertility_quality_multiplier": 0.5997,
     "coastal": true,
     "borders": [
      "madagascar_02"
@@ -15312,7 +15291,7 @@
     "lon": 45.913,
     "land_area_km2": 130603.9,
     "arable_fraction": 0.3071,
-    "fertility_quality_multiplier": 0.8792,
+    "fertility_quality_multiplier": 0.8865,
     "coastal": true,
     "borders": [
      "madagascar_01",
@@ -15337,7 +15316,7 @@
     "lon": 46.2664,
     "land_area_km2": 146174.0,
     "arable_fraction": 0.296,
-    "fertility_quality_multiplier": 0.824,
+    "fertility_quality_multiplier": 0.8247,
     "coastal": true,
     "borders": [
      "madagascar_02",
@@ -15361,7 +15340,7 @@
     "lon": 48.4606,
     "land_area_km2": 21108.1,
     "arable_fraction": 0.2227,
-    "fertility_quality_multiplier": 0.7955,
+    "fertility_quality_multiplier": 0.8786,
     "coastal": true,
     "borders": [
      "madagascar_03",
@@ -15382,7 +15361,7 @@
     "lon": 46.2281,
     "land_area_km2": 130001.6,
     "arable_fraction": 0.3026,
-    "fertility_quality_multiplier": 0.7761,
+    "fertility_quality_multiplier": 0.7776,
     "coastal": true,
     "borders": [
      "madagascar_03",
@@ -15403,7 +15382,7 @@
     "lon": 48.8678,
     "land_area_km2": 56513.2,
     "arable_fraction": 0.2412,
-    "fertility_quality_multiplier": 0.8176,
+    "fertility_quality_multiplier": 0.878,
     "coastal": true,
     "borders": [
      "madagascar_04",
@@ -15427,7 +15406,7 @@
     "lon": 49.1536,
     "land_area_km2": 59503.8,
     "arable_fraction": 0.2633,
-    "fertility_quality_multiplier": 0.781,
+    "fertility_quality_multiplier": 0.7985,
     "coastal": true,
     "borders": [
      "madagascar_06"
@@ -15534,7 +15513,7 @@
     "lon": -10.0351,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.232,
-    "fertility_quality_multiplier": 0.648,
+    "fertility_quality_multiplier": 0.6621,
     "coastal": false,
     "borders": [
      "guinea_02",
@@ -15557,7 +15536,7 @@
     "lon": -6.021,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.164,
-    "fertility_quality_multiplier": 0.59,
+    "fertility_quality_multiplier": 0.5988,
     "coastal": false,
     "borders": [
      "burkina_faso_02",
@@ -15862,7 +15841,7 @@
     "lon": -101.016,
     "land_area_km2": 28466.7,
     "arable_fraction": 0.2683,
-    "fertility_quality_multiplier": 0.7167,
+    "fertility_quality_multiplier": 0.7326,
     "coastal": true,
     "borders": [
      "mexico_02",
@@ -15884,7 +15863,7 @@
     "lon": -98.3436,
     "land_area_km2": 105790.7,
     "arable_fraction": 0.2862,
-    "fertility_quality_multiplier": 0.7905,
+    "fertility_quality_multiplier": 0.7976,
     "coastal": true,
     "borders": [
      "mexico_01",
@@ -15909,7 +15888,7 @@
     "lon": -94.3296,
     "land_area_km2": 122137.7,
     "arable_fraction": 0.2877,
-    "fertility_quality_multiplier": 0.8045,
+    "fertility_quality_multiplier": 0.8113,
     "coastal": true,
     "borders": [
      "mexico_02",
@@ -15933,7 +15912,7 @@
     "lon": -90.3156,
     "land_area_km2": 146452.4,
     "arable_fraction": 0.264,
-    "fertility_quality_multiplier": 0.816,
+    "fertility_quality_multiplier": 0.8386,
     "coastal": true,
     "borders": [
      "guatemala_01",
@@ -15958,7 +15937,7 @@
     "lon": -105.0102,
     "land_area_km2": 28720.7,
     "arable_fraction": 0.307,
-    "fertility_quality_multiplier": 0.825,
+    "fertility_quality_multiplier": 0.8293,
     "coastal": true,
     "borders": [
      "mexico_06",
@@ -15982,7 +15961,7 @@
     "lon": -102.3576,
     "land_area_km2": 147221.9,
     "arable_fraction": 0.29,
-    "fertility_quality_multiplier": 0.84,
+    "fertility_quality_multiplier": 0.8623,
     "coastal": false,
     "borders": [
      "mexico_01",
@@ -16011,7 +15990,7 @@
     "lon": -98.4665,
     "land_area_km2": 132347.2,
     "arable_fraction": 0.2839,
-    "fertility_quality_multiplier": 0.8283,
+    "fertility_quality_multiplier": 0.8396,
     "coastal": true,
     "borders": [
      "mexico_02",
@@ -16077,7 +16056,7 @@
     "lon": -110.3493,
     "land_area_km2": 23205.7,
     "arable_fraction": 0.0527,
-    "fertility_quality_multiplier": 0.5591,
+    "fertility_quality_multiplier": 0.5845,
     "coastal": true,
     "borders": [
      "mexico_11",
@@ -16098,7 +16077,7 @@
     "lon": -105.4245,
     "land_area_km2": 85192.8,
     "arable_fraction": 0.296,
-    "fertility_quality_multiplier": 0.8333,
+    "fertility_quality_multiplier": 0.8581,
     "coastal": true,
     "borders": [
      "mexico_05",
@@ -16124,7 +16103,7 @@
     "lon": -102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2104,
-    "fertility_quality_multiplier": 0.58,
+    "fertility_quality_multiplier": 0.5876,
     "coastal": false,
     "borders": [
      "mexico_06",
@@ -16149,7 +16128,7 @@
     "lon": -99.0486,
     "land_area_km2": 98466.6,
     "arable_fraction": 0.2756,
-    "fertility_quality_multiplier": 0.772,
+    "fertility_quality_multiplier": 0.7991,
     "coastal": true,
     "borders": [
      "mexico_07",
@@ -16194,7 +16173,7 @@
     "lon": -109.1192,
     "land_area_km2": 76613.4,
     "arable_fraction": 0.095,
-    "fertility_quality_multiplier": 0.5708,
+    "fertility_quality_multiplier": 0.5939,
     "coastal": true,
     "borders": [
      "mexico_10",
@@ -16217,7 +16196,7 @@
     "lon": -106.3717,
     "land_area_km2": 149723.0,
     "arable_fraction": 0.252,
-    "fertility_quality_multiplier": 0.73,
+    "fertility_quality_multiplier": 0.769,
     "coastal": false,
     "borders": [
      "mexico_11",
@@ -16242,7 +16221,7 @@
     "lon": -102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1008,
-    "fertility_quality_multiplier": 0.568,
+    "fertility_quality_multiplier": 0.5857,
     "coastal": false,
     "borders": [
      "mexico_12",
@@ -16266,7 +16245,7 @@
     "lon": -115.2214,
     "land_area_km2": 72677.9,
     "arable_fraction": 0.0533,
-    "fertility_quality_multiplier": 0.525,
+    "fertility_quality_multiplier": 0.5406,
     "coastal": true,
     "borders": [
      "mexico_14",
@@ -16289,7 +16268,7 @@
     "lon": -110.3857,
     "land_area_km2": 147060.9,
     "arable_fraction": 0.1792,
-    "fertility_quality_multiplier": 0.614,
+    "fertility_quality_multiplier": 0.6516,
     "coastal": false,
     "borders": [
      "mexico_15",
@@ -16314,7 +16293,7 @@
     "lon": -106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.112,
-    "fertility_quality_multiplier": 0.552,
+    "fertility_quality_multiplier": 0.5664,
     "coastal": false,
     "borders": [
      "mexico_16",
@@ -16339,7 +16318,7 @@
     "lon": 94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.068,
-    "fertility_quality_multiplier": 0.474,
+    "fertility_quality_multiplier": 0.5276,
     "coastal": false,
     "borders": [
      "china_50",
@@ -16362,7 +16341,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0898,
-    "fertility_quality_multiplier": 0.474,
+    "fertility_quality_multiplier": 0.5364,
     "coastal": false,
     "borders": [
      "china_51",
@@ -16387,7 +16366,7 @@
     "lon": 102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1224,
-    "fertility_quality_multiplier": 0.506,
+    "fertility_quality_multiplier": 0.5428,
     "coastal": false,
     "borders": [
      "china_52",
@@ -16411,7 +16390,7 @@
     "lon": 106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.076,
-    "fertility_quality_multiplier": 0.478,
+    "fertility_quality_multiplier": 0.5311,
     "coastal": false,
     "borders": [
      "china_53",
@@ -16434,7 +16413,7 @@
     "lon": 110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.116,
-    "fertility_quality_multiplier": 0.498,
+    "fertility_quality_multiplier": 0.541,
     "coastal": false,
     "borders": [
      "china_54",
@@ -16457,7 +16436,7 @@
     "lon": 114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.204,
-    "fertility_quality_multiplier": 0.542,
+    "fertility_quality_multiplier": 0.5492,
     "coastal": false,
     "borders": [
      "china_55",
@@ -16503,7 +16482,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0934,
-    "fertility_quality_multiplier": 0.49,
+    "fertility_quality_multiplier": 0.5468,
     "coastal": false,
     "borders": [
      "mongolia_02",
@@ -16527,7 +16506,7 @@
     "lon": 102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1248,
-    "fertility_quality_multiplier": 0.56,
+    "fertility_quality_multiplier": 0.5692,
     "coastal": false,
     "borders": [
      "mongolia_03",
@@ -16551,7 +16530,7 @@
     "lon": 106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1664,
-    "fertility_quality_multiplier": 0.6,
+    "fertility_quality_multiplier": 0.6221,
     "coastal": false,
     "borders": [
      "mongolia_04",
@@ -16638,7 +16617,7 @@
     "lon": -8.8368,
     "land_area_km2": 75602.5,
     "arable_fraction": 0.156,
-    "fertility_quality_multiplier": 0.5867,
+    "fertility_quality_multiplier": 0.6175,
     "coastal": true,
     "borders": [
      "morocco_03",
@@ -16661,7 +16640,7 @@
     "lon": -6.021,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0656,
-    "fertility_quality_multiplier": 0.6,
+    "fertility_quality_multiplier": 0.825,
     "coastal": false,
     "borders": [
      "algeria_06",
@@ -16687,7 +16666,7 @@
     "lon": -5.6838,
     "land_area_km2": 116113.8,
     "arable_fraction": 0.327,
-    "fertility_quality_multiplier": 0.935,
+    "fertility_quality_multiplier": 0.958,
     "coastal": true,
     "borders": [
      "morocco_05",
@@ -16711,7 +16690,7 @@
     "lon": -2.007,
     "land_area_km2": 139155.3,
     "arable_fraction": 0.16,
-    "fertility_quality_multiplier": 0.584,
+    "fertility_quality_multiplier": 0.705,
     "coastal": true,
     "borders": [
      "algeria_10",
@@ -16736,7 +16715,7 @@
     "lon": 32.5115,
     "land_area_km2": 26350.0,
     "arable_fraction": 0.2444,
-    "fertility_quality_multiplier": 0.6667,
+    "fertility_quality_multiplier": 0.6818,
     "coastal": true,
     "borders": [
      "mozambique_02",
@@ -16757,7 +16736,7 @@
     "lon": 33.7739,
     "land_area_km2": 119200.2,
     "arable_fraction": 0.224,
-    "fertility_quality_multiplier": 0.636,
+    "fertility_quality_multiplier": 0.6482,
     "coastal": true,
     "borders": [
      "mozambique_01",
@@ -16779,7 +16758,7 @@
     "lon": 33.4181,
     "land_area_km2": 116468.4,
     "arable_fraction": 0.287,
-    "fertility_quality_multiplier": 0.7625,
+    "fertility_quality_multiplier": 0.7726,
     "coastal": true,
     "borders": [
      "mozambique_02",
@@ -16803,7 +16782,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2568,
-    "fertility_quality_multiplier": 0.704,
+    "fertility_quality_multiplier": 0.7229,
     "coastal": false,
     "borders": [
      "mozambique_03",
@@ -16828,7 +16807,7 @@
     "lon": 37.6296,
     "land_area_km2": 94962.9,
     "arable_fraction": 0.3012,
-    "fertility_quality_multiplier": 0.7618,
+    "fertility_quality_multiplier": 0.7625,
     "coastal": true,
     "borders": [
      "mozambique_04",
@@ -16849,7 +16828,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3096,
-    "fertility_quality_multiplier": 0.846,
+    "fertility_quality_multiplier": 0.8492,
     "coastal": false,
     "borders": [
      "mozambique_04",
@@ -16934,7 +16913,7 @@
     "lon": 94.6944,
     "land_area_km2": 120837.1,
     "arable_fraction": 0.29,
-    "fertility_quality_multiplier": 0.7875,
+    "fertility_quality_multiplier": 0.7943,
     "coastal": true,
     "borders": [
      "myanmar_01",
@@ -16959,7 +16938,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3072,
-    "fertility_quality_multiplier": 0.834,
+    "fertility_quality_multiplier": 0.837,
     "coastal": false,
     "borders": [
      "laos_02",
@@ -16983,7 +16962,7 @@
     "lon": 94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.296,
-    "fertility_quality_multiplier": 0.838,
+    "fertility_quality_multiplier": 0.8473,
     "coastal": false,
     "borders": [
      "bangladesh_01",
@@ -17008,7 +16987,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3112,
-    "fertility_quality_multiplier": 0.922,
+    "fertility_quality_multiplier": 0.9243,
     "coastal": false,
     "borders": [
      "china_02",
@@ -17097,7 +17076,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0344,
-    "fertility_quality_multiplier": 0.554,
+    "fertility_quality_multiplier": 0.5733,
     "coastal": false,
     "borders": [
      "botswana_01",
@@ -17120,7 +17099,7 @@
     "lon": 14.5807,
     "land_area_km2": 110918.2,
     "arable_fraction": 0.048,
-    "fertility_quality_multiplier": 0.52,
+    "fertility_quality_multiplier": 0.5563,
     "coastal": true,
     "borders": [
      "angola_01",
@@ -17144,7 +17123,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1928,
-    "fertility_quality_multiplier": 0.598,
+    "fertility_quality_multiplier": 0.5998,
     "coastal": false,
     "borders": [
      "angola_02",
@@ -17188,7 +17167,7 @@
     "lon": 167.9038,
     "land_area_km2": 28215.3,
     "arable_fraction": 0.209,
-    "fertility_quality_multiplier": 0.67,
+    "fertility_quality_multiplier": 0.8328,
     "coastal": true,
     "borders": [
      "new_zealand_02"
@@ -17209,7 +17188,7 @@
     "lon": 169.8564,
     "land_area_km2": 66473.6,
     "arable_fraction": 0.285,
-    "fertility_quality_multiplier": 0.8719,
+    "fertility_quality_multiplier": 0.8783,
     "coastal": true,
     "borders": [
      "new_zealand_01",
@@ -17230,7 +17209,7 @@
     "lon": 172.0282,
     "land_area_km2": 30703.4,
     "arable_fraction": 0.276,
-    "fertility_quality_multiplier": 0.855,
+    "fertility_quality_multiplier": 0.8641,
     "coastal": true,
     "borders": [
      "new_zealand_02",
@@ -17251,7 +17230,7 @@
     "lon": 173.3672,
     "land_area_km2": 55260.0,
     "arable_fraction": 0.292,
-    "fertility_quality_multiplier": 0.885,
+    "fertility_quality_multiplier": 0.8887,
     "coastal": true,
     "borders": [
      "new_zealand_03",
@@ -17311,7 +17290,7 @@
     "lon": -85.0825,
     "land_area_km2": 51218.6,
     "arable_fraction": 0.2912,
-    "fertility_quality_multiplier": 0.8147,
+    "fertility_quality_multiplier": 0.8197,
     "coastal": true,
     "borders": [
      "costa_rica_01",
@@ -17353,7 +17332,7 @@
     "lon": 2.007,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0992,
-    "fertility_quality_multiplier": 0.572,
+    "fertility_quality_multiplier": 0.5944,
     "coastal": false,
     "borders": [
      "benin_01",
@@ -17376,7 +17355,7 @@
     "lon": 6.021,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1064,
-    "fertility_quality_multiplier": 0.574,
+    "fertility_quality_multiplier": 0.5951,
     "coastal": false,
     "borders": [
      "niger_01",
@@ -17399,7 +17378,7 @@
     "lon": 10.0351,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0416,
-    "fertility_quality_multiplier": 0.556,
+    "fertility_quality_multiplier": 0.5788,
     "coastal": false,
     "borders": [
      "chad_03",
@@ -17640,7 +17619,7 @@
     "lon": 10.0351,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.276,
-    "fertility_quality_multiplier": 0.714,
+    "fertility_quality_multiplier": 0.7239,
     "coastal": false,
     "borders": [
      "niger_03",
@@ -17663,7 +17642,7 @@
     "lon": 14.0491,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.24,
-    "fertility_quality_multiplier": 0.66,
+    "fertility_quality_multiplier": 0.675,
     "coastal": false,
     "borders": [
      "cameroon_03",
@@ -17686,7 +17665,7 @@
     "lon": 129.1326,
     "land_area_km2": 53830.7,
     "arable_fraction": 0.24,
-    "fertility_quality_multiplier": 0.795,
+    "fertility_quality_multiplier": 0.8137,
     "coastal": true,
     "borders": [
      "china_58",
@@ -17710,7 +17689,7 @@
     "lon": 7.3233,
     "land_area_km2": 71787.0,
     "arable_fraction": 0.174,
-    "fertility_quality_multiplier": 0.645,
+    "fertility_quality_multiplier": 0.7586,
     "coastal": true,
     "borders": [
      "netherlands_01",
@@ -17732,7 +17711,7 @@
     "lon": 10.0351,
     "land_area_km2": 120080.6,
     "arable_fraction": 0.1161,
-    "fertility_quality_multiplier": 0.4932,
+    "fertility_quality_multiplier": 0.6876,
     "coastal": true,
     "borders": [
      "germany_03",
@@ -17756,7 +17735,7 @@
     "lon": 14.3974,
     "land_area_km2": 68626.6,
     "arable_fraction": 0.0756,
-    "fertility_quality_multiplier": 0.4265,
+    "fertility_quality_multiplier": 0.4484,
     "coastal": true,
     "borders": [
      "norway_04",
@@ -17778,7 +17757,7 @@
     "lon": 14.0491,
     "land_area_km2": 16666.8,
     "arable_fraction": 0.0046,
-    "fertility_quality_multiplier": 0.0462,
+    "fertility_quality_multiplier": 0.05,
     "coastal": true,
     "borders": [
      "norway_03",
@@ -17944,7 +17923,7 @@
     "lon": 66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0912,
-    "fertility_quality_multiplier": 0.548,
+    "fertility_quality_multiplier": 0.5535,
     "coastal": false,
     "borders": [
      "afghanistan_01",
@@ -17969,7 +17948,7 @@
     "lon": 70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0568,
-    "fertility_quality_multiplier": 0.558,
+    "fertility_quality_multiplier": 0.5782,
     "coastal": false,
     "borders": [
      "afghanistan_04",
@@ -17993,7 +17972,7 @@
     "lon": 74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2618,
-    "fertility_quality_multiplier": 0.822,
+    "fertility_quality_multiplier": 0.9207,
     "coastal": false,
     "borders": [
      "afghanistan_04",
@@ -18021,7 +18000,7 @@
     "lon": 74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.043,
-    "fertility_quality_multiplier": 0.226,
+    "fertility_quality_multiplier": 0.504,
     "coastal": false,
     "borders": [
      "china_34",
@@ -18045,7 +18024,7 @@
     "lon": -81.1708,
     "land_area_km2": 42429.2,
     "arable_fraction": 0.2885,
-    "fertility_quality_multiplier": 0.8346,
+    "fertility_quality_multiplier": 0.842,
     "coastal": true,
     "borders": [
      "colombia_08",
@@ -18068,7 +18047,7 @@
     "lon": 149.1556,
     "land_area_km2": 22028.7,
     "arable_fraction": 0.1625,
-    "fertility_quality_multiplier": 0.6708,
+    "fertility_quality_multiplier": 0.6885,
     "coastal": true,
     "borders": [],
     "conf": "D",
@@ -18086,7 +18065,7 @@
     "lon": 142.131,
     "land_area_km2": 129227.7,
     "arable_fraction": 0.1826,
-    "fertility_quality_multiplier": 0.7043,
+    "fertility_quality_multiplier": 0.7393,
     "coastal": true,
     "borders": [
      "australia_66",
@@ -18109,7 +18088,7 @@
     "lon": 146.0372,
     "land_area_km2": 92880.6,
     "arable_fraction": 0.1833,
-    "fertility_quality_multiplier": 0.7056,
+    "fertility_quality_multiplier": 0.7409,
     "coastal": true,
     "borders": [
      "papua_new_guinea_02",
@@ -18131,7 +18110,7 @@
     "lon": 142.4979,
     "land_area_km2": 137860.0,
     "arable_fraction": 0.1812,
-    "fertility_quality_multiplier": 0.7021,
+    "fertility_quality_multiplier": 0.7362,
     "coastal": true,
     "borders": [
      "indonesia_12",
@@ -18174,7 +18153,7 @@
     "lon": 151.5537,
     "land_area_km2": 34490.0,
     "arable_fraction": 0.175,
-    "fertility_quality_multiplier": 0.6917,
+    "fertility_quality_multiplier": 0.7214,
     "coastal": true,
     "borders": [
      "papua_new_guinea_05"
@@ -18194,7 +18173,7 @@
     "lon": -58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.312,
-    "fertility_quality_multiplier": 0.834,
+    "fertility_quality_multiplier": 0.8423,
     "coastal": false,
     "borders": [
      "argentina_23",
@@ -18218,7 +18197,7 @@
     "lon": -73.1192,
     "land_area_km2": 27171.2,
     "arable_fraction": 0.0311,
-    "fertility_quality_multiplier": 0.3929,
+    "fertility_quality_multiplier": 0.5006,
     "coastal": true,
     "borders": [
      "peru_02",
@@ -18241,7 +18220,7 @@
     "lon": -70.2101,
     "land_area_km2": 129769.0,
     "arable_fraction": 0.0564,
-    "fertility_quality_multiplier": 0.3045,
+    "fertility_quality_multiplier": 0.7242,
     "coastal": true,
     "borders": [
      "bolivia_03",
@@ -18267,7 +18246,7 @@
     "lon": -74.237,
     "land_area_km2": 142001.6,
     "arable_fraction": 0.0752,
-    "fertility_quality_multiplier": 0.348,
+    "fertility_quality_multiplier": 0.6984,
     "coastal": true,
     "borders": [
      "peru_01",
@@ -18295,7 +18274,7 @@
     "lon": -70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1664,
-    "fertility_quality_multiplier": 0.548,
+    "fertility_quality_multiplier": 0.8026,
     "coastal": false,
     "borders": [
      "bolivia_05",
@@ -18322,7 +18301,7 @@
     "lon": -77.0911,
     "land_area_km2": 58206.3,
     "arable_fraction": 0.0789,
-    "fertility_quality_multiplier": 0.3667,
+    "fertility_quality_multiplier": 0.731,
     "coastal": true,
     "borders": [
      "peru_06",
@@ -18348,7 +18327,7 @@
     "lon": -74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.237,
-    "fertility_quality_multiplier": 0.756,
+    "fertility_quality_multiplier": 0.8127,
     "coastal": false,
     "borders": [
      "brazil_26",
@@ -18375,7 +18354,7 @@
     "lon": -77.8748,
     "land_area_km2": 119439.6,
     "arable_fraction": 0.1867,
-    "fertility_quality_multiplier": 0.6714,
+    "fertility_quality_multiplier": 0.8107,
     "coastal": true,
     "borders": [
      "peru_05",
@@ -18404,7 +18383,7 @@
     "lon": -74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.192,
-    "fertility_quality_multiplier": 0.72,
+    "fertility_quality_multiplier": 0.7594,
     "coastal": false,
     "borders": [
      "brazil_34",
@@ -18427,7 +18406,7 @@
     "lon": -80.7968,
     "land_area_km2": 25008.7,
     "arable_fraction": 0.0543,
-    "fertility_quality_multiplier": 0.5595,
+    "fertility_quality_multiplier": 0.5851,
     "coastal": true,
     "borders": [
      "peru_10"
@@ -18447,7 +18426,7 @@
     "lon": -78.2735,
     "land_area_km2": 148986.6,
     "arable_fraction": 0.2088,
-    "fertility_quality_multiplier": 0.728,
+    "fertility_quality_multiplier": 0.76,
     "coastal": false,
     "borders": [
      "ecuador_01",
@@ -18537,7 +18516,7 @@
     "lon": 125.5083,
     "land_area_km2": 60788.2,
     "arable_fraction": 0.1575,
-    "fertility_quality_multiplier": 0.6625,
+    "fertility_quality_multiplier": 0.6738,
     "coastal": true,
     "borders": [
      "philippines_01",
@@ -18558,7 +18537,7 @@
     "lon": 122.5496,
     "land_area_km2": 34868.3,
     "arable_fraction": 0.1929,
-    "fertility_quality_multiplier": 0.7214,
+    "fertility_quality_multiplier": 0.7611,
     "coastal": true,
     "borders": [
      "philippines_01",
@@ -18600,7 +18579,7 @@
     "lon": 121.3433,
     "land_area_km2": 51056.3,
     "arable_fraction": 0.2437,
-    "fertility_quality_multiplier": 0.8063,
+    "fertility_quality_multiplier": 0.8423,
     "coastal": true,
     "borders": [
      "philippines_03",
@@ -18621,7 +18600,7 @@
     "lon": 121.4338,
     "land_area_km2": 60721.5,
     "arable_fraction": 0.26,
-    "fertility_quality_multiplier": 0.8196,
+    "fertility_quality_multiplier": 0.845,
     "coastal": true,
     "borders": [
      "philippines_05"
@@ -18643,7 +18622,7 @@
     "lon": 18.0631,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.292,
-    "fertility_quality_multiplier": 0.89,
+    "fertility_quality_multiplier": 0.8911,
     "coastal": false,
     "borders": [
      "germany_02",
@@ -18666,7 +18645,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2832,
-    "fertility_quality_multiplier": 0.872,
+    "fertility_quality_multiplier": 0.8857,
     "coastal": false,
     "borders": [
      "poland_01",
@@ -18712,7 +18691,7 @@
     "lon": 22.6399,
     "land_area_km2": 123697.2,
     "arable_fraction": 0.2873,
-    "fertility_quality_multiplier": 0.8841,
+    "fertility_quality_multiplier": 0.8856,
     "coastal": true,
     "borders": [
      "belarus_01",
@@ -18735,7 +18714,7 @@
     "lon": -8.4173,
     "land_area_km2": 22584.3,
     "arable_fraction": 0.3467,
-    "fertility_quality_multiplier": 0.9944,
+    "fertility_quality_multiplier": 0.9949,
     "coastal": true,
     "borders": [
      "portugal_02",
@@ -18756,7 +18735,7 @@
     "lon": -8.4,
     "land_area_km2": 31689.7,
     "arable_fraction": 0.3253,
-    "fertility_quality_multiplier": 0.9588,
+    "fertility_quality_multiplier": 0.9595,
     "coastal": true,
     "borders": [
      "portugal_01",
@@ -18777,7 +18756,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3132,
-    "fertility_quality_multiplier": 0.948,
+    "fertility_quality_multiplier": 0.9554,
     "coastal": false,
     "borders": [
      "greece_02",
@@ -18801,7 +18780,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2968,
-    "fertility_quality_multiplier": 0.924,
+    "fertility_quality_multiplier": 0.9501,
     "coastal": false,
     "borders": [
      "bulgaria_01",
@@ -18826,7 +18805,7 @@
     "lon": 38.8757,
     "land_area_km2": 86388.8,
     "arable_fraction": 0.3458,
-    "fertility_quality_multiplier": 1.0375,
+    "fertility_quality_multiplier": 1.0392,
     "coastal": true,
     "borders": [
      "russia_002",
@@ -18849,7 +18828,7 @@
     "lon": 42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3192,
-    "fertility_quality_multiplier": 0.966,
+    "fertility_quality_multiplier": 0.9741,
     "coastal": false,
     "borders": [
      "russia_001",
@@ -18874,7 +18853,7 @@
     "lon": 45.8409,
     "land_area_km2": 131623.2,
     "arable_fraction": 0.2439,
-    "fertility_quality_multiplier": 0.6457,
+    "fertility_quality_multiplier": 0.681,
     "coastal": true,
     "borders": [
      "azerbaijan_01",
@@ -18898,7 +18877,7 @@
     "lon": 134.4698,
     "land_area_km2": 140287.9,
     "arable_fraction": 0.2467,
-    "fertility_quality_multiplier": 0.8167,
+    "fertility_quality_multiplier": 0.8176,
     "coastal": true,
     "borders": [
      "china_65",
@@ -18920,7 +18899,7 @@
     "lon": 137.3175,
     "land_area_km2": 36984.5,
     "arable_fraction": 0.1413,
-    "fertility_quality_multiplier": 0.5967,
+    "fertility_quality_multiplier": 0.6906,
     "coastal": true,
     "borders": [
      "japan_07",
@@ -18944,7 +18923,7 @@
     "lon": 38.1332,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.276,
-    "fertility_quality_multiplier": 0.87,
+    "fertility_quality_multiplier": 0.8717,
     "coastal": false,
     "borders": [
      "russia_001",
@@ -18967,7 +18946,7 @@
     "lon": 42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.284,
-    "fertility_quality_multiplier": 0.88,
+    "fertility_quality_multiplier": 0.8817,
     "coastal": false,
     "borders": [
      "russia_002",
@@ -18990,7 +18969,7 @@
     "lon": 46.1613,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2792,
-    "fertility_quality_multiplier": 0.824,
+    "fertility_quality_multiplier": 0.8393,
     "coastal": false,
     "borders": [
      "kazakhstan_10",
@@ -19014,7 +18993,7 @@
     "lon": 86.3015,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1348,
-    "fertility_quality_multiplier": 0.562,
+    "fertility_quality_multiplier": 0.7076,
     "coastal": false,
     "borders": [
      "china_60",
@@ -19039,7 +19018,7 @@
     "lon": 90.3156,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.135,
-    "fertility_quality_multiplier": 0.476,
+    "fertility_quality_multiplier": 0.5567,
     "coastal": false,
     "borders": [
      "china_61",
@@ -19066,7 +19045,7 @@
     "lon": 110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1056,
-    "fertility_quality_multiplier": 0.56,
+    "fertility_quality_multiplier": 0.5727,
     "coastal": false,
     "borders": [
      "mongolia_05",
@@ -19089,7 +19068,7 @@
     "lon": 114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.176,
-    "fertility_quality_multiplier": 0.6,
+    "fertility_quality_multiplier": 0.6182,
     "coastal": false,
     "borders": [
      "china_66",
@@ -19113,7 +19092,7 @@
     "lon": 130.4558,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2176,
-    "fertility_quality_multiplier": 0.76,
+    "fertility_quality_multiplier": 0.7816,
     "coastal": false,
     "borders": [
      "china_65",
@@ -19136,7 +19115,7 @@
     "lon": 134.4698,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1792,
-    "fertility_quality_multiplier": 0.69,
+    "fertility_quality_multiplier": 0.7438,
     "coastal": false,
     "borders": [
      "russia_004",
@@ -19161,7 +19140,7 @@
     "lon": 138.4839,
     "land_area_km2": 143515.1,
     "arable_fraction": 0.1832,
-    "fertility_quality_multiplier": 0.68,
+    "fertility_quality_multiplier": 0.7622,
     "coastal": true,
     "borders": [
      "russia_005",
@@ -19186,7 +19165,7 @@
     "lon": 143.0511,
     "land_area_km2": 56850.1,
     "arable_fraction": 0.1445,
-    "fertility_quality_multiplier": 0.57,
+    "fertility_quality_multiplier": 0.7365,
     "coastal": true,
     "borders": [
      "japan_07",
@@ -19341,7 +19320,7 @@
     "lon": 58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2528,
-    "fertility_quality_multiplier": 0.834,
+    "fertility_quality_multiplier": 0.8449,
     "coastal": false,
     "borders": [
      "kazakhstan_12",
@@ -19408,7 +19387,7 @@
     "lon": 70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.252,
-    "fertility_quality_multiplier": 0.79,
+    "fertility_quality_multiplier": 0.7976,
     "coastal": false,
     "borders": [
      "kazakhstan_15",
@@ -19431,7 +19410,7 @@
     "lon": 74.2595,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2584,
-    "fertility_quality_multiplier": 0.838,
+    "fertility_quality_multiplier": 0.8398,
     "coastal": false,
     "borders": [
      "kazakhstan_16",
@@ -19454,7 +19433,7 @@
     "lon": 78.2735,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2584,
-    "fertility_quality_multiplier": 0.838,
+    "fertility_quality_multiplier": 0.8398,
     "coastal": false,
     "borders": [
      "kazakhstan_17",
@@ -19521,7 +19500,7 @@
     "lon": 90.3156,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1808,
-    "fertility_quality_multiplier": 0.676,
+    "fertility_quality_multiplier": 0.7699,
     "coastal": false,
     "borders": [
      "russia_010",
@@ -19546,7 +19525,7 @@
     "lon": 94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1104,
-    "fertility_quality_multiplier": 0.522,
+    "fertility_quality_multiplier": 0.608,
     "coastal": false,
     "borders": [
      "mongolia_07",
@@ -19570,7 +19549,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0912,
-    "fertility_quality_multiplier": 0.506,
+    "fertility_quality_multiplier": 0.5114,
     "coastal": false,
     "borders": [
      "mongolia_08",
@@ -19593,7 +19572,7 @@
     "lon": 102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0976,
-    "fertility_quality_multiplier": 0.5,
+    "fertility_quality_multiplier": 0.5475,
     "coastal": false,
     "borders": [
      "mongolia_09",
@@ -19618,7 +19597,7 @@
     "lon": 106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.088,
-    "fertility_quality_multiplier": 0.49,
+    "fertility_quality_multiplier": 0.4955,
     "coastal": false,
     "borders": [
      "mongolia_10",
@@ -19641,7 +19620,7 @@
     "lon": 110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0914,
-    "fertility_quality_multiplier": 0.482,
+    "fertility_quality_multiplier": 0.5069,
     "coastal": false,
     "borders": [
      "russia_011",
@@ -19666,7 +19645,7 @@
     "lon": 114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0962,
-    "fertility_quality_multiplier": 0.53,
+    "fertility_quality_multiplier": 0.549,
     "coastal": false,
     "borders": [
      "russia_012",
@@ -19689,7 +19668,7 @@
     "lon": 118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0962,
-    "fertility_quality_multiplier": 0.53,
+    "fertility_quality_multiplier": 0.549,
     "coastal": false,
     "borders": [
      "china_66",
@@ -19734,7 +19713,7 @@
     "lon": 126.4418,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1104,
-    "fertility_quality_multiplier": 0.566,
+    "fertility_quality_multiplier": 0.5906,
     "coastal": false,
     "borders": [
      "china_68",
@@ -19758,7 +19737,7 @@
     "lon": 130.4558,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0962,
-    "fertility_quality_multiplier": 0.53,
+    "fertility_quality_multiplier": 0.549,
     "coastal": false,
     "borders": [
      "russia_013",
@@ -19781,7 +19760,7 @@
     "lon": 133.9322,
     "land_area_km2": 144689.2,
     "arable_fraction": 0.1017,
-    "fertility_quality_multiplier": 0.5396,
+    "fertility_quality_multiplier": 0.5582,
     "coastal": true,
     "borders": [
      "russia_014",
@@ -19805,7 +19784,7 @@
     "lon": 138.4839,
     "land_area_km2": 75562.3,
     "arable_fraction": 0.1732,
-    "fertility_quality_multiplier": 0.6409,
+    "fertility_quality_multiplier": 0.7818,
     "coastal": true,
     "borders": [
      "russia_015",
@@ -19830,7 +19809,7 @@
     "lon": 142.7779,
     "land_area_km2": 19633.8,
     "arable_fraction": 0.2446,
-    "fertility_quality_multiplier": 0.8115,
+    "fertility_quality_multiplier": 0.8324,
     "coastal": true,
     "borders": [
      "russia_016",
@@ -19873,7 +19852,7 @@
     "lon": 158.554,
     "land_area_km2": 132729.5,
     "arable_fraction": 0.0546,
-    "fertility_quality_multiplier": 0.314,
+    "fertility_quality_multiplier": 0.4515,
     "coastal": true,
     "borders": [
      "russia_045",
@@ -19896,7 +19875,7 @@
     "lon": 161.2738,
     "land_area_km2": 40399.6,
     "arable_fraction": 0.0756,
-    "fertility_quality_multiplier": 0.4265,
+    "fertility_quality_multiplier": 0.4484,
     "coastal": true,
     "borders": [
      "russia_046",
@@ -19917,7 +19896,7 @@
     "lon": 30.3799,
     "land_area_km2": 144653.7,
     "arable_fraction": 0.224,
-    "fertility_quality_multiplier": 0.77,
+    "fertility_quality_multiplier": 0.8214,
     "coastal": true,
     "borders": [
      "belarus_02",
@@ -19940,7 +19919,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1952,
-    "fertility_quality_multiplier": 0.706,
+    "fertility_quality_multiplier": 0.791,
     "coastal": false,
     "borders": [
      "russia_017",
@@ -19963,7 +19942,7 @@
     "lon": 38.1332,
     "land_area_km2": 149985.9,
     "arable_fraction": 0.1664,
-    "fertility_quality_multiplier": 0.642,
+    "fertility_quality_multiplier": 0.75,
     "coastal": false,
     "borders": [
      "russia_018",
@@ -19986,7 +19965,7 @@
     "lon": 42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.152,
-    "fertility_quality_multiplier": 0.61,
+    "fertility_quality_multiplier": 0.7237,
     "coastal": false,
     "borders": [
      "russia_019",
@@ -20009,7 +19988,7 @@
     "lon": 46.1613,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.152,
-    "fertility_quality_multiplier": 0.61,
+    "fertility_quality_multiplier": 0.7237,
     "coastal": false,
     "borders": [
      "russia_020",
@@ -20032,7 +20011,7 @@
     "lon": 50.1753,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1592,
-    "fertility_quality_multiplier": 0.626,
+    "fertility_quality_multiplier": 0.7374,
     "coastal": false,
     "borders": [
      "russia_021",
@@ -20055,7 +20034,7 @@
     "lon": 54.1893,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1448,
-    "fertility_quality_multiplier": 0.594,
+    "fertility_quality_multiplier": 0.7086,
     "coastal": false,
     "borders": [
      "russia_022",
@@ -20078,7 +20057,7 @@
     "lon": 58.2034,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0872,
-    "fertility_quality_multiplier": 0.466,
+    "fertility_quality_multiplier": 0.4977,
     "coastal": false,
     "borders": [
      "russia_023",
@@ -20101,7 +20080,7 @@
     "lon": 62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.116,
-    "fertility_quality_multiplier": 0.53,
+    "fertility_quality_multiplier": 0.6293,
     "coastal": false,
     "borders": [
      "russia_024",
@@ -20124,7 +20103,7 @@
     "lon": 66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1232,
-    "fertility_quality_multiplier": 0.546,
+    "fertility_quality_multiplier": 0.6526,
     "coastal": false,
     "borders": [
      "russia_025",
@@ -20147,7 +20126,7 @@
     "lon": 70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1016,
-    "fertility_quality_multiplier": 0.498,
+    "fertility_quality_multiplier": 0.5728,
     "coastal": false,
     "borders": [
      "russia_026",
@@ -20346,7 +20325,7 @@
     "lon": 106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0808,
-    "fertility_quality_multiplier": 0.454,
+    "fertility_quality_multiplier": 0.455,
     "coastal": false,
     "borders": [
      "russia_035",
@@ -20391,7 +20370,7 @@
     "lon": 114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0808,
-    "fertility_quality_multiplier": 0.454,
+    "fertility_quality_multiplier": 0.455,
     "coastal": false,
     "borders": [
      "russia_037",
@@ -20414,7 +20393,7 @@
     "lon": 118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.084,
-    "fertility_quality_multiplier": 0.47,
+    "fertility_quality_multiplier": 0.4738,
     "coastal": false,
     "borders": [
      "russia_038",
@@ -20481,7 +20460,7 @@
     "lon": 130.4558,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0656,
-    "fertility_quality_multiplier": 0.414,
+    "fertility_quality_multiplier": 0.428,
     "coastal": false,
     "borders": [
      "russia_041",
@@ -20504,7 +20483,7 @@
     "lon": 134.4698,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0584,
-    "fertility_quality_multiplier": 0.398,
+    "fertility_quality_multiplier": 0.4144,
     "coastal": false,
     "borders": [
      "russia_042",
@@ -20528,7 +20507,7 @@
     "lon": 138.4839,
     "land_area_km2": 149745.7,
     "arable_fraction": 0.0576,
-    "fertility_quality_multiplier": 0.35,
+    "fertility_quality_multiplier": 0.4917,
     "coastal": false,
     "borders": [
      "russia_043",
@@ -20554,7 +20533,7 @@
     "lon": 142.4979,
     "land_area_km2": 115541.0,
     "arable_fraction": 0.056,
-    "fertility_quality_multiplier": 0.3452,
+    "fertility_quality_multiplier": 0.5045,
     "coastal": true,
     "borders": [
      "russia_044",
@@ -20579,7 +20558,7 @@
     "lon": 146.5119,
     "land_area_km2": 106455.7,
     "arable_fraction": 0.0456,
-    "fertility_quality_multiplier": 0.27,
+    "fertility_quality_multiplier": 0.4553,
     "coastal": true,
     "borders": [
      "russia_076",
@@ -20603,7 +20582,7 @@
     "lon": 150.5259,
     "land_area_km2": 104674.5,
     "arable_fraction": 0.0515,
-    "fertility_quality_multiplier": 0.2978,
+    "fertility_quality_multiplier": 0.4432,
     "coastal": true,
     "borders": [
      "russia_077",
@@ -20626,7 +20605,7 @@
     "lon": 154.54,
     "land_area_km2": 93772.9,
     "arable_fraction": 0.0667,
-    "fertility_quality_multiplier": 0.3786,
+    "fertility_quality_multiplier": 0.4514,
     "coastal": true,
     "borders": [
      "russia_045",
@@ -20650,7 +20629,7 @@
     "lon": 158.554,
     "land_area_km2": 68171.9,
     "arable_fraction": 0.0425,
-    "fertility_quality_multiplier": 0.25,
+    "fertility_quality_multiplier": 0.4265,
     "coastal": true,
     "borders": [
      "russia_046",
@@ -20673,7 +20652,7 @@
     "lon": 161.851,
     "land_area_km2": 98664.8,
     "arable_fraction": 0.0712,
-    "fertility_quality_multiplier": 0.4029,
+    "fertility_quality_multiplier": 0.4467,
     "coastal": true,
     "borders": [
      "russia_047",
@@ -20696,7 +20675,7 @@
     "lon": 166.582,
     "land_area_km2": 82888.2,
     "arable_fraction": 0.0761,
-    "fertility_quality_multiplier": 0.4289,
+    "fertility_quality_multiplier": 0.4486,
     "coastal": true,
     "borders": [
      "russia_081",
@@ -20718,7 +20697,7 @@
     "lon": 170.5961,
     "land_area_km2": 76174.5,
     "arable_fraction": 0.06,
-    "fertility_quality_multiplier": 0.3413,
+    "fertility_quality_multiplier": 0.4891,
     "coastal": true,
     "borders": [
      "russia_082",
@@ -20741,7 +20720,7 @@
     "lon": 174.6101,
     "land_area_km2": 44335.4,
     "arable_fraction": 0.0603,
-    "fertility_quality_multiplier": 0.3447,
+    "fertility_quality_multiplier": 0.4413,
     "coastal": true,
     "borders": [
      "russia_083",
@@ -20763,7 +20742,7 @@
     "lon": 177.9921,
     "land_area_km2": 18474.1,
     "arable_fraction": 0.0355,
-    "fertility_quality_multiplier": 0.2119,
+    "fertility_quality_multiplier": 0.4419,
     "coastal": true,
     "borders": [
      "russia_084",
@@ -20843,8 +20822,8 @@
     "lat": 68.0934,
     "lon": 34.1192,
     "land_area_km2": 90451.4,
-    "arable_fraction": 0.0763,
-    "fertility_quality_multiplier": 0.43,
+    "arable_fraction": 0.0762,
+    "fertility_quality_multiplier": 0.4487,
     "coastal": true,
     "borders": [
      "russia_049",
@@ -21015,7 +20994,7 @@
     "lon": 66.2314,
     "land_area_km2": 112895.6,
     "arable_fraction": 0.0725,
-    "fertility_quality_multiplier": 0.41,
+    "fertility_quality_multiplier": 0.4472,
     "coastal": true,
     "borders": [
      "russia_057",
@@ -21080,7 +21059,7 @@
     "lon": 78.2735,
     "land_area_km2": 142966.4,
     "arable_fraction": 0.0637,
-    "fertility_quality_multiplier": 0.363,
+    "fertility_quality_multiplier": 0.4432,
     "coastal": true,
     "borders": [
      "russia_060",
@@ -21101,8 +21080,8 @@
     "lat": 66.7624,
     "lon": 82.2875,
     "land_area_km2": 145118.2,
-    "arable_fraction": 0.0738,
-    "fertility_quality_multiplier": 0.4167,
+    "arable_fraction": 0.0737,
+    "fertility_quality_multiplier": 0.4477,
     "coastal": true,
     "borders": [
      "russia_061",
@@ -21169,7 +21148,7 @@
     "lon": 94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.065,
-    "fertility_quality_multiplier": 0.37,
+    "fertility_quality_multiplier": 0.4438,
     "coastal": false,
     "borders": [
      "russia_064",
@@ -21192,7 +21171,7 @@
     "lon": 98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.071,
-    "fertility_quality_multiplier": 0.402,
+    "fertility_quality_multiplier": 0.4466,
     "coastal": false,
     "borders": [
      "russia_065",
@@ -21259,7 +21238,7 @@
     "lon": 110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0768,
-    "fertility_quality_multiplier": 0.442,
+    "fertility_quality_multiplier": 0.4458,
     "coastal": false,
     "borders": [
      "russia_068",
@@ -21282,7 +21261,7 @@
     "lon": 114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0776,
-    "fertility_quality_multiplier": 0.446,
+    "fertility_quality_multiplier": 0.451,
     "coastal": false,
     "borders": [
      "russia_069",
@@ -21306,7 +21285,7 @@
     "lon": 118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0632,
-    "fertility_quality_multiplier": 0.41,
+    "fertility_quality_multiplier": 0.4285,
     "coastal": false,
     "borders": [
      "russia_070",
@@ -21330,7 +21309,7 @@
     "lon": 122.4278,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0704,
-    "fertility_quality_multiplier": 0.444,
+    "fertility_quality_multiplier": 0.4568,
     "coastal": false,
     "borders": [
      "russia_071",
@@ -21354,7 +21333,7 @@
     "lon": 126.4418,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.056,
-    "fertility_quality_multiplier": 0.408,
+    "fertility_quality_multiplier": 0.4329,
     "coastal": false,
     "borders": [
      "russia_072",
@@ -21378,7 +21357,7 @@
     "lon": 130.4558,
     "land_area_km2": 141011.1,
     "arable_fraction": 0.0438,
-    "fertility_quality_multiplier": 0.352,
+    "fertility_quality_multiplier": 0.4007,
     "coastal": true,
     "borders": [
      "russia_073",
@@ -21402,7 +21381,7 @@
     "lon": 134.4698,
     "land_area_km2": 146126.8,
     "arable_fraction": 0.044,
-    "fertility_quality_multiplier": 0.37,
+    "fertility_quality_multiplier": 0.3773,
     "coastal": true,
     "borders": [
      "russia_074",
@@ -21424,7 +21403,7 @@
     "lon": 138.4839,
     "land_area_km2": 146000.0,
     "arable_fraction": 0.0504,
-    "fertility_quality_multiplier": 0.366,
+    "fertility_quality_multiplier": 0.4405,
     "coastal": true,
     "borders": [
      "russia_075",
@@ -21449,7 +21428,7 @@
     "lon": 142.4979,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.042,
-    "fertility_quality_multiplier": 0.318,
+    "fertility_quality_multiplier": 0.4157,
     "coastal": false,
     "borders": [
      "russia_076",
@@ -21474,7 +21453,7 @@
     "lon": 146.5119,
     "land_area_km2": 149769.0,
     "arable_fraction": 0.0492,
-    "fertility_quality_multiplier": 0.328,
+    "fertility_quality_multiplier": 0.4305,
     "coastal": true,
     "borders": [
      "russia_077",
@@ -21499,7 +21478,7 @@
     "lon": 150.5259,
     "land_area_km2": 144103.7,
     "arable_fraction": 0.0818,
-    "fertility_quality_multiplier": 0.462,
+    "fertility_quality_multiplier": 0.4862,
     "coastal": true,
     "borders": [
      "russia_078",
@@ -21523,7 +21502,7 @@
     "lon": 154.54,
     "land_area_km2": 136942.5,
     "arable_fraction": 0.084,
-    "fertility_quality_multiplier": 0.482,
+    "fertility_quality_multiplier": 0.4967,
     "coastal": true,
     "borders": [
      "russia_079",
@@ -21546,7 +21525,7 @@
     "lon": 158.554,
     "land_area_km2": 133217.7,
     "arable_fraction": 0.0898,
-    "fertility_quality_multiplier": 0.498,
+    "fertility_quality_multiplier": 0.5204,
     "coastal": true,
     "borders": [
      "russia_080",
@@ -21569,7 +21548,7 @@
     "lon": 162.568,
     "land_area_km2": 113550.1,
     "arable_fraction": 0.0602,
-    "fertility_quality_multiplier": 0.3413,
+    "fertility_quality_multiplier": 0.5164,
     "coastal": true,
     "borders": [
      "russia_081",
@@ -21592,7 +21571,7 @@
     "lon": 166.582,
     "land_area_km2": 114063.9,
     "arable_fraction": 0.035,
-    "fertility_quality_multiplier": 0.21,
+    "fertility_quality_multiplier": 0.4157,
     "coastal": true,
     "borders": [
      "russia_082",
@@ -21614,7 +21593,7 @@
     "lon": 170.5961,
     "land_area_km2": 112662.1,
     "arable_fraction": 0.067,
-    "fertility_quality_multiplier": 0.3804,
+    "fertility_quality_multiplier": 0.4448,
     "coastal": true,
     "borders": [
      "russia_083",
@@ -21636,7 +21615,7 @@
     "lon": 174.6101,
     "land_area_km2": 117792.3,
     "arable_fraction": 0.0394,
-    "fertility_quality_multiplier": 0.2333,
+    "fertility_quality_multiplier": 0.4225,
     "coastal": true,
     "borders": [
      "russia_084",
@@ -21658,7 +21637,7 @@
     "lon": 178.3085,
     "land_area_km2": 84701.5,
     "arable_fraction": 0.01,
-    "fertility_quality_multiplier": 0.0763,
+    "fertility_quality_multiplier": 0.3132,
     "coastal": true,
     "borders": [
      "russia_085",
@@ -21758,7 +21737,7 @@
     "lon": 87.1145,
     "land_area_km2": 36287.2,
     "arable_fraction": 0.0129,
-    "fertility_quality_multiplier": 0.0921,
+    "fertility_quality_multiplier": 0.3112,
     "coastal": true,
     "borders": [
      "russia_102",
@@ -21780,7 +21759,7 @@
     "lon": 90.3156,
     "land_area_km2": 54515.3,
     "arable_fraction": 0.0391,
-    "fertility_quality_multiplier": 0.2318,
+    "fertility_quality_multiplier": 0.4221,
     "coastal": true,
     "borders": [
      "russia_103",
@@ -21802,7 +21781,7 @@
     "lon": 94.3296,
     "land_area_km2": 72828.9,
     "arable_fraction": 0.0359,
-    "fertility_quality_multiplier": 0.2147,
+    "fertility_quality_multiplier": 0.4172,
     "coastal": true,
     "borders": [
      "russia_104",
@@ -21824,7 +21803,7 @@
     "lon": 98.3436,
     "land_area_km2": 72403.6,
     "arable_fraction": 0.0425,
-    "fertility_quality_multiplier": 0.25,
+    "fertility_quality_multiplier": 0.4265,
     "coastal": true,
     "borders": [
      "russia_105",
@@ -21846,7 +21825,7 @@
     "lon": 102.3576,
     "land_area_km2": 82533.3,
     "arable_fraction": 0.0705,
-    "fertility_quality_multiplier": 0.405,
+    "fertility_quality_multiplier": 0.4443,
     "coastal": true,
     "borders": [
      "russia_106",
@@ -21869,7 +21848,7 @@
     "lon": 106.3717,
     "land_area_km2": 68686.3,
     "arable_fraction": 0.0486,
-    "fertility_quality_multiplier": 0.3136,
+    "fertility_quality_multiplier": 0.4164,
     "coastal": true,
     "borders": [
      "russia_107",
@@ -21892,7 +21871,7 @@
     "lon": 110.3857,
     "land_area_km2": 57709.8,
     "arable_fraction": 0.0524,
-    "fertility_quality_multiplier": 0.3548,
+    "fertility_quality_multiplier": 0.4464,
     "coastal": true,
     "borders": [
      "russia_108",
@@ -21980,7 +21959,7 @@
     "lon": 126.4418,
     "land_area_km2": 25347.4,
     "arable_fraction": 0.0762,
-    "fertility_quality_multiplier": 0.4857,
+    "fertility_quality_multiplier": 0.4925,
     "coastal": true,
     "borders": [
      "russia_112",
@@ -22021,7 +22000,7 @@
     "lon": 142.4979,
     "land_area_km2": 29888.4,
     "arable_fraction": 0.0283,
-    "fertility_quality_multiplier": 0.25,
+    "fertility_quality_multiplier": 0.3324,
     "coastal": true,
     "borders": [
      "russia_116",
@@ -22065,7 +22044,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2288,
-    "fertility_quality_multiplier": 0.652,
+    "fertility_quality_multiplier": 0.6706,
     "coastal": false,
     "borders": [
      "ethiopia_01",
@@ -22111,7 +22090,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.26,
-    "fertility_quality_multiplier": 0.69,
+    "fertility_quality_multiplier": 0.7038,
     "coastal": false,
     "borders": [
      "ethiopia_03",
@@ -22466,7 +22445,7 @@
     "lon": -16.4916,
     "land_area_km2": 28949.6,
     "arable_fraction": 0.2333,
-    "fertility_quality_multiplier": 0.65,
+    "fertility_quality_multiplier": 0.6643,
     "coastal": true,
     "borders": [
      "senegal_02"
@@ -22486,7 +22465,7 @@
     "lon": -14.0491,
     "land_area_km2": 149713.8,
     "arable_fraction": 0.232,
-    "fertility_quality_multiplier": 0.648,
+    "fertility_quality_multiplier": 0.6621,
     "coastal": false,
     "borders": [
      "guinea_01",
@@ -22530,7 +22509,7 @@
     "lon": 42.1473,
     "land_area_km2": 139921.2,
     "arable_fraction": 0.185,
-    "fertility_quality_multiplier": 0.5958,
+    "fertility_quality_multiplier": 0.5995,
     "coastal": true,
     "borders": [
      "ethiopia_02",
@@ -22573,7 +22552,7 @@
     "lon": 46.113,
     "land_area_km2": 134354.6,
     "arable_fraction": 0.0425,
-    "fertility_quality_multiplier": 0.5563,
+    "fertility_quality_multiplier": 0.5794,
     "coastal": true,
     "borders": [
      "ethiopia_02",
@@ -22636,7 +22615,7 @@
     "lon": 46.1613,
     "land_area_km2": 80213.5,
     "arable_fraction": 0.0543,
-    "fertility_quality_multiplier": 0.5595,
+    "fertility_quality_multiplier": 0.5851,
     "coastal": true,
     "borders": [
      "ethiopia_06",
@@ -22659,7 +22638,7 @@
     "lon": 19.0929,
     "land_area_km2": 47426.3,
     "arable_fraction": 0.2962,
-    "fertility_quality_multiplier": 0.8595,
+    "fertility_quality_multiplier": 0.8936,
     "coastal": true,
     "borders": [
      "south_africa_02",
@@ -22682,7 +22661,7 @@
     "lon": 22.0771,
     "land_area_km2": 94925.6,
     "arable_fraction": 0.1691,
-    "fertility_quality_multiplier": 0.5909,
+    "fertility_quality_multiplier": 0.6651,
     "coastal": true,
     "borders": [
      "south_africa_01",
@@ -22707,7 +22686,7 @@
     "lon": 25.9478,
     "land_area_km2": 73596.1,
     "arable_fraction": 0.2319,
-    "fertility_quality_multiplier": 0.6905,
+    "fertility_quality_multiplier": 0.7498,
     "coastal": true,
     "borders": [
      "south_africa_02",
@@ -22732,7 +22711,7 @@
     "lon": 18.6691,
     "land_area_km2": 103725.8,
     "arable_fraction": 0.0905,
-    "fertility_quality_multiplier": 0.5474,
+    "fertility_quality_multiplier": 0.5651,
     "coastal": true,
     "borders": [
      "namibia_02",
@@ -22756,7 +22735,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0272,
-    "fertility_quality_multiplier": 0.512,
+    "fertility_quality_multiplier": 0.5353,
     "coastal": false,
     "borders": [
      "south_africa_02",
@@ -22780,7 +22759,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2416,
-    "fertility_quality_multiplier": 0.664,
+    "fertility_quality_multiplier": 0.6874,
     "coastal": false,
     "borders": [
      "south_africa_03",
@@ -22806,7 +22785,7 @@
     "lon": 29.4344,
     "land_area_km2": 100832.9,
     "arable_fraction": 0.2989,
-    "fertility_quality_multiplier": 0.9056,
+    "fertility_quality_multiplier": 0.916,
     "coastal": true,
     "borders": [
      "south_africa_06",
@@ -22829,7 +22808,7 @@
     "lon": 22.0771,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0632,
-    "fertility_quality_multiplier": 0.562,
+    "fertility_quality_multiplier": 0.588,
     "coastal": false,
     "borders": [
      "botswana_01",
@@ -22852,7 +22831,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2264,
-    "fertility_quality_multiplier": 0.656,
+    "fertility_quality_multiplier": 0.6818,
     "coastal": false,
     "borders": [
      "botswana_02",
@@ -22877,7 +22856,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2868,
-    "fertility_quality_multiplier": 0.866,
+    "fertility_quality_multiplier": 0.8727,
     "coastal": false,
     "borders": [
      "mozambique_01",
@@ -22903,7 +22882,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1904,
-    "fertility_quality_multiplier": 0.648,
+    "fertility_quality_multiplier": 0.6933,
     "coastal": false,
     "borders": [
      "botswana_02",
@@ -22927,7 +22906,7 @@
     "lon": 127.0424,
     "land_area_km2": 21024.3,
     "arable_fraction": 0.33,
-    "fertility_quality_multiplier": 0.9833,
+    "fertility_quality_multiplier": 0.9854,
     "coastal": true,
     "borders": [
      "japan_01",
@@ -22948,7 +22927,7 @@
     "lon": 127.5512,
     "land_area_km2": 86944.5,
     "arable_fraction": 0.2838,
-    "fertility_quality_multiplier": 0.8656,
+    "fertility_quality_multiplier": 0.8685,
     "coastal": true,
     "borders": [
      "china_45",
@@ -22973,7 +22952,7 @@
     "lon": 128.9355,
     "land_area_km2": 21822.8,
     "arable_fraction": 0.3129,
-    "fertility_quality_multiplier": 0.9571,
+    "fertility_quality_multiplier": 0.9696,
     "coastal": true,
     "borders": [
      "japan_01",
@@ -23019,7 +22998,7 @@
     "lon": -2.3395,
     "land_area_km2": 83844.6,
     "arable_fraction": 0.3053,
-    "fertility_quality_multiplier": 0.8533,
+    "fertility_quality_multiplier": 0.8961,
     "coastal": true,
     "borders": [
      "algeria_15",
@@ -23043,7 +23022,7 @@
     "lon": -6.021,
     "land_area_km2": 149984.3,
     "arable_fraction": 0.3368,
-    "fertility_quality_multiplier": 0.978,
+    "fertility_quality_multiplier": 0.9791,
     "coastal": true,
     "borders": [
      "portugal_02",
@@ -23065,7 +23044,7 @@
     "lon": -2.007,
     "land_area_km2": 148335.0,
     "arable_fraction": 0.3076,
-    "fertility_quality_multiplier": 0.898,
+    "fertility_quality_multiplier": 0.9137,
     "coastal": false,
     "borders": [
      "france_01",
@@ -23091,7 +23070,7 @@
     "lon": 1.329,
     "land_area_km2": 71729.7,
     "arable_fraction": 0.3292,
-    "fertility_quality_multiplier": 0.9667,
+    "fertility_quality_multiplier": 0.9709,
     "coastal": true,
     "borders": [
      "algeria_15",
@@ -23114,7 +23093,7 @@
     "lon": 81.0213,
     "land_area_km2": 46283.8,
     "arable_fraction": 0.2523,
-    "fertility_quality_multiplier": 0.7727,
+    "fertility_quality_multiplier": 0.7959,
     "coastal": true,
     "borders": [
      "india_01"
@@ -23135,7 +23114,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.212,
-    "fertility_quality_multiplier": 0.618,
+    "fertility_quality_multiplier": 0.6255,
     "coastal": false,
     "borders": [
      "chad_02",
@@ -23180,7 +23159,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0344,
-    "fertility_quality_multiplier": 0.554,
+    "fertility_quality_multiplier": 0.5733,
     "coastal": false,
     "borders": [
      "chad_05",
@@ -23225,7 +23204,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1064,
-    "fertility_quality_multiplier": 0.574,
+    "fertility_quality_multiplier": 0.5951,
     "coastal": false,
     "borders": [
      "ethiopia_07",
@@ -23402,7 +23381,7 @@
     "lon": -54.1893,
     "land_area_km2": 130526.0,
     "arable_fraction": 0.2062,
-    "fertility_quality_multiplier": 0.7438,
+    "fertility_quality_multiplier": 0.7864,
     "coastal": true,
     "borders": [
      "brazil_62",
@@ -23446,7 +23425,7 @@
     "lon": 14.0491,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1528,
-    "fertility_quality_multiplier": 0.604,
+    "fertility_quality_multiplier": 0.7356,
     "coastal": false,
     "borders": [
      "norway_02",
@@ -23470,7 +23449,7 @@
     "lon": 16.833,
     "land_area_km2": 68001.4,
     "arable_fraction": 0.2125,
-    "fertility_quality_multiplier": 0.725,
+    "fertility_quality_multiplier": 0.8288,
     "coastal": true,
     "borders": [
      "finland_01",
@@ -23494,7 +23473,7 @@
     "lon": 18.0631,
     "land_area_km2": 109267.8,
     "arable_fraction": 0.0604,
-    "fertility_quality_multiplier": 0.3457,
+    "fertility_quality_multiplier": 0.4414,
     "coastal": true,
     "borders": [
      "norway_03",
@@ -23517,7 +23496,7 @@
     "lon": 22.0771,
     "land_area_km2": 98321.8,
     "arable_fraction": 0.0729,
-    "fertility_quality_multiplier": 0.4119,
+    "fertility_quality_multiplier": 0.4474,
     "coastal": true,
     "borders": [
      "finland_01",
@@ -23540,7 +23519,7 @@
     "lon": 38.1332,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0732,
-    "fertility_quality_multiplier": 0.548,
+    "fertility_quality_multiplier": 0.6306,
     "coastal": false,
     "borders": [
      "iraq_02",
@@ -23565,7 +23544,7 @@
     "lon": 120.9612,
     "land_area_km2": 31174.0,
     "arable_fraction": 0.294,
-    "fertility_quality_multiplier": 0.9,
+    "fertility_quality_multiplier": 0.9133,
     "coastal": true,
     "borders": [
      "china_06"
@@ -23586,7 +23565,7 @@
     "lon": 70.2454,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1896,
-    "fertility_quality_multiplier": 0.612,
+    "fertility_quality_multiplier": 0.7225,
     "coastal": false,
     "borders": [
      "afghanistan_04",
@@ -23616,7 +23595,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3056,
-    "fertility_quality_multiplier": 0.83,
+    "fertility_quality_multiplier": 0.8327,
     "coastal": false,
     "borders": [
      "mozambique_06",
@@ -23661,7 +23640,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2672,
-    "fertility_quality_multiplier": 0.74,
+    "fertility_quality_multiplier": 0.7617,
     "coastal": false,
     "borders": [
      "dem_rep_congo_04",
@@ -23707,7 +23686,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2976,
-    "fertility_quality_multiplier": 0.762,
+    "fertility_quality_multiplier": 0.7613,
     "coastal": false,
     "borders": [
      "dem_rep_congo_04",
@@ -23730,7 +23709,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2824,
-    "fertility_quality_multiplier": 0.734,
+    "fertility_quality_multiplier": 0.7409,
     "coastal": false,
     "borders": [
      "tanzania_03",
@@ -23754,7 +23733,7 @@
     "lon": 37.7834,
     "land_area_km2": 124549.9,
     "arable_fraction": 0.2714,
-    "fertility_quality_multiplier": 0.7205,
+    "fertility_quality_multiplier": 0.7331,
     "coastal": true,
     "borders": [
      "kenya_01",
@@ -23779,7 +23758,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.288,
-    "fertility_quality_multiplier": 0.772,
+    "fertility_quality_multiplier": 0.7771,
     "coastal": false,
     "borders": [
      "dem_rep_congo_11",
@@ -23975,7 +23954,7 @@
     "lon": 9.1301,
     "land_area_km2": 116769.5,
     "arable_fraction": 0.048,
-    "fertility_quality_multiplier": 0.555,
+    "fertility_quality_multiplier": 0.5708,
     "coastal": true,
     "borders": [
      "algeria_14",
@@ -23999,7 +23978,7 @@
     "lon": 9.3742,
     "land_area_km2": 43919.9,
     "arable_fraction": 0.3071,
-    "fertility_quality_multiplier": 0.8857,
+    "fertility_quality_multiplier": 0.9256,
     "coastal": true,
     "borders": [
      "algeria_16",
@@ -24043,7 +24022,7 @@
     "lon": 30.1052,
     "land_area_km2": 111135.1,
     "arable_fraction": 0.3377,
-    "fertility_quality_multiplier": 0.9795,
+    "fertility_quality_multiplier": 0.9806,
     "coastal": true,
     "borders": [
      "turkey_01",
@@ -24065,7 +24044,7 @@
     "lon": 34.1192,
     "land_area_km2": 118343.4,
     "arable_fraction": 0.2955,
-    "fertility_quality_multiplier": 0.8318,
+    "fertility_quality_multiplier": 0.8694,
     "coastal": true,
     "borders": [
      "lebanon_01",
@@ -24090,7 +24069,7 @@
     "lon": 38.1332,
     "land_area_km2": 149880.6,
     "arable_fraction": 0.292,
-    "fertility_quality_multiplier": 0.854,
+    "fertility_quality_multiplier": 0.8932,
     "coastal": false,
     "borders": [
      "syria_01",
@@ -24114,7 +24093,7 @@
     "lon": 42.1473,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2892,
-    "fertility_quality_multiplier": 0.842,
+    "fertility_quality_multiplier": 0.8822,
     "coastal": false,
     "borders": [
      "iran_10",
@@ -24138,8 +24117,8 @@
     "lat": 40.4929,
     "lon": 30.4901,
     "land_area_km2": 64440.1,
-    "arable_fraction": 0.3212,
-    "fertility_quality_multiplier": 0.925,
+    "arable_fraction": 0.3213,
+    "fertility_quality_multiplier": 0.9449,
     "coastal": true,
     "borders": [
      "bulgaria_01",
@@ -24164,7 +24143,7 @@
     "lon": 34.1192,
     "land_area_km2": 93240.9,
     "arable_fraction": 0.3044,
-    "fertility_quality_multiplier": 0.9,
+    "fertility_quality_multiplier": 0.9122,
     "coastal": true,
     "borders": [
      "turkey_03",
@@ -24191,7 +24170,7 @@
     "lon": 38.1332,
     "land_area_km2": 64653.2,
     "arable_fraction": 0.266,
-    "fertility_quality_multiplier": 0.815,
+    "fertility_quality_multiplier": 0.8248,
     "coastal": true,
     "borders": [
      "russia_001",
@@ -24215,7 +24194,7 @@
     "lon": 42.7016,
     "land_area_km2": 125539.1,
     "arable_fraction": 0.2352,
-    "fertility_quality_multiplier": 0.7905,
+    "fertility_quality_multiplier": 0.8725,
     "coastal": true,
     "borders": [
      "azerbaijan_01",
@@ -24241,7 +24220,7 @@
     "lon": 62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.0744,
-    "fertility_quality_multiplier": 0.494,
+    "fertility_quality_multiplier": 0.5446,
     "coastal": false,
     "borders": [
      "afghanistan_02",
@@ -24310,7 +24289,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.278,
-    "fertility_quality_multiplier": 0.768,
+    "fertility_quality_multiplier": 0.7781,
     "coastal": false,
     "borders": [
      "dem_rep_congo_15",
@@ -24336,7 +24315,7 @@
     "lon": 28.8984,
     "land_area_km2": 75855.0,
     "arable_fraction": 0.3455,
-    "fertility_quality_multiplier": 1.0364,
+    "fertility_quality_multiplier": 1.0382,
     "coastal": true,
     "borders": [
      "romania_02",
@@ -24359,7 +24338,7 @@
     "lon": 34.2383,
     "land_area_km2": 77462.4,
     "arable_fraction": 0.3372,
-    "fertility_quality_multiplier": 1.0194,
+    "fertility_quality_multiplier": 1.0255,
     "coastal": true,
     "borders": [
      "russia_001",
@@ -24383,7 +24362,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2804,
-    "fertility_quality_multiplier": 0.886,
+    "fertility_quality_multiplier": 0.8928,
     "coastal": false,
     "borders": [
      "belarus_01",
@@ -24429,7 +24408,7 @@
     "lon": 34.1192,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2664,
-    "fertility_quality_multiplier": 0.858,
+    "fertility_quality_multiplier": 0.859,
     "coastal": false,
     "borders": [
      "russia_006",
@@ -24516,7 +24495,7 @@
     "lon": -7.1619,
     "land_area_km2": 75152.2,
     "arable_fraction": 0.2893,
-    "fertility_quality_multiplier": 0.88,
+    "fertility_quality_multiplier": 0.8848,
     "coastal": true,
     "borders": [
      "ireland_01",
@@ -24538,7 +24517,7 @@
     "lon": -2.7102,
     "land_area_km2": 94898.6,
     "arable_fraction": 0.295,
-    "fertility_quality_multiplier": 0.8906,
+    "fertility_quality_multiplier": 0.893,
     "coastal": true,
     "borders": [
      "united_kingdom_02",
@@ -24559,7 +24538,7 @@
     "lon": -98.9152,
     "land_area_km2": 115193.2,
     "arable_fraction": 0.2525,
-    "fertility_quality_multiplier": 0.7575,
+    "fertility_quality_multiplier": 0.8183,
     "coastal": true,
     "borders": [
      "mexico_13",
@@ -24581,7 +24560,7 @@
     "lon": -81.1772,
     "land_area_km2": 62352.2,
     "arable_fraction": 0.3263,
-    "fertility_quality_multiplier": 0.9237,
+    "fertility_quality_multiplier": 0.9339,
     "coastal": true,
     "borders": [
      "cuba_03",
@@ -24603,7 +24582,7 @@
     "lon": -102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1632,
-    "fertility_quality_multiplier": 0.618,
+    "fertility_quality_multiplier": 0.6701,
     "coastal": false,
     "borders": [
      "mexico_17",
@@ -24734,7 +24713,7 @@
     "lon": -117.3099,
     "land_area_km2": 82219.0,
     "arable_fraction": 0.2508,
-    "fertility_quality_multiplier": 0.7808,
+    "fertility_quality_multiplier": 0.8629,
     "coastal": true,
     "borders": [
      "united_states_of_america_10",
@@ -24756,7 +24735,7 @@
     "lon": -114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.036,
-    "fertility_quality_multiplier": 0.546,
+    "fertility_quality_multiplier": 0.5478,
     "coastal": false,
     "borders": [
      "mexico_18",
@@ -24780,7 +24759,7 @@
     "lon": -110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2316,
-    "fertility_quality_multiplier": 0.672,
+    "fertility_quality_multiplier": 0.7203,
     "coastal": false,
     "borders": [
      "mexico_19",
@@ -24808,7 +24787,7 @@
     "lon": -106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1944,
-    "fertility_quality_multiplier": 0.562,
+    "fertility_quality_multiplier": 0.5916,
     "coastal": false,
     "borders": [
      "mexico_20",
@@ -24832,7 +24811,7 @@
     "lon": -102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2356,
-    "fertility_quality_multiplier": 0.61,
+    "fertility_quality_multiplier": 0.6391,
     "coastal": false,
     "borders": [
      "united_states_of_america_03",
@@ -24985,7 +24964,7 @@
     "lon": -121.4287,
     "land_area_km2": 76692.3,
     "arable_fraction": 0.3231,
-    "fertility_quality_multiplier": 0.9406,
+    "fertility_quality_multiplier": 0.9499,
     "coastal": true,
     "borders": [
      "united_states_of_america_21",
@@ -25007,7 +24986,7 @@
     "lon": -118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1592,
-    "fertility_quality_multiplier": 0.63,
+    "fertility_quality_multiplier": 0.7899,
     "coastal": false,
     "borders": [
      "united_states_of_america_09",
@@ -25034,7 +25013,7 @@
     "lon": -114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1976,
-    "fertility_quality_multiplier": 0.592,
+    "fertility_quality_multiplier": 0.6219,
     "coastal": false,
     "borders": [
      "united_states_of_america_10",
@@ -25062,7 +25041,7 @@
     "lon": -110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1528,
-    "fertility_quality_multiplier": 0.514,
+    "fertility_quality_multiplier": 0.5421,
     "coastal": false,
     "borders": [
      "united_states_of_america_11",
@@ -25086,7 +25065,7 @@
     "lon": -106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1802,
-    "fertility_quality_multiplier": 0.608,
+    "fertility_quality_multiplier": 0.7073,
     "coastal": false,
     "borders": [
      "united_states_of_america_12",
@@ -25222,7 +25201,7 @@
     "lon": -82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.344,
-    "fertility_quality_multiplier": 1.032,
+    "fertility_quality_multiplier": 1.0343,
     "coastal": false,
     "borders": [
      "united_states_of_america_18",
@@ -25245,7 +25224,7 @@
     "lon": -78.5137,
     "land_area_km2": 143905.0,
     "arable_fraction": 0.348,
-    "fertility_quality_multiplier": 1.044,
+    "fertility_quality_multiplier": 1.0448,
     "coastal": true,
     "borders": [
      "united_states_of_america_19",
@@ -25288,7 +25267,7 @@
     "lon": -122.2625,
     "land_area_km2": 141560.0,
     "arable_fraction": 0.3236,
-    "fertility_quality_multiplier": 0.956,
+    "fertility_quality_multiplier": 0.9565,
     "coastal": true,
     "borders": [
      "united_states_of_america_20",
@@ -25310,7 +25289,7 @@
     "lon": -118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.196,
-    "fertility_quality_multiplier": 0.566,
+    "fertility_quality_multiplier": 0.6006,
     "coastal": false,
     "borders": [
      "united_states_of_america_21",
@@ -25334,7 +25313,7 @@
     "lon": -114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2216,
-    "fertility_quality_multiplier": 0.622,
+    "fertility_quality_multiplier": 0.6374,
     "coastal": false,
     "borders": [
      "united_states_of_america_22",
@@ -25359,7 +25338,7 @@
     "lon": -110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2018,
-    "fertility_quality_multiplier": 0.65,
+    "fertility_quality_multiplier": 0.7212,
     "coastal": false,
     "borders": [
      "united_states_of_america_23",
@@ -25385,7 +25364,7 @@
     "lon": -106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2048,
-    "fertility_quality_multiplier": 0.626,
+    "fertility_quality_multiplier": 0.6641,
     "coastal": false,
     "borders": [
      "united_states_of_america_24",
@@ -25409,7 +25388,7 @@
     "lon": -102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2512,
-    "fertility_quality_multiplier": 0.692,
+    "fertility_quality_multiplier": 0.7221,
     "coastal": false,
     "borders": [
      "united_states_of_america_25",
@@ -25436,7 +25415,7 @@
     "lon": -98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3124,
-    "fertility_quality_multiplier": 0.938,
+    "fertility_quality_multiplier": 0.9435,
     "coastal": false,
     "borders": [
      "united_states_of_america_26",
@@ -25460,7 +25439,7 @@
     "lon": -94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.304,
-    "fertility_quality_multiplier": 0.912,
+    "fertility_quality_multiplier": 0.9138,
     "coastal": false,
     "borders": [
      "united_states_of_america_27",
@@ -25483,7 +25462,7 @@
     "lon": -90.3156,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3064,
-    "fertility_quality_multiplier": 0.922,
+    "fertility_quality_multiplier": 0.9257,
     "coastal": false,
     "borders": [
      "united_states_of_america_28",
@@ -25507,7 +25486,7 @@
     "lon": -86.3015,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3084,
-    "fertility_quality_multiplier": 0.928,
+    "fertility_quality_multiplier": 0.9324,
     "coastal": false,
     "borders": [
      "united_states_of_america_29",
@@ -25531,7 +25510,7 @@
     "lon": -82.2875,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.3176,
-    "fertility_quality_multiplier": 0.964,
+    "fertility_quality_multiplier": 0.9728,
     "coastal": false,
     "borders": [
      "canada_01",
@@ -25556,7 +25535,7 @@
     "lon": -78.2735,
     "land_area_km2": 149999.6,
     "arable_fraction": 0.2904,
-    "fertility_quality_multiplier": 0.916,
+    "fertility_quality_multiplier": 0.9292,
     "coastal": false,
     "borders": [
      "canada_02",
@@ -25580,7 +25559,7 @@
     "lon": -74.2595,
     "land_area_km2": 122612.6,
     "arable_fraction": 0.3045,
-    "fertility_quality_multiplier": 0.9455,
+    "fertility_quality_multiplier": 0.959,
     "coastal": true,
     "borders": [
      "canada_03",
@@ -25604,7 +25583,7 @@
     "lon": -71.6204,
     "land_area_km2": 29189.5,
     "arable_fraction": 0.3143,
-    "fertility_quality_multiplier": 0.9679,
+    "fertility_quality_multiplier": 0.9807,
     "coastal": true,
     "borders": [
      "united_states_of_america_45",
@@ -25626,7 +25605,7 @@
     "lon": -122.1835,
     "land_area_km2": 134701.3,
     "arable_fraction": 0.2858,
-    "fertility_quality_multiplier": 0.8667,
+    "fertility_quality_multiplier": 0.8993,
     "coastal": true,
     "borders": [
      "canada_07",
@@ -25651,7 +25630,7 @@
     "lon": -118.4137,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2692,
-    "fertility_quality_multiplier": 0.754,
+    "fertility_quality_multiplier": 0.7903,
     "coastal": false,
     "borders": [
      "canada_08",
@@ -25677,7 +25656,7 @@
     "lon": -114.3997,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1992,
-    "fertility_quality_multiplier": 0.678,
+    "fertility_quality_multiplier": 0.748,
     "coastal": false,
     "borders": [
      "canada_09",
@@ -25704,7 +25683,7 @@
     "lon": -110.3857,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2072,
-    "fertility_quality_multiplier": 0.662,
+    "fertility_quality_multiplier": 0.7091,
     "coastal": false,
     "borders": [
      "canada_10",
@@ -25729,7 +25708,7 @@
     "lon": -106.3717,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2104,
-    "fertility_quality_multiplier": 0.554,
+    "fertility_quality_multiplier": 0.5618,
     "coastal": false,
     "borders": [
      "canada_11",
@@ -25753,7 +25732,7 @@
     "lon": -102.3576,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2448,
-    "fertility_quality_multiplier": 0.7,
+    "fertility_quality_multiplier": 0.7176,
     "coastal": false,
     "borders": [
      "canada_12",
@@ -25778,7 +25757,7 @@
     "lon": -98.3436,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2808,
-    "fertility_quality_multiplier": 0.876,
+    "fertility_quality_multiplier": 0.8778,
     "coastal": false,
     "borders": [
      "canada_13",
@@ -25801,7 +25780,7 @@
     "lon": -94.3296,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2776,
-    "fertility_quality_multiplier": 0.872,
+    "fertility_quality_multiplier": 0.8738,
     "coastal": false,
     "borders": [
      "canada_14",
@@ -25824,7 +25803,7 @@
     "lon": -90.3156,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2632,
-    "fertility_quality_multiplier": 0.854,
+    "fertility_quality_multiplier": 0.8546,
     "coastal": false,
     "borders": [
      "canada_15",
@@ -25869,7 +25848,7 @@
     "lon": -70.2454,
     "land_area_km2": 135011.3,
     "arable_fraction": 0.2522,
-    "fertility_quality_multiplier": 0.8326,
+    "fertility_quality_multiplier": 0.8445,
     "coastal": true,
     "borders": [
      "canada_03",
@@ -25892,7 +25871,7 @@
     "lon": -158.7843,
     "land_area_km2": 22632.9,
     "arable_fraction": 0.0706,
-    "fertility_quality_multiplier": 0.4,
+    "fertility_quality_multiplier": 0.4465,
     "coastal": true,
     "borders": [
      "united_states_of_america_62"
@@ -25912,7 +25891,7 @@
     "lon": -132.8931,
     "land_area_km2": 28180.7,
     "arable_fraction": 0.24,
-    "fertility_quality_multiplier": 0.78,
+    "fertility_quality_multiplier": 0.8425,
     "coastal": true,
     "borders": [
      "canada_25",
@@ -25954,7 +25933,7 @@
     "lon": -162.568,
     "land_area_km2": 89150.1,
     "arable_fraction": 0.0818,
-    "fertility_quality_multiplier": 0.4591,
+    "fertility_quality_multiplier": 0.4611,
     "coastal": true,
     "borders": [
      "united_states_of_america_60",
@@ -25976,7 +25955,7 @@
     "lon": -158.554,
     "land_area_km2": 127446.3,
     "arable_fraction": 0.0873,
-    "fertility_quality_multiplier": 0.4864,
+    "fertility_quality_multiplier": 0.4917,
     "coastal": true,
     "borders": [
      "united_states_of_america_58",
@@ -25999,7 +25978,7 @@
     "lon": -154.54,
     "land_area_km2": 130887.0,
     "arable_fraction": 0.0737,
-    "fertility_quality_multiplier": 0.4152,
+    "fertility_quality_multiplier": 0.4701,
     "coastal": true,
     "borders": [
      "united_states_of_america_62",
@@ -26023,7 +26002,7 @@
     "lon": -151.144,
     "land_area_km2": 90127.5,
     "arable_fraction": 0.0847,
-    "fertility_quality_multiplier": 0.4375,
+    "fertility_quality_multiplier": 0.5666,
     "coastal": true,
     "borders": [
      "united_states_of_america_63",
@@ -26047,7 +26026,7 @@
     "lon": -146.5119,
     "land_area_km2": 74866.1,
     "arable_fraction": 0.0676,
-    "fertility_quality_multiplier": 0.3833,
+    "fertility_quality_multiplier": 0.4585,
     "coastal": true,
     "borders": [
      "united_states_of_america_64",
@@ -26070,7 +26049,7 @@
     "lon": -142.4979,
     "land_area_km2": 90143.6,
     "arable_fraction": 0.055,
-    "fertility_quality_multiplier": 0.314,
+    "fertility_quality_multiplier": 0.5067,
     "coastal": true,
     "borders": [
      "canada_44",
@@ -26094,7 +26073,7 @@
     "lon": -166.1353,
     "land_area_km2": 28160.7,
     "arable_fraction": 0.0383,
-    "fertility_quality_multiplier": 0.2278,
+    "fertility_quality_multiplier": 0.421,
     "coastal": true,
     "borders": [
      "united_states_of_america_60",
@@ -26115,7 +26094,7 @@
     "lon": -162.568,
     "land_area_km2": 86383.8,
     "arable_fraction": 0.0555,
-    "fertility_quality_multiplier": 0.3184,
+    "fertility_quality_multiplier": 0.4652,
     "coastal": true,
     "borders": [
      "united_states_of_america_61",
@@ -26138,7 +26117,7 @@
     "lon": -158.554,
     "land_area_km2": 134688.4,
     "arable_fraction": 0.0502,
-    "fertility_quality_multiplier": 0.29,
+    "fertility_quality_multiplier": 0.4643,
     "coastal": true,
     "borders": [
      "united_states_of_america_62",
@@ -26161,7 +26140,7 @@
     "lon": -154.54,
     "land_area_km2": 137058.6,
     "arable_fraction": 0.0448,
-    "fertility_quality_multiplier": 0.262,
+    "fertility_quality_multiplier": 0.4375,
     "coastal": true,
     "borders": [
      "united_states_of_america_63",
@@ -26184,7 +26163,7 @@
     "lon": -150.5259,
     "land_area_km2": 129038.7,
     "arable_fraction": 0.07,
-    "fertility_quality_multiplier": 0.394,
+    "fertility_quality_multiplier": 0.5003,
     "coastal": true,
     "borders": [
      "united_states_of_america_64",
@@ -26208,7 +26187,7 @@
     "lon": -146.5119,
     "land_area_km2": 123474.8,
     "arable_fraction": 0.0716,
-    "fertility_quality_multiplier": 0.382,
+    "fertility_quality_multiplier": 0.5182,
     "coastal": true,
     "borders": [
      "united_states_of_america_65",
@@ -26232,7 +26211,7 @@
     "lon": -142.4979,
     "land_area_km2": 119012.4,
     "arable_fraction": 0.0534,
-    "fertility_quality_multiplier": 0.306,
+    "fertility_quality_multiplier": 0.4934,
     "coastal": true,
     "borders": [
      "canada_61",
@@ -26255,7 +26234,7 @@
     "lon": -54.671,
     "land_area_km2": 93983.4,
     "arable_fraction": 0.3476,
-    "fertility_quality_multiplier": 1.0429,
+    "fertility_quality_multiplier": 1.0438,
     "coastal": true,
     "borders": [
      "argentina_16",
@@ -26298,7 +26277,7 @@
     "lon": 66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.1768,
-    "fertility_quality_multiplier": 0.59,
+    "fertility_quality_multiplier": 0.6889,
     "coastal": false,
     "borders": [
      "afghanistan_05",
@@ -26344,7 +26323,7 @@
     "lon": -66.2314,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.246,
-    "fertility_quality_multiplier": 0.81,
+    "fertility_quality_multiplier": 0.8451,
     "coastal": false,
     "borders": [
      "colombia_07",
@@ -26367,7 +26346,7 @@
     "lon": -62.2174,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.198,
-    "fertility_quality_multiplier": 0.724,
+    "fertility_quality_multiplier": 0.7621,
     "coastal": false,
     "borders": [
      "brazil_60",
@@ -26391,7 +26370,7 @@
     "lon": -70.2454,
     "land_area_km2": 149631.1,
     "arable_fraction": 0.2882,
-    "fertility_quality_multiplier": 0.746,
+    "fertility_quality_multiplier": 0.7745,
     "coastal": false,
     "borders": [
      "colombia_07",
@@ -26439,7 +26418,7 @@
     "lon": -62.2174,
     "land_area_km2": 143334.2,
     "arable_fraction": 0.275,
-    "fertility_quality_multiplier": 0.7771,
+    "fertility_quality_multiplier": 0.7886,
     "coastal": true,
     "borders": [
      "guyana_02",
@@ -26463,7 +26442,7 @@
     "lon": -69.9012,
     "land_area_km2": 102300.4,
     "arable_fraction": 0.2875,
-    "fertility_quality_multiplier": 0.7312,
+    "fertility_quality_multiplier": 0.737,
     "coastal": true,
     "borders": [
      "colombia_10",
@@ -26549,7 +26528,7 @@
     "lon": 108.8133,
     "land_area_km2": 30417.1,
     "arable_fraction": 0.3067,
-    "fertility_quality_multiplier": 0.8524,
+    "fertility_quality_multiplier": 0.8545,
     "coastal": true,
     "borders": [
      "cambodia_02"
@@ -26570,7 +26549,7 @@
     "lon": 105.3226,
     "land_area_km2": 79863.1,
     "arable_fraction": 0.3117,
-    "fertility_quality_multiplier": 0.8667,
+    "fertility_quality_multiplier": 0.8698,
     "coastal": true,
     "borders": [
      "china_01",
@@ -26593,7 +26572,7 @@
     "lon": 46.0199,
     "land_area_km2": 97033.6,
     "arable_fraction": 0.04,
-    "fertility_quality_multiplier": 0.54,
+    "fertility_quality_multiplier": 0.545,
     "coastal": true,
     "borders": [
      "ethiopia_11",
@@ -26682,7 +26661,7 @@
     "lon": 26.0912,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.248,
-    "fertility_quality_multiplier": 0.74,
+    "fertility_quality_multiplier": 0.7806,
     "coastal": false,
     "borders": [
      "angola_03",
@@ -26727,7 +26706,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.308,
-    "fertility_quality_multiplier": 0.864,
+    "fertility_quality_multiplier": 0.8708,
     "coastal": false,
     "borders": [
      "mozambique_06",
@@ -26751,7 +26730,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.308,
-    "fertility_quality_multiplier": 0.83,
+    "fertility_quality_multiplier": 0.8331,
     "coastal": false,
     "borders": [
      "dem_rep_congo_01",
@@ -26774,7 +26753,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2192,
-    "fertility_quality_multiplier": 0.656,
+    "fertility_quality_multiplier": 0.6818,
     "coastal": false,
     "borders": [
      "botswana_04",
@@ -26797,7 +26776,7 @@
     "lon": 30.1052,
     "land_area_km2": 150000.0,
     "arable_fraction": 0.2616,
-    "fertility_quality_multiplier": 0.774,
+    "fertility_quality_multiplier": 0.8124,
     "coastal": false,
     "borders": [
      "mozambique_04",
