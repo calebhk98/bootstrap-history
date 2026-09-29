@@ -60,3 +60,6 @@ Effect: a player (and my own open-if-profitable routine) mothballs profitable co
 `start scientific_method` (cost 1,106) -> "REFUSED: nobody here will fund new work: your creditors were left unpaid ... They will deal with you again in 303, and until then you may finish what is running, and pay for something out of money you actually hold."
 `stuck` also says "0 things you could begin, 0 of them you could pay for". Either the rule should let a start the player can fully pay from cash go ahead (which the message promises), or the message should say plainly that nothing can be started.
 Repro: exhaust credit so a freeze starts, step until cash is positive, `start` any cheap node.
+
+## 10. `rush preview` always reports nothing
+At 507 AD, `rush preview` and `rush preview:true` both print "RUSH: 0 started, 0 not". On an identical copy of the save, `rush limit:3` starts 3 things and refuses 1. The preview should list what `rush` would do.

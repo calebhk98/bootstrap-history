@@ -76,3 +76,9 @@ In 303 AD cash went from 14,823 to 21,536 in one `step 1`, while `money` gave "N
 
 ## 18. `auto_hire` keeps idle taught specialists on full pay
 Two machinists trained in 179 AD stayed on the payroll at 7,578 den/yr each (15,156 in all, more than 8x my revenue) through years with no project that used them. `auto_hire` "replaces any trade you taught as its people die off", but nothing ever warns that a taught trade is idle. `stuck` pointed at arrears and loss-making works, not at the wage bill.
+
+## 19. Top-level `--help` is developer documentation
+`python3 sim/simulator.py --help` (which the README tells players to run) prints a module docstring about cli.py / cli_interactive.py / cli_agent.py, `cmd_sweep` placement and `_wilson_interval`, instead of a one-line description per command. It also reveals `agent`, `plan`, `search`, `run`, `compare`, `sweep` and `sensitivity`, which the README does not mention.
+
+## 20. `compact` output is longer than the normal screen
+`help commands` says `compact` gives "a small shared set of ... fields". At 507 AD `state compact` is 10,747 bytes of JSON and `state` is 4,250 bytes of text, so it is no help to a script or agent trying to read less.
