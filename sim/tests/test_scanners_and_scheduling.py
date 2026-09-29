@@ -522,8 +522,9 @@ check("BREAK-style isolation: a sacking that forgot even one technology "
       and _ach_sack["never_understaffed"]["won"]
       and _ach_sack["free_hands_only"]["won"], _ach_sack)
 
-_ach_staff = _SCORE(_won_sim(shut_for_staff={"workshop_first": 150}),
-                    NODES)["achievements"]
+_staff_sim = _won_sim()
+_staff_sim.state.projects.closures["workshop_first"] = {"reason": "staff", "year": 150}
+_ach_staff = _SCORE(_staff_sim, NODES)["achievements"]
 check("...a concern once closed for want of staff costs only that "
       "achievement",
       not _ach_staff["never_understaffed"]["won"]

@@ -479,19 +479,10 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def shut_for_staff(self):
-		sub = getattr(self.state, "projects", None)
-		if sub is None:
-			raise AttributeError("shut_for_staff")
-		val = getattr(sub, "shut_for_staff", None)
-		if val is None:
-			raise AttributeError("shut_for_staff")
-		return val
-
-	@shut_for_staff.setter
-	def shut_for_staff(self, value):
-		sub = getattr(self.state, "projects", None)
-		if sub is not None:
-			setattr(sub, "shut_for_staff", value)
+		# Read-only {work id: year} view of the staffing closures.
+		return {node_id: record["year"]
+				for node_id, record in self.state.projects.closures.items()
+				if record["reason"] == "staff"}
 
 	@property
 	def bountied(self):

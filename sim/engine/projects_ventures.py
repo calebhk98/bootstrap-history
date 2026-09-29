@@ -296,8 +296,8 @@ class VenturesMixin:
         household = self.state.household
         scenario = self.state.scenario
         governance = self.state.governance
-        _shut = getattr(projects, "shut_for_staff", {}) or {}
-        if node_id in _shut and scenario.year - _shut[node_id] <= self.STAFF_CLOSURE_GRACE:
+        _age = self.staff_closure_age(node_id)
+        if _age is not None and _age <= self.STAFF_CLOSURE_GRACE:
             fee *= self.STAFF_CLOSURE_DISCOUNT
         if pay:
             if fee > self.spending_power("open"):
@@ -314,8 +314,7 @@ class VenturesMixin:
             household.capital -= fee
         projects.operating.add(node_id)
         projects.mothballed.discard(node_id)
-        _shut.pop(node_id, None)
-        projects.shut_for_staff = _shut
+        self.clear_closure(node_id)
         if scalable:
             inst_units = getattr(governance, "inst_units", None)
             if inst_units is None:
@@ -420,8 +419,7 @@ class VenturesMixin:
         projects = self.state.projects
         if node_id not in projects.operating:
             return False, "you are not running that"
-        projects.operating.discard(node_id)
-        projects.mothballed.add(node_id)
+        self.close_work(node_id, self.CLOSED_BY_CHOICE)
         node = self.nodes[node_id]
         return True, ("%s closed: you stop paying %s a year and stop earning %s"
                       % (node_id, "{:,.0f}".format(node["up"]), "{:,.0f}".format(node["rev"])))
