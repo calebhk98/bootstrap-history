@@ -16,7 +16,7 @@
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -42,7 +42,7 @@
    "glassblower": 40
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 3,
@@ -68,7 +68,7 @@
    "glassblower": 60
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.15,
   "dev_years": 2,
@@ -82,7 +82,7 @@
   "cat": "lab_technique",
   "pre": [
    "lab_apparatus",
-   "reflux",
+   "ch2_lab_reflux",
    "distillation_alcohol"
   ],
   "req_any": [
@@ -105,7 +105,7 @@
    "glassblower": 100
   },
   "mat": {
-   "mat_glass_labware": 5
+   "glass_raw_kg": 5
   },
   "build_yrs": 0.3,
   "dev_years": 5,
@@ -130,7 +130,7 @@
    "chemist": 120
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -157,7 +157,7 @@
    "machinist": 150
   },
   "mat": {
-   "mat_glass_labware": 4,
+   "glass_raw_kg": 4,
    "mat_mercury": 2
   },
   "build_yrs": 0.4,
@@ -184,7 +184,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -199,7 +199,7 @@
   "pre": [
    "lab_apparatus",
    "thermometer",
-   "recrystallisation"
+   "ch2_lab_recrystallisation"
   ],
   "traits": [
    "labour_saving"
@@ -210,7 +210,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 4
+   "glass_raw_kg": 4
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -235,7 +235,7 @@
    "chemist": 100
   },
   "mat": {
-   "mat_parchment": 2
+   "parchment_sheet": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -261,7 +261,7 @@
    "chemist": 280
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -344,7 +344,7 @@
    "machinist": 80
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -358,7 +358,7 @@
   "cat": "lab_technique",
   "pre": [
    "lab_apparatus",
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1100",
    "thermometer"
   ],
@@ -372,7 +372,7 @@
    "machinist": 200
   },
   "mat": {
-   "mat_glass_labware": 4,
+   "glass_raw_kg": 4,
    "steel_plate_kg": 1
   },
   "build_yrs": 0.5,
@@ -388,7 +388,7 @@
   "pre": [
    "lab_apparatus",
    "potash_soda",
-   "coal_tar_products"
+   "chm_coal_tar_distillation"
   ],
   "traits": [
    "labour_saving"
@@ -399,7 +399,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 6,
@@ -433,7 +433,7 @@
    "chemist": 100
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -460,7 +460,7 @@
   },
   "mat": {
    "cast_iron_kg": 3,
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.4,
   "dev_years": 5,
@@ -487,7 +487,7 @@
    "machinist": 150
   },
   "mat": {
-   "mat_glass_labware": 4,
+   "glass_raw_kg": 4,
    "mat_mercury": 1
   },
   "build_yrs": 0.5,
@@ -513,7 +513,7 @@
    "chemist": 150
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -548,7 +548,7 @@
    "glassblower": 40
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -562,7 +562,7 @@
   "cat": "analysis",
   "pre": [
    "lab_apparatus",
-   "coal_tar_products"
+   "chm_coal_tar_distillation"
   ],
   "traits": [
    "labour_saving"
@@ -573,7 +573,7 @@
    "chemist": 250
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -614,7 +614,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -639,7 +639,7 @@
    "chemist": 250
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -680,7 +680,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_glass_labware": 4
+   "glass_raw_kg": 4
   },
   "build_yrs": 0.3,
   "dev_years": 5,
@@ -694,7 +694,7 @@
   "cat": "analysis",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -715,7 +715,7 @@
    "machinist": 100
   },
   "mat": {
-   "mat_glass_labware": 5,
+   "glass_raw_kg": 5,
    "copper_kg": 2
   },
   "build_yrs": 0.4,
@@ -731,7 +731,7 @@
   "pre": [
    "lab_apparatus",
    "spectroscope",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "traits": [
    "labour_saving"
@@ -743,7 +743,7 @@
    "optician": 100
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 5,
@@ -768,7 +768,7 @@
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -794,8 +794,8 @@
    "optician": 120
   },
   "mat": {
-   "mat_glass_labware": 2,
-   "mat_glass_boro": 1
+   "glass_raw_kg": 2,
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.35,
   "dev_years": 6,
@@ -822,7 +822,7 @@
    "machinist": 120
   },
   "mat": {
-   "mat_glass_labware": 3,
+   "glass_raw_kg": 3,
    "mat_mercury": 1
   },
   "build_yrs": 0.4,
@@ -837,7 +837,7 @@
   "cat": "analysis",
   "pre": [
    "lab_apparatus",
-   "glass_boro",
+   "glass_borosilicate",
    "vacuum_tube"
   ],
   "traits": [
@@ -850,7 +850,7 @@
    "glassblower": 180
   },
   "mat": {
-   "mat_glass_boro": 2,
+   "glass_borosilicate_kg": 2,
    "silver_kg": 0.5
   },
   "build_yrs": 0.4,
@@ -878,7 +878,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 3,
@@ -904,7 +904,7 @@
    "optician": 80
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -929,7 +929,7 @@
    "chemist": 80
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.1,
   "dev_years": 1,
@@ -943,7 +943,7 @@
   "cat": "industrial_process",
   "pre": [
    "nitric_acid",
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1300"
   ],
   "req_any": [
@@ -980,7 +980,7 @@
   "cat": "industrial_process",
   "pre": [
    "nitric_acid",
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1300"
   ],
   "req_any": [
@@ -1046,7 +1046,7 @@
   "cat": "industrial_process",
   "pre": [
    "potash_soda",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -1082,7 +1082,7 @@
   "cat": "industrial_process",
   "pre": [
    "steam_high_pressure",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -1116,7 +1116,7 @@
   "name": "Ostwald process for HNO3",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1100"
   ],
   "req_any": [
@@ -1139,7 +1139,7 @@
   },
   "mat": {
    "steel_plate_kg": 40,
-   "mat_platinum_bulk": 0.5
+   "platinum_g": 500.0
   },
   "cap": 400,
   "build_yrs": 1.5,
@@ -1153,8 +1153,8 @@
   "name": "Birkeland-Eyde process for NOx",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
-   "electric_arc"
+   "cap_gas_o2h2",
+   "chm_electric_arc_nitrogen"
   ],
   "traits": [
    "commerce"
@@ -1180,9 +1180,8 @@
   "name": "Cyanamide process",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
-   "cap_heat_1300",
-   "calcium_carbide"
+   "cap_gas_o2h2",
+   "cap_heat_1300"
   ],
   "traits": [
    "commerce"
@@ -1208,7 +1207,7 @@
   "name": "Fischer-Tropsch synthesis",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1100"
   ],
   "req_any": [
@@ -1244,7 +1243,7 @@
   "name": "Bergius coal liquefaction",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1300"
   ],
   "req_any": [
@@ -1317,7 +1316,7 @@
   "name": "Catalytic cracking of oil",
   "cat": "industrial_process",
   "pre": [
-   "cap_heat_800",
+   "cap_heat_1100",
    "ch2_process_thermal_cracking",
    "chm_catalyst_concept"
   ],
@@ -1389,7 +1388,7 @@
   "name": "Alkylation of aromatic hydrocarbons",
   "cat": "industrial_process",
   "pre": [
-   "cap_heat_700",
+   "cap_heat_0700",
    "ch2_rxn_friedel_crafts",
    "chm_benzene"
   ],
@@ -1412,7 +1411,7 @@
    "engineer": 160
   },
   "mat": {
-   "mat_glass_boro": 10
+   "glass_borosilicate_kg": 10
   },
   "cap": 300,
   "build_yrs": 1.2,
@@ -1563,7 +1562,7 @@
    "chemist": 150
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -1606,7 +1605,7 @@
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 2,
@@ -1648,7 +1647,7 @@
    "chemist": 240
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -1662,7 +1661,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "sulfuric_acid_conc"
+   "chm_contact_sulfuric"
   ],
   "req_any": [
    {
@@ -1682,7 +1681,7 @@
    "chemist": 220
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -1696,7 +1695,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "cap_heat_700"
+   "cap_heat_0700"
   ],
   "req_any": [
    {
@@ -1724,7 +1723,7 @@
    "chemist": 230
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 4,
@@ -1738,7 +1737,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "cap_heat_700"
+   "cap_heat_0700"
   ],
   "req_any": [
    {
@@ -1764,7 +1763,7 @@
    "chemist": 260
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -1805,7 +1804,7 @@
    "chemist": 270
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -1819,7 +1818,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "cap_heat_700"
+   "cap_heat_0700"
   ],
   "req_any": [
    {
@@ -1846,7 +1845,7 @@
    "chemist": 290
   },
   "mat": {
-   "mat_glass_boro": 3
+   "glass_borosilicate_kg": 3
   },
   "build_yrs": 0.25,
   "dev_years": 5,
@@ -1887,7 +1886,7 @@
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 6,
@@ -1901,7 +1900,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "cap_heat_700"
+   "cap_heat_0700"
   ],
   "req_any": [
    {
@@ -1928,7 +1927,7 @@
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -1942,7 +1941,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -1970,7 +1969,7 @@
    "chemist": 260
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -2002,7 +2001,7 @@
    "chemist": 160
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -2016,7 +2015,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "sulfuric_acid_conc"
+   "chm_contact_sulfuric"
   ],
   "req_any": [
    {
@@ -2035,7 +2034,7 @@
    "chemist": 170
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -2069,7 +2068,7 @@
    "chemist": 290
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 6,
@@ -2094,7 +2093,7 @@
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 6,
@@ -2128,7 +2127,7 @@
    "chemist": 220
   },
   "mat": {
-   "mat_glass_boro": 1
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -2169,7 +2168,7 @@
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -2202,7 +2201,7 @@
    "chemist": 240
   },
   "mat": {
-   "mat_glass_boro": 1
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -2215,8 +2214,7 @@
   "name": "Acetylene from calcium carbide",
   "cat": "product",
   "pre": [
-   "calcium_carbide",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "traits": [
    "commerce",
@@ -2228,7 +2226,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 2,
@@ -2240,7 +2238,7 @@
   "name": "Methanol synthesis",
   "cat": "product",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1300"
   ],
   "req_any": [
@@ -2261,7 +2259,7 @@
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 7,
@@ -2301,7 +2299,7 @@
    "chemist": 150
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -2342,7 +2340,7 @@
    "chemist": 220
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -2383,7 +2381,7 @@
    "chemist": 240
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -2397,7 +2395,7 @@
   "cat": "product",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -2424,7 +2422,7 @@
    "chemist": 270
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 5,
@@ -2437,7 +2435,7 @@
   "name": "Benzene from coal tar",
   "cat": "product",
   "pre": [
-   "coal_tar_products",
+   "chm_coal_tar_distillation",
    "distillation_alcohol"
   ],
   "traits": [
@@ -2449,7 +2447,7 @@
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 2,
@@ -2461,7 +2459,7 @@
   "name": "Toluene from coal tar",
   "cat": "product",
   "pre": [
-   "coal_tar_products",
+   "chm_coal_tar_distillation",
    "distillation_alcohol"
   ],
   "traits": [
@@ -2473,7 +2471,7 @@
    "chemist": 190
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 2,
@@ -2485,7 +2483,7 @@
   "name": "Xylene from coal tar and synthesis",
   "cat": "product",
   "pre": [
-   "coal_tar_products",
+   "chm_coal_tar_distillation",
    "distillation_alcohol"
   ],
   "req_any": [
@@ -2506,7 +2504,7 @@
    "chemist": 220
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 3,
@@ -2520,7 +2518,7 @@
   "cat": "product",
   "pre": [
    "lab_apparatus",
-   "rxn_bechamp_reduction"
+   "ch2_rxn_bechamp_reduction"
   ],
   "req_any": [
    {
@@ -2547,7 +2545,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -2561,7 +2559,7 @@
   "cat": "product",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "traits": [
    "commerce"
@@ -2572,7 +2570,7 @@
    "chemist": 240
   },
   "mat": {
-   "mat_glass_boro": 1
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -2586,7 +2584,7 @@
   "cat": "product",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -2613,7 +2611,7 @@
    "chemist": 230
   },
   "mat": {
-   "mat_glass_boro": 1
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 3,
@@ -2626,7 +2624,7 @@
   "name": "Glycerol as soap byproduct and synthetic",
   "cat": "product",
   "pre": [
-   "rxn_saponification"
+   "ch2_rxn_saponification"
   ],
   "traits": [
    "commerce"
@@ -2637,7 +2635,7 @@
    "chemist": 150
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -2670,7 +2668,7 @@
    "chemist": 260
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -2704,7 +2702,7 @@
    "chemist": 280
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -2737,7 +2735,7 @@
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 7,
@@ -2750,8 +2748,7 @@
   "name": "Cellulose acetate plastic",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "acetic_anhydride"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -2770,7 +2767,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 6,
@@ -2784,7 +2781,7 @@
   "cat": "polymer",
   "pre": [
    "lab_apparatus",
-   "phenol"
+   "ch2_prod_phenol"
   ],
   "req_any": [
    {
@@ -2810,7 +2807,7 @@
    "chemist": 320
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 7,
@@ -2824,8 +2821,8 @@
   "cat": "polymer",
   "pre": [
    "lab_apparatus",
-   "urea",
-   "formaldehyde"
+   "ch2_prod_urea",
+   "ch2_prod_formaldehyde"
   ],
   "req_any": [
    {
@@ -2845,7 +2842,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 6,
@@ -2858,7 +2855,6 @@
   "name": "Polyvinyl chloride (PVC)",
   "cat": "polymer",
   "pre": [
-   "vinyl_chloride",
    "lab_apparatus",
    "electrolysis_industrial"
   ],
@@ -2895,7 +2891,6 @@
   "name": "Polystyrene",
   "cat": "polymer",
   "pre": [
-   "styrene",
    "lab_apparatus"
   ],
   "req_any": [
@@ -2916,7 +2911,7 @@
    "chemist": 270
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -2930,7 +2925,7 @@
   "cat": "polymer",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -2962,7 +2957,6 @@
   "name": "Polymethyl methacrylate (PMMA)",
   "cat": "polymer",
   "pre": [
-   "methyl_methacrylate",
    "lab_apparatus"
   ],
   "req_any": [
@@ -2983,7 +2977,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 6,
@@ -2996,8 +2990,7 @@
   "name": "Nylon-66 polyamide fibre",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "adipic_acid"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -3016,7 +3009,7 @@
    "chemist": 320
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 8,
@@ -3029,8 +3022,7 @@
   "name": "Polyethylene terephthalate (PET) polyester",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "ethylene_glycol"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -3050,7 +3042,7 @@
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 8,
@@ -3063,8 +3055,7 @@
   "name": "Neoprene synthetic rubber",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "chloroprene"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -3084,7 +3075,7 @@
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 7,
@@ -3098,8 +3089,7 @@
   "cat": "polymer",
   "pre": [
    "lab_apparatus",
-   "butadiene",
-   "styrene"
+   "ch2_polymer_polystyrene"
   ],
   "req_any": [
    {
@@ -3119,7 +3109,7 @@
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 7,
@@ -3132,8 +3122,7 @@
   "name": "Silicone polymers",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "silicon_metal"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -3158,7 +3147,7 @@
    "chemist": 340
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 8,
@@ -3184,7 +3173,7 @@
    "chemist": 230
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -3211,7 +3200,7 @@
    "chemist": 270
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -3238,7 +3227,7 @@
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -3254,7 +3243,7 @@
   "cat": "physical_chemistry",
   "pre": [
    "lab_apparatus",
-   "equilibrium"
+   "ch2_phys_equilibrium"
   ],
   "traits": [
    "labour_saving"
@@ -3315,7 +3304,7 @@
    "chemist": 220
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -3367,7 +3356,7 @@
    "chemist": 220
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -3383,7 +3372,7 @@
   "cat": "physical_chemistry",
   "pre": [
    "lab_apparatus",
-   "electrochemical_series"
+   "ch2_phys_electrochemical_series"
   ],
   "traits": [
    "labour_saving"
@@ -3394,7 +3383,7 @@
    "chemist": 280
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -3410,7 +3399,7 @@
   "cat": "physical_chemistry",
   "pre": [
    "lab_apparatus",
-   "electrochemical_series",
+   "ch2_phys_electrochemical_series",
    "logarithms"
   ],
   "traits": [

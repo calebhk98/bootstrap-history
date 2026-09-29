@@ -112,7 +112,7 @@
   },
   "mat": {
    "iron_bar_kg": 150,
-   "mat_wood_bulk": 300
+   "wood_kg": 300
   },
   "cap": 80,
   "up": 15,
@@ -179,11 +179,11 @@
   "ph": 100,
   "lab": {
    "millwright": 322,
-   "master_screw": 60
+   "machinist": 60
   },
   "mat": {
    "iron_bar_kg": 140,
-   "mat_wood_bulk": 300
+   "wood_kg": 300
   },
   "cap": 90,
   "up": 18,
@@ -359,7 +359,7 @@
    "carpenter": 200
   },
   "mat": {
-   "mat_wood_bulk": 500,
+   "wood_kg": 500,
    "lead_kg": 50
   },
   "cap": 50,
@@ -393,7 +393,7 @@
   },
   "mat": {
    "cast_iron_kg": 100,
-   "mat_wood_bulk": 200
+   "wood_kg": 200
   },
   "cap": 80,
   "up": 10,
@@ -424,7 +424,7 @@
   "ph": 100,
   "lab": {
    "millwright": 368,
-   "master_screw": 50
+   "machinist": 50
   },
   "mat": {
    "iron_bar_kg": 60,
@@ -605,7 +605,7 @@
   "ph": 110,
   "lab": {
    "carpenter": 368,
-   "master_screw": 80
+   "machinist": 80
   },
   "mat": {
    "mat_canvas": 50,
@@ -638,7 +638,7 @@
   "ph": 100,
   "lab": {
    "carpenter": 322,
-   "master_screw": 70
+   "machinist": 70
   },
   "mat": {
    "mat_canvas": 60,
@@ -672,11 +672,11 @@
   "ph": 120,
   "lab": {
    "millwright": 414,
-   "pump_maker": 300
+   "artisan": 300
   },
   "mat": {
    "mat_bronze": 80,
-   "mat_wood_bulk": 300
+   "wood_kg": 300
   },
   "cap": 40,
   "up": 8,
@@ -767,7 +767,7 @@
   "name": "Separate condenser (Watt)",
   "cat": "steam_auxiliary",
   "pre": [
-   "en_atmospheric_engine",
+   "steam_atmospheric",
    "cap_tol_10um"
   ],
   "traits": [
@@ -777,7 +777,7 @@
   "ph": 200,
   "lab": {
    "engineer": 552,
-   "master_screw": 100
+   "machinist": 100
   },
   "mat": {
    "copper_kg": 300,
@@ -801,7 +801,7 @@
   "name": "Double-acting cylinder",
   "cat": "steam_prime",
   "pre": [
-   "en_atmospheric_engine",
+   "steam_atmospheric",
    "cap_tol_10um"
   ],
   "traits": [
@@ -811,7 +811,7 @@
   "ph": 160,
   "lab": {
    "engineer": 478,
-   "master_screw": 80
+   "machinist": 80
   },
   "mat": {
    "cast_iron_kg": 400,
@@ -879,7 +879,7 @@
   "ph": 120,
   "lab": {
    "engineer": 414,
-   "master_screw": 70
+   "machinist": 70
   },
   "mat": {
    "iron_bar_kg": 100,
@@ -1026,8 +1026,7 @@
   "kb": "98_power_plants.md#en_expansive_working",
   "ph": 90,
   "lab": {
-   "machinist": 322,
-   "master_screw": 60
+   "machinist": 382
   },
   "mat": {
    "cast_iron_kg": 150,
@@ -1294,7 +1293,7 @@
   "kb": "Copper sphere or hemispherical shell, wood fire underneath",
   "ph": 180.0,
   "lab": {
-   "coppersmith": 300
+   "smith": 300
   },
   "mat": {
    "copper_kg": 400.0,
@@ -1329,7 +1328,7 @@
   "kb": "Cylindrical iron shell with flat ends, internal fire tube",
   "ph": 200.0,
   "lab": {
-   "metalworker": 368
+   "smith": 368
   },
   "mat": {
    "cast_iron_kg": 600.0,
@@ -1366,7 +1365,7 @@
   "ph": 250.0,
   "lab": {
    "engineer": 349,
-   "metalworker": 368
+   "smith": 368
   },
   "mat": {
    "cast_iron_kg": 800.0,
@@ -1404,7 +1403,7 @@
   "ph": 250.0,
   "lab": {
    "engineer": 386,
-   "metalworker": 414
+   "smith": 414
   },
   "mat": {
    "cast_iron_kg": 1000.0,
@@ -1440,10 +1439,10 @@
   "ph": 120,
   "lab": {
    "engineer": 368,
-   "metalworker": 386
+   "smith": 386
   },
   "mat": {
-   "mat_steel": 400,
+   "steel_plate_kg": 400,
    "copper_kg": 100
   },
   "cap": 70,
@@ -1520,7 +1519,7 @@
    "machinist": 322
   },
   "mat": {
-   "mat_steel": 550,
+   "steel_plate_kg": 550,
    "cast_iron_kg": 250,
    "mat_bronze": 80
   },
@@ -1554,7 +1553,7 @@
    "machinist": 349
   },
   "mat": {
-   "mat_steel": 600,
+   "steel_plate_kg": 600,
    "cast_iron_kg": 280,
    "mat_bronze": 120
   },
@@ -1622,13 +1621,12 @@
   "kb": "Bourdon tube or diaphragm responds to pressure, needle shows reading",
   "ph": 100,
   "lab": {
-   "machinist": 322,
-   "master_screw": 60
+   "machinist": 382
   },
   "mat": {
    "mat_bronze": 80,
    "iron_bar_kg": 50,
-   "mat_glass_soda": 10
+   "glass_raw_kg": 10
   },
   "cap": 70,
   "up": 12,
@@ -1692,7 +1690,7 @@
    "mason": 200
   },
   "mat": {
-   "mat_steel": 200,
+   "steel_plate_kg": 200,
    "cast_iron_kg": 250
   },
   "cap": 120,
@@ -1727,7 +1725,7 @@
    "machinist": 414
   },
   "mat": {
-   "mat_steel": 300,
+   "steel_plate_kg": 300,
    "mat_bronze": 150
   },
   "cap": 300,
@@ -1800,7 +1798,7 @@
    "machinist": 441
   },
   "mat": {
-   "mat_steel": 350,
+   "steel_plate_kg": 350,
    "mat_bronze": 180
   },
   "cap": 330,
@@ -1834,7 +1832,7 @@
    "machinist": 349
   },
   "mat": {
-   "mat_steel": 100
+   "steel_plate_kg": 100
   },
   "cap": 150,
   "up": 30,
@@ -1902,7 +1900,7 @@
    "machinist": 322
   },
   "mat": {
-   "mat_steel": 300,
+   "steel_plate_kg": 300,
    "cast_iron_kg": 200
   },
   "cap": 150,
@@ -2061,7 +2059,7 @@
    "machinist": 441
   },
   "mat": {
-   "mat_steel": 500,
+   "steel_plate_kg": 500,
    "cast_iron_kg": 400
   },
   "cap": 150,
@@ -2082,7 +2080,7 @@
   "name": "Fuel injection system",
   "cat": "ic_auxiliary",
   "pre": [
-   "en_compression_ignition",
+   "lnd_diesel_cycle",
    "cap_tol_10um"
   ],
   "traits": [
@@ -2095,7 +2093,7 @@
    "machinist": 368
   },
   "mat": {
-   "mat_steel": 200,
+   "steel_plate_kg": 200,
    "mat_bronze": 100
   },
   "cap": 120,
@@ -2176,7 +2174,7 @@
   },
   "mat": {
    "cast_iron_kg": 400,
-   "mat_brick": 500
+   "brick_1000": 0.5
   },
   "cap": 100,
   "up": 18,
@@ -2206,7 +2204,7 @@
   "name": "Carburetted engine",
   "cat": "ic_prime",
   "pre": [
-   "en_four_stroke_cycle",
+   "lnd_otto_cycle_four_stroke",
    "mat_petroleum_refined"
   ],
   "traits": [
@@ -2240,7 +2238,7 @@
   "name": "Poppet valve and camshaft",
   "cat": "ic_auxiliary",
   "pre": [
-   "en_four_stroke_cycle",
+   "lnd_otto_cycle_four_stroke",
    "cap_tol_100um"
   ],
   "traits": [
@@ -2249,11 +2247,10 @@
   "kb": "98_power_plants.md#en_poppet_valve",
   "ph": 100,
   "lab": {
-   "machinist": 322,
-   "master_screw": 60
+   "machinist": 382
   },
   "mat": {
-   "mat_steel": 120,
+   "steel_plate_kg": 120,
    "mat_bronze": 80
   },
   "cap": 90,
@@ -2287,7 +2284,7 @@
    "machinist": 349
   },
   "mat": {
-   "mat_steel": 180,
+   "steel_plate_kg": 180,
    "mat_bronze": 100
   },
   "cap": 100,
@@ -2342,7 +2339,7 @@
   "name": "Turbocharger (exhaust-driven)",
   "cat": "ic_auxiliary",
   "pre": [
-   "en_compression_ignition",
+   "lnd_diesel_cycle",
    "cap_tol_10um"
   ],
   "traits": [
@@ -2355,7 +2352,7 @@
    "machinist": 386
   },
   "mat": {
-   "mat_steel": 200,
+   "steel_plate_kg": 200,
    "mat_bronze": 120
   },
   "cap": 140,
@@ -2394,7 +2391,7 @@
    "machinist": 506
   },
   "mat": {
-   "mat_steel": 400,
+   "steel_plate_kg": 400,
    "mat_bronze": 200
   },
   "cap": 200,
@@ -2427,7 +2424,7 @@
    "machinist": 552
   },
   "mat": {
-   "mat_steel": 500,
+   "steel_plate_kg": 500,
    "mat_bronze": 250
   },
   "cap": 250,
@@ -2462,7 +2459,7 @@
   },
   "mat": {
    "mat_porcelain": 150,
-   "mat_steel": 200
+   "steel_plate_kg": 200
   },
   "cap": 150,
   "up": 35,
@@ -2502,7 +2499,7 @@
    "engineer": 460
   },
   "mat": {
-   "mat_steel": 300,
+   "steel_plate_kg": 300,
    "copper_kg": 150
   },
   "cap": 140,
@@ -2616,7 +2613,7 @@
   "ph": 100,
   "lab": {
    "engineer": 349,
-   "metalworker": 300
+   "smith": 300
   },
   "mat": {
    "cast_iron_kg": 400,
@@ -2682,11 +2679,11 @@
   "kb": "98_power_plants.md#en_stirling_engine",
   "ph": 80,
   "lab": {
-   "clockmaker": 322,
-   "master_screw": 60
+   "artisan": 322,
+   "machinist": 60
   },
   "mat": {
-   "mat_steel": 150
+   "steel_plate_kg": 150
   },
   "cap": 10,
   "up": 2,
@@ -2777,8 +2774,7 @@
   "kb": "98_power_plants.md#en_alternator",
   "ph": 90,
   "lab": {
-   "machinist": 294,
-   "master_screw": 70
+   "machinist": 364
   },
   "mat": {
    "copper_kg": 80,
@@ -2846,8 +2842,7 @@
   "kb": "98_power_plants.md#en_alternator",
   "ph": 100,
   "lab": {
-   "machinist": 303,
-   "master_screw": 60
+   "machinist": 363
   },
   "mat": {
    "copper_kg": 100,
@@ -2949,7 +2944,7 @@
   "ph": 140,
   "lab": {
    "engineer": 423,
-   "lineman": 460
+   "electrician": 460
   },
   "mat": {
    "copper_kg": 500,
@@ -3294,7 +3289,7 @@
   "ph": 250.0,
   "lab": {
    "chemist": 349,
-   "metalworker": 300
+   "smith": 300
   },
   "mat": {
    "glass_raw_kg": 20.0,
@@ -3422,7 +3417,7 @@
   "cat": "grid_operations",
   "pre": [
    "en_substation",
-   "en_power_grid"
+   "power_grid"
   ],
   "traits": [
    "infrastructure"
@@ -3434,7 +3429,7 @@
   },
   "mat": {
    "copper_kg": 800,
-   "mat_steel": 500
+   "steel_plate_kg": 500
   },
   "cap": 200,
   "up": 0,
@@ -3455,7 +3450,7 @@
   "cat": "grid_operations",
   "pre": [
    "en_alternator",
-   "en_governor"
+   "en_centrifugal_governor"
   ],
   "traits": [
    "infrastructure"
@@ -3576,9 +3571,9 @@
    "mason": 506
   },
   "mat": {
-   "mat_steel": 1000,
+   "steel_plate_kg": 1000,
    "cast_iron_kg": 600,
-   "mat_brick": 2000
+   "brick_1000": 2.0
   },
   "cap": 350,
   "up": 0,
@@ -3609,9 +3604,8 @@
   "cat": "energy_storage",
   "pre": [
    "en_hydroelectric_station",
-   "en_motor_transformer_ac",
-   "dynamo",
    "motor_transformer_ac",
+   "dynamo",
    "power_grid",
    "water_power_scale"
   ],
@@ -3660,7 +3654,7 @@
    "furnaceman": 250
   },
   "mat": {
-   "mat_wood_bulk": 1000
+   "wood_kg": 1000
   },
   "cap": 100,
   "up": 20,
@@ -3725,7 +3719,7 @@
    "furnaceman": 322
   },
   "mat": {
-   "mat_brick": 600,
+   "brick_1000": 0.6,
    "cast_iron_kg": 200
   },
   "cap": 150,
@@ -3746,7 +3740,7 @@
   "name": "Town gas retort and generator",
   "cat": "fuel_production",
   "pre": [
-   "coke_oven"
+   "en_coke_oven"
   ],
   "traits": [
    "infrastructure"
@@ -3758,7 +3752,7 @@
    "furnaceman": 331
   },
   "mat": {
-   "mat_brick": 800,
+   "brick_1000": 0.8,
    "cast_iron_kg": 300,
    "lead_kg": 100
   },
@@ -3789,7 +3783,7 @@
   "ph": 110,
   "lab": {
    "engineer": 349,
-   "metalworker": 294
+   "smith": 294
   },
   "mat": {
    "cast_iron_kg": 600,
@@ -3827,7 +3821,7 @@
    "miner": 368
   },
   "mat": {
-   "mat_steel": 500,
+   "steel_plate_kg": 500,
    "iron_bar_kg": 300
   },
   "cap": 200,
@@ -3861,9 +3855,9 @@
    "chemist": 349
   },
   "mat": {
-   "mat_steel": 400,
+   "steel_plate_kg": 400,
    "copper_kg": 200,
-   "mat_brick": 600
+   "brick_1000": 0.6
   },
   "cap": 180,
   "up": 30,
@@ -3895,9 +3889,9 @@
    "chemist": 368
   },
   "mat": {
-   "mat_steel": 350,
+   "steel_plate_kg": 350,
    "copper_kg": 150,
-   "mat_brick": 500
+   "brick_1000": 0.5
   },
   "cap": 160,
   "up": 28,
@@ -3962,7 +3956,7 @@
    "chemist": 294
   },
   "mat": {
-   "mat_steel": 100
+   "steel_plate_kg": 100
   },
   "cap": 130,
   "up": 22,
@@ -3993,7 +3987,7 @@
    "chemist": 285
   },
   "mat": {
-   "mat_steel": 100
+   "steel_plate_kg": 100
   },
   "cap": 125,
   "up": 21,
@@ -4024,7 +4018,7 @@
    "chemist": 322
   },
   "mat": {
-   "mat_steel": 100
+   "steel_plate_kg": 100
   },
   "cap": 140,
   "up": 24,
@@ -4088,7 +4082,7 @@
    "furnaceman": 312
   },
   "mat": {
-   "mat_brick": 500,
+   "brick_1000": 0.5,
    "cast_iron_kg": 250,
    "lead_kg": 50
   },

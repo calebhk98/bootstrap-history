@@ -1136,7 +1136,7 @@
    "engineer": 60
   },
   "mat": {
-   "mat_caustic_soda_kg": 40
+   "caustic_soda_kg": 40
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1180,7 +1180,7 @@
    "artisan": 60
   },
   "mat": {
-   "mat_vitriols": 5
+   "green_vitriol_kg": 5
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.2,
@@ -1269,7 +1269,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_dyes_natural_kg": 20
+   "dye_kg": 20
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1289,7 +1289,7 @@
    "artisan": 120
   },
   "mat": {
-   "mat_dyes_natural_kg": 30
+   "dye_kg": 30
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1309,7 +1309,7 @@
    "artisan": 140
   },
   "mat": {
-   "mat_dyes_natural_kg": 50
+   "dye_kg": 50
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1333,7 +1333,7 @@
    "artisan": 160
   },
   "mat": {
-   "mat_dyes_natural_kg": 40
+   "dye_kg": 40
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1355,7 +1355,7 @@
   },
   "mat": {
    "wood_kg": 15,
-   "mat_dyes_natural_kg": 20
+   "dye_kg": 20
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.5,
@@ -1993,7 +1993,7 @@
    "glassblower": 120
   },
   "mat": {
-   "mat_glass_soda": 100
+   "glass_raw_kg": 100
   },
   "cap": "cap_heat_1600",
   "build_yrs": 0.8,
@@ -2168,7 +2168,7 @@
   "cat": "sewing",
   "pre": [
    "tx2_cutting_table",
-   "cap_power_motor"
+   "tx2_cap_power_motor"
   ],
   "traits": [
    "labour_saving"
@@ -2368,7 +2368,7 @@
    "artisan": 200
   },
   "mat": {
-   "mat_steel_boning_kg": 8
+   "steel_plate_kg": 8
   },
   "cap": 0,
   "build_yrs": 0.5,
@@ -2769,7 +2769,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_phosphorus_kg": 5
+   "phosphorus_red_kg": 5
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.4,
@@ -2791,7 +2791,7 @@
    "chemist": 80
   },
   "mat": {
-   "mat_phosphorus_kg": 3
+   "phosphorus_red_kg": 3
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -2952,7 +2952,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_glass_soda": 20,
+   "glass_raw_kg": 20,
    "mat_mercury": 5
   },
   "cap": "cap_tol_1mm",
@@ -3173,7 +3173,7 @@
    "engineer": 120
   },
   "mat": {
-   "mat_steel": 10,
+   "steel_plate_kg": 10,
    "mat_rubber": 8
   },
   "cap": "cap_tol_100um",
@@ -3197,7 +3197,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_graphite_pure": 20,
+   "graphite_kg": 20,
    "clay_kg": 30
   },
   "cap": "cap_heat_1100",
@@ -3481,7 +3481,7 @@
    "engineer": 90
   },
   "mat": {
-   "mat_tin_plate": 30
+   "iron_sheet_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -3507,7 +3507,7 @@
   },
   "mat": {
    "brass_kg": 30,
-   "mat_tin_plate": 40
+   "iron_sheet_kg": 40
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -3534,7 +3534,7 @@
    "smith": 120
   },
   "mat": {
-   "mat_steel": 80,
+   "steel_plate_kg": 80,
    "mat_rubber": 20
   },
   "cap": "cap_tol_100um",
@@ -3561,7 +3561,7 @@
   },
   "mat": {
    "brass_kg": 40,
-   "mat_glass_soda": 30
+   "glass_raw_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -3588,7 +3588,7 @@
   },
   "mat": {
    "brass_kg": 50,
-   "mat_tin_plate": 80
+   "iron_sheet_kg": 80
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.6,
@@ -3637,7 +3637,7 @@
    "engineer": 120
   },
   "mat": {
-   "mat_glass_soda": 100
+   "glass_raw_kg": 100
   },
   "cap": "cap_vac_1torr",
   "build_yrs": 0.5,
@@ -3658,7 +3658,7 @@
    "engineer": 80
   },
   "mat": {
-   "mat_tin_plate": 60
+   "iron_sheet_kg": 60
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.3,
@@ -3747,7 +3747,7 @@
    "glassblower": 100
   },
   "mat": {
-   "mat_glass_soda": 100
+   "glass_raw_kg": 100
   },
   "cap": "cap_heat_1100",
   "build_yrs": 0.3,
@@ -3767,7 +3767,7 @@
    "engineer": 90
   },
   "mat": {
-   "mat_tin_plate": 30
+   "iron_sheet_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.3,

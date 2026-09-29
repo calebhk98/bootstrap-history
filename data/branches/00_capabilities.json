@@ -215,8 +215,7 @@
   "name": "Tolerance 1 micron (lapping, grinding, optical flats)",
   "cat": "capability",
   "pre": [
-   "cap_tol_10um",
-   "optical_flat_interference"
+   "cap_tol_10um"
   ],
   "kb": "",
   "ph": 350,
@@ -411,8 +410,8 @@
   "cat": "capability",
   "pre": [
    "cap_pure_4N",
-   "cap_glass_boro",
-   "distillation_fractional"
+   "glass_borosilicate",
+   "en_oil_refining_distillation"
   ],
   "kb": "",
   "ph": 350,
@@ -439,7 +438,7 @@
    "cap_heat_1600",
    "cap_power_electric",
    "mat_graphite_pure",
-   "mat_fused_quartz"
+   "fused_quartz"
   ],
   "kb": "",
   "ph": 500,
@@ -760,7 +759,7 @@
   "name": "Interferometric length (wavelengths of light)",
   "cat": "capability",
   "pre": [
-   "optical_flat_interference",
+   "prc_optical_flat",
    "spectroscope"
   ],
   "kb": "",

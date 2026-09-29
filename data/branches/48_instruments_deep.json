@@ -15,7 +15,7 @@
    "optician": 200
   },
   "mat": {
-   "mat_glass_soda": 2
+   "glass_raw_kg": 2
   },
   "cap": 300,
   "up": 30,
@@ -38,10 +38,9 @@
   "cat": "optics",
   "pre": [
    "in2_simple_lens",
-   "glass_lead",
+   "mat_glass_lead",
    "cap_tol_10um",
-   "lens_grinding",
-   "mat_glass_lead"
+   "lens_grinding"
   ],
   "traits": [
    "infrastructure"
@@ -50,7 +49,7 @@
   "ph": 180.0,
   "lab": {
    "optician": 400,
-   "master_screw": 40
+   "machinist": 40
   },
   "mat": {
    "glass_raw_kg": 1.2
@@ -76,7 +75,7 @@
   "cat": "optics",
   "pre": [
    "in2_doublet_lens",
-   "glass_boro"
+   "glass_borosilicate"
   ],
   "traits": [
    "infrastructure"
@@ -85,12 +84,12 @@
   "ph": 180,
   "lab": {
    "optician": 600,
-   "master_screw": 60
+   "machinist": 60
   },
   "mat": {
-   "mat_glass_soda": 1.5,
-   "mat_glass_lead": 2,
-   "mat_glass_boro": 1.5
+   "glass_raw_kg": 1.5,
+   "glass_lead_kg": 2,
+   "glass_borosilicate_kg": 1.5
   },
   "cap": 2000,
   "up": 120,
@@ -121,11 +120,11 @@
   "ph": 90,
   "lab": {
    "optician": 300,
-   "master_screw": 30
+   "machinist": 30
   },
   "mat": {
-   "mat_glass_soda": 2,
-   "mat_glass_lead": 1.5
+   "glass_raw_kg": 2,
+   "glass_lead_kg": 1.5
   },
   "cap": 1200,
   "up": 80,
@@ -158,9 +157,9 @@
    "optician": 350
   },
   "mat": {
-   "mat_glass_soda": 1.5,
-   "mat_glass_lead": 1.5,
-   "mat_glass_boro": 1
+   "glass_raw_kg": 1.5,
+   "glass_lead_kg": 1.5,
+   "glass_borosilicate_kg": 1
   },
   "cap": 1500,
   "up": 90,
@@ -191,11 +190,11 @@
   "ph": 110,
   "lab": {
    "optician": 380,
-   "master_screw": 35
+   "machinist": 35
   },
   "mat": {
-   "mat_glass_soda": 2,
-   "mat_glass_lead": 2
+   "glass_raw_kg": 2,
+   "glass_lead_kg": 2
   },
   "cap": 1800,
   "up": 100,
@@ -228,8 +227,8 @@
    "optician": 250
   },
   "mat": {
-   "mat_glass_soda": 2,
-   "mat_glass_lead": 1.5
+   "glass_raw_kg": 2,
+   "glass_lead_kg": 1.5
   },
   "cap": 1000,
   "up": 70,
@@ -261,11 +260,11 @@
   "ph": 130,
   "lab": {
    "optician": 400,
-   "master_screw": 40
+   "machinist": 40
   },
   "mat": {
-   "mat_glass_soda": 2.5,
-   "mat_glass_lead": 2
+   "glass_raw_kg": 2.5,
+   "glass_lead_kg": 2
   },
   "cap": 1500,
   "up": 100,
@@ -302,7 +301,7 @@
   "mat": {
    "iron_bar_kg": 20,
    "mat_mercury": 2,
-   "tin": 1.5
+   "tin_kg": 1.5
   },
   "cap": 2000,
   "up": 150,
@@ -335,7 +334,7 @@
    "optician": 350
   },
   "mat": {
-   "mat_glass_soda": 1,
+   "glass_raw_kg": 1,
    "mat_mercury": 0.5
   },
   "cap": 2500,
@@ -369,7 +368,7 @@
    "optician": 280
   },
   "mat": {
-   "mat_glass_soda": 1,
+   "glass_raw_kg": 1,
    "mat_mercury": 0.3
   },
   "cap": 1500,
@@ -401,10 +400,10 @@
   "ph": 120,
   "lab": {
    "optician": 450,
-   "master_screw": 50
+   "machinist": 50
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "mat_mercury": 0.5
   },
   "cap": 3000,
@@ -436,10 +435,10 @@
   "ph": 80,
   "lab": {
    "optician": 280,
-   "master_screw": 30
+   "machinist": 30
   },
   "mat": {
-   "mat_glass_soda": 2
+   "glass_raw_kg": 2
   },
   "cap": 1200,
   "up": 80,
@@ -470,10 +469,10 @@
   "ph": 75,
   "lab": {
    "optician": 260,
-   "master_screw": 25
+   "machinist": 25
   },
   "mat": {
-   "mat_glass_soda": 2
+   "glass_raw_kg": 2
   },
   "cap": 1000,
   "up": 70,
@@ -504,10 +503,10 @@
   "ph": 70,
   "lab": {
    "optician": 200,
-   "master_screw": 20
+   "machinist": 20
   },
   "mat": {
-   "mat_glass_soda": 1.5,
+   "glass_raw_kg": 1.5,
    "mat_mercury": 0.3
   },
   "cap": 800,
@@ -539,11 +538,11 @@
   "ph": 85,
   "lab": {
    "optician": 300,
-   "master_screw": 30
+   "machinist": 30
   },
   "mat": {
-   "mat_glass_soda": 0.1,
-   "calcite": 2
+   "glass_raw_kg": 0.1,
+   "calcite_kg": 2
   },
   "cap": 1500,
   "up": 100,
@@ -574,7 +573,7 @@
   "ph": 70,
   "lab": {
    "optician": 200,
-   "master_screw": 15
+   "machinist": 15
   },
   "mat": {
    "mica": 0.05
@@ -608,12 +607,12 @@
   "ph": 110,
   "lab": {
    "optician": 350,
-   "master_screw": 35
+   "machinist": 35
   },
   "mat": {
-   "mat_glass_soda": 1,
+   "glass_raw_kg": 1,
    "magnesium_fluoride": 0.1,
-   "zinc_sulfide": 0.1
+   "zinc_sulfide_kg": 0.1
   },
   "cap": 2000,
   "up": 150,
@@ -644,10 +643,10 @@
   "ph": 90,
   "lab": {
    "optician": 280,
-   "master_screw": 25
+   "machinist": 25
   },
   "mat": {
-   "mat_glass_soda": 1,
+   "glass_raw_kg": 1,
    "magnesium_fluoride": 0.05
   },
   "cap": 1800,
@@ -679,7 +678,7 @@
    "optician": 80
   },
   "mat": {
-   "mat_glass_soda": 0.2
+   "glass_raw_kg": 0.2
   },
   "cap": 300,
   "up": 20,
@@ -710,7 +709,7 @@
    "optician": 120
   },
   "mat": {
-   "mat_glass_soda": 0.5
+   "glass_raw_kg": 0.5
   },
   "cap": 400,
   "up": 30,
@@ -741,8 +740,8 @@
    "optician": 160
   },
   "mat": {
-   "mat_glass_soda": 0.5,
-   "mat_glass_lead": 0.2
+   "glass_raw_kg": 0.5,
+   "glass_lead_kg": 0.2
   },
   "cap": 600,
   "up": 40,
@@ -773,7 +772,7 @@
    "optician": 120
   },
   "mat": {
-   "mat_glass_soda": 0.5
+   "glass_raw_kg": 0.5
   },
   "cap": 350,
   "up": 25,
@@ -804,8 +803,8 @@
    "optician": 240
   },
   "mat": {
-   "mat_glass_soda": 0.8,
-   "mat_glass_lead": 0.4
+   "glass_raw_kg": 0.8,
+   "glass_lead_kg": 0.4
   },
   "cap": 1000,
   "up": 60,
@@ -836,8 +835,8 @@
    "optician": 320
   },
   "mat": {
-   "mat_glass_soda": 1,
-   "mat_glass_lead": 0.6
+   "glass_raw_kg": 1,
+   "glass_lead_kg": 0.6
   },
   "cap": 1500,
   "up": 100,
@@ -868,7 +867,7 @@
    "optician": 140
   },
   "mat": {
-   "mat_glass_soda": 1
+   "glass_raw_kg": 1
   },
   "cap": 400,
   "up": 30,
@@ -901,9 +900,9 @@
    "optician": 280
   },
   "mat": {
-   "mat_glass_soda": 2,
-   "mat_fused_quartz": 1,
-   "olive_oil": 0.1
+   "glass_raw_kg": 2,
+   "quartz_tube_kg": 1,
+   "olive_oil_kg": 0.1
   },
   "cap": 1200,
   "up": 80,
@@ -934,11 +933,11 @@
   "ph": 120,
   "lab": {
    "optician": 400,
-   "master_screw": 40
+   "machinist": 40
   },
   "mat": {
-   "mat_glass_soda": 2,
-   "mat_fused_quartz": 1
+   "glass_raw_kg": 2,
+   "quartz_tube_kg": 1
   },
   "cap": 2500,
   "up": 200,
@@ -969,7 +968,7 @@
    "optician": 220
   },
   "mat": {
-   "mat_glass_soda": 1.5
+   "glass_raw_kg": 1.5
   },
   "cap": 1000,
   "up": 70,
@@ -1040,8 +1039,8 @@
    "machinist": 200
   },
   "mat": {
-   "mat_steel": 2,
-   "mat_glass_soda": 0.5
+   "steel_plate_kg": 2,
+   "glass_raw_kg": 0.5
   },
   "cap": 600,
   "up": 50,
@@ -1074,7 +1073,7 @@
    "machinist": 280
   },
   "mat": {
-   "mat_steel": 2.5,
+   "steel_plate_kg": 2.5,
    "cast_iron_kg": 10
   },
   "cap": 1200,
@@ -1145,7 +1144,7 @@
    "electrician": 350
   },
   "mat": {
-   "tungsten": 0.05
+   "tungsten_kg": 0.05
   },
   "cap": 2000,
   "up": 200,
@@ -1177,11 +1176,11 @@
   "ph": 85,
   "lab": {
    "optician": 300,
-   "master_screw": 30
+   "machinist": 30
   },
   "mat": {
-   "mat_glass_soda": 2,
-   "mat_glass_lead": 1
+   "glass_raw_kg": 2,
+   "glass_lead_kg": 1
   },
   "cap": 2000,
   "up": 150,
@@ -1202,7 +1201,7 @@
   "cat": "laboratory",
   "pre": [
    "spectroscope",
-   "in2_diffraction_grating"
+   "opt_diffraction_grating"
   ],
   "traits": [
    "information"
@@ -1211,10 +1210,10 @@
   "ph": 110,
   "lab": {
    "optician": 350,
-   "master_screw": 40
+   "machinist": 40
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "silver_kg": 0.5
   },
   "cap": 3000,
@@ -1247,8 +1246,8 @@
   },
   "mat": {
    "iron_bar_kg": 20,
-   "mat_glass_soda": 5,
-   "diamond": 0.001
+   "glass_raw_kg": 5,
+   "diamond_g": 1.0
   },
   "cap": 4000,
   "up": 300,
@@ -1318,10 +1317,10 @@
   "ph": 120,
   "lab": {
    "optician": 400,
-   "master_screw": 50
+   "machinist": 50
   },
   "mat": {
-   "mat_glass_soda": 4,
+   "glass_raw_kg": 4,
    "mat_mercury": 1
   },
   "cap": 2500,
@@ -1351,10 +1350,10 @@
   "ph": 130,
   "lab": {
    "optician": 420,
-   "master_screw": 60
+   "machinist": 60
   },
   "mat": {
-   "mat_glass_soda": 3,
+   "glass_raw_kg": 3,
    "silver_kg": 2
   },
   "cap": 3000,
@@ -1480,7 +1479,6 @@
   "name": "Cloud chamber: Wilson expansion chamber",
   "cat": "laboratory",
   "pre": [
-   "pump_pneumatic",
    "glass_labware",
    "sc2_physics_nucleus_discovery"
   ],
@@ -1494,7 +1492,7 @@
    "chemist": 250
   },
   "mat": {
-   "mat_glass_soda": 3,
+   "glass_raw_kg": 3,
    "iron_bar_kg": 20,
    "lead_kg": 10
   },
@@ -1527,8 +1525,8 @@
    "chemist": 200
   },
   "mat": {
-   "silver_nitrate": 0.05,
-   "gelatin": 5
+   "silver_nitrate_kg": 0.05,
+   "gelatin_kg": 5
   },
   "cap": 1500,
   "up": 100,
@@ -1561,7 +1559,7 @@
    "engineer": 200
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "iron_bar_kg": 15
   },
   "cap": 3500,
@@ -1595,7 +1593,7 @@
    "electrician": 300
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "iron_bar_kg": 20
   },
   "cap": 4000,
@@ -1632,7 +1630,7 @@
   },
   "mat": {
    "iron_bar_kg": 50,
-   "mat_steel": 30
+   "steel_plate_kg": 30
   },
   "cap": 8000,
   "up": 600,
@@ -1665,8 +1663,8 @@
    "engineer": 200
   },
   "mat": {
-   "mat_glass_soda": 1,
-   "mat_glass_lead": 1,
+   "glass_raw_kg": 1,
+   "glass_lead_kg": 1,
    "copper_kg": 3
   },
   "cap": 2500,
@@ -1701,9 +1699,9 @@
    "glassblower": 200
   },
   "mat": {
-   "mat_glass_soda": 8,
+   "glass_raw_kg": 8,
    "copper_kg": 15,
-   "phosphor": 1
+   "zinc_sulfide_kg": 1
   },
   "cap": 5000,
   "up": 400,
@@ -1733,7 +1731,7 @@
    "machinist": 250
   },
   "mat": {
-   "constantan_wire_kg": 0.05,
+   "constantan_kg": 0.05,
    "mat_silk": 0.5
   },
   "cap": 1000,
@@ -1769,8 +1767,7 @@
    "engineer": 250
   },
   "mat": {
-   "copper_kg": 5,
-   "vacuum_tube": 2
+   "copper_kg": 5
   },
   "cap": 2500,
   "up": 200,
@@ -1836,7 +1833,7 @@
   },
   "mat": {
    "iron_bar_kg": 100,
-   "mat_steel": 50
+   "steel_plate_kg": 50
   },
   "cap": 6000,
   "up": 400,
@@ -1967,7 +1964,7 @@
   },
   "mat": {
    "iron_bar_kg": 30,
-   "mat_refractories": 100
+   "clay_kg": 100
   },
   "cap": 3500,
   "up": 350,
@@ -2031,7 +2028,7 @@
    "optician": 100
   },
   "mat": {
-   "mat_glass_soda": 5,
+   "glass_raw_kg": 5,
    "mat_mercury": 0.5
   },
   "cap": 2000,
@@ -2060,11 +2057,11 @@
   "kb": "Gas expands through throttle; cooling is proportional to enthalpy drop",
   "ph": 80,
   "lab": {
-   "mechanic": 250
+   "machinist": 250
   },
   "mat": {
    "iron_bar_kg": 10,
-   "mat_steel": 5
+   "steel_plate_kg": 5
   },
   "cap": 1500,
   "up": 100,
@@ -2160,8 +2157,7 @@
    "engineer": 500
   },
   "mat": {
-   "iron_bar_kg": 50,
-   "electromagnet": 1
+   "iron_bar_kg": 50
   },
   "cap": 8000,
   "up": 600,
@@ -2217,10 +2213,10 @@
   "ph": 40,
   "lab": {
    "smith": 130,
-   "mechanician": 50
+   "machinist": 50
   },
   "mat": {
-   "mat_steel": 15
+   "steel_plate_kg": 15
   },
   "cap": 300,
   "up": 25,
@@ -2249,7 +2245,7 @@
    "glassblower": 150
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "brass_kg": 3
   },
   "cap": 400,
@@ -2322,11 +2318,11 @@
   "ph": 80,
   "lab": {
    "optician": 280,
-   "master_screw": 30
+   "machinist": 30
   },
   "mat": {
    "brass_kg": 12,
-   "mat_glass_soda": 4
+   "glass_raw_kg": 4
   },
   "cap": 2000,
   "up": 120,
@@ -2392,7 +2388,7 @@
   },
   "mat": {
    "brass_kg": 5,
-   "mat_glass_soda": 1
+   "glass_raw_kg": 1
   },
   "cap": 600,
   "up": 40,
@@ -2451,10 +2447,10 @@
   "kb": "Known length baseline; correction for slope, temperature, tension; used as reference for triangulation",
   "ph": 90,
   "lab": {
-   "surveyor": 400
+   "scholar": 400
   },
   "mat": {
-   "mat_steel": 50,
+   "steel_plate_kg": 50,
    "mat_stone": 5000
   },
   "cap": 2000,
@@ -2484,12 +2480,12 @@
   "kb": "Network of triangulation points; height determined by precise levelling",
   "ph": 130,
   "lab": {
-   "surveyor": 500,
+   "scholar": 500,
    "optician": 300
   },
   "mat": {
    "brass_kg": 20,
-   "mat_glass_soda": 8
+   "glass_raw_kg": 8
   },
   "cap": 5000,
   "up": 400,
@@ -2519,10 +2515,10 @@
   "ph": 80,
   "lab": {
    "optician": 280,
-   "master_screw": 30
+   "machinist": 30
   },
   "mat": {
-   "mat_glass_soda": 3,
+   "glass_raw_kg": 3,
    "brass_kg": 10,
    "mat_wood": 15
   },
@@ -2556,7 +2552,7 @@
    "machinist": 300
   },
   "mat": {
-   "mat_spring_steel": 5,
+   "tool_steel_kg": 5,
    "iron_bar_kg": 10
   },
   "cap": 2000,
@@ -2577,7 +2573,6 @@
   "name": "Magnetometer: sensitive compass",
   "cat": "surveying",
   "pre": [
-   "magnet_permanent",
    "cap_tol_100um",
    "galvanometer"
   ],
@@ -2590,9 +2585,9 @@
    "optician": 220
   },
   "mat": {
-   "mat_glass_soda": 2,
-   "quartz_fiber": 0.001,
-   "magnet": 1
+   "glass_raw_kg": 2,
+   "quartz_tube_kg": 0.001,
+   "lodestone_kg": 1
   },
   "cap": 1500,
   "up": 100,
@@ -2622,11 +2617,11 @@
   "ph": 110,
   "lab": {
    "optician": 350,
-   "master_screw": 40
+   "machinist": 40
   },
   "mat": {
    "brass_kg": 20,
-   "mat_glass_soda": 4,
+   "glass_raw_kg": 4,
    "mat_mercury": 1
   },
   "cap": 2500,
@@ -2658,7 +2653,7 @@
    "glassblower": 120
   },
   "mat": {
-   "mat_glass_soda": 1
+   "glass_raw_kg": 1
   },
   "cap": 300,
   "up": 20,
@@ -2723,7 +2718,7 @@
   "kb": "Lunar distance or lunar occultation gives time; chronometer rate determined",
   "ph": 60,
   "lab": {
-   "surveyor": 200
+   "scholar": 200
   },
   "mat": {
    "paper_kg": 0.5,
@@ -2759,7 +2754,7 @@
   },
   "mat": {
    "lead_kg": 30,
-   "mat_rope": 100
+   "cordage_kg": 100
   },
   "cap": 200,
   "up": 15,
@@ -2780,7 +2775,8 @@
   "cat": "surveying",
   "pre": [
    "cap_power_electric",
-   "discharge_xray"
+   "discharge_xray",
+   "vacuum_tube"
   ],
   "traits": [
    "military"
@@ -2791,8 +2787,7 @@
    "electrician": 400
   },
   "mat": {
-   "iron_bar_kg": 30,
-   "vacuum_tube": 2
+   "iron_bar_kg": 30
   },
   "cap": 4000,
   "up": 300,
@@ -2924,7 +2919,7 @@
   "mat": {
    "cast_iron_kg": 80,
    "copper_kg": 25,
-   "mat_aluminum": 15
+   "aluminium_kg": 15
   },
   "cap": 5000,
   "up": 350,
@@ -2955,7 +2950,7 @@
    "optician": 300
   },
   "mat": {
-   "mat_glass_soda": 4,
+   "glass_raw_kg": 4,
    "brass_kg": 15
   },
   "cap": 3000,
@@ -2985,7 +2980,7 @@
    "optician": 160
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "brass_kg": 3
   },
   "cap": 600,
@@ -3017,7 +3012,7 @@
    "electrician": 250
   },
   "mat": {
-   "mat_platinum": 0.2,
+   "platinum_g": 200.0,
    "paper_kg": 1
   },
   "cap": 1500,
@@ -3038,7 +3033,8 @@
   "name": "Photocell: vacuum photoelectric",
   "cat": "measurement",
   "pre": [
-   "discharge_xray"
+   "discharge_xray",
+   "vacuum_tube"
   ],
   "traits": [],
   "kb": "Photon ejects electron from cathode; current proportional to light intensity",
@@ -3047,8 +3043,7 @@
    "electrician": 300
   },
   "mat": {
-   "vacuum_tube": 1,
-   "mat_cesium": 0.01
+   "caesium_g": 10.0
   },
   "cap": 1500,
   "up": 100,
@@ -3070,7 +3065,8 @@
   "name": "Photomultiplier: secondary emission cascade",
   "cat": "measurement",
   "pre": [
-   "in2_photocell_vacuum_photoelectric"
+   "in2_photocell_vacuum_photoelectric",
+   "vacuum_tube"
   ],
   "traits": [
    "information",
@@ -3082,7 +3078,6 @@
    "electrician": 400
   },
   "mat": {
-   "vacuum_tube": 1,
    "mat_copper_beryllium": 0.1
   },
   "cap": 2500,
@@ -3104,7 +3099,8 @@
   "cat": "measurement",
   "pre": [
    "in2_spectrograph_grating",
-   "in2_photomultiplier_cascade_amplifier"
+   "in2_photomultiplier_cascade_amplifier",
+   "vacuum_tube"
   ],
   "traits": [
    "information"
@@ -3115,8 +3111,7 @@
    "electrician": 420
   },
   "mat": {
-   "mat_glass_soda": 3,
-   "vacuum_tube": 10
+   "glass_raw_kg": 3
   },
   "cap": 5000,
   "up": 400,
@@ -3145,7 +3140,7 @@
    "optician": 140
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "mat_gold": 0.001
   },
   "cap": 400,
@@ -3180,7 +3175,7 @@
    "electrician": 280
   },
   "mat": {
-   "mat_glass_soda": 3,
+   "glass_raw_kg": 3,
    "brass_kg": 5
   },
   "cap": 1000,
@@ -3213,7 +3208,7 @@
    "electrician": 350
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "brass_kg": 8
   },
   "cap": 1500,
@@ -3246,7 +3241,7 @@
    "electrician": 400
   },
   "mat": {
-   "zinc_sulfide": 5
+   "zinc_sulfide_kg": 5
   },
   "cap": 3000,
   "up": 250,
@@ -3276,10 +3271,10 @@
   "ph": 80,
   "lab": {
    "optician": 280,
-   "master_screw": 40
+   "machinist": 40
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "iron_bar_kg": 20
   },
   "cap": 1800,
@@ -3300,7 +3295,7 @@
   "name": "Optical comparator: magnified shadow projection",
   "cat": "measurement",
   "pre": [
-   "simple_lens",
+   "in2_simple_lens",
    "cap_tol_10um"
   ],
   "traits": [],
@@ -3310,7 +3305,7 @@
    "optician": 220
   },
   "mat": {
-   "mat_glass_soda": 3,
+   "glass_raw_kg": 3,
    "iron_bar_kg": 30
   },
   "cap": 2000,
@@ -3337,7 +3332,7 @@
   "kb": "89_remaining_arts.md#in2_analytical_balance",
   "ph": 50,
   "lab": {
-   "mechanician": 160
+   "machinist": 160
   },
   "mat": {
    "iron_bar_kg": 10,
@@ -3361,7 +3356,7 @@
   "name": "Torsion balance: vertical fiber suspension",
   "cat": "measurement",
   "pre": [
-   "analytical_balance"
+   "in2_analytical_balance"
   ],
   "traits": [
    "information"
@@ -3372,8 +3367,8 @@
    "optician": 280
   },
   "mat": {
-   "quartz_fiber": 0.001,
-   "mat_glass_soda": 2
+   "quartz_tube_kg": 0.001,
+   "glass_raw_kg": 2
   },
   "cap": 1500,
   "up": 100,
@@ -3393,8 +3388,8 @@
   "name": "Microbalance: quartz oscillator frequency shift",
   "cat": "measurement",
   "pre": [
-   "quartz_resonator",
-   "in2_quartz_resonator_frequency"
+   "in2_quartz_resonator_frequency",
+   "el2_quartz_crystal"
   ],
   "traits": [
    "information",
@@ -3405,9 +3400,7 @@
   "lab": {
    "electrician": 350
   },
-  "mat": {
-   "quartz_crystal": 1
-  },
+  "mat": {},
   "cap": 2000,
   "up": 150,
   "build_yrs": 1,
@@ -3437,7 +3430,7 @@
   "mat": {
    "iron_bar_kg": 1,
    "copper_kg": 1,
-   "mat_constantan": 1
+   "constantan_kg": 1
   },
   "cap": 400,
   "up": 25,
@@ -3468,7 +3461,7 @@
    "electrician": 260
   },
   "mat": {
-   "mat_platinum": 0.5
+   "platinum_g": 500.0
   },
   "cap": 1200,
   "up": 80,
@@ -3497,10 +3490,10 @@
   "kb": "89_remaining_arts.md#in2_thermocouple",
   "ph": 140,
   "lab": {
-   "experimentalist": 400
+   "scholar": 400
   },
   "mat": {
-   "mat_glass_soda": 5,
+   "glass_raw_kg": 5,
    "mat_mercury": 2
   },
   "cap": 3000,
@@ -3530,7 +3523,7 @@
    "glassblower": 150
   },
   "mat": {
-   "mat_glass_soda": 2,
+   "glass_raw_kg": 2,
    "mat_mercury": 5
   },
   "cap": 600,
@@ -3563,7 +3556,7 @@
   },
   "mat": {
    "brass_kg": 10,
-   "mat_steel": 5
+   "steel_plate_kg": 5
   },
   "cap": 1000,
   "up": 70,
@@ -3593,7 +3586,7 @@
   },
   "mat": {
    "brass_kg": 15,
-   "mat_steel": 8
+   "steel_plate_kg": 8
   },
   "cap": 1200,
   "up": 80,
@@ -3613,7 +3606,7 @@
   "name": "McLeod gauge: compression manometer",
   "cat": "measurement",
   "pre": [
-   "mercury_barometer"
+   "in2_mercury_barometer"
   ],
   "traits": [
    "information"
@@ -3624,7 +3617,7 @@
    "glassblower": 300
   },
   "mat": {
-   "mat_glass_soda": 3,
+   "glass_raw_kg": 3,
    "mat_mercury": 2
   },
   "cap": 1500,
@@ -3645,7 +3638,8 @@
   "name": "Quartz resonator: piezoelectric oscillator",
   "cat": "measurement",
   "pre": [
-   "fused_quartz"
+   "fused_quartz",
+   "el2_quartz_crystal"
   ],
   "traits": [
    "infrastructure"
@@ -3656,9 +3650,7 @@
    "optician": 350,
    "electrician": 200
   },
-  "mat": {
-   "quartz_crystal": 2
-  },
+  "mat": {},
   "cap": 2000,
   "up": 150,
   "build_yrs": 1.2,
@@ -3677,13 +3669,13 @@
   "name": "Orifice plate: differential pressure flow measurement",
   "cat": "measurement",
   "pre": [
-   "mercury_barometer"
+   "in2_mercury_barometer"
   ],
   "traits": [],
   "kb": "89_remaining_arts.md#in2_pitot_tube",
   "ph": 50,
   "lab": {
-   "mechanician": 160
+   "machinist": 160
   },
   "mat": {
    "brass_kg": 5,
@@ -3707,7 +3699,7 @@
   "name": "Venturi tube: smooth convergent-divergent flow",
   "cat": "measurement",
   "pre": [
-   "orifice_flow_meter"
+   "in2_orifice_flow_meter"
   ],
   "traits": [
    "information"
@@ -3739,7 +3731,7 @@
   "name": "Pitot tube: total and static pressure difference",
   "cat": "measurement",
   "pre": [
-   "mercury_barometer"
+   "in2_mercury_barometer"
   ],
   "traits": [],
   "kb": "Stagnation pressure at nose minus static pressure gives dynamic pressure = 0.5 rho v^2",
@@ -3776,11 +3768,10 @@
   "kb": "89_remaining_arts.md#in2_quartz_resonator_frequency",
   "ph": 100,
   "lab": {
-   "machinist": 350,
-   "master_screw": 60
+   "machinist": 410
   },
   "mat": {
-   "mat_steel": 0.5
+   "steel_plate_kg": 0.5
   },
   "cap": 2000,
   "up": 150,
@@ -3809,7 +3800,7 @@
    "smith": 200
   },
   "mat": {
-   "mat_steel": 0.5
+   "steel_plate_kg": 0.5
   },
   "cap": 500,
   "up": 40,

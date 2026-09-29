@@ -197,7 +197,7 @@
   "cat": "metals",
   "pre": [
    "cap_heat_1300",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -914,7 +914,7 @@
   "name": "Powder metallurgy: forming shapes from metal powder by sintering",
   "cat": "processes",
   "pre": [
-   "sintering_process",
+   "mt2_sintering_process",
    "cap_tol_1mm"
   ],
   "traits": [
@@ -1040,7 +1040,7 @@
   "name": "Tempering: controlled reheating to reduce brittleness of martensite",
   "cat": "heat_treatment",
   "pre": [
-   "quenching_water"
+   "mt2_quenching_water"
   ],
   "traits": [
    "industrial"
@@ -1090,7 +1090,7 @@
   "cat": "heat_treatment",
   "pre": [
    "cap_heat_1100",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "traits": [
    "industrial"
@@ -1114,7 +1114,7 @@
   "cat": "heat_treatment",
   "pre": [
    "motor_transformer_ac",
-   "quenching_water"
+   "mt2_quenching_water"
   ],
   "traits": [
    "industrial"
@@ -1257,7 +1257,7 @@
   "name": "Recrystallisation: formation of new strain-free grains during annealing",
   "cat": "heat_treatment",
   "pre": [
-   "annealing",
+   "mt2_annealing",
    "microscope_compound"
   ],
   "traits": [
@@ -1373,7 +1373,7 @@
    "engineer": 350
   },
   "mat": {
-   "mat_steel": 10
+   "steel_plate_kg": 10
   },
   "build_yrs": 0.8,
   "dev_years": 18,
@@ -1435,7 +1435,7 @@
   "name": "Fatigue testing: measuring S-N curve and stress-life endurance",
   "cat": "testing",
   "pre": [
-   "tensile_test",
+   "mt2_tensile_test",
    "cap_measure_time_ms"
   ],
   "traits": [
@@ -1458,7 +1458,7 @@
   "name": "Creep testing: measuring time-dependent deformation at elevated temperature",
   "cat": "testing",
   "pre": [
-   "tensile_test",
+   "mt2_tensile_test",
    "cap_measure_temp_hi"
   ],
   "traits": [
@@ -1494,7 +1494,7 @@
    "engineer": 250
   },
   "mat": {
-   "mat_vitriols": 50
+   "green_vitriol_kg": 50
   },
   "build_yrs": 0.8,
   "dev_years": 20,
@@ -1569,7 +1569,7 @@
    "engineer": 400
   },
   "mat": {
-   "mat_iron_powder": 50
+   "iron_bar_kg": 50
   },
   "build_yrs": 1,
   "dev_years": 22,
@@ -2083,7 +2083,6 @@
   "name": "Stellite: cobalt-chromium-tungsten hard alloy for cutting tools",
   "cat": "alloys",
   "pre": [
-   "mat_cobalt",
    "mat_chromium",
    "mat_tungsten"
   ],
@@ -2113,7 +2112,6 @@
   "cat": "alloys",
   "pre": [
    "mat_tungsten",
-   "mat_vanadium",
    "cementation_steel"
   ],
   "req_any": [
@@ -2177,7 +2175,7 @@
   "pre": [
    "mat_chromium",
    "mat_nickel",
-   "bessemer_openhearth"
+   "mat_bulk_steel"
   ],
   "traits": [
    "industrial",
@@ -2233,7 +2231,7 @@
   "cat": "alloys",
   "pre": [
    "motor_transformer_ac",
-   "bessemer_openhearth"
+   "mat_bulk_steel"
   ],
   "traits": [
    "infrastructure"
@@ -2260,7 +2258,7 @@
   "cat": "alloys",
   "pre": [
    "mat_manganese",
-   "bessemer_openhearth"
+   "mat_bulk_steel"
   ],
   "traits": [
    "industrial"
@@ -2287,7 +2285,7 @@
   "cat": "alloys",
   "pre": [
    "cementation_steel",
-   "tempering"
+   "mt2_tempering"
   ],
   "traits": [
    "industrial",
@@ -2366,7 +2364,7 @@
   "name": "Malleable cast iron: annealed white iron, ductile",
   "cat": "alloys",
   "pre": [
-   "white_cast_iron"
+   "mt2_white_cast_iron"
   ],
   "traits": [
    "infrastructure"
@@ -2418,7 +2416,7 @@
   "name": "Duralumin: aluminum-copper, age-hardened aircraft alloy",
   "cat": "alloys",
   "pre": [
-   "age_hardening_aluminum"
+   "mt2_age_hardening_aluminum"
   ],
   "traits": [
    "industrial",
@@ -2496,7 +2494,6 @@
   "name": "Titanium alloys: high-strength-to-weight for aerospace",
   "cat": "alloys",
   "pre": [
-   "mat_titanium",
    "cap_heat_1600",
    "mt2_titanium_extraction"
   ],
@@ -2575,7 +2572,6 @@
   "name": "Bone china: high-firing ceramic with calcined bone",
   "cat": "ceramics",
   "pre": [
-   "cap_heat_1200",
    "cap_heat_1300",
    "mat_porcelain"
   ],
@@ -2772,7 +2768,7 @@
    "optician": 300
   },
   "mat": {
-   "mat_glass_lead": 800
+   "glass_lead_kg": 800
   },
   "build_yrs": 1.5,
   "dev_years": 25,
@@ -2802,7 +2798,7 @@
    "chemist": 400
   },
   "mat": {
-   "mat_glass_soda": 1000
+   "glass_raw_kg": 1000
   },
   "build_yrs": 2,
   "dev_years": 40,
@@ -2830,7 +2826,7 @@
    "glassblower": 600
   },
   "mat": {
-   "mat_glass_soda": 1000
+   "glass_raw_kg": 1000
   },
   "build_yrs": 1.5,
   "dev_years": 28,
@@ -2847,7 +2843,7 @@
   "name": "Tempered glass: heat-treated for safety and strength",
   "cat": "ceramics",
   "pre": [
-   "cap_heat_1200",
+   "cap_heat_1300",
    "cap_heat_0700",
    "glass_clear"
   ],
@@ -3058,7 +3054,7 @@
   "name": "Pneumatic rock drill: compressed air powered percussion",
   "cat": "mining",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_power_water"
   ],
   "traits": [
@@ -3083,7 +3079,7 @@
   "name": "Jackhammer: portable pneumatic pick for ore breaking",
   "cat": "mining",
   "pre": [
-   "rock_drill_pneumatic"
+   "mt2_rock_drill_pneumatic"
   ],
   "traits": [
    "labour_saving"

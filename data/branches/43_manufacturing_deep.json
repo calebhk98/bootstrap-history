@@ -54,7 +54,7 @@
   "name": "Carbon steel cutting tools",
   "cat": "cutting",
   "pre": [
-   "mat_crucible_steel",
+   "crucible_steel",
    "mfg_rake_clearance"
   ],
   "traits": [],
@@ -65,7 +65,7 @@
    "machinist": 40
   },
   "mat": {
-   "mat_crucible_steel": 8
+   "tool_steel_kg": 8
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0.2,
@@ -80,7 +80,7 @@
   "name": "Mushet steel tooling",
   "cat": "cutting",
   "pre": [
-   "mat_crucible_steel",
+   "crucible_steel",
    "mfg_carbon_steel_tool"
   ],
   "traits": [
@@ -93,7 +93,7 @@
    "chemist": 80
   },
   "mat": {
-   "mat_crucible_steel": 10,
+   "tool_steel_kg": 10,
    "mat_tungsten": 2
   },
   "build_yrs": 0.4,
@@ -132,7 +132,7 @@
    "engineer": 200
   },
   "mat": {
-   "mat_crucible_steel": 15,
+   "tool_steel_kg": 15,
    "mat_tungsten": 8,
    "mat_cobalt": 4
   },
@@ -200,7 +200,7 @@
    "furnaceman": 60
   },
   "mat": {
-   "mat_crucible_steel": 3,
+   "tool_steel_kg": 3,
    "mat_cobalt": 4,
    "mat_chromium": 2,
    "mat_tungsten": 3
@@ -227,7 +227,7 @@
   "cat": "cutting",
   "pre": [
    "mfg_carbon_steel_tool",
-   "brazing"
+   "mfg_brazing"
   ],
   "traits": [],
   "kb": "Carbide or stellite brazed to a steel shank",
@@ -412,7 +412,7 @@
   "cat": "machines",
   "pre": [
    "mfg_engine_lathe",
-   "indexing_head"
+   "mfg_indexing_head"
   ],
   "req_any": [
    {
@@ -453,8 +453,8 @@
   "cat": "machines",
   "pre": [
    "mfg_turret_lathe",
-   "cam_lobe",
-   "escapement_lever"
+   "mfg_cam_lobe",
+   "mfg_escapement_lever"
   ],
   "req_any": [
    {
@@ -772,7 +772,7 @@
   "cat": "machines",
   "pre": [
    "mfg_engine_lathe",
-   "indexing_head",
+   "mfg_indexing_head",
    "cap_tol_10um"
   ],
   "req_any": [
@@ -896,7 +896,7 @@
   "cat": "machines",
   "pre": [
    "mfg_universal_mill",
-   "optical_comparator"
+   "mfg_optical_comparator"
   ],
   "req_any": [
    {
@@ -1016,7 +1016,7 @@
   "name": "Gear grinding machine",
   "cat": "machines",
   "pre": [
-   "cylindrical_grinder",
+   "mfg_cylindrical_grinder",
    "cap_tol_10um",
    "cap_tol_1um"
   ],
@@ -1183,7 +1183,7 @@
   "name": "Centreless grinder",
   "cat": "machines",
   "pre": [
-   "cylindrical_grinder",
+   "mfg_cylindrical_grinder",
    "cap_tol_1um"
   ],
   "req_any": [
@@ -1223,7 +1223,7 @@
   "name": "Internal grinder",
   "cat": "machines",
   "pre": [
-   "cylindrical_grinder",
+   "mfg_cylindrical_grinder",
    "cap_tol_1um"
   ],
   "req_any": [
@@ -1261,7 +1261,7 @@
   "name": "Tool and cutter grinder",
   "cat": "machines",
   "pre": [
-   "surface_grinder",
+   "prc_surface_grinder",
    "cap_tol_10um"
   ],
   "req_any": [
@@ -1301,7 +1301,7 @@
   "name": "Honing machine",
   "cat": "machines",
   "pre": [
-   "cylindrical_grinder"
+   "mfg_cylindrical_grinder"
   ],
   "req_any": [
    {
@@ -1369,7 +1369,7 @@
   "name": "Superfinishing machine",
   "cat": "machines",
   "pre": [
-   "honing",
+   "mfg_honing",
    "cap_tol_100nm"
   ],
   "req_any": [
@@ -1796,7 +1796,7 @@
   "cat": "machines",
   "pre": [
    "mfg_punch_press",
-   "lubricant"
+   "en_lubricating_oil"
   ],
   "traits": [
    "labour_saving"
@@ -1868,7 +1868,7 @@
   "name": "Extrusion press",
   "cat": "machines",
   "pre": [
-   "mfg_hydraulic_press",
+   "met_hydraulic_press",
    "cap_heat_1100"
   ],
   "traits": [
@@ -2198,7 +2198,6 @@
   "name": "Green-sand flask pattern and mould",
   "cat": "tooling",
   "pre": [
-   "sand_casting",
    "met_green_sand_mold"
   ],
   "req_any": [
@@ -2217,7 +2216,7 @@
    "artisan": 150
   },
   "mat": {
-   "sand_molding": 50
+   "sand_kg": 50
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -2259,7 +2258,7 @@
   "cat": "tooling",
   "pre": [
    "cap_tol_100um",
-   "mat_crucible_steel"
+   "crucible_steel"
   ],
   "traits": [],
   "kb": "Wooden or metal pattern sized for shrinkage",
@@ -2517,7 +2516,7 @@
   "name": "Comparator",
   "cat": "measurement",
   "pre": [
-   "dial_indicator",
+   "mfg_dial_indicator",
    "cap_tol_1um"
   ],
   "traits": [
@@ -2648,7 +2647,7 @@
   "name": "Control chart",
   "cat": "measurement",
   "pre": [
-   "tolerance_limit_system",
+   "mfg_tolerance_limit",
    "statistics_basic"
   ],
   "traits": [
@@ -2684,7 +2683,7 @@
   "ph": 180,
   "lab": {
    "engineer": 220,
-   "inspector": 150
+   "master": 150
   },
   "mat": {},
   "build_yrs": 0.5,
@@ -2759,7 +2758,7 @@
   },
   "mat": {
    "iron_bar_kg": 8,
-   "mat_borax": 2
+   "borax_kg": 2
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -2774,7 +2773,7 @@
   "name": "Oxy-acetylene welding",
   "cat": "joining",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_2000",
    "met_acetylene_supply"
   ],
@@ -2810,7 +2809,6 @@
   "name": "Arc welding with bare electrode",
   "cat": "joining",
   "pre": [
-   "electrical_metrology",
    "cap_heat_2000",
    "cap_heat_3000",
    "cap_power_electric"
@@ -2845,7 +2843,7 @@
   "cat": "joining",
   "pre": [
    "mfg_arc_weld_bare",
-   "flux"
+   "mfg_flux"
   ],
   "traits": [],
   "kb": "Electrode coated with flux to shield the arc",
@@ -2990,9 +2988,8 @@
   "name": "Brazing",
   "cat": "joining",
   "pre": [
-   "cap_heat_800",
-   "mat_brass",
-   "cap_heat_1100"
+   "cap_heat_1100",
+   "mat_brass"
   ],
   "traits": [],
   "kb": "Brass or copper filler, capillary flow into joint",
@@ -3017,7 +3014,7 @@
   "name": "Silver soldering",
   "cat": "joining",
   "pre": [
-   "cap_heat_750",
+   "cap_heat_1100",
    "mat_silver",
    "cap_heat_0700"
   ],
@@ -3044,7 +3041,7 @@
   "name": "Soft soldering",
   "cat": "joining",
   "pre": [
-   "cap_heat_300",
+   "cap_heat_0700",
    "mat_lead"
   ],
   "traits": [],
@@ -3070,9 +3067,7 @@
   "id": "mfg_flux",
   "name": "Flux",
   "cat": "joining",
-  "pre": [
-   "mat_borax"
-  ],
+  "pre": [],
   "req_any": [
    {
     "group": "flux",
@@ -3090,7 +3085,7 @@
    "artisan": 60
   },
   "mat": {
-   "mat_borax": 3
+   "borax_kg": 3
   },
   "build_yrs": 0.15,
   "adopt_yrs": 0,
@@ -3148,7 +3143,7 @@
    "chemist": 120
   },
   "mat": {
-   "hydrochloric_acid": 8
+   "hydrochloric_acid_kg": 8
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0.1,
@@ -3210,7 +3205,7 @@
    "artisan": 100
   },
   "mat": {
-   "sand": 30
+   "sand_kg": 30
   },
   "build_yrs": 0.25,
   "adopt_yrs": 0.1,
@@ -3262,7 +3257,7 @@
   },
   "mat": {
    "mat_cotton": 15,
-   "rouge": 3
+   "mineral_pigment_kg": 3
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
@@ -3288,7 +3283,7 @@
   },
   "mat": {
    "mat_nickel": 4,
-   "copper_sulfate": 6
+   "blue_vitriol_kg": 6
   },
   "build_yrs": 0.4,
   "adopt_yrs": 0.3,
@@ -3314,7 +3309,7 @@
   },
   "mat": {
    "mat_aluminium": 8,
-   "sulfuric_acid": 4
+   "sulfuric_acid_kg": 4
   },
   "build_yrs": 0.4,
   "adopt_yrs": 0.4,
@@ -3339,7 +3334,7 @@
   "cat": "finishing",
   "pre": [
    "mat_zinc",
-   "cap_heat_450"
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "Hot-dip or electroplated zinc coating",
@@ -3362,9 +3357,7 @@
   "id": "mfg_painting",
   "name": "Painting",
   "cat": "finishing",
-  "pre": [
-   "mat_paint"
-  ],
+  "pre": [],
   "req_any": [
    {
     "group": "paint",
@@ -3382,7 +3375,7 @@
    "artisan": 100
   },
   "mat": {
-   "paint": 5
+   "paint_kg": 5
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -3397,10 +3390,9 @@
   "name": "Enamelling",
   "cat": "finishing",
   "pre": [
-   "cap_heat_800",
-   "glass_soda",
-   "cap_heat_0700",
-   "mat_glass_soda"
+   "cap_heat_1100",
+   "mat_glass_soda",
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "Fused glass coat on metal by heating",
@@ -3409,7 +3401,7 @@
    "furnaceman": 140
   },
   "mat": {
-   "mat_glass_soda": 8
+   "glass_raw_kg": 8
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
@@ -3424,7 +3416,6 @@
   "name": "Phosphating",
   "cat": "finishing",
   "pre": [
-   "phosphoric_acid",
    "chm_superphosphate"
   ],
   "traits": [],
@@ -3434,7 +3425,7 @@
    "chemist": 120
   },
   "mat": {
-   "phosphoric_acid": 6
+   "phosphoric_acid_kg": 6
   },
   "build_yrs": 0.25,
   "adopt_yrs": 0.2,
@@ -3449,8 +3440,7 @@
   "name": "Japanning",
   "cat": "finishing",
   "pre": [
-   "lacquer",
-   "cap_heat_150",
+   "cap_heat_0700",
    "mat_shellac"
   ],
   "traits": [],
@@ -3460,7 +3450,7 @@
    "artisan": 130
   },
   "mat": {
-   "lacquer": 6
+   "varnish_kg": 6
   },
   "build_yrs": 0.25,
   "adopt_yrs": 0.1,
@@ -3475,7 +3465,7 @@
   "name": "Moving assembly line",
   "cat": "organisation",
   "pre": [
-   "production_schedule"
+   "mfg_production_schedule"
   ],
   "traits": [
    "labour_saving",
@@ -3485,12 +3475,9 @@
   "ph": 250,
   "lab": {
    "engineer": 300,
-   "supervisor": 200
+   "master": 200
   },
-  "mat": {
-   "conveyor_system": 500,
-   "workstations": 200
-  },
+  "mat": {},
   "cap": 5000,
   "up": 1000,
   "build_yrs": 1,
@@ -3505,7 +3492,7 @@
   "name": "Work study",
   "cat": "organisation",
   "pre": [
-   "time_study"
+   "mfg_time_study"
   ],
   "traits": [
    "labour_saving",
@@ -3540,9 +3527,7 @@
   "lab": {
    "engineer": 180
   },
-  "mat": {
-   "chronograph": 1
-  },
+  "mat": {},
   "build_yrs": 0.3,
   "adopt_yrs": 0.5,
   "dev_years": 7,
@@ -3589,7 +3574,7 @@
   "kb": "89_remaining_arts.md#mfg_time_study",
   "ph": 100,
   "lab": {
-   "supervisor": 120
+   "master": 120
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -3605,7 +3590,6 @@
   "name": "Production schedule",
   "cat": "organisation",
   "pre": [
-   "bill_of_materials",
    "fin_contract_law"
   ],
   "traits": [
@@ -3615,7 +3599,7 @@
   "kb": "89_remaining_arts.md#mfg_production_schedule",
   "ph": 130,
   "lab": {
-   "supervisor": 160
+   "master": 160
   },
   "mat": {},
   "build_yrs": 0.3,
@@ -3631,7 +3615,7 @@
   "name": "Bill of materials",
   "cat": "organisation",
   "pre": [
-   "drawing_office"
+   "mfg_drawing_office"
   ],
   "traits": [
    "information",
@@ -3656,7 +3640,7 @@
   "name": "Inventory and reorder point",
   "cat": "organisation",
   "pre": [
-   "production_schedule"
+   "mfg_production_schedule"
   ],
   "traits": [
    "information",
@@ -3665,7 +3649,7 @@
   "kb": "89_remaining_arts.md#mfg_production_schedule",
   "ph": 120,
   "lab": {
-   "supervisor": 140
+   "master": 140
   },
   "mat": {},
   "build_yrs": 0.3,
@@ -3681,7 +3665,7 @@
   "name": "Drawing office",
   "cat": "organisation",
   "pre": [
-   "orthographic_projection",
+   "mfg_orthographic",
    "prc_straightedge",
    "units_standards"
   ],
@@ -3691,8 +3675,7 @@
   "kb": "89_remaining_arts.md#mfg_drawing_office",
   "ph": 150,
   "lab": {
-   "scribe": 200,
-   "draftsman": 250
+   "scribe": 450
   },
   "mat": {
    "paper_kg": 100,
@@ -3734,7 +3717,7 @@
   "name": "Dimensioning and tolerancing conventions",
   "cat": "organisation",
   "pre": [
-   "tolerance_limit_system",
+   "mfg_tolerance_limit",
    "cap_measure_len",
    "mfg_drawing_office"
   ],
@@ -3772,7 +3755,7 @@
    "scribe": 150
   },
   "mat": {
-   "blueprint_paper": 20
+   "paper_kg": 20
   },
   "build_yrs": 0.35,
   "adopt_yrs": 0.3,
@@ -3787,7 +3770,7 @@
   "name": "Change order",
   "cat": "organisation",
   "pre": [
-   "drawing_office"
+   "mfg_drawing_office"
   ],
   "traits": [
    "information"
@@ -3821,9 +3804,7 @@
   "lab": {
    "machinist": 200
   },
-  "mat": {
-   "tool_storage": 500
-  },
+  "mat": {},
   "build_yrs": 0.5,
   "adopt_yrs": 0.3,
   "dev_years": 7,
@@ -3845,8 +3826,8 @@
   "kb": "89_remaining_arts.md#mfg_production_schedule",
   "ph": 130,
   "lab": {
-   "mechanic": 180,
-   "supervisor": 100
+   "machinist": 180,
+   "master": 100
   },
   "mat": {},
   "build_yrs": 0.4,
@@ -3871,7 +3852,7 @@
   "kb": "89_remaining_arts.md#mfg_production_schedule",
   "ph": 160,
   "lab": {
-   "inspector": 200,
+   "master": 200,
    "engineer": 150
   },
   "mat": {},

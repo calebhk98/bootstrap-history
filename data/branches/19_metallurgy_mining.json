@@ -276,7 +276,7 @@
   "name": "Converter furnace for steel",
   "cat": "smelting",
   "pre": [
-   "bessemer_openhearth",
+   "mat_bulk_steel",
    "met_basic_lining_phosphorus"
   ],
   "kb": "",
@@ -308,7 +308,7 @@
   "name": "Basic lining and the phosphorus problem",
   "cat": "materials",
   "pre": [
-   "bessemer_openhearth",
+   "mat_bulk_steel",
    "analytical_chemistry"
   ],
   "kb": "",
@@ -927,7 +927,6 @@
   "name": "Green sand molding for casting",
   "cat": "casting",
   "pre": [
-   "sand_casting",
    "cap_heat_1300"
   ],
   "kb": "",
@@ -992,9 +991,7 @@
   "id": "met_investment_casting",
   "name": "Investment casting and lost wax",
   "cat": "casting",
-  "pre": [
-   "lost_wax_casting"
-  ],
+  "pre": [],
   "kb": "",
   "ph": 100,
   "lab": {
@@ -1174,7 +1171,7 @@
   "cat": "refining",
   "pre": [
    "electroplating",
-   "copper_fire_refined"
+   "mat_copper"
   ],
   "kb": "",
   "ph": 100,
@@ -1625,7 +1622,7 @@
   "name": "Fatigue testing and fracture mechanics",
   "cat": "knowledge",
   "pre": [
-   "met_tensile_test",
+   "mt2_tensile_test",
    "statistics_basic",
    "cap_measure_time_ms"
   ],
@@ -1725,8 +1722,7 @@
   "name": "Mine pumping systems",
   "cat": "mining",
   "pre": [
-   "cap_power_water",
-   "screw_pump"
+   "cap_power_water"
   ],
   "kb": "",
   "ph": 180,
@@ -1933,7 +1929,7 @@
   "cat": "joining",
   "pre": [
    "cap_heat_2000",
-   "industrial_gases",
+   "cap_gas_o2h2",
    "met_acetylene_supply"
   ],
   "kb": "",
@@ -2027,7 +2023,7 @@
   "cat": "materials",
   "pre": [
    "cap_heat_1600",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "kb": "",
   "ph": 200,

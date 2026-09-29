@@ -1145,7 +1145,7 @@
   "name": "Safety bicycle (chain drive)",
   "cat": "transport",
   "pre": [
-   "lnd_ball_bearing",
+   "tl_ball_bearing",
    "lnd_chain_drive_bicycle"
   ],
   "kb": "",
@@ -1242,7 +1242,7 @@
   "name": "Pneumatic tyre (rubber tyre)",
   "cat": "transport",
   "pre": [
-   "lnd_ball_bearing",
+   "tl_ball_bearing",
    "mat_natural_rubber"
   ],
   "kb": "",
@@ -1455,7 +1455,7 @@
   "name": "Magneto (ignition system)",
   "cat": "transport",
   "pre": [
-   "lnd_spark_plug",
+   "tl_spark_plug",
    "electromagnet",
    "cap_tol_100um"
   ],
@@ -1469,7 +1469,7 @@
   "mat": {
    "steel_plate_kg": 15,
    "copper_wire_kg": 10,
-   "mat_ceramic": 2
+   "ceramic_kg": 2
   },
   "cap": 1200,
   "up": 0.0,
@@ -1551,7 +1551,7 @@
   "pre": [
    "lnd_otto_cycle_four_stroke",
    "lnd_gearbox_clutch",
-   "lnd_differential",
+   "tl_differential",
    "lnd_steering_geometry",
    "mat_bulk_steel"
   ],
@@ -1794,7 +1794,7 @@
   "cat": "transport",
   "pre": [
    "lnd_diesel_cycle",
-   "lnd_caterpillar_track"
+   "tl_caterpillar_track"
   ],
   "kb": "",
   "ph": 350,

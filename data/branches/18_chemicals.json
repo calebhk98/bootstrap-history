@@ -528,7 +528,7 @@
       "chm_catalyst_concept",
       "cap_heat_1300",
       "nitric_acid",
-      "industrial_gases"
+      "cap_gas_o2h2"
     ],
     "kb": "Catalytic oxidation of gaseous ammonia with air over hot platinum gauze",
     "ph": 250,
@@ -569,7 +569,7 @@
     "name": "Haber-Bosch synthesis of ammonia",
     "cat": "chemical_engineering",
     "pre": [
-      "industrial_gases",
+      "cap_gas_o2h2",
       "cap_heat_1600",
       "chm_pressure_vessel",
       "chm_catalyst_concept",
@@ -643,7 +643,7 @@
     "name": "Electric arc nitrogen fixation: nitrogen oxides from air",
     "cat": "chemical_engineering",
     "pre": [
-      "industrial_gases",
+      "cap_gas_o2h2",
       "cap_heat_3000"
     ],
     "kb": "High-temperature arc oxidises nitrogen in air to nitric oxide, absorbed to yield nitric acid",
@@ -745,7 +745,7 @@
     "cat": "chemical_engineering",
     "pre": [
       "destructive_distillation",
-      "fractionating_column"
+      "chm_fractionating_column"
     ],
     "kb": "Separation of coal tar into volatile fractions: benzene, toluene, naphthalene, anthracene",
     "ph": 250,
@@ -844,8 +844,8 @@
     "cat": "organic_chemistry",
     "pre": [
       "chm_benzene",
-      "oleum",
-      "industrial_gases",
+      "chm_oleum",
+      "cap_gas_o2h2",
       "nitric_acid"
     ],
     "kb": "Nitration of benzene to nitrobenzene, then reduction with iron and acid",
@@ -974,7 +974,7 @@
     "cat": "organic_chemistry",
     "pre": [
       "chm_benzene",
-      "oleum"
+      "chm_oleum"
     ],
     "kb": "Sulfonation then oxidation of methylbenzene to benzosulfimide",
     "ph": 120,
@@ -1006,7 +1006,7 @@
     "cat": "organic_chemistry",
     "pre": [
       "chm_benzene",
-      "oleum",
+      "chm_oleum",
       "cap_heat_1100"
     ],
     "kb": "Sulfonation and alkali fusion to convert benzenesulfonic acid to phenol",
@@ -1258,8 +1258,7 @@
     "name": "Filter press: plate-and-frame filtration",
     "cat": "chemical_engineering",
     "pre": [
-      "cap_tol_1mm",
-      "iron_bar_kg"
+      "cap_tol_1mm"
     ],
     "kb": "Packed plates with cloth or paper filter medium under mechanical pressure",
     "ph": 150,
@@ -1388,7 +1387,7 @@
     "cat": "chemical_engineering",
     "pre": [
       "mat_bulk_steel",
-      "formaldehyde_synthesis"
+      "chm_formaldehyde_synthesis"
     ],
     "kb": "Synthetic resin beads with exchangeable ions to remove hardness and trace metals",
     "ph": 200,
@@ -1568,7 +1567,7 @@
     "cat": "explosives",
     "pre": [
       "nitric_acid",
-      "oleum"
+      "chm_oleum"
     ],
     "kb": "Cellulose nitrated with mixed acid to yield highly explosive nitrocellulose",
     "ph": 120,
@@ -1602,7 +1601,7 @@
     "pre": [
       "chm_glycerol",
       "nitric_acid",
-      "oleum"
+      "chm_oleum"
     ],
     "kb": "Nitration of glycerol to yield highly sensitive volatile liquid explosive",
     "ph": 150,
@@ -1629,7 +1628,7 @@
     "name": "Dynamite: nitroglycerin in diatomaceous earth",
     "cat": "explosives",
     "pre": [
-      "chm_nitroglycerin"
+      "mat_nitroglycerin"
     ],
     "kb": "Adsorption of liquid nitroglycerin onto porous diatomaceous earth for safe transport and storage",
     "ph": 100,
@@ -1660,7 +1659,7 @@
     "name": "Gelignite: nitroglycerin in colloidal cellulose",
     "cat": "explosives",
     "pre": [
-      "chm_nitroglycerin",
+      "mat_nitroglycerin",
       "chm_guncotton"
     ],
     "kb": "Stabilisation of nitroglycerin by absorbing into gelatinised nitrocellulose",
@@ -1722,7 +1721,7 @@
     "cat": "explosives",
     "pre": [
       "chm_toluene",
-      "oleum"
+      "chm_oleum"
     ],
     "kb": "Nitration of toluene in three stages to yield trinitrotoluene",
     "ph": 150,
@@ -1754,7 +1753,7 @@
     "cat": "explosives",
     "pre": [
       "chm_phenol",
-      "oleum"
+      "chm_oleum"
     ],
     "kb": "Nitration of phenol to yield picric acid (trinitrophenol)",
     "ph": 100,
@@ -1912,7 +1911,7 @@
     "cat": "plastics",
     "pre": [
       "chm_phenol",
-      "formaldehyde_synthesis",
+      "chm_formaldehyde_synthesis",
       "destructive_distillation",
       "mat_formaldehyde"
     ],
@@ -1943,8 +1942,7 @@
     "name": "Polyvinyl chloride (PVC) synthesis",
     "cat": "plastics",
     "pre": [
-      "electrolysis_industrial",
-      "mat_calcium_carbide"
+      "electrolysis_industrial"
     ],
     "kb": "Polymerisation of vinyl chloride monomer under free-radical initiation",
     "ph": 200,
@@ -1973,7 +1971,7 @@
     "cat": "plastics",
     "pre": [
       "chm_pressure_vessel",
-      "industrial_gases"
+      "cap_gas_o2h2"
     ],
     "kb": "Polymerisation of ethylene at 1000 atm and 150 C with organic peroxide initiator",
     "ph": 250,
@@ -2098,7 +2096,7 @@
     "name": "Glycerol production and purification",
     "cat": "chemical_engineering",
     "pre": [
-      "chm_soap_hard",
+      "soap_hard",
       "cap_pure_4N"
     ],
     "kb": "Recovery of glycerol from saponification of oils and fats",
@@ -2129,7 +2127,7 @@
     "name": "Friction matches: red phosphorus safety match",
     "cat": "chemical_engineering",
     "pre": [
-      "phosphorus_extraction"
+      "chm_phosphorus_extraction"
     ],
     "kb": "Wooden sticks coated with red phosphorus, antimony sulfide and potassium dichromate",
     "ph": 100,

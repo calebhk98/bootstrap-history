@@ -1005,7 +1005,7 @@
   },
   "mat": {
    "timber_m3": 1,
-   "wire_steel_kg": 5,
+   "wire_drawn_kg": 5,
    "linen_kg": 5
   },
   "cap": 100,

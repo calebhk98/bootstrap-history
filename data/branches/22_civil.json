@@ -991,7 +991,7 @@
   "name": "Compressed air caisson and decompression",
   "cat": "foundations",
   "pre": [
-   "civ_caisson",
+   "cn_caisson",
    "cap_power_steam"
   ],
   "kb": "",
@@ -1084,7 +1084,7 @@
   "cat": "excavation",
   "pre": [
    "civ_tunnel_rock_drill",
-   "civ_caisson"
+   "cn_caisson"
   ],
   "kb": "",
   "ph": 250,
@@ -1526,7 +1526,7 @@
   "name": "Prestressed concrete",
   "cat": "materials",
   "pre": [
-   "civ_reinforced_concrete"
+   "cn_reinforced_concrete"
   ],
   "kb": "",
   "ph": 180,
@@ -1654,7 +1654,7 @@
    "glassblower": 250
   },
   "mat": {
-   "mat_glass_soda": 100
+   "glass_raw_kg": 100
   },
   "cap": 200,
   "up": 30,
@@ -1686,7 +1686,7 @@
   },
   "mat": {
    "brick_1000": 100,
-   "refractory_fireclay": 50
+   "clay_kg": 50
   },
   "cap": 300,
   "up": 0.0,

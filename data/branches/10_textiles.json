@@ -553,7 +553,7 @@
   "name": "Rope walk and cordage",
   "cat": "textiles",
   "pre": [
-   "tex_linen",
+   "mat_linen",
    "cap_measure_len"
   ],
   "kb": "",
@@ -587,7 +587,7 @@
   "name": "Canvas cloth",
   "cat": "textiles",
   "pre": [
-   "tex_linen",
+   "mat_linen",
    "tex_horizontal_loom"
   ],
   "kb": "",
@@ -619,7 +619,7 @@
   "name": "Fitted garment tailoring",
   "cat": "textiles",
   "pre": [
-   "tex_linen",
+   "mat_linen",
    "cap_measure_len"
   ],
   "kb": "",
@@ -653,7 +653,7 @@
   "cat": "textiles",
   "pre": [
    "tex_wool",
-   "tex_carding"
+   "tx2_carding"
   ],
   "kb": "",
   "ph": 40,
@@ -1086,7 +1086,7 @@
   "name": "Water-powered fulling mill",
   "cat": "textiles",
   "pre": [
-   "tex_fulling",
+   "tx2_fulling",
    "cap_power_water",
    "crank_conrod"
   ],
@@ -1125,7 +1125,7 @@
   "name": "Field bleaching with sun",
   "cat": "textiles",
   "pre": [
-   "tex_linen",
+   "mat_linen",
    "tex_sailcloth"
   ],
   "kb": "",
@@ -1265,7 +1265,7 @@
   "name": "Wool combing machinery",
   "cat": "textiles",
   "pre": [
-   "tex_combing",
+   "tx2_combing",
    "cap_power_water",
    "crank_conrod",
    "cap_tol_1mm"
@@ -1702,7 +1702,7 @@
   "cat": "textiles",
   "pre": [
    "mat_ammonia",
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_tol_100um"
   ],
   "kb": "",

@@ -556,8 +556,7 @@
   "cat": "instruments",
   "pre": [
    "cap_tol_100um",
-   "glass_labware",
-   "steel_noric_kg"
+   "glass_labware"
   ],
   "kb": "",
   "ph": 100,
@@ -1366,7 +1365,7 @@
   },
   "mat": {
    "steel_noric_kg": 2,
-   "corundum": 1
+   "emery_kg": 1
   },
   "cap": 1000,
   "up": 150,
