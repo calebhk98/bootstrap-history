@@ -168,7 +168,10 @@ def _agent_help(sim, topic=None):
             "start <id>": "begin work on something",
             "stop <id>": "abandon it, losing what you have spent",
             "rush": "start everything you could begin today in one go, "
-                    "highest-leverage first; add limit:N to cap it",
+                    "highest-leverage first (also 'start all'); add limit:N to "
+                    "cap the count, max_total_cost:N, max_annual_draw:N or "
+                    "reserve_cash:N to cap the money, and preview to see what "
+                    "it would start and spend without starting anything",
             "step <years>": "let time pass",
             "money": "the whole ledger: what comes in, what goes out",
             "values": "what this society actually believes, as numbers - the "

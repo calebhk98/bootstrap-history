@@ -319,8 +319,27 @@ def _parse_rush(command, rest, words, nums, want_json):
                                   "one of them." % token_text[len(pre):])
                 _lim = value
                 break
-    if _lim is None and nums:
-        _lim = nums[0]
+    # fiscal caps take key:value or key=value; a cap that will not parse is refused
+    cap_tokens = set()
+    for word in rest:
+        token_text = str(word)
+        lowered = token_text.lower()
+        if lowered in ("preview", "dry_run", "dryrun"):
+            out["preview"] = True
+            continue
+        for key in ("max_total_cost", "max_annual_draw", "reserve_cash"):
+            for separator in (":", "="):
+                if lowered.startswith(key + separator):
+                    value = _typed_number(token_text[len(key) + 1:])
+                    if value is None:
+                        return None, ("'%s' is not an amount for %s, e.g. "
+                                      "'rush %s:5000'." % (token_text[len(key) + 1:], key, key))
+                    out[key] = value
+                    cap_tokens.add(token_text)
+    if _lim is None:
+        _lim = next((number for number in nums
+                     if not any(_typed_number(token[token.find(":") + 1:]) == number
+                                for token in cap_tokens)), None)
     if _lim is not None:
         out["limit"] = int(_lim)
     return out, None
@@ -602,6 +621,10 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
         if want not in NODE_IDS:
             want = NODE_IDS_LOWER.get(want.lower(), want)
         return {"cmd": "open", "id": want, "units": nums[-1]}, None
+
+    if command == "start" and str(rest[0]).lower() == "all" if rest else False:
+        # 'start all ...' is the bulk start; unbounded it only previews
+        return _parse_rush("rush", rest[1:], words[1:], nums, want_json)
 
     if not rest:
         return None, ("%s needs the name of a technology, e.g. '%s "
