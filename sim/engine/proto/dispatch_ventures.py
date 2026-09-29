@@ -9,8 +9,13 @@ name protocol.py's shim re-exports - and imports these handlers back from
 here. Behaviour is unchanged and moved verbatim.
 """
 
+import os
+import tempfile
+
 from ..data import downstream_count
+from ..purchase_rule import purchase_budget
 from .nodes import _did_you_mean
+from .saveload import load_state, save_state
 from .util import _flag
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
@@ -299,6 +304,73 @@ def _cmd_stop(sim, nodes, cmd, ended):
 
 
 
+def _rush_caps(cmd):
+    """The fiscal caps on a rush as (caps, error). A cap is None when not given."""
+    caps = {}
+    for key in ("max_total_cost", "max_annual_draw", "reserve_cash"):
+        raw = cmd.get(key)
+        if raw is None:
+            caps[key] = None
+            continue
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            return None, "%s must be a number of currency" % key
+        if value < 0 or value != value:
+            return None, "%s cannot be negative" % key
+        caps[key] = value
+    return caps, None
+
+
+def _rush_cost_left(sim, node_id):
+    """Money still owed to begin this project, net of what was already sunk."""
+    paid = (sim.state.projects.paid_towards or {}).get(node_id, 0.0)
+    price = sim.project_cost(node_id)
+    return price - min(price, max(0.0, paid))
+
+
+def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far):
+    """Why the next project breaks a fiscal cap, or None when it fits."""
+    if caps["max_total_cost"] is not None and cost_so_far + cost > caps["max_total_cost"] + 1e-9:
+        return ("not begun: costs %s, which would take this rush past "
+                "max_total_cost" % "{:,.0f}".format(cost))
+    if caps["max_annual_draw"] is not None and draw_so_far + draw > caps["max_annual_draw"] + 1e-9:
+        return ("not begun: draws %s a year, which would take this rush past "
+                "max_annual_draw" % "{:,.0f}".format(draw))
+    if caps["reserve_cash"] is not None:
+        if cost_so_far + cost + caps["reserve_cash"] > budget + 1e-9:
+            return ("not begun: costs %s, which would dip into the "
+                    "reserve_cash you asked to keep" % "{:,.0f}".format(cost))
+    return None
+
+
+def _rush_preview(sim, nodes, cmd, ended):
+    """Run the real rush, then roll the game back to how it was.
+
+    Credit, costs and availability all move as projects begin, so only the
+    real start path can say what a rush would start.
+    """
+    saved_order = list(sim.order)
+    with tempfile.TemporaryDirectory() as folder:
+        snapshot = os.path.join(folder, "snapshot.json")
+        save_state(sim, snapshot)
+        try:
+            result = _cmd_rush(sim, nodes, dict(cmd, preview=False), ended)
+        finally:
+            load_state(sim, snapshot)
+            sim.order[:] = saved_order
+    if result.get("preview") or not result.get("ok"):
+        return result
+    return {"ok": True, "preview": True, "nothing_changed": True,
+            "count_would_start": result["count_started"],
+            "would_start": result["started"],
+            "total_cost": result["total_cost"],
+            "total_annual_draw": result["total_annual_draw"],
+            "count_not_started": result["count_not_started"],
+            "not_started": result["not_started"],
+            "how_to_confirm": "Repeat the same rush without 'preview' to begin these."}
+
+
 def _cmd_rush(sim, nodes, cmd, ended):
     # BULK START, FOG-SAFE: a late game can have dozens of things
     # startable at once, with nothing to do but type `start <id>`
@@ -318,6 +390,12 @@ def _cmd_rush(sim, nodes, cmd, ended):
         return {"ok": False, "error": "limit must be a whole number"}
     if limit is not None and limit < 1:
         return {"ok": False, "error": "limit must be at least 1"}
+    caps, cap_error = _rush_caps(cmd)
+    if cap_error:
+        return {"ok": False, "error": cap_error}
+    capped = any(value is not None for value in caps.values())
+    if _flag(cmd.get("preview")):
+        return _rush_preview(sim, nodes, cmd, ended)
     _memo = {}
     _ok = [node_id for node_id in sim.order if sim.can_start(node_id, _memo=_memo)]
     # HIGHEST-LEVERAGE FIRST, INTERNALLY ONLY. This never shows a player
@@ -330,7 +408,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
     _ok.sort(key=lambda k: (-downstream_count(nodes, k), sim.project_cost(k)))
     # Discovery must not mutate dozens of portfolio entries. A numeric limit
     # is an explicit bounded instruction; an unbounded run needs confirmation.
-    if limit is None and not cmd.get("force"):
+    if limit is None and not capped and not cmd.get("force"):
         return {"ok": True, "preview": True,
                 "count_would_start": len(_ok),
                 "would_start": [{"id": node_id, "name": nodes[node_id]["name"],
@@ -356,9 +434,20 @@ def _cmd_rush(sim, nodes, cmd, ended):
     _budget = sim.director_pool() * _HORIZON_YEARS
     started, not_started = [], []
     _owed = 0.0
+    total_cost = total_draw = 0.0
+    # budget fixed up front from the shared purchase rule, so the reserve holds as projects start
+    budget = purchase_budget(sim)
     for node_id in _ok:
         if limit is not None and len(started) >= limit:
             break
+        cost_left = _rush_cost_left(sim, node_id)
+        annual_draw = cost_left / max(1.0, nodes[node_id]["yrs"])
+        cap_reason = _rush_cap_refusal(caps, budget, cost_left, annual_draw,
+                                       total_cost, total_draw)
+        if cap_reason:
+            not_started.append({"id": node_id, "name": nodes[node_id]["name"],
+                                "why": cap_reason})
+            continue
         if started and _owed + nodes[node_id]["ph"] > _budget:
             not_started.append({
                 "id": node_id, "name": nodes[node_id]["name"],
@@ -372,6 +461,8 @@ def _cmd_rush(sim, nodes, cmd, ended):
         ok2, why = sim.start_project(node_id)
         if ok2:
             _owed += nodes[node_id]["ph"]
+            total_cost += cost_left
+            total_draw += annual_draw
             node = nodes[node_id]
             # SAY SO, for the same reason the single-id `start` does: a
             # player reading `log` back should see every begun-work as a
@@ -380,10 +471,13 @@ def _cmd_rush(sim, nodes, cmd, ended):
                 sim.log.append((sim.year, "started: %s" % node["name"]))
             started.append({"id": node_id, "name": node["name"],
                             "cost": round(sim.active.get(node_id, {}).get(
-                                "cost_left", sim.project_cost(node_id)), 1)})
+                                "cost_left", sim.project_cost(node_id)), 1),
+                            "annual_draw": round(annual_draw, 1)})
         else:
             not_started.append({"id": node_id, "why": why})
     return {"ok": True, "started": started, "count_started": len(started),
+            "total_cost": round(total_cost, 1),
+            "total_annual_draw": round(total_draw, 1),
             "not_started": not_started,
             "count_not_started": len(not_started),
             # THE SAME WARNING `policy` CARRIES, for the same reason. This

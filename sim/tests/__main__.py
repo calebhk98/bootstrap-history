@@ -94,6 +94,7 @@ TOPICS = [
     "perf_optimizations",
     "economic_caching",
     "affordability_warning",
+    "rush_fiscal_controls",
     "arrears_visibility",
     "allocate",
     "craftsmen_wording",
