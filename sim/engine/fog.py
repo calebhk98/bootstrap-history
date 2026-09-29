@@ -275,9 +275,14 @@ class FogMixin:
         if not text or not self.state._fog:
             return text
         scrubbed = text
-        for node_id in self.nodes:
-            if node_id in scrubbed and not self.is_visible(node_id):
-                scrubbed = scrubbed.replace(node_id, "something you have not heard of")
+        # Sort by length descending to replace longer ids first, avoiding
+        # corruption when one id is a prefix of another.
+        sorted_ids = sorted(self.nodes, key=lambda node_id: -len(node_id))
+        for node_id in sorted_ids:
+            if not self.is_visible(node_id):
+                # Use word boundaries to match whole ids only: id chars are [A-Za-z0-9_]
+                pattern = r'\b' + re.escape(node_id) + r'\b'
+                scrubbed = re.sub(pattern, "something you have not heard of", scrubbed)
         return scrubbed
 
     def fog_summary(self, node_id: str) -> str:
