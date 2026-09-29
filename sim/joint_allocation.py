@@ -9,6 +9,7 @@ solved output price, so the split cannot feed back into itself.
 """
 import json
 import os
+import warnings
 
 from sim.constants import declare
 from sim.world import demand, deposits
@@ -28,62 +29,41 @@ MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
         "number for every civilisation.")
 
 
-def mass_in_kg(material, quantity):
-    """Quantity as kilograms, read from the material's unit suffix."""
-    # TEMPORARY HEURISTIC: only the _g suffix is converted; other units count as kg.
-    return quantity / 1000.0 if material.endswith("_g") else quantity
-
-
 def allocate_joint_cost(outputs, current_prices, total_cost,
-                        anchor_price_by_material=None, input_cost=0.0):
+                        anchor_price_by_material=None):
     """{material: price per unit} splitting `total_cost` over `outputs`.
 
-    `input_cost` (the batch's material inputs) sets a floor: no output is
-    valued below its share of the input mass, since its atoms came from them.
+    Outputs only have to recover the batch together; a bulk waste may carry
+    far less than its mass share. Without an anchor an output is valued by
+    its mass in kg. An output whose unit is not a mass is warned about,
+    left out of the split and priced at zero.
     """
+    if len(outputs) == 1:
+        (name, quantity), = outputs.items()
+        return {name: total_cost / quantity}
     anchors = anchor_price_by_material or {}
-    anchored = {name for name in outputs if name in anchors}
-    if not anchored:
-        prices = _split_by_value(outputs, current_prices, total_cost)
-    else:
-        if len(anchored) == len(outputs):
-            reference_prices = anchors
-        else:
-            # Standalone unit cost of the batch, in place of a solved price.
-            # TEMPORARY HEURISTIC: mixes kg and g outputs by raw quantity.
-            standalone_unit_cost = total_cost / sum(outputs.values())
-            reference_prices = {
-                name: anchors[name] if name in anchored else standalone_unit_cost
-                for name in outputs}
-        prices = _split_by_value(outputs, reference_prices, total_cost)
-    return _apply_input_floor(outputs, prices, total_cost, input_cost)
-
-
-def _apply_input_floor(outputs, prices, total_cost, input_cost):
-    if input_cost <= 0 or len(outputs) < 2:
+    mass = {name: demand.mass_in_kg_or_none(name, quantity)
+            for name, quantity in outputs.items()}
+    unconvertible = sorted(name for name, kilograms in mass.items() if kilograms is None)
+    if unconvertible:
+        warnings.warn("joint outputs with no mass unit are left out of the cost split: %s"
+                      % ", ".join(unconvertible))
+    split_outputs = {name: quantity for name, quantity in outputs.items()
+                     if mass[name] is not None}
+    prices = dict.fromkeys(unconvertible, 0.0)
+    if not split_outputs:
         return prices
-    mass = {name: mass_in_kg(name, quantity) for name, quantity in outputs.items()}
-    total_mass = sum(mass.values())
-    if total_mass <= 0:
-        return prices
-    floor = {name: min(input_cost, total_cost) * mass[name] / total_mass for name in outputs}
-    value = {name: prices[name] * quantity for name, quantity in outputs.items()}
-    # Outputs under their floor are lifted to it; the deficit comes out of
-    # the surplus above floor of the rest, proportionally.
-    for _round in range(len(outputs)):
-        short = {name for name in outputs if value[name] < floor[name] * (1 - 1e-12)}
-        if not short:
-            break
-        deficit = sum(floor[name] - value[name] for name in short)
-        surplus = {name: value[name] - floor[name] for name in outputs if name not in short}
-        total_surplus = sum(surplus.values())
-        if total_surplus <= 0:
-            break
-        for name in short:
-            value[name] = floor[name]
-        for name, extra in surplus.items():
-            value[name] -= deficit * extra / total_surplus
-    return {name: value[name] / quantity for name, quantity in outputs.items()}
+    anchored = {name for name in split_outputs if name in anchors}
+    kilograms_per_unit = {name: mass[name] / quantity for name, quantity in split_outputs.items()}
+    # TEMPORARY HEURISTIC: an unanchored output is valued at the batch's
+    # standalone cost per kg, which does not depend on any solved output price.
+    standalone_cost_per_kg = total_cost / (sum(mass[name] for name in split_outputs) or 1.0)
+    reference_prices = {
+        name: anchors[name] if name in anchored
+        else standalone_cost_per_kg * kilograms_per_unit[name]
+        for name in split_outputs}
+    prices.update(_split_by_value(split_outputs, reference_prices, total_cost))
+    return prices
 
 
 def cap_anchors(anchor_price_by_material, direct_price_by_material):

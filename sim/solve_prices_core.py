@@ -844,13 +844,13 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
     return energy_cost_hours
 
 
-def _allocate_output_prices(outputs, current_prices, total_process_cost_hours, input_cost_hours,
+def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
                             demand_anchor_price_by_material=None):
     # Missing prices fall back to the initial guess, as for any unsolved material.
     priced = {material: current_prices.get(material, INITIAL_PRICE_GUESS_HOURS)
               for material in outputs}
     return allocate_joint_cost(outputs, priced, total_process_cost_hours,
-                               demand_anchor_price_by_material, input_cost=input_cost_hours)
+                               demand_anchor_price_by_material)
 
 
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
@@ -947,7 +947,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                 + energy_cost_hours)
 
     output_prices = _allocate_output_prices(
-        outputs, current_prices, total_process_cost_hours, material_cost_hours,
+        outputs, current_prices, total_process_cost_hours,
         demand_anchor_price_by_material)
 
     return total_process_cost_hours, output_prices

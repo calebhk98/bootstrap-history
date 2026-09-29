@@ -37,28 +37,51 @@ class AllocateJointCostTests(unittest.TestCase):
         self.assertAlmostEqual(cheap["main_kg"], dear["main_kg"])
 
 
-class InputFloorTests(unittest.TestCase):
-    """An output never prices below the inputs its own mass came from."""
+class WasteOutputTests(unittest.TestCase):
+    """Outputs only have to recover the batch together, not one mass share each."""
 
-    outputs = {"main_kg": 1000.0, "gem_kg": 1.0}
+    outputs = {"metal_kg": 1.0, "slag_kg": 1000.0}
 
-    def test_a_huge_anchor_cannot_push_the_main_output_below_its_inputs(self):
+    def test_a_bulk_waste_carries_far_less_than_its_mass_share(self):
+        # Slag is nearly all the mass and worth almost nothing; the metal is the reason for the batch.
         prices = joint_allocation.allocate_joint_cost(
-            self.outputs, {}, 100.0, {"gem_kg": 1e6}, input_cost=80.0)
-        self.assertGreaterEqual(prices["main_kg"] * 1000.0, 80.0 * 1000.0 / 1001.0 - 1e-9)
+            self.outputs, {}, 100.0, {"metal_kg": 500.0, "slag_kg": 0.001})
+        slag_share = prices["slag_kg"] * 1000.0 / 100.0
+        self.assertLess(slag_share, 0.01)
+        self.assertGreater(prices["metal_kg"], 50.0)
 
-    def test_the_split_still_recovers_the_whole_cost(self):
+    def test_the_batch_cost_is_still_recovered_exactly(self):
         prices = joint_allocation.allocate_joint_cost(
-            self.outputs, {}, 100.0, {"gem_kg": 1e6}, input_cost=80.0)
+            self.outputs, {}, 100.0, {"metal_kg": 500.0, "slag_kg": 0.001})
         recovered = sum(prices[name] * quantity for name, quantity in self.outputs.items())
         self.assertAlmostEqual(recovered, 100.0)
 
-    def test_a_split_that_already_covers_inputs_is_untouched(self):
-        without = joint_allocation.allocate_joint_cost(
-            self.outputs, {}, 100.0, {"gem_kg": 500.0})
-        with_floor = joint_allocation.allocate_joint_cost(
-            self.outputs, {}, 100.0, {"gem_kg": 500.0}, input_cost=1.0)
-        self.assertEqual(without, with_floor)
+
+class UnitConsistentFallbackTests(unittest.TestCase):
+    """Without anchors the split is by mass, so a gram is not priced like a kilogram."""
+
+    def test_one_kilogram_of_each_output_costs_the_same(self):
+        outputs = {"nickel_kg": 1000.0, "platinum_g": 40.0}
+        prices = joint_allocation.allocate_joint_cost(outputs, {}, 100.0)
+        self.assertAlmostEqual(prices["nickel_kg"], prices["platinum_g"] * 1000.0)
+
+    def test_the_batch_cost_is_recovered(self):
+        outputs = {"nickel_kg": 1000.0, "platinum_g": 40.0}
+        prices = joint_allocation.allocate_joint_cost(outputs, {}, 100.0)
+        self.assertAlmostEqual(
+            sum(prices[name] * quantity for name, quantity in outputs.items()), 100.0)
+
+    def test_an_unanchored_output_beside_an_anchored_one_is_mass_valued(self):
+        outputs = {"nickel_kg": 1000.0, "platinum_g": 40.0, "gem_kg": 1.0}
+        prices = joint_allocation.allocate_joint_cost(outputs, {}, 100.0, {"gem_kg": 500.0})
+        self.assertAlmostEqual(prices["nickel_kg"], prices["platinum_g"] * 1000.0)
+
+    def test_an_output_with_no_mass_unit_is_flagged_and_left_out_of_the_split(self):
+        outputs = {"metal_kg": 10.0, "heat_mj": 50.0}
+        with self.assertWarns(UserWarning):
+            prices = joint_allocation.allocate_joint_cost(outputs, {}, 100.0)
+        self.assertAlmostEqual(prices["metal_kg"] * 10.0, 100.0)
+        self.assertEqual(prices["heat_mj"], 0.0)
 
 
 class CapAnchorsTests(unittest.TestCase):
@@ -168,23 +191,31 @@ class RealDataJointSmeltTests(unittest.TestCase):
         self.assertLess(self.solved.iterations, solve_prices.MAXIMUM_ITERATIONS)
         self.assertLess(self.solved.residual, solve_prices.CONVERGENCE_TOLERANCE)
 
-    def test_no_joint_product_is_priced_below_its_share_of_input_cost(self):
-        # Floor: input cost times the output's share of the batch's output mass.
+    def test_every_joint_recipe_recovers_its_batch_cost_exactly(self):
+        _tree, prices_json, _nodes, _wages, _goods = simulator.load()
+        wages = solve_prices.wage_ratios_by_trade(prices_json)
+        rent = solve_prices.rent_hours_per_kg_by_ore_material(self.solved.entries, wages)
         checked = 0
         for material, recipe_id in self.solved.chosen.items():
             entry = self.solved.entries[recipe_id]
-            outputs = entry.get("outputs") or {}
-            if len(outputs) < 2 or material not in outputs:
+            if len(entry.get("outputs") or {}) < 2 or material not in entry["outputs"]:
                 continue
-            input_cost = sum(quantity * self.after[name]
-                             for name, quantity in (entry.get("inputs") or {}).items())
-            mass = {name: joint_allocation.mass_in_kg(name, quantity)
-                    for name, quantity in outputs.items()}
-            floor = input_cost * mass[material] / sum(mass.values())
-            value = outputs[material] * self.after[material]
-            self.assertGreaterEqual(value, floor * 0.999, (material, recipe_id))
+            costed = solve_prices.recipe_cost_and_allocation(
+                recipe_id, entry, self.after, wages, rent_hours_per_kg_by_material=rent)
+            if costed is None:
+                continue
+            total_cost, output_prices = costed
+            recovered = sum(output_prices[name] * quantity
+                            for name, quantity in entry["outputs"].items())
+            self.assertAlmostEqual(recovered, total_cost, places=6, msg=recipe_id)
             checked += 1
         self.assertGreater(checked, 0)
+
+    def test_no_solved_price_is_negative_or_vanishing_next_to_its_input(self):
+        for material in ("lead_kg", "silver_kg"):
+            self.assertGreater(self.after[material], 0.0)
+        # Lead is at least what its galena costs per kg of ore, before any other cost.
+        self.assertGreater(self.after["lead_kg"], self.after["galena_kg"])
 
     def test_lead_pays_for_its_own_galena(self):
         self.assertGreater(self.after["lead_kg"], 1.77 * self.after["galena_kg"])
