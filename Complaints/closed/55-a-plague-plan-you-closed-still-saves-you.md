@@ -1,6 +1,6 @@
 # A plague plan you shut down still protects you from the plague
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_plague_mitigation_realism.py
 
 `plague_preparedness` is a venture. It can be opened, it costs upkeep, and
 it can be closed:
@@ -126,3 +126,11 @@ Filed, not fixed. Fixing it means choosing one of the three answers above,
 and that is a modelling decision rather than a defect to patch. The
 `NOT_OPERATING_BENEFIT` comment should be corrected either way, because its
 citation is now dangling whichever answer wins.
+
+## Resolution
+
+A concern you closed keeps only a residue of its hazard relief
+(`KNOWLEDGE_RESIDUE_AFTER_CLOSURE`, a labelled heuristic); a running one gives
+its full share and pure knowledge is never switched off. The gate is
+`running()` versus `has()` via `Sim._counter_strength`. The dangling
+`NOT_OPERATING_BENEFIT` comment is corrected.

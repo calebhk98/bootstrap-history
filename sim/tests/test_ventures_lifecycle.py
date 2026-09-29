@@ -133,10 +133,9 @@ check("...and closes the moment the doors reopen - this is a LIVE check of "
        {gap["id"] for gap in s_cg.capability_gaps()})[1] == {"corpus_dispersed"},
       s_cg.capability_gaps())
 s_cg.operating.discard("patron_imperial")
-check("plague_preparedness is deliberately never warned about: its only "
-      "measurable protection (HAZARD_COUNTERS) is has()-gated like corpus, "
-      "so closing it costs nothing today, and a false alarm here is "
-      "exactly the wall-of-text failure this feature exists to avoid",
+check("plague_preparedness is not in the capability warning table: its "
+      "protection is read through running() by hazard_relief, not paid as a "
+      "capability benefit",
       "plague_preparedness" not in s_cg.NOT_OPERATING_BENEFIT,
       sorted(s_cg.NOT_OPERATING_BENEFIT))
 check("fin_university's sole benefit is shared (an `or`) with "

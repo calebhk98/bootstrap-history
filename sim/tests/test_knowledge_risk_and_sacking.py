@@ -299,6 +299,7 @@ _FIXTURE_380 = os.path.join(ROOT, "playtest", "fixtures",
                             "rome_380_corpus_bug.json")
 s_fix = sim(capital=1.0)
 S.load_state(s_fix, _FIXTURE_380)
+s_fix.insolvent_years = 0  # the fixture predates this field
 check("the fixture is what it claims to be: both corpora done, neither "
       "one operating",
       s_fix.has("corpus_written") and s_fix.has("corpus_dispersed")
