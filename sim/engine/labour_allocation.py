@@ -59,26 +59,55 @@ def starting_hours(production, reached_nodes, total_hours, farm_hours):
     return hours
 
 
-def reallocate(hours_by_trade, total_hours, farm_hours_needed):
-    """One year of labour_market.Workforce.step toward the stated farm need;
-    the non-farm hours keep their current split as their need."""
+def hours_needed_by_trade(need_shares, total_hours, farm_hours_needed):
+    """Hours each trade is needed for: the farm need, and the rest of the
+    society's hours split by each trade's share of non-farm need."""
+    farm_hours_needed = min(farm_hours_needed, total_hours)
+    rest_hours = total_hours - farm_hours_needed
+    needed = {trade: share * rest_hours for trade, share in need_shares.items()}
+    needed[FARM_TRADE] = farm_hours_needed
+    return needed
+
+
+def reallocate(hours_by_trade, total_hours, needed_by_trade):
+    """One year of labour_market.Workforce.step toward the stated need of
+    every trade, under its mobility limits."""
     current_total = sum(hours_by_trade[trade] for trade in sorted(hours_by_trade))
     scale = total_hours / current_total if current_total > 0.0 else 0.0
     workforce = labour_market.Workforce(
         {trade: hours * scale for trade, hours in hours_by_trade.items()})
-    farm_hours_needed = min(farm_hours_needed, total_hours)
-    rest_now = sum(hours for trade, hours in workforce.hours_by_trade.items()
-                   if trade != FARM_TRADE)
-    rest_needed = total_hours - farm_hours_needed
-    needs = {trade: (hours / rest_now * rest_needed if rest_now > 0.0 else 0.0)
-             for trade, hours in workforce.hours_by_trade.items() if trade != FARM_TRADE}
-    needs[FARM_TRADE] = farm_hours_needed
-    workforce.step(needs)
+    workforce.step(needed_by_trade)
     return workforce.hours_by_trade
 
 
 class LabourAllocationMixin:
     """Sim method that sizes this year's farm workforce."""
+
+    def _non_farm_need_shares(self):
+        """Each non-farm trade's share of need from household demand through
+        the recipe graph; with no recipe available, the current split."""
+        reached = frozenset(self.civ["starting_techs"]) | frozenset(self.state.projects.done)
+        cached = getattr(self, "_need_shares_cache", None)
+        if cached is None or cached[0] != reached:
+            shares = workforce_spinup.need_shares_by_trade(labour_market.production_data(), reached)
+            cached = self._need_shares_cache = (reached, shares)
+        if cached[1]:
+            return cached[1]
+        hours = self.state.economy.society_labour_hours
+        rest = sum(value for trade, value in hours.items() if trade != FARM_TRADE)
+        return {trade: value / rest for trade, value in hours.items()
+                if trade != FARM_TRADE and rest > 0.0}
+
+    def _hours_needed_by_trade(self, total_hours=None):
+        """Hours each trade is needed for, read by both the labour
+        allocation and the wage rule."""
+        economy = self.state.economy
+        hours = economy.society_labour_hours
+        if total_hours is None:
+            total_hours = sum(hours.values())
+        farm_now = hours.get(FARM_TRADE, 0.0)
+        farm_needed = farm_now if economy.farm_hours_needed is None else economy.farm_hours_needed
+        return hours_needed_by_trade(self._non_farm_need_shares(), total_hours, farm_needed)
 
     def _clearable_hectares(self):
         """Arable ground held but not yet cleared."""
@@ -199,7 +228,8 @@ class LabourAllocationMixin:
                 technique=technique)
         economy.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
         economy.society_labour_hours = reallocate(
-            economy.society_labour_hours, total_hours, economy.farm_hours_needed)
+            economy.society_labour_hours, total_hours,
+            self._hours_needed_by_trade(total_hours))
         farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         crop_limit_fte = (self.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit))

@@ -17,7 +17,6 @@ in it.
 from . import wage_provider
 from .data import FOOD_PRICE_PER_KG, TRADE_REGISTRY, WAGES
 from sim.constants import declare
-from sim.world import labour_market, workforce_spinup
 
 
 class WagesMixin:
@@ -286,7 +285,8 @@ class WagesMixin:
         cached = getattr(self, "_wage_schedule_cache", None)
         if cached is None or cached.tightness_factors is not factors:
             cached = self._wage_schedule_cache = wage_provider.build_schedule(
-                TRADE_REGISTRY, FOOD_PRICE_PER_KG, tightness_factors=factors)
+                TRADE_REGISTRY, FOOD_PRICE_PER_KG, self.civ["starting_interest_rate"],
+                tightness_factors=factors)
         return cached
 
     def wage_per_hour(self, trade):
@@ -300,24 +300,6 @@ class WagesMixin:
     def wage_document(self):
         """The wage vector in the shape the price solver reads."""
         return self.wage_schedule().document()
-
-    def _hours_needed_by_trade(self):
-        """Hours each trade is needed for: the food farms still lack for the
-        farm trade, household demand through the recipe graph for the rest."""
-        hours = self.state.economy.society_labour_hours
-        farm_trade = workforce_spinup.FARM_TRADE
-        rest_now = sum(value for trade, value in hours.items() if trade != farm_trade)
-        production = labour_market.production_data()
-        reached = set(self.civ["starting_techs"]) | set(self.state.projects.done)
-        need_shares = workforce_spinup.need_shares_by_trade(production, reached)
-        needed = {trade: share * rest_now for trade, share in need_shares.items()}
-        needed[farm_trade] = self._farm_hours_needed(hours.get(farm_trade, 0.0))
-        return needed
-
-    def _farm_hours_needed(self, farm_hours_now):
-        """The farm need the labour allocation computed this year."""
-        needed = self.state.economy.farm_hours_needed
-        return farm_hours_now if needed is None else needed
 
     def update_wages(self):
         """One year of wage adjustment toward the trades that are short."""

@@ -193,7 +193,8 @@ FOOD_PRICE_PER_KG: float = _book_food_price_per_kg()
 
 # Starting wages: the labour-market schedule before any year has passed.
 # Sim carries the live schedule; these serve tools and validation.
-_STARTING_SCHEDULE = wage_provider.build_schedule(_TRADE_REGISTRY, FOOD_PRICE_PER_KG)
+_STARTING_SCHEDULE = wage_provider.build_schedule(
+    _TRADE_REGISTRY, FOOD_PRICE_PER_KG, wage_provider.reference_discount_rate())
 WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
 ANNUAL_WAGE: Dict[str, float] = {
     trade: _STARTING_SCHEDULE.annual_wage(trade) for trade in WAGES}
