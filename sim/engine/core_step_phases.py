@@ -863,7 +863,7 @@ class StepPhasesMixin:
                     _afford_ha = (_can_raise * 0.35
                                   / (self.FOREST_COST_PER_HA * self.price_index))
                     self.buy_forest(min(400.0, _want_ha, _afford_ha))
-            elif (self.state.economy.binding in self.MINE_CAPEX_PER_T_YR
+            elif (self.state.economy.binding in self.MINE_OPEX_PER_T
                     and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # Size the mine from ALL the material keys that feed this
                 # bucket, not one of them. The throttle counted iron ore AND
@@ -890,7 +890,7 @@ class StepPhasesMixin:
                 want = max(0.0, short - self.mine_capacity.get(self.state.economy.binding, 0.0)
                            - self.state.economy.mine_pending.get(self.state.economy.binding, 0.0))
                 self.open_mine(self.state.economy.binding, min(want, self.state.household.capital * 0.25
-                                                 / max(1.0, self.MINE_CAPEX_PER_T_YR[self.state.economy.binding])))
+                                                 / max(1.0, self._mine_capex(self.state.economy.binding))))
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
                 if self.state.economy.binding in ("iron", "copper", "lead"):

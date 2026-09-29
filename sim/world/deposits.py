@@ -160,9 +160,10 @@ same cost to make a mine regardless of if there is 1 ton of gold in there, or
 500 B tons of gold". That is a ONE-TIME, FIXED cost - sinking the shaft,
 timbering it, building the hoist, or (for Las Medulas) building the aqueduct
 - paid once regardless of what is eventually brought up through it.
-`sinking_cost_labour_hours` gives that fixed figure from `depth_class` alone
-(surface and hand-worked alluvial ground need no shaft or aqueduct at all,
-so their fixed cost is zero); `amortized_sinking_cost_labour_hours_per_kg`
+`shaft_cost_labour_hours` gives that figure for ONE shaft from depth and rock
+hardness alone, and `shafts_needed` counts how many a district's output
+requires from what one shaft's hoist can raise (surface and hand-worked
+alluvial ground need no shaft, so their fixed cost is zero); `amortized_sinking_cost_labour_hours_per_kg`
 spreads it over the deposit's whole assumed lifetime metal output (the same
 reserve figure `DepositState` already uses); `total_cost_labour_hours_per_kg`
 is the two added together, and is what `supply_curve` and
@@ -261,6 +262,7 @@ share.
 """
 import collections
 import json
+import math
 import os
 from typing import Any, Dict, List, Optional
 
@@ -453,72 +455,127 @@ DEPOSIT_ASSUMED_WORKING_LIFE_YEARS = declare(
         "life.")
 
 # ----------------------------------------------------------------------
-# SINKING COST - fixed, one-time, paid regardless of what is down there.
-# See the module docstring's own SINKING COST section for what this
-# stands for and why it is additive with, not a replacement for, the
-# recurring per-tonne costs above. Every figure here is a total number of
-# labour-hours for the WHOLE one-time works (shaft, timbering, hoist
-# frame, or aqueduct), never a per-tonne or per-year rate - that is
-# exactly what makes it independent of the deposit's own richness.
+# BUILD COST - what it takes to sink and equip a shaft, and what one shaft
+# can raise. Nothing here reads ore grade or quantity: a shaft costs what
+# its depth and rock cost, wherever it is dug.
 # ----------------------------------------------------------------------
 
-SHAFT_SINKING_HOURS_SHALLOW_VEIN = declare(
-    "SHAFT_SINKING_HOURS_SHALLOW_VEIN", 2000.0,
-    kind="temporary_heuristic",
-    unit="labourer-hours, ONE TIME, to sink and timber a shallow shaft and "
-         "build its basket-and-windlass hoist frame",
-    source=None,
-    confidence="D",
-    why="A modest hand-dug shaft a few worker-years deep, worked by a small "
-        "crew over a season or two before ore is ever raised - no ancient "
-        "figure for a specific shaft's sinking time is behind this number, "
-        "only the same DIRECTION-not-SIZE reasoning HAULAGE_MULTIPLIER_"
-        "SHALLOW_VEIN already carries: a shaft costs something substantial "
-        "to sink, once, before any ore comes up, and this is a placeholder "
-        "for a real derivation from shaft cross-section, depth and "
-        "hand-digging rate this project does not have.")
+GRAVITY_METRES_PER_SECOND_SQUARED = declare(
+    "GRAVITY_METRES_PER_SECOND_SQUARED", 9.81, kind="physical_constant",
+    unit="m/s^2", source="Standard gravity.", confidence="A",
+    why="Converts a lifted mass and height into work.")
 
-SHAFT_SINKING_HOURS_DEEP_VEIN = declare(
-    "SHAFT_SINKING_HOURS_DEEP_VEIN", 20000.0,
-    kind="temporary_heuristic",
-    unit="labourer-hours, ONE TIME, to sink a deep shaft and install its "
-         "drainage-wheel battery and long ore-hoist",
-    source="Ten times SHAFT_SINKING_HOURS_SHALLOW_VEIN, standing in for the "
-           "same order-of-magnitude jump HAULAGE_MULTIPLIER_DEEP_VEIN "
-           "already charges the recurring cost for a hundred-metre Rio "
-           "Tinto-style shaft with compartmentalised Archimedes-screw and "
-           "reverse-overshot-wheel drainage batteries - real installations "
-           "recovered archaeologically, whose one-time construction labour "
-           "was substantial even before a single tonne of ore was raised.",
+ROCK_DENSITY_TONNES_PER_CUBIC_METRE = declare(
+    "ROCK_DENSITY_TONNES_PER_CUBIC_METRE", 2.6, kind="physical_constant",
+    unit="tonnes/m^3",
+    source="Typical in-place density of crystalline and sedimentary host rock.",
+    confidence="B",
+    why="Turns a shaft's volume into tonnes of rock to break and hoist.")
+
+HUMAN_SUSTAINED_POWER_WATTS = declare(
+    "HUMAN_SUSTAINED_POWER_WATTS", 75.0, kind="biological_parameter",
+    unit="watts of useful mechanical power per labourer, sustained over a shift",
+    source="Sustained human work output is commonly put at 50-100 W.",
+    confidence="B",
+    why="Sets how fast a hand windlass crew can lift rock from depth.")
+
+HOIST_MECHANICAL_EFFICIENCY = declare(
+    "HOIST_MECHANICAL_EFFICIENCY", 0.5, kind="engineering_estimate",
+    unit="fraction of labourer power that becomes lift",
+    source=None, confidence="D",
+    why="Rope, axle and basket friction and idle return strokes in a hand "
+        "windlass; an order-of-magnitude figure.")
+
+HOIST_CREW_SIZE = declare(
+    "HOIST_CREW_SIZE", 8.0, kind="temporary_heuristic",
+    unit="labourers on one shaft's hoist", source=None, confidence="D",
+    why="How many people turn one shaft's windlass; a shaft's raising "
+        "capacity scales with it. Replace with a hoist-design derivation.")
+
+HOIST_HOURS_PER_YEAR = declare(
+    "HOIST_HOURS_PER_YEAR", 2000.0, kind="temporary_heuristic",
+    unit="hours/year a hoist crew works", source=None, confidence="D",
+    why="A working year for the hoist crew.")
+
+SHAFT_CROSS_SECTION_SQUARE_METRES = declare(
+    "SHAFT_CROSS_SECTION_SQUARE_METRES", 2.0, kind="engineering_estimate",
+    unit="m^2",
+    source="Ancient shafts at Laurion and Rio Tinto were narrow rectangular "
+           "or square drives a metre or two a side.",
+    confidence="C",
+    why="With depth and rock density, sets the tonnes of rock a shaft removes.")
+
+SHAFT_DEPTH_METRES_SHALLOW_VEIN = declare(
+    "SHAFT_DEPTH_METRES_SHALLOW_VEIN", 30.0, kind="temporary_heuristic",
+    unit="metres", source=None, confidence="D",
+    why="deposits.json gives a depth class, not a depth; this is the depth "
+        "assumed for the shallow class until the data carries metres.")
+
+SHAFT_DEPTH_METRES_DEEP_VEIN = declare(
+    "SHAFT_DEPTH_METRES_DEEP_VEIN", 100.0, kind="temporary_heuristic",
+    unit="metres",
+    source="Rio Tinto's drained shafts reached about a hundred metres.",
     confidence="D",
-    why="Same reasoning as SHAFT_SINKING_HOURS_SHALLOW_VEIN's own "
-        "declaration: the DIRECTION (a deep, dewatered shaft costs far "
-        "more to open than a shallow one) is well attested by the "
-        "archaeology; the specific multiple above shallow is this file's "
-        "own placeholder pending a real derivation.")
+    why="Depth assumed for the deep class until the data carries metres.")
+
+SHAFT_SUPPORT_HOURS_PER_METRE = declare(
+    "SHAFT_SUPPORT_HOURS_PER_METRE", 60.0, kind="temporary_heuristic",
+    unit="labourer-hours per metre of shaft at the surface, for timbering "
+         "and lining", source=None, confidence="D",
+    why="Cutting, dressing and fitting timber to hold a shaft's walls.")
+
+SHAFT_SUPPORT_DEPTH_SCALE_METRES = declare(
+    "SHAFT_SUPPORT_DEPTH_SCALE_METRES", 100.0, kind="temporary_heuristic",
+    unit="metres of depth over which support per metre doubles",
+    source=None, confidence="D",
+    why="Rock pressure grows with depth, so each further metre needs "
+        "more support.")
+
+SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD = declare(
+    "SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD", 100.0, kind="temporary_heuristic",
+    unit="labourer-hours per metre of depth, to build the water-lifting works",
+    source=None, confidence="D",
+    why="The water a shaft meets must be lifted out; the works to do it "
+        "grow with the height to lift.")
+
+HOIST_FRAME_HOURS = declare(
+    "HOIST_FRAME_HOURS", 500.0, kind="temporary_heuristic",
+    unit="labourer-hours per shaft", source=None, confidence="D",
+    why="Building the windlass frame and headworks over a shaft.")
 
 AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC = declare(
     "AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC", 500000.0,
     kind="temporary_heuristic",
-    unit="labourer-hours, ONE TIME, to build the aqueduct(s) and sluice "
-         "channels a hydraulic placer operation needs before any gravel is "
-         "washed at all",
-    source="Pliny, Natural History 33.66-78's 'ruina montium' account "
-           "describes aqueducts carrying water many kilometres to Las "
-           "Medulas - a canal-building programme on a genuinely large "
-           "scale, and the reason ALLUVIAL_HYDRAULIC_PROCESSING_HOURS_"
-           "PER_TONNE's own declaration says explicitly that 'the labour "
-           "is in building and maintaining the aqueduct once, not in "
-           "moving each further tonne of gravel': this constant is that "
-           "sentence given a number for the first time.",
+    unit="labourer-hours to build ONE aqueduct and sluice system",
+    source="Pliny, Natural History 33.66-78 describes aqueducts carrying "
+           "water many kilometres to Las Medulas.",
     confidence="D",
-    why="No ancient source states a labour-hour total for Las Medulas's "
-        "aqueduct system, so this is an order-of-magnitude placeholder for "
-        "a real derivation from canal length, cross-section and hand-"
-        "digging rate. It is deliberately far larger than either shaft "
-        "figure above - kilometres of canal is a bigger one-time "
-        "undertaking than a single shaft - which is the DIRECTION this "
-        "number exists to assert; the SIZE is not defended beyond that.")
+    why="No ancient source gives labour-hours; an order-of-magnitude "
+        "placeholder for canal length times digging rate. One system "
+        "supplies the flow set by AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND.")
+
+AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND = declare(
+    "AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND", 0.5, kind="temporary_heuristic",
+    unit="m^3/s delivered by one aqueduct system", source=None, confidence="D",
+    why="Sets how much gravel one aqueduct system can wash per year.")
+
+SLUICING_WATER_CUBIC_METRES_PER_TONNE_GRAVEL = declare(
+    "SLUICING_WATER_CUBIC_METRES_PER_TONNE_GRAVEL", 10.0,
+    kind="engineering_estimate",
+    unit="m^3 of water per tonne of gravel washed", source=None,
+    confidence="D",
+    why="Water needed to break down and carry a tonne of gravel through "
+        "the sluices.")
+
+SECONDS_PER_YEAR = declare(
+    "SECONDS_PER_YEAR", 31557600.0, kind="physical_constant",
+    unit="seconds/year", source="Julian year.", confidence="A",
+    why="Converts a flow rate into a yearly volume.")
+
+SECONDS_PER_HOUR = declare(
+    "SECONDS_PER_HOUR", 3600.0, kind="physical_constant",
+    unit="seconds/hour", source="Definition.", confidence="A",
+    why="Converts labour-hours to seconds of work.")
 
 GRADE_DECLINE_SHAPE_EXPONENT = declare(
     "GRADE_DECLINE_SHAPE_EXPONENT", 1.0,
@@ -555,18 +612,10 @@ _DEPTH_HAULAGE_MULTIPLIER = {
     "deep_vein": HAULAGE_MULTIPLIER_DEEP_VEIN,
 }
 
-# Fixed, ONE-TIME labour-hours to open a deposit of this depth_class - see
-# the module docstring's SINKING COST section. Surface and hand-worked
-# alluvial ground need no shaft or aqueduct at all (a spade and a pan need
-# no capital works before the first basket is filled), so both are zero;
-# this is the whole reason those two classes were already the cheapest in
-# _DEPTH_HAULAGE_MULTIPLIER above, now cheaper still on the fixed side too.
-_DEPTH_SINKING_HOURS = {
-    "surface": 0.0,
-    "shallow_vein": SHAFT_SINKING_HOURS_SHALLOW_VEIN,
-    "deep_vein": SHAFT_SINKING_HOURS_DEEP_VEIN,
-    "alluvial": 0.0,
-    "alluvial_hydraulic": AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC,
+# Shaft depth per depth class; classes with no shaft are absent.
+_SHAFT_DEPTH_METRES = {
+    "shallow_vein": SHAFT_DEPTH_METRES_SHALLOW_VEIN,
+    "deep_vein": SHAFT_DEPTH_METRES_DEEP_VEIN,
 }
 
 DEPTH_CLASSES = ("surface", "shallow_vein", "deep_vein", "alluvial",
@@ -636,38 +685,111 @@ def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
 
 
 # ============================================================================
-# SINKING COST - fixed, one-time, independent of what is down there
+# BUILD COST - shafts to sink, what each costs, what each can raise
 # ============================================================================
-# See the module docstring's own SINKING COST section for the reasoning.
-# Every function here is additive with extraction_cost_labour_hours_per_kg,
-# never a replacement for it: a deposit pays BOTH a recurring per-tonne cost
-# and (if its depth_class calls for a shaft or an aqueduct) a fixed cost
-# amortised over its assumed lifetime output.
+# A shaft costs what its depth and rock make it cost. The number of shafts a
+# district needs follows from the rock it must raise per year against what
+# one shaft's hoist can lift from that depth. Hydraulic ground counts one
+# aqueduct system as the unit instead of a shaft.
 
-def sinking_cost_labour_hours(deposit: "Deposit") -> float:
-    """The fixed, ONE-TIME labour-hours to open `deposit`, from depth_class
-    alone - never from ore_grade_kg_per_tonne, quantity_tonnes_per_year, or
-    anything else about how much metal is down there. Surface workings and
-    hand-worked alluvial ground need no shaft or aqueduct and cost zero
-    here; see _DEPTH_SINKING_HOURS's own comment for why.
+def shaft_depth_metres(deposit: "Deposit") -> float:
+    """Depth of one shaft into `deposit`; zero where no shaft is dug."""
+    return _SHAFT_DEPTH_METRES.get(deposit.depth_class, 0.0)
+
+
+def _lift_hours_per_tonne_metre() -> float:
+    """Labourer-hours to lift one tonne one metre by hand windlass."""
+    joules_per_tonne_metre = (GRAVITY_METRES_PER_SECOND_SQUARED
+                              * KILOGRAMS_PER_TONNE)
+    return joules_per_tonne_metre / (
+        HUMAN_SUSTAINED_POWER_WATTS * HOIST_MECHANICAL_EFFICIENCY
+        * SECONDS_PER_HOUR)
+
+
+def shaft_cost_labour_hours(deposit: "Deposit") -> float:
+    """Labour-hours to sink and equip ONE shaft (or build one aqueduct
+    system for hydraulic ground): breaking the rock, lifting the spoil,
+    timbering, draining, and the hoist frame. Reads depth and hardness
+    only, never grade or quantity. Zero for surface and hand-worked
+    alluvial ground.
     """
-    return _DEPTH_SINKING_HOURS[deposit.depth_class]
+    if deposit.depth_class == "alluvial_hydraulic":
+        return AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC
+    depth = shaft_depth_metres(deposit)
+    if depth <= 0.0:
+        return 0.0
+    tonnes_per_metre = (SHAFT_CROSS_SECTION_SQUARE_METRES
+                        * ROCK_DENSITY_TONNES_PER_CUBIC_METRE)
+    breaking = (tonnes_per_metre * depth
+                * _HARDNESS_BREAKING_HOURS[deposit.hardness_class])
+    # Spoil from depth z is lifted z metres; summed over the shaft that is depth^2 / 2.
+    spoil_lift = tonnes_per_metre * _lift_hours_per_tonne_metre() * depth ** 2 / 2.0
+    # Support per metre grows linearly with depth.
+    support = SHAFT_SUPPORT_HOURS_PER_METRE * (
+        depth + depth ** 2 / (2.0 * SHAFT_SUPPORT_DEPTH_SCALE_METRES))
+    drainage = SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD * depth
+    return breaking + spoil_lift + support + drainage + HOIST_FRAME_HOURS
+
+
+def shaft_rock_capacity_tonnes_per_year(deposit: "Deposit") -> float:
+    """Tonnes of rock (or gravel) one shaft's hoist, or one aqueduct
+    system's flow, can raise or wash per year. Hoisting is work-limited:
+    crew power times efficiency times hours, over the weight lifted
+    through the shaft's depth. Infinite where no works are needed.
+    """
+    if deposit.depth_class == "alluvial_hydraulic":
+        return (AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND * SECONDS_PER_YEAR
+                / SLUICING_WATER_CUBIC_METRES_PER_TONNE_GRAVEL)
+    depth = shaft_depth_metres(deposit)
+    if depth <= 0.0:
+        return float("inf")
+    crew_work_joules = (HOIST_CREW_SIZE * HUMAN_SUSTAINED_POWER_WATTS
+                        * HOIST_MECHANICAL_EFFICIENCY * HOIST_HOURS_PER_YEAR
+                        * SECONDS_PER_HOUR)
+    joules_per_tonne = (GRAVITY_METRES_PER_SECOND_SQUARED * KILOGRAMS_PER_TONNE
+                        * depth)
+    return crew_work_joules / joules_per_tonne
+
+
+def shafts_needed_fractional(deposit: "Deposit", tonnes_metal_per_year: float) -> float:
+    """Shafts (or aqueduct systems) `tonnes_metal_per_year` of contained
+    metal needs, before rounding up: rock to raise per year over what one
+    shaft raises."""
+    if tonnes_metal_per_year <= 0.0:
+        return 0.0
+    rock_tonnes_per_year = (tonnes_metal_per_year * KILOGRAMS_PER_TONNE
+                            * material_moved_tonnes_per_kg_metal(deposit))
+    return rock_tonnes_per_year / shaft_rock_capacity_tonnes_per_year(deposit)
+
+
+def shafts_needed(deposit: "Deposit", tonnes_metal_per_year: float) -> int:
+    """Whole shafts needed to raise `tonnes_metal_per_year` of metal."""
+    fractional = shafts_needed_fractional(deposit, tonnes_metal_per_year)
+    if fractional <= 0.0:
+        return 0
+    # The tolerance absorbs floating-point noise on an exact multiple.
+    return math.ceil(fractional - 1e-9)
+
+
+def build_cost_labour_hours(deposit: "Deposit", tonnes_metal_per_year: float) -> float:
+    """Labour-hours to open capacity for `tonnes_metal_per_year`: whole
+    shafts times the per-shaft cost."""
+    return shafts_needed(deposit, tonnes_metal_per_year) * shaft_cost_labour_hours(deposit)
+
+
+def build_cost_labour_hours_per_tonne_year(deposit: "Deposit") -> float:
+    """Build cost per tonne/year of capacity, shafts counted fractionally,
+    for pricing a fleet large enough that rounding is immaterial."""
+    return shafts_needed_fractional(deposit, 1.0) * shaft_cost_labour_hours(deposit)
 
 
 def amortized_sinking_cost_labour_hours_per_kg(
         deposit: "Deposit", working_life_years: Optional[float] = None) -> float:
-    """sinking_cost_labour_hours(deposit), spread over the deposit's whole
-    assumed lifetime metal output (quantity_tonnes_per_year *
-    working_life_years, the same reserve figure DepositState's own initial
-    reserve uses - see DEPOSIT_ASSUMED_WORKING_LIFE_YEARS's own
-    declaration for what that heuristic stands in for). A deposit with zero
-    fixed cost (surface, plain alluvial) returns exactly 0.0 regardless of
-    its size; a deposit that DOES carry a fixed cost is cheaper per
-    kilogram the larger its assumed total reserve is - the mechanical
-    content of "the same shaft costs the same whether there is 1 tonne or
-    500 billion tonnes of metal behind it".
+    """The whole district's build cost (shafts for its own annual output
+    times the per-shaft cost), spread over its assumed lifetime metal
+    output. Zero where no works are needed.
     """
-    fixed_hours = sinking_cost_labour_hours(deposit)
+    fixed_hours = build_cost_labour_hours(deposit, deposit.quantity_tonnes_per_year)
     if fixed_hours <= 0.0:
         return 0.0
     working_life_years = (DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
