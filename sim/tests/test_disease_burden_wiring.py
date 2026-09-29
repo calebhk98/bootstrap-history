@@ -14,6 +14,8 @@ holding none of the eight (Rome, at the start of the game) is provably
 unaffected, and that the food-effect technologies sharing _TECH_EFFECTS.
 json's `population` field with the eight disease ones are excluded by
 construction rather than by accident.
+
+The medical nodes drive a live disease burden, so technology can lower mortality.
 """
 import unittest
 

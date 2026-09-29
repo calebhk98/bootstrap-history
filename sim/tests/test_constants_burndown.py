@@ -22,6 +22,8 @@ fail if either returns.
 
 unittest.TestCase style, like test_agriculture.py and test_demography.py, so
 it can exercise the tool in a subprocess without dragging in the engine.
+
+Guards the burndown count of declared numbers so milestone 1 stays measurable.
 """
 import json
 import os

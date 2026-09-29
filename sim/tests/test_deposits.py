@@ -14,6 +14,8 @@ sim/world/agriculture.py's own CALIBRATION TARGETS section for the same
 discipline applied there first). It reports the disagreement; it never
 asserts a tolerance tight enough to tempt anyone into tuning a grade or a
 breaking-hours constant to close it.
+
+sim/world/deposits.py standalone: Ricardian rent from ore grade, depth and hardness (unittest-style).
 """
 import ast
 import json

@@ -1,4 +1,7 @@
 """round2_policy_hazards_options: regression checks, run individually with `--only round2_policy_hazards_options`."""
+
+# Skipped by a default run; --slow or --only runs it.
+SLOW_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
 # ============================================================================

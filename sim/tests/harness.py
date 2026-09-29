@@ -206,75 +206,10 @@ def slow_check(name, run_check):
     check(name, passed, detail)
 
 
-# SAME FLAG, ONE LEVEL UP. slow_check() above opts one expensive CHECK out of
-# an otherwise-fast topic; SLOW_TOPICS opts a whole TOPIC MODULE out, because
-# in these three the expense is not one buried check but the module's normal
-# way of working - many full `proto()` subprocess sessions, or many checks
-# that each step a Sim over a century or two, one after another.
-#
-# THE COMMAND, NOT A HAND-RUN FIGURE: CLAUDE.md section 8 is explicit that a
-# number in prose carries the command that produced it or it does not go in.
-# A measurement taken by hand once and never re-checked drifts out of contact
-# with the suite exactly as silently as any other stale comment, so quote
-# only what this command reproduces:
-#
-#     python3 sim/test_regressions.py --slow --timing
-#
-# Measured on 2026-09-19 with that command, a --slow run is 651.38s across 90
-# topics and 2,373 checks, and these three cost 44.75s of it, which is 6.9%,
-# not 52.7%. The per-check figures, which are what the tag should actually
-# turn on, and the reason each keeps its tag:
-#
-#   round2_policy_hazards_options   27.40s  249 checks  0.110 s/check
-#   regional_weather_wiring          8.82s   15 checks  0.588 s/check
-#   growing_season_weather_correlation 8.53s 15 checks  0.569 s/check
-#
-# Read that honestly: round2 is the CHEAPEST of the three per check, and it
-# is tagged anyway, because 27.40s is 37% on top of a 73s default run and it
-# is the only topic in the suite big enough for the tag to change how long a
-# default run feels. That is a real trade and it costs 249 checks, so it is
-# written down here rather than left to look obvious. If the default run ever
-# gets slower for other reasons, this is the first tag to reconsider, because
-# by the s/check test it is the weakest one in the set.
-#
-# The same command also found where the suite's time really goes, which is
-# NOT here: under --slow, run_reproducibility costs 283.31s (43.5%) for 2
-# checks and determinism costs 66.44s (10.2%) for 5. Those seven checks are
-# 53.7% of a --slow run between them. They are slow_check()s rather than slow
-# topics, so they cost a default run nothing, and nothing above needs to
-# change for them. They are named here because the next person to ask "why
-# does --slow take eleven minutes" should not have to re-derive it.
-SLOW_TOPICS = {
-    # 21.65s, 19.9% of the suite - the single biggest topic file, and both
-    # kinds of expense at once: 37 real `proto()` subprocess sessions plus
-    # 17 separate loops that each run a Sim across a century or more of
-    # years, to see a policy or a hazard option actually play out long run
-    # rather than just accept in year one.
-    "round2_policy_hazards_options",
-    # `round8_fixes` and `round9` are not listed here, and are not topics at
-    # all: both were named for the development round that produced them
-    # rather than for anything they test, and their checks live in the
-    # fifteen subject-named topics that replaced them. None of those fifteen
-    # is slow enough on its own to be worth opting 394 checks out of a
-    # default run, because regrouping by subject spreads the subprocess cost
-    # thin across them - the concentration this set exists to manage is gone.
-    #
-    # A name in here that matches no topic is silent: it skips nothing and
-    # says nothing, which is exactly how a stale entry can go on looking like
-    # it is saving time long after the topic it names has been deleted.
-    # sim/tests/test_suite_portability.py now fails if that happens again.
-    # 8.18s, 7.5% - Complaints/47's fix (weather drawn per home region and
-    # pooled by cultivable-land share, not one draw for a whole civilisation)
-    # can only be told apart from the old single-draw behaviour by actually
-    # running enough years for a distribution to show up in, across every
-    # home region a civilisation holds.
-    "regional_weather_wiring",
-    # 7.15s, 6.6% - Complaints/50's fix (weather correlated across
-    # geography.json's land tiles by real distance, not by region label)
-    # needs enough tiles and enough sampled years for a correlation-by-
-    # -distance curve to mean anything; fewer years would just be noise.
-    "growing_season_weather_correlation",
-}
+# Topic discovery lives in discovery.py so --list needs no heavy imports.
+from .discovery import TESTS_DIR, discover_topics, discover_slow_topics
+
+SLOW_TOPICS = discover_slow_topics()
 
 
 def check(name, passed, detail=""):

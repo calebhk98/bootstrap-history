@@ -1,4 +1,7 @@
-"""Joint-process cost is split by demand-derived value, not by mass."""
+"""Joint-process cost is split by demand-derived value, not by mass.
+
+Joint-process cost is split by demand-derived value, not by mass.
+"""
 import unittest
 
 from sim import joint_allocation, simulator, solve_prices

@@ -40,6 +40,8 @@ boundary, not inside agriculture.py alone), so - unlike test_agriculture.py
 and test_demography.py, which stay off sim/tests/harness.py on purpose -
 this one uses harness.py, the same way test_agriculture_wiring.py does for
 the same reason.
+
+Storage persists across years; the farm workforce share does not respond to famine.
 """
 import statistics
 import unittest

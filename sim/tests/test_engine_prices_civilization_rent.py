@@ -28,6 +28,8 @@ Written against the real data/production/ and data/civilizations/, like
 `test_engine_prices.py`'s own `RealDataIntegrationTests`, because the
 thing being pinned - land actually differing by civilization - has no
 useful synthetic analogue: land.py reads real geography.
+
+Engine price solving includes the per-civilisation rent tables.
 """
 import json
 import os

@@ -18,6 +18,8 @@ actually wire together and stay convergent); the rest build tiny synthetic
 entries, like test_price_solver_era_gate.py's own `entry()` helper, so the
 mechanism itself is pinned independent of any future edit to those data
 files (which this task does not own).
+
+Pins rent_hours_per_kg_by_ore_material and the iron blast-furnace/bloomery fallback for rome_100ad.
 """
 import unittest
 from unittest import mock

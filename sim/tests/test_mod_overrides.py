@@ -1,4 +1,7 @@
-"""Override semantics and error reporting for the mod tree and production loaders."""
+"""Override semantics and error reporting for the mod tree and production loaders.
+
+Mod loader override semantics and error reporting (unittest-style).
+"""
 import copy
 import json
 from pathlib import Path

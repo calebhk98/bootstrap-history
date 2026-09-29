@@ -7,6 +7,8 @@ test_round12_naive15.py (see CLAUDE.md's test-file reorganisation note); the
 original round numbering recorded when a check was written, not what it
 tests, so it is regrouped here by subject. Checks moved verbatim - see each
 one's own comment for the break it guards.
+
+Venture lifecycle checks, grouped by theme.
 """
 from .harness import *  # noqa: F401,F403
 

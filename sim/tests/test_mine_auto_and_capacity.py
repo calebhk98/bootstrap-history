@@ -4,6 +4,8 @@
 66: a mine's commissioning year names the year that resolves it, and the
     capacity is visible the query after.
 67: the capacity row for a material fed by two supply tags shows both demands.
+
+Complaints 65, 66, 67 and the zero-cost mine guard.
 """
 from .harness import *  # noqa: F401,F403
 from sim.engine.proto.economy import _agent_mines, _material_capacity_rows

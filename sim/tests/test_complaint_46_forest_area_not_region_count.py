@@ -10,11 +10,6 @@ civilization's territory happens to be filed under, rather than by how much
 ground any of those labels actually cover. That would let re-filing the
 same territory under a different number of labels change how much forest
 could be held, with not one hectare of ground changing hands.
-
-Not registered in sim/tests/__main__.py's TOPICS list yet - the agent that
-wrote this file owns only sim/engine/economy.py and test files (see its own
-task's constraints). Needs "complaint_46_forest_area_not_region_count"
-added there for `test_regressions.py` to run it as part of the full suite.
 """
 from .harness import *  # noqa: F401,F403
 

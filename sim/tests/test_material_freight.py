@@ -19,6 +19,8 @@ own per-tonne-km feed and driver-hour figures and the real great-circle
 distance between two real region centroids; and a material geography.json
 has no location data for at all (gold, and everything outside the seven
 tracked minerals) is left alone rather than guessed at, per CLAUDE.md SS3.1.
+
+Wires transport.py into economy.py through a live Sim and geography mineral tables.
 """
 from .harness import *  # noqa: F401,F403
 

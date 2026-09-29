@@ -5,6 +5,8 @@ Verifies that:
 2. Core modules (constants, world, engine, proto) resolve only under `sim.*`.
 3. Bare module names ('constants', 'engine', 'world', 'simulator') are not in sys.modules.
 4. Shared registries and singletons (such as `sim.constants._REGISTRY`) have a single identity.
+
+The suite runs from a checkout of any name, in any directory.
 """
 import sys
 from .harness import *  # noqa: F401,F403

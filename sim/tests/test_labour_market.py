@@ -14,6 +14,8 @@ authored at any confidence level without breaking this suite, exactly the
 discipline sim/tests/test_deposits.py's own ExtractionCostMechanicsTests
 docstring states for ore data), and EXACT ARITHMETIC wherever the input is
 a small, hand-built synthetic fixture this file controls itself.
+
+sim/world/labour_market.py: fixed point over trade allocation in labour-hours, needing no wages.
 """
 import ast
 import os
