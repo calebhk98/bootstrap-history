@@ -8,15 +8,9 @@ from .data import (DEFAULTS, load_civ, load_geography, load_resources,
 
 from sim.world import demography
 from sim.world import agriculture
-# Weather is drawn per GEOGRAPHY.JSON TILE (see `_compute_farm_weather_cells`
-# below), reading geography.json's own `land_tiles` block directly rather
-# than sim/world/land.py's region-parcel abstraction: a region record is not
-# one weather system, and two region records are not independent draws
-# (Complaints/50-one-label-draws-one-coin.md). This file does not import
-# `land.py`; sim/world/land.py itself is untouched and stays under this
-# task's own ownership boundary (sim/engine/core.py,
-# sim/world/shared_constants.py - see this task's own brief).
-#
+from sim.world import land
+# Weather is drawn per geography.json land_tiles cell (see
+# `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
 # `from world import X` style `agriculture`/`demography` above use, and
 # deliberately so: `agriculture` and `land` (sim/world/) both already do
@@ -374,34 +368,20 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.population = self._demography.Population.stationary(
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
             seed=_population_seed)
-        # WIRING MILESTONE 4'S OTHER HALF (docs/architecture/
-        # WIRING_MILESTONE_4.md SS6, "Agriculture wiring is a parallel
-        # track"): how much arable land this civilisation starts with.
-        # `self._agriculture.farmland_for_population` sizes a `Land` so that, at
-        # DEFAULT crop/soil/rotation/toolkit and an AVERAGE weather year,
-        # the farm workforce that fraction implies can feed exactly this
-        # starting population - i.e. the civilisation starts neither
-        # land-rich nor land-starved, which is the only starting point that
-        # does not itself hand a fresh run a scripted feast or a scripted
-        # famine. This is an INITIAL CONDITION (how much land is already
-        # cleared and worked - CLAUDE.md SS3.1's own allowed category,
-        # alongside the starting population above), not a result computed
-        # from anything the game measures: `farm_land.hectares` is fixed
-        # for the life of a run, exactly like `_pop_scale_base`'s reference
-        # denominator above, and needs no SAVE_FIELDS entry for the same
-        # reason - `Sim.__init__` recomputes it identically, from
-        # `self.civ`'s own unchanging config, on every construction,
-        # before `load_state` (if any) runs. See `_demographic_recovery`
-        # for the one thing this initial condition deliberately does NOT
-        # do: grow as the population does. A civilisation whose population
-        # outgrows this fixed endowment gets LESS food per head over time
-        # from ordinary diminishing returns to labour on fixed land (see
-        # self._agriculture.py's `gross_harvest_kg`), not from any mechanism
-        # added here - the extensive margin (bringing more land under the
-        # plough) is real future work self._agriculture.py's own docstring names
-        # as missing mechanism (b), not something invented in this file.
+        # Initial condition: farmed area is sized to feed the starting
+        # population on the soil of the regions this civilisation holds.
+        # Fixed for the run and rebuilt from config on every construction.
+        home_regions = list(self.civ.get("home_regions") or [])
+        if home_regions:
+            territory = land.territory_farmland(home_regions, load_geography())
+            land_quality = territory.mean_fertility
+            arable_ceiling = territory.arable_hectares
+        else:
+            # temporary_heuristic: no territory declared, so reference soil, no ceiling.
+            land_quality, arable_ceiling = 1.0, None
         self.farm_land = self._agriculture.farmland_for_population(
-            self._adult_equivalent_population(self.population))
+            self._adult_equivalent_population(self.population),
+            land_quality=land_quality, arable_hectares_ceiling=arable_ceiling)
         # WIRING THREE (Complaints/50-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
         # weights` (Complaints/47): this civilisation's territory is broken

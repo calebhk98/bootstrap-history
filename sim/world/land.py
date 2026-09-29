@@ -1100,6 +1100,33 @@ def cultivable_land_for_civilization(
     return [tile_lands[tile_id] for tile_id in tile_ids if tile_id in tile_lands]
 
 
+TerritoryFarmland = collections.namedtuple("TerritoryFarmland", [
+    "arable_hectares",        # cultivable ground the held regions contain
+    "mean_fertility",         # arable-area-weighted fertility multiplier
+])
+
+
+def territory_farmland(home_regions: List[str],
+                       geography: Optional[Dict[str, Any]] = None) -> TerritoryFarmland:
+    """Arable hectares and arable-weighted mean fertility over the named
+    regions' `land` blocks. A region with no land data raises KeyError."""
+    region_lands = load_region_lands(geography)
+    total_arable_km2 = 0.0
+    weighted_fertility = 0.0
+    for region in home_regions:
+        if region not in region_lands:
+            raise KeyError("home region %r has no land block in geography" % region)
+        region_land = region_lands[region]
+        arable_km2 = region_land.land_area_km2 * region_land.arable_fraction
+        total_arable_km2 += arable_km2
+        weighted_fertility += arable_km2 * region_land.fertility_quality_multiplier
+    if total_arable_km2 <= 0.0:
+        raise ValueError("home regions %r hold no arable land" % (home_regions,))
+    return TerritoryFarmland(
+        arable_hectares=total_arable_km2 * _KM2_TO_HECTARES,
+        mean_fertility=weighted_fertility / total_arable_km2)
+
+
 # ============================================================================
 # THE MARGIN OF CULTIVATION AND RENT
 # ============================================================================
