@@ -727,7 +727,7 @@
    "artisan": 60
   },
   "mat": {
-   "mat_starch_kg": 20
+   "starch_kg": 20
   },
   "cap": 0,
   "build_yrs": 0.2,
@@ -1489,7 +1489,7 @@
    "artisan": 60
   },
   "mat": {
-   "mat_oil_kg": 30
+   "olive_oil_kg": 30
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -2622,7 +2622,7 @@
    "artisan": 100
   },
   "mat": {
-   "mat_oil_kg": 20
+   "olive_oil_kg": 20
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -3338,7 +3338,7 @@
    "chemist": 60
   },
   "mat": {
-   "mat_gum_kg": 20
+   "starch_kg": 20
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.2,

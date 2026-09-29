@@ -1,0 +1,326 @@
+{
+ "_note": "Organic gap materials that branch nodes consume and no other production file makes. Yields are physical (cited in each yield_basis); labour is borrowed from a named neighbouring entry, or left out and said so.",
+ "materials": {
+  "mulberry_leaves_kg": {
+   "outputs": {
+    "mulberry_leaves_kg": 20000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of intensively pruned mulberry orchard per year, output as kg of fresh leaf",
+   "yield_basis": "GROWN. The 20-30 tonnes of leaf per hectare per year for an intensively pruned orchard is the figure silk_kg's own yield_basis uses; the low end is taken. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_silkworm_stock"
+  },
+  "pyrethrum_flower": {
+   "outputs": {
+    "pyrethrum_flower": 800.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of pyrethrum (Chrysanthemum cinerariifolium) per year, output as kg of dried flower heads",
+   "yield_basis": "GROWN. Established pyrethrum stands are usually quoted at roughly 500-1500 kg of dried flower per hectare per year; the lower-middle of that range is taken for unimproved stock. Pyrethrins are a fraction of a percent to about 1-2 percent of the dried flower, which downstream extraction consumes. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": "ag2_pyrethrum_stock"
+  },
+  "hops": {
+   "outputs": {
+    "hops": 1200.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of hop bine per year, output as kg of dried cones",
+   "yield_basis": "GROWN. Traditional hop gardens yielded on the order of 1000-1500 kg of dried cones per hectare per year (about 10-12 hundredweight per acre in older English records); the middle is taken. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": "ag2_hop_stock"
+  },
+  "mat_sugar": {
+   "outputs": {
+    "mat_sugar": 2000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of sugar cane per year, output as kg of raw (muscovado-type) sugar boiled from pressed juice",
+   "yield_basis": "GROWN, then pressed and boiled in the field-side works. Hand-and-animal-mill cane of the pre-industrial period runs on the order of 30-40 tonnes of cane per hectare, of which roller crushing and open-kettle boiling recover roughly 5-6 percent as crystallised raw sugar, giving about 2 tonnes per hectare. Boiling heat is supplied by burning the crushed cane (bagasse), which the crop itself provides, so no thermal input is charged. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": "ag2_sugar_voyage"
+  },
+  "mat_opium": {
+   "outputs": {
+    "mat_opium": 15.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of opium poppy per year, output as kg of dried raw opium latex",
+   "yield_basis": "GROWN. Hand-lanced poppy capsules give on the order of 10-25 kg of raw opium per hectare in traditional cultivation; 15 kg is taken. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": "med_opium_mandrake"
+  },
+  "tobacco_extract": {
+   "outputs": {
+    "tobacco_extract": 16.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of tobacco per year, output as kg of nicotine recovered in the extract",
+   "yield_basis": "GROWN, then leached. Pre-industrial tobacco yielded roughly 1000 kg of cured leaf per hectare; cured leaf holds about 2 percent nicotine by mass, and leaching or steam distillation recovers about 80 percent, so 1000 x 0.02 x 0.8 = 16 kg of nicotine. Waste stems and dust carry the same alkaloid at lower grade, which this basis does not distinguish. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": "exp_atlantic_crossing"
+  },
+  "foxglove_leaf_kg": {
+   "outputs": {
+    "foxglove_leaf_kg": 1500.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of cultivated foxglove (Digitalis purpurea) per year, output as kg of dried leaf",
+   "yield_basis": "GROWN. Cultivated foxglove, a biennial harvested for its leaf, is commonly cited at about 1-2 tonnes of dried leaf per hectare per year; the midpoint is taken. Glycoside content is a fraction of a percent of the dried leaf and is left to the consuming node. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": "md2_plant_chemistry"
+  },
+  "potato_starch_kg": {
+   "outputs": {
+    "potato_starch_kg": 1445.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_iugera_years": 3.9635,
+   "extracted_from": "arable land",
+   "basis": "per hectare of potatoes per year, output as kg of washed, dried potato starch",
+   "yield_basis": "GROWN, then rasped and washed. Pre-industrial potato yields are on the order of 10 tonnes of tubers per hectare; tubers are about 17 percent starch by mass and rasping and washing recovers about 85 percent, so 10000 x 0.17 x 0.85 = 1445 kg. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": "ag2_potato_newworld"
+  },
+  "starch_kg": {
+   "outputs": {
+    "starch_kg": 1000.0
+   },
+   "inputs": {
+    "wheat_kg": 1667.0
+   },
+   "labour_hours": {},
+   "basis": "per tonne of dry wheat starch by wet extraction (dough washed under water, starch settled and dried)",
+   "yield_basis": "COMPOSITION. Wheat grain is about 68 percent starch by mass and washing dough out recovers about 88 percent of it, so about 0.60 kg of starch per kg of grain, i.e. 1000 / 0.60 = 1667 kg of wheat per tonne. The gluten and bran left over have a use of their own, which is not credited here, so the grain charge is if anything high. Washing, settling and drying labour has no cited figure and is left out, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "arsenopyrite_kg": {
+   "outputs": {
+    "arsenopyrite_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "miner": 15.0,
+    "labourer": 5.0
+   },
+   "extracted_from": "ore deposit",
+   "basis": "per tonne of hand-dressed arsenopyrite (FeAsS) ore, about 60 percent FeAsS by mass",
+   "yield_basis": "EXTRACTED. Arsenopyrite is a heavy, metallic, easily hand-sorted sulphide of the same vein class as stibnite. The 60 percent dressed grade and the miner and labourer hours are borrowed from stibnite_kg's entry, the nearest hand-dressed sulphide ore. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "arsenic": {
+   "outputs": {
+    "arsenic": 1000.0
+   },
+   "inputs": {
+    "arsenopyrite_kg": 3429.0
+   },
+   "labour_hours": {
+    "furnaceman": 50.0
+   },
+   "basis": "per tonne of white arsenic (arsenic trioxide, As2O3) sublimed from roasted arsenopyrite",
+   "yield_basis": "STOICHIOMETRY. FeAsS is 74.92/162.83 = 46.0 percent arsenic and As2O3 is 75.7 percent arsenic, so a tonne of As2O3 holds 757 kg of arsenic, which is 1646 kg of pure FeAsS or 2743 kg of 60 percent ore; roasting in air drives the oxide off as vapour, condensed in flues, and about 80 percent is recovered, so 2743 / 0.8 = 3429 kg of ore. Roasting sulphide ore is largely self-heating, so no thermal input is charged. Furnaceman hours are borrowed from antimony_kg's roast-and-reduce entry. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "mat_potash": {
+   "outputs": {
+    "mat_potash": 1000.0
+   },
+   "inputs": {
+    "wood_ash_kg": 11765.0
+   },
+   "labour_hours": {},
+   "thermal_mj": 16540.0,
+   "temperature_needed_c": 110.0,
+   "basis": "per tonne of crude potash (mostly potassium carbonate) leached from wood ash and boiled dry",
+   "yield_basis": "COMPOSITION AND LATENT HEAT. Hardwood ash carries on the order of 10 percent potassium carbonate by mass, and leaching recovers about 85 percent, so 1000 / (0.10 x 0.85) = 11765 kg of ash per tonne. Leach liquor of about 12 percent salt has 1/0.12 - 1 = 7.33 kg of water to boil off per kg of potash at 2.257 MJ/kg latent heat, giving 16540 MJ, a physical floor before any pot efficiency. The ash itself is 1 percent of the wood burned (see wood_ash_kg), which is why potash was a byproduct of land clearing rather than a fuel-fed industry. Leaching and stirring labour has no cited figure and is left out, so labour is understated. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "basic_slag": {
+   "outputs": {
+    "steel_plate_kg": 4500.0,
+    "basic_slag": 1000.0
+   },
+   "inputs": {
+    "pig_iron_kg": 5000.0,
+    "lime_kg": 500.0
+   },
+   "labour_hours": {
+    "furnaceman": 112.5
+   },
+   "basis": "per tonne of phosphatic converter slag, with the steel blown alongside it (basic-lined converter on high-phosphorus pig iron)",
+   "yield_basis": "MASS BALANCE. Blowing high-phosphorus pig iron (about 2 percent P) in a lime-lined converter leaves roughly 200-250 kg of slag per tonne of steel, so a tonne of slag comes with about 4.5 tonnes of steel; the pig iron charge is 4.5 t over an about 90 percent metal yield = 5000 kg. About 100 kg of phosphorus becomes about 230 kg of P2O5, i.e. 23 percent of the slag, and the lime flux (about 500 kg) supplies the rest of the slag's calcium oxide. Blowing is exothermic (silicon, carbon and phosphorus burn), so no thermal input is charged. Furnaceman hours are steel_plate_kg's 25 per tonne of steel, scaled to 4.5 t. Conf C.",
+   "conf": "C",
+   "requires_node": "met_basic_lining_phosphorus"
+  },
+  "mat_tar": {
+   "outputs": {
+    "mat_tar": 1000.0,
+    "charcoal_kg": 2500.0
+   },
+   "inputs": {
+    "wood_kg": 10000.0
+   },
+   "labour_hours": {
+    "labourer": 75.0
+   },
+   "basis": "per tonne of pine wood tar from a tar kiln, with the charcoal left in the kiln",
+   "yield_basis": "PYROLYSIS. Resinous pine burned slowly in a closed kiln drains about 10 percent of its mass as tar, and the residue is charcoal at the same 25 percent of wood mass charcoal_kg's clamp burn uses, so 10000 kg of wood gives 1000 kg of tar and 2500 kg of charcoal. Labour is charcoal_kg's 30 collier-hours per 4000 kg of wood, scaled to 10000 kg. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "bentonite_kg": {
+   "outputs": {
+    "bentonite_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 6.0
+   },
+   "extracted_from": "clay pit",
+   "basis": "per tonne of swelling (montmorillonite) clay dug from a pit",
+   "yield_basis": "EXTRACTED. Dug like any pit clay; the labour is borrowed from clay_kg's entry. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "mat_bentonite_slurry": {
+   "outputs": {
+    "mat_bentonite_slurry": 1000.0
+   },
+   "inputs": {
+    "bentonite_kg": 50.0,
+    "water_kg": 950.0
+   },
+   "labour_hours": {},
+   "basis": "per tonne of drilling-mud slurry at 5 percent bentonite by mass",
+   "yield_basis": "COMPOSITION. Slurry for supporting an open trench is made at a few percent bentonite by mass in fresh water; 5 percent is taken, so 50 kg of clay in 950 kg of water. Mixing labour and energy are not cited and are left out. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "mat_gutta_percha": {
+   "outputs": {
+    "mat_gutta_percha": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 60.0
+   },
+   "extracted_from": "forest (Palaquium latex, coagulated in hot water)",
+   "basis": "per tonne of raw gutta-percha coagulated from Palaquium latex",
+   "yield_basis": "EXTRACTED from wild trees by bleeding or felling; a tree gives only kilograms, so a tonne stands for hundreds of trees. The 60 hours are borrowed from resin_kg's tapping entry (the nearest latex-bleeding work) and badly understate a felling-and-collecting trade at that yield. Conf C.",
+   "conf": "C",
+   "requires_node": "mat_gutta_percha"
+  },
+  "mat_iodine_compound": {
+   "outputs": {
+    "mat_iodine_compound": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {},
+   "extracted_from": "seaweed (kelp ash from coastal weed)",
+   "basis": "per tonne of iodine, as iodide salt, recovered from kelp ash",
+   "yield_basis": "EXTRACTED. Burnt kelp ('kelp' in the Scottish sense) carries on the order of 0.5-1 percent iodine by mass, and leaching plus crystallisation recovers most of it; at 0.75 percent about 133 tonnes of kelp ash stand behind a tonne, itself burnt from a couple of dozen times its mass of wet weed. Gathering and burning labour have no cited figure and are left out, so this is a floor. Conf C.",
+   "conf": "C",
+   "requires_node": "analytical_chemistry"
+  },
+  "horn_kg": {
+   "outputs": {
+    "horn_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.3
+   },
+   "extracted_from": "livestock (horn sheaths, a slaughter byproduct)",
+   "basis": "per kg of the cleaned raw material",
+   "yield_basis": "Horn sheaths are slaughter offcuts: cattle horn cores are loosened by soaking and the keratin sheath pulled off. The animal's or person's keep is charged elsewhere. Labour is borrowed from bone_kg's 0.3 hours per kg of separating a raw slaughter byproduct; it understates the cleaning work for gut and shell. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "mat_animal_gut": {
+   "outputs": {
+    "mat_animal_gut": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.3
+   },
+   "extracted_from": "livestock (intestine, a slaughter byproduct)",
+   "basis": "per kg of the cleaned raw material",
+   "yield_basis": "Sheep or ox intestine is stripped and cleaned as a slaughter byproduct. The animal's or person's keep is charged elsewhere. Labour is borrowed from bone_kg's 0.3 hours per kg of separating a raw slaughter byproduct; it understates the cleaning work for gut and shell. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "shell_kg": {
+   "outputs": {
+    "shell_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.3
+   },
+   "extracted_from": "shore and shallow water (gathered shell)",
+   "basis": "per kg of the cleaned raw material",
+   "yield_basis": "Mother-of-pearl and other shell is gathered from shore or shallows and sorted by hand. The animal's or person's keep is charged elsewhere. Labour is borrowed from bone_kg's 0.3 hours per kg of separating a raw slaughter byproduct; it understates the cleaning work for gut and shell. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "human_hair_g": {
+   "outputs": {
+    "human_hair_g": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 1.0
+   },
+   "extracted_from": "people (cut hair)",
+   "basis": "per 1000 g of the cleaned raw material",
+   "yield_basis": "Human hair for instrument use is cut, degreased and sorted. The animal's or person's keep is charged elsewhere. Labour is borrowed from horsehair_kg's 1.0 hours per kg (cut, sort, clean hair); it understates the cleaning work for gut and shell. Conf C.",
+   "conf": "C",
+   "requires_node": null
+  }
+ }
+}
