@@ -124,12 +124,10 @@ class AdoptionMixin:
                 changed.append(field)
             elif field in ("literacy_general", "literacy_elite", "state_capacity"):
                 before = float(self.civ.get(field, 0.0))
-                if field == "literacy_elite":
-                    self.civ[field] = max(0.0, min(self.literacy_ceiling_elite(), before + delta))
-                elif field == "literacy_general":
-                    self.civ[field] = max(0.0, min(self.literacy_ceiling_general(), before + delta))
-                else:
-                    self.civ[field] = max(0.0, min(1.0, before + delta))
+                ceiling = {"literacy_elite": self.literacy_ceiling_elite,
+                           "literacy_general": self.literacy_ceiling_general}.get(field, lambda: 1.0)()
+                # A start above the ceiling is kept; tech cannot push past it.
+                self.civ[field] = max(0.0, min(max(ceiling, before), before + delta))
                 if field == "state_capacity":
                     self.state_capacity = self.civ[field]
                 changed.append(field)
@@ -341,6 +339,12 @@ class AdoptionMixin:
         return min(self.LITERACY_CEILING_GENERAL_MAX,
                    room + self.LITERACY_MECHANISATION_ROOM * self.agrarian_slack())
 
+    GENERATION_YEARS = declare(
+        "GENERATION_YEARS", 25, kind="temporary_heuristic", unit="years",
+        source=None, confidence="C",
+        why="Length of a human generation; spaces literacy census messages "
+            "and decides when schooling has run for a generation.")
+
     # The propertied and lettered class literacy_elite measures was never
     # the class tied to the fields, so its ceiling does not read
     # agrarian_slack() at all: an academy can teach every noble and priest's
@@ -479,16 +483,9 @@ class AdoptionMixin:
                 changed["literacy_elite"] = eli_new
         if not changed:
             return
-        # ONCE A GENERATION, NOT ONCE A YEAR. A gain of a few thousandths a
-        # year is real and worth recording, and logging it every single year
-        # for a five-hundred-year run would be the same fault the debasement
-        # and output_factor hazards were already fixed for elsewhere in this
-        # file: a message repeated until it is noise has stopped being a
-        # message. Thrown on a fixed 25-year clock (a generation) rather than
-        # on a rounded-value change, so it fires on the same schedule whether
-        # a run is barely investing or investing heavily.
+        # Census message at most once a generation, so small yearly gains stay quiet.
         last = self._literacy_said
-        if year - last >= 25:
+        if year - last >= self.GENERATION_YEARS:
             self._literacy_said = year
             bits = []
             if "literacy_general" in changed:
@@ -498,10 +495,9 @@ class AdoptionMixin:
                 bits.append("the lettered and propertied class is now %d%% "
                             "literate" % round(changed["literacy_elite"] * 100))
             school_phrase = "schooling shows in the census"
-            if "school_founded" in self.done_year:
-                school_started = self.done_year["school_founded"]
-                if year - school_started >= 25:
-                    school_phrase = "a generation of schooling shows in the census"
+            school_started = self.done_year.get("school_founded")
+            if school_started is not None and year - school_started >= self.GENERATION_YEARS:
+                school_phrase = "a generation of schooling shows in the census"
             self.state.household.log.append((year, "%s: %s" % (school_phrase, "; ".join(bits))))
 
     # ---- A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS ----
