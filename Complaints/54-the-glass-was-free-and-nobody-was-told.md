@@ -1,6 +1,6 @@
 # Eighty-three technologies make glass out of nothing
 
-**Status:** partly - unknown trades, unresolvable prerequisites and cycles are cleared, most undeclared materials now resolve or have recipes; the remaining undeclared materials are pinned by sim/tests/test_branch_merge_blocking_events.py, and the merge is not yet written because tech_tree.json carries judge/kb edits the branches lack
+**Status:** partly - merge --dry-run has no blocking events (pinned by test_branch_merge_blocking_events); merge --write still blocked by tree-only kb links, review notes and prerequisites, see below
 
 `treetool.py merge` dropped anything it could not resolve and wrote the tree
 anyway. It printed a warning per drop, the warnings scrolled past, and the
