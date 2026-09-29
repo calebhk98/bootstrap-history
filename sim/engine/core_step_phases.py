@@ -301,7 +301,7 @@ class StepPhasesMixin:
         # deputies, and the single largest change to the resource the
         # whole game is built on must not go unannounced.
         _whole = int(self.state.household.directors_extra)
-        if _whole > int(getattr(self.state.household, "_said_deputies", 0) or 0):
+        if _whole > self.state.household._said_deputies:
             self.state.household._said_deputies = _whole
             self.state.household.log.append((self.state.scenario.year, "you now have %d deput%s directing work in "
                                  "your name: your year is %s hours instead of "
@@ -380,7 +380,7 @@ class StepPhasesMixin:
             if _net > 0:
                 self.state.household.insolvent_years = 0
             else:
-                self.state.household.insolvent_years = (getattr(self.state.household, "insolvent_years", 0) or 0) + 1
+                self.state.household.insolvent_years = self.state.household.insolvent_years + 1
             floor = -max(self.INSOLVENCY_FLOOR_MIN, self.revenue() * self.INSOLVENCY_FLOOR_REVENUE_MULTIPLE)
             if self.state.household.capital < floor and self.state.household.insolvent_years >= self.INSOLVENCY_YEARS_BEFORE_BLEED:
                 # wages unpaid: freedmen leave first, they are free to
@@ -668,7 +668,7 @@ class StepPhasesMixin:
         # directive again on top of what was already sold.
         _wd = self.state.household.hour_allocations.get("work")
         if _wd and _wd > 0 and self.state.household.work_trade:
-            _already = getattr(self.state.household, "wage_hours_this_year", 0.0) or 0.0
+            _already = self.state.household.wage_hours_this_year
             _want = max(0.0, _wd - _already)
             if _want > 0.5:
                 _room = max(0.0, self.director_pool() - self.director_hours_committed())
@@ -1602,7 +1602,7 @@ class StepPhasesMixin:
         # final hours-left figure with no way to tell where the rest went.
         self.hours_this_year = {
             "available": round(self.director_pool(), 1),
-            "wage_work": round(getattr(self.state.household, "wage_hours_this_year", 0.0) or 0.0, 1),
+            "wage_work": round(self.state.household.wage_hours_this_year, 1),
             "teaching": round(self.state.household.teaching_hours_this_year, 1),
             "offered_to_projects": round(max(0.0, pool - remaining_after_projects), 1),
             # OFFERED is what projects were given a shot at; EFFECTIVE is what
@@ -1680,8 +1680,8 @@ class StepPhasesMixin:
         _sd = self.cfg["suspicion_danger"]
         if self.state.household.scandal > _sd * 0.75:
             _band = int(self.state.household.scandal / max(1.0, _sd * 0.15))
-            if _band > int(getattr(self.state.household, "_said_scandal", 0) or 0):
-                self.state.household._said_scandal = _band
+            if _band > self.state.scenario._said_scandal:
+                self.state.scenario._said_scandal = _band
                 self.state.household.log.append((self.state.scenario.year, "YOU ARE BEING TALKED ABOUT: scandal %.0f "
                                      "against a line of %.0f. Past it you may be "
                                      "denounced, and that ends the run - about "
@@ -1691,7 +1691,7 @@ class StepPhasesMixin:
                                  % (self.state.household.scandal, _sd,
                                     PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
         elif self.state.household.scandal < _sd * 0.5:
-            self.state.household._said_scandal = 0
+            self.state.scenario._said_scandal = 0
         if self.events and self.state.household.scandal > self.cfg["suspicion_danger"]:
             probability = (self.state.household.scandal - self.cfg["suspicion_danger"]) / self.SCANDAL_HAZARD_SCALE
             if self.rng.random() < probability:

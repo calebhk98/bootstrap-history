@@ -101,7 +101,7 @@ class WagesMixin:
                             household.reputation / self.WAGE_REPUTATION_SCALE)))
         before_practice = self.revenue()
         household.add_capital(pay)
-        household.wage_hours_this_year = (household.wage_hours_this_year or 0.0) + hours
+        household.wage_hours_this_year = household.wage_hours_this_year + hours
         household.wages_earned = (household.wages_earned or 0.0) + pay
         # SAY WHEN IT IS A BAD TRADE: selling your hours costs you the
         # practice those same hours were running (see practice_attention),

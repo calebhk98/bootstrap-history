@@ -245,7 +245,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     forgotten_n = len(sim.forgotten or {})
     ever_completed = len(sim.done) + forgotten_n
     corpus_preserved = (1.0 - forgotten_n / ever_completed) if ever_completed else 1.0
-    solvent_share = 1.0 - min(1.0, getattr(sim, "insolvent_years", 0) / run_years)
+    solvent_share = 1.0 - min(1.0, sim.insolvent_years / run_years)
     shut_years = len(set((getattr(sim, "shut_for_staff", None) or {}).values()))
     staffing_share = 1.0 - min(1.0, shut_years / run_years)
     suspicion_danger = max(1e-9, float(sim.cfg.get("suspicion_danger", 25.0)))
@@ -297,7 +297,7 @@ def _score_achievements(sim, nodes):
         "won": len(getattr(sim, "shut_for_staff", None) or {}) == 0,
         "what": "no concern ever closed for want of staff"}
     out["clean_ledger"] = {
-        "won": (getattr(sim, "insolvent_years", 0) == 0
+        "won": (sim.insolvent_years == 0
                 and getattr(sim, "interest_paid", 0.0) <= 0.0),
         "what": "never spent a year insolvent or paid a denarius of interest"}
     out["free_hands_only"] = {

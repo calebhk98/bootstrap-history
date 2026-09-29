@@ -1255,7 +1255,7 @@ class CapacityMixin:
         pair of hands.
         """
         return (getattr(self.household, "teaching_hours_this_year", 0.0)
-                + getattr(self.household, "wage_hours_this_year", 0.0))
+                + self.household.wage_hours_this_year)
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.
