@@ -124,7 +124,12 @@ class AdoptionMixin:
                 changed.append(field)
             elif field in ("literacy_general", "literacy_elite", "state_capacity"):
                 before = float(self.civ.get(field, 0.0))
-                self.civ[field] = max(0.0, min(1.0, before + delta))
+                if field == "literacy_elite":
+                    self.civ[field] = max(0.0, min(self.literacy_ceiling_elite(), before + delta))
+                elif field == "literacy_general":
+                    self.civ[field] = max(0.0, min(self.literacy_ceiling_general(), before + delta))
+                else:
+                    self.civ[field] = max(0.0, min(1.0, before + delta))
                 if field == "state_capacity":
                     self.state_capacity = self.civ[field]
                 changed.append(field)
@@ -492,8 +497,12 @@ class AdoptionMixin:
             if "literacy_elite" in changed:
                 bits.append("the lettered and propertied class is now %d%% "
                             "literate" % round(changed["literacy_elite"] * 100))
-            self.state.household.log.append((year, "a generation of schooling shows in the "
-                             "census: %s" % "; ".join(bits)))
+            school_phrase = "schooling shows in the census"
+            if "school_founded" in self.done_year:
+                school_started = self.done_year["school_founded"]
+                if year - school_started >= 25:
+                    school_phrase = "a generation of schooling shows in the census"
+            self.state.household.log.append((year, "%s: %s" % (school_phrase, "; ".join(bits))))
 
     # ---- A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS ----
     # "If I invent electricity, you can't say that after 100 years I still
