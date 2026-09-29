@@ -176,7 +176,7 @@ class TechniqueTests(unittest.TestCase):
 class SurplusResponseTests(unittest.TestCase):
     def test_a_surplus_lowers_farm_need_and_a_shortfall_raises_it(self):
         common = dict(baseline_fte=100.0, current_fte=100.0,
-                      marginal_product_kg_per_hour=0.5, land_hectares=1e9)
+                      marginal_product_kg_per_hour=5.0, land_hectares=1e9)
         surplus = labour_allocation.farm_workers_needed(
             shortfall_kg=0.0, surplus_kg=1e6, **common)
         shortfall = labour_allocation.farm_workers_needed(

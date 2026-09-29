@@ -24,6 +24,17 @@ FOOD_BALANCE_ITERATIONS = 6
 RESERVE_REBUILD_YEARS = 25.0
 
 
+def net_marginal_product_kg_per_hour(gross_kg_per_hour, technique):
+    """Food an extra farm hour adds once the seed its hectares need is
+    taken out; at or below zero, more hands on that land cannot help.
+    The harvest model's marginal product holds the land fixed; an hour that
+    brings its own hectares earns the harvest per hour, which is that
+    marginal product over the labour elasticity."""
+    seed_kg_per_hour = (technique.crop.planting_material_kg_per_ha
+                        / farming_technique.hours_per_hectare(technique))
+    return gross_kg_per_hour / agriculture.LABOUR_OUTPUT_ELASTICITY - seed_kg_per_hour
+
+
 def farm_workers_needed(baseline_fte, current_fte, shortfall_kg,
                         marginal_product_kg_per_hour, land_hectares,
                         clearable_hectares=0.0, surplus_kg=0.0,
@@ -31,13 +42,16 @@ def farm_workers_needed(baseline_fte, current_fte, shortfall_kg,
     """Farm workers (full-time equivalents) the society wants next year.
     A shortfall calls for more hands, clearing more ground once the cleared
     land is fully cropped; a surplus lets hands go, one marginal hour at a
-    time."""
+    time. Sized on the marginal product net of seed."""
+    marginal_product_kg_per_hour = net_marginal_product_kg_per_hour(
+        marginal_product_kg_per_hour, technique)
     hectares_per_worker = agriculture.hectares_cropped_per_farm_worker(
         technique.crop, technique.toolkit)
     land_limit_fte = land_hectares / hectares_per_worker
     clearing_fte = (clearable_hectares * agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE
                     / HOURS_PER_FARM_WORKER_YEAR)
-    land_limit_fte += clearing_fte
+    if marginal_product_kg_per_hour > 0.0:
+        land_limit_fte += clearing_fte
     hours_per_hectare = farming_technique.hours_per_hectare(technique)
     if shortfall_kg <= 0.0 and surplus_kg > 0.0 and marginal_product_kg_per_hour > 0.0:
         freed_hectares = surplus_kg / marginal_product_kg_per_hour / hours_per_hectare
