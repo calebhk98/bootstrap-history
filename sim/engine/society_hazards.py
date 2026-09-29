@@ -563,6 +563,31 @@ class HazardsMixin:
             self._shock_real_erosion(hazard, year)
             self._shock_values(hazard, year, hazard_start, hazard_end)
 
+    def _household_staff_loss_relief_scaled_by_national(self):
+        """Household relief for staff_loss, scaled so household mitigations
+        only cover what the nation hasn't.
+
+        For each household technique, its contribution is scaled by
+        (1 - the nation's coverage of that same technique). National coverage
+        is tracked as a single medical_diffusion_relief index, used as a proxy
+        for all medical mitigations since per-technique national adoption is
+        not separately tracked.
+        """
+        mult, why = 1.0, []
+        national_medical_relief = self.medical_diffusion_relief()
+        for node, share, label in self.HAZARD_COUNTERS.get("staff_loss", ()):
+            if node == "_own_gold":
+                strength = 1.0 if self.mine_capacity.get("gold", 0.0) > 0.0005 else 0.0
+            elif node == "_own_silver":
+                strength = 1.0 if self.mine_capacity.get("silver", 0.0) > 0.01 else 0.0
+            else:
+                strength = self._counter_strength(node)
+            if strength > 0.0:
+                household_contribution = share * strength * (1.0 - national_medical_relief)
+                mult *= (1.0 - household_contribution)
+                why.append(label if strength >= 1.0 else label + " (lapsed)")
+        return mult, why
+
     def _shock_staff_loss(self, hazard, year):
         """The staff_loss branch of _shocks: disease and famine years.
 
@@ -577,8 +602,9 @@ class HazardsMixin:
             # household is exposed to this, not to the historical rate.
             med_relief = self.medical_diffusion_relief()
             raw = historical * (1.0 - med_relief)
-            # Household mitigations cut its risk relative to that exposure.
-            relief, why = self.hazard_relief("staff_loss")
+            # Household mitigations cut its risk relative to that exposure,
+            # but scaled so each technique only covers what the nation hasn't.
+            relief, why = self._household_staff_loss_relief_scaled_by_national()
             loss = raw * relief
             household = self.state.household
             _people_before = (household.scholars + household.artisans
