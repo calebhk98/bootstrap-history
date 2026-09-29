@@ -1,6 +1,6 @@
 # Venture staffing can appear overcommitted without an explanation
 
-**Status:** partly - own audit line says partly; `reports/RESOLUTION_AUDIT_01_26.md` says fixed, re-verify
+**Status:** closed - pinned by sim/tests/test_ventures_lifecycle.py
 
 **Type:** UI / rules clarity  
 **Priority:** Medium
