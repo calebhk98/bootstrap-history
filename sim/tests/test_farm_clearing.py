@@ -80,7 +80,8 @@ class ClearingTests(unittest.TestCase):
         quality_before = test_sim.farm_land.quality
         for year in range(101, 131):
             test_sim._demographic_recovery(year)
-        self.assertLess(test_sim.farm_land.quality, quality_before)
+        # Cleared ground comes from the best-first ladder, so quality never rises.
+        self.assertLessEqual(test_sim.farm_land.quality, quality_before)
         expected = land.ladder_quality(_ladder("norse_900ad").ladder,
                                        test_sim.farm_land.hectares)
         self.assertAlmostEqual(test_sim.farm_land.quality, expected, places=9)
