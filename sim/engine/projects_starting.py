@@ -63,7 +63,7 @@ class StartingMixin:
             "as cheaply as a poor one. Tuned scale, not measured.")
     BRIBE_DENARII_PER_SCANDAL_POINT = declare(
         "BRIBE_DENARII_PER_SCANDAL_POINT", 300.0, kind="temporary_heuristic",
-        unit="denarii per point of household.scandal, at bribability=1",
+        book_money=True, unit="denarii per point of household.scandal, at bribability=1",
         source=None, confidence="D",
         why="What it costs to erase one point of scandal outright. Scandal "
             "itself has no independent source model for who spreads it or "
@@ -307,7 +307,7 @@ class StartingMixin:
             "measured.")
     ARREARS_CHEAP_PROJECT_FLOOR = declare(
         "ARREARS_CHEAP_PROJECT_FLOOR", 600.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Even deep in persistent arrears, a project costing less than "
             "this is always 'cheap enough to need nobody's permission' - a "
             "flat floor under ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE's own "
@@ -326,7 +326,7 @@ class StartingMixin:
             "multiple, not derived.")
     ARREARS_HARD_STOP_FLOOR = declare(
         "ARREARS_HARD_STOP_FLOOR", 4000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="However cheap a project looks, new work stops outright once "
             "the household is this far underwater - a flat floor under "
             "ARREARS_HARD_STOP_REVENUE_MULTIPLE's revenue-based figure so "

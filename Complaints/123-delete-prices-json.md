@@ -67,15 +67,24 @@ relaxed pump check in `sim/tests/test_early_playtest.py`).
   wheat entry removed or changed.
 
 Opening kits are stated in labourer-years (`STARTING_KITS`, `data.kit_capital`)
-and convert through the civilisation's own wage. Other money constants in the
-engine and the tree's `rev` are still authored in book denarii; the household
-wealth scale of `state_notice` was converted, the rest have not been audited.
+and convert through the civilisation's own wage.
+
+- [x] One conversion boundary, `sim/engine/money_units.py`: authored book
+  denarii become labour hours through one labelled transitional factor (the
+  book's own reference labourer wage), then the civilisation's money through
+  its `money_per_labour_hour`. It covers the book goods table (`data.load`,
+  `priced_goods_table`, `calculated_goods_prices`), each node's `rev`, `up`
+  and `cap`, and every declared money constant (`declare(..., book_money=True)`,
+  converted per `Sim`). `sim/tests/test_money_units_one_boundary.py` checks it.
+- [ ] The conversion factor itself, the book labourer wage, is still a book
+  figure; it goes when authored money is derived from labour and materials.
 
 What still limits it: the coin's value is fixed at the opening technology, so
 later improvements to the coin metal's production do not deflate the currency
 (a labelled simplification: money supply and debasement are not modelled).
-The book goods table is still in denarii, so a book-priced fallback for a gated
-material is not in the civilisation's own unit.
+A book-priced fallback for a gated material is now in the civilisation's unit
+but is still a book figure. The commodity ledger's own base prices
+(`commodities.json`) are still read in book denarii by the ledger.
 
 ### 3. Make endogenous material prices the only runtime path
 

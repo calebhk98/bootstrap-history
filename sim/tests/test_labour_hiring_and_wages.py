@@ -17,12 +17,12 @@ s_pr = sim()
 _prac = sorted(s_pr._practice_set())
 _expect = sum(NODES[node_id]["rev"] for node_id in _prac) * s_pr.PRACTICE_SHARE
 check("the practice pays its share of the quoted figure, not a ramp step",
-      abs(s_pr.revenue() - _expect) < 0.5, (s_pr.revenue(), _expect))
+      abs(s_pr.revenue() - _expect) < 1e-3 * _expect, (s_pr.revenue(), _expect))
 s_pr5 = sim()
 for _ in range(6):
     s_pr5.step()
 check("...and it does not grow into the full figure over the ramp years",
-      abs(s_pr5.revenue() - _expect) < 0.5, (s_pr5.revenue(), _expect))
+      abs(s_pr5.revenue() - _expect) < 1e-3 * _expect, (s_pr5.revenue(), _expect))
 check("the ledger says why the practice pays less than the tree quotes",
       s_pr.practice_note() and "a third" in s_pr.practice_note(),
       s_pr.practice_note())

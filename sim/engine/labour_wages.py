@@ -15,6 +15,7 @@ household-room ceiling; this file only prices the trade once a person is
 in it.
 """
 from . import wage_provider
+from . import money_units
 from .data import TRADE_REGISTRY, WAGES
 from sim.constants import declare
 
@@ -287,6 +288,14 @@ class WagesMixin:
             cached = self._wage_schedule_cache = wage_provider.build_schedule(
                 TRADE_REGISTRY, self.civ, tightness_factors=factors)
         return cached
+
+    def money_per_labour_hour(self):
+        """Money one hour of the unskilled numeraire trade is worth here."""
+        return self.wage_schedule().money_per_labour_hour
+
+    def book_money(self, denarii):
+        """An authored book-denarii amount in this civilisation's coin."""
+        return money_units.book_to_money(denarii, self.money_per_labour_hour())
 
     def wage_per_hour(self, trade):
         """Money one hour of this trade costs before local prices and

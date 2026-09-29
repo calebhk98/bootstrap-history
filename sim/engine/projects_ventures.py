@@ -62,7 +62,7 @@ class VenturesMixin:
     # One pair of hands per this much revenue.
     VENTURE_HANDS_PER_REVENUE = declare(
         "VENTURE_HANDS_PER_REVENUE", 1500.0, kind="temporary_heuristic",
-        unit="denarii/year of revenue per pair of hands", source=None,
+        book_money=True, unit="denarii/year of revenue per pair of hands", source=None,
         confidence="D",
         why="A floor under venture_supervision's own build-crew share: "
             "even a concern that took nobody to build (a bottling shed, a "

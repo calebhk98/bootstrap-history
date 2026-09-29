@@ -27,7 +27,7 @@ class ProductionMixin:
 
     STATE_FUNDING_BASE = declare(
         "STATE_FUNDING_BASE", 2500.0, kind="temporary_heuristic",
-        unit="denarii/year at economy=1, state_capacity=1, pop_scale=1",
+        book_money=True, unit="denarii/year at economy=1, state_capacity=1, pop_scale=1",
         source=None, confidence="D",
         why="What an imperial patron is worth in direct funding at a "
             "reference civilisation size and state capacity. No fiscal "
@@ -251,7 +251,7 @@ class ProductionMixin:
             "against playtests, not fitted to any output data.")
     REVENUE_CEILING_PER_POP_SCALE = declare(
         "REVENUE_CEILING_PER_POP_SCALE", 900000.0, kind="temporary_heuristic",
-        unit="denarii/year at pop_scale=1, economy=1", source=None,
+        book_money=True, unit="denarii/year at pop_scale=1, economy=1", source=None,
         confidence="D",
         why="The saturating ceiling on how much revenue a single founder's "
             "ventures can pull out of one civilisation's whole market - "
@@ -394,7 +394,7 @@ class ProductionMixin:
             "measurement.")
     CAPABILITY_FACTOR_HALF_SATURATION_REV = declare(
         "CAPABILITY_FACTOR_HALF_SATURATION_REV", 40000.0,
-        kind="temporary_heuristic", unit="denarii of tier-weighted revenue "
+        kind="temporary_heuristic", book_money=True, unit="denarii of tier-weighted revenue "
         "at half of CAPABILITY_FACTOR_CEILING_BONUS", source=None,
         confidence="D",
         why="How much accumulated tier-weighted method it takes to reach "
@@ -791,7 +791,7 @@ class ProductionMixin:
     }
     INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD = declare(
         "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD", 250.0,
-        kind="temporary_heuristic", unit="denarii of upkeep per head",
+        kind="temporary_heuristic", book_money=True, unit="denarii of upkeep per head",
         source=None, confidence="D",
         why="For an institution not in INSTITUTION_PLACES, how many "
             "denarii of upkeep one person's worth of capacity is assumed "

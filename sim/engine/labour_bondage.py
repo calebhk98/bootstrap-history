@@ -178,7 +178,7 @@ class BondageMixin:
             "for any real slave market.")
     SLAVE_BASE_PRICE_DENARII = declare(
         "SLAVE_BASE_PRICE_DENARII", 300.0, kind="hardcoded_outcome",
-        unit="denarii, at price_index=1 and zero market pressure",
+        book_money=True, unit="denarii, at price_index=1 and zero market pressure",
         source=None, confidence="D",
         why="The list price of one person before any congestion surcharge "
             "- a flat number this file asserts rather than derives from "

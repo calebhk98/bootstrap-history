@@ -17,6 +17,7 @@ def final_report(sim, nodes):
     there is nothing left to spoil: the run is finished, so showing the
     road is the reward for finishing it, not a leak.
     """
+    nodes = sim.nodes   # the tree in this civilisation's coin
     goal = sim.goal
     earned = sorted(sim.done - sim.granted)
     out = {"ended_in": sim.year, "why": _agent_end_reason(sim),

@@ -29,7 +29,7 @@ from .mods import get_ordered_mods, load_mod_tree
 from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
-from . import wage_provider
+from . import money_units, wage_provider
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
 
@@ -312,6 +312,11 @@ def civilization_ids() -> List[str]:
                   if not is_hidden(load_civ(identifier)))
 
 
+def _in_coin(money: float, document: JSONDict, money_per_labour_hour: float) -> float:
+    """A price in the money of a wage document, in another coin."""
+    return money / document["money_per_labour_hour"] * money_per_labour_hour
+
+
 def load(use_solved_prices: bool = False,
          held_technology_ids: Iterable[str] = (),
          civilization_id: Optional[str] = None
@@ -359,30 +364,32 @@ def load(use_solved_prices: bool = False,
     nodes = {node["id"]: node for node in tree["nodes"]}
     schedule = starting_schedule(civilization_id)
     wages = schedule.wages_per_hour()
-    goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
-             if not key.startswith("_")}
+    rate = schedule.money_per_labour_hour
+    book_goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
+                  if not key.startswith("_")}
+    goods = money_units.convert_book_table(book_goods, rate)
     required_materials = {material for node in nodes.values()
                           for material in (node.get("mat") or {})}
     if use_solved_prices:
         from . import prices as price_solver
         goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, goods, schedule.document(),
+            held_technology_ids, book_goods, schedule.document(),
             civilization_id=civilization_id)
     elif not required_materials.issubset(goods):
         # Book prices stay; the solver only fills materials the book lacks.
         from . import prices as price_solver
-        book_goods = dict(goods)
+        reference_document = _STARTING_SCHEDULE.document()
         solved_goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, book_goods, _STARTING_SCHEDULE.document(),
+            held_technology_ids, book_goods, reference_document,
             civilization_id=civilization_id)
-        goods.update({material: solved_goods[material]
+        goods.update({material: _in_coin(solved_goods[material], reference_document, rate)
                       for material in required_materials - set(goods) if material in solved_goods})
         unresolved = required_materials - set(goods)
         if unresolved:
             # TRANSITIONAL: price era-gated materials as if every technology were held.
             era_free_goods, _provenance = price_solver.priced_goods_table(
-                list(nodes), book_goods, _STARTING_SCHEDULE.document(), civilization_id=civilization_id)
-            goods.update({material: era_free_goods[material]
+                list(nodes), book_goods, reference_document, civilization_id=civilization_id)
+            goods.update({material: _in_coin(era_free_goods[material], reference_document, rate)
                           for material in unresolved if material in era_free_goods})
     production = load_production_catalog(ROOT, MODDIR)
     load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
@@ -399,11 +406,11 @@ def load(use_solved_prices: bool = False,
                                  "production path but is unavailable with the selected "
                                  "technologies" % (node["id"], material))
     for node in nodes.values():
-        node["_labour_cost"] = sum(wages[trade] * hours for trade, hours in node["lab"].items())
         # TRANSITIONAL: a material the price solver cannot resolve counts as free, so the cost is a lower bound.
-        node["_material_cost"] = sum(goods.get(material, 0.0) * quantity for material, quantity in node["mat"].items())
-        node["_total_cost"] = node["_labour_cost"] + node["_material_cost"] + node["cap"]
+        node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
+                                      for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
+    money_units.stamp_nodes(nodes.values(), wages, rate)
     return tree, prices, nodes, wages, goods
 
 
@@ -444,7 +451,8 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
 
 
 def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
-                            civilization_id: Optional[str] = None
+                            civilization_id: Optional[str] = None,
+                            money_per_labour_hour: Optional[float] = None
                             ) -> Dict[str, float]:
     """Return the calculator-backed material-price table for an era.
 
@@ -458,10 +466,21 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
     """
     prices, book_goods = _book_prices()
     from . import prices as price_solver
+    document = starting_schedule(civilization_id).document()
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, book_goods, starting_schedule(civilization_id).document(),
-        civilization_id=civilization_id)
+        held_technology_ids, book_goods, document, civilization_id=civilization_id)
+    if money_per_labour_hour is not None:
+        # The caller's coin differs from the civilisation file's: rescale.
+        goods = {material: _in_coin(price, document, money_per_labour_hour)
+                 for material, price in goods.items()}
     return goods
+
+
+def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
+    """The tree with every money field in the civilisation's coin."""
+    schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    return money_units.rebased_nodes(
+        nodes, schedule.wages_per_hour(), schedule.money_per_labour_hour)
 
 
 # How many things rest on each node, for the whole tree at once.

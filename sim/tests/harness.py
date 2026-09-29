@@ -166,6 +166,13 @@ def _progress_ping():
         sys.stderr.flush()
 
 
+def book_money(denarii, civ="rome_100ad"):
+    """Book denarii in a civilisation's own coin (Rome's by default)."""
+    from sim.engine import money_units
+    return money_units.book_to_money(
+        denarii, S.starting_schedule(civ).money_per_labour_hour)
+
+
 def sim(civ="rome_100ad", capital=None, manual=True, events=False):
     config = {"start_capital": capital} if capital is not None else None
     test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
