@@ -2,6 +2,7 @@
 
 import json
 
+from . import command_registry
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
 
@@ -23,42 +24,9 @@ from .nodes import NODE_IDS, NODE_IDS_LOWER
 # same call.
 # ---------------------------------------------------------------------------
 
-# What a person types on the left, the protocol's own name on the right. The
-# single letters are the ones `play` has always used, kept because the older
-# notes and anyone who has played before will still type them.
-TYPED_ALIASES = {
-    "s": "state", "st": "state", "status": "state",
-    "a": "available", "av": "available", "options": "available",
-    "n": "step", "next": "step", "wait": "step", "year": "step",
-    "x": "stop", "abandon": "stop", "cancel": "stop",
-    "q": "quit", "exit": "quit", "bye": "quit",
-    "h": "help", "?": "help", "commands": "help",
-    "ledger": "money", "accounts": "money", "cash": "money",
-    "hazards": "risk", "risks": "risk",
-    "history": "log", "diary": "log", "logs": "log", "journal": "log",
-    "people": "labour", "staff": "labour", "workers": "labour",
-    "demographics": "population", "demography": "population", "census": "population",
-    "pop": "population",
-    "dismiss": "fire", "sack": "fire", "lay": "fire",
-    "job": "commission", "hireout": "commission",
-    "teach": "train", "learn": "train",
-    "price": "quote", "cost": "quote",
-    "shut": "close", "closemine": "close", "close_mine": "close",
-    "begin": "start", "research": "start", "build": "start",
-    "explain": "why", "look": "why", "inspect": "why",
-    "route": "path", "plan": "path",
-    "workings": "mines", "mine": "mines", "pits": "mines",
-    "blocked": "stuck", "help_me": "stuck", "why_stuck": "stuck",
-    "retire": "withdraw", "step_back": "withdraw", "obscurity": "withdraw",
-    "beliefs": "values", "traits": "values", "society": "values",
-    "startall": "rush", "start_all": "rush", "muster": "rush",
-    "overview": "capacity", "industry": "capacity", "dashboard": "capacity",
-    "infrastructure": "capacity", "power": "capacity",
-    "prices": "economy", "econ": "economy",
-    "diff": "changes", "recap": "changes", "summary": "changes",
-    "move": "move_base", "relocate": "move_base", "moveto": "move_base",
-    "direct": "allocate", "assign": "allocate", "split": "allocate",
-}
+# Every alias a person can type, mapped to its command; declared with each
+# command by @command(aliases=...).
+TYPED_ALIASES = command_registry.alias_map()
 
 
 def _typed_number(tok):
@@ -232,9 +200,10 @@ def parse_typed(line):
     parts = text.split()
     head = parts[0].lower()
     rest = parts[1:]
-    command = TYPED_ALIASES.get(head, head)
-    if command not in KNOWN_COMMANDS:
-        near = [candidate for candidate in KNOWN_COMMANDS if candidate.startswith(head[:3])]
+    command = command_registry.alias_map().get(head, head)
+    if command not in command_registry.COMMANDS:
+        near = [candidate for candidate in command_registry.COMMANDS
+                if candidate.startswith(head[:3])]
         return None, ("no command called %r. Type 'help' for the list%s."
                       % (head, (", or did you mean: " + ", ".join(near)) if near else ""))
 

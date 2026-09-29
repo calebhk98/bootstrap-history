@@ -8,10 +8,15 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
+from .command_registry import command
 from .util import _qty
 from .. import purchase_rule
 
 
+@command("bounty", group="projects",
+         summary="pay someone else to solve it",
+         usage=["bounty <id>"], options={"<id>": "a technology"},
+         description="Posts a public prize instead of building it yourself.")
 def _cmd_bounty(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be bought. 'state' shows where you finished and how far you got" % ended}
@@ -218,6 +223,15 @@ _BUY_HANDLERS = {
 }
 
 
+@command("buy", group="money",
+         summary="farmland, housing, schools, stock, forest, nitre, mines, slaves",
+         usage=["buy forest <ha>", "buy nitre <m2>", "buy farm <ha>", "buy housing <n>",
+                "buy school <trade> <n>", "buy material <name> <tonnes>",
+                "buy mine <material> <tonnes_per_year>", "buy slaves <n>", "buy manumit <n>"],
+         options={"what": "forest, nitre, farm, housing, school, material, mine, slaves or manumit",
+                  "n": "the amount"},
+         description="Spends capital on durable things. Ask the price first with quote. "
+                     "See the economy topic for what each one does.")
 def _cmd_buy(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be bought. 'state' shows where you finished and how far you got" % ended}
@@ -242,6 +256,11 @@ def _cmd_buy(sim, nodes, cmd, ended):
 
 
 
+@command("sell", group="money",
+         summary="sell material you have in stock",
+         usage=["sell <material> <tonnes>"],
+         options={"<material>": "a material in stock", "<tonnes>": "amount"},
+         description="Sells at the current value; you can only sell what you hold.")
 def _cmd_sell(sim, nodes, cmd, ended):
     material = str(cmd.get("material") or cmd.get("what") or "").lower()
     quantity, err = _qty(cmd, "n", 0)
@@ -256,6 +275,11 @@ def _cmd_sell(sim, nodes, cmd, ended):
 
 
 
+@command("money", group="money", aliases=("ledger", "accounts", "cash"),
+         summary="the whole ledger",
+         usage=["money"], options={},
+         description="What comes in and where it comes from, what goes out, and the "
+                     "rows sum to the totals.")
 def _cmd_money(sim, nodes, cmd, ended):
     # LESS THE YEAR YOU HAVE ALREADY PAID FOR: `hire` takes a finder's fee
     # and the first year's wages up front, and step() nets that advance off
@@ -351,6 +375,12 @@ def _cmd_money(sim, nodes, cmd, ended):
 
 
 
+@command("quote", group="money", aliases=("price", "cost"),
+         summary="what something costs before you commit",
+         usage=["quote mine <material> <tonnes_per_year>"],
+         options={"what": "mine (and other buy targets)", "material": "the material",
+                  "n": "the amount"},
+         description="Prices a purchase without making it.")
 def _cmd_quote(sim, nodes, cmd, ended):
     what = (cmd.get("what") or "mine").strip().lower()
     # EVERYTHING YOU CAN BUY, NOT JUST MINES: any purchase command with no
@@ -434,6 +464,10 @@ def _cmd_quote(sim, nodes, cmd, ended):
 
 
 
+@command("close", group="money", aliases=("shut", "closemine", "close_mine"),
+         summary="shut a mine and stop paying upkeep",
+         usage=["close <material>"], options={"<material>": "the mine's material"},
+         description="Closes your own workings so they stop costing to keep standing.")
 def _cmd_close(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -445,6 +479,11 @@ def _cmd_close(sim, nodes, cmd, ended):
 
 
 
+@command("withdraw", group="society", aliases=("retire", "step_back", "obscurity"),
+         summary="step back from public life",
+         usage=["withdraw"], options={},
+         description="Lowers your eminence and reputation and raises your protection; "
+                     "the reply shows the new values. Refused if the run has ended.")
 def _cmd_withdraw(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -458,6 +497,10 @@ def _cmd_withdraw(sim, nodes, cmd, ended):
 
 
 
+@command("bribe", group="society",
+         summary="spend money to reduce a scandal",
+         usage=["bribe <amount>"], options={"<amount>": "money to spend"},
+         description="Buys down the current scandal at the price of the money.")
 def _cmd_bribe(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}

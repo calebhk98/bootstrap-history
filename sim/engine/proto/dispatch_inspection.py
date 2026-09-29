@@ -9,6 +9,7 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
+from .command_registry import command
 from ..data import closure, topo_order
 from .economy import (_agent_capacity, _agent_changes, _agent_economy,
                       _agent_mines, _agent_portfolio, _agent_values)
@@ -18,26 +19,70 @@ from .state import _agent_log, _agent_state, _waiting_on
 from .techtree import _agent_available, _brief, _node_explain
 
 
+@command("state", group="overview", aliases=("s", "st", "status"),
+         summary="where you stand",
+         usage=["state", "state full", "state compact"],
+         options={"full": "include every field, not only the headline ones",
+                  "json / compact": "the raw reply; compact adds blocked_projects"},
+         description="Year, money, income, founder hours, active projects with "
+                     "what each is waiting on, and what to look at next.")
 def _cmd_state(sim, nodes, cmd, ended):
     return dict(ok=True, **_agent_state(sim, nodes, cmd))
 
 
 
+@command("available", group="overview", aliases=("a", "av", "options"),
+         summary="what you could begin today",
+         usage=["available", "available <subject>", "available find <text>",
+                "available state:blocked tag:<topic>", "available sort:price reverse"],
+         options={"subject / find": "narrow by subject word or search text",
+                  "afford": "only what you can pay for now",
+                  "all:true": "every row, not the summary by subject",
+                  "limit / offset": "page through the rows",
+                  "sort": "price, hours, years, earns, upkeep, risk, alpha or fewest_missing",
+                  "reverse": "flip the order",
+                  "state": "startable, blocked, active or done (blocked rows say what is missing)",
+                  "tag / category": "narrow by topic or node category"},
+         description="Summarised by subject, with cost, founder hours and risk. "
+                     "An empty search suggests tags to try. fewest_missing orders the "
+                     "heard-of list by how few of a thing's own prerequisites are "
+                     "missing, not by distance to a goal; see path for that.")
 def _cmd_available(sim, nodes, cmd, ended):
     return _agent_available(sim, nodes, cmd)
 
 
 
+@command("log", group="overview", aliases=("history", "diary", "logs", "journal"),
+         summary="your own exact history, most recent first",
+         usage=["log", "log failures:true", "log find:<text> since:<year> before:<year>",
+                "log oldest", "log limit:20 offset:20"],
+         options={"failures": "only failures", "find": "text to search for",
+                  "since / before": "year bounds", "oldest": "oldest first",
+                  "limit / offset": "page size and position"},
+         description="Starts, completions, failures, hazards, openings, closures and "
+                     "staffing, paginated; never the whole record at once.")
 def _cmd_log(sim, nodes, cmd, ended):
     return _agent_log(sim, cmd)
 
 
 
+@command("score", group="overview",
+         summary="what you are optimising, any time",
+         usage=["score"], options={},
+         description="Each ending-score component, raw and weighted. Under fog the "
+                     "technology-coverage share stays withheld until the run is over.")
 def _cmd_score(sim, nodes, cmd, ended):
     return {"ok": True, **score_report(sim, nodes)}
 
 
 
+@command("why", group="overview", aliases=("explain", "look", "inspect"),
+         summary="everything known about one thing",
+         usage=["why <id or name>", "why <id> compact"],
+         options={"<id>": "a technology or concern, by id or name",
+                  "compact": "add blocked, blocked_by and explanation fields"},
+         description="Cost, staff, risk, chain, what it unlocks, and exactly why it "
+                     "is or is not startable right now.")
 def _cmd_why(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
     # The goal is the one thing you were told the name of on arrival; see
@@ -69,6 +114,11 @@ def _cmd_why(sim, nodes, cmd, ended):
 
 
 
+@command("path", group="overview", aliases=("route", "plan"), fog_hidden=True,
+         summary="the route to one thing",
+         usage=["path <id or name>"], options={"<id>": "the goal or any target"},
+         description="Everything still standing between here and there, and which "
+                     "of those you could start today. Try it on your goal first.")
 def _cmd_path(sim, nodes, cmd, ended):
     if sim.fog:
         # THE REASON HAS TO BE THE REAL ONE: the command is switched off
@@ -166,6 +216,11 @@ def _cmd_path(sim, nodes, cmd, ended):
 
 
 
+@command("materials", group="overview",
+         summary="material stocks, production and demand",
+         usage=["materials"], options={},
+         description="Stocks on hand, annual production and demand, and current "
+                     "buy and sell values for every tracked material.")
 def _cmd_materials(sim, nodes, cmd, ended):
     return {"ok": True, "materials": sim.materials_report(),
             "units": "stocks are tonnes; production and demand are tonnes/year",
@@ -173,6 +228,10 @@ def _cmd_materials(sim, nodes, cmd, ended):
 
 
 
+@command("risk", group="society", aliases=("hazards", "risks"),
+         summary="what history is about to do to you",
+         usage=["risk", "risk json"], options={"json": "the raw reply"},
+         description="The hazards in play and what blunts them.")
 def _cmd_risk(sim, nodes, cmd, ended):
     knowledge_risk = sim.knowledge_risk()
     return {"ok": True, "knowledge_risk": knowledge_risk, "year": sim.year,
@@ -181,6 +240,10 @@ def _cmd_risk(sim, nodes, cmd, ended):
 
 
 
+@command("values", group="society", aliases=("beliefs", "traits", "society"),
+         summary="what this society believes, as numbers",
+         usage=["values"], options={},
+         description="The same fields a completion's 'changes the society' line names.")
 def _cmd_values(sim, nodes, cmd, ended):
     return _agent_values(sim)
 
@@ -406,6 +469,12 @@ def _stuck_startable_and_afford(sim, nodes, _fog):
     return _startable, _afford
 
 
+@command("stuck", group="overview", aliases=("blocked", "help_me", "why_stuck"),
+         summary="why you are not getting on",
+         usage=["stuck", "stuck compact"], options={"compact": "add a blockers list"},
+         description="Gathers every kind of stall in one place: work blocked, no road "
+                     "to the goal, nothing started, a shut venture, a binding raw "
+                     "material, no room for people, arrears, a credit freeze.")
 def _cmd_stuck(sim, nodes, cmd, ended):
     # WHY AM I STUCK: several independent kinds of stall - work blocked, no
     # road to the goal, nothing started, a shut venture, a binding raw
@@ -464,6 +533,11 @@ def _cmd_stuck(sim, nodes, cmd, ended):
 
 
 
+@command("mines", group="overview", aliases=("workings", "mine", "pits"),
+         summary="your own workings",
+         usage=["mines"], options={},
+         description="Each mine you own: output, upkeep and what limits it. Buy with "
+                     "buy mine, shut with close.")
 def _cmd_mines(sim, nodes, cmd, ended):
     # See _agent_mines above: the one place this arithmetic is written,
     # shared with `capacity`, so the two screens cannot drift apart.
@@ -471,25 +545,56 @@ def _cmd_mines(sim, nodes, cmd, ended):
 
 
 
+@command("capacity", group="overview",
+         aliases=("overview", "industry", "dashboard", "infrastructure", "power"),
+         summary="why active projects move at their present pace",
+         usage=["capacity"], options={},
+         description="Annual material throughput and shortages, trade-hour demand and "
+                     "supply, power, staffing and finance. Throughput is this year's "
+                     "flow; durable unused material is shown separately by materials "
+                     "as stock on hand.")
 def _cmd_capacity(sim, nodes, cmd, ended):
     return _agent_capacity(sim, nodes, cmd)
 
 
 
+@command("portfolio", group="overview",
+         summary="every active project and what limits it",
+         usage=["portfolio", "portfolio json"], options={"json": "the raw reply"},
+         description="The founder hours each project actually gets this year and why, "
+                     "the reason it is not moving faster, and each hired trade's "
+                     "demand against supply.")
 def _cmd_portfolio(sim, nodes, cmd, ended):
     return _agent_portfolio(sim, nodes, cmd)
 
 
 
+@command("economy", group="money", aliases=("prices", "econ"),
+         summary="what things cost and what you can trade",
+         usage=["economy", "economy full"], options={"full": "every row"},
+         description="Current values of goods and inputs as this economy prices them.")
 def _cmd_economy(sim, nodes, cmd, ended):
     return _agent_economy(sim, cmd)
 
 
 
+@command("changes", group="overview", aliases=("diff", "recap", "summary"),
+         summary="what changed lately",
+         usage=["changes", "changes <years>"],
+         options={"<years>": "how far back to compare (default 5)"},
+         description="A recap of the last few years: what completed, what moved in "
+                     "money, people and the society.")
 def _cmd_changes(sim, nodes, cmd, ended):
     return _agent_changes(sim, nodes, cmd)
 
 
 
+@command("population", group="society",
+         aliases=("demographics", "demography", "census", "pop"),
+         summary="the country's numbers and your reach",
+         usage=["population"], options={},
+         description="The country, the one town your household reaches, and per trade "
+                     "how many exist, how many are within reach and how many you "
+                     "employ. Country-wide and reach figures are estimates.")
 def _cmd_population(sim, nodes, cmd, ended):
     return {"ok": True, **sim.population_report()}
