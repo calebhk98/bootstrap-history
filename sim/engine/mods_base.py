@@ -1,4 +1,5 @@
 """Shared mod types plus field-claim and removal-claim bookkeeping."""
+import copy
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
@@ -20,6 +21,21 @@ class ModManifest:
 # Patch keys that steer the loader and are never merged into content.
 CONTROL_KEYS = ("override", "replaces", "remove")
 REMOVED = "<removed>"
+
+
+def deep_merge(base: Dict[str, Any], patch: Dict[str, Any], nested: bool = False) -> Dict[str, Any]:
+    result = copy.deepcopy(base)
+    for key, value in patch.items():
+        if key in CONTROL_KEYS:
+            continue
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            result[key] = deep_merge(result[key], value, nested=True)
+        elif value is None and nested and key in result:
+            # null inside a nested map deletes that key from the base map
+            del result[key]
+        else:
+            result[key] = copy.deepcopy(value)
+    return result
 
 
 def ancestors(manifest: ModManifest, by_id: Dict[str, ModManifest]) -> set:

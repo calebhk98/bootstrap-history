@@ -26,8 +26,10 @@ import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from .mods import get_ordered_mods, load_mod_tree
-from .mods_civ import apply_mod_civilization, check_starting_techs, is_hidden
-from .catalog import (load_production_catalog, load_trade_registry,
+from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
+                       is_hidden)
+from .catalog import (load_mod_tree_nodes, load_production_catalog,
+                      load_trade_registry,
                       transitional_wage_rates, validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
@@ -200,7 +202,8 @@ def _load_annual_wages() -> Dict[str, float]:
 ANNUAL_WAGE: Dict[str, float] = _load_annual_wages()
 
 
-_TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR), MODDIR)
+_TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR), MODDIR,
+                                      nodes=load_mod_tree_nodes(ROOT, MODDIR))
 
 # Trade identity, availability, and explanatory text belong to the trade
 # registry, not to the legacy table that temporarily supplies their wages.
@@ -371,6 +374,7 @@ def load(use_solved_prices: bool = False,
     pass its id here explicitly, or its land is silently priced as Rome's.
     """
     manifests = get_ordered_mods(MODDIR)
+    check_all_civilizations(CIVDIR, manifests)
     with open(TREE) as source:
         tree = load_mod_tree(json.load(source), manifests)
     with open(PRICES) as source:
@@ -387,6 +391,7 @@ def load(use_solved_prices: bool = False,
             held_technology_ids, goods, prices,
             civilization_id=civilization_id)
     production = load_production_catalog(ROOT, MODDIR)
+    load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
     producers = set(production)
     for entry in production.values():

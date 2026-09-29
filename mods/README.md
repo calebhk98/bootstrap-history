@@ -40,8 +40,14 @@ not exist. Technology nodes may also use `"replaces": "existing_id"`, which is
 the same patch aimed at that id. A new technology node must have a string
 `name`. Unmarked collisions are errors which name both sources.
 
-Two mods that override the same field of the same technology or recipe are an
-error naming both mods, the id and the field, unless the later mod declares the
+Goals (in `data/goals.json`, identified by their `node`) and trades (in
+`data/world/trades.json`, with `family`, `training`, `note`, `initially_absent`)
+take `"override": true` with the same meaning: a deep merge of only the named
+fields, a `null` inside a nested map deletes that key, and an override of a
+missing goal or trade is an error.
+
+Two mods that override the same field of the same technology, recipe, goal or
+trade are an error naming both mods, the id and the field, unless the later mod declares the
 other as a dependency (directly or transitively), in which case the dependent
 mod wins. Overrides of different fields merge.
 
@@ -54,7 +60,8 @@ by its `node`). Removing an id that does not exist is an error. After all mods
 load, any remaining technology prerequisite or `req_any` option, goal, recipe
 input or output, technology material, labour trade, or civilisation starting
 technology that still names a removed id is an error naming the referencing
-item and the removing mod. Patch the reference away with an override (in the
+item and the removing mod. The trade check includes technology labour, and
+every base and mod civilisation is checked once at mod load, picked or not. Patch the reference away with an override (in the
 same mod or a mod that depends on the remover). Inside a nested map of an
 override, a `null` value deletes that key, for example
 `"inputs": {"removed_material": null}`.

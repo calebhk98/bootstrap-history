@@ -3,8 +3,8 @@ import json
 import os
 from typing import Any, Dict, Iterable, List, Optional
 
-from .mods import _check_new_id, _deep_merge
-from .mods_base import ModError, ModManifest, claim_fields
+from .mods import _check_new_id
+from .mods_base import ModError, ModManifest, claim_fields, deep_merge
 from .mods_remove import TECH, scan_removed
 
 CIVILIZATION = "civilization"
@@ -35,7 +35,7 @@ def apply_mod_civilization(name: str, base: Optional[Dict[str, Any]],
             if civ is None:
                 raise ModError("%s overrides missing civilization %r" % (path, name))
             claim_fields(claims, CIVILIZATION, name, patch, manifest, by_id)
-            civ = _deep_merge(civ, dict(patch, id=name))
+            civ = deep_merge(civ, dict(patch, id=name))
             continue
         _check_new_id(manifest, name, False, path)
         if civ is not None:
@@ -45,13 +45,41 @@ def apply_mod_civilization(name: str, base: Optional[Dict[str, Any]],
     return civ
 
 
-def check_starting_techs(civ: Dict[str, Any], manifests: Iterable[ModManifest]) -> None:
+def check_starting_techs(civ: Dict[str, Any], manifests: Iterable[ModManifest],
+                         removed: Optional[Dict[str, str]] = None) -> None:
     """A civ may not start with a technology a mod removed."""
-    removed = scan_removed(manifests, TECH)
+    if removed is None:
+        removed = scan_removed(manifests, TECH)
     for tech_id in civ.get("starting_techs") or ():
         if tech_id in removed:
             raise ModError("civilization %s starts with tech node %s; mod %s removed it" %
                            (civ.get("id"), tech_id, removed[tech_id]))
+
+
+def civilization_names(base_dir: str, manifests: Iterable[ModManifest]) -> List[str]:
+    """Every base and mod civilisation file name, hidden ones included."""
+    names = set()
+    directories = [base_dir] + [os.path.join(manifest.directory, "data", "civilizations")
+                                for manifest in manifests]
+    for directory in directories:
+        if os.path.isdir(directory):
+            names.update(filename[:-5] for filename in os.listdir(directory)
+                         if filename.endswith(".json") and not filename.startswith("_"))
+    return sorted(names)
+
+
+def check_all_civilizations(base_dir: str, manifests: Iterable[ModManifest]) -> None:
+    """Apply mods to every civ and check its starting techs, whether or not anyone picks it."""
+    manifests = list(manifests)
+    removed = scan_removed(manifests, TECH)
+    for name in civilization_names(base_dir, manifests):
+        path = os.path.join(base_dir, name + ".json")
+        base = None
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as source:
+                base = json.load(source)
+        civ = apply_mod_civilization(name, base, manifests)
+        check_starting_techs(civ, manifests, removed)
 
 
 def is_hidden(civ: Dict[str, Any]) -> bool:

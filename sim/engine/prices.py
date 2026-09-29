@@ -319,6 +319,13 @@ def all_gate_nodes(production_entries: Optional[ProductionEntries] = None) -> Fr
         if entry.get("requires_node") is not None)
 
 
+def solver_trade_registry(production_entries: ProductionEntries) -> Dict[str, Any]:
+    """The trade registry, checked against the loaded technologies as well as recipes."""
+    from .catalog import load_mod_tree_nodes, load_trade_registry
+    root = os.path.dirname(os.path.dirname(HERE))
+    return load_trade_registry(root, production_entries, nodes=load_mod_tree_nodes(root))
+
+
 def denarii_per_labour_hour(prices_json: Dict[str, Any]) -> float:
     """Denarii one hour of unskilled (`labourer`) labour is worth, read from
     `prices.json`'s own wage table - the one number LABOUR-HOURS TO DENARII
@@ -381,9 +388,8 @@ def solved_prices(held_technology_ids: Iterable[str],
     wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
     # Trade identity is independent of the legacy wage calibration.  Supply a
     # family-relative transitional rate for newly registered mod trades.
-    from .catalog import load_trade_registry, transitional_wage_rates
-    registry = load_trade_registry(os.path.dirname(os.path.dirname(HERE)),
-                                   production_entries)
+    from .catalog import transitional_wage_rates
+    registry = solver_trade_registry(production_entries)
     base_hourly = {trade: ratio for trade, ratio in wage_by_trade.items()}
     wage_by_trade = transitional_wage_rates(registry, base_hourly)
 

@@ -5,9 +5,10 @@ import os
 import re
 from typing import Any, Dict, Iterable, List
 
-from .mods_base import (CONTROL_KEYS, ModError, ModManifest, check_not_removed, claim_fields,
-                        claim_removal, removed_by)
-from .mods_remove import (GOAL, RECIPE, TECH, check_recipe_references, check_tree_references)
+from .mods_base import (ModError, ModManifest, check_not_removed, claim_fields, claim_removal,
+                        deep_merge, removed_by)
+from .mods_goals import apply_goal_entries
+from .mods_remove import (RECIPE, TECH, check_recipe_references, check_tree_references)
 
 
 def _manifest(path: str) -> ModManifest:
@@ -78,21 +79,6 @@ def _json_files(directory: str) -> Iterable[str]:
                 yield os.path.join(directory, filename)
 
 
-def _deep_merge(base: Dict[str, Any], patch: Dict[str, Any], nested: bool = False) -> Dict[str, Any]:
-    result = copy.deepcopy(base)
-    for key, value in patch.items():
-        if key in CONTROL_KEYS:
-            continue
-        if isinstance(value, dict) and isinstance(result.get(key), dict):
-            result[key] = _deep_merge(result[key], value, nested=True)
-        elif value is None and nested and key in result:
-            # null inside a nested map deletes that key from the base map
-            del result[key]
-        else:
-            result[key] = copy.deepcopy(value)
-    return result
-
-
 def _check_new_id(manifest: ModManifest, item_id: str, override: bool, path: str) -> None:
     if not override and not item_id.startswith(manifest.id + "_"):
         raise ModError("%s introduces un-prefixed id %r; expected %s_* or override=true" %
@@ -156,28 +142,18 @@ def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest]) -
                 if override:
                     # A patch names only the fields it changes; defaults are for new nodes.
                     claim_fields(claims, TECH, node_id, node, manifest, by_id)
-                    nodes[node_id] = _deep_merge(nodes[node_id], dict(node, id=node_id))
+                    nodes[node_id] = deep_merge(nodes[node_id], dict(node, id=node_id))
                 else:
                     if not isinstance(node.get("name"), str):
                         raise ModError("mod %s: node %s in %s is missing a string 'name'" %
                                        (manifest.id, node_id, path))
-                    nodes[node_id] = _deep_merge({}, _node_defaults(dict(node)))
+                    nodes[node_id] = deep_merge({}, _node_defaults(dict(node)))
                 origins[node_id] = path
         goals_path = os.path.join(manifest.directory, "data", "goals.json")
         if os.path.isfile(goals_path):
             with open(goals_path, encoding="utf-8") as source:
-                for goal in json.load(source).get("goals", []):
-                    if goal.get("remove") is True:
-                        matching = [item for item in goals if item.get("node") == goal.get("node")]
-                        if not matching:
-                            raise ModError("%s removes missing goal for node %r" %
-                                           (goals_path, goal.get("node")))
-                        claim_removal(claims, GOAL, goal["node"], manifest, by_id)
-                        goals = [item for item in goals if item not in matching]
-                        continue
-                    if goal.get("node") not in nodes:
-                        raise ModError("%s names missing goal node %r" % (goals_path, goal.get("node")))
-                    goals.append(goal)
+                goals = apply_goal_entries(goals, json.load(source).get("goals", []), nodes,
+                                           goals_path, claims, manifest, by_id)
     check_tree_references(nodes, goals, tree.get("meta", {}).get("goal_node"),
                           removed_by(claims, TECH))
     tree["nodes"] = list(nodes.values())
@@ -208,6 +184,6 @@ def load_mod_production(base: Dict[str, Any], manifests: Iterable[ModManifest]) 
                     raise ModError("production id %s is already defined before %s" % (entry_id, path))
                 if override:
                     claim_fields(claims, RECIPE, entry_id, entry, manifest, by_id)
-                merged[entry_id] = _deep_merge(merged.get(entry_id, {}), entry)
+                merged[entry_id] = deep_merge(merged.get(entry_id, {}), entry)
     check_recipe_references(merged, removed_by(claims, RECIPE))
     return merged

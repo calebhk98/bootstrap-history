@@ -14,26 +14,24 @@ Ordered by value per cost.
 
 ## Missing capabilities
 
-1. **Overrides for goals and trades**, matching what nodes and recipes have.
-
-2. **World content from mods:** geography, deposits and resources, hazards
+1. **World content from mods:** geography, deposits and resources, hazards
    and events, UI and currency strings, strategies. Each is read from base
    paths only.
 
-3. **Manifest hardening:** a minimum game version, compared versions for
+2. **Manifest hardening:** a minimum game version, compared versions for
    dependencies, rejection of unknown keys, and a check that a mod using
    another mod's ids declares it as a dependency.
 
 ## Larger work
 
-4. **New kinds of actor and new mechanics** (elves, dragons, magic). By the
+3. **New kinds of actor and new mechanics** (elves, dragons, magic). By the
    design constraints these cannot be special cases: a new species is an
    actor with calorie needs, growth and diet running through the normal
    production and labour rules, and magic is most naturally an energy or
    material source with recipes. Both depend on the general-actor work the
    project needs anyway for multiplayer and draft animals.
 
-5. **Runnable mod code.** Not supported, and expensive to trust: Python run
+4. **Runnable mod code.** Not supported, and expensive to trust: Python run
    in-process has the player's full permissions. Prefer extending the
    declarative data contract. If code hooks are ever added they need a
    process or WASM boundary, an allowlisted API, per-mod consent, and a

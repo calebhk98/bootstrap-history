@@ -134,6 +134,8 @@ TOPICS = [
     "closure_reasons",
     "mod_economic_catalog",
     "mod_removal_and_civs",
+    "mod_goal_trade_overrides",
+    "mod_load_checks",
     # sim/world/agriculture.py: land, labour, technique and weather into
     # food, standalone and with no import of sim/engine/ - see that
     # module's own docstring for why. Also unittest.TestCase-style.

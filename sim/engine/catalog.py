@@ -4,13 +4,14 @@ This module is deliberately the only place which walks ``data/production``.
 Consumers may still accept an explicit production mapping for small unit tests,
 but their default view must come from here.
 """
+import dataclasses
 from dataclasses import dataclass
 import json
 import os
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Tuple
 
-from .mods import ModError, ModManifest, get_ordered_mods, load_mod_production
-from .mods_base import claim_removal
+from .mods import ModError, ModManifest, get_ordered_mods, load_mod_production, load_mod_tree
+from .mods_base import check_not_removed, claim_fields, claim_removal, deep_merge
 from .mods_remove import RECIPE, TRADE, check_trade_references, scan_removed
 
 
@@ -22,6 +23,15 @@ class Trade:
     note: str = ""
     initially_absent: bool = False
     source: str = ""
+
+
+def _trade_from(trade_id: str, metadata: Mapping[str, Any], source: str) -> Trade:
+    return Trade(trade_id,
+                 family=metadata.get("family", "craft"),
+                 training=metadata.get("training"),
+                 note=metadata.get("note", ""),
+                 initially_absent=bool(metadata.get("initially_absent", False)),
+                 source=source)
 
 
 _production_cache: Dict[Tuple[str, str], Dict[str, Any]] = {}
@@ -99,6 +109,14 @@ def validate_mod_material_paths(nodes: Iterable[Mapping[str, Any]],
                                (node_id, material))
 
 
+def load_mod_tree_nodes(root: str, mods_dir: Optional[str] = None) -> Iterable[Dict[str, Any]]:
+    """Technology nodes of the base tree with enabled mods applied."""
+    with open(os.path.join(root, "data", "tech_tree.json"), encoding="utf-8") as source:
+        base_tree = json.load(source)
+    tree = load_mod_tree(base_tree, get_ordered_mods(mods_dir or os.path.join(root, "mods")))
+    return tree["nodes"]
+
+
 def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = None,
                         mods_dir: Optional[str] = None,
                         nodes: Iterable[Mapping[str, Any]] = ()) -> Dict[str, Trade]:
@@ -130,19 +148,22 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
                 claim_removal(claims, TRADE, trade_id, manifest, by_id)
                 del registry[trade_id]
                 continue
+            if manifest and isinstance(metadata, dict) and metadata.get("override") is True:
+                check_not_removed(claims, TRADE, trade_id, manifest, by_id)
+                if trade_id not in registry:
+                    raise ModError("mod %s: %s overrides missing trade %r" %
+                                   (manifest.id, path, trade_id))
+                claim_fields(claims, TRADE, trade_id, metadata, manifest, by_id)
+                registry[trade_id] = _trade_from(trade_id, deep_merge(
+                    dataclasses.asdict(registry[trade_id]), metadata), registry[trade_id].source)
+                continue
             if manifest and not trade_id.startswith(manifest.id + "_"):
                 raise ModError("%s introduces un-prefixed trade id %r" % (path, trade_id))
             if trade_id in registry:
                 raise ModError("trade %s is already defined before %s" % (trade_id, path))
             if isinstance(metadata, str):
                 metadata = {"family": metadata}
-            registry[trade_id] = Trade(
-                trade_id,
-                family=metadata.get("family", "craft"),
-                training=metadata.get("training"),
-                note=metadata.get("note", ""),
-                initially_absent=bool(metadata.get("initially_absent", False)),
-                source=path)
+            registry[trade_id] = _trade_from(trade_id, metadata, path)
 
     world = os.path.join(root, "data", "world")
     add_file(os.path.join(world, "trades.json"), None)
