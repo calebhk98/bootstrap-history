@@ -9,6 +9,7 @@ from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from .saveload import load_state, save_state
 from .state import (_agent_end_reason, _agent_state)
+from .wave_summary import wave_summary
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
 # The four handler groups moved out of this module, by subject - see each
@@ -205,6 +206,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     stopped_early = None
     end_year = sim.end_year
     ran = 0
+    goal_before = sim.goal_snapshot()
     for _ in range(years):
         if sim.dead_reason or sim.year >= end_year:
             break
@@ -243,7 +245,10 @@ def _cmd_step(sim, nodes, cmd, ended):
             # having built something on turn one they never started.
             completed.append({"id": node_id, "name": nodes[node_id]["name"],
                               "year": sim.done_year.get(node_id),
-                              "granted": node_id in sim.granted})
+                              "granted": node_id in sim.granted,
+                              "kind": ("granted" if node_id in sim.granted
+                                       else "concern" if sim.is_venture(node_id)
+                                       else "technology")})
         for node_id in sorted(before_done - sim.done):
             lost.append({"id": node_id, "name": nodes[node_id]["name"], "year": sim.year,
                          "can_be_restored": node_id in getattr(sim, "mothballed", set())})
@@ -277,6 +282,9 @@ def _cmd_step(sim, nodes, cmd, ended):
                              % (ran, years))
             break
     out = dict(ok=True, completed=completed, lost=lost, events=events)
+    summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
+    if summary:
+        out["summary"] = summary
     if founder_died_this_step:
         out["the_founder_died_this_step"] = founder_died_this_step
     if stopped_early:

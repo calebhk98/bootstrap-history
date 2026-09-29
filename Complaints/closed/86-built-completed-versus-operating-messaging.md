@@ -1,6 +1,6 @@
 # "Built/completed" versus "operating" needs stronger transition messaging
 
-**Status:** open
+**Status:** closed
 
 `school_founded` completed, but literacy did not begin annual schooling growth until the school was opened/operating. Mechanically this is coherent. The completion wording made it easy to assume the school was already functioning.
 

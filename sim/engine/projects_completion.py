@@ -15,9 +15,111 @@ These are methods of Sim; they are a mixin only so that they can live in a
 file of their own.
 """
 from sim.constants import declare
+from .data import closure
+
+FAILED_PREFIX = "FAILED at"
+MINOR_MARK = "(minor)"
+
+# What a goal measure is called and how it is shown; unknown metrics print raw.
+_FRACTION_METRICS = frozenset(("literacy_general", "literacy_elite", "epidemic_relief"))
+_GOAL_DETERMINANTS = {
+    "literacy_general": (("literacy ceiling", "literacy_ceiling_general"),),
+    "literacy_elite": (("elite literacy ceiling", "literacy_ceiling_elite"),),
+}
+
+
+def format_goal_value(value, is_fraction):
+    return "%.1f%%" % (value * 100.0) if is_fraction else "%.3g" % value
+
+
+def goal_movement(before, after):
+    """(label, before text, after text) for each goal measure that moved
+    between two goal_snapshot() results, plus the road steps gained."""
+    if not before or not after:
+        return [], 0
+    moved = []
+    for label, (old_value, is_fraction) in before["measures"].items():
+        new_value = after["measures"].get(label, (old_value, is_fraction))[0]
+        if abs(new_value - old_value) > 1e-9:
+            moved.append((label, format_goal_value(old_value, is_fraction),
+                          format_goal_value(new_value, is_fraction)))
+    return moved, after["road_done"] - before["road_done"]
 
 
 class CompletionMixin:
+    MINOR_FAILURE_SHARE = declare(
+        "MINOR_FAILURE_SHARE", 0.05, kind="temporary_heuristic",
+        unit="fraction of funding capacity", source=None, confidence="D",
+        why="A failed attempt that costs less than this share of what the "
+            "player could fund is reported as one compact line; only the "
+            "presentation depends on it, not the loss itself.")
+    GOAL_PATH_FAILURE_WEIGHT = declare(
+        "GOAL_PATH_FAILURE_WEIGHT", 2.0, kind="temporary_heuristic",
+        unit="multiplier on the loss share", source=None, confidence="D",
+        why="A failure on the goal's own prerequisite road blocks the goal, "
+            "so its loss counts for more when deciding how loudly to say "
+            "it. Presentation only.")
+
+    def goal_closure_ids(self):
+        """Every node the current goal needs, cached per goal."""
+        cache = self.__dict__.setdefault("_goal_closure_by_goal", {})
+        if self.goal not in cache:
+            try:
+                cache[self.goal] = set(closure(self.nodes, self.goal))
+            except Exception:
+                cache[self.goal] = set()
+        return cache[self.goal]
+
+    def failure_severity(self, node_id, lost, means):
+        """'minor' or 'major', from the loss against the player's means and
+        whether the failed project sits on the goal's road."""
+        weight = self.GOAL_PATH_FAILURE_WEIGHT if node_id in self.goal_closure_ids() else 1.0
+        return "minor" if lost * weight < self.MINOR_FAILURE_SHARE * max(means, 1.0) else "major"
+
+    def goal_snapshot(self):
+        """The goal's live measure(s) and road progress, or None without a goal."""
+        goal = self.goal
+        if goal not in self.nodes:
+            return None
+        road = self.goal_closure_ids()
+        measures = {}
+        condition = self.nodes[goal].get("win_condition")
+        if condition and goal not in self.state.projects.done:
+            try:
+                metric = condition.get("metric") or "goal measure"
+                fraction = metric in _FRACTION_METRICS
+                measures[metric.replace("_", " ")] = (self._win_condition_value(condition), fraction)
+                for label, getter in _GOAL_DETERMINANTS.get(metric, ()):
+                    measures[label] = (float(getattr(self, getter)()), True)
+            except (ValueError, AttributeError):
+                pass
+        return {"measures": measures,
+                "road_done": len(road & self.state.projects.done),
+                "road_total": len(road)}
+
+    def goal_effect_lines(self, node_id, before):
+        """Log lines saying how finishing `node_id` moved the goal."""
+        after = self.goal_snapshot()
+        moved, _gained = goal_movement(before, after)
+        lines = ["goal effect: %s %s -> %s" % row for row in moved]
+        if (before and node_id != self.goal and node_id in self.goal_closure_ids()
+                and self.goal not in self.state.projects.done):
+            if self.fog:
+                lines.append("goal effect: this is on the road to your goal")
+            else:
+                lines.append("goal effect: on the road to your goal, %d of %d steps done"
+                             % (after["road_done"], after["road_total"]))
+        return lines
+
+    def opening_shortfall(self, node_id):
+        """(need scholars, need craftsmen, free scholars, free craftsmen) when
+        today's free staff could not supervise this concern, else None."""
+        need_scholars, need_craftsmen = self.venture_hands(node_id)
+        free_scholars, free_craftsmen = self.venture_staff_free()
+        if need_scholars > free_scholars + 0.01 or need_craftsmen > free_craftsmen + 0.01:
+            return need_scholars, need_craftsmen, free_scholars, free_craftsmen
+        return None
+
     FAILURE_RESET_SHARE = declare(
         "FAILURE_RESET_SHARE", 0.4, kind="temporary_heuristic",
         unit="fraction of founder-hours and of total cost", source=None,
@@ -124,26 +226,23 @@ class CompletionMixin:
             _retain = self._retry_calendar_retain(node_id)
             projects.active[node_id]["yrs"] = _yrs_before * _retain
             _lost = node["_total_cost"] * self.FAILURE_RESET_SHARE * self.cost_money_factor()
+            _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
             household.capital -= _lost
-            # SAY SO: a failed attempt must announce itself in the log - a
-            # cost you cannot see is a cost nobody is paying attention to,
-            # which is the same as not charging it.
-            # THE LOGGED PERCENTAGE MUST MATCH WHAT WAS ACTUALLY CHARGED:
-            # ph_left is set to FAILURE_RESET_SHARE of the FULL hours, so
-            # the message has to build its own percentage from that same
-            # constant rather than a separately hardcoded number that can
-            # drift out of sync with it.
-            # AND NOW SAY WHAT WAS LEARNED, in the same breath as the loss -
-            # a player who has just been told a program failed should also be
-            # told, in the same sentence, that the next attempt is not a
-            # repeat of this one: the engineering is better understood
-            # (chance of failure quoted for next time) and some of the
-            # groundwork survives (years already banked toward the next
-            # attempt's own floor).
+            # A failure always announces itself; its size sets how loudly.
             _next_risk = self.effective_risk(node_id)
             _banked = projects.active[node_id]["yrs"]
+            if _severity == "minor":
+                household.log.append((scenario.year,
+                    "%s %s %s: lost %s denarii, %d%% of the hours to redo; "
+                    "attempt %d, next attempt's chance of failing %d%%."
+                    % (FAILED_PREFIX, node["name"], MINOR_MARK,
+                       "{:,.0f}".format(max(0.0, _lost)),
+                       round(self.FAILURE_RESET_SHARE * 100),
+                       projects.failed_attempts[node_id] + 1,
+                       round(_next_risk * 100))))
+                return
             household.log.append((scenario.year,
-                             "FAILED at %s: it did not work. %d%% of the hours "
+                             FAILED_PREFIX + " %s: it did not work. %d%% of the hours "
                              "are to do again (%s of your own) and %s is gone. "
                              "Attempt %d. What went wrong is now understood well "
                              "enough that the next attempt's chance of failing "
@@ -158,6 +257,7 @@ class CompletionMixin:
                                 round(_risk_this_attempt * 100),
                                 _banked, _yrs_before)))
             return
+        goal_before = self.goal_snapshot()
         del projects.active[node_id]
         projects.bountied.discard(node_id)
         # A FINISHED PROJECT CANNOT BE GIVEN MORE HOURS. Unlike stopping or
@@ -206,16 +306,25 @@ class CompletionMixin:
             if node_id == "academy_network":    self._grant_staff(scholars=self.GRANT_STAFF_ACADEMY_SCHOLARS,
                                                               artisans=self.GRANT_STAFF_ACADEMY_ARTISANS)
         if node_id == "mining_concession":  pass
-        # SAY THAT IT IS NOT YET RUNNING: completing something that could be
-        # a going concern does not start it earning, and a player who is
-        # not told will reasonably conclude the money is broken rather
-        # than that they have not opened the doors.
         if self.is_venture(node_id) and not self.policy.get("auto_open", not self.manual):
-            household.log.append((scenario.year, "completed: %s. You know how; nothing "
-                                        "is earning yet - 'open %s' to run it"
-                                        % (node["name"], node_id)))
+            # Built is not open: say what is switched off until it is opened.
+            benefit = self.NOT_OPERATING_BENEFIT.get(node_id)
+            household.log.append((scenario.year,
+                "completed: %s. STATUS: CLOSED / NOT OPERATING. %s Open it "
+                "('open %s') to begin and to start paying upkeep."
+                % (node["name"],
+                   ("Not in effect until open: %s." % benefit) if benefit
+                   else "Nothing is earning yet.", node_id)))
+            shortfall = self.opening_shortfall(node_id)
+            if shortfall:
+                household.log.append((scenario.year,
+                    "with today's staff you could not open it: it needs %.1f "
+                    "scholars and %.1f craftsmen to supervise, and %.1f and %.1f "
+                    "are free." % shortfall))
         else:
             household.log.append((scenario.year, "completed: " + node["name"]))
+        for line in self.goal_effect_lines(node_id, goal_before):
+            household.log.append((scenario.year, line))
         if node_id == self.goal and scenario.goal_year is None:
             scenario.goal_year = scenario.year
 
