@@ -5,6 +5,7 @@ import hashlib
 from ..data import closure, critical_path, downstream_count, is_downstream
 from ..fog import strip_self_play_advice
 
+from . import tree_filters
 from .nodes import _downstream_of, _unlocked_by
 from .state import _waiting_on
 from .ventures import _VENTURE_SUPERVISION_NOTE
@@ -341,14 +342,8 @@ def _available_params(cmd):
 
 
 def _matches_find(nodes, find, node_id):
-    """Match every query word across ids, names, anchors, and aliases."""
-    aliases = nodes[node_id].get("aliases") or []
-    if isinstance(aliases, str):
-        aliases = [aliases]
-    haystack = " ".join([node_id, nodes[node_id].get("name", ""),
-                         nodes[node_id].get("kb", "")] + aliases).lower()
-    terms = [term for term in find.replace("_", " ").split() if term]
-    return bool(terms) and all(term in haystack for term in terms)
+    """Every query word reaches the node's text, category or topic vocabulary."""
+    return tree_filters.matches_find(nodes, find, node_id)
 
 
 def _busy_subject_note(sim, nodes, want_subject, fog):
@@ -372,7 +367,7 @@ def _busy_subject_note(sim, nodes, want_subject, fog):
             "are working on " + ", ".join(_busy[:4]))
 
 
-def _select_startable(sim, nodes, startable, fog, find, want_subject, afford):
+def _select_startable(sim, nodes, startable, fog, find, want_subject, afford, keep=None):
     """Which startable nodes match the find/subject/afford filters the
     player asked for, and the reason to show under "showing" if any.
     """
@@ -385,6 +380,8 @@ def _select_startable(sim, nodes, startable, fog, find, want_subject, afford):
         why_these = "in %r" % want_subject
         if not sel:
             why_these += _busy_subject_note(sim, nodes, want_subject, fog)
+    if keep is not None:
+        sel = [node_id for node_id in sel if keep(node_id)]
     if afford is not None:
         sel = [node_id for node_id in sel if sim.project_cost(node_id) <= afford]
     return sel, why_these
@@ -406,7 +403,7 @@ def _sort_startable_list(sim, nodes, sel, _sort_fn, reverse):
         return sorted(sel, key=lambda k: (sim.project_cost(k), k))
 
 
-def _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse):
+def _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse, keep=None):
     """The full heard-of-but-not-startable list, filtered by the same
     find/subject the startable list used, sorted nearest-first (or by
     whatever column was asked for). Not yet paged; see _heard_of_block.
@@ -433,6 +430,8 @@ def _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse):
     elif want_subject:
         _heard_all = [node_id for node_id in _heard_all
                       if want_subject in _subject_of(nodes[node_id]).lower()]
+    if keep is not None:
+        _heard_all = [node_id for node_id in _heard_all if keep(node_id)]
     # NEAREST-FIRST BY DEFAULT, but the same `sort`/`reverse` a player set
     # on the startable list applies here too - one vocabulary for both
     # halves of the screen, per the sort table's own docstring.
@@ -444,14 +443,15 @@ def _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse):
     return _heard_all
 
 
-def _heard_of_block(sim, nodes, fog, find, want_subject, _sort_fn, reverse, heard_offset):
+def _heard_of_block(sim, nodes, fog, find, want_subject, _sort_fn, reverse, heard_offset,
+                    keep=None):
     """The "heard of but cannot begin" list: closest first, searchable and
     pageable the same way the startable list is. Empty outside fog, where
     there is nothing hidden to report on.
     """
     heard, heard_more, heard_from = [], 0, 0
     if fog:
-        _heard_all = _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse)
+        _heard_all = _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse, keep)
         # PAGEABLE, and it says when it is cut: a silent slice at 25 with no
         # note that it was truncated leaves a large heard-of list with no
         # way to see the rest. `heard_offset` pages it, the same way
@@ -721,7 +721,20 @@ def _agent_available(sim, nodes, cmd=None):
     (want_subject, find, show_all, limit, offset, afford, sort_by,
      _sort_fn, reverse, heard_offset) = _available_params(cmd)
 
-    sel, why_these = _select_startable(sim, nodes, startable, fog, find, want_subject, afford)
+    state, filter_error = tree_filters.parse_state(cmd)
+    tag, category, topic_error = tree_filters.parse_topic(cmd, nodes)
+    if filter_error or topic_error:
+        return {"ok": False, "error": filter_error or topic_error}
+    keep = tree_filters.topic_keeper(nodes, tag, category)
+    known = tree_filters.known_ids(sim, nodes, startable)
+
+    # Blocked, active and done lists come from the tree_filters module.
+    if state and state != "startable":
+        return tree_filters.state_reply(
+            sim, nodes, state, find, want_subject, keep, known, startable,
+            (show_all, offset, limit or DEFAULT_AVAILABLE_LIMIT), _sort_fn, reverse, _subject_of)
+
+    sel, why_these = _select_startable(sim, nodes, startable, fog, find, want_subject, afford, keep)
 
     # THE SAME CONDITION GOVERNED SORTING AND WHICH REPLY TO BUILD, written
     # out twice in the original function with nothing between the two
@@ -730,18 +743,30 @@ def _agent_available(sim, nodes, cmd=None):
     # One name for it here, used at both points, changes nothing about
     # when the sort or the list branch actually run.
     wants_list = bool(find or want_subject or limit or offset or show_all
-                       or afford is not None)
+                       or afford is not None or keep is not None or state)
     if wants_list:
         sel = _sort_startable_list(sim, nodes, sel, _sort_fn, reverse)
 
     heard_more, heard_from, heard_block = _heard_of_block(
-        sim, nodes, fog, find, want_subject, _sort_fn, reverse, heard_offset)
+        sim, nodes, fog, find, want_subject, _sort_fn, reverse, heard_offset, keep)
 
     # A LIST was asked for: a subject, a search, an explicit page, or everything.
     if wants_list:
-        return _list_reply(sim, nodes, sel, startable, why_these, fog, show_all,
-                            offset, limit, DEFAULT_AVAILABLE_LIMIT, sort_by,
-                            _sort_fn, reverse, heard_block, heard_more, heard_from)
+        out = _list_reply(sim, nodes, sel, startable, why_these, fog, show_all,
+                          offset, limit, DEFAULT_AVAILABLE_LIMIT, sort_by,
+                          _sort_fn, reverse, heard_block, heard_more, heard_from)
+        out["state"] = "startable"
+        if tag or category:
+            out.update({k: v for k, v in (("tag", tag), ("category", category)) if v})
+        if find or keep is not None:
+            # Say what the filter skipped, so blocked matches are not invisible.
+            out["known_but_blocked_matches"] = tree_filters.blocked_match_count(
+                sim, nodes, find, keep, known, startable)
+            if out["known_but_blocked_matches"]:
+                out["see_blocked"] = "add state:blocked to list them, with what each is missing"
+            if not out["available"]:
+                out["try_instead"] = tree_filters.try_instead(sim, nodes, find, known, startable)
+        return out
 
     return _digest_reply(sim, nodes, startable, fog, DEFAULT_AVAILABLE_LIMIT,
                           heard_block, heard_more, heard_from)

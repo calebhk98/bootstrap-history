@@ -58,6 +58,16 @@ Two fixes, usable separately or together:
       {"cmd":"available"}                          every node that can legally start now,
                                                     with cost, founder hours, calendar
                                                     floor, prerequisites and its note
+      {"cmd":"available","state":"blocked","tag":"mechanical_power"}
+                                                   filters: state is startable (default),
+                                                    blocked, active or done; tag is a
+                                                    topic, category a node category; find
+                                                    also matches stems and topic words.
+                                                    Non-startable states reply with
+                                                    "rows" (id, name, tags, why_not,
+                                                    missing); an empty search adds
+                                                    "try_instead". Fog limits every list
+                                                    to nodes the player has heard of.
       {"cmd":"why","id":"zinc_metal"}              the full explanation for one node:
                                                     cost, staff, risk, chain, what it
                                                     unlocks, why it is or isn't startable

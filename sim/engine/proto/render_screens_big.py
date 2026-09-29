@@ -8,6 +8,7 @@ the live Sim - see render.py and ARCHITECTURE.md.
 """
 
 from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
+from .tree_filters import render_state_rows
 # DISPLAY_WIDTH is NOT imported here: cli.py patches engine.protocol.DISPLAY_WIDTH
 # directly at runtime, so every reader of it in this file goes through the
 # protocol module itself, live, rather than a plain name bound once at import
@@ -588,6 +589,8 @@ def render_available(out):
     """A scannable table: every column aligned, sorted cheapest-first so the
     same eye scan works whether you are looking for a bargain or a subject.
     """
+    if "rows" in out and out.get("state"):
+        return render_state_rows(out)
     lines, _purse, _width, header = _available_top(out)
     if "subjects" in out:
         lines += _available_subjects_block(out, header, _width, _purse)

@@ -339,6 +339,24 @@ def _parse_state(command, rest, words, nums, want_json):
     return {"cmd": "state", "full": want_full, "json": want_json}, None
 
 
+_STATE_WORDS = ("startable", "blocked", "active", "done", "completed")
+
+
+def _available_consume_state_or_tag(out, low, i):
+    """`state X`, `tag X`, `category X`, or a bare state word. Same (new_i,
+    matched) contract as the other _available_consume helpers.
+    """
+    word = low[i]
+    nxt = low[i + 1] if i + 1 < len(low) else None
+    if word in ("state", "tag", "category", "cat") and nxt:
+        out["category" if word == "cat" else word] = nxt
+        return i + 2, True
+    if word in _STATE_WORDS:
+        out["state"] = word
+        return i + 1, True
+    return i, False
+
+
 def _available_consume_find_afford_or_limit(out, low, i):
     """The first half of the 'available' narrowings that read a following
     word: find/search/named, afford/under/within, limit. Returns (new_i,
@@ -438,7 +456,8 @@ def _parse_available(command, rest, words, nums, want_json):
         rest,
         flag_keys=("all", "reverse", "reversed", "desc", "descending"),
         value_keys=("find", "search", "named", "afford", "under", "within",
-                    "limit", "offset", "heard", "heard_offset", "sort"))
+                    "limit", "offset", "heard", "heard_offset", "sort",
+                    "state", "tag", "category", "cat"))
     low = [word.lower() for word in rest]
     # THE TOKEN LOOP ITSELF, kept here so the scanning (which token is next,
     # when to stop) stays in one place; what each token MEANS is delegated to
@@ -450,6 +469,9 @@ def _parse_available(command, rest, words, nums, want_json):
         if word == "all":
             out["all"] = True
             i += 1
+            continue
+        i, matched = _available_consume_state_or_tag(out, low, i)
+        if matched:
             continue
         i, matched = _available_consume_find_afford_or_limit(out, low, i)
         if matched:
