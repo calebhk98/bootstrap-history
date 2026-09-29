@@ -10,6 +10,8 @@ import os
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Tuple
 
 from .mods import ModError, ModManifest, get_ordered_mods, load_mod_production
+from .mods_base import claim_removal
+from .mods_remove import RECIPE, TRADE, check_trade_references, scan_removed
 
 
 @dataclass(frozen=True)
@@ -77,6 +79,14 @@ def validate_mod_material_paths(nodes: Iterable[Mapping[str, Any]],
     producers = set(production)
     for entry in production.values():
         producers.update((entry.get("outputs") or {}).keys())
+    manifests = list(manifests)
+    removed = scan_removed(manifests, RECIPE)
+    for node in nodes:
+        for material in (node.get("mat") or {}):
+            if material in removed and material not in producers:
+                raise ModError("technology %s references material %s; mod %s removed the "
+                               "recipe that produced it" % (node.get("id"), material,
+                                                            removed[material]))
     prefixes = tuple(manifest.id + "_" for manifest in manifests)
     for node in nodes:
         node_id = str(node.get("id", ""))
@@ -90,7 +100,8 @@ def validate_mod_material_paths(nodes: Iterable[Mapping[str, Any]],
 
 
 def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = None,
-                        mods_dir: Optional[str] = None) -> Dict[str, Trade]:
+                        mods_dir: Optional[str] = None,
+                        nodes: Iterable[Mapping[str, Any]] = ()) -> Dict[str, Trade]:
     """Return trade identity/metadata without requiring a wage-table row.
 
     ``trade_families.json`` remains a supported shorthand.  Mods may instead
@@ -100,6 +111,8 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
     mods_dir = mods_dir or os.path.join(root, "mods")
     manifests = get_ordered_mods(mods_dir)
     registry: Dict[str, Trade] = {}
+    claims: Dict[Any, str] = {}
+    by_id = {manifest.id: manifest for manifest in manifests}
 
     def add_file(path: str, manifest: Optional[ModManifest]) -> None:
         if not os.path.isfile(path):
@@ -110,6 +123,13 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
         additions.update({key: {"family": value} for key, value in
                           (raw.get("trade_families") or {}).items()})
         for trade_id, metadata in additions.items():
+            if manifest and isinstance(metadata, dict) and metadata.get("remove") is True:
+                if trade_id not in registry:
+                    raise ModError("mod %s: %s removes missing trade %r" %
+                                   (manifest.id, path, trade_id))
+                claim_removal(claims, TRADE, trade_id, manifest, by_id)
+                del registry[trade_id]
+                continue
             if manifest and not trade_id.startswith(manifest.id + "_"):
                 raise ModError("%s introduces un-prefixed trade id %r" % (path, trade_id))
             if trade_id in registry:
@@ -131,7 +151,9 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
         world = os.path.join(manifest.directory, "data", "world")
         add_file(os.path.join(world, "trades.json"), manifest)
         add_file(os.path.join(world, "trade_families.json"), manifest)
-    for entry in (production or load_production_catalog(root, mods_dir)).values():
+    production = production or load_production_catalog(root, mods_dir)
+    check_trade_references(registry, production, nodes, scan_removed(manifests, TRADE))
+    for entry in production.values():
         for trade_id in (entry.get("labour_hours") or {}):
             registry.setdefault(trade_id, Trade(trade_id, source="production"))
         for capital in entry.get("capital") or ():

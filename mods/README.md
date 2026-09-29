@@ -22,7 +22,8 @@ A mod may provide:
 * `data/branches/*.json`: a list of technology nodes (or an object with a
   `nodes` list).
 * `data/goals.json`: `{ "goals": [...] }`, using the base goal catalog shape.
-* `data/civilizations/*.json`: civilization files using the base schema.
+* `data/civilizations/*.json`: civilization files using the base schema, or
+  override patches of an existing civilisation.
 * `data/production/*.json`: production recipe files using the base schema.
 * `data/world/trade_families.json`: additive `trade_families` entries (the
   backwards-compatible shorthand trade registry).
@@ -43,6 +44,33 @@ Two mods that override the same field of the same technology or recipe are an
 error naming both mods, the id and the field, unless the later mod declares the
 other as a dependency (directly or transitively), in which case the dependent
 mod wins. Overrides of different fields merge.
+
+## Removing content
+
+An entry marked `"remove": true` deletes a base (or earlier mod) item by its
+id: a technology node in `data/branches`, a recipe in `data/production`, a
+trade in `data/world/trades.json`, or a goal in `data/goals.json` (identified
+by its `node`). Removing an id that does not exist is an error. After all mods
+load, any remaining technology prerequisite or `req_any` option, goal, recipe
+input or output, technology material, labour trade, or civilisation starting
+technology that still names a removed id is an error naming the referencing
+item and the removing mod. Patch the reference away with an override (in the
+same mod or a mod that depends on the remover). Inside a nested map of an
+override, a `null` value deletes that key, for example
+`"inputs": {"removed_material": null}`.
+
+A mod that removes an id another unrelated mod overrides (in either order) is
+an error naming both mods; declare a dependency to choose a winner.
+
+## Civilisations
+
+A file `data/civilizations/<id>.json` is a new civilisation (id prefixed with
+the mod id) unless it carries `"override": true`, in which case it patches the
+existing civilisation of that id (base or from another mod) by deep merge,
+changing only the named fields; lists such as `starting_techs` are replaced
+whole. Unrelated mods patching the same field are an error naming both. A
+patch with `"hidden": true` keeps the civilisation out of the new-game menu and
+`civilization_ids()`; it still loads by name.
 
 ## Economic content
 
