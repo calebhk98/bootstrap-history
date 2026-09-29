@@ -129,3 +129,5 @@ sim/_prover_pinned.py
 
 # Spin-up results, regenerated per civilisation and mod set
 .cache/
+_loadtest_tmp*/
+_playtest_tmp*/
