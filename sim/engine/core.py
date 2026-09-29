@@ -1523,8 +1523,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # documented "one bad harvest becomes two" mechanism, operating
         # across years exactly as its class docstring intends.
         capacity_kg = self._agriculture.granary_capacity_kg(farm_year.food_demand_kg)
-        self.farm_stock_kg = min(
-            self._agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg)
+        # A granary cannot hold less than nothing: seed sown beyond the stock is not a debt.
+        self.farm_stock_kg = max(0.0, min(
+            self._agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg))
         self._apply_land_clearing()
         # Kept for tests and diagnostics only (e.g. `state`'s founder-facing
         # reply never reads this) - NOT a SAVE_FIELDS member and does not

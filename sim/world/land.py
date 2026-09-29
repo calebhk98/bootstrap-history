@@ -1129,7 +1129,8 @@ TerritoryFarmland = collections.namedtuple("TerritoryFarmland", [
 def territory_farmland(home_regions: List[str],
                        geography: Optional[Dict[str, Any]] = None) -> TerritoryFarmland:
     """Arable hectares and arable-weighted mean fertility over the tiles
-    the named regions resolve to. A region with no tiles raises KeyError."""
+    the named regions resolve to. A region with no tiles raises KeyError;
+    territory with no farmable ground comes back empty."""
     geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
     land_tiles = geography.get("land_tiles")
     if land_tiles is None:
@@ -1144,6 +1145,9 @@ def territory_farmland(home_regions: List[str],
     parcels = []
     for tile_id in _tile_ids_for_home_regions(home_regions, land_tiles):
         tile = tile_lands[tile_id]
+        # Ground that yields nothing is not arable, whatever its share of the tile.
+        if tile.fertility_quality_multiplier <= 0.0:
+            continue
         arable_km2 = tile.land_area_km2 * tile.arable_fraction
         total_arable_km2 += arable_km2
         weighted_fertility += arable_km2 * tile.fertility_quality_multiplier
@@ -1153,7 +1157,7 @@ def territory_farmland(home_regions: List[str],
     ladder = [(-negative_fertility, hectares)
               for negative_fertility, _tile_id, hectares in parcels if hectares > 0.0]
     if total_arable_km2 <= 0.0:
-        raise ValueError("home regions %r hold no arable land" % (home_regions,))
+        return TerritoryFarmland(arable_hectares=0.0, mean_fertility=0.0, ladder=[])
     return TerritoryFarmland(
         arable_hectares=total_arable_km2 * _KM2_TO_HECTARES,
         mean_fertility=weighted_fertility / total_arable_km2,
