@@ -125,6 +125,14 @@ for _jobs_argi, _jobs_arg in enumerate(sys.argv):
             pass
 del _jobs_argi, _jobs_arg
 
+# A parallel-run worker (see __main__.py) is launched with `--worker-tag TAG`;
+# its scratch directories get that suffix so concurrent topics never share
+# one. Read from argv rather than the environment so a suite run started
+# from inside a topic does not inherit it.
+_SCRATCH_TAG = ""
+if "--worker-tag" in sys.argv and sys.argv.index("--worker-tag") + 1 < len(sys.argv):
+    _SCRATCH_TAG = "_" + sys.argv[sys.argv.index("--worker-tag") + 1]
+
 
 def _par_map(function, items):
     """Run function(item) for each item in items, concurrently when --jobs > 1.
@@ -206,9 +214,10 @@ def slow_check(name, run_check):
 
 
 # Topic discovery lives in discovery.py so --list needs no heavy imports.
-from .discovery import TESTS_DIR, discover_topics, discover_slow_topics
+from .discovery import TESTS_DIR, discover_topics, discover_slow_topics, discover_serial_topics
 
 SLOW_TOPICS = discover_slow_topics()
+SERIAL_TOPICS = discover_serial_topics()
 
 
 def check(name, passed, detail=""):
@@ -265,7 +274,7 @@ def proto(lines, civ="rome_100ad", kit=None, fog=False):
 # Every save/load path used by the tests lives under one relative scratch
 # directory, so that a real player's own relative save path is what's being
 # exercised.
-_LOADTEST_DIR = "_loadtest_tmp"
+_LOADTEST_DIR = "_loadtest_tmp" + _SCRATCH_TAG
 _loadtest_abs = os.path.join(ROOT, _LOADTEST_DIR)
 os.makedirs(_loadtest_abs, exist_ok=True)
 
@@ -277,7 +286,7 @@ def _rel(name):
 # --- from the old "THE CORRECTION" options section: the scratch directory
 # session files for `play`-driven checks live under, elsewhere reused far
 # past that section (e.g. the fog/rewind checks later on).
-_PLAY_DIR = "_playtest_tmp"
+_PLAY_DIR = "_playtest_tmp" + _SCRATCH_TAG
 
 
 # A GREEN RUN LEAVES NOTHING BEHIND; A RED ONE LEAVES THE EVIDENCE.
