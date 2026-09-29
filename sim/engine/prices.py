@@ -84,28 +84,10 @@ LABOUR-HOURS TO DENARII, AND WHY THIS DIRECTION IS THE RIGHT ONE.
 `sim/solve_prices.py` prices everything in labour-hours - one hour of
 `labourer`, its numeraire, by construction equals 1.0 - because that is a
 number a recipe graph can actually produce: relative amounts of unskilled
-effort. `data/prices.json` and every consumer of `goods` in
-`sim/engine/economy.py` are in denarii. `solve_prices.py --compare` already
-has to cross this exact boundary to judge the solver against the book, and
-it does it by dividing the book's denarii figure by the labourer wage rate
-(also denarii per hour) to get BOTH sides into hours before comparing them:
-
-    book_hours = book_price_denarii / wage_rates_denarii_per_hour["labourer"]
-
-This module needs the other direction - a solved number in hours has to
-become a denarii figure `economy.py` can subtract from a household's purse -
-which is the same equation solved for the term that direction leaves alone:
-
-    price_denarii = price_hours * wage_rates_denarii_per_hour["labourer"]
-
-Multiplying (rather than dividing again, or using some other rate) is the
-only conversion consistent with `--compare`'s own arithmetic: hours is
-denarii divided by the labourer rate, so getting back to denarii is
-multiplying by that same rate, not a different one and not its reciprocal
-taken twice. Getting this backwards - dividing instead of multiplying, or
-using a different trade's wage - would silently rescale every solved price
-by the square of the labourer wage or by an unrelated trade's ratio, exactly
-the mistake this module's own docstring was told to be explicit about.
+effort. Every consumer of `goods` in `sim/engine/economy.py` is in denarii. A
+solved number in hours becomes a denarii figure by multiplying by the labourer
+wage rate (denarii per hour); dividing, or using another trade's rate, would
+silently rescale every solved price.
 `denarii_per_labour_hour` below is the one place that rate is read, so there
 is exactly one line to check rather than one per caller.
 

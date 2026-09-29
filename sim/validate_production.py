@@ -502,16 +502,14 @@ def run_default_mode(entries, duplicates, known_materials, known_trades, nodes, 
 
 
 def main(argv=None):
-    from sim import simulator
+    from sim.tool_costs import load_tree_nodes
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--todo", action="store_true",
                         help="list materials with no entry yet, worst first")
     parser.add_argument("--entry", help="show one entry and check only it")
     arguments = parser.parse_args(argv)
 
-    _tree, prices, nodes, _wages, _goods = simulator.load()
-    if not isinstance(nodes, dict):
-        nodes = {node["id"]: node for node in nodes}
+    nodes = load_tree_nodes()
 
     entries, duplicates = load_production()
     consumed = materials_the_tree_consumes(nodes)

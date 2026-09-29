@@ -9,8 +9,7 @@ the whole point of the module:
     set must hit the same cache entry, and one that differs INSIDE it must
     miss;
   - the labour-hours -> denarii conversion is a multiplication by the
-    labourer wage rate, the inverse of `solve_prices.py --compare`'s own
-    division, not some other rate or direction;
+    labourer wage rate, not some other rate or direction;
   - the engine's default behaviour (`sim.engine.data.load()` with no
     arguments) is untouched - every existing call site calls it that way,
     and this module must not change what comes back until something opts
@@ -135,23 +134,21 @@ class CacheKeyingTests(unittest.TestCase):
 
 class ConversionTests(unittest.TestCase):
     """LABOUR-HOURS TO DENARII: multiply by the labourer rate, matching
-    `solve_prices.py --compare`'s own division inverted."""
+    the reverse of dividing by it."""
 
     def test_one_labour_hour_is_worth_the_labourer_rate_in_denarii(self):
         prices_json = _prices_json(labourer_rate=3.5)
         self.assertEqual(
             engine_prices.hours_to_denarii(1.0, prices_json), 3.5)
 
-    def test_round_trips_against_compares_own_division(self):
-        # solve_prices.py --compare does book_hours = book_denarii / rate.
-        # Converting back the other way must return the original figure -
-        # anything else means the two tools disagree about the numeraire.
+    def test_round_trips_against_division_by_the_labourer_rate(self):
+        # hours = denarii / rate, so converting back must return the original.
         prices_json = _prices_json(labourer_rate=2.5)
         rate = prices_json["wage_rates_denarii_per_hour"]["labourer"]["rate"]
-        book_denarii = 40.0
-        book_hours = book_denarii / rate
+        denarii = 40.0
+        hours = denarii / rate
         self.assertAlmostEqual(
-            engine_prices.hours_to_denarii(book_hours, prices_json), book_denarii)
+            engine_prices.hours_to_denarii(hours, prices_json), denarii)
 
     def test_the_smith_rate_is_not_used_for_the_labourer_conversion(self):
         # A wrong-rate bug (using whatever trade happened to be handy)

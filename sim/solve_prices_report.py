@@ -1,5 +1,5 @@
 """The reporting front end: `print_why`'s recursive cost breakdown, the
-default price-table report, the `--compare` report, and the CLI's own
+default price-table report, and the CLI's own
 `main`.
 
 See sim/solve_prices.py's own module docstring for why "the module
@@ -9,7 +9,7 @@ reasoning for the whole tool and lives there rather than divided by
 function; and see sim/solve_prices_core.py's own module docstring for the
 composition-point structure the three files form. This file only formats
 and prints a price sim/solve_prices_core.py has already computed: every
-`_print_*` helper below, `print_why`, `_run_compare_report`, and `main`
+`_print_*` helper below, `print_why`, and `main`
 (the argparse CLI `python3 sim/solve_prices.py` runs).
 """
 import argparse
@@ -20,7 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(HERE)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim import joint_allocation                     # noqa: E402
+from sim import joint_allocation, tool_costs        # noqa: E402
 from sim.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND, in _print_rent_summary)
 
@@ -439,7 +439,7 @@ def _apply_era_gate(arguments, production_entries):
     """
     # THE ERA GATE. Applied before anything else looks at the entries, so
     # that resolvability, the fixed point, choice of technique, --why and
-    # --compare all see the same, single set of techniques. Filtering later
+    # and the price table all see the same, single set of techniques. Filtering later
     # - say, only inside `solve` - would leave the resolvability pass
     # reporting materials as priceable that this era has no way to make.
     unreached_techniques, unclassified_techniques = [], []
@@ -481,44 +481,6 @@ def _run_why_report(material, all_referenced_materials, production_entries, prod
               prices, wage_by_trade, chosen_recipe_by_material,
               rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
               demand_anchor_price_by_material=demand_anchor_price_by_material)
-    return 0
-
-
-def _run_compare_report(prices_json, resolvable_materials, prices, unanchored_byproducts):
-    book_prices = {material: entry["p"] for material, entry in prices_json["purchase_prices_denarii"].items()
-                   if not material.startswith("_")}
-    unskilled_wage_denarii_per_hour = \
-        prices_json["wage_rates_denarii_per_hour"][NUMERAIRE_TRADE]["rate"]
-    rows = []
-    for material in sorted(resolvable_materials):
-        if material not in book_prices:
-            continue
-        computed_hours = prices[material]
-        book_hours = book_prices[material] / unskilled_wage_denarii_per_hour
-        if book_hours <= 0 or computed_hours <= 0:
-            continue
-        disagreement = (computed_hours / book_hours if computed_hours >= book_hours
-                       else book_hours / computed_hours)
-        higher = "book" if book_hours > computed_hours else "computed"
-        rows.append((disagreement, material, computed_hours, book_hours, higher))
-    rows.sort(reverse=True)
-    print("computed price (labour-hours) vs data/prices.json book price "
-          "(converted to labour-hours via the labourer wage), sorted by "
-          "disagreement - THIS IS A VALIDATION READ, NOT A CALIBRATION "
-          "TARGET. The book is 91.8%% author estimate; this exists to "
-          "replace it, so a big ratio is a finding about one of the two "
-          "numbers, not automatically a bug in the computed one. Rows "
-          "marked (*) are minor joint byproducts whose computed price is "
-          "a mass-split artifact, not an independent number - see "
-          "JOINT BYPRODUCTS WITHOUT A DEMAND ANCHOR above; for "
-          "those the book is the more informative number this round.")
-    print()
-    print("%-26s %14s %14s %16s" % ("material", "computed h", "book h", "disagreement"))
-    for disagreement, material, computed_hours, book_hours, higher in rows:
-        flag = " (*)" if material in unanchored_byproducts else ""
-        print("%-26s %14s %14s %12sx %s higher%s" % (
-            material, format_hours(computed_hours), format_hours(book_hours),
-            format_hours(disagreement), higher, flag))
     return 0
 
 
@@ -732,7 +694,6 @@ def _run_default_report(arguments, rent_hours_per_kg_by_material, converged, ite
 
 
 def main(argv=None):
-    from sim import simulator
     # `description` is a literal copy of sim/solve_prices.py's own module
     # docstring's first line, not `__doc__.splitlines()[0]`: `main` lives
     # in this file while the mechanism essay lives in sim/solve_prices.py
@@ -744,9 +705,6 @@ def main(argv=None):
         description="Solve for the price of every material from physical structure, not a book.")
     parser.add_argument("--why", metavar="MATERIAL",
                         help="full recursive cost breakdown for one material")
-    parser.add_argument("--compare", action="store_true",
-                        help="computed price vs prices.json book price, as a "
-                             "ratio, worst disagreement first")
     parser.add_argument("--damping", type=float, default=DAMPING_FACTOR,
                         help="fixed-point damping factor (default %.1f)" % DAMPING_FACTOR)
     parser.add_argument("--civ", metavar="CIVILIZATION",
@@ -758,9 +716,13 @@ def main(argv=None):
                              "NOTION OF WHEN, above, and Complaints/39")
     arguments = parser.parse_args(argv)
 
-    _tree, prices_json, nodes, _wages_unused, _goods_unused = simulator.load()
-    if not isinstance(nodes, dict):
-        nodes = {node["id"]: node for node in nodes}
+    nodes = tool_costs.load_tree_nodes()
+    try:
+        wage_document = tool_costs.wage_document(tool_costs.runtime_wages())
+    except tool_costs.CostsUnavailable as problem:
+        print("PRICES UNAVAILABLE: %s. The solver takes its wage ratios from the "
+              "live wage provider and will not substitute a book value." % problem)
+        return 1
 
     production_entries, duplicates = load_production()
     if duplicates:
@@ -776,7 +738,7 @@ def main(argv=None):
     (all_production_entries, production_entries, unreached_techniques,
      unclassified_techniques) = era_gate_result
 
-    wage_by_trade = wage_ratios_by_trade(prices_json)
+    wage_by_trade = wage_ratios_by_trade(wage_document)
     producers_of = build_producers_index(production_entries)
 
     # RENT ON EXTRACTED MATERIALS (see the module docstring). Computed once,
@@ -828,9 +790,6 @@ def main(argv=None):
                                 producers_of, resolvable_materials, prices, wage_by_trade,
                                 chosen_recipe_by_material, rent_hours_per_kg_by_material,
                                 demand_anchors.prices(prices) if demand_anchors else None)
-
-    if arguments.compare:
-        return _run_compare_report(prices_json, resolvable_materials, prices, unanchored_byproducts)
 
     # Default: every material's price, in labour-hours.
     return _run_default_report(arguments, rent_hours_per_kg_by_material, converged, iterations_run,
