@@ -20,6 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(HERE)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
+from sim import joint_allocation                     # noqa: E402
 from sim.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND, in _print_rent_summary)
 
@@ -144,7 +145,7 @@ def _print_rejected_techniques(pad, material, recipe_id, production_entries, pro
 def _print_joint_output_note(pad, other_outputs, outputs):
     if other_outputs:
         print("%s  joint output of this batch, also yielding: %s - cost "
-              "split across outputs by current value share" % (
+              "split across outputs by value share (demand-anchored where available)" % (
               pad, ", ".join("%s (%.4g)" % (key, outputs[key]) for key in other_outputs)))
 
 
@@ -294,7 +295,7 @@ def _print_value_share_or_total(pad, other_outputs, this_output_value_share, out
                   "to the SAME price per unit as its dominant co-product - a "
                   "mass-split artifact of net-realisable-value allocation with "
                   "no independent price to anchor it, not a derived number. "
-                  "See JOINT BYPRODUCTS WITHOUT AN INDEPENDENT ANCHOR in this "
+                  "See JOINT BYPRODUCTS WITHOUT A DEMAND ANCHOR in this "
                   "file's module docstring." % pad)
     else:
         print("%s  process total: %s h  /  %.4g unit(s) of output = %s h/unit"
@@ -338,7 +339,8 @@ def _next_recursion_targets(inputs, entry, graded_energy_keys, land_iugera_years
 
 def print_why(material, production_entries, producers_of, resolvable_materials,
               prices, wage_by_trade, chosen_recipe_by_material, indent=0, ancestors=(),
-              rent_hours_per_kg_by_material=None, capability_band_price_by_carrier=None):
+              rent_hours_per_kg_by_material=None, capability_band_price_by_carrier=None,
+              demand_anchor_price_by_material=None):
     """Recursive cost breakdown for one material: how much of its price is
     which input, which labour, which rent - recursing into every priced
     input in turn, with a cycle guard so a recipe graph that legitimately
@@ -388,7 +390,8 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
     result = recipe_cost_and_allocation(
         recipe_id, entry, prices, wage_by_trade,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-        capability_band_price_by_carrier=capability_band_price_by_carrier)
+        capability_band_price_by_carrier=capability_band_price_by_carrier,
+        demand_anchor_price_by_material=demand_anchor_price_by_material)
     total_process_cost, output_prices = result
     output_quantity = outputs[material]
     this_output_value_share = (output_prices[material] * output_quantity) / total_process_cost \
@@ -422,7 +425,8 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
                   prices, wage_by_trade, chosen_recipe_by_material,
                   indent=indent + 1, ancestors=next_ancestors,
                   rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-                  capability_band_price_by_carrier=capability_band_price_by_carrier)
+                  capability_band_price_by_carrier=capability_band_price_by_carrier,
+                  demand_anchor_price_by_material=demand_anchor_price_by_material)
 
 
 def _apply_era_gate(arguments, production_entries):
@@ -468,14 +472,15 @@ def _apply_era_gate(arguments, production_entries):
 
 def _run_why_report(material, all_referenced_materials, production_entries, producers_of,
                      resolvable_materials, prices, wage_by_trade, chosen_recipe_by_material,
-                     rent_hours_per_kg_by_material):
+                     rent_hours_per_kg_by_material, demand_anchor_price_by_material=None):
     if material not in all_referenced_materials:
         print("%r is not a material this tree consumes, nor one "
               "data/production/ produces or references. Typo?" % material)
         return 1
     print_why(material, production_entries, producers_of, resolvable_materials,
               prices, wage_by_trade, chosen_recipe_by_material,
-              rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+              rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
+              demand_anchor_price_by_material=demand_anchor_price_by_material)
     return 0
 
 
@@ -505,7 +510,7 @@ def _run_compare_report(prices_json, resolvable_materials, prices, unanchored_by
           "numbers, not automatically a bug in the computed one. Rows "
           "marked (*) are minor joint byproducts whose computed price is "
           "a mass-split artifact, not an independent number - see "
-          "JOINT BYPRODUCTS WITHOUT AN INDEPENDENT ANCHOR above; for "
+          "JOINT BYPRODUCTS WITHOUT A DEMAND ANCHOR above; for "
           "those the book is the more informative number this round.")
     print()
     print("%-26s %14s %14s %16s" % ("material", "computed h", "book h", "disagreement"))
@@ -689,7 +694,7 @@ def _print_unanchored_byproducts_summary(unanchored_byproducts):
         print("%d material(s) marked (*) below are MINOR JOINT BYPRODUCTS "
               "whose printed price is a mass-split artifact of joint-cost "
               "allocation, not an independently derived number - see JOINT "
-              "BYPRODUCTS WITHOUT AN INDEPENDENT ANCHOR in this file's "
+              "BYPRODUCTS WITHOUT A DEMAND ANCHOR in this file's "
               "module docstring, and run --why on one of them:"
               % len(unanchored_byproducts))
         for material in sorted(unanchored_byproducts):
@@ -805,20 +810,24 @@ def main(argv=None):
         all_referenced_materials |= set((entry.get("inputs") or {}).keys())
     unpriceable = sorted(all_referenced_materials - resolvable_materials)
 
+    demand_anchors = joint_allocation.build_demand_anchors(arguments.civ)
     prices, iterations_run, residual, chosen_recipe_by_material = solve(
         production_entries, producers_of, resolvable_materials, wage_by_trade,
         damping=arguments.damping,
-        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
+        demand_anchors=demand_anchors)
 
     converged = residual < CONVERGENCE_TOLERANCE
     unanchored_byproducts = minor_joint_byproducts_are_unanchored(
         production_entries, chosen_recipe_by_material, prices, wage_by_trade,
-        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
+        demand_anchors=demand_anchors)
 
     if arguments.why:
         return _run_why_report(arguments.why, all_referenced_materials, production_entries,
                                 producers_of, resolvable_materials, prices, wage_by_trade,
-                                chosen_recipe_by_material, rent_hours_per_kg_by_material)
+                                chosen_recipe_by_material, rent_hours_per_kg_by_material,
+                                demand_anchors.prices(prices) if demand_anchors else None)
 
     if arguments.compare:
         return _run_compare_report(prices_json, resolvable_materials, prices, unanchored_byproducts)

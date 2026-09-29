@@ -26,6 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(HERE)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
+from sim.joint_allocation import allocate_joint_cost  # noqa: E402
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
@@ -843,29 +844,19 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
     return energy_cost_hours
 
 
-def _allocate_output_prices(outputs, current_prices, total_process_cost_hours):
-    total_batch_value = sum(quantity * current_prices.get(material, INITIAL_PRICE_GUESS_HOURS)
-                            for material, quantity in outputs.items())
-
-    output_prices = {}
-    for output_material, output_quantity in outputs.items():
-        if total_batch_value > 0:
-            output_value = output_quantity * current_prices.get(
-                output_material, INITIAL_PRICE_GUESS_HOURS)
-            value_share = output_value / total_batch_value
-        else:
-            # Every output priced at exactly zero (only possible before the
-            # first real iteration, or for a recipe whose every output is
-            # otherwise worthless) - split the cost evenly rather than divide
-            # by zero, and let the next iteration's real prices take over.
-            value_share = 1.0 / len(outputs)
-        output_prices[output_material] = (total_process_cost_hours * value_share) / output_quantity
-    return output_prices
+def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
+                            demand_anchor_price_by_material=None):
+    # Missing prices fall back to the initial guess, as for any unsolved material.
+    priced = {material: current_prices.get(material, INITIAL_PRICE_GUESS_HOURS)
+              for material in outputs}
+    return allocate_joint_cost(outputs, priced, total_process_cost_hours,
+                               demand_anchor_price_by_material)
 
 
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                rent_hours_per_kg_by_material=None,
-                               capability_band_price_by_carrier=None):
+                               capability_band_price_by_carrier=None,
+                               demand_anchor_price_by_material=None):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
@@ -895,9 +886,10 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     productiveness test and any other caller that has no opinion about rent
     is not forced to pass an empty dict everywhere.
 
-    The split is net-realisable-value allocation: each output's share of the
-    batch's total cost is its own current value (quantity times current
-    price) divided by the batch's total value. This is the standard answer
+    The split is value allocation (see sim/joint_allocation.py): outputs in
+    `demand_anchor_price_by_material` are valued at their demand-clearing
+    price, the rest at current price (or standalone unit cost when mixed
+    with anchored ones). This is the standard answer
     to "how much of a joint process's cost belongs to this one output" and it
     is why a single-output recipe needs no special case - its one output
     simply holds a 100% share.
@@ -954,7 +946,8 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                 + capital_cost_hours * batch_output_quantity
                                 + energy_cost_hours)
 
-    output_prices = _allocate_output_prices(outputs, current_prices, total_process_cost_hours)
+    output_prices = _allocate_output_prices(
+        outputs, current_prices, total_process_cost_hours, demand_anchor_price_by_material)
 
     return total_process_cost_hours, output_prices
 
@@ -1199,7 +1192,8 @@ def _capability_band_prices_this_round(required_grades_by_carrier, production_en
 
 def _solve_round_candidates(production_entries, recipe_ids_in_order, resolvable_materials,
                             prices, wage_by_trade, rent_hours_per_kg_by_material,
-                            band_price_by_carrier, floor_by_carrier):
+                            band_price_by_carrier, floor_by_carrier,
+                            demand_anchor_price_by_material=None):
     candidates_by_material = collections.defaultdict(list)
     for recipe_id in recipe_ids_in_order:
         entry = production_entries[recipe_id]
@@ -1209,7 +1203,8 @@ def _solve_round_candidates(production_entries, recipe_ids_in_order, resolvable_
         result = recipe_cost_and_allocation(
             recipe_id, entry, prices, wage_by_trade,
             rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-            capability_band_price_by_carrier=band_price_by_carrier)
+            capability_band_price_by_carrier=band_price_by_carrier,
+            demand_anchor_price_by_material=demand_anchor_price_by_material)
         if result is None:
             continue
         _total_cost, output_prices = result
@@ -1242,7 +1237,8 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
 
 def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
          damping=DAMPING_FACTOR, max_iterations=MAXIMUM_ITERATIONS,
-         tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None):
+         tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None,
+         demand_anchors=None):
     """Damped Jacobi fixed-point iteration over every resolvable material.
 
     Every material updates from the SAME round's starting prices (Jacobi,
@@ -1301,7 +1297,9 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
         candidates_by_material = _solve_round_candidates(
             production_entries, recipe_ids_in_order, resolvable_materials, prices,
             wage_by_trade, rent_hours_per_kg_by_material, band_price_by_carrier,
-            floor_by_carrier)
+            floor_by_carrier,
+            demand_anchor_price_by_material=(
+                demand_anchors.prices(prices) if demand_anchors else None))
 
         prices, final_residual = _solve_round_update_prices(
             resolvable_materials, prices, candidates_by_material, damping,
@@ -1314,22 +1312,25 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
 def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_material,
                                           prices, wage_by_trade, share_threshold=0.5,
-                                          rent_hours_per_kg_by_material=None):
+                                          rent_hours_per_kg_by_material=None,
+                                          demand_anchors=None):
     """{material: value_share} for every material whose CONVERGED, CHOSEN
     recipe is a joint-production recipe in which this material holds under
     `share_threshold` of the batch's value.
 
-    See JOINT BYPRODUCTS WITHOUT AN INDEPENDENT ANCHOR in the module
+    See JOINT BYPRODUCTS WITHOUT A DEMAND ANCHOR in the module
     docstring for why this matters: these are not ordinary low-value
     materials, they are materials whose printed price is a mass-split
     artifact rather than an independently derived number, and every caller
-    that prints a price must be able to say so next to it.
+    that prints a price must be able to say so next to it. A recipe with a
+    demand-anchored output (`demand_anchors`) is split by value and not reported.
     """
     unanchored = {}
+    anchored = set(demand_anchors.prices(prices)) if demand_anchors else set()
     for material, recipe_id in chosen_recipe_by_material.items():
         entry = production_entries[recipe_id]
         outputs = entry.get("outputs") or {}
-        if len(outputs) <= 1:
+        if len(outputs) <= 1 or anchored & set(outputs):
             continue
         result = recipe_cost_and_allocation(
             recipe_id, entry, prices, wage_by_trade,
