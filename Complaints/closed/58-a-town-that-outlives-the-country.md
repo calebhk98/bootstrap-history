@@ -1,6 +1,6 @@
 # The local labour market cannot shrink past a floor, so it outlives the country it sits in
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_population_bounds_and_relocation.py
 
 ## What the player saw
 

@@ -34,12 +34,13 @@ docstring for exactly which methods it holds and why they sit together.
 """
 from .labour_capacity import CapacityMixin
 from .labour_population import PopulationMixin
+from .labour_settlement import SettlementMixin
 from .labour_wages import WagesMixin
 from .labour_training import TrainingMixin
 from .labour_bondage import BondageMixin
 
 
-class LabourMixin(CapacityMixin, PopulationMixin, WagesMixin, TrainingMixin, BondageMixin):
+class LabourMixin(CapacityMixin, PopulationMixin, SettlementMixin, WagesMixin, TrainingMixin, BondageMixin):
     """Composition point only: every method below is defined in one of the
     five sibling modules above, not here. This class exists so that
     sim/engine/core.py's `class Sim(..., LabourMixin, ...)` keeps working

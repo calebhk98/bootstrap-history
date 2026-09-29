@@ -617,6 +617,16 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    def _check_people_exist(self, node_id, node, ignore_trade, _memo, _why):
+        # Staffing demand against the people who exist, before any per-person
+        # hiring advice: no price or school makes up a missing population.
+        if ignore_trade:
+            return None
+        shortfall = self.project_staffing_shortfall(node)
+        if shortfall:
+            return False, (shortfall if _why else None)
+        return None
+
     def _check_scholar_staff(self, node_id, node, ignore_trade, _memo, _why):
         # SCHOLARS UNDER CONTRACT COUNT TOO - Complaints/34. This read
         # effective_scholars(), the standing headcount, so scholar hours you
@@ -783,6 +793,7 @@ class StartingMixin:
         _check_substitution,
         _check_credit_frozen,
         _check_arrears,
+        _check_people_exist,
         _check_scholar_staff,
         _check_craft_staff,
         _check_absent_trades,

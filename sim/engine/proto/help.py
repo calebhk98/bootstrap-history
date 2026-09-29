@@ -222,6 +222,9 @@ def _agent_help(sim, topic=None):
             "ventures": "what you are running, and what you know how to run and "
                         "have not opened",
             "mothball <id> / restore <id>": "shut a finished work down, or reopen it",
+            "move [<tile>]": "list the tiles your nation holds, or move your "
+                "base to one: the town, and the trades you can reach, change "
+                "with the place",
             "bribe <amount>": "spend money to reduce a scandal",
             "policy": "every automatic behaviour, and a switch for each",
             "path <id>": ("not available under fog of war" if fog
@@ -273,6 +276,10 @@ def _agent_help(sim, topic=None):
             "ESTIMATE, not a census."),
             "commands": {
                 "population": "no argument needed - the whole picture at once",
+                "move": "move the base to another tile: 'move' lists them, "
+                        "'move <tile>' goes. It costs the journey's wages, "
+                        "part of your year's hours, your local contracts and "
+                        "most of your local standing",
             }}
 
     if topic == "money":

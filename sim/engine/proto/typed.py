@@ -56,6 +56,7 @@ TYPED_ALIASES = {
     "infrastructure": "capacity", "power": "capacity",
     "prices": "economy", "econ": "economy",
     "diff": "changes", "recap": "changes", "summary": "changes",
+    "move": "move_base", "relocate": "move_base", "moveto": "move_base",
     "direct": "allocate", "assign": "allocate", "split": "allocate",
 }
 
@@ -712,6 +713,12 @@ def _parse_population(command, rest, words, nums, want_json):
     return {"cmd": "population"}, None
 
 
+def _parse_move_base(command, rest, words, nums, want_json):
+    # 'move' alone lists the tiles; 'move <tile>' (or 'move to <tile>') goes.
+    names = [word for word in rest if word.lower() != "to"]
+    return ({"cmd": "move_base", "to": names[0]} if names else {"cmd": "move_base"}), None
+
+
 def _parse_labour(command, rest, words, nums, want_json):
     # A PLAYER WHO TYPES THE FIELD NAME MEANS THE FIELD: the help shows
     # {"cmd":"labour","trade":"smith"}, so `labour trade smith` is the
@@ -902,6 +909,7 @@ _COMMAND_PARSERS = {
     "changes": _parse_changes,
     "bribe": _parse_bribe,
     "population": _parse_population,
+    "move_base": _parse_move_base,
     "labour": _parse_labour,
     "hire": _parse_hire_or_fire,
     "fire": _parse_hire_or_fire,

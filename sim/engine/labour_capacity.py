@@ -24,7 +24,7 @@ onto a whole person without biasing which way growth heads.
 """
 import math
 
-from .data import closure
+from .data import TRADES_ABSENT, closure
 from sim.constants import declare
 
 
@@ -256,8 +256,9 @@ class CapacityMixin:
         """
         if trade not in self.LITERATE_TRADES:
             return float("inf")
-        base = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
-                                                     + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
+        base = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
+                * (self.POP_SCALE_FLOOR_SHARE
+                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
         people = base * self.SCHOLAR_MARKET_SHARE / self.HOURS_PER_PERSON_YEAR
         # A FLOOR OF TWO, because the unfloored number said something false.
         # Norse elite literacy is a sixth of Rome's, which took this ceiling to
@@ -290,6 +291,8 @@ class CapacityMixin:
             # which is why a fresh household still sees exactly the
             # market-share figure above and no more.
             cap += self.staff_capacity()[0]
+        if trade not in TRADES_ABSENT:
+            cap = min(cap, self.people_who_exist(trade))
         return cap
 
     def _literate_wall_refusal(self, trade, cap, have):
@@ -1119,8 +1122,9 @@ class CapacityMixin:
 
     def hired_cap(self):
         # a civilization of 1.5 million cannot staff what one of 65 million can
-        cap = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
-                                                    + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
+        cap = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
+               * (self.POP_SCALE_FLOOR_SHARE
+                  + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
         # 1.0 + (mult - 1.0) * sqrt(units): exactly the old `cap *= mult` at
         # units 1.0 (a run that never expands sees the identical multiplier),
         # and SQRT rather than linear beyond that - because these multipliers
@@ -1255,6 +1259,7 @@ class CapacityMixin:
         pair of hands.
         """
         return (getattr(self.household, "teaching_hours_this_year", 0.0)
+                + (getattr(self.household, "relocation_hours_this_year", 0.0) or 0.0)
                 + self.household.wage_hours_this_year)
 
     def household_room(self):

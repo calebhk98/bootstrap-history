@@ -21,6 +21,7 @@ import math
 from dataclasses import dataclass
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, PERCENT_SCALE
+from .invariants import check_labour_market_invariants
 
 
 @dataclass(frozen=True)
@@ -40,7 +41,8 @@ class StepPhasesMixin:
 
     def verify_step_invariants(self):
         """Validate this turn without reading configuration from globals."""
-        return self.step_context.invariant_checker(self.state)
+        self.step_context.invariant_checker(self.state)
+        return check_labour_market_invariants(self)
 
     def _step_apprenticeships(self):
         # 0. PEOPLE WHOSE APPRENTICESHIP ENDED, FIRST, BEFORE THE YEAR'S WORK
@@ -1604,6 +1606,7 @@ class StepPhasesMixin:
             "available": round(self.director_pool(), 1),
             "wage_work": round(self.state.household.wage_hours_this_year, 1),
             "teaching": round(self.state.household.teaching_hours_this_year, 1),
+            "moving": round(self.state.household.relocation_hours_this_year or 0.0, 1),
             "offered_to_projects": round(max(0.0, pool - remaining_after_projects), 1),
             # OFFERED is what projects were given a shot at; EFFECTIVE is what
             # actually reduced their founder_hours_left. The gap between the
@@ -1621,6 +1624,7 @@ class StepPhasesMixin:
         # paid a shop for in 142 are not still sitting there in 143.
         self.state.household.contract_hours = {}
         self.state.household.teaching_hours_this_year = 0.0
+        self.state.household.relocation_hours_this_year = 0.0
         self.state.household.spend_last_year = getattr(self, "_spend_this_year", 0.0)
         self._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.

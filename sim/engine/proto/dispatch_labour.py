@@ -459,3 +459,29 @@ def _cmd_commission(sim, nodes, cmd, ended):
         return {"ok": False, "error": msg}
     return {"ok": True, "commissioned": msg, "capital": round(sim.capital, 1),
             "note": "These hours are available to your projects this year only."}
+
+
+def _cmd_move_base(sim, nodes, cmd, ended):
+    if ended:
+        return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
+    target = cmd.get("to")
+    home = sim.base_tile()
+    if not target:
+        people = sim.settlement_tiles()
+        rows = []
+        for tile in sorted(people, key=lambda name: -people[name]):
+            if tile == home or people[tile] < 1.0:
+                continue
+            days, hours, money = sim.relocation_quote(tile)
+            rows.append({"tile": tile, "people": round(people[tile]),
+                         "days_on_the_road": round(days), "your_hours_lost": round(hours),
+                         "wages_paid_on_the_way": round(money)})
+        return {"ok": True, "you_are_based_at": home,
+                "the_town_there": round(sim.home_town_population_estimate()),
+                "tiles": rows,
+                "how": 'move to one: {"cmd":"move_base","to":"<tile>"}'}
+    moved, message = sim.move_base(target)
+    if not moved:
+        return {"ok": False, "error": message}
+    return {"ok": True, "moved": message, "based_at": sim.base_tile(),
+            "capital": round(sim.capital, 1)}

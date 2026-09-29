@@ -112,7 +112,20 @@ Two fixes, usable separately or together:
                                                     an idle year repeated N times is N
                                                     idle years, not one. Non-blocking:
                                                     the years still run.
+      {"cmd":"move_base"}                          list the tiles your nation holds that
+                                                    you could move to, with people,
+                                                    days on the road and the cost
+      {"cmd":"move_base","to":"italia_01"}         move the base (typed: `move <tile>`).
+                                                    The town and its trades come from
+                                                    that tile's share of the nation.
+                                                    Costs the journey's wages, part of
+                                                    this year's founder hours, local
+                                                    contracts and most local standing.
+                                                    Refused for a tile nobody lives on.
       {"cmd":"quit"}                               end the session
+
+      A project or hire that needs more people than exist in the country is
+      refused, and the reason says so plainly.
 
       A `step` reply also carries `completed` (each record has `kind`:
       "technology", "concern" or "granted"), `events`, and, when anything

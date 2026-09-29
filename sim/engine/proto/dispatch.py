@@ -28,7 +28,7 @@ from .dispatch_money import (
     _cmd_withdraw, _cmd_bribe)
 from .dispatch_labour import (
     _cmd_work, _cmd_allocate, _cmd_labour, _cmd_hire, _cmd_fire, _cmd_train,
-    _cmd_commission)
+    _cmd_commission, _cmd_move_base)
 from .dispatch_ventures import (
     _cmd_start, _cmd_stop, _cmd_rush, _cmd_mothball, _cmd_restore,
     _cmd_open, _cmd_ventures, _cmd_policy)
@@ -39,7 +39,7 @@ from .dispatch_ventures import (
 KNOWN_COMMANDS = (
     "state", "available", "why", "path", "start", "stop", "rush", "step",
     "money", "risk", "values", "labour", "population", "policy", "help", "log",
-    "hire", "fire", "train", "commission", "work", "allocate",
+    "hire", "fire", "train", "commission", "work", "allocate", "move_base",
     "buy", "quote", "close", "bounty", "mothball", "restore", "bribe",
     "open", "ventures", "withdraw", "mines", "stuck",
     "capacity", "materials", "sell", "economy", "changes", "score", "portfolio",
@@ -342,6 +342,7 @@ _AGENT_DISPATCH_TABLE = {
     'dismiss': _cmd_fire,
     'train': _cmd_train,
     'commission': _cmd_commission,
+    'move_base': _cmd_move_base,
     'job': _cmd_commission,
     'mothball': _cmd_mothball,
     'restore': _cmd_restore,

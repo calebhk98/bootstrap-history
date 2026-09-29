@@ -1,6 +1,6 @@
 # Add cross-system invariant tests, not only local ones
 
-**Status:** open
+**Status:** partly - town <= nation and reachable tradesmen <= people in the trade are pinned by sim/tests/test_population_bounds_and_relocation.py (checked every step); the other listed invariants are still open
 
 **Source:** playtest findings document, ARCH-002. **Type:** Architecture/
 testing recommendation. High value; overlaps directly with several bugs

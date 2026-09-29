@@ -87,6 +87,8 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"contract_hours": "household",
 	"commissioned": "household",
 	"teaching_hours_this_year": "household",
+	"relocation_hours_this_year": "household",
+	"base_tile": "household",
 	"hour_allocations": "household",
 	"work_trade": "household",
 	"last_taught": "household",
