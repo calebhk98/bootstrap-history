@@ -70,3 +70,9 @@ Result: "technologies: N built by you" fell from 91 to 21, route steps remaining
 - Each sack took most of the cash on hand. The first took 14.1M of roughly 17M. There seems to be no way to protect cash: no bank, no deposit elsewhere, no "move base" advice in `risk`.
 - Frequency: `risk` at 241 AD said "sack chance after what you have built: 10%" a year (16% base). Six sackings in 19 years is about 4% likely at those rates. It compounds: every sack destroys the defences, so the chance returns to 16%. Suggestive, not proven.
 - In fairness, it was signposted. Every `state` from 100 AD printed "N technologies at risk if a hazard lands, hedged by nothing yet", and `risk` listed the crisis window with its odds. I ignored it and filtered it out. The hedge nodes (corpus_dispersed, academy_network) were still several steps away when the crisis began.
+
+## 17. Standing wage work (`allocate work machinist 2000`) never appears in `money`
+In 303 AD cash went from 14,823 to 21,536 in one `step 1`, while `money` gave "Net/yr before the work in hand: -967.1" and listed only the medical practice under revenue ("these add up to the revenue above"). The ~7.7k difference is the machinist wage work, which no row in `money` and no `log` line mentions (compare bugs.md #3 for one-off `work`).
+
+## 18. `auto_hire` keeps idle taught specialists on full pay
+Two machinists trained in 179 AD stayed on the payroll at 7,578 den/yr each (15,156 in all, more than 8x my revenue) through years with no project that used them. `auto_hire` "replaces any trade you taught as its people die off", but nothing ever warns that a taught trade is idle. `stuck` pointed at arrears and loss-making works, not at the wage bill.

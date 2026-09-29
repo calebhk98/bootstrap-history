@@ -16,3 +16,5 @@ Game: `play --civ rome_100ad --seed 1` (poor_scholar kit, default goal point_con
 | 169-206 | 14.9M | +1.05M | 83 | Newtonian mechanics, EM theory, machine tools, vacuum, thermodynamics, 1600 C furnaces. Turned on `auto_hire`, which stopped most churn. |
 | 206-234 | ~17M | +1.2M | 91 | Interchangeable parts, Newcomen and Watt engines, band theory. Fires took 3.6M and 3.8M. |
 | 235-256 | -88k | +1.2k | 25 | Third century crisis: 6 sackings, debasement. Most cash, most staff and 70 technologies lost. Roughly back to 110 AD. |
+| 257-303 | 47k -> 15k | -16k to -1k | 10 | Credit frozen twice (my script borrowed with no income), insolvency settled in 279 and 291. Idle machinists on payroll. Plague of Cyprian, Diocletian. |
+| 303-341 | 72k | +30k | ~35 | Rebuilt the basics with a cash-only routine: method, units, patron, maths, lenses, trade route, steel, water power, 1300 C. |
