@@ -131,6 +131,7 @@ TOPICS = [
     "tierless_schema",
     # Mod loader override semantics and error reporting (unittest-style).
     "mod_overrides",
+    "closure_reasons",
     "mod_economic_catalog",
     "mod_removal_and_civs",
     # sim/world/agriculture.py: land, labour, technique and weather into

@@ -248,7 +248,7 @@ total every count below is built from.
 | `scandal_last_year` | lazy via getattr (sim/engine/proto/state.py:759) | no | 2 | 6 | HOUSEHOLD | last year's scandal reading, used to report this year's delta |
 | `scholars` | `__init__` (sim/engine/core.py:103) | yes | 5 | 20 | HOUSEHOLD | owned staff pool |
 | `shortages` | `__init__` (sim/engine/core.py:338) | yes | 3 | 4 | HOUSEHOLD | tally of which material bound in which year for this household (diagnostic, but per-household - see summary) |
-| `shut_for_staff` | lazy via getattr (sim/engine/projects.py:564) | yes | 3 | 9 | HOUSEHOLD | household ventures currently shut for lack of staff |
+| `closures` | ProjectsState field, work id to reason and year | yes | n/a | n/a | HOUSEHOLD | why and since when each shut work was closed (`shut_for_staff` is now a read-only view of the staffing ones) |
 | `slaves` | `__init__` (sim/engine/core.py:284) | yes | 6 | 21 | HOUSEHOLD | owned slaves |
 | `spend_last_year` | lazy via getattr (sim/engine/proto/dispatch.py:1065) | yes | 3 | 5 | HOUSEHOLD | last year's spend (spend_this_year, promoted at year end) |
 | `stalled` | `__init__` (sim/engine/core.py:262) | yes | 1 | 7 | HOUSEHOLD | count of stalled years |

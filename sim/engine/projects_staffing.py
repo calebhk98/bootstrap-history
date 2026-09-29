@@ -20,6 +20,40 @@ from sim.constants import declare
 
 class StaffingMixin:
 
+    # Why a work is shut; the only two writers are close_work and clear_closure.
+    CLOSED_FOR_STAFF = "staff"
+    CLOSED_BY_CHOICE = "manual"
+
+    def close_work(self, node_id, reason, year=None):
+        """Shut a work and record why and since when, in one place."""
+        projects = self.state.projects
+        projects.operating.discard(node_id)
+        projects.mothballed.add(node_id)
+        projects.closures[node_id] = {"reason": reason, "year": self.state.scenario.year if year is None else year}
+
+    def closure_of(self, node_id):
+        """The closure record of a currently shut work, else None."""
+        projects = self.state.projects
+        if node_id not in projects.mothballed:
+            return None
+        return projects.closures.get(node_id)
+
+    def clear_closure(self, node_id, reason=None):
+        """Drop a closure record. With a reason, only that reason's record goes."""
+        closures = self.state.projects.closures
+        record = closures.get(node_id)
+        if record is None or (reason is not None and record["reason"] != reason):
+            return False
+        del closures[node_id]
+        return True
+
+    def staff_closure_age(self, node_id):
+        """Years since a staffing closure began, or None if not closed for staff."""
+        record = self.closure_of(node_id)
+        if record is None or record["reason"] != self.CLOSED_FOR_STAFF:
+            return None
+        return self.state.scenario.year - record["year"]
+
     STAFFING_CLOSURE_SLACK = declare(
         "STAFFING_CLOSURE_SLACK", 0.5, kind="temporary_heuristic",
         unit="people (scholars or craftsmen)", source=None, confidence="D",
@@ -93,13 +127,7 @@ class StaffingMixin:
                                        / max(0.01, self.venture_hands(k)[1]
                                              + self.venture_foreman(k)[1]),
                                        -self.venture_hands(k)[1]))
-            projects.operating.discard(worst)
-            projects.mothballed.add(worst)
-            _sfs = projects.shut_for_staff
-            if _sfs is None:
-                _sfs = {}
-                projects.shut_for_staff = _sfs
-            _sfs[worst] = year
+            self.close_work(worst, self.CLOSED_FOR_STAFF, year)
             closed.append(worst)
         if closed:
             household.log.append((year, "nobody left to keep an eye on %d concern%s, so "
@@ -127,15 +155,15 @@ class StaffingMixin:
         them to decide it again.
 
         So this runs unconditionally, like the rule it undoes, and it is
-        careful to undo only THAT rule: shut_for_staff is set nowhere except
-        close_unstaffed_ventures, so a concern a player shut on purpose with
+        careful to undo only THAT rule: only staffing closures are
+        candidates, so a concern a player shut on purpose with
         `mothball` never reappears on its own - that is still their call.
         """
         projects = self.state.projects
         household = self.state.household
-        _shut = projects.shut_for_staff or {}
-        cands = [node_id for node_id in sorted(_shut)
-                 if node_id in projects.mothballed and node_id in projects.done and node_id in self.nodes]
+        cands = [node_id for node_id in sorted(projects.closures)
+                 if self.staff_closure_age(node_id) is not None
+                 and node_id in projects.done and node_id in self.nodes]
         if not cands:
             return []
         # BEST-EARNING FIRST, same idea as auto_open_ventures: when only some
@@ -759,8 +787,7 @@ class StaffingMixin:
         # can go on" for a concern that was only ever switched off, not
         # forgotten.
         was_running = node_id in projects.operating
-        projects.operating.discard(node_id)
-        projects.mothballed.add(node_id)
+        self.close_work(node_id, self.CLOSED_BY_CHOICE)
         if not was_running:
             return True, ("%s was not running, so there was nothing to stop "
                           "paying for. You still know how to do it." % node_id)
@@ -828,8 +855,8 @@ class StaffingMixin:
         # says so in the closing message; `restore` - the verb a player
         # actually reaches for - must honour that same discount, or a
         # player pays double what the closing message promised.
-        _shut = projects.shut_for_staff or {}
-        _in_grace = node_id in _shut and scenario_year - _shut[node_id] <= self.STAFF_CLOSURE_GRACE
+        _age = self.staff_closure_age(node_id)
+        _in_grace = _age is not None and _age <= self.STAFF_CLOSURE_GRACE
         # SAY WHICH CASE THIS IS, not just a number: the closing message
         # promises "reopening soon costs a tenth of what opening did", so a
         # player who comes back to `restore` after the grace window has
@@ -838,20 +865,20 @@ class StaffingMixin:
         # account of itself reads as broken whether it is wrong or merely
         # unexplained.
         _grace_note = None
-        if node_id in _shut:
+        if _age is not None:
             if _in_grace:
                 fee *= self.STAFF_CLOSURE_DISCOUNT
                 _grace_note = ("the staffing window is still open (shut %d "
                                "years ago, of %d allowed), so this is the "
                                "discounted tenth, not the full price"
-                               % (scenario_year - _shut[node_id], self.STAFF_CLOSURE_GRACE))
+                               % (_age, self.STAFF_CLOSURE_GRACE))
             else:
                 _grace_note = ("the staffing discount only lasts %d years "
                                "after a closure, and it has been %d - too "
                                "long for the tenth, so this is the full "
                                "price, the same as rebuilding the plant "
                                "from nothing"
-                               % (self.STAFF_CLOSURE_GRACE, scenario_year - _shut[node_id]))
+                               % (self.STAFF_CLOSURE_GRACE, _age))
         if fee > self.spending_power("buy"):
             return False, ("bringing it back costs %s denarii%s, and between "
                            "%s in cash and what anyone will advance against a "
@@ -867,6 +894,7 @@ class StaffingMixin:
         projects.done.add(node_id)
         self._done_changed()
         projects.mothballed.discard(node_id)
+        self.clear_closure(node_id)
         # Back in service means back in OPERATION: restore is what a player
         # types to reopen something they shut, so it must put it back on the
         # books rather than leaving it known-but-closed.

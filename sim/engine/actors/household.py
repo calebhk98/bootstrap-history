@@ -122,7 +122,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"trade_hours_used": "projects",
 	"revealed": "projects",
 	"stalled": "projects",
-	"shut_for_staff": "projects",
+	"closures": "projects",
 
 	# EconomyState
 	"mines": "economy",
@@ -198,7 +198,6 @@ _LAZY_FIELDS: Set[str] = {
 	"_said_near_limit",
 	"_said_autoopen",
 	"done_year",
-	"shut_for_staff",
 	"mine_tranches",
 	"_material_stock_ledger",
 	"farm_hectares",

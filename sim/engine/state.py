@@ -270,7 +270,8 @@ class ProjectsState:
 	trade_hours_used: Dict[str, float] = field(default_factory=dict)
 	revealed: Set[str] = field(default_factory=set)
 	stalled: int = 0
-	shut_for_staff: Optional[Dict[str, int]] = None
+	# work id -> {"reason": str, "year": int}; only while the work is mothballed
+	closures: Dict[str, Dict[str, object]] = field(default_factory=dict)
 
 	def active_keys_sorted(self) -> List[str]:
 		"""Return active project ids in the canonical resolution order.
