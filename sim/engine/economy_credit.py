@@ -144,19 +144,8 @@ class CreditMixin:
         wage-selling zeroed out - see revenue_capacity's own docstring),
         never the same call `_rev` would have been computed with.
         """
-        # What a STRANGER can borrow is almost nothing: you have walked into
-        # a town with no name, no land and no one to vouch for you. A flat
-        # floor handing a newcomer years of living expenses on nothing but
-        # arrival would be wrong. Credit here is what someone will advance
-        # against your income and the people who will stand behind you.
-        # WHAT YOU NORMALLY EARN, not what this particular year came to: a
-        # lender looks at your practice and your concerns; he does not cut
-        # your line because you spent this year working for somebody else.
-        # Using this year's actual revenue instead would let `work scholar
-        # 2000` - which sells the founder's whole year and so takes the
-        # practice's income to nothing for it - collapse the credit line
-        # mid-step, breaching spending already committed against the old
-        # line.
+        # Strangers borrow almost nothing. Credit based on standing income (not
+        # this year's actual revenue, which can be zeroed out by temporary work).
         earning = self.revenue_capacity()
         base = earning * self.CREDIT_LINE_EARNING_MULTIPLE
         if self.running("identity_cover"):     base += self.CREDIT_LINE_IDENTITY_COVER
@@ -171,39 +160,13 @@ class CreditMixin:
         if self.running("endowment_land"):     base += self.CREDIT_LINE_ENDOWMENT_LAND      # real collateral
         base += max(0.0, self.state.household.reputation) * self.CREDIT_LINE_PER_REPUTATION_POINT
         base += self.state.economy.forest_ha * self.CREDIT_LINE_PER_FOREST_HA                   # also collateral
-        # A FLOOR of one year's running costs, because everyone everywhere has
-        # always been able to run a tab. The baker, the landlord and the smith
-        # all carry you for a season; what they will not do is advance you cash.
-        # Without this floor a household whose rent exceeded its credit line by
-        # a few denarii was declared insolvent, settled, and then declared
-        # insolvent again the next year, for ever.
-        # ONE upkeep() CALL, NOT TWO (and _rev, if the caller already had
-        # one, is reused rather than making living_cost() take its own
-        # third). Nothing between here and living_cost()'s own return
-        # assigns to self - revenue_capacity() just above already restored
-        # wage_hours_this_year before returning (see its own try/finally) -
-        # so upkeep()/revenue() cannot answer differently a second time, and
-        # living_cost() takes both as `_upkeep`/`_rev` to skip its own copy
-        # of the same calls rather than silently repeating them. See
-        # living_cost's own docstring on why those arguments exist.
+        # Floor of one year's running costs: everyone can run a tab for a season.
+        # One upkeep() call; if already provided, reuse it to avoid silent duplication.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
         floor = self.living_cost(_rev=_rev, _upkeep=upkeep_amount) + upkeep_amount * self.CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE
-        # AND BOUNDED BY WHAT YOU CAN SERVICE. A senatorial patron adds fifteen
-        # thousand to the line whoever you are, so a household with 1,800 of
-        # revenue could owe 23,000 - about 1,500 a year in interest against
-        # 1,800 of income. That is not a credit line, it is a trap with a
-        # patron's name on it, and every Rome run walked into it: five hundred
-        # years in arrears, the debt compounding faster than the practice could
-        # ever repay, with the optimizer and the player equally helpless.
-        #
-        # A patron will stand behind you; no lender advances more than your
-        # income can carry, however grand your friends. Five years of turnover
-        # on top of the running tab everyone gets - turnover and not margin,
-        # because much of what this model calls living costs is discretionary
-        # display a ruined man stops paying, and a lender knows it. Five is
-        # chosen to leave the OPENING where it was: a founder with a practice
-        # and nothing else could always just reach a respectable cover
-        # identity, and that is the first real decision in the game.
+        # Bounded by what can be serviced: no lender advances more than income
+        # can carry, even with a grand patron. Five years of turnover stops a
+        # patron-name from creating an unpayable debt trap. [temporary_heuristic]
         serviceable = floor + max(0.0, earning) * self.CREDIT_SURPLUS_YEARS_MULTIPLE
         return calculate_credit_ceiling(base, floor, serviceable, self.price_index)
 
@@ -289,14 +252,7 @@ class CreditMixin:
             if net >= 0:
                 break
             worst = None
-            # THE SCHOOL AND THE PATRON GO LAST. Every one of these loses money
-            # by construction - a school takes 2,500 a year and returns 800 -
-            # and every one of them is what your scholars, your household
-            # places and your credit are gated on, so shedding by margin alone
-            # picked them FIRST and closed the institution that was paying for
-            # everything else. In real ruin you do close the school; you close
-            # it after you have closed everything else. Two passes: ordinary
-            # loss-makers, then, only if that was not enough, these.
+            # Schools and patrons close last (they're loss-makers but drive credit and scholars).
             for _pass in (0, 1):
                 # WHAT YOU ARE ACTUALLY PAYING FOR, which since knowing and
                 # running became two states is `operating`, not `done`. This
@@ -547,11 +503,7 @@ class CreditMixin:
         # stop everything in progress: you cannot fund it
         if projects.active:
             dropped = sorted(projects.active)
-            # WHAT YOU PAID IS NOT BURNED: "Halted" must mean paused, not
-            # deleted - a half-built thing is still half built when the
-            # money runs out, the site does not un-dig itself. What you
-            # paid stands to your credit and comes off the bill when you
-            # begin again.
+            # Payments on halted projects are credited, not burned.
             _paid = getattr(projects, "paid_towards", None)
             if _paid is None:
                 _paid = projects.paid_towards = {}
@@ -680,23 +632,7 @@ class CreditMixin:
             # a fresh line of credit the following morning.
             _frozen_before = getattr(household, "credit_frozen_until", 0)
             household.credit_frozen_until = max(_frozen_before, year + self.SETTLEMENT_CREDIT_FREEZE_YEARS)
-            # SAY WHAT ACTUALLY HAPPENED: "the debt is written off" while
-            # leaving the player owing a third of their credit line
-            # contradicts the number on the next line. Most of it goes;
-            # what is left, and what it cost your name, is the part worth
-            # reading.
-            #
-            # AND SAY IF THE UNLOCK DATE JUST MOVED: a second settlement
-            # while the first freeze had not yet lifted pushes it from
-            # year+5 or year+12 out to a fresh year+12, and that has to be
-            # announced - a deadline that quietly slides is worse than a
-            # longer fixed one would have been.
-            # A FREEZE HAS TO HAVE BEEN ACTUALLY IN FORCE to "move" - the
-            # default _frozen_before of 0 is "never frozen", not a freeze
-            # that this settlement then extended, and comparing only the
-            # before/after VALUES said a date had moved on every first-ever
-            # settlement (0 -> year+12 is a bigger number, by that test, same
-            # as a real extension).
+            # Say what actually happened and if the freeze date moved (not on first settlement).
             _moved = (_frozen_before > year
                      and household.credit_frozen_until > _frozen_before)
             household.log.append((year, "INSOLVENCY SETTLED: most of the debt is written "
@@ -752,16 +688,8 @@ class CreditMixin:
         insolvent_years = household.insolvent_years
         if household.capital >= 0 or insolvent_years < 8:
             return None
-        # THE SAME NET THE LEDGER PRINTS: must include the interest on the
-        # arrears, the one cost that exists BECAUSE you are in arrears -
-        # leaving it out would quote a loss (e.g. "you lose 46 denarii a
-        # year") that disagrees with the ledger's own "Net/yr" figure
-        # directly above it.
+        # Must include interest on arrears; use revenue_capacity() to match ledger.
         interest = max(0.0, -household.capital) * self.debt_interest_rate()
-        # revenue_capacity(), NOT plain revenue(): the ledger's own
-        # net_per_year reads revenue_capacity() too, so this and that net
-        # can only actually be "the same net" if both call the same
-        # standing-figure function.
         standing_revenue = self.revenue_capacity()
         standing_upkeep = self.upkeep()
         standing_living = self.living_cost(
@@ -773,14 +701,8 @@ class CreditMixin:
         ways = []
         pool = self.director_pool() - household.wage_hours_this_year
         if pool > 100:
-            # ONLY IF IT WOULD ACTUALLY GAIN: selling your hours takes them
-            # out of your own practice, so with a practice to lose this is
-            # often the losing move, and this advice must not recommend a
-            # move that `work` itself would then report as a net loss.
-            # NAME THE TRADE, and pick the one that actually pays best
-            # here: advice that says only "work for wages" without naming
-            # which job, and takes the cheapest trade in the table by
-            # default, is advice that can be followed into a loss.
+            # Only suggest work if it gains (selling hours pulls from practice).
+            # Name the best-paying trade available.
             trades = [trade for trade in WAGES if self.trade_available(trade)]
             best_trade = max(trades, key=self.base_annual_wage,
                          default=None)
