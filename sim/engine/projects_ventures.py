@@ -47,13 +47,7 @@ class VenturesMixin:
         return max(self.project_cost(node_id) * self.VENTURE_CAPEX_SHARE_OF_BUILD_COST,
                    node["up"] * self.VENTURE_CAPEX_MIN_UPKEEP_YEARS)
 
-    # SUPERVISION, NOT OPERATION: a node's sch/art figures are what it takes
-    # to BUILD the thing, and its upkeep already pays the people who run it
-    # once built, so charging the full build crew against your own staff
-    # forever would bill you twice for the same hands. What your own
-    # trained people actually owe a going concern is supervision -
-    # somebody of yours has to keep an eye on it - and that is a fraction
-    # of what it took to build.
+    # Supervision share of build crew, not full crew (avoids double-billing).
     VENTURE_SUPERVISION = declare(
         "VENTURE_SUPERVISION", 0.25, kind="temporary_heuristic",
         unit="fraction of the build crew", source=None, confidence="D",
@@ -64,16 +58,8 @@ class VenturesMixin:
             "own outcomes (see this constant's own comment). Tuned to "
             "avoid double-billing, not measured from any real supervisory "
             "ratio.")
-    # AND A FLOOR FROM ITS SIZE: charging a fraction of the BUILD crew alone
-    # would mean concerns that take nobody to build - a bottling shed, a
-    # butter trade, a chaff cutter - would take nobody to RUN either,
-    # letting a fleet of such concerns run on nought employees and nought
-    # in wages, which is precisely what the opening screen promises the
-    # model will not do. A going concern needs somebody of yours to keep
-    # an eye on it whether or not it was hard to build, and a bigger one
-    # needs more: one pair of hands per 1,500 a year of takings, which
-    # puts a 130-a-year bottling shed at a tenth of a person and a
-    # 12,000-a-year fleet at eight.
+    # Floor on supervision: a zero-build concern still needs staff watching.
+    # One pair of hands per this much revenue.
     VENTURE_HANDS_PER_REVENUE = declare(
         "VENTURE_HANDS_PER_REVENUE", 1500.0, kind="temporary_heuristic",
         unit="denarii/year of revenue per pair of hands", source=None,
@@ -91,16 +77,8 @@ class VenturesMixin:
     def venture_hands(self, node_id):
         """(scholars, craftsmen) of your own that running this ties up."""
         node = self.nodes[node_id]
-        # A SCHOOL DOES NOT COST YOU SCHOLARS. What these establishments take
-        # is money - a patron's cultivation, a school's stipends - and what
-        # they hand back is exactly the people every other concern is
-        # supervised by. Charging supervision against them made the loop
-        # impossible to enter: school_founded's build crew is twelve scholars,
-        # so keeping it open wanted three of them, and the only source of three
-        # scholars was the school you could not keep open. A founder opened
-        # the school and the staffing rule shut it the same turn, for ever.
-        # Only the ones that lose money qualify: a blast furnace is in this set
-        # too, and a blast furnace certainly needs somebody watching it.
+        # Capability institutions (school, workshop) and net-loss concerns
+        # don't tie up supervision staff (avoids circular dependency).
         if (node_id in self.CAPABILITY_INSTITUTIONS and node["rev"] <= node["up"]):
             return 0.0, 0.0
         supervision_share = self.VENTURE_SUPERVISION
@@ -223,11 +201,8 @@ class VenturesMixin:
                            "is nothing to open")
         if node_id in projects.granted:
             if self._practisable(node_id):
-                # The SKILL is the society's, and you are already practising
-                # it - which is why it pays, and why there is nothing here
-                # to open. `money` itemises this as your revenue, and the
-                # refusal below must not contradict that by calling it only
-                # the society's.
+                # Society skill already in your practice: it's where your income
+                # comes from. Cannot open it again.
                 return False, ("you are already doing that - it is your practice, "
                                "and it is where most of your income comes from. "
                                "It is a skill this society has, not a concern "
@@ -245,14 +220,7 @@ class VenturesMixin:
             return False, "you are already running that"
         node = self.nodes[node_id]
         scalable = node_id in self.SCALABLE_INSTITUTIONS
-        # A STARTER FOUNDING IS STILL A FOUNDING, NOT A TOY. Below a fifth of
-        # the ordinary size there would be nothing left standing between "a
-        # schoolroom" and "no school at all", so this is a floor on what
-        # `units` may ask for on a first opening, not a ceiling.
-        #
-        # REOPENING RESTORES WHAT WAS THERE, not the default single unit. A
-        # closed school does not un-build the extra wings it grew before it
-        # shut; only `units` explicitly asked for here changes the size.
+        # Starter founding has a floor. Reopening restores prior size, not 1.0.
         if scalable and units is not None:
             unit_count = max(self.STARTER_FOUNDING_MIN_UNITS, float(units))
         elif scalable:
@@ -264,11 +232,7 @@ class VenturesMixin:
         need_sch, need_art = need_sch * unit_count, need_art * unit_count
         foreman_trade, foreman_fte = self.venture_foreman(node_id)
         foreman_fte *= unit_count
-        # A HUNDREDTH OF A PERSON IS NOBODY: comparing exact floats while
-        # rounding the message to one decimal can print "it needs 0.0
-        # craftsmen to supervise, and you have 0.0" - a refusal that
-        # contradicts itself on its own line - so the comparison needs a
-        # small tolerance rather than an exact one.
+        # Use tolerance to avoid false contradictions in error messages.
         if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
             return False, ("nobody free to keep an eye on it: it needs %.2f "
                            "scholars and %.2f craftsmen to supervise, and you "
@@ -286,12 +250,7 @@ class VenturesMixin:
                               self.venture_foreman_free(foreman_trade),
                               foreman_trade))
         fee = self.venture_capex(node_id) * (unit_count if scalable else 1.0)
-        # A SHOP THAT LOST ITS KEEPER IS NOT A SHOP YOU HAVE TO BUILD AGAIN:
-        # staff attrition runs at 3.5% a year, so a household sitting near
-        # the supervision line can lose a concern in most years. The
-        # premises are still standing and the stock is still on the
-        # shelves; what is missing is somebody to watch it. Reopening
-        # within a few years must cost the difference, not the whole thing
+        # If reopening within grace period, cost is discounted (premises remain).
         projects = self.state.projects
         household = self.state.household
         scenario = self.state.scenario
@@ -301,10 +260,7 @@ class VenturesMixin:
             fee *= self.STAFF_CLOSURE_DISCOUNT
         if pay:
             if fee > self.spending_power("open"):
-                # SAY WHAT WAS COUNTED: the test allows cash plus what can be
-                # borrowed, so the refusal must quote that same figure, not
-                # cash alone - quoting cash alone tells a player they cannot
-                # afford something the test itself would let them buy.
+                # Report the same spending power the test checked.
                 return False, ("opening it costs %s denarii in stock and premises, "
                                "and between %s in cash and what anyone will "
                                "advance against a purchase you can raise %s"
@@ -320,34 +276,18 @@ class VenturesMixin:
             if inst_units is None:
                 inst_units = governance.inst_units = {}
             inst_units[node_id] = unit_count
-        # WHEN THE DOORS OPENED, which is when custom starts to find you: see
-        # venture_ramp, which reads this rather than the year the capability
-        # was worked out, so opening late does not skip the ramp. Reopening
-        # something you had running does not restart it: the shop is known.
+        # Record when doors opened for venture_ramp. Reopening doesn't restart it.
         _oy = getattr(projects, "opened_year", None)
         if _oy is None:
             _oy = projects.opened_year = {}
         _oy.setdefault(node_id, scenario.year)
         rev_now, up_now = node["rev"] * unit_count, node["up"] * unit_count
-        # SAID NOW, NOT DISCOVERED LATER IN A FOOTNOTE: a newly opened
-        # concern takes revenue_ramp_years to reach the figure just quoted -
-        # custom takes time to find the shop - and that has to be said
-        # here, at the moment of opening, not only in `money`'s
-        # still_ramping(), read after the fact once the ledger already
-        # looks like it disagrees with what was promised.
+        # Report ramp time upfront, not later in still_ramping().
         _ramp_note = (
             " It reaches that over the first %d years as custom finds it - "
             "expect less at first, not a mistake in the figure."
             % self.cfg["revenue_ramp_years"]) if rev_now > 0 else ""
-        # SUBTRACT THE TWO NUMBERS, DO NOT LEAVE THEM SIDE BY SIDE: earn and
-        # upkeep sitting next to each other on the screen does not tell a
-        # reader which is bigger, so a net-loss concern has to say so
-        # explicitly rather than relying on the reader doing the
-        # subtraction. Capability institutions are deliberately excluded: a
-        # school or a workshop losing money is the normal, intended shape of
-        # the trade (see CAPABILITY_INSTITUTIONS and venture_hands), not a
-        # mistake to flag on the one screen a player could still back out
-        # from.
+        # Flag net-loss concerns explicitly; exclude capability institutions.
         _loss_note = (
             " !! this costs more than it earns (%s a year net), even once "
             "it is fully ramped up - that may be the right call for what it "
@@ -361,14 +301,7 @@ class VenturesMixin:
                          "{:,.0f}".format(rev_now), "{:,.0f}".format(up_now),
                          _ramp_note, _loss_note))
 
-    # HOW A PLAYER OPENS A SECOND SCHOOL: send `units` to the SAME "open"
-    # command. {"cmd":"open","id":"school_founded"} founds the first,
-    # ordinary one, and {"cmd":"open","id":"school_founded",
-    # "units":2} on a school already open founds a second, taking it to 2.0
-    # units of capacity. Reusing "open" rather than adding a new verb means a
-    # save and an agent that has never heard of expansion still speaks a
-    # protocol that works: the field is simply absent from every call it never
-    # makes.
+    # Expansion: reusing "open" with units field keeps protocol backward-compatible.
     def _expand_institution(self, node_id, add_units, pay=True):
         """Found more of an institution that is already open."""
         have = self.institution_units(node_id)
