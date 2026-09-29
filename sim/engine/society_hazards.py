@@ -283,63 +283,12 @@ class HazardsMixin:
         out.sort(key=lambda entry: not entry["can_begin_now"])
         return out
 
-    # ---- A TIMELINE, NOT A WALL OF TEXT THAT NEVER CHANGES -----------------
-    # `risk` already had dates, yearly odds, cumulative danger and what prior
-    # choices buy against each - a winning player called that combination one
-    # of the strongest systems in the game. What it did not have was ONE
-    # compact, chronological answer to "what is coming, how soon, and am I
-    # covered" - that reply is scattered across a single flat `hedged_by`
-    # (one word for the whole civilisation, not per hazard) and a list of
-    # hazard rows each carrying its own sack/staff-loss percentages several
-    # keys deep. And `hedged_by` itself never changed its wording as a date
-    # got closer: a Rome player watched it read "nothing yet" for a hundred
-    # and fifty years, across a hazard that eventually arrived anyway, and
-    # lost 22 technologies, 1.38 million denarii and 47 staff in the single
-    # turn it landed - a third of their critical-path progress. The words had
-    # been true every one of those years and had stopped being a WARNING long
-    # before that, because a sentence that reads identically five years out
-    # and a hundred and fifty years out carries no information about which of
-    # those it is.
-    #
-    # THE FIX IS NOT A COUNTDOWN. A bare "N years left" still reads the same
-    # at every distance greater than zero - what actually has to escalate is
-    # the relationship between the calendar and the hedge itself. The real
-    # hedges in HAZARD_COUNTERS have lead times of their own (see
-    # _calendar_floor_remaining - up to thirty years for academy_network's
-    # own dispersal chain) and a hazard that is fifty years off with a five-
-    # year hedge is not urgent, while the SAME fifty years against a thirty-
-    # year hedge is already something to be starting now, not later - it is
-    # the gap between the two clocks that should set the tone, not either
-    # clock alone.
-    #
-    # Three clean levels come out of comparing "years until it arrives" to
-    # "years the live hedges still need". Two such lead times are kept, not
-    # one, because they escalate at DIFFERENT moments: the QUICKEST counter
-    # among HAZARD_COUNTERS (some relief, soonest) and the SLOWEST (the
-    # strongest one among the same counters - the thirty-year
-    # academy_network dispersal chain, for sack_chance). A player still has
-    # time to begin the quick, partial answer well after it is already too
-    # late for the one actually carrying the largest share of the relief, so
-    # the bands below are four, nearest first (HORIZON_MULT gives the margin
-    # on the furthest boundary - calm vs "begin now" - because a player who
-    # starts exactly on the strong hedge's own floor has no slack left for
-    # anything going wrong with it):
-    #   - past the strong hedge's own floor by a comfortable margin: plenty
-    #     of time, said once and then left alone.
-    #   - inside that margin, strong hedge not yet begun: begin it now -
-    #     there is still time, but not much of it.
-    #   - past the strong hedge's own floor, but still within the quick
-    #     hedge's: a partial answer can still finish; the real one cannot.
-    #   - past even the quick hedge's own floor: too late to finish anything
-    #     from a cold start; the event is coming regardless of what begins
-    #     today.
-    # A hazard already well hedged, or already in progress, or with no known
-    # hedge at all, reports that plainly instead of forcing it into one of
-    # these four bands.
+    # Timeline compares "years until hazard" to "lead time of each hedge"
+    # (quickest and slowest separately: they escalate at different times).
+    # The gap between clocks sets urgency, not either clock alone.
+    # States: plenty of time; begin now; quick only; too late; hedged/no hedge.
     HAZARD_TIMELINE_BEGIN_NOW_MULT = 1.5
-    # Which urgency tags keep their full sentence once a row is past the
-    # nearest one - see the note where this is applied, in hazard_timeline
-    # itself, for why position in the list is the wrong thing to key this on.
+    # Urgency tags that keep full sentence regardless of position in list.
     HAZARD_TIMELINE_WARN_TAGS = frozenset(
         {"happening now", "too late to hedge", "stopgap only", "begin hedge now"})
 
@@ -371,24 +320,9 @@ class HazardsMixin:
                      if hazard_kind in hazard]
             if not kinds:
                 continue
-            # THE LEAST-DEFENDED SIDE OF IT, not an average, and its OWN
-            # hedge's own lead time - not the quickest lead time among ALL
-            # the kinds this hazard happens to carry. A hazard that is both
-            # a sacking risk (hedged, for real, only by a thirty-year
-            # academy_network dispersal chain) and an output shock (hedged
-            # by things as quick as two years) is exactly as urgent as the
-            # sacking half if that is the half nothing has been built
-            # against - taking the faster OTHER kind's lead time here would
-            # have said "two years will cover you" about a risk a two-year
-            # hedge does nothing for, which is the averaging mistake the
-            # section comment above warns against, just one kind's own floor
-            # away from where it would actually bite.
-            # QUICKEST (some relief, started cold, soonest) and SLOWEST (the
-            # strongest real hedge among the same counters - up to the
-            # thirty-year academy_network chain for sack_chance) are both
-            # kept, because they escalate at DIFFERENT times: a player still
-            # has time for a partial answer after it is already too late for
-            # the one that actually carries the largest share of the relief.
+            # Use worst-defended kind and its own lead times (quickest and slowest).
+            # Don't average across kinds: a hazard that is both a sack and output
+            # shock is as urgent as its slowest hedge, not the average.
             worst_mult, quick_hedge, strong_hedge = 0.0, None, None
             for hazard_kind in kinds:
                 mult, _why = self.hazard_relief(hazard_kind)
@@ -565,11 +499,7 @@ class HazardsMixin:
             "market as well as the workshop (see comment above). Tuned to "
             "make the cash loss proportionate to the staff loss, not "
             "measured against any attested plague-year revenue collapse.")
-    # Recovery from a staff-loss hazard is driven entirely by
-    # self.population's own vital rates on the surviving cohort structure
-    # (core.py's _apply_population_mortality_shock/pop_scale/wage_index),
-    # not a fixed recovery-horizon parameter handed out here at the moment
-    # a hazard fires - see docs/architecture/WIRING_MILESTONE_4.md.
+    # Recovery: self.population vital rates, not a fixed parameter here.
     SACK_CAPITAL_LOSS = declare(
         "SACK_CAPITAL_LOSS", 0.60, kind="temporary_heuristic",
         unit="dimensionless (fraction of capital)", source=None,
@@ -727,25 +657,11 @@ class HazardsMixin:
         _shocks makes its draws in - see _shocks's own docstring.
         """
         rng = self.rng
-        # SAY WHAT IT TOOK FROM YOU: a bare "a site is sacked" line against
-        # an unexplained fall in capital, with no mention of people or
-        # projects, is how a player stops trusting the ledger. The plague
-        # family already reports the harm it actually does; this one must
-        # too.
         household = self.state.household
         projects = self.state.projects
         _cap0 = max(0.0, household.capital)
-        # EVERY TRADE YOU HIRED, NOT ONLY THE TWO GENERIC POOLS: reducing
-        # only artisans, scholars and directors_extra while leaving
-        # household.employees (hired smiths, scribes, masons - for a
-        # developed household, most of its people) untouched would let the
-        # event announce "92.7 of your people gone" while `state`'s
-        # employees_total headcount screen sits exactly where it was. The
-        # plague family right above already reduces employees (see its own
-        # `for trade in list(household.employees)` loop); a sack must not be
-        # gentler to hired staff than a plague. _people0/_people_after
-        # count the same population the announcement claims to describe and
-        # `state` actually renders.
+        # Count all staff (artisans, scholars, hired employees, directors)
+        # so the message matches what state actually renders.
         _people0 = (household.artisans + household.scholars
                     + sum(household.employees.values()))
         _act0 = len(projects.active)
@@ -773,10 +689,7 @@ class HazardsMixin:
                          % (hazard.get("name", "crisis"),
                             ", ".join(_took)
                             or "you had nothing it could take")))
-        # Sim.corpus_hedge (core.py) is the one place this is
-        # decided, and `risk` calls the same method - see its
-        # own comment for why two independent copies of this
-        # table could disagree with each other.
+        # corpus_hedge (core.py) computes both the roll and the defense state.
         corpus_loss_probability, frac, _hedge_before = self.corpus_hedge()
         if rng.random() < corpus_loss_probability:
             self._sack_corpus_loss(year, frac, _hedge_before)
@@ -791,21 +704,9 @@ class HazardsMixin:
         reproducing a run byte-for-byte.
         """
         rng = self.rng
-        # sorted() matters: self.state.projects.done is a SET and iterates in an
-        # order that depends on PYTHONHASHSEED, so feeding it
-        # unsorted to rng.sample made the same --seed give a
-        # different answer every invocation.
-        # Never the society's own inheritance: you can lose what
-        # YOU built, not what the civilization has always known.
-        # Nor corpus_dispersed: its whole definition is that
-        # copies exist in other people's hands, beyond this
-        # one site - a sack here cannot reach a copy sitting
-        # in a library three provinces away. corpus_written,
-        # one set of books in one place, stays losable; only
-        # dispersal is out of a single raid's reach. This is
-        # about a SACK specifically - mothballing or
-        # abandoning the corpus yourself is a different
-        # mechanism and still applies.
+        # sorted() for determinism: .done is a set with hash-order iteration.
+        # Exclude: society inheritance (granted), dispersed copies (beyond reach).
+        # Losable: corpus_written only (local site); corpus_dispersed survives.
         projects = self.state.projects
         losable = sorted(node_id for node_id in projects.done
                          if node_id not in projects.granted
@@ -817,10 +718,7 @@ class HazardsMixin:
                 projects.operating.discard(node_id)
                 projects.done.discard(node_id)
                 projects.mothballed.discard(node_id)
-                # KEPT, so `risk` can list what you have to
-                # build again. Otherwise the only record is a
-                # log line a century back.
-                _lost[node_id] = year
+                _lost[node_id] = year  # Track for rebuilding.
             self._done_changed()
             self._log_corpus_loss(year, drop, _hedge_before)
 
@@ -831,22 +729,12 @@ class HazardsMixin:
         Makes no self.rng draws: `drop` is already decided by the time this
         runs.
         """
-        # NAME THEM: a bare count leaves a player to discover a loss only
-        # decades later, when `start X` says "missing prerequisites:
-        # <thing you built two hundred years ago>", and rebuild the chain
-        # one refusal at a time. A bare count is not a report of what
-        # happened to you.
+        # Name what was lost, not just the count.
         _named = sorted(drop)
         _corpus = [tech_id for tech_id in ("corpus_written",
                                "corpus_dispersed")
                    if tech_id in drop]
-        # AND WHAT IT DOES TO THE ROAD YOU ARE ACTUALLY ON: naming the lost
-        # ids alone still leaves a player with a real goal set to find out
-        # the road got longer only by re-running `path` afterwards and
-        # comparing it by hand - a sack that silently undoes a third of
-        # critical-path progress in one turn needs to say so in the same
-        # breath as the loss itself, using the same goal-closure `never_
-        # abandon` already computes and caches.
+        # Report impact on goal road: how many lost nodes were on the path.
         _on_road = 0
         _goal = self.goal
         if _goal and _goal in self.nodes:
@@ -864,16 +752,6 @@ class HazardsMixin:
                ", ".join(_named[:8])
                + (" and %d more" % (len(_named) - 8)
                   if len(_named) > 8 else ""),
-               # BEFORE the loss, not after: `drop` has
-               # already come out of `self.state.projects.done` by this
-               # point, so re-asking `self.state.projects.done` here
-               # could tell a player the corpus was
-               # "never printed and dispersed" in the
-               # same sentence that says the corpus
-               # itself just went - both about the same
-               # sacking. _hedge_before was read when
-               # the sack started, before anything was
-               # taken.
                "" if _hedge_before == "corpus_dispersed"
                else " (the corpus was never printed and "
                     "dispersed)",
@@ -903,22 +781,12 @@ class HazardsMixin:
             scenario = self.state.scenario
             before = economy.output_factor
             economy.output_factor = min(economy.output_factor, floor)
-            # ONCE, AND THEN A REMINDER, not every year of a hundred-year
-            # war: output_factor recovers a little each step, so firing this
-            # line every time the war pulls it back down again would mean
-            # firing it every single year for the war's whole length. A
-            # message repeated until it is noise has stopped being a
-            # message.
+            # Log only on first hit or after 20 years: avoid noise on recovery.
             said = scenario._said_output or {}
             key = hazard.get("name", "crisis")
             if before > economy.output_factor and year - said.get(key, -99) >= 20:
                 said[key] = year
                 scenario._said_output = said
-                # SAY WHAT HELD: every other hazard message in this file
-                # names its hedges - staff_loss says "would have been";
-                # sack_chance says "comes to nothing (%s)". Saying nothing
-                # here would be indistinguishable from a military branch
-                # that did nothing.
                 self.state.household.log.append((year, "%s: trade and output fall to %d%% of "
                                      "normal%s"
                                  % (key, economy.output_factor * 100,
@@ -942,13 +810,7 @@ class HazardsMixin:
             lost = had - max(0.0, household.capital)
             if not scenario._said_debasement or year - scenario._said_debasement >= 15:
                 scenario._said_debasement = year
-                # SAY WHAT IT DID TO YOU, and say what it did NOT do: every
-                # price in this game is what a thing really costs in labour
-                # and materials, which debasement does not change, so a
-                # `why` quote that looks unchanged after a debasement is
-                # correct, not evidence the debasement did nothing. What it
-                # destroys is the money you are HOLDING. Quoting the bite in
-                # coin makes that the visible half.
+                # Report the money lost held, not quoted costs (which reflect reality).
                 household.log.append((year, "%s: the coin is worth %d%% less than it "
                                      "was%s. Quoted costs are what a thing "
                                      "really takes to make, so they do not "
@@ -970,21 +832,8 @@ class HazardsMixin:
         Makes no self.rng draws.
         """
         if "values" in hazard:
-            # A hazard is not limited to killing people, burning a site, or
-            # making a household poorer. Norse Christianisation is none of
-            # those: its real effect is on
-            # what the society BELIEVES, which is exactly what
-            # alarm_of() and update_protection() read out of
-            # self.value_weights. This
-            # is apply_tech_effects' mechanism (see there), aimed at a
-            # hazard instead of a technology, with one difference: a
-            # technology is a single event and logs once, but a hazard
-            # like this runs for over a century, so the shift is spread
-            # evenly across every year of `years` rather than dumped on
-            # the first one. Applying 1/Nth of the total delta every
-            # year, for N years, is what "gradual" means here; a single
-            # jump on the first year would be exactly the fake
-            # instantaneous conversion this mechanism exists to avoid.
+            # Like apply_tech_effects but spread across years: 1/N of total delta yearly.
+            # Single-event tech logs once; multi-year hazard should shift gradually.
             span = max(1, int(hazard_end) - int(hazard_start) + 1)
             changed = {}
             for field, total_delta in hazard["values"].items():
@@ -998,14 +847,7 @@ class HazardsMixin:
                     min(self.VALUE_WEIGHT_CEILING, before + total_delta / span))
                 if abs(self.value_weights[field] - before) > 1e-9:
                     changed[field] = self.value_weights[field]
-            # VISIBLE WHILE IT HAPPENS, not only in hindsight: a tester
-            # should be able to watch the society turning against them
-            # year by year, not discover it as a lump sum in the future.
-            # A hundred-odd years of this hazard would be a hundred-odd
-            # near-identical log lines if this fired every year, so it
-            # is throttled to the first year, the last, and every tenth
-            # in between -- the same spirit as the debasement throttle
-            # just above, which exists for the same reason.
+            # Log at start, end, and every 10 years: visible change without noise.
             if changed and (year == hazard_start or year == hazard_end or (year - hazard_start) % 10 == 0):
                 self.state.household.log.append((year, "%s: the society's values are shifting (%s)"
                                  % (hazard.get("name", "hazard"),
@@ -1077,14 +919,7 @@ class HazardsMixin:
 
     def _random_events(self, year):
         rng = self.rng
-        # A patron dies ONCE and then you have courted his heir. The old model
-        # rolled 4% every year forever, so a long run logged the same line six
-        # times, which is not how having a patron works.
-        # ONE ATTRIBUTE, NOT TWO. The guard read `_last_patron_death` and the
-        # body set `last_patron_death`, so the twenty-five year cooling-off
-        # this comment describes never applied to anything: the roll came up
-        # five per cent a year for ever, which is precisely the behaviour the
-        # fix was written to stop. (The save list carried the unread name too.)
+        # Patron death rolls once per cooldown, not every year.
         founder = self.state.founder
         household = self.state.household
         last_patron_death = founder.last_patron_death
@@ -1098,12 +933,6 @@ class HazardsMixin:
             courted = self.policy.get("auto_court_heir", not self.manual)
             if courted:
                 household.capital -= gift
-            # SAY WHAT IT COST: "your patron dies; his heir must be courted
-            # afresh" with nothing in `state` changed by an amount a
-            # player can point at reads as decorative. It is not: it
-            # takes money, standing and most of your cover, and it has to
-            # say so, because the answer to it - court somebody, spend on
-            # standing - is a decision.
             if courted:
                 msg = ("your patron dies; auto_court_heir courts his heir "
                        "afresh for %s denarii. Protection falls from %d%% to "
@@ -1119,10 +948,6 @@ class HazardsMixin:
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
             self.lose_capital(self.FIRE_CAPITAL_LOSS)
-            # An insula is a Roman tenement block; naming it here directly
-            # instead of reading self.civ["fire_quarter"] would print
-            # "insula district" in a Han game too. Every civilization file
-            # names its own quarter.
             household.log.append((year, "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
                                 self._loss_words(had))))
