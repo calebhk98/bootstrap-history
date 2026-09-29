@@ -32,3 +32,13 @@ In practice I grep-filtered most output to find the one line that mattered.
 ## Command count
 There are about 45 commands. The ones I actually needed: state, path, available, why, start, step, open, ventures, money, labour, hire, quote, economy (13). The hints after each screen point to the right next command well, so remembering them was not the problem.
 The friction is inconsistent nouns between sibling commands: `buy` takes farm/housing/school/material/nitre, `quote` refuses all of those, and `help commands` lists `options` as an alias for `available`.
+
+## Route blockers
+- For about 9 years (160-169 AD) the route had nothing startable. `path` said only "nothing on the route is startable today - see 'stuck'". `stuck` gave the real reason: "the state is wary of this (state interest -0.6); ... 'open patron_local'". That is a patron I had built decades earlier and never opened, because it earns 0 and costs upkeep.
+  Request: have `path` print the blocker line itself when nothing is startable, since `path` is the screen a goal-focused player reads every turn. It would also help if `why patron_local` said up front "some route nodes need this OPEN, not just built".
+- The game does warn every year that founder-hours are going to waste ("2,000 founder-hours this year are going into nothing at all"). That warning is good; it just cannot say what to do when the route is politically blocked.
+
+## Hazards and history
+- Hazards are dated historical events with names: Antonine plague (from 169), Third century crisis (a 44-year window from 235), currency debasement (205, 220, 235), Plague of Cyprian (249-262), Diocletian's reforms (284-305). `risk` lists them decades ahead. That makes them plannable, which is good for a player. It also means every Rome run meets the same crises at the same dates, which reads as scripted history rather than a society producing its own crises.
+- The knowledge-loss mechanic (80% chance a sack destroys knowledge, 40% of it each time) is the harshest rule in the game, and a new player has no strong signal until it happens. Request: when a hazard window with knowledge loss is under 30 years away, show a prominent line in `state` and `path` naming the cheapest hedge and how many steps it is. A one-line "AHEAD: ... hedged by nothing yet" that repeats unchanged for 135 years turns into wallpaper.
+- Request: some way to protect cash (a bank, deposits spread across towns, buying land elsewhere). As it stands the correct play before 235 is to spend everything, which is a strange lesson.

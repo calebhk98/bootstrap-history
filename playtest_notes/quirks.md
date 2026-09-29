@@ -45,3 +45,28 @@ Either the node should be granted to Rome, or the text should say what extra (in
 By 121 AD (seed 1), 7 of 25 projects failed on the first attempt. The FAILURE RISK figures shown at `start` sum to about 3.2 expected failures, and 7 or more has roughly a 4-5% chance under those figures.
 In 119 AD, three projects at 20%, 12% and 15% all failed in the same year (about 0.4% chance if independent).
 This could just be seed 1. Worth checking with many seeds whether realised first-attempt failure rates match the displayed FAILURE RISK, for example whether reputation or opposition multipliers apply at roll time but not in the displayed figure.
+
+## 12. Three ways to reopen a shut concern, three different prices, none stated up front
+- After a staff-loss closure, `open` costs "a tenth of what opening did" (the closure message says so).
+- After `mothball`, `open <id>` worked in 135 AD and charged 1x the yearly upkeep (nitre_beds: 10,781).
+- After `mothball`, `restore <id>` in 136 AD charged 2x the yearly upkeep (nitre_beds: 21,561; refractory_fireclay: 9,433 vs 4,717 upkeep).
+Neither the `mothball` reply, `help mothball` ("Stops its upkeep; restore reopens it") nor `help restore` ("Undoes mothball") mentions a cost. Combined with bugs.md #8, a player who mothballs a concern that looked unprofitable pays double to undo it.
+
+## 13. `labour` says household room "is not bought, it is built", but `buy housing` works
+`labour` at 142 AD: "to make room: Room is not bought, it is built: blast_furnace (+15 places); freedman_staff ...; school_founded ...". It points only at tech-tree nodes, the nearest costing 1.8M.
+`buy housing 10` succeeded straight away for about 40k and took places from 22 to 32. `help economy` lists it, but the screen a player reads when short of room steers them away from the cheap option.
+
+## 14. Staff fall faster than the log's "you lose N" lines add up to
+Artisans: 41 on staff after `hire artisan 20` in 169 AD, 18 by 179 AD (`labour`). The log's "you lose N artisans" lines for 169-178 add up to about 14-16. The rest may be the Antonine plague (`state` shows "HAPPENING NOW: Antonine plague" from 169), but no log line connects the plague to my staff.
+`state` also says attrition is "about 3.5%/yr", which would be about 12 over ten years on a staff of ~40.
+
+## 15. Disasters destroy a share of cash
+177 AD: "fire in the insula district ... destroyed 1,662,217 denarii" and "banditry or a frontier war disrupts supply: it cost you 757,232 denarii", together about a quarter of the 9.1M I held. In 132 a fire took 77,957 and in 120 one took 10,763, so the loss scales with wealth.
+It is unclear what a tenement fire burns when most of the wealth is cash. If it is deliberate (idle money is exposed), `risk` or `help money` should say so.
+
+## 16. The third-century crisis wiped out 150 years of progress in under 20 years
+Sackings (from `log find:sacked`): 235 (14.1M taken, 119 people), 242 (8.6M, 114 people, "8 projects back to the beginning"), 246 (3.2M, 88), 250 (1.1M, 48), 252 (0.2M, 15), 253 (111 den, 8).
+Result: "technologies: N built by you" fell from 91 to 21, route steps remaining went from 69 back to 135, money from ~17M to -88k, and net from +1.2M/yr to +1.2k/yr. In game terms 256 AD looks like 110 AD.
+- Each sack took most of the cash on hand. The first took 14.1M of roughly 17M. There seems to be no way to protect cash: no bank, no deposit elsewhere, no "move base" advice in `risk`.
+- Frequency: `risk` at 241 AD said "sack chance after what you have built: 10%" a year (16% base). Six sackings in 19 years is about 4% likely at those rates. It compounds: every sack destroys the defences, so the chance returns to 16%. Suggestive, not proven.
+- In fairness, it was signposted. Every `state` from 100 AD printed "N technologies at risk if a hazard lands, hedged by nothing yet", and `risk` listed the crisis window with its odds. I ignored it and filtered it out. The hedge nodes (corpus_dispersed, academy_network) were still several steps away when the crisis began.

@@ -11,3 +11,8 @@ Game: `play --civ rome_100ad --seed 1` (poor_scholar kit, default goal point_con
 | 113-121 | 49k | +41k | 22 | Trade route extension (big earner), first workshop, lenses, case hardening, crank. Many first-attempt failures. |
 | 122-128 | 389k | +163k | ~39 | Water power, bellows, 1100/1300 C heat, glass, porcelain, telescope, steel, phosphorus. |
 | 129-130 | 55k | +194k | ~39 | Route narrows to charcoal_industrial / zinc_metal / lead_metallurgy (330k-470k each). Paid 464k for lead; found bugs #6 and #7. |
+| 130-149 | 1.0M | +396k | ~45 | Lead, charcoal, zinc, coke, blast furnace (1.81M, failed once). Staff churn closes concerns often (bugs #5). |
+| 150-169 | 6.0M | +341k | ~53 | Bessemer converter, puddling, copper, voltaic pile, calculus. Route stalled ~9 years until `stuck` said to open the town patron. |
+| 169-206 | 14.9M | +1.05M | 83 | Newtonian mechanics, EM theory, machine tools, vacuum, thermodynamics, 1600 C furnaces. Turned on `auto_hire`, which stopped most churn. |
+| 206-234 | ~17M | +1.2M | 91 | Interchangeable parts, Newcomen and Watt engines, band theory. Fires took 3.6M and 3.8M. |
+| 235-256 | -88k | +1.2k | 25 | Third century crisis: 6 sackings, debasement. Most cash, most staff and 70 technologies lost. Roughly back to 110 AD. |
