@@ -126,6 +126,9 @@ TOPICS = [
     # _run_topic handles both. It had never run: unregistered here, and unable
     # to import under the old rome.sim.tests rooting even if it had been.
     "tierless_schema",
+    # Mod loader override semantics and error reporting (unittest-style).
+    "mod_overrides",
+    "mod_economic_catalog",
     # sim/world/agriculture.py: land, labour, technique and weather into
     # food, standalone and with no import of sim/engine/ - see that
     # module's own docstring for why. Also unittest.TestCase-style.

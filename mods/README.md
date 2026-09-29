@@ -33,9 +33,16 @@ A mod may provide:
 
 New technology, recipe, civilization, and trade ids must start with
 `<mod_id>_`. A technology or recipe may instead deliberately patch an existing
-id with `"override": true`; overrides are deep merges and fail if their target
-does not exist. Technology nodes may also use `"replaces": "existing_id"`.
-Unmarked collisions are errors which name both sources.
+id with `"override": true`; an override is a deep merge that changes only the
+fields it names (defaults apply to new nodes only) and fails if its target does
+not exist. Technology nodes may also use `"replaces": "existing_id"`, which is
+the same patch aimed at that id. A new technology node must have a string
+`name`. Unmarked collisions are errors which name both sources.
+
+Two mods that override the same field of the same technology or recipe are an
+error naming both mods, the id and the field, unless the later mod declares the
+other as a dependency (directly or transitively), in which case the dependent
+mod wins. Overrides of different fields merge.
 
 ## Economic content
 
