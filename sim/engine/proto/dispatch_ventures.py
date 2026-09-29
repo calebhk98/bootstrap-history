@@ -139,7 +139,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # calendar floor is long enough that it cannot be the only thing in
     # hand for a while - not every multi-year start, which would be noise
     # by the fifth one.
-    if node["yrs"] >= 2 and not getattr(sim, "_said_parallelism", False):
+    if node["yrs"] >= 2 and sim._said_parallelism is None:
         sim._said_parallelism = True
         out["a_calendar_floor_is_not_exclusive_research_time"] = (
             "%s will take at least %d year%s, whatever else you do. That "

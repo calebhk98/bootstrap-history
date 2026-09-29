@@ -9,6 +9,7 @@ the live Sim - see render.py and ARCHITECTURE.md.
 
 from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 from .tree_filters import render_state_rows
+from .wave_summary import summary_line
 # DISPLAY_WIDTH is NOT imported here: cli.py patches engine.protocol.DISPLAY_WIDTH
 # directly at runtime, so every reader of it in this file goes through the
 # protocol module itself, live, rather than a plain name bound once at import
@@ -335,6 +336,9 @@ def _state_completed_head_lines(out):
         if fdts:
             head.append("  *** THE FOUNDER HAS DIED, aged about %s, in %s ***"
                         % (fdts.get("aged_about"), fdts.get("year")))
+        headline = summary_line(out.get("summary"))
+        if headline:
+            head.append(headline)
         for record in completed or []:
             head.append("  %s %s: %s"
                         % ("THIS SOCIETY NOW HAS" if record.get("granted")

@@ -1,6 +1,6 @@
 # Freedman institution does not visibly apply its promised artisan capacity
 
-**Status:** open - `reports/RESOLUTION_AUDIT_01_26.md` says fixed, re-verify and close
+**Status:** closed - pinned by sim/tests/test_ventures_lifecycle.py and peoples capacity regression tests
 
 **Type:** State/tooltip inconsistency  
 **Priority:** High

@@ -114,6 +114,20 @@ Two fixes, usable separately or together:
                                                     the years still run.
       {"cmd":"quit"}                               end the session
 
+      A `step` reply also carries `completed` (each record has `kind`:
+      "technology", "concern" or "granted"), `events`, and, when anything
+      completed or failed, `summary`: `completed`, `by_kind`, `failed`,
+      `minor_failures` and, when the goal moved, `goal` (`measures` of
+      label/before/after and `road_steps_gained`). The text rendering leads
+      with a one-line SUMMARY once a step has several results; the full list
+      follows it. Event messages: a failure starts "FAILED at" and is
+      compact and marked "(minor)" when its loss is small against what you
+      can fund (weighted up on the goal's road); a completion may be followed
+      by "goal effect:" lines (metric before -> after, or that it is on the
+      road; under fog never the total), and a finished concern left closed
+      says "STATUS: CLOSED / NOT OPERATING" with what switches on when opened
+      and, if free staff could not supervise it, "could not open it".
+
       The `state` object (also embedded in every `step` reply) reports: year,
       capital, revenue, founder hours available, founder_alive, scholars,
       artisans, reputation, suspicion, scandal, eminence, protection,

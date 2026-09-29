@@ -1,6 +1,6 @@
 # Large completion waves should be summary-first
 
-**Status:** open
+**Status:** closed
 
 At mature scale, 10-25 technologies could complete in a turn. Full per-project narration becomes log spam.
 

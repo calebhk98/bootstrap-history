@@ -597,7 +597,7 @@ class StartingMixin:
 
     def _check_arrears(self, node_id, node, ignore_trade, _memo, _why):
         household = self.state.household
-        insolvent_years = household.insolvent_years or 0
+        insolvent_years = household.insolvent_years
         if insolvent_years >= self.ARREARS_GRACE_YEARS:
             surplus = (self.revenue() - self.upkeep() - self.living_cost()
                        - self.mine_operating_cost())

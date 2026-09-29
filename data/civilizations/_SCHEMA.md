@@ -24,6 +24,7 @@ python3 rome/sim/simulator.py civs            # list what is available
 | `id`, `name`, `year`, `blurb` | identity |
 | `population`, `urban_fraction`, `literacy_elite`, `literacy_general` | demography |
 | `currency`, `price_index`, `wage_index` | economy scaling. 1.0 is Rome 100 AD, which is the calibration baseline for `prices.json`. |
+| `starting_interest_rate`, `starting_tax_share` | **Required.** Yearly rate on arrears, and share of a household's revenue taken by tax and dues, at the civilisation's start date. Initial conditions, held constant for now; a missing or non-numeric value is a load error. Each carries a source and confidence under `_internal`. |
 | `state_capacity` | 0 to 1. Can the state fund and compel a large project? Rome 0.85, Norse 0.15. |
 | `starting_techs` | **Required, exhaustive, duplicate-free** node ids the civilization already has, including its material and capability nodes. Every id must exist in the universal graph or scenario loading fails. The engine never infers ownership from tier, cost, or another civilization's prerequisites: a zero-cost/tier-0 node absent from this list remains unknown. A different civ has a different free list. |
 | `home_regions` | which geography regions it controls or trades in cheaply |

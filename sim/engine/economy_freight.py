@@ -643,7 +643,7 @@ class FreightMixin:
                     % (deficit, square_meters, self.NITRE_YIELD_T_PER_M2,
                        "{:,.0f}".format(square_meters * self.NITRE_COST_PER_M2
                                        * self.price_index)))
-        if binding in self.MINE_CAPEX_PER_T_YR:
+        if binding in self.MINE_OPEX_PER_T:
             dem = self.annual_material_demand()
             # SAME GROUPING resource_throttle() uses (_demand_by_supply_tag):
             # copper's shortfall can now come from copper_wire_kg or

@@ -641,7 +641,7 @@ class StatePressureMixin:
             helps.append("visible wealth is half of what makes you a target")
         # THE LEVER, NAMED. This screen must not leave a player with no command
         # in it that means "get smaller". It is `withdraw`.
-        _last = getattr(self.state.household, "last_withdrawal", None)
+        _last = self.state.household.last_withdrawal
         if _last is not None and self.state.scenario.year - _last < self.WITHDRAW_EVERY:
             _lever_note = ("you stepped back in %d; again no sooner than %d"
                   % (_last, _last + self.WITHDRAW_EVERY))

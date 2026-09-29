@@ -427,7 +427,7 @@ class MaterialSupplyMixin:
         materials should not have to guess it needs no suffix, and the
         seven original short names must keep working exactly as before."""
         mat = str(mat or "").strip().lower()
-        if not mat or mat in self.MINE_CAPEX_PER_T_YR:
+        if not mat or mat in self.MINE_OPEX_PER_T:
             return mat
         prices = self._material_prices()
         if mat in prices or mat in self._commodity_ledger().commodities:
@@ -556,7 +556,7 @@ class MaterialSupplyMixin:
     # civilisation's real copper numbers via commodities.py's
     # propagate_demand(). gold_kg (fin_central_bank's 1000 kg, tx2_watch_case,
     # the gold-leaf electroscope) was also untracked despite Sim.open_mine
-    # already supporting a gold mine (MINE_CAPEX_PER_T_YR) and
+    # already supporting a gold mine (a mine) and
     # resources.json already carrying an empire gold figure (9 t/yr) --
     # nothing wired the two together. gold_g (LEDs, transistors: 1-20 grams)
     # is NOT added here, still: annual_material_demand() assumes every *_kg

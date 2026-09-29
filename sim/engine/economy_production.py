@@ -102,7 +102,7 @@ class ProductionMixin:
         pool = self.director_pool()
         if pool <= 0:
             return 1.0
-        sold = min(pool, getattr(self.state.household, "wage_hours_this_year", 0.0) or 0.0)
+        sold = min(pool, self.state.household.wage_hours_this_year)
         return max(0.0, 1.0 - sold / pool)
 
     def revenue_capacity(self):
@@ -110,7 +110,7 @@ class ProductionMixin:
         own work. Used where a swing in ONE year should not count - a lender
         does not cut your line because you took a job this year."""
         household = self.state.household
-        _sold = getattr(household, "wage_hours_this_year", 0.0) or 0.0
+        _sold = household.wage_hours_this_year
         household.wage_hours_this_year = 0.0
         try:
             return self.revenue()
@@ -154,7 +154,7 @@ class ProductionMixin:
             getattr(projects, "_done_ver", 0),
             getattr(household, "_workforce_ver", 0),
             getattr(governance, "_inst_units_ver", 0),
-            getattr(household, "wage_hours_this_year", 0.0) or 0.0,
+            household.wage_hours_this_year,
             getattr(economy, "farm_hectares", 0.0) or 0.0,
             getattr(household, "freedmen", 0.0) or 0.0,
             getattr(household, "slaves", 0.0) or 0.0,

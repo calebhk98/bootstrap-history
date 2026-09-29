@@ -1,6 +1,6 @@
 # Population screen does not reflect announced plague losses
 
-**Status:** partly - own audit line says partly; `reports/RESOLUTION_AUDIT_01_26.md` says fixed, re-verify
+**Status:** closed - pinned by sim/tests/test_complaints_17_24.py
 
 **Type:** UI/model consistency  
 **Priority:** High

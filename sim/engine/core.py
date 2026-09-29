@@ -527,29 +527,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "auto_commission": not manual,
             "auto_bribe":    not manual,   # pay your way out of a scandal
         }
-        # A HANDFUL OF "LAST TIME I SAID/DID X" TRACKERS, GIVEN A REAL
-        # STARTING VALUE HERE INSTEAD OF SPRINGING INTO EXISTENCE ON FIRST
-        # USE, so every call site can read `self.x` directly rather than
-        # paying a `getattr(self, name, default)` dict-and-default lookup on
-        # a path that runs every single step (some in step() itself, some in
-        # SocietyMixin's per-year calls). TRAP FOR A FIELD ALSO IN
-        # protocol.py's SAVE_FIELDS: perf_fingerprint.py hashes that list at
-        # year 0, and several of ITS OWN comments say a save MISSING one of
-        # those fields reads back as "has never happened yet" (None), a
-        # state distinct from an explicit zero or sentinel. Giving such a
-        # field a real value here makes year 0's hash disagree with any
-        # baseline recorded before this field existed - re-record every
-        # fingerprint baseline (`sim/perf_fingerprint.py record`) whenever a
-        # SAVE_FIELDS member's constructor default changes.
-        #
-        # Only fields that belong to `Sim` live here; the household's own
-        # equivalents of this same pattern (`insolvent_years`,
-        # `wage_hours_this_year`, `_said_deputies`, and the rest) live in
-        # Household.__init__ along with everything else it owns - see that
-        # constructor's own copy of this comment. What is left below is
-        # WORLD state: a shock or a debasement is something that happened to
-        # the whole society, not to this household alone, so a new field of
-        # that kind belongs here, not on Household.
+        # World-level "last time I said X" trackers; household ones live on HouseholdState.
         self._said_wage_cascade = -999     # last year a wage-cascade note was printed; -999 guarantees the first qualifying year always warns
         self._literacy_said = -999            # last year a literacy-census note was printed
         self._food_diffusion_said = -999      # last year a food-diffusion note was printed

@@ -379,5 +379,17 @@
         "A recognised fellowship of healers and teachers"
       ]
     ]
+  },
+  "starting_interest_rate": 0.2,
+  "starting_tax_share": 0.04,
+  "_internal": {
+    "starting_interest_rate": {
+      "source": "No Norse lending record survives for this date. Set from the neighbouring Carolingian and Anglo-Saxon world, where credit was informal and short-term rates high. Weak evidence.",
+      "confidence": "D"
+    },
+    "starting_tax_share": {
+      "source": "Levies were tribute, thing dues, and ship-levy service to a chieftain or king, not a steady share of revenue. A low share reflects weak state reach; an estimate.",
+      "confidence": "D"
+    }
   }
 }

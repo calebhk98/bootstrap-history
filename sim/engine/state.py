@@ -186,7 +186,7 @@ class HouseholdState:
 	bondage_years_left: float = 0.0
 	bondage_debt: float = 0.0
 	credit_frozen_until: int = 0
-	insolvent_years: Optional[int] = None
+	insolvent_years: int = 0
 	last_withdrawal: Optional[int] = None
 	last_settlement: int = -999
 	spend_last_year: Optional[float] = None
@@ -206,13 +206,13 @@ class HouseholdState:
 	work_trade: Optional[str] = None
 	last_taught: Dict[str, int] = field(default_factory=dict)
 	training: List[List[Any]] = field(default_factory=list)
-	wage_hours_this_year: Optional[float] = None
+	wage_hours_this_year: float = 0.0
 	log: List[Tuple[Any, str]] = field(default_factory=list)
 	granted_staff: Optional[Dict[str, float]] = None
 	hours_this_year: Optional[Dict[str, float]] = None
 	trade_schools: Optional[int] = None
 	worker_housing_places: Optional[int] = None
-	_said_deputies: Optional[int] = None
+	_said_deputies: int = 0
 	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None
 	_said_eminence: int = -999
@@ -220,7 +220,6 @@ class HouseholdState:
 	_said_notice_approach: int = 0
 	last_military_demand: int = -999
 	_said_confiscation_band: int = -1
-	_said_scandal: int = 0
 
 	def cost_capital(self, amount: float) -> None:
 		"""Deduct an amount of capital for household expenditure and track total spend."""
@@ -343,7 +342,7 @@ class ScenarioState:
 	goal_year: Optional[int] = None
 	_said_debasement: Optional[int] = None
 	_said_output: Optional[Dict[str, int]] = None
-	_said_scandal: Optional[int] = None
+	_said_scandal: int = 0
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
 

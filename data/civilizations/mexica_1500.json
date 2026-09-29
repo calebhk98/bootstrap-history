@@ -441,5 +441,17 @@
         "A recognised body of ticitl and teachers"
       ]
     ]
+  },
+  "starting_interest_rate": 0.1,
+  "starting_tax_share": 0.2,
+  "_internal": {
+    "starting_interest_rate": {
+      "source": "Credit was in kind (cacao, cloth, maize) with pledges of labour; no attested monetary interest rate. A placeholder for near-absent formal lending.",
+      "confidence": "E"
+    },
+    "starting_tax_share": {
+      "source": "Commoner tribute in goods and labour recorded in the Codex Mendoza and Matricula de Tributos; the share falling on a trading household is an estimate.",
+      "confidence": "D"
+    }
   }
 }
