@@ -334,30 +334,6 @@ class CreditMixin:
                              % (len(shed), "" if len(shed) == 1 else "s",
                                 ", ".join(shed))))
 
-    DEBT_BASE_RATE = declare(
-        "DEBT_BASE_RATE", 0.12, kind="hardcoded_outcome",
-        unit="fraction of arrears charged per year", source=
-        "The Roman legal maximum on ordinary loans (centesimae usurae, "
-        "literally 'hundredths', i.e. 1%/month) was twelve per cent a year; "
-        "widely attested as the respectable-lending ceiling of the period "
-        "this scenario starts in.",
-        confidence="B",
-        why="What an ordinary, unsecured borrower with no patron pays on "
-            "arrears - a real attested legal ceiling for Rome specifically, "
-            "not a guess, but used here as a flat PRICE OF MONEY asserted "
-            "from the historical record rather than a rate this model "
-            "derives from capital scarcity, expected default and lending "
-            "risk the way CLAUDE.md SS3.1 asks a price to be derived. It is "
-            "also the one figure every OTHER civilisation in this game "
-            "reuses as its own starting rate (nothing here varies it by "
-            "civ), which a real mechanism would have to. Reclassified from "
-            "temporary_heuristic to hardcoded_outcome (see "
-            "Complaints/36 and Complaints/37): this is not scaffolding "
-            "waiting on a mechanism that has simply not been written yet, "
-            "it is a historical number standing in for a market this "
-            "project has not yet built - see ENDOGENOUS_COSTS_AND_DOMAINS.md's "
-            "wage/price solver for the kind of mechanism a real interest "
-            "rate would fall out of.")
     DEBT_RATE_DISCOUNT_PATRON_LOCAL = declare(
         "DEBT_RATE_DISCOUNT_PATRON_LOCAL", 0.015, kind="temporary_heuristic",
         unit="fraction off the base annual rate", source=None,
@@ -413,14 +389,12 @@ class CreditMixin:
     def debt_interest_rate(self):
         """What arrears cost you a year.
 
-        Roman lending was expensive and the legal ceiling of twelve per cent was
-        a ceiling on the RESPECTABLE end of it; maritime loans ran far higher
-        because the risk was real. A man with no standing borrows from whoever
-        will have him and pays for it. Standing is what makes money cheap, which
+        Starts from the civilisation's own base rate. A man with no standing
+        borrows from whoever will have him and pays for it. Standing is what makes money cheap, which
         is the same rule as everything else in this model: patronage is the
         currency underneath the currency.
         """
-        rate = self.DEBT_BASE_RATE
+        rate = self.civ["starting_interest_rate"]     # the civ's own starting rate
         if self.running("patron_local"):        rate -= self.DEBT_RATE_DISCOUNT_PATRON_LOCAL
         if self.running("patron_senatorial"):   rate -= self.DEBT_RATE_DISCOUNT_PATRON_SENATORIAL
         if self.running("patron_imperial"):     rate -= self.DEBT_RATE_DISCOUNT_PATRON_IMPERIAL
@@ -969,7 +943,7 @@ class CreditMixin:
         household = (self.LIVING_COST_HOUSEHOLD_BASE * price_index
                      * (1 + household_state.freedmen * self.LIVING_COST_FREEDMAN_SHARE
                         + household_state.slaves * self.LIVING_COST_SLAVE_SHARE))
-        tax = max(0.0, rev) * self.LIVING_COST_TAX_RATE                # portoria, vicesima, local dues
+        tax = max(0.0, rev) * self.civ["starting_tax_share"]       # the civ's own starting tax share
         status = 0.0
         if self.has("citizenship"):        status += self.LIVING_COST_STATUS_CITIZENSHIP * price_index
         if self.running("patron_senatorial"):  status += self.LIVING_COST_STATUS_PATRON_SENATORIAL * price_index
@@ -1024,26 +998,6 @@ class CreditMixin:
         why="As LIVING_COST_FREEDMAN_SHARE, for an enslaved household "
             "member - lower, reflecting a bare rather than a dignified "
             "standard of upkeep. Tuned, not measured.")
-    LIVING_COST_TAX_RATE = declare(
-        "LIVING_COST_TAX_RATE", 0.06, kind="hardcoded_outcome",
-        unit="fraction of revenue", source=
-        "Named after real Roman levies - portoria (customs dues, "
-        "typically a few per cent), the vicesima (a nominal 5% on certain "
-        "transactions) and local dues - but combined into one flat rate "
-        "rather than modelling any of them as its own mechanism.",
-        confidence="C",
-        why="What fraction of revenue goes to tax and local dues each "
-            "year. The NAMED taxes are real; this file has no separate "
-            "customs, transaction or local-dues mechanism, so their "
-            "combined bite is approximated as one flat share of revenue "
-            "rather than computed from an actual fiscal structure. "
-            "Reclassified from temporary_heuristic to "
-            "hardcoded_outcome (see Complaints/36 and "
-            "Complaints/37), alongside DEBT_BASE_RATE: this stands "
-            "in for state revenue extraction, which CLAUDE.md SS3.1 asks "
-            "to fall out of trade volume, customs enforcement and imperial "
-            "administrative reach rather than being asserted as one number "
-            "reused unchanged by every civilisation this game starts.")
     LIVING_COST_STATUS_CITIZENSHIP = declare(
         "LIVING_COST_STATUS_CITIZENSHIP", 200.0, kind="temporary_heuristic",
         unit="denarii/year at price_index=1", source=None, confidence="D",

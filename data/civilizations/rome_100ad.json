@@ -535,5 +535,17 @@
     "w_religious_rigidity": 0.2
   },
   "wage_index": 1.0,
-  "year": 100
+  "year": 100,
+  "starting_interest_rate": 0.12,
+  "starting_tax_share": 0.06,
+  "_internal": {
+    "starting_interest_rate": {
+      "source": "Centesimae usurae, 1% a month, was the legal ceiling on ordinary loans; the respectable-lending rate, with maritime and unsecured lending far higher.",
+      "confidence": "B"
+    },
+    "starting_tax_share": {
+      "source": "Portoria customs (a few per cent), the vicesima on some transactions, and local dues combined into one share of a trading household's revenue. An estimate, not a fiscal reconstruction.",
+      "confidence": "C"
+    }
+  }
 }

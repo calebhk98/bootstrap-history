@@ -320,5 +320,17 @@
     "w_religious_rigidity": 0.2
   },
   "wage_index": 1.0,
-  "year": -100
+  "year": -100,
+  "starting_interest_rate": 0.24,
+  "starting_tax_share": 0.15,
+  "_internal": {
+    "starting_interest_rate": {
+      "source": "Ptolemaic private loans at two per cent a month (twenty-four a year) are well attested in the papyri and were the customary ceiling.",
+      "confidence": "B"
+    },
+    "starting_tax_share": {
+      "source": "Crown monopolies, the apomoira on orchards and vineyards, salt tax, and import duties made the state's bite heavy. Share on a trading household is an estimate.",
+      "confidence": "D"
+    }
+  }
 }

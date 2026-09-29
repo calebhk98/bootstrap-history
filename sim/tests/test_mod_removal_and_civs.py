@@ -297,7 +297,8 @@ class CivilizationModTests(ModTestBase):
         self.assertEqual(kept, self.load()["starting_techs"])
 
     def test_new_civ_is_still_added(self):
-        self.add_mod("acme", civs={"acme_land": {"id": "acme_land", "starting_techs": []}})
+        self.add_mod("acme", civs={"acme_land": {"id": "acme_land", "starting_techs": [],
+                                       "starting_interest_rate": 0.1, "starting_tax_share": 0.05}})
         self.assertIn("acme_land", self.ids())
         self.assertEqual("acme_land", self.load("acme_land")["id"])
 

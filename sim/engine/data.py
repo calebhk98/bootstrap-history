@@ -314,6 +314,10 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
         raise ValueError("civilization %r repeats starting technologies: %s"
                          % (civ.get("id", name), ", ".join(duplicates)))
     check_starting_techs(civ, get_ordered_mods(MODDIR))
+    for field in ("starting_interest_rate", "starting_tax_share"):
+        if not isinstance(civ.get(field), (int, float)) or isinstance(civ.get(field), bool):
+            raise ValueError("civilization %r must declare a numeric %s"
+                             % (civ.get("id", name), field))
     civ.setdefault("values", {})
     for field, default in (("w_military",0.5),("w_labour_saving",0.0),("w_information",0.0),
                  ("w_novelty",0.0),("w_magic_fear",0.4),("w_religious_rigidity",0.3),

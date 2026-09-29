@@ -382,5 +382,17 @@
         "A registered guild of physicians and teachers"
       ]
     ]
+  },
+  "starting_interest_rate": 0.2,
+  "starting_tax_share": 0.08,
+  "_internal": {
+    "starting_interest_rate": {
+      "source": "Shiji ch.129 puts a lending return near a fifth a year; Han memorials (Chao Cuo) describe peasant debt doubling within a year, so the spread is wide. Eastern Han specifics are thin.",
+      "confidence": "C"
+    },
+    "starting_tax_share": {
+      "source": "Land tax at a thirtieth of harvest, plus poll tax, a merchant surcharge, and corvee commuted to cash and the salt and iron regime. Merchants were taxed above farmers; the combined share on trading revenue is an estimate.",
+      "confidence": "D"
+    }
   }
 }
