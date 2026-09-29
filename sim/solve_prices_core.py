@@ -26,7 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(HERE)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim.joint_allocation import allocate_joint_cost  # noqa: E402
+from sim.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
@@ -844,13 +844,13 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
     return energy_cost_hours
 
 
-def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
+def _allocate_output_prices(outputs, current_prices, total_process_cost_hours, input_cost_hours,
                             demand_anchor_price_by_material=None):
     # Missing prices fall back to the initial guess, as for any unsolved material.
     priced = {material: current_prices.get(material, INITIAL_PRICE_GUESS_HOURS)
               for material in outputs}
     return allocate_joint_cost(outputs, priced, total_process_cost_hours,
-                               demand_anchor_price_by_material)
+                               demand_anchor_price_by_material, input_cost=input_cost_hours)
 
 
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
@@ -947,7 +947,8 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                 + energy_cost_hours)
 
     output_prices = _allocate_output_prices(
-        outputs, current_prices, total_process_cost_hours, demand_anchor_price_by_material)
+        outputs, current_prices, total_process_cost_hours, material_cost_hours,
+        demand_anchor_price_by_material)
 
     return total_process_cost_hours, output_prices
 
@@ -1194,24 +1195,48 @@ def _solve_round_candidates(production_entries, recipe_ids_in_order, resolvable_
                             prices, wage_by_trade, rent_hours_per_kg_by_material,
                             band_price_by_carrier, floor_by_carrier,
                             demand_anchor_price_by_material=None):
-    candidates_by_material = collections.defaultdict(list)
-    for recipe_id in recipe_ids_in_order:
-        entry = production_entries[recipe_id]
-        outputs = entry.get("outputs") or {}
-        if not outputs or not all(output_material in resolvable_materials for output_material in outputs):
-            continue
-        result = recipe_cost_and_allocation(
+    def cost(recipe_id, entry, anchors):
+        return recipe_cost_and_allocation(
             recipe_id, entry, prices, wage_by_trade,
             rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
             capability_band_price_by_carrier=band_price_by_carrier,
-            demand_anchor_price_by_material=demand_anchor_price_by_material)
+            demand_anchor_price_by_material=anchors)
+
+    runnable = [
+        recipe_id for recipe_id in recipe_ids_in_order
+        if (production_entries[recipe_id].get("outputs") or {})
+        and all(material in resolvable_materials
+                for material in production_entries[recipe_id]["outputs"])]
+    result_by_recipe = {}
+    # Sole-output recipes first: no anchor touches their price, so their
+    # cheapest price per material is a safe cap on the anchors joint recipes use.
+    direct_price_by_material = {}
+    for recipe_id in runnable:
+        entry = production_entries[recipe_id]
+        if len(entry["outputs"]) != 1:
+            continue
+        result = cost(recipe_id, entry, demand_anchor_price_by_material)
+        result_by_recipe[recipe_id] = result
         if result is None:
             continue
-        _total_cost, output_prices = result
-        for material, price in output_prices.items():
-            if not _meets_capability_floor(material, entry, floor_by_carrier):
-                continue
-            candidates_by_material[material].append((price, recipe_id))
+        for material, price in result[1].items():
+            if _meets_capability_floor(material, entry, floor_by_carrier):
+                direct_price_by_material[material] = min(
+                    price, direct_price_by_material.get(material, price))
+    capped_anchors = cap_anchors(demand_anchor_price_by_material, direct_price_by_material)
+    for recipe_id in runnable:
+        if recipe_id not in result_by_recipe:
+            result_by_recipe[recipe_id] = cost(
+                recipe_id, production_entries[recipe_id], capped_anchors)
+
+    candidates_by_material = collections.defaultdict(list)
+    for recipe_id in runnable:
+        result = result_by_recipe[recipe_id]
+        if result is None:
+            continue
+        for material, price in result[1].items():
+            if _meets_capability_floor(material, production_entries[recipe_id], floor_by_carrier):
+                candidates_by_material[material].append((price, recipe_id))
     return candidates_by_material
 
 

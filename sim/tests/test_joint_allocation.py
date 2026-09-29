@@ -34,6 +34,46 @@ class AllocateJointCostTests(unittest.TestCase):
         self.assertAlmostEqual(cheap["main_kg"], dear["main_kg"])
 
 
+class InputFloorTests(unittest.TestCase):
+    """An output never prices below the inputs its own mass came from."""
+
+    outputs = {"main_kg": 1000.0, "gem_kg": 1.0}
+
+    def test_a_huge_anchor_cannot_push_the_main_output_below_its_inputs(self):
+        prices = joint_allocation.allocate_joint_cost(
+            self.outputs, {}, 100.0, {"gem_kg": 1e6}, input_cost=80.0)
+        self.assertGreaterEqual(prices["main_kg"] * 1000.0, 80.0 * 1000.0 / 1001.0 - 1e-9)
+
+    def test_the_split_still_recovers_the_whole_cost(self):
+        prices = joint_allocation.allocate_joint_cost(
+            self.outputs, {}, 100.0, {"gem_kg": 1e6}, input_cost=80.0)
+        recovered = sum(prices[name] * quantity for name, quantity in self.outputs.items())
+        self.assertAlmostEqual(recovered, 100.0)
+
+    def test_a_split_that_already_covers_inputs_is_untouched(self):
+        without = joint_allocation.allocate_joint_cost(
+            self.outputs, {}, 100.0, {"gem_kg": 500.0})
+        with_floor = joint_allocation.allocate_joint_cost(
+            self.outputs, {}, 100.0, {"gem_kg": 500.0}, input_cost=1.0)
+        self.assertEqual(without, with_floor)
+
+
+class CapAnchorsTests(unittest.TestCase):
+
+    def test_an_anchor_is_capped_at_the_direct_route_price(self):
+        capped = joint_allocation.cap_anchors(
+            {"gem_kg": 900.0, "other_kg": 5.0}, {"gem_kg": 70.0})
+        self.assertEqual(capped, {"gem_kg": 70.0, "other_kg": 5.0})
+
+    def test_a_cheaper_anchor_is_kept(self):
+        self.assertEqual(
+            joint_allocation.cap_anchors({"gem_kg": 10.0}, {"gem_kg": 70.0}),
+            {"gem_kg": 10.0})
+
+    def test_no_anchors_stays_none(self):
+        self.assertIsNone(joint_allocation.cap_anchors(None, {"gem_kg": 70.0}))
+
+
 class DemandAnchorsTests(unittest.TestCase):
 
     def anchors(self, supply_kg):
@@ -52,6 +92,21 @@ class DemandAnchorsTests(unittest.TestCase):
             demand.income_bins(1_000_000.0, 500.0),
             (demand.FOOD, demand.Good("gem_kg", 0.0, 0.70)), {})
         self.assertEqual(anchors.prices({"wheat_kg": 0.5}), {})
+
+    def test_a_direct_route_caps_the_anchor_in_a_solved_joint_recipe(self):
+        # Direct route: 1 kg gem costs 20 hours; the joint smelt's anchor says 400.
+        entries = {"smelt": joint_entry(), "direct": {
+            "outputs": {"gem_kg": 1.0}, "inputs": {},
+            "labour_hours": {"labourer": 20.0}}}
+        producers = solve_prices.build_producers_index(entries)
+        anchors = self.anchors(50.0)
+        anchors.prices = lambda _prices: {"gem_kg": 400.0}
+        prices, iterations, _r, _c = solve_prices.solve(
+            entries, producers, {"main_kg", "gem_kg"}, {"labourer": 1.0},
+            demand_anchors=anchors)
+        # Uncapped, the smelt alone would price gem near 80 per kg.
+        self.assertLessEqual(prices["gem_kg"], 20.0)
+        self.assertLess(iterations, solve_prices.MAXIMUM_ITERATIONS)
 
     def test_a_custom_anchor_reaches_a_solved_joint_recipe(self):
         entries = {"smelt": joint_entry()}
@@ -75,21 +130,61 @@ def solve_ungated(with_anchors):
     resolvable = solve_prices.compute_resolvable_materials(
         entries, producers, rent_hours_per_kg_by_material=rent)
     anchors = joint_allocation.build_demand_anchors() if with_anchors else None
-    prices, _i, _r, chosen = solve_prices.solve(
+    prices, iterations, residual, chosen = solve_prices.solve(
         entries, producers, resolvable, wages,
         rent_hours_per_kg_by_material=rent, demand_anchors=anchors)
     unanchored = solve_prices.minor_joint_byproducts_are_unanchored(
         entries, chosen, prices, wages, rent_hours_per_kg_by_material=rent,
         demand_anchors=anchors)
-    return prices, unanchored
+    solved = SolvedRun(prices, unanchored, iterations, residual, chosen, entries)
+    return solved
+
+
+class SolvedRun:
+
+    def __init__(self, prices, unanchored, iterations, residual, chosen, entries):
+        self.prices = prices
+        self.unanchored = unanchored
+        self.iterations = iterations
+        self.residual = residual
+        self.chosen = chosen
+        self.entries = entries
 
 
 class RealDataJointSmeltTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.before, cls.unanchored_before = solve_ungated(False)
-        cls.after, cls.unanchored_after = solve_ungated(True)
+        before = solve_ungated(False)
+        after = solve_ungated(True)
+        cls.before, cls.unanchored_before = before.prices, before.unanchored
+        cls.after, cls.unanchored_after = after.prices, after.unanchored
+        cls.solved = after
+
+    def test_solver_converges_without_oscillating(self):
+        self.assertLess(self.solved.iterations, solve_prices.MAXIMUM_ITERATIONS)
+        self.assertLess(self.solved.residual, solve_prices.CONVERGENCE_TOLERANCE)
+
+    def test_no_joint_product_is_priced_below_its_share_of_input_cost(self):
+        # Floor: input cost times the output's share of the batch's output mass.
+        checked = 0
+        for material, recipe_id in self.solved.chosen.items():
+            entry = self.solved.entries[recipe_id]
+            outputs = entry.get("outputs") or {}
+            if len(outputs) < 2 or material not in outputs:
+                continue
+            input_cost = sum(quantity * self.after[name]
+                             for name, quantity in (entry.get("inputs") or {}).items())
+            mass = {name: joint_allocation.mass_in_kg(name, quantity)
+                    for name, quantity in outputs.items()}
+            floor = input_cost * mass[material] / sum(mass.values())
+            value = outputs[material] * self.after[material]
+            self.assertGreaterEqual(value, floor * 0.999, (material, recipe_id))
+            checked += 1
+        self.assertGreater(checked, 0)
+
+    def test_lead_pays_for_its_own_galena(self):
+        self.assertGreater(self.after["lead_kg"], 1.77 * self.after["galena_kg"])
 
     def test_mass_split_prices_silver_like_lead(self):
         self.assertAlmostEqual(self.before["silver_kg"], self.before["lead_kg"], places=6)
