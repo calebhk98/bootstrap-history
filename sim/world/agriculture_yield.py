@@ -38,15 +38,8 @@ from .agriculture import (
     Rotation,
     Toolkit,
 )
-# `hectares_cropped_per_farm_worker` is NOT imported up here at module level.
-# It lives in sim/world/agriculture_labour.py, which itself imports `Land`
-# from THIS module at ITS own top level - a top-level import in both
-# directions would be a genuine circular import between two sibling modules,
-# unlike sim/world/agriculture.py's own composition-point imports, which are
-# safe only because they run against a PARENT module that is merely
-# mid-execution, not two siblings each waiting on the other to finish.
-# `_max_hectares_harvestable_by_labour` below imports it locally, at call
-# time, once - see that function's own comment at the one line that needs it.
+# Circular import with agriculture_labour.py: deferred to call time in
+# _max_hectares_harvestable_by_labour (unlike composition-point imports).
 
 
 class Land(object):
@@ -150,14 +143,7 @@ def _max_hectares_harvestable_by_labour(
         return max_hectares_reapable_by_crew(
             worker_count, hours_per_worker_day=hours_per_worker_day,
             crop=crop, toolkit=toolkit)
-    # LOCAL IMPORT, ON PURPOSE - see this file's own top-of-file comment on
-    # why: sim/world/agriculture_labour.py (where hectares_cropped_per_farm_
-    # worker lives) imports Land from this module at ITS top level, so a
-    # top-level import here in the other direction would be a real circular
-    # import between two sibling files. Deferred to call time instead, by
-    # which point sim/world/agriculture.py's own composition-point imports
-    # have already finished loading both modules in full, so this is an
-    # ordinary, already-cached module lookup, not a fresh import.
+    # Deferred import to avoid circular dependency with agriculture_labour.py.
     from .agriculture_labour import hectares_cropped_per_farm_worker
     worker_equivalents = labour_hours / ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
     return worker_equivalents * hectares_cropped_per_farm_worker(crop, toolkit)
