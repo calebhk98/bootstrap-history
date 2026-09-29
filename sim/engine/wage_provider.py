@@ -23,9 +23,10 @@ _CIVILISATION_DIRECTORY = os.path.join(
 
 @functools.lru_cache(maxsize=None)
 def reference_discount_rate() -> float:
-    """Rome's own starting interest rate, for the context-free wage table
-    that tools and the price solver use when no civilisation is in play."""
-    path = os.path.join(_CIVILISATION_DIRECTORY, "rome_100ad.json")
+    """The default civilisation's starting interest rate, for the context-free
+    wage table tools and the price solver use when no civilisation is in play."""
+    from .settings import CONFIG_DEFAULTS
+    path = os.path.join(_CIVILISATION_DIRECTORY, CONFIG_DEFAULTS["default_civ"] + ".json")
     with open(path, encoding="utf-8") as handle:
         return float(json.load(handle)["starting_interest_rate"])
 
