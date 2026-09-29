@@ -123,6 +123,25 @@ Two fixes, usable separately or together:
                                                     contracts and most local standing.
                                                     Refused for a tile nobody lives on.
       {"cmd":"quit"}                               end the session
+      {"cmd":"help"}                               front page and topic list
+      {"cmd":"help","topic":"commands"}            every command, grouped (see below)
+      {"cmd":"help","topic":"hire"}                one command, or any alias, in detail
+
+      THE COMMAND LIST IS NOT MAINTAINED HERE. The examples above are a tour;
+      `help` is the complete list, generated from the command registry
+      (engine/proto/command_registry.py). Each handler declares its own
+      summary, usage, options, description and aliases with @command, and the
+      dispatch table, typed aliases and help are all read from that one
+      registry, so a command cannot run without being documented. The suite
+      checks that every dispatchable command and typed alias appears in help.
+
+      help reply shapes. `topic:"commands"` returns `commands` (name to
+      summary and description), `usage` (name to example forms), `groups`
+      (group to command names) and `aliases` (alias to command). A command
+      or alias topic returns `command`: name, group, summary, usage, options
+      (option to meaning), description and aliases. A word that is also a
+      topic (money, log, stuck, ...) returns the topic text plus `command`.
+      An unknown word returns `no such topic`, `did you mean` and `topics`.
 
       A project or hire that needs more people than exist in the country is
       refused, and the reason says so plainly.

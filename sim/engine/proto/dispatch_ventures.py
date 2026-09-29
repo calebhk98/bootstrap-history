@@ -9,6 +9,7 @@ name protocol.py's shim re-exports - and imports these handlers back from
 here. Behaviour is unchanged and moved verbatim.
 """
 
+from .command_registry import command
 import os
 import tempfile
 
@@ -20,6 +21,12 @@ from .util import _flag
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
 
+@command("start", group="projects", aliases=("begin", "research", "build"),
+         summary="begin work on something",
+         usage=["start <id or name>"], options={"<id>": "a technology or concern"},
+         description="If it cannot start, the error says exactly what is missing. A "
+                     "start that would oversubscribe a hired trade still goes ahead "
+                     "and warns.")
 def _cmd_start(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be started. 'state' shows where you finished and how far you got" % ended}
@@ -282,6 +289,10 @@ def _cmd_start(sim, nodes, cmd, ended):
 
 
 
+@command("stop", group="projects", aliases=("x", "abandon", "cancel"),
+         summary="abandon a project, losing what you spent",
+         usage=["stop <id>"], options={"<id>": "an active project"},
+         description="Sunk cost is sunk.")
 def _cmd_stop(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
     stopped, why = sim.stop_project(node_id)
@@ -363,6 +374,13 @@ def _rush_preview(sim, nodes, cmd, ended):
             "how_to_confirm": "Repeat the same rush without 'preview' to begin these."}
 
 
+@command("rush", group="projects", aliases=("startall", "start_all", "muster"),
+         summary="start everything you could begin today",
+         usage=["rush", "rush limit:5", "rush preview", "rush max_total_cost:<n>"],
+         options={"limit": "cap the count", "max_total_cost": "cap total money",
+                  "max_annual_draw": "cap yearly draw", "reserve_cash": "keep this much back",
+                  "preview": "show what it would start and spend, starting nothing"},
+         description="Highest-leverage first. Also spelled 'start all'.")
 def _cmd_rush(sim, nodes, cmd, ended):
     # BULK START, FOG-SAFE: a late game can have dozens of things
     # startable at once, with nothing to do but type `start <id>`
@@ -494,6 +512,10 @@ def _cmd_rush(sim, nodes, cmd, ended):
 
 
 
+@command("mothball", group="projects",
+         summary="shut a finished work down",
+         usage=["mothball <id>"], options={"<id>": "a finished concern"},
+         description="Stops its upkeep; restore reopens it.")
 def _cmd_mothball(sim, nodes, cmd, ended):
     _mb_id = cmd.get("id")
     mothballed, msg = sim.mothball_work(_mb_id)
@@ -523,6 +545,10 @@ def _cmd_mothball(sim, nodes, cmd, ended):
 
 
 
+@command("restore", group="projects",
+         summary="reopen a mothballed work",
+         usage=["restore <id>"], options={"<id>": "a mothballed concern"},
+         description="Undoes mothball.")
 def _cmd_restore(sim, nodes, cmd, ended):
     _rs_id = cmd.get("id")
     restored, msg = sim.restore_work(_rs_id)
@@ -534,6 +560,11 @@ def _cmd_restore(sim, nodes, cmd, ended):
 
 
 
+@command("open", group="projects",
+         summary="start running something you have worked out how to do",
+         usage=["open <id>"], options={"<id>": "a finished concern"},
+         description="Until you open it, it earns nothing and costs nothing. Finishing "
+                     "is not the same as running.")
 def _cmd_open(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -567,6 +598,10 @@ def _cmd_open(sim, nodes, cmd, ended):
 
 
 
+@command("ventures", group="projects",
+         summary="what you run and could run",
+         usage=["ventures"], options={},
+         description="What you are running, and what you know how to run and have not opened.")
 def _cmd_ventures(sim, nodes, cmd, ended):
     sch_free, art_free = sim.venture_staff_free()
     running = sorted(sim.operating)
@@ -697,6 +732,12 @@ def _cmd_ventures(sim, nodes, cmd, ended):
 
 
 
+@command("policy", group="game",
+         summary="automatic behaviours and their switches",
+         usage=["policy", "policy <name> on|off", '{"cmd":"policy","set":{"auto_hire":true}}'],
+         options={"<name>": "a policy switch", "on / off": "the new setting"},
+         description="Bare policy lists every automatic behaviour. Each can be done by "
+                     "hand instead.")
 def _cmd_policy(sim, nodes, cmd, ended):
     want = cmd.get("set")
     changed = {}

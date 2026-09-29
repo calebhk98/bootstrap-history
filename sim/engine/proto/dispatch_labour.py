@@ -9,11 +9,17 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
+from .command_registry import command
 from ..data import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state import _staff_fraction_note
 from .util import _num, _qty
 
 
+@command("work", group="labour",
+         summary="do an ordinary job for ordinary pay",
+         usage=["work <trade> <hours>"],
+         options={"<trade>": "a trade you can practise", "<hours>": "founder hours to sell"},
+         description="Sell your own hours for wages instead of spending them on a project.")
 def _cmd_work(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -54,6 +60,15 @@ def _cmd_work(sim, nodes, cmd, ended):
 
 
 
+@command("allocate", group="labour", aliases=("direct", "assign", "split"),
+         summary="a standing order for your own hours",
+         usage=["allocate", "allocate <id> <hours>", "allocate <id> off",
+                "allocate work <trade> <hours>"],
+         options={"<id>": "an active project", "<hours>": "hours every year; 0 or off clears it",
+                  "work <trade>": "sell hours as wages instead of a project"},
+         description="Gives a project this many of your hours every year, ahead of "
+                     "anything undirected. Bare allocate lists what is set; hours "
+                     "nobody directs are still shared by priority.")
 def _cmd_allocate(sim, nodes, cmd, ended):
     # A STANDING INSTRUCTION, NOT A ONE-TURN COMMAND. "Divide your own
     # year's hours yourself": `start` and `work` already let a player
@@ -142,6 +157,11 @@ def _cmd_allocate(sim, nodes, cmd, ended):
 
 
 
+@command("labour", group="labour", aliases=("people", "staff", "workers"),
+         summary="who you employ and what trades exist here",
+         usage=["labour", "labour <trade>"], options={"<trade>": "one trade in detail"},
+         description="Who exists here, what they cost, and who you employ. See the "
+                     "labour topic for how trades differ.")
 def _cmd_labour(sim, nodes, cmd, ended):
     one = (cmd.get("trade") or "").strip().lower()
     if one and one not in WAGES:
@@ -366,6 +386,11 @@ def _cmd_labour(sim, nodes, cmd, ended):
 
 
 
+@command("hire", group="labour",
+         summary="hire staff by the year",
+         usage=["hire <trade> <n>", '{"cmd":"hire","trade":"smith","n":3}'],
+         options={"<trade>": "a trade that exists here", "<n>": "how many"},
+         description="Paid every year whether or not there is work for them.")
 def _cmd_hire(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -395,6 +420,11 @@ def _cmd_hire(sim, nodes, cmd, ended):
 
 
 
+@command("fire", group="labour", aliases=("dismiss", "sack", "lay"),
+         summary="let staff go",
+         usage=["fire <trade> <n>"],
+         options={"<trade>": "the trade", "<n>": "how many"},
+         description="Stops their annual wage.")
 def _cmd_fire(sim, nodes, cmd, ended):
     quantity, err = _qty(cmd, "n", 1)
     if err:
@@ -414,6 +444,11 @@ def _cmd_fire(sim, nodes, cmd, ended):
 
 
 
+@command("train", group="labour", aliases=("teach", "learn"),
+         summary="teach a trade this society lacks",
+         usage=["train <trade> <n>"],
+         options={"<trade>": "a trade that does not exist here", "<n>": "how many"},
+         description="Teaches from nothing, out of your own hours.")
 def _cmd_train(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -448,6 +483,11 @@ def _cmd_train(sim, nodes, cmd, ended):
 
 
 
+@command("commission", group="labour", aliases=("job", "hireout"),
+         summary="buy a job rather than a person",
+         usage=["commission <trade> <hours>"],
+         options={"<trade>": "the trade", "<hours>": "hours of that trade's work"},
+         description="Pays for hours of a trade's work once, with no continuing wage.")
 def _cmd_commission(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -461,6 +501,12 @@ def _cmd_commission(sim, nodes, cmd, ended):
             "note": "These hours are available to your projects this year only."}
 
 
+@command("move_base", group="labour", aliases=("move", "relocate", "moveto"),
+         summary="move your base to another tile",
+         usage=["move", "move <tile>"], options={"<tile>": "a tile your nation holds"},
+         description="Bare move lists the tiles with the journey's cost. Moving costs "
+                     "wages on the road, part of your year's hours, local contracts and "
+                     "most local standing; the town and reachable trades change.")
 def _cmd_move_base(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
