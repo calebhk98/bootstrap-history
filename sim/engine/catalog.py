@@ -115,7 +115,8 @@ def load_mod_tree_nodes(root: str, mods_dir: Optional[str] = None) -> Iterable[D
     """Technology nodes of the base tree with enabled mods applied."""
     with open(os.path.join(root, "data", "tech_tree.json"), encoding="utf-8") as source:
         base_tree = json.load(source)
-    tree = load_mod_tree(base_tree, get_ordered_mods(mods_dir or os.path.join(root, "mods")))
+    tree = load_mod_tree(base_tree, get_ordered_mods(mods_dir or os.path.join(root, "mods")),
+                         copy_base=False)
     return tree["nodes"]
 
 

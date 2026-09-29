@@ -101,9 +101,13 @@ def _remove(items: Dict[str, Any], claims: Dict[Any, str], kind: str, item_id: s
     del items[item_id]
 
 
-def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest]) -> Dict[str, Any]:
-    """Overlay mod branch nodes and goal catalog entries on a base tree."""
-    tree = copy.deepcopy(base_tree)
+def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest],
+                  copy_base: bool = True) -> Dict[str, Any]:
+    """Overlay mod branch nodes and goal catalog entries on a base tree.
+
+    `copy_base=False` lets the overlay edit `base_tree` in place, for a
+    caller that just parsed it and keeps no other reference."""
+    tree = copy.deepcopy(base_tree) if copy_base else base_tree
     nodes = {node["id"]: node for node in tree["nodes"]}
     manifests = list(manifests)
     by_id = {manifest.id: manifest for manifest in manifests}

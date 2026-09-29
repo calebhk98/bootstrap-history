@@ -26,7 +26,10 @@ def discover_slow_topics(tests_dir=TESTS_DIR):
     for name in discover_topics(tests_dir):
         path = os.path.join(tests_dir, "test_%s.py" % name)
         with open(path, encoding="utf-8") as handle:
-            tree = ast.parse(handle.read(), filename=path)
+            source = handle.read()
+        if "SLOW_TOPIC" not in source:
+            continue
+        tree = ast.parse(source, filename=path)
         for node in tree.body:
             if (isinstance(node, ast.Assign)
                     and any(isinstance(target, ast.Name) and target.id == "SLOW_TOPIC"

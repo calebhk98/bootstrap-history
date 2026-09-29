@@ -1127,7 +1127,7 @@
    "chemist": 150
   },
   "mat": {
-   "basic_slag": 800
+   "basic_slag_kg": 800
   },
   "cap": 250,
   "up": 35,
