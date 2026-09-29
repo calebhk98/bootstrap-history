@@ -153,7 +153,7 @@ S.load_state(s7_fresh, _save7)
 os.remove(_save7)
 check("a demographic shock's cohort counts survive a real save/reconstruct/"
       "load cycle bit-for-bit - the exact failure mode the OLD pop_deficit/"
-      "wage_index/_pop_scale_base trio had, live, because none of the nine "
+      "wage_index/pop-scale trio had, live, because none of the nine "
       "attributes _demographic_recovery used were ever in SAVE_FIELDS",
       (s7_fresh.population.children == _shocked_children
        and s7_fresh.population.working_age == _shocked_working_age
@@ -162,47 +162,6 @@ check("a demographic shock's cohort counts survive a real save/reconstruct/"
 check("...and the wage premium that cohort state drives is therefore ALSO "
       "intact after the round-trip, not silently reset to baseline",
       s7_fresh.wage_index > s7_fresh._wage_index_base * 1.2, s7_fresh.wage_index)
-
-# --- JOB 3: A FOOD TECHNOLOGY RAISES THE POPULATION, SLOWLY. Crop
-# rotation, the three-field system, New World crops and the like should feed
-# back into a bigger labour market eventually, but more food shows up in the
-# headcount a generation later, not the season it is first sown - so
-# apply_tech_effects must queue the gain rather than apply it the year the
-# node completes.
-#
-# THE VEHICLE CANNOT BE A DISEASE TECHNOLOGY, such as `sanitation_
-# antisepsis`: the eight DISEASE technologies (Sim.DISEASE_BURDEN_TECH_IDS)
-# do not queue a scalar here at all - they drive `_disease_burden()` live,
-# and the generational lag this ramp was imitating falls out of the cohort
-# model instead - people stop dying the year the latrine opens, and the
-# headcount answers over the following decades because that is how cohorts
-# work. A hardcoded forty-year ramp is not needed where the simulation
-# produces the lag itself (CLAUDE.md SS3.1), so for disease there is none,
-# and test_disease_burden_wiring.py is what guards the mechanism that
-# produces it.
-# The five FOOD entries sharing the `population` field still queue exactly as
-# before, which is what this job tests. `crop_rotation` carries the same 0.02
-# weight `sanitation_antisepsis` did, so every number below is unchanged.
-s6 = sim(civ="rome_100ad")
-_base_pop = s6._pop_scale_base
-s6.apply_tech_effects("crop_rotation")
-check("a population-raising technology does not move the population the "
-      "instant it completes",
-      s6._pop_scale_base == _base_pop, s6._pop_scale_base)
-for _yr in range(100, 100 + 40):
-    s6._demographic_recovery(_yr)
-check("...but it has fully landed by the end of its forty-year ramp",
-      abs(s6._pop_scale_base - (_base_pop + 0.02)) < 1e-6, s6._pop_scale_base)
-check("...and the gain stops growing once it has landed, rather than "
-      "compounding forever",
-      not s6._pop_tech_pending, s6._pop_tech_pending)
-s6.apply_tech_effects("crop_rotation")
-for _yr in range(140, 140 + 20):
-    s6._demographic_recovery(_yr)
-check("halfway through a SECOND such technology's ramp, only half of its "
-      "own gain has landed - the ramp does not dump the total on year one",
-      abs(s6._pop_scale_base - (_base_pop + 0.02 + 0.01)) < 1e-6,
-      s6._pop_scale_base)
 
 # =============================================================================
 # SEVERITY HONESTY: the words attached to a dated hazard must match `loss`,

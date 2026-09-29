@@ -8,6 +8,7 @@ from .data import (DEFAULTS, load_civ, load_geography, load_resources,
 
 from sim.world import demography
 from sim.world import agriculture
+from sim.world import farming_technique
 from sim.world import land
 # Weather is drawn per geography.json land_tiles cell (see
 # `_compute_farm_weather_cells`).
@@ -329,24 +330,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # mortality event large enough to take a third of one household's
         # own staff must not leave everybody ELSE's wages untouched, as if
         # the rest of the world's labour market saw nothing happen.
-        # self._pop_scale_base is this civilisation's OWN trend size - its
-        # configured population against the same 65,000,000 reference every
-        # downstream formula is calibrated to (see pop_scale's own comment
-        # below) - nudged upward over time by population-raising technology
-        # and food-diffusion (apply_tech_effects/_advance_food_diffusion_
-        # population, society.py). Those two write sites do not yet feed
-        # self.population itself (open question - see docs/architecture/
-        # WIRING_MILESTONE_4.md SS1.3), so nothing reads this attribute back
-        # here; see wage_index's own comment for why it deliberately does
-        # NOT compare against this mutable value.
-        # self.pop_scale itself (read everywhere else in the engine) is a
-        # COMPUTED PROPERTY off self.population, not stored here: a
-        # staff_loss hazard in _shocks() (society.py) cuts self.population's
-        # cohorts directly, rather than touching a separate scalar deficit.
-        self._pop_scale_base = max(
-            self.POP_SCALE_FLOOR,
-            float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
-            / self.DEFAULT_POPULATION_100AD)
+        # pop_scale is a computed property over the age-cohort population;
+        # a mortality shock cuts the cohorts directly.
         # An age-cohort population (docs/architecture/WIRING_MILESTONE_4.md
         # SS6), built and proven standalone in sim/world/self._demography.py, and
         # read and mutated by pop_scale/wage_index (below) and by _shocks()
@@ -435,18 +420,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # `_last_farm_year` for why this is not a SAVE_FIELDS member.
         self._last_farm_year = None
         self._last_demographic_step = None
-        # Population-raising technologies (sanitation, antisepsis, crop
-        # rotation, canning...) queue their effect here instead of applying
-        # it the year they complete - see apply_tech_effects in society.py.
-        # Each entry is [fraction-of-baseline added per year, years left to
-        # add it]: a lower death rate shows up in a headcount a generation
-        # later, not the day a latrine opens. DRAINED INTO `_pop_scale_base`
-        # rather than into `self.population` directly, because giving a
-        # technology an actual per-instance effect on this civilisation's
-        # mortality/fertility needs a mechanism sim/world/self._demography.py does
-        # not have yet (its rates are module-level constants) - open design
-        # question in docs/architecture/WIRING_MILESTONE_4.md SS1.3/SS6.
-        self._pop_tech_pending = []
+        self._last_farm_workers_fte = None
+        self._farm_technique_this_year = farming_technique.DEFAULT_TECHNIQUE
         self.year = self.cfg["start_year"]
         config = self.cfg
         # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,
@@ -532,7 +507,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
         self._said_wage_cascade = -999     # last year a wage-cascade note was printed; -999 guarantees the first qualifying year always warns
         self._literacy_said = -999            # last year a literacy-census note was printed
-        self._food_diffusion_said = -999      # last year a food-diffusion note was printed
         self._said_condition = set()          # hazard-condition messages already printed once
         # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
         # to a household in general, and stay on `Sim` for exactly that reason
@@ -749,31 +723,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     # below); that lowers `pop_scale` directly, and this property reads the
     # gap that opens - a hazard never touches `wage_index` itself.
     #
-    # DELIBERATELY NOT `self._pop_scale_base`: `_pop_scale_base` is
-    # incremented by population-raising technology and food-technology
-    # diffusion (`_pop_tech_pending`/`_advance_food_diffusion_population`,
-    # society.py), but those two write sites do not yet feed
-    # `self.population` itself (open design question - see docs/
-    # architecture/WIRING_MILESTONE_4.md SS1.3). Reading the mutable
-    # `_pop_scale_base` here would make a population-raising technology
-    # look like it makes labour SCARCER, not more abundant: it would raise
-    # the trend line `pop_scale` is compared against while `pop_scale`
-    # itself (self.population.total, untouched by those two mechanisms)
-    # stays exactly where it was, widening the apparent shortfall for no
-    # reason. Comparing against this civilisation's ORIGINAL configured
-    # trend instead - the same expression `_pop_scale_base` is seeded with
-    # in __init__, before any technology can touch it - keeps those two
-    # write sites genuinely inert with respect to `wage_index` until they
-    # gain a real effect on `self.population` to be inert ABOUT.
-    #
-    # RECOVERY IS EMERGENT, NOT A CLOCK: as `self.population.step()` (called
-    # once a year, below) runs its own births and deaths on the SURVIVING
-    # cohort structure, `pop_scale` moves back toward this trend - or does
-    # not, if the surviving population's own vital rates do not support
-    # catch-up growth above replacement, which is itself a real, checkable
-    # prediction of the demographic model rather than a number this engine
-    # asserts. See WIRING_MILESTONE_4.md SS5 for the fingerprint behaviour
-    # this predicts.
+    # Recovery is emergent: the cohort model's own births and deaths move
+    # pop_scale back toward the trend, or not, with no clock.
     @property
     def wage_index(self):
         unshocked_trend = max(
@@ -1322,10 +1273,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         return pooled_multiplier
 
     def _demographic_recovery(self, year):
-        """Advance `self.population` by one year, from a REAL harvest, and
-        let population-raising technologies build their queued gain into
-        `_pop_scale_base`: the age-cohort model handles the population
-        half, `self._agriculture.py` the food half.
+        """Advance `self.population` by one year, from a REAL harvest: the
+        age-cohort model handles the population half, the agriculture model
+        the food half, through this society's own farming technique.
 
         Food availability comes from an actual harvest: one year of
         `self._agriculture.Storage.step` (land, labour and an independent weather
@@ -1468,21 +1418,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         returns would give, and an honest consequence of not (yet) modelling
         within-hectare labour intensification beyond reference technique.
         """
-        if self._pop_tech_pending:
-            still = []
-            for per_year, years_left in self._pop_tech_pending:
-                self._pop_scale_base += per_year
-                if years_left > 1:
-                    still.append((per_year, years_left - 1))
-            self._pop_tech_pending = still
-
         adult_equivalent_population = self._adult_equivalent_population(self.population)
         farm_workers_fte = self._allocate_farm_workforce(adult_equivalent_population)
-        hectares_worked = min(
-            self.farm_land.hectares,
-            farm_workers_fte * self._agriculture.hectares_cropped_per_farm_worker())
-        crop_workers_fte = hectares_worked / self._agriculture.hectares_cropped_per_farm_worker()
-        farm_labour_hours = hectares_worked * self._agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
+        technique = self._farm_technique_this_year
+        hectares_per_worker = self._agriculture.hectares_cropped_per_farm_worker(
+            technique.crop, technique.toolkit)
+        hectares_worked = min(self.farm_land.hectares, farm_workers_fte * hectares_per_worker)
+        crop_workers_fte = hectares_worked / hectares_per_worker
+        farm_labour_hours = hectares_worked * farming_technique.hours_per_hectare(technique)
+        self._last_farm_workers_fte = farm_workers_fte
         # SEED IS SOWN ON WHAT GETS WORKED, NOT ON `farm_land`'S FULL FIXED
         # AREA. `Storage.step` charges seed (and next year's seed reservation)
         # against `land.hectares` directly, with no cap of its own - it is
@@ -1528,7 +1472,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # beyond the reserve is eaten, which is grain that would otherwise
         # have sat there and spoiled.
         reserve_target_kg = self._agriculture.granary_capacity_kg(
-            adult_equivalent_population * self._agriculture.annual_food_demand_kg_per_person())
+            adult_equivalent_population
+            * self._agriculture.annual_food_demand_kg_per_person(technique.crop))
         # THE PER-REGION WEATHER DRAW (Complaints/closed/47-one-weather-
         # draw-for-a-continent.md). `_pooled_farm_weather_multiplier`
         # draws one independent weather multiplier per home region this
@@ -1543,6 +1488,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # receives a number, exactly as it always has.
         farm_year = farm_storage.step(
             worked_land, farm_labour_hours, adult_equivalent_population,
+            crop=technique.crop, rotation=technique.rotation, toolkit=technique.toolkit,
             worker_count=crop_workers_fte,
             reserve_target_kg=reserve_target_kg,
             weather_multiplier=self._pooled_farm_weather_multiplier(year))
@@ -1615,20 +1561,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
             disease_burden = 1.0 - unlocked_weight / total_weight
 
-        LIVE, NOT QUEUED: read fresh every call from `self.has(...)`, never
-        accumulated into `_pop_tech_pending` - a technology's disease
-        effect is a standing fact about this civilisation ("it now boils
-        its water"), not a one-off pulse that ramps in over
-        POP_TECH_RAMP_YEARS and is done. `apply_tech_effects` does not feed
-        these eight into `_pop_tech_pending` at all (see its own comment):
-        the same tree-author weight must not do two jobs at once, and
-        `_pop_tech_pending` draining into `_pop_scale_base` is read by
-        nothing (WIRING_MILESTONE_4.md SS1.3). The five FOOD entries that also carry a
-        `population` field (crop_rotation, fud_three_field_rotation,
-        fud_seed_drill, mat_newworld_crops, ag2_canning) are calorie
-        effects, not disease ones, and are deliberately excluded by
-        construction: only `DISEASE_BURDEN_TECH_IDS`'s own eight ids are
-        ever summed here.
+        Read fresh every call from `self.has(...)`: a standing fact about
+        this civilisation ("it now boils its water"). Food technologies act
+        through the farming technique instead (see `_farming_technique`).
 
         Clamped to [0, 1] defensively (a total of exactly 0.15 measured
         directly against `_TECH_EFFECTS.json` today makes this unreachable
@@ -1655,13 +1590,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         announced effects should be visible immediately, not lag a step.
         """
         premium = (self.wage_index / self._wage_index_base - 1.0) * PERCENT_SCALE
-        # The message wants the SAME shortfall wage_index's own property
-        # just computed, not a second, separately-derived copy of it - see
-        # wage_index's own comment for why it is measured against this
-        # civilisation's unshocked configured trend rather than the
-        # (still tech-mutable) `_pop_scale_base`. Recovered algebraically
-        # from `premium` rather than recomputed, so the two can never drift
-        # apart: premium == elasticity * shortfall * 100, by construction.
+        # Recover the shortfall from `premium` so the message and
+        # wage_index cannot drift apart.
         shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
         if premium > 0.5 and year - self._said_wage_cascade >= 15:
             self._said_wage_cascade = year

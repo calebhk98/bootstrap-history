@@ -136,13 +136,9 @@ def _score_components(sim, nodes, reveal_tree_total):
 
     # LITERACY (15%) - general and elite literacy against the CEILING each
     # already has in this engine (SocietyMixin.literacy_ceiling_general/
-    # _elite, society.py): a hard, population- and mechanisation-driven cap
-    # that is the same structural number for every civilisation, not
-    # something this file tunes. 0.90 general / 0.97 elite are what the
-    # mechanism itself says a pre-transistor-era society can ever reach, so
-    # "literacy" here means how much of what is ACTUALLY reachable has been
-    # reached, not a raw fraction a civilisation starting with worse
-    # schooling could never max out. Weighted equally between the two
+    # _elite, society.py): the cap comes from the farm share of hours and
+    # the share unable to read, so "literacy" here means how much of what
+    # is reachable has been reached. Weighted equally between the two
     # populations the engine tracks separately.
     gen = max(0.0, float(sim.civ.get("literacy_general", 0.0)))
     gen_ceiling = max(1e-9, sim.literacy_ceiling_general())

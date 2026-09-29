@@ -894,7 +894,7 @@ class StatePressureMixin:
         1.77 billion denarii while eminence itself never once crossed its
         own danger line (see the Rome dice-free trial this mechanic was
         measured against). Every term sqrt-saturates or caps at 1.0, the same
-        diminishing shape military_leverage() and agrarian_slack() already
+        diminishing shape military_leverage() already
         use: the five-hundredth employee does not make you five hundred
         times more noticeable than the first.
         """

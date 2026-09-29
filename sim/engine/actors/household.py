@@ -177,7 +177,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"pop_children": "population",
 	"pop_working_age": "population",
 	"pop_elderly": "population",
-	"_food_pop_bonus_applied": "population",
 }
 
 _VERSION_MAP: Dict[str, str] = {

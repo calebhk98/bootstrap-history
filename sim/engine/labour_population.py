@@ -568,13 +568,7 @@ class PopulationMixin:
         """
         if not self.trade_available(trade):
             return 0.0
-        # self.population.total (sim/world/demography.py's age-cohort
-        # model) IS this civilisation's actual running headcount, and must
-        # be read directly rather than reconstructed from civ["population"]
-        # (a fixed config number) times a ratio of two scalar fields
-        # (pop_scale/_pop_scale_base) - that reconstruction would be the
-        # one place in the engine trying to answer "how many people are
-        # actually here" as a headcount built entirely out of ratios.
+        # The age-cohort model's running headcount is the actual population.
         pop = self.population.total
         urban = pop * float(self.civ.get("urban_fraction", 0.0))
         if trade == "scholar":

@@ -809,22 +809,6 @@ class ForwardingPropertiesMixin:
 	# =========================================================================
 
 	@property
-	def _food_pop_bonus_applied(self):
-		sub = getattr(self.state, "population", None)
-		if sub is None:
-			raise AttributeError("_food_pop_bonus_applied")
-		val = getattr(sub, "_food_pop_bonus_applied", None)
-		if val is None:
-			raise AttributeError("_food_pop_bonus_applied")
-		return val
-
-	@_food_pop_bonus_applied.setter
-	def _food_pop_bonus_applied(self, value):
-		sub = getattr(self.state, "population", None)
-		if sub is not None:
-			setattr(sub, "_food_pop_bonus_applied", value)
-
-	@property
 	def pop_children(self):
 		return self.population.children
 

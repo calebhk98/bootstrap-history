@@ -286,11 +286,6 @@ def _test_governance_and_population_bidirectional_sync():
 	if s.population.elderly != 4000.0 or s.state.population.pop_elderly != 4000.0:
 		return False, f"pop_elderly failed to sync: sim.pop={s.population.elderly}, state={s.state.population.pop_elderly}"
 
-	# 3. _food_pop_bonus_applied flag
-	s._food_pop_bonus_applied = True
-	if s.state.population._food_pop_bonus_applied is not True:
-		return False, "s._food_pop_bonus_applied failed to sync to state.population"
-
 	return True, "governance and population subsystems synchronize bidirectionally"
 
 
