@@ -387,8 +387,13 @@ check("without --pretty, stderr carries no rendered reply (only the welcome bann
 
 _out_kit, _err_kit, _ = _run_agent([{"cmd": "state"}, {"cmd": "quit"}],
                                    extra_args=["--pretty", "--kit", "equestrian"])
+# The opening cash is now labourer-years in the civ's own coin, so no fixed
+# figure is expected; the Money line must be grouped and never a bare digit run.
+import re as _re_money
+_money_line = [line for line in _err_kit.splitlines() if line.startswith("Money:")]
 check("large numbers in the pretty rendering carry thousands separators",
-      "100,000" in _err_kit or "100,000" in _err_kit.replace(",", "", 0), _err_kit[:300])
+      bool(_money_line) and _re_money.search(r"\d{1,3}(,\d{3})+", _money_line[0])
+      and not _re_money.search(r"\d{4,}", _money_line[0]), _money_line)
 
 # --- 2: the menu ends by starting the game, not by printing a command line
 # and asking permission to run it. It must also honour the mortality choice
@@ -743,6 +748,7 @@ check("...while the session still starts and is still playable with it off",
 # and then reported the 1,000-den gap as unexplained, twice, as both a
 # balance worry and a trust issue. The arithmetic was always right; only
 # the silence was a bug.
+import re as _re_mk
 _mk_dir = tempfile.mkdtemp()
 _mk_env = dict(os.environ, ROME_SIM_CONFIG=os.path.join(_mk_dir, "nope.json"),
                ROME_SAVE_DIR=tempfile.mkdtemp())
@@ -751,11 +757,15 @@ _mk_play = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"),
                            "--session", os.path.join(_mk_dir, "s.json")],
                           input="quit\n", capture_output=True, text=True,
                           timeout=120, env=_mk_env)
-check("a civilisation whose price_index differs from Rome's explains the "
-      "gap between the kit's quoted denarii and the cash actually arrived "
-      "with, on the same screen that shows both numbers",
-      "4000" in _mk_play.stdout and "0.75" in _mk_play.stdout
-      and "Rome" in _mk_play.stdout,
+# Kits are stated in labourer-years, so the kit's size and the cash arrived
+# with (in the civ's own coin) must be tied together on the same screen.
+_mk_arrived = _re_mk.search(r"arrive in \d+ AD with (\d+)", _mk_play.stdout)
+_mk_kit_cash = _re_mk.search(r"which here is (\d+)", _mk_play.stdout)
+check("a kit stated in labourer-years and the cash it is worth in the civ's "
+      "own coin appear together on the first screen",
+      "labourer-years of wages" in _mk_play.stdout
+      and _mk_arrived is not None and _mk_kit_cash is not None
+      and _mk_arrived.group(1) == _mk_kit_cash.group(1),
       _mk_play.stdout[:1200])
 # --- and Rome itself (price_index 1.0) says nothing extra: there is no gap
 # to explain, and a sentence explaining a non-existent discrepancy would be
@@ -993,14 +1003,21 @@ check("you cannot be paid for a trade this society does not have",
 # (a) A payroll the remaining credit COVERS costs you nobody but attrition.
 s = sim(capital=6000.0)
 s.policy["auto_hire"] = False
-s.hire("smith", 2)
+# One labourer: wages track labour tightness now, so a smith or two people
+# would exceed the credit line and rightly be trimmed. The precondition on
+# the check keeps the case honest.
+s.hire("labourer", 1)
 s.capital = -s.credit_limit() * 0.35
 _before = sum(s.employees.values())
-_room = s.capital + s.credit_limit() - (s.living_cost() - s.wage_bill())
+# What the household can still spend on wages: income plus remaining credit,
+# after the costs that are not wages.
+_room = (s.revenue() + s.capital + s.credit_limit()
+         - (s.living_cost() - s.wage_bill()) - s.upkeep())
+_payroll_before = s.wage_bill()
 s.step()
 _after = sum(s.employees.values())
 check("staff are not let go while there is still credit to pay them",
-      _room > 0 and _after > _before * 0.95,
+      _room > _payroll_before and _after > _before * 0.95,
       "%.2f -> %.2f with %.0f still to spend against a %.0f payroll"
       % (_before, _after, _room, s.wage_bill()))
 
@@ -1241,7 +1258,11 @@ check("nothing that deletes your work is on by default for a player",
 # 5. You could sell every one of your 2,400 hours as a labourer and still
 #    collect the full fee from a surgery you were demonstrably not in. The
 #    practice is your own two hands; that was the same hours sold twice.
+# Wages now track labour tightness and can exceed an ordinary practice, so
+# the practice is scaled up until a year of day labour genuinely is a loss.
+_PRACTICE_BOOM = 5.0
 s = sim()
+s.output_factor = _PRACTICE_BOOM
 _rev_before = s.revenue()
 _earned, _note = s.work_for_wages("labourer", s.director_pool())
 check("hours sold as a labourer are not also spent practising medicine",
@@ -1254,6 +1275,7 @@ check("hours sold as a labourer are not also spent practising medicine",
 check("selling your hours at a loss says so, and still happens",
       _note and "cost you" in _note, _note)
 s2 = sim()
+s2.output_factor = _PRACTICE_BOOM
 s2.work_for_wages("labourer", s2.director_pool() * 0.5)
 check("selling half your hours costs you half the practice, not all of it",
       abs(s2.revenue() - _rev_before * 0.5) < _rev_before * 0.06,
@@ -1768,7 +1790,9 @@ for _ in range(4):
 #    hours, while the real cause was 40,000 scribe-hours wanted from a society
 #    that can field a few thousand. waiting_on was read off whatever the last
 #    step happened to record instead of being worked out against today.
-s = sim(civ="han_china_100ad", capital=500000.0)
+s = sim(civ="han_china_100ad")
+# Enough of Han's own money for the hires, so the stall is about scribes.
+s.capital = 1000 * s.annual_wage("scholar")
 for _p in NODES["logarithms"]["pre"]:
     s.done.add(_p)
 s._done_changed()
@@ -1802,13 +1826,15 @@ check("auto_hire on a poor household hires nobody and stays solvent",
       s.bondage_years_left == 0 and s.capital > 0,
       "capital %.0f, staff %.2f, bondage %s"
       % (s.capital, sum(s.employees.values()), s.bondage_years_left))
-s = sim(civ="han_china_100ad", capital=100000.0)
+s = sim(civ="han_china_100ad")
+# Han's coin is small, so a fixed purse is a fraction of a labourer-year.
+s.capital = 1000 * s.annual_wage("labourer")
 s.policy["auto_hire"] = True
 for _ in range(10):
     s.step()
 check("...and on a rich one it actually hires",
       sum(s.employees.values()) > 1.0,
-      "staff %.2f on 100,000" % sum(s.employees.values()))
+      "staff %.2f on %.0f" % (sum(s.employees.values()), s.capital))
 
 # --- the persona is a persona, not a licence to do arithmetic ----------------
 # The user, on identity_cover: "does anything building on it actually require
