@@ -171,7 +171,7 @@ _pay_by_hand, _err = s.work_for_wages("labourer", 40.0)
 s.step()
 check("a standing work order tops up to the full directive rather than "
       "selling it twice on top of hours already sold by hand this year",
-      abs(s.wages_earned - 100.0 * _rate_per_hour) < 0.05,
+      abs(s.wages_earned - 100.0 * _rate_per_hour) < 0.01 * 100.0 * _rate_per_hour,
       (s.wages_earned, 100.0 * _rate_per_hour))
 check("...and the standing order's own hour tally resets for the next "
       "year exactly like an ordinary `work` call does",

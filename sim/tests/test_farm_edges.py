@@ -239,3 +239,56 @@ class ClearingLadderTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NetMarginalProductTests(unittest.TestCase):
+    """The allocator sizes the farm from the harvest of an extra hour net of
+    the seed that hour's hectares need."""
+
+    def setUp(self):
+        self.technique = labour_allocation.farming_technique.DEFAULT_TECHNIQUE
+        self.seed_per_hour = (
+            self.technique.crop.planting_material_kg_per_ha
+            / labour_allocation.farming_technique.hours_per_hectare(self.technique))
+
+    def _need(self, gross_per_hour, shortfall_kg=1e6, clearable_hectares=1e4):
+        return labour_allocation.farm_workers_needed(
+            10.0, 10.0, shortfall_kg, gross_per_hour, 100.0,
+            clearable_hectares=clearable_hectares, technique=self.technique)
+
+    def test_net_product_is_gross_less_seed_the_hour_needs(self):
+        net = labour_allocation.net_marginal_product_kg_per_hour(
+            self.seed_per_hour * 3.0 * agriculture.LABOUR_OUTPUT_ELASTICITY, self.technique)
+        self.assertAlmostEqual(net, self.seed_per_hour * 2.0)
+
+    def test_seed_eating_land_does_not_draw_hands_with_the_shortfall(self):
+        gross = self.seed_per_hour * 0.5 * agriculture.LABOUR_OUTPUT_ELASTICITY
+        self.assertEqual(self._need(gross, 1.0), self._need(gross, 1e9))
+        self.assertLessEqual(self._need(gross), 10.0)
+
+    def test_seed_eating_land_is_not_cleared(self):
+        gross = self.seed_per_hour * 0.5 * agriculture.LABOUR_OUTPUT_ELASTICITY
+        self.assertEqual(self._need(gross, clearable_hectares=1e4),
+                         self._need(gross, clearable_hectares=0.0))
+
+    def test_land_that_pays_for_its_seed_still_draws_hands_and_clearing(self):
+        gross = self.seed_per_hour * 5.0 * agriculture.LABOUR_OUTPUT_ELASTICITY
+        self.assertGreater(self._need(gross, 1e3, clearable_hectares=0.0), 10.0)
+        self.assertGreater(self._need(gross, 1e9, clearable_hectares=1e4),
+                           self._need(gross, 1e9, clearable_hectares=0.0))
+
+    def test_surplus_frees_more_hands_when_the_net_product_is_smaller(self):
+        def freed(gross):
+            return 10.0 - labour_allocation.farm_workers_needed(
+                10.0, 10.0, 0.0, gross, 1e6, surplus_kg=1e3, technique=self.technique)
+        self.assertGreater(freed(self.seed_per_hour * 1.5 * agriculture.LABOUR_OUTPUT_ELASTICITY),
+                           freed(self.seed_per_hour * 5.0 * agriculture.LABOUR_OUTPUT_ELASTICITY))
+
+    def test_ordinary_land_is_farmed_as_before(self):
+        # Reference values recorded from the gross-product allocator.
+        history = _run(sim(CIV_ID, events=False), 30)
+        for year_index, population, farm_share in (
+                (9, 63794202.8, 0.36154), (19, 64504643.0, 0.37042),
+                (29, 65121381.1, 0.3665)):
+            self.assertAlmostEqual(history[year_index][0] / population, 1.0, delta=0.01)
+            self.assertAlmostEqual(history[year_index][1], farm_share, delta=0.01)
