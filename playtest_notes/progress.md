@@ -18,3 +18,8 @@ Game: `play --civ rome_100ad --seed 1` (poor_scholar kit, default goal point_con
 | 235-256 | -88k | +1.2k | 25 | Third century crisis: 6 sackings, debasement. Most cash, most staff and 70 technologies lost. Roughly back to 110 AD. |
 | 257-303 | 47k -> 15k | -16k to -1k | 10 | Credit frozen twice (my script borrowed with no income), insolvency settled in 279 and 291. Idle machinists on payroll. Plague of Cyprian, Diocletian. |
 | 303-341 | 72k | +30k | 34 | Rebuilt the basics with a cash-only routine: method, units, patron, maths, lenses, trade route, steel, water power, 1300 C. |
+| 341-417 | -181k | +15k | ~60 | Rebuilt through blast furnace, Bessemer, puddling; route stalled 30 years on an ID my script could not parse (cap_pure_2N). Sack of Rome (410, 415) took 1.1M and 43 people. |
+| 417-507 | 3.17M | +388k | 106 | Trained chemists; steam engines, chemistry, acids, dispersed corpus, academy network. Knowledge hedged (sack knowledge-loss chance 80% -> 12%). |
+| 507-546 | 11.2M | +0.9M on paper, ~0.3M/yr actually saved | 107 | Built ~170 cheap earners; ~200 concerns running, but ~60 close and reopen every year (bugs #5). Justinianic plague and banditry take ~1-2M a year. Forest purchase cut zinc smelting from 63M to 26.7M. Bulk steel (14.8M) refused for lack of funds three years running. |
+
+Outlook at 546 AD: the 53 remaining nodes cost ~48M (bulk steel 14.8M, industrial zinc 26.7M after the forest, power grid 4.0M, the rest ~3M), before 25-30% failure risks on the two biggest. With 54 years left, that needs ~0.9M/yr actually saved; the real rate since 529 is ~0.3M/yr.

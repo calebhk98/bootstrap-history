@@ -82,3 +82,6 @@ Two machinists trained in 179 AD stayed on the payroll at 7,578 den/yr each (15,
 
 ## 20. `compact` output is longer than the normal screen
 `help commands` says `compact` gives "a small shared set of ... fields". At 507 AD `state compact` is 10,747 bytes of JSON and `state` is 4,250 bytes of text, so it is no help to a script or agent trying to read less.
+
+## 21. `ventures` hides most unopened concerns and has no way to page
+At 534 AD `ventures` lists 12 "YOU KNOW HOW, AND HAVE NOT OPENED" rows and then "...and 117 more", while `state` says "you know how to run 142 more". `help ventures` gives no options, and `ventures json` is capped at 20 (`and_more_you_could_open`). `stuck` names only "the best you could open". So a player with 100+ built concerns cannot list which are shut. Every other long list in the game (`available`, `log`) pages with `offset`.

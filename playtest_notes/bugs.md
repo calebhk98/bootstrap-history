@@ -6,7 +6,7 @@ Each entry: what happened, and the command that shows it.
 ## 1. `available sort earns` does not sort by earnings
 `available sort earns limit 25` returns the list in alphabetical order by id, with every row at EARNS/YR 0.
 Real earners (tex_hand_ginning 291.8/yr, pwr_peat 303.2/yr, pwr_oil_shale, hom_toothbrush) are not on the first page.
-The help text on that screen says `sort` accepts `earns`. The `sort:earns` form in `help commands` may behave differently (untested).
+**Update (507 AD):** `available sort:earns reverse` (colon form, from `help commands`) does sort correctly, highest first. So the bug is that the space form `sort earns`, which the hint under the table suggests ("add a 'sort' of price, hours, years, earns ..."), is silently ignored instead of being accepted or refused.
 
 ## 2. `quote farm` refused although `help economy` advertises farms
 `help economy` lists `buy farm 120`, but `quote farm 20` gives:
@@ -63,3 +63,9 @@ Repro: exhaust credit so a freeze starts, step until cash is positive, `start` a
 
 ## 10. `rush preview` always reports nothing
 At 507 AD, `rush preview` and `rush preview:true` both print "RUSH: 0 started, 0 not". On an identical copy of the save, `rush limit:3` starts 3 things and refuses 1. The preview should list what `rush` would do.
+**Refinement (540 AD):** owning supply does affect project cost, through the *scarcity* multiplier. `buy forest 500` (842,240 den) immediately cut `why zinc_industry_scale` from 63,001,688 to 26,656,506 (scarcity x2.511 -> x1.063). The base material price (charcoal at ~540 den/t inside that node vs ~102 den/t at market) and the rule that owned stock is never drawn down both still stand. Nothing on the project screens says that owning a forest or mine lowers "scarcity"; I found it by trying it on a copy of the save.
+
+## 11. `buy school <trade> <n>` is always refused with the mine error
+`help buy` lists `buy school <trade> <n>`, and `help economy` gives the example `buy school smith 2` ("makes two more smiths' worth of annual labour locally available").
+At 542 AD, `buy school smith 2`, `buy school scholar 1` and `buy school scholar 5` all give: "REFUSED: material must be one of: well-known workings: coal, copper, gold, iron, lead, silver, tin - or any other material key ...". That is the `buy mine` validation message, so `school` seems to be routed to the mine/material parser.
+This matters because scholars are capped ("reach ... will not stretch past 14.4 in total"), and `labour scholar` says schools widen that cap. The documented way to raise it does not work.
