@@ -1,6 +1,6 @@
 # "School" is overloaded for two different mechanics
 
-**Status:** open
+**Status:** closed - the training mechanic is now "trade school"; `buy school` was removed
 
 "Buy school smith 2" refers to trade-training capacity (apprenticeship seats), while "school_founded" is a general-literacy institution that teaches the population as a whole.
 
