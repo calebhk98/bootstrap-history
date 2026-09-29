@@ -107,6 +107,31 @@ def _check_new_id(manifest: ModManifest, item_id: str, override: bool, path: str
                        (path, item_id, manifest.id))
 
 
+def _ancestors(manifest: ModManifest, by_id: Dict[str, ModManifest]) -> set:
+    """Every mod this one depends on, directly or transitively."""
+    found: set = set()
+    pending = list(manifest.dependencies)
+    while pending:
+        mod_id = pending.pop()
+        if mod_id not in found:
+            found.add(mod_id)
+            pending.extend(by_id[mod_id].dependencies if mod_id in by_id else [])
+    return found
+
+
+def _claim_fields(claims: Dict[Any, str], kind: str, item_id: str, patch: Dict[str, Any],
+                  manifest: ModManifest, by_id: Dict[str, ModManifest]) -> None:
+    """Record which mod set each field; two unrelated mods on one field is an error."""
+    for name in patch:
+        if name in ("override", "replaces", "id"):
+            continue
+        earlier = claims.get((kind, item_id, name))
+        if earlier and earlier != manifest.id and earlier not in _ancestors(manifest, by_id):
+            raise ModError("mods %s and %s both override field %r of %s %s; make one depend on "
+                           "the other to choose a winner" % (earlier, manifest.id, name, kind, item_id))
+        claims[(kind, item_id, name)] = manifest.id
+
+
 def _node_defaults(node: Dict[str, Any]) -> Dict[str, Any]:
     defaults = {"ph": 60, "lab": {}, "mat": {}, "cap": 200, "up": 40,
                 "risk": 0.15, "rev": 0, "sch": 0, "art": 1, "conf": "C",
@@ -123,6 +148,9 @@ def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest]) -
     """Overlay mod branch nodes and goal catalog entries on a base tree."""
     tree = copy.deepcopy(base_tree)
     nodes = {node["id"]: node for node in tree["nodes"]}
+    manifests = list(manifests)
+    by_id = {manifest.id: manifest for manifest in manifests}
+    claims: Dict[Any, str] = {}
     origins = {node_id: "data/tech_tree.json" for node_id in nodes}
     goals = list(tree.get("meta", {}).get("goals") or [])
     for manifest in manifests:
@@ -131,6 +159,9 @@ def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest]) -
                 payload = json.load(source)
             batch = payload.get("nodes", []) if isinstance(payload, dict) else payload
             for node in batch:
+                if not isinstance(node, dict):
+                    raise ModError("mod %s: %s contains a node that is not an object" %
+                                   (manifest.id, path))
                 node_id = node.get("replaces", node.get("id"))
                 if not node_id:
                     raise ModError("%s contains a node without an id" % path)
@@ -141,8 +172,15 @@ def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest]) -
                 if not override and node_id in nodes:
                     raise ModError("tech id %s is defined in both %s and %s" %
                                    (node_id, origins[node_id], path))
-                clean = _node_defaults(dict(node, id=node_id))
-                nodes[node_id] = _deep_merge(nodes[node_id], clean) if override else _deep_merge({}, clean)
+                if override:
+                    # A patch names only the fields it changes; defaults are for new nodes.
+                    _claim_fields(claims, "tech node", node_id, node, manifest, by_id)
+                    nodes[node_id] = _deep_merge(nodes[node_id], dict(node, id=node_id))
+                else:
+                    if not isinstance(node.get("name"), str):
+                        raise ModError("mod %s: node %s in %s is missing a string 'name'" %
+                                       (manifest.id, node_id, path))
+                    nodes[node_id] = _deep_merge({}, _node_defaults(dict(node)))
                 origins[node_id] = path
         goals_path = os.path.join(manifest.directory, "data", "goals.json")
         if os.path.isfile(goals_path):
@@ -158,6 +196,9 @@ def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest]) -
 
 def load_mod_production(base: Dict[str, Any], manifests: Iterable[ModManifest]) -> Dict[str, Any]:
     merged = copy.deepcopy(base)
+    manifests = list(manifests)
+    by_id = {manifest.id: manifest for manifest in manifests}
+    claims: Dict[Any, str] = {}
     for manifest in manifests:
         for path in _json_files(os.path.join(manifest.directory, "data", "production")):
             with open(path, encoding="utf-8") as source:
@@ -169,6 +210,8 @@ def load_mod_production(base: Dict[str, Any], manifests: Iterable[ModManifest]) 
                     raise ModError("%s overrides missing production recipe %r" % (path, entry_id))
                 if not override and entry_id in merged:
                     raise ModError("production id %s is already defined before %s" % (entry_id, path))
+                if override:
+                    _claim_fields(claims, "production recipe", entry_id, entry, manifest, by_id)
                 merged[entry_id] = _deep_merge(merged.get(entry_id, {}), entry)
     return merged
 

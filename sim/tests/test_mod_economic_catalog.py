@@ -26,7 +26,7 @@ class ModEconomicCatalogTests(unittest.TestCase):
         (mod / "data/world").mkdir(parents=True)
         (mod / "mod.json").write_text(json.dumps({
             "id": "acme", "name": "Acme", "version": "1", "dependencies": [], "conflicts": []}))
-        self.nodes = [{"id": "acme_metallurgy", "mat": {"acme_ingot": 10},
+        self.nodes = [{"id": "acme_metallurgy", "name": "Metallurgy", "mat": {"acme_ingot": 10},
                        "lab": {}, "pre": [], "cap": 0}]
         (mod / "data/branches/metals.json").write_text(json.dumps({"nodes": self.nodes}))
         (mod / "data/goals.json").write_text(json.dumps({"goals": [{"id": "acme_goal", "node": "acme_metallurgy"}]}))
