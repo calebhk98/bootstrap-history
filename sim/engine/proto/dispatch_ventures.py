@@ -162,21 +162,13 @@ def _cmd_start(sim, nodes, cmd, ended):
     # anything, with today's free staff - not a promise, since attrition
     # and hiring between now and completion can move either number.
     if sim.is_venture(node_id):
-        _sup_sch, _sup_art = sim.venture_hands(node_id)
-        _free_sch, _free_art = sim.venture_staff_free()
-        if _sup_sch > _free_sch + 1e-9 or _sup_art > _free_art + 1e-9:
+        shortfall = sim.opening_shortfall(node_id)
+        if shortfall:
+            _sup_sch, _sup_art, _free_sch, _free_art = shortfall
             out["today_you_could_not_open_this_when_it_is_done"] = (
-                "keeping it open will want the equivalent of %.2f "
-                "scholars and %.2f artisans of your own watching it "
-                "full time, every year it runs - a continuous share of "
-                "their time, not a headcount; you have %.2f and %.2f "
-                "free right now, with nothing else committed. That "
-                "is a different, usually smaller number than the crew "
-                "that builds it, and it is checked only when you 'open' "
-                "it - not now. Staffing can change before this "
-                "finishes, for better or worse; if it has not by then, "
-                "hire, teach, or close something first."
-                % (_sup_sch, _sup_art, _free_sch, _free_art))
+                "with today's staff you could not open it: it needs %.1f "
+                "scholars and %.1f craftsmen to supervise, and %.1f and %.1f "
+                "are free." % shortfall)
     # AND SAY WHEN THIS WOULD BORROW TO FINISH: `start` must not silently
     # finance the gap between what a project costs and what the household
     # has, at up to twelve per cent, leaving a player carried into debt

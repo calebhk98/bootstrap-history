@@ -1,6 +1,6 @@
 # Starting a project does not warn that its finished concern could not be opened
 
-**Status:** partly - completion now warns (opening_shortfall); the warning at `start` time is still to add in projects_starting.py
+**Status:** closed - test_start_opening_warning verifies the warning appears at start time for concerns with insufficient free staff to open
 
 **Source:** `reports/TOP_PROBLEMS.md` item 10 (build staffing versus operating staffing).
 
