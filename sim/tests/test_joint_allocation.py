@@ -54,6 +54,33 @@ class WasteOutputTests(unittest.TestCase):
         self.assertAlmostEqual(recovered, 100.0)
 
 
+class UnitConsistentFallbackTests(unittest.TestCase):
+    """Without anchors the split is by mass, so a gram is not priced like a kilogram."""
+
+    def test_one_kilogram_of_each_output_costs_the_same(self):
+        outputs = {"nickel_kg": 1000.0, "platinum_g": 40.0}
+        prices = joint_allocation.allocate_joint_cost(outputs, {}, 100.0)
+        self.assertAlmostEqual(prices["nickel_kg"], prices["platinum_g"] * 1000.0)
+
+    def test_the_batch_cost_is_recovered(self):
+        outputs = {"nickel_kg": 1000.0, "platinum_g": 40.0}
+        prices = joint_allocation.allocate_joint_cost(outputs, {}, 100.0)
+        self.assertAlmostEqual(
+            sum(prices[name] * quantity for name, quantity in outputs.items()), 100.0)
+
+    def test_an_unanchored_output_beside_an_anchored_one_is_mass_valued(self):
+        outputs = {"nickel_kg": 1000.0, "platinum_g": 40.0, "gem_kg": 1.0}
+        prices = joint_allocation.allocate_joint_cost(outputs, {}, 100.0, {"gem_kg": 500.0})
+        self.assertAlmostEqual(prices["nickel_kg"], prices["platinum_g"] * 1000.0)
+
+    def test_an_output_with_no_mass_unit_is_flagged_and_left_out_of_the_split(self):
+        outputs = {"metal_kg": 10.0, "heat_mj": 50.0}
+        with self.assertWarns(UserWarning):
+            prices = joint_allocation.allocate_joint_cost(outputs, {}, 100.0)
+        self.assertAlmostEqual(prices["metal_kg"] * 10.0, 100.0)
+        self.assertEqual(prices["heat_mj"], 0.0)
+
+
 class CapAnchorsTests(unittest.TestCase):
 
     def test_an_anchor_is_capped_at_the_direct_route_price(self):

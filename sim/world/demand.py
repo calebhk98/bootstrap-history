@@ -876,6 +876,14 @@ _KG_EQUIVALENT_PER_UNIT_SUFFIX = {"_kg": 1.0, "_g": KILOGRAMS_PER_GRAM,
                                   "_t": KILOGRAMS_PER_TONNE}
 
 
+def mass_in_kg_or_none(material_key: str, quantity: float):
+    """Quantity as kilograms, or None when the key's unit is not a mass."""
+    for suffix, multiplier in _KG_EQUIVALENT_PER_UNIT_SUFFIX.items():
+        if material_key.endswith(suffix):
+            return quantity * multiplier
+    return None
+
+
 def _kg_equivalent(material_key: str, quantity: float) -> float:
     for suffix, multiplier in _KG_EQUIVALENT_PER_UNIT_SUFFIX.items():
         if material_key.endswith(suffix):
