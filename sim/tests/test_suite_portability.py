@@ -40,7 +40,7 @@ from .__main__ import TOPICS
 check("harness.ROOT is the repository root, so os.path.join(ROOT, 'data') "
       "addresses this checkout's own data",
       all(os.path.isdir(os.path.join(ROOT, directory))
-          for directory in ("data", "sim", "knowledge", "playtest")),
+          for directory in ("data", "sim", "docs", "playtest")),
       ROOT)
 
 check("...and it is THIS checkout, the one the harness itself was imported "
@@ -187,7 +187,7 @@ _alias_parent = tempfile.mkdtemp(prefix="suite_portability_")
 try:
     _alias = os.path.join(_alias_parent, "definitely_not_called_rome")
     os.makedirs(_alias)
-    for _sub in ("sim", "data", "knowledge", "playtest"):
+    for _sub in ("sim", "data", "docs", "playtest"):
         try:
             os.symlink(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
         except (OSError, AttributeError):

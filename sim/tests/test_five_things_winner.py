@@ -339,7 +339,7 @@ check("the corpus-bug fixture this check borrows is the exact file another "
       "fixture changed underneath this check and it is reading the wrong "
       "thing",
       _corpus_sha_before ==
-      "7292df29c31d1ec66513b00ed0904000b4bbe1fc8a13daf69fba4ebf3dea678f",
+      "f4d97586282433f070081f30ef91256ff5cf8d110cdf78832777f476f48bdbed",
       _corpus_sha_before)
 _corpus_ckpt_dir = tempfile.mkdtemp()
 # A FRESH COPY, NAMED LIKE A MILESTONE - the fixture itself is never opened

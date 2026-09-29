@@ -105,6 +105,7 @@ TREE = os.path.join(ROOT, "data", "tech_tree.json")
 PRICES = os.path.join(ROOT, "data", "prices.json")
 STRATS = os.path.join(SIMDIR, "strategies")   # sim/strategies, beside simulator.py
 MODDIR = os.path.join(ROOT, "mods")
+KNOWLEDGE_DIR = os.path.join(ROOT, "docs", "knowledge")   # the how-to library the tree's kb links point into
 
 # ----------------------------------------------------------------------------
 # Loading and derived economics

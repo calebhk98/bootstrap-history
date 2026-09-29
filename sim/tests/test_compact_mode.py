@@ -405,15 +405,16 @@ _TOUCHED_FILES = (
     "sim/engine/proto/help.py",
 )
 _BASELINE_REF = "e98e461"
+# Reference copies of the three files as they were at _BASELINE_REF, kept as
+# fixtures so the proof does not need that commit in the repository history.
+_BASELINE_DIR = os.path.join(HERE, "tests", "fixtures", "compact_mode_baseline")
 _SKIP_MIRROR_NAMES = {".git", "__pycache__", "_loadtest_tmp", "_playtest_tmp"}
 
 
-def _git_show(ref, relpath):
-    completed = subprocess.run(["git", "show", "%s:%s" % (ref, relpath)],
-                               cwd=ROOT, capture_output=True, text=True)
-    if completed.returncode != 0:
-        return None
-    return completed.stdout
+def _baseline_text(relpath):
+    path = os.path.join(_BASELINE_DIR, os.path.basename(relpath) + ".txt")
+    with open(path, encoding="utf-8", newline="") as file:
+        return file.read()
 
 
 def _mirror_with_overrides(src_dir, dst_dir, overrides):
@@ -519,42 +520,29 @@ check("'help commands' documents the new json/compact words, so a player "
 
 _baseline_dir = None
 try:
-    _overrides = {}
-    _missing_ref = False
-    for _relpath in _TOUCHED_FILES:
-        _text = _git_show(_BASELINE_REF, _relpath)
-        if _text is None:
-            _missing_ref = True
-            break
-        _overrides[_relpath] = _text
-    if _missing_ref:
-        check("byte-identical proof: could read %s's own copy of every "
-              "touched file from git" % _BASELINE_REF, False,
-              "git show %s:<path> failed - is this checkout shallow?"
-              % _BASELINE_REF)
+    _overrides = {_relpath: _baseline_text(_relpath) for _relpath in _TOUCHED_FILES}
+    _baseline_dir = tempfile.mkdtemp(prefix="compact_mode_baseline_")
+    _mirror_with_overrides(ROOT, _baseline_dir, _overrides)
+    _cur_out, _cur_err, _cur_rc = _run_agent(ROOT, _REPRESENTATIVE_LINES)
+    _base_out, _base_err, _base_rc = _run_agent(_baseline_dir, _REPRESENTATIVE_LINES)
+    if _cur_out == _base_out:
+        _diff_detail = ""
     else:
-        _baseline_dir = tempfile.mkdtemp(prefix="compact_mode_baseline_")
-        _mirror_with_overrides(ROOT, _baseline_dir, _overrides)
-        _cur_out, _cur_err, _cur_rc = _run_agent(ROOT, _REPRESENTATIVE_LINES)
-        _base_out, _base_err, _base_rc = _run_agent(_baseline_dir, _REPRESENTATIVE_LINES)
-        if _cur_out == _base_out:
-            _diff_detail = ""
-        else:
-            _diff_at = next((i for i in range(min(len(_cur_out), len(_base_out)))
-                            if _cur_out[i] != _base_out[i]),
-                           min(len(_cur_out), len(_base_out)))
-            _lo, _hi = max(0, _diff_at - 120), _diff_at + 120
-            _diff_detail = ("first differing byte at %d (of %d/%d)\n  current : %r"
-                           "\n  baseline: %r"
-                           % (_diff_at, len(_cur_out), len(_base_out),
-                              _cur_out[_lo:_hi], _base_out[_lo:_hi]))
-        check("byte-identical proof: mode-OFF stdout is identical between "
-              "this checkout and %s for every representative command "
-              "(the only difference between the two runs is the three "
-              "files this task touched)" % _BASELINE_REF,
-              _cur_out == _base_out, _diff_detail)
-        check("byte-identical proof: same return code both sides",
-              _cur_rc == _base_rc, (_cur_rc, _base_rc))
+        _diff_at = next((i for i in range(min(len(_cur_out), len(_base_out)))
+                        if _cur_out[i] != _base_out[i]),
+                       min(len(_cur_out), len(_base_out)))
+        _lo, _hi = max(0, _diff_at - 120), _diff_at + 120
+        _diff_detail = ("first differing byte at %d (of %d/%d)\n  current : %r"
+                       "\n  baseline: %r"
+                       % (_diff_at, len(_cur_out), len(_base_out),
+                          _cur_out[_lo:_hi], _base_out[_lo:_hi]))
+    check("byte-identical proof: mode-OFF stdout is identical between "
+          "this checkout and %s for every representative command "
+          "(the only difference between the two runs is the three "
+          "files this task touched)" % _BASELINE_REF,
+          _cur_out == _base_out, _diff_detail)
+    check("byte-identical proof: same return code both sides",
+          _cur_rc == _base_rc, (_cur_rc, _base_rc))
 finally:
     if _baseline_dir:
         shutil.rmtree(_baseline_dir, ignore_errors=True)

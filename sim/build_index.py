@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate knowledge/README.md: the index that links every tech-tree node
+"""Generate the knowledge library README.md: the index that links every tech-tree node
 to the entry in the knowledge library that tells you how to actually do it.
 
 Run after editing either the tree or any knowledge module:
@@ -8,9 +8,11 @@ It also reports broken links, which is the point of generating it rather than
 maintaining it by hand.
 """
 import json, os, re, sys, collections
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sim.engine.data import KNOWLEDGE_DIR
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-KB   = os.path.join(ROOT, "knowledge")
+KB   = KNOWLEDGE_DIR
 
 TITLES = {
  "00_NONOBVIOUS_TRICKS.md": "The tricks that make everything else buildable. READ FIRST.",
@@ -119,13 +121,13 @@ def _classify_nodes(nodes, anchors, parent_files):
 
 def _render_header(files, anchors, by_file):
     """Build the file's fixed preamble plus the per-module summary table."""
-    out = ["# knowledge/ - the how-to library",
+    out = ["# docs/knowledge/ - the how-to library",
            "",
            "**This file is generated. Do not edit it.** Run `python3 sim/build_index.py`.",
            "",
            "A tech tree that says *microscope requires glass* is useless to someone who does",
            "not already know that one melted bead of glass gives 250x. The tree in",
-           "`../data/tech_tree.json` says WHAT and IN WHAT ORDER. These modules say HOW, at a",
+           "`../../data/tech_tree.json` says WHAT and IN WHAT ORDER. These modules say HOW, at a",
            "level of detail a competent non-specialist can act on: masses, ratios,",
            "temperatures with Roman-observable proxies, vessel materials, how to tell it",
            "worked, how it fails, what it costs, and what it will do to you.",
@@ -158,7 +160,7 @@ def _render_prose_table(prose):
             "",
             "| Node | Your hours | Documented in |", "|---|---:|---|"]
     for node, filename, anchor in sorted(prose, key=lambda entry: (entry[0]["id"], entry[0]["ph"])):
-        out.append("| `%s` | %s | [`%s`](../%s) |" %
+        out.append("| `%s` | %s | [`%s`](../../%s) |" %
                    (node["id"], f"{node['ph']:,}", filename, filename))
     return out
 
@@ -239,7 +241,7 @@ def _render_broken_links_section(broken_file, broken_anchor):
 
 
 def _print_report(files, by_file, prose, bydesign, gap, broken_file, broken_anchor, inline_bad, nodes):
-    print("wrote knowledge/README.md")
+    print("wrote", os.path.join(KB, "README.md"))
     print("  modules indexed : %d" % len(files))
     print("  nodes linked    : %d recipe + %d prose = %d of %d"
           % (sum(len(value) for value in by_file.values()), len(prose),
