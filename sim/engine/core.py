@@ -368,20 +368,22 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.population = self._demography.Population.stationary(
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
             seed=_population_seed)
-        # Initial condition: farmed area is sized to feed the starting
-        # population on the soil of the regions this civilisation holds.
-        # Fixed for the run and rebuilt from config on every construction.
+        # Initial condition: cleared area is what feeds the starting
+        # population at reference soil, on the best ground the held tiles
+        # offer; later clearing works down the same best-first ladder.
         home_regions = list(self.civ.get("home_regions") or [])
         if home_regions:
             territory = land.territory_farmland(home_regions, load_geography())
-            land_quality = territory.mean_fertility
-            arable_ceiling = territory.arable_hectares
+            self._farm_ladder = territory.ladder
+            self._farm_arable_ceiling = territory.arable_hectares
         else:
             # temporary_heuristic: no territory declared, so reference soil, no ceiling.
-            land_quality, arable_ceiling = 1.0, None
-        self.farm_land = self._agriculture.farmland_for_population(
+            self._farm_ladder = []
+            self._farm_arable_ceiling = None
+        sized = self._agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population),
-            land_quality=land_quality, arable_hectares_ceiling=arable_ceiling)
+            arable_hectares_ceiling=self._farm_arable_ceiling)
+        self._set_farm_area(sized.hectares)
         # WIRING THREE (Complaints/50-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
         # weights` (Complaints/47): this civilisation's territory is broken
@@ -641,6 +643,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             self.state.household.employees or {},
             on_change=self._workforce_changed
         )
+        cleared = getattr(self.state.economy, "farm_cleared_hectares", None)
+        if cleared is not None:
+            self._set_farm_area(cleared)
         # Ensure version counters exist on state owners
         if getattr(self.state.projects, "_operating_ver", None) is None:
             self.state.projects._operating_ver = 0
@@ -1476,6 +1481,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         hectares_worked = min(
             self.farm_land.hectares,
             farm_workers_fte * self._agriculture.hectares_cropped_per_farm_worker())
+        crop_workers_fte = hectares_worked / self._agriculture.hectares_cropped_per_farm_worker()
         farm_labour_hours = hectares_worked * self._agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
         # SEED IS SOWN ON WHAT GETS WORKED, NOT ON `farm_land`'S FULL FIXED
         # AREA. `Storage.step` charges seed (and next year's seed reservation)
@@ -1537,7 +1543,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # receives a number, exactly as it always has.
         farm_year = farm_storage.step(
             worked_land, farm_labour_hours, adult_equivalent_population,
-            worker_count=farm_workers_fte,
+            worker_count=crop_workers_fte,
             reserve_target_kg=reserve_target_kg,
             weather_multiplier=self._pooled_farm_weather_multiplier(year))
         # CLOSE THE YEAR: write what this year's Storage call actually
@@ -1570,6 +1576,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         capacity_kg = self._agriculture.granary_capacity_kg(farm_year.food_demand_kg)
         self.farm_stock_kg = min(
             self._agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg)
+        self._apply_land_clearing()
         # Kept for tests and diagnostics only (e.g. `state`'s founder-facing
         # reply never reads this) - NOT a SAVE_FIELDS member and does not
         # need to be one: it is recomputed fresh every year from state that
@@ -1577,6 +1584,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # so a stale or missing value right after a fresh `Sim()` (before
         # this method has run once) costs nothing correctness-sensitive.
         self._last_farm_year = farm_year
+        self.state.economy.farm_last_shortfall_kg = farm_year.food_shortfall_kg
+        self.state.economy.farm_last_marginal_product = (
+            farm_year.marginal_product_last_hour_kg_per_hour)
 
         # Same diagnostic-only status as `_last_farm_year` just above (not a
         # SAVE_FIELDS member, recomputed fresh every year) - kept so a test

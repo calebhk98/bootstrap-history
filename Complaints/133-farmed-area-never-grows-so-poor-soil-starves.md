@@ -1,6 +1,6 @@
 # Farmed area is fixed at the start, so labour cannot answer a food shortfall
 
-**Status:** open
+**Status:** partly - clearing, best-first ladder and the rent API landed; the price cache still keys on civilisation only
 
 Soil now changes only how much food a hectare yields (Complaints/52). Less food
 should make food scarcer and pull workers onto the farm, and it does, but the
@@ -23,3 +23,7 @@ and `sim/world/land.py` rent should read the same area. Not a number to tune.
 
 Related: `python3 sim/audit_costs.py` style measurement does not exist for this;
 the trace was a throwaway script and is not committed.
+
+## What landed
+
+Cleared area grows when hands beyond what the farm can crop exist, paid at a declared labour cost per hectare (agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE, temporary_heuristic), best ground first via land.territory_farmland ladder. land.margin_outcome_for_civilization takes farmed_hectares to read the same ladder. Not done: engine/prices.py caches solved prices per civilisation id, so the live farmed area is not yet passed into the rent solve; keying the cache on it needs a cheaper solve. Tests: sim/tests/test_farm_clearing.py.

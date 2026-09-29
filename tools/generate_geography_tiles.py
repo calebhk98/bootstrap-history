@@ -333,6 +333,26 @@ KOPPEN_ARABLE_AND_FERTILITY = {
 }
 
 
+def arable_and_fertility_from_mix(sample_mix):
+    """(arable_fraction, fertility) of a tile from its {climate class: sample
+    count} mix. Arable fraction is the plain mean over samples; fertility is
+    the mean over the ARABLE ground, so a tundra corner of a Mediterranean
+    tile does not dilute the fertility of the land that is actually farmed."""
+    samples = sum(sample_mix.values())
+    arable_total = 0.0
+    fertile_total = 0.0
+    plain_fertility_total = 0.0
+    for koppen_class, count in sample_mix.items():
+        arable, fertility = KOPPEN_ARABLE_AND_FERTILITY[koppen_class]
+        arable_total += arable * count
+        fertile_total += arable * fertility * count
+        plain_fertility_total += fertility * count
+    arable_fraction = arable_total / samples
+    if arable_total > 0.0:
+        return arable_fraction, fertile_total / arable_total
+    return arable_fraction, plain_fertility_total / samples
+
+
 # ============================================================================
 # OLD REGION MAPPING - for the report only, never for a tile's own numbers.
 # Each of the 21 hand-written geography.json regions names, in its own
@@ -615,25 +635,18 @@ def build_tiles(cache_dir, verbose=True):
             sample_points, crs=EQUAL_AREA_CRS).to_crs(4326)
         sample_classes = [classify_koppen(point.y, point.x) for point in sample_points_lonlat]
 
-        arable_fractions, fertilities = [], []
-        for koppen_class in sample_classes:
-            looked_up = KOPPEN_ARABLE_AND_FERTILITY.get(koppen_class)
-            if looked_up is None:
+        sample_mix = dict(collections.Counter(sample_classes))
+        for koppen_class in sample_mix:
+            if koppen_class not in KOPPEN_ARABLE_AND_FERTILITY:
                 unclassified_count += 1
-                # Only reachable if kgcpy's own raster returns a class this
-                # table does not list (it lists every standard Koppen-Geiger
-                # class kgcpy can produce) - fails loudly rather than
-                # silently inventing a number, per CLAUDE.md SS3.1.
+                # Fails loudly rather than inventing a number (CLAUDE.md SS3.1).
                 raise ValueError(
                     "tile %r sample classified as %r, which is not in "
                     "KOPPEN_ARABLE_AND_FERTILITY" % (tile.get("country_majority"), koppen_class))
-            arable_fractions.append(looked_up[0])
-            fertilities.append(looked_up[1])
-
         tile["koppen_class"] = collections.Counter(sample_classes).most_common(1)[0][0]
-        tile["koppen_sample_mix"] = dict(collections.Counter(sample_classes))
-        tile["arable_fraction"] = sum(arable_fractions) / len(arable_fractions)
-        tile["fertility_quality_multiplier"] = sum(fertilities) / len(fertilities)
+        tile["koppen_sample_mix"] = sample_mix
+        (tile["arable_fraction"],
+         tile["fertility_quality_multiplier"]) = arable_and_fertility_from_mix(sample_mix)
     log("  classified climate (%d samples/tile) and looked up arable/fertility "
         "for %d tiles in %.2fs"
         % (CLIMATE_SAMPLES_PER_AXIS ** 2, len(tiles), time.time() - stage_start))
@@ -761,9 +774,27 @@ def main():
     parser.add_argument("--cache-dir", default=DEFAULT_CACHE_DIR,
         help="where to cache downloaded Natural Earth shapefiles (default: %s)"
              % DEFAULT_CACHE_DIR)
+    parser.add_argument("--rederive", action="store_true",
+        help="recompute every stored tile's arable_fraction and fertility from its "
+             "koppen_sample_mix with the current rule (no download, no classification)")
     parser.add_argument("--report-only", action="store_true",
         help="build the tiles and print the summary report, but write nothing")
     arguments = parser.parse_args()
+
+    if arguments.rederive:
+        with open(arguments.out) as handle:
+            geography = json.load(handle)
+        for tile in geography["land_tiles"]["tiles"].values():
+            arable, fertility = arable_and_fertility_from_mix(tile["koppen_sample_mix"])
+            tile["arable_fraction"] = round(arable, 4)
+            tile["fertility_quality_multiplier"] = round(fertility, 4)
+        for record in geography["regions"].values():
+            if isinstance(record, dict):
+                record.get("land", {}).pop("fertility_quality_multiplier", None)
+        with open(arguments.out, "w") as handle:
+            json.dump(geography, handle, indent=1, sort_keys=False)
+        print("rederived tile arable/fertility from koppen_sample_mix")
+        return
 
     print("Building land tiles (target %.0f km2 each)..." % TARGET_TILE_AREA_KM2)
     tiles = build_tiles(arguments.cache_dir)

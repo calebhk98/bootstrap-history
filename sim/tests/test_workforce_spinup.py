@@ -147,8 +147,10 @@ class EngineStartTests(unittest.TestCase):
     def test_farm_share_matches_the_farm_labour_logic(self):
         for civ in _civilisations():
             test_sim = sim(civ=civ["id"], events=False)
-            baseline_fte = agriculture.farm_workers_fte_for_population(
-                test_sim._adult_equivalent_population(test_sim.population))
+            adult_equivalent = test_sim._adult_equivalent_population(test_sim.population)
+            baseline_fte = test_sim._expected_year_farm_need(
+                agriculture.farm_workers_fte_for_population(adult_equivalent),
+                adult_equivalent)
             total_hours = (test_sim.population.working_age
                            * labour_allocation.HOURS_PER_FARM_WORKER_YEAR)
             wanted_share = min(baseline_fte * labour_allocation.HOURS_PER_FARM_WORKER_YEAR,

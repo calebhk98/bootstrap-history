@@ -30,19 +30,30 @@ def _arable_km2(tile_id):
     return tile["land_area_km2"] * tile["arable_fraction"]
 
 
-def _expected_quality(home_regions):
-    tile_ids = _held_tiles(home_regions)
-    weighted = sum(_arable_km2(tile_id) * _TILES[tile_id]["fertility_quality_multiplier"]
-                   for tile_id in tile_ids)
-    return weighted / sum(_arable_km2(tile_id) for tile_id in tile_ids)
+def _expected_quality(home_regions, hectares=None):
+    """Mean fertility of the best `hectares` of arable ground (all of it when
+    None), hand-computed from the tiles."""
+    tile_ids = sorted(_held_tiles(home_regions),
+                      key=lambda tile_id: (-_TILES[tile_id]["fertility_quality_multiplier"], tile_id))
+    remaining = float("inf") if hectares is None else hectares
+    taken = weighted = 0.0
+    for tile_id in tile_ids:
+        step = min(100.0 * _arable_km2(tile_id), remaining)
+        taken += step
+        weighted += step * _TILES[tile_id]["fertility_quality_multiplier"]
+        remaining -= step
+        if remaining <= 0.0:
+            break
+    return weighted / taken
 
 
 class FarmLandQualityTests(unittest.TestCase):
     def test_quality_matches_weighted_average_of_own_regions(self):
         for civ_id in _CIVILISATIONS:
             civ = S.load_civ(civ_id)
-            expected = _expected_quality(civ["home_regions"])
-            self.assertAlmostEqual(sim(civ_id).farm_land.quality, expected, places=9, msg=civ_id)
+            test_sim = sim(civ_id)
+            expected = _expected_quality(civ["home_regions"], test_sim.farm_land.hectares)
+            self.assertAlmostEqual(test_sim.farm_land.quality, expected, places=9, msg=civ_id)
 
     def test_civilisations_differ(self):
         qualities = {civ_id: sim(civ_id).farm_land.quality for civ_id in _CIVILISATIONS}
@@ -54,7 +65,9 @@ class FarmLandQualityTests(unittest.TestCase):
         civ["id"] = "mod_single_region"
         civ["home_regions"] = ["scandinavia"]
         test_sim = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ)
-        self.assertAlmostEqual(test_sim.farm_land.quality, _expected_quality(["scandinavia"]))
+        self.assertAlmostEqual(
+            test_sim.farm_land.quality,
+            _expected_quality(["scandinavia"], test_sim.farm_land.hectares))
 
     def test_region_without_land_data_fails_loudly(self):
         civ = copy.deepcopy(S.load_civ("rome_100ad"))
@@ -106,14 +119,17 @@ class FoodBalanceWorkforceTests(unittest.TestCase):
         self.assertGreater(fte, 1.05 * share_fte * test_sim.population.total
                            / test_sim.civ["population"])
 
-    def test_farm_workers_are_capped_by_the_farm_area(self):
-        # The farm area caps hands: with the land far smaller than the need,
-        # workers stop at what that land employs.
+    def test_farm_workers_are_capped_by_farm_area_plus_what_is_clearable(self):
         test_sim = sim("norse_900ad", events=False)
         test_sim.farm_land.hectares *= 0.5
+        cap = ((test_sim.farm_land.hectares
+                + test_sim._clearable_hectares()
+                * agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE
+                / labour_allocation.HOURS_PER_FARM_WORKER_YEAR
+                * agriculture.hectares_cropped_per_farm_worker())
+               / agriculture.hectares_cropped_per_farm_worker())
         test_sim._demographic_recovery(101)
         hours = test_sim.state.economy.society_labour_hours[labour_allocation.FARM_TRADE]
-        cap = test_sim.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker()
         self.assertLessEqual(hours / labour_allocation.HOURS_PER_FARM_WORKER_YEAR, cap * 1.0001)
 
 
