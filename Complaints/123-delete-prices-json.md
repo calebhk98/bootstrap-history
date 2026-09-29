@@ -69,21 +69,28 @@ deleted. Merely moving the remaining old values behind the shared provider is
 not completion; it prevents another private reader while that replacement is
 built.
 
-### 5. Separate namespaces from prices in every tool
+### 5. Separate namespaces from prices in every tool (done)
 
-`sim/treetool.py` still uses purchase-price keys as the material namespace and
-uses the book values in `judge` and `repair`. Material identity must come from
-the production catalogue plus technology requirements. Cost audits must use the
-same endogenous pricing service as runtime, or explicitly report a material as
-unavailable/incomplete.
+- [x] `sim/treetool.py` takes material identity from the production catalogue
+  plus what tree nodes require (`load_material_namespace`); `judge` and
+  `repair` cost nodes through `sim/tool_costs.py`, which uses the runtime wage
+  provider and `sim/engine/prices.py`'s solver, and reports costs as
+  unavailable or as a lower bound with the unresolved materials named.
+- [x] `sim/validate_production.py` loads the tree, production catalogue and
+  trade registry without the main loader, so it never initialises prices.
+- [x] `sim/audit_costs.py` prices its cost base through the same service and
+  drops the book-confidence section.
+- [x] `sim/solve_prices_report.py` takes wage ratios from the live wage
+  provider and says prices are unavailable when it cannot; `--compare` is gone.
+- [x] `sim/tests/test_tools_without_price_book.py` runs each tool with the file
+  unreadable.
 
-`sim/validate_production.py` currently reaches the file indirectly through the
-main simulator loader. Validation must load the tree, production catalogue, and
-trade registry without initializing runtime prices.
+Remaining: the wage provider (`sim.engine.data.WAGES`) still reads the file
+until blocker 1 lands, so tools that need wages report unavailable without it.
 
 ### 6. Remove comparison and test readers
 
-The standalone price report's `--compare` mode and several demand, deposit,
+(The standalone price report's `--compare` mode is already removed.) Several demand, deposit,
 civilization, and engine-price tests open the old file. Delete comparisons that
 only enshrine its guessed values. Where a genuine historical observation is
 useful, create a focused validation fixture that records the observation,

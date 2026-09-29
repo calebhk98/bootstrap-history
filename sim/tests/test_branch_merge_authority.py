@@ -344,7 +344,7 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         self.assertEqual(meta["merged_duplicate_ids"], {"fx_retired": "tl_survivor"})
 
     # ---- the data-loss refusal (Task 1) --------------------------------
-    def test_unpriced_material_refuses_to_write_without_the_override(self):
+    def test_undeclared_material_refuses_to_write_without_the_override(self):
         self._write_tree(_tree([]))
         with open(self.tree_path, "rb") as file:
             tree_before = file.read()
@@ -356,8 +356,8 @@ class BranchMergeAuthorityTests(unittest.TestCase):
 
         self.assertEqual(return_code, 1)
         self.assertIn("MERGE REFUSED", out)
-        self.assertIn("unpriced_material", out)
-        self.assertIn("UNPRICED material 'unobtainium_kg'", out)
+        self.assertIn("undeclared_material", out)
+        self.assertIn("UNDECLARED material 'unobtainium_kg'", out)
         self.assertIn("--accept-data-loss", out)
         with open(self.tree_path, "rb") as file:
             tree_after = file.read()
@@ -374,7 +374,7 @@ class BranchMergeAuthorityTests(unittest.TestCase):
 
         self.assertEqual(return_code, 0)
         self.assertNotIn("MERGE REFUSED", out)
-        self.assertIn("UNPRICED material 'unobtainium_kg'", out)
+        self.assertIn("UNDECLARED material 'unobtainium_kg'", out)
         self.assertIn("unknown trade 'nonexistent_trade'", out)
         nodes = {node["id"]: node for node in self._read_tree()["nodes"]}
         self.assertIn("fx_alpha", nodes)

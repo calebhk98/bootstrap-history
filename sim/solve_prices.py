@@ -3,8 +3,6 @@
 
     python3 sim/solve_prices.py                        every price, in labour-hours
     python3 sim/solve_prices.py --why iron_bar_kg       full recursive cost breakdown
-    python3 sim/solve_prices.py --compare               computed price vs prices.json,
-                                                         as a ratio, worst disagreement first
 
 STANDALONE AND READ-ONLY. This tool computes prices; nothing in `sim/engine/`
 reads them yet. `data/prices.json` still runs the game. That wiring is a
@@ -500,8 +498,7 @@ reads the SAME `thermal_mj` field and the SAME (optional)
 and grades the price behind the name rather than the name itself. If a
 future round DOES own every consumer (or the split is judged worth a
 coordinated rewrite anyway), separate band materials remain available
-and would give each band its own resolvable price for `--why` and
-`--compare` to show directly, rather than the graded price computed on
+and would give each band its own resolvable price for `--why` to show directly, rather than the graded price computed on
 demand the way this round shows it (see print_why's own ENERGY section
 below) - a real trade-off, not a decision this round claims to have
 closed.
@@ -759,8 +756,8 @@ from sim.validate_production import load_production, materials_the_tree_consumes
 #                                   and energy cost, choice of technique,
 #                                   and the damped fixed-point `solve` loop
 #     sim/solve_prices_report.py   the reporting front end: `print_why`,
-#                                   the default price table, the `--compare`
-#                                   report, and the CLI's own `main`
+#                                   the default price table, and the
+#                                   CLI's own `main`
 #
 # This docstring above - THE mechanism essay - lives here rather than with
 # either sibling: every "see the module docstring" comment in both sibling
@@ -826,7 +823,6 @@ from sim.solve_prices_report import (                # noqa: E402
     _print_unpriceable_materials,
     _print_value_share_or_total,
     _resolved_recipe_id_or_none,
-    _run_compare_report,
     _run_default_report,
     _run_why_report,
     format_hours,
