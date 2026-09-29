@@ -439,7 +439,7 @@ class CreditMixin:
         owed = -household.capital * rate
         household.capital -= owed
         household.interest_paid = (household.interest_paid or 0.0) + owed
-        if owed > 0 and (getattr(household, "insolvent_years", 0) in (1, 5, 15)):
+        if owed > 0 and (household.insolvent_years in (1, 5, 15)):
             household.log.append((year, "interest on %0.f denarii of arrears at %.1f%% a year"
                                  % (-household.capital, rate * 100)))
         return owed
@@ -472,7 +472,7 @@ class CreditMixin:
         if used < 0.7:
             household._said_near_limit = False
             return
-        if getattr(household, "_said_near_limit", False):
+        if household._said_near_limit:
             return
         household._said_near_limit = True
         household.log.append((year, "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
@@ -775,7 +775,7 @@ class CreditMixin:
         """
         household = self.state.household
         projects = self.state.projects
-        insolvent_years = getattr(household, "insolvent_years", 0) or 0
+        insolvent_years = household.insolvent_years
         if household.capital >= 0 or insolvent_years < 8:
             return None
         # THE SAME NET THE LEDGER PRINTS: must include the interest on the
@@ -797,7 +797,7 @@ class CreditMixin:
         if net >= 0:
             return None
         ways = []
-        pool = self.director_pool() - getattr(household, "wage_hours_this_year", 0.0)
+        pool = self.director_pool() - household.wage_hours_this_year
         if pool > 100:
             # ONLY IF IT WOULD ACTUALLY GAIN: selling your hours takes them
             # out of your own practice, so with a practice to lose this is

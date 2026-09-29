@@ -567,7 +567,7 @@ def _agent_state_training_and_hours(sim, active, full):
                               - sim.director_hours_committed()) > 200)
                   else None)),
         "founder_hours_sold_for_wages_this_year": round(
-            getattr(sim, "wage_hours_this_year", 0.0), 1),
+            sim.wage_hours_this_year, 1),
         # WHERE THE HOURS COME FROM: the pool can grow well past a single
         # founder's own hours, and that has to be explained here rather
         # than left unexplained. It is not the founder working harder: it

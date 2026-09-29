@@ -105,7 +105,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_said_notice_approach": "household",
 	"last_military_demand": "household",
 	"_said_confiscation_band": "household",
-	"_said_scandal": "household",
 
 	# ProjectsState
 	"active": "projects",
@@ -187,25 +186,17 @@ _VERSION_MAP: Dict[str, str] = {
 _LAZY_FIELDS: Set[str] = {
 	"wages_earned",
 	"interest_paid",
-	"insolvent_years",
-	"last_withdrawal",
 	"spend_last_year",
 	"granted_staff",
 	"hours_this_year",
 	"trade_schools",
 	"worker_housing_places",
-	"_said_deputies",
-	"_said_near_limit",
-	"_said_autoopen",
 	"done_year",
 	"mine_tranches",
 	"_material_stock_ledger",
 	"farm_hectares",
 	"_dashboard_history",
 	"inst_units",
-	"wage_hours_this_year",
-	"_said_scandal",
-	"_said_parallelism",
 }
 
 
