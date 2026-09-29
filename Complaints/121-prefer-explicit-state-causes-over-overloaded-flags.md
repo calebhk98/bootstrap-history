@@ -1,6 +1,8 @@
 # Prefer explicit state causes over overloaded flags
 
-**Source:** playtest findings document, ARCH-003. **Status:** Architecture
+**Status:** open
+
+**Source:** playtest findings document, ARCH-003. **Type:** Architecture
 recommendation, illustrated by a specific bug filed elsewhere in this
 review round.
 

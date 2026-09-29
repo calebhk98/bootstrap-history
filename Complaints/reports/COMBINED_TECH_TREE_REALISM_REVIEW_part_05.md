@@ -1,4 +1,12 @@
 | 108 | **Papyrus** (`mat_papyrus`) | 377.5 | 20 | 60h scribe | 0 | — | LIKELY ALREADY KNOWN BY 1300 | Adequate/good |
+
+> **Disposition.** Every finding in this part has a recorded resolution in
+> `reports/RESOLUTION_AUDIT_TECH_TREE_REALISM_PART_05.md` (regression tests are
+> named there). Findings that resolution did not cover were filed as
+> `Complaints/127` (Rome's heat rung), `Complaints/128` (no validator that a
+> start agrees with itself) and `Complaints/132` (descriptions that do not
+> teach). Related standing issues: `Complaints/42` (pinned prerequisite
+> violations).
 | 109 | **Parchment** (`mat_parchment`) | 503.4 | 30 | 80h scribe | 0 | — | LIKELY ALREADY KNOWN BY 1300 | Adequate/good |
 | 110 | **Plaster cast immobilization** (`md2_plaster_cast`) | 239.8 | 100 | 120h artisan | 1 | — | PLAUSIBLE TO ATTEMPT / NEEDS NODE-SPECIFIC CHECK | Adequate/good |
 | 111 | **Vector control** (`md2_vector_control`) | 272.8 | 100 | 120h scholar | 2 | — | PLAUSIBLE TO ATTEMPT / NEEDS NODE-SPECIFIC CHECK | Adequate/good |

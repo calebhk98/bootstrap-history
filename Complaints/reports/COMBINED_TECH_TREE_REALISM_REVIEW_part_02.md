@@ -1,4 +1,12 @@
 | 10 | **Twist insertion control** (`tx2_twist_insertion`) | 9 | 50 | 60h artisan | 0 | — | **STARTABLE, FIX MODEL** | Can begin now, but prerequisites/scope are incomplete; retune cost/time only after that fix. | Adequate. Ancient spinners already controlled twist by feel. The modern quantified part (turns per unit length / twist multiplier) needs standards. Split tacit craft from measured specification. |
+
+> **Disposition.** Every finding in this part has a recorded resolution in
+> `reports/RESOLUTION_AUDIT_TECH_TREE_REALISM_PART_02.md` (regression tests are
+> named there). Findings that resolution did not cover were filed as
+> `Complaints/127` (Rome's heat rung), `Complaints/128` (no validator that a
+> start agrees with itself) and `Complaints/132` (descriptions that do not
+> teach). Related standing issues: `Complaints/42` (pinned prerequisite
+> violations).
 | 11 | **Warp sizing: fibre stiffening** (`tx2_warp_sizing`) | 9 | 50 | 60h artisan | 0.20 | — | **ALREADY ROMAN** | Research price/labour/time should be 0 because the capability belongs in the inherited state. | Adequate. The generic capability/practice predates 100 AD in the Roman/Mediterranean world; description is acceptable unless it implies a later industrial version. |
 | 12 | **Bone setting** (`med_bone_setting`) | 9.3 | 0 | 50h artisan | 0.50 | med_surgical_kit_good | **ALREADY ROMAN** | Research price/labour/time should be 0 because the capability belongs in the inherited state. | Adequate. The generic capability/practice predates 100 AD in the Roman/Mediterranean world; description is acceptable unless it implies a later industrial version. |
 | 13 | **Heddle: warp thread carrier and riser** (`tx2_heddle`) | 9.5 | 40 | 50h artisan | 0.10 | — | **ALREADY ROMAN** | Research price/labour/time should be 0 because the capability belongs in the inherited state. | Adequate. The generic capability/practice predates 100 AD in the Roman/Mediterranean world; description is acceptable unless it implies a later industrial version. |

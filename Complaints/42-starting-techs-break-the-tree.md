@@ -1,6 +1,8 @@
 # Every civilisation holds a technology whose prerequisites it lacks
 
-**Status (project-wide audit, 2026-09-18): PINNED, not fixed - by design,
+**Status:** pinned - a regression test holds the known-violation count on purpose
+
+**Audit (2026-09-18): PINNED, not fixed - by design,
 and that is the correct state.** `sim/tests/test_civilisation_prerequisites.py`
 still holds the count at exactly the 17 violations named below; the file
 deliberately declines to referee which side (tree or civilisation file) is

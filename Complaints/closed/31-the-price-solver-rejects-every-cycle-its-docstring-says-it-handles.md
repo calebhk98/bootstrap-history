@@ -1,5 +1,7 @@
 # `solve_prices.py` rejects every recipe cycle, including the one its own docstring uses as the example
 
+**Status:** closed
+
 **Type:** Tooling / modelling
 **Priority:** Medium. It does not bite today; it blocks the next physically-correct thing anyone tries to model.
 

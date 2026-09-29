@@ -1,5 +1,7 @@
 # Capital was not the gap. Every price in this model is pure labour content, and that is the gap.
 
+**Status:** partly - rent landed for ores and land; some prices still far from book
+
 **Type:** Modelling, direction-setting
 **Priority:** High for what gets built next. Nothing is broken.
 

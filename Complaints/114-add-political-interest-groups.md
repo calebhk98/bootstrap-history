@@ -1,6 +1,8 @@
 # Add political interest groups created by industrialisation
 
-**Source:** playtest findings document, LATE-008. **Status:** Feature
+**Status:** open
+
+**Source:** playtest findings document, LATE-008. **Type:** Feature
 recommendation, roadmap-sized, substantially overlapping already-planned
 architecture direction.
 

@@ -1,5 +1,13 @@
 # Tech-tree opening review — combined report
 
+> **Disposition.** Part 01 has no audit of its own; its Rome findings are dispositioned in
+> `reports/RESOLUTION_AUDIT_TECH_TREE_REALISM_PART_02.md` (regression tests are
+> named there). Findings that resolution did not cover were filed as
+> `Complaints/127` (Rome's heat rung), `Complaints/128` (no validator that a
+> start agrees with itself) and `Complaints/132` (descriptions that do not
+> teach). Related standing issues: `Complaints/42` (pinned prerequisite
+> violations).
+
 > [!IMPORTANT]
 > ## Suggestions — highest-priority fixes
 > **Design constraint:** keep the technology tree **scenario/country agnostic**. Do not hard-link ordinary technology nodes to Rome, Han, England, the Mexica, Japan, Mars, etc. A scenario should simply load an historically appropriate starting state into the same universal graph.

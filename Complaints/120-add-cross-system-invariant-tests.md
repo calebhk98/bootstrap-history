@@ -1,6 +1,8 @@
 # Add cross-system invariant tests, not only local ones
 
-**Source:** playtest findings document, ARCH-002. **Status:** Architecture/
+**Status:** open
+
+**Source:** playtest findings document, ARCH-002. **Type:** Architecture/
 testing recommendation. High value; overlaps directly with several bugs
 another agent is filing in this same review round.
 

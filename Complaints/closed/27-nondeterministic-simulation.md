@@ -1,8 +1,10 @@
 # The same simulation, run twice, gives two different answers
 
+**Status:** closed
+
 **Type:** Correctness / determinism
 **Priority:** Blocking
-**Status:** FIXED. Root cause and fix are at the bottom of this file.
+**Outcome:** FIXED. Root cause and fix are at the bottom of this file.
 
 Everything between here and `# RESOLVED` is kept exactly as it was written
 during the investigation, wrong guesses included - the `## Ruled out` entry

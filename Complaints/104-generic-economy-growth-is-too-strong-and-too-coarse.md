@@ -1,6 +1,8 @@
 # Generic economy growth per completed technology is too strong and too coarse
 
-**Source:** playtest findings document, ECON-002. **Status:** Design/balance
+**Status:** open
+
+**Source:** playtest findings document, ECON-002. **Type:** Design/balance
 recommendation, already substantially aligned with CLAUDE.md's own stated
 direction.
 

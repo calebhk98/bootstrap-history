@@ -69,7 +69,8 @@ Check with `ls` before trusting this; directories move.
 | Tests | `sim/tests/`, run through `sim/test_regressions.py` |
 | Engine shape, measured | `sim/ARCHITECTURE.md` |
 | Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |
-| Open problems, playtest reports, bug reports | `Complaints/` (numbered files are open, `Complaints/closed/` are done) |
+| Open problems, bug reports (each has a `**Status:**` line) | `Complaints/` (open), `Complaints/closed/` (done); `python3 sim/issue_status.py` prints the table, `--check` validates it |
+| Playtest and audit reports; standing design decisions | `Complaints/reports/`; `docs/architecture/DESIGN_PRINCIPLES.md` |
 | Mods: loader, contract, backlog | `sim/engine/mods.py`, `mods/README.md`, `mods/TASKS.md` |
 | Playtest setup for agent players | `playtest/` |
 | Schema for production data | `data/production/_SCHEMA.md` |

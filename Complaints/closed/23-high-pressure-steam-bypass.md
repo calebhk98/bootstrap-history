@@ -1,8 +1,10 @@
 # High-pressure steam bypasses its intended prerequisite chain
 
+**Status:** closed
+
 **Type:** Tech-tree realism defect  
 **Priority:** High
-**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `en_high_pressure_engine`'s prerequisites in `data/tech_tree.json` now include `steam_high_pressure`, `thermodynamics_theory` and `mat_bulk_steel`, not only the capability rungs named here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): RESOLVED, verified.** `en_high_pressure_engine`'s prerequisites in `data/tech_tree.json` now include `steam_high_pressure`, `thermodynamics_theory` and `mat_bulk_steel`, not only the capability rungs named here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

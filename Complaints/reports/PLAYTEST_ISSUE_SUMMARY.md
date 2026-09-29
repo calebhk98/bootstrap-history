@@ -54,3 +54,31 @@ The issues fall into four groups.
 7. Freedman-capacity state check
 8. Command and wording cleanup
 9. Balance/tech-tree review
+
+## Where each item is tracked
+
+Every item above already has a numbered issue; nothing new was filed from this
+summary. `reports/RESOLUTION_AUDIT_01_26.md` records the implemented fixes.
+
+| Item | Issue |
+|---|---|
+| Global material throttle | `closed/09` |
+| Expected calendar time under the floor | `closed/08` |
+| False specialist-hours block | `07` (audit says fixed; the issue file still says partly) |
+| Workshop revenue forecast | `03` (audit says fixed; issue not yet re-verified or moved) |
+| Search omission | `closed/22` |
+| Plague wage and population feedback | `closed/17`, `18`, `closed/19` |
+| Freedman capacity | `12` (audit says fixed; issue not yet re-verified or moved) |
+| Loan interest label, affordability ceilings | `closed/15`, `closed/16` |
+| Permanent versus active-only institution effects | `closed/04` |
+| `capacity` in help, throughput versus inventory | `closed/10`, `closed/26` |
+| Waiting on money wording | `closed/02` |
+| Bare `rush` | `closed/21` |
+| Training completion wording | `closed/20` |
+| Zero-time projects | `closed/14` |
+| Annual-scholar wording | `closed/05` |
+| Nitre recommendation | `closed/11` |
+| Generic artisans supervising anything | `closed/13` |
+| Diversified ventures snowball | `104`, `117` |
+| High-pressure steam, Brayton turbine prerequisites | `closed/23`, `closed/24` |
+| Venture staffing wording | `01` |

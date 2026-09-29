@@ -1,8 +1,10 @@
 # Venture staffing can appear overcommitted without an explanation
 
+**Status:** partly - own audit line says partly; `reports/RESOLUTION_AUDIT_01_26.md` says fixed, re-verify
+
 **Type:** UI / rules clarity  
 **Priority:** Medium
-**Status (project-wide audit, 2026-09-18): PARTLY RESOLVED.** `_staff_fraction_note` (`sim/engine/proto/state.py`) now explains fractional FTE counts generally on `state`/`labour` ("these are continuous full-time-equivalents, not a count of whole people"). The ventures-screen-specific overcommitment breakdown (effective capacity, required FTE, and overcommitment behaviour, spelled out on that one screen) was not separately confirmed. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): PARTLY RESOLVED.** `_staff_fraction_note` (`sim/engine/proto/state.py`) now explains fractional FTE counts generally on `state`/`labour` ("these are continuous full-time-equivalents, not a count of whole people"). The ventures-screen-specific overcommitment breakdown (effective capacity, required FTE, and overcommitment behaviour, spelled out on that one screen) was not separately confirmed. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

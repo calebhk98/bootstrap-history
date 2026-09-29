@@ -1,6 +1,8 @@
 # The live economy lacks a closed population/income/demand loop
 
-**Source:** playtest findings document, ECON-004. **Status:** Architecture
+**Status:** open
+
+**Source:** playtest findings document, ECON-004. **Type:** Architecture
 finding with substantial existing groundwork; do not read this as "build a
 demand model," because one already exists. Read it as "wire the one that
 exists in."
@@ -42,8 +44,8 @@ piece for splitting one furnace cost across two outputs (lead and silver).
     grep -rn "world.demand\|world import demand\|from world.demand" sim/engine/ sim/solve_prices.py
     -> no matches
 
-`docs/architecture/STATE_OF_THE_PROJECT.md` (Part 2, its own import table)
-confirms this independently: "`demand.py` imported by NOTHING under
+`docs/architecture/STATE_OF_THE_PROJECT.md` (milestone section, with the grep that measures
+which modules are imported) confirmed this independently when written: "`demand.py` imported by NOTHING under
 `sim/engine/` or `sim/solve_prices.py`." Of the eight `sim/world/` domain
 modules, five (agriculture, demography, land, transport, military_logistics)
 are wired directly into the engine; a sixth (deposits) is reachable only
@@ -64,7 +66,7 @@ moves with another trade's fortunes.
 
 This is not a gap the project has overlooked; it is a gap the project has
 already measured and sequenced. `docs/architecture/STATE_OF_THE_PROJECT.md`
-Part 4 ("What to do next, in order, and why") lists wiring
+("What to do next, in order") lists wiring
 `sim/world/labour_market.py` into the engine as its #1 recommendation and
 wiring `sim/world/demand.py` into `sim/solve_prices.py` (replacing the
 current mass-split joint-byproduct allocation) as its #2, both described as

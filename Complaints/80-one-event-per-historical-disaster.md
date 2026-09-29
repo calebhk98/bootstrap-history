@@ -1,5 +1,7 @@
 # One historical disaster should be one expandable event
 
+**Status:** open
+
 The 1519 invasion and the 410 Sack of Rome each manifested as several separate log entries: seizure, staff loss, project reset, knowledge loss, value changes, arrears, etc. Reconstructing "what just happened?" required scanning multiple entries.
 
 ## WHY IT MATTERS

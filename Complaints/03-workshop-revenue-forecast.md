@@ -1,5 +1,7 @@
 # Workshop forecast contradicts realized revenue
 
+**Status:** open - `reports/RESOLUTION_AUDIT_01_26.md` says fixed, re-verify and close
+
 **Type:** Financial forecast/UI defect  
 **Priority:** High
 

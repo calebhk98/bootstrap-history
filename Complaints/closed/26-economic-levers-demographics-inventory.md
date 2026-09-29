@@ -1,8 +1,10 @@
 # Economic levers, demographics, and material inventory need to be actionable
 
+**Status:** closed
+
 **Type:** Economic simulation / discoverability  
 **Priority:** High
-**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `buy farm`/`buy housing`/a named trade school all exist (`_cmd_buy`, `sim/engine/proto/dispatch.py`); a `materials` command/report now covers "stocks on hand, annual production and demand, and current buy/sell values for every tracked material." See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): RESOLVED, verified.** `buy farm`/`buy housing`/a named trade school all exist (`_cmd_buy`, `sim/engine/proto/dispatch.py`); a `materials` command/report now covers "stocks on hand, annual production and demand, and current buy/sell values for every tracked material." See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player concern
 

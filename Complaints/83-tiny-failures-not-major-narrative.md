@@ -1,5 +1,7 @@
 # Tiny failures should not get the same narrative weight as major failures
 
+**Status:** open
+
 A failed near-zero-cost technique should be one compact line. A failed blast furnace, power grid, vacuum tube, or crystal-growth program deserves detailed consequences.
 
 ## WHY IT MATTERS

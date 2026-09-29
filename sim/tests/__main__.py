@@ -342,6 +342,8 @@ TOPICS = [
     # DETECTORS against small fixtures with a known answer, not the current
     # state of this codebase - see that file's own docstring.
     "code_health",
+    # sim/issue_status.py: status table and folder/status check for Complaints/.
+    "issue_status",
     # The claim CLAUDE.md section 7 and .pylintrc both rest on: pylint's
     # invalid-name reports nothing for three kinds of binding, so a clean
     # pylint run is not a tree without short names. That claim rots

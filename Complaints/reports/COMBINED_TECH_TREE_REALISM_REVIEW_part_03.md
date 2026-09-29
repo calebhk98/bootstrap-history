@@ -1,4 +1,12 @@
 | 200 | **Inn and coaching house** (`fin_inn`) | 3,538* | 100 | 150h merchant | 1.5 | — | **ALREADY ROMAN** | Research price/labour/time should be 0 because the capability belongs in the inherited state. | Good. Roman inns, taverns and roadside lodging are ubiquitous. This should be inherited. |
+
+> **Disposition.** Every finding in this part has a recorded resolution in
+> `reports/RESOLUTION_AUDIT_TECH_TREE_REALISM_PART_03.md` (regression tests are
+> named there). Findings that resolution did not cover were filed as
+> `Complaints/127` (Rome's heat rung), `Complaints/128` (no validator that a
+> start agrees with itself) and `Complaints/132` (descriptions that do not
+> teach). Related standing issues: `Complaints/42` (pinned prerequisite
+> violations).
 | 201 | **Marine insurance** (`fin_marine_insurance`) | 4,105* | 200 | 300h merchant, 150h scribe | 2 | fin_maritime_loan | **STARTABLE, FIX MODEL** | Can begin now, but prerequisites/scope are incomplete; retune cost/time only after that fix. | Good. True insurance is later than Roman bottomry, but the founder can realistically introduce a premium-for-indemnity contract using existing bankers, maritime loans and contract law. Adoption/underwriting practice is the work, not invention of a physical technology. |
 | 202 | **Postal service as paid business** (`fin_postal_service`) | 4,362* | 180 | 200h carpenter, 250h merchant | 2 | fin_contract_law | **STARTABLE, FIX MODEL** | Can begin now, but prerequisites/scope are incomplete; retune cost/time only after that fix. | Good. No historical-date gate is needed, but the current node bundles later practice, lacks a logical parent, or overstates what the starting inputs can accomplish. |
 | 203 | **Solder: lead-tin for joining metals by melting** (`mt2_solder_lead_tin`) | 4,713* | 100 | 250h smith | 0.50 | cap_heat_0700, mat_lead, mat_tin | **STARTABLE, FIX MODEL** | Can begin now, but prerequisites/scope are incomplete; retune cost/time only after that fix. | Good. Basic lead-tin soldering is ancient, but the note contains a chemistry error: 50/50 Pb-Sn is not the 183 °C eutectic; the eutectic is about 61.9% tin / 38.1% lead. Split ancient soldering from later composition optimisation and correct the number. |

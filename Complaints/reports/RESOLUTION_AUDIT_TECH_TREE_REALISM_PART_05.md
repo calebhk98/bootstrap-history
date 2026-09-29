@@ -1,5 +1,9 @@
 # Resolution audit: combined tech-tree realism review, part 05
 
+> **Status of this audit.** It records fixes checked when it was written. The
+> regression modules it names are the evidence; re-run them with
+> `python3 sim/test_regressions.py --only <topic>` before relying on a claim.
+
 **Scope:** only `COMBINED_TECH_TREE_REALISM_REVIEW_part_05.md`: English
 opening-project rows 108–272 and the complete Mexica opening review.
 

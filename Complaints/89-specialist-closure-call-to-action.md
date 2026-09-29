@@ -1,5 +1,7 @@
 # Specialist-caused venture closures need a direct call to action in state
 
+**Status:** open
+
 Auto-hire could replace general labor after attrition while a profitable concern stayed shut because it specifically needed a carpenter or foreman FTE. The detailed venture screen explains this specialist requirement, but the high-level state output did not make the specialist cause prominent enough to prompt action.
 
 ## Why it matters

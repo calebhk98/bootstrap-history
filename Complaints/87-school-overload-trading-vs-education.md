@@ -1,5 +1,7 @@
 # "School" is overloaded for two different mechanics
 
+**Status:** open
+
 "Buy school smith 2" refers to trade-training capacity (apprenticeship seats), while "school_founded" is a general-literacy institution that teaches the population as a whole.
 
 For a literacy-focused run this creates confusion because the same word means completely different things in these two contexts.

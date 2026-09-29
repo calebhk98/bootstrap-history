@@ -1,5 +1,7 @@
 # Funding UI should distinguish four different concepts more aggressively
 
+**Status:** open
+
 Early Rome play repeatedly exposed the difference between these four funding concepts, which are often conflated under a single "funding capacity" headline:
 
 - cash on hand

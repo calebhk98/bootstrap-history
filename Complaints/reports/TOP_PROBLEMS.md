@@ -1,5 +1,7 @@
 # TOP PROBLEMS — Blind Later Han playthrough
 
+> **Dispositions** below were checked against the current code and the numbered issues. "Fixed" items name the test that pins them; new issues were filed for what remained.
+
 ## Run context
 
 - Blind first full playthrough; no source code, data files, docs, or prior-session notes were used.
@@ -13,6 +15,8 @@
 This list is ordered by **damage to a player trying seriously to win**, not by how easy the issue is to fix.
 
 ## 1. Point-contact transistor requires single-crystal material even though its own text says it historically did not
+
+**Disposition:** Fixed in current code: `point_contact_transistor` no longer gates on `single_crystal` or `silicon_path`; pinned by `sim/tests/test_round8g_display.py`.
 
 **Damage: Critical.** This forced an entire post-1947 manufacturing programme into the mandatory path and nearly cost the run through repeated long-calendar failures.
 
@@ -34,6 +38,8 @@ So the player-facing historical explanation explicitly contradicts the prerequis
 
 ## 2. Long calendar floors combined with high unmitigable failure rates can dominate the game more than strategy
 
+**Disposition:** Filed as `Complaints/124` (no lever to lower failure risk). The platinum placeholder risk was fixed separately.
+
 **Damage: Critical/High.** Several mandatory projects can erase 5–12 years per failed roll even when the player has solved every economic, staffing, material and scientific problem.
 
 Examples from this run:
@@ -50,6 +56,8 @@ Late in the run, money became almost irrelevant while these rolls controlled the
 **Recommendation:** Keep uncertainty, but give players some way to trade resources/preparation for lower failure risk: pilot plants, extra prototype work, redundant teams, quality-control spending, or a visible "spend more to reduce risk" option. Even a partial reduction would turn calendar failure back into strategy rather than lottery.
 
 ## 3. Platinum supply is extremely hard to discover and the economy UI gives misleading signals
+
+**Disposition:** Partly fixed: the platinum node note now names the eastern-route breadcrumb and no longer points at a data file (`sim/tests/test_round8g_display.py`). Whether a mine producing `platinum_g` should count as supply is not covered by any issue.
 
 **Damage: High.** This blocked vacuum tubes, which blocked the transistor, for decades.
 
@@ -75,6 +83,8 @@ That directs the player outside the game into a data file. I deliberately did no
 
 ## 4. Platinum acquisition becomes a 95% failure lottery with almost no player agency
 
+**Disposition:** Fixed in current code: every `located_material` node now has a low risk, pinned by `sim/tests/test_round8g_display.py`. The general no-lever problem is `Complaints/124`.
+
 **Damage: High.** After finally discovering the platinum node, it had 0 cash cost, 0 calendar floor, and **95% failure risk**. I failed repeatedly for years. There was no visible way to improve the odds.
 
 This felt less like historical difficulty than a repeated dice roll. Eventually I restarted it and succeeded on the next attempt without changing any strategy.
@@ -82,6 +92,8 @@ This felt less like historical difficulty than a repeated dice roll. Eventually 
 **Recommendation:** Tie the failure chance to visible trade-route/logistics investment, money, escorts, multiple expeditions, or distance-reduction infrastructure. If the intended answer is "send enough expeditions," let the player buy several attempts in parallel rather than consuming one year per 5% roll.
 
 ## 5. Bounty commands leak fog-hidden prerequisite IDs, and one bounty message directly suggests an impossible action
+
+**Disposition:** Fixed in current code: `bounty` uses the same fog filter as `why` (`missing_prereq_message`, `sim/engine/fog.py`) and checks eligibility before suggesting a switch (`sim/engine/proto/dispatch_money.py`).
 
 **Damage: High for fog integrity; medium for run outcome.** Normal `why` correctly hides unknown prerequisites, but `bounty` sometimes names them.
 
@@ -101,6 +113,8 @@ I stopped it, then `bounty mat_platinum_bulk` refused because the node was **not
 
 ## 6. The game does not teach parallel research strongly enough, even though parallelism is essential
 
+**Disposition:** Fixed in current code: a one-time parallelism note and a free-hours field exist (`sim/tests/test_parallelism_note.py`). Enhancements are `Complaints/101`.
+
 **Damage: High.** I was winning economically but playing the research programme too serially. A user hint materially changed the run:
 
 - long calendar projects can remain in the background;
@@ -115,6 +129,8 @@ Without that realization, repeated late-game failures could easily have pushed t
 
 ## 7. `available sort nearest` is misleading for goal navigation, and `stuck` becomes nearly useless near the endgame
 
+**Disposition:** Partly fixed: the misleading sort was renamed `fewest_missing` (`sim/engine/proto/techtree.py`; `nearest` stays as a silent alias). Goal-aware guidance is `Complaints/100`; `stuck` refuses to name the goal blocker under fog by design.
+
 **Damage: High/Medium.** With the explicit goal set to junction transistors, `available sort nearest` repeatedly began with agriculture. Near the end, `stuck` told me I had hundreds of affordable things and suggested cheap/profitable work rather than identifying the one actual goal blocker.
 
 `rush` is better documented because it explicitly says it has no idea what I am building toward. `nearest` does not explain what "nearest" means and therefore looks like a target-path planner when it is not one.
@@ -122,6 +138,8 @@ Without that realization, repeated late-game failures could easily have pushed t
 **Recommendation:** Either make `nearest` actual graph distance to the current goal, or rename/explain it. Add a goal-aware command that says: "Of the prerequisites you have heard of, these are the currently buildable nodes on paths to your target."
 
 ## 8. Finished knowledge versus active supply/capability is strategically good but inconsistently surfaced
+
+**Disposition:** Filed as `Complaints/129`. Related: `Complaints/86`, `Complaints/88`.
 
 **Damage: Medium/High.** The distinction is one of the game's best systems, but it repeatedly surprised me.
 
@@ -144,6 +162,8 @@ The underlying model is excellent; the UI should make the state type unmistakabl
 
 ## 9. Attrition silently closes critical concerns and can create large downstream changes
 
+**Disposition:** Filed as `Complaints/130`. Related: `Complaints/89`.
+
 **Damage: Medium.** The power grid, lead chamber, zinc industry and other major concerns repeatedly closed because normal attrition left nobody supervising them. This could crash recurring income or silently remove a supply/capability.
 
 The auto-close message itself is clear when it happens, but with many concerns it becomes maintenance whack-a-mole.
@@ -151,6 +171,8 @@ The auto-close message itself is clear when it happens, but with many concerns i
 **Recommendation:** Provide a "critical concerns" staffing reserve or a policy like "prioritize keeping these N concerns open." `auto_hire` exists but is intentionally simplistic; a small priority list would reduce repetitive babysitting without automating strategy.
 
 ## 10. Build staffing and operating staffing can differ sharply, producing post-completion surprises
+
+**Disposition:** Filed as `Complaints/131`.
 
 **Damage: Medium.** Examples included the lead chamber and several large concerns. A player can afford and complete a project and then discover the operating supervision requirement is larger/different enough that it cannot be opened.
 
@@ -160,11 +182,15 @@ The `why` page does display both numbers, which is good, but in a huge descripti
 
 ## 11. Zero-year / zero-cost capability nodes still require a time tick
 
+**Disposition:** Fixed: `Complaints/closed/14`.
+
 **Damage: Low/Medium.** Examples such as local/portable power capabilities showed 0 years, 0 hours, 0 cost, yet after `start` they waited until the next yearly step to complete.
 
 **Recommendation:** Either complete true zero-time capabilities immediately or display a minimum "next tick" duration rather than 0 years.
 
 ## 12. Some player-facing text leaks development/audit notes or out-of-civilization assumptions
+
+**Disposition:** Partly fixed: data-file pointers in notes are gone (`sim/tests/test_round8g_display.py`). Audit markers and patch history in notes remain: `Complaints/126`. Rome-framed institution text under other civilisations is not filed separately (see `Complaints/132`).
 
 **Damage: Low, but immersion-breaking.** Examples during the run included:
 
@@ -175,6 +201,8 @@ The `why` page does display both numbers, which is good, but in a huge descripti
 **Recommendation:** Keep developer provenance, internal file references and patch-history comments out of normal player text. Civilization-specific flavor should either adapt or stay generic.
 
 ## 13. The selected merchant start appeared as 4,000 den, but the playable state began with 3,000 cash without explanation
+
+**Disposition:** Fixed in current code: the kit is converted to the chosen civilisation's prices and the game says so (`sim/engine/cli_interactive.py`).
 
 **Damage: Low/Medium early-game trust issue.** I chose the merchant option because it was the recommended middle-ish income. The first playable prompt then said I arrived with 3,000 cash. If 1,000 is intentionally consumed by setup/travel, the game should say so.
 

@@ -1,5 +1,7 @@
 # Recommended nitre-bed purchase is drastically oversized
 
+**Status:** closed
+
 **Type:** Recommendation/balance UX  
 **Priority:** Medium
 

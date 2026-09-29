@@ -2,8 +2,8 @@
 
 **Status:** proposed plan. Supersedes the sequencing sketch in `PM_ASSESSMENT.md` §5.
 **For "is this done yet":** `docs/architecture/STATE_OF_THE_PROJECT.md` holds
-the re-measured milestone table, every `Complaints/` file's real status, and
-an ordered next-steps list - read it alongside Part 4 below, which is the
+the milestone table with the commands that measure it and an ordered
+next-steps list; the issue table is `python3 sim/issue_status.py` - read it alongside Part 4 below, which is the
 short version of the same thing.
 **Settled with the stakeholder:** the historical record must be a *plausible*
 outcome, not the only one, and not one produced by feeding history back in. The
@@ -289,8 +289,8 @@ Each is a thing that either works or does not, with a stated measurement.
 **STATUS, measured rather than remembered.** Bring this table up to date when
 a milestone moves; it is the first thing anyone reads. **`docs/architecture/
 STATE_OF_THE_PROJECT.md` is now the fuller version of this same question** -
-every complaint's status, the same commands re-run with their full output,
-and an ordered next-steps list with reasoning. Read it alongside this table;
+the commands that measure each milestone and an ordered next-steps list
+with reasoning. Read it alongside this table;
 this table stays the short version.
 
 | | milestone | state, re-measured 2026-09-18 |
@@ -325,7 +325,7 @@ two newest modules, so the ratio of building-to-wiring has clearly turned
 around rather than merely improved on one module. CLAUDE.md §4's "coverage
 is not the same as being wired in" still applies to exactly two modules now
 instead of five, and both are named directly in `STATE_OF_THE_PROJECT.md`
-Part 3 with what wiring each one would take.
+("What is not built or not linked") with what wiring each one would take.
 
 **WHAT IS ACTUALLY BLOCKING THE HEADLINE GOAL, updated.** Rent (ore and
 land) and capital are in; the gap barely moved where the margin is not

@@ -1,5 +1,7 @@
 # Demographic catastrophes should dominate the main state screen
 
+**Status:** open
+
 The Mexica population could collapse by 50-70% in a wave, but the main state presentation still gave substantial visual attention to workshop supervision and small project details.
 
 ## WHY IT MATTERS

@@ -1,4 +1,12 @@
 | 73 | **Wrought iron (bloomery)** (`mat_wrought_iron`) | NO OBVIOUS HARD CONFLICT | Adequate/good |
+
+> **Disposition.** Every finding in this part has a recorded resolution in
+> `reports/RESOLUTION_AUDIT_TECH_TREE_REALISM_PART_04.md` (regression tests are
+> named there). Findings that resolution did not cover were filed as
+> `Complaints/127` (Rome's heat rung), `Complaints/128` (no validator that a
+> start agrees with itself) and `Complaints/132` (descriptions that do not
+> teach). Related standing issues: `Complaints/42` (pinned prerequisite
+> violations).
 | 74 | **Cataract couching** (`med_cataract_couching`) | WRONG / FOREIGN / ANACHRONISTIC | Adequate/good |
 | 75 | **Legal protection for physicians** (`med_legal_physician`) | WRONG / FOREIGN / ANACHRONISTIC | Adequate/good |
 | 76 | **Opium and mandrake tinctures** (`med_opium_mandrake`) | WRONG / FOREIGN / ANACHRONISTIC | Adequate/good |

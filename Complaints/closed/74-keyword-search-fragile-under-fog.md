@@ -1,5 +1,7 @@
 # Literal keyword search is too fragile under fog
 
+**Status:** closed
+
 Searching terms such as `education`, `literacy`, or `academy` could miss visible technologies that were obviously relevant because their names used different vocabulary. Surveying mechanical power required trying many literal words such as gear, shaft, belt, crank, steam, rotary, drive.
 
 ## WHY IT MATTERS

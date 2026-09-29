@@ -1,5 +1,7 @@
 # Persistent shortages should become status conditions, not identical annual messages
 
+**Status:** open
+
 Messages such as "buy ~1 more hectare of coppice" repeated year after year with nearly identical wording.
 
 ## WHY IT MATTERS

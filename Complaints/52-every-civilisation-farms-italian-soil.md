@@ -1,5 +1,7 @@
 # Norse Scandinavia grows wheat on Italian loam
 
+**Status:** open
+
 Found by asking why five civilisations with wildly different geography gave
 the SAME answer. With harvest weather variance removed, the unshocked
 century lands on:

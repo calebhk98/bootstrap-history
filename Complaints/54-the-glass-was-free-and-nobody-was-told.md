@@ -1,5 +1,7 @@
 # Eighty-three technologies make glass out of nothing
 
+**Status:** open
+
 `treetool.py merge` dropped anything it could not resolve and wrote the tree
 anyway. It printed a warning per drop, the warnings scrolled past, and the
 merge reported success. Nobody counted them until the merge was made to

@@ -1,7 +1,9 @@
 # Difficulty curve: simple rules, difficult interactions, strong snowball
 
+**Status:** open
+
 **Source:** playtest findings document, BAL-001, evidenced by section 6's
-Rome and Mexica playtest narratives. **Status:** Balance observation.
+Rome and Mexica playtest narratives. **Type:** Balance observation.
 
 ## The player's reasoning
 
@@ -41,7 +43,7 @@ logistics, capital allocation) is already filed separately in this batch
 (`Complaints/107` through `Complaints/113`). This finding's role is to state
 the balance principle that ties them together: the goal is new constraints
 at scale, not higher early difficulty and not revenue suppression (the same
-point `Complaints/105`, ECON-003, makes from the wealth angle specifically).
+point `docs/architecture/DESIGN_PRINCIPLES.md`, ECON-003, makes from the wealth angle specifically).
 
 ## Size
 
@@ -52,6 +54,6 @@ late-game constraint rather than nerfing something that already works).
 
 ## Cross-references
 
-`Complaints/105` (ECON-003, extreme wealth is not a bug) makes the parallel
+`docs/architecture/DESIGN_PRINCIPLES.md` (ECON-003, extreme wealth is not a bug) makes the parallel
 argument for wealth specifically. `Complaints/107` through `Complaints/114`
 (the LATE- findings) are the concrete mechanisms this principle argues for.

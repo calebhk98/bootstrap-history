@@ -1,5 +1,7 @@
 # `path` prints one lifetime budget and judges against a different one
 
+**Status:** closed
+
 **Type:** Bug, player-facing
 **Priority:** Medium. It is two lines apart and it tells the player the opposite of what it just told them.
 

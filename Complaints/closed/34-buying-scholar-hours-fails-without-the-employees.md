@@ -1,8 +1,10 @@
 # You can buy labourer hours, but buying scholar hours fails for want of scholars
 
+**Status:** closed - fixed by `scholar_hands_available`; this file predates the fix
+
 **Type:** Gameplay / economic model
 **Priority:** Medium-high. It blocks a legal move a player reasonably expects to work.
-**Status: REPORTED, NOT YET REPRODUCED.** Recorded from a playthrough at the
+**Outcome: REPORTED, NOT YET REPRODUCED.** Recorded from a playthrough at the
 stakeholder's request, deliberately without investigating - see "Before
 fixing it".
 

@@ -1,5 +1,7 @@
 # A mine's "ready year" reads as this year, and means next year
 
+**Status:** closed
+
 ## What the player saw
 
 A mine was reported as "ready year 1600." At the displayed year-1600 state

@@ -1,8 +1,10 @@
 # The mod system adds content but cannot change rules or remove content
 
+**Status:** open
+
 **Source:** playtester report that mods are "heavily restricted": no runnable
 code, no magic or elves, cannot change or hide Rome, cannot really change the
-tech tree. **Status:** Confirmed, with two defects found while checking.
+tech tree. **Type:** Confirmed, with two defects found while checking.
 
 ## What a mod can do today
 

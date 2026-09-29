@@ -1,5 +1,7 @@
 # Turning on solved prices today would make land free
 
+**Status:** partly - rent landed; the endogenous-only switch stays off
+
 Found by measuring the new `sim/engine/prices.py` wiring rather than by
 reading it. The wiring itself is right and is correctly defaulted OFF; this
 records what the measurement says about when it may be turned ON, so that

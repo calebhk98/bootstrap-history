@@ -1,5 +1,7 @@
 # A shaft that costs nothing to sink
 
+**Status:** open
+
 `sim/world/deposits.py` has a SINKING COST mechanism, described at length in
 its own module docstring as the thing that makes a poor deposit uneconomic at
 low demand and economic at high demand. A one-time cost for the shaft,

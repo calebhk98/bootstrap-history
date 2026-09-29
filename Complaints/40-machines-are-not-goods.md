@@ -1,5 +1,7 @@
 # The energy file builds machines that nothing else can buy
 
+**Status:** open
+
 Raised by the stakeholder, who put it as: the electricity file should not
 care about the costs of materials, that belongs to the pricing side.
 

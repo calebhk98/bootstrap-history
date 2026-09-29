@@ -1,5 +1,7 @@
 # Population-raising technology still writes to a number nothing reads
 
+**Status:** open
+
 ## What the player saw
 
 Several food and population technologies are described, in their own notes
@@ -79,7 +81,7 @@ architecture doc.
 
 One caveat worth stating precisely, because CLAUDE.md SS3.4 requires
 distinguishing a labelled heuristic from an unlabelled one: `WIRING ONE`
-(`Complaints/48-technology-cannot-stop-people-dying-young.md`) already gave
+(`Complaints/closed/48-technology-cannot-stop-people-dying-young.md`) already gave
 eight disease/sanitation technologies (`Sim.DISEASE_BURDEN_TECH_IDS`) a
 *real*, live effect via `_disease_burden()`, which reads `self.has(...)`
 every year rather than queuing into `_pop_scale_base` at all - the

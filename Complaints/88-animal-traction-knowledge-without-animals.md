@@ -1,5 +1,7 @@
 # Knowledge of animal traction should be visually separate from actual animal availability
 
+**Status:** open
+
 Mexica could complete knowledge and capability relating to draught-animal muscle power while carts and treadmills remained blocked because no local draught animals existed in that civilization.
 
 The blocker was mechanically correct - the capability should not work without the physical resource. However, the capability name in isolation could imply that the physical resource now existed.

@@ -1,5 +1,7 @@
 # Hazard mitigation should show timing, not only relevance
 
+**Status:** open
+
 The risk screen was excellent at translating historical danger into actionable categories without exposing the whole tree. However, it only showed which mitigations were relevant, not whether they could be completed in time to matter.
 
 ## Why it matters

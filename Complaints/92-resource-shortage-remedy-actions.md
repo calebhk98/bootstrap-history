@@ -1,5 +1,7 @@
 # Resource-shortage screens should offer direct remedy actions
 
+**Status:** open
+
 The capacity screen was one of the strongest management tools and clearly identified shortages. However, it required the player to manually translate a measured shortage into separate commands to get a quote, inspect projects, or reduce demand.
 
 ## Why it matters

@@ -1,8 +1,10 @@
 # Announced plague wage shock is absent from economy and hiring
 
+**Status:** closed
+
 **Type:** Simulation/UI inconsistency  
 **Priority:** High
-**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `wage_index` is now a computed property driven by population shortfall (`WAGE_SCARCITY_ELASTICITY`), and `_refresh_demographic_indexes()` (`sim/engine/core.py`) is called immediately after a hazard fires specifically so "a shock's announced effects [are] visible immediately, not lag a step." See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): RESOLVED, verified.** `wage_index` is now a computed property driven by population shortfall (`WAGE_SCARCITY_ELASTICITY`), and `_refresh_demographic_indexes()` (`sim/engine/core.py`) is called immediately after a hazard fires specifically so "a shock's announced effects [are] visible immediately, not lag a step." See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

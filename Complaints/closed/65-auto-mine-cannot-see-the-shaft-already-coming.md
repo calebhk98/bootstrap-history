@@ -1,5 +1,7 @@
 # Auto-mine sizes the new shaft against active capacity only, blind to what is already sinking
 
+**Status:** closed
+
 ## What the player saw
 
 A coal shaft had already been commissioned and was due to come online.
