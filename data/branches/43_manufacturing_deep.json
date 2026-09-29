@@ -134,7 +134,7 @@
   "mat": {
    "tool_steel_kg": 15,
    "mat_tungsten": 8,
-   "mat_cobalt": 4
+   "cobalt_kg": 4
   },
   "cap": 200,
   "build_yrs": 0.6,
@@ -201,7 +201,7 @@
   },
   "mat": {
    "tool_steel_kg": 3,
-   "mat_cobalt": 4,
+   "cobalt_kg": 4,
    "mat_chromium": 2,
    "mat_tungsten": 3
   },
@@ -266,7 +266,7 @@
   },
   "mat": {
    "mat_tungsten": 12,
-   "mat_cobalt": 3
+   "cobalt_kg": 3
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
@@ -294,7 +294,7 @@
    "engineer": 80
   },
   "mat": {
-   "mat_cemented_carbide": 3,
+   "cemented_carbide_kg": 3,
    "steel_plate_kg": 5
   },
   "build_yrs": 0.4,

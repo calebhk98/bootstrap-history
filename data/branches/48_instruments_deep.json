@@ -576,7 +576,7 @@
    "machinist": 15
   },
   "mat": {
-   "mica": 0.05
+   "mica_kg": 0.05
   },
   "cap": 600,
   "up": 40,
@@ -611,7 +611,7 @@
   },
   "mat": {
    "glass_raw_kg": 1,
-   "magnesium_fluoride": 0.1,
+   "magnesium_fluoride_kg": 0.1,
    "zinc_sulfide_kg": 0.1
   },
   "cap": 2000,
@@ -647,7 +647,7 @@
   },
   "mat": {
    "glass_raw_kg": 1,
-   "magnesium_fluoride": 0.05
+   "magnesium_fluoride_kg": 0.05
   },
   "cap": 1800,
   "up": 120,
@@ -3078,7 +3078,7 @@
    "electrician": 400
   },
   "mat": {
-   "mat_copper_beryllium": 0.1
+   "copper_beryllium_kg": 0.1
   },
   "cap": 2500,
   "up": 200,

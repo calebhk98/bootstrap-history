@@ -399,7 +399,7 @@
   },
   "mat": {
    "glass_raw_kg": 3,
-   "mat_mirror_amalgam": 0.2
+   "mirror_amalgam_kg": 0.2
   },
   "build_yrs": 1.5,
   "adopt_yrs": 2,
@@ -455,7 +455,7 @@
   },
   "mat": {
    "glass_raw_kg": 1.5,
-   "mat_mirror_amalgam": 0.5
+   "mirror_amalgam_kg": 0.5
   },
   "build_yrs": 0.7,
   "adopt_yrs": 1,

@@ -41,7 +41,7 @@
   },
   "mat": {
    "copper_wire_kg": 0.2,
-   "mat_silk_m": 3
+   "silk_kg": 7.333e-06
   },
   "cap": 500,
   "up": 100,
@@ -255,7 +255,7 @@
    "electrician": 60
   },
   "mat": {
-   "mat_mica_sheet_kg": 0.02,
+   "mica_kg": 0.02,
    "copper_kg": 0.05
   },
   "cap": 1500,
@@ -453,7 +453,7 @@
   },
   "mat": {
    "copper_wire_kg": 0.1,
-   "mat_silk_m": 1
+   "silk_kg": 2.444e-06
   },
   "cap": 3000,
   "up": 500,
@@ -511,7 +511,7 @@
   "mat": {
    "mat_cast_iron_kg": 0.8,
    "copper_wire_kg": 0.15,
-   "mat_silk_m": 2
+   "silk_kg": 4.889e-06
   },
   "cap": 1000,
   "up": 200,
@@ -553,7 +553,7 @@
    "electrician": 60
   },
   "mat": {
-   "mat_ferrite_kg": 0.1,
+   "ferrite_kg": 0.1,
    "copper_wire_kg": 0.1
   },
   "cap": 800,
@@ -703,7 +703,7 @@
   "mat": {
    "copper_wire_kg": 0.2,
    "mat_silver_kg": 0.01,
-   "mat_mica": 0.05
+   "mica_kg": 0.05
   },
   "cap": 800,
   "up": 150,
@@ -800,7 +800,7 @@
    "electrician": 80
   },
   "mat": {
-   "mat_bimetallic_kg": 0.05,
+   "bimetallic_kg": 0.05,
    "mat_brass_kg": 0.1,
    "mat_silver_kg": 0.002
   },
@@ -1120,7 +1120,8 @@
   "cat": "component",
   "pre": [
    "photography",
-   "electroplating"
+   "electroplating",
+   "ch2_polymer_bakelite"
   ],
   "req_any": [
    {
@@ -1150,7 +1151,7 @@
   },
   "mat": {
    "copper_kg": 0.05,
-   "mat_phenolic_paper": 0.1
+   "paper_kg": 0.1
   },
   "cap": 1000,
   "up": 200,
@@ -1656,7 +1657,7 @@
    "machinist": 150
   },
   "mat": {
-   "mat_alnico_kg": 0.5,
+   "alnico_kg": 0.5,
    "copper_wire_kg": 0.3,
    "steel_plate_kg": 10
   },
@@ -2327,7 +2328,7 @@
    "labourer": 300
   },
   "mat": {
-   "copper_wire_km": 1000
+   "copper_wire_kg": 28148
   },
   "cap": 10,
   "up": 2,
@@ -2738,7 +2739,7 @@
   "mat": {
    "mat_mercury_kg": 0.1,
    "mat_zinc_kg": 0.05,
-   "mat_cadmium_kg": 0.02
+   "cadmium_kg": 0.02
   },
   "cap": 200,
   "up": 40,
@@ -2929,7 +2930,7 @@
    "machinist": 180
   },
   "mat": {
-   "mat_silk_m": 10,
+   "silk_kg": 2.444e-05,
    "copper_wire_kg": 0.05,
    "mat_paper_kg": 10
   },
@@ -3330,7 +3331,7 @@
    "glassblower": 180
   },
   "mat": {
-   "mat_xenon_kg": 0.001
+   "xenon_g": 1.0
   },
   "cap": 120,
   "up": 24,
@@ -3636,8 +3637,7 @@
    "engineer": 140
   },
   "mat": {
-   "mat_nickel_oxide_kg": 0.01,
-   "nickel_kg": 0.05
+   "nickel_kg": 0.05786
   },
   "cap": 150,
   "up": 30,
@@ -3686,7 +3686,7 @@
    "engineer": 130
   },
   "mat": {
-   "mat_silicon_carbide_kg": 0.02,
+   "silicon_carbide_kg": 0.02,
    "ceramic_kg": 0.05
   },
   "cap": 180,
@@ -5002,7 +5002,7 @@
    "electrician": 200
   },
   "mat": {
-   "mat_copper_wire_km": 100
+   "copper_wire_kg": 89600
   },
   "cap": 60,
   "up": 12,
