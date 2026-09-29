@@ -2,7 +2,8 @@
 
 Every sim/tests/test_*.py is a topic named by the rest of its filename, run in
 sorted order. A file opts out of the default run with a module-level
-`SLOW_TOPIC = True`. Kept free of heavy imports so `--list` stays instant.
+`SLOW_TOPIC = True`, and from the parallel batch with
+`SERIAL_TOPIC = True`. Kept free of heavy imports so `--list` stays instant.
 """
 import ast
 import os
@@ -18,22 +19,32 @@ def discover_topics(tests_dir=TESTS_DIR):
 
 
 def discover_slow_topics(tests_dir=TESTS_DIR):
-    """Topics whose file sets `SLOW_TOPIC = True` at module level.
+    """Topics whose file sets `SLOW_TOPIC = True` at module level."""
+    return _discover_flag("SLOW_TOPIC", tests_dir)
+
+
+def discover_serial_topics(tests_dir=TESTS_DIR):
+    """Topics whose file sets `SERIAL_TOPIC = True`: never run beside another topic."""
+    return _discover_flag("SERIAL_TOPIC", tests_dir)
+
+
+def _discover_flag(flag, tests_dir):
+    """Topics whose file sets `<flag> = True` at module level.
 
     Read from the syntax tree, so finding them imports (and runs) nothing.
     """
-    slow = set()
+    found = set()
     for name in discover_topics(tests_dir):
         path = os.path.join(tests_dir, "test_%s.py" % name)
         with open(path, encoding="utf-8") as handle:
             source = handle.read()
-        if "SLOW_TOPIC" not in source:
+        if flag not in source:
             continue
         tree = ast.parse(source, filename=path)
         for node in tree.body:
             if (isinstance(node, ast.Assign)
-                    and any(isinstance(target, ast.Name) and target.id == "SLOW_TOPIC"
+                    and any(isinstance(target, ast.Name) and target.id == flag
                             for target in node.targets)
                     and isinstance(node.value, ast.Constant) and node.value.value is True):
-                slow.add(name)
-    return slow
+                found.add(name)
+    return found

@@ -861,7 +861,6 @@ check("the in-game options command still changes the horizon, unrelated to "
 # making". Everything built since the split went into the JSON protocol only,
 # and `play` still understood six commands of its own. It must now reach the
 # whole game, in typed words, and it must never answer a person in JSON.
-_PLAY_DIR = "_playtest_tmp"
 os.makedirs(os.path.join(ROOT, _PLAY_DIR), exist_ok=True)
 
 
@@ -910,7 +909,6 @@ check("running out of input ends a typed game cleanly, not on a traceback",
 # so every file here lives in a relative scratch directory under ROOT, the
 # same place a real player's save would land.
 import shutil as _shutil
-_LOADTEST_DIR = "_loadtest_tmp"
 _loadtest_abs = os.path.join(ROOT, _LOADTEST_DIR)
 os.makedirs(_loadtest_abs, exist_ok=True)
 

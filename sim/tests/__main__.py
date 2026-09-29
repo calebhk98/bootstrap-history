@@ -13,13 +13,26 @@ the run, and how many checks each topic bought. That table is what decides
 whether a topic deserves a module-level `SLOW_TOPIC = True`. It changes
 nothing about which checks run, so `--timing` can be added to any
 invocation, including `--only` and `--slow`.
+
+`--jobs N` (default: available cores; `--jobs 1` is the plain sequential run)
+runs each topic in its own fresh worker process, N at a time. Each worker
+buffers its output and the runner prints topics in the sorted order, so the
+output is the same as `--jobs 1` apart from timings. Workers run with
+`--jobs 1` inside, so in-topic subprocess parallelism does not multiply with
+topic parallelism, and each gets its own scratch directories. A topic that
+must not run beside others sets a module-level `SERIAL_TOPIC = True`; those
+run one at a time after the parallel batch. Per-topic times are remembered
+in `.cache/` so the next run starts the longest topics first.
 """
 import importlib
 import json
 import os
+import subprocess
 import sys
+import tempfile
 import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 
 # So `python3 sim/tests/__main__.py` (run as a plain script, no package
 # context) works exactly like `python3 -m sim.tests`: put the repo root on
@@ -144,6 +157,105 @@ def _print_topic_timing(topic_costs):
              sum(count for _, _, count in topic_costs), len(topic_costs)))
 
 
+_TIMES_FILE = os.path.join(_REPO_ROOT, ".cache", "test_topic_seconds.json")
+
+
+def _load_topic_seconds():
+    try:
+        with open(_TIMES_FILE, encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_topic_seconds(topic_costs):
+    """Remember per-topic wall time so the next parallel run starts the longest first."""
+    known = _load_topic_seconds()
+    known.update({slug: seconds for slug, seconds, _ in topic_costs})
+    try:
+        os.makedirs(os.path.dirname(_TIMES_FILE), exist_ok=True)
+        handle_fd, temporary = tempfile.mkstemp(dir=os.path.dirname(_TIMES_FILE), suffix=".tmp")
+        with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
+            json.dump(known, handle)
+        os.replace(temporary, _TIMES_FILE)
+    except OSError:
+        pass
+
+
+def _worker_main(slug, result_path):
+    """Run one topic in this (fresh) process and dump its results as JSON."""
+    from sim.tests import harness
+    checks_before = len(harness.CHECKS_RUN)
+    started_at = time.time()
+    _run_topic(slug, harness)
+    with open(result_path, "w", encoding="utf-8") as handle:
+        json.dump({"seconds": time.time() - started_at,
+                   "checks": harness.CHECKS_RUN[checks_before:],
+                   "failures": harness.FAILURES,
+                   "skipped": harness.SKIPPED,
+                   "subproc_time": harness._SUBPROC_TIME[0],
+                   "subproc_calls": harness._SUBPROC_CALLS[0]}, handle)
+    return 0
+
+
+def _start_worker(slug, harness, result_dir):
+    """Launch a fresh process for one topic; in-topic parallelism is 1 per worker."""
+    result_path = os.path.join(result_dir, slug + ".json")
+    command = [sys.executable, os.path.abspath(__file__), "--worker", slug,
+               "--worker-result", result_path, "--worker-tag", slug, "--jobs", "1"]
+    if harness.SLOW:
+        command.append("--slow")
+    completed = harness._real_subprocess_run(command, capture_output=True, text=True,
+                                             cwd=_REPO_ROOT)
+    result = None
+    try:
+        with open(result_path, encoding="utf-8") as handle:
+            result = json.load(handle)
+    except (OSError, ValueError):
+        pass
+    return completed, result
+
+
+def _run_topics_parallel(run_now, harness, jobs):
+    """Run topics in worker processes; print and merge results in topic order."""
+    serial = set(harness.SERIAL_TOPICS)
+    seconds_before = _load_topic_seconds()
+    parallel_slugs = sorted((slug for slug in run_now if slug not in serial),
+                            key=lambda slug: -seconds_before.get(slug, 0.0))
+    serial_slugs = [slug for slug in run_now if slug in serial]
+    topic_costs = []
+    outcomes = {}
+    with tempfile.TemporaryDirectory(prefix="rome_suite_") as result_dir:
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = {slug: pool.submit(_start_worker, slug, harness, result_dir)
+                       for slug in parallel_slugs}
+            # Serial topics wait for the whole parallel batch, then run one at a time.
+            for future in futures.values():
+                future.exception()
+        for slug in serial_slugs:
+            outcomes[slug] = _start_worker(slug, harness, result_dir)
+        for slug, future in futures.items():
+            outcomes[slug] = future.result()
+    for slug in run_now:
+        completed, result = outcomes[slug]
+        sys.stdout.write(completed.stdout)
+        if result is None:
+            message = "%s: worker crashed (exit %s)" % (slug, completed.returncode)
+            print("  %-58s FAIL %s" % (message, completed.stderr.strip()[-400:]))
+            harness.CHECKS_RUN.append((message, 0.0))
+            harness.FAILURES.append(message)
+            topic_costs.append((slug, 0.0, 1))
+            continue
+        harness.CHECKS_RUN.extend((name, took) for name, took in result["checks"])
+        harness.FAILURES.extend(result["failures"])
+        harness.SKIPPED.extend(result["skipped"])
+        harness._SUBPROC_TIME[0] += result["subproc_time"]
+        harness._SUBPROC_CALLS[0] += result["subproc_calls"]
+        topic_costs.append((slug, result["seconds"], len(result["checks"])))
+    _save_topic_seconds(topic_costs)
+    return topic_costs
+
+
 def _parse_only(argv):
     for i, arg in enumerate(argv):
         if arg == "--only" and i + 1 < len(argv):
@@ -160,6 +272,11 @@ def main(argv=None):
         for slug in TOPICS:
             print(slug)
         return 0
+
+    if "--worker" in argv:
+        position = argv.index("--worker")
+        result_path = argv[argv.index("--worker-result") + 1]
+        return _worker_main(argv[position + 1], result_path)
 
     only = _parse_only(argv)
     if only is None:
@@ -208,13 +325,17 @@ def main(argv=None):
     # number in prose carries the command that produced it or it does not go
     # in. This loop is that command.
     topic_costs = []
-    for slug in TOPICS:
-        if slug in run_now:
-            checks_before = len(harness.CHECKS_RUN)
-            started_at = time.time()
-            _run_topic(slug, harness)
-            topic_costs.append((slug, time.time() - started_at,
-                                len(harness.CHECKS_RUN) - checks_before))
+    if harness.JOBS > 1 and len(run_now) > 1:
+        topic_costs = _run_topics_parallel(
+            [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)
+    else:
+        for slug in TOPICS:
+            if slug in run_now:
+                checks_before = len(harness.CHECKS_RUN)
+                started_at = time.time()
+                _run_topic(slug, harness)
+                topic_costs.append((slug, time.time() - started_at,
+                                    len(harness.CHECKS_RUN) - checks_before))
 
     print("=" * 72)
     print("%d checks, %d failures, %.0fs%s"
