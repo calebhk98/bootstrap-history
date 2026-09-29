@@ -16,7 +16,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 
 
 def _schedule(training_years, floor=1.0):
-    return wages.WageSchedule(training_years, floor)
+    return wages.WageSchedule(training_years, floor, 0.10)
 
 
 class TightnessTests(unittest.TestCase):
@@ -75,8 +75,8 @@ class ProviderTests(unittest.TestCase):
 
     def test_floor_follows_the_food_price(self):
         registry = catalog.load_trade_registry(ROOT)
-        cheap = wage_provider.build_schedule(registry, 0.1)
-        dear = wage_provider.build_schedule(registry, 0.2)
+        cheap = wage_provider.build_schedule(registry, 0.1, 0.10)
+        dear = wage_provider.build_schedule(registry, 0.2, 0.10)
         self.assertAlmostEqual(dear.wage_per_hour("labourer") / cheap.wage_per_hour("labourer"), 2.0)
 
     def test_a_mod_trade_gets_a_wage_with_no_wage_table_entry(self):
@@ -97,7 +97,7 @@ class ProviderTests(unittest.TestCase):
                 "test_acme_k3f9:clockmaker": {"family": "craft"},
                 "test_acme_k3f9:surveyor": {"family": "craft", "training_years": 9}}}))
             registry = catalog.load_trade_registry(str(root), mods_dir=str(root / "mods"))
-        schedule = wage_provider.build_schedule(registry, 0.13)
+        schedule = wage_provider.build_schedule(registry, 0.13, 0.10)
         self.assertGreater(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), schedule.floor_per_hour)
         # A trade that states no training takes its family's median.
         self.assertEqual(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), schedule.wage_per_hour("smith"))

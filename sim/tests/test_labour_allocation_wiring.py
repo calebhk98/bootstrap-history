@@ -54,7 +54,9 @@ class WorkforceAllocationWiringTests(unittest.TestCase):
 
     def test_workforce_hours_are_conserved_by_reallocation(self):
         hours = {labour_allocation.FARM_TRADE: 40.0, "smith": 20.0, "potter": 40.0}
-        moved = labour_allocation.reallocate(hours, 100.0, 70.0)
+        needed = labour_allocation.hours_needed_by_trade(
+            {"smith": 1.0 / 3.0, "potter": 2.0 / 3.0}, 100.0, 70.0)
+        moved = labour_allocation.reallocate(hours, 100.0, needed)
         self.assertAlmostEqual(sum(moved.values()), 100.0)
         self.assertGreater(moved[labour_allocation.FARM_TRADE], 40.0)
 

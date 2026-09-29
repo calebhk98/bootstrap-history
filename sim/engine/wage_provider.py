@@ -5,6 +5,8 @@ The schedule itself lives in sim.world.wages and is actor-agnostic; this is
 the glue that supplies its inputs.
 """
 import functools
+import json
+import os
 from typing import Any, Dict, Mapping, Optional
 
 from sim.world import demand, demography, wages
@@ -13,6 +15,19 @@ from sim.world import demand, demography, wages
 FOOD_PRICE_MATERIAL = "wheat_kg"
 
 REFERENCE_POPULATION = 10000.0
+
+_CIVILISATION_DIRECTORY = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "data", "civilizations")
+
+
+@functools.lru_cache(maxsize=None)
+def reference_discount_rate() -> float:
+    """Rome's own starting interest rate, for the context-free wage table
+    that tools and the price solver use when no civilisation is in play."""
+    path = os.path.join(_CIVILISATION_DIRECTORY, "rome_100ad.json")
+    with open(path, encoding="utf-8") as handle:
+        return float(json.load(handle)["starting_interest_rate"])
 
 
 @functools.lru_cache(maxsize=None)
@@ -30,8 +45,8 @@ def training_years_by_trade(registry: Mapping[str, Any]) -> Dict[str, float]:
 
 
 def build_schedule(registry: Mapping[str, Any], food_price_per_kg: float,
-                   tightness_factors: Optional[Dict[str, float]] = None,
-                   discount_rate: float = wages.DEFAULT_DISCOUNT_RATE) -> wages.WageSchedule:
+                   discount_rate: float,
+                   tightness_factors: Optional[Dict[str, float]] = None) -> wages.WageSchedule:
     floor = wages.subsistence_wage_per_hour(
         demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR,
         food_price_per_kg, people_fed_per_worker())

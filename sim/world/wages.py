@@ -31,12 +31,6 @@ CAREER_YEARS = declare(
     why="Working career over which a trade's training years are repaid. "
         "To be replaced by the demography model's expected working life.")
 
-DEFAULT_DISCOUNT_RATE = declare(
-    "DEFAULT_DISCOUNT_RATE", 0.10, kind="temporary_heuristic",
-    unit="per year", source=None, confidence="D",
-    why="Discount rate for valuing years spent training. An actor with its "
-        "own interest rate passes that instead.")
-
 NON_FOOD_SUBSISTENCE_MARKUP = declare(
     "NON_FOOD_SUBSISTENCE_MARKUP", 1.5, kind="temporary_heuristic",
     unit="subsistence spending per unit of food spending", source=None,
@@ -59,6 +53,14 @@ TIGHTNESS_GAP_LIMIT = declare(
     why="Largest relative gap that moves a wage in one year, so an absent "
         "trade or a collapse in hours cannot jump a wage.")
 
+TIGHTNESS_REVERSION_RATE_PER_YEAR = declare(
+    "TIGHTNESS_REVERSION_RATE_PER_YEAR", 0.03, kind="temporary_heuristic",
+    unit="fraction of the distance back to 1.0 per year", source=None,
+    confidence="D",
+    why="Without it a scarcity premium never leaves once the gap closes. "
+        "Stands in for the bargaining that fades when workers are no "
+        "longer hard to find; not fitted to any observed wage path.")
+
 MIN_TIGHTNESS_FACTOR = declare(
     "MIN_TIGHTNESS_FACTOR", 0.5, kind="temporary_heuristic",
     unit="multiple of the untightened wage", source=None, confidence="D",
@@ -70,8 +72,7 @@ MAX_TIGHTNESS_FACTOR = declare(
     why="Scarcity cannot push a trade's wage above this multiple of itself.")
 
 
-def training_premium(training_years: float,
-                     discount_rate: float = DEFAULT_DISCOUNT_RATE,
+def training_premium(training_years: float, discount_rate: float,
                      career_years: float = CAREER_YEARS) -> float:
     """Wage multiple that leaves a trainee indifferent to skipping training.
 
@@ -126,6 +127,7 @@ def adjusted_tightness_factor(factor: float, hours_required: float,
         gap = hours_required / hours_have - 1.0
     gap = max(-TIGHTNESS_GAP_LIMIT, min(TIGHTNESS_GAP_LIMIT, gap))
     moved = factor * (1.0 + TIGHTNESS_ADJUSTMENT_RATE_PER_YEAR * gap)
+    moved += (1.0 - moved) * TIGHTNESS_REVERSION_RATE_PER_YEAR
     return max(MIN_TIGHTNESS_FACTOR, min(MAX_TIGHTNESS_FACTOR, moved))
 
 
@@ -137,7 +139,7 @@ class WageSchedule(object):
     """
 
     def __init__(self, training_years: Mapping[str, float], floor_per_hour: float,
-                 discount_rate: float = DEFAULT_DISCOUNT_RATE,
+                 discount_rate: float,
                  tightness_factors: Optional[Dict[str, float]] = None,
                  career_years: float = CAREER_YEARS,
                  hours_per_year: float = HOURS_PER_WORKER_YEAR) -> None:

@@ -382,7 +382,8 @@ def solved_prices(held_technology_ids: Iterable[str],
     registry = solver_trade_registry(production_entries)
     training_years = wage_provider.training_years_by_trade(registry)
     for trade in registry:
-        wage_by_trade.setdefault(trade, wages.training_premium(training_years[trade]))
+        wage_by_trade.setdefault(trade, wages.training_premium(
+            training_years[trade], wage_provider.reference_discount_rate()))
 
     # RENT. See RENT WAS MISSING FROM THIS FILE in the module docstring:
     # `main()` in sim/solve_prices.py computes exactly these two dicts and

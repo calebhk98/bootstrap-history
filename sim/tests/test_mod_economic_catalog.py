@@ -93,7 +93,7 @@ class ModEconomicCatalogTests(unittest.TestCase):
         self.assertIn("test_acme_k3f9:clockmaker", registry)
         self.assertTrue(registry["test_acme_k3f9:clockmaker"].initially_absent)
         self.assertIn("established", registry["test_acme_k3f9:clockmaker"].note)
-        schedule = wage_provider.build_schedule(registry, 0.13)
+        schedule = wage_provider.build_schedule(registry, 0.13, 0.10)
         self.assertGreater(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), 0)
 
     def test_base_trade_registry_owns_identity_and_availability(self):
