@@ -6,13 +6,11 @@ actor that owns one can be stepped with the same functions.
 """
 from sim.world import agriculture
 from sim.world import labour_market
+from sim.world import workforce_spinup
 
-# Trade names as data/production books them: farm labour is the generic
-# unskilled trade; everything else is pooled into one craft trade.
-FARM_TRADE = "labourer"
-# [temporary_heuristic] no per-trade initial workforce exists yet, so all
-# non-farm working hours share one trade until one does.
-REST_TRADE = "artisan"
+# Farm labour is the generic unskilled trade as data/production books it;
+# every other trade's starting hours come from the workforce spin-up.
+FARM_TRADE = workforce_spinup.FARM_TRADE
 
 HOURS_PER_FARM_WORKER_YEAR = agriculture.ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
 
@@ -31,15 +29,31 @@ def farm_workers_needed(baseline_fte, current_fte, shortfall_kg,
     return min(wanted, land_limit_fte)
 
 
+def starting_hours(production, reached_nodes, total_hours, farm_hours):
+    """Hours by trade at the start: the farm hours the farm logic asks for,
+    and the rest split by the spun-up trade shares."""
+    rest_hours = total_hours - farm_hours
+    shares = workforce_spinup.cached_spin_up(production, reached_nodes).shares_by_trade
+    hours = {trade: rest_hours * share for trade, share in shares.items()}
+    hours[FARM_TRADE] = farm_hours
+    return hours
+
+
 def reallocate(hours_by_trade, total_hours, farm_hours_needed):
-    """One year of labour_market.Workforce.step toward the stated farm need."""
-    current_total = sum(hours_by_trade.values())
+    """One year of labour_market.Workforce.step toward the stated farm need;
+    the non-farm hours keep their current split as their need."""
+    current_total = sum(hours_by_trade[trade] for trade in sorted(hours_by_trade))
     scale = total_hours / current_total if current_total > 0.0 else 0.0
     workforce = labour_market.Workforce(
         {trade: hours * scale for trade, hours in hours_by_trade.items()})
     farm_hours_needed = min(farm_hours_needed, total_hours)
-    workforce.step({FARM_TRADE: farm_hours_needed,
-                    REST_TRADE: total_hours - farm_hours_needed})
+    rest_now = sum(hours for trade, hours in workforce.hours_by_trade.items()
+                   if trade != FARM_TRADE)
+    rest_needed = total_hours - farm_hours_needed
+    needs = {trade: (hours / rest_now * rest_needed if rest_now > 0.0 else 0.0)
+             for trade, hours in workforce.hours_by_trade.items() if trade != FARM_TRADE}
+    needs[FARM_TRADE] = farm_hours_needed
+    workforce.step(needs)
     return workforce.hours_by_trade
 
 
@@ -55,9 +69,9 @@ class LabourAllocationMixin:
         total_hours = self.population.working_age * HOURS_PER_FARM_WORKER_YEAR
         baseline_farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)
         if not economy.society_labour_hours:
-            economy.society_labour_hours = {
-                FARM_TRADE: baseline_farm_hours,
-                REST_TRADE: total_hours - baseline_farm_hours}
+            economy.society_labour_hours = starting_hours(
+                labour_market.production_data(), self.civ["starting_techs"],
+                total_hours, baseline_farm_hours)
         last_year = self._last_farm_year
         current_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         if last_year is None:

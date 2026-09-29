@@ -32,10 +32,15 @@ class WorkforceAllocationWiringTests(unittest.TestCase):
         # Half the farm hands leave: food runs short, and workers move back.
         test_sim = _rome_sim()
         test_sim._demographic_recovery(101)
-        total_hours = sum(test_sim.state.economy.society_labour_hours.values())
         hours = test_sim.state.economy.society_labour_hours
-        hours[labour_allocation.FARM_TRADE] *= 0.5
-        hours[labour_allocation.REST_TRADE] = total_hours - hours[labour_allocation.FARM_TRADE]
+        removed = hours[labour_allocation.FARM_TRADE] * 0.5
+        hours[labour_allocation.FARM_TRADE] -= removed
+        # The farm hands become craft workers in proportion to each trade's size.
+        rest_total = sum(value for trade, value in hours.items()
+                         if trade != labour_allocation.FARM_TRADE)
+        for trade in list(hours):
+            if trade != labour_allocation.FARM_TRADE:
+                hours[trade] += removed * hours[trade] / rest_total
         depleted = _farm_hours(test_sim)
         test_sim._demographic_recovery(102)
         after_one_year = _farm_hours(test_sim)
@@ -45,7 +50,7 @@ class WorkforceAllocationWiringTests(unittest.TestCase):
         self.assertGreater(after_two_years, after_one_year)
 
     def test_workforce_hours_are_conserved_by_reallocation(self):
-        hours = {labour_allocation.FARM_TRADE: 40.0, labour_allocation.REST_TRADE: 60.0}
+        hours = {labour_allocation.FARM_TRADE: 40.0, "smith": 20.0, "potter": 40.0}
         moved = labour_allocation.reallocate(hours, 100.0, 70.0)
         self.assertAlmostEqual(sum(moved.values()), 100.0)
         self.assertGreater(moved[labour_allocation.FARM_TRADE], 40.0)
