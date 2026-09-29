@@ -6,12 +6,11 @@ the goods households consume and the recipes that make them, through the whole
 recipe graph. A neutral (equal) split of the workforce is then stepped through
 sim.world.labour_market until the trade split stops moving.
 
-[temporary_heuristic] Household demand names only food, an undifferentiated
-manufactures good and silver. The manufactures budget is split equally by
-labour value across every available end good (one no available recipe
-consumes), and a material with several available producers is split equally
-among them, until measured budget shares per good and technique-choice costs
-exist to replace both.
+[temporary_heuristic] A need's budget is split equally by labour value across
+the available goods that satisfy it, an end good (one no available recipe
+consumes) that no need names takes an equal generic weight, and a material
+with several available producers is split equally among them, until
+price-responsive shares and technique-choice costs exist to replace these.
 
 Farm labour is not decided here; the engine pins it from the farm-labour
 logic in sim.world.agriculture and this module splits the remaining hours.
@@ -25,7 +24,7 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Set
 
 from sim.constants import declare
 from sim.solve_prices_core import techniques_available_to
-from sim.world import demand, labour_market
+from sim.world import demand, labour_market, need_demand
 
 # Trade whose hours the farm-labour logic owns; its recipe hours are not part
 # of the non-farm split.
@@ -52,6 +51,12 @@ SPIN_UP_SHARE_TOLERANCE = declare(
         "share moves by more than this in a year. Tight enough that a later "
         "year's reallocation starts from a rest state, loose enough to be "
         "reached in floating point.")
+
+
+def _needs() -> Dict[str, Any]:
+    from sim.engine import need_data
+    return need_data.load_needs(_REPOSITORY_ROOT)
+
 
 def _dominant_output(entry: Mapping[str, Any]) -> Optional[str]:
     outputs = entry.get("outputs") or {}
@@ -124,18 +129,16 @@ def need_shares_by_trade(production: Mapping[str, Any],
                 hours[trade] += level * per_unit
         return hours
 
-    # Household basket: the manufactures share is spread over end goods; a
-    # basket good with its own recipe (silver) takes its own budget share.
-    basket_weight = {good.name: good.marginal_budget_share for good in demand.DEFAULT_BASKET}
-    manufactures_weight = basket_weight.get(demand.MANUFACTURES.name, 0.0)
-    budget: Dict[str, float] = {}
-    generic_goods = sorted(material for material in end_goods
-                           if material not in basket_weight)
-    for material in sorted(end_goods):
-        if material in basket_weight and material != demand.FOOD.name:
-            budget[material] = basket_weight[material]
-    for material in generic_goods:
-        budget[material] = manufactures_weight / len(generic_goods)
+    # Household demand: each need's budget goes to the available goods that
+    # satisfy it; an end good no need names takes the mean declared weight.
+    declared_weight = need_demand.budget_weights_by_good(
+        _needs(), available, set(producers))
+    # TEMPORARY HEURISTIC: undeclared end goods share equal weight.
+    generic_weight = (sum(declared_weight.values()) / len(declared_weight)
+                      if declared_weight else 1.0)
+    budget: Dict[str, float] = dict(declared_weight)
+    for material in sorted(end_goods - set(declared_weight)):
+        budget[material] = generic_weight
 
     total_by_trade: Dict[str, float] = collections.defaultdict(float)
     served_recipes: Set[str] = set()
@@ -156,7 +159,6 @@ def need_shares_by_trade(production: Mapping[str, Any],
         add_budget(material, weight)
     # A recipe nothing reaches (a cycle with no end good, or output nobody
     # consumes) still runs for its own output, at the generic good weight.
-    generic_weight = manufactures_weight / max(len(generic_goods), 1)
     for recipe_id in sorted(dominant):
         if recipe_id not in served_recipes:
             add_budget(dominant[recipe_id], generic_weight)
@@ -210,7 +212,7 @@ def _cache_key(production: Mapping[str, Any], reached_nodes: Set[str]) -> str:
     available, _unreached, _unclassified = techniques_available_to(production, reached_nodes)
     payload = json.dumps(
         {"recipes": available, "reached": sorted(reached_nodes),
-         "basket": [list(good) for good in demand.DEFAULT_BASKET],
+         "needs": _needs(),
          "parameters": [SPIN_UP_MAX_YEARS, SPIN_UP_SHARE_TOLERANCE,
                         labour_market.OCCUPATIONAL_MOBILITY_RATE_PER_YEAR,
                         labour_market.OCCUPATIONAL_MOBILITY_GAP_RESPONSE_GAIN,

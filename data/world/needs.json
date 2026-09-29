@@ -1,0 +1,86 @@
+{
+ "_internal": "TRANSITIONAL: surplus_budget_share is a labelled heuristic weight per need (normalised over the needs that have a priced good). A good's effectiveness is per unit of its own production unit, in the need's unit. Mods add needs (ids namespaced by mod id) and add or extend goods; a production entry may also carry `satisfies` and `supply_per_year` for its dominant output. `supply_per_year` states a limited supply with no deposit model behind it, and floors the price at what that supply clears.",
+ "needs": {
+  "food": {
+   "surplus_budget_share": 0.30,
+   "subsistence_constant": "FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR",
+   "unit": "kg wheat equivalent",
+   "effectiveness_basis": "food energy per kg relative to wheat grain"
+  },
+  "shelter": {
+   "surplus_budget_share": 0.12,
+   "unit": "cubic metres of wall or frame",
+   "effectiveness_basis": "volume of structure one unit builds"
+  },
+  "clothing": {
+   "surplus_budget_share": 0.13,
+   "unit": "kg of cloth equivalent",
+   "effectiveness_basis": "cover and warmth per kg relative to plain woven cloth"
+  },
+  "implements_and_arms": {
+   "surplus_budget_share": 0.20,
+   "unit": "kg of bronze equivalent",
+   "effectiveness_basis": "working hardness and edge holding per kg relative to bronze"
+  },
+  "health": {
+   "surplus_budget_share": 0.04,
+   "unit": "dose-equivalents",
+   "effectiveness_basis": "relative therapeutic or hygienic effect per kg"
+  },
+  "ornament": {
+   "surplus_budget_share": 0.06,
+   "unit": "kg of bright durable metal equivalent",
+   "effectiveness_basis": "display value per kg of worked metal; a cultural quantity, equal across the bright metals"
+  },
+  "warmth_and_light": {
+   "surplus_budget_share": 0.15,
+   "unit": "megajoules of fuel heat",
+   "effectiveness_basis": "heating value per kg"
+  }
+ },
+ "goods": {
+  "wheat_kg": {"satisfies": {"food": 1.0}},
+  "milk_kg": {"satisfies": {"food": 0.2}},
+  "olive_oil_kg": {"satisfies": {"food": 2.7}},
+  "fat_kg": {"satisfies": {"food": 2.4}},
+  "mat_sugar": {"satisfies": {"food": 1.2}},
+  "starch_kg": {"satisfies": {"food": 1.05}},
+  "wine_common_kg": {"satisfies": {"food": 0.2}},
+
+  "brick_1000": {"satisfies": {"shelter": 1.4}},
+  "timber_m3": {"satisfies": {"shelter": 1.0}},
+  "stone_blocks": {"satisfies": {"shelter": 0.054}},
+  "cement_portland_kg": {"satisfies": {"shelter": 0.003}},
+
+  "cloth_kg": {"satisfies": {"clothing": 1.0}},
+  "fabric_kg": {"satisfies": {"clothing": 1.0}},
+  "linen_kg": {"satisfies": {"clothing": 1.0}},
+  "cotton_fabric_kg": {"satisfies": {"clothing": 1.0}},
+  "silk_kg": {"satisfies": {"clothing": 1.0}},
+  "felt_kg": {"satisfies": {"clothing": 1.2}},
+  "leather_kg": {"satisfies": {"clothing": 1.5}},
+  "canvas_kg": {"satisfies": {"clothing": 0.8}},
+
+  "bronze_kg": {"satisfies": {"implements_and_arms": 1.0}},
+  "brass_kg": {"satisfies": {"implements_and_arms": 0.7}},
+  "iron_bar_kg": {"satisfies": {"implements_and_arms": 0.9}},
+  "cast_iron_kg": {"satisfies": {"implements_and_arms": 0.5}},
+  "steel_plate_kg": {"satisfies": {"implements_and_arms": 2.0}},
+  "steel_noric_kg": {"satisfies": {"implements_and_arms": 2.0}},
+  "tool_steel_kg": {"satisfies": {"implements_and_arms": 3.0}},
+
+  "soap_kg": {"satisfies": {"health": 1.0}},
+  "camphor_kg": {"satisfies": {"health": 2.0}},
+  "foxglove_leaf_kg": {"satisfies": {"health": 10.0}},
+  "mat_opium": {"satisfies": {"health": 20.0}},
+
+  "silver_kg": {"satisfies": {"ornament": 1.0}},
+  "gold_kg": {"satisfies": {"ornament": 1.0}},
+  "platinum_g": {"satisfies": {"ornament": 0.001}},
+
+  "firewood_kg": {"satisfies": {"warmth_and_light": 15.0}},
+  "charcoal_kg": {"satisfies": {"warmth_and_light": 29.0}},
+  "coal_kg": {"satisfies": {"warmth_and_light": 27.0}},
+  "peat_kg": {"satisfies": {"warmth_and_light": 12.0}}
+ }
+}
