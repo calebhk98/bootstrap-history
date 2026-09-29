@@ -130,6 +130,7 @@ TOPICS = [
     # Mod loader override semantics and error reporting (unittest-style).
     "mod_overrides",
     "mod_economic_catalog",
+    "mod_removal_and_civs",
     # sim/world/agriculture.py: land, labour, technique and weather into
     # food, standalone and with no import of sim/engine/ - see that
     # module's own docstring for why. Also unittest.TestCase-style.

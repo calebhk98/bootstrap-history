@@ -25,7 +25,8 @@ sys.setrecursionlimit(20000)
 import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
-from .mods import find_mod_civilization, get_ordered_mods, load_mod_tree
+from .mods import get_ordered_mods, load_mod_tree
+from .mods_civ import apply_mod_civilization, check_starting_techs, is_hidden
 from .catalog import (load_production_catalog, load_trade_registry,
                       transitional_wage_rates, validate_mod_material_paths)
 
@@ -277,9 +278,9 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
     Norway, Mexica Tenochtitlan or somewhere invented is a different file, not a
     different simulator. See data/civilizations/_SCHEMA.md."""
     path = os.path.join(CIVDIR, name + ".json")
-    if not os.path.exists(path):
-        path = find_mod_civilization(name, get_ordered_mods(MODDIR)) or path
-    if not os.path.exists(path):
+    base_civ = json.load(open(path)) if os.path.exists(path) else None
+    civ = apply_mod_civilization(name, base_civ, get_ordered_mods(MODDIR))
+    if civ is None:
         # "_"-prefixed files are schema and reference data, not playable
         # civilizations, so the listing below excludes them - the same
         # convention cli.py applies everywhere it lists this directory. An
@@ -293,7 +294,6 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
                 have.extend(filename[:-5] for filename in os.listdir(mod_civs)
                             if filename.endswith(".json") and not filename.startswith("_"))
         raise SystemExit("unknown civilization %r. available: %s" % (name, ", ".join(have)))
-    civ = json.load(open(path))
     # Opening ownership is scenario data, not an optional convenience with an
     # implicit fallback.  Silently turning a missing declaration into an empty
     # list makes a newly-authored scenario look valid while stripping its
@@ -309,6 +309,7 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
     if duplicates:
         raise ValueError("civilization %r repeats starting technologies: %s"
                          % (civ.get("id", name), ", ".join(duplicates)))
+    check_starting_techs(civ, get_ordered_mods(MODDIR))
     civ.setdefault("values", {})
     for field, default in (("w_military",0.5),("w_labour_saving",0.0),("w_information",0.0),
                  ("w_novelty",0.0),("w_magic_fear",0.4),("w_religious_rigidity",0.3),
@@ -319,7 +320,7 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
 
 
 def civilization_ids() -> List[str]:
-    """Playable base and mod civilization ids in deterministic order."""
+    """Playable (not hidden) base and mod civilization ids in deterministic order."""
     identifiers = {filename[:-5] for filename in os.listdir(CIVDIR)
                    if filename.endswith(".json") and not filename.startswith("_")}
     for manifest in get_ordered_mods(MODDIR):
@@ -327,7 +328,8 @@ def civilization_ids() -> List[str]:
         if os.path.isdir(directory):
             identifiers.update(filename[:-5] for filename in os.listdir(directory)
                                if filename.endswith(".json") and not filename.startswith("_"))
-    return sorted(identifiers)
+    return sorted(identifier for identifier in identifiers
+                  if not is_hidden(load_civ(identifier)))
 
 
 def load(use_solved_prices: bool = False,
