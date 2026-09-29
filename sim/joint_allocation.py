@@ -30,18 +30,39 @@ MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
 
 
 def allocate_joint_cost(outputs, current_prices, total_cost,
-                        anchor_price_by_material=None):
+                        anchor_price_by_material=None,
+                        disposal_value_by_material=None):
     """{material: price per unit} splitting `total_cost` over `outputs`.
 
     Outputs only have to recover the batch together; a bulk waste may carry
     far less than its mass share. Without an anchor an output is valued by
     its mass in kg. An output whose unit is not a mass is warned about,
     left out of the split and priced at zero.
+
+    An anchored output whose demand-clearing price is at or below its
+    disposal value (default zero) is in surplus: it prices at the disposal
+    value and the other outputs carry the rest of the batch.
     """
     if len(outputs) == 1:
         (name, quantity), = outputs.items()
         return {name: total_cost / quantity}
     anchors = anchor_price_by_material or {}
+    disposal = disposal_value_by_material or {}
+    surplus = {name: disposal.get(name, 0.0) for name in outputs
+               if name in anchors and anchors[name] <= disposal.get(name, 0.0)}
+    if surplus and len(surplus) < len(outputs):
+        # Disposal revenue cannot exceed the batch, so the rest never goes negative.
+        surplus_revenue = min(total_cost, sum(
+            outputs[name] * value for name, value in surplus.items()))
+        scale = surplus_revenue / (sum(
+            outputs[name] * value for name, value in surplus.items()) or 1.0)
+        prices = {name: value * scale for name, value in surplus.items()}
+        remaining = {name: quantity for name, quantity in outputs.items()
+                     if name not in surplus}
+        prices.update(allocate_joint_cost(
+            remaining, current_prices, total_cost - surplus_revenue,
+            {name: price for name, price in anchors.items() if name in remaining}))
+        return prices
     mass = {name: demand.mass_in_kg_or_none(name, quantity)
             for name, quantity in outputs.items()}
     unconvertible = sorted(name for name, kilograms in mass.items() if kilograms is None)
@@ -94,10 +115,10 @@ def _split_by_value(outputs, reference_prices, total_cost):
 class DemandAnchors:
     """Market-clearing prices for goods with a household demand curve."""
 
-    def __init__(self, bins, basket, supply_kg_by_material):
+    def __init__(self, bins, basket, supply_by_material):
         self.bins = bins
         self.basket = basket
-        self.supply_kg_by_material = supply_kg_by_material
+        self.supply_by_material = supply_by_material
 
     def prices(self, current_prices):
         """{material: clearing price} at this round's solved prices."""
@@ -112,7 +133,7 @@ class DemandAnchors:
                 known[good.name] = 1.0
         anchors = {}
         for good in self.basket:
-            supply = self.supply_kg_by_material.get(good.name)
+            supply = self.supply_by_material.get(good.name)
             if not supply:
                 continue
             others = {name: price for name, price in known.items() if name != good.name}
@@ -124,34 +145,41 @@ class DemandAnchors:
         return anchors
 
 
-def _annual_supply_kg(material, resources):
-    output = resources.get(material.rsplit("_", 1)[0])
-    if not output:
-        return None
-    return output["t_per_yr"] * 1000.0
+def _annual_supply(material, resources):
+    """Annual supply in the material's own unit, from the first table naming it."""
+    for table in resources:
+        output = table.get(material.rsplit("_", 1)[0])
+        if output:
+            kilograms = output["t_per_yr"] * 1000.0
+            per_unit = demand.mass_in_kg_or_none(material, 1.0)
+            return kilograms / per_unit if per_unit else None
+    return None
 
 
 def build_demand_anchors(civilization_id=None, basket=None,
-                         supply_kg_by_material=None):
+                         supply_by_material=None):
     """DemandAnchors for a civilisation, or None when nothing is anchorable.
 
     Only basket goods with a known annual supply and no subsistence floor
-    are anchored; staples are priced by their own recipes.
+    are anchored; staples are priced by their own recipes. Supply is in the
+    good's own unit.
     """
     basket = basket or demand.DEFAULT_BASKET
-    if supply_kg_by_material is None:
+    if supply_by_material is None:
         with open(deposits.RESOURCES_FILE) as handle:
-            resources = json.load(handle)["empire_output_100ad"]
-        supply_kg_by_material = {}
+            resources = json.load(handle)
+        tables = [resources["empire_output_100ad"],
+                  resources.get("placer_metal_output_reference", {})]
+        supply_by_material = {}
         for good in basket:
-            supply = _annual_supply_kg(good.name, resources)
+            supply = _annual_supply(good.name, tables)
             if supply:
-                supply_kg_by_material[good.name] = supply
-    supply_kg_by_material = {
-        good.name: supply_kg_by_material[good.name] for good in basket
-        if good.name in supply_kg_by_material
+                supply_by_material[good.name] = supply
+    supply_by_material = {
+        good.name: supply_by_material[good.name] for good in basket
+        if good.name in supply_by_material
         and good.subsistence_quantity_per_capita_per_year == 0}
-    if not supply_kg_by_material:
+    if not supply_by_material:
         return None
     path = os.path.join(_ROOT, "data", "civilizations", "%s.json" % civilization_id)
     if not civilization_id or not os.path.exists(path):
@@ -161,4 +189,4 @@ def build_demand_anchors(civilization_id=None, basket=None,
         population = json.load(handle)["population"]
     bins = demand.income_bins(
         float(population), MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR)
-    return DemandAnchors(bins, basket, supply_kg_by_material)
+    return DemandAnchors(bins, basket, supply_by_material)

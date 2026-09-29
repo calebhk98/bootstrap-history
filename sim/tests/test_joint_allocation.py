@@ -231,8 +231,11 @@ class RealDataJointSmeltTests(unittest.TestCase):
         self.assertNotIn("silver_kg", self.unanchored_after)
 
     def test_byproducts_with_no_demand_curve_stay_flagged(self):
-        for material in ("platinum_g", "germanium_g", "indium_g", "coal_tar_kg"):
+        for material in ("germanium_g", "indium_g", "coal_tar_kg"):
             self.assertIn(material, self.unanchored_after)
+
+    def test_platinum_is_anchored_by_its_basket_entry(self):
+        self.assertNotIn("platinum_g", self.unanchored_after)
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ import json
 import math
 import os
 import sys
+import warnings
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(HERE)
@@ -845,12 +846,14 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
 
 
 def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
-                            demand_anchor_price_by_material=None):
+                            demand_anchor_price_by_material=None,
+                            disposal_value_by_material=None):
     # Missing prices fall back to the initial guess, as for any unsolved material.
     priced = {material: current_prices.get(material, INITIAL_PRICE_GUESS_HOURS)
               for material in outputs}
     return allocate_joint_cost(outputs, priced, total_process_cost_hours,
-                               demand_anchor_price_by_material)
+                               demand_anchor_price_by_material,
+                               disposal_value_by_material)
 
 
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
@@ -948,7 +951,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
 
     output_prices = _allocate_output_prices(
         outputs, current_prices, total_process_cost_hours,
-        demand_anchor_price_by_material)
+        demand_anchor_price_by_material, entry.get("disposal_value_hours"))
 
     return total_process_cost_hours, output_prices
 
@@ -1368,4 +1371,7 @@ def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_m
         value_share = (outputs[material] * prices[material]) / total_process_cost
         if value_share < share_threshold:
             unanchored[material] = value_share
+    if unanchored:
+        warnings.warn("joint byproducts priced without a demand anchor: %s"
+                      % ", ".join(sorted(unanchored)))
     return unanchored

@@ -270,7 +270,7 @@ class EngelCurveFloorsAtTheMarginalBudgetShareTests(unittest.TestCase):
         self.basket = demand.DEFAULT_BASKET
         wheat_price_per_kg = demand._illustrative_recursive_labour_content_price_per_kg(
             "wheat_kg")
-        self.prices = {"wheat_kg": wheat_price_per_kg, "manufactures": 1.0,
+        self.prices = {"wheat_kg": wheat_price_per_kg, "manufactures": 1.0, "platinum_g": 1.0,
                         "silver_kg": 50.0}
         self.committed_cost_per_capita = sum(
             self.prices[good.name] * good.subsistence_quantity_per_capita_per_year
@@ -326,7 +326,7 @@ class SoftenedFloorOnTheRealDefaultBasketTests(unittest.TestCase):
         self.basket = demand.DEFAULT_BASKET
         wheat_price_per_kg = demand._illustrative_recursive_labour_content_price_per_kg(
             "wheat_kg")
-        self.prices = {"wheat_kg": wheat_price_per_kg, "manufactures": 1.0,
+        self.prices = {"wheat_kg": wheat_price_per_kg, "manufactures": 1.0, "platinum_g": 1.0,
                         "silver_kg": 50.0}
         self.committed_per_capita = sum(
             self.prices[good.name] * good.subsistence_quantity_per_capita_per_year
@@ -382,7 +382,7 @@ class NumeraireInvarianceConfirmsTheAtlantisCaseTests(unittest.TestCase):
         wheat_price_per_kg = demand._illustrative_recursive_labour_content_price_per_kg(
             "wheat_kg")
         prices_in_labour_hours = {
-            "wheat_kg": wheat_price_per_kg, "manufactures": 1.0, "silver_kg": 50.0}
+            "wheat_kg": wheat_price_per_kg, "manufactures": 1.0, "platinum_g": 1.0, "silver_kg": 50.0}
         income_in_labour_hours = 400.0
 
         # An arbitrary, non-round conversion factor - a round factor like
@@ -408,7 +408,7 @@ class NumeraireInvarianceConfirmsTheAtlantisCaseTests(unittest.TestCase):
     def test_market_clearing_price_rescales_exactly_with_the_unit_of_account(self):
         wheat_price_per_kg = demand._illustrative_recursive_labour_content_price_per_kg(
             "wheat_kg")
-        other_prices_in_labour_hours = {"wheat_kg": wheat_price_per_kg, "manufactures": 1.0}
+        other_prices_in_labour_hours = {"wheat_kg": wheat_price_per_kg, "manufactures": 1.0, "platinum_g": 1.0}
         shells_per_labour_hour = 17.3
         other_prices_in_shells = {name: price * shells_per_labour_hour
                                    for name, price in other_prices_in_labour_hours.items()}

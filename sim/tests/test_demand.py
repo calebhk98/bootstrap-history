@@ -164,7 +164,7 @@ class AggregateDemandAndInequalityTests(unittest.TestCase):
 
     def test_top_bin_buys_far_more_silver_per_capita_than_bottom_bin(self):
         bins = demand.income_bins(1_000_000.0, 500.0, gini=0.45, num_bins=10)
-        prices = {"wheat_kg": 0.3, "manufactures": 1.0, "silver_kg": 50.0}
+        prices = {"wheat_kg": 0.3, "manufactures": 1.0, "platinum_g": 1.0, "silver_kg": 50.0}
         richest, poorest = bins[0], bins[-1]
         rich_qty = demand.household_quantity_demanded_per_capita(
             demand.SILVER, prices, richest.income_per_capita_per_year,
@@ -196,7 +196,7 @@ class AggregateDemandAndInequalityTests(unittest.TestCase):
         # aggregate price for a population that can all afford its own
         # necessities.
         population, mean_income, supply = 1_000_000.0, 500.0, 10.0
-        other_prices = {"wheat_kg": 0.3, "manufactures": 1.0}
+        other_prices = {"wheat_kg": 0.3, "manufactures": 1.0, "platinum_g": 1.0}
         unequal_bins = demand.income_bins(population, mean_income, gini=0.55)
         equal_bins = demand.income_bins(population, mean_income, gini=0.15)
         price_unequal = demand.market_clearing_price(
@@ -215,7 +215,7 @@ class ClosedFormMatchesDirectSummationTests(unittest.TestCase):
 
     def test_closed_form_price_reproduces_the_target_quantity_by_direct_sum(self):
         bins = demand.income_bins(2_000_000.0, 400.0, gini=0.42, num_bins=15)
-        other_prices = {"wheat_kg": 0.28, "manufactures": 1.2}
+        other_prices = {"wheat_kg": 0.28, "manufactures": 1.2, "platinum_g": 1.0}
         target_quantity = 5000.0
         price = demand.market_clearing_price(
             demand.SILVER, target_quantity, other_prices, bins, demand.DEFAULT_BASKET)
@@ -227,7 +227,7 @@ class ClosedFormMatchesDirectSummationTests(unittest.TestCase):
 
     def test_raises_when_quantity_is_below_the_price_insensitive_floor(self):
         bins = demand.income_bins(1000.0, 500.0, gini=0.4)
-        other_prices = {"manufactures": 1.0, "silver_kg": 1.0}
+        other_prices = {"manufactures": 1.0, "platinum_g": 1.0, "silver_kg": 1.0}
         # FOOD has a positive subsistence floor, so it has a positive
         # floor quantity (population times its subsistence floor times
         # (1 minus its marginal budget share)); asking for less than that
@@ -438,7 +438,7 @@ class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
 
     def test_report_food_budget_share(self):
         prices = {"wheat_kg": self.wheat_price,
-                  "manufactures": self.manufactures_price,
+                  "manufactures": self.manufactures_price, "platinum_g": 1.0,
                   "silver_kg": self._silver_price()}
         food_share = demand.household_budget_share(
             demand.FOOD, prices, self.bins, demand.DEFAULT_BASKET)
@@ -457,7 +457,7 @@ class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
         annual_silver_kg = annual_lead_kg * outputs["silver_kg"] / outputs["lead_kg"]
         return demand.market_clearing_price(
             demand.SILVER, annual_silver_kg,
-            {"wheat_kg": self.wheat_price, "manufactures": self.manufactures_price},
+            {"wheat_kg": self.wheat_price, "manufactures": self.manufactures_price, "platinum_g": 1.0},
             self.bins, demand.DEFAULT_BASKET)
 
     def test_report_silver_to_lead_ratio(self):
