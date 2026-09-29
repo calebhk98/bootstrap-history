@@ -443,23 +443,23 @@ def _format_commission_display(row):
     if setting in ("commissioned", "both") and commissioned is not None:
         parts.append("commissions during %s" % _fmt_num(commissioned))
     if setting in ("ready", "both") and ready is not None:
-        parts.append("ready %s" % _fmt_num(ready))
+        parts.append("ready in %s" % _fmt_num(ready))
     if parts:
         return "(" + ", ".join(parts) + ")"
     return ""
 
 
-def _format_pending_mine_display(material, ready_year):
+def _format_pending_mine_display(material, commissioned):
     """Format pending mine display based on COMMISSION_DISPLAY setting."""
     from . import render_typed as _render_typed
     setting = _render_typed.COMMISSION_DISPLAY
-    # For pending mines, commissions_during_year is ready_year - 1
-    commissioned = ready_year - 1 if isinstance(ready_year, (int, float)) else None
+    # A mine is usable the year after the one it commissions during.
+    ready_year = commissioned + 1 if isinstance(commissioned, (int, float)) else None
     parts = [material]
     if setting in ("commissioned", "both") and commissioned is not None:
         parts.append("commissions during %s" % _fmt_num(commissioned))
     if setting in ("ready", "both") and ready_year is not None:
-        parts.append("ready %s" % _fmt_num(ready_year))
+        parts.append("ready in %s" % _fmt_num(ready_year))
     if len(parts) > 1:
         return "%s (%s)" % (parts[0], ", ".join(parts[1:]))
     return material

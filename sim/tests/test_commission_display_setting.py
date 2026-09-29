@@ -37,3 +37,24 @@ if _commission_year is not None:
     check("commissioned mine appears in mines screen",
           _ready_screen["mines_you_own"] and _ready_screen["mines_you_own"] != "none",
           _ready_screen)
+
+# Rendered text follows the commission_display setting.
+from sim.engine.proto import render_typed as _render_typed
+from sim.engine.proto.render_screens_economy import render_mines
+from sim.engine.settings import resolve_commission_display
+
+_pending_screen = {"mines_you_own": "none", "still_being_sunk": {"coal": 105}}
+_expected = {"commissioned": ("commissions during 105", "ready in"),
+             "ready": ("ready in 106", "commissions during"),
+             "both": ("commissions during 105, ready in 106", None)}
+_saved_setting = _render_typed.COMMISSION_DISPLAY
+for _setting, (_wanted, _absent) in _expected.items():
+    _render_typed.COMMISSION_DISPLAY = _setting
+    _text = render_mines(_pending_screen)
+    check("pending mine text for %s setting" % _setting,
+          _wanted in _text and (_absent is None or _absent not in _text), _text)
+_render_typed.COMMISSION_DISPLAY = _saved_setting
+
+check("unknown commission_display value falls back to both",
+      resolve_commission_display({"commission_display": "sometimes"}) == "both",
+      resolve_commission_display({"commission_display": "sometimes"}))
