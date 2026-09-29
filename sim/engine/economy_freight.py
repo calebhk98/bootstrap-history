@@ -61,6 +61,7 @@ import math
 from .data import haversine_km, WAGES
 from . import commodities as _commod
 from sim.constants import declare
+from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from sim.world import transport as freight_physics
@@ -586,7 +587,7 @@ class FreightMixin:
             return 0.0
         cost = square_metres * self.NITRE_COST_PER_M2 * self.price_index
         household = self.state.household
-        if cost > household.capital:
+        if not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
         self.state.economy.nitre_bed_m2 += square_metres

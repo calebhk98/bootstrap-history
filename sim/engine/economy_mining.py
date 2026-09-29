@@ -25,6 +25,7 @@ other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
 from sim.constants import declare
+from . import purchase_rule
 
 
 class MiningMixin:
@@ -696,11 +697,10 @@ class MiningMixin:
                 "every_year_it_stands": round(opex, 1),
                 "years_before_it_produces": self.MINE_LEAD_YEARS,
                 "you_have": round(household.capital, 1),
-                "you_could_raise": round(self.spending_power("buy"), 1),
-                "you_can_afford_about": round(
-                    self.spending_power("buy") / max(cap * self.price_index * scale, 1e-9), 3),
-                "afford_means": "cash plus half the credit line, which is what "
-                                "a lender will advance against a purchase",
+                "you_could_raise": round(purchase_rule.purchase_budget(self), 1),
+                "you_can_afford_about": purchase_rule.affordable_units(
+                    self, cap * self.price_index * scale, decimals=3),
+                "afford_means": purchase_rule.afford_means(),
                 "the_ground_here_could_ever_support": round(ceiling, 1),
                 "room_left_before_geology_stops_you": round(room, 1),
                 "current_yield_is_this_fraction_of_day_one": round(depl, 3),
@@ -841,7 +841,7 @@ class MiningMixin:
         # blasting or a railway -- see that method's own comment.
         scale = self.mining_cost_scale(mat)
         cost = t_per_yr * cap * self.price_index * scale
-        if cost > household.capital:
+        if not purchase_rule.can_pay(self, cost):
             # A COMMAND YOU TYPED IS NOT A STANDING ORDER TO SPEND EVERYTHING:
             # silently spending all available capital and handing back a
             # fraction of the mine actually asked for is not what a typed
@@ -852,8 +852,9 @@ class MiningMixin:
             # request for a particular mine.
             if not partial:
                 return 0.0
-            t_per_yr = household.capital / (cap * self.price_index * scale)
-            cost = household.capital
+            t_per_yr = purchase_rule.affordable_units(
+                self, cap * self.price_index * scale, decimals=6)
+            cost = t_per_yr * cap * self.price_index * scale
         if t_per_yr <= 0:
             return 0.0
         household.capital -= cost
@@ -1078,7 +1079,7 @@ class MiningMixin:
         if hectares <= 0:
             return 0.0
         cost = hectares * self.FOREST_COST_PER_HA * self.price_index
-        if cost > household.capital:
+        if not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
         economy.forest_ha += hectares

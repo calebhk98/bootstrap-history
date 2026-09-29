@@ -312,6 +312,8 @@ TOPICS = [
     "complaint_64_literacy_ceiling",
     "complaint_98_schooling_message",
     "mod_economic_catalog",
+    # Complaints/61: every quoted affordable amount is purchasable as quoted.
+    "complaint_61_quote_matches_purchase",
     # Complaints/42: a civilisation holding a node whose own prerequisites it
     # lacks. Seventeen do. Pinned by name rather than fixed, and failing in
     # both directions, so the count can only move deliberately.
