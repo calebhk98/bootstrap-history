@@ -1508,7 +1508,7 @@
   },
   "mat": {
    "glass_raw_kg": 25,
-   "mat_potato_starch": 30
+   "potato_starch_kg": 30
   },
   "cap": 4000,
   "up": 320,

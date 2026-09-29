@@ -3232,7 +3232,7 @@
   },
   "mat": {
    "cast_iron_kg": 50,
-   "media": 30
+   "ceramic_kg": 30
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
