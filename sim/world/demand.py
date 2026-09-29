@@ -714,7 +714,7 @@ FOOD_SURPLUS_BUDGET_SHARE = declare(
         "this module inventing a second one for a specific study.")
 
 MANUFACTURES_SURPLUS_BUDGET_SHARE = declare(
-    "MANUFACTURES_SURPLUS_BUDGET_SHARE", 0.65,
+    "MANUFACTURES_SURPLUS_BUDGET_SHARE", 0.64,
     kind="temporary_heuristic",
     unit="fraction of surplus household spending (dimensionless)",
     source=None,
@@ -750,12 +750,26 @@ SILVER_SURPLUS_BUDGET_SHARE = declare(
         "household wealth held as bullion/plate for a comparable "
         "pre-industrial economy, which this project does not have.")
 
+PLATINUM_SURPLUS_BUDGET_SHARE = declare(
+    "PLATINUM_SURPLUS_BUDGET_SHARE", 0.01,
+    kind="temporary_heuristic",
+    unit="fraction of surplus household spending (dimensionless)",
+    source=None,
+    confidence="D",
+    why="Prestige and jewellery spending on platinum, a narrower category "
+        "than silver plate; taken out of the manufactures share so the "
+        "basket still sums to one. Platinum has no other household or "
+        "recipe demand in the data, so without a basket entry a "
+        "trace-byproduct platinum has no anchor at all. A documented "
+        "precious-metal wealth split would replace it.")
+
 FOOD = Good("wheat_kg", FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR,
             FOOD_SURPLUS_BUDGET_SHARE)
 MANUFACTURES = Good("manufactures", 0.0, MANUFACTURES_SURPLUS_BUDGET_SHARE)
 SILVER = Good("silver_kg", 0.0, SILVER_SURPLUS_BUDGET_SHARE)
+PLATINUM = Good("platinum_g", 0.0, PLATINUM_SURPLUS_BUDGET_SHARE)
 
-DEFAULT_BASKET = (FOOD, MANUFACTURES, SILVER)
+DEFAULT_BASKET = (FOOD, MANUFACTURES, SILVER, PLATINUM)
 validate_basket(DEFAULT_BASKET)
 
 
@@ -1246,11 +1260,11 @@ if __name__ == "__main__":
     silver_price = market_clearing_price(
         SILVER, illustrative_annual_silver_kg,
         {"wheat_kg": illustrative_wheat_price,
-         "manufactures": illustrative_manufactures_price},
+         "manufactures": illustrative_manufactures_price, "platinum_g": 1.0},
         bins, DEFAULT_BASKET)
 
     all_prices = {"wheat_kg": illustrative_wheat_price,
-                  "manufactures": illustrative_manufactures_price,
+                  "manufactures": illustrative_manufactures_price, "platinum_g": 1.0,
                   "silver_kg": silver_price}
     food_share = household_budget_share(FOOD, all_prices, bins, DEFAULT_BASKET)
     print("\nillustrative wheat price (recursive labour content): %.4f h/kg"
