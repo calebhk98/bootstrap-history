@@ -1,5 +1,7 @@
 # Fog messages become repetitive without giving directional information
 
+**Status:** open
+
 Repeated queries could return effectively the same "one prerequisite you have not heard of" for years. This is technically fog-safe but eventually provides no decision support.
 
 ## WHAT THE PLAYER SAW

@@ -57,8 +57,7 @@ class PopulationMixin:
             "recovers from a demand shock, which nothing here measures.")
 
     def labour_pressure(self, trade):
-        rec = getattr(self.household, "_labour_pressure", None)
-        rec = rec.get(trade) if rec else None
+        rec = self.household.labour_pressure_records.get(trade)
         if not rec:
             return 0.0
         hours, year = rec
@@ -66,9 +65,7 @@ class PopulationMixin:
         return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
 
     def _add_labour_pressure(self, trade, hours):
-        pressures = getattr(self.household, "_labour_pressure", None)
-        if pressures is None:
-            pressures = self.household._labour_pressure = {}
+        pressures = self.household.labour_pressure_records
         pressures[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.state.scenario.year)
 
     LABOUR_PRESSURE_SHARE_CAP = declare(
@@ -437,24 +434,21 @@ class PopulationMixin:
         """
         if not self.trade_available(trade):
             return 0.0
-        base = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
-                                                     + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
+        base = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
+                * (self.POP_SCALE_FLOOR_SHARE
+                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
         household = self.state.household
         school_hours = ((household.trade_schools or {}).get(trade, 0.0)
                         * self.HOURS_PER_PERSON_YEAR)
         if trade in TRADES_ABSENT:
-            # Only the people you taught, plus the ones they have taught since.
-            return (household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
-                    * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
-                    + school_hours)
+            return self._taught_trade_people(trade) * self.HOURS_PER_PERSON_YEAR
         cls = self._trade_market_class(trade)
         if cls in ("abundant", "common"):
             # A REAL TOWN'S WORTH, not base's village-sized share of it (see
             # this function's own docstring and the comment above
             # TOWN_POPULATION_REFERENCE for the full account and its
             # citation).
-            town = self.TOWN_POPULATION_REFERENCE * (self.POP_SCALE_FLOOR_SHARE
-                                                       + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
+            town = self.home_town_population_estimate()
             cap = town * self.TRADE_DENSITY[cls] * self.HOURS_PER_PERSON_YEAR
         elif cls == "scholar":
             cap = base * self.SCHOLAR_MARKET_SHARE   # literate men are a small fraction of anywhere
@@ -476,8 +470,9 @@ class PopulationMixin:
         # train().
         if trade in self.LITERATE_TRADES:
             cap *= self.literacy_factor(trade)
-        return (cap + household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
-                + school_hours)
+        # The reachable pool is people, so it cannot exceed those who exist.
+        hours = cap + household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR + school_hours
+        return min(hours, self.people_who_exist(trade) * self.HOURS_PER_PERSON_YEAR)
 
     def reachable_trade_population(self, trade):
         """What this household's own labour market actually holds of this
@@ -500,6 +495,57 @@ class PopulationMixin:
             return self.literate_capacity(trade)
         return self.market_supply(trade) / self.HOURS_PER_PERSON_YEAR
 
+    def _taught_trade_people(self, trade):
+        """People in a trade only you teach: your staff, their own students
+        (approximated as a multiple of your headcount) and school places."""
+        household = self.state.household
+        return (household.employees.get(trade, 0.0) * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
+                + (household.trade_schools or {}).get(trade, 0.0))
+
+    def people_who_exist(self, trade):
+        """People in this trade who exist in the country, counting your own
+        staff even if a collapse has left the estimate below them."""
+        return max(self.national_trade_population(trade),
+                   self.state.household.employees.get(trade, 0.0))
+
+    def available_trades(self):
+        """Every trade this society has that the labour market can supply."""
+        return [trade for trade in sorted(WAGES) if self.trade_available(trade)]
+
+    def project_staffing_shortfall(self, node):
+        """A sentence when the country lacks the people this project needs at
+        once, else None. Demand is the trained heads the node asks for, and at
+        least one person in every trade it draws hours from; supply is the
+        people who exist in those trades."""
+        trades = sorted(trade for trade, hours in (node["lab"] or {}).items()
+                        if hours > 0 and trade not in TRADES_ABSENT
+                        and self.trade_available(trade))
+        working_age = self.population.working_age
+        craft_supply = sum(self.people_who_exist(trade) for trade in trades)
+        scholar_supply = self.people_who_exist("scholar")
+        empty = [trade for trade in trades if self.people_who_exist(trade) < 1.0]
+        craft_need = float(node["art"])
+        scholar_need = float(node["sch"])
+        short = []
+        if empty:
+            short.append("no %s left to do the %s" % (
+                "one" if len(empty) == 1 else "people",
+                ", ".join(empty) + " work"))
+        if craft_need > (craft_supply if trades else working_age):
+            short.append("%d craftsmen against about %.1f" % (
+                craft_need, craft_supply if trades else working_age))
+        if scholar_need > scholar_supply:
+            short.append("%d scholars against about %.1f" % (scholar_need, scholar_supply))
+        if craft_need + scholar_need > working_age:
+            short.append("%d workers against %.0f of working age" % (
+                craft_need + scholar_need, working_age))
+        if not short:
+            return None
+        return ("there are not enough people in this country to staff it: %s. "
+                "Only about %.0f people of working age exist, and a project "
+                "needing more workers than exist cannot be staffed at any price."
+                % ("; ".join(short), working_age))
+
     def national_trade_population(self, trade):
         """A rough ESTIMATE of how many people ply this trade across the
         WHOLE COUNTRY - not this household's reach (reachable_trade_
@@ -519,13 +565,7 @@ class PopulationMixin:
         """
         if not self.trade_available(trade):
             return 0.0
-        # self.population.total (sim/world/demography.py's age-cohort
-        # model) IS this civilisation's actual running headcount, and must
-        # be read directly rather than reconstructed from civ["population"]
-        # (a fixed config number) times a ratio of two scalar fields
-        # (pop_scale/_pop_scale_base) - that reconstruction would be the
-        # one place in the engine trying to answer "how many people are
-        # actually here" as a headcount built entirely out of ratios.
+        # The age-cohort model's running headcount is the actual population.
         pop = self.population.total
         urban = pop * float(self.civ.get("urban_fraction", 0.0))
         if trade == "scholar":
@@ -535,25 +575,8 @@ class PopulationMixin:
         if trade == "merchant":
             return urban * self.MERCHANT_DENSITY
         if trade in TRADES_ABSENT:
-            # engineer, chemist, machinist, optician, electrician: taught
-            # into existence by you alone (trade_available already checked
-            # this is now true), so "the country's" population of the trade
-            # IS what you have taught - there is no wider pool to estimate.
-            return self.state.household.employees.get(trade, 0.0)
+            return self._taught_trade_people(trade)
         return urban * self.TRADE_DENSITY.get(self._trade_market_class(trade), 0.0)
-
-    def home_town_population_estimate(self):
-        """How big the single town TOWN_POPULATION_REFERENCE represents
-        actually is for THIS civilisation, at its current pop_scale - the
-        number the 'population' command shows next to the country's own,
-        so a player can see "one household, one town" for themselves
-        instead of inferring it from a refusal. An estimate, said as one:
-        this engine has no named city for the founder to stand in, only
-        the abstraction hired_hours_cap_base and this constant already
-        are (see TOWN_POPULATION_REFERENCE's own comment).
-        """
-        return self.TOWN_POPULATION_REFERENCE * (self.POP_SCALE_FLOOR_SHARE
-                                                  + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
 
     def population_report(self):
         """Everything the 'population' command (protocol.py) shows, worked

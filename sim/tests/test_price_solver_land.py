@@ -18,6 +18,8 @@ convergent, and that the five civilizations' differing rents actually
 separate their crop prices); the rest build tiny synthetic entries so the
 mechanism itself is pinned independent of any future edit to those data
 files.
+
+Land-limited materials state land_iugera_years and the solver charges rent for it.
 """
 import unittest
 
@@ -290,7 +292,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         # stripped out - and compares every resolvable material's price.
         #
         # EXCEPT for minor joint byproducts with no independent price
-        # anchor (see JOINT BYPRODUCTS WITHOUT AN INDEPENDENT ANCHOR in the
+        # anchor (see JOINT BYPRODUCTS WITHOUT A DEMAND ANCHOR in the
         # module docstring and `minor_joint_byproducts_are_unanchored`) -
         # germanium_g and indium_g today, both mass-split artifacts of
         # zinc_electrolytic_kg's own value-share allocation rather than

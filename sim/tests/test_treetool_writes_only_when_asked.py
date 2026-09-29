@@ -13,6 +13,8 @@ So the default moved, and this pins it there. The check runs the real
 subcommands in a subprocess against a COPY of the repository, so a failure
 here cannot itself write to `data/`, which would be an unusually unkind way
 for a test about accidental writes to fail.
+
+treetool subcommands write only with --write; --dry-run is still accepted.
 """
 from .harness import *  # noqa: F401,F403
 

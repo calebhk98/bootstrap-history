@@ -1,22 +1,19 @@
 """The simulation itself: what one year does, and the loop over years."""
 import collections, math, os, random, sys
 
-from sim.constants import declare
+from sim.constants import book_money_names, declare
+from .money_units import book_money_factor
+from .wage_provider import build_schedule
 from sim.engine.state import SimulationState, ActiveProjectState
-from .data import (DEFAULTS, load_civ, load_geography, load_resources,
-                   TECH_EFFECTS)
+from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
+                   nodes_in_civ_money, TECH_EFFECTS, TRADE_REGISTRY)
 
 from sim.world import demography
 from sim.world import agriculture
-# Weather is drawn per GEOGRAPHY.JSON TILE (see `_compute_farm_weather_cells`
-# below), reading geography.json's own `land_tiles` block directly rather
-# than sim/world/land.py's region-parcel abstraction: a region record is not
-# one weather system, and two region records are not independent draws
-# (Complaints/50-one-label-draws-one-coin.md). This file does not import
-# `land.py`; sim/world/land.py itself is untouched and stays under this
-# task's own ownership boundary (sim/engine/core.py,
-# sim/world/shared_constants.py - see this task's own brief).
-#
+from sim.world import farming_technique
+from sim.world import land
+# Weather is drawn per geography.json land_tiles cell (see
+# `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
 # `from world import X` style `agriculture`/`demography` above use, and
 # deliberately so: `agriculture` and `land` (sim/world/) both already do
@@ -42,11 +39,13 @@ from .economy import EconomyMixin
 from .fog import FogMixin
 from .geography import GeographyMixin
 from .labour import LabourMixin
+from .labour_allocation import LabourAllocationMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
+from .society_actors import ActorsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
-from .data import trade_family, WAGES
+from .data import trade_family
 from .invariants import check_simulation_invariants
 from .actors import Household
 
@@ -195,8 +194,8 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
-          ProjectsMixin, SocietyMixin, ForwardingPropertiesMixin,
-          StepPhasesMixin):
+          ProjectsMixin, SocietyMixin, ActorsMixin, ForwardingPropertiesMixin,
+          StepPhasesMixin, LabourAllocationMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -230,7 +229,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "population never divides a formula by something vanishingly "
             "small. Guard value, not a demographic claim.")
 
-    # WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-young.md):
+    # WIRING ONE (Complaints/closed/48-technology-cannot-stop-people-dying-young.md):
     # the eight _TECH_EFFECTS.json entries whose `population` weight is a
     # DISEASE effect rather than a FOOD one, and so are the only entries
     # `_disease_burden` below is allowed to sum. _TECH_EFFECTS.json also
@@ -250,6 +249,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         "med_obstetric_antisepsis", "med_asepsis_antisepsis",
         "med_vaccination_progression",
     )
+
+    def _localise_book_money_constants(self):
+        """Give this Sim its own copy of every money constant authored in book
+        denarii, in its civilisation's coin."""
+        factor = book_money_factor(build_schedule(
+            TRADE_REGISTRY, self.civ).money_per_labour_hour)
+        for name in book_money_names():
+            if hasattr(type(self), name):
+                setattr(self, name, getattr(type(self), name) * factor)
 
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
                  bounty_set=None, civ=None, manual=False, debug=None):
@@ -275,7 +283,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._demography = demography
         self._tech_effects = TECH_EFFECTS
         self.step_context = StepContext(
-            trade_family=trade_family, wages=dict(WAGES),
+            trade_family=trade_family,
             invariant_checker=check_simulation_invariants)
         self.debug = __debug__ if debug is None else bool(debug)
         self.events = events
@@ -283,9 +291,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.verbose = verbose
         self.bounty_set = set(bounty_set or ())
         self.civ = civ or load_civ()
+        self.nodes = nodes_in_civ_money(nodes, self.civ)
+        self._localise_book_money_constants()
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (
-            SimulationState, HouseholdState, ProjectsState,
+            SimulationState, HouseholdState, ProjectsState, ActorsState,
             EconomyState, GovernanceState, FounderState,
             ScenarioState, PopulationState
         )
@@ -297,6 +307,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             founder=FounderState(),
             scenario=ScenarioState(),
             population=PopulationState(),
+            actors=ActorsState(),
             _civ=self.civ.get("id"),
             _version=3,
         )
@@ -334,24 +345,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # mortality event large enough to take a third of one household's
         # own staff must not leave everybody ELSE's wages untouched, as if
         # the rest of the world's labour market saw nothing happen.
-        # self._pop_scale_base is this civilisation's OWN trend size - its
-        # configured population against the same 65,000,000 reference every
-        # downstream formula is calibrated to (see pop_scale's own comment
-        # below) - nudged upward over time by population-raising technology
-        # and food-diffusion (apply_tech_effects/_advance_food_diffusion_
-        # population, society.py). Those two write sites do not yet feed
-        # self.population itself (open question - see docs/architecture/
-        # WIRING_MILESTONE_4.md SS1.3), so nothing reads this attribute back
-        # here; see wage_index's own comment for why it deliberately does
-        # NOT compare against this mutable value.
-        # self.pop_scale itself (read everywhere else in the engine) is a
-        # COMPUTED PROPERTY off self.population, not stored here: a
-        # staff_loss hazard in _shocks() (society.py) cuts self.population's
-        # cohorts directly, rather than touching a separate scalar deficit.
-        self._pop_scale_base = max(
-            self.POP_SCALE_FLOOR,
-            float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
-            / self.DEFAULT_POPULATION_100AD)
+        # pop_scale is a computed property over the age-cohort population;
+        # a mortality shock cuts the cohorts directly.
         # An age-cohort population (docs/architecture/WIRING_MILESTONE_4.md
         # SS6), built and proven standalone in sim/world/self._demography.py, and
         # read and mutated by pop_scale/wage_index (below) and by _shocks()
@@ -373,34 +368,22 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self.population = self._demography.Population.stationary(
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
             seed=_population_seed)
-        # WIRING MILESTONE 4'S OTHER HALF (docs/architecture/
-        # WIRING_MILESTONE_4.md SS6, "Agriculture wiring is a parallel
-        # track"): how much arable land this civilisation starts with.
-        # `self._agriculture.farmland_for_population` sizes a `Land` so that, at
-        # DEFAULT crop/soil/rotation/toolkit and an AVERAGE weather year,
-        # the farm workforce that fraction implies can feed exactly this
-        # starting population - i.e. the civilisation starts neither
-        # land-rich nor land-starved, which is the only starting point that
-        # does not itself hand a fresh run a scripted feast or a scripted
-        # famine. This is an INITIAL CONDITION (how much land is already
-        # cleared and worked - CLAUDE.md SS3.1's own allowed category,
-        # alongside the starting population above), not a result computed
-        # from anything the game measures: `farm_land.hectares` is fixed
-        # for the life of a run, exactly like `_pop_scale_base`'s reference
-        # denominator above, and needs no SAVE_FIELDS entry for the same
-        # reason - `Sim.__init__` recomputes it identically, from
-        # `self.civ`'s own unchanging config, on every construction,
-        # before `load_state` (if any) runs. See `_demographic_recovery`
-        # for the one thing this initial condition deliberately does NOT
-        # do: grow as the population does. A civilisation whose population
-        # outgrows this fixed endowment gets LESS food per head over time
-        # from ordinary diminishing returns to labour on fixed land (see
-        # self._agriculture.py's `gross_harvest_kg`), not from any mechanism
-        # added here - the extensive margin (bringing more land under the
-        # plough) is real future work self._agriculture.py's own docstring names
-        # as missing mechanism (b), not something invented in this file.
-        self.farm_land = self._agriculture.farmland_for_population(
-            self._adult_equivalent_population(self.population))
+        # Initial condition: cleared area is what feeds the starting
+        # population at reference soil, on the best ground the held tiles
+        # offer; later clearing works down the same best-first ladder.
+        home_regions = list(self.civ.get("home_regions") or [])
+        if home_regions:
+            territory = land.territory_farmland(home_regions, load_geography())
+            self._farm_ladder = territory.ladder
+            self._farm_arable_ceiling = territory.arable_hectares
+        else:
+            # temporary_heuristic: no territory declared, so reference soil, no ceiling.
+            self._farm_ladder = []
+            self._farm_arable_ceiling = None
+        sized = self._agriculture.farmland_for_population(
+            self._adult_equivalent_population(self.population),
+            arable_hectares_ceiling=self._farm_arable_ceiling)
+        self._set_farm_area(sized.hectares)
         # WIRING THREE (Complaints/50-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
         # weights` (Complaints/47): this civilisation's territory is broken
@@ -452,18 +435,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # `_last_farm_year` for why this is not a SAVE_FIELDS member.
         self._last_farm_year = None
         self._last_demographic_step = None
-        # Population-raising technologies (sanitation, antisepsis, crop
-        # rotation, canning...) queue their effect here instead of applying
-        # it the year they complete - see apply_tech_effects in society.py.
-        # Each entry is [fraction-of-baseline added per year, years left to
-        # add it]: a lower death rate shows up in a headcount a generation
-        # later, not the day a latrine opens. DRAINED INTO `_pop_scale_base`
-        # rather than into `self.population` directly, because giving a
-        # technology an actual per-instance effect on this civilisation's
-        # mortality/fertility needs a mechanism sim/world/self._demography.py does
-        # not have yet (its rates are module-level constants) - open design
-        # question in docs/architecture/WIRING_MILESTONE_4.md SS1.3/SS6.
-        self._pop_tech_pending = []
+        self._last_farm_workers_fte = None
+        self._farm_technique_this_year = farming_technique.DEFAULT_TECHNIQUE
         self.year = self.cfg["start_year"]
         config = self.cfg
         # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,
@@ -492,8 +465,11 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # method of it can be passed down right now. See Household.__init__'s
         # own docstring for why the callback travels this way instead of the
         # household reaching back up for it.
+        start_money = config["start_capital"]
+        if start_money is None:
+            start_money = kit_capital(config["start_kit"], self.civ)
         self.household = Household(
-            starting_capital=float(config["start_capital"]) * self.price_index,
+            starting_capital=float(start_money) * self.price_index,
             operating_changed=self._operating_changed,
             active_changed=self._active_changed,
             workforce_changed=self._workforce_changed,
@@ -546,32 +522,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "auto_commission": not manual,
             "auto_bribe":    not manual,   # pay your way out of a scandal
         }
-        # A HANDFUL OF "LAST TIME I SAID/DID X" TRACKERS, GIVEN A REAL
-        # STARTING VALUE HERE INSTEAD OF SPRINGING INTO EXISTENCE ON FIRST
-        # USE, so every call site can read `self.x` directly rather than
-        # paying a `getattr(self, name, default)` dict-and-default lookup on
-        # a path that runs every single step (some in step() itself, some in
-        # SocietyMixin's per-year calls). TRAP FOR A FIELD ALSO IN
-        # protocol.py's SAVE_FIELDS: perf_fingerprint.py hashes that list at
-        # year 0, and several of ITS OWN comments say a save MISSING one of
-        # those fields reads back as "has never happened yet" (None), a
-        # state distinct from an explicit zero or sentinel. Giving such a
-        # field a real value here makes year 0's hash disagree with any
-        # baseline recorded before this field existed - re-record every
-        # fingerprint baseline (`sim/perf_fingerprint.py record`) whenever a
-        # SAVE_FIELDS member's constructor default changes.
-        #
-        # Only fields that belong to `Sim` live here; the household's own
-        # equivalents of this same pattern (`insolvent_years`,
-        # `wage_hours_this_year`, `_said_deputies`, and the rest) live in
-        # Household.__init__ along with everything else it owns - see that
-        # constructor's own copy of this comment. What is left below is
-        # WORLD state: a shock or a debasement is something that happened to
-        # the whole society, not to this household alone, so a new field of
-        # that kind belongs here, not on Household.
+        # World-level "last time I said X" trackers; household ones live on HouseholdState.
         self._said_wage_cascade = -999     # last year a wage-cascade note was printed; -999 guarantees the first qualifying year always warns
         self._literacy_said = -999            # last year a literacy-census note was printed
-        self._food_diffusion_said = -999      # last year a food-diffusion note was printed
         self._said_condition = set()          # hazard-condition messages already printed once
         # THE FOLLOWING EIGHT FIELDS ARE BIOGRAPHICAL TO ONE MORTAL PERSON, not
         # to a household in general, and stay on `Sim` for exactly that reason
@@ -682,6 +635,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             self.state.household.employees or {},
             on_change=self._workforce_changed
         )
+        cleared = getattr(self.state.economy, "farm_cleared_hectares", None)
+        if cleared is not None:
+            self._set_farm_area(cleared)
         # Ensure version counters exist on state owners
         if getattr(self.state.projects, "_operating_ver", None) is None:
             self.state.projects._operating_ver = 0
@@ -785,31 +741,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     # below); that lowers `pop_scale` directly, and this property reads the
     # gap that opens - a hazard never touches `wage_index` itself.
     #
-    # DELIBERATELY NOT `self._pop_scale_base`: `_pop_scale_base` is
-    # incremented by population-raising technology and food-technology
-    # diffusion (`_pop_tech_pending`/`_advance_food_diffusion_population`,
-    # society.py), but those two write sites do not yet feed
-    # `self.population` itself (open design question - see docs/
-    # architecture/WIRING_MILESTONE_4.md SS1.3). Reading the mutable
-    # `_pop_scale_base` here would make a population-raising technology
-    # look like it makes labour SCARCER, not more abundant: it would raise
-    # the trend line `pop_scale` is compared against while `pop_scale`
-    # itself (self.population.total, untouched by those two mechanisms)
-    # stays exactly where it was, widening the apparent shortfall for no
-    # reason. Comparing against this civilisation's ORIGINAL configured
-    # trend instead - the same expression `_pop_scale_base` is seeded with
-    # in __init__, before any technology can touch it - keeps those two
-    # write sites genuinely inert with respect to `wage_index` until they
-    # gain a real effect on `self.population` to be inert ABOUT.
-    #
-    # RECOVERY IS EMERGENT, NOT A CLOCK: as `self.population.step()` (called
-    # once a year, below) runs its own births and deaths on the SURVIVING
-    # cohort structure, `pop_scale` moves back toward this trend - or does
-    # not, if the surviving population's own vital rates do not support
-    # catch-up growth above replacement, which is itself a real, checkable
-    # prediction of the demographic model rather than a number this engine
-    # asserts. See WIRING_MILESTONE_4.md SS5 for the fingerprint behaviour
-    # this predicts.
+    # Recovery is emergent: the cohort model's own births and deaths move
+    # pop_scale back toward the trend, or not, with no clock.
     @property
     def wage_index(self):
         unshocked_trend = max(
@@ -1358,10 +1291,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         return pooled_multiplier
 
     def _demographic_recovery(self, year):
-        """Advance `self.population` by one year, from a REAL harvest, and
-        let population-raising technologies build their queued gain into
-        `_pop_scale_base`: the age-cohort model handles the population
-        half, `self._agriculture.py` the food half.
+        """Advance `self.population` by one year, from a REAL harvest: the
+        age-cohort model handles the population half, the agriculture model
+        the food half, through this society's own farming technique.
 
         Food availability comes from an actual harvest: one year of
         `self._agriculture.Storage.step` (land, labour and an independent weather
@@ -1504,21 +1436,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         returns would give, and an honest consequence of not (yet) modelling
         within-hectare labour intensification beyond reference technique.
         """
-        if self._pop_tech_pending:
-            still = []
-            for per_year, years_left in self._pop_tech_pending:
-                self._pop_scale_base += per_year
-                if years_left > 1:
-                    still.append((per_year, years_left - 1))
-            self._pop_tech_pending = still
-
         adult_equivalent_population = self._adult_equivalent_population(self.population)
-        farm_workers_fte = self._agriculture.farm_workers_fte_for_population(
-            adult_equivalent_population)
-        hectares_worked = min(
-            self.farm_land.hectares,
-            farm_workers_fte * self._agriculture.hectares_cropped_per_farm_worker())
-        farm_labour_hours = hectares_worked * self._agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
+        farm_workers_fte = self._allocate_farm_workforce(adult_equivalent_population)
+        technique = self._farm_technique_this_year
+        hectares_per_worker = self._agriculture.hectares_cropped_per_farm_worker(
+            technique.crop, technique.toolkit)
+        hectares_worked = min(self.farm_land.hectares, farm_workers_fte * hectares_per_worker)
+        crop_workers_fte = hectares_worked / hectares_per_worker
+        farm_labour_hours = hectares_worked * farming_technique.hours_per_hectare(technique)
+        self._last_farm_workers_fte = farm_workers_fte
         # SEED IS SOWN ON WHAT GETS WORKED, NOT ON `farm_land`'S FULL FIXED
         # AREA. `Storage.step` charges seed (and next year's seed reservation)
         # against `land.hectares` directly, with no cap of its own - it is
@@ -1564,7 +1490,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # beyond the reserve is eaten, which is grain that would otherwise
         # have sat there and spoiled.
         reserve_target_kg = self._agriculture.granary_capacity_kg(
-            adult_equivalent_population * self._agriculture.annual_food_demand_kg_per_person())
+            adult_equivalent_population
+            * self._agriculture.annual_food_demand_kg_per_person(technique.crop))
         # THE PER-REGION WEATHER DRAW (Complaints/closed/47-one-weather-
         # draw-for-a-continent.md). `_pooled_farm_weather_multiplier`
         # draws one independent weather multiplier per home region this
@@ -1579,7 +1506,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # receives a number, exactly as it always has.
         farm_year = farm_storage.step(
             worked_land, farm_labour_hours, adult_equivalent_population,
-            worker_count=farm_workers_fte,
+            crop=technique.crop, rotation=technique.rotation, toolkit=technique.toolkit,
+            worker_count=crop_workers_fte,
             reserve_target_kg=reserve_target_kg,
             weather_multiplier=self._pooled_farm_weather_multiplier(year))
         # CLOSE THE YEAR: write what this year's Storage call actually
@@ -1610,8 +1538,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # documented "one bad harvest becomes two" mechanism, operating
         # across years exactly as its class docstring intends.
         capacity_kg = self._agriculture.granary_capacity_kg(farm_year.food_demand_kg)
-        self.farm_stock_kg = min(
-            self._agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg)
+        # A granary cannot hold less than nothing: seed sown beyond the stock is not a debt.
+        self.farm_stock_kg = max(0.0, min(
+            self._agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg))
+        self._apply_land_clearing()
         # Kept for tests and diagnostics only (e.g. `state`'s founder-facing
         # reply never reads this) - NOT a SAVE_FIELDS member and does not
         # need to be one: it is recomputed fresh every year from state that
@@ -1619,6 +1549,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # so a stale or missing value right after a fresh `Sim()` (before
         # this method has run once) costs nothing correctness-sensitive.
         self._last_farm_year = farm_year
+        self.state.economy.farm_last_shortfall_kg = farm_year.food_shortfall_kg
+        self.state.economy.farm_last_marginal_product = (
+            farm_year.marginal_product_last_hour_kg_per_hour)
+        self.update_wages()
 
         # Same diagnostic-only status as `_last_farm_year` just above (not a
         # SAVE_FIELDS member, recomputed fresh every year) - kept so a test
@@ -1631,7 +1565,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._refresh_demographic_indexes(year)
 
     def _disease_burden(self):
-        """WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-
+        """WIRING ONE (Complaints/closed/48-technology-cannot-stop-people-dying-
         young.md): this civilisation's CURRENT disease burden, 1.0 being
         the full pre-industrial infectious environment sim/world/
         self._demography.py already assumes by default, 0.0 being clean water,
@@ -1647,20 +1581,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
             disease_burden = 1.0 - unlocked_weight / total_weight
 
-        LIVE, NOT QUEUED: read fresh every call from `self.has(...)`, never
-        accumulated into `_pop_tech_pending` - a technology's disease
-        effect is a standing fact about this civilisation ("it now boils
-        its water"), not a one-off pulse that ramps in over
-        POP_TECH_RAMP_YEARS and is done. `apply_tech_effects` does not feed
-        these eight into `_pop_tech_pending` at all (see its own comment):
-        the same tree-author weight must not do two jobs at once, and
-        `_pop_tech_pending` draining into `_pop_scale_base` is read by
-        nothing (WIRING_MILESTONE_4.md SS1.3). The five FOOD entries that also carry a
-        `population` field (crop_rotation, fud_three_field_rotation,
-        fud_seed_drill, mat_newworld_crops, ag2_canning) are calorie
-        effects, not disease ones, and are deliberately excluded by
-        construction: only `DISEASE_BURDEN_TECH_IDS`'s own eight ids are
-        ever summed here.
+        Read fresh every call from `self.has(...)`: a standing fact about
+        this civilisation ("it now boils its water"). Food technologies act
+        through the farming technique instead (see `_farming_technique`).
 
         Clamped to [0, 1] defensively (a total of exactly 0.15 measured
         directly against `_TECH_EFFECTS.json` today makes this unreachable
@@ -1687,13 +1610,8 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         announced effects should be visible immediately, not lag a step.
         """
         premium = (self.wage_index / self._wage_index_base - 1.0) * PERCENT_SCALE
-        # The message wants the SAME shortfall wage_index's own property
-        # just computed, not a second, separately-derived copy of it - see
-        # wage_index's own comment for why it is measured against this
-        # civilisation's unshocked configured trend rather than the
-        # (still tech-mutable) `_pop_scale_base`. Recovered algebraically
-        # from `premium` rather than recomputed, so the two can never drift
-        # apart: premium == elasticity * shortfall * 100, by construction.
+        # Recover the shortfall from `premium` so the message and
+        # wage_index cannot drift apart.
         shortfall = (premium / PERCENT_SCALE) / self.WAGE_SCARCITY_ELASTICITY if self.WAGE_SCARCITY_ELASTICITY else 0.0
         if premium > 0.5 and year - self._said_wage_cascade >= 15:
             self._said_wage_cascade = year
@@ -1901,7 +1819,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
 
     INSOLVENCY_FLOOR_MIN = declare(
         "INSOLVENCY_FLOOR_MIN", 4000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Floor on how deep into arrears a household can sit before "
             "insolvency's staff bleed can begin, for a household with "
             "very low revenue - so a household earning almost nothing is "
@@ -2032,7 +1950,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "yet worth buying down. Tuned, not measured.")
     AUTO_BRIBE_CAPITAL_THRESHOLD = declare(
         "AUTO_BRIBE_CAPITAL_THRESHOLD", 2000, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Minimum capital before the optimizer's bribery policy will "
             "spend at all, so a poor household is not bled dry bribing "
             "away scandal it might survive anyway. Round number, not "
@@ -2046,7 +1964,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "the household. Tuned, not measured.")
     AUTO_BRIBE_COST_PER_SCANDAL_POINT = declare(
         "AUTO_BRIBE_COST_PER_SCANDAL_POINT", 260, kind="temporary_heuristic",
-        unit="denarii per scandal point", source=None, confidence="D",
+        book_money=True, unit="denarii per scandal point", source=None, confidence="D",
         why="What buying down one point of scandal costs, capping total "
             "spend alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, "
             "not sourced to any attested bribe schedule.")
@@ -2061,7 +1979,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "Tuned, not measured.")
     BRIBE_SCANDAL_REDUCTION_SCALE = declare(
         "BRIBE_SCANDAL_REDUCTION_SCALE", 300.0, kind="temporary_heuristic",
-        unit="denarii per scandal point removed (before bribability)",
+        book_money=True, unit="denarii per scandal point removed (before bribability)",
         source=None, confidence="D",
         why="How much bribery spend it takes to remove one point of "
             "scandal, scaled further by this society's own bribability "
@@ -2124,13 +2042,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "while serving out a debt-bondage term. Tuned to leave some "
             "hours for the founder's own affairs even in bondage; not "
             "measured.")
-    BONDAGE_LABOURER_WAGE_DEFAULT = declare(
-        "BONDAGE_LABOURER_WAGE_DEFAULT", 0.075, kind="temporary_heuristic",
-        unit="denarii/hour at price_index=1.0", source=None,
-        confidence="D",
-        why="Fallback labourer wage rate for computing bondage repayment "
-            "if WAGES has no 'labourer' entry - WAGES normally does carry "
-            "one, so this only matters as a defensive default.")
     BONDAGE_WAGE_MARKUP = declare(
         "BONDAGE_WAGE_MARKUP", 1.2, kind="temporary_heuristic",
         unit="dimensionless multiplier", source=None, confidence="D",

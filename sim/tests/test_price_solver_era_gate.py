@@ -15,6 +15,8 @@ be made useless while still looking like it worked:
 
 Written as unittest.TestCase against solve_prices directly, like
 test_price_solver_cycles.py, so it does not drag in the engine.
+
+Pins the technique-to-node link the price solver gates on, so a Roman technique is told from a modern one.
 """
 import unittest
 

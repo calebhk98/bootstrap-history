@@ -1,10 +1,10 @@
-# knowledge/ - the how-to library
+# docs/knowledge/ - the how-to library
 
 **This file is generated. Do not edit it.** Run `python3 sim/build_index.py`.
 
 A tech tree that says *microscope requires glass* is useless to someone who does
 not already know that one melted bead of glass gives 250x. The tree in
-`../data/tech_tree.json` says WHAT and IN WHAT ORDER. These modules say HOW, at a
+`../../data/tech_tree.json` says WHAT and IN WHAT ORDER. These modules say HOW, at a
 level of detail a competent non-specialist can act on: masses, ratios,
 temperatures with Roman-observable proxies, vessel materials, how to tell it
 worked, how it fails, what it costs, and what it will do to you.
@@ -21,7 +21,7 @@ in this directory, read that one.
 | Module | Subject | Entries | Tree nodes it documents |
 |---|---|---:|---:|
 | [`00_NONOBVIOUS_TRICKS.md`](00_NONOBVIOUS_TRICKS.md) | The tricks that make everything else buildable. READ FIRST. | 11 | 0 |
-| [`03_SOCIAL_POLITICS.md`](03_SOCIAL_POLITICS.md) |  | 10 | 0 |
+| [`03_SOCIAL_POLITICS.md`](03_SOCIAL_POLITICS.md) |  | 10 | 10 |
 | [`10_metallurgy.md`](10_metallurgy.md) | Metallurgy, fuel and refractories | 19 | 182 |
 | [`20_chemistry.md`](20_chemistry.md) | Chemistry, acids, alkalis and energetics | 16 | 188 |
 | [`30_glass_optics.md`](30_glass_optics.md) | Glass, optics and scientific instruments | 17 | 168 |
@@ -56,23 +56,25 @@ strategy, not a procedure, so it lives outside the recipe library.
 
 | Node | Your hours | Documented in |
 |---|---:|---|
-| `academy_network` | 2,500.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `arrival_orientation` | 900.0 | [`00_BRIEFING.md`](../00_BRIEFING.md) |
-| `citizenship` | 250.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `collegium_licensed` | 350.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `endowment_land` | 500.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `freedman_staff` | 900.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `identity_cover` | 500.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `mining_concession` | 400.0 | [`01_WORLD_STATE_100AD.md`](../01_WORLD_STATE_100AD.md) |
-| `patron_imperial` | 900.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `patron_local` | 400.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `patron_senatorial` | 600.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `school_founded` | 2,000.0 | [`03_SOCIAL_POLITICS.md`](../03_SOCIAL_POLITICS.md) |
-| `workshop_first` | 500.0 | [`00_BRIEFING.md`](../00_BRIEFING.md) |
 
 ## Every tech-tree node, and where its recipe lives
 
 Sorted by module, then by node id.
+
+### 03_SOCIAL_POLITICS.md
+
+| Node | Your hours | Recipe |
+|---|---:|---|
+| `academy_network` | 2,500.0 | [`academy_network`](03_SOCIAL_POLITICS.md#academy_network---three-separated-academies) |
+| `citizenship` | 250.0 | [`citizenship`](03_SOCIAL_POLITICS.md#citizenship---roman-citizenship-by-grant-civitas-romana) |
+| `collegium_licensed` | 350.0 | [`collegium_licensed`](03_SOCIAL_POLITICS.md#collegium_licensed---a-licensed-association-collegium-licitum) |
+| `endowment_land` | 500.0 | [`endowment_land`](03_SOCIAL_POLITICS.md#endowment_land---endow-in-land-not-coin-fundatio) |
+| `freedman_staff` | 900.0 | [`freedman_staff`](03_SOCIAL_POLITICS.md#freedman_staff---buy-teach-and-free-a-technical-staff) |
+| `identity_cover` | 500.0 | [`identity_cover`](03_SOCIAL_POLITICS.md#identity_cover---the-alexandrian-physician-philosopher-medicus-et-philosophus-alexandrinus) |
+| `patron_imperial` | 900.0 | [`patron_imperial`](03_SOCIAL_POLITICS.md#patron_imperial---imperial-patronage) |
+| `patron_local` | 400.0 | [`patron_local`](03_SOCIAL_POLITICS.md#patron_local---a-town-patron-patronus-municipii) |
+| `patron_senatorial` | 600.0 | [`patron_senatorial`](03_SOCIAL_POLITICS.md#patron_senatorial---senatorial-patronage) |
+| `school_founded` | 2,000.0 | [`school_founded`](03_SOCIAL_POLITICS.md#school_founded---the-school-museum) |
 
 ### 10_metallurgy.md
 
@@ -2919,9 +2921,9 @@ Sorted by module, then by node id.
 
 | status | nodes |
 |---|---:|
-| linked to a specific recipe entry | 883 |
+| linked to a specific recipe entry | 893 |
 | linked to a domain module, no specific entry | 1843 |
-| documented in a top-level prose file | 13 |
+| documented in a top-level prose file | 0 |
 | no link BY DESIGN (capability rungs, materials, unobtainables) | 95 |
 | **undocumented, a real gap** | **30** |
 
@@ -2931,6 +2933,9 @@ The undocumented nodes, listed so the gap is visible rather than hidden:
 
 ## Broken links
 
+- `arrival_orientation` points at `00_BRIEFING.md`, which does not exist
+- `mining_concession` points at `01_WORLD_STATE_100AD.md`, which does not exist
+- `workshop_first` points at `00_BRIEFING.md`, which does not exist
 - `civ_monumental_stone` points at `87_construction.md#cn_quarry_wedge`, but that module has no such `###` entry
 - `goal_literacy_common` points at `80_information_printing.md#literacy`, but that module has no such `###` entry
 - `goal_literate_nation` points at `80_information_printing.md#literacy`, but that module has no such `###` entry

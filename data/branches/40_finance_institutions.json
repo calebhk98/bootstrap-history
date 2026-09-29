@@ -7,7 +7,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -30,7 +30,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150.0,
   "lab": {
    "scribe": 60.0
@@ -56,7 +56,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -105,7 +105,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -128,7 +128,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -151,7 +151,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -174,7 +174,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -197,7 +197,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -220,7 +220,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 600.0,
   "lab": {
    "scribe": 200.0
@@ -275,13 +275,13 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "scribe": 200
   },
   "mat": {
-   "papyrus": 50
+   "papyrus_sheet": 50
   },
   "cap": 0,
   "up": 0,
@@ -305,7 +305,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "scribe": 300,
@@ -336,7 +336,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "scribe": 200
@@ -366,7 +366,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "scribe": 100
@@ -397,14 +397,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
    "scribe": 100
   },
   "mat": {
-   "parchment": 50
+   "parchment_sheet": 50
   },
   "cap": 0,
   "up": 0,
@@ -427,14 +427,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
    "scribe": 50
   },
   "mat": {
-   "parchment": 30
+   "parchment_sheet": 30
   },
   "cap": 0,
   "up": 0,
@@ -457,14 +457,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 100,
    "scribe": 50
   },
   "mat": {
-   "parchment": 20
+   "parchment_sheet": 20
   },
   "cap": 0,
   "up": 0,
@@ -487,14 +487,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 80,
    "scribe": 40
   },
   "mat": {
-   "parchment": 15
+   "parchment_sheet": 15
   },
   "cap": 0,
   "up": 0,
@@ -517,14 +517,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 150,
    "scribe": 50
   },
   "mat": {
-   "parchment": 20
+   "parchment_sheet": 20
   },
   "cap": 0,
   "up": 0,
@@ -548,14 +548,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
    "scribe": 200
   },
   "mat": {
-   "parchment": 200,
+   "parchment_sheet": 200,
    "lead_kg": 50
   },
   "cap": 2000,
@@ -580,7 +580,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -609,14 +609,14 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
    "scribe": 200
   },
   "mat": {
-   "parchment": 150
+   "parchment_sheet": 150
   },
   "cap": 3000,
   "up": 200,
@@ -648,7 +648,7 @@
    "scribe": 200
   },
   "mat": {
-   "parchment": 300
+   "parchment_sheet": 300
   },
   "cap": 5000,
   "up": 500,
@@ -672,7 +672,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 250,
@@ -700,14 +700,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
    "scribe": 50
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -731,14 +731,14 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 300,
    "scribe": 150
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 8000,
   "up": 400,
@@ -761,14 +761,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 150,
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 3000,
   "up": 150,
@@ -791,7 +791,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -820,7 +820,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 250,
   "lab": {
    "merchant": 400,
@@ -851,7 +851,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 250,
@@ -883,7 +883,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 100
@@ -910,7 +910,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
@@ -942,14 +942,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
    "scribe": 150
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 4000,
   "up": 200,
@@ -972,14 +972,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
    "scribe": 100
   },
   "mat": {
-   "parchment": 150
+   "parchment_sheet": 150
   },
   "cap": 3000,
   "up": 150,
@@ -1003,14 +1003,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
    "scribe": 150
   },
   "mat": {
-   "parchment": 150
+   "parchment_sheet": 150
   },
   "cap": 5000,
   "up": 250,
@@ -1065,14 +1065,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -1095,14 +1095,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 150,
    "scribe": 100
   },
   "mat": {
-   "parchment": 80
+   "parchment_sheet": 80
   },
   "cap": 0,
   "up": 0,
@@ -1125,14 +1125,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 200,
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -1155,14 +1155,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
    "scribe": 150
   },
   "mat": {
-   "parchment": 150
+   "parchment_sheet": 150
   },
   "cap": 3000,
   "up": 200,
@@ -1185,14 +1185,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 160,
   "lab": {
    "merchant": 200,
    "scribe": 150
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -1213,7 +1213,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 60,
   "lab": {
    "merchant": 100
@@ -1240,7 +1240,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "scribe": 150
@@ -1267,7 +1267,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 100,
@@ -1295,7 +1295,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "scribe": 200
@@ -1324,7 +1324,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 150,
@@ -1361,7 +1361,7 @@
    "scribe": 200
   },
   "mat": {
-   "parchment": 500
+   "parchment_sheet": 500
   },
   "cap": 3000,
   "up": 200,
@@ -1386,7 +1386,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "scribe": 200
@@ -1414,7 +1414,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "scribe": 100
@@ -1441,7 +1441,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150
@@ -1468,13 +1468,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 60,
   "lab": {
    "scribe": 50
   },
   "mat": {
-   "parchment": 10
+   "parchment_sheet": 10
   },
   "cap": 0,
   "up": 0,
@@ -1495,7 +1495,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -1521,7 +1521,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -1584,7 +1584,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 200
@@ -1612,7 +1612,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 150,
@@ -1640,7 +1640,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
@@ -1676,7 +1676,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 2000,
   "up": 100,
@@ -1740,7 +1740,7 @@
    "chemist": 100
   },
   "mat": {
-   "mat_crucible": 50
+   "ceramic_kg": 50
   },
   "cap": 3000,
   "up": 150,
@@ -1763,14 +1763,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 200,
    "scribe": 100
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 3000,
   "up": 100,
@@ -1801,7 +1801,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 4000,
   "up": 200,
@@ -1824,7 +1824,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "merchant": 150
@@ -1852,7 +1852,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -1887,7 +1887,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 160,
   "lab": {
    "merchant": 200,
@@ -1920,7 +1920,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "scribe": 150
@@ -1952,7 +1952,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "scholar": 200,
@@ -1985,7 +1985,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "scribe": 300,
@@ -2020,7 +2020,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
@@ -2058,7 +2058,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 100
+   "parchment_sheet": 100
   },
   "cap": 3000,
   "up": 200,
@@ -2082,7 +2082,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "engraver": 200,
@@ -2116,7 +2116,7 @@
    "information",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -2150,7 +2150,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
@@ -2183,15 +2183,15 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 200,
    "scribe": 150
   },
   "mat": {
-   "parchment": 300,
-   "timber": 200
+   "parchment_sheet": 300,
+   "timber_m3": 200
   },
   "cap": 2000,
   "up": 100,
@@ -2217,14 +2217,14 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 200
   },
   "mat": {
    "timber_m3": 50,
-   "mat_brick": 1000
+   "brick_1000": 1.0
   },
   "cap": 2000,
   "up": 100,
@@ -2249,7 +2249,7 @@
    "commerce",
    "spectacle"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -2257,7 +2257,7 @@
   },
   "mat": {
    "timber_m3": 300,
-   "mat_brick": 2000
+   "brick_1000": 2.0
   },
   "cap": 8000,
   "up": 400,
@@ -2311,14 +2311,14 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150
   },
   "mat": {
    "timber_m3": 30,
-   "mat_brick": 500
+   "brick_1000": 0.5
   },
   "cap": 2000,
   "up": 100,
@@ -2341,14 +2341,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
    "scribe": 150
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 2000,
   "up": 100,
@@ -2373,7 +2373,7 @@
    "commerce",
    "spectacle"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 130,
   "lab": {
    "merchant": 200,
@@ -2381,7 +2381,7 @@
   },
   "mat": {
    "timber_m3": 100,
-   "mat_brick": 1000
+   "brick_1000": 1.0
   },
   "cap": 5000,
   "up": 300,
@@ -2437,7 +2437,7 @@
    "commerce",
    "spectacle"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 140,
   "lab": {
    "merchant": 250
@@ -2463,7 +2463,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150,
@@ -2471,7 +2471,7 @@
   },
   "mat": {
    "timber_m3": 80,
-   "mat_rope": 100
+   "cordage_kg": 100
   },
   "cap": 2000,
   "up": 150,
@@ -2495,7 +2495,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 150,
   "lab": {
    "merchant": 200,
@@ -2529,7 +2529,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -2563,7 +2563,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 250,
   "lab": {
    "merchant": 350,
@@ -2598,7 +2598,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 300,
   "lab": {
    "merchant": 400,
@@ -2632,7 +2632,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 250,
@@ -2696,7 +2696,7 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 200,
@@ -2704,7 +2704,7 @@
   },
   "mat": {
    "timber_m3": 300,
-   "mat_brick": 3000
+   "brick_1000": 3.0
   },
   "cap": 5000,
   "up": 300,
@@ -2726,14 +2726,14 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150
   },
   "mat": {
    "timber_m3": 200,
-   "mat_brick": 2000
+   "brick_1000": 2.0
   },
   "cap": 3000,
   "up": 200,
@@ -2756,14 +2756,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 120,
   "lab": {
    "merchant": 200
   },
   "mat": {
    "timber_m3": 50,
-   "mat_brick": 1000
+   "brick_1000": 1.0
   },
   "cap": 2000,
   "up": 150,
@@ -2786,7 +2786,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 300,
@@ -2794,7 +2794,7 @@
   },
   "mat": {
    "timber_m3": 400,
-   "mat_brick": 5000
+   "brick_1000": 5.0
   },
   "cap": 15000,
   "up": 1000,
@@ -2819,7 +2819,7 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300,
@@ -2850,7 +2850,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 400,
@@ -2858,7 +2858,7 @@
   },
   "mat": {
    "timber_m3": 2000,
-   "mat_brick": 20000
+   "brick_1000": 20.0
   },
   "cap": 30000,
   "up": 2000,
@@ -2879,14 +2879,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 100,
   "lab": {
    "merchant": 150
   },
   "mat": {
    "timber_m3": 50,
-   "mat_brick": 500
+   "brick_1000": 0.5
   },
   "cap": 1500,
   "up": 100,
@@ -2910,7 +2910,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 180,
   "lab": {
    "merchant": 250,
@@ -2918,7 +2918,7 @@
   },
   "mat": {
    "timber_m3": 300,
-   "mat_brick": 3000
+   "brick_1000": 3.0
   },
   "cap": 8000,
   "up": 500,
@@ -2940,7 +2940,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 200,
   "lab": {
    "merchant": 300
@@ -2996,13 +2996,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "96_finance.md",
   "ph": 80,
   "lab": {
    "scribe": 80
   },
   "mat": {
-   "parchment": 30
+   "parchment_sheet": 30
   },
   "cap": 0,
   "up": 0,
@@ -3033,7 +3033,7 @@
    "scribe": 100
   },
   "mat": {
-   "parchment": 200
+   "parchment_sheet": 200
   },
   "cap": 1000,
   "up": 50,
@@ -3064,7 +3064,7 @@
    "scribe": 200
   },
   "mat": {
-   "parchment": 500,
+   "parchment_sheet": 500,
    "timber_m3": 200
   },
   "cap": 5000,
@@ -3191,7 +3191,7 @@
   },
   "mat": {
    "timber_m3": 400,
-   "mat_brick": 4000
+   "brick_1000": 4.0
   },
   "cap": 10000,
   "up": 500,
@@ -3222,7 +3222,7 @@
    "merchant": 200
   },
   "mat": {
-   "parchment": 1000
+   "parchment_sheet": 1000
   },
   "cap": 2000,
   "up": 100,
@@ -3308,7 +3308,7 @@
    "scribe": 150
   },
   "mat": {
-   "parchment": 500
+   "parchment_sheet": 500
   },
   "cap": 2000,
   "up": 100,

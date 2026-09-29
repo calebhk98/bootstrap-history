@@ -1,10 +1,7 @@
 """Regression coverage for Complaints/38: `cli.py` used to print one founder
 lifetime-hours budget and judge feasibility against a different one.
 
-Not registered in sim/tests/__main__.py's TOPICS list yet - out of scope for
-the agent that wrote this file (cli.py/data.py and test files only). Needs
-"complaint_38_founder_lifetime" added there for `test_regressions.py` to run
-it as part of the full suite.
+The printed founder-hours budget and the judged feasibility budget share one source.
 """
 import argparse
 import contextlib

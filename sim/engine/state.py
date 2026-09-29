@@ -186,7 +186,7 @@ class HouseholdState:
 	bondage_years_left: float = 0.0
 	bondage_debt: float = 0.0
 	credit_frozen_until: int = 0
-	insolvent_years: Optional[int] = None
+	insolvent_years: int = 0
 	last_withdrawal: Optional[int] = None
 	last_settlement: int = -999
 	spend_last_year: Optional[float] = None
@@ -202,17 +202,20 @@ class HouseholdState:
 	contract_hours: Dict[str, float] = field(default_factory=dict)
 	commissioned: Dict[str, float] = field(default_factory=dict)
 	teaching_hours_this_year: float = 0.0
+	relocation_hours_this_year: float = 0.0
+	base_tile: Optional[str] = None
 	hour_allocations: Dict[str, float] = field(default_factory=dict)
 	work_trade: Optional[str] = None
 	last_taught: Dict[str, int] = field(default_factory=dict)
 	training: List[List[Any]] = field(default_factory=list)
-	wage_hours_this_year: Optional[float] = None
+	wage_hours_this_year: float = 0.0
 	log: List[Tuple[Any, str]] = field(default_factory=list)
 	granted_staff: Optional[Dict[str, float]] = None
 	hours_this_year: Optional[Dict[str, float]] = None
 	trade_schools: Optional[int] = None
+	labour_pressure_records: Dict[str, Any] = field(default_factory=dict)
 	worker_housing_places: Optional[int] = None
-	_said_deputies: Optional[int] = None
+	_said_deputies: int = 0
 	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None
 	_said_eminence: int = -999
@@ -220,7 +223,6 @@ class HouseholdState:
 	_said_notice_approach: int = 0
 	last_military_demand: int = -999
 	_said_confiscation_band: int = -1
-	_said_scandal: int = 0
 
 	def cost_capital(self, amount: float) -> None:
 		"""Deduct an amount of capital for household expenditure and track total spend."""
@@ -270,7 +272,8 @@ class ProjectsState:
 	trade_hours_used: Dict[str, float] = field(default_factory=dict)
 	revealed: Set[str] = field(default_factory=set)
 	stalled: int = 0
-	shut_for_staff: Optional[Dict[str, int]] = None
+	# work id -> {"reason": str, "year": int}; only while the work is mothballed
+	closures: Dict[str, Dict[str, object]] = field(default_factory=dict)
 
 	def active_keys_sorted(self) -> List[str]:
 		"""Return active project ids in the canonical resolution order.
@@ -310,6 +313,12 @@ class EconomyState:
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
 	farm_hectares: Optional[float] = None
 	farm_stock_kg: float = 0.0
+	farm_cleared_hectares: Optional[float] = None
+	farm_last_shortfall_kg: Optional[float] = None
+	farm_last_marginal_product: Optional[float] = None
+	society_labour_hours: Dict[str, float] = field(default_factory=dict)
+	farm_hours_needed: Optional[float] = None
+	wage_tightness_factors: Dict[str, float] = field(default_factory=dict)
 	_dashboard_history: Optional[List[Any]] = None
 
 
@@ -341,7 +350,7 @@ class ScenarioState:
 	goal_year: Optional[int] = None
 	_said_debasement: Optional[int] = None
 	_said_output: Optional[Dict[str, int]] = None
-	_said_scandal: Optional[int] = None
+	_said_scandal: int = 0
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
 
@@ -352,7 +361,34 @@ class PopulationState:
 	pop_children: float = 0.0
 	pop_working_age: float = 0.0
 	pop_elderly: float = 0.0
-	_food_pop_bonus_applied: Optional[float] = None
+
+
+@dataclass
+class ActorRecord:
+	"""Persistent state shared by every non-founder actor (a firm, a government)."""
+	kind: str = "firm"
+	name: str = ""
+	policy_kind: str = "value"
+	money: float = 0.0
+	workforce: Dict[str, float] = field(default_factory=dict)
+	knowledge: Set[str] = field(default_factory=set)
+	concerns: Set[str] = field(default_factory=set)
+	# node id -> copy work in progress (hours_left, money_left, years, ...)
+	works: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+	failed_copies: Dict[str, int] = field(default_factory=dict)
+	opened_year: Dict[str, int] = field(default_factory=dict)
+	target: Optional[str] = None
+	location: Optional[str] = None
+	exited_year: Optional[int] = None
+	loss_years: int = 0
+	founded_year: Optional[int] = None
+	last_margin: float = 0.0
+
+
+@dataclass
+class ActorsState:
+	"""Every actor other than the founder's household, keyed by actor id."""
+	records: Dict[str, ActorRecord] = field(default_factory=dict)
 
 
 @dataclass
@@ -365,6 +401,7 @@ class SimulationState:
 	founder: Optional[FounderState] = None
 	scenario: Optional[ScenarioState] = None
 	population: Optional[PopulationState] = None
+	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
 	_goal: Optional[str] = None
 	_civ_live: Dict[str, Any] = field(default_factory=dict)
@@ -383,6 +420,7 @@ ALL_STATE_CLASSES = (
 	FounderState,
 	ScenarioState,
 	PopulationState,
+	ActorsState,
 )
 
 

@@ -1,5 +1,7 @@
 # Automation needs a per-turn audit trail
 
+**Status:** open
+
 Auto-hire, auto-open, auto-mine, auto-forest and other automation policies can spend money or change staffing. While the policy screen explains the heuristics, the player needs to know what actually happened on this turn and why.
 
 ## Why it matters

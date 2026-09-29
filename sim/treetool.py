@@ -36,10 +36,13 @@ from sim.presentation import (                                   # noqa: E402
     JUDGE_WORST_NODES_SHOWN, JUDGE_NODE_ID_COLUMN_WIDTH_CHARS,
     JUDGE_DEFECT_CODES_SHOWN, APPLY_CAPS_SAMPLE_SHOWN,
     APPLY_CAPS_PREREQ_LIST_TRUNCATE_CHARS, APPLY_CAPS_REASON_TRUNCATE_CHARS)
-from sim.engine.catalog import load_trade_registry               # noqa: E402
+from sim.engine.catalog import (load_production_catalog, load_trade_registry,  # noqa: E402
+                                material_namespace)
+from sim import tool_costs                                       # noqa: E402
 DATA = os.path.join(ROOT, "data")
 BR   = os.path.join(DATA, "branches")
 TREE = os.path.join(DATA, "tech_tree.json")
+TREE_INDENT = 2  # matches the committed data/tech_tree.json layout
 
 def load_trades():
     """Read trade identity from the canonical, mod-aware trade registry."""
@@ -94,19 +97,14 @@ def normalise_v2(node):
 
 # ---------------------------------------------------------------- MERGE
 def load_aliases():
-    """No runtime aliases: source data is canonicalised before merge.
-
-    ``scripts/migrate_data_aliases.py`` retains the historical table solely
-    as repeatable migration input.  Returning empty collections here makes a
-    stale source identifier a validation error instead of silently translating
-    it on every tree rebuild.
-    """
+    """No aliases: a stale source identifier is a merge event, never silently translated."""
     return {}, set()
 
 
-def load_prices():
-    prices = json.load(open(os.path.join(DATA, "prices.json")))
-    return set(material for material in prices["purchase_prices_denarii"] if not material.startswith("_"))
+def load_material_namespace(tree_nodes=()):
+    """Material identity: everything the production catalogue declares plus what tree nodes require."""
+    production = load_production_catalog(ROOT)
+    return material_namespace(production, tree_nodes)
 
 
 MERGED_DUPLICATE_IDS_FILE = "_MERGED_DUPLICATE_IDS.json"
@@ -124,9 +122,7 @@ def load_merged_duplicate_ids():
     duplicates and would have resurrected all of them. See the header in
     that file for the full story.
 
-    A missing file means no ids have been deduped yet, not an error - the
-    same "absent means empty" reading load_aliases() already gives a missing
-    ALIASES.json. A branches/ directory built for a small fixture (a test,
+    A missing file means no ids have been deduped yet, not an error. A branches/ directory built for a small fixture (a test,
     or a from-scratch tree with nothing to dedup) is a legitimate state, and
     refusing to merge just because nobody has ever recorded a duplicate
     would make this file mandatory boilerplate rather than a record of an
@@ -157,7 +153,7 @@ def cmd_merge(args):
     # everything else it found.
     collisions = []
     # Every event that DELETES something a branch author wrote: a labour
-    # trade prices.json has no rate for, a material with no price, a
+    # trade the registry does not know, an undeclared material, a
     # material that is really a technology, a prerequisite naming no node,
     # or a back edge cut to break a cycle. Collected separately from `warns`
     # (informational, does not lose data) so the merge can refuse to write
@@ -166,7 +162,7 @@ def cmd_merge(args):
     losses = []
 
     for filename in sorted(os.listdir(BR)):
-        if not filename.endswith(".json") or filename in ("ALIASES.json", MERGED_DUPLICATE_IDS_FILE):
+        if not filename.endswith(".json") or filename == MERGED_DUPLICATE_IDS_FILE:
             continue
         file_added, file_updated = _merge_process_branch_file(
             filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions)
@@ -189,7 +185,7 @@ def cmd_merge(args):
 
     # `losses` now holds every event, from both loops above, that deleted
     # something a branch author wrote rather than merely warning about it:
-    # an unknown labour trade, a material with no price, a material that is
+    # an unknown labour trade, an undeclared material, a material that is
     # really a technology, a prerequisite naming no node, or a back edge cut
     # to break a cycle. Print every one, grouped by kind - someone fixing
     # the source data needs to see every problem in one pass, not the first
@@ -205,12 +201,12 @@ def cmd_merge(args):
 
 
 def _merge_load_inputs():
-    """The merge's read side: prices, aliases, the current tree, the dedup record, and
+    """The merge's read side: material namespace, aliases, the current tree, the dedup record, and
     the seed `nodes` dict (current tree, normalised, with `_src` defaulted to "core")."""
-    goods = load_prices()
     valid_trades = load_trades()
     alias, dropset = load_aliases()
     base = json.load(open(TREE))
+    goods = load_material_namespace(base["nodes"])
     # Ids retired by deduplication. Branch files still contain both spellings
     # of a technology that two authors invented independently, so without this
     # the next merge silently resurrects every duplicate. Read from source
@@ -289,8 +285,8 @@ def _merge_resolve_materials(node, alias, dropset, goods, filename, losses):
         if resolved_material in goods:
             materials[resolved_material] = materials.get(resolved_material, 0) + quantity
         else:
-            losses.append(("unpriced_material",
-                "%s: %s UNPRICED material '%s', dropped" % (filename, node["id"], material)))
+            losses.append(("undeclared_material",
+                "%s: %s UNDECLARED material '%s', dropped" % (filename, node["id"], material)))
     return materials
 
 
@@ -479,9 +475,9 @@ def _merge_report_losses(losses, accept_data_loss):
             print("     " + message)
     if not accept_data_loss:
         print("\nMERGE REFUSED: the %d event(s) listed above would each drop something a "
-              "branch author wrote (an unpriced material, an unknown trade, a prerequisite "
+              "branch author wrote (an undeclared material, an unknown trade, a prerequisite "
               "naming no node, or a cycle-breaking edge deletion). Fix the source data - "
-              "price the material, add the trade to prices.json, add the missing "
+              "declare the material in data/production/, add the trade to the trade registry, add the missing "
               "prerequisite node, or break the cycle by hand in the branch file - and "
               "re-run merge. If the loss is intended, re-run with --accept-data-loss to "
               "write anyway. Nothing was written." % len(losses))
@@ -494,7 +490,7 @@ def _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns
     base["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
     base["meta"]["goal_node"] = "point_contact_transistor"
     base["meta"]["merged_duplicate_ids"] = retired
-    _write_json(base, TREE, args)
+    _write_json(base, TREE, args, indent=TREE_INDENT)
 
     print("\nmerged  : %d nodes (%d added from branches, %d updated from branches)"
           % (len(nodes), added, updated))
@@ -601,7 +597,7 @@ def _judge_cost_and_hours_defects(node, ancestry, stats):
     category = node["cat"]
     med_cost = stats["cost"].get(category, 1)
     cost = node["_total_cost"]
-    if med_cost > 0 and cost > med_cost * 25:
+    if cost is not None and med_cost > 0 and cost > med_cost * 25:
         defects.append(("COST-HIGH", "costs %s den, about %.0fx the median for category %s"
                                % (f"{cost:,.0f}", cost / med_cost, category)))
     if node["ph"] > 2000:
@@ -657,13 +653,9 @@ def grade(score):
     return "A" if score >= 90 else "B" if score >= 78 else "C" if score >= 64 else "D" if score >= 50 else "F"
 
 
-def _judge_compute_costs(nodes, prices):
-    """Set node["_total_cost"] for every node from labour hours, materials and cap, in place."""
-    wages = {trade: value["rate"] for trade, value in prices["wage_rates_denarii_per_hour"].items() if not trade.startswith("_")}
-    goods = {material: value["p"] for material, value in prices["purchase_prices_denarii"].items() if not material.startswith("_")}
-    for node in nodes.values():
-        node["_total_cost"] = (sum(wages.get(trade, 0) * hours for trade, hours in node["lab"].items())
-                            + sum(goods.get(material, 0) * quantity for material, quantity in node["mat"].items()) + node["cap"])
+def _judge_compute_costs(nodes):
+    """Set node["_total_cost"] from the shared pricing service; returns its CostReport."""
+    return tool_costs.price_nodes(nodes)
 
 
 def _judge_cost_stats(nodes):
@@ -672,14 +664,14 @@ def _judge_cost_stats(nodes):
     median-cost baseline that COST-HIGH in judge_node compares against."""
     by_category_cost = collections.defaultdict(list)
     for node in nodes.values():
-        by_category_cost[node["cat"]].append(node["_total_cost"])
+        if node["_total_cost"] is not None:
+            by_category_cost[node["cat"]].append(node["_total_cost"])
     return {"cost": {cat: statistics.median(value)
                      for cat, value in by_category_cost.items()}}
 
 
-def _judge_build_results(nodes, prices):
-    """Cost every node, work out the per-category median cost, then judge every node."""
-    _judge_compute_costs(nodes, prices)
+def _judge_build_results(nodes):
+    """Work out the per-category median cost, then judge every node (costs already set)."""
     stats = _judge_cost_stats(nodes)
 
     results = {}
@@ -700,8 +692,11 @@ def _judge_print_single_node_report(args, nodes, results):
           % (grade(score), score, node["cat"], node["conf"]))
     print("direct prerequisites : %d   full ancestry : %d nodes"
           % (len(node["pre"]), len(closure(nodes, args.id)) - 1))
-    print("cost %s den   founder-hours %s   calendar floor %.1f yr   risk %.0f%%"
-          % (f"{node['_total_cost']:,.0f}", f"{node['ph']:,}", node["yrs"], 100 * node["risk"]))
+    cost_text = "unavailable" if node["_total_cost"] is None else f"{node['_total_cost']:,.0f} den"
+    if node["_cost_missing"]:
+        cost_text += " (lower bound; unresolved: %s)" % ", ".join(node["_cost_missing"])
+    print("cost %s   founder-hours %s   calendar floor %.1f yr   risk %.0f%%"
+          % (cost_text, f"{node['ph']:,}", node["yrs"], 100 * node["risk"]))
     caps = sorted(cap_id for cap_id in closure(nodes, args.id) if cap_id.startswith("cap_"))
     print("capability rungs in its chain: %s" % (", ".join(caps) if caps else "NONE"))
     print("\n%s\n" % node["note"])
@@ -730,6 +725,15 @@ def _judge_print_summary(nodes, results):
     print("\nDEFECTS BY FREQUENCY")
     for code, value in defects.most_common():
         print("   %-12s %4d  (%.0f%% of nodes)" % (code, value, 100.0 * value / len(nodes)))
+
+
+def _judge_print_cost_coverage(cost_report, nodes):
+    """Say whether COST-HIGH could be judged, and how complete the costs behind it are."""
+    if not cost_report.available:
+        print("\nCOSTS UNAVAILABLE: %s; COST-HIGH was not judged." % cost_report.reason)
+        return
+    print("\nCOSTS: solved prices; %d of %d nodes need a material or trade the price service "
+          "cannot resolve (their cost is a lower bound)." % (cost_report.incomplete_nodes, len(nodes)))
 
 
 def _judge_print_worst_nodes(results):
@@ -773,14 +777,15 @@ def _judge_write_judgement(results, args):
 def cmd_judge(args):
     tree = json.load(open(TREE))
     nodes = {node["id"]: node for node in tree["nodes"]}
-    prices = json.load(open(os.path.join(DATA, "prices.json")))
-    results = _judge_build_results(nodes, prices)
+    cost_report = _judge_compute_costs(nodes)
+    results = _judge_build_results(nodes)
 
     if args.id:
         _judge_print_single_node_report(args, nodes, results)
         return 0
 
     _judge_print_summary(nodes, results)
+    _judge_print_cost_coverage(cost_report, nodes)
     _judge_print_worst_nodes(results)
     _judge_print_grade_filter(args, results)
     _judge_print_full_report(args, results)
@@ -906,8 +911,8 @@ def cmd_repair(args):
     """
     tree = json.load(open(TREE))
     nodes = {node["id"]: node for node in tree["nodes"]}
-    prices = json.load(open(os.path.join(DATA, "prices.json")))
-    _judge_compute_costs(nodes, prices)
+    stored_total_costs = {node_id: node.get("_total_cost") for node_id, node in nodes.items()}
+    _judge_compute_costs(nodes)
     stats = _judge_cost_stats(nodes)
 
     counts = collections.Counter()
@@ -925,8 +930,13 @@ def cmd_repair(args):
         _repair_documentation_level(node, ident, counts)
         _repair_social_defaults(node, ident, codes, counts)
         _repair_calendar_floor(node, codes, counts)
+    # Costs steer the judgement only; the stored tree keeps its own field untouched.
+    for node_id, node in nodes.items():
+        for key in ("_labour_cost", "_material_cost", "_cost_missing"):
+            node.pop(key, None)
+        node["_total_cost"] = stored_total_costs[node_id]
     tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
-    _write_json(tree, TREE, args)
+    _write_json(tree, TREE, args, indent=TREE_INDENT)
     print("REPAIR PASS")
     for ident, value in counts.most_common():
         print("   %-32s %d" % (ident, value))
@@ -980,7 +990,7 @@ def cmd_apply_caps(args):
                     " [REVIEWED: prerequisite(s) %s added by a reviewer working node by node. "
                     "Reason: %s]" % (", ".join(got), fix.get("reason", "not given")))
     tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
-    _write_json(tree, TREE, args)
+    _write_json(tree, TREE, args, indent=TREE_INDENT)
     print("APPLY REVIEWER-ASSIGNED PREREQUISITES")
     print("   edges applied                    %d" % applied)
     print("   nodes judged to need none        %d" % empty)
@@ -1034,8 +1044,8 @@ def main():
     subparsers = parser.add_subparsers(dest="cmd", required=True)
     subparser = subparsers.add_parser("merge")
     subparser.add_argument("--accept-data-loss", action="store_true",
-                   help="write the merge even though it will delete data: drop an unpriced "
-                        "material, drop a labour trade prices.json has no rate for, drop a "
+                   help="write the merge even though it will delete data: drop an undeclared "
+                        "material, drop a labour trade the registry does not know, drop a "
                         "material that is really a technology, drop a prerequisite that names "
                         "no node, or delete a back edge to break a dependency cycle. Without "
                         "this flag the merge lists every such event and refuses to write, so "

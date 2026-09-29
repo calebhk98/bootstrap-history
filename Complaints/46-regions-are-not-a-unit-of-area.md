@@ -1,5 +1,7 @@
 # A region is not a unit of area, and land rent is reading the filing system
 
+**Status:** partly - intensive-margin rent landed; regions still not a unit of area
+
 Raised by the stakeholder, from a simple question: how can China with one
 region have more land than Rome with seven?
 

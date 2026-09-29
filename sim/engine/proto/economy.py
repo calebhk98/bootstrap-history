@@ -1,6 +1,6 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
-from ..data import ANNUAL_WAGE, WAGES, trade_family
+from ..data import WAGES, trade_family
 
 from .state import _agent_state
 
@@ -83,8 +83,9 @@ def _material_capacity_rows(sim):
     demand = sim.annual_material_demand()
     by_tag = sim._demand_by_supply_tag(demand)
     rows = {}
-    for (emp_key, tag), need in by_tag.items():
-        own = sim._own_material_supply(tag)
+    # One row per material: firewood and charcoal draw on the same forest,
+    # so their demands are combined rather than one overwriting the other.
+    for emp_key, (need, own) in sim.demand_and_own_supply_by_material(by_tag).items():
         market = sim._material_market_tonnes(emp_key)
         rows[emp_key] = {
             "material": emp_key,
@@ -309,12 +310,13 @@ def _mine_rows_for_material(sim, material, workings, want):
         share = want * (working["capacity"] / total_rated) if total_rated > 0 else 0.0
         drawn = min(share, actual)
         util = (drawn / working["capacity"]) if working["capacity"] > 0 else 0.0
+        opened = working.get("opened_year")
         rows.append({
             "material": material,
-            "commissioned_year": working.get("opened_year") if working.get("opened_year")
-                                 is not None else "unknown (from a save "
+            "commissioned_year": opened if opened is not None else "unknown (from a save "
                                  "written before per-working tracking "
                                  "existed)",
+            "ready_year": (None if opened is None else opened + 1),
             "rated_capacity_t_per_yr": round(working["capacity"], 2),
             "actual_output_t_per_yr": round(actual, 2),
             "material_demand_t_per_yr": round(want, 2),
@@ -349,7 +351,8 @@ def _mine_pending_rows(dem, pending):
             "costs_you_a_year": 0.0,
             "utilization": "sinking",
             "actually_supplying_demand": False,
-            "ready_in": ready,
+            "commissions_during_year": ready,
+            "ready_year": (None if ready is None else ready + 1),
             "tonnes_a_year_when_it_is_ready": round(amt, 2),
             "shut_it_with": "close %s" % material})
     return rows
@@ -728,7 +731,7 @@ def _agent_economy(sim, cmd=None):
         out["wages_by_trade"] = [
             {"trade": trade, "a_year_of_one": round(sim.annual_wage(trade), 0),
              "wage_foundation": {
-                 "base_for_skill_and_difficulty": ANNUAL_WAGE.get(trade, 375.0),
+                 "base_for_skill_and_difficulty": round(sim.base_annual_wage(trade), 2),
                  **{factor_key: round(value, 3) for factor_key, value in sim.wage_cost_factors(trade).items()},
                  "demographic_scarcity": round(sim.wage_index, 3),
                  "local_trade_scarcity": round(sim.labour_price_factor(trade), 3)}}

@@ -10,37 +10,10 @@ from .actors import Household
 from .data import closure, JSONDict, Nodes
 from .hazard_window import hazards_not_yet_past
 
-# THE GAME TELLING YOU WHAT IS IMPORTANT IS THE GAME PLAYING ITSELF. A
-# node's own note must not grade itself against the rest of the tree:
-# school_founded's calling itself "the pivot of the entire game" and
-# saying "every year of delay here costs more than any single
-# technology", or corpus_dispersed's calling itself "THE highest
-# expected-value node in the tree", are exactly the kind of sentence this
-# strips. Under fog, which branch matters most is exactly the decision fog exists to
-# leave to the player; a sentence that grades a node against the rest of the
-# tree answers that question for them as plainly as a number would, fog or no
-# fog, because it is the designer's own ranking, not something the founder in
-# the story could know. It is cut everywhere a node's note is shown, not only
-# under fog, because telling a player outright which of their own choices is
-# correct is the same move whether or not the rest of the tree is hidden.
-#
-# NARROW ON PURPOSE, same lesson as FOREIGN_MARKERS and NEVER_ABANDON below.
-# A sentence only qualifies if it BOTH names the game or the tree itself AND
-# makes a ranking claim about it ("highest", "pivot", "largest single", ...),
-# or matches one of the handful of exact phrases below that rank a node
-# without naming "game"/"tree" in so many words ("costs more than any single
-# technology", "must not cut"). A sentence that calls something "the most
-# important instrument" a pilot has, or Cayley's discovery "his single most
-# important insight", is a true statement about the real world and survives -
-# it never mentions the game or the tree at all. Only a sentence that steps
-# outside the fiction to grade the tree's own node against the rest of the
-# tree is self-play, and only those are dropped. Deliberately NOT touched:
-# "Nothing in the technical tree requires it. You may decline..." on
-# school_founded's own note - stating that a thing is optional is the
-# opposite of the fault this exists to fix, and "the whole game" on
-# point_contact_transistor's note ("Getting here from 100 AD is the whole
-# game") is left alone too, because the goal's own identity is already known
-# under fog by design - see help's "what you are trying to do".
+# Removes sentences where a node grades itself against the rest of the tree.
+# Matches exact phrases like "pivot", "highest-value", "costs more than any
+# single technology", or meta-ranking patterns (mentioning "game"/"tree" + ranking
+# words). [temporary_heuristic]
 _SELF_PLAY_PHRASES = (
     "pivot of the entire game",
     "costs more than any single",
@@ -50,13 +23,7 @@ _SELF_PLAY_PHRASES = (
     "is simply the highest-leverage",
     "largest single call on your personal hours",
     "must not cut",
-    # AND TELLING YOU WHAT TO DO FIRST, which is the same offence in the
-    # imperative rather than the comparative and so slips past both the
-    # phrase list and the meta-plus-ranking test above. Under fog, what to
-    # build first IS the question being asked of the player. There are
-    # only two such sentences in the whole tree, so they are named rather
-    # than pattern matched, because a broad rule for imperatives would eat
-    # the recipe instructions that are the point of the note field.
+    # Imperative phrases that say what to build first (same offence as ranking)
     "do this before writing any other recipe down",
     "build it first, use it to learn",
 )
@@ -85,39 +52,13 @@ def strip_self_play_advice(text: Optional[str]) -> Optional[str]:
 
 
 class FogMixin:
-    # FOG IS A RATCHET, NOT A REWIND (see playtest/AUDIT_rounds_1_6.md, C1):
-    # `load` restores the game but must not restore the player's memory
-    # with it, or a save-build-look-load cycle lets a player see what
-    # `available` reveals at no cost, refunding every denarius and year
-    # that discovery cost, for free, as many times as they like. The
-    # dishonest half is not that reload fails to un-teach a human who
-    # already read a name - no save format can do that - it is reload
-    # handing back the cost of having learned it.
-    #
-    # THE RATCHET LIVES ON `Household`, not here: `revealed` is this
-    # household's own accumulated knowledge of the tree, which is exactly
-    # the shape of state HOUSEHOLD_EXTRACTION.md moved onto its own
-    # object, and a property is how the ratchet holds regardless of WHICH
-    # code assigns to it - assigning a smaller set only ever grows what is
-    # already known, never shrinks it. See sim/engine/actors/household.py
-    # for the property itself. Every call site below reads and writes
-    # `self.household.revealed` directly, for the same reason every other
-    # moved field's engine-internal call sites do
-    # (HOUSEHOLD_EXTRACTION.md section 2): this is the hot path, not the
-    # outside surface.
+    # FOG IS A RATCHET: revealed knowledge never shrinks. `revealed` is stored
+    # on Household (sim/engine/actors/household.py) as a ratcheting property;
+    # assignments only grow what is already known.
 
-    # -- ATTRIBUTES AND METHODS THIS MIXIN READS BUT DOES NOT DEFINE -------
-    # Set/defined by Sim.__init__ and by sibling mixins (core.py,
-    # projects_starting.py, society_hazards.py, projects_capability.py - not
-    # owned by this task, see the top-level instructions' file list).
-    # Declared here, type-only: a bare annotation binds nothing at runtime
-    # (it only populates FogMixin.__annotations__), and a Callable-typed one
-    # is exactly the same - neither creates a real attribute or method on
-    # this class, so nothing here can shadow the real implementation another
-    # mixin actually provides, the way a `def start_reason(self): ...` stub
-    # placed directly in this class body would risk doing through Sim's own
-    # MRO. See geography.py's identical pattern (and its own comment) for
-    # the non-callable half of this.
+    # Type annotations only (no runtime binding); provided by Sim and sibling
+    # mixins (core.py, projects_starting.py, society_hazards.py,
+    # projects_capability.py). See geography.py for the same pattern.
     household: Household
     state: Any
     nodes: Nodes
@@ -174,19 +115,9 @@ class FogMixin:
         memo = {} if _memo is None else _memo
         if node_id in memo:
             return memo[node_id]
-        memo[node_id] = False        # provisional: the tree is a DAG so this should
-                                # never actually be read back, but a cycle must
-                                # not recurse forever if one ever sneaks in.
-        # anything you could start right now is visible by definition: you can
-        # see the work in front of you even if you cannot see past it
-        #
-        # _why=False: this discards start_reason's message too - is_visible
-        # only ever wants the boolean - and it is what turns the recursive
-        # descent (this function calls start_reason, which calls
-        # missing_prereq_message, which calls is_visible on every missing
-        # prerequisite, which calls back into start_reason...) from building
-        # a player-facing sentence at every single level into building one
-        # only at the outermost call that actually asked for it.
+        memo[node_id] = False  # provisional guard against cycles in DAG
+        # Anything startable now is visible; _why=False avoids building messages
+        # at every recursive level, only at the outermost call.
         result = self.start_reason(node_id, _memo=memo, _why=False)[0]
         memo[node_id] = result
         return result
@@ -223,25 +154,8 @@ class FogMixin:
         # hidden prerequisite is never named by the hint either.
         return msg + self._free_prereq_hint(known)
 
-    # WHAT IT COSTS TO SAY YES. Eight nodes in this tree - cap_measure_temp,
-    # cap_measure_elec, cap_measure_mass_mg, cap_measure_time_s,
-    # cap_power_water, cap_power_steam, cap_power_electric, cap_power_grid -
-    # cost nothing, take no hours, take no years and cannot fail. They are the
-    # engine's way of saying "you built a thermometer, so now you can measure
-    # temperature", and a player still has to start each one by hand.
-    #
-    # A refusal that names one of these as a missing prerequisite must not
-    # say only "missing prerequisites: cap_measure_temp" - a bare name
-    # gives no indication that the thing behind it is free and one command
-    # away, and reads as pure administrative friction if it does not say
-    # so.
-    #
-    # NOT AUTO-GRANTED, deliberately. Each of these carries 20 a year of
-    # upkeep if it is ever OPENED, so completing them on the player's behalf
-    # would be spending their money on a decision they were never asked about.
-    # They do not need opening to satisfy a prerequisite - start_reason tests
-    # `p not in self.household.done`, not operating - so the honest fix is to say what
-    # the refusal was already about: this one is free, start it.
+    # Capability nodes (cap_measure_*, cap_power_*) cost nothing, take no time.
+    # A refusal naming one must say it is free and startable now, not just the name.
     FREE_PREREQ_NAMED_AT_MOST = 3
 
     def _free_prereq_hint(self, missing: List[str]) -> str:
@@ -275,9 +189,14 @@ class FogMixin:
         if not text or not self.state._fog:
             return text
         scrubbed = text
-        for node_id in self.nodes:
-            if node_id in scrubbed and not self.is_visible(node_id):
-                scrubbed = scrubbed.replace(node_id, "something you have not heard of")
+        # Sort by length descending to replace longer ids first, avoiding
+        # corruption when one id is a prefix of another.
+        sorted_ids = sorted(self.nodes, key=lambda node_id: -len(node_id))
+        for node_id in sorted_ids:
+            if not self.is_visible(node_id):
+                # Whole ids only; ':' joins a namespaced id, so it is not a boundary either
+                pattern = r'(?<![\w:])' + re.escape(node_id) + r'(?![\w:])'
+                scrubbed = re.sub(pattern, "something you have not heard of", scrubbed)
         return scrubbed
 
     def fog_summary(self, node_id: str) -> str:
@@ -311,14 +230,7 @@ class FogMixin:
         behind the dice are readable here while there is still time to act
         on them.
         """
-        # `has`, NOT running(): every other capability in this engine was
-        # moved onto running() - a school with nobody paid to keep it open
-        # trains nobody - and this one deliberately stays where it is.
-        # Books that exist are books that exist, whether or not the
-        # institution that produced them is still open. See
-        # Sim.corpus_hedge (core.py): the sack itself calls the same
-        # method, so this screen cannot quote a hedge the sack does not
-        # honour.
+        # Uses has() not running(): books exist even if institution closed.
         chance, frac, hedge = self.corpus_hedge()
         projects = self.state.projects
         scenario = self.state.scenario
@@ -366,12 +278,7 @@ class FogMixin:
                 row["expected_cumulative_staff_loss"] = round(
                     1.0 - (1.0 - 0.32 * per_wave) ** waves, 4)
             upcoming.append(row)
-        # WHAT IS ACTUALLY NEAR, in full, and the rest by name. Every dated
-        # hazard now carries a real historical note and England has fifteen of
-        # them; sending all of it made one `risk` reply seventeen thousand
-        # bytes, which is the wall this whole interface was broken up to stop
-        # producing. A player deciding what to do this decade does not need
-        # four hundred words on enclosure in 1700.
+        # Show full records for next 4 actionable hazards, rest by name only (avoid bloat).
         _soon = [row for row in upcoming
                  if row.get("in_progress") or (row["years"][0] - scenario.year) <= 120]
         _later = [row for row in upcoming if row not in _soon]
@@ -383,15 +290,7 @@ class FogMixin:
         upcoming = _full + [{"name": row["name"], "years": row["years"],
                              "sacks_a_site": row.get("sacks_a_site", False)}
                             for row in _compact]
-        # A civilisation with no sack-capable hazards (Norse, among others)
-        # must not advertise a loss risk or recommend a hedge for one: risk
-        # you cannot face is not risk.
-        # A COMPACT CHRONOLOGICAL VIEW, sorted nearest-first, that says the
-        # same thing `known_hazards_ahead` says in scattered, per-kind detail
-        # but ESCALATES as a date closes in rather than repeating itself -
-        # see hazard_timeline's own comment (society.py) for why "hedged_by:
-        # nothing yet" sitting unchanged on this screen for a hundred and
-        # fifty years was the actual defect, not merely the lack of a list.
+        # Civs with no sack hazards: no loss risk to report. Get chronological timeline.
         timeline = self.hazard_timeline()
         can_be_sacked = any(entry.get("sacks_a_site") for entry in upcoming)
         if not can_be_sacked:
@@ -441,41 +340,10 @@ class FogMixin:
             "timeline": timeline,
         }
 
-    # Institutions that belong to one named society. Granting them to everyone
-    # was the bug; refusing to let anyone else BUILD them would be a worse one,
-    # because a founder can perfectly well introduce an aqueduct to Tenochtitlan.
-    # This only blocks the free gift.
-    # Standing, knowledge and persona are not plant: they carry upkeep
-    # because they cost you to maintain, but they must never be let go to
-    # save money the way a mill or a mine can. Shedding `identity_cover` -
-    # a persona AND a real prerequisite of the goal - for money can
-    # permanently softlock a run, because knowledge cannot be repossessed.
-    # Everything else can lapse.
-    #
-    # NARROW ON PURPOSE: this list protects only true knowledge and
-    # persona categories, not institutions like patron_local,
-    # collegium_licensed, freedman_staff or workshop_first - those must
-    # stay sheddable, or a ruined run could never stop bleeding and
-    # recover. A patronage can lapse and a workshop can close; what you
-    # cannot lose is who you are and what you know.
-    #
-    # Creditors forcing the founder to forget Newton's laws
-    # (sc2_physics_newtons_laws, cat "physics", up 40) is already covered
-    # above; abstract science and medicine outside pure mathematics can go
-    # the same way: cell theory, DNA, the phase diagram of iron, none of
-    # them a building, all of them carrying real upkeep (40 to 400 denarii,
-    # from "keeping up scholarly correspondence" rather than rent) and so
-    # all of them ELIGIBLE under the up-exceeds-revenue test that gates
-    # both shed_loss_makers and enforce_credit_limit's seizure. "theory" and
-    # "knowledge" are what the tree itself calls these categories, which is
-    # the same evidence "physics" and "mathematics" were added on: you cannot
-    # be made to un-know a thing to balance a ledger, whatever it is filed
-    # under. NARROW ON PURPOSE, same lesson as FOREIGN_MARKERS below: most
-    # knowledge (tex_drop_spindle, "basic textile technique", among it) costs
-    # nothing to keep and was never at risk, needing no protection here at
-    # all - see the note on that in never_abandon's caller. This list is only
-    # for the knowledge that DOES carry upkeep and would otherwise be shed for
-    # it.
+    # Protects knowledge and persona that carry upkeep: categories that would
+    # be shed for money but cannot be lost without softlocking the run.
+    # Does NOT protect institutions (patron_local, collegium_licensed, etc.)
+    # which can and must lapse. Only knowledge that DOES carry upkeep.
     NEVER_ABANDON = {"mathematics", "physics", "method", "notation",
                      "algebra", "geometry", "probability", "analysis",
                      "theory", "knowledge"}
@@ -499,27 +367,9 @@ class FogMixin:
 
     FOREIGN_MARKERS = ("_roman", "_rome", "annona", "insula", "societas",
                        "collegium", "argentarii", "latifundi",
-                       # The cursus publicus is the Roman imperial dispatch
-                       # relay and the Pharos is one specific Ptolemaic
-                       # building at Alexandria. Neither is a generic capability
-                       # any society might have, so without a marker of their
-                       # own both would be handed free to Han and to the
-                       # Norse alike.
-                       "cursus", "pharos")
+                       "cursus", "pharos")  # Rome-specific things: state grain dole, imperial dispatch, etc.
 
-    # A Roman masonry arch is a way of laying stone and anyone can learn it. The
-    # annona is the Roman state's grain dole and Roman citizenship is a status
-    # only Rome can confer, and neither is a thing you can BUILD in Luoyang.
-    # This must stay NARROW: blocking anything with "collegium" in the
-    # name, for example, would cut the licensed association out of the
-    # tree, and with it school_founded, endowment_land, academy_network and
-    # both patronage tiers - the entire institutional ladder - even though
-    # every society has partnerships, money-lenders and licensed
-    # associations under its own names. What no other society has is Roman
-    # citizenship specifically, because only Rome can confer it;
-    # `citizenship` itself models a status the courts will hear, which
-    # every society has one of under its own name, so even that must not
-    # be blocked. The right list here is empty. What remains civ-specific
-    # is which institutions you are GRANTED for free, which FOREIGN_MARKERS
-    # still handles: the Han are not handed the annona.
+    # Blocks only civ-specific institutions, not generic capabilities. A Roman arch
+    # is a construction technique anyone can learn; annona is a state benefit Rome alone
+    # can grant. Most of this list is empty by design. [temporary_heuristic]
     FOREIGN_INSTITUTIONS = ()

@@ -1,5 +1,7 @@
 # `temporary_heuristic` conflates "not derived yet" with "copied from history"
 
+**Status:** closed
+
 **Type:** Registry design / §3.1 compliance
 **Priority:** Medium. It makes the burndown harder to act on than it should be.
 

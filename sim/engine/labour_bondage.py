@@ -17,6 +17,7 @@ rebuilds self.household.scholars/artisans from the trades actually on the
 books - does not overwrite the grant out of existence.
 """
 from .data import trade_family
+from . import purchase_rule
 from sim.constants import declare
 
 
@@ -177,7 +178,7 @@ class BondageMixin:
             "for any real slave market.")
     SLAVE_BASE_PRICE_DENARII = declare(
         "SLAVE_BASE_PRICE_DENARII", 300.0, kind="hardcoded_outcome",
-        unit="denarii, at price_index=1 and zero market pressure",
+        book_money=True, unit="denarii, at price_index=1 and zero market pressure",
         source=None, confidence="D",
         why="The list price of one person before any congestion surcharge "
             "- a flat number this file asserts rather than derives from "
@@ -266,7 +267,8 @@ class BondageMixin:
         price = self.slave_quote(n_people)
         household = self.state.household
         economy = self.state.economy
-        if price > household.capital:
+        if not purchase_rule.can_pay(self, price):
+            household._last_buy_refusal = purchase_rule.refusal_text(self, "%d slaves" % n_people, price)
             return 0
         household.capital -= price
         household.slaves += n_people

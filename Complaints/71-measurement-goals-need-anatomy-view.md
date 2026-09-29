@@ -1,5 +1,7 @@
 # Measurement goals need a dedicated "anatomy" view
 
+**Status:** open
+
 For the literacy goal, the most useful information was scattered across `state`, `why`, population/labor screens, and technology effects. The goal card showed current literacy and a ceiling, but not enough explanation of why the ceiling was where it was or what was moving it.
 
 ## WHY IT MATTERS

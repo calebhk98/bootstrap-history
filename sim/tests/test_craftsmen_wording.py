@@ -79,6 +79,7 @@ check("...and now also says this is a continuous share of their year, not "
 # and still says "craftsmen" (an existing regression checks this), and now
 # explains the mixed count inline instead of implying a body count alone.
 s_cc = sim(civ="rome_100ad", capital=1e6, manual=True, events=False)
+s_cc.done.update(NODES["ag2_cold_store"]["pre"])  # prerequisites held, so only staffing can refuse
 _ok_cc, _why_cc = s_cc.start_reason("ag2_cold_store", ignore_trade=True)
 check("the craftsmen staffing refusal still refuses for the same reason, "
       "unchanged arithmetic",
@@ -174,47 +175,6 @@ check("...but WITH a patron, and enough time, it genuinely has - the "
       s_patron.state_military_diffusion() > 0.5, s_patron.state_military_diffusion())
 
 # =============================================================================
-# FOOD: the country eats better, and grows - on top of, never instead of,
-# apply_tech_effects' own small instant population queue (see that
-# mechanism's own regression checks elsewhere in this file).
-s_food = sim(civ="rome_100ad")
-s_food.granted.discard(_FOOD_NODE)
-s_food.done.add(_FOOD_NODE); s_food.done_year[_FOOD_NODE] = s_food.year
-_base0 = s_food._pop_scale_base
-for i in range(1, 81):
-    s_food.year += 1
-    s_food.advance_society(s_food.year)
-check("eighty years after New World-style crop rotation is done, the "
-      "country's own baseline population has risen by a real, double-digit "
-      "percentage - 'within a few decades ALL of Rome has significantly "
-      "more food and a larger population', not a rounding error",
-      s_food._pop_scale_base - _base0 > 0.08,
-      s_food._pop_scale_base - _base0)
-check("...and it is told in the log, not only in a state variable",
-      any("no longer only on your own land" in message for _, message in s_food.log),
-      [message for _, message in s_food.log if "no longer only on your own land" in message])
-
-s_food_far = sim(civ="rome_100ad")
-s_food_far.granted.discard(_FOOD_NODE)
-s_food_far.done.add(_FOOD_NODE); s_food_far.done_year[_FOOD_NODE] = s_food_far.year
-for i in range(1, 601):
-    s_food_far.year += 1
-    s_food_far.advance_society(s_food_far.year)
-check("however long it has had, the food-diffusion population bonus never "
-      "exceeds its own cap - this is bounded, not a runaway feedback loop",
-      s_food_far._food_pop_bonus_applied <= s_food.FOOD_DIFFUSION_POP_BONUS_MAX + 1e-6,
-      s_food_far._food_pop_bonus_applied)
-
-s_nofood = sim(civ="rome_100ad")
-for i in range(1, 81):
-    s_nofood.year += 1
-    s_nofood.advance_society(s_nofood.year)
-check("a founder who never builds any food technology gets none of this - "
-      "the bonus is earned, not a free drift",
-      getattr(s_nofood, "_food_pop_bonus_applied", 0.0) == 0.0,
-      getattr(s_nofood, "_food_pop_bonus_applied", 0.0))
-
-# =============================================================================
 # DISEASE: the country is harder to kill wholesale, once ITS OWN medicine
 # has spread - not only the founder's private, has()-gated hedge (`relief`
 # in _shocks, unchanged by any of this). The user's own example: invent the
@@ -256,10 +216,12 @@ check("diffused medicine four centuries deep can turn even the Black Death "
       "barely registers" in _black_death or "softer" in _black_death,
       _black_death)
 
-check("medical diffusion relief is capped, never total - no amount of "
-      "diffused medicine makes a dated epidemic do nothing at all",
-      sim(civ="rome_100ad").MEDICAL_DIFFUSION_RELIEF_CAP < 1.0,
-      sim(civ="rome_100ad").MEDICAL_DIFFUSION_RELIEF_CAP)
+check("medical diffusion relief has no fixed ceiling: full coverage with a "
+      "capable state can remove the epidemic entirely",
+      (lambda nation: (setattr(nation, "state_capacity", 1.0),
+                       setattr(nation, "medical_diffusion_index", lambda: 1.0),
+                       nation.medical_diffusion_relief())[-1])(sim(civ="rome_100ad")) >= 1.0,
+      "relief at full coverage")
 
 # --- and this never touches the founder's own, personal figure (`loss`),
 # nor sack_chance/output_factor, which are a different category entirely.
@@ -357,9 +319,9 @@ for i in range(1, 91):
     s_cli.year += 1
     s_cli.advance_society(s_cli.year)
 check("once something has genuinely diffused, world_diffusion_report is no "
-      "longer None and names the population it has already added",
+      "longer None and names how much of farming the country has adopted",
       s_cli.world_diffusion_report() is not None
-      and s_cli.world_diffusion_report()["population_this_has_already_added"] > 0,
+      and s_cli.world_diffusion_report()["food_and_farming_the_country_has_adopted"] > 0,
       s_cli.world_diffusion_report())
 
 # =============================================================================
@@ -388,8 +350,7 @@ for _ in range(150):
 print(repr((round(s.food_diffusion_index(), 12),
             round(s.medical_diffusion_index(), 12),
             round(s.state_military_diffusion(), 12),
-            round(s.information_diffusion_index(), 12),
-            round(s._pop_scale_base, 12))))
+            round(s.information_diffusion_index(), 12))))
 """
 
 

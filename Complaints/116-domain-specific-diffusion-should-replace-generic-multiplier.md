@@ -1,6 +1,8 @@
 # Domain-specific diffusion should replace some of the generic technology-count multiplier
 
-**Source:** playtest findings document, LATE-010. **Status:** Architecture/
+**Status:** open - roadmap: approved
+
+**Source:** playtest findings document, LATE-010. **Type:** Architecture/
 realism recommendation, the direct companion to `Complaints/104` (ECON-002).
 
 ## The player's reasoning

@@ -7,7 +7,7 @@
    "mat_linen",
    "mat_silk"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 20,
   "lab": {
    "artisan": 40
@@ -42,7 +42,7 @@
    "mat_beeswax",
    "cap_heat_0700"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "artisan": 200
@@ -100,7 +100,7 @@
   "pre": [
    "air_observation_balloon_tethered"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "artisan": 300
@@ -134,7 +134,7 @@
    "air_observation_balloon_tethered",
    "mat_shellac"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "artisan": 250
@@ -170,7 +170,7 @@
    "mat_salt",
    "distillation_alcohol"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "chemist": 200,
@@ -206,7 +206,7 @@
    "coal_coke",
    "destructive_distillation"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 180,
   "lab": {
    "furnaceman": 250,
@@ -242,7 +242,7 @@
    "mat_wrought_iron",
    "mat_leather"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 60,
   "lab": {
    "smith": 100,
@@ -275,7 +275,7 @@
   "pre": [
    "air_observation_balloon_tethered"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 20,
   "lab": {
    "artisan": 40
@@ -307,7 +307,7 @@
    "air_observation_balloon_tethered",
    "mat_linen"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "artisan": 150
@@ -338,7 +338,7 @@
   "pre": [
    "air_varnished_silk_envelope"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "artisan": 200
@@ -371,7 +371,7 @@
    "air_elongated_envelope",
    "air_light_petrol_engine"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "carpenter": 200,
@@ -406,7 +406,7 @@
    "air_dirigible_engine_mount",
    "mat_aluminium"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 300,
   "lab": {
    "carpenter": 200,
@@ -443,7 +443,7 @@
   "pre": [
    "air_coal_gas_generation"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "chemist": 150,
@@ -475,7 +475,7 @@
   "pre": [
    "scientific_method"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "scholar": 200
@@ -507,7 +507,7 @@
    "air_aerofoil_section",
    "newtonian_mechanics"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "scholar": 300
@@ -540,7 +540,7 @@
    "mat_cast_iron",
    "cap_power_human"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "carpenter": 200,
@@ -575,7 +575,7 @@
    "air_cayley_forces",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 160,
   "lab": {
    "carpenter": 200,
@@ -609,7 +609,7 @@
    "air_glider_simple",
    "air_wind_tunnel"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "carpenter": 150,
@@ -642,7 +642,7 @@
   "pre": [
    "air_three_axis_control"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "carpenter": 150
@@ -677,7 +677,7 @@
    "air_three_axis_control",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 140,
   "lab": {
    "carpenter": 160,
@@ -713,7 +713,7 @@
   "pre": [
    "air_glider_simple"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 60,
   "lab": {
    "carpenter": 100
@@ -745,7 +745,7 @@
   "pre": [
    "air_glider_simple"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 50,
   "lab": {
    "carpenter": 100
@@ -778,7 +778,7 @@
    "air_aerofoil_section",
    "air_wind_tunnel"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 180,
   "lab": {
    "carpenter": 200,
@@ -815,7 +815,7 @@
    "cap_tol_100um",
    "mat_tool_steel_hss"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "machinist": 300,
@@ -852,7 +852,7 @@
    "air_light_petrol_engine",
    "air_cayley_forces"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "scholar": 200
@@ -886,7 +886,7 @@
    "air_power_to_weight",
    "air_wind_tunnel"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 300,
   "lab": {
    "carpenter": 250,
@@ -924,7 +924,7 @@
    "air_light_petrol_engine",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "machinist": 250,
@@ -962,7 +962,7 @@
    "cap_tol_100um",
    "cap_tol_10um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 220,
   "lab": {
    "machinist": 280,
@@ -998,14 +998,14 @@
   "pre": [
    "air_three_axis_control"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 140,
   "lab": {
    "carpenter": 200
   },
   "mat": {
    "timber_m3": 1,
-   "wire_steel_kg": 5,
+   "wire_drawn_kg": 5,
    "linen_kg": 5
   },
   "cap": 100,
@@ -1035,7 +1035,7 @@
    "cap_tol_100um",
    "air_three_axis_control"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "carpenter": 150,
@@ -1081,7 +1081,7 @@
    "mat_aluminium",
    "mat_concrete_reinforced"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 180,
   "lab": {
    "machinist": 200,
@@ -1118,7 +1118,7 @@
    "air_pitot_tube",
    "barometer"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "glassblower": 80,
@@ -1155,7 +1155,7 @@
    "in2_mercury_barometer",
    "opt_manometer"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80.0,
   "lab": {
    "artisan": 100.0,
@@ -1189,7 +1189,7 @@
    "barometer",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "artisan": 150,
@@ -1225,7 +1225,7 @@
    "mat_silk",
    "sea_lodestone"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 30,
   "lab": {
    "artisan": 50
@@ -1259,7 +1259,7 @@
    "mat_bulk_steel",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "artisan": 100.0,
@@ -1298,7 +1298,7 @@
    "air_powered_aeroplane",
    "mat_bulk_steel"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 220,
   "lab": {
    "carpenter": 250,
@@ -1333,7 +1333,7 @@
   "pre": [
    "air_powered_aeroplane"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "labourer": 500
@@ -1366,7 +1366,7 @@
    "air_powered_aeroplane",
    "photography"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "scribe": 100,
@@ -1424,7 +1424,7 @@
    "air_powered_aeroplane",
    "mat_nitroglycerin"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "chemist": 120,
@@ -1457,7 +1457,7 @@
    "air_light_petrol_engine",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 280,
   "lab": {
    "carpenter": 200,
@@ -1493,7 +1493,7 @@
    "air_light_petrol_engine",
    "air_propeller_wing"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "carpenter": 200,
@@ -1527,9 +1527,10 @@
   "pre": [
    "thermodynamics_theory",
    "newtonian_mechanics",
-   "mat_tool_steel_hss"
+   "mat_tool_steel_hss",
+   "cap_heat_1600"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "scholar": 250,
@@ -1546,7 +1547,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Newton's third law: jet out the back, thrust forward. A compressor forces air in, fuel burns in a combustion chamber, hot gas expands and exits at high velocity. No piston engine, no propeller. Much simpler mechanically than reciprocating engines but requires materials that survive continuous high temperature under pressure.",
+  "note": "Newton's third law: jet out the back, thrust forward. A compressor forces air in, fuel burns in a combustion chamber, hot gas expands and exits at high velocity. No piston engine, no propeller. Much simpler mechanically than reciprocating engines but requires materials that survive continuous high temperature under pressure. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat]",
   "traits": [
    "military",
    "spectacle"
@@ -1563,7 +1564,7 @@
    "cap_tol_10um",
    "mat_nickel"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 350,
   "lab": {
    "machinist": 300,

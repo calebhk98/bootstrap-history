@@ -1,5 +1,7 @@
 # Opening state is informative but overloaded
 
+**Status:** open
+
 Before the player makes their first decision, the initial state output can expose them to:
 
 - saves/sessions

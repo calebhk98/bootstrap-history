@@ -370,8 +370,8 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
     sub-mixin reads through self
     (done_in_order/_done_changed/_operating_changed/_reset_operating,
     alongside _InvalidatingSet above, which the last two use), and a
-    handful of constants (PRACTICE_SHARE, DEFAULT_ANNUAL_WAGE_FALLBACK,
-    MINE_CAPEX_PER_T_YR and its per-material entries, FOREST_COST_PER_HA)
+    handful of constants (PRACTICE_SHARE,
+    FOREST_COST_PER_HA)
     that are genuinely read from more than one sub-mixin, so moving any
     one of them into a single sub-mixin would leave the others reaching
     across module boundaries for a constant that isn't theirs - they
@@ -593,78 +593,13 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
             "fraction) and then kept because the whole opening of the game "
             "is now calibrated around it - moving it requires re-tuning "
             "the early game, not just picking a better number.")
-    DEFAULT_ANNUAL_WAGE_FALLBACK = declare(
-        "DEFAULT_ANNUAL_WAGE_FALLBACK", 375.0, kind="temporary_heuristic",
-        unit="denarii/year", source=None, confidence="D",
-        why="Stand-in annual wage for a craft trade that ANNUAL_WAGE (see "
-            "labour.py, outside this file's scope) has no entry for, so a "
-            "missing trade does not crash the workshop-output or "
-            "stall-diagnosis wage sums. A round, plausible mid-table wage, "
-            "not sourced to any specific trade.")
-
-    # Capital to create one tonne per year of standing extraction capacity, and
-    # the recurring cost of actually getting that tonne out. DERIVED, not
-    # measured: a Roman coal hewer working a shallow drift wins on the order of
-    # a tonne a day, so 250 t/yr a man, and the miner wage of 0.09 den/hr over
-    # 2000 hours is 180 den a year, giving roughly 0.7 den per tonne in wages
-    # before haulage. Doubling it for haulage, timbering and overseers gives the
-    # figures below. Metal ores cost far more per tonne of METAL because of the
-    # ore grade and the smelting, and the capital rises with depth and drainage.
-    # Gold is here so debasement has an answer: if the money is being ruined
-    # by having less silver in it, a man who digs his own metal is not ruined
-    # with it. Roman gold (Dacia, Las Medulas) was mined at enormous cost and
-    # that is what the capex says.
-    MINE_CAPEX_PER_T_YR_COAL = declare(
-        "MINE_CAPEX_PER_T_YR_COAL", 9.0, kind="engineering_estimate",
-        unit="denarii per tonne/year of capacity sunk",
-        source="The base figure this file derives explicitly: a Roman coal hewer working a shallow drift wins on the order of a tonne a day (~250 t/yr/man); at a miner's wage of 0.09 denarii/hour over 2000 hours/year (180 den/yr), that is roughly 0.7 den/tonne in wages before haulage, doubled here for haulage, timbering and overseers.",
-        confidence='B', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
-    MINE_CAPEX_PER_T_YR_IRON = declare(
-        "MINE_CAPEX_PER_T_YR_IRON", 60.0, kind="hardcoded_outcome",
-        unit="denarii per tonne/year of capacity sunk",
-        source="Scaled up from coal's derived figure for ore grade and smelting, cross-checked against iron's own book price (the GENERIC_MINE_CAPEX_MULTIPLE comment below notes iron's capex is close to 60x its book price, the same multiple the generic fallback for every other material now uses).",
-        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
-    MINE_CAPEX_PER_T_YR_COPPER = declare(
-        "MINE_CAPEX_PER_T_YR_COPPER", 240.0, kind="hardcoded_outcome",
-        unit="denarii per tonne/year of capacity sunk",
-        source="As iron, scaled for copper's own ore grade and smelting; close to 60x copper's own book price.",
-        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
-    MINE_CAPEX_PER_T_YR_LEAD = declare(
-        "MINE_CAPEX_PER_T_YR_LEAD", 80.0, kind="engineering_estimate",
-        unit="denarii per tonne/year of capacity sunk",
-        source="As iron, scaled for lead's own ore grade and smelting.",
-        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
-    MINE_CAPEX_PER_T_YR_TIN = declare(
-        "MINE_CAPEX_PER_T_YR_TIN", 420.0, kind="hardcoded_outcome",
-        unit="denarii per tonne/year of capacity sunk",
-        source="As iron, scaled for tin's own ore grade and smelting; close to 42x tin's own book price.",
-        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
-    MINE_CAPEX_PER_T_YR_SILVER = declare(
-        "MINE_CAPEX_PER_T_YR_SILVER", 9000.0, kind="hardcoded_outcome",
-        unit="denarii per tonne/year of capacity sunk",
-        source="As iron, scaled for silver's much higher ore value and smelting/refining cost; close to 28x silver's own book price.",
-        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
-    MINE_CAPEX_PER_T_YR_GOLD = declare(
-        "MINE_CAPEX_PER_T_YR_GOLD", 160000.0, kind="hardcoded_outcome",
-        unit="denarii per tonne/year of capacity sunk",
-        source="Attested Roman gold workings (Dacia, Las Medulas) were mined at enormous cost, reflected here; close to 46x gold's own book price. Included specifically so debasement has an escape valve - a founder who mines their own gold is not ruined by a debased currency the way one holding cash is.",
-        confidence='C', why="Capital to create one tonne per year of standing extraction capacity for this material - see the class comment above for how coal's own figure is derived from Roman wage and productivity evidence (a hewer at ~250 t/yr, a miner's wage of 0.09 den/hr over 2000 hours, doubled for haulage/timbering/overseers) and the other metals scale up from ore grade, smelting and depth/drainage cost, cross-checked against attested Roman workings (Rio Tinto, Dacia, Las Medulas for gold).")
-    MINE_CAPEX_PER_T_YR = {
-        'coal': MINE_CAPEX_PER_T_YR_COAL,
-        'iron': MINE_CAPEX_PER_T_YR_IRON,
-        'copper': MINE_CAPEX_PER_T_YR_COPPER,
-        'lead': MINE_CAPEX_PER_T_YR_LEAD,
-        'tin': MINE_CAPEX_PER_T_YR_TIN,
-        'silver': MINE_CAPEX_PER_T_YR_SILVER,
-        'gold': MINE_CAPEX_PER_T_YR_GOLD,
-    }
 
     # ~1 iugerum of woodland per 0.25 ha. Named so that `quote forest` and the
     # purchase itself cannot drift apart: a player must be able to ask the
     # price of coppice before spending capital on it, not only after.
     FOREST_COST_PER_HA = declare(
         "FOREST_COST_PER_HA", 250.0, kind="temporary_heuristic",
-        unit="denarii/hectare", source=None, confidence="D",
+        book_money=True, unit="denarii/hectare", source=None, confidence="D",
         why="Purchase price of a hectare of coppice woodland. No attested "
             "Roman land-price figure backs this; it exists mainly so "
             "`quote forest` and the purchase itself agree on a real price "

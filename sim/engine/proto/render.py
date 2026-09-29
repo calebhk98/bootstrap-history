@@ -28,6 +28,6 @@ from .render_screens_status import (
     render_rush, render_path,
 )
 from .render_typed import (
-    _RENDERERS, TYPED_HINTS, MONEY_SHORT, _typed_form, _JSON_HINT, _JSON_PAIR,
+    _RENDERERS, TYPED_HINTS, MONEY_SHORT, COMMISSION_DISPLAY, _typed_form, _JSON_HINT, _JSON_PAIR,
     _typed_deep, to_typed_hints, _DEN_RE, render_pretty,
 )

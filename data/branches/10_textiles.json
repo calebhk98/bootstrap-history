@@ -4,7 +4,7 @@
   "name": "Wool fiber",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -50,7 +50,7 @@
   "name": "Cotton by trade",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -75,7 +75,7 @@
   "name": "Silk by trade",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -100,7 +100,7 @@
   "name": "Drop spindle",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -146,7 +146,7 @@
   "name": "Felting",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -171,7 +171,7 @@
   "name": "Warp-weighted loom",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -196,7 +196,7 @@
   "name": "Two-beam loom",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -221,7 +221,7 @@
   "name": "Sailcloth",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -246,7 +246,7 @@
   "name": "Dyeing with madder root",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -271,7 +271,7 @@
   "name": "Dyeing with woad",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -296,7 +296,7 @@
   "name": "Murex purple dyeing",
   "cat": "textiles",
   "pre": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -383,7 +383,7 @@
    "crank_conrod",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "carpenter": 200,
@@ -420,7 +420,7 @@
    "tx2_beam",
    "tx2_heddle"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "carpenter": 200,
@@ -455,7 +455,7 @@
    "crank_conrod",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 90,
   "lab": {
    "carpenter": 250,
@@ -489,7 +489,7 @@
    "tex_dye_madder",
    "mat_alum"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 100
@@ -522,7 +522,7 @@
    "tex_dye_woad",
    "mat_natron"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 140
@@ -553,10 +553,10 @@
   "name": "Rope walk and cordage",
   "cat": "textiles",
   "pre": [
-   "tex_linen",
+   "mat_linen",
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "artisan": 200,
@@ -587,10 +587,10 @@
   "name": "Canvas cloth",
   "cat": "textiles",
   "pre": [
-   "tex_linen",
+   "mat_linen",
    "tex_horizontal_loom"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 80
@@ -619,10 +619,10 @@
   "name": "Fitted garment tailoring",
   "cat": "textiles",
   "pre": [
-   "tex_linen",
+   "mat_linen",
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 150
@@ -653,9 +653,9 @@
   "cat": "textiles",
   "pre": [
    "tex_wool",
-   "tex_carding"
+   "tx2_carding"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "labourer": 150
@@ -686,7 +686,7 @@
   "pre": [
    "tex_cotton_trade"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 30,
   "lab": {
    "labourer": 200
@@ -717,7 +717,7 @@
    "crank_conrod",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "carpenter": 250,
@@ -754,7 +754,7 @@
    "crank_conrod",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "carpenter": 180,
@@ -792,7 +792,7 @@
    "crank_conrod",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 280,
   "lab": {
    "carpenter": 400,
@@ -833,7 +833,7 @@
    "cap_tol_1mm",
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 250,
   "lab": {
    "carpenter": 400,
@@ -873,7 +873,7 @@
    "crank_conrod",
    "mat_wrought_iron"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 150,
   "lab": {
    "carpenter": 200,
@@ -911,7 +911,7 @@
    "crank_conrod",
    "mat_wrought_iron"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 160,
   "lab": {
    "artisan": 280,
@@ -948,7 +948,7 @@
    "tex_fitted_garment",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 120
@@ -983,7 +983,7 @@
    "tex_wool",
    "tex_cotton_trade"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "artisan": 180
@@ -1018,7 +1018,7 @@
    "crank_conrod",
    "tex_hand_ginning"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "carpenter": 160,
@@ -1053,7 +1053,7 @@
   "pre": [
    "mat_leather"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "artisan": 250,
@@ -1086,11 +1086,11 @@
   "name": "Water-powered fulling mill",
   "cat": "textiles",
   "pre": [
-   "tex_fulling",
+   "tx2_fulling",
    "cap_power_water",
    "crank_conrod"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "carpenter": 280,
@@ -1125,10 +1125,10 @@
   "name": "Field bleaching with sun",
   "cat": "textiles",
   "pre": [
-   "tex_linen",
+   "mat_linen",
    "tex_sailcloth"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "labourer": 300
@@ -1162,7 +1162,7 @@
    "tex_canvas",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 140,
   "lab": {
    "artisan": 250,
@@ -1200,7 +1200,7 @@
    "cap_measure_len",
    "mat_paper"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "master": 150,
@@ -1234,7 +1234,7 @@
   "pre": [
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 80
@@ -1265,12 +1265,12 @@
   "name": "Wool combing machinery",
   "cat": "textiles",
   "pre": [
-   "tex_combing",
+   "tx2_combing",
    "cap_power_water",
    "crank_conrod",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 180,
   "lab": {
    "carpenter": 300,
@@ -1310,7 +1310,7 @@
    "cap_power_water",
    "interchangeable_parts"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 300,
   "lab": {
    "carpenter": 500,
@@ -1352,7 +1352,7 @@
    "crank_conrod",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 200,
   "lab": {
    "machinist": 350,
@@ -1425,7 +1425,7 @@
    "cap_tol_100um",
    "cap_power_water"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 180,
   "lab": {
    "machinist": 300,
@@ -1464,7 +1464,7 @@
    "tex_cotton_trade",
    "potash_soda"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "chemist": 200,
@@ -1500,7 +1500,7 @@
    "mat_chlorine",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "chemist": 250,
@@ -1576,7 +1576,7 @@
    "mat_chlorine",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 180,
   "lab": {
    "chemist": 300,
@@ -1614,7 +1614,7 @@
    "cap_heat_1300",
    "mat_charcoal"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 200,
   "lab": {
    "chemist": 350,
@@ -1666,7 +1666,7 @@
    "mat_leather",
    "cap_heat_1300"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 140,
   "lab": {
    "chemist": 250,
@@ -1702,7 +1702,7 @@
   "cat": "textiles",
   "pre": [
    "mat_ammonia",
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_tol_100um"
   ],
   "kb": "",

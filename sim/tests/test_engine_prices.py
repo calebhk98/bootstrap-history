@@ -9,8 +9,7 @@ the whole point of the module:
     set must hit the same cache entry, and one that differs INSIDE it must
     miss;
   - the labour-hours -> denarii conversion is a multiplication by the
-    labourer wage rate, the inverse of `solve_prices.py --compare`'s own
-    division, not some other rate or direction;
+    labourer wage rate, not some other rate or direction;
   - the engine's default behaviour (`sim.engine.data.load()` with no
     arguments) is untouched - every existing call site calls it that way,
     and this module must not change what comes back until something opts
@@ -20,16 +19,18 @@ Written as unittest.TestCase against synthetic production entries, like
 test_price_solver_cycles.py and test_price_solver_era_gate.py, so this does
 not depend on the real, changing contents of data/production/ for anything
 but one light integration check at the end.
+
+sim/engine/prices.py: solver prices cached on held gate nodes, book fallback, per-material solved/book provenance.
 """
 import json
 import os
 import sys
 import unittest
 
-from sim.engine import data, prices as engine_prices
+from sim.engine import data, money_units, prices as engine_prices
 
 
-def _prices_json(labourer_rate=2.0, smith_rate=4.0):
+def _prices_json(labourer_rate=2.0, smith_rate=4.0, money_per_labour_hour=None):
     """A minimal prices.json-shaped dict: just enough for
     wage_ratios_by_trade and denarii_per_labour_hour to read."""
     return {
@@ -37,6 +38,8 @@ def _prices_json(labourer_rate=2.0, smith_rate=4.0):
             "labourer": {"rate": labourer_rate},
             "smith": {"rate": smith_rate},
         },
+        "money_per_labour_hour": (labourer_rate if money_per_labour_hour is None
+                                  else money_per_labour_hour),
         "purchase_prices_denarii": {},
     }
 
@@ -132,30 +135,24 @@ class CacheKeyingTests(unittest.TestCase):
 
 
 class ConversionTests(unittest.TestCase):
-    """LABOUR-HOURS TO DENARII: multiply by the labourer rate, matching
-    `solve_prices.py --compare`'s own division inverted."""
+    """LABOUR-HOURS TO DENARII: multiply by the document's coin-anchored
+    money per labour hour."""
 
-    def test_one_labour_hour_is_worth_the_labourer_rate_in_denarii(self):
-        prices_json = _prices_json(labourer_rate=3.5)
+    def test_one_labour_hour_is_worth_the_documents_money_per_hour(self):
+        prices_json = _prices_json(money_per_labour_hour=3.5)
         self.assertEqual(
             engine_prices.hours_to_denarii(1.0, prices_json), 3.5)
 
-    def test_round_trips_against_compares_own_division(self):
-        # solve_prices.py --compare does book_hours = book_denarii / rate.
-        # Converting back the other way must return the original figure -
-        # anything else means the two tools disagree about the numeraire.
-        prices_json = _prices_json(labourer_rate=2.5)
-        rate = prices_json["wage_rates_denarii_per_hour"]["labourer"]["rate"]
-        book_denarii = 40.0
-        book_hours = book_denarii / rate
+    def test_round_trips_against_division_by_the_money_per_hour(self):
+        prices_json = _prices_json(money_per_labour_hour=2.5)
+        denarii = 40.0
+        hours = denarii / 2.5
         self.assertAlmostEqual(
-            engine_prices.hours_to_denarii(book_hours, prices_json), book_denarii)
+            engine_prices.hours_to_denarii(hours, prices_json), denarii)
 
-    def test_the_smith_rate_is_not_used_for_the_labourer_conversion(self):
-        # A wrong-rate bug (using whatever trade happened to be handy)
-        # would rescale every solved price silently - the exact mistake the
-        # module docstring calls out.
-        prices_json = _prices_json(labourer_rate=2.0, smith_rate=9.0)
+    def test_wage_rates_are_not_used_for_the_conversion(self):
+        prices_json = _prices_json(labourer_rate=7.0, smith_rate=9.0,
+                                   money_per_labour_hour=2.0)
         self.assertEqual(engine_prices.denarii_per_labour_hour(prices_json), 2.0)
 
 
@@ -185,7 +182,9 @@ class PricedGoodsTableTests(unittest.TestCase):
         # 3 labour-hours at 2 denarii/hour = 6 denarii, replacing the book's
         # invented 999.
         self.assertAlmostEqual(goods["straw_kg"], 6.0)
-        self.assertEqual(goods["unrelated_kg"], 5.0)
+        self.assertAlmostEqual(
+            goods["unrelated_kg"],
+            money_units.book_to_money(5.0, prices_json["money_per_labour_hour"]))
 
     def test_a_material_the_solver_cannot_reach_falls_back_to_the_book(self):
         prices_json = _prices_json()
@@ -201,7 +200,8 @@ class PricedGoodsTableTests(unittest.TestCase):
         # recipe simply cannot be costed, because one of its inputs has no
         # price of its own. Either way the book value stands.
         self.assertEqual(provenance["widget_kg"], "gated")
-        self.assertEqual(goods["widget_kg"], 42.0)
+        self.assertAlmostEqual(
+            goods["widget_kg"], money_units.book_to_money(42.0, prices_json["money_per_labour_hour"]))
 
     def test_solver_adds_a_producible_material_the_book_never_had(self):
         prices_json = _prices_json()
@@ -245,7 +245,12 @@ class EngineDefaultBehaviourUnchangedTests(unittest.TestCase):
         book_goods = {key: value["p"]
                       for key, value in prices_json["purchase_prices_denarii"].items()
                       if not key.startswith("_")}
-        self.assertEqual(goods, book_goods)
+        # Book prices are only converted to the coin; the solver only adds materials the book lacks.
+        rate = data.starting_schedule().money_per_labour_hour
+        for key, denarii in book_goods.items():
+            self.assertAlmostEqual(goods[key], money_units.book_to_money(denarii, rate), msg=key)
+        required = {material for node in nodes.values() for material in node["mat"]}
+        self.assertTrue(set(goods) - set(book_goods) <= required)
 
 
 class RealDataIntegrationTests(unittest.TestCase):

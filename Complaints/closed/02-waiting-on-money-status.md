@@ -1,8 +1,10 @@
 # “Waiting on money” can still make progress
 
+**Status:** closed
+
 **Type:** Misleading status text  
 **Priority:** Medium
-**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `sim/engine/proto/state.py` now prints exactly the two states suggested here: "unfunded now; will fund opportunistically as revenue..." and "fully blocked until funding is available...". See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): RESOLVED, verified.** `sim/engine/proto/state.py` now prints exactly the two states suggested here: "unfunded now; will fund opportunistically as revenue..." and "fully blocked until funding is available...". See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

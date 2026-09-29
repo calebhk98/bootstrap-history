@@ -20,7 +20,7 @@ comments on `DetRNG` and `Sim` for the general shape of this hazard.
 """
 import os, random, sys
 
-from .data import closure, critical_path, load, load_civ, resolve_goal, topo_order
+from .data import KNOWLEDGE_DIR, ROOT, closure, critical_path, load, load_civ, resolve_goal, topo_order
 from .core import Sim
 from sim.constants import declare
 from sim.unit_conversions import PERCENT_SCALE
@@ -266,7 +266,7 @@ def cmd_why(args):
     print("=" * 78)
     print(node_record["note"])
     print()
-    print("Recipe          : knowledge/%s" % node_record["kb"])
+    print("Recipe          : %s/%s" % (os.path.relpath(KNOWLEDGE_DIR, ROOT), node_record["kb"]))
     # Complaints/38: same computed budget cmd_path prints and judges against
     # - see _founder_lifetime_hours()'s own comment - so this percentage
     # cannot go stale against either of those the way a separately typed

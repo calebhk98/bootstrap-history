@@ -42,6 +42,8 @@ rather than a module:
     generator, specifically so nothing about this wiring depends on how
     many times a --session game was saved and reloaded before reaching a
     given year (see Sim._farm_year_weather_seed's own docstring).
+
+The seam where Sim demographic recovery feeds the real harvest to Population.step, so famine falls out of land, labour and weather. Needs sim/engine (unittest-style).
 """
 import statistics
 import unittest
@@ -259,6 +261,8 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
         shocked = _rome_sim(events=False)
         shocked_start = shocked.population.total
         shocked.farm_land.hectares *= 0.15
+        # Land lost is lost: no ground left to clear as a way out.
+        shocked._farm_arable_ceiling = shocked.farm_land.hectares
         for year in range(101, 111):
             shocked._demographic_recovery(year)
         shocked_end = shocked.population.total

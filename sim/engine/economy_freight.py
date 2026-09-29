@@ -58,9 +58,10 @@ account of this hazard.
 """
 import math
 
-from .data import haversine_km, WAGES
+from .data import haversine_km
 from . import commodities as _commod
 from sim.constants import declare
+from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from sim.world import transport as freight_physics
@@ -323,7 +324,7 @@ class FreightMixin:
             return 0.0
         inputs = self._land_freight_physical_inputs()
         feed_price_per_kg = self._book_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
-        driver_wage_per_hour = WAGES.get(self.FREIGHT_DRIVER_WAGE_TRADE, 0.0)
+        driver_wage_per_hour = self.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
         denarii_per_tonne_km = (inputs.feed_kg_per_tonne_km * feed_price_per_kg
                                  + inputs.driver_hours_per_tonne_km * driver_wage_per_hour)
         denarii_per_tonne = denarii_per_tonne_km * distance_km
@@ -554,7 +555,7 @@ class FreightMixin:
     # already short.
     NITRE_COST_PER_M2 = declare(
         "NITRE_COST_PER_M2", 2.0, kind="temporary_heuristic",
-        unit="denarii/square metre", source=
+        book_money=True, unit="denarii/square metre", source=
         "The figure step() used before this was given a proper `quote` "
         "path (spend / 2.0), carried forward unchanged so buying a bed the "
         "new way costs exactly what the old automatic policy always paid.",
@@ -586,7 +587,7 @@ class FreightMixin:
             return 0.0
         cost = square_metres * self.NITRE_COST_PER_M2 * self.price_index
         household = self.state.household
-        if cost > household.capital:
+        if not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
         self.state.economy.nitre_bed_m2 += square_metres
@@ -642,7 +643,7 @@ class FreightMixin:
                     % (deficit, square_meters, self.NITRE_YIELD_T_PER_M2,
                        "{:,.0f}".format(square_meters * self.NITRE_COST_PER_M2
                                        * self.price_index)))
-        if binding in self.MINE_CAPEX_PER_T_YR:
+        if binding in self.MINE_OPEX_PER_T:
             dem = self.annual_material_demand()
             # SAME GROUPING resource_throttle() uses (_demand_by_supply_tag):
             # copper's shortfall can now come from copper_wire_kg or

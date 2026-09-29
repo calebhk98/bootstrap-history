@@ -107,7 +107,6 @@ total every count below is built from.
 
 | Name | First set | In `SAVE_FIELDS`? | Files | Sites | Category | Notes / non-person-owner flag |
 |---|---|---|---|---|---|---|
-| `_agri_mechanisation_ids` | set outside `__init__`, no getattr guard (sim/engine/society.py:875, in `agrarian_slack`) | no | 1 | 1 | INTERNAL (keyed off world/scenario (nodes only)) | fixed set of agri-mechanisation node ids, derived only from the static tree |
 | `_cap_factor` | `__init__` (sim/engine/core.py:92) | no | 2 | 5 | INTERNAL (keyed off household (done/granted/practice/operating)) | capability_factor() memo |
 | `_dashboard_history` | lazy via getattr (sim/engine/proto/dispatch.py:2295) | yes | 2 | 4 | INTERNAL (keyed off household (snapshots of household portfolio)) | one portfolio snapshot per year, for `changes`/`economy` |
 | `_demand_by_emp_key_cache` | lazy via getattr (sim/engine/economy.py:3391) | no | 1 | 2 | INTERNAL (keyed off household) | material demand grouped by employment key |
@@ -116,7 +115,6 @@ total every count below is built from.
 | `_done_seq` | `__init__` (sim/engine/core.py:91) | no | 2 | 4 | INTERNAL (keyed off household (tracks `done`)) | version counter that invalidates caches when `done` changes |
 | `_electricity_load_ids_cache` | lazy via getattr (sim/engine/economy.py:3060) | no | 1 | 2 | INTERNAL (keyed off world/scenario (nodes only)) | fixed set of electricity-gated node ids, derived only from the static tree |
 | `_food_diffusion_said` | `__init__` (sim/engine/core.py:250) | no | 2 | 3 | INTERNAL (keyed off world (population-wide)) | last year a food-diffusion note fired |
-| `_food_pop_bonus_applied` | lazy via getattr (sim/engine/society.py:1443) | yes | 1 | 3 | INTERNAL (keyed off world (population-wide bonus, but the flag itself lives on the Sim instance)) | whether this year's food-diffusion population bonus has already been applied |
 | `_foreign_institution_cache` | special (see note) (sim/engine/society.py:1561) | no | 1 | 1 | INTERNAL (keyed off world/scenario (civ+nodes only)) | per-node memo of a string match against civ id + node name |
 | `_foreign_only_cache` | special (see note) (sim/engine/society.py:1577) | no | 1 | 1 | INTERNAL (keyed off world/scenario (civ+nodes only)) | per-node memo of a string match against civ id + node name |
 | `_founder_death_aged` | lazy via getattr (sim/engine/proto/state.py:279) | yes | 2 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | founder's age at death, cached for --session resume |
@@ -137,8 +135,6 @@ total every count below is built from.
 | `_nodes_by_cat_cache` | lazy via getattr (sim/engine/economy.py:1291) | no | 1 | 2 | INTERNAL (keyed off world/scenario (nodes only)) | node-id-by-category index, derived only from the static tree |
 | `_operating_ver` | lazy via getattr (sim/engine/economy.py:936) | no | 1 | 4 | INTERNAL (keyed off household (tracks `operating`)) | version counter that invalidates caches when `operating` changes |
 | `_pop_recovery_years` | `__init__` (sim/engine/core.py:72) | no | 2 | 5 | WORLD | time-constant for the whole society's demographic recovery from the worst shock endured |
-| `_pop_scale_base` | `__init__` (sim/engine/core.py:70) | no | 3 | 8 | WORLD | pop_scale's steady-state baseline before the current deficit is applied |
-| `_pop_tech_pending` | `__init__` (sim/engine/core.py:79) | no | 2 | 5 | WORLD | queued population-raising effects of technologies, applied to the whole society's population |
 | `_practice_cache` | lazy via getattr (sim/engine/economy.py:2052) | no | 1 | 2 | INTERNAL (keyed off household, but see `granted` ambiguity) | cache of which granted nodes are 'practisable', keyed on len(granted) |
 | `_regions` | `__init__` (sim/engine/core.py:302) | no | 2 | 10 | INTERNAL (keyed off world/scenario) | geography.json's regions, minus '_'-prefixed keys |
 | `_rev_up_candidates_cache` | lazy via getattr (sim/engine/economy.py:2111) | no | 1 | 2 | INTERNAL (keyed off household) | candidate nodes for revenue/upkeep, keyed on operating/practice |
@@ -248,7 +244,7 @@ total every count below is built from.
 | `scandal_last_year` | lazy via getattr (sim/engine/proto/state.py:759) | no | 2 | 6 | HOUSEHOLD | last year's scandal reading, used to report this year's delta |
 | `scholars` | `__init__` (sim/engine/core.py:103) | yes | 5 | 20 | HOUSEHOLD | owned staff pool |
 | `shortages` | `__init__` (sim/engine/core.py:338) | yes | 3 | 4 | HOUSEHOLD | tally of which material bound in which year for this household (diagnostic, but per-household - see summary) |
-| `shut_for_staff` | lazy via getattr (sim/engine/projects.py:564) | yes | 3 | 9 | HOUSEHOLD | household ventures currently shut for lack of staff |
+| `closures` | ProjectsState field, work id to reason and year | yes | n/a | n/a | HOUSEHOLD | why and since when each shut work was closed (`shut_for_staff` is now a read-only view of the staffing ones) |
 | `slaves` | `__init__` (sim/engine/core.py:284) | yes | 6 | 21 | HOUSEHOLD | owned slaves |
 | `spend_last_year` | lazy via getattr (sim/engine/proto/dispatch.py:1065) | yes | 3 | 5 | HOUSEHOLD | last year's spend (spend_this_year, promoted at year end) |
 | `stalled` | `__init__` (sim/engine/core.py:262) | yes | 1 | 7 | HOUSEHOLD | count of stalled years |

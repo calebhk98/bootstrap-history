@@ -1,4 +1,7 @@
-"""Focused regression tests for the tierless technology schema."""
+"""Focused regression tests for the tierless technology schema.
+
+unittest-style; each TestCase method is reported as one check.
+"""
 import copy
 import json
 import os

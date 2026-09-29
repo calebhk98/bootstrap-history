@@ -1,5 +1,7 @@
 # A shaft that costs nothing to sink
 
+**Status:** partly - the fixed cost now covers every shaft a district needs; the horizon/reserve knob is still shared
+
 `sim/world/deposits.py` has a SINKING COST mechanism, described at length in
 its own module docstring as the thing that makes a poor deposit uneconomic at
 low demand and economic at high demand. A one-time cost for the shaft,
@@ -142,3 +144,12 @@ than "sentinel defaults are bad". It is that a test-only parameter threaded
 through seven signatures stops being a test affordance the moment two
 different quantities are reachable through it, and nobody reviewing any one
 of those seven functions can see the collision from inside that function.
+
+## Re-measured after the build-cost change
+
+The amortised share now charges the whole district's shafts. Re-run the
+script above: gold's Las Medulas is the only deposit where it is several
+percent of total cost; copper, silver, lead and iron stay a fraction of a
+percent, and tin is zero (alluvial, no shaft). Candidates 2 and 3 above (split
+the amortisation horizon from the reserve; derive the reserve from ore-body
+volume) are still open.

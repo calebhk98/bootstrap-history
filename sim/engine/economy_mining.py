@@ -25,53 +25,56 @@ other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
 from sim.constants import declare
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
+from sim.world import deposits as deposit_model
+from . import purchase_rule
 
 
 class MiningMixin:
     MINE_OPEX_PER_T_COAL = declare(
         "MINE_OPEX_PER_T_COAL", 1.5, kind="engineering_estimate",
-        unit="denarii per tonne extracted",
-        source="Derived alongside MINE_CAPEX_PER_T_YR's own coal figure from the same wage evidence.",
-        confidence='B', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
+        why="Curated recurring cost per tonne extracted from a working of this "
+            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_IRON = declare(
         "MINE_OPEX_PER_T_IRON", 12.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted",
-        source="About a fifth of iron's own capex (12/60 = 0.20), the ratio GENERIC_MINE_OPEX_SHARE below generalises.",
-        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
+        why="Curated recurring cost per tonne extracted from a working of this "
+            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_COPPER = declare(
         "MINE_OPEX_PER_T_COPPER", 55.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted",
-        source="About a fifth of copper's own capex (55/240 = 0.229).",
-        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
+        why="Curated recurring cost per tonne extracted from a working of this "
+            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_LEAD = declare(
         "MINE_OPEX_PER_T_LEAD", 18.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted",
-        source="About a fifth of lead's own capex (18/80 = 0.225).",
-        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
+        why="Curated recurring cost per tonne extracted from a working of this "
+            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_TIN = declare(
         "MINE_OPEX_PER_T_TIN", 95.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted",
-        source="About a fifth of tin's own capex (95/420 = 0.226).",
-        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
+        why="Curated recurring cost per tonne extracted from a working of this "
+            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_SILVER = declare(
         "MINE_OPEX_PER_T_SILVER", 2200.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted",
-        source="About a fifth of silver's own capex (2200/9000 = 0.244).",
-        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
+        why="Curated recurring cost per tonne extracted from a working of this "
+            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
     MINE_OPEX_PER_T_GOLD = declare(
         "MINE_OPEX_PER_T_GOLD", 42000.0, kind="engineering_estimate",
-        unit="denarii per tonne extracted",
-        source="About a fifth of gold's own capex (42000/160000 = 0.2625).",
-        confidence='C', why="Recurring cost per tonne actually extracted from a working of this material, once sunk - derived alongside MINE_CAPEX_PER_T_YR's own figure from the same wage evidence, roughly a fifth of capex across the seven curated materials (see the GENERIC_MINE_OPEX_SHARE comment below for the exact ratios).")
-    MINE_OPEX_PER_T = {
-        'coal': MINE_OPEX_PER_T_COAL,
-        'iron': MINE_OPEX_PER_T_IRON,
-        'copper': MINE_OPEX_PER_T_COPPER,
-        'lead': MINE_OPEX_PER_T_LEAD,
-        'tin': MINE_OPEX_PER_T_TIN,
-        'silver': MINE_OPEX_PER_T_SILVER,
-        'gold': MINE_OPEX_PER_T_GOLD,
-    }
+        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
+        why="Curated recurring cost per tonne extracted from a working of this "
+            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
+
+    MINE_OPEX_MATERIALS = ("coal", "iron", "copper", "lead", "tin", "silver", "gold")
+
+    @property
+    def MINE_OPEX_PER_T(self):
+        """Curated running cost per tonne, by material, in this civilisation's coin."""
+        return {material: getattr(self, "MINE_OPEX_PER_T_" + material.upper())
+                for material in self.MINE_OPEX_MATERIALS}
+
     MINE_LEAD_YEARS = declare(
         "MINE_LEAD_YEARS", 3.0, kind="engineering_estimate",
         unit="years", source="Sinking a shaft, arranging drainage, "
@@ -83,86 +86,69 @@ class MiningMixin:
             "after capital is committed - the delay that stopped a "
             "playtester from treating mine investment as instantaneous.")
 
-    # ---- A GENERIC PRODUCTION LEVER FOR ANY MATERIAL, NOT ONLY THESE SEVEN ---
+    # ---- CAPEX AND OPEX FROM THE PHYSICAL WORKS, FOR ANY MINEABLE MATERIAL ----
     #
-    # COMMODITY_DYNAMISM.md's aluminium test, verified by running the engine
-    # directly: "no mine, no supply lever of any kind for it... Nothing in
-    # economy.py even contains the string 'aluminium.' Producing an enormous
-    # amount of it via electrolysis tech changes nothing." open_mine() used
-    # to answer nothing at all (a bare `return 0.0`) for any material not in
-    # MINE_CAPEX_PER_T_YR above - a literal seven-name dictionary, chosen
-    # because those seven are real, well-sourced figures (Roman wage
-    # evidence, attested workings) and they stay exactly as they are here.
-    # For every other material - not just aluminium, whatever the tech tree
-    # is ever extended to include - GENERALISE rather than special-case: the
-    # seven curated figures already show capex tracking a material's own
-    # book price closely (iron 1.0 den/kg -> capex 60, copper 4.0 -> 240,
-    # both a 60x multiple; tin 10.0 -> 420, ~42x; silver 317 -> 9000, ~28x;
-    # gold 3440 -> 160000, ~46x - a 30-60x band holding across four decades
-    # of price). 50, the middle of that band, is the generic multiple.
-    # Running cost tracks capex at close to a fifth across the same seven
-    # (12/60=0.20, 55/240=0.229, 18/80=0.225, 95/420=0.226, 2200/9000=0.244,
-    # 42000/160000=0.2625 - all 0.20-0.26), so generic opex is 0.22x generic
-    # capex. This is a real, general production lever - sink capital, wait
-    # out MINE_LEAD_YEARS, pay to keep it standing - for whatever material
-    # an unanticipated recipe needs, not a rule written for aluminium by name.
-    GENERIC_MINE_CAPEX_MULTIPLE = declare(
-        "GENERIC_MINE_CAPEX_MULTIPLE", 50.0, kind="hardcoded_outcome",
-        unit="denarii capex per denarius/kg of book price", source=
-        "Fitted from the seven curated MINE_CAPEX_PER_T_YR figures against "
-        "their own book prices: iron ~60x, copper ~60x, tin ~42x, silver "
-        "~28x, gold ~46x - a 30-60x band across four decades of price; 50, "
-        "the middle of that band, is used for any material without a "
-        "curated figure.",
-        confidence="C",
-        why="Lets open_mine() offer standing production capacity for ANY "
-            "priceable material, not only the seven hand-curated metals - "
-            "the fix for the aluminium gap COMMODITY_DYNAMISM.md's audit "
-            "found ('no mine, no supply lever of any kind for it'). Fitted "
-            "to seven points and extrapolated, the same honest limit as "
-            "GENERIC_OUTPUT_ANCHOR_T_PER_YR above.")
-    GENERIC_MINE_OPEX_SHARE = declare(
-        "GENERIC_MINE_OPEX_SHARE", 0.22, kind="engineering_estimate",
-        unit="dimensionless (opex/capex)", source=
-        "Running cost tracks capex at close to a fifth across the seven "
-        "curated materials (0.20-0.26 across coal/iron/copper/lead/tin/"
-        "silver/gold); 0.22 is the representative figure used generically.",
-        confidence="C",
-        why="Converts a generic material's fitted capex into its ongoing "
-            "operating cost, for the same materials GENERIC_MINE_CAPEX_"
-            "MULTIPLE covers.")
-    GENERIC_MINE_CAPEX_FLOOR = declare(
-        "GENERIC_MINE_CAPEX_FLOOR", 5.0, kind="temporary_heuristic",
-        unit="denarii per tonne/year (minimum)", source=None,
-        confidence="D",
-        why="Safety floor so an extremely cheap material's fitted mine "
-            "capex never rounds to effectively free capacity. A defensive "
-            "bound, not a reasoned floor.")
-    GENERIC_MINE_CAPEX_CEILING = declare(
-        "GENERIC_MINE_CAPEX_CEILING", 400000.0, kind="temporary_heuristic",
-        unit="denarii per tonne/year (maximum)", source=None,
-        confidence="D",
-        why="Safety ceiling so an extremely dear material's fitted mine "
-            "capex never runs away to an implausible figure. A defensive "
-            "bound, not a reasoned ceiling.")
+    # Capex per tonne/year is the labour to sink and equip the shafts that
+    # tonne needs (sim.world.deposits), at the miner's wage. It never reads
+    # the material's price. Capacity needs as many shafts as the rock to be
+    # raised requires, so a lean ore costs more capex per tonne of metal.
+    # The typical working of a metal is its named deposits weighted by
+    # output; a material with no deposit data is worked as a shallow seam
+    # of the material itself.
+    GENERIC_MINE_DEPTH_CLASS = declare(
+        "GENERIC_MINE_DEPTH_CLASS", "shallow_vein", kind="temporary_heuristic",
+        unit="depth class of deposits.py", source=None, confidence="D",
+        why="Depth of the workings assumed for a material with no named "
+            "deposits; replace with per-material deposit data.")
+    GENERIC_MINE_HARDNESS_CLASS = declare(
+        "GENERIC_MINE_HARDNESS_CLASS", "medium", kind="temporary_heuristic",
+        unit="hardness class of deposits.py", source=None, confidence="D",
+        why="Rock hardness assumed for a material with no named deposits; "
+            "replace with per-material deposit data.")
+    MINE_TRADE = "miner"
+    _MINE_PROFILE_CACHE = {}
+
+    def _mine_reference_deposits(self, mat):
+        """(deposit, weight) pairs describing a typical working of `mat`."""
+        if mat in deposit_model.METALS:
+            pool = deposit_model.load_deposits(mat)
+            total = sum(dep.quantity_tonnes_per_year for dep in pool)
+            return [(dep, dep.quantity_tonnes_per_year / total) for dep in pool]
+        seam = deposit_model.Deposit(
+            name="generic_" + mat, metal=mat, region="", material_moved="ore",
+            ore_grade_kg_per_tonne=KILOGRAMS_PER_TONNE,
+            depth_class=self.GENERIC_MINE_DEPTH_CLASS,
+            hardness_class=self.GENERIC_MINE_HARDNESS_CLASS,
+            quantity_tonnes_per_year=1.0, note="")
+        return [(seam, 1.0)]
+
+    def _mine_labour_hours_per_tonne(self, mat):
+        """(build hours per tonne/year, running hours per tonne) of a typical
+        working of `mat`, output-weighted across its deposits."""
+        cached = self._MINE_PROFILE_CACHE.get(mat)
+        if cached is None:
+            pairs = self._mine_reference_deposits(mat)
+            build = sum(weight * deposit_model.build_cost_labour_hours_per_tonne_year(dep)
+                        for dep, weight in pairs)
+            running = sum(weight * KILOGRAMS_PER_TONNE
+                          * deposit_model.extraction_cost_labour_hours_per_kg(dep)
+                          for dep, weight in pairs)
+            cached = self._MINE_PROFILE_CACHE[mat] = (build, running)
+        return cached
 
     def _mine_capex_opex(self, mat):
         """(capex per t/yr to sink, opex per t/yr to run) for standing
-        production of `mat` - the curated figure for the seven originally
-        tracked metals, unchanged; a generic figure derived from the
-        material's own book price (see the class comment above) for
-        anything else this file can price at all. (None, None) for a name
-        nothing prices - the only way this stays "no such material,"
-        rather than an arbitrary string being accepted."""
-        if mat in self.MINE_CAPEX_PER_T_YR:
-            return self.MINE_CAPEX_PER_T_YR[mat], self.MINE_OPEX_PER_T.get(mat, 0.0)
-        price = self._book_price_per_kg(mat)
-        if price is None or price <= 0:
-            return None, None
-        capex = max(self.GENERIC_MINE_CAPEX_FLOOR,
-                    min(self.GENERIC_MINE_CAPEX_CEILING,
-                        self.GENERIC_MINE_CAPEX_MULTIPLE * price))
-        return capex, capex * self.GENERIC_MINE_OPEX_SHARE
+        production of `mat`. Capex is derived from the physical works;
+        opex is the curated figure where there is one, else the deposits'
+        own extraction labour. (None, None) for a name nothing prices."""
+        if mat not in self.MINE_OPEX_PER_T:
+            price = self._book_price_per_kg(mat)
+            if price is None or price <= 0:
+                return None, None
+        wage = self.wage_per_hour(self.MINE_TRADE)
+        build_hours, running_hours = self._mine_labour_hours_per_tonne(mat)
+        opex = self.MINE_OPEX_PER_T.get(mat, running_hours * wage)
+        return build_hours * wage, opex
 
     def _mine_capex(self, mat):
         capex, _opex = self._mine_capex_opex(mat)
@@ -189,7 +175,7 @@ class MiningMixin:
         COMMODITY_DYNAMISM.md) as well-sourced headline cases, and also
         points at the generic fallback below: not a hard, closed list.
         """
-        named = ", ".join(sorted(self.MINE_CAPEX_PER_T_YR))
+        named = ", ".join(sorted(self.MINE_OPEX_MATERIALS))
         return ("well-known workings: %s - or any other material key the "
                 "tree uses (for example aluminium_kg), priced from its own "
                 "book price if nothing more specific is known about it"
@@ -305,7 +291,7 @@ class MiningMixin:
             "capacity.")
     REVENUE_SCALE_DENARII = declare(
         "REVENUE_SCALE_DENARII", 60000.0, kind="temporary_heuristic",
-        unit="denarii/year of revenue for +100% ceiling", source=None,
+        book_money=True, unit="denarii/year of revenue for +100% ceiling", source=None,
         confidence="D",
         why="How much annual revenue it takes to double a standing "
             "ceiling via REVENUE_SCALE_CAP_MULTIPLE, reused identically in "
@@ -596,8 +582,7 @@ class MiningMixin:
 
     def mining_cost_scale(self, mat):
         """What sinking or running a tonne/yr of this material costs THIS
-        YEAR, relative to MINE_CAPEX_PER_T_YR/MINE_OPEX_PER_T's own book
-        price: technology (mining_tech's cost multiplier) against depletion
+        YEAR, relative to the derived capex and opex: technology (mining_tech's cost multiplier) against depletion
         (mine_depletion_factor, inverted -- the same effort recovers less
         from a half-worked deposit, so it costs proportionally more per
         tonne) pulling against each other. This is "deeper ones cost more"
@@ -696,11 +681,10 @@ class MiningMixin:
                 "every_year_it_stands": round(opex, 1),
                 "years_before_it_produces": self.MINE_LEAD_YEARS,
                 "you_have": round(household.capital, 1),
-                "you_could_raise": round(self.spending_power("buy"), 1),
-                "you_can_afford_about": round(
-                    self.spending_power("buy") / max(cap * self.price_index * scale, 1e-9), 3),
-                "afford_means": "cash plus half the credit line, which is what "
-                                "a lender will advance against a purchase",
+                "you_could_raise": round(purchase_rule.purchase_budget(self), 1),
+                "you_can_afford_about": min(room, purchase_rule.affordable_units(
+                    self, cap * self.price_index * scale, decimals=3)),
+                "afford_means": purchase_rule.afford_means(),
                 "the_ground_here_could_ever_support": round(ceiling, 1),
                 "room_left_before_geology_stops_you": round(room, 1),
                 "current_yield_is_this_fraction_of_day_one": round(depl, 3),
@@ -841,7 +825,8 @@ class MiningMixin:
         # blasting or a railway -- see that method's own comment.
         scale = self.mining_cost_scale(mat)
         cost = t_per_yr * cap * self.price_index * scale
-        if cost > household.capital:
+        # A shaft that costs nothing needs no budget check.
+        if cost > 0 and not purchase_rule.can_pay(self, cost):
             # A COMMAND YOU TYPED IS NOT A STANDING ORDER TO SPEND EVERYTHING:
             # silently spending all available capital and handing back a
             # fraction of the mine actually asked for is not what a typed
@@ -852,8 +837,9 @@ class MiningMixin:
             # request for a particular mine.
             if not partial:
                 return 0.0
-            t_per_yr = household.capital / (cap * self.price_index * scale)
-            cost = household.capital
+            t_per_yr = purchase_rule.affordable_units(
+                self, cap * self.price_index * scale, decimals=6)
+            cost = t_per_yr * cap * self.price_index * scale
         if t_per_yr <= 0:
             return 0.0
         household.capital -= cost
@@ -1078,7 +1064,8 @@ class MiningMixin:
         if hectares <= 0:
             return 0.0
         cost = hectares * self.FOREST_COST_PER_HA * self.price_index
-        if cost > household.capital:
+        # A shaft that costs nothing needs no budget check.
+        if cost > 0 and not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
         economy.forest_ha += hectares

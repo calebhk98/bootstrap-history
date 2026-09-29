@@ -3,8 +3,6 @@
 
     python3 sim/solve_prices.py                        every price, in labour-hours
     python3 sim/solve_prices.py --why iron_bar_kg       full recursive cost breakdown
-    python3 sim/solve_prices.py --compare               computed price vs prices.json,
-                                                         as a ratio, worst disagreement first
 
 STANDALONE AND READ-ONLY. This tool computes prices; nothing in `sim/engine/`
 reads them yet. `data/prices.json` still runs the game. That wiring is a
@@ -24,8 +22,8 @@ Every input price on the right is defined by the same equation, so this is a
 system of equations rather than a lookup, solved for the fixed point where
 every price is consistent with every other. `data/production/` supplies
 `quantity_per_unit` (its `inputs`) and `hours_per_unit` (its `labour_hours`)
-for 182 materials once byproducts are counted; `data/prices.json`
-`wage_rates_denarii_per_hour` supplies the wage ratios. Nothing here is a
+for 182 materials once byproducts are counted; the labour-market wage
+provider (`sim/world/wages.py`) supplies the wage ratios. Nothing here is a
 lookup of a finished price - only of the physical recipe and the relative
 wage, which is what the mechanism is allowed to take as given.
 
@@ -500,8 +498,7 @@ reads the SAME `thermal_mj` field and the SAME (optional)
 and grades the price behind the name rather than the name itself. If a
 future round DOES own every consumer (or the split is judged worth a
 coordinated rewrite anyway), separate band materials remain available
-and would give each band its own resolvable price for `--why` and
-`--compare` to show directly, rather than the graded price computed on
+and would give each band its own resolvable price for `--why` to show directly, rather than the graded price computed on
 demand the way this round shows it (see print_why's own ENERGY section
 below) - a real trade-off, not a decision this round claims to have
 closed.
@@ -614,42 +611,27 @@ than one material (smelting galena yields lead AND silver; roasting coal
 yields carbon AND coal tar). Both are the same underlying question - how much
 of a process's cost belongs to a given unit of a given output - and this
 script answers both with one mechanism: cost the whole process, then split
-that cost across its outputs in proportion to each output's own current price
-times its quantity (net-realisable-value allocation, the standard treatment
-of joint cost in cost accounting). A single-output recipe is just the case
+that cost across its outputs in proportion to each output's value (price times
+quantity). An output with a household demand curve is valued at its
+market-clearing price (sim/joint_allocation.py, sim/world/demand.py); the rest
+at their current price, or at the batch's standalone unit cost when mixed with
+anchored ones. A single-output recipe is just the case
 where one output holds 100% of the value share. Where a material has several
 candidate recipes, its price is the CHEAPEST of what each recipe implies for
 it - the solver picks the technique a rational producer would pick at current
 prices, and because prices move as the solve iterates, technique choice
 iterates alongside it exactly as the design doc's Part 2.1 says it must.
 
-JOINT BYPRODUCTS WITHOUT AN INDEPENDENT ANCHOR ARE NOT REALLY PRICED, AND
-THIS SCRIPT SAYS SO RATHER THAN PRINTING THE NUMBER AS IF THEY WERE. Running
-the solve and inspecting every joint-production recipe shows the same thing
-every time: a MINOR co-product (silver from lead smelting, platinum from
-nickel refining, germanium and indium from zinc electrolysis, coal tar from
-coke-making) converges to EXACTLY the same price per physical unit as its
-DOMINANT co-product, no matter how the price search is seeded. That is not a
-finding about silver and platinum being cheap - it is `recipe_cost_and_
-allocation`'s net-realisable-value split degenerating to a plain mass split
-whenever nothing else in the system independently prices the minor output.
-The algebra: at a fixed point, value_i = quantity_i * price_i for every
-output of one recipe, and the value split is itself computed FROM those same
-prices, so "every output priced identically per unit" is a self-consistent
-answer whenever no other equation constrains it - and for these five
-materials, nothing else does, because their only OTHER recipe (if any, like
-silver's direct patio-amalgamation route) turns out more expensive at the
-degenerate price and is never selected. This is the textbook joint-production
-result from classical price theory: a system with one process and two goods
-has one equation short of pinning down both prices, and closing the gap needs
-demand, or a second independent process that actually binds - this dataset
-has neither yet. `minor_joint_byproducts_are_unanchored` finds exactly this
-set by checking, on the CONVERGED, CHOSEN recipe for each material, whether
-it is a joint recipe where this material holds under half the batch's value.
-Flagged materials print with a `(*)` and a named warning, in every mode -
-their number is a real lower bound on cost (the batch really did cost that
-much to run) but not a real relative price, and treating it as one would be
-worse than saying plainly that this round cannot separate it out.
+JOINT BYPRODUCTS WITHOUT A DEMAND ANCHOR ARE NOT REALLY PRICED, AND THIS
+SCRIPT SAYS SO. With no anchor, a minor co-product converges to the same price
+per unit as its dominant co-product (a mass split): one process and two goods
+is one equation short. Demand closes the gap for goods in the household basket
+with a known supply (silver). The rest (platinum, germanium, indium, coal tar)
+have no demand curve yet. `minor_joint_byproducts_are_unanchored` finds them
+by checking, on the converged recipe for each material, whether it is a joint
+recipe with no anchored output where this material holds under half the
+batch's value. Flagged materials print with a `(*)`: a real lower bound on
+cost, not a real relative price.
 
 CYCLES ARE EXPECTED BY THE ITERATION, AND NOW ACCEPTED BY THE PASS IN FRONT
 OF IT TOO (Complaints/31, fixed). Iron needs charcoal; charcoal needs timber
@@ -774,8 +756,8 @@ from sim.validate_production import load_production, materials_the_tree_consumes
 #                                   and energy cost, choice of technique,
 #                                   and the damped fixed-point `solve` loop
 #     sim/solve_prices_report.py   the reporting front end: `print_why`,
-#                                   the default price table, the `--compare`
-#                                   report, and the CLI's own `main`
+#                                   the default price table, and the
+#                                   CLI's own `main`
 #
 # This docstring above - THE mechanism essay - lives here rather than with
 # either sibling: every "see the module docstring" comment in both sibling
@@ -841,7 +823,6 @@ from sim.solve_prices_report import (                # noqa: E402
     _print_unpriceable_materials,
     _print_value_share_or_total,
     _resolved_recipe_id_or_none,
-    _run_compare_report,
     _run_default_report,
     _run_why_report,
     format_hours,

@@ -1,5 +1,7 @@
 # Idle directed hours need better late-game handling
 
+**Status:** open
+
 In the Rome run, thousands of directed hours per year were often unused while waiting for calendar floors on long projects. A mature optimized civilization can apparently reach vastly larger pools of idle capacity.
 
 The game should make unused organizational capacity impossible to miss and easy to allocate.

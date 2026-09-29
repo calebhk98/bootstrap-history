@@ -286,10 +286,10 @@ check("...while single_crystal is still mandatory for the goal itself - "
       "concept, is where single-crystal growth belongs",
       "single_crystal" in NODES["junction_transistor"]["pre"],
       NODES["junction_transistor"]["pre"])
-check("...and the goal's required closure is unchanged at 154 nodes - "
+check("...and the goal's required closure is unchanged at 160 nodes - "
       "loosening the contradictory gate did not also loosen what the "
       "goal actually needs",
-      len(S.closure(NODES, GOAL)) == 154, len(S.closure(NODES, GOAL)))
+      len(S.closure(NODES, GOAL)) == 160, len(S.closure(NODES, GOAL)))
 
 # THE BUG CLASS, not just the one instance: a node's own note disclaiming a
 # prerequisite ("no X and no Y, neither of which existed yet", "X had not

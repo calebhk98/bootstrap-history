@@ -101,11 +101,7 @@ import collections
 from typing import Optional
 
 from sim.constants import declare
-# sim.unit_conversions carries the same "imports nothing but sim.constants"
-# property sim.constants itself already has (see that module's own module
-# docstring), so importing it is not the cross-domain wiring this file's own
-# STANDALONE section forbids - it is infrastructure, not a sim/world/ domain
-# module this file would otherwise be coupled to.
+# unit_conversions is infrastructure, not cross-domain wiring.
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, METERS_PER_KILOMETER, PERCENT_SCALE
 
 # ============================================================================
@@ -137,11 +133,7 @@ JOULES_PER_KCAL = declare(
 # ============================================================================
 # DRAUGHT ANIMAL METABOLISM
 # ============================================================================
-# An animal eats to do two different things: stay alive (maintenance) and do
-# external mechanical work (hauling, climbing). Maintenance is derived from
-# body mass via the standard interspecific mammalian scaling law rather than
-# stated per species, so the model has a real mechanism for "a bigger animal
-# eats more even standing still" rather than a table of invented numbers.
+# Maintenance (Kleiber's law) + work. Bigger animals eat more by metabolic scaling.
 
 KLEIBER_BASAL_METABOLIC_COEFFICIENT_KCAL_PER_DAY = declare(
     "KLEIBER_BASAL_METABOLIC_COEFFICIENT_KCAL_PER_DAY", 70.0,
@@ -224,13 +216,7 @@ FEED_ENERGY_DENSITY_KCAL_PER_KG = declare(
 # ============================================================================
 # ANIMAL TABLE
 # ============================================================================
-# Each animal is a bundle of independently-sourced physical facts: how heavy
-# it is (sets its maintenance cost via Kleiber's law, and its own share of
-# gradient-climbing work), how much of its own weight it can sustain as a
-# pull or a pack load, how fast it walks, and how many hours a day it can
-# actually be worked. None of these is fitted to reproduce a transport cost -
-# they are the same order-of-magnitude figures found across draught-animal
-# husbandry and veterinary literature.
+# Mass, pull/pack fractions, walking speed, working hours. Independently sourced.
 
 Animal = collections.namedtuple(
     "Animal",
@@ -454,15 +440,7 @@ DEFAULT_PACK_ANIMAL = MULE
 # ============================================================================
 # VEHICLE TABLE
 # ============================================================================
-# A vehicle contributes two things: dead weight the team has to haul or
-# carry before any cargo at all, and a service life that turns distance
-# travelled into a fraction of the vehicle worn out. Neither service-life
-# figure below has a real citation - no fatigue-life study of an ancient
-# cart wheel exists inside this project - so both are `temporary_heuristic`,
-# unlike almost everything else in this file. See the module docstring's
-# WHAT THIS MODULE DOES NOT DO for what the resulting wear figure leaves out
-# (it does not scale with load, which understates a heavy wagon's true wear
-# relative to a light one).
+# Dead weight + service life (wear per km). Service-life figures are heuristic.
 
 Vehicle = collections.namedtuple(
     "Vehicle", ["name", "self_mass_kg", "service_life_km"])
@@ -592,15 +570,9 @@ BARGE = Vehicle(
     service_life_km=BARGE_SERVICE_LIFE_KM)
 
 # ============================================================================
-# SURFACE TABLE: rolling resistance, the thing that makes a road a road
+# SURFACE TABLE: rolling resistance
 # ============================================================================
-# A rolling-resistance coefficient is force needed to keep a wheel rolling,
-# divided by the weight pressing it into the ground - the standard vehicle-
-# dynamics way to state how much a surface costs a wheeled vehicle, reused
-# here unchanged rather than reinvented. These three surfaces are the same
-# wheel (wood, iron-tired) on three different Roman-era road conditions; the
-# coefficient is what differs, and multiplying by weight is what makes that
-# difference show up as cargo capacity in max_cargo_mass_kg below.
+# Rolling-resistance coefficient: force/weight ratio (standard vehicle dynamics).
 
 Surface = collections.namedtuple(
     "Surface", ["name", "rolling_resistance_coefficient"])
@@ -697,13 +669,7 @@ CALM_WATER = Surface(
 # ============================================================================
 # ILLUSTRATIVE GEOGRAPHY DEFAULTS
 # ============================================================================
-# Grade and river current are properties of a PLACE, exactly like
-# sim/world/agriculture.py's Land.quality - they are legitimate inputs under
-# CLAUDE.md SS3.1 ("geography... and initial conditions"), passed as plain
-# function arguments everywhere in this module rather than baked in as
-# defaults. The two figures below exist only so this module's own __main__
-# demonstration and sim/tests/test_transport.py have a concrete, sourced
-# example to run against - no function in this module reads them itself.
+# Examples for __main__ and tests only; all functions take these as parameters.
 
 TYPICAL_MOUNTAIN_PASS_GRADE_FRACTION = declare(
     "TYPICAL_MOUNTAIN_PASS_GRADE_FRACTION", 0.08,

@@ -1,6 +1,8 @@
 # Add independent firms, imitation and entrepreneurship
 
-**Source:** playtest findings document, LATE-001. **Status:** Major
+**Status:** partly - actor model, government imitation and firm entry built; labour-market competition and player choices remain
+
+**Source:** playtest findings document, LATE-001. **Type:** Major
 roadmap-sized feature recommendation, not a fix.
 
 ## The player's reasoning
@@ -77,6 +79,19 @@ pick up expecting a contained fix.
 
 `Complaints/106` (ECON-004) and `Complaints/119` (ARCH-001) both note that
 `labour_market.py` and `demand.py` are unwired prerequisites for this.
-`Complaints/105` (ECON-003, extreme wealth is not inherently a bug) should
+`docs/architecture/DESIGN_PRINCIPLES.md` (ECON-003, extreme wealth is not inherently a bug) should
 be read alongside this: independent firms are the mechanism that is
 supposed to erode founder margin over time, not a revenue nerf.
+
+## Progress
+
+Built: the `Actor` base with a policy interface, `Household`, `Government` and
+`Firm` actors, value-derived imitation of the founder's inventions, and firm
+entry into proven concerns. See `docs/architecture/ACTORS.md`.
+
+Remaining: firms hiring from and competing in the shared labour and material
+markets (their staff do not yet draw on the society's labour pool), erosion of
+the founder's own margin from competitors, the player's choices (license,
+publish, patent, keep secret, spin off), joint-stock companies, other
+countries as full players with their own locations and policies, fog of war
+for actor observation, and workers leaving the founder to found firms.

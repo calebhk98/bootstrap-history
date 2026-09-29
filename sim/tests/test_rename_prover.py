@@ -18,6 +18,8 @@ verification tool nobody verified is a rubber stamp, and a rubber stamp on
 hand it one known-good and seven known-bad edits and require it to sort them
 correctly - if a future change to the prover makes it more permissive, this
 fails here rather than silently approving a real change to the simulation.
+
+Verifies the rename prover itself.
 """
 from .harness import *
 

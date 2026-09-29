@@ -1,5 +1,7 @@
 # Add a generic "why did this number change?" inspector
 
+**Status:** open
+
 Many important numbers change significantly each turn. A player trying to understand the civilization's trajectory needs to see what caused each major change.
 
 ## Useful for

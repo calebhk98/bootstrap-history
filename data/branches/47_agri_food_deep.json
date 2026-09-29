@@ -35,7 +35,7 @@
   "name": "Ridging plough",
   "cat": "field_machinery",
   "pre": [
-   "coulter",
+   "ag2_coulter",
    "horse_collar"
   ],
   "traits": [
@@ -194,7 +194,7 @@
   "cat": "field_machinery",
   "pre": [
    "horse_collar",
-   "cultivator",
+   "ag2_cultivator",
    "fud_seed_drill"
   ],
   "traits": [
@@ -229,7 +229,6 @@
   "cat": "field_machinery",
   "pre": [
    "horse_collar",
-   "cam",
    "master_screw"
   ],
   "traits": [
@@ -297,8 +296,7 @@
   "name": "Reaper-binder",
   "cat": "field_machinery",
   "pre": [
-   "reaper",
-   "twine"
+   "ag2_reaper"
   ],
   "traits": [
    "labour_saving"
@@ -331,8 +329,8 @@
   "name": "Combine harvester",
   "cat": "field_machinery",
   "pre": [
-   "reaper_binder",
-   "threshing_machine",
+   "ag2_reaper_binder",
+   "ag2_threshing_machine",
    "steam_high_pressure",
    "cap_power_steam",
    "fud_mechanical_reaper",
@@ -384,7 +382,7 @@
   "name": "Mower",
   "cat": "field_machinery",
   "pre": [
-   "reaper",
+   "ag2_reaper",
    "horse_collar"
   ],
   "traits": [
@@ -449,8 +447,6 @@
   "name": "Baler",
   "cat": "field_machinery",
   "pre": [
-   "hay_rake",
-   "twine",
    "steam_high_pressure"
   ],
   "req_any": [
@@ -541,7 +537,7 @@
   "name": "Winnower",
   "cat": "field_machinery",
   "pre": [
-   "threshing_machine"
+   "ag2_threshing_machine"
   ],
   "req_any": [
    {
@@ -582,8 +578,8 @@
   "name": "Fanning mill",
   "cat": "field_machinery",
   "pre": [
-   "winnower",
-   "threshing_machine"
+   "ag2_winnower",
+   "ag2_threshing_machine"
   ],
   "req_any": [
    {
@@ -687,7 +683,7 @@
   "cat": "field_machinery",
   "pre": [
    "horse_collar",
-   "ridging_plough"
+   "ag2_ridging_plough"
   ],
   "traits": [
    "labour_saving"
@@ -718,9 +714,7 @@
   "name": "Steam tractor",
   "cat": "field_machinery",
   "pre": [
-   "steam_high_pressure",
-   "boiler_steel",
-   "wheel_drive"
+   "steam_high_pressure"
   ],
   "traits": [
    "labour_saving",
@@ -754,7 +748,7 @@
   "name": "Caterpillar track",
   "cat": "field_machinery",
   "pre": [
-   "tractor_steam"
+   "ag2_tractor_steam"
   ],
   "traits": [
    "labour_saving",
@@ -788,7 +782,7 @@
   "name": "Power take-off shaft",
   "cat": "field_machinery",
   "pre": [
-   "tractor_steam",
+   "ag2_tractor_steam",
    "crank_conrod"
   ],
   "traits": [
@@ -823,8 +817,8 @@
   "name": "Three-point linkage",
   "cat": "field_machinery",
   "pre": [
-   "tractor_steam",
-   "power_take_off"
+   "ag2_tractor_steam",
+   "ag2_power_take_off"
   ],
   "traits": [
    "labour_saving",
@@ -972,8 +966,7 @@
   "name": "The nitrogen cycle as knowledge",
   "cat": "soil",
   "pre": [
-   "scientific_method",
-   "chemical_theory"
+   "scientific_method"
   ],
   "traits": [
    "information"
@@ -1002,7 +995,7 @@
   "name": "Rhizobia and legume nodulation",
   "cat": "soil",
   "pre": [
-   "nitrogen_cycle",
+   "ag2_nitrogen_cycle",
    "microscope_compound"
   ],
   "traits": [
@@ -1090,8 +1083,8 @@
   "name": "Superphosphate",
   "cat": "soil",
   "pre": [
-   "sulfuric_acid",
-   "bone_meal"
+   "sulfuric_retort",
+   "ag2_bone_meal"
   ],
   "traits": [
    "infrastructure"
@@ -1102,7 +1095,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_sulfuric_acid": 600,
+   "sulfuric_acid_kg": 600,
    "mat_bone": 400
   },
   "cap": 420,
@@ -1123,7 +1116,7 @@
   "name": "Basic slag",
   "cat": "soil",
   "pre": [
-   "bessemer_openhearth"
+   "mat_bulk_steel"
   ],
   "traits": [
    "infrastructure"
@@ -1134,7 +1127,7 @@
    "chemist": 150
   },
   "mat": {
-   "basic_slag": 800
+   "basic_slag_kg": 800
   },
   "cap": 250,
   "up": 35,
@@ -1183,7 +1176,6 @@
   "name": "Guano",
   "cat": "soil",
   "pre": [
-   "exp_guano_islands",
    "ag2_guano_deposit_access"
   ],
   "traits": [
@@ -1215,7 +1207,7 @@
   "cat": "soil",
   "pre": [
    "coal_coke",
-   "sulfuric_acid"
+   "sulfuric_retort"
   ],
   "traits": [
    "infrastructure"
@@ -1244,7 +1236,7 @@
   "name": "Urea as fertiliser",
   "cat": "soil",
   "pre": [
-   "haber_bosch_ammonia",
+   "chm_haber_bosch",
    "ch2_prod_urea"
   ],
   "traits": [
@@ -1286,8 +1278,7 @@
   "name": "Soil testing",
   "cat": "soil",
   "pre": [
-   "analytical_chemistry",
-   "laboratory"
+   "analytical_chemistry"
   ],
   "traits": [
    "information"
@@ -1316,7 +1307,6 @@
   "name": "Tile drainage",
   "cat": "soil",
   "pre": [
-   "ceramic_kiln",
    "horse_collar"
   ],
   "traits": [
@@ -1329,7 +1319,7 @@
    "mason": 250
   },
   "mat": {
-   "ceramic_tiles": 2000
+   "ceramic_kg": 2000
   },
   "cap": 350,
   "up": 50,
@@ -1372,7 +1362,7 @@
    "mason": 300
   },
   "mat": {
-   "ceramic_pipes": 1500,
+   "ceramic_kg": 1500,
    "cast_iron_kg": 200
   },
   "cap": 500,
@@ -1457,7 +1447,6 @@
   "name": "Erosion control - wind breaks and mulch",
   "cat": "soil",
   "pre": [
-   "trees",
    "crop_rotation"
   ],
   "traits": [
@@ -1516,8 +1505,7 @@
   "name": "Controlled pollination",
   "cat": "plants",
   "pre": [
-   "record_keeping_breeding",
-   "botanical_knowledge",
+   "ag2_record_keeping_breeding",
    "fud_selective_breeding_pedigree"
   ],
   "traits": [
@@ -1547,7 +1535,7 @@
   "name": "Hybridisation",
   "cat": "plants",
   "pre": [
-   "controlled_pollination"
+   "ag2_controlled_pollination"
   ],
   "traits": [
    "information"
@@ -1555,7 +1543,7 @@
   "kb": "76_farming_food_deep.md#ag2_record_keeping_breeding",
   "ph": 120,
   "lab": {
-   "botanist": 400
+   "scholar": 400
   },
   "mat": {},
   "cap": 400,
@@ -1576,8 +1564,8 @@
   "name": "Hybrid maize",
   "cat": "plants",
   "pre": [
-   "hybridisation",
-   "pure_line_selection"
+   "ag2_hybridisation",
+   "ag2_pure_line_selection"
   ],
   "traits": [
    "food"
@@ -1585,7 +1573,7 @@
   "kb": "76_farming_food_deep.md#ag2_record_keeping_breeding",
   "ph": 150,
   "lab": {
-   "botanist": 450
+   "scholar": 450
   },
   "mat": {},
   "cap": 480,
@@ -1606,7 +1594,7 @@
   "name": "Pure line selection",
   "cat": "plants",
   "pre": [
-   "record_keeping_breeding"
+   "ag2_record_keeping_breeding"
   ],
   "traits": [
    "information"
@@ -1614,7 +1602,7 @@
   "kb": "76_farming_food_deep.md#ag2_record_keeping_breeding",
   "ph": 110,
   "lab": {
-   "botanist": 350
+   "scholar": 350
   },
   "mat": {},
   "cap": 380,
@@ -1635,7 +1623,7 @@
   "name": "The seed trade",
   "cat": "plants",
   "pre": [
-   "record_keeping_breeding"
+   "ag2_record_keeping_breeding"
   ],
   "traits": [
    "commerce",
@@ -1665,8 +1653,8 @@
   "name": "Seed certification",
   "cat": "plants",
   "pre": [
-   "seed_trade",
-   "soil_testing"
+   "ag2_seed_trade",
+   "ag2_soil_testing"
   ],
   "traits": [
    "commerce",
@@ -1702,7 +1690,7 @@
   "kb": "76_farming_food_deep.md#ag2_grafting",
   "ph": 50,
   "lab": {
-   "gardener": 150
+   "labourer": 150
   },
   "mat": {},
   "cap": 200,
@@ -1723,7 +1711,7 @@
   "name": "Budding",
   "cat": "plants",
   "pre": [
-   "grafting"
+   "ag2_grafting"
   ],
   "traits": [
    "labour_saving"
@@ -1731,7 +1719,7 @@
   "kb": "76_farming_food_deep.md#ag2_grafting",
   "ph": 45,
   "lab": {
-   "gardener": 130
+   "labourer": 130
   },
   "mat": {},
   "cap": 180,
@@ -1758,7 +1746,7 @@
   "kb": "76_farming_food_deep.md#ag2_grafting",
   "ph": 40,
   "lab": {
-   "gardener": 100
+   "labourer": 100
   },
   "mat": {},
   "cap": 150,
@@ -1779,8 +1767,7 @@
   "name": "Rootstocks as knowledge",
   "cat": "plants",
   "pre": [
-   "grafting",
-   "botanical_knowledge"
+   "ag2_grafting"
   ],
   "traits": [
    "information"
@@ -1788,7 +1775,7 @@
   "kb": "76_farming_food_deep.md#ag2_grafting",
   "ph": 100,
   "lab": {
-   "botanist": 300
+   "scholar": 300
   },
   "mat": {},
   "cap": 320,
@@ -1819,7 +1806,7 @@
   "kb": "76_farming_food_deep.md#ag2_botanic_garden",
   "ph": 90,
   "lab": {
-   "botanist": 280
+   "scholar": 280
   },
   "mat": {},
   "cap": 300,
@@ -1839,9 +1826,7 @@
   "id": "ag2_botanic_garden",
   "name": "Botanic garden as instrument of empire",
   "cat": "plants",
-  "pre": [
-   "exploration_network"
-  ],
+  "pre": [],
   "traits": [
    "information",
    "spectacle"
@@ -1849,8 +1834,8 @@
   "kb": "76_farming_food_deep.md#ag2_botanic_garden",
   "ph": 110,
   "lab": {
-   "botanist": 350,
-   "gardener": 250
+   "scholar": 350,
+   "labourer": 250
   },
   "mat": {},
   "cap": 400,
@@ -1884,7 +1869,7 @@
    "glassblower": 300
   },
   "mat": {
-   "mat_glass_soda": 40
+   "glass_raw_kg": 40
   },
   "cap": 320,
   "up": 0,
@@ -1904,8 +1889,6 @@
   "name": "Sugar cultivation after voyage",
   "cat": "plants",
   "pre": [
-   "exp_sugar_voyage",
-   "plantation_system",
    "exp_trade_route_extend"
   ],
   "traits": [
@@ -1934,8 +1917,7 @@
   "name": "Tea cultivation after voyage",
   "cat": "plants",
   "pre": [
-   "exp_tea_voyage",
-   "botanic_garden"
+   "ag2_botanic_garden"
   ],
   "traits": [
    "food",
@@ -1964,8 +1946,6 @@
   "name": "Coffee cultivation after voyage",
   "cat": "plants",
   "pre": [
-   "exp_coffee_voyage",
-   "plantation_system",
    "exp_trade_route_extend"
   ],
   "traits": [
@@ -1995,7 +1975,6 @@
   "name": "Potato from the New World",
   "cat": "plants",
   "pre": [
-   "exp_newworld_crops",
    "exp_atlantic_crossing"
   ],
   "traits": [
@@ -2023,7 +2002,6 @@
   "name": "Maize from the New World",
   "cat": "plants",
   "pre": [
-   "exp_newworld_crops",
    "exp_atlantic_crossing"
   ],
   "traits": [
@@ -2051,8 +2029,8 @@
   "name": "Bordeaux mixture",
   "cat": "pests",
   "pre": [
-   "sulfuric_acid",
-   "copper_fire_refined"
+   "sulfuric_retort",
+   "mat_copper"
   ],
   "traits": [
    "food",
@@ -2085,7 +2063,7 @@
   "name": "Lime sulphur",
   "cat": "pests",
   "pre": [
-   "sulfuric_acid",
+   "sulfuric_retort",
    "mat_lime"
   ],
   "traits": [
@@ -2119,8 +2097,7 @@
   "name": "Lead arsenate",
   "cat": "pests",
   "pre": [
-   "lead_metallurgy",
-   "arsenic_extraction"
+   "lead_metallurgy"
   ],
   "traits": [
    "food",
@@ -2152,9 +2129,7 @@
   "id": "ag2_nicotine_pesticide",
   "name": "Nicotine as pesticide",
   "cat": "pests",
-  "pre": [
-   "tobacco_crop"
-  ],
+  "pre": [],
   "traits": [
    "food",
    "labour_saving"
@@ -2185,7 +2160,6 @@
   "name": "Pyrethrum",
   "cat": "pests",
   "pre": [
-   "exp_pyrethrum_voyage",
    "ag2_pyrethrum_stock"
   ],
   "traits": [
@@ -2216,8 +2190,6 @@
   "name": "DDT",
   "cat": "pests",
   "pre": [
-   "organic_chemistry",
-   "chlorination",
    "ch2_rxn_halogenation",
    "chm_benzene",
    "electrolysis_industrial",
@@ -2254,7 +2226,7 @@
   "name": "The sprayer",
   "cat": "pests",
   "pre": [
-   "horse_hoe"
+   "ag2_horse_hoe"
   ],
   "req_any": [
    {
@@ -2306,7 +2278,7 @@
   "kb": "76_farming_food_deep.md#ag2_sprayer",
   "ph": 110,
   "lab": {
-   "naturalist": 350
+   "scholar": 350
   },
   "mat": {},
   "cap": 350,
@@ -2327,8 +2299,7 @@
   "name": "The resistant variety",
   "cat": "pests",
   "pre": [
-   "record_keeping_breeding",
-   "pest_knowledge"
+   "ag2_record_keeping_breeding"
   ],
   "traits": [
    "food",
@@ -2337,7 +2308,7 @@
   "kb": "76_farming_food_deep.md#ag2_sprayer",
   "ph": 120,
   "lab": {
-   "botanist": 380
+   "scholar": 380
   },
   "mat": {},
   "cap": 400,
@@ -2358,7 +2329,7 @@
   "name": "Herd book",
   "cat": "animals",
   "pre": [
-   "record_keeping_breeding"
+   "ag2_record_keeping_breeding"
   ],
   "traits": [
    "information",
@@ -2388,7 +2359,7 @@
   "name": "Progeny testing",
   "cat": "animals",
   "pre": [
-   "herd_book"
+   "ag2_herd_book"
   ],
   "traits": [
    "information"
@@ -2459,9 +2430,7 @@
   "id": "ag2_cream_separator",
   "name": "Cream separator",
   "cat": "animals",
-  "pre": [
-   "centrifuge_industrial"
-  ],
+  "pre": [],
   "req_any": [
    {
     "group": "power",
@@ -2501,7 +2470,7 @@
   "name": "Artificial insemination in cattle",
   "cat": "animals",
   "pre": [
-   "progeny_testing",
+   "ag2_progeny_testing",
    "germ_theory"
   ],
   "traits": [
@@ -2510,7 +2479,7 @@
   "kb": "76_farming_food_deep.md#ag2_progeny_testing",
   "ph": 140,
   "lab": {
-   "veterinarian": 420
+   "scholar": 420
   },
   "mat": {},
   "cap": 480,
@@ -2530,9 +2499,7 @@
   "id": "ag2_silage_silo",
   "name": "Silage and the silo",
   "cat": "animals",
-  "pre": [
-   "lactic_fermentation"
-  ],
+  "pre": [],
   "traits": [
    "labour_saving",
    "food"
@@ -2592,8 +2559,7 @@
   "name": "Veterinary vaccination",
   "cat": "animals",
   "pre": [
-   "germ_theory",
-   "vaccine_technique"
+   "germ_theory"
   ],
   "traits": [
    "medical",
@@ -2602,7 +2568,7 @@
   "kb": "76_farming_food_deep.md#ag2_tuberculin_test",
   "ph": 120,
   "lab": {
-   "veterinarian": 380
+   "scholar": 380
   },
   "mat": {},
   "cap": 400,
@@ -2624,7 +2590,6 @@
   "cat": "animals",
   "pre": [
    "germ_theory",
-   "tuberculosis_knowledge",
    "md2_immunity",
    "sanitation_antisepsis"
   ],
@@ -2656,7 +2621,7 @@
   "name": "Sheep dip",
   "cat": "animals",
   "pre": [
-   "nicotine_pesticide"
+   "ag2_nicotine_pesticide"
   ],
   "traits": [
    "labour_saving",
@@ -2668,7 +2633,7 @@
    "chemist": 200
   },
   "mat": {
-   "nicotine_extract": 800
+   "tobacco_extract": 800
   },
   "cap": 280,
   "up": 40,
@@ -2688,8 +2653,7 @@
   "name": "Battery poultry",
   "cat": "animals",
   "pre": [
-   "incubator",
-   "balanced_ration"
+   "ag2_balanced_ration"
   ],
   "traits": [
    "labour_saving",
@@ -2701,7 +2665,7 @@
    "engineer": 320
   },
   "mat": {
-   "mat_wire": 200,
+   "wire_drawn_kg": 200,
    "cast_iron_kg": 150
   },
   "cap": 450,
@@ -2763,7 +2727,7 @@
   "name": "The purifier",
   "cat": "processing",
   "pre": [
-   "roller_mill"
+   "fud_roller_mill"
   ],
   "traits": [
    "labour_saving"
@@ -2794,8 +2758,7 @@
   "name": "White flour and vitamin loss",
   "cat": "processing",
   "pre": [
-   "purifier",
-   "vitamin_knowledge"
+   "ag2_purifier"
   ],
   "traits": [
    "food",
@@ -2854,16 +2817,14 @@
   "id": "ag2_malting",
   "name": "Malting",
   "cat": "processing",
-  "pre": [
-   "grain_crop"
-  ],
+  "pre": [],
   "traits": [
    "food"
   ],
   "kb": "76_farming_food_deep.md#ag2_malting",
   "ph": 60,
   "lab": {
-   "brewer": 180
+   "artisan": 180
   },
   "mat": {},
   "cap": 240,
@@ -2884,7 +2845,7 @@
   "name": "Mashing",
   "cat": "processing",
   "pre": [
-   "malting"
+   "ag2_malting"
   ],
   "traits": [
    "food"
@@ -2892,7 +2853,7 @@
   "kb": "76_farming_food_deep.md#ag2_malting",
   "ph": 50,
   "lab": {
-   "brewer": 140
+   "artisan": 140
   },
   "mat": {},
   "cap": 180,
@@ -2913,7 +2874,6 @@
   "name": "Hopping",
   "cat": "processing",
   "pre": [
-   "beer_brewing",
    "ag2_hop_stock",
    "ag2_malting"
   ],
@@ -2923,7 +2883,7 @@
   "kb": "76_farming_food_deep.md#ag2_malting",
   "ph": 40,
   "lab": {
-   "brewer": 100
+   "artisan": 100
   },
   "mat": {
    "hops": 300
@@ -2946,7 +2906,7 @@
   "name": "Fermentation control",
   "cat": "processing",
   "pre": [
-   "yeast_culture",
+   "ag2_yeast_culture",
    "thermometer"
   ],
   "traits": [
@@ -2976,9 +2936,7 @@
   "id": "ag2_hydrometer",
   "name": "The hydrometer",
   "cat": "processing",
-  "pre": [
-   "hydrometers"
-  ],
+  "pre": [],
   "traits": [
    "information"
   ],
@@ -2988,7 +2946,7 @@
    "optician": 150
   },
   "mat": {
-   "mat_glass_soda": 30
+   "glass_raw_kg": 30
   },
   "cap": 180,
   "up": 20,
@@ -3017,7 +2975,7 @@
   "kb": "76_farming_food_deep.md#ag2_malting",
   "ph": 60,
   "lab": {
-   "distiller": 180
+   "artisan": 180
   },
   "mat": {
    "copper_kg": 150
@@ -3040,7 +2998,7 @@
   "name": "Column still",
   "cat": "processing",
   "pre": [
-   "pot_still",
+   "ag2_pot_still",
    "crank_conrod"
   ],
   "req_any": [
@@ -3082,9 +3040,7 @@
   "id": "ag2_cheese_families",
   "name": "Cheese families",
   "cat": "processing",
-  "pre": [
-   "lactic_fermentation"
-  ],
+  "pre": [],
   "traits": [
    "food"
   ],
@@ -3110,7 +3066,7 @@
   "name": "Butter",
   "cat": "processing",
   "pre": [
-   "cream_separator"
+   "ag2_cream_separator"
   ],
   "traits": [
    "food"
@@ -3137,8 +3093,8 @@
   "name": "Condensed milk",
   "cat": "processing",
   "pre": [
-   "vacuum_pan",
-   "pasteurisation"
+   "ag2_vacuum_pan",
+   "ag2_pasteurisation"
   ],
   "traits": [
    "food",
@@ -3170,7 +3126,7 @@
   "name": "Evaporated milk",
   "cat": "processing",
   "pre": [
-   "vacuum_pan"
+   "ag2_vacuum_pan"
   ],
   "traits": [
    "food",
@@ -3199,16 +3155,14 @@
   "id": "ag2_oil_pressing",
   "name": "Oil pressing",
   "cat": "processing",
-  "pre": [
-   "leverage"
-  ],
+  "pre": [],
   "traits": [
    "food"
   ],
   "kb": "76_farming_food_deep.md#ag2_oil_pressing",
   "ph": 60,
   "lab": {
-   "miller": 180
+   "artisan": 180
   },
   "mat": {
    "mat_wood": 200
@@ -3231,8 +3185,6 @@
   "name": "Fat hydrogenation",
   "cat": "processing",
   "pre": [
-   "hydrogen_production",
-   "nickel_catalyst",
    "ch2_rxn_catalytic_hydrogenation",
    "mat_nickel"
   ],
@@ -3247,7 +3199,7 @@
   },
   "mat": {
    "mat_nickel": 50,
-   "hydrogen": 200
+   "hydrogen_m3": 200
   },
   "cap": 440,
   "up": 0,
@@ -3267,8 +3219,7 @@
   "name": "Cane and beet sugar refining",
   "cat": "processing",
   "pre": [
-   "vacuum_pan",
-   "centrifugal"
+   "ag2_vacuum_pan"
   ],
   "traits": [
    "food"
@@ -3329,7 +3280,6 @@
   "name": "The centrifugal machine for sugar",
   "cat": "processing",
   "pre": [
-   "centrifuge_industrial",
    "ag2_sugar_voyage"
   ],
   "traits": [
@@ -3361,8 +3311,7 @@
   "name": "Canning",
   "cat": "processing",
   "pre": [
-   "retort",
-   "sterilisation"
+   "ag2_retort"
   ],
   "traits": [
    "food",
@@ -3423,7 +3372,6 @@
   "name": "Double seam can",
   "cat": "processing",
   "pre": [
-   "seamsealing_machine",
    "met_tin_plate"
   ],
   "traits": [
@@ -3465,7 +3413,7 @@
   "ph": 60,
   "lab": {},
   "mat": {
-   "mat_glass_soda": 400
+   "glass_raw_kg": 400
   },
   "cap": 240,
   "up": 30,
@@ -3485,7 +3433,6 @@
   "name": "Crown cork",
   "cat": "processing",
   "pre": [
-   "seamsealing_machine",
    "met_tin_plate"
   ],
   "traits": [
@@ -3552,7 +3499,7 @@
   "name": "Refrigeration - ice trade",
   "cat": "processing",
   "pre": [
-   "ice_harvest"
+   "fud_ice_harvesting_and_cutting"
   ],
   "traits": [
    "food",
@@ -3580,8 +3527,8 @@
   "name": "Cold store",
   "cat": "processing",
   "pre": [
-   "ice_artificial",
-   "insulation"
+   "mat_ice_artificial",
+   "cn_insulation"
   ],
   "req_any": [
    {
@@ -3625,7 +3572,7 @@
   "name": "Refrigerated ship",
   "cat": "processing",
   "pre": [
-   "cold_store",
+   "ag2_cold_store",
    "steam_high_pressure"
   ],
   "req_any": [
@@ -3667,9 +3614,7 @@
   "id": "ag2_nitrite_curing",
   "name": "Nitrite curing",
   "cat": "processing",
-  "pre": [
-   "sodium_nitrite"
-  ],
+  "pre": [],
   "traits": [
    "food"
   ],
@@ -3726,7 +3671,7 @@
   "name": "Adulteration law and enforcement",
   "cat": "processing",
   "pre": [
-   "food_laboratory"
+   "ag2_food_laboratory"
   ],
   "traits": [
    "information",

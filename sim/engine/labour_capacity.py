@@ -24,7 +24,7 @@ onto a whole person without biasing which way growth heads.
 """
 import math
 
-from .data import closure
+from .data import TRADES_ABSENT, WAGES, closure
 from sim.constants import declare
 
 
@@ -256,8 +256,9 @@ class CapacityMixin:
         """
         if trade not in self.LITERATE_TRADES:
             return float("inf")
-        base = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
-                                                     + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
+        base = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
+                * (self.POP_SCALE_FLOOR_SHARE
+                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
         people = base * self.SCHOLAR_MARKET_SHARE / self.HOURS_PER_PERSON_YEAR
         # A FLOOR OF TWO, because the unfloored number said something false.
         # Norse elite literacy is a sixth of Rome's, which took this ceiling to
@@ -290,6 +291,8 @@ class CapacityMixin:
             # which is why a fresh household still sees exactly the
             # market-share figure above and no more.
             cap += self.staff_capacity()[0]
+        if trade not in TRADES_ABSENT:
+            cap = min(cap, self.people_who_exist(trade))
         return cap
 
     def _literate_wall_refusal(self, trade, cap, have):
@@ -780,14 +783,13 @@ class CapacityMixin:
             "the share a household is willing to commit to new staff in a "
             "single year rather than holding back - a caution constant, "
             "not a measured savings rate.")
-    STAFF_ANNUAL_WAGE_REFERENCE = declare(
-        "STAFF_ANNUAL_WAGE_REFERENCE", 420.0, kind="temporary_heuristic",
-        unit="denarii/year at price_index=wage_index=1",
-        source=None, confidence="D",
-        why="A reference annual wage used to convert an affordability "
-            "budget in denarii into a headcount, standing in for the "
-            "actual mix of trades a household would hire into - a rough "
-            "blended figure, not any one trade's real annual_wage().")
+    def staff_wage_reference(self):
+        """Blended annual wage of the trades that exist from the start, used
+        to turn an affordability budget into a headcount."""
+        wages = [self.base_annual_wage(trade) for trade in sorted(WAGES)
+                 if trade not in TRADES_ABSENT]
+        return sum(wages) / len(wages) if wages else self.base_annual_wage("labourer")
+
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(
         "STAFF_EXTRA_HEADROOM_WEIGHT", 1.35, kind="temporary_heuristic",
         unit="dimensionless", source=None, confidence="D",
@@ -900,7 +902,7 @@ class CapacityMixin:
                     * self.rep_factor()
                     + max(0.0, self.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
-        afford = budget / (self.STAFF_ANNUAL_WAGE_REFERENCE * self.price_index * self.wage_index)
+        afford = budget / (self.staff_wage_reference() * self.price_index * self.wage_index)
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
         # this institutional ceiling (see step(), section 1). It must be
         # folded into the SAME denominator this ceiling is scaled against,
@@ -1119,8 +1121,9 @@ class CapacityMixin:
 
     def hired_cap(self):
         # a civilization of 1.5 million cannot staff what one of 65 million can
-        cap = self.cfg["hired_hours_cap_base"] * (self.POP_SCALE_FLOOR_SHARE
-                                                    + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale))
+        cap = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
+               * (self.POP_SCALE_FLOOR_SHARE
+                  + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
         # 1.0 + (mult - 1.0) * sqrt(units): exactly the old `cap *= mult` at
         # units 1.0 (a run that never expands sees the identical multiplier),
         # and SQRT rather than linear beyond that - because these multipliers
@@ -1255,7 +1258,8 @@ class CapacityMixin:
         pair of hands.
         """
         return (getattr(self.household, "teaching_hours_this_year", 0.0)
-                + getattr(self.household, "wage_hours_this_year", 0.0))
+                + (getattr(self.household, "relocation_hours_this_year", 0.0) or 0.0)
+                + self.household.wage_hours_this_year)
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.

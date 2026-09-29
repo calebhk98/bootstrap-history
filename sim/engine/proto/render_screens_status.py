@@ -339,6 +339,20 @@ def render_policy(out):
 
 
 def render_rush(out):
+    if out.get("preview") and "total_cost" in out:
+        lines = ["RUSH PREVIEW (nothing started): %d would start, %s total cost, "
+                 "%s a year" % (out.get("count_would_start", 0),
+                                _fmt_num(out.get("total_cost")),
+                                _fmt_num(out.get("total_annual_draw")))]
+        for row in out.get("would_start") or []:
+            lines.append("  WOULD START %s (%s): %s" % (row.get("id"),
+                         _fmt_num(row.get("cost")), row.get("name")))
+        for row in out.get("not_started") or []:
+            lines.append("  SKIPPED %s: %s" % (row.get("id"), row.get("why")))
+        if out.get("how_to_confirm"):
+            lines.append("")
+            lines.append(_wrap(out["how_to_confirm"]))
+        return "\n".join(lines)
     lines = ["RUSH: %d started, %d not" % (out.get("count_started", 0),
                                        out.get("count_not_started", 0))]
     for row in out.get("started") or []:

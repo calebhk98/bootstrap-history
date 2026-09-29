@@ -78,14 +78,9 @@ from sim.constants import declare
 # ============================================================================
 # AGE BAND BOUNDARIES
 # ============================================================================
-# These two ages are not invented for this project - they are the boundary
-# ages demography as a field already uses. "Women of reproductive age,
-# 15-49" is the definition the UN Demographic Yearbook and WHO fertility
-# statistics are built on; this model borrows it wholesale rather than
-# picking its own cutoffs, and uses the same 15/49 split for the population
-# as a whole (not just women) because the model does not track sex per
-# cohort - see FEMALE_SHARE_OF_WORKING_AGE_POPULATION below for what that
-# simplification costs.
+# UN/WHO demographic convention: "women of reproductive age, 15-49".
+# Applied to entire population (no sex tracking) - see FEMALE_SHARE_OF_
+# WORKING_AGE_POPULATION for what that costs.
 
 WORKING_AGE_LOWER_BOUND_YEARS = declare(
     "WORKING_AGE_LOWER_BOUND_YEARS", 15.0,
@@ -120,70 +115,10 @@ WORKING_AGE_BAND_WIDTH_YEARS = (
 # ============================================================================
 # BASELINE VITAL RATES (nutrition ratio == 1.0, i.e. exactly meeting need)
 # ============================================================================
-# Each of these three is independently anchored to a real historical
-# demography estimate - none of them is fitted to make the model behave.
-# But each estimate above is a RANGE, not a point, and the specific point
-# within its range used here is chosen jointly, because the three together
-# imply a long-run growth rate, and a real pre-industrial population's rates
-# really were close to self-replacing (net reproduction ratio near 1). That
-# is a genuine, sourced fact about history - not this model's outcome -
-# and picking each of the three numbers from within its own documented
-# range so that the model reproduces it is calibration the same way a
-# demographer fitting a historical model life table calibrates it: every
-# number stays inside the range the literature supports, and the criterion
-# used to choose a point inside that range is a different, independently
-# documented fact (crude birth/death rates in the 30-40 per thousand range,
-# life expectancy at birth in the 20s-30s - CLAUDE.md SS3.2's own anchors)
-# rather than a specific dated outcome.
-#
-# WHY THE JOINT CHOICE, NOT EACH RANGE ALONE, MUST BE CHECKED AGAINST
-# STATIONARITY. Each of SURVIVAL_TO_WORKING_AGE, BASELINE_ANNUAL_MORTALITY_
-# RATE_WORKING_AGE and TOTAL_FERTILITY_RATE stays inside its own documented
-# range, but choosing the pessimistic end of all three simultaneously
-# describes a population more extreme than any one citation supports on its
-# own: solving the exact continuous-age Lotka renewal equation for three
-# harsh-end points together gives a net reproduction ratio of 0.9946, not
-# 1.0 - genuinely, if barely, sub-replacement even before this module's own
-# 3-band coarsening adds anything of its own (a coarse-cohort discretization
-# cost, not a new biological claim - see the paragraph below
-# BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE for why refining that
-# discretization further was tried and rejected). A small, compounding
-# deficit like this is easy to miss by eye: -0.03%/year looks negligible per
-# year, but compounds to a 14% loss over the 500 years this game plays,
-# which is not what a "roughly stationary" baseline means and not what
-# CLAUDE.md SS3.2 asks this model to produce.
-#
-# BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE THEREFORE SITS AT ITS RANGE'S
-# MIDPOINT, NOT ITS HARSH END, plus a second, smaller and independently
-# sourced correction (DOUBLE_COUNT_CORRECTION_FACTOR, described where that
-# constant is declared). SURVIVAL_TO_WORKING_AGE and TOTAL_FERTILITY_RATE
-# stay at their own range's harsh end: only one of the three stacked
-# harsh-end choices needs to move to stop the stack, and moving the fewest
-# numbers keeps this auditable. None of the three is a free parameter
-# chosen to hit a specific target figure - the only freedom used is where
-# inside each already-sourced range the numbers sit relative to each other.
-#
-# `stationary()`'s cohort construction agrees with `step`'s own rates: the
-# converged children:working-age ratio it finds (0.6714) and the
-# elderly:working-age ratio it finds (0.4956) both solve this module's own
-# transition matrix's dominant-eigenvalue equation to four decimal places,
-# so `stationary()` is correctly finding this model's own fixed point,
-# including its (small) built-in decline, rather than seeding something the
-# step rates then fight. That decline is present even with jitter=False and
-# constant food, so Jensen's inequality (see `_excess_mortality_multiplier`'s
-# own docstring, the real and separate mechanism behind the FULL engine's
-# larger, weather-driven decline) is not what produces it here - it is a
-# genuine property of these three rates, not sampling noise or variance.
-#
-# `sim/tests/test_demography.py`'s `StationarityTests` (constant food, no
-# jitter) prints the measured figures: crude birth rate 34.0/1000, crude
-# death rate 33.1/1000, life expectancy at birth 30.3 years, net drift over
-# 300 years at subsistence +29.5% (+0.086%/year) - all inside CLAUDE.md
-# SS3.2's targets (25-45/1000 for the crude rates, 18-35 years for e0). The
-# small positive drift is deliberately far short of the ~9.06%/year
-# biological ceiling `GrowthCeilingTests` checks against (a population held
-# exactly at subsistence should be slow, not racing toward that ceiling -
-# that ceiling is for unlimited food, checked separately).
+# Each rate is from historical demography; joint calibration keeps the
+# three from producing sub-replacement growth. BASELINE_ANNUAL_MORTALITY_
+# RATE_WORKING_AGE sits at range midpoint; the other two at harsh end.
+# StationarityTests confirms: ~34/1000 CBR, ~33/1000 CDR, 30.3y e0.
 
 SURVIVAL_TO_WORKING_AGE = declare(
     "SURVIVAL_TO_WORKING_AGE", 0.50,
@@ -253,14 +188,8 @@ DOUBLE_COUNT_CORRECTION_FACTOR = declare(
         "to bother applying', and over the 500 years this game plays even "
         "a fraction of a percent compounds.")
 
-# exp(mean_hazard * -width) == SURVIVAL_TO_WORKING_AGE, per band width, i.e.
-# a constant annual hazard that compounds to the sourced survival fraction
-# over CHILD_BAND_WIDTH_YEARS years - the standard way to turn a life-table
-# survivorship figure into a single-band exponential hazard. The double-
-# count correction is applied on top, as a separate, explicit factor,
-# rather than folded into SURVIVAL_TO_WORKING_AGE itself, so the sourced
-# survival fraction stays legible on its own and the correction stays
-# auditable as its own line.
+# exp(-hazard * width) == SURVIVAL_TO_WORKING_AGE: constant hazard → survival.
+# Double-count correction applied separately to keep correction auditable.
 BASELINE_ANNUAL_MORTALITY_RATE_CHILD = (
     -math.log(SURVIVAL_TO_WORKING_AGE) / CHILD_BAND_WIDTH_YEARS
     * DOUBLE_COUNT_CORRECTION_FACTOR)
@@ -314,12 +243,8 @@ BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE = declare(
         "parameter to make a number come out) wearing a numerical-methods "
         "costume. Rejected for that reason, in favour of the smaller, "
         "auditable, within-cited-range change actually made above.")
-# The double-count correction is applied here, on top of the declared
-# literature figure, for the same reason it is applied on top of
-# SURVIVAL_TO_WORKING_AGE above rather than folded into either sourced
-# number directly: the registry above records the literature midpoint
-# (0.0125) with its own citation; this line's own factor is the separately-
-# sourced adjustment on top of it (see DOUBLE_COUNT_CORRECTION_FACTOR).
+# Double-count correction applied separately to keep literature midpoint
+# (0.0125) auditable and correction auditable.
 BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE *= DOUBLE_COUNT_CORRECTION_FACTOR
 
 REMAINING_LIFE_EXPECTANCY_AT_WORKING_AGE_CEILING_YEARS = declare(
@@ -584,56 +509,14 @@ NUTRITION_YEAR_TO_YEAR_NOISE_STD = declare(
 
 
 # ============================================================================
-# DISEASE AND SANITATION: a second axis, distinct from nutrition, that can
-# take mortality below the pre-industrial baseline and child survival above
-# its pre-industrial 0.5
+# DISEASE AND SANITATION: a second axis, distinct from nutrition
 # ============================================================================
-# `disease_burden` is a plain float, 1.0 to 0.0, that a caller hands to
-# `step()`/`stationary()` alongside the nutrition ratio. It is NOT read from
-# the tech tree or the engine by this module - see the module docstring and
-# this task's own report for what the engine would have to compute to
-# produce one.
-#
-#   1.0  today's default. The full pre-industrial infectious-disease
-#        environment that SURVIVAL_TO_WORKING_AGE and the three
-#        BASELINE_ANNUAL_MORTALITY_RATE_* figures above already describe.
-#        Every scenario that never sets this argument (every test and
-#        engine call site that predates this change) behaves EXACTLY as
-#        before - this axis is additive, not a replacement for the
-#        nutrition one.
-#   0.0  clean water and sewered sanitation, germ theory-informed hygiene
-#        and quarantine, and vaccination all fully present.
-#
-# WHY THIS IS A SEPARATE MULTIPLICATIVE CHANNEL FROM NUTRITION, NOT A
-# REPLACEMENT FOR IT. `_excess_mortality_multiplier` (nutrition) is
-# deliberately floored at 1.0 - see its own docstring for the literature
-# search (Antonovsky's social-class mortality differentials, the British
-# peerage's own mortality record) that found no sourced nutrition-only
-# mortality benefit below the historical baseline, and that conclusion is
-# UNCHANGED and still correct: better-fed pre-industrial populations did not
-# reliably outlive worse-fed ones by much, because nutrition alone was never
-# what was holding pre-industrial mortality up. Disease is a different,
-# independently and extensively documented channel: the historical
-# mortality decline that took crude death rates from the 30-40/1000 this
-# module's baseline describes down toward modern rates under 10/1000 is
-# attributed by the historical-demography literature overwhelmingly to
-# infectious-disease control specifically, not to better diets - Omran's
-# epidemiologic transition (Omran, "The Epidemiologic Transition: A Theory
-# of the Epidemiology of Population Change", Milbank Memorial Fund
-# Quarterly, 1971) names exactly this shift ("age of pestilence and famine"
-# to "age of receding pandemics") as the mechanism, and Preston's
-# decomposition of 20th-century life expectancy gains (Preston, "The
-# Changing Relation between Mortality and Level of Economic Development",
-# Population Studies, 1975) and Cutler & Miller's study of clean water
-# technology in early-20th-century American cities (Cutler & Miller, "The
-# Role of Public Health Improvements in Health Advances: The Twentieth-
-# Century United States", Demography, 2005 - finding clean water alone
-# responsible for roughly half of the total urban mortality decline they
-# studied, and nearly all of the child-mortality share of it) both find the
-# same thing from different data. That is why THIS channel, unlike the
-# nutrition one, is allowed to take mortality below the pre-industrial
-# baseline - it is a different, sourced mechanism, not the same one applied
-# more generously.
+# `disease_burden` is a float 1.0 (pre-industrial) to 0.0 (fully modern),
+# passed by the caller. Not read from the engine by this module.
+# This is a separate multiplicative channel from nutrition: the historical
+# mortality decline to <10/1000 is attributed primarily to disease control
+# (Omran's epidemiologic transition), not diet. Only this axis can reduce
+# mortality below the baseline - a sourced biological mechanism.
 
 MODERN_SURVIVAL_TO_WORKING_AGE_CEILING = declare(
     "MODERN_SURVIVAL_TO_WORKING_AGE_CEILING", 0.95,
@@ -664,34 +547,18 @@ MODERN_SURVIVAL_TO_WORKING_AGE_CEILING = declare(
         "response: two sourced points, one invented interpolation between "
         "them (see _disease_mortality_multiplier).")
 
-# Same log-hazard transform BASELINE_ANNUAL_MORTALITY_RATE_CHILD was built
-# with, run on the modern endpoint instead of the pre-industrial one. NO
-# DOUBLE_COUNT_CORRECTION_FACTOR here: that correction is specifically about
-# a property of the WRIGLEY & SCHOFIELD ENGLISH SERIES SURVIVAL_TO_WORKING_
-# AGE and BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE are drawn from (see
-# that constant's own declaration) - a multi-century average that may
-# already contain some of the harvest-driven mortality this module's own
-# nutrition mechanism separately adds. MODERN_SURVIVAL_TO_WORKING_AGE_
-# CEILING is sourced from present-day UN IGME national estimates, an
-# entirely different data-collection method with no shared provenance and
-# no reason to carry that specific bias.
+# Same log-hazard as BASELINE_ANNUAL_MORTALITY_RATE_CHILD but for modern
+# endpoint. No double-count correction: MODERN_* is from UN IGME, not the
+# Wrigley & Schofield English series.
 MODERN_ANNUAL_MORTALITY_RATE_CHILD_FLOOR = (
     -math.log(MODERN_SURVIVAL_TO_WORKING_AGE_CEILING) / CHILD_BAND_WIDTH_YEARS)
 
-# The child band's disease floor multiplier is DERIVED, not declared: it is
-# the ratio of two already-sourced hazards (the modern one just above, the
-# pre-industrial one at the top of this file), not a new invented number of
-# its own.
+# Derived: ratio of modern to pre-industrial child mortality hazards.
 DISEASE_MORTALITY_FLOOR_MULTIPLIER_CHILD = (
     MODERN_ANNUAL_MORTALITY_RATE_CHILD_FLOOR
     / BASELINE_ANNUAL_MORTALITY_RATE_CHILD)
 
-# The two endpoints of the disease_burden SCALE ITSELF. These are
-# definitional, not sourced empirical facts (unlike everything declare()d
-# above and below), so they are plain floats rather than declare()d: there
-# is nothing to cite for "1.0 is the top of the scale and 0.0 is the
-# bottom", only a choice of which end means which regime, made once here
-# and used everywhere else in this module.
+# Scale endpoints (definitional, not empirical): 1.0=pre-industrial, 0.0=modern.
 PRE_INDUSTRIAL_DISEASE_BURDEN = 1.0
 FULLY_MODERN_DISEASE_BURDEN = 0.0
 

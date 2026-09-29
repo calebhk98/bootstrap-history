@@ -100,12 +100,16 @@ def _portfolio_run(auto_hire, years=40):
         before = set(sim_state.operating)
         sim_state.step()
         reopenings += len((set(sim_state.operating) - before) & set(opened))
-    return opened, sum(1 for node_id in opened if node_id in sim_state.operating), reopenings
+    free_scholars, free_artisans = sim_state.venture_staff_free()
+    stranded = [node_id for node_id in opened if node_id not in sim_state.operating
+                and sim_state.venture_hands(node_id)[0] <= free_scholars + 0.01
+                and sim_state.venture_hands(node_id)[1] <= free_artisans + 0.01]
+    return opened, stranded, reopenings
 
-_opened, _open_end, _reopenings = _portfolio_run(auto_hire=True)
-check("with auto_hire replacing attrition losses, the portfolio it built "
-      "fully recovers over 40 years - every closure eventually comes back "
-      "on its own once the household can staff it again",
-      _open_end == len(_opened) and _reopenings > 0,
-      "opened %d, open at year 40: %d, auto-reopenings: %d"
-      % (len(_opened), _open_end, _reopenings))
+_opened, _stranded, _reopenings = _portfolio_run(auto_hire=True)
+check("with auto_hire replacing attrition losses, no closed concern stays "
+      "shut while there are free people to run it - every closure comes back "
+      "on its own as soon as the household can staff it again",
+      not _stranded and _reopenings > 0,
+      "opened %d, shut with free staff at year 40: %s, auto-reopenings: %d"
+      % (len(_opened), _stranded, _reopenings))

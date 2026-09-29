@@ -58,19 +58,11 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def wage_hours_this_year(self):
-		sub = getattr(self.state, "household", None)
-		if sub is None:
-			raise AttributeError("wage_hours_this_year")
-		val = getattr(sub, "wage_hours_this_year", None)
-		if val is None:
-			raise AttributeError("wage_hours_this_year")
-		return val
+		return self.state.household.wage_hours_this_year
 
 	@wage_hours_this_year.setter
 	def wage_hours_this_year(self, value):
-		sub = getattr(self.state, "household", None)
-		if sub is not None:
-			setattr(sub, "wage_hours_this_year", value)
+		self.state.household.wage_hours_this_year = value
 
 	@property
 	def teaching_hours_this_year(self):
@@ -98,19 +90,11 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def insolvent_years(self):
-		sub = getattr(self.state, "household", None)
-		if sub is None:
-			raise AttributeError("insolvent_years")
-		val = getattr(sub, "insolvent_years", None)
-		if val is None:
-			raise AttributeError("insolvent_years")
-		return val
+		return self.state.household.insolvent_years
 
 	@insolvent_years.setter
 	def insolvent_years(self, value):
-		sub = getattr(self.state, "household", None)
-		if sub is not None:
-			setattr(sub, "insolvent_years", value)
+		self.state.household.insolvent_years = value
 
 	@property
 	def credit_frozen_until(self):
@@ -479,19 +463,10 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def shut_for_staff(self):
-		sub = getattr(self.state, "projects", None)
-		if sub is None:
-			raise AttributeError("shut_for_staff")
-		val = getattr(sub, "shut_for_staff", None)
-		if val is None:
-			raise AttributeError("shut_for_staff")
-		return val
-
-	@shut_for_staff.setter
-	def shut_for_staff(self, value):
-		sub = getattr(self.state, "projects", None)
-		if sub is not None:
-			setattr(sub, "shut_for_staff", value)
+		# Read-only {work id: year} view of the staffing closures.
+		return {node_id: record["year"]
+				for node_id, record in self.state.projects.closures.items()
+				if record["reason"] == "staff"}
 
 	@property
 	def bountied(self):
@@ -783,35 +758,19 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def _said_parallelism(self):
-		sub = getattr(self.state, "scenario", None)
-		if sub is None:
-			raise AttributeError("_said_parallelism")
-		val = getattr(sub, "_said_parallelism", None)
-		if val is None:
-			raise AttributeError("_said_parallelism")
-		return val
+		return self.state.scenario._said_parallelism
 
 	@_said_parallelism.setter
 	def _said_parallelism(self, value):
-		sub = getattr(self.state, "scenario", None)
-		if sub is not None:
-			setattr(sub, "_said_parallelism", value)
+		self.state.scenario._said_parallelism = value
 
 	@property
 	def _said_scandal(self):
-		sub = getattr(self.state, "scenario", None)
-		if sub is None:
-			raise AttributeError("_said_scandal")
-		val = getattr(sub, "_said_scandal", None)
-		if val is None:
-			raise AttributeError("_said_scandal")
-		return val
+		return self.state.scenario._said_scandal
 
 	@_said_scandal.setter
 	def _said_scandal(self, value):
-		sub = getattr(self.state, "scenario", None)
-		if sub is not None:
-			setattr(sub, "_said_scandal", value)
+		self.state.scenario._said_scandal = value
 
 	@property
 	def goal_year(self):
@@ -848,22 +807,6 @@ class ForwardingPropertiesMixin:
 	# =========================================================================
 	# PopulationState Compatibility Properties
 	# =========================================================================
-
-	@property
-	def _food_pop_bonus_applied(self):
-		sub = getattr(self.state, "population", None)
-		if sub is None:
-			raise AttributeError("_food_pop_bonus_applied")
-		val = getattr(sub, "_food_pop_bonus_applied", None)
-		if val is None:
-			raise AttributeError("_food_pop_bonus_applied")
-		return val
-
-	@_food_pop_bonus_applied.setter
-	def _food_pop_bonus_applied(self, value):
-		sub = getattr(self.state, "population", None)
-		if sub is not None:
-			setattr(sub, "_food_pop_bonus_applied", value)
 
 	@property
 	def pop_children(self):

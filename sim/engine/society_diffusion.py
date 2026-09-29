@@ -9,7 +9,7 @@ category - food, medical, information and state-military - at its own pace
 (_diffusion_category, _diffusible_ids, _state_has_a_patron, _diffusion_pace,
 civ_diffusion, _category_diffusion_index, food_diffusion_index,
 medical_diffusion_index, information_diffusion_index,
-state_military_diffusion, _advance_food_diffusion_population,
+state_military_diffusion,
 medical_diffusion_relief, _state_military_diffusion_relief,
 world_diffusion_report), plus what a diffused-or-foreign technology means for
 the fog-of-war display and for cost (_is_foreign_institution,
@@ -430,97 +430,25 @@ class DiffusionMixin:
     def state_military_diffusion(self):
         return self._category_diffusion_index("military")
 
-    # ---- FOOD: THE COUNTRY EATS BETTER, AND GROWS --------------------------
-    # apply_tech_effects' own `population` field already adds a one-off,
-    # deliberately small amount (0.01-0.02, see _TECH_EFFECTS.json's own
-    # note on why it stays small) the year a food technology completes,
-    # spread over a flat 40-year ramp (POP_TECH_RAMP_YEARS) - a generation
-    # for the CENSUS to catch up with a lower death rate on the founder's
-    # OWN estate, not a claim that the whole country farms this way yet.
-    # This is the other half the user asked for: as food_diffusion_index()
-    # climbs - which, at a 25-year half life, is "within a few decades"
-    # exactly as asked - the country's own baseline population rises again,
-    # on top of that ramp, by up to FOOD_DIFFUSION_POP_BONUS_MAX. Capped
-    # well above what a single node's instant delta could ever reach
-    # (0.25 versus a handful of nodes at 0.02 each) ONLY because it is
-    # earned slowly, over generations of the country actually adopting it,
-    # never as an instant lump sum - see _TECH_EFFECTS.json's own
-    # population field note for why the INSTANT deltas stay small instead
-    # of scoring this the way Nunn and Qian (2011) actually would.
-    FOOD_DIFFUSION_POP_BONUS_MAX = declare(
-        "FOOD_DIFFUSION_POP_BONUS_MAX", 0.25, kind="temporary_heuristic",
-        unit="dimensionless (fraction of baseline population)",
-        source=None, confidence="D",
-        why="Ceiling on how much the country's baseline population rises "
-            "as food technologies fully diffuse - capped well above what "
-            "a single node's instant _TECH_EFFECTS.json delta could reach "
-            "(0.25 versus ~0.02 each) only because it is earned slowly, "
-            "over generations, never as a lump sum (see comment above). "
-            "Not fitted to Nunn and Qian (2011) or any other source "
-            "numerically.")
-    # How fast the realised bonus chases its own target once diffusion
-    # moves it - fast relative to diffusion's own decades, so diffusion
-    # itself, not this, is the slow part a player is actually watching.
-    FOOD_DIFFUSION_POP_APPROACH_RATE = declare(
-        "FOOD_DIFFUSION_POP_APPROACH_RATE", 0.15, kind="temporary_heuristic",
-        unit="dimensionless (fraction of remaining gap closed per year)",
-        source=None, confidence="D",
-        why="How fast the realised population bonus chases its own "
-            "diffusion-driven target - deliberately fast relative to "
-            "diffusion's own multi-decade half-life, so diffusion, not "
-            "this, is the slow part a player actually watches. Tuned, not "
-            "measured.")
-
-    def _advance_food_diffusion_population(self, year):
-        target = self.FOOD_DIFFUSION_POP_BONUS_MAX * self.food_diffusion_index()
-        pop_state = self.state.population
-        applied = getattr(pop_state, "_food_pop_bonus_applied", 0.0) or 0.0
-        gap = target - applied
-        if gap <= 1e-6:
-            return
-        add = self.FOOD_DIFFUSION_POP_APPROACH_RATE * gap
-        self._pop_scale_base += add
-        applied += add
-        pop_state._food_pop_bonus_applied = applied
-        # ONCE A GENERATION, same throttle as _advance_literacy's own - a
-        # gain this small, reported every year of a centuries-long run, is
-        # the same noise that throttle was written to stop.
-        last = self._food_diffusion_said
-        if applied > 0.005 and year - last >= 25:
-            self._food_diffusion_said = year
-            self.state.household.log.append((year, "what you grew is no longer only on your "
-                             "own land: the crops and rotations you "
-                             "introduced have spread far enough into the "
-                             "country's own fields that the population is "
-                             "running about %d%% above where it would "
-                             "otherwise be" % round(applied * 100)))
-
     # ---- DISEASE: THE COUNTRY IS HARDER TO KILL WHOLESALE ------------------
-    # _shocks' staff_loss branch (below) tells a household-level story
-    # (`loss`, reduced by the founder's own sanitation and vaccination) and
-    # an empire-wide one (`raw`, the hazard's historical, unmitigated rate -
-    # deliberately untouched by the founder's PERSONAL hedges: your
-    # quarantine protects your people, not everyone else's labour market).
-    # Invent the cure or the vaccine for a pandemic and the Black Death
-    # should become a minor period of some sickness rather than a
-    # catastrophe, which needs the EMPIRE's own figure to fall as the
-    # empire, not only the founder, absorbs germ theory, quarantine and
-    # vaccination by the time the hazard's window opens.
-    # medical_diffusion_relief is that number, read by _shocks directly
-    # against `raw`, never against `loss` (which stays the founder's own,
-    # private, has()-gated figure).
-    MEDICAL_DIFFUSION_RELIEF_CAP = declare(
-        "MEDICAL_DIFFUSION_RELIEF_CAP", 0.85, kind="temporary_heuristic",
-        unit="dimensionless (fraction of empire-wide epidemic harm removed)",
-        source=None, confidence="D",
-        why="Ceiling on how much the country's own absorbed medicine can "
-            "soften an empire-wide epidemic's raw historical rate, "
-            "leaving a residual so no cure ever reduces a historical "
-            "pandemic to literally nothing. Tuned, not measured against "
-            "any actual disease-control record.")
+    # National prevalence of an epidemic falls as the country absorbs the
+    # medicine; the household is exposed to that prevalence (see
+    # _shock_staff_loss). Relief is coverage (the diffusion index) times how
+    # far people follow the guidance; there is no fixed ceiling.
+    MEDICAL_COMPLIANCE_BASE = declare(
+        "MEDICAL_COMPLIANCE_BASE", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (share following public-health guidance at "
+             "zero state capacity)", source=None, confidence="D",
+        why="Share of people who follow quarantine and hygiene guidance "
+            "with no administration behind it; state capacity supplies "
+            "the rest. Not derived from a behavioural model.")
+
+    def medical_compliance(self):
+        return (self.MEDICAL_COMPLIANCE_BASE
+                + (1.0 - self.MEDICAL_COMPLIANCE_BASE) * self.state_capacity)
 
     def medical_diffusion_relief(self):
-        return min(self.MEDICAL_DIFFUSION_RELIEF_CAP, self.medical_diffusion_index())
+        return min(1.0, self.medical_diffusion_index() * self.medical_compliance())
 
     # ---- WAR: A STATE THAT IS ACTUALLY ARMED LOSES LESS, AND SACKS LESS ----
     # military_leverage() and _military_war_relief() (further below)
@@ -579,8 +507,6 @@ class DiffusionMixin:
         out = {}
         if food >= 0.01:
             out["food_and_farming_the_country_has_adopted"] = round(food, 3)
-            out["population_this_has_already_added"] = round(
-                getattr(self, "_food_pop_bonus_applied", 0.0), 3)
         if med >= 0.01:
             out["public_health_the_country_has_adopted"] = round(med, 3)
             out["how_much_softer_the_next_epidemic_will_be"] = round(

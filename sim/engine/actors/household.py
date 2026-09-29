@@ -20,6 +20,8 @@ from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
 					 Optional, Set, Tuple, TypedDict)
 
 from ..economy import _InvalidatingSet, _InvalidatingDict
+from .base import Actor
+from .policy import IdlePolicy
 from sim.engine.state import (
 	ActiveProjectState,
 	SimulationState,
@@ -87,6 +89,8 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"contract_hours": "household",
 	"commissioned": "household",
 	"teaching_hours_this_year": "household",
+	"relocation_hours_this_year": "household",
+	"base_tile": "household",
 	"hour_allocations": "household",
 	"work_trade": "household",
 	"last_taught": "household",
@@ -96,6 +100,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"granted_staff": "household",
 	"hours_this_year": "household",
 	"trade_schools": "household",
+	"labour_pressure_records": "household",
 	"worker_housing_places": "household",
 	"_said_deputies": "household",
 	"_said_near_limit": "household",
@@ -105,7 +110,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_said_notice_approach": "household",
 	"last_military_demand": "household",
 	"_said_confiscation_band": "household",
-	"_said_scandal": "household",
 
 	# ProjectsState
 	"active": "projects",
@@ -122,7 +126,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"trade_hours_used": "projects",
 	"revealed": "projects",
 	"stalled": "projects",
-	"shut_for_staff": "projects",
+	"closures": "projects",
 
 	# EconomyState
 	"mines": "economy",
@@ -142,6 +146,11 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_material_stock_ledger": "economy",
 	"farm_hectares": "economy",
 	"farm_stock_kg": "economy",
+	"farm_cleared_hectares": "economy",
+	"farm_last_shortfall_kg": "economy",
+	"farm_hours_needed": "economy",
+	"farm_last_marginal_product": "economy",
+	"society_labour_hours": "economy",
 	"_dashboard_history": "economy",
 
 	# GovernanceState
@@ -172,7 +181,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"pop_children": "population",
 	"pop_working_age": "population",
 	"pop_elderly": "population",
-	"_food_pop_bonus_applied": "population",
 }
 
 _VERSION_MAP: Dict[str, str] = {
@@ -186,30 +194,21 @@ _VERSION_MAP: Dict[str, str] = {
 _LAZY_FIELDS: Set[str] = {
 	"wages_earned",
 	"interest_paid",
-	"insolvent_years",
-	"last_withdrawal",
 	"spend_last_year",
 	"granted_staff",
 	"hours_this_year",
 	"trade_schools",
 	"worker_housing_places",
-	"_said_deputies",
-	"_said_near_limit",
-	"_said_autoopen",
 	"done_year",
-	"shut_for_staff",
 	"mine_tranches",
 	"_material_stock_ledger",
 	"farm_hectares",
 	"_dashboard_history",
 	"inst_units",
-	"wage_hours_this_year",
-	"_said_scandal",
-	"_said_parallelism",
 }
 
 
-class Household:
+class Household(Actor):
 	"""The founder's household: money, staff, knowledge, plant and standing.
 
 	In the live state architecture, Household delegates all persistent state
@@ -226,6 +225,8 @@ class Household:
 		state: Optional[SimulationState] = None,
 		sim: Optional[Any] = None,
 	) -> None:
+		# The founder's choices arrive as commands, so the household idles.
+		Actor.__init__(self, IdlePolicy())
 		self._sim = sim
 		if state is not None:
 			self._state = state
@@ -296,6 +297,35 @@ class Household:
 		self._stock_throttle_sig: Any = None
 		self._last_buy_refusal: Any = None
 		self._said_stack_caution: Any = None
+
+	kind = "household"
+
+	@property
+	def money(self) -> float:
+		return self.capital
+
+	@money.setter
+	def money(self, value: float) -> None:
+		self.capital = value
+
+	@property
+	def workforce(self) -> Any:
+		return self.employees
+
+	@property
+	def knowledge(self) -> Any:
+		return self.done
+
+	@property
+	def concerns(self) -> Any:
+		return self.operating
+
+	@property
+	def works(self) -> Any:
+		return self.active
+
+	def imitation_worth(self, node_id: str, world: Any) -> float:
+		return 0.0
 
 	@property
 	def capital(self) -> float:

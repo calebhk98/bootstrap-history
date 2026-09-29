@@ -63,7 +63,7 @@ class StartingMixin:
             "as cheaply as a poor one. Tuned scale, not measured.")
     BRIBE_DENARII_PER_SCANDAL_POINT = declare(
         "BRIBE_DENARII_PER_SCANDAL_POINT", 300.0, kind="temporary_heuristic",
-        unit="denarii per point of household.scandal, at bribability=1",
+        book_money=True, unit="denarii per point of household.scandal, at bribability=1",
         source=None, confidence="D",
         why="What it costs to erase one point of scandal outright. Scandal "
             "itself has no independent source model for who spreads it or "
@@ -307,7 +307,7 @@ class StartingMixin:
             "measured.")
     ARREARS_CHEAP_PROJECT_FLOOR = declare(
         "ARREARS_CHEAP_PROJECT_FLOOR", 600.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Even deep in persistent arrears, a project costing less than "
             "this is always 'cheap enough to need nobody's permission' - a "
             "flat floor under ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE's own "
@@ -326,7 +326,7 @@ class StartingMixin:
             "multiple, not derived.")
     ARREARS_HARD_STOP_FLOOR = declare(
         "ARREARS_HARD_STOP_FLOOR", 4000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="However cheap a project looks, new work stops outright once "
             "the household is this far underwater - a flat floor under "
             "ARREARS_HARD_STOP_REVENUE_MULTIPLE's revenue-based figure so "
@@ -597,7 +597,7 @@ class StartingMixin:
 
     def _check_arrears(self, node_id, node, ignore_trade, _memo, _why):
         household = self.state.household
-        insolvent_years = household.insolvent_years or 0
+        insolvent_years = household.insolvent_years
         if insolvent_years >= self.ARREARS_GRACE_YEARS:
             surplus = (self.revenue() - self.upkeep() - self.living_cost()
                        - self.mine_operating_cost())
@@ -615,6 +615,16 @@ class StartingMixin:
                            "so is finishing or stopping what is running."
                            % (insolvent_years, -household.capital))
                            if _why else None)
+        return None
+
+    def _check_people_exist(self, node_id, node, ignore_trade, _memo, _why):
+        # Staffing demand against the people who exist, before any per-person
+        # hiring advice: no price or school makes up a missing population.
+        if ignore_trade:
+            return None
+        shortfall = self.project_staffing_shortfall(node)
+        if shortfall:
+            return False, (shortfall if _why else None)
         return None
 
     def _check_scholar_staff(self, node_id, node, ignore_trade, _memo, _why):
@@ -783,6 +793,7 @@ class StartingMixin:
         _check_substitution,
         _check_credit_frozen,
         _check_arrears,
+        _check_people_exist,
         _check_scholar_staff,
         _check_craft_staff,
         _check_absent_trades,
@@ -827,6 +838,34 @@ class StartingMixin:
         # start_reason's own docstring on _why for what this skips).
         return self.start_reason(node_id, _memo=_memo, _why=False)[0]
 
+    def start_refusal(self, node_id, extra_owed=0.0):
+        """Why the project cannot begin now, or None. Changes no state.
+
+        extra_owed is money already committed by starts not yet applied
+        (a preview's earlier picks), counted like work in hand.
+        """
+        may_start, why = self.start_reason(node_id)
+        if not may_start:
+            return why
+        # commit past cash but not past what cash plus credit can carry
+        price = self.project_cost(node_id)
+        projects = self.state.projects
+        # money already sunk into this node comes off the bill
+        paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
+        price -= paid_now
+        # sorted(): summing floats over a dict whose keys came from a set
+        owed = extra_owed + sum(projects.active[nid].get("cost_left") or 0.0
+                                for nid in sorted(projects.active))
+        ceiling = max(0.0, self.state.household.capital) + self.credit_limit()
+        # applies to the first project too
+        if owed + price > ceiling:
+            return ("you already owe %s denarii on work in hand; this "
+                    "would take it to %s, and between cash and credit "
+                    "you can raise %s. Finish or stop something first."
+                    % ("{:,.0f}".format(owed), "{:,.0f}".format(owed + price),
+                       "{:,.0f}".format(ceiling)))
+        return None
+
     def start_project(self, node_id):
         """PLAYER-CHOSEN start. This is the whole reason `--manual` and the
         `agent` JSON protocol exist: the old `play` command let you type a
@@ -841,43 +880,15 @@ class StartingMixin:
         mode the optimizer's loop is switched off entirely (see step(), 4b),
         so this becomes the only way anything ever starts.
         """
-        may_start, why = self.start_reason(node_id)
-        if not may_start:
-            return False, why
-        # YOU MAY COMMIT PAST WHAT YOU HOLD, AND NOT PAST WHAT ANYONE WILL
-        # LEND: `help economy` states exactly that contract, and it has to
-        # be enforced here. Committing to something you cannot yet afford
-        # is realistic project accounting and stays; committing to many
-        # times what anyone will advance you is not a plan, it is an
-        # accounting fiction, and the limit the player read a moment
-        # earlier has to mean something.
+        refusal = self.start_refusal(node_id)
+        if refusal:
+            return False, refusal
         price = self.project_cost(node_id)
-        # WHAT IS LEFT TO PAY, not the whole bill. Money already sunk into this
-        # node - by you stopping it, or by the creditors stopping it - comes
-        # off, and testing against the gross would refuse a project that is
-        # nearly paid for. See stop_project.
         projects = self.state.projects
         household = self.state.household
         scenario_year = self.state.scenario.year
-        _paid_towards = projects.paid_towards or {}
-        _paid_now = min(price, max(0.0, _paid_towards.get(node_id, 0.0)))
+        _paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
         price -= _paid_now
-        # sorted(): summing floats over a dict whose keys came from a set.
-        owed = sum(project_state.get("cost_left") or 0.0
-                   for project_state in (projects.active[nid] for nid in sorted(projects.active)))
-        ceiling = max(0.0, household.capital) + self.credit_limit()
-        # THE AFFORDABILITY TEST MUST APPLY TO THE FIRST PROJECT TOO: a
-        # guard that only checked once something was already active would
-        # let an opening move be started far beyond what cash and credit
-        # could cover, only to see the identical command refused - quoting
-        # the shortfall exactly - the moment a second, much cheaper project
-        # was started right after.
-        if owed + price > ceiling:
-            return False, ("you already owe %s denarii on work in hand; this "
-                           "would take it to %s, and between cash and credit "
-                           "you can raise %s. Finish or stop something first."
-                           % ("{:,.0f}".format(owed), "{:,.0f}".format(owed + price),
-                              "{:,.0f}".format(ceiling)))
         node = self.nodes[node_id]
         # CREDIT FOR WHAT YOU ALREADY PAID. See enforce_credit_limit: when the
         # creditors stop a project the money already sunk into it is kept

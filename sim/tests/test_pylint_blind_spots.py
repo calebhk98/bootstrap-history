@@ -20,6 +20,8 @@ spots while CLAUDE.md goes on telling people to run both. So
 `PylintReallyIsBlindTests` runs the real pylint, with this repository's real
 `.pylintrc`, over a fixture holding one of each - and a matching visible
 case one line away, to prove the run was actually checking something.
+
+Runs real pylint over a fixture to confirm invalid-name misses three binding kinds.
 """
 
 import importlib.util

@@ -20,14 +20,18 @@ No third-party dependencies. Python 3.8+.
 Design notes and the full protocol: sim/PROTOCOL.md
 """
 
-import json, math, os, sys
+import functools, json, math, os, sys
 sys.setrecursionlimit(20000)
 import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
-from .mods import find_mod_civilization, get_ordered_mods, load_mod_tree
-from .catalog import (load_production_catalog, load_trade_registry,
-                      transitional_wage_rates, validate_mod_material_paths)
+from .mods import get_ordered_mods, load_mod_tree
+from .mods_ids import is_mod_content
+from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
+                       is_hidden, mod_civ_ids)
+from . import money_units, wage_provider
+from .catalog import (load_mod_tree_nodes, load_production_catalog,
+                      load_trade_registry, validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
 # dictionary read straight from a JSON file (tech_tree.json, prices.json,
@@ -65,8 +69,8 @@ class StartingKit(TypedDict):
     """One entry of `STARTING_KITS`, below - a fixed two-field schema every
     entry actually has (checked against every kit in this module and every
     read site in cli.py/cli_interactive.py/cli_agent.py, all of which read
-    exactly `["den"]` and/or `["desc"]` and nothing else)."""
-    den: int
+    exactly `["labourer_years"]` and/or `["desc"]` and nothing else)."""
+    labourer_years: float
     desc: str
 
 
@@ -82,7 +86,8 @@ class SimulationDefaults(TypedDict):
     founder_life_mean: float
     founder_life_sd: float
     start_year: int
-    start_capital: int
+    start_capital: Optional[float]
+    start_kit: str
     founder_arrival_age: int
     founder_hours_per_year: int
     director_hours_per_year: int
@@ -102,6 +107,7 @@ TREE = os.path.join(ROOT, "data", "tech_tree.json")
 PRICES = os.path.join(ROOT, "data", "prices.json")
 STRATS = os.path.join(SIMDIR, "strategies")   # sim/strategies, beside simulator.py
 MODDIR = os.path.join(ROOT, "mods")
+KNOWLEDGE_DIR = os.path.join(ROOT, "docs", "knowledge")   # the how-to library the tree's kb links point into
 
 # ----------------------------------------------------------------------------
 # Loading and derived economics
@@ -155,51 +161,9 @@ def _load_tech_effects() -> JSONDict:
 TECH_EFFECTS: JSONDict = _load_tech_effects()
 
 
-def _load_wages() -> Dict[str, float]:
-    """The wage table, skipping the _note entry that is a bare string.
-
-    My first version did `v["rate"]` over every entry, hit the explanatory
-    _note string, raised, and a bare `except` turned that into an empty dict. So
-    every trade reported "no such trade" and the error helpfully listed nothing
-    at all. Swallowing an exception into a silent empty default is the same
-    failure as the save file writing nulls: the bug is the except, not the data.
-    """
-    with open(PRICES) as source:
-        prices_data = json.load(source)
-    return {key: value["rate"] for key, value in prices_data["wage_rates_denarii_per_hour"].items()
-            if isinstance(value, dict) and "rate" in value}
-
-
-WAGES: Dict[str, float] = _load_wages()
-
-
-def _load_annual_wages() -> Dict[str, float]:
-    """What a year of one person of each trade actually costs.
-
-    Two columns in prices.json disagree with each other by about half: `rate` is
-    denarii an hour, `day_hs` is sestertii a day, and rate x 10 hours is
-    consistently 1.5x day_hs / 4. The day figure is the better sourced of the
-    two (it is what the wage evidence is actually quoted in), so annual pay
-    comes from that where it exists, and only falls back to the hourly rate
-    where it does not.
-    """
-    with open(PRICES) as source:
-        prices_data = json.load(source)
-    out: Dict[str, float] = {}
-    for trade, value in prices_data["wage_rates_denarii_per_hour"].items():
-        if not isinstance(value, dict):
-            continue
-        if "day_hs" in value:
-            out[trade] = value["day_hs"] / 4.0 * 250.0     # 4 sestertii to the denarius
-        elif "rate" in value:
-            out[trade] = value["rate"] * 2500.0
-    return out
-
-
-ANNUAL_WAGE: Dict[str, float] = _load_annual_wages()
-
-
-_TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR), MODDIR)
+_TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR), MODDIR,
+                                      nodes=load_mod_tree_nodes(ROOT, MODDIR))
+TRADE_REGISTRY = _TRADE_REGISTRY
 
 # Trade identity, availability, and explanatory text belong to the trade
 # registry, not to the legacy table that temporarily supplies their wages.
@@ -218,13 +182,14 @@ TRADES_ABSENT: FrozenSet[str] = frozenset(
 TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family
                                 for trade_id, trade in _TRADE_REGISTRY.items()}
 
-# Transitional provider: identity comes from the registry, while monetary
-# wages still use legacy inputs scheduled for deletion. A new trade inherits
-# its family's median rate until the dynamic labour market supplies one.
-WAGES = transitional_wage_rates(_TRADE_REGISTRY, WAGES)
-for _trade_id in _TRADE_REGISTRY:
-    if _trade_id not in ANNUAL_WAGE:
-        ANNUAL_WAGE[_trade_id] = WAGES[_trade_id] * 2500.0
+# Starting wages: the labour-market schedule before any year has passed.
+# Sim carries the live schedule; these serve tools and validation.
+_STARTING_SCHEDULE = wage_provider.build_schedule(
+    _TRADE_REGISTRY, wage_provider.reference_civilisation())
+WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
+ANNUAL_WAGE: Dict[str, float] = {
+    trade: _STARTING_SCHEDULE.annual_wage(trade) for trade in WAGES}
+MONEY_PER_LABOUR_HOUR: float = _STARTING_SCHEDULE.money_per_labour_hour
 
 
 def trade_family(trade: str) -> str:
@@ -247,6 +212,7 @@ MONEY_WORDS: Dict[str, str] = {
     "wu zhu cash": "cash",
     "hacksilver by weight": "in hacksilver",
     "cacao bean and cotton cloth": "in cacao beans",
+    "Ptolemaic silver tetradrachm": "tetradrachms",
 }
 
 
@@ -258,12 +224,28 @@ MONEY_WORDS: Dict[str, str] = {
 MONEY_SHORT_WORDS: Dict[str, str] = {
     "denarius": "den", "sterling penny": "pence", "wu zhu cash": "cash",
     "hacksilver by weight": "hacksilver", "cacao bean and cotton cloth": "beans",
+    "Ptolemaic silver tetradrachm": "tetradr",
 }
 
 
 def money_word(civ: Optional[JSONDict]) -> str:
     cur = (civ or {}).get("currency") or "denarius"
     return MONEY_WORDS.get(cur, cur)
+
+
+@functools.lru_cache(maxsize=None)
+def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wages.WageSchedule:
+    """The opening wage schedule of a civilisation (the default one if none)."""
+    if civilization_id is None:
+        return _STARTING_SCHEDULE
+    return wage_provider.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
+
+
+def kit_capital(kit_id: str, civ: JSONDict) -> float:
+    """Opening money of a kit for a civilisation: its labourer-years times the
+    civilisation's opening annual labourer wage."""
+    schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    return STARTING_KITS[kit_id]["labourer_years"] * schedule.annual_wage("labourer")
 
 
 def money_short(civ: Optional[JSONDict]) -> str:
@@ -277,9 +259,9 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
     Norway, Mexica Tenochtitlan or somewhere invented is a different file, not a
     different simulator. See data/civilizations/_SCHEMA.md."""
     path = os.path.join(CIVDIR, name + ".json")
-    if not os.path.exists(path):
-        path = find_mod_civilization(name, get_ordered_mods(MODDIR)) or path
-    if not os.path.exists(path):
+    base_civ = json.load(open(path)) if os.path.exists(path) else None
+    civ = apply_mod_civilization(name, base_civ, get_ordered_mods(MODDIR))
+    if civ is None:
         # "_"-prefixed files are schema and reference data, not playable
         # civilizations, so the listing below excludes them - the same
         # convention cli.py applies everywhere it lists this directory. An
@@ -288,12 +270,8 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
         have = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                       if filename.endswith(".json") and not filename.startswith("_"))
         for manifest in get_ordered_mods(MODDIR):
-            mod_civs = os.path.join(manifest.directory, "data", "civilizations")
-            if os.path.isdir(mod_civs):
-                have.extend(filename[:-5] for filename in os.listdir(mod_civs)
-                            if filename.endswith(".json") and not filename.startswith("_"))
+            have.extend(mod_civ_ids(manifest))
         raise SystemExit("unknown civilization %r. available: %s" % (name, ", ".join(have)))
-    civ = json.load(open(path))
     # Opening ownership is scenario data, not an optional convenience with an
     # implicit fallback.  Silently turning a missing declaration into an empty
     # list makes a newly-authored scenario look valid while stripping its
@@ -309,6 +287,12 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
     if duplicates:
         raise ValueError("civilization %r repeats starting technologies: %s"
                          % (civ.get("id", name), ", ".join(duplicates)))
+    check_starting_techs(civ, get_ordered_mods(MODDIR))
+    wage_provider.validate_coin_standard(civ)
+    for field in ("starting_interest_rate", "starting_tax_share"):
+        if not isinstance(civ.get(field), (int, float)) or isinstance(civ.get(field), bool):
+            raise ValueError("civilization %r must declare a numeric %s"
+                             % (civ.get("id", name), field))
     civ.setdefault("values", {})
     for field, default in (("w_military",0.5),("w_labour_saving",0.0),("w_information",0.0),
                  ("w_novelty",0.0),("w_magic_fear",0.4),("w_religious_rigidity",0.3),
@@ -319,15 +303,18 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
 
 
 def civilization_ids() -> List[str]:
-    """Playable base and mod civilization ids in deterministic order."""
+    """Playable (not hidden) base and mod civilization ids in deterministic order."""
     identifiers = {filename[:-5] for filename in os.listdir(CIVDIR)
                    if filename.endswith(".json") and not filename.startswith("_")}
     for manifest in get_ordered_mods(MODDIR):
-        directory = os.path.join(manifest.directory, "data", "civilizations")
-        if os.path.isdir(directory):
-            identifiers.update(filename[:-5] for filename in os.listdir(directory)
-                               if filename.endswith(".json") and not filename.startswith("_"))
-    return sorted(identifiers)
+        identifiers.update(mod_civ_ids(manifest))
+    return sorted(identifier for identifier in identifiers
+                  if not is_hidden(load_civ(identifier)))
+
+
+def _in_coin(money: float, document: JSONDict, money_per_labour_hour: float) -> float:
+    """A price in the money of a wage document, in another coin."""
+    return money / document["money_per_labour_hour"] * money_per_labour_hour
 
 
 def load(use_solved_prices: bool = False,
@@ -369,29 +356,49 @@ def load(use_solved_prices: bool = False,
     pass its id here explicitly, or its land is silently priced as Rome's.
     """
     manifests = get_ordered_mods(MODDIR)
+    check_all_civilizations(CIVDIR, manifests)
     with open(TREE) as source:
-        tree = load_mod_tree(json.load(source), manifests)
+        tree = load_mod_tree(json.load(source), manifests, copy_base=False)
     with open(PRICES) as source:
         prices = json.load(source)
     nodes = {node["id"]: node for node in tree["nodes"]}
-    wages = dict(WAGES)
-    goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
-             if not key.startswith("_")}
+    schedule = starting_schedule(civilization_id)
+    wages = schedule.wages_per_hour()
+    rate = schedule.money_per_labour_hour
+    book_goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
+                  if not key.startswith("_")}
+    goods = money_units.convert_book_table(book_goods, rate)
     required_materials = {material for node in nodes.values()
                           for material in (node.get("mat") or {})}
-    if use_solved_prices or not required_materials.issubset(goods):
+    if use_solved_prices:
         from . import prices as price_solver
         goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, goods, prices,
+            held_technology_ids, book_goods, schedule.document(),
             civilization_id=civilization_id)
+    elif not required_materials.issubset(goods):
+        # Book prices stay; the solver only fills materials the book lacks.
+        from . import prices as price_solver
+        reference_document = _STARTING_SCHEDULE.document()
+        solved_goods, _provenance = price_solver.priced_goods_table(
+            held_technology_ids, book_goods, reference_document,
+            civilization_id=civilization_id)
+        goods.update({material: _in_coin(solved_goods[material], reference_document, rate)
+                      for material in required_materials - set(goods) if material in solved_goods})
+        unresolved = required_materials - set(goods)
+        if unresolved:
+            # TRANSITIONAL: price era-gated materials as if every technology were held.
+            era_free_goods, _provenance = price_solver.priced_goods_table(
+                list(nodes), book_goods, reference_document, civilization_id=civilization_id)
+            goods.update({material: _in_coin(era_free_goods[material], reference_document, rate)
+                          for material in unresolved if material in era_free_goods})
     production = load_production_catalog(ROOT, MODDIR)
+    load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
     producers = set(production)
     for entry in production.values():
         producers.update((entry.get("outputs") or {}).keys())
-    mod_prefixes = tuple(manifest.id + "_" for manifest in manifests)
     for node in nodes.values():
-        if not node["id"].startswith(mod_prefixes):
+        if not is_mod_content(node["id"], manifests):
             continue
         for material in (node.get("mat") or {}):
             if material not in goods:
@@ -399,10 +406,11 @@ def load(use_solved_prices: bool = False,
                                  "production path but is unavailable with the selected "
                                  "technologies" % (node["id"], material))
     for node in nodes.values():
-        node["_labour_cost"] = sum(wages[trade] * hours for trade, hours in node["lab"].items())
-        node["_material_cost"] = sum(goods[material] * quantity for material, quantity in node["mat"].items())
-        node["_total_cost"] = node["_labour_cost"] + node["_material_cost"] + node["cap"]
+        # TRANSITIONAL: a material the price solver cannot resolve counts as free, so the cost is a lower bound.
+        node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
+                                      for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
+    money_units.stamp_nodes(nodes.values(), wages, rate)
     return tree, prices, nodes, wages, goods
 
 
@@ -437,12 +445,14 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
     prices, goods = _book_prices()
     from . import prices as price_solver
     _goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, goods, prices, civilization_id=civilization_id)
+        held_technology_ids, goods, starting_schedule(civilization_id).document(),
+        civilization_id=civilization_id)
     return provenance
 
 
 def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
-                            civilization_id: Optional[str] = None
+                            civilization_id: Optional[str] = None,
+                            money_per_labour_hour: Optional[float] = None
                             ) -> Dict[str, float]:
     """Return the calculator-backed material-price table for an era.
 
@@ -456,10 +466,21 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
     """
     prices, book_goods = _book_prices()
     from . import prices as price_solver
+    document = starting_schedule(civilization_id).document()
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, book_goods, prices,
-        civilization_id=civilization_id)
+        held_technology_ids, book_goods, document, civilization_id=civilization_id)
+    if money_per_labour_hour is not None:
+        # The caller's coin differs from the civilisation file's: rescale.
+        goods = {material: _in_coin(price, document, money_per_labour_hour)
+                 for material, price in goods.items()}
     return goods
+
+
+def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
+    """The tree with every money field in the civilisation's coin."""
+    schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    return money_units.rebased_nodes(
+        nodes, schedule.wages_per_hour(), schedule.money_per_labour_hour)
 
 
 # How many things rest on each node, for the whole tree at once.
@@ -809,13 +830,18 @@ def win_condition_describe(node_record: JSONDict) -> str:
 # Simulation
 # ----------------------------------------------------------------------------
 
+# A kit is stated in labourer-years: the years of an unskilled worker's wage it
+# represents at the civilisation's opening wage, which is anchored to the
+# coin's physical content. The figures keep the earlier kit sizes relative to
+# the earlier labourer wage; none is tuned to history. `kit_capital` converts
+# them to money.
 STARTING_KITS: Dict[str, StartingKit] = {
-    "destitute":   {"den": 0,     "desc": "the clothes you stand in. You must earn your first meal."},
-    "poor_scholar":{"den": 400,   "desc": "DEFAULT. A few months' subsistence, a knife, a lens, a codex of notes. About what a working teacher has."},
-    "artisan":     {"den": 1200,  "desc": "enough to rent a workshop and buy a first set of tools."},
-    "merchant":    {"den": 4000,  "desc": "a modest trading capital. You can fund one real venture."},
-    "rich_merchant":{"den": 20000,"desc": "wealthy but well under the equestrian census of 100,000."},
-    "equestrian":  {"den": 100000,"desc": "the equestrian census exactly. Conspicuous."},
+    "destitute":   {"labourer_years": 0.0, "desc": "the clothes you stand in. You must earn your first meal."},
+    "poor_scholar":{"labourer_years": 4.033, "desc": "DEFAULT. A few months' subsistence, a knife, a lens, a codex of notes. About what a working teacher has."},
+    "artisan":     {"labourer_years": 12.10, "desc": "enough to rent a workshop and buy a first set of tools."},
+    "merchant":    {"labourer_years": 40.33, "desc": "a modest trading capital. You can fund one real venture."},
+    "rich_merchant":{"labourer_years": 201.6, "desc": "wealthy but well under the equestrian census of 100,000."},
+    "equestrian":  {"labourer_years": 1008.0, "desc": "the equestrian census exactly. Conspicuous."},
     # "the medians sit inside the noise band" is not true of the whole kit
     # range: measured on the finish, not just the opening - Rome, 8 runs a
     # kit, one seed - the median year the transistor is reached runs 476
@@ -824,7 +850,7 @@ STARTING_KITS: Dict[str, StartingKit] = {
     # claim is true of the middle of the range and false at the top of it,
     # which is exactly the kind of statement that should not be made in one
     # sentence about "the whole kit range".
-    "absurd":      {"den": 1000000,"desc": "four senatorial fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a million denarii buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
+    "absurd":      {"labourer_years": 10081.0, "desc": "four senatorial fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a million denarii buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
 }
 
 DEFAULTS: SimulationDefaults = dict(
@@ -838,7 +864,8 @@ DEFAULTS: SimulationDefaults = dict(
     start_year=100,
     # DEFAULT IS A POOR SCHOLAR. Arriving with a noble's fortune is a strange
     # premise and the sweep shows it is also a worse one. Pick a kit with --kit.
-    start_capital=400,
+    start_capital=None,        # money override; None takes it from `start_kit`
+    start_kit="poor_scholar",
     founder_arrival_age=35,
     # 2,000, NOT 2,400: everyone you HIRE is modelled at HOURS_PER_PERSON_YEAR
     # = 2,000 - "a 10-hour day, 250 days, less feasts" - and the founder must

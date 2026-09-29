@@ -75,7 +75,7 @@
   "pre": [
    "cap_power_muscle"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -101,7 +101,7 @@
   "pre": [
    "cap_power_water"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -128,7 +128,7 @@
   "pre": [
    "cap_power_human"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -155,7 +155,7 @@
   "pre": [
    "cap_power_human"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -181,7 +181,7 @@
   "pre": [
    "water_power_scale"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "carpenter": 200,
@@ -246,7 +246,7 @@
    "cap_measure_mass_mg",
    "cap_measure_time_s"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "artisan": 100,
@@ -277,7 +277,7 @@
   "pre": [
    "water_power_scale"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "labourer": 400,
@@ -309,7 +309,7 @@
   "pre": [
    "water_power_scale"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "labourer": 500,
@@ -339,7 +339,7 @@
   "name": "Peat extraction and burning",
   "cat": "power",
   "pre": [],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "labourer": 200
@@ -367,7 +367,7 @@
   "name": "Oil shale and bitumen deposits",
   "cat": "power",
   "pre": [],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 80,
   "lab": {
    "labourer": 100
@@ -397,7 +397,7 @@
    "cap_tol_100um",
    "mat_cast_iron"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "artisan": 400,
@@ -475,7 +475,7 @@
   "mat": {
    "cast_iron_kg": 100,
    "copper_kg": 50,
-   "wire_copper_kg": 30
+   "copper_wire_kg": 30
   },
   "cap": 1000,
   "up": 200,
@@ -556,7 +556,7 @@
   "name": "Windmill fantail and automatic furling",
   "cat": "power",
   "pre": [
-   "pwr_tower_mill"
+   "en_tower_mill"
   ],
   "kb": "",
   "ph": 200,
@@ -587,7 +587,7 @@
   "pre": [
    "water_power_scale"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 180,
   "lab": {
    "carpenter": 250,
@@ -618,7 +618,7 @@
   "cat": "power",
   "pre": [
    "water_power_scale",
-   "pwr_breastshot_wheel"
+   "en_breastshot_wheel"
   ],
   "kb": "",
   "ph": 200,
@@ -651,7 +651,7 @@
   "pre": [
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "miner": 400,
@@ -683,7 +683,7 @@
    "pwr_coal_seam",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "furnaceman": 250,
@@ -713,10 +713,9 @@
   "cat": "power",
   "pre": [
    "pwr_coking",
-   "cap_heat_1100",
-   "pot_ash_soda"
+   "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "furnaceman": 300,
@@ -750,7 +749,7 @@
    "pwr_coal_gas",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "artisan": 300,
@@ -783,7 +782,7 @@
    "pwr_gas_main",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 180,
   "lab": {
    "artisan": 150,
@@ -813,7 +812,7 @@
   "name": "Petroleum seeps and collection",
   "cat": "power",
   "pre": [],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "labourer": 200
@@ -843,10 +842,9 @@
   "pre": [
    "pwr_petroleum_seeps",
    "cap_power_steam",
-   "mat_steel_plate_kg",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "machinist": 300,
@@ -879,10 +877,9 @@
   "cat": "power",
   "pre": [
    "pwr_cable_tool_drilling",
-   "cap_tol_100um",
-   "mat_steel_plate_kg"
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 400,
@@ -916,7 +913,7 @@
    "distillation_alcohol",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "furnaceman": 300,
@@ -979,7 +976,7 @@
    "pwr_oil_refinery",
    "en_oil_refining_distillation"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "artisan": 100.0,
@@ -1007,10 +1004,9 @@
   "cat": "power",
   "pre": [
    "pwr_fuel_oil",
-   "cap_tol_100um",
-   "mat_steel_plate_kg"
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "artisan": 400,
@@ -1077,7 +1073,7 @@
    "steam_watt",
    "barometer"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "artisan": 250,
@@ -1296,7 +1292,7 @@
    "pwr_condenser",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "artisan": 200,
@@ -1357,10 +1353,9 @@
   "cat": "power",
   "pre": [
    "steam_watt",
-   "cap_measure_pressure",
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "artisan": 150,
@@ -1392,7 +1387,7 @@
   "pre": [
    "cap_power_steam"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "artisan": 200,
@@ -1489,7 +1484,7 @@
    "mat_zinc",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "artisan": 150,
@@ -1525,7 +1520,7 @@
    "pwr_thermoelectric_couple",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "artisan": 120,
@@ -1556,10 +1551,10 @@
   "name": "Selenium photovoltaic effect",
   "cat": "power",
   "pre": [
-   "selenium_metal",
+   "pwr_selenium_metal",
    "cap_heat_1300"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "chemist": 150,
@@ -1593,7 +1588,7 @@
    "pwr_selenium_photovoltaic",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "artisan": 100,
@@ -1626,7 +1621,7 @@
   "cat": "power",
   "pre": [
    "lead_chamber",
-   "sulfuric_acid",
+   "sulfuric_retort",
    "cap_tol_1mm"
   ],
   "kb": "",
@@ -1658,7 +1653,6 @@
   "name": "Nickel-iron battery",
   "cat": "power",
   "pre": [
-   "nickel_metal",
    "potash_soda",
    "cap_tol_100um"
   ],
@@ -1757,7 +1751,7 @@
    "motor_transformer_ac",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "engineer": 300,
@@ -1830,7 +1824,7 @@
    "dynamo",
    "motor_transformer_ac"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "engineer": 200,
@@ -1861,7 +1855,7 @@
   "cat": "power",
   "pre": [
    "pwr_high_voltage_transmission",
-   "pwr_transformer",
+   "en_transformer",
    "cap_tol_1mm"
   ],
   "kb": "",
@@ -1892,10 +1886,10 @@
   "name": "Load factor and grid economics",
   "cat": "power",
   "pre": [
-   "pwr_substation",
+   "en_substation",
    "statistics_basic"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "scholar": 200,
@@ -1925,9 +1919,9 @@
   "cat": "power",
   "pre": [
    "motor_transformer_ac",
-   "pwr_substation"
+   "en_substation"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "engineer": 250,
@@ -1959,10 +1953,10 @@
   "name": "Fuel cell (hydrogen-oxygen)",
   "cat": "power",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_measure_elec"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "chemist": 250,
@@ -2010,10 +2004,10 @@
   "pre": [
    "copper_refining",
    "cap_heat_1300",
-   "sulfuric_acid",
+   "sulfuric_retort",
    "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "chemist": 200,
@@ -2054,10 +2048,9 @@
   "pre": [
    "atomic_theory",
    "cap_measure_temp_hi",
-   "mat_uranium",
    "cap_pure_9N"
   ],
-  "kb": "",
+  "kb": "40_power_precision.md",
   "ph": 500,
   "lab": {
    "engineer": 400,

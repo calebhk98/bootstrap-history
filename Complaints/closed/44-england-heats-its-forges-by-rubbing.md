@@ -1,5 +1,7 @@
 # Medieval England makes process heat by friction, and the data predicted it would not
 
+**Status:** closed
+
 Emergent, correct by the model's own rules, and wrong. Found immediately
 after the waterwheel's iron gate was fixed, which is the point: this was
 invisible while no civilisation could build a waterwheel at all.

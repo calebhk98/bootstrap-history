@@ -1,5 +1,7 @@
 # Rome cannot tan leather or full cloth, and both are wrong
 
+**Status:** partly - starting techs added; missing tree nodes remain
+
 Found by the technique-to-node join (`requires_node`, Complaints/39), within
 an hour of the first two slices landing, and worth recording for the method
 as much as the finding.

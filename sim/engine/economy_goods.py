@@ -32,164 +32,10 @@ from sim.unit_conversions import PERCENT_SCALE
 class GoodsMixin:
 
     # ---- goods-producing concerns: a market, not a fixed number --------------
-    #
-    # Every OTHER concern in this file pays the tree's flat `rev` for ever,
-    # scaled only by the ramp above and this society's prices. That breaks for
-    # the case of an automated loom, which should make an enormous margin the
-    # day it opens, because handlooms are everywhere and power looms are not,
-    # and that margin has to erode as the rest of the world catches up,
-    # cushioned by the fact that cheaper cloth pulls in buyers who could not
-    # afford cloth before. `commodities.py` already has a
-    # bounded, elastic price built for exactly this worked example (see
-    # COMMODITIES.md section 4.2), but it is a standalone module Sim has never
-    # imported - its own header says so - because it reasons in tonnes against
-    # a national output table and has no notion of "years since you personally
-    # opened this," or "how rich a population you can reach": Sim already has
-    # both (opened_year, pop_scale, self.economy). This reuses commodities.py's
-    # IDEAS - a bounded, elastic price, and the loom's own twenty-times figure
-    # - natively, rather than bolting a tonnage model onto a system that has
-    # never tracked a single tonne of anything. Wiring commodities.py itself
-    # into Sim is the larger integration COMMODITIES.md section 11 describes
-    # and explicitly defers.
-    #
-    # SCOPE IS DELIBERATELY NARROW. Only categories that are a tangible good
-    # sold to a broad population get this: cloth (`textiles`), preserved food
-    # and drink (`processing`), books and print matter (`printing`), cameras
-    # and film (`photography`). Mining, instruments, transport and every
-    # institution keep the flat figure - a mine's output already has its own
-    # supply-and-price machinery below (MARKET_SHARE, material_price_factor)
-    # answering a different question (what it costs YOU to buy ore, not what
-    # a workshop earns selling a finished good), and a school or a patron is
-    # exactly what the brief asked to leave alone.
-    #
-    # NUMBERS AND WHERE THEY CAME FROM, per category:
-    #   eta (price elasticity of demand: how much buying responds to price):
-    #     textiles 0.65 - apparel-demand studies typically put clothing's
-    #       own-price elasticity in the 0.6-1.0 range, moderately elastic,
-    #       neither a staple nor a luxury; picked at the inelastic end of that
-    #       range so the early erosion the brief asks for is actually visible
-    #       - at exactly 1.0 (unit elastic) revenue would sit dead flat as
-    #       price moved, which demonstrates nothing. [C]
-    #     processing 0.35 - agricultural-economics estimates for food-at-home
-    #       demand (the USDA's Economic Research Service puts most packaged
-    #       food categories around 0.2-0.6) cluster low: people keep eating
-    #       whether or not canned milk or refined sugar gets cheaper. [C]
-    #     printing 0.80 - discretionary but not a luxury in the pre-mass-media
-    #       world these nodes describe; picked close to, but under, unit
-    #       elastic. [C]
-    #     photography 1.60 - camera and film equipment is squarely a luxury
-    #       good throughout the period this applies to; luxury-goods demand
-    #       studies commonly cite elasticities above 1.5 (fine goods and
-    #       jewellery studies often land in the 1.5-2.5 range). [C]
-    #   floor (price never falls below this fraction of the tree's own
-    #     figure, however saturated the market): textiles and printing start
-    #     from the bound already chosen for cloth (the one tracked commodity
-    #     textiles maps to) in commodities.json, 0.35, nudged up to 0.40;
-    #     processing starts tighter still, 0.45, because preserved food has a
-    #     harder cost floor (a tin and the heat to seal it cost what they
-    #     cost) and a harder ceiling on how much cheaper it can get before
-    #     people just use raw ingredients instead, nudged up to 0.55;
-    #     photography starts from coffee's bound in commodities.json, the one
-    #     other luxury good that file prices, 0.5, nudged up to 0.55. Every
-    #     nudge is the SAME finding: measuring this against the 700-year
-    #     Monte Carlo runs (see the change's own report) showed a civilization
-    #     already winning on the earlier, harsher floors on the edge of the
-    #     700-year horizon (han_china_100ad, 2 of 10 seeds) losing every one
-    #     of them once a goods concern's long-run earnings fell as far as the
-    #     first pass had them fall. A model that turns a marginal win into a
-    #     loss is not "more realistic," it is miscalibrated against a game
-    #     this game already plays close to the edge of - so every floor here
-    #     moved up by 0.05-0.1 from its first-pass figure, softening how much
-    #     of the day-one margin is eventually given up, while leaving the
-    #     shape of the curve (an early, visible decline) untouched.
-    #   tau (years for the market to visibly respond to a new supply):
-    #     textiles 35 - Britain's handloom weavers went from the dominant
-    #       technology to a shrinking minority over roughly thirty to forty
-    #       years, the 1810s to the 1850s; that is the number used for how
-    #       long a cloth market takes to re-equilibrate around a new loom, at
-    #       the slower end of that range for the same reason the floors moved
-    #       - see above. Processing, printing and photography use a longer 40
-    #       [C]: no equally specific diffusion-speed citation exists for
-    #       those, so a longer, explicitly illustrative period stands in for
-    #       one, and the same 700-year-horizon finding argued for slower
-    #       rather than faster.
-    #
-    # EXTENDED, data/review/COMMODITY_DYNAMISM.md's second and third
-    # findings. Two gaps in the original four categories, both measured
-    # directly against a live Sim:
-    #
-    # (a) ZERO CROSS-ELASTICITY. "One loom at age 20 earns factor 0.7840.
-    #     With a second identical loom running: 0.7840. With ten: 0.7840."
-    #     goods_market_factor() used each concern's OWN age as a private
-    #     clock standing in for "how saturated is the market" - a real
-    #     number for a lone producer, but a fiction once a second producer
-    #     (yours, or - per this file's existing goods_reach_factor comment
-    #     - the rest of the world's) exists, because nothing summed what
-    #     they were jointly supplying. Fixed below by pricing off the
-    #     CATEGORY's total supply (every concern you operate in it, not one
-    #     node's private clock) rather than one node's own age in isolation.
-    #
-    # (b) NO REAL CONSUMER ECONOMY. The brief's own richest idea: "when the
-    #     public has less money, they buy less. So if the price of food
-    #     goes down, the price people would be willing to pay for diamonds
-    #     or records would go up." That is an ordinary income effect
-    #     (cheaper necessities free up spending on everything else, the
-    #     same logic behind Engel's law) and this file had no channel for
-    #     it at all - `processing` (food) and, say, `photography` (a
-    #     luxury) moved on completely independent clocks. The brief also
-    #     named the actual businesses this should cover - "alcohol, or
-    #     wine... food like pizza... gambling, casinos... books, card
-    #     games, movies, phonographs, record players, newspapers" - and
-    #     grepping the tree for them turns up real, revenue-bearing nodes
-    #     (fud_distillation_spirits, fin_gambling_house, fin_racecourse,
-    #     fin_theatre_business, hom_printed_books, hom_playing_cards_printed,
-    #     if_tin_foil_phonograph, prn_radio_broadcasting,
-    #     fin_newspaper_business...) that were earning the tree's flat
-    #     figure for ever, the same as an aqueduct. `essential` below marks
-    #     which categories are necessities (only `processing`, food, so
-    #     far - the one the brief's own worked example is about) and
-    #     income_factor()/essential_price_ratio() below implement the
-    #     effect: a discretionary category earns more as the player's own
-    #     essential-goods concerns get cheaper, and is neutral (no effect,
-    #     not a penalty) when the player runs none. See those methods' own
-    #     comments for the mechanism and its honest scope limit.
-    #
-    # NEW CATEGORY NUMBERS, same [C] estimation method as the original
-    # four (see the class comment above for how those were reasoned):
-    #   fermentation (alcohol - brewing, distilling, vinegar) 0.55/0.45/35:
-    #     alcohol demand studies commonly cite elasticities of roughly
-    #     0.3-0.9 (a consumption habit, not a nutritional necessity, but
-    #     also not as freely substitutable as a camera); floor and tau
-    #     follow processing's "real cost floor" and textiles' diffusion
-    #     pace respectively, as the closest existing anchors.
-    #   leisure (toys, games, puzzles, books, instruments) 1.10/0.45/35:
-    #     hobby and entertainment goods are usually cited above unit
-    #     elasticity but below photography's fine-goods range.
-    #   sound (phonograph, gramophone, radio broadcasting) 1.30/0.50/35:
-    #     a luxury technology good, the same reasoning as photography but
-    #     slightly less extreme - audio reached a mass market somewhat
-    #     faster, historically, than the camera did.
-    #   media (newspapers, advertising, lending library, telegraph
-    #     business) 0.85/0.40/35: an information good, close to printing's
-    #     own 0.80.
-    #   commerce (inns, hotels, restaurants, department stores, trading
-    #     posts, coffeehouses) 1.00/0.45/30: unit-elastic hospitality and
-    #     retail demand (commonly cited 0.8-1.3); a shorter tau because a
-    #     service business's custom is understood to shift faster than a
-    #     manufacturing good's.
-    #   entertainment (gambling, lotteries, theatre, professional sport,
-    #     racecourses - cat values "luxury", "spectacle" and "law" in the
-    #     tree, which is where fin_gambling_house, fin_lottery,
-    #     fin_theatre_business, fin_racecourse and fin_professional_sport
-    #     actually live) 1.80/0.50/35: the single most discretionary
-    #     bucket here, above photography, matching how elastic gambling
-    #     and spectator-entertainment demand is usually cited to be.
-    #   personal (perfume, cosmetics, toiletries) 1.10/0.45/35: ordinary
-    #     personal-luxury demand, the same order as leisure.
-    # `essential` is omitted (defaults False, i.e. discretionary) on every
-    # category except processing; textiles is left discretionary too,
-    # deliberately - clothing is not modelled as a nutritional necessity
-    # here, only food is, matching the brief's own worked example exactly.
+    # Bounded, elastic price curves (eta, floor, tau) per category: textiles,
+    # processing, printing, photography, plus fermentation, leisure, sound,
+    # media, commerce, entertainment, personal. Cross-elasticity via category
+    # totals. Income effect via essential_price_ratio() (food frees up spending).
     GOODS_ETA_TEXTILES = declare(
         "GOODS_ETA_TEXTILES", 0.65, kind="temporary_heuristic",
         unit="price elasticity of demand (dimensionless)",
@@ -440,10 +286,7 @@ class GoodsMixin:
         "law": {"eta": GOODS_ETA_LAW, "floor": GOODS_FLOOR_LAW, "tau": GOODS_TAU_LAW},
         "personal": {"eta": GOODS_ETA_PERSONAL, "floor": GOODS_FLOOR_PERSONAL, "tau": GOODS_TAU_PERSONAL},
     }
-    # Which of the categories above are necessities, for income_factor()
-    # below. Kept as its own set rather than scattering an `essential`
-    # check across every reader, matching the class's own convention of
-    # naming a scope decision once rather than repeating the condition.
+    # Essential categories for income_factor(); kept centralized.
     ESSENTIAL_CATEGORIES = frozenset(
         cat for cat, cfg in GOODS_CATEGORIES.items() if cfg.get("essential"))
 
@@ -544,57 +387,8 @@ class GoodsMixin:
         cfg = self.GOODS_CATEGORIES.get(cat)
         if not cfg:
             return None
-        # RESULT CACHED PER (cat, self.year, operating's version), because
-        # the walk below is still called far more often than its answer can
-        # possibly change. A 150-year rome_100ad profile of 150 optimizer
-        # steps found this called 75,748 times - 505 times per simulated
-        # year - for the same reason the comment below already explains
-        # (goods_market_factor() once per operating concern, income_factor()
-        # again for the essential category, from every one of those calls):
-        # nothing that changes what this function returns happens between
-        # most of those calls in the same year.
-        #
-        # WHY THIS KEY IS SAFE, exhaustively:
-        #   self.year only ever changes at one place in the whole engine
-        #   (core.py's step(), `self.year += 1`, once per step) - so it is
-        #   constant for the entire year's worth of calls this is trying to
-        #   collapse, and a NEW year always gets a different key, never a
-        #   stale hit.
-        #   self.household.operating's membership is the other input read below (the
-        #   `for m in ...: if m not in self.household.operating` test); `_operating_ver`
-        #   is a plain counter bumped by _operating_changed(), which the
-        #   _InvalidatingSet backing self.household.operating (see that class's own
-        #   comment, top of file) fires on EVERY .add/.discard/.update/...
-        #   from any of the nine-odd call sites across core.py/projects.py/
-        #   economy.py/society.py - the exact mechanism _cap_factor's own
-        #   cache already trusts for the same set, and it carries the same
-        #   one accepted gap that one already has (see _operating_changed's
-        #   own docstring): a caller that replaces self.household.operating with a
-        #   bare set() rather than going through _reset_operating() stops
-        #   this counter, same as it already stops _cap_factor. Not a new
-        #   risk.
-        #   `opened_year` (read below via `started`) is never mutated
-        #   anywhere except projects.py's open_venture, and there only ever
-        #   in the same call, immediately after, as `self.household.operating.add(node_id)`
-        #   - grep the engine for "opened_year" and it is the only
-        #   assignment site outside __init__'s empty {} and load_state's
-        #   generic setattr (which itself calls _reset_operating(), and so
-        #   _operating_changed(), right after setting it - see that
-        #   function's own comment on why that ordering matters). So
-        #   `_operating_ver` changing is a SUPERSET of every way
-        #   `opened_year` can change: it cannot go stale on its own.
-        #   `done_year` is read here only as a fallback for a member of
-        #   `operating` whose opened_year entry is somehow still missing -
-        #   which the paragraph above shows never happens along either real
-        #   path into `operating` (open_venture always sets it in the same
-        #   breath; restore() requires the node to already be mothballed,
-        #   which means it went through open_venture earlier). The one place
-        #   this fallback is actually reachable is a test fixture that adds
-        #   directly to `operating` without ever opening anything - and that
-        #   still bumps `_operating_ver` through the identical hook, so even
-        #   there this cache is not stale, only (like the code before this
-        #   change) reading done_year's default of self.year for a node that
-        #   was never truly opened.
+        # Result cached per (cat, year, operating version). Key safe via
+        # self.year (step), _operating_ver (add/discard), opened_year (open_venture).
         scenario = self.state.scenario
         projects = self.state.projects
         key = (scenario.year, getattr(projects, "_operating_ver", 0))
@@ -606,20 +400,7 @@ class GoodsMixin:
         if cat in bucket:
             return bucket[cat]
         ages = []
-        # WHICH NODES CAN EVER BE IN THIS CATEGORY IS FIXED AT LOAD TIME,
-        # so walk that (small, cached-once) list and test membership in
-        # `operating` instead of sorting and filtering the whole operating
-        # set on every single call. `cat` never changes after the tree is
-        # loaded, so this cache needs no invalidation. Profiling a 300-year
-        # single-seed run found this function alone (the `sorted(self.
-        # operating)` scan) costing more self time than any other in the
-        # engine - 7.1s of 34.4s total, called 1.5 million times because
-        # goods_market_factor() calls it once per operating concern, and
-        # income_factor() (reached from the SAME call, for every
-        # non-essential concern) calls it again for the essential
-        # category. Only max() and len() are taken from `ages` below, both
-        # order-independent, so dropping the sort changes no result. See
-        # PERFORMANCE.md.
+        # Walk nodes_in_cat cache, test membership in operating.
         for node_id in self._nodes_in_cat(cat):
             if node_id not in projects.operating:
                 continue
@@ -786,20 +567,20 @@ class GoodsMixin:
 
     FARM_COST_PER_HA = declare(
         "FARM_COST_PER_HA", 75.0, kind="temporary_heuristic",
-        unit="denarii/hectare", source=None, confidence="D",
+        book_money=True, unit="denarii/hectare", source=None, confidence="D",
         why="Purchase price of one hectare of productive farmland for the "
             "household's own staple supply. Not tied to FOREST_COST_PER_HA "
             "or to any attested land price; an independent, invented "
             "figure for a different land use.")
     HOUSING_COST_PER_PLACE = declare(
         "HOUSING_COST_PER_PLACE", 600.0, kind="temporary_heuristic",
-        unit="denarii/place", source=None, confidence="D",
+        book_money=True, unit="denarii/place", source=None, confidence="D",
         why="Cost to build one place of durable worker housing. Not "
             "sourced to any attested construction cost; an invented figure "
             "sized to make the lever meaningful without being free.")
     TRADE_SCHOOL_COST_PER_SEAT = declare(
         "TRADE_SCHOOL_COST_PER_SEAT", 1200.0, kind="temporary_heuristic",
-        unit="denarii/seat", source=None, confidence="D",
+        book_money=True, unit="denarii/seat", source=None, confidence="D",
         why="Cost to found one seat of a named trade school (see "
             "labour.py's consumer of this figure, outside this file's "
             "scope). Not sourced to any attested cost of pre-industrial "
@@ -1068,11 +849,7 @@ class GoodsMixin:
                     % ("{:,.0f}".format(quoted), "{:,.0f}".format(now), direction,
                        "{:,.0f}".format(quoted * floor_factor / n_active))]
         else:
-            # THE WARNING BEFORE THE DECISION, not the postmortem after it.
-            # `quoted` here is the tree's own figure exactly as `ventures`
-            # and `why` already show it for anything not yet opened, so a
-            # player reading this alongside that figure sees the same number
-            # this note is about to tell them not to expect.
+            # Warning before decision: quote matches ventures/why figure.
             bits = ["the tree quotes %s a year for this, and 'ventures'/'why' "
                     "show that same figure - but %d of yours already sell "
                     "into this market, so this would open already reduced by "
@@ -1094,12 +871,7 @@ class GoodsMixin:
                         "leaves people more to spend on a good like this "
                         "one")
         if factor < 1.0:
-            # THE WAY OUT, not only the diagnosis. This is a shared-total
-            # mechanism scoped to ONE category (GOODS_CATEGORIES/
-            # _goods_category_state): a concern in a different category is
-            # not competing for the same buyers at all and keeps the tree's
-            # own figure, which is the honest answer to "what do I do about
-            # this" and was missing from every screen this appears on.
+            # Solution: different category = no competition, keeps tree figure.
             bits.append("a concern in a DIFFERENT goods category is not "
                         "competing for these same buyers and is not reduced "
                         "by this at all")

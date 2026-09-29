@@ -77,13 +77,13 @@ internationalisation to switch on. _localise_words/_localise_money in
 protocol.py swap the NAME of the currency per civilisation (denarii,
 hacksilver, beans, pence) - flavour, not translation - and the many
 thousands of words of node notes (data/tech_tree.json) and the
-knowledge/ corpus exist in English only. A menu entry offering
+docs/knowledge/ corpus exist in English only. A menu entry offering
 "language" with nothing behind it would be worse than no entry: a setting
 that silently does nothing. Real language support would mean translating
 every node note and every rendered sentence in protocol.py/cli.py (not a
 small rewrite - protocol.py alone is thousands of lines of prose, generated
 sentence by sentence from game state) and deciding what happens to
-knowledge/, which is English prose no translation layer touches
+docs/knowledge/, which is English prose no translation layer touches
 automatically. That is a project of its own, not a field in this file.
 """
 import json
@@ -97,7 +97,7 @@ from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 class Config(TypedDict):
     """The application-preferences file this module reads and writes
     (CONFIG_DEFAULTS, below, and load_config()'s/save_config()'s own
-    shape). Fixed at exactly these ten keys: `load_config` builds every
+    shape). Fixed at exactly these eleven keys: `load_config` builds every
     result by copying CONFIG_DEFAULTS and overwriting only keys already in
     that dict (`for key in CONFIG_DEFAULTS: if key in raw: ...`), and
     `save_config` writes back exactly `{key: ... for key in
@@ -109,6 +109,7 @@ class Config(TypedDict):
     display_width: Optional[int]
     rows_per_page: int
     show_welcome: bool
+    commission_display: str
     default_civ: str
     default_kit: str
     default_fog: bool
@@ -196,6 +197,7 @@ CONFIG_DEFAULTS: Config = {
     "display_width": None,     # None means "ask the terminal; see below"
     "rows_per_page": 30,
     "show_welcome": True,
+    "commission_display": "both",  # "commissioned", "ready", or "both"
     # REMEMBERED, NOT CONFIGURED - see the module docstring. These four plus
     # the horizon are the New Game wizard's last-used answers, written back
     # by cli.py's _new_game the moment a game actually starts, and are not
@@ -257,6 +259,18 @@ def resolve_rows_per_page(cfg: Optional[Config] = None) -> int:
     except (TypeError, ValueError):
         rows = FALLBACK_ROWS_PER_PAGE
     return rows if rows > 0 else FALLBACK_ROWS_PER_PAGE
+
+
+def resolve_commission_display(cfg: Optional[Config] = None) -> str:
+    """Which mine commission milestones to show in rendered text: one of
+    'commissioned' (when the mine starts), 'ready' (when it becomes ready),
+    or 'both' (both dates). Invalid values fall back to 'both'."""
+    if cfg is None:
+        cfg = load_config()
+    value = cfg.get("commission_display", "both")
+    if value in ("commissioned", "ready", "both"):
+        return value
+    return "both"
 
 
 def config_path() -> str:

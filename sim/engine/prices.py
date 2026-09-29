@@ -10,6 +10,11 @@ imports it - and it is deliberately the ONLY new surface this round touches
 beyond `sim/engine/data.py`, per this change's own scope: economy.py, which
 actually spends a price on something, is another agent's file this round.
 
+THE WAGE ARGUMENT (`prices_json` below) is a wage document in the book's
+shape, built by `sim.world.wages.WageSchedule.document()`, so the solver and
+payroll read one wage vector. Its labourer rate is the money value of one
+labour hour.
+
 THE INTERFACE. One function matters to a caller:
 
     solved_prices(held_technology_ids, prices_json)   -> a SolvedPrices
@@ -80,34 +85,14 @@ before trusting it. A caller that hands in a DIFFERENT `production_entries`
 object (a test building synthetic data, mainly) can never collide with a
 real one that happens to reuse the same gate-node ids.
 
-LABOUR-HOURS TO DENARII, AND WHY THIS DIRECTION IS THE RIGHT ONE.
-`sim/solve_prices.py` prices everything in labour-hours - one hour of
-`labourer`, its numeraire, by construction equals 1.0 - because that is a
-number a recipe graph can actually produce: relative amounts of unskilled
-effort. `data/prices.json` and every consumer of `goods` in
-`sim/engine/economy.py` are in denarii. `solve_prices.py --compare` already
-has to cross this exact boundary to judge the solver against the book, and
-it does it by dividing the book's denarii figure by the labourer wage rate
-(also denarii per hour) to get BOTH sides into hours before comparing them:
-
-    book_hours = book_price_denarii / wage_rates_denarii_per_hour["labourer"]
-
-This module needs the other direction - a solved number in hours has to
-become a denarii figure `economy.py` can subtract from a household's purse -
-which is the same equation solved for the term that direction leaves alone:
-
-    price_denarii = price_hours * wage_rates_denarii_per_hour["labourer"]
-
-Multiplying (rather than dividing again, or using some other rate) is the
-only conversion consistent with `--compare`'s own arithmetic: hours is
-denarii divided by the labourer rate, so getting back to denarii is
-multiplying by that same rate, not a different one and not its reciprocal
-taken twice. Getting this backwards - dividing instead of multiplying, or
-using a different trade's wage - would silently rescale every solved price
-by the square of the labourer wage or by an unrelated trade's ratio, exactly
-the mistake this module's own docstring was told to be explicit about.
-`denarii_per_labour_hour` below is the one place that rate is read, so there
-is exactly one line to check rather than one per caller.
+LABOUR-HOURS TO DENARII. `sim/solve_prices.py` prices everything in
+labour-hours - one hour of `labourer`, its numeraire, equals 1.0 - because a
+recipe graph can produce relative amounts of unskilled effort. Money enters
+only here, at the edge: the wage document carries `money_per_labour_hour`,
+which `sim.engine.wage_provider.build_schedule` derives from the
+civilisation's coin (the coin material's solved labour hours per kg times the
+coin's mass), so a price in money is its labour hours times that rate.
+`denarii_per_labour_hour` is the one place the rate is read.
 
 THIS MODULE DOES NOT DECIDE WHICH MATERIALS GET REPLACED - THAT SWITCH
 LIVES IN `data.py`, AND IS OFF BY DEFAULT. `priced_goods_table` overlays a
@@ -166,6 +151,7 @@ correctness fix, not a widening of the wiring's scope: no new material is
 priced, no new switch is flipped, `use_solved_prices` is still `False` by
 default in `sim/engine/data.py`.
 """
+import json
 import os
 import sys
 from typing import Any, Dict, FrozenSet, Iterable, Optional, Set, Tuple
@@ -208,8 +194,11 @@ REPO_ROOT = os.path.dirname(SIMDIR)                             # repo root
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from sim import solve_prices                                    # noqa: E402
+from sim import joint_allocation, solve_prices              # noqa: E402
 from sim.validate_production import load_production             # noqa: E402
+from sim.world import wages                                     # noqa: E402
+from sim.engine import money_units, wage_provider                # noqa: E402
+from sim.engine import solve_cache                              # noqa: E402
 
 
 class SolvedPrices(object):
@@ -319,21 +308,72 @@ def all_gate_nodes(production_entries: Optional[ProductionEntries] = None) -> Fr
         if entry.get("requires_node") is not None)
 
 
+def solver_trade_registry(production_entries: ProductionEntries) -> Dict[str, Any]:
+    """The trade registry, checked against the loaded technologies as well as recipes."""
+    from .catalog import load_mod_tree_nodes, load_trade_registry
+    root = os.path.dirname(os.path.dirname(HERE))
+    return load_trade_registry(root, production_entries, nodes=load_mod_tree_nodes(root))
+
+
 def denarii_per_labour_hour(prices_json: Dict[str, Any]) -> float:
-    """Denarii one hour of unskilled (`labourer`) labour is worth, read from
-    `prices.json`'s own wage table - the one number LABOUR-HOURS TO DENARII
-    in the module docstring needs, read in exactly one place so there is
-    exactly one place to check it is read correctly."""
-    return (prices_json["wage_rates_denarii_per_hour"]
-            [solve_prices.NUMERAIRE_TRADE]["rate"])
+    """Money one labour hour is worth: the wage document's coin-anchored
+    conversion (see LABOUR-HOURS TO DENARII in the module docstring)."""
+    return prices_json["money_per_labour_hour"]
 
 
 def hours_to_denarii(price_in_labour_hours: float, prices_json: Dict[str, Any]) -> float:
-    """`price_hours * labourer_denarii_per_hour` - see LABOUR-HOURS TO
-    DENARII in the module docstring for why multiplication, not division, is
-    the correct direction and why the labourer rate specifically is the
-    right rate to multiply by."""
+    """Labour hours times the money one labour hour is worth."""
     return price_in_labour_hours * denarii_per_labour_hour(prices_json)
+
+
+def _solve_to_json(production_entries: ProductionEntries,
+                   gate_nodes_held: FrozenSet[str], civilization_id: str,
+                   document_ratios: Dict[str, float]) -> Dict[str, Any]:
+    """Run the solver for one held-gate set; the result is JSON-able."""
+    # `gate_nodes_held` is exactly the right thing to hand
+    # `techniques_available_to` as `reached_nodes`: every `requires_node` it
+    # will ever check membership for is, by `all_gate_nodes`'s own
+    # construction, a gate node, so restricting the membership set to the
+    # gate nodes actually held changes no answer - see CACHE KEY above.
+    available_entries, _unreached, _unclassified = \
+        solve_prices.techniques_available_to(production_entries, gate_nodes_held)
+    producers_of = solve_prices.build_producers_index(available_entries)
+    wage_by_trade = dict(document_ratios)
+    # A trade the document does not list is paid by the same training rule
+    # the labour market uses.
+    registry = solver_trade_registry(production_entries)
+    training_years = wage_provider.training_years_by_trade(registry)
+    for trade in registry:
+        wage_by_trade.setdefault(trade, wages.training_premium(
+            training_years[trade], wage_provider.reference_discount_rate()))
+
+    # RENT. See RENT WAS MISSING FROM THIS FILE in the module docstring:
+    # `main()` in sim/solve_prices.py computes exactly these two dicts and
+    # merges them the same way before ever calling `compute_resolvable_
+    # materials` or `solve` - this mirrors that, rather than re-deriving a
+    # third way to combine them.
+    rent_hours_per_kg_by_material = solve_prices.rent_hours_per_kg_by_ore_material(
+        available_entries, wage_by_trade)
+    rent_hours_per_kg_by_material.update(
+        solve_prices.land_rent_hours_per_iugerum(
+            available_entries, wage_by_trade, civilization_id=civilization_id))
+
+    resolvable_materials = solve_prices.compute_resolvable_materials(
+        available_entries, producers_of,
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+    (prices_in_labour_hours, iterations_run, residual,
+     chosen_recipe_by_material) = solve_prices.solve(
+        available_entries, producers_of, resolvable_materials, wage_by_trade,
+        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
+        demand_anchors=joint_allocation.build_demand_anchors(civilization_id))
+
+    return {
+        "prices_in_labour_hours": prices_in_labour_hours,
+        "resolvable_materials": sorted(resolvable_materials),
+        "chosen_recipe_by_material": chosen_recipe_by_material,
+        "converged": residual < solve_prices.CONVERGENCE_TOLERANCE,
+        "iterations_run": iterations_run,
+    }
 
 
 def solved_prices(held_technology_ids: Iterable[str],
@@ -364,54 +404,36 @@ def solved_prices(held_technology_ids: Iterable[str],
 
     gate_nodes_held = frozenset(all_gate_nodes(production_entries)
                                 & set(held_technology_ids))
-    cache_key = (gate_nodes_held, civilization_id)
+    document_ratios = solve_prices.wage_ratios_by_trade(prices_json)
+    # Wages move with the labour market, so the cache is keyed on them too.
+    cache_key = (gate_nodes_held, civilization_id,
+                 tuple(sorted(document_ratios.items())))
 
     cached = _SOLVE_CACHE.get(cache_key)
     if cached is not None and cached[0] is production_entries:
         return cached[1]
 
-    # `gate_nodes_held` is exactly the right thing to hand
-    # `techniques_available_to` as `reached_nodes`: every `requires_node` it
-    # will ever check membership for is, by `all_gate_nodes`'s own
-    # construction, a gate node, so restricting the membership set to the
-    # gate nodes actually held changes no answer - see CACHE KEY above.
-    available_entries, _unreached, _unclassified = \
-        solve_prices.techniques_available_to(production_entries, gate_nodes_held)
-    producers_of = solve_prices.build_producers_index(available_entries)
-    wage_by_trade = solve_prices.wage_ratios_by_trade(prices_json)
-    # Trade identity is independent of the legacy wage calibration.  Supply a
-    # family-relative transitional rate for newly registered mod trades.
-    from .catalog import load_trade_registry, transitional_wage_rates
-    registry = load_trade_registry(os.path.dirname(os.path.dirname(HERE)),
-                                   production_entries)
-    base_hourly = {trade: ratio for trade, ratio in wage_by_trade.items()}
-    wage_by_trade = transitional_wage_rates(registry, base_hourly)
-
-    # RENT. See RENT WAS MISSING FROM THIS FILE in the module docstring:
-    # `main()` in sim/solve_prices.py computes exactly these two dicts and
-    # merges them the same way before ever calling `compute_resolvable_
-    # materials` or `solve` - this mirrors that, rather than re-deriving a
-    # third way to combine them.
-    rent_hours_per_kg_by_material = solve_prices.rent_hours_per_kg_by_ore_material(
-        available_entries, wage_by_trade)
-    rent_hours_per_kg_by_material.update(
-        solve_prices.land_rent_hours_per_iugerum(
-            available_entries, wage_by_trade, civilization_id=civilization_id))
-
-    resolvable_materials = solve_prices.compute_resolvable_materials(
-        available_entries, producers_of,
-        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
-    (prices_in_labour_hours, iterations_run, residual,
-     chosen_recipe_by_material) = solve_prices.solve(
-        available_entries, producers_of, resolvable_materials, wage_by_trade,
-        rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
-
+    def compute() -> Dict[str, Any]:
+        return _solve_to_json(production_entries, gate_nodes_held,
+                              civilization_id, document_ratios)
+    if production_entries is _DEFAULT_PRODUCTION_ENTRIES:
+        # Only the committed catalogue is persisted; synthetic catalogues are not.
+        try:
+            key = solve_cache.solve_key({
+                "production": production_entries, "gates": sorted(gate_nodes_held),
+                "civilization": civilization_id, "wage_ratios": document_ratios})
+        except OSError:
+            key = None  # an input file cannot be read: solve without the cache
+        stored = (solve_cache.cached_json(key, compute) if key
+                  else json.loads(json.dumps(compute())))
+    else:
+        stored = json.loads(json.dumps(compute()))
     result = SolvedPrices(
-        prices_in_labour_hours=prices_in_labour_hours,
-        resolvable_materials=resolvable_materials,
-        chosen_recipe_by_material=chosen_recipe_by_material,
-        converged=residual < solve_prices.CONVERGENCE_TOLERANCE,
-        iterations_run=iterations_run,
+        prices_in_labour_hours=stored["prices_in_labour_hours"],
+        resolvable_materials=set(stored["resolvable_materials"]),
+        chosen_recipe_by_material=stored["chosen_recipe_by_material"],
+        converged=stored["converged"],
+        iterations_run=stored["iterations_run"],
         gate_nodes_held=gate_nodes_held,
         civilization_id=civilization_id)
     _SOLVE_CACHE[cache_key] = (production_entries, result)
@@ -472,7 +494,8 @@ def priced_goods_table(held_technology_ids: Iterable[str],
     for entry in all_entries.values():
         makeable_by_someone.update((entry.get("outputs") or {}))
 
-    goods_denarii = dict(book_goods_denarii)
+    goods_denarii = money_units.convert_book_table(
+        book_goods_denarii, prices_json["money_per_labour_hour"])
     provenance = {}
     for material in book_goods_denarii:
         provenance[material] = ("gated" if material in makeable_by_someone

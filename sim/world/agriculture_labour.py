@@ -242,7 +242,9 @@ def farmland_for_population(
         adult_equivalent_population: float, crop: Optional["Crop"] = None,
         soil: Optional["Soil"] = None, rotation: Optional["Rotation"] = None,
         toolkit: Optional["Toolkit"] = None,
-        storage_technique: Optional["StorageTechnique"] = None) -> "Land":
+        storage_technique: Optional["StorageTechnique"] = None,
+        land_quality: float = 1.0,
+        arable_hectares_ceiling: Optional[float] = None) -> "Land":
     """A `Land` parcel sized so that the workforce
     `farm_workers_fte_for_population` implies can each crop their full
     `hectares_cropped_per_farm_worker` share - i.e. land is NOT the binding
@@ -259,15 +261,14 @@ def farmland_for_population(
     population changes - see sim/engine/core.py's own comment on why
     `farm_land` is constructed once, not every year.
 
-    `land.quality` is left at the default (1.0, decent land) here
-    regardless of `soil`: `soil.quality_multiplier` is a YIELD multiplier on
-    however many hectares exist, not a LAND-AREA requirement, so it plays no
-    part in how much land gets allocated - see the SOIL TABLE section and
-    `Land`'s own docstring. A caller modelling worse land should build the
-    `Land` directly with `quality=soil.quality_multiplier` instead of
-    relying on this function to do it implicitly.
+    `land_quality` is the parcel's yield multiplier only; it does not change
+    the area. `arable_hectares_ceiling`, when given, caps the area at
+    what the territory holds, so a civilisation that cannot be fed from its
+    own ground starts short rather than inventing land.
     """
     workers_fte = farm_workers_fte_for_population(
         adult_equivalent_population, crop, soil, rotation, toolkit, storage_technique)
     hectares = hectares_cropped_per_farm_worker(crop, toolkit) * workers_fte
-    return Land(hectares)
+    if arable_hectares_ceiling is not None:
+        hectares = min(hectares, arable_hectares_ceiling)
+    return Land(hectares, land_quality)

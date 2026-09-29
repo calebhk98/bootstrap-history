@@ -7,7 +7,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Digits hold different values by position; ten is one and zero",
+  "kb": "60_mathematics_method.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -28,7 +28,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Zero is a digit, not absence",
+  "kb": "60_mathematics_method.md",
   "ph": 40,
   "lab": {
    "scribe": 80
@@ -51,7 +51,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Numbers less than zero; rules for addition and multiplication",
+  "kb": "60_mathematics_method.md",
   "ph": 50,
   "lab": {
    "scribe": 100
@@ -74,7 +74,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Tenths, hundredths, thousandths as a continuation of positional notation past zero",
+  "kb": "60_mathematics_method.md",
   "ph": 45,
   "lab": {
    "scribe": 90
@@ -92,13 +92,13 @@
   "name": "The decimal point convention",
   "cat": "notation",
   "pre": [
-   "decimal_fraction",
+   "sc2_notation_decimal_fraction",
    "sc2_notation_positional"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Standardizing a marker between whole and fractional parts",
+  "kb": "60_mathematics_method.md",
   "ph": 20,
   "lab": {
    "scribe": 40
@@ -121,7 +121,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Symbol = means both sides have the same value",
+  "kb": "60_mathematics_method.md",
   "ph": 30,
   "lab": {
    "scribe": 60
@@ -144,7 +144,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Standardized marks for operations instead of words",
+  "kb": "60_mathematics_method.md",
   "ph": 35,
   "lab": {
    "scribe": 70
@@ -162,13 +162,12 @@
   "name": "Exponent notation",
   "cat": "notation",
   "pre": [
-   "brackets",
    "algebra_symbolic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Small superscript numbers for powers; x squared is x\u00b2",
+  "kb": "60_mathematics_method.md",
   "ph": 45,
   "lab": {
    "scribe": 90
@@ -186,13 +185,13 @@
   "name": "Root symbols and radical notation",
   "cat": "notation",
   "pre": [
-   "exponents",
+   "sc2_notation_exponents",
    "algebra_symbolic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Radical sign \u221a for square, cube, and nth roots",
+  "kb": "60_mathematics_method.md",
   "ph": 40,
   "lab": {
    "scribe": 80
@@ -210,14 +209,14 @@
   "name": "Scientific notation and powers of ten",
   "cat": "notation",
   "pre": [
-   "exponents",
-   "decimal_fraction",
+   "sc2_notation_exponents",
+   "sc2_notation_decimal_fraction",
    "arithmetic_positional"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Writing 0.0000314 as 3.14 \u00d7 10\u207b\u2075 or 3.14 E-5",
+  "kb": "60_mathematics_method.md",
   "ph": 60,
   "lab": {
    "scribe": 120
@@ -242,7 +241,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Decimal prefixes; base 10 throughout; no accidents like 12 inches to a foot",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
    "engineer": 200,
@@ -263,13 +262,13 @@
   "name": "Dimensional analysis and unit checking",
   "cat": "notation",
   "pre": [
-   "metric_unit",
+   "sc2_notation_metric_unit",
    "algebra_symbolic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Treating dimensions as algebraic quantities; force = mass times acceleration means newtons = kg\u22c5m/s\u00b2",
+  "kb": "60_mathematics_method.md",
   "ph": 70,
   "lab": {
    "engineer": 150
@@ -293,7 +292,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Recording measurement uncertainty by digit count; multiplication and division rules for combining measurements",
+  "kb": "60_mathematics_method.md",
   "ph": 90,
   "lab": {
    "chemist": 200,
@@ -312,13 +311,13 @@
   "name": "Error propagation and uncertainty arithmetic",
   "cat": "notation",
   "pre": [
-   "significant_figures",
+   "sc2_notation_significant_figures",
    "calculus"
   ],
   "traits": [
    "information"
   ],
-  "kb": "If x has uncertainty \u0394x and y = f(x), then \u0394y = |df/dx| \u0394x; rules for multiple variables",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "engineer": 250
@@ -337,7 +336,7 @@
   "cat": "algebra",
   "pre": [
    "algebra_symbolic",
-   "equals_sign"
+   "sc2_notation_equals_sign"
   ],
   "traits": [
    "information"
@@ -360,13 +359,13 @@
   "cat": "algebra",
   "pre": [
    "algebra_symbolic",
-   "exponents",
-   "roots"
+   "sc2_notation_exponents",
+   "sc2_notation_roots"
   ],
   "traits": [
    "information"
   ],
-  "kb": "ax\u00b2 + bx + c = 0 has solution x = (-b \u00b1 \u221a(b\u00b2 - 4ac)) / 2a",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
    "scribe": 150
@@ -384,13 +383,13 @@
   "name": "Polynomial equations and factoring",
   "cat": "algebra",
   "pre": [
-   "quadratic",
+   "sc2_algebra_quadratic",
    "algebra_symbolic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Expressions like x\u00b3 - 6x\u00b2 + 11x - 6 = (x-1)(x-2)(x-3); finding roots",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scribe": 180
@@ -408,14 +407,14 @@
   "name": "Binomial theorem and binomial expansion",
   "cat": "algebra",
   "pre": [
-   "polynomial",
-   "exponents",
+   "sc2_algebra_polynomial",
+   "sc2_notation_exponents",
    "algebra_symbolic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "(x + y)\u207f expands to a sum of terms with binomial coefficients C(n,k)",
+  "kb": "60_mathematics_method.md",
   "ph": 90,
   "lab": {
    "scribe": 170
@@ -433,13 +432,13 @@
   "name": "Logarithm as inverse exponent: log\u2081\u2080(1000) = 3",
   "cat": "algebra",
   "pre": [
-   "exponents",
+   "sc2_notation_exponents",
    "logarithms"
   ],
   "traits": [
    "information"
   ],
-  "kb": "If b^x = a, then log_b(a) = x; rules: log(xy) = log(x) + log(y)",
+  "kb": "60_mathematics_method.md",
   "ph": 70,
   "lab": {
    "scribe": 140
@@ -457,13 +456,12 @@
   "name": "Infinite series and convergence",
   "cat": "algebra",
   "pre": [
-   "calculus",
-   "limit"
+   "calculus"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Sum of infinitely many terms: 1 + 1/2 + 1/4 + ... = 2; when does it converge?",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scribe": 180
@@ -482,12 +480,12 @@
   "cat": "algebra",
   "pre": [
    "algebra_symbolic",
-   "infinite_series"
+   "sc2_algebra_infinite_series"
   ],
   "traits": [
    "information"
   ],
-  "kb": "As x \u2192 a, f(x) \u2192 L means values cluster arbitrarily close to L; formal: for any \u03b5 > 0, choose \u03b4 > 0 such that |x - a| < \u03b4 implies |f(x) - L| < \u03b5",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "scribe": 200
@@ -506,12 +504,12 @@
   "cat": "algebra",
   "pre": [
    "calculus",
-   "limit"
+   "sc2_calculus_limit"
   ],
   "traits": [
    "information"
   ],
-  "kb": "f'(x) = lim[h\u21920] (f(x+h) - f(x)) / h; rules: product, chain, quotient",
+  "kb": "60_mathematics_method.md",
   "ph": 140,
   "lab": {
    "scribe": 240
@@ -529,14 +527,14 @@
   "name": "The integral as area under a curve",
   "cat": "algebra",
   "pre": [
-   "derivative",
-   "limit",
+   "sc2_calculus_derivative",
+   "sc2_calculus_limit",
    "calculus"
   ],
   "traits": [
    "information"
   ],
-  "kb": "\u222bf(x)dx is the area under f; fundamental theorem: antiderivative of f has derivative f",
+  "kb": "60_mathematics_method.md",
   "ph": 150,
   "lab": {
    "scribe": 250
@@ -554,14 +552,14 @@
   "name": "Fundamental theorem: differentiation and integration are inverses",
   "cat": "algebra",
   "pre": [
-   "integral",
-   "derivative",
+   "sc2_calculus_integral",
+   "sc2_calculus_derivative",
    "calculus"
   ],
   "traits": [
    "information"
   ],
-  "kb": "d/dx \u222bf = f and \u222bdf/dx = f; connects rate of change to total change",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scribe": 150
@@ -580,12 +578,12 @@
   "cat": "algebra",
   "pre": [
    "calculus",
-   "fundamental_theorem"
+   "sc2_calculus_fundamental_theorem"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Equations like y' = -ky describe decay or growth; separation of variables, integrating factors",
+  "kb": "60_mathematics_method.md",
   "ph": 150,
   "lab": {
    "scribe": 250
@@ -603,15 +601,14 @@
   "name": "Partial differential equations",
   "cat": "algebra",
   "pre": [
-   "ode",
-   "limit",
-   "calculus",
-   "sc2_calculus_fourier_series"
+   "sc2_calculus_ode",
+   "sc2_calculus_limit",
+   "calculus"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Equations with derivatives with respect to multiple variables; heat, wave, Laplace equations",
+  "kb": "60_mathematics_method.md",
   "ph": 200,
   "lab": {
    "scribe": 300
@@ -629,14 +626,14 @@
   "name": "Fourier series: decomposing periodic functions",
   "cat": "algebra",
   "pre": [
-   "infinite_series",
-   "pde",
+   "sc2_algebra_infinite_series",
+   "sc2_calculus_pde",
    "calculus"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Any periodic function is a sum of sines and cosines with the right amplitudes and phases",
+  "kb": "60_mathematics_method.md",
   "ph": 160,
   "lab": {
    "scribe": 280
@@ -654,13 +651,12 @@
   "name": "Fourier transform and continuous frequency spectrum",
   "cat": "algebra",
   "pre": [
-   "fourier_series",
    "sc2_calculus_fourier_series"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Generalizing Fourier series to non-periodic signals; converting between time and frequency domains",
+  "kb": "60_mathematics_method.md",
   "ph": 170,
   "lab": {
    "scribe": 290
@@ -679,12 +675,12 @@
   "cat": "algebra",
   "pre": [
    "algebra_symbolic",
-   "roots"
+   "sc2_notation_roots"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Quadratics always have solutions in complex numbers; polar form re^(i\u03b8); Euler's e^(i\u03b8) = cos \u03b8 + i sin \u03b8",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scribe": 200
@@ -702,13 +698,13 @@
   "name": "Vectors and vector algebra",
   "cat": "algebra",
   "pre": [
-   "complex_numbers",
+   "sc2_algebra_complex_numbers",
    "geometry_analytic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Directed quantities; dot product a\u00b7b = |a||b|cos(angle); cross product a\u00d7b perpendicular to both",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
    "scribe": 220
@@ -726,13 +722,13 @@
   "name": "Matrices and matrix multiplication",
   "cat": "algebra",
   "pre": [
-   "vector",
+   "sc2_algebra_vector",
    "algebra_symbolic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Rectangular arrays of numbers; AB is not the same as BA; determinant measures invertibility",
+  "kb": "60_mathematics_method.md",
   "ph": 130,
   "lab": {
    "scribe": 240
@@ -750,13 +746,13 @@
   "name": "Determinants and matrix inversion",
   "cat": "algebra",
   "pre": [
-   "matrix",
+   "sc2_algebra_matrix",
    "algebra_symbolic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "det(A) = 0 means A is singular (non-invertible); A\u207b\u00b9 exists if det(A) \u2260 0",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "scribe": 200
@@ -774,14 +770,14 @@
   "name": "Tensors and tensor notation",
   "cat": "algebra",
   "pre": [
-   "matrix",
-   "vector",
+   "sc2_algebra_matrix",
+   "sc2_algebra_vector",
    "calculus"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Generalizing scalars, vectors, matrices; stress is a tensor (force per unit area in each direction)",
+  "kb": "60_mathematics_method.md",
   "ph": 180,
   "lab": {
    "scribe": 300
@@ -800,15 +796,15 @@
   "cat": "algebra",
   "pre": [
    "calculus",
-   "limit"
+   "sc2_calculus_limit"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Algorithms to find roots or solve equations when closed forms do not exist; choosing method depends on smoothness and number of solutions",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
-   "mathematician": 200
+   "scholar": 200
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -823,17 +819,17 @@
   "name": "Polynomial interpolation and finite differences",
   "cat": "algebra",
   "pre": [
-   "polynomial",
-   "numerical_methods",
+   "sc2_algebra_polynomial",
+   "sc2_algebra_numerical_methods",
    "algebra_symbolic"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Given n points, unique polynomial of degree n-1 passes through them; Newton forward differences for tables",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
-   "mathematician": 180
+   "scholar": 180
   },
   "mat": {},
   "build_yrs": 0.15,
@@ -854,10 +850,10 @@
   "traits": [
    "information"
   ],
-  "kb": "Minimize sum of squared errors between data points and model; normal equations from setting derivatives to zero",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
-   "mathematician": 200
+   "scholar": 200
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -878,7 +874,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Representing curves as equations: circle is x\u00b2 + y\u00b2 = r\u00b2; line is ax + by + c = 0",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
    "scribe": 150
@@ -896,14 +892,14 @@
   "name": "Conic sections: circles, ellipses, parabolas, hyperbolas",
   "cat": "geometry",
   "pre": [
-   "coordinate",
-   "polynomial",
+   "sc2_geometry_coordinate",
+   "sc2_algebra_polynomial",
    "geometry_analytic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "All are second-degree equations ax\u00b2 + bxy + cy\u00b2 + dx + ey + f = 0; eccentricity e determines shape",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
    "scribe": 180
@@ -922,15 +918,15 @@
   "cat": "geometry",
   "pre": [
    "geometry_analytic",
-   "exponents"
+   "sc2_notation_exponents"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "sin, cos, tan; inverse functions; tables for every degree or tenth of degree; identities like sin\u00b2 + cos\u00b2 = 1",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
-   "mathematician": 200,
+   "scholar": 200,
    "scribe": 80
   },
   "mat": {
@@ -948,17 +944,16 @@
   "name": "Spherical trigonometry and navigation formulas",
   "cat": "geometry",
   "pre": [
-   "trigonometry",
    "sc2_geometry_trigonometry"
   ],
   "traits": [
    "military",
    "commerce"
   ],
-  "kb": "Solving triangles on a sphere; great circles; spherical excess; rhumb line vs. geodesic",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
-   "mathematician": 220
+   "scholar": 220
   },
   "mat": {},
   "build_yrs": 0.25,
@@ -973,14 +968,14 @@
   "name": "Descriptive geometry and engineering drawing",
   "cat": "geometry",
   "pre": [
-   "spherical_trig",
-   "orthographic",
+   "sc2_geometry_spherical_trig",
+   "mfg_orthographic",
    "geometry_analytic"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Three orthographic views (top, front, side) fully describe a 3D object; sections; auxiliary views",
+  "kb": "60_mathematics_method.md",
   "ph": 130,
   "lab": {
    "engineer": 220,
@@ -1001,17 +996,16 @@
   "name": "Non-Euclidean geometry: hyperbolic and elliptic",
   "cat": "geometry",
   "pre": [
-   "conics",
-   "spherical_trig",
-   "sc2_geometry_differential"
+   "sc2_geometry_conics",
+   "sc2_geometry_spherical_trig"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Gauss, Lobachevsky, Riemann: parallel postulate is independent; curved spaces have their own geometry",
+  "kb": "60_mathematics_method.md",
   "ph": 150,
   "lab": {
-   "mathematician": 260
+   "scholar": 260
   },
   "mat": {},
   "build_yrs": 0.3,
@@ -1026,18 +1020,18 @@
   "name": "Differential geometry: curves and surfaces",
   "cat": "geometry",
   "pre": [
-   "non_euclidean",
-   "pde",
+   "sc2_geometry_non_euclidean",
+   "sc2_calculus_pde",
    "calculus",
    "sc2_algebra_determinant"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Curvature, torsion, geodesics, Gaussian curvature, first and second fundamental forms",
+  "kb": "60_mathematics_method.md",
   "ph": 170,
   "lab": {
-   "mathematician": 300
+   "scholar": 300
   },
   "mat": {},
   "build_yrs": 0.35,
@@ -1053,15 +1047,15 @@
   "cat": "probability",
   "pre": [
    "algebra_symbolic",
-   "binomial"
+   "sc2_algebra_binomial"
   ],
   "traits": [
    "information"
   ],
-  "kb": "nPr = n!/(n-r)!, nCr = n!/(r!(n-r)!); binomial coefficients C(n,k)",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
-   "mathematician": 150
+   "scholar": 150
   },
   "mat": {},
   "build_yrs": 0.15,
@@ -1076,17 +1070,17 @@
   "name": "Probability axioms and conditional probability",
   "cat": "probability",
   "pre": [
-   "combinatorics",
+   "sc2_probability_combinatorics",
    "algebra_symbolic",
    "arithmetic_positional"
   ],
   "traits": [
    "information"
   ],
-  "kb": "P(A or B) = P(A) + P(B) - P(A and B); P(A|B) = P(A and B)/P(B); Bayes' theorem",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
-   "mathematician": 200
+   "scholar": 200
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -1101,16 +1095,16 @@
   "name": "Normal (Gaussian) distribution and the bell curve",
   "cat": "probability",
   "pre": [
-   "probability_axioms",
-   "limit"
+   "sc2_probability_axioms",
+   "sc2_calculus_limit"
   ],
   "traits": [
    "information"
   ],
-  "kb": "f(x) = (1/(\u03c3\u221a(2\u03c0))) exp(-(x-\u03bc)\u00b2/(2\u03c3\u00b2)); most natural distribution for sums of independent errors",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
-   "mathematician": 200
+   "scholar": 200
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -1125,18 +1119,17 @@
   "name": "Central limit theorem",
   "cat": "probability",
   "pre": [
-   "normal_distribution",
-   "infinite_series",
-   "sc2_probability_axioms",
-   "sc2_probability_normal_distribution"
+   "sc2_probability_normal_distribution",
+   "sc2_algebra_infinite_series",
+   "sc2_probability_axioms"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Sum of many independent random variables is approximately normal, regardless of their individual distributions",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
-   "mathematician": 220
+   "scholar": 220
   },
   "mat": {},
   "build_yrs": 0.25,
@@ -1156,10 +1149,10 @@
   "traits": [
    "information"
   ],
-  "kb": "Mean \u03bc = sum/n; variance \u03c3\u00b2 = average squared deviation; standard deviation \u03c3 = \u221a(variance)",
+  "kb": "60_mathematics_method.md",
   "ph": 60,
   "lab": {
-   "mathematician": 120
+   "scholar": 120
   },
   "mat": {},
   "build_yrs": 0.1,
@@ -1174,16 +1167,16 @@
   "name": "Correlation and covariance",
   "cat": "probability",
   "pre": [
-   "mean_variance",
+   "sc2_statistics_mean_variance",
    "sc2_statistics_sampling_theory"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Pearson r = \u03a3(x-\u03bcx)(y-\u03bcy) / (n \u03c3x \u03c3y); r ranges from -1 to +1; r\u00b2 is fraction of variance explained",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
-   "mathematician": 180
+   "scholar": 180
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -1198,17 +1191,16 @@
   "name": "Linear regression and the line of best fit",
   "cat": "probability",
   "pre": [
-   "correlation",
-   "least_squares",
-   "sc2_statistics_correlation"
+   "sc2_statistics_correlation",
+   "sc2_algebra_least_squares"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "y = a + bx where b = r(\u03c3y/\u03c3x); minimizes squared vertical distances",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
-   "mathematician": 200
+   "scholar": 200
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -1223,17 +1215,16 @@
   "name": "Student's t-test for mean differences",
   "cat": "probability",
   "pre": [
-   "chi_squared",
-   "normal_distribution",
+   "sc2_probability_normal_distribution",
    "sc2_statistics_significance_test"
   ],
   "traits": [
    "information"
   ],
-  "kb": "t = (mean1 - mean2) / (SE of difference); compares two small samples",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
-   "mathematician": 220
+   "scholar": 220
   },
   "mat": {},
   "build_yrs": 0.25,
@@ -1248,17 +1239,17 @@
   "name": "Analysis of variance (ANOVA)",
   "cat": "probability",
   "pre": [
-   "t_test",
-   "regression",
+   "sc2_statistics_t_test",
+   "sc2_statistics_regression",
    "sc2_probability_normal_distribution"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Partitions variance into groups and residuals; F-test whether group means differ",
+  "kb": "60_mathematics_method.md",
   "ph": 140,
   "lab": {
-   "mathematician": 250
+   "scholar": 250
   },
   "mat": {},
   "build_yrs": 0.3,
@@ -1273,17 +1264,16 @@
   "name": "Sampling theory and the standard error",
   "cat": "probability",
   "pre": [
-   "central_limit",
-   "normal_distribution",
-   "sc2_probability_central_limit"
+   "sc2_probability_central_limit",
+   "sc2_probability_normal_distribution"
   ],
   "traits": [
    "information"
   ],
-  "kb": "SE = \u03c3/\u221an; determines precision of sample mean estimate; confidence interval is mean \u00b1 t*SE",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
-   "mathematician": 200
+   "scholar": 200
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -1298,17 +1288,15 @@
   "name": "Confidence interval and margin of error",
   "cat": "probability",
   "pre": [
-   "sampling_theory",
-   "t_test",
    "sc2_statistics_sampling_theory"
   ],
   "traits": [
    "information"
   ],
-  "kb": "95% CI is estimate \u00b1 1.96 SE; if we repeat the survey 100 times, about 95 contain the true value",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
-   "mathematician": 180
+   "scholar": 180
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -1323,17 +1311,15 @@
   "name": "Significance test and p-value",
   "cat": "probability",
   "pre": [
-   "chi_squared",
-   "confidence_interval",
    "sc2_statistics_confidence_interval"
   ],
   "traits": [
    "information"
   ],
-  "kb": "p is probability of data if null hypothesis is true; p < 0.05 usually means reject null",
+  "kb": "60_mathematics_method.md",
   "ph": 120,
   "lab": {
-   "mathematician": 220
+   "scholar": 220
   },
   "mat": {},
   "build_yrs": 0.25,
@@ -1348,15 +1334,15 @@
   "name": "Randomisation and random assignment",
   "cat": "probability",
   "pre": [
-   "probability_axioms"
+   "sc2_probability_axioms"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Assigning subjects to treatment or control by random mechanism ensures balance on unknown confounders",
+  "kb": "60_mathematics_method.md",
   "ph": 80,
   "lab": {
-   "researcher": 160
+   "scholar": 160
   },
   "mat": {},
   "build_yrs": 0.15,
@@ -1371,16 +1357,15 @@
   "name": "Blocking and stratification in experiments",
   "cat": "probability",
   "pre": [
-   "randomisation",
-   "sc2_statistics_control_group"
+   "sc2_statistics_randomisation"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Divide subjects into homogeneous blocks, randomise within block, to reduce variance from known confounders",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
-   "researcher": 180
+   "scholar": 180
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -1395,16 +1380,16 @@
   "name": "Control group and negative control",
   "cat": "probability",
   "pre": [
-   "blocking",
+   "sc2_statistics_blocking",
    "sc2_statistics_significance_test"
   ],
   "traits": [
    "medical"
   ],
-  "kb": "Run the same experiment without treatment to measure placebo effect and natural variation",
+  "kb": "60_mathematics_method.md",
   "ph": 70,
   "lab": {
-   "researcher": 140
+   "scholar": 140
   },
   "mat": {},
   "build_yrs": 0.1,
@@ -1419,16 +1404,15 @@
   "name": "Blinding and double-blind experiments",
   "cat": "probability",
   "pre": [
-   "control_group",
    "sc2_statistics_control_group"
   ],
   "traits": [
    "medical"
   ],
-  "kb": "Neither subject nor experimenter knows who got treatment; reveals biases in observation and reporting",
+  "kb": "60_mathematics_method.md",
   "ph": 90,
   "lab": {
-   "researcher": 170
+   "scholar": 170
   },
   "mat": {},
   "build_yrs": 0.15,
@@ -1448,11 +1432,10 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Probability of death at each age; lx survivors at age x; ex life expectancy",
+  "kb": "60_mathematics_method.md",
   "ph": 100,
   "lab": {
-   "actuary": 200,
-   "mathematician": 100
+   "scholar": 300
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -1467,14 +1450,14 @@
   "name": "Control chart and statistical process control",
   "cat": "probability",
   "pre": [
-   "mean_variance",
-   "significance_test",
+   "sc2_statistics_mean_variance",
+   "sc2_statistics_significance_test",
    "sc2_statistics_sampling_theory"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Plot process output over time with control limits (\u03bc \u00b1 3\u03c3); trends or excursions signal problems",
+  "kb": "60_mathematics_method.md",
   "ph": 110,
   "lab": {
    "engineer": 200
@@ -1512,7 +1495,7 @@
   "name": "Kinematics: position, velocity, acceleration",
   "cat": "physics",
   "pre": [
-   "derivative",
+   "sc2_calculus_derivative",
    "algebra_symbolic",
    "units_standards"
   ],
@@ -1537,9 +1520,8 @@
   "name": "Newton's three laws of motion",
   "cat": "physics",
   "pre": [
-   "kinematics",
-   "algebra_symbolic",
    "sc2_physics_kinematics",
+   "algebra_symbolic",
    "units_standards"
   ],
   "traits": [
@@ -1564,7 +1546,7 @@
   "name": "Newton's law of universal gravitation",
   "cat": "physics",
   "pre": [
-   "newtons_laws",
+   "sc2_physics_newtons_laws",
    "algebra_symbolic",
    "sc2_physics_kinematics"
   ],
@@ -1589,7 +1571,7 @@
   "name": "Momentum and impulse",
   "cat": "physics",
   "pre": [
-   "newtons_laws",
+   "sc2_physics_newtons_laws",
    "arithmetic_positional",
    "units_standards"
   ],
@@ -1615,7 +1597,7 @@
   "cat": "physics",
   "pre": [
    "calculus",
-   "newtons_laws"
+   "sc2_physics_newtons_laws"
   ],
   "traits": [
    "information"
@@ -1638,7 +1620,7 @@
   "name": "Work, power, and efficiency",
   "cat": "physics",
   "pre": [
-   "energy"
+   "sc2_physics_energy"
   ],
   "traits": [
    "labour_saving",
@@ -1662,7 +1644,7 @@
   "name": "Elasticity and Hooke's law",
   "cat": "physics",
   "pre": [
-   "newtons_laws"
+   "sc2_physics_newtons_laws"
   ],
   "traits": [
    "information"
@@ -1685,7 +1667,7 @@
   "name": "Fluid statics and buoyancy",
   "cat": "physics",
   "pre": [
-   "statics"
+   "civ_statics"
   ],
   "traits": [
    "information"
@@ -1709,7 +1691,7 @@
   "cat": "physics",
   "pre": [
    "calculus",
-   "fluid_statics"
+   "sc2_physics_fluid_statics"
   ],
   "traits": [
    "information"
@@ -1732,7 +1714,7 @@
   "name": "Viscosity and Newton's law of friction",
   "cat": "physics",
   "pre": [
-   "hydrodynamics",
+   "sc2_physics_hydrodynamics",
    "sc2_calculus_derivative"
   ],
   "traits": [
@@ -1756,9 +1738,8 @@
   "name": "Reynolds number and flow regime",
   "cat": "physics",
   "pre": [
-   "viscosity",
-   "hydrodynamics",
-   "sc2_physics_viscosity"
+   "sc2_physics_viscosity",
+   "sc2_physics_hydrodynamics"
   ],
   "traits": [
    "information"
@@ -1781,8 +1762,7 @@
   "name": "Aerodynamic lift and wing design",
   "cat": "physics",
   "pre": [
-   "hydrodynamics",
-   "bernoulli",
+   "sc2_physics_hydrodynamics",
    "sc2_physics_reynolds_number"
   ],
   "traits": [
@@ -1807,8 +1787,8 @@
   "name": "Acoustics and sound propagation",
   "cat": "physics",
   "pre": [
-   "hydrodynamics",
-   "wave_motion",
+   "sc2_physics_hydrodynamics",
+   "sc2_physics_wave_motion",
    "sc2_calculus_fourier_series"
   ],
   "traits": [
@@ -1835,7 +1815,7 @@
   "cat": "physics",
   "pre": [
    "calculus",
-   "kinematics"
+   "sc2_physics_kinematics"
   ],
   "traits": [
    "information"
@@ -1882,7 +1862,6 @@
   "name": "Diffraction and Fraunhofer patterns",
   "cat": "physics",
   "pre": [
-   "physical_optics",
    "lens_grinding",
    "sc2_physics_em_wave"
   ],
@@ -1930,7 +1909,7 @@
   "name": "Electrostatics and Coulomb's law",
   "cat": "physics",
   "pre": [
-   "newtons_laws",
+   "sc2_physics_newtons_laws",
    "electrostatics"
   ],
   "traits": [
@@ -1977,7 +1956,7 @@
   "name": "Maxwell's equations and electromagnetic theory",
   "cat": "physics",
   "pre": [
-   "magnetostatics",
+   "sc2_physics_magnetostatics",
    "electrostatics"
   ],
   "traits": [
@@ -2001,7 +1980,7 @@
   "name": "Electromagnetic wave and radiation",
   "cat": "physics",
   "pre": [
-   "maxwell_equations",
+   "sc2_physics_maxwell_equations",
    "em_theory",
    "sc2_calculus_fourier_series"
   ],
@@ -2027,7 +2006,7 @@
   "name": "Speed of light as fundamental constant",
   "cat": "physics",
   "pre": [
-   "em_wave",
+   "sc2_physics_em_wave",
    "lens_grinding",
    "sc2_calculus_derivative"
   ],
@@ -2052,7 +2031,7 @@
   "name": "Kinetic theory of gases",
   "cat": "physics",
   "pre": [
-   "newtons_laws",
+   "sc2_physics_newtons_laws",
    "statistics_basic"
   ],
   "traits": [
@@ -2076,7 +2055,7 @@
   "name": "Statistical mechanics and ensemble theory",
   "cat": "physics",
   "pre": [
-   "kinetic_theory",
+   "sc2_physics_kinetic_theory",
    "thermodynamics_theory"
   ],
   "traits": [
@@ -2100,7 +2079,6 @@
   "name": "Boltzmann distribution and thermal equilibrium",
   "cat": "physics",
   "pre": [
-   "statistical_mechanics",
    "sc2_physics_statistical_mechanics",
    "thermodynamics_theory"
   ],
@@ -2125,8 +2103,8 @@
   "name": "Blackbody radiation and Planck's law",
   "cat": "physics",
   "pre": [
-   "boltzmann_distribution",
-   "spectrum",
+   "sc2_physics_boltzmann_distribution",
+   "sc2_physics_spectrum",
    "sc2_physics_em_wave",
    "thermodynamics_theory"
   ],
@@ -2151,9 +2129,7 @@
   "name": "The quantum and photon concept",
   "cat": "physics",
   "pre": [
-   "blackbody_radiation",
-   "sc2_physics_blackbody_radiation",
-   "sc2_physics_photoelectric_effect"
+   "sc2_physics_blackbody_radiation"
   ],
   "traits": [
    "information"
@@ -2176,7 +2152,7 @@
   "name": "Photoelectric effect and stopping potential",
   "cat": "physics",
   "pre": [
-   "quantum_photon",
+   "sc2_physics_quantum_photon",
    "sc2_physics_em_wave",
    "vacuum_tube"
   ],
@@ -2204,10 +2180,8 @@
   "name": "Wave mechanics and Schr\u00f6dinger equation",
   "cat": "physics",
   "pre": [
-   "bohr_atom",
-   "pde",
-   "atomic_theory",
    "sc2_calculus_pde",
+   "atomic_theory",
    "sc2_physics_photoelectric_effect"
   ],
   "traits": [
@@ -2231,7 +2205,6 @@
   "name": "Heisenberg uncertainty principle",
   "cat": "physics",
   "pre": [
-   "wave_mechanics",
    "sc2_physics_wave_mechanics"
   ],
   "traits": [
@@ -2255,7 +2228,7 @@
   "name": "The nucleus and radioactivity",
   "cat": "physics",
   "pre": [
-   "photoelectric_effect",
+   "sc2_physics_photoelectric_effect",
    "atomic_theory",
    "in2_geiger_counter"
   ],
@@ -2280,7 +2253,6 @@
   "name": "The neutron",
   "cat": "physics",
   "pre": [
-   "isotopes",
    "sc2_physics_nucleus_discovery"
   ],
   "traits": [
@@ -2304,7 +2276,7 @@
   "name": "Nuclear fission and chain reaction",
   "cat": "physics",
   "pre": [
-   "neutron_discovery",
+   "sc2_physics_neutron_discovery",
    "analytical_chemistry",
    "in2_geiger_counter",
    "sc2_physics_wave_mechanics"
@@ -2339,7 +2311,7 @@
   "kb": "89_remaining_arts.md#sc2_method_hypothesis",
   "ph": 100,
   "lab": {
-   "researcher": 200
+   "scholar": 200
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -2354,7 +2326,7 @@
   "name": "Hypothesis and prediction",
   "cat": "method",
   "pre": [
-   "controlled_experiment"
+   "sc2_method_controlled_experiment"
   ],
   "traits": [
    "information"
@@ -2362,7 +2334,7 @@
   "kb": "89_remaining_arts.md#sc2_method_hypothesis",
   "ph": 90,
   "lab": {
-   "researcher": 180
+   "scholar": 180
   },
   "mat": {},
   "build_yrs": 0.15,
@@ -2377,7 +2349,7 @@
   "name": "Replication and repeatability",
   "cat": "method",
   "pre": [
-   "controlled_experiment",
+   "sc2_method_controlled_experiment",
    "sc2_institution_research_group",
    "scientific_method"
   ],
@@ -2387,7 +2359,7 @@
   "kb": "89_remaining_arts.md#sc2_method_hypothesis",
   "ph": 80,
   "lab": {
-   "researcher": 160
+   "scholar": 160
   },
   "mat": {},
   "build_yrs": 0.1,
@@ -2410,10 +2382,10 @@
   "kb": "89_remaining_arts.md#sc2_method_hypothesis",
   "ph": 70,
   "lab": {
-   "researcher": 140
+   "scholar": 140
   },
   "mat": {
-   "mat_parchment": 50,
+   "parchment_sheet": 50,
    "mat_ink": 5
   },
   "build_yrs": 0.1,
@@ -2428,8 +2400,8 @@
   "name": "Negative result and null finding",
   "cat": "method",
   "pre": [
-   "hypothesis",
-   "replication",
+   "sc2_method_hypothesis",
+   "sc2_method_replication",
    "scientific_method"
   ],
   "traits": [
@@ -2438,7 +2410,7 @@
   "kb": "89_remaining_arts.md#sc2_method_hypothesis",
   "ph": 90,
   "lab": {
-   "researcher": 180
+   "scholar": 180
   },
   "mat": {},
   "build_yrs": 0.15,
@@ -2461,7 +2433,7 @@
   "kb": "89_remaining_arts.md#sc2_method_hypothesis",
   "ph": 100,
   "lab": {
-   "researcher": 200
+   "scholar": 200
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -2484,7 +2456,7 @@
   "kb": "89_remaining_arts.md#sc2_institution_journal",
   "ph": 100,
   "lab": {
-   "administrator": 200
+   "scholar": 200
   },
   "mat": {
    "paper_kg": 100
@@ -2500,7 +2472,7 @@
   "name": "Scientific journal and periodical",
   "cat": "institution",
   "pre": [
-   "learned_society",
+   "sc2_institution_learned_society",
    "corpus_dispersed"
   ],
   "traits": [
@@ -2509,8 +2481,7 @@
   "kb": "89_remaining_arts.md#sc2_institution_journal",
   "ph": 110,
   "lab": {
-   "editor": 200,
-   "scribe": 150
+   "scribe": 350
   },
   "mat": {
    "paper_kg": 500
@@ -2526,8 +2497,8 @@
   "name": "Referee and peer review",
   "cat": "institution",
   "pre": [
-   "journal",
-   "peer_criticism",
+   "sc2_institution_journal",
+   "sc2_method_peer_criticism",
    "sc2_institution_research_group",
    "sc2_institution_textbook"
   ],
@@ -2537,8 +2508,8 @@
   "kb": "89_remaining_arts.md#sc2_institution_journal",
   "ph": 100,
   "lab": {
-   "editor": 200,
-   "researcher": 150
+   "scribe": 200,
+   "scholar": 150
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -2552,7 +2523,7 @@
   "name": "Citation and bibliographic reference",
   "cat": "institution",
   "pre": [
-   "journal",
+   "sc2_institution_journal",
    "sc2_institution_textbook"
   ],
   "traits": [
@@ -2575,8 +2546,8 @@
   "name": "Textbook and codified knowledge",
   "cat": "institution",
   "pre": [
-   "journal",
-   "curriculum"
+   "sc2_institution_journal",
+   "sc2_institution_curriculum"
   ],
   "traits": [
    "information",
@@ -2602,7 +2573,6 @@
   "name": "Curriculum and course sequence",
   "cat": "institution",
   "pre": [
-   "textbook",
    "school_founded"
   ],
   "traits": [
@@ -2612,7 +2582,7 @@
   "kb": "89_remaining_arts.md#sc2_institution_curriculum",
   "ph": 120,
   "lab": {
-   "educator": 220
+   "scholar": 220
   },
   "mat": {},
   "build_yrs": 0.3,
@@ -2626,7 +2596,6 @@
   "name": "Examination and credentialing",
   "cat": "institution",
   "pre": [
-   "curriculum",
    "sc2_institution_curriculum",
    "school_founded"
   ],
@@ -2636,7 +2605,7 @@
   "kb": "89_remaining_arts.md#sc2_institution_curriculum",
   "ph": 80,
   "lab": {
-   "educator": 160
+   "scholar": 160
   },
   "mat": {
    "paper_kg": 100
@@ -2652,10 +2621,8 @@
   "name": "Doctorate and research degree",
   "cat": "institution",
   "pre": [
-   "examination",
-   "thesis",
-   "fin_university",
-   "sc2_institution_examination"
+   "sc2_institution_examination",
+   "fin_university"
   ],
   "traits": [
    "information"
@@ -2663,7 +2630,7 @@
   "kb": "89_remaining_arts.md#sc2_institution_curriculum",
   "ph": 150,
   "lab": {
-   "advisor": 300
+   "scholar": 300
   },
   "mat": {},
   "build_yrs": 0.5,
@@ -2677,9 +2644,7 @@
   "name": "Research group and principal investigator",
   "cat": "institution",
   "pre": [
-   "doctorate",
-   "funded_programme",
-   "sc2_institution_funded_programme",
+   "sc2_institution_doctorate",
    "school_founded"
   ],
   "traits": [
@@ -2688,7 +2653,7 @@
   "kb": "89_remaining_arts.md#sc2_institution_funded_programme",
   "ph": 100,
   "lab": {
-   "administrator": 200
+   "scholar": 200
   },
   "mat": {},
   "build_yrs": 0.25,
@@ -2702,8 +2667,7 @@
   "name": "Funded research programme",
   "cat": "institution",
   "pre": [
-   "research_group",
-   "government_support",
+   "sc2_institution_research_group",
    "fin_contract_law",
    "school_founded"
   ],
@@ -2713,7 +2677,7 @@
   "kb": "89_remaining_arts.md#sc2_institution_funded_programme",
   "ph": 120,
   "lab": {
-   "administrator": 220
+   "scholar": 220
   },
   "mat": {},
   "build_yrs": 0.3,
@@ -2728,7 +2692,7 @@
   "cat": "institution",
   "pre": [
    "scientific_method",
-   "lab_notebook"
+   "sc2_method_lab_notebook"
   ],
   "traits": [
    "commerce"
@@ -2737,7 +2701,7 @@
   "ph": 100,
   "lab": {
    "scribe": 200,
-   "lawyer": 100
+   "scholar": 100
   },
   "mat": {},
   "build_yrs": 0.2,

@@ -1,5 +1,7 @@
 # Add dedicated Education and Demography screens
 
+**Status:** open
+
 These systems are fundamental to civilization development but their information is scattered across generic screens and require triangulation.
 
 ## Education screen should include

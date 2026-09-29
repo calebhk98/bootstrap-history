@@ -9,12 +9,24 @@ name protocol.py's shim re-exports - and imports these handlers back from
 here. Behaviour is unchanged and moved verbatim.
 """
 
+from .command_registry import command
+import os
+import tempfile
+
 from ..data import downstream_count
+from ..purchase_rule import purchase_budget
 from .nodes import _did_you_mean
+from .saveload import load_state, save_state
 from .util import _flag
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
 
+@command("start", group="projects", aliases=("begin", "research", "build"),
+         summary="begin work on something",
+         usage=["start <id or name>"], options={"<id>": "a technology or concern"},
+         description="If it cannot start, the error says exactly what is missing. A "
+                     "start that would oversubscribe a hired trade still goes ahead "
+                     "and warns.")
 def _cmd_start(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be started. 'state' shows where you finished and how far you got" % ended}
@@ -134,7 +146,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # calendar floor is long enough that it cannot be the only thing in
     # hand for a while - not every multi-year start, which would be noise
     # by the fifth one.
-    if node["yrs"] >= 2 and not getattr(sim, "_said_parallelism", False):
+    if node["yrs"] >= 2 and sim._said_parallelism is None:
         sim._said_parallelism = True
         out["a_calendar_floor_is_not_exclusive_research_time"] = (
             "%s will take at least %d year%s, whatever else you do. That "
@@ -157,21 +169,13 @@ def _cmd_start(sim, nodes, cmd, ended):
     # anything, with today's free staff - not a promise, since attrition
     # and hiring between now and completion can move either number.
     if sim.is_venture(node_id):
-        _sup_sch, _sup_art = sim.venture_hands(node_id)
-        _free_sch, _free_art = sim.venture_staff_free()
-        if _sup_sch > _free_sch + 1e-9 or _sup_art > _free_art + 1e-9:
+        shortfall = sim.opening_shortfall(node_id)
+        if shortfall:
+            _sup_sch, _sup_art, _free_sch, _free_art = shortfall
             out["today_you_could_not_open_this_when_it_is_done"] = (
-                "keeping it open will want the equivalent of %.2f "
-                "scholars and %.2f artisans of your own watching it "
-                "full time, every year it runs - a continuous share of "
-                "their time, not a headcount; you have %.2f and %.2f "
-                "free right now, with nothing else committed. That "
-                "is a different, usually smaller number than the crew "
-                "that builds it, and it is checked only when you 'open' "
-                "it - not now. Staffing can change before this "
-                "finishes, for better or worse; if it has not by then, "
-                "hire, teach, or close something first."
-                % (_sup_sch, _sup_art, _free_sch, _free_art))
+                "with today's staff you could not open it: it needs %.1f "
+                "scholars and %.1f craftsmen to supervise, and %.1f and %.1f "
+                "are free." % shortfall)
     # AND SAY WHEN THIS WOULD BORROW TO FINISH: `start` must not silently
     # finance the gap between what a project costs and what the household
     # has, at up to twelve per cent, leaving a player carried into debt
@@ -285,6 +289,10 @@ def _cmd_start(sim, nodes, cmd, ended):
 
 
 
+@command("stop", group="projects", aliases=("x", "abandon", "cancel"),
+         summary="abandon a project, losing what you spent",
+         usage=["stop <id>"], options={"<id>": "an active project"},
+         description="Sunk cost is sunk.")
 def _cmd_stop(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
     stopped, why = sim.stop_project(node_id)
@@ -299,6 +307,80 @@ def _cmd_stop(sim, nodes, cmd, ended):
 
 
 
+def _rush_caps(cmd):
+    """The fiscal caps on a rush as (caps, error). A cap is None when not given."""
+    caps = {}
+    for key in ("max_total_cost", "max_annual_draw", "reserve_cash"):
+        raw = cmd.get(key)
+        if raw is None:
+            caps[key] = None
+            continue
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            return None, "%s must be a number of currency" % key
+        if value < 0 or value != value:
+            return None, "%s cannot be negative" % key
+        caps[key] = value
+    return caps, None
+
+
+def _rush_cost_left(sim, node_id):
+    """Money still owed to begin this project, net of what was already sunk."""
+    paid = (sim.state.projects.paid_towards or {}).get(node_id, 0.0)
+    price = sim.project_cost(node_id)
+    return price - min(price, max(0.0, paid))
+
+
+def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far):
+    """Why the next project breaks a fiscal cap, or None when it fits."""
+    if caps["max_total_cost"] is not None and cost_so_far + cost > caps["max_total_cost"] + 1e-9:
+        return ("not begun: costs %s, which would take this rush past "
+                "max_total_cost" % "{:,.0f}".format(cost))
+    if caps["max_annual_draw"] is not None and draw_so_far + draw > caps["max_annual_draw"] + 1e-9:
+        return ("not begun: draws %s a year, which would take this rush past "
+                "max_annual_draw" % "{:,.0f}".format(draw))
+    if caps["reserve_cash"] is not None:
+        if cost_so_far + cost + caps["reserve_cash"] > budget + 1e-9:
+            return ("not begun: costs %s, which would dip into the "
+                    "reserve_cash you asked to keep" % "{:,.0f}".format(cost))
+    return None
+
+
+def _rush_preview(sim, nodes, cmd, ended):
+    """Run the real rush, then roll the game back to how it was.
+
+    Credit, costs and availability all move as projects begin, so only the
+    real start path can say what a rush would start.
+    """
+    saved_order = list(sim.order)
+    with tempfile.TemporaryDirectory() as folder:
+        snapshot = os.path.join(folder, "snapshot.json")
+        save_state(sim, snapshot)
+        try:
+            result = _cmd_rush(sim, nodes, dict(cmd, preview=False), ended)
+        finally:
+            load_state(sim, snapshot)
+            sim.order[:] = saved_order
+    if result.get("preview") or not result.get("ok"):
+        return result
+    return {"ok": True, "preview": True, "nothing_changed": True,
+            "count_would_start": result["count_started"],
+            "would_start": result["started"],
+            "total_cost": result["total_cost"],
+            "total_annual_draw": result["total_annual_draw"],
+            "count_not_started": result["count_not_started"],
+            "not_started": result["not_started"],
+            "how_to_confirm": "Repeat the same rush without 'preview' to begin these."}
+
+
+@command("rush", group="projects", aliases=("startall", "start_all", "muster"),
+         summary="start everything you could begin today",
+         usage=["rush", "rush limit:5", "rush preview", "rush max_total_cost:<n>"],
+         options={"limit": "cap the count", "max_total_cost": "cap total money",
+                  "max_annual_draw": "cap yearly draw", "reserve_cash": "keep this much back",
+                  "preview": "show what it would start and spend, starting nothing"},
+         description="Highest-leverage first. Also spelled 'start all'.")
 def _cmd_rush(sim, nodes, cmd, ended):
     # BULK START, FOG-SAFE: a late game can have dozens of things
     # startable at once, with nothing to do but type `start <id>`
@@ -318,6 +400,12 @@ def _cmd_rush(sim, nodes, cmd, ended):
         return {"ok": False, "error": "limit must be a whole number"}
     if limit is not None and limit < 1:
         return {"ok": False, "error": "limit must be at least 1"}
+    caps, cap_error = _rush_caps(cmd)
+    if cap_error:
+        return {"ok": False, "error": cap_error}
+    capped = any(value is not None for value in caps.values())
+    if _flag(cmd.get("preview")):
+        return _rush_preview(sim, nodes, cmd, ended)
     _memo = {}
     _ok = [node_id for node_id in sim.order if sim.can_start(node_id, _memo=_memo)]
     # HIGHEST-LEVERAGE FIRST, INTERNALLY ONLY. This never shows a player
@@ -330,7 +418,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
     _ok.sort(key=lambda k: (-downstream_count(nodes, k), sim.project_cost(k)))
     # Discovery must not mutate dozens of portfolio entries. A numeric limit
     # is an explicit bounded instruction; an unbounded run needs confirmation.
-    if limit is None and not cmd.get("force"):
+    if limit is None and not capped and not cmd.get("force"):
         return {"ok": True, "preview": True,
                 "count_would_start": len(_ok),
                 "would_start": [{"id": node_id, "name": nodes[node_id]["name"],
@@ -356,9 +444,20 @@ def _cmd_rush(sim, nodes, cmd, ended):
     _budget = sim.director_pool() * _HORIZON_YEARS
     started, not_started = [], []
     _owed = 0.0
+    total_cost = total_draw = 0.0
+    # budget fixed up front from the shared purchase rule, so the reserve holds as projects start
+    budget = purchase_budget(sim)
     for node_id in _ok:
         if limit is not None and len(started) >= limit:
             break
+        cost_left = _rush_cost_left(sim, node_id)
+        annual_draw = cost_left / max(1.0, nodes[node_id]["yrs"])
+        cap_reason = _rush_cap_refusal(caps, budget, cost_left, annual_draw,
+                                       total_cost, total_draw)
+        if cap_reason:
+            not_started.append({"id": node_id, "name": nodes[node_id]["name"],
+                                "why": cap_reason})
+            continue
         if started and _owed + nodes[node_id]["ph"] > _budget:
             not_started.append({
                 "id": node_id, "name": nodes[node_id]["name"],
@@ -372,6 +471,8 @@ def _cmd_rush(sim, nodes, cmd, ended):
         ok2, why = sim.start_project(node_id)
         if ok2:
             _owed += nodes[node_id]["ph"]
+            total_cost += cost_left
+            total_draw += annual_draw
             node = nodes[node_id]
             # SAY SO, for the same reason the single-id `start` does: a
             # player reading `log` back should see every begun-work as a
@@ -380,10 +481,13 @@ def _cmd_rush(sim, nodes, cmd, ended):
                 sim.log.append((sim.year, "started: %s" % node["name"]))
             started.append({"id": node_id, "name": node["name"],
                             "cost": round(sim.active.get(node_id, {}).get(
-                                "cost_left", sim.project_cost(node_id)), 1)})
+                                "cost_left", sim.project_cost(node_id)), 1),
+                            "annual_draw": round(annual_draw, 1)})
         else:
             not_started.append({"id": node_id, "why": why})
     return {"ok": True, "started": started, "count_started": len(started),
+            "total_cost": round(total_cost, 1),
+            "total_annual_draw": round(total_draw, 1),
             "not_started": not_started,
             "count_not_started": len(not_started),
             # THE SAME WARNING `policy` CARRIES, for the same reason. This
@@ -408,6 +512,10 @@ def _cmd_rush(sim, nodes, cmd, ended):
 
 
 
+@command("mothball", group="projects",
+         summary="shut a finished work down",
+         usage=["mothball <id>"], options={"<id>": "a finished concern"},
+         description="Stops its upkeep; restore reopens it.")
 def _cmd_mothball(sim, nodes, cmd, ended):
     _mb_id = cmd.get("id")
     mothballed, msg = sim.mothball_work(_mb_id)
@@ -437,6 +545,10 @@ def _cmd_mothball(sim, nodes, cmd, ended):
 
 
 
+@command("restore", group="projects",
+         summary="reopen a mothballed work",
+         usage=["restore <id>"], options={"<id>": "a mothballed concern"},
+         description="Undoes mothball.")
 def _cmd_restore(sim, nodes, cmd, ended):
     _rs_id = cmd.get("id")
     restored, msg = sim.restore_work(_rs_id)
@@ -448,6 +560,11 @@ def _cmd_restore(sim, nodes, cmd, ended):
 
 
 
+@command("open", group="projects",
+         summary="start running something you have worked out how to do",
+         usage=["open <id>"], options={"<id>": "a finished concern"},
+         description="Until you open it, it earns nothing and costs nothing. Finishing "
+                     "is not the same as running.")
 def _cmd_open(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -481,6 +598,10 @@ def _cmd_open(sim, nodes, cmd, ended):
 
 
 
+@command("ventures", group="projects",
+         summary="what you run and could run",
+         usage=["ventures"], options={},
+         description="What you are running, and what you know how to run and have not opened.")
 def _cmd_ventures(sim, nodes, cmd, ended):
     sch_free, art_free = sim.venture_staff_free()
     running = sorted(sim.operating)
@@ -611,6 +732,12 @@ def _cmd_ventures(sim, nodes, cmd, ended):
 
 
 
+@command("policy", group="game",
+         summary="automatic behaviours and their switches",
+         usage=["policy", "policy <name> on|off", '{"cmd":"policy","set":{"auto_hire":true}}'],
+         options={"<name>": "a policy switch", "on / off": "the new setting"},
+         description="Bare policy lists every automatic behaviour. Each can be done by "
+                     "hand instead.")
 def _cmd_policy(sim, nodes, cmd, ended):
     want = cmd.get("set")
     changed = {}

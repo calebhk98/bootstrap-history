@@ -18,10 +18,7 @@ Earth or kgcpy's own data ever changes, and a test that pinned today's
 exact numbers would break for the wrong reason the day someone re-runs the
 generator in good faith.
 
-NOT REGISTERED in sim/tests/__main__.py's TOPICS - out of this task's own
-ownership (CLAUDE.md's ownership list explicitly reserves that file to
-whoever else is managing topic registration). Run directly:
-    python3 -m unittest sim.tests.test_geography_tiles -v
+Structural checks on generated equal-area land tiles; does not pin exact numbers.
 """
 import json
 import os

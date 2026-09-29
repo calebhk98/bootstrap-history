@@ -2,7 +2,7 @@
 
 import math
 
-from ..data import ANNUAL_WAGE, closure, critical_path, topo_order
+from ..data import closure, critical_path, topo_order
 
 from .state import _agent_end_reason
 from .util import _fmt_num, _wrap
@@ -17,6 +17,7 @@ def final_report(sim, nodes):
     there is nothing left to spoil: the run is finished, so showing the
     road is the reward for finishing it, not a leak.
     """
+    nodes = sim.nodes   # the tree in this civilisation's coin
     goal = sim.goal
     earned = sorted(sim.done - sim.granted)
     out = {"ended_in": sim.year, "why": _agent_end_reason(sim),
@@ -136,13 +137,9 @@ def _score_components(sim, nodes, reveal_tree_total):
 
     # LITERACY (15%) - general and elite literacy against the CEILING each
     # already has in this engine (SocietyMixin.literacy_ceiling_general/
-    # _elite, society.py): a hard, population- and mechanisation-driven cap
-    # that is the same structural number for every civilisation, not
-    # something this file tunes. 0.90 general / 0.97 elite are what the
-    # mechanism itself says a pre-transistor-era society can ever reach, so
-    # "literacy" here means how much of what is ACTUALLY reachable has been
-    # reached, not a raw fraction a civilisation starting with worse
-    # schooling could never max out. Weighted equally between the two
+    # _elite, society.py): the cap comes from the farm share of hours and
+    # the share unable to read, so "literacy" here means how much of what
+    # is reachable has been reached. Weighted equally between the two
     # populations the engine tracks separately.
     gen = max(0.0, float(sim.civ.get("literacy_general", 0.0)))
     gen_ceiling = max(1e-9, sim.literacy_ceiling_general())
@@ -174,7 +171,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # civilisation's currency is a different scale (civs/*.json: "denarius",
     # "wu zhu cash", "hacksilver by weight", "cacao bean and cotton cloth",
     # each with its own wage_index/price_index multiplier on the shared wage
-    # table, data.ANNUAL_WAGE) - comparing raw capital across civilisations
+    # table) - comparing raw capital across civilisations
     # would be comparing different units with the same name. Deflating by
     # one ordinary worker-year IN THIS CIVILISATION'S OWN MONEY (an
     # artisan's annual wage, scaled by this civ's live price_index and
@@ -186,7 +183,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # calibration save's 4.41 million worker-years, rounded to a clean
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
-    reference_wage = max(1e-6, ANNUAL_WAGE.get("artisan", 250.0)
+    reference_wage = max(1e-6, sim.base_annual_wage("artisan")
                           * max(1e-6, float(sim.price_index))
                           * max(1e-6, float(sim.wage_index)))
     worker_years = max(0.0, sim.capital) / reference_wage
@@ -245,7 +242,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     forgotten_n = len(sim.forgotten or {})
     ever_completed = len(sim.done) + forgotten_n
     corpus_preserved = (1.0 - forgotten_n / ever_completed) if ever_completed else 1.0
-    solvent_share = 1.0 - min(1.0, getattr(sim, "insolvent_years", 0) / run_years)
+    solvent_share = 1.0 - min(1.0, sim.insolvent_years / run_years)
     shut_years = len(set((getattr(sim, "shut_for_staff", None) or {}).values()))
     staffing_share = 1.0 - min(1.0, shut_years / run_years)
     suspicion_danger = max(1e-9, float(sim.cfg.get("suspicion_danger", 25.0)))
@@ -297,7 +294,7 @@ def _score_achievements(sim, nodes):
         "won": len(getattr(sim, "shut_for_staff", None) or {}) == 0,
         "what": "no concern ever closed for want of staff"}
     out["clean_ledger"] = {
-        "won": (getattr(sim, "insolvent_years", 0) == 0
+        "won": (sim.insolvent_years == 0
                 and getattr(sim, "interest_paid", 0.0) <= 0.0),
         "what": "never spent a year insolvent or paid a denarius of interest"}
     out["free_hands_only"] = {

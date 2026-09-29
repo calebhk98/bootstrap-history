@@ -5,7 +5,7 @@
   "cat": "textile_production",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 30,
   "lab": {
    "artisan": 40
@@ -27,7 +27,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 100
@@ -49,7 +49,7 @@
    "tx2_scutching"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 120
@@ -73,7 +73,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "carpenter": 80,
@@ -101,7 +101,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 150.0
@@ -130,7 +130,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 120.0
@@ -154,7 +154,7 @@
    "tx2_combing"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -176,7 +176,7 @@
    "tx2_carding"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 80
@@ -200,7 +200,7 @@
    "tx2_drawing"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "carpenter": 60,
@@ -226,7 +226,7 @@
    "tx2_carding"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 50
@@ -250,7 +250,7 @@
    "tex_spinning_wheel"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "smith": 80,
@@ -274,7 +274,7 @@
    "tx2_flyer"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "smith": 60
@@ -297,7 +297,7 @@
    "tx2_bobbin_and_flyer"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "carpenter": 100,
@@ -324,7 +324,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "engineer": 100,
@@ -351,7 +351,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 160,
   "lab": {
    "engineer": 140,
@@ -378,7 +378,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "engineer": 80,
@@ -402,7 +402,7 @@
    "tx2_bobbin_and_flyer"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "smith": 60
@@ -423,7 +423,7 @@
   "cat": "spinning",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 40
@@ -443,7 +443,7 @@
    "units_standards"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 60
@@ -461,7 +461,7 @@
   "cat": "weaving",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 30,
   "lab": {
    "artisan": 40
@@ -479,7 +479,7 @@
   "cat": "weaving",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 50
@@ -501,7 +501,7 @@
    "tx2_heddle"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "carpenter": 80
@@ -526,7 +526,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 140,
   "lab": {
    "engineer": 120,
@@ -555,7 +555,7 @@
    "labour_saving",
    "information"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 200,
   "lab": {
    "engineer": 180,
@@ -582,7 +582,7 @@
   "traits": [
    "information"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "artisan": 100
@@ -604,7 +604,7 @@
    "tx2_shed"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "carpenter": 60,
@@ -631,7 +631,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "engineer": 100,
@@ -655,7 +655,7 @@
    "tx2_picking_mechanism"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "engineer": 60
@@ -678,7 +678,7 @@
    "tx2_picking_mechanism"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "engineer": 60
@@ -701,7 +701,7 @@
    "tx2_picking_mechanism"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "smith": 40
@@ -721,13 +721,13 @@
   "cat": "weaving",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 60
   },
   "mat": {
-   "mat_starch_kg": 20
+   "starch_kg": 20
   },
   "cap": 0,
   "build_yrs": 0.2,
@@ -743,7 +743,7 @@
    "tx2_beam"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "carpenter": 80
@@ -764,7 +764,7 @@
   "cat": "weaving",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "carpenter": 60
@@ -784,7 +784,7 @@
   "cat": "weaving",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 50
@@ -808,7 +808,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 180,
   "lab": {
    "engineer": 160,
@@ -834,7 +834,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 140,
   "lab": {
    "engineer": 120
@@ -859,7 +859,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 140,
   "lab": {
    "engineer": 120,
@@ -887,7 +887,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "engineer": 100,
@@ -914,7 +914,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 130,
   "lab": {
    "engineer": 110,
@@ -940,7 +940,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 90,
   "lab": {
    "smith": 100
@@ -960,7 +960,7 @@
   "cat": "finishing",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -982,7 +982,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 80
@@ -1004,7 +1004,7 @@
    "tx2_fulling"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -1026,7 +1026,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "engineer": 80,
@@ -1052,7 +1052,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 90,
   "lab": {
    "engineer": 90,
@@ -1078,7 +1078,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "engineer": 70
@@ -1103,7 +1103,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "engineer": 80,
@@ -1129,14 +1129,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "chemist": 80,
    "engineer": 60
   },
   "mat": {
-   "mat_caustic_soda_kg": 40
+   "caustic_soda_kg": 40
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1152,7 +1152,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 80
@@ -1174,13 +1174,13 @@
    "tx2_scouring"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 60
   },
   "mat": {
-   "mat_vitriols": 5
+   "green_vitriol_kg": 5
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.2,
@@ -1194,7 +1194,7 @@
   "cat": "finishing",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 30,
   "lab": {
    "artisan": 40
@@ -1216,7 +1216,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "chemist": 100,
@@ -1242,14 +1242,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 90,
   "lab": {
    "chemist": 100,
    "artisan": 70
   },
   "mat": {
-   "mat_peroxide_h2o2_kg": 15
+   "hydrogen_peroxide_kg": 15
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1263,13 +1263,13 @@
   "cat": "finishing",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 100
   },
   "mat": {
-   "mat_dyes_natural_kg": 20
+   "dye_kg": 20
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1283,13 +1283,13 @@
   "cat": "finishing",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "artisan": 120
   },
   "mat": {
-   "mat_dyes_natural_kg": 30
+   "dye_kg": 30
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1303,13 +1303,13 @@
   "cat": "finishing",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "artisan": 140
   },
   "mat": {
-   "mat_dyes_natural_kg": 50
+   "dye_kg": 50
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1327,13 +1327,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 90,
   "lab": {
    "artisan": 160
   },
   "mat": {
-   "mat_dyes_natural_kg": 40
+   "dye_kg": 40
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1347,7 +1347,7 @@
   "cat": "finishing",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "artisan": 200,
@@ -1355,7 +1355,7 @@
   },
   "mat": {
    "wood_kg": 15,
-   "mat_dyes_natural_kg": 20
+   "dye_kg": 20
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.5,
@@ -1373,7 +1373,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 160,
   "lab": {
    "engineer": 140,
@@ -1401,7 +1401,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "artisan": 140
@@ -1426,7 +1426,7 @@
    "tex_mordanting"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "artisan": 120
@@ -1448,7 +1448,7 @@
    "tx2_printing_block"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "chemist": 80,
@@ -1482,14 +1482,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "chemist": 80,
    "artisan": 60
   },
   "mat": {
-   "mat_oil_kg": 30
+   "olive_oil_kg": 30
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1507,13 +1507,13 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "chemist": 100
   },
   "mat": {
-   "mat_flame_retardant_kg": 25
+   "flame_retardant_kg": 25
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.4,
@@ -1531,13 +1531,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 90,
   "lab": {
    "chemist": 90
   },
   "mat": {
-   "mat_pesticide_kg": 20
+   "camphor_kg": 20
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -1557,7 +1557,7 @@
    "labour_saving",
    "commerce"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "chemist": 100
@@ -1577,7 +1577,7 @@
   "cat": "fibres",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -1595,7 +1595,7 @@
   "cat": "fibres",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -1615,7 +1615,7 @@
    "tx2_jute_seed_stock"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 70
@@ -1635,7 +1635,7 @@
    "tx2_ramie_plant_stock"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 70
@@ -1653,7 +1653,7 @@
   "cat": "fibres",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 50
@@ -1676,7 +1676,7 @@
    "tx2_combing"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 80
@@ -1698,7 +1698,7 @@
    "tx2_angora_goat_stock"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 70
@@ -1718,7 +1718,7 @@
    "tx2_cashmere_goat_stock"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 70
@@ -1738,7 +1738,7 @@
    "tx2_silkworm_stock"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -1760,7 +1760,7 @@
    "tx2_silk_fibre"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "artisan": 120
@@ -1782,7 +1782,7 @@
    "tx2_sericulture"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "artisan": 100
@@ -1827,7 +1827,7 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 150,
   "lab": {
    "chemist": 150
@@ -1875,13 +1875,13 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 140,
   "lab": {
    "chemist": 140
   },
   "mat": {
-   "mat_acetic_anhydride_kg": 50
+   "acetic_anhydride_kg": 50
   },
   "cap": "cap_heat_1100",
   "build_yrs": 0.6,
@@ -1901,13 +1901,13 @@
    "luxury",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 180,
   "lab": {
    "chemist": 180
   },
   "mat": {
-   "mat_adipic_acid_kg": 50
+   "adipic_acid_kg": 50
   },
   "cap": "cap_heat_1300",
   "build_yrs": 1,
@@ -1929,7 +1929,7 @@
    "luxury",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 180,
   "lab": {
    "chemist": 180
@@ -1965,13 +1965,13 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 170,
   "lab": {
    "chemist": 170
   },
   "mat": {
-   "mat_acrylonitrile_kg": 50
+   "acrylonitrile_kg": 50
   },
   "cap": "cap_heat_1300",
   "build_yrs": 1,
@@ -1987,13 +1987,13 @@
    "cap_heat_1600"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 130,
   "lab": {
    "glassblower": 120
   },
   "mat": {
-   "mat_glass_soda": 100
+   "glass_raw_kg": 100
   },
   "cap": "cap_heat_1600",
   "build_yrs": 0.8,
@@ -2013,7 +2013,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "artisan": 100
@@ -2033,7 +2033,7 @@
   "cat": "sewing",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "smith": 60
@@ -2058,7 +2058,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "engineer": 100
@@ -2080,7 +2080,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 90,
   "lab": {
    "engineer": 90
@@ -2103,7 +2103,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 110,
   "lab": {
    "engineer": 100
@@ -2126,7 +2126,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "engineer": 120,
@@ -2148,7 +2148,7 @@
   "cat": "sewing",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "carpenter": 80
@@ -2168,12 +2168,12 @@
   "cat": "sewing",
   "pre": [
    "tx2_cutting_table",
-   "cap_power_motor"
+   "tx2_cap_power_motor"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "engineer": 100,
@@ -2198,7 +2198,7 @@
    "tx2_sizing_systems"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "artisan": 120
@@ -2221,7 +2221,7 @@
    "units_standards"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "artisan": 120
@@ -2243,7 +2243,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "artisan": 120
@@ -2291,7 +2291,7 @@
    "commerce",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "smith": 100
@@ -2313,7 +2313,7 @@
    "mfg_wire_drawing"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "smith": 60
@@ -2339,7 +2339,7 @@
    "labour_saving",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 90,
   "lab": {
    "chemist": 80
@@ -2362,13 +2362,13 @@
    "tx2_sizing_systems"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "artisan": 200
   },
   "mat": {
-   "mat_steel_boning_kg": 8
+   "steel_plate_kg": 8
   },
   "cap": 0,
   "build_yrs": 0.5,
@@ -2387,7 +2387,7 @@
    "luxury",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "artisan": 150
@@ -2412,7 +2412,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "artisan": 100,
@@ -2439,7 +2439,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 140,
   "lab": {
    "engineer": 140,
@@ -2467,7 +2467,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 150,
   "lab": {
    "engineer": 150,
@@ -2489,7 +2489,7 @@
   "cat": "rope_cordage",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -2512,7 +2512,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 110,
   "lab": {
    "engineer": 110,
@@ -2536,7 +2536,7 @@
    "tx2_rope_lay"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 70
@@ -2596,7 +2596,7 @@
    "mat_alum"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 80
@@ -2616,13 +2616,13 @@
   "cat": "leather",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 100
   },
   "mat": {
-   "mat_oil_kg": 20
+   "olive_oil_kg": 20
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -2639,7 +2639,7 @@
    "tx2_currying"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "artisan": 100
@@ -2661,7 +2661,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "engineer": 80
@@ -2685,7 +2685,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "engineer": 120,
@@ -2711,7 +2711,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 150,
   "lab": {
    "engineer": 140
@@ -2735,7 +2735,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "chemist": 100,
@@ -2762,14 +2762,14 @@
    "labour_saving",
    "status_threatening"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "chemist": 100,
    "artisan": 80
   },
   "mat": {
-   "mat_phosphorus_kg": 5
+   "phosphorus_red_kg": 5
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.4,
@@ -2785,13 +2785,13 @@
    "chm_phosphorus_extraction"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "chemist": 80
   },
   "mat": {
-   "mat_phosphorus_kg": 3
+   "phosphorus_red_kg": 3
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -2832,7 +2832,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "engineer": 100
@@ -2877,7 +2877,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "chemist": 80,
@@ -2903,7 +2903,7 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "chemist": 100
@@ -2923,7 +2923,7 @@
   "cat": "consumer_goods",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 80
@@ -2946,13 +2946,13 @@
    "mat_tin"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "artisan": 100
   },
   "mat": {
-   "mat_glass_soda": 20,
+   "glass_raw_kg": 20,
    "mat_mercury": 5
   },
   "cap": "cap_tol_1mm",
@@ -2967,7 +2967,7 @@
   "cat": "consumer_goods",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -2987,7 +2987,7 @@
   "cat": "consumer_goods",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -3007,7 +3007,7 @@
   "cat": "consumer_goods",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "artisan": 70
@@ -3031,7 +3031,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "engineer": 70
@@ -3051,7 +3051,7 @@
   "cat": "consumer_goods",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "smith": 60
@@ -3071,7 +3071,7 @@
   "cat": "consumer_goods",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 40,
   "lab": {
    "smith": 60
@@ -3093,7 +3093,7 @@
    "hom_spectacles"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 100
@@ -3116,7 +3116,7 @@
    "hom_pocket_watch"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "smith": 120,
@@ -3167,13 +3167,13 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 120,
   "lab": {
    "engineer": 120
   },
   "mat": {
-   "mat_steel": 10,
+   "steel_plate_kg": 10,
    "mat_rubber": 8
   },
   "cap": "cap_tol_100um",
@@ -3197,7 +3197,7 @@
    "artisan": 80
   },
   "mat": {
-   "mat_graphite_pure": 20,
+   "graphite_kg": 20,
    "clay_kg": 30
   },
   "cap": "cap_heat_1100",
@@ -3216,7 +3216,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "engineer": 70
@@ -3240,7 +3240,7 @@
    "mt2_spring_steel"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "smith": 70
@@ -3264,7 +3264,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "engineer": 100
@@ -3288,7 +3288,7 @@
    "mfg_wire_drawing"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 50,
   "lab": {
    "smith": 70
@@ -3310,7 +3310,7 @@
    "mat_paper"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 100
@@ -3332,13 +3332,13 @@
    "mat_paper"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "chemist": 60
   },
   "mat": {
-   "mat_gum_kg": 20
+   "starch_kg": 20
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.2,
@@ -3356,7 +3356,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "artisan": 100
@@ -3381,7 +3381,7 @@
    "commerce",
    "luxury"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100.0,
   "lab": {
    "artisan": 100.0,
@@ -3406,7 +3406,7 @@
    "tx2_playing_card"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "artisan": 150
@@ -3449,7 +3449,7 @@
   "cat": "consumer_goods",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "artisan": 150
@@ -3475,13 +3475,13 @@
    "spectacle",
    "luxury"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 90,
   "lab": {
    "engineer": 90
   },
   "mat": {
-   "mat_tin_plate": 30
+   "iron_sheet_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.4,
@@ -3500,14 +3500,14 @@
    "spectacle",
    "luxury"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 110,
   "lab": {
    "engineer": 110
   },
   "mat": {
    "brass_kg": 30,
-   "mat_tin_plate": 40
+   "iron_sheet_kg": 40
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -3527,14 +3527,14 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 140,
   "lab": {
    "engineer": 140,
    "smith": 120
   },
   "mat": {
-   "mat_steel": 80,
+   "steel_plate_kg": 80,
    "mat_rubber": 20
   },
   "cap": "cap_tol_100um",
@@ -3554,14 +3554,14 @@
    "commerce",
    "spectacle"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 130,
   "lab": {
    "engineer": 130
   },
   "mat": {
    "brass_kg": 40,
-   "mat_glass_soda": 30
+   "glass_raw_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.5,
@@ -3581,14 +3581,14 @@
    "commerce",
    "information"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 140,
   "lab": {
    "engineer": 140
   },
   "mat": {
    "brass_kg": 50,
-   "mat_tin_plate": 80
+   "iron_sheet_kg": 80
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.6,
@@ -3607,7 +3607,7 @@
    "information",
    "spectacle"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 150,
   "lab": {
    "engineer": 150,
@@ -3637,7 +3637,7 @@
    "engineer": 120
   },
   "mat": {
-   "mat_glass_soda": 100
+   "glass_raw_kg": 100
   },
   "cap": "cap_vac_1torr",
   "build_yrs": 0.5,
@@ -3652,13 +3652,13 @@
    "met_tin_plate"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "engineer": 80
   },
   "mat": {
-   "mat_tin_plate": 60
+   "iron_sheet_kg": 60
   },
   "cap": "cap_tol_1mm",
   "build_yrs": 0.3,
@@ -3674,7 +3674,7 @@
    "mat_paper"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "artisan": 100
@@ -3696,7 +3696,7 @@
    "mat_paper"
   ],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 70,
   "lab": {
    "artisan": 120
@@ -3721,7 +3721,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "engineer": 100
@@ -3741,13 +3741,13 @@
   "cat": "consumer_goods",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 60,
   "lab": {
    "glassblower": 100
   },
   "mat": {
-   "mat_glass_soda": 100
+   "glass_raw_kg": 100
   },
   "cap": "cap_heat_1100",
   "build_yrs": 0.3,
@@ -3767,7 +3767,7 @@
    "engineer": 90
   },
   "mat": {
-   "mat_tin_plate": 30
+   "iron_sheet_kg": 30
   },
   "cap": "cap_tol_100um",
   "build_yrs": 0.3,
@@ -3780,7 +3780,7 @@
   "cat": "consumer_goods",
   "pre": [],
   "traits": [],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 80,
   "lab": {
    "engineer": 80
@@ -3805,7 +3805,7 @@
    "commerce",
    "labour_saving"
   ],
-  "kb": "",
+  "kb": "90_textiles.md",
   "ph": 100,
   "lab": {
    "engineer": 100

@@ -49,6 +49,7 @@ import collections
 
 from . import commodities as _commod
 from sim.constants import declare
+from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
@@ -271,7 +272,8 @@ class MaterialSupplyMixin:
         if cached is None or cached[0] != held:
             from .data import calculated_goods_prices
             prices = calculated_goods_prices(
-                held, civilization_id=self.civ.get("id"))
+                held, civilization_id=self.civ.get("id"),
+                money_per_labour_hour=self.money_per_labour_hour())
             cached = self._material_prices_cache = (held, prices)
         return cached[1]
 
@@ -289,8 +291,14 @@ class MaterialSupplyMixin:
         commodity = self._commodity_ledger().commodities.get(tag)
         if commodity:
             price = float(commodity.get("base_price_denarii_per_kg", 0.0) or 0.0)
-            return price or None
+            return self.book_money(price) or None
         return None
+
+    def _book_denarii_price_per_kg(self, tag):
+        """The price in book denarii, the unit the output and market-share
+        curves below were fitted in."""
+        price = self._book_price_per_kg(tag)
+        return None if price is None else price / self.book_money(1.0)
 
     def _material_tag(self, mat_key):
         """Which (commodity id, supply-pool tag) a raw material key draws
@@ -336,7 +344,7 @@ class MaterialSupplyMixin:
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
             return ledger.country_output(tag, built=self.state.projects.done)
-        price = self._book_price_per_kg(tag)
+        price = self._book_denarii_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_OUTPUT_CEILING_T_PER_YR
         out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / (price ** self.GENERIC_OUTPUT_PRICE_EXPONENT)
@@ -359,7 +367,7 @@ class MaterialSupplyMixin:
         if tag in ledger.commodities:
             return float(ledger.commodities[tag].get(
                 "market_share", self.GENERIC_MARKET_SHARE_LEDGER_FALLBACK))
-        price = self._book_price_per_kg(tag)
+        price = self._book_denarii_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK
         return max(self.GENERIC_MARKET_SHARE_FLOOR,
@@ -426,7 +434,7 @@ class MaterialSupplyMixin:
         materials should not have to guess it needs no suffix, and the
         seven original short names must keep working exactly as before."""
         mat = str(mat or "").strip().lower()
-        if not mat or mat in self.MINE_CAPEX_PER_T_YR:
+        if not mat or mat in self.MINE_OPEX_PER_T:
             return mat
         prices = self._material_prices()
         if mat in prices or mat in self._commodity_ledger().commodities:
@@ -555,7 +563,7 @@ class MaterialSupplyMixin:
     # civilisation's real copper numbers via commodities.py's
     # propagate_demand(). gold_kg (fin_central_bank's 1000 kg, tx2_watch_case,
     # the gold-leaf electroscope) was also untracked despite Sim.open_mine
-    # already supporting a gold mine (MINE_CAPEX_PER_T_YR) and
+    # already supporting a gold mine (a mine) and
     # resources.json already carrying an empire gold figure (9 t/yr) --
     # nothing wired the two together. gold_g (LEDs, transistors: 1-20 grams)
     # is NOT added here, still: annual_material_demand() assumes every *_kg
@@ -753,6 +761,23 @@ class MaterialSupplyMixin:
                 by_tag[self._material_tag(mat)] += amt
         return by_tag
 
+    def demand_and_own_supply_by_material(self, by_tag):
+        """{emp_key: (demand, own_supply)} with tags that share one land
+        base (firewood and charcoal off the same forest) expressed in the
+        units of the tag whose yield is the reference, so the demands add."""
+        # The forest4 (firewood) yield is the reference yield times this
+        # ratio, so a tonne of firewood uses 1/ratio of the forest.
+        demand_scale = {"forest4": 1.0 / self.FIREWOOD_PER_CHARCOAL_MASS_RATIO}
+        totals = {}
+        for (emp_key, tag), need in sorted(by_tag.items()):
+            scale = demand_scale.get(tag, 1.0)
+            demand, own = totals.get(emp_key, (0.0, 0.0))
+            # Tags sharing a land base see the same land, so own supply is
+            # the largest of them in reference units, not their sum.
+            own = max(own, self._own_material_supply(tag) * scale)
+            totals[emp_key] = (demand + need * scale, own)
+        return totals
+
     # ---- stock vs flow -----------------------------------------------------
     #
     # Requiring 20 grams of gold for a device must not require building a
@@ -875,7 +900,7 @@ class MaterialSupplyMixin:
         tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
         cost = tonnes * quote["buy_per_tonne"]
         household = self.state.household
-        if tonnes <= 0 or cost > household.capital:
+        if tonnes <= 0 or not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
         self._material_stock()[quote["material"]] += tonnes

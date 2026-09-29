@@ -1,6 +1,8 @@
 # Urbanisation should become a first-class system
 
-**Source:** playtest findings document, LATE-005. **Status:** Major
+**Status:** open - intended as a mod
+
+**Source:** playtest findings document, LATE-005. **Type:** Major
 roadmap-sized feature recommendation, already named in the architecture
 plan, and directly interacting with in-flight map work.
 

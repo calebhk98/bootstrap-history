@@ -18,6 +18,8 @@ Written as unittest.TestCase rather than the flat check()-at-import style,
 like test_agriculture.py and test_demography.py, so it can exercise
 solve_prices directly without dragging in sim/tests/harness.py and the whole
 engine behind it.
+
+Pins the resolvability pass refusing every recipe cycle, including the axe/iron example.
 """
 import collections
 import unittest

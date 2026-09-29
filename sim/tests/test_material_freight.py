@@ -19,6 +19,8 @@ own per-tonne-km feed and driver-hour figures and the real great-circle
 distance between two real region centroids; and a material geography.json
 has no location data for at all (gold, and everything outside the seven
 tracked minerals) is left alone rather than guessed at, per CLAUDE.md SS3.1.
+
+Wires transport.py into economy.py through a live Sim and geography mineral tables.
 """
 from .harness import *  # noqa: F401,F403
 
@@ -96,7 +98,7 @@ _inputs = _transport.draught_freight_physical_inputs(
     _transport.OX, int(s_mexica.LAND_FREIGHT_TEAM_SIZE),
     _transport.CART, _transport.DIRT_TRACK)
 _feed_price = s_mexica._book_price_per_kg(s_mexica.FREIGHT_FEED_PRICE_MATERIAL)
-_wage = WAGES[s_mexica.FREIGHT_DRIVER_WAGE_TRADE]
+_wage = s_mexica.wage_per_hour(s_mexica.FREIGHT_DRIVER_WAGE_TRADE)
 _expected_denarii_per_tonne_km = (_inputs.feed_kg_per_tonne_km * _feed_price
                                    + _inputs.driver_hours_per_tonne_km * _wage)
 _expected_cost_per_kg = _expected_denarii_per_tonne_km * _mexica_coal_km / 1000.0

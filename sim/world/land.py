@@ -841,7 +841,7 @@ class LandBlock(TypedDict):
     checked rather than assumed at each `land_entry["..."]` lookup."""
     land_area_km2: float
     arable_fraction: float
-    fertility_quality_multiplier: float
+    fertility_quality_multiplier: NotRequired[float]
     conf: NotRequired[str]
     source: NotRequired[Optional[str]]
 
@@ -893,23 +893,41 @@ def _declare_arable_fraction(region_key: str, land_entry: LandBlock) -> float:
             "data/world/geography.json's %r region." % region_key)
 
 
-def _declare_fertility(region_key: str, land_entry: LandBlock) -> float:
+def _declare_fertility(region_key: str, land_entry: LandBlock, fertility: float) -> float:
     name = "REGION_FERTILITY_QUALITY_MULTIPLIER_%s" % region_key.upper()
     if name in _LAND_DECLARED:
-        return land_entry["fertility_quality_multiplier"]
+        return fertility
     _LAND_DECLARED.add(name)
-    confidence = land_entry.get("conf", "D")
-    kind = "engineering_estimate" if confidence in ("A", "B", "C") else "temporary_heuristic"
     return declare(
-        name, land_entry["fertility_quality_multiplier"], kind=kind,
+        name, fertility, kind="engineering_estimate",
         unit="multiplier on REFERENCE_WHEAT_YIELD_KG_PER_HECTARE, 1.0 = "
              "Italia's own dry-farmed Mediterranean baseline (dimensionless)",
-        source=land_entry.get("source"), confidence=confidence,
+        source="arable-weighted mean of the region's land_tiles fertility",
+        confidence=land_entry.get("conf", "D"),
         why="A soil/climate quality fact about this region's arable "
-            "share, in the SAME units sim/world/agriculture.py's own "
-            "Land(hectares, quality=...) already uses - see the module "
-            "docstring's THE SAME UNIT section. Read from data/world/"
-            "geography.json's %r region." % region_key)
+            "share, derived from its %r land_tiles (one fertility scale, "
+            "anchored at the Mediterranean reference class)." % region_key)
+
+
+def _derived_region_fertility(region_key: str, geography: Dict[str, Any],
+                              land_entry: LandBlock) -> float:
+    """Arable-weighted mean tile fertility of the region. A region with no
+    tiles may carry its own value; with neither, KeyError."""
+    land_tiles = geography.get("land_tiles") or {}
+    tile_ids = (land_tiles.get("region_to_tiles") or {}).get(region_key) or []
+    tiles = land_tiles.get("tiles") or {}
+    arable_total = 0.0
+    weighted_total = 0.0
+    for tile_id in tile_ids:
+        tile = tiles[tile_id]
+        arable_km2 = tile["land_area_km2"] * tile["arable_fraction"]
+        arable_total += arable_km2
+        weighted_total += arable_km2 * tile["fertility_quality_multiplier"]
+    if arable_total > 0.0:
+        return weighted_total / arable_total
+    if "fertility_quality_multiplier" in land_entry:
+        return land_entry["fertility_quality_multiplier"]
+    raise KeyError("region %r has no arable tiles and no stored fertility" % region_key)
 
 
 def load_region_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, RegionLand]:
@@ -931,7 +949,8 @@ def load_region_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, R
             continue
         land_area_km2 = _declare_land_area(region_key, land_entry)
         arable_fraction = _declare_arable_fraction(region_key, land_entry)
-        fertility = _declare_fertility(region_key, land_entry)
+        fertility = _declare_fertility(
+            region_key, land_entry, _derived_region_fertility(region_key, geography, land_entry))
         arable_km2 = land_area_km2 * arable_fraction
         arable_iugera = arable_km2 * _KM2_TO_HECTARES / IUGERUM_HECTARES
         out[region_key] = RegionLand(
@@ -1100,6 +1119,69 @@ def cultivable_land_for_civilization(
     return [tile_lands[tile_id] for tile_id in tile_ids if tile_id in tile_lands]
 
 
+TerritoryFarmland = collections.namedtuple("TerritoryFarmland", [
+    "arable_hectares",        # cultivable ground the held regions contain
+    "mean_fertility",         # arable-area-weighted fertility multiplier
+    "ladder",                 # [(fertility, arable hectares)], best ground first
+])
+
+
+def territory_farmland(home_regions: List[str],
+                       geography: Optional[Dict[str, Any]] = None) -> TerritoryFarmland:
+    """Arable hectares and arable-weighted mean fertility over the tiles
+    the named regions resolve to. A region with no tiles raises KeyError;
+    territory with no farmable ground comes back empty."""
+    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    land_tiles = geography.get("land_tiles")
+    if land_tiles is None:
+        raise KeyError("geography has no 'land_tiles' block")
+    region_to_tiles = land_tiles.get("region_to_tiles", {})
+    for region in home_regions:
+        if not region_to_tiles.get(region):
+            raise KeyError("home region %r has no land tiles in geography" % region)
+    tile_lands = load_tile_lands(geography)
+    total_arable_km2 = 0.0
+    weighted_fertility = 0.0
+    parcels = []
+    for tile_id in _tile_ids_for_home_regions(home_regions, land_tiles):
+        tile = tile_lands[tile_id]
+        # Ground that yields nothing is not arable, whatever its share of the tile.
+        if tile.fertility_quality_multiplier <= 0.0:
+            continue
+        arable_km2 = tile.land_area_km2 * tile.arable_fraction
+        total_arable_km2 += arable_km2
+        weighted_fertility += arable_km2 * tile.fertility_quality_multiplier
+        parcels.append((-tile.fertility_quality_multiplier, tile_id,
+                        arable_km2 * _KM2_TO_HECTARES))
+    parcels.sort()
+    ladder = [(-negative_fertility, hectares)
+              for negative_fertility, _tile_id, hectares in parcels if hectares > 0.0]
+    if total_arable_km2 <= 0.0:
+        return TerritoryFarmland(arable_hectares=0.0, mean_fertility=0.0, ladder=[])
+    return TerritoryFarmland(
+        arable_hectares=total_arable_km2 * _KM2_TO_HECTARES,
+        mean_fertility=weighted_fertility / total_arable_km2,
+        ladder=ladder)
+
+
+def ladder_quality(ladder: List[Any], hectares: float) -> float:
+    """Mean fertility of the best `hectares` of a best-first ladder: the
+    quality of a farm that has cleared the best ground first."""
+    remaining = max(0.0, hectares)
+    taken = 0.0
+    weighted = 0.0
+    for fertility, parcel_hectares in ladder:
+        step = min(parcel_hectares, remaining)
+        taken += step
+        weighted += step * fertility
+        remaining -= step
+        if remaining <= 0.0:
+            break
+    if taken <= 0.0:
+        return ladder[0][0] if ladder else 1.0
+    return weighted / taken
+
+
 # ============================================================================
 # THE MARGIN OF CULTIVATION AND RENT
 # ============================================================================
@@ -1223,13 +1305,42 @@ def find_margin_of_cultivation(
         price_kg_grain_equivalent_per_iugerum=price_per_iugerum)
 
 
+def _grain_capacity_of_farmed_area(
+        region_lands: List[RegionLand], farmed_hectares: float,
+        kg_per_hectare_at_quality_1: Optional[float],
+        iugerum_hectares: Optional[float]) -> float:
+    """Grain the best `farmed_hectares` of the parcels yield at reference
+    labour, taking parcels best-first as `find_margin_of_cultivation` does."""
+    ordered = sorted(region_lands,
+                     key=lambda parcel: (-parcel.fertility_quality_multiplier, parcel.region))
+    remaining = max(0.0, farmed_hectares)
+    total_kg = 0.0
+    for parcel in ordered:
+        parcel_hectares = parcel.arable_iugera * (iugerum_hectares or IUGERUM_HECTARES)
+        taken = min(parcel_hectares, remaining)
+        if parcel_hectares > 0.0:
+            total_kg += (taken / parcel_hectares * parcel.arable_iugera
+                         * reference_yield_kg_per_iugerum(
+                             parcel.fertility_quality_multiplier,
+                             kg_per_hectare_at_quality_1, iugerum_hectares))
+        remaining -= taken
+        if remaining <= 0.0:
+            break
+    return total_kg
+
+
 def margin_outcome_for_civilization(
         civilization_id: str, geography: Optional[Dict[str, Any]] = None,
         civilizations: Optional[Dict[str, Any]] = None,
         kg_per_hectare_at_quality_1: Optional[float] = None,
         iugerum_hectares: Optional[float] = None,
-        annual_farm_labour_hours_per_capita: Optional[float] = None) -> "MarginOutcome":
-    """find_margin_of_cultivation's own EXTENSIVE-margin outcome, for one
+        annual_farm_labour_hours_per_capita: Optional[float] = None,
+        farmed_hectares: Optional[float] = None) -> "MarginOutcome":
+    """`farmed_hectares`, when given, sizes demand to the best-first ground a
+    farm of that area covers (the farm's own ladder) instead of the
+    population's grain demand.
+
+    find_margin_of_cultivation's own EXTENSIVE-margin outcome, for one
     civilization's own territory and population, with the INTENSIVE
     margin's own rent (see the LABOUR INTENSITY section above) added on
     top of every worked parcel - the single call sim/solve_prices.py's own
@@ -1278,6 +1389,9 @@ def margin_outcome_for_civilization(
     if population is None:
         raise KeyError("%r has no population field" % (civilization_id,))
     quantity_demanded_kg = quantity_demanded_kg_grain_equivalent(population)
+    if farmed_hectares is not None:
+        quantity_demanded_kg = _grain_capacity_of_farmed_area(
+            region_lands, farmed_hectares, kg_per_hectare_at_quality_1, iugerum_hectares)
     extensive_outcome = find_margin_of_cultivation(
         region_lands, quantity_demanded_kg,
         kg_per_hectare_at_quality_1, iugerum_hectares)

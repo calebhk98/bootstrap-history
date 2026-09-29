@@ -48,7 +48,7 @@ def cmd_agent(args):
     # `run`/`compare`/`play` all take --mortal, so `agent` must accept it
     # too, or the founder is immortal in every scripted or JSON-driven game
     # no matter what was asked for.
-    cfg = {"start_capital": STARTING_KITS[args.kit]["den"], "horizon_years": args.horizon,
+    cfg = {"start_kit": args.kit, "horizon_years": args.horizon,
            "immortal": not getattr(args, "mortal", False)}
     sim = Sim(nodes, order,
             DetRNG(args.seed) if getattr(args, "deterministic", False) else random.Random(args.seed),

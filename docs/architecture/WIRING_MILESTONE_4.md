@@ -48,9 +48,7 @@ lines given are anchor-commit lines):
 | `pop_scale` | `core.py:59` (`__init__`), `core.py:1267` (`_refresh_demographic_indexes`) | economy.py, labour.py, projects.py, geography.py, core.py | 5 | 19 |
 | `pop_deficit` | `core.py:71`, `society.py:2239` (`_shocks`) | core.py, society.py | 2 | 9 |
 | `wage_index` | `core.py:56`/`1279` | core.py, labour.py, economy.py, proto/dispatch.py, proto/economy.py | 6 | 16 |
-| `_pop_scale_base` | `core.py:70`, `society.py:1450` (`_advance_food_diffusion_population`) | core.py, labour.py, society.py | 3 | 8 |
 | `_pop_recovery_years` | `core.py:72`, `society.py:2240` | core.py, society.py | 2 | 5 |
-| `_pop_tech_pending` | `core.py:79`, `society.py:773` (`apply_tech_effects`) | core.py, society.py | 2 | 5 |
 | `_wage_index_base` | `core.py:57` | core.py | 1 | 3 |
 | `_said_wage_cascade` | `core.py:244` | core.py | 1 | 3 |
 | `_food_pop_bonus_applied` | `society.py:1450` (lazy) | society.py; **is a `SAVE_FIELDS` member already** | 1 | 3 |
@@ -147,6 +145,8 @@ the same national wheat market rather than a private multiplier) is a real
 question but **outside this milestone**; flagged, not solved.
 
 ### 1.3 The three write sites, and why they matter more than the read sites
+
+**Status: sites 2 and 3 are removed.** The scalar and its queue are gone; food technologies act through the farming technique (`sim/world/farming_technique.py`) and disease technologies through `_disease_burden()`. The text below is the original analysis.
 
 Read sites (§1.1's ~19+16+9 count) are formulas that consume a number.
 **Write sites are the ones that have to be redesigned, not just repointed**,

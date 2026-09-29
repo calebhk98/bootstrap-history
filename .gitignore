@@ -126,3 +126,8 @@ _playtest_tmp/
 # location (ROOT = dirname(dirname(__file__))), so a copy anywhere else
 # silently reports "nothing to prove" for every file.
 sim/_prover_pinned.py
+
+# Spin-up results, regenerated per civilisation and mod set
+.cache/
+_loadtest_tmp*/
+_playtest_tmp*/

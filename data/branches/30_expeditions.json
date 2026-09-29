@@ -4,7 +4,6 @@
   "name": "Provisioning a long voyage against scurvy",
   "cat": "expedition",
   "pre": [
-   "fud_food_preservation",
    "sanitation_antisepsis"
   ],
   "kb": "95_expeditions.md#provisioning_scurvy",
@@ -80,9 +79,9 @@
   "name": "An ocean-going hull",
   "cat": "expedition",
   "pre": [
-   "sea_skeleton_first_hull",
+   "sea_skeleton_first",
    "sea_sternpost_rudder",
-   "sea_lateen_rig"
+   "tr_lateen_sail"
   ],
   "kb": "95_expeditions.md#oceangoing_hull",
   "ph": 250,
@@ -293,7 +292,7 @@
   "cat": "expedition",
   "pre": [
    "exp_coastal_africa",
-   "fin_joint_stock_company",
+   "fin_joint_stock",
    "citizenship"
   ],
   "kb": "95_expeditions.md#colony_administration",
@@ -327,7 +326,7 @@
   "pre": [
    "exp_trade_route_extend",
    "crop_rotation",
-   "fud_controlled_pollination"
+   "ag2_controlled_pollination"
   ],
   "kb": "95_expeditions.md#transplant_botany",
   "ph": 350,
@@ -360,7 +359,7 @@
   "cat": "expedition",
   "pre": [
    "exp_colony_administration",
-   "mil_firearm_matchlock",
+   "mil_matchlock",
    "patron_imperial"
   ],
   "kb": "95_expeditions.md#conquest_resource",

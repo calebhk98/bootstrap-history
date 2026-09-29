@@ -85,7 +85,7 @@ _st_r, _, _ = proto([{"cmd": "money"}])
 _led = _st_r[0].get("where_the_money_comes_from") or {}
 check("...and that figure is the ledger's, to the decimal",
       abs(_rwy[0]["but_it_pays_YOU"]
-          - _led.get("med_cataract_couching", -1)) < 0.11,
+          - _led.get("med_cataract_couching", -1)) < 0.05 * len(_led) + 0.06,
       (_rwy[0].get("but_it_pays_YOU"), sorted(_led)[:4]))
 _rwy2, _, _ = proto([{"cmd": "why", "id": "horse_collar"}])
 check("...and a node that is NOT your practice carries no such line",

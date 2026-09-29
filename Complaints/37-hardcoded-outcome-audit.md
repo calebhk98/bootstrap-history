@@ -1,5 +1,7 @@
 # Adding `hardcoded_outcome`, and auditing every `declare()` call for more of it
 
+**Status:** partly - interest and tax rates moved into civilisation data; mining capex outcomes remain
+
 **Type:** Registry design / §3.1 compliance
 **Priority:** Informational. The mechanism is built; nothing new and confirmed
 was found to put in it yet.
@@ -249,3 +251,28 @@ a §3.1 issue. `share_of_empire_output` in `deposits.py` is arguably
 `initial_condition` rather than `temporary_heuristic`. Both are bookkeeping;
 neither is a hardcoded outcome. Left alone to keep this complaint about one
 thing.
+
+---
+
+## Update: interest and tax rates are now civilisation data
+
+`DEBT_BASE_RATE` and `LIVING_COST_TAX_RATE` are gone from the engine. Each
+civilisation file carries `starting_interest_rate` and `starting_tax_share`
+as initial conditions, with a source and confidence under `_internal`; a
+civilisation missing either fails to load. The values stay fixed at the
+starting figure for the whole run.
+`python3 sim/constants.py --burndown` no longer lists either name.
+
+### How they could evolve later (not implemented)
+
+- Interest: a price of money from capital scarcity (how much savings the
+  economy holds against what borrowers want) plus expected default loss for
+  the borrower's risk class, plus the lender's own alternative return. Legal
+  ceilings would then be a cap on that price, as in the historical record,
+  rather than the price itself.
+- Tax: revenue from a state budget. The state needs a spending load
+  (army, officials, public works) and can raise only what its reach allows
+  from trade volume and enforcement, so the share a household pays falls out
+  of the budget gap. See Complaints/109 for the fiscal model this depends on.
+- Both need a per-country state as an actor, so other countries can set
+  their own rates the way the founder's household responds to them.

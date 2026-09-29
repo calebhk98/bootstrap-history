@@ -1,0 +1,813 @@
+# Prerequisites removed while clearing merge events (Complaints/54)
+
+Rebuilt from the branch diff of the merge-cleanup commit; renames to real ids are not listed.
+
+### 00_capabilities.json
+- `cap_tol_1um`: `optical_flat_interference`
+- `cap_pure_6N`: `cap_glass_boro (node gained: en_oil_refining_distillation, glass_borosilicate)`
+- `cap_pure_6N`: `distillation_fractional (node gained: en_oil_refining_distillation, glass_borosilicate)`
+- `cap_measure_light`: `optical_flat_interference (node gained: prc_optical_flat)`
+
+### 01_materials.json
+- `mat_bakelite`: `cap_pressure_10atm`
+- `mat_synthetic_rubber`: `cap_pressure_100atm`
+- `mat_petroleum_refined`: `distillation_fractional (node gained: en_oil_refining_distillation)`
+
+### 10_textiles.json
+- `tex_nylon`: `industrial_gases (node gained: cap_gas_o2h2)`
+
+### 11_food_agriculture.json
+- `fud_haber_process_synthetic_nitrogen`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `fud_margarine_synthesis`: `industrial_gases (node gained: cap_gas_o2h2)`
+
+### 12_household.json
+- `hom_matches_friction`: `sulfur_kg`
+- `hom_eraser_breadcrumb`: `wheat_kg`
+- `hom_sprung_mattress`: `drawn_wire`
+- `hom_fountain_pen`: `ebonite_or_celluloid`
+- `hom_deodorant`: `alum_kg`
+- `hom_bath_piped_hot_water`: `lead_plumbing (node gained: hom_lead_plumbing)`
+- `hom_toothpaste_commercial`: `chalk_powder`
+
+### 15_ships.json
+- `sea_lunar_distances`: `astronomical_tables (node gained: opt_sextant, sea_astronomical_tables)`
+- `sea_steel_hull`: `bessemer_openhearth`
+- `sea_compound_expansion`: `boiler_water_tube (node gained: en_boiler_water_tube)`
+- `sea_diesel_engine`: `fuel_oil_burner (node gained: sea_fuel_oil_burner)`
+- `sea_submarine`: `diving_suit (node gained: sea_diving_suit)`
+- `sea_sonar`: `electromagnetic_wave_theory (node gained: sea_electromagnetic_wave_theory)`
+
+### 17_energy.json
+- `pwr_coal_gas`: `pot_ash_soda`
+- `pwr_cable_tool_drilling`: `mat_steel_plate_kg`
+- `pwr_rotary_drilling`: `mat_steel_plate_kg`
+- `pwr_pipeline`: `mat_steel_plate_kg`
+- `pwr_indicator_diagram`: `cap_measure_pressure`
+- `pwr_selenium_photovoltaic`: `selenium_metal (node gained: pwr_selenium_metal)`
+- `pwr_lead_acid_battery`: `sulfuric_acid (node gained: sulfuric_retort)`
+- `pwr_nickel_iron_battery`: `nickel_metal`
+- `pwr_fuel_cell`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `pwr_selenium_metal`: `sulfuric_acid (node gained: sulfuric_retort)`
+- `pwr_nuclear_fission`: `mat_uranium`
+
+### 18_chemicals.json
+- `chm_ostwald_ammonia_oxidation`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `chm_haber_bosch`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `chm_electric_arc_nitrogen`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `chm_coal_tar_distillation`: `fractionating_column (node gained: chm_fractionating_column)`
+- `chm_aniline`: `industrial_gases (node gained: cap_gas_o2h2, chm_oleum)`
+- `chm_aniline`: `oleum (node gained: cap_gas_o2h2, chm_oleum)`
+- `chm_saccharin`: `oleum (node gained: chm_oleum)`
+- `chm_salicylic_acid`: `oleum (node gained: chm_oleum)`
+- `chm_filter_press`: `iron_bar_kg`
+- `chm_ion_exchange`: `formaldehyde_synthesis (node gained: chm_formaldehyde_synthesis)`
+- `chm_guncotton`: `oleum (node gained: chm_oleum)`
+- `chm_nitroglycerin`: `oleum (node gained: chm_oleum)`
+- `chm_tnt`: `oleum (node gained: chm_oleum)`
+- `chm_picric_acid`: `oleum (node gained: chm_oleum)`
+- `chm_bakelite`: `formaldehyde_synthesis (node gained: chm_formaldehyde_synthesis)`
+- `chm_pvc_synthesis`: `mat_calcium_carbide`
+- `chm_polyethylene`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `chm_matches`: `phosphorus_extraction (node gained: chm_phosphorus_extraction)`
+
+### 19_metallurgy_mining.json
+- `met_converter_furnace`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+- `met_basic_lining_phosphorus`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+- `met_green_sand_mold`: `sand_casting`
+- `met_investment_casting`: `lost_wax_casting`
+- `met_electro_refining`: `copper_fire_refined (node gained: mat_copper)`
+- `met_mine_pumping`: `screw_pump`
+- `met_oxyacetylene_welding`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `met_acetylene_supply`: `industrial_gases (node gained: cap_gas_o2h2)`
+
+### 20_precision.json
+- `prc_surface_grinder`: `mat_aluminum_oxide`
+
+### 21_medicine.json
+- `med_hypodermic_syringe`: `steel_noric_kg`
+
+### 23_optics_instruments.json
+- `opt_theodolite`: `transit_instrument (node gained: opt_transit_instrument)`
+
+### 30_expeditions.json
+- `exp_provisioning_scurvy`: `fud_food_preservation`
+- `exp_oceangoing_hull`: `sea_lateen_rig (node gained: sea_skeleton_first, tr_lateen_sail)`
+- `exp_oceangoing_hull`: `sea_skeleton_first_hull (node gained: sea_skeleton_first, tr_lateen_sail)`
+- `exp_colony_administration`: `fin_joint_stock_company (node gained: fin_joint_stock)`
+- `exp_conquest_resource`: `mil_firearm_matchlock (node gained: mil_matchlock)`
+
+### 41_chemistry_deep.json
+- `ch2_lab_soxhlet`: `reflux (node gained: ch2_lab_reflux)`
+- `ch2_lab_fractional_crystallisation`: `recrystallisation (node gained: ch2_lab_recrystallisation)`
+- `ch2_lab_gas_chromatography`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_lab_ion_exchange`: `coal_tar_products (node gained: chm_coal_tar_distillation)`
+- `ch2_analysis_indicator_dyes`: `coal_tar_products (node gained: chm_coal_tar_distillation)`
+- `ch2_analysis_combustion`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_analysis_flame_photometry`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_analysis_glass_ph_electrode`: `glass_boro (node gained: glass_borosilicate)`
+- `ch2_process_contact`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_process_deacon`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_process_bayer`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_process_frasch`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_process_ostwald`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_process_birkeland_eyde`: `electric_arc (node gained: cap_gas_o2h2, chm_electric_arc_nitrogen)`
+- `ch2_process_birkeland_eyde`: `industrial_gases (node gained: cap_gas_o2h2, chm_electric_arc_nitrogen)`
+- `ch2_process_cyanamide`: `calcium_carbide (node gained: cap_gas_o2h2)`
+- `ch2_process_cyanamide`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_process_fischer_tropsch`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_process_bergius`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_process_catalytic_cracking`: `cap_heat_800 (node gained: cap_heat_1100)`
+- `ch2_process_alkylation`: `cap_heat_700 (node gained: cap_heat_0700)`
+- `ch2_rxn_sulfonation`: `sulfuric_acid_conc (node gained: chm_contact_sulfuric)`
+- `ch2_rxn_halogenation`: `cap_heat_700 (node gained: cap_heat_0700)`
+- `ch2_rxn_friedel_crafts`: `cap_heat_700 (node gained: cap_heat_0700)`
+- `ch2_rxn_grignard`: `cap_heat_700 (node gained: cap_heat_0700)`
+- `ch2_rxn_bechamp_reduction`: `cap_heat_700 (node gained: cap_heat_0700)`
+- `ch2_rxn_catalytic_hydrogenation`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_rxn_dichromate_oxidation`: `sulfuric_acid_conc (node gained: chm_contact_sulfuric)`
+- `ch2_prod_acetylene`: `calcium_carbide (node gained: cap_gas_o2h2)`
+- `ch2_prod_acetylene`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_prod_methanol`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_prod_phenol`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_prod_benzene`: `coal_tar_products (node gained: chm_coal_tar_distillation)`
+- `ch2_prod_toluene`: `coal_tar_products (node gained: chm_coal_tar_distillation)`
+- `ch2_prod_xylene`: `coal_tar_products (node gained: chm_coal_tar_distillation)`
+- `ch2_prod_aniline`: `rxn_bechamp_reduction (node gained: ch2_rxn_bechamp_reduction)`
+- `ch2_prod_urea`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_prod_formaldehyde`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_prod_glycerol`: `rxn_saponification (node gained: ch2_rxn_saponification)`
+- `ch2_polymer_cellulose_acetate`: `acetic_anhydride`
+- `ch2_polymer_bakelite`: `phenol (node gained: ch2_prod_phenol)`
+- `ch2_polymer_urea_formaldehyde`: `formaldehyde (node gained: ch2_prod_formaldehyde, ch2_prod_urea)`
+- `ch2_polymer_urea_formaldehyde`: `urea (node gained: ch2_prod_formaldehyde, ch2_prod_urea)`
+- `ch2_polymer_pvc`: `vinyl_chloride`
+- `ch2_polymer_polystyrene`: `styrene`
+- `ch2_polymer_polyethylene`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `ch2_polymer_pmma`: `methyl_methacrylate`
+- `ch2_polymer_nylon`: `adipic_acid`
+- `ch2_polymer_polyester`: `ethylene_glycol`
+- `ch2_polymer_neoprene`: `chloroprene`
+- `ch2_polymer_buna`: `butadiene (node gained: ch2_polymer_polystyrene)`
+- `ch2_polymer_buna`: `styrene (node gained: ch2_polymer_polystyrene)`
+- `ch2_polymer_silicone`: `silicon_metal`
+- `ch2_phys_le_chatelier`: `equilibrium (node gained: ch2_phys_equilibrium)`
+- `ch2_phys_overpotential`: `electrochemical_series (node gained: ch2_phys_electrochemical_series)`
+- `ch2_phys_nernst_equation`: `electrochemical_series (node gained: ch2_phys_electrochemical_series)`
+
+### 42_electrical_deep.json
+- `el2_capacitor_fixed_mica`: `copper_fire_refined (node gained: mat_copper)`
+- `el2_capacitor_fixed_mica`: `mat_mica (node gained: mat_copper)`
+- `el2_capacitor_fixed_paper`: `copper_fire_refined (node gained: mat_copper)`
+- `el2_capacitor_electrolytic`: `aluminium_metal`
+- `el2_contactor_industrial`: `relay_electromagnetic (node gained: el2_relay_electromagnetic)`
+- `el2_plug_socket_portable`: `copper_fire_refined (node gained: mat_copper)`
+- `el2_transformer_core_air`: `inductor_air_core (node gained: el2_inductor_air_core)`
+- `el2_dynamo_compound_wound`: `dynamo_series_wound (node gained: el2_dynamo_series_wound, el2_dynamo_shunt_wound)`
+- `el2_dynamo_compound_wound`: `dynamo_shunt_wound (node gained: el2_dynamo_series_wound, el2_dynamo_shunt_wound)`
+- `el2_synchronous_motor`: `alternator_rotating_field (node gained: el2_alternator_rotating_field)`
+- `el2_induction_motor_squirrel_cage`: `synchronous_motor (node gained: el2_synchronous_motor)`
+- `el2_induction_motor_wound_rotor`: `induction_motor_squirrel_cage (node gained: el2_induction_motor_squirrel_cage)`
+- `el2_universal_motor_AC_DC`: `dynamo_series_wound (node gained: el2_dynamo_series_wound, el2_induction_motor_squirrel_cage)`
+- `el2_universal_motor_AC_DC`: `induction_motor_squirrel_cage (node gained: el2_dynamo_series_wound, el2_induction_motor_squirrel_cage)`
+- `el2_stepper_motor_PM`: `permanent_magnet_alloy`
+- `el2_stepper_motor_PM`: `wound_rotor_motor`
+- `el2_servo_motor_feedback`: `feedback_system (node gained: el2_stepper_motor_PM)`
+- `el2_servo_motor_feedback`: `stepper_motor_PM (node gained: el2_stepper_motor_PM)`
+- `el2_motor_rotary_converter_AC_DC`: `dynamo_shunt_wound (node gained: el2_dynamo_shunt_wound, el2_synchronous_motor)`
+- `el2_motor_rotary_converter_AC_DC`: `synchronous_motor (node gained: el2_dynamo_shunt_wound, el2_synchronous_motor)`
+- `el2_three_wire_distribution_system`: `standardised_frequency (node gained: el2_standardised_frequency_nominal)`
+- `el2_ring_main_distribution`: `substation (node gained: el2_substation_voltage_regulation)`
+- `el2_substation_voltage_regulation`: `transformer (node gained: en_transformer)`
+- `el2_tap_changer_load_compensator`: `relay_electromagnetic (node gained: el2_relay_electromagnetic, el2_substation_voltage_regulation, motor_transformer_ac)`
+- `el2_tap_changer_load_compensator`: `substation_voltage_regulation (node gained: el2_relay_electromagnetic, el2_substation_voltage_regulation, motor_transformer_ac)`
+- `el2_protective_relaying_differential`: `relay_electromagnetic (node gained: el2_relay_electromagnetic)`
+- `el2_power_factor_correction_capacitor`: `capacitor_fixed_paper (node gained: el2_capacitor_fixed_paper, el2_induction_motor_squirrel_cage)`
+- `el2_power_factor_correction_capacitor`: `induction_motor_squirrel_cage (node gained: el2_capacitor_fixed_paper, el2_induction_motor_squirrel_cage)`
+- `el2_synchroscope_phase_angle_indicator`: `synchronous_motor (node gained: el2_synchronous_motor)`
+- `el2_standardised_frequency_nominal`: `alternator_rotating_field (node gained: el2_alternator_rotating_field)`
+- `el2_meter_moving_iron_attraction`: `mat_iron`
+- `el2_meter_electrodynamometer_wattmeter`: `meter_moving_coil (node gained: el2_meter_moving_coil_galvanometer)`
+- `el2_meter_energy_kWh_meter`: `electrodynamometer_wattmeter`
+- `el2_megger_resistance_tester`: `dynamo_series_wound (node gained: el2_dynamo_series_wound, el2_meter_moving_coil_galvanometer)`
+- `el2_megger_resistance_tester`: `meter_moving_coil (node gained: el2_dynamo_series_wound, el2_meter_moving_coil_galvanometer)`
+- `el2_bridge_resistance_AC_impedance`: `alternator_rotating_field (node gained: el2_alternator_rotating_field, el2_capacitor_variable_air, el2_rheostat)`
+- `el2_standard_resistor_manganin`: `mat_manganin`
+- `el2_potentiometer_method_measurement`: `potentiometer (node gained: el2_potentiometer, el2_standard_cell_weston_saturated, galvanometer)`
+- `el2_potentiometer_method_measurement`: `standard_cell_weston (node gained: el2_potentiometer, el2_standard_cell_weston_saturated, galvanometer)`
+- `el2_galvanometer_ballistic_impulse`: `meter_moving_coil (node gained: el2_meter_moving_coil_galvanometer)`
+- `el2_oscillograph_string_recorder`: `meter_moving_coil (node gained: el2_meter_moving_coil_galvanometer)`
+- `el2_cathode_ray_tube_oscilloscope`: `deflection_coil`
+- `el2_valve_voltmeter_high_impedance`: `cathode_follower`
+- `el2_triode_amplifying_tube`: `diode_thermionic_rectifying_tube (node gained: el2_diode_thermionic_rectifying_tube, vacuum_tube)`
+- `el2_tetrode_four_electrode_tube`: `triode_amplifying_tube (node gained: el2_triode_amplifying_tube, vacuum_tube)`
+- `el2_pentode_five_electrode_tube`: `tetrode_four_electrode_tube (node gained: el2_tetrode_four_electrode_tube, vacuum_tube)`
+- `el2_beam_tetrode_output_tube`: `pentode_five_electrode_tube (node gained: el2_pentode_five_electrode_tube, vacuum_tube)`
+- `el2_thyratron_gas_filled_switching_tube`: `tetrode_four_electrode_tube (node gained: el2_tetrode_four_electrode_tube, vacuum_tube)`
+- `el2_photomultiplier_single_photon`: `cascade_multiplier (node gained: el2_photodiode_photocell_selenium)`
+- `el2_photomultiplier_single_photon`: `photodiode (node gained: el2_photodiode_photocell_selenium)`
+- `el2_klystron_microwave_amplifier`: `waveguide (node gained: com_waveguide)`
+- `el2_magnetron_microwave_oscillator`: `electron_bunching`
+- `el2_travelling_wave_tube_linear_amplifier`: `klystron_microwave_amplifier (node gained: el2_klystron_microwave_amplifier)`
+- `el2_travelling_wave_tube_linear_amplifier`: `slow_wave_structure (node gained: el2_klystron_microwave_amplifier)`
+- `el2_photodiode_photocell_selenium`: `light_sensitive_element (node gained: el2_rectifier_metal_layer)`
+- `el2_photodiode_photocell_selenium`: `rectifier_metal_layer (node gained: el2_rectifier_metal_layer)`
+- `el2_thermistor_thermally_sensitive_resistor`: `metal_oxide_semiconductor`
+- `el2_varistor_voltage_dependent_resistor`: `high_voltage_protection`
+- `el2_varistor_voltage_dependent_resistor`: `metal_oxide_semiconductor`
+- `el2_tuned_circuit_resonance_tank`: `capacitor_variable_air (node gained: el2_capacitor_variable_air, el2_inductor_air_core)`
+- `el2_tuned_circuit_resonance_tank`: `inductor_air_core (node gained: el2_capacitor_variable_air, el2_inductor_air_core)`
+- `el2_resonance_frequency_selectivity`: `tuned_circuit_resonance_tank (node gained: el2_tuned_circuit_resonance_tank)`
+- `el2_low_pass_filter_high_pass_filter`: `capacitor_fixed_paper (node gained: el2_capacitor_fixed_paper, el2_resistor_wirewound)`
+- `el2_low_pass_filter_high_pass_filter`: `resistor_wirewound (node gained: el2_capacitor_fixed_paper, el2_resistor_wirewound)`
+- `el2_bandpass_filter_notch_filter`: `high_pass_filter (node gained: el2_capacitor_fixed_mica, el2_inductor_iron_core, el2_low_pass_filter_high_pass_filter, el2_tuned_circuit_resonance_tank)`
+- `el2_bandpass_filter_notch_filter`: `tuned_circuit_resonance_tank (node gained: el2_capacitor_fixed_mica, el2_inductor_iron_core, el2_low_pass_filter_high_pass_filter, el2_tuned_circuit_resonance_tank)`
+- `el2_amplifier_gain_voltage_current`: `load_resistance (node gained: el2_capacitor_fixed_paper, el2_resistor_wirewound, el2_triode_amplifying_tube)`
+- `el2_amplifier_gain_voltage_current`: `triode_amplifying_tube (node gained: el2_capacitor_fixed_paper, el2_resistor_wirewound, el2_triode_amplifying_tube)`
+- `el2_negative_feedback_stability_gain`: `amplifier_gain_voltage_current (node gained: el2_amplifier_gain_voltage_current)`
+- `el2_oscillator_feedback_frequency_generation`: `triode_amplifying_tube (node gained: el2_triode_amplifying_tube, el2_tuned_circuit_resonance_tank)`
+- `el2_oscillator_feedback_frequency_generation`: `tuned_circuit_resonance_tank (node gained: el2_triode_amplifying_tube, el2_tuned_circuit_resonance_tank)`
+- `el2_multivibrator_binary_oscillator`: `oscillator_feedback_frequency_generation (node gained: el2_capacitor_fixed_paper, el2_oscillator_feedback_frequency_generation, el2_resistor_wirewound, el2_triode_amplifying_tube)`
+- `el2_flip_flop_binary_latch_memory`: `multivibrator_binary_oscillator (node gained: el2_capacitor_fixed_paper, el2_multivibrator_binary_oscillator, el2_pentode_five_electrode_tube, el2_resistor_wirewound)`
+- `el2_counter_frequency_scaling_binary`: `flip_flop_binary_latch_memory (node gained: el2_flip_flop_binary_latch_memory)`
+- `el2_mixer_frequency_translation`: `nonlinear_device (node gained: el2_diode_thermionic_rectifying_tube, el2_inductor_air_core, el2_oscillator_feedback_frequency_generation)`
+- `el2_mixer_frequency_translation`: `oscillator_feedback_frequency_generation (node gained: el2_diode_thermionic_rectifying_tube, el2_inductor_air_core, el2_oscillator_feedback_frequency_generation)`
+- `el2_detector_demodulation_envelope_product`: `diode_thermionic_rectifying_tube (node gained: el2_capacitor_fixed_paper, el2_diode_thermionic_rectifying_tube, el2_resistor_wirewound, el2_tuned_circuit_resonance_tank)`
+- `el2_detector_demodulation_envelope_product`: `tuned_circuit_resonance_tank (node gained: el2_capacitor_fixed_paper, el2_diode_thermionic_rectifying_tube, el2_resistor_wirewound, el2_tuned_circuit_resonance_tank)`
+- `el2_discriminator_FM_demodulator`: `detector_demodulation_envelope_product (node gained: el2_bandpass_filter_notch_filter, el2_detector_demodulation_envelope_product, el2_diode_thermionic_rectifying_tube, el2_tuned_circuit_resonance_tank)`
+- `el2_discriminator_FM_demodulator`: `tuned_circuit_resonance_tank (node gained: el2_bandpass_filter_notch_filter, el2_detector_demodulation_envelope_product, el2_diode_thermionic_rectifying_tube, el2_tuned_circuit_resonance_tank)`
+- `el2_modulator_amplitude_frequency_phase`: `amplifier_gain_voltage_current (node gained: el2_amplifier_gain_voltage_current, el2_oscillator_feedback_frequency_generation, el2_triode_amplifying_tube)`
+- `el2_modulator_amplitude_frequency_phase`: `oscillator_feedback_frequency_generation (node gained: el2_amplifier_gain_voltage_current, el2_oscillator_feedback_frequency_generation, el2_triode_amplifying_tube)`
+- `el2_power_supply_rectification_filtering`: `inductor_iron_core (node gained: el2_capacitor_electrolytic, el2_inductor_iron_core, el2_rectifier_metal_layer)`
+- `el2_power_supply_rectification_filtering`: `rectifier_metal_layer (node gained: el2_capacitor_electrolytic, el2_inductor_iron_core, el2_rectifier_metal_layer)`
+- `el2_voltage_regulation_series_shunt`: `cathode_follower (node gained: el2_power_supply_rectification_filtering, el2_resistor_wirewound, el2_triode_amplifying_tube)`
+- `el2_voltage_regulation_series_shunt`: `power_supply_rectification_filtering (node gained: el2_power_supply_rectification_filtering, el2_resistor_wirewound, el2_triode_amplifying_tube)`
+- `el2_impedance_matching_transformer_network`: `inductor_air_core (node gained: el2_inductor_air_core, el2_transformer_core_air)`
+- `el2_impedance_matching_transformer_network`: `transformer_core_air (node gained: el2_inductor_air_core, el2_transformer_core_air)`
+- `el2_transmission_line_coaxial_cable`: `impedance_matching_transformer_network (node gained: el2_impedance_matching_transformer_network)`
+- `el2_waveguide_rectangular_propagation`: `microwave_frequency (node gained: el2_transmission_line_coaxial_cable)`
+- `el2_waveguide_rectangular_propagation`: `transmission_line_coaxial_cable (node gained: el2_transmission_line_coaxial_cable)`
+- `el2_antenna_patterns_radiation_efficiency`: `transmission_line_coaxial_cable (node gained: el2_transmission_line_coaxial_cable)`
+- `el2_resistance_welding_spot_seam`: `high_current_connection`
+- `el2_induction_heating_inductor_coupling`: `alternator_rotating_field (node gained: el2_alternator_rotating_field, el2_inductor_iron_core)`
+- `el2_induction_heating_inductor_coupling`: `inductor_iron_core (node gained: el2_alternator_rotating_field, el2_inductor_iron_core)`
+- `el2_dielectric_heating_capacitor_coupling`: `capacitor_fixed_paper (node gained: el2_capacitor_fixed_paper)`
+- `el2_dielectric_heating_capacitor_coupling`: `high_frequency_generator (node gained: el2_capacitor_fixed_paper)`
+- `el2_electropolishing_etching_surface_finish`: `electroplating_and_electrorefining (node gained: analytical_chemistry, el2_electroplating_and_electrorefining, power_grid)`
+- `el2_electrostatic_precipitation_dust_collection`: `high_voltage_supply`
+- `el2_electric_locomotive_traction_motor`: `induction_motor_squirrel_cage (node gained: el2_induction_motor_squirrel_cage)`
+- `el2_trolleybus_catenary_power`: `electric_locomotive_traction_motor (node gained: el2_electric_locomotive_traction_motor, el2_universal_motor_AC_DC)`
+- `el2_electric_lift_motor_gear_reduction`: `induction_motor_squirrel_cage (node gained: el2_induction_motor_squirrel_cage)`
+- `el2_electric_lift_motor_gear_reduction`: `speed_reducer_gearbox (node gained: el2_induction_motor_squirrel_cage)`
+- `el2_electric_drill_handheld_motor`: `universal_motor (node gained: el2_universal_motor_AC_DC)`
+- `el2_loudspeaker_moving_coil_magnetic`: `cone_diaphragm`
+- `el2_microphone_carbon_contact`: `carbon_granule (node gained: if_telephone_transmitter)`
+- `el2_microphone_carbon_contact`: `telephone_transmitter (node gained: if_telephone_transmitter)`
+- `el2_microphone_dynamic_moving_coil`: `loudspeaker_moving_coil_magnetic (node gained: el2_loudspeaker_moving_coil_magnetic)`
+- `el2_microphone_condenser_electrostatic`: `capacitor_variable_air (node gained: el2_capacitor_variable_air)`
+- `el2_microphone_ribbon_velocity`: `loudspeaker_moving_coil_magnetic (node gained: el2_loudspeaker_moving_coil_magnetic)`
+- `el2_telephone_exchange_switching_network`: `relay_electromagnetic (node gained: el2_relay_electromagnetic)`
+- `el2_radar_pulse_modulation_detection`: `cathode_ray_tube_oscilloscope (node gained: el2_cathode_ray_tube_oscilloscope, el2_magnetron_microwave_oscillator, el2_travelling_wave_tube_linear_amplifier)`
+- `el2_radar_pulse_modulation_detection`: `magnetron_microwave_oscillator (node gained: el2_cathode_ray_tube_oscilloscope, el2_magnetron_microwave_oscillator, el2_travelling_wave_tube_linear_amplifier)`
+- `el2_sonar_acoustic_detection_ranging`: `piezo_crystal_transducer (node gained: el2_cathode_ray_tube_oscilloscope, el2_pentode_five_electrode_tube, el2_quartz_crystal)`
+- `el2_photocell_vacuum_gas_photoelectric`: `cathode_follower`
+- `el2_xray_tube_high_voltage_cathode_rays`: `high_voltage_power_supply`
+- `el2_electron_microscope_electromagnetic_lens`: `cathode_ray_tube_oscilloscope (node gained: el2_cathode_ray_tube_oscilloscope, electromagnet, vacuum_pumps)`
+- `el2_electron_microscope_electromagnetic_lens`: `high_voltage_power_supply (node gained: el2_cathode_ray_tube_oscilloscope, electromagnet, vacuum_pumps)`
+
+### 43_manufacturing_deep.json
+- `mfg_brazed_tip`: `brazing (node gained: mfg_brazing)`
+- `mfg_turret_lathe`: `indexing_head (node gained: mfg_indexing_head)`
+- `mfg_automatic_screw`: `cam_lobe (node gained: mfg_cam_lobe, mfg_escapement_lever)`
+- `mfg_automatic_screw`: `escapement_lever (node gained: mfg_cam_lobe, mfg_escapement_lever)`
+- `mfg_universal_mill`: `indexing_head (node gained: mfg_indexing_head)`
+- `mfg_profile_mill`: `optical_comparator (node gained: mfg_optical_comparator)`
+- `mfg_gear_grinder`: `cylindrical_grinder (node gained: mfg_cylindrical_grinder)`
+- `mfg_centreless_grinder`: `cylindrical_grinder (node gained: mfg_cylindrical_grinder)`
+- `mfg_internal_grinder`: `cylindrical_grinder (node gained: mfg_cylindrical_grinder)`
+- `mfg_tool_grinder`: `surface_grinder (node gained: prc_surface_grinder)`
+- `mfg_honing`: `cylindrical_grinder (node gained: mfg_cylindrical_grinder)`
+- `mfg_superfinishing`: `honing (node gained: mfg_honing)`
+- `mfg_deep_drawing`: `lubricant (node gained: en_lubricating_oil)`
+- `mfg_mould`: `sand_casting`
+- `mfg_comparator`: `dial_indicator (node gained: mfg_dial_indicator)`
+- `mfg_control_chart`: `tolerance_limit_system (node gained: mfg_tolerance_limit)`
+- `mfg_oxy_acetylene`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `mfg_arc_weld_bare`: `electrical_metrology`
+- `mfg_arc_weld_coated`: `flux (node gained: mfg_flux)`
+- `mfg_brazing`: `cap_heat_800`
+- `mfg_silver_solder`: `cap_heat_750 (node gained: cap_heat_1100)`
+- `mfg_soft_solder`: `cap_heat_300 (node gained: cap_heat_0700)`
+- `mfg_flux`: `mat_borax`
+- `mfg_galvanising`: `cap_heat_450 (node gained: cap_heat_0700)`
+- `mfg_painting`: `mat_paint`
+- `mfg_enamelling`: `cap_heat_800 (node gained: cap_heat_1100)`
+- `mfg_enamelling`: `glass_soda (node gained: cap_heat_1100)`
+- `mfg_phosphating`: `phosphoric_acid`
+- `mfg_japanning`: `cap_heat_150 (node gained: cap_heat_0700)`
+- `mfg_japanning`: `lacquer (node gained: cap_heat_0700)`
+- `mfg_assembly_line`: `production_schedule (node gained: mfg_production_schedule)`
+- `mfg_work_study`: `time_study (node gained: mfg_time_study)`
+- `mfg_production_schedule`: `bill_of_materials`
+- `mfg_bill_materials`: `drawing_office (node gained: mfg_drawing_office)`
+- `mfg_inventory_mgmt`: `production_schedule (node gained: mfg_production_schedule)`
+- `mfg_drawing_office`: `orthographic_projection (node gained: mfg_orthographic)`
+- `mfg_dimensioning`: `tolerance_limit_system (node gained: mfg_tolerance_limit)`
+- `mfg_change_order`: `drawing_office (node gained: mfg_drawing_office)`
+
+### 44_medicine_deep.json
+- `md2_gas_exchange`: `circulation (node gained: md2_circulation)`
+- `md2_nervous_system`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_endocrine_system`: `digestion (node gained: md2_digestion, md2_nervous_system)`
+- `md2_endocrine_system`: `nervous_system (node gained: md2_digestion, md2_nervous_system)`
+- `md2_kidney`: `circulation (node gained: md2_circulation)`
+- `md2_mendelian_inheritance`: `cell_theory (node gained: md2_cell_theory)`
+- `md2_chromosome`: `mendelian_inheritance (node gained: md2_mendelian_inheritance)`
+- `md2_gene`: `chromosome (node gained: md2_chromosome)`
+- `md2_dna`: `gene (node gained: md2_gene)`
+- `md2_auscultation`: `stethoscope (node gained: md2_stethoscope)`
+- `md2_sphygmomanometer`: `clinical_thermometer (node gained: md2_clinical_thermometer)`
+- `md2_endoscope`: `light_source (node gained: md2_light_source)`
+- `md2_cystoscope`: `endoscope (node gained: md2_endoscope)`
+- `md2_fluoroscopy`: `xray_plate (node gained: md2_xray_plate)`
+- `md2_contrast_media`: `xray_plate (node gained: md2_xray_plate)`
+- `md2_basal_metabolic_rate`: `clinical_thermometer (node gained: md2_clinical_thermometer, md2_spirometer)`
+- `md2_basal_metabolic_rate`: `spirometer (node gained: md2_clinical_thermometer, md2_spirometer)`
+- `md2_differential_count`: `haemocytometer (node gained: md2_haemocytometer, md2_staining_methylene)`
+- `md2_differential_count`: `staining_methylene (node gained: md2_haemocytometer, md2_staining_methylene)`
+- `md2_wassermann_test`: `immunity (node gained: md2_immunity)`
+- `md2_tuberculin_test`: `immunity (node gained: md2_immunity)`
+- `md2_biopsy`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_frozen_section`: `biopsy (node gained: mat_ice_artificial, md2_biopsy)`
+- `md2_frozen_section`: `ice_artificial (node gained: mat_ice_artificial, md2_biopsy)`
+- `md2_synthetic_suture`: `mat_nylon`
+- `md2_blood_transfusion`: `blood_typing (node gained: md2_blood_typing)`
+- `md2_blood_bank`: `blood_typing (node gained: mat_ice_artificial, md2_blood_typing)`
+- `md2_blood_bank`: `ice_artificial (node gained: mat_ice_artificial, md2_blood_typing)`
+- `md2_citrate_anticoagulation`: `blood_typing (node gained: md2_blood_typing)`
+- `md2_endotracheal_intubation`: `laryngoscope (node gained: md2_laryngoscope)`
+- `md2_spinal_anaesthesia`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_spinal_anaesthesia`: `needle_gauge (node gained: md2_cadaver_dissection)`
+- `md2_local_anaesthesia`: `cocaine_isolation`
+- `md2_appendicectomy`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_hernia_repair`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_gastrectomy`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_caesarean_section`: `antibiotics_early (node gained: md2_cadaver_dissection)`
+- `md2_caesarean_section`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_orthopaedic_fixation`: `plaster_cast (node gained: md2_plaster_cast)`
+- `md2_plaster_cast`: `gypsum (node gained: mat_gypsum)`
+- `md2_traction`: `cadaver_dissection (node gained: md2_cadaver_dissection, mfg_wire_drawing)`
+- `md2_traction`: `wire_drawing (node gained: md2_cadaver_dissection, mfg_wire_drawing)`
+- `md2_skin_graft`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_cataract_extraction`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_thyroidectomy`: `antibiotics_early (node gained: md2_cadaver_dissection)`
+- `md2_thyroidectomy`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_digitalis`: `plant_chemistry (node gained: md2_plant_chemistry)`
+- `md2_salicylate`: `plant_chemistry (node gained: md2_plant_chemistry)`
+- `md2_barbiturates`: `urea_synthesis`
+- `md2_insulin`: `endocrine_system (node gained: md2_endocrine_system)`
+- `md2_insulin`: `pancreas_isolation (node gained: md2_endocrine_system)`
+- `md2_thyroid_extract`: `endocrine_system (node gained: md2_endocrine_system)`
+- `md2_thyroid_extract`: `gland_extraction (node gained: md2_endocrine_system)`
+- `md2_adrenaline`: `adrenal_gland`
+- `md2_sulphonamides`: `synthetic_dyes (node gained: mat_dyes_synthetic)`
+- `md2_penicillin_production`: `microbiology_culture (node gained: md2_microbiology_culture)`
+- `md2_penicillin_fermentation`: `penicillin_production (node gained: cap_power_steam, md2_penicillin_production)`
+- `md2_penicillin_fermentation`: `steam_power (node gained: cap_power_steam, md2_penicillin_production)`
+- `md2_penicillin_freeze_dry`: `ice_artificial (node gained: mat_ice_artificial, md2_penicillin_fermentation)`
+- `md2_penicillin_freeze_dry`: `penicillin_fermentation (node gained: mat_ice_artificial, md2_penicillin_fermentation)`
+- `md2_streptomycin`: `microbiology_culture (node gained: md2_microbiology_culture)`
+- `md2_streptomycin`: `tuberculosis_pathogen (node gained: md2_microbiology_culture)`
+- `md2_antitoxin`: `horse_immunization (node gained: md2_immunity)`
+- `md2_antitoxin`: `immunity (node gained: md2_immunity)`
+- `md2_vaccine_smallpox`: `immunity (node gained: md2_immunity)`
+- `md2_vaccine_rabies`: `brain_culture (node gained: md2_immunity)`
+- `md2_vaccine_rabies`: `immunity (node gained: md2_immunity)`
+- `md2_vaccine_typhoid`: `bacterial_culture (node gained: md2_immunity, md2_microbiology_culture)`
+- `md2_vaccine_typhoid`: `immunity (node gained: md2_immunity, md2_microbiology_culture)`
+- `md2_vaccine_cholera`: `bacterial_culture (node gained: md2_immunity, md2_microbiology_culture)`
+- `md2_vaccine_cholera`: `immunity (node gained: md2_immunity, md2_microbiology_culture)`
+- `md2_vaccine_plague`: `bacterial_culture (node gained: md2_immunity, md2_microbiology_culture)`
+- `md2_vaccine_plague`: `immunity (node gained: md2_immunity, md2_microbiology_culture)`
+- `md2_vaccine_diphtheria`: `immunity (node gained: md2_immunity)`
+- `md2_vaccine_diphtheria`: `toxin_production (node gained: md2_immunity)`
+- `md2_vaccine_tetanus`: `immunity (node gained: md2_immunity)`
+- `md2_vaccine_tetanus`: `toxin_production (node gained: md2_immunity)`
+- `md2_vaccine_pertussis`: `bacterial_culture (node gained: md2_immunity, md2_microbiology_culture)`
+- `md2_vaccine_pertussis`: `immunity (node gained: md2_immunity, md2_microbiology_culture)`
+- `md2_vaccine_yellow_fever`: `immunity (node gained: md2_immunity)`
+- `md2_vaccine_yellow_fever`: `viral_culture (node gained: md2_immunity)`
+- `md2_vitamin_a`: `fat_soluble_factors`
+- `md2_vitamin_b1`: `water_soluble_vitamins`
+- `md2_vitamin_b12`: `cobalt_isolation`
+- `md2_vitamin_b12`: `intrinsic_factor`
+- `md2_vitamin_c`: `plant_ascorbate`
+- `md2_vitamin_d`: `fat_soluble_factors`
+- `md2_vitamin_d`: `sunlight_exposure`
+- `md2_iodised_salt`: `salt_purification (node gained: md2_thyroid_extract)`
+- `md2_iodised_salt`: `thyroid_extract (node gained: md2_thyroid_extract)`
+- `md2_oral_rehydration`: `digestion (node gained: md2_digestion)`
+- `md2_oral_rehydration`: `electrolyte_transport (node gained: md2_digestion)`
+- `md2_sand_filtration`: `water_supply (node gained: civ_aqueduct_roman)`
+- `md2_chlorination`: `chlorine_production (node gained: md2_sand_filtration)`
+- `md2_chlorination`: `sand_filtration (node gained: md2_sand_filtration)`
+- `md2_sewage_separation`: `water_supply (node gained: civ_aqueduct_roman)`
+- `md2_activated_sludge`: `aeration_technology (node gained: md2_sewage_separation)`
+- `md2_activated_sludge`: `sewage_separation (node gained: md2_sewage_separation)`
+- `md2_milk_pasteurisation`: `steam_power (node gained: cap_power_steam)`
+- `md2_meat_inspection`: `cadaver_dissection (node gained: md2_cadaver_dissection)`
+- `md2_notifiable_disease`: `vital_registration (node gained: md2_vital_registration)`
+- `md2_contact_tracing`: `notifiable_disease (node gained: md2_notifiable_disease)`
+- `md2_isolation_hospital`: `hospital_design`
+- `md2_vector_control`: `epidemiology_insect`
+- `md2_mosquito_net`: `vector_control (node gained: md2_vector_control)`
+- `md2_hospital_infection_control`: `autoclave (node gained: md2_autoclave)`
+- `md2_maternal_clinic`: `obstetric_care`
+- `md2_child_clinic`: `pediatric_care`
+- `md2_case_series`: `case_record (node gained: md2_case_record)`
+- `md2_cohort_study`: `case_series (node gained: md2_case_series)`
+- `md2_case_control_study`: `case_series (node gained: md2_case_series)`
+- `md2_randomised_controlled_trial`: `blinding (node gained: md2_blinding)`
+- `md2_blinding`: `placebo (node gained: md2_placebo)`
+- `md2_placebo`: `case_control_study (node gained: md2_case_control_study)`
+- `md2_mortality_table`: `vital_registration (node gained: md2_vital_registration)`
+- `md2_pharmacopoeia`: `drug_standardisation (node gained: md2_drug_standardisation)`
+- `md2_bioassay`: `drug_standardisation (node gained: md2_drug_standardisation)`
+- `md2_staining_methylene`: `synthetic_dyes (node gained: mat_dyes_synthetic)`
+- `md2_microbiology_culture`: `sterilization_autoclave`
+
+### 45a_transport_land_deep.json
+- `tl_spoked_wheel`: `mat_wood`
+- `tl_kerbing`: `mat_stone`
+- `tl_roller_bearing`: `mat_steel`
+- `tl_handbrake`: `mat_rope`
+- `tl_fan_belt`: `mat_rubber (node gained: mat_rubber_coagulated)`
+- `tl_air_filter`: `mat_cloth`
+- `tl_windscreen_wiper`: `mat_rubber (node gained: mat_rubber_coagulated)`
+- `tl_storage_battery`: `mat_sulfuric_acid`
+- `tl_wire_rope_brake`: `mat_rope`
+
+### 45b_transport_rail_marine_deep.json
+- `tr_rail_rolling`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+- `tr_compound_expansion`: `tr_locomotiv_boiler (node gained: tr_locomotive_boiler)`
+- `tr_catenary_overhead`: `structural_steel_towers (node gained: cn_lattice_truss)`
+- `tr_diesel_electric`: `internal_combustion_engine (node gained: lnd_diesel_cycle)`
+- `tr_sleeping_car`: `wood_construction`
+- `tr_refrigerated_wagon`: `wood_construction`
+- `tr_hopper_wagon`: `wood_construction`
+- `tr_tank_wagon`: `riveted_plating (node gained: tr_riveted_plating)`
+- `tr_watertight_bulkhead`: `wood_construction`
+- `tr_double_bottom`: `riveted_plating (node gained: tr_riveted_plating)`
+- `tr_iron_hull`: `riveted_plating (node gained: tr_riveted_plating)`
+- `tr_steel_hull`: `bessemer_openhearth (node gained: mat_bulk_steel, tr_riveted_plating)`
+- `tr_steel_hull`: `riveted_plating (node gained: mat_bulk_steel, tr_riveted_plating)`
+- `tr_welded_hull`: `riveted_plating (node gained: tr_riveted_plating)`
+- `tr_variable_pitch_propeller`: `screw_propeller (node gained: tr_screw_propeller)`
+- `tr_triple_expansion`: `marine_engine (node gained: tr_marine_engine)`
+- `tr_reduction_gearing`: `screw_propeller (node gained: tr_screw_propeller)`
+- `tr_marine_diesel`: `internal_combustion_engine (node gained: lnd_diesel_cycle)`
+- `tr_ballast_tank`: `riveted_plating (node gained: tr_riveted_plating)`
+- `tr_submarine_hull`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+- `tr_lifeboat`: `wood_construction`
+- `tr_gyrocompass_repeater`: `gyroscope (node gained: in2_gyrocompass)`
+- `tr_dry_dock`: `canal_lock (node gained: civ_pumping_station, tr_canal_lock)`
+- `tr_dry_dock`: `water_pumping (node gained: civ_pumping_station, tr_canal_lock)`
+- `tr_slipway_launch`: `wood_construction`
+- `tr_canal_lock`: `wood_construction`
+- `tr_canal_lift`: `canal_lock (node gained: civ_pumping_station, tr_canal_lock)`
+- `tr_canal_lift`: `water_pumping (node gained: civ_pumping_station, tr_canal_lock)`
+- `tr_dredger`: `screw_propeller (node gained: tr_screw_propeller)`
+- `tr_tug`: `screw_propeller (node gained: tr_screw_propeller)`
+- `tr_keelson`: `frame_first_construction (node gained: tr_frame_first_construction)`
+
+### 46_materials_deep.json
+- `mt2_molybdenum_extraction`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `mt2_powder_metallurgy`: `sintering_process (node gained: mt2_sintering_process)`
+- `mt2_tempering`: `quenching_water (node gained: mt2_quenching_water)`
+- `mt2_nitriding`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `mt2_induction_hardening`: `quenching_water (node gained: mt2_quenching_water)`
+- `mt2_recrystallisation`: `annealing (node gained: mt2_annealing)`
+- `mt2_fatigue_testing`: `tensile_test (node gained: mt2_tensile_test)`
+- `mt2_creep_testing`: `tensile_test (node gained: mt2_tensile_test)`
+- `mt2_stellite_cobalt_alloy`: `mat_cobalt`
+- `mt2_high_speed_steel`: `mat_vanadium`
+- `mt2_stainless_austenitic`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+- `mt2_silicon_steel_transformer`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+- `mt2_hadfield_manganese_steel`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+- `mt2_spring_steel`: `tempering (node gained: mt2_tempering)`
+- `mt2_malleable_cast_iron`: `white_cast_iron (node gained: mt2_white_cast_iron)`
+- `mt2_duralumin_alloy`: `age_hardening_aluminum (node gained: mt2_age_hardening_aluminum)`
+- `mt2_titanium_alloys`: `mat_titanium`
+- `mt2_bone_china`: `cap_heat_1200`
+- `mt2_tempered_glass_safety`: `cap_heat_1200 (node gained: cap_heat_1300)`
+- `mt2_rock_drill_pneumatic`: `industrial_gases (node gained: cap_gas_o2h2)`
+- `mt2_jackhammer_portable`: `rock_drill_pneumatic (node gained: mt2_rock_drill_pneumatic)`
+
+### 47_agri_food_deep.json
+- `ag2_ridging_plough`: `coulter (node gained: ag2_coulter)`
+- `ag2_horse_hoe`: `cultivator (node gained: ag2_cultivator)`
+- `ag2_seed_drill`: `cam`
+- `ag2_reaper_binder`: `reaper (node gained: ag2_reaper)`
+- `ag2_reaper_binder`: `twine (node gained: ag2_reaper)`
+- `ag2_combine_harvester`: `reaper_binder (node gained: ag2_reaper_binder, ag2_threshing_machine)`
+- `ag2_combine_harvester`: `threshing_machine (node gained: ag2_reaper_binder, ag2_threshing_machine)`
+- `ag2_mower`: `reaper (node gained: ag2_reaper)`
+- `ag2_baler`: `hay_rake`
+- `ag2_baler`: `twine`
+- `ag2_winnower`: `threshing_machine (node gained: ag2_threshing_machine)`
+- `ag2_fanning_mill`: `threshing_machine (node gained: ag2_threshing_machine, ag2_winnower)`
+- `ag2_fanning_mill`: `winnower (node gained: ag2_threshing_machine, ag2_winnower)`
+- `ag2_potato_lifter`: `ridging_plough (node gained: ag2_ridging_plough)`
+- `ag2_tractor_steam`: `boiler_steel`
+- `ag2_tractor_steam`: `wheel_drive`
+- `ag2_caterpillar_track`: `tractor_steam (node gained: ag2_tractor_steam)`
+- `ag2_power_take_off`: `tractor_steam (node gained: ag2_tractor_steam)`
+- `ag2_three_point_linkage`: `power_take_off (node gained: ag2_power_take_off, ag2_tractor_steam)`
+- `ag2_three_point_linkage`: `tractor_steam (node gained: ag2_power_take_off, ag2_tractor_steam)`
+- `ag2_nitrogen_cycle`: `chemical_theory`
+- `ag2_rhizobia`: `nitrogen_cycle (node gained: ag2_nitrogen_cycle)`
+- `ag2_superphosphate`: `bone_meal (node gained: ag2_bone_meal, sulfuric_retort)`
+- `ag2_superphosphate`: `sulfuric_acid (node gained: ag2_bone_meal, sulfuric_retort)`
+- `ag2_basic_slag`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+- `ag2_guano`: `exp_guano_islands`
+- `ag2_gasworks_ammonia`: `sulfuric_acid (node gained: sulfuric_retort)`
+- `ag2_urea`: `haber_bosch_ammonia (node gained: chm_haber_bosch)`
+- `ag2_soil_testing`: `laboratory`
+- `ag2_tile_drainage`: `ceramic_kiln`
+- `ag2_erosion_control`: `trees`
+- `ag2_controlled_pollination`: `botanical_knowledge (node gained: ag2_record_keeping_breeding)`
+- `ag2_controlled_pollination`: `record_keeping_breeding (node gained: ag2_record_keeping_breeding)`
+- `ag2_hybridisation`: `controlled_pollination (node gained: ag2_controlled_pollination)`
+- `ag2_hybrid_maize`: `hybridisation (node gained: ag2_hybridisation, ag2_pure_line_selection)`
+- `ag2_hybrid_maize`: `pure_line_selection (node gained: ag2_hybridisation, ag2_pure_line_selection)`
+- `ag2_pure_line_selection`: `record_keeping_breeding (node gained: ag2_record_keeping_breeding)`
+- `ag2_seed_trade`: `record_keeping_breeding (node gained: ag2_record_keeping_breeding)`
+- `ag2_seed_certification`: `seed_trade (node gained: ag2_seed_trade, ag2_soil_testing)`
+- `ag2_seed_certification`: `soil_testing (node gained: ag2_seed_trade, ag2_soil_testing)`
+- `ag2_budding`: `grafting (node gained: ag2_grafting)`
+- `ag2_rootstocks`: `botanical_knowledge (node gained: ag2_grafting)`
+- `ag2_rootstocks`: `grafting (node gained: ag2_grafting)`
+- `ag2_botanic_garden`: `exploration_network`
+- `ag2_sugar_voyage`: `exp_sugar_voyage`
+- `ag2_sugar_voyage`: `plantation_system`
+- `ag2_tea_voyage`: `botanic_garden (node gained: ag2_botanic_garden)`
+- `ag2_tea_voyage`: `exp_tea_voyage (node gained: ag2_botanic_garden)`
+- `ag2_coffee_voyage`: `exp_coffee_voyage`
+- `ag2_coffee_voyage`: `plantation_system`
+- `ag2_potato_newworld`: `exp_newworld_crops`
+- `ag2_maize_newworld`: `exp_newworld_crops`
+- `ag2_bordeaux_mixture`: `copper_fire_refined (node gained: mat_copper, sulfuric_retort)`
+- `ag2_bordeaux_mixture`: `sulfuric_acid (node gained: mat_copper, sulfuric_retort)`
+- `ag2_lime_sulphur`: `sulfuric_acid (node gained: sulfuric_retort)`
+- `ag2_lead_arsenate`: `arsenic_extraction`
+- `ag2_nicotine_pesticide`: `tobacco_crop`
+- `ag2_pyrethrum`: `exp_pyrethrum_voyage`
+- `ag2_ddt`: `chlorination`
+- `ag2_ddt`: `organic_chemistry`
+- `ag2_sprayer`: `horse_hoe (node gained: ag2_horse_hoe)`
+- `ag2_resistant_variety`: `pest_knowledge (node gained: ag2_record_keeping_breeding)`
+- `ag2_resistant_variety`: `record_keeping_breeding (node gained: ag2_record_keeping_breeding)`
+- `ag2_herd_book`: `record_keeping_breeding (node gained: ag2_record_keeping_breeding)`
+- `ag2_progeny_testing`: `herd_book (node gained: ag2_herd_book)`
+- `ag2_cream_separator`: `centrifuge_industrial`
+- `ag2_artificial_insemination`: `progeny_testing (node gained: ag2_progeny_testing)`
+- `ag2_silage_silo`: `lactic_fermentation`
+- `ag2_veterinary_vaccination`: `vaccine_technique`
+- `ag2_tuberculin_test`: `tuberculosis_knowledge`
+- `ag2_sheep_dip`: `nicotine_pesticide (node gained: ag2_nicotine_pesticide)`
+- `ag2_battery_poultry`: `balanced_ration (node gained: ag2_balanced_ration)`
+- `ag2_battery_poultry`: `incubator (node gained: ag2_balanced_ration)`
+- `ag2_purifier`: `roller_mill (node gained: fud_roller_mill)`
+- `ag2_white_flour_loss`: `purifier (node gained: ag2_purifier)`
+- `ag2_white_flour_loss`: `vitamin_knowledge (node gained: ag2_purifier)`
+- `ag2_malting`: `grain_crop`
+- `ag2_mashing`: `malting (node gained: ag2_malting)`
+- `ag2_hopping`: `beer_brewing`
+- `ag2_fermentation_control`: `yeast_culture (node gained: ag2_yeast_culture)`
+- `ag2_hydrometer`: `hydrometers`
+- `ag2_column_still`: `pot_still (node gained: ag2_pot_still)`
+- `ag2_cheese_families`: `lactic_fermentation`
+- `ag2_butter`: `cream_separator (node gained: ag2_cream_separator)`
+- `ag2_condensed_milk`: `pasteurisation (node gained: ag2_pasteurisation, ag2_vacuum_pan)`
+- `ag2_condensed_milk`: `vacuum_pan (node gained: ag2_pasteurisation, ag2_vacuum_pan)`
+- `ag2_evaporated_milk`: `vacuum_pan (node gained: ag2_vacuum_pan)`
+- `ag2_oil_pressing`: `leverage`
+- `ag2_fat_hydrogenation`: `hydrogen_production`
+- `ag2_fat_hydrogenation`: `nickel_catalyst`
+- `ag2_sugar_refining`: `centrifugal (node gained: ag2_vacuum_pan)`
+- `ag2_sugar_refining`: `vacuum_pan (node gained: ag2_vacuum_pan)`
+- `ag2_centrifugal_sugar`: `centrifuge_industrial`
+- `ag2_canning`: `retort (node gained: ag2_retort)`
+- `ag2_canning`: `sterilisation (node gained: ag2_retort)`
+- `ag2_double_seam_can`: `seamsealing_machine`
+- `ag2_crown_cork`: `seamsealing_machine`
+- `ag2_refrigeration_ice`: `ice_harvest (node gained: fud_ice_harvesting_and_cutting)`
+- `ag2_cold_store`: `ice_artificial (node gained: cn_insulation, mat_ice_artificial)`
+- `ag2_cold_store`: `insulation (node gained: cn_insulation, mat_ice_artificial)`
+- `ag2_refrigerated_ship`: `cold_store (node gained: ag2_cold_store)`
+- `ag2_nitrite_curing`: `sodium_nitrite`
+- `ag2_adulteration_law`: `food_laboratory (node gained: ag2_food_laboratory)`
+
+### 48_instruments_deep.json
+- `in2_doublet_lens`: `glass_lead`
+- `in2_triplet_lens`: `glass_boro (node gained: glass_borosilicate)`
+- `in2_cloud_chamber_wilson`: `pump_pneumatic`
+- `in2_magnetometer_compass`: `magnet_permanent`
+- `in2_optical_comparator`: `simple_lens (node gained: in2_simple_lens)`
+- `in2_torsion_balance`: `analytical_balance (node gained: in2_analytical_balance)`
+- `in2_microbalance_quartz`: `quartz_resonator (node gained: el2_quartz_crystal)`
+- `in2_mcleod_vacuum_gauge`: `mercury_barometer (node gained: in2_mercury_barometer)`
+- `in2_orifice_flow_meter`: `mercury_barometer (node gained: in2_mercury_barometer)`
+- `in2_venturi_flow_meter`: `orifice_flow_meter (node gained: in2_orifice_flow_meter)`
+- `in2_pitot_tube`: `mercury_barometer (node gained: in2_mercury_barometer)`
+
+### 49_military.json
+- `mil_powder_mill`: `corned_powder (node gained: gunpowder)`
+- `mil_cartridge_metallic`: `metal_drawing`
+- `mil_centrefire_primer`: `mil_metallic_cartridge (node gained: mil_cartridge_metallic)`
+- `mil_rifling`: `barrel_boring`
+- `mil_bolt_action`: `mil_metallic_cartridge (node gained: mil_cartridge_metallic)`
+- `mil_lever_action`: `mil_metallic_cartridge (node gained: mil_cartridge_metallic)`
+- `mil_revolver`: `mil_metallic_cartridge (node gained: mil_cartridge_metallic)`
+- `mil_self_loading_pistol`: `recoil_operated_mechanism`
+- `mil_asdic`: `ultrasonic_transducer`
+- `mil_tank`: `internal_combustion_engine (node gained: lnd_otto_cycle_four_stroke)`
+- `mil_track`: `internal_combustion_engine (node gained: lnd_otto_cycle_four_stroke)`
+- `mil_armoured_car`: `internal_combustion_engine (node gained: lnd_otto_cycle_four_stroke)`
+- `mil_half_track`: `internal_combustion_engine (node gained: lnd_otto_cycle_four_stroke)`
+- `mil_fighter_aircraft`: `aircraft_engine (node gained: air_light_petrol_engine)`
+- `mil_bomber_aircraft`: `aircraft_engine (node gained: air_light_petrol_engine)`
+- `mil_dive_bomber`: `aircraft_engine (node gained: air_light_petrol_engine)`
+- `mil_radar`: `electromagnetism_theory`
+- `mil_ballistic_rocket`: `rocket_engine`
+- `mil_jet_fighter`: `jet_engine (node gained: en_jet_engine)`
+- `mil_chemical_phosgene`: `mat_carbon`
+- `mil_chemical_mustard`: `ethylene_glycol`
+- `mil_atomic_bomb`: `plutonium_production`
+- `mil_atomic_bomb`: `uranium_enrichment`
+
+### 50_textiles_consumer_deep.json
+- `tx2_band_knife`: `cap_power_motor (node gained: tx2_cap_power_motor)`
+
+### 51_construction_deep.json
+- `cn_rolled_I_beam`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+- `cn_plate_glass_window`: `glass_lead (node gained: mat_glass_lead)`
+- `cn_roof_truss_corrugated`: `bessemer_openhearth (node gained: mat_bulk_steel)`
+
+### 52_energy_deep.json
+- `en_grid_interconnection`: `en_power_grid (node gained: power_grid)`
+- `en_frequency_standardisation`: `en_governor (node gained: en_centrifugal_governor)`
+- `en_pumped_storage`: `en_motor_transformer_ac`
+- `en_town_gas_retort`: `coke_oven (node gained: en_coke_oven)`
+
+### 53_information_deep.json
+- `if_pencil_graphite`: `mat_clay`
+- `if_movable_type`: `mat_type_metal`
+- `if_punch_and_matrix`: `mat_steel`
+- `if_chase_and_forme`: `mat_iron`
+- `if_dry_gelatin_plate`: `mat_gelatin`
+- `if_autochrome_plate`: `mat_potato_starch`
+- `if_focal_plane_shutter`: `mat_cloth`
+- `if_cine_camera`: `cap_power_spring`
+- `if_cine_camera`: `if_intermittent_movement`
+- `if_film_projector`: `if_intermittent_movement`
+- `if_tin_foil_phonograph`: `mat_aluminum`
+- `if_gramophone_motor`: `cap_power_spring`
+- `if_spark_transmitter`: `if_induction_coil (node gained: el2_tuned_circuit_resonance_tank)`
+- `if_tuned_circuit`: `if_capacitor`
+- `if_continuous_wave_transmitter`: `if_alternator`
+- `if_amplitude_modulation`: `if_audio_amplifier`
+- `if_frequency_modulation`: `if_audio_amplifier`
+- `if_radio_direction_finding`: `if_loop_antenna`
+- `if_television_mechanical`: `if_selenium_cell (node gained: camera_obscura, pwr_selenium_cell)`
+- `if_facsimile_transmission`: `if_selenium_cell (node gained: pwr_selenium_cell)`
+
+### 54_science_method_deep.json
+- `sc2_notation_decimal_point`: `decimal_fraction (node gained: sc2_notation_decimal_fraction)`
+- `sc2_notation_exponents`: `brackets`
+- `sc2_notation_roots`: `exponents (node gained: sc2_notation_exponents)`
+- `sc2_notation_scientific`: `decimal_fraction (node gained: sc2_notation_decimal_fraction, sc2_notation_exponents)`
+- `sc2_notation_scientific`: `exponents (node gained: sc2_notation_decimal_fraction, sc2_notation_exponents)`
+- `sc2_notation_dimension`: `metric_unit (node gained: sc2_notation_metric_unit)`
+- `sc2_notation_error_propagation`: `significant_figures (node gained: sc2_notation_significant_figures)`
+- `sc2_algebra_symbolic`: `equals_sign (node gained: sc2_notation_equals_sign)`
+- `sc2_algebra_quadratic`: `exponents (node gained: sc2_notation_exponents, sc2_notation_roots)`
+- `sc2_algebra_quadratic`: `roots (node gained: sc2_notation_exponents, sc2_notation_roots)`
+- `sc2_algebra_polynomial`: `quadratic (node gained: sc2_algebra_quadratic)`
+- `sc2_algebra_binomial`: `exponents (node gained: sc2_algebra_polynomial, sc2_notation_exponents)`
+- `sc2_algebra_binomial`: `polynomial (node gained: sc2_algebra_polynomial, sc2_notation_exponents)`
+- `sc2_algebra_logarithm`: `exponents (node gained: sc2_notation_exponents)`
+- `sc2_algebra_infinite_series`: `limit`
+- `sc2_calculus_limit`: `infinite_series (node gained: sc2_algebra_infinite_series)`
+- `sc2_calculus_derivative`: `limit (node gained: sc2_calculus_limit)`
+- `sc2_calculus_integral`: `derivative (node gained: sc2_calculus_derivative, sc2_calculus_limit)`
+- `sc2_calculus_integral`: `limit (node gained: sc2_calculus_derivative, sc2_calculus_limit)`
+- `sc2_calculus_fundamental_theorem`: `derivative (node gained: sc2_calculus_derivative, sc2_calculus_integral)`
+- `sc2_calculus_fundamental_theorem`: `integral (node gained: sc2_calculus_derivative, sc2_calculus_integral)`
+- `sc2_calculus_ode`: `fundamental_theorem (node gained: sc2_calculus_fundamental_theorem)`
+- `sc2_calculus_pde`: `limit (node gained: sc2_calculus_limit, sc2_calculus_ode)`
+- `sc2_calculus_pde`: `ode (node gained: sc2_calculus_limit, sc2_calculus_ode)`
+- `sc2_calculus_fourier_series`: `infinite_series (node gained: sc2_algebra_infinite_series, sc2_calculus_pde)`
+- `sc2_calculus_fourier_series`: `pde (node gained: sc2_algebra_infinite_series, sc2_calculus_pde)`
+- `sc2_calculus_fourier_transform`: `fourier_series`
+- `sc2_algebra_complex_numbers`: `roots (node gained: sc2_notation_roots)`
+- `sc2_algebra_vector`: `complex_numbers (node gained: sc2_algebra_complex_numbers)`
+- `sc2_algebra_matrix`: `vector (node gained: sc2_algebra_vector)`
+- `sc2_algebra_determinant`: `matrix (node gained: sc2_algebra_matrix)`
+- `sc2_algebra_tensor`: `matrix (node gained: sc2_algebra_matrix, sc2_algebra_vector)`
+- `sc2_algebra_tensor`: `vector (node gained: sc2_algebra_matrix, sc2_algebra_vector)`
+- `sc2_algebra_numerical_methods`: `limit (node gained: sc2_calculus_limit)`
+- `sc2_algebra_interpolation`: `numerical_methods (node gained: sc2_algebra_numerical_methods, sc2_algebra_polynomial)`
+- `sc2_algebra_interpolation`: `polynomial (node gained: sc2_algebra_numerical_methods, sc2_algebra_polynomial)`
+- `sc2_geometry_conics`: `coordinate (node gained: sc2_algebra_polynomial, sc2_geometry_coordinate)`
+- `sc2_geometry_conics`: `polynomial (node gained: sc2_algebra_polynomial, sc2_geometry_coordinate)`
+- `sc2_geometry_trigonometry`: `exponents (node gained: sc2_notation_exponents)`
+- `sc2_geometry_spherical_trig`: `trigonometry`
+- `sc2_geometry_descriptive`: `orthographic (node gained: mfg_orthographic, sc2_geometry_spherical_trig)`
+- `sc2_geometry_descriptive`: `spherical_trig (node gained: mfg_orthographic, sc2_geometry_spherical_trig)`
+- `sc2_geometry_non_euclidean`: `conics (node gained: sc2_geometry_conics, sc2_geometry_spherical_trig)`
+- `sc2_geometry_non_euclidean`: `spherical_trig (node gained: sc2_geometry_conics, sc2_geometry_spherical_trig)`
+- `sc2_geometry_differential`: `non_euclidean (node gained: sc2_calculus_pde, sc2_geometry_non_euclidean)`
+- `sc2_geometry_differential`: `pde (node gained: sc2_calculus_pde, sc2_geometry_non_euclidean)`
+- `sc2_probability_combinatorics`: `binomial (node gained: sc2_algebra_binomial)`
+- `sc2_probability_axioms`: `combinatorics (node gained: sc2_probability_combinatorics)`
+- `sc2_probability_normal_distribution`: `limit (node gained: sc2_calculus_limit, sc2_probability_axioms)`
+- `sc2_probability_normal_distribution`: `probability_axioms (node gained: sc2_calculus_limit, sc2_probability_axioms)`
+- `sc2_probability_central_limit`: `infinite_series (node gained: sc2_algebra_infinite_series)`
+- `sc2_probability_central_limit`: `normal_distribution (node gained: sc2_algebra_infinite_series)`
+- `sc2_statistics_correlation`: `mean_variance (node gained: sc2_statistics_mean_variance)`
+- `sc2_statistics_regression`: `correlation (node gained: sc2_algebra_least_squares)`
+- `sc2_statistics_regression`: `least_squares (node gained: sc2_algebra_least_squares)`
+- `sc2_statistics_t_test`: `chi_squared (node gained: sc2_probability_normal_distribution)`
+- `sc2_statistics_t_test`: `normal_distribution (node gained: sc2_probability_normal_distribution)`
+- `sc2_statistics_anova`: `regression (node gained: sc2_statistics_regression, sc2_statistics_t_test)`
+- `sc2_statistics_anova`: `t_test (node gained: sc2_statistics_regression, sc2_statistics_t_test)`
+- `sc2_statistics_sampling_theory`: `central_limit (node gained: sc2_probability_normal_distribution)`
+- `sc2_statistics_sampling_theory`: `normal_distribution (node gained: sc2_probability_normal_distribution)`
+- `sc2_statistics_confidence_interval`: `sampling_theory`
+- `sc2_statistics_confidence_interval`: `t_test`
+- `sc2_statistics_significance_test`: `chi_squared`
+- `sc2_statistics_significance_test`: `confidence_interval`
+- `sc2_statistics_randomisation`: `probability_axioms (node gained: sc2_probability_axioms)`
+- `sc2_statistics_blocking`: `randomisation (node gained: sc2_statistics_randomisation)`
+- `sc2_statistics_control_group`: `blocking (node gained: sc2_statistics_blocking)`
+- `sc2_statistics_blinding`: `control_group`
+- `sc2_statistics_control_chart`: `mean_variance (node gained: sc2_statistics_mean_variance, sc2_statistics_significance_test)`
+- `sc2_statistics_control_chart`: `significance_test (node gained: sc2_statistics_mean_variance, sc2_statistics_significance_test)`
+- `sc2_physics_kinematics`: `derivative (node gained: sc2_calculus_derivative)`
+- `sc2_physics_newtons_laws`: `kinematics`
+- `sc2_physics_gravitation`: `newtons_laws (node gained: sc2_physics_newtons_laws)`
+- `sc2_physics_momentum`: `newtons_laws (node gained: sc2_physics_newtons_laws)`
+- `sc2_physics_energy`: `newtons_laws (node gained: sc2_physics_newtons_laws)`
+- `sc2_physics_work_power`: `energy (node gained: sc2_physics_energy)`
+- `sc2_physics_elasticity`: `newtons_laws (node gained: sc2_physics_newtons_laws)`
+- `sc2_physics_fluid_statics`: `statics (node gained: civ_statics)`
+- `sc2_physics_hydrodynamics`: `fluid_statics (node gained: sc2_physics_fluid_statics)`
+- `sc2_physics_viscosity`: `hydrodynamics (node gained: sc2_physics_hydrodynamics)`
+- `sc2_physics_reynolds_number`: `hydrodynamics (node gained: sc2_physics_hydrodynamics)`
+- `sc2_physics_reynolds_number`: `viscosity (node gained: sc2_physics_hydrodynamics)`
+- `sc2_physics_aerodynamic_lift`: `bernoulli (node gained: sc2_physics_hydrodynamics)`
+- `sc2_physics_aerodynamic_lift`: `hydrodynamics (node gained: sc2_physics_hydrodynamics)`
+- `sc2_physics_acoustics`: `hydrodynamics (node gained: sc2_physics_hydrodynamics, sc2_physics_wave_motion)`
+- `sc2_physics_acoustics`: `wave_motion (node gained: sc2_physics_hydrodynamics, sc2_physics_wave_motion)`
+- `sc2_physics_wave_motion`: `kinematics (node gained: sc2_physics_kinematics)`
+- `sc2_physics_diffraction`: `physical_optics`
+- `sc2_physics_electrostatics`: `newtons_laws (node gained: sc2_physics_newtons_laws)`
+- `sc2_physics_maxwell_equations`: `magnetostatics (node gained: sc2_physics_magnetostatics)`
+- `sc2_physics_em_wave`: `maxwell_equations (node gained: sc2_physics_maxwell_equations)`
+- `sc2_physics_speed_of_light`: `em_wave (node gained: sc2_physics_em_wave)`
+- `sc2_physics_kinetic_theory`: `newtons_laws (node gained: sc2_physics_newtons_laws)`
+- `sc2_physics_statistical_mechanics`: `kinetic_theory (node gained: sc2_physics_kinetic_theory)`
+- `sc2_physics_boltzmann_distribution`: `statistical_mechanics`
+- `sc2_physics_blackbody_radiation`: `boltzmann_distribution (node gained: sc2_physics_boltzmann_distribution, sc2_physics_spectrum)`
+- `sc2_physics_blackbody_radiation`: `spectrum (node gained: sc2_physics_boltzmann_distribution, sc2_physics_spectrum)`
+- `sc2_physics_quantum_photon`: `blackbody_radiation`
+- `sc2_physics_photoelectric_effect`: `quantum_photon (node gained: sc2_physics_quantum_photon)`
+- `sc2_physics_wave_mechanics`: `bohr_atom`
+- `sc2_physics_wave_mechanics`: `pde`
+- `sc2_physics_uncertainty_principle`: `wave_mechanics`
+- `sc2_physics_nucleus_discovery`: `photoelectric_effect (node gained: sc2_physics_photoelectric_effect)`
+- `sc2_physics_neutron_discovery`: `isotopes`
+- `sc2_physics_nuclear_fission`: `neutron_discovery (node gained: sc2_physics_neutron_discovery)`
+- `sc2_method_hypothesis`: `controlled_experiment (node gained: sc2_method_controlled_experiment)`
+- `sc2_method_replication`: `controlled_experiment (node gained: sc2_method_controlled_experiment)`
+- `sc2_method_negative_result`: `hypothesis (node gained: sc2_method_hypothesis, sc2_method_replication)`
+- `sc2_method_negative_result`: `replication (node gained: sc2_method_hypothesis, sc2_method_replication)`
+- `sc2_institution_journal`: `learned_society (node gained: sc2_institution_learned_society)`
+- `sc2_institution_referee`: `journal (node gained: sc2_institution_journal, sc2_method_peer_criticism)`
+- `sc2_institution_referee`: `peer_criticism (node gained: sc2_institution_journal, sc2_method_peer_criticism)`
+- `sc2_institution_citation`: `journal (node gained: sc2_institution_journal)`
+- `sc2_institution_textbook`: `curriculum (node gained: sc2_institution_curriculum, sc2_institution_journal)`
+- `sc2_institution_textbook`: `journal (node gained: sc2_institution_curriculum, sc2_institution_journal)`
+- `sc2_institution_curriculum`: `textbook`
+- `sc2_institution_examination`: `curriculum`
+- `sc2_institution_doctorate`: `examination`
+- `sc2_institution_doctorate`: `thesis`
+- `sc2_institution_research_group`: `doctorate (node gained: sc2_institution_doctorate)`
+- `sc2_institution_research_group`: `funded_programme (node gained: sc2_institution_doctorate)`
+- `sc2_institution_funded_programme`: `government_support (node gained: sc2_institution_research_group)`
+- `sc2_institution_funded_programme`: `research_group (node gained: sc2_institution_research_group)`
+- `sc2_institution_patent_disclosure`: `lab_notebook (node gained: sc2_method_lab_notebook)`
+
+### 60_goalpath_deep.json
+- `gp_controlled_atmosphere_chamber`: `industrial_gases (node gained: cap_gas_o2h2)`
+

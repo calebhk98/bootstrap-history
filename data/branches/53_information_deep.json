@@ -46,7 +46,7 @@
    "scribe": 80
   },
   "mat": {
-   "mat_parchment": 10
+   "parchment_sheet": 10
   },
   "cap": 400,
   "up": 40,
@@ -203,8 +203,7 @@
   "name": "Graphite pencil",
   "cat": "writing",
   "pre": [
-   "mat_graphite_pure",
-   "mat_clay"
+   "mat_graphite_pure"
   ],
   "traits": [
    "information",
@@ -217,8 +216,8 @@
    "chemist": 100
   },
   "mat": {
-   "mat_graphite_pure": 8,
-   "mat_clay": 50
+   "graphite_kg": 8,
+   "clay_kg": 50
   },
   "cap": 1500,
   "up": 120,
@@ -284,7 +283,7 @@
    "chemist": 120
   },
   "mat": {
-   "mat_vitriols": 20,
+   "green_vitriol_kg": 20,
    "tallow_kg": 5
   },
   "cap": 600,
@@ -373,8 +372,7 @@
   "cat": "printing",
   "pre": [
    "if_punch_and_matrix",
-   "if_type_mould",
-   "mat_type_metal"
+   "if_type_mould"
   ],
   "traits": [
    "information",
@@ -387,7 +385,7 @@
    "engraver": 300
   },
   "mat": {
-   "mat_type_metal": 500
+   "type_metal_kg": 500
   },
   "cap": 5000,
   "up": 300,
@@ -407,8 +405,7 @@
   "name": "Punch and matrix for type",
   "cat": "printing",
   "pre": [
-   "cap_tol_100um",
-   "mat_steel"
+   "cap_tol_100um"
   ],
   "traits": [
    "infrastructure"
@@ -417,7 +414,7 @@
   "ph": 180,
   "lab": {
    "smith": 500,
-   "master_screw": 100
+   "machinist": 100
   },
   "mat": {
    "steel_noric_kg": 30
@@ -542,8 +539,7 @@
   "name": "Chase and forme",
   "cat": "printing",
   "pre": [
-   "cap_tol_1mm",
-   "mat_iron"
+   "cap_tol_1mm"
   ],
   "traits": [
    "infrastructure"
@@ -1063,7 +1059,7 @@
    "machinist": 300
   },
   "mat": {
-   "mat_steel": 20
+   "steel_plate_kg": 20
   },
   "cap": 2000,
   "up": 150,
@@ -1094,7 +1090,7 @@
   "kb": "88_media_signals.md#if_mimeograph",
   "ph": 140,
   "lab": {
-   "mechanic": 350
+   "machinist": 350
   },
   "mat": {
    "mat_nitrocellulose": 20,
@@ -1134,7 +1130,7 @@
   },
   "mat": {
    "cast_iron_kg": 100,
-   "mat_steel": 40
+   "steel_plate_kg": 40
   },
   "cap": 4000,
   "up": 300,
@@ -1202,7 +1198,7 @@
    "optician": 300
   },
   "mat": {
-   "mat_glass_soda": 8
+   "glass_raw_kg": 8
   },
   "cap": 1500,
   "up": 100,
@@ -1234,7 +1230,7 @@
    "optician": 280
   },
   "mat": {
-   "mat_glass_soda": 6
+   "glass_raw_kg": 6
   },
   "cap": 1200,
   "up": 80,
@@ -1370,7 +1366,7 @@
    "chemist": 420
   },
   "mat": {
-   "mat_glass_soda": 20,
+   "glass_raw_kg": 20,
    "mat_nitrocellulose": 10
   },
   "cap": 2800,
@@ -1393,7 +1389,6 @@
   "pre": [
    "if_silver_halide_sensitivity",
    "mat_glass_soda",
-   "mat_gelatin",
    "prn_wet_collodion_plate"
   ],
   "traits": [
@@ -1479,7 +1474,7 @@
    "chemist": 400
   },
   "mat": {
-   "mat_gelatin": 12,
+   "gelatin_kg": 12,
    "dye_kg": 8
   },
   "cap": 2800,
@@ -1500,8 +1495,7 @@
   "name": "Autochrome colour plate",
   "cat": "photography",
   "pre": [
-   "if_dry_gelatin_plate",
-   "mat_potato_starch"
+   "if_dry_gelatin_plate"
   ],
   "traits": [
    "spectacle"
@@ -1513,8 +1507,8 @@
    "artisan": 300
   },
   "mat": {
-   "mat_glass_soda": 25,
-   "mat_potato_starch": 30
+   "glass_raw_kg": 25,
+   "potato_starch_kg": 30
   },
   "cap": 4000,
   "up": 320,
@@ -1547,7 +1541,7 @@
    "chemist": 300
   },
   "mat": {
-   "mat_magnesium": 20
+   "magnesium_kg": 20
   },
   "cap": 1800,
   "up": 140,
@@ -1582,8 +1576,8 @@
    "chemist": 250
   },
   "mat": {
-   "mat_glass_soda": 12,
-   "mat_magnesium": 25
+   "glass_raw_kg": 12,
+   "magnesium_kg": 25
   },
   "cap": 3000,
   "up": 240,
@@ -1615,7 +1609,7 @@
    "machinist": 400
   },
   "mat": {
-   "mat_steel": 15
+   "steel_plate_kg": 15
   },
   "cap": 2500,
   "up": 200,
@@ -1635,8 +1629,7 @@
   "name": "Focal plane shutter",
   "cat": "photography",
   "pre": [
-   "cap_tol_100um",
-   "mat_cloth"
+   "cap_tol_100um"
   ],
   "traits": [
    "information"
@@ -1648,7 +1641,7 @@
   },
   "mat": {
    "mat_linen": 5,
-   "mat_steel": 20
+   "steel_plate_kg": 20
   },
   "cap": 2200,
   "up": 180,
@@ -1668,9 +1661,7 @@
   "name": "Cine camera",
   "cat": "photography",
   "pre": [
-   "if_celluloid_roll_film",
-   "if_intermittent_movement",
-   "cap_power_spring"
+   "if_celluloid_roll_film"
   ],
   "traits": [
    "spectacle",
@@ -1684,7 +1675,7 @@
   },
   "mat": {
    "cast_iron_kg": 50,
-   "mat_steel": 40
+   "steel_plate_kg": 40
   },
   "cap": 4000,
   "up": 300,
@@ -1716,7 +1707,7 @@
    "machinist": 350
   },
   "mat": {
-   "mat_steel": 20
+   "steel_plate_kg": 20
   },
   "cap": 2200,
   "up": 180,
@@ -1737,7 +1728,6 @@
   "cat": "photography",
   "pre": [
    "if_celluloid_roll_film",
-   "if_intermittent_movement",
    "lens_grinding"
   ],
   "traits": [
@@ -1752,7 +1742,7 @@
   },
   "mat": {
    "cast_iron_kg": 60,
-   "mat_glass_soda": 12
+   "glass_raw_kg": 12
   },
   "cap": 3000,
   "up": 240,
@@ -1805,7 +1795,7 @@
   "cat": "sound",
   "pre": [
    "if_phonautograph",
-   "mat_aluminum"
+   "mat_aluminium"
   ],
   "traits": [
    "spectacle",
@@ -1817,7 +1807,7 @@
    "engineer": 380
   },
   "mat": {
-   "mat_aluminum": 50
+   "aluminium_kg": 50
   },
   "cap": 2300,
   "up": 180,
@@ -1937,8 +1927,7 @@
   "name": "Gramophone motor and governor",
   "cat": "sound",
   "pre": [
-   "if_disc_record",
-   "cap_power_spring"
+   "if_disc_record"
   ],
   "traits": [
    "labour_saving"
@@ -1949,7 +1938,7 @@
    "engineer": 300
   },
   "mat": {
-   "mat_steel": 40
+   "steel_plate_kg": 40
   },
   "cap": 2000,
   "up": 160,
@@ -2150,7 +2139,7 @@
   },
   "mat": {
    "copper_kg": 40,
-   "mat_iron": 30
+   "iron_bar_kg": 30
   },
   "cap": 2500,
   "up": 200,
@@ -2170,7 +2159,7 @@
   "name": "Morse key and sounder",
   "cat": "telegraphy",
   "pre": [
-   "if_electric_telegraph"
+   "telegraph_electric"
   ],
   "traits": [
    "information"
@@ -2182,7 +2171,7 @@
   },
   "mat": {
    "copper_kg": 15,
-   "mat_iron": 20
+   "iron_bar_kg": 20
   },
   "cap": 2000,
   "up": 160,
@@ -2214,7 +2203,7 @@
   },
   "mat": {
    "copper_kg": 10,
-   "mat_iron": 15
+   "iron_bar_kg": 15
   },
   "cap": 1700,
   "up": 140,
@@ -2234,7 +2223,7 @@
   "name": "Submarine cable with gutta percha",
   "cat": "telegraphy",
   "pre": [
-   "if_electric_telegraph",
+   "telegraph_electric",
    "mat_gutta_percha"
   ],
   "traits": [
@@ -2282,7 +2271,7 @@
   },
   "mat": {
    "copper_kg": 30,
-   "mat_iron": 40
+   "iron_bar_kg": 40
   },
   "cap": 2800,
   "up": 220,
@@ -2380,7 +2369,7 @@
   },
   "mat": {
    "copper_kg": 150,
-   "mat_iron": 100
+   "iron_bar_kg": 100
   },
   "cap": 3500,
   "up": 280,
@@ -2473,8 +2462,7 @@
   "name": "Spark transmitter",
   "cat": "radio",
   "pre": [
-   "if_induction_coil",
-   "if_tuned_circuit"
+   "el2_tuned_circuit_resonance_tank"
   ],
   "traits": [
    "information",
@@ -2574,8 +2562,7 @@
   "name": "Tuned LC circuit",
   "cat": "radio",
   "pre": [
-   "electromagnet",
-   "if_capacitor"
+   "electromagnet"
   ],
   "traits": [
    "information"
@@ -2606,8 +2593,7 @@
   "name": "Continuous wave transmitter",
   "cat": "radio",
   "pre": [
-   "if_spark_transmitter",
-   "if_alternator"
+   "if_spark_transmitter"
   ],
   "traits": [
    "information",
@@ -2641,7 +2627,7 @@
   "cat": "radio",
   "pre": [
    "vacuum_tube",
-   "if_tuned_circuit",
+   "el2_tuned_circuit_resonance_tank",
    "cap_vac_1e3"
   ],
   "traits": [
@@ -2680,7 +2666,6 @@
   "cat": "radio",
   "pre": [
    "if_triode_oscillator",
-   "if_audio_amplifier",
    "com_continuous_wave"
   ],
   "traits": [
@@ -2757,7 +2742,6 @@
   "cat": "radio",
   "pre": [
    "if_triode_oscillator",
-   "if_audio_amplifier",
    "com_continuous_wave"
   ],
   "traits": [
@@ -2794,7 +2778,7 @@
   "name": "Dipole antenna",
   "cat": "radio",
   "pre": [
-   "if_tuned_circuit"
+   "el2_tuned_circuit_resonance_tank"
   ],
   "traits": [
    "information"
@@ -2825,8 +2809,7 @@
   "name": "Radio direction finding",
   "cat": "radio",
   "pre": [
-   "if_superheterodyne_receiver",
-   "if_loop_antenna"
+   "if_superheterodyne_receiver"
   ],
   "traits": [
    "information",
@@ -2941,8 +2924,8 @@
   "name": "Television by mechanical scanning",
   "cat": "radio",
   "pre": [
-   "if_camera_obscura_lens",
-   "if_selenium_cell"
+   "camera_obscura",
+   "pwr_selenium_cell"
   ],
   "traits": [
    "spectacle",
@@ -2975,7 +2958,7 @@
   "cat": "radio",
   "pre": [
    "if_cathode_ray_tube",
-   "if_camera_obscura_lens"
+   "camera_obscura"
   ],
   "traits": [
    "information",
@@ -2988,7 +2971,7 @@
    "glassblower": 250
   },
   "mat": {
-   "mat_glass_soda": 50
+   "glass_raw_kg": 50
   },
   "cap": 5000,
   "up": 400,
@@ -3038,7 +3021,7 @@
   "name": "Facsimile transmission",
   "cat": "radio",
   "pre": [
-   "if_selenium_cell",
+   "pwr_selenium_cell",
    "if_amplitude_modulation"
   ],
   "traits": [
@@ -3216,7 +3199,7 @@
   },
   "mat": {
    "cast_iron_kg": 80,
-   "mat_steel": 40
+   "steel_plate_kg": 40
   },
   "cap": 2800,
   "up": 220,
@@ -3249,7 +3232,7 @@
   },
   "mat": {
    "cast_iron_kg": 60,
-   "mat_steel": 30
+   "steel_plate_kg": 30
   },
   "cap": 2200,
   "up": 180,

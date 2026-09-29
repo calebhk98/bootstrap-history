@@ -563,7 +563,7 @@ def _below_subsistence_quantity_demanded_per_capita(
     spending is split by the SAME marginal budget shares used above the
     line, so a basket whose subsistence good already keeps most of the
     marginal budget share above the line (food's own share in
-    DEFAULT_BASKET) keeps most of the newly-flexible spending too, on top
+    the needs data) keeps most of the newly-flexible spending too, on top
     of the protected share it already had - a household well short of its
     own floor still spends the large majority of its income on the
     subsistence good, for any FLOOR_TRADEABLE_SHARE strictly less than
@@ -633,22 +633,11 @@ def household_budget_share(
 
 
 # ============================================================================
-# THE DEFAULT BASKET
+# FOOD SUBSISTENCE
 # ============================================================================
-# Three goods, deliberately named after real data/production/ material keys
-# where one exists (wheat_kg, silver_kg) rather than an invented composite,
-# so a caller can hand this basket's demand straight to
-# joint_output_value_shares for a real recipe. "manufactures" has no single
-# data/production/ key of its own - it stands for the broad category of
-# artisan-made goods (cloth, tools, pottery) this module does not attempt to
-# disaggregate; see the module docstring's WHAT THIS MODULE DOES NOT DO.
-#
-# THE THREE BETA SHARES ARE A NAMED HEURISTIC, NOT DERIVED, AND ARE NOT
-# TUNED TO ANY CALIBRATION TARGET. They were chosen once, from the
-# reasoning given in each declaration below, and never adjusted after
-# seeing what food-budget-share or silver:lead ratio they produce - see
-# sim/tests/test_demand.py's CalibrationAgainstHistoricalTargetsTests for
-# what they actually produce and how that compares.
+# The physical food floor a household commits to before any other spending.
+# Which goods households spend the rest on is data: data/world/needs.json and
+# sim/world/need_demand.py.
 
 HUMAN_SUBSISTENCE_CALORIES_PER_CAPITA_DAY = declare(
     "HUMAN_SUBSISTENCE_CALORIES_PER_CAPITA_DAY", 2200.0,
@@ -696,68 +685,6 @@ FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR = (
 # ~236.3 kg/person/year - arithmetic on two already-declared numbers, not a
 # fact of its own, matching agriculture.py's own convention for
 # GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA.
-
-FOOD_SURPLUS_BUDGET_SHARE = declare(
-    "FOOD_SURPLUS_BUDGET_SHARE", 0.30,
-    kind="temporary_heuristic",
-    unit="fraction of surplus (post-subsistence) household spending "
-         "(dimensionless)",
-    source=None,
-    confidence="D",
-    why="What a household does with income LEFT OVER once its physical "
-        "food floor is paid for - real households do not stop buying "
-        "food at the subsistence line, they buy better food (meat, wine, "
-        "white bread over barley), so this is not zero. No consumption "
-        "survey for Roman households exists to derive this from; a real "
-        "one (or a documented Engel-curve estimate for a comparable "
-        "pre-industrial economy) would replace this number rather than "
-        "this module inventing a second one for a specific study.")
-
-MANUFACTURES_SURPLUS_BUDGET_SHARE = declare(
-    "MANUFACTURES_SURPLUS_BUDGET_SHARE", 0.65,
-    kind="temporary_heuristic",
-    unit="fraction of surplus household spending (dimensionless)",
-    source=None,
-    confidence="D",
-    why="The largest surplus share, on the reasoning that most "
-        "discretionary pre-industrial household spending went on "
-        "artisan-made goods broadly (cloth, tools, pottery, furniture, "
-        "housing) rather than on precious metals specifically - ordinary "
-        "consumption, not hoarding. Same caveat as "
-        "FOOD_SURPLUS_BUDGET_SHARE: a real historical consumption survey "
-        "would derive this, not this module.")
-
-SILVER_SURPLUS_BUDGET_SHARE = declare(
-    "SILVER_SURPLUS_BUDGET_SHARE", 0.05,
-    kind="temporary_heuristic",
-    unit="fraction of surplus household spending (dimensionless)",
-    source=None,
-    confidence="D",
-    why="What a household with money left over spends on silver "
-        "specifically (jewellery, plate, hoarded coin) rather than on "
-        "ordinary manufactures - deliberately the smallest of the three "
-        "shares, because silver-buying is a narrower category than "
-        "'discretionary spending' in general. THIS IS THE NUMBER THAT "
-        "MOST DIRECTLY SETS SILVER'S DERIVED PRICE (see "
-        "market_clearing_price) and CLAUDE.md 3.4's own instruction is "
-        "followed here in the strictest sense this project has applied it "
-        "yet: this value was picked ONCE, from the reasoning above, and "
-        "never adjusted after computing what silver:lead ratio it "
-        "produces - see sim/tests/test_demand.py's own CalibrationAgainst"
-        "HistoricalTargetsTests docstring for the honesty check that "
-        "enforces this (it prints the result; it never asserts a "
-        "tolerance). A real number would come from a documented share of "
-        "household wealth held as bullion/plate for a comparable "
-        "pre-industrial economy, which this project does not have.")
-
-FOOD = Good("wheat_kg", FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR,
-            FOOD_SURPLUS_BUDGET_SHARE)
-MANUFACTURES = Good("manufactures", 0.0, MANUFACTURES_SURPLUS_BUDGET_SHARE)
-SILVER = Good("silver_kg", 0.0, SILVER_SURPLUS_BUDGET_SHARE)
-
-DEFAULT_BASKET = (FOOD, MANUFACTURES, SILVER)
-validate_basket(DEFAULT_BASKET)
-
 
 # ============================================================================
 # MARKET-CLEARING PRICE FOR A GOOD IN FIXED SUPPLY
@@ -874,6 +801,14 @@ def market_clearing_price(
 
 _KG_EQUIVALENT_PER_UNIT_SUFFIX = {"_kg": 1.0, "_g": KILOGRAMS_PER_GRAM,
                                   "_t": KILOGRAMS_PER_TONNE}
+
+
+def mass_in_kg_or_none(material_key: str, quantity: float):
+    """Quantity as kilograms, or None when the key's unit is not a mass."""
+    for suffix, multiplier in _KG_EQUIVALENT_PER_UNIT_SUFFIX.items():
+        if material_key.endswith(suffix):
+            return quantity * multiplier
+    return None
 
 
 def _kg_equivalent(material_key: str, quantity: float) -> float:
@@ -1141,146 +1076,3 @@ SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL = declare(
     why="The order-of-magnitude sim/tests/test_demand.py's "
         "CalibrationAgainstHistoricalTargetsTests reports this module's "
         "own derived ratio against, never tunes to.")
-
-
-if __name__ == "__main__":
-    # A quick, human-readable readout - the same kind of thing
-    # sim/world/agriculture.py's and sim/world/deposits.py's own __main__
-    # blocks print, for whoever next wants to see this module's headline
-    # numbers without opening a test file. Every number below is
-    # illustrative (order-of-magnitude population and income figures to
-    # give the demonstration the right SCALE) - see this module's own
-    # docstring's TAKE WHAT YOU NEED AS PARAMETERS section for why nothing
-    # in the functions above assumes any of them.
-    ILLUSTRATIVE_POPULATION = declare(
-        "ILLUSTRATIVE_DEMAND_DEMO_POPULATION", 55_000_000.0,
-        kind="initial_condition",
-        unit="people",
-        source="Modern demographic estimates for the Roman Empire's total "
-               "population around 100 AD commonly cluster in the "
-               "45-65 million range (a genuinely debated figure); taken "
-               "as a round mid-point purely to give this module's "
-               "__main__ demonstration a population of the right order "
-               "of magnitude, exactly as sim/world/deposits.py's own "
-               "__main__ uses data/world/resources.json's stated output "
-               "as an illustrative quantity.",
-        confidence="D",
-        why="Only used for this printed demonstration and by "
-            "sim/tests/test_demand.py's calibration report - no function "
-            "above assumes any particular population; it is always a "
-            "parameter.")
-    ILLUSTRATIVE_MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
-        "ILLUSTRATIVE_DEMAND_DEMO_MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR",
-        550.0,
-        kind="initial_condition",
-        unit="labour-hours/person/year (sim/solve_prices.py's own "
-             "numeraire - see Complaints/32)",
-        source="Order-of-magnitude only: sim/world/agriculture.py's own "
-               "ANNUAL_LABOUR_HOURS_PER_FARM_WORKER (1,400 h/year) times "
-               "a working-age labour-force participation share of "
-               "roughly 40% of total population (children, the elderly "
-               "and the non-working fraction of adults included), giving "
-               "~550 labour-hour-equivalents of income per PERSON per "
-               "year, not per worker.",
-        confidence="D",
-        why="Same as ILLUSTRATIVE_DEMAND_DEMO_POPULATION - a demo-scale "
-            "figure only, never assumed by a function above.")
-
-    bins = income_bins(ILLUSTRATIVE_POPULATION,
-                        ILLUSTRATIVE_MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR)
-    print("DEMAND - budgets and needs, not a table of worth")
-    print("=" * 72)
-    print("population: %.3g   mean income: %.1f labour-hours/person/year   "
-          "gini: %.2f (%d income bins)"
-          % (ILLUSTRATIVE_POPULATION,
-             ILLUSTRATIVE_MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR,
-             GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, DEFAULT_NUM_INCOME_BINS))
-    print("\nincome by decile-ish bin (richest first), labour-hours/capita/year:")
-    for income_bin in bins[:5]:
-        print("  bin %-12s population=%12.0f  income/capita=%9.2f"
-              % (str(income_bin.population_percentile_from_top), income_bin.population,
-                 income_bin.income_per_capita_per_year))
-    print("  ... (%d bins total, poorest: income/capita=%.2f)"
-          % (len(bins), bins[-1].income_per_capita_per_year))
-
-    # A recursive "pure labour content" illustrative food price (see
-    # _illustrative_recursive_labour_content_price_per_kg's own docstring) -
-    # NOT what solve_prices will eventually compute (it ignores land rent
-    # entirely, which Complaints/32 flags as the largest missing term for
-    # an extracted-adjacent good), used only so this demonstration has
-    # SOME price to anchor food demand with.
-    illustrative_wheat_price = _illustrative_recursive_labour_content_price_per_kg("wheat_kg")
-    illustrative_manufactures_price = 1.0   # arbitrary numeraire-scale
-                                             # anchor; manufactures has no
-                                             # single data/production/ key
-                                             # of its own (see DEFAULT_BASKET).
-
-    # Complaints/29's own worked example: lead_kg's joint silver output.
-    # lead_kg's own price, on the same recursive labour-content reading -
-    # NOT this module's own mechanism, and not what sim/solve_prices.py
-    # will eventually compute once rent and capital are read; it exists
-    # only to anchor the demo's OTHER prices, exactly like wheat's above.
-    lead_entry = production_data()["lead_kg"]
-    outputs = lead_entry["outputs"]
-    illustrative_lead_price = _illustrative_recursive_labour_content_price_per_kg("lead_kg")
-
-    # Scale the recipe's own fixed output ratio up to data/world/
-    # resources.json's own stated Roman lead output - a real historical
-    # output level, not an invented one, exactly as sim/world/deposits.py's
-    # own __main__ block uses the same file for the same reason. The RATIO
-    # (silver output / lead output) is read straight from the recipe,
-    # never hand-typed.
-    with open(os.path.join(_ROOT, "data", "world", "resources.json")) as handle:
-        resources = json.load(handle)
-    illustrative_annual_lead_kg = resources["empire_output_100ad"]["lead"]["t_per_yr"] * KILOGRAMS_PER_TONNE
-    illustrative_annual_silver_kg = (
-        illustrative_annual_lead_kg * outputs["silver_kg"] / outputs["lead_kg"])
-    silver_price = market_clearing_price(
-        SILVER, illustrative_annual_silver_kg,
-        {"wheat_kg": illustrative_wheat_price,
-         "manufactures": illustrative_manufactures_price},
-        bins, DEFAULT_BASKET)
-
-    all_prices = {"wheat_kg": illustrative_wheat_price,
-                  "manufactures": illustrative_manufactures_price,
-                  "silver_kg": silver_price}
-    food_share = household_budget_share(FOOD, all_prices, bins, DEFAULT_BASKET)
-    print("\nillustrative wheat price (recursive labour content): %.4f h/kg"
-          % illustrative_wheat_price)
-    print("household food budget share at that price: %.1f%%"
-          % (PERCENT_SCALE * food_share))
-    print("historical calibration target: %.0f-%.0f%%"
-          % (PERCENT_SCALE * HOUSEHOLD_FOOD_BUDGET_SHARE_LOW,
-             PERCENT_SCALE * HOUSEHOLD_FOOD_BUDGET_SHARE_HIGH))
-
-    print("\n" + "=" * 72)
-    print("COMPLAINTS/29: lead_kg's joint silver output, priced two ways")
-    print("recipe outputs (per %s): %s" % (lead_entry["basis"][:40] + "...", outputs))
-    mass_shares = joint_output_mass_shares(outputs)
-    print("mass shares:  " + ", ".join(
-        "%s=%.4f%%" % (material, PERCENT_SCALE * share)
-        for material, share in mass_shares.items()))
-    print("illustrative lead price (recursive labour content): %.4f h/kg"
-          % illustrative_lead_price)
-    print("stated Roman lead output: %.4g kg/yr -> lead-byproduct silver at "
-          "the recipe's own ratio: %.4g kg/yr (stated total silver output "
-          "including the direct-ore route: %.4g kg/yr)"
-          % (illustrative_annual_lead_kg, illustrative_annual_silver_kg,
-             resources["empire_output_100ad"]["silver"]["t_per_yr"] * KILOGRAMS_PER_TONNE))
-    print("demand-cleared silver price at that supply: %.4f h/kg"
-          % silver_price)
-    print("derived silver:lead price ratio: %.1fx  (historical target: ~%.0fx)"
-          % (silver_price / illustrative_lead_price,
-             SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL))
-    value_shares = joint_output_value_shares(
-        outputs, {"lead_kg": illustrative_lead_price, "silver_kg": silver_price})
-    print("value shares: " + ", ".join(
-        "%s=%.4f%%" % (material, PERCENT_SCALE * share)
-        for material, share in value_shares.items()))
-
-    print("\n" + "=" * 72)
-    print("DERIVED DEMAND: who actually consumes lead_kg as an input")
-    for consumer in consumers_of("lead_kg"):
-        coefficient = input_coefficients_per_unit_output(consumer)["lead_kg"]
-        print("  %-28s %.5f kg lead per unit of its own dominant output"
-              % (consumer, coefficient))

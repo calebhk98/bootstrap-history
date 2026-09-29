@@ -16,6 +16,11 @@
     "structures": 0.75
   },
   "currency": "denarius",
+  "coin_standard": {
+    "material": "silver_kg",
+    "kg_per_unit": 0.0027,
+    "source": "Fine silver in one denarius: Trajan's reform, dated to AD 100 by Butcher and Ponting, lowered fineness to about 80% at about 3.2 g, so about 2.6 to 2.7 g of silver (The Metallurgy of Roman Silver Coinage, CUP 2014, ch. 15; and their paper 'The Reforms of Trajan and the End of the Pre-Neronian Denarius'). 100 AD sits at the reform boundary; the pre-reform denarius held about 2.9 g. Confidence medium-low on the post-reform fineness."
+  },
   "debt_bondage": false,
   "fire_quarter": "insula district, where the tenements stand six storeys in wood",
   "handicap_remedies": {
@@ -535,5 +540,17 @@
     "w_religious_rigidity": 0.2
   },
   "wage_index": 1.0,
-  "year": 100
+  "year": 100,
+  "starting_interest_rate": 0.12,
+  "starting_tax_share": 0.06,
+  "_internal": {
+    "starting_interest_rate": {
+      "source": "Centesimae usurae, 1% a month, was the legal ceiling on ordinary loans; the respectable-lending rate, with maritime and unsecured lending far higher.",
+      "confidence": "B"
+    },
+    "starting_tax_share": {
+      "source": "Portoria customs (a few per cent), the vicesima on some transactions, and local dues combined into one share of a trading household's revenue. An estimate, not a fiscal reconstruction.",
+      "confidence": "C"
+    }
+  }
 }

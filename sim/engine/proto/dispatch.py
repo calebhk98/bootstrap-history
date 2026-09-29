@@ -5,10 +5,13 @@ import re
 from ..data import money_word
 
 from .economy import _dashboard_snapshot
+from . import command_registry
+from .command_registry import command
 from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from .saveload import load_state, save_state
 from .state import (_agent_end_reason, _agent_state)
+from .wave_summary import wave_summary
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
 # The four handler groups moved out of this module, by subject - see each
@@ -27,24 +30,10 @@ from .dispatch_money import (
     _cmd_withdraw, _cmd_bribe)
 from .dispatch_labour import (
     _cmd_work, _cmd_allocate, _cmd_labour, _cmd_hire, _cmd_fire, _cmd_train,
-    _cmd_commission)
+    _cmd_commission, _cmd_move_base)
 from .dispatch_ventures import (
     _cmd_start, _cmd_stop, _cmd_rush, _cmd_mothball, _cmd_restore,
     _cmd_open, _cmd_ventures, _cmd_policy)
-
-# Every command the dispatcher answers to, in the order a player meets them.
-# Kept beside the dispatcher so that adding a command and forgetting to
-# advertise it is a visible omission rather than a silent one.
-KNOWN_COMMANDS = (
-    "state", "available", "why", "path", "start", "stop", "rush", "step",
-    "money", "risk", "values", "labour", "population", "policy", "help", "log",
-    "hire", "fire", "train", "commission", "work", "allocate",
-    "buy", "quote", "close", "bounty", "mothball", "restore", "bribe",
-    "open", "ventures", "withdraw", "mines", "stuck",
-    "capacity", "materials", "sell", "economy", "changes", "score", "portfolio",
-    "save", "load", "quit",
-)
-
 
 # Every command that names a technology. Under fog, NONE of them may say
 # anything about one you have not heard of - including refusing it for a reason
@@ -60,6 +49,11 @@ _NAME_COMMANDS = _ID_COMMANDS + ("open",)
 
 
 
+@command("save", group="game",
+         summary="write the game to a file",
+         usage=["save <file>", '{"cmd":"save","file":"mygame.json"}'],
+         options={"<file>": "a relative file name"},
+         description="Writes the whole game. See the sittings topic for scripting.")
 def _cmd_save(sim, nodes, cmd, ended):
     command = cmd.get("cmd")  # this handler serves both "save" and "load"; see below
     path = cmd.get("file") or cmd.get("path")
@@ -84,6 +78,11 @@ def _cmd_save(sim, nodes, cmd, ended):
 
 
 
+@command("step", group="projects", aliases=("n", "next", "wait", "year"),
+         summary="let time pass",
+         usage=["step", "step <years>"], options={"<years>": "how many years (default 1)"},
+         description="Advances the calendar and reports what completed and happened. "
+                     "Founder hours do not bank between years.")
 def _cmd_step(sim, nodes, cmd, ended):
     # Must refuse to advance the clock once the run has ended: doing so
     # silently would look identical to a working game that has simply
@@ -205,6 +204,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     stopped_early = None
     end_year = sim.end_year
     ran = 0
+    goal_before = sim.goal_snapshot()
     for _ in range(years):
         if sim.dead_reason or sim.year >= end_year:
             break
@@ -243,7 +243,10 @@ def _cmd_step(sim, nodes, cmd, ended):
             # having built something on turn one they never started.
             completed.append({"id": node_id, "name": nodes[node_id]["name"],
                               "year": sim.done_year.get(node_id),
-                              "granted": node_id in sim.granted})
+                              "granted": node_id in sim.granted,
+                              "kind": ("granted" if node_id in sim.granted
+                                       else "concern" if sim.is_venture(node_id)
+                                       else "technology")})
         for node_id in sorted(before_done - sim.done):
             lost.append({"id": node_id, "name": nodes[node_id]["name"], "year": sim.year,
                          "can_be_restored": node_id in getattr(sim, "mothballed", set())})
@@ -277,6 +280,9 @@ def _cmd_step(sim, nodes, cmd, ended):
                              % (ran, years))
             break
     out = dict(ok=True, completed=completed, lost=lost, events=events)
+    summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
+    if summary:
+        out["summary"] = summary
     if founder_died_this_step:
         out["the_founder_died_this_step"] = founder_died_this_step
     if stopped_early:
@@ -288,77 +294,28 @@ def _cmd_step(sim, nodes, cmd, ended):
 
 
 
+@command("quit", group="game", aliases=("q", "exit", "bye"),
+         summary="stop",
+         usage=["quit"], options={},
+         description="Ends the session.")
 def _cmd_quit(sim, nodes, cmd, ended):
     return {"ok": True, "bye": True}
 
 
 
 
-_AGENT_DISPATCH_TABLE = {
-    'state': _cmd_state,
-    'available': _cmd_available,
-    'log': _cmd_log,
-    'score': _cmd_score,
-    'why': _cmd_why,
-    'path': _cmd_path,
-    'start': _cmd_start,
-    'stop': _cmd_stop,
-    'rush': _cmd_rush,
-    'bounty': _cmd_bounty,
-    'buy': _cmd_buy,
-    'work': _cmd_work,
-    'allocate': _cmd_allocate,
-    'risk': _cmd_risk,
-    'hazards': _cmd_risk,
-    'values': _cmd_values,
-    'money': _cmd_money,
-    'ledger': _cmd_money,
-    'accounts': _cmd_money,
-    'stuck': _cmd_stuck,
-    'why_stuck': _cmd_stuck,
-    'blocked': _cmd_stuck,
-    'mines': _cmd_mines,
-    'workings': _cmd_mines,
-    'capacity': _cmd_capacity,
-    'materials': _cmd_materials,
-    'sell': _cmd_sell,
-    'industry': _cmd_capacity,
-    'dashboard': _cmd_capacity,
-    'portfolio': _cmd_portfolio,
-    'economy': _cmd_economy,
-    'changes': _cmd_changes,
-    'population': _cmd_population,
-    'labour': _cmd_labour,
-    'hire': _cmd_hire,
-    'fire': _cmd_fire,
-    'dismiss': _cmd_fire,
-    'train': _cmd_train,
-    'commission': _cmd_commission,
-    'job': _cmd_commission,
-    'mothball': _cmd_mothball,
-    'restore': _cmd_restore,
-    'quote': _cmd_quote,
-    'price': _cmd_quote,
-    'close': _cmd_close,
-    'close_mine': _cmd_close,
-    'withdraw': _cmd_withdraw,
-    'bribe': _cmd_bribe,
-    'open': _cmd_open,
-    'ventures': _cmd_ventures,
-    'policy': _cmd_policy,
-    'save': _cmd_save,
-    'load': _cmd_save,
-    'step': _cmd_step,
-    'quit': _cmd_quit,
-}
+# "load" shares the save handler.
+command_registry.register_command(
+    "load", group="game", summary="read a game from a file",
+    usage=["load <file>"], options={"<file>": "a file written by save"},
+    description="Replaces the current game with a saved one.",
+    handler=_cmd_save)
 
-# KNOWN_COMMANDS must never name a command the table cannot run - see
-# KNOWN_COMMANDS' own definition. Checked once at import time so the two
-# cannot silently drift apart again.
-assert set(KNOWN_COMMANDS) - {"help"} <= set(_AGENT_DISPATCH_TABLE), (
-    "KNOWN_COMMANDS names a command absent from _AGENT_DISPATCH_TABLE: %r"
-    % sorted(set(KNOWN_COMMANDS) - {"help"} - set(_AGENT_DISPATCH_TABLE)))
+# Every command word and alias mapped to its handler, from the registry.
+_AGENT_DISPATCH_TABLE = command_registry.handlers()
 
+# Every command name, read from the registry.
+KNOWN_COMMANDS = tuple(command_registry.COMMANDS)
 
 # --- COMPACT MODE. See Complaints/35 section 1 and typed.py's own long
 # comment on 'json' vs 'compact' for the shape of the request and why they
@@ -508,6 +465,7 @@ def _agent_dispatch(sim, nodes, cmd):
 
 
 def _agent_dispatch_inner(sim, nodes, cmd):
+    nodes = sim.nodes   # the tree in this civilisation's coin
     if not isinstance(cmd, dict) or "cmd" not in cmd:
         return {"ok": False, "error": "each line must be a JSON object with a 'cmd' field, "
                                       "e.g. {\"cmd\":\"state\"}"}
@@ -640,7 +598,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
                 "error": "%s must be a real number; NaN and Infinity are not "
                          "quantities. Nothing was changed." % ", ".join(bad)}
 
-    _handler = _AGENT_DISPATCH_TABLE.get(command)
+    _handler = command_registry.handlers().get(command)
     if _handler is not None:
         return _handler(sim, nodes, cmd, ended)
 
@@ -651,5 +609,5 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # A help message that is wrong is worse than none, because it is believed.
     return {"ok": False,
             "error": "unknown cmd %r. Use one of: %s. %s"
-                     % (command, ", ".join(KNOWN_COMMANDS),
+                     % (command, ", ".join(command_registry.COMMANDS),
                         'Or {"cmd":"help"} for what each one does.')}

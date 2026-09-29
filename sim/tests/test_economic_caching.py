@@ -14,7 +14,7 @@ from .harness import *  # noqa: F401,F403
 
 def _test_done_and_operating_versions():
 	"""Verify _done_ver and _operating_ver track respective mutations."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	initial_done_ver = getattr(sim_inst.household, "_done_ver", 0)
 	initial_op_ver = getattr(sim_inst.household, "_operating_ver", 0)
 
@@ -40,7 +40,7 @@ check("done and operating version counters increment", _ok, _detail)
 
 def _test_active_project_invalidation_version():
 	"""Verify mutating household.active bumps _active_ver automatically."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	initial_active_ver = getattr(sim_inst.household, "_active_ver", 0)
 
 	# Add project
@@ -64,7 +64,7 @@ check("active project version increments on mutation", _ok, _detail)
 
 def _test_nested_mutation_invalidation():
 	"""Verify nested mutations and alias modifications inside active projects increment _active_ver."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	sim_inst.household.active["test_node"] = {
 		"ph_left": 100.0,
 		"spent": 0.0,
@@ -122,7 +122,7 @@ check("nested mutation and alias invalidation", _ok, _detail)
 
 def _test_revenue_memoization_and_invalidation():
 	"""Verify revenue() returns identical cached values, and invalidates upon mutation."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	sim_inst.step()
 
 	rev1 = sim_inst.revenue()
@@ -156,7 +156,7 @@ check("revenue() memoization and invalidation", _ok, _detail)
 
 def _test_goods_market_memoization_and_invalidation():
 	"""Verify _goods_category_ratios and goods_market_factor cache and invalidate."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	loom_node = "tex_power_loom"
 	if loom_node in sim_inst.nodes:
 		sim_inst.household.operating.add(loom_node)
@@ -195,7 +195,7 @@ check("goods market caching and invalidation", _ok, _detail)
 
 def _test_annual_material_demand_caching():
 	"""Verify annual_material_demand caches, invalidates on active/done, and defensively copies."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	test_node = sim_inst.order[0]
 	sim_inst.household.active[test_node] = {"ph_left": 10.0, "cost_left": 10.0}
 
@@ -234,7 +234,7 @@ def _test_save_load_derived_state_integrity():
 	import os
 	from sim.engine.proto.saveload import save_state, load_state
 
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	sim_inst.step()
 	sim_inst.revenue()
 	sim_inst.annual_material_demand()
@@ -302,7 +302,7 @@ check("save and load derived state integrity", _ok, _detail)
 
 def _test_living_cost_and_credit_limit_consistency():
 	"""Edge case: living_cost and credit_limit reflect revenue and capital changes accurately."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	sim_inst.step()
 
 	lc1 = sim_inst.living_cost()
@@ -326,7 +326,7 @@ check("living_cost and credit_limit consistency", _ok, _detail)
 
 def _test_rapid_workforce_invalidation():
 	"""Edge case: rapid mutations to workforce properly invalidate wages and revenue."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	sim_inst.step()
 
 	wages = []
@@ -363,7 +363,7 @@ check("rapid workforce invalidation", _ok, _detail)
 
 def _test_multiple_goods_concerns_competition():
 	"""Edge case: adding multiple concerns in the same goods category updates cross-elasticity."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	loom_node = "tex_power_loom"
 	if loom_node in sim_inst.nodes:
 		sim_inst.household.operating.add(loom_node)
@@ -388,7 +388,7 @@ check("goods market multi-concern competition", _ok, _detail)
 
 def _test_step_advance_year_cache_invalidation():
 	"""Edge case: simulation steps advance year and pop_scale, invalidating old caches."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	sim_inst.step()
 	rev_year1 = sim_inst.revenue()
 
@@ -409,7 +409,7 @@ check("step advance cache invalidation", _ok, _detail)
 
 def _test_workforce_container_api_completeness():
 	"""Edge case: dictionary mutating APIs on household.employees increment _workforce_ver."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	sim_inst.household.employees["smith"] = 5.0
 	ver0 = getattr(sim_inst.household, "_workforce_ver", 0)
 
@@ -458,7 +458,7 @@ check("workforce container dictionary APIs completeness", _ok, _detail)
 
 def _test_nested_active_container_api_completeness():
 	"""Edge case: dictionary mutating APIs on nested and deep project sub-dicts increment _active_ver."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	test_node = "test_node_nested_api"
 	sim_inst.household.active[test_node] = {
 		"ph_left": 100.0,
@@ -509,7 +509,7 @@ check("nested and deep project dictionary APIs completeness", _ok, _detail)
 
 def _test_annual_material_demand_nested_invalidation():
 	"""Edge case: annual_material_demand invalidates when nested project cost or labour changes."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	test_node = sim_inst.order[0]
 	sim_inst.household.active[test_node] = {
 		"ph_left": 50.0,
@@ -580,7 +580,7 @@ check("independent sim instances isolation", _ok, _detail)
 
 def _test_pre_insertion_alias_and_invalidating_dict_identity():
 	"""Regression: pre-insertion alias mutation vs already-_InvalidatingDict identity preservation."""
-	sim_inst = sim(civ="rome_100ad", capital=10000.0)
+	sim_inst = sim(civ="rome_100ad", capital=book_money(10000.0))
 	_InvalidatingDict = sim_inst.household.active.__class__
 
 	# 1. Plain dictionary insertion: wraps in a new _InvalidatingDict, decoupling pre-insertion alias

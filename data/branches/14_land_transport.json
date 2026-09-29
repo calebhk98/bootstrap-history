@@ -4,7 +4,7 @@
   "name": "Paved trunk road network",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -32,7 +32,7 @@
    "lnd_paved_road_network",
    "lnd_horse_saddle_basic"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -60,7 +60,7 @@
    "lnd_wheel_spoked",
    "lnd_axle_pivot_front"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -87,7 +87,7 @@
   "pre": [
    "lnd_wheel_spoked"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -112,7 +112,7 @@
   "name": "Spoked wheel",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -137,7 +137,7 @@
   "name": "Pivoting front axle",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -165,7 +165,7 @@
    "lnd_wheel_spoked",
    "mat_wrought_iron"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -190,7 +190,7 @@
   "name": "Harness of throat and girth type",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -215,7 +215,7 @@
   "name": "Mule transport",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -240,7 +240,7 @@
   "name": "Ox transport",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -265,7 +265,7 @@
   "name": "Horse saddle (basic)",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -290,7 +290,7 @@
   "name": "Litter",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -315,7 +315,7 @@
   "name": "Bridge",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -340,7 +340,7 @@
   "name": "Milestone",
   "cat": "transport",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -427,7 +427,7 @@
    "lnd_harness_throat_girth",
    "mat_wrought_iron"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "carpenter": 400,
@@ -463,7 +463,7 @@
    "lnd_coach",
    "lnd_spring_leaf"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "carpenter": 500,
@@ -498,7 +498,7 @@
   "pre": [
    "lnd_wheel_spoked"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 30,
   "lab": {
    "carpenter": 80,
@@ -532,7 +532,7 @@
    "cementation_steel",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "smith": 200,
@@ -566,7 +566,7 @@
    "cap_measure_len",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 140.0,
   "lab": {
    "labourer": 2000,
@@ -602,7 +602,7 @@
    "mat_bitumen",
    "destructive_distillation"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150.0,
   "lab": {
    "chemist": 100.0,
@@ -639,7 +639,7 @@
   "pre": [
    "lnd_macadam"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 50,
   "lab": {
    "labourer": 500
@@ -671,7 +671,7 @@
    "case_hardening",
    "finery_puddling"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80.0,
   "lab": {
    "artisan": 100.0,
@@ -707,7 +707,7 @@
    "blast_furnace",
    "case_hardening"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "artisan": 100.0,
@@ -770,7 +770,7 @@
    "lnd_iron_edge_rail",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "smith": 250,
@@ -804,7 +804,7 @@
   "pre": [
    "lnd_point_switch"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "smith": 120,
@@ -841,7 +841,7 @@
    "lnd_signal_railway",
    "telegraph_electric"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "scribe": 200,
@@ -873,7 +873,7 @@
    "lnd_iron_edge_rail",
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "master": 300,
@@ -906,7 +906,7 @@
    "mat_bulk_steel",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 400,
   "lab": {
    "smith": 600,
@@ -942,7 +942,7 @@
    "lnd_steam_locomotive",
    "lnd_flanged_wheel"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "carpenter": 250,
@@ -1010,7 +1010,7 @@
    "lnd_steam_locomotive",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "machinist": 350,
@@ -1045,7 +1045,7 @@
   "pre": [
    "lnd_wheel_spoked"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 40,
   "lab": {
    "carpenter": 100,
@@ -1080,7 +1080,7 @@
    "crank_conrod",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "carpenter": 150,
@@ -1145,7 +1145,7 @@
   "name": "Safety bicycle (chain drive)",
   "cat": "transport",
   "pre": [
-   "lnd_ball_bearing",
+   "tl_ball_bearing",
    "lnd_chain_drive_bicycle"
   ],
   "kb": "",
@@ -1181,7 +1181,7 @@
    "crank_conrod",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "smith": 200,
@@ -1242,7 +1242,7 @@
   "name": "Pneumatic tyre (rubber tyre)",
   "cat": "transport",
   "pre": [
-   "lnd_ball_bearing",
+   "tl_ball_bearing",
    "mat_natural_rubber"
   ],
   "kb": "",
@@ -1276,7 +1276,7 @@
    "cap_tol_100um",
    "cap_heat_1300"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "smith": 300,
@@ -1310,9 +1310,10 @@
   "cat": "materials",
   "pre": [
    "coal_coke",
-   "destructive_distillation"
+   "destructive_distillation",
+   "cap_heat_1100"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "chemist": 150,
@@ -1331,7 +1332,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Coke and steam passed through hot coal produces combustible gas. Used for lighting and early engines. Supply is local and pipeline-dependent; replaced by petrol in vehicles."
+  "note": "Coke and steam passed through hot coal produces combustible gas. Used for lighting and early engines. Supply is local and pipeline-dependent; replaced by petrol in vehicles. [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: steam-coke reaction at 900-1000C for coal gas production]"
  },
  {
   "id": "lnd_otto_cycle_four_stroke",
@@ -1346,7 +1347,7 @@
    "cap_heat_1100",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 350,
   "lab": {
    "artisan": 200.0,
@@ -1455,11 +1456,11 @@
   "name": "Magneto (ignition system)",
   "cat": "transport",
   "pre": [
-   "lnd_spark_plug",
+   "tl_spark_plug",
    "electromagnet",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "machinist": 250,
@@ -1469,7 +1470,7 @@
   "mat": {
    "steel_plate_kg": 15,
    "copper_wire_kg": 10,
-   "mat_ceramic": 2
+   "ceramic_kg": 2
   },
   "cap": 1200,
   "up": 0.0,
@@ -1499,7 +1500,7 @@
    "boring_mill",
    "cap_heat_1300"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 400,
   "lab": {
    "machinist": 450,
@@ -1551,11 +1552,11 @@
   "pre": [
    "lnd_otto_cycle_four_stroke",
    "lnd_gearbox_clutch",
-   "lnd_differential",
+   "tl_differential",
    "lnd_steering_geometry",
    "mat_bulk_steel"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 500,
   "lab": {
    "machinist": 600,
@@ -1593,7 +1594,7 @@
    "lnd_otto_cycle_four_stroke",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "machinist": 350,
@@ -1661,7 +1662,7 @@
    "cap_tol_100um",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "artisan": 200,
@@ -1695,7 +1696,7 @@
    "lnd_automobile",
    "mfg_production_schedule"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 600,
   "lab": {
    "artisan": 300.0,
@@ -1728,7 +1729,7 @@
    "lnd_automobile",
    "lnd_diesel_cycle"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 300,
   "lab": {
    "machinist": 400,
@@ -1794,7 +1795,7 @@
   "cat": "transport",
   "pre": [
    "lnd_diesel_cycle",
-   "lnd_caterpillar_track"
+   "tl_caterpillar_track"
   ],
   "kb": "",
   "ph": 350,
@@ -1860,7 +1861,7 @@
    "mat_petroleum_refined",
    "lnd_truck"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 180,
   "lab": {
    "master": 250,
@@ -1893,7 +1894,7 @@
    "lnd_automobile",
    "lnd_tarmacadam"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "master": 400,

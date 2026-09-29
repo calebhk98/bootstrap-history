@@ -32,6 +32,8 @@ it finds must then be validated by identity against a strong reference to the
 object itself. That is what `sim/engine/proto/nodes.py` has always done and
 what the two guilty caches now do. It is deterministic, it costs milliseconds,
 and it catches the whole class rather than the one instance we happened to hit.
+
+Guards the id()-reuse hazard behind non-determinism; structural, so it catches the class.
 """
 import ast
 import os

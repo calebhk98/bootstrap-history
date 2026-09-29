@@ -40,6 +40,8 @@ boundary, not inside agriculture.py alone), so - unlike test_agriculture.py
 and test_demography.py, which stay off sim/tests/harness.py on purpose -
 this one uses harness.py, the same way test_agriculture_wiring.py does for
 the same reason.
+
+Storage persists across years; the farm workforce share does not respond to famine.
 """
 import statistics
 import unittest
@@ -211,6 +213,10 @@ class GranaryCapacityTests(unittest.TestCase):
 
     def test_farm_stock_kg_never_exceeds_capacity_over_many_good_years(self):
         test_sim = _rome_sim(events=False)
+        # Fertile ground with room to work: a structural surplus, whatever
+        # soil the civilisation's own territory happens to have.
+        test_sim.farm_land.quality = 1.3
+        test_sim.farm_land.hectares *= 2.0
         max_seen_ratio_to_capacity = 0.0
         for year in range(101, 161):
             test_sim._demographic_recovery(year)

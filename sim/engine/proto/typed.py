@@ -2,6 +2,7 @@
 
 import json
 
+from . import command_registry
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
 
@@ -23,41 +24,9 @@ from .nodes import NODE_IDS, NODE_IDS_LOWER
 # same call.
 # ---------------------------------------------------------------------------
 
-# What a person types on the left, the protocol's own name on the right. The
-# single letters are the ones `play` has always used, kept because the older
-# notes and anyone who has played before will still type them.
-TYPED_ALIASES = {
-    "s": "state", "st": "state", "status": "state",
-    "a": "available", "av": "available", "options": "available",
-    "n": "step", "next": "step", "wait": "step", "year": "step",
-    "x": "stop", "abandon": "stop", "cancel": "stop",
-    "q": "quit", "exit": "quit", "bye": "quit",
-    "h": "help", "?": "help", "commands": "help",
-    "ledger": "money", "accounts": "money", "cash": "money",
-    "hazards": "risk", "risks": "risk",
-    "history": "log", "diary": "log", "logs": "log", "journal": "log",
-    "people": "labour", "staff": "labour", "workers": "labour",
-    "demographics": "population", "demography": "population", "census": "population",
-    "pop": "population",
-    "dismiss": "fire", "sack": "fire", "lay": "fire",
-    "job": "commission", "hireout": "commission",
-    "teach": "train", "learn": "train",
-    "price": "quote", "cost": "quote",
-    "shut": "close", "closemine": "close", "close_mine": "close",
-    "begin": "start", "research": "start", "build": "start",
-    "explain": "why", "look": "why", "inspect": "why",
-    "route": "path", "plan": "path",
-    "workings": "mines", "mine": "mines", "pits": "mines",
-    "blocked": "stuck", "help_me": "stuck", "why_stuck": "stuck",
-    "retire": "withdraw", "step_back": "withdraw", "obscurity": "withdraw",
-    "beliefs": "values", "traits": "values", "society": "values",
-    "startall": "rush", "start_all": "rush", "muster": "rush",
-    "overview": "capacity", "industry": "capacity", "dashboard": "capacity",
-    "infrastructure": "capacity", "power": "capacity",
-    "prices": "economy", "econ": "economy",
-    "diff": "changes", "recap": "changes", "summary": "changes",
-    "direct": "allocate", "assign": "allocate", "split": "allocate",
-}
+# Every alias a person can type, mapped to its command; declared with each
+# command by @command(aliases=...).
+TYPED_ALIASES = command_registry.alias_map()
 
 
 def _typed_number(tok):
@@ -231,9 +200,10 @@ def parse_typed(line):
     parts = text.split()
     head = parts[0].lower()
     rest = parts[1:]
-    command = TYPED_ALIASES.get(head, head)
-    if command not in KNOWN_COMMANDS:
-        near = [candidate for candidate in KNOWN_COMMANDS if candidate.startswith(head[:3])]
+    command = command_registry.alias_map().get(head, head)
+    if command not in command_registry.COMMANDS:
+        near = [candidate for candidate in command_registry.COMMANDS
+                if candidate.startswith(head[:3])]
         return None, ("no command called %r. Type 'help' for the list%s."
                       % (head, (", or did you mean: " + ", ".join(near)) if near else ""))
 
@@ -319,8 +289,27 @@ def _parse_rush(command, rest, words, nums, want_json):
                                   "one of them." % token_text[len(pre):])
                 _lim = value
                 break
-    if _lim is None and nums:
-        _lim = nums[0]
+    # fiscal caps take key:value or key=value; a cap that will not parse is refused
+    cap_tokens = set()
+    for word in rest:
+        token_text = str(word)
+        lowered = token_text.lower()
+        if lowered in ("preview", "dry_run", "dryrun"):
+            out["preview"] = True
+            continue
+        for key in ("max_total_cost", "max_annual_draw", "reserve_cash"):
+            for separator in (":", "="):
+                if lowered.startswith(key + separator):
+                    value = _typed_number(token_text[len(key) + 1:])
+                    if value is None:
+                        return None, ("'%s' is not an amount for %s, e.g. "
+                                      "'rush %s:5000'." % (token_text[len(key) + 1:], key, key))
+                    out[key] = value
+                    cap_tokens.add(token_text)
+    if _lim is None:
+        _lim = next((number for number in nums
+                     if not any(_typed_number(token[token.find(":") + 1:]) == number
+                                for token in cap_tokens)), None)
     if _lim is not None:
         out["limit"] = int(_lim)
     return out, None
@@ -337,6 +326,24 @@ def _parse_state(command, rest, words, nums, want_json):
     low_rest = [word.lower() for word in rest]
     want_full = bool(rest) and low_rest[0].split(":")[0] == "full"
     return {"cmd": "state", "full": want_full, "json": want_json}, None
+
+
+_STATE_WORDS = ("startable", "blocked", "active", "done", "completed")
+
+
+def _available_consume_state_or_tag(out, low, i):
+    """`state X`, `tag X`, `category X`, or a bare state word. Same (new_i,
+    matched) contract as the other _available_consume helpers.
+    """
+    word = low[i]
+    nxt = low[i + 1] if i + 1 < len(low) else None
+    if word in ("state", "tag", "category", "cat") and nxt:
+        out["category" if word == "cat" else word] = nxt
+        return i + 2, True
+    if word in _STATE_WORDS:
+        out["state"] = word
+        return i + 1, True
+    return i, False
 
 
 def _available_consume_find_afford_or_limit(out, low, i):
@@ -438,7 +445,8 @@ def _parse_available(command, rest, words, nums, want_json):
         rest,
         flag_keys=("all", "reverse", "reversed", "desc", "descending"),
         value_keys=("find", "search", "named", "afford", "under", "within",
-                    "limit", "offset", "heard", "heard_offset", "sort"))
+                    "limit", "offset", "heard", "heard_offset", "sort",
+                    "state", "tag", "category", "cat"))
     low = [word.lower() for word in rest]
     # THE TOKEN LOOP ITSELF, kept here so the scanning (which token is next,
     # when to stop) stays in one place; what each token MEANS is delegated to
@@ -450,6 +458,9 @@ def _parse_available(command, rest, words, nums, want_json):
         if word == "all":
             out["all"] = True
             i += 1
+            continue
+        i, matched = _available_consume_state_or_tag(out, low, i)
+        if matched:
             continue
         i, matched = _available_consume_find_afford_or_limit(out, low, i)
         if matched:
@@ -603,6 +614,10 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
             want = NODE_IDS_LOWER.get(want.lower(), want)
         return {"cmd": "open", "id": want, "units": nums[-1]}, None
 
+    if command == "start" and str(rest[0]).lower() == "all" if rest else False:
+        # 'start all ...' is the bulk start; unbounded it only previews
+        return _parse_rush("rush", rest[1:], words[1:], nums, want_json)
+
     if not rest:
         return None, ("%s needs the name of a technology, e.g. '%s "
                       "fud_wheelbarrow'. 'available' lists what you can "
@@ -665,6 +680,12 @@ def _parse_population(command, rest, words, nums, want_json):
     # not the tech tree - so nothing here is gated on what the player
     # has discovered.
     return {"cmd": "population"}, None
+
+
+def _parse_move_base(command, rest, words, nums, want_json):
+    # 'move' alone lists the tiles; 'move <tile>' (or 'move to <tile>') goes.
+    names = [word for word in rest if word.lower() != "to"]
+    return ({"cmd": "move_base", "to": names[0]} if names else {"cmd": "move_base"}), None
 
 
 def _parse_labour(command, rest, words, nums, want_json):
@@ -733,7 +754,7 @@ def _parse_buy_or_quote(command, rest, words, nums, want_json):
     if out["what"] in ("nitre", "saltpetre", "nitre_bed"):
         out["what"] = "nitre"
     elif out["what"] not in ("forest", "farm", "food", "housing", "houses",
-                             "school", "trade_school", "material", "stock",
+                             "trade_school", "material", "stock",
                              "slaves", "mine", "mines", "people",
                              "manumit", "manumission", "free"):
         out["material"], out["what"] = out["what"], "mine"
@@ -857,6 +878,7 @@ _COMMAND_PARSERS = {
     "changes": _parse_changes,
     "bribe": _parse_bribe,
     "population": _parse_population,
+    "move_base": _parse_move_base,
     "labour": _parse_labour,
     "hire": _parse_hire_or_fire,
     "fire": _parse_hire_or_fire,

@@ -22,6 +22,8 @@ fail if either returns.
 
 unittest.TestCase style, like test_agriculture.py and test_demography.py, so
 it can exercise the tool in a subprocess without dragging in the engine.
+
+Guards the burndown count of declared numbers so milestone 1 stays measurable.
 """
 import json
 import os
@@ -260,15 +262,9 @@ class HardcodedHistoricalOutcomeTests(unittest.TestCase):
                                 text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout.strip())
-        # Complaints/36 named these two explicitly. If sim/engine/economy.py
-        # is ever dropped from _import_declaring_modules(), or either
-        # reclassification is quietly reverted, this fails loudly instead
-        # of the count just silently reading zero - the exact failure mode
-        # Complaints/36 exists to prevent one level up.
-        self.assertIn("DEBT_BASE_RATE", payload["outcome_names"])
-        self.assertIn("LIVING_COST_TAX_RATE", payload["outcome_names"])
-        # And they must not ALSO count as temporary_heuristic - one entry,
-        # one kind, which is the whole point of separating the bucket.
+        # Both moved into civilisation data; neither may return as a constant.
+        self.assertNotIn("DEBT_BASE_RATE", payload["outcome_names"])
+        self.assertNotIn("LIVING_COST_TAX_RATE", payload["outcome_names"])
         self.assertNotIn("DEBT_BASE_RATE", payload["heuristic_names"])
         self.assertNotIn("LIVING_COST_TAX_RATE", payload["heuristic_names"])
 
@@ -276,8 +272,8 @@ class HardcodedHistoricalOutcomeTests(unittest.TestCase):
         stdout, _stderr = self._run_burndown()
         self.assertIn("HARDCODED OUTCOME", stdout)
         self.assertIn("ZERO", stdout)
-        self.assertIn("DEBT_BASE_RATE", stdout)
-        self.assertIn("LIVING_COST_TAX_RATE", stdout)
+        self.assertNotIn("DEBT_BASE_RATE", stdout)
+        self.assertNotIn("LIVING_COST_TAX_RATE", stdout)
 
     def test_cli_still_reports_declared_count_first(self):
         # The new, loud section must not break the existing contract this

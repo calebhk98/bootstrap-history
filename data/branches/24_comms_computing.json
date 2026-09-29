@@ -6,7 +6,7 @@
   "pre": [
    "sea_coastal_pilotage"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 40,
   "lab": {
    "artisan": 60
@@ -38,7 +38,7 @@
   "pre": [
    "tr_semaphore_signal"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "scribe": 200
@@ -71,7 +71,7 @@
   "pre": [
    "com_optical_codebook"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "carpenter": 400,
@@ -105,9 +105,10 @@
   "name": "Heliograph - sun mirror telegraph",
   "cat": "signalling",
   "pre": [
-   "com_optical_codebook"
+   "com_optical_codebook",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "artisan": 100
@@ -127,7 +128,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A polished mirror reflects sunlight to encode Morse dots and dashes. Works in daylight at range up to 50 km. Lighter and cheaper than optical towers. Cannot work at night or in cloud. The constraint is weather: an overcast day stops all communication, but the apparatus itself is simpler and more portable.",
+  "note": "A polished mirror reflects sunlight to encode Morse dots and dashes. Works in daylight at range up to 50 km. Lighter and cheaper than optical towers. Cannot work at night or in cloud. The constraint is weather: an overcast day stops all communication, but the apparatus itself is simpler and more portable. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: polished mirror surface requires fine finishing quality]",
   "traits": [
    "information",
    "infrastructure",
@@ -141,7 +142,7 @@
   "pre": [
    "telegraph_electric"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "scribe": 150
@@ -172,7 +173,7 @@
   "pre": [
    "telegraph_electric"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 100,
   "lab": {
    "machinist": 200,
@@ -207,7 +208,7 @@
    "telegraph_electric",
    "electromagnet"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "machinist": 150
@@ -241,7 +242,7 @@
    "telegraph_electric",
    "electromagnet"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "machinist": 200
@@ -276,7 +277,7 @@
    "telegraph_electric",
    "voltaic_pile"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "chemist": 100
@@ -284,7 +285,7 @@
   "mat": {
    "copper_kg": 4,
    "zinc_kg": 4,
-   "sulfuric_retort": 10,
+   "sulfuric_acid_kg": 10,
    "salt_kg": 2
   },
   "cap": 0,
@@ -311,7 +312,7 @@
    "com_relay",
    "com_morse_sounder"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "machinist": 250,
@@ -346,7 +347,7 @@
   "pre": [
    "com_duplex_telegraph"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 140,
   "lab": {
    "machinist": 300,
@@ -384,7 +385,7 @@
    "cap_tol_100um",
    "mat_gutta_percha"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 200,
   "lab": {
    "machinist": 400,
@@ -421,9 +422,10 @@
   "pre": [
    "com_submarine_cable",
    "electromagnet",
-   "if_telephone_transmitter"
+   "if_telephone_transmitter",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 120.0,
   "lab": {
    "electrician": 350.0,
@@ -444,7 +446,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A coil of wire inserted periodically into a long telegraph or telephone line. Wire acts as a capacitor that stores charge; the coil inductance smooths it out. This compensates for cable distortion and allows signals to travel further before attenuation kills them. A loading coil every 2 km extends range from 50 km to 500 km on a submarine cable. The physics is: inductance and capacitance in series form a filter that attenuates high frequencies (noise) less than the signal distortion.",
+  "note": "A coil of wire inserted periodically into a long telegraph or telephone line. Wire acts as a capacitor that stores charge; the coil inductance smooths it out. This compensates for cable distortion and allows signals to travel further before attenuation kills them. A loading coil every 2 km extends range from 50 km to 500 km on a submarine cable. The physics is: inductance and capacitance in series form a filter that attenuates high frequencies (noise) less than the signal distortion. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: coil winding requires file and gauge precision to achieve specified inductance]",
   "traits": [
    "information",
    "infrastructure",
@@ -459,14 +461,14 @@
    "telegraph_electric",
    "com_relay"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "machinist": 200,
    "artisan": 100
   },
   "mat": {
-   "carbon_black_kg": 2,
+   "carbon_kg": 2,
    "iron_bar_kg": 2,
    "brass_kg": 1,
    "mercury_kg": 0.5
@@ -491,7 +493,7 @@
    "telegraph_electric",
    "electromagnet"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "machinist": 150,
@@ -522,7 +524,7 @@
    "com_telephone_carbon_mic",
    "com_telephone_diaphragm"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 150,
   "lab": {
    "machinist": 300,
@@ -557,7 +559,7 @@
    "com_telephone_manual_exchange",
    "com_loading_coil"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "carpenter": 400,
@@ -591,7 +593,7 @@
   "pre": [
    "com_trunk_lines"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "machinist": 250,
@@ -657,7 +659,7 @@
    "telegraph_electric",
    "com_morse_sounder"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "machinist": 200,
@@ -693,7 +695,7 @@
    "vacuum_tube",
    "com_relay"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "machinist": 250,
@@ -728,7 +730,7 @@
    "galena_detector",
    "com_antenna_ground"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "artisan": 120
@@ -762,7 +764,7 @@
   "pre": [
    "em_theory"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "carpenter": 150,
@@ -824,9 +826,9 @@
   "cat": "radio",
   "pre": [
    "vacuum_tube",
-   "com_tuned_circuit"
+   "el2_tuned_circuit_resonance_tank"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "machinist": 250,
@@ -885,7 +887,7 @@
   "cat": "radio",
   "pre": [
    "com_continuous_wave",
-   "com_triode_oscillator"
+   "if_triode_oscillator"
   ],
   "kb": "",
   "ph": 100,
@@ -916,8 +918,8 @@
   "cat": "radio",
   "pre": [
    "com_continuous_wave",
-   "com_triode_oscillator",
-   "com_amplitude_modulation"
+   "if_triode_oscillator",
+   "if_amplitude_modulation"
   ],
   "kb": "",
   "ph": 160,
@@ -949,7 +951,7 @@
   "cat": "radio",
   "pre": [
    "com_continuous_wave",
-   "com_triode_oscillator"
+   "if_triode_oscillator"
   ],
   "kb": "",
   "ph": 140,
@@ -979,10 +981,10 @@
   "name": "Broadcasting as an institution - scheduled transmission and profit model",
   "cat": "radio",
   "pre": [
-   "com_superheterodyne_receiver",
-   "com_amplitude_modulation"
+   "if_superheterodyne_receiver",
+   "if_amplitude_modulation"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 200,
   "lab": {
    "scribe": 300,
@@ -1020,7 +1022,7 @@
    "machinist": 150
   },
   "mat": {
-   "glass_boro_kg": 5,
+   "glass_borosilicate_kg": 5,
    "copper_kg": 8,
    "nickel_kg": 1,
    "lead_kg": 2
@@ -1042,9 +1044,10 @@
   "name": "Mechanical television scanning - early image transmission",
   "cat": "television",
   "pre": [
-   "com_antenna_ground"
+   "com_antenna_ground",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 140,
   "lab": {
    "machinist": 300,
@@ -1066,23 +1069,24 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "A spinning disc with holes arranged in a spiral (Nipkow disc) scans an image line by line. Light from the scene passes through a hole onto a selenium photocell, which modulates current proportional to brightness. This signal is transmitted by radio; a receiver feeds it to a similar spinning disc, with light shining behind it, reconstructing the image on a screen. The whole system is mechanical, unreliable, and limited to about 30 lines of resolution. Electronic television replaced it by 1935."
+  "note": "A spinning disc with holes arranged in a spiral (Nipkow disc) scans an image line by line. Light from the scene passes through a hole onto a selenium photocell, which modulates current proportional to brightness. This signal is transmitted by radio; a receiver feeds it to a similar spinning disc, with light shining behind it, reconstructing the image on a screen. The whole system is mechanical, unreliable, and limited to about 30 lines of resolution. Electronic television replaced it by 1935. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: Nipkow disc hole pattern must be precise for image resolution]"
  },
  {
   "id": "com_tv_electronic_camera",
   "name": "Electronic camera tube (iconoscope) - real-time image capture",
   "cat": "television",
   "pre": [
-   "com_cathode_ray_tube"
+   "if_cathode_ray_tube",
+   "cap_vac_1e6"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 160,
   "lab": {
    "glassblower": 250,
    "machinist": 200
   },
   "mat": {
-   "glass_boro_kg": 8,
+   "glass_borosilicate_kg": 8,
    "copper_kg": 12,
    "silver_kg": 2,
    "clay_kg": 1
@@ -1097,7 +1101,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A vacuum tube where an electron beam scans a photosensitive mosaic (thousands of tiny silver-mica capacitors). Light on each capacitor charges it; the beam discharges each spot sequentially, producing a current proportional to light. This is a camera: it converts an optical image to an electrical signal suitable for transmission. The iconoscope was unreliable (mosaic damage, burn-in), but it launched electronic television and was the standard for decades.",
+  "note": "A vacuum tube where an electron beam scans a photosensitive mosaic (thousands of tiny silver-mica capacitors). Light on each capacitor charges it; the beam discharges each spot sequentially, producing a current proportional to light. This is a camera: it converts an optical image to an electrical signal suitable for transmission. The iconoscope was unreliable (mosaic damage, burn-in), but it launched electronic television and was the standard for decades. [REVIEWED: prerequisite(s) cap_vac_1e6 added by a reviewer working node by node. Reason: iconoscope tube requires very high vacuum to achieve usable photoemission]",
   "traits": [
    "inexplicable",
    "infrastructure"
@@ -1108,10 +1112,10 @@
   "name": "Raster scan and synchronisation",
   "cat": "television",
   "pre": [
-   "com_cathode_ray_tube",
+   "if_cathode_ray_tube",
    "com_tv_electronic_camera"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 120,
   "lab": {
    "scholar": 250,
@@ -1146,7 +1150,7 @@
    "vacuum_tube",
    "electromagnet"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 160,
   "lab": {
    "glassblower": 200,
@@ -1187,9 +1191,10 @@
   "name": "Waveguide - pipe for microwaves",
   "cat": "radar",
   "pre": [
-   "com_radar_magnetron"
+   "com_radar_magnetron",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 80,
   "lab": {
    "machinist": 200
@@ -1208,7 +1213,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "At microwave frequencies (GHz), conventional wires radiate their signal into space (useless). A rectangular copper tube confines the microwave to propagate only in the TM01 mode (specific to the tube dimensions). Loss is low, and the signal is contained. Waveguide is like a plumbing system for microwaves: you assemble it with flanges and bolts, couple to a magnetron at one end and an antenna at the other. This solved the long-standing problem of transmitting high-frequency signals over distance.",
+  "note": "At microwave frequencies (GHz), conventional wires radiate their signal into space (useless). A rectangular copper tube confines the microwave to propagate only in the TM01 mode (specific to the tube dimensions). Loss is low, and the signal is contained. Waveguide is like a plumbing system for microwaves: you assemble it with flanges and bolts, couple to a magnetron at one end and an antenna at the other. This solved the long-standing problem of transmitting high-frequency signals over distance. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: dimensional accuracy critical for microwave mode propagation]",
   "build_yrs": 2.0
  },
  {
@@ -1218,14 +1223,14 @@
   "pre": [
    "vacuum_tube"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "glassblower": 150,
    "machinist": 100
   },
   "mat": {
-   "glass_boro_kg": 2,
+   "glass_borosilicate_kg": 2,
    "nickel_kg": 0.5,
    "copper_kg": 2,
    "tungsten_kg": 0.2
@@ -1261,16 +1266,17 @@
   "name": "Pentode vacuum tube - suppressor grid output stage",
   "cat": "electronics",
   "pre": [
-   "com_vacuum_tube_tetrode"
+   "com_vacuum_tube_tetrode",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 110,
   "lab": {
    "glassblower": 160,
    "machinist": 110
   },
   "mat": {
-   "glass_boro_kg": 2.2,
+   "glass_borosilicate_kg": 2.2,
    "nickel_kg": 0.6,
    "copper_kg": 2.2,
    "tungsten_kg": 0.25
@@ -1285,7 +1291,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "A tetrode with a fifth electrode (suppressor grid, at cathode potential) that prevents secondary electrons from the anode reaching the screen. This was a problem in tetrodes (screen current wasted power). A pentode has higher efficiency and better linearity. It became the standard audio output tube and RF power tube from 1930 onward. Five or more grids became common in specialized tubes (hexode, heptode) for mixing and frequency conversion.",
+  "note": "A tetrode with a fifth electrode (suppressor grid, at cathode potential) that prevents secondary electrons from the anode reaching the screen. This was a problem in tetrodes (screen current wasted power). A pentode has higher efficiency and better linearity. It became the standard audio output tube and RF power tube from 1930 onward. Five or more grids became common in specialized tubes (hexode, heptode) for mixing and frequency conversion. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: five closely-spaced electrodes require 0.1 mm precision]",
   "traits": [
    "inexplicable",
    "infrastructure",
@@ -1367,7 +1373,7 @@
   "pre": [
    "arithmetic_positional"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 100,
   "lab": {
    "artisan": 150
@@ -1398,7 +1404,7 @@
   "pre": [
    "crank_conrod"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 80,
   "lab": {
    "machinist": 180
@@ -1431,7 +1437,7 @@
    "com_stepped_drum",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 150,
   "lab": {
    "machinist": 300,
@@ -1467,7 +1473,7 @@
    "com_mechanical_calculator",
    "interchangeable_parts"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 120,
   "lab": {
    "machinist": 250
@@ -1533,7 +1539,7 @@
    "com_mechanical_calculator",
    "cap_tol_10um"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 200,
   "lab": {
    "master": 400,
@@ -1566,7 +1572,7 @@
    "cap_tol_100um",
    "interchangeable_parts"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 250,
   "lab": {
    "master": 500,
@@ -1601,7 +1607,7 @@
    "mat_paper",
    "tex_power_loom"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 250.0,
   "lab": {
    "artisan": 200.0,
@@ -1639,7 +1645,7 @@
   "pre": [
    "com_jacquard_loom"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 180,
   "lab": {
    "machinist": 300,
@@ -1672,9 +1678,10 @@
   "cat": "signalling",
   "pre": [
    "telegraph_electric",
-   "electromagnet"
+   "electromagnet",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 140,
   "lab": {
    "machinist": 280,
@@ -1696,7 +1703,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Operator types on a keyboard (like a typewriter). Solenoids pull levers that position type wheels for each character, a hammer fires on command, the character prints on paper, and the whole sequence is transmitted as electrical pulses down the telegraph line. The receiving teleprinter receives the same pulses and reproduces each character. No skilled Morse operator needed; anyone who can type can use a teleprinter. Slower than Morse (40 words/minute vs. 100+), but usable by clerical staff.",
+  "note": "Operator types on a keyboard (like a typewriter). Solenoids pull levers that position type wheels for each character, a hammer fires on command, the character prints on paper, and the whole sequence is transmitted as electrical pulses down the telegraph line. The receiving teleprinter receives the same pulses and reproduces each character. No skilled Morse operator needed; anyone who can type can use a teleprinter. Slower than Morse (40 words/minute vs. 100+), but usable by clerical staff. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: character wheel indexing mechanism needs mechanical precision]",
   "traits": [
    "information",
    "military",
@@ -1710,7 +1717,7 @@
   "pre": [
    "com_teleprinter"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 60,
   "lab": {
    "scholar": 150
@@ -1741,7 +1748,7 @@
   "pre": [
    "algebra_symbolic"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 120,
   "lab": {
    "scholar": 300
@@ -1773,7 +1780,7 @@
    "arithmetic_positional",
    "com_boolean_algebra"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 100,
   "lab": {
    "scholar": 250
@@ -1804,7 +1811,7 @@
   "pre": [
    "com_relay"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 100,
   "lab": {
    "machinist": 200,
@@ -1838,7 +1845,7 @@
   "pre": [
    "com_flip_flop"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 120,
   "lab": {
    "machinist": 250,
@@ -1871,7 +1878,7 @@
   "pre": [
    "com_register_computing"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 110,
   "lab": {
    "machinist": 240,
@@ -1905,7 +1912,7 @@
   "pre": [
    "com_register_computing"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 130,
   "lab": {
    "machinist": 260,
@@ -1940,7 +1947,7 @@
    "com_ring_counter",
    "com_binary_arithmetic"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 300,
   "lab": {
    "master": 400,
@@ -1976,7 +1983,7 @@
    "vacuum_tube",
    "com_relay_computer"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 400,
   "lab": {
    "master": 500,
@@ -1989,7 +1996,7 @@
    "copper_kg": 200,
    "iron_bar_kg": 200,
    "timber_m3": 8,
-   "glass_boro_kg": 80
+   "glass_borosilicate_kg": 80
   },
   "cap": 100000,
   "up": 0.0,
@@ -2014,7 +2021,7 @@
   "pre": [
    "com_vacuum_tube_computer"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "machinist": 200
@@ -2047,7 +2054,7 @@
   "pre": [
    "com_magnetic_wire_storage"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 120,
   "lab": {
    "machinist": 250
@@ -2080,9 +2087,10 @@
   "cat": "storage",
   "pre": [
    "electromagnet",
-   "com_register_computing"
+   "com_register_computing",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 140,
   "lab": {
    "machinist": 300,
@@ -2104,7 +2112,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Toroidal ferrite cores (0.5 mm) arranged in a 2D grid (64x64 cores = 4096 bits). Each core stores 1 bit (magnetized clockwise or counter-clockwise). Access time is 1 microsecond (1000x faster than tape). Each core is addressed by X and Y wires (select row and column), read and write wires complete the circuit. Core memory was the standard for mainframe computers (1960s-1970s) until semiconductor RAM replaced it. Handwiring a core array took weeks.",
+  "note": "Toroidal ferrite cores (0.5 mm) arranged in a 2D grid (64x64 cores = 4096 bits). Each core stores 1 bit (magnetized clockwise or counter-clockwise). Access time is 1 microsecond (1000x faster than tape). Each core is addressed by X and Y wires (select row and column), read and write wires complete the circuit. Core memory was the standard for mainframe computers (1960s-1970s) until semiconductor RAM replaced it. Handwiring a core array took weeks. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: 0.5 mm ferrite cores need precise size consistency]",
   "traits": [
    "information"
   ]
@@ -2114,9 +2122,10 @@
   "name": "Magnetic drum storage - early rotating memory",
   "cat": "storage",
   "pre": [
-   "com_magnetic_wire_storage"
+   "com_magnetic_wire_storage",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 110,
   "lab": {
    "machinist": 270
@@ -2137,7 +2146,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A cylinder coated with iron oxide, rotating at 3600 RPM. Read/write heads are stationary, positioned around the drum. Average access time is half a rotation (8 ms). Faster than tape, but requires synchronization with the rotating medium. Used as main memory in early computers (1950s) and later as auxiliary storage. Eventually replaced by moving-head disk drives (faster, fewer mechanical issues).",
+  "note": "A cylinder coated with iron oxide, rotating at 3600 RPM. Read/write heads are stationary, positioned around the drum. Average access time is half a rotation (8 ms). Faster than tape, but requires synchronization with the rotating medium. Used as main memory in early computers (1950s) and later as auxiliary storage. Eventually replaced by moving-head disk drives (faster, fewer mechanical issues). [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotating cylinder storage needs precise cylindrical geometry and head spacing]",
   "traits": [
    "information"
   ]
@@ -2147,9 +2156,10 @@
   "name": "Semiconductor diode - p-n junction rectifier",
   "cat": "electronics",
   "pre": [
-   "junction_transistor"
+   "junction_transistor",
+   "cap_pure_6N"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "chemist": 200,
@@ -2170,7 +2180,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "A junction between p-type (hole-doped) and n-type (electron-doped) semiconductor. Forward bias allows current flow (low resistance), reverse bias blocks it (high resistance). Used as rectifier (AC to DC), detector, and digital switch. Silicon and germanium diodes were reliable by 1952. In logic, diodes replace vacuum tubes: smaller, cooler, longer-lived. The key is that the diode's threshold voltage sets the logic swing (0-5V typical).",
+  "note": "A junction between p-type (hole-doped) and n-type (electron-doped) semiconductor. Forward bias allows current flow (low resistance), reverse bias blocks it (high resistance). Used as rectifier (AC to DC), detector, and digital switch. Silicon and germanium diodes were reliable by 1952. In logic, diodes replace vacuum tubes: smaller, cooler, longer-lived. The key is that the diode's threshold voltage sets the logic swing (0-5V typical). [REVIEWED: prerequisite(s) cap_pure_6N added by a reviewer working node by node. Reason: reliable germanium and silicon diodes require high-purity semiconductor material]",
   "traits": [
    "inexplicable",
    "infrastructure",
@@ -2185,7 +2195,7 @@
   "pre": [
    "com_semiconductor_diode"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 160,
   "lab": {
    "chemist": 260,
@@ -2216,7 +2226,7 @@
   "pre": [
    "com_semiconductor_diode"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 100,
   "lab": {
    "machinist": 220,
@@ -2253,7 +2263,7 @@
    "cap_power_electric",
    "cap_measure_light"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 180,
   "lab": {
    "chemist": 300,
@@ -2300,7 +2310,7 @@
    "com_photolithography",
    "quantum_solidstate_theory"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 220,
   "lab": {
    "chemist": 350,
@@ -2347,7 +2357,7 @@
    "com_analytical_engine",
    "com_vacuum_tube_computer"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 180,
   "lab": {
    "scholar": 400,
@@ -2376,7 +2386,7 @@
   "pre": [
    "com_stored_program_concept"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 300,
   "lab": {
    "scholar": 500,
@@ -2407,7 +2417,7 @@
   "pre": [
    "com_binary_arithmetic"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 140,
   "lab": {
    "scholar": 300
@@ -2438,7 +2448,7 @@
   "pre": [
    "com_binary_arithmetic"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 160,
   "lab": {
    "scholar": 350
@@ -2468,7 +2478,7 @@
   "pre": [
    "corpus_written"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 80,
   "lab": {
    "scribe": 200
@@ -2496,9 +2506,10 @@
   "name": "Rotor cipher machine - Enigma and successors",
   "cat": "cryptography",
   "pre": [
-   "com_cryptography_substitution"
+   "com_cryptography_substitution",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 160,
   "lab": {
    "machinist": 300,
@@ -2520,7 +2531,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "A rotor (circular disk) with internal wiring that implements a substitution. As you type, each rotor rotates one position (like an odometer), changing the substitution. Three to five rotors in sequence give enormous key space (26^N combinations). The Enigma machine (1923 onward) was adopted by German military and was believed unbreakable until codebreakers (Turing, Rejewski) found flaws. The rotor machine was the standard for military encryption until electronics arrived.",
+  "note": "A rotor (circular disk) with internal wiring that implements a substitution. As you type, each rotor rotates one position (like an odometer), changing the substitution. Three to five rotors in sequence give enormous key space (26^N combinations). The Enigma machine (1923 onward) was adopted by German military and was believed unbreakable until codebreakers (Turing, Rejewski) found flaws. The rotor machine was the standard for military encryption until electronics arrived. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotor with internal wiring needs precise electrical contact and alignment]",
   "traits": [
    "infrastructure",
    "labour_saving"
@@ -2534,7 +2545,7 @@
    "com_cryptography_substitution",
    "com_information_theory"
   ],
-  "kb": "",
+  "kb": "50_electricity.md",
   "ph": 100,
   "lab": {
    "scribe": 250,
@@ -2542,7 +2553,7 @@
   },
   "mat": {
    "parchment_sheet": 200,
-   "carbon_black_kg": 5
+   "carbon_kg": 5
   },
   "cap": 2000,
   "up": 0.0,
@@ -2567,7 +2578,7 @@
    "com_information_theory",
    "com_integrated_circuit"
   ],
-  "kb": "",
+  "kb": "94_computing.md",
   "ph": 200,
   "lab": {
    "scholar": 400,

@@ -522,8 +522,9 @@ check("BREAK-style isolation: a sacking that forgot even one technology "
       and _ach_sack["never_understaffed"]["won"]
       and _ach_sack["free_hands_only"]["won"], _ach_sack)
 
-_ach_staff = _SCORE(_won_sim(shut_for_staff={"workshop_first": 150}),
-                    NODES)["achievements"]
+_staff_sim = _won_sim()
+_staff_sim.state.projects.closures["workshop_first"] = {"reason": "staff", "year": 150}
+_ach_staff = _SCORE(_staff_sim, NODES)["achievements"]
 check("...a concern once closed for want of staff costs only that "
       "achievement",
       not _ach_staff["never_understaffed"]["won"]
@@ -1060,6 +1061,8 @@ _s_over._resync_pools()
 _over_real_hycco = _s_over.hours_you_can_call_on
 _s_over.hours_you_can_call_on = (
     lambda trade, _fallback=_over_real_hycco: 150.0 if trade == "chemist" else _fallback(trade))
+_s_over.done.update(NODES["md2_local_anaesthesia"]["pre"])
+_s_over.done.update(NODES["md2_staining_methylene"]["pre"])
 _ok_over, _why_over = _s_over.start_project("md2_local_anaesthesia")
 check("(setup) the first chemist-needing project starts cleanly on its own",
       _ok_over, _why_over)
@@ -1370,9 +1373,9 @@ check("none of the 13 new nodes was inserted as a prerequisite of anything "
               for i, node in NODES.items() for new_id in _ctl_new_ids
               if i not in _ctl_new_ids),
       "a pre-existing node references a new one")
-check("...and the goal's required closure is still exactly 154 nodes, "
+check("...and the goal's required closure is still exactly 160 nodes, "
       "unchanged by adding a whole optional side-branch of theory",
-      len(S.closure(NODES, GOAL)) == 154, len(S.closure(NODES, GOAL)))
+      len(S.closure(NODES, GOAL)) == 160, len(S.closure(NODES, GOAL)))
 
 # failure_kind is a property of the NODE, in the tree data, not a list kept
 # in the engine - this is what CONTROL_RELIEF_CAPABILITY in projects.py

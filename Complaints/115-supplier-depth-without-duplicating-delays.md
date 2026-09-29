@@ -1,9 +1,11 @@
 # Add supplier depth / tacit industrial competence, without duplicating existing delays
 
-**Source:** playtest findings document, LATE-009. **Status:** Realism
+**Status:** open - on hold
+
+**Source:** playtest findings document, LATE-009. **Type:** Realism
 refinement, medium size. Carries its own explicit warning against
 duplicating a mechanism that already exists, the same shape as `ECON-001`
-(`Complaints/103`).
+(`docs/architecture/DESIGN_PRINCIPLES.md`).
 
 ## The player's reasoning
 
@@ -55,7 +57,7 @@ mean deriving a refinement from a number the project already knows is wrong.
 
 ## Cross-references
 
-`Complaints/103` (ECON-001) for the "do not add a blanket delay" pattern
+`docs/architecture/DESIGN_PRINCIPLES.md` (ECON-001) for the "do not add a blanket delay" pattern
 this finding explicitly echoes. `Complaints/106` (ECON-004) for the labour-
 market wiring this depends on. `Complaints/45` and `Complaints/48` (open)
 both independently point at the same underlying gap (professions do not

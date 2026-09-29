@@ -4,7 +4,7 @@
   "name": "Burning glass",
   "cat": "optics",
   "pre": [],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -29,7 +29,7 @@
   "name": "Water-filled globe as magnifier",
   "cat": "optics",
   "pre": [],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -54,7 +54,7 @@
   "name": "Polished metal mirror",
   "cat": "optics",
   "pre": [],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -79,7 +79,7 @@
   "name": "Sundial",
   "cat": "optics",
   "pre": [],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -103,7 +103,7 @@
   "name": "Water clock (clepsydra)",
   "cat": "optics",
   "pre": [],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -127,7 +127,7 @@
   "name": "Groma (surveying cross)",
   "cat": "optics",
   "pre": [],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -151,7 +151,7 @@
   "name": "Dioptra (sighting tube)",
   "cat": "optics",
   "pre": [],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -175,7 +175,7 @@
   "name": "Steelyard balance",
   "cat": "measurement",
   "pre": [],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -196,7 +196,7 @@
   "name": "Geared mechanical transmission",
   "cat": "optics",
   "pre": [],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -222,7 +222,7 @@
   "pre": [
    "lens_grinding"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 40,
   "lab": {
    "glassblower": 60,
@@ -284,7 +284,7 @@
    "cap_tol_100um",
    "lens_grinding"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "artisan": 120,
@@ -314,7 +314,7 @@
    "lens_grinding",
    "opt_plano_convex_lens"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 50,
   "lab": {
    "artisan": 100,
@@ -373,10 +373,10 @@
   "name": "Apochromatic lens (three-glass)",
   "cat": "optics",
   "pre": [
-   "opt_achromatic_doublet",
+   "in2_doublet_lens",
    "cap_tol_1um"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 250,
   "lab": {
    "glassblower": 300,
@@ -411,7 +411,7 @@
    "cap_heat_1100",
    "mat_bronze"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 150.0,
   "lab": {
    "furnaceman": 150.0,
@@ -447,7 +447,7 @@
    "opt_speculum_metal",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 200,
   "lab": {
    "artisan": 250,
@@ -517,7 +517,7 @@
    "cap_tol_1mm",
    "geometry_analytic"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 180,
   "lab": {
    "carpenter": 200,
@@ -554,7 +554,7 @@
    "crank_conrod",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 160,
   "lab": {
    "master": 120,
@@ -591,7 +591,7 @@
    "cap_tol_100um",
    "cap_measure_time_s"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 200,
   "lab": {
    "master": 120,
@@ -629,7 +629,7 @@
    "cap_measure_time_s",
    "newtonian_mechanics"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 150,
   "lab": {
    "scholar": 300,
@@ -662,7 +662,7 @@
    "cap_tol_1um",
    "in2_ruling_engine"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 150.0,
   "lab": {
    "artisan": 200.0,
@@ -711,7 +711,7 @@
    "iron_bar_kg": 20.0,
    "brass_kg": 5.0,
    "steel_noric_kg": 8.0,
-   "diamond_kg": 0.01
+   "diamond_g": 10.0
   },
   "cap": 3000,
   "up": 100,
@@ -733,7 +733,7 @@
    "spectroscope",
    "cap_heat_1600"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "scholar": 150,
@@ -763,7 +763,7 @@
    "spectroscope",
    "cap_heat_1600"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "scholar": 180,
@@ -793,7 +793,7 @@
    "spectroscope",
    "opt_spectroscopy_absorption"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 200,
   "lab": {
    "scholar": 400
@@ -822,7 +822,7 @@
    "spectroscope",
    "opt_spectroscopy_emission"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "artisan": 120,
@@ -854,7 +854,7 @@
    "opt_diffraction_grating",
    "camera_obscura"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 250,
   "lab": {
    "master": 200,
@@ -890,7 +890,7 @@
    "cap_measure_light",
    "lens_grinding"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "artisan": 120,
@@ -924,7 +924,7 @@
    "opt_diffraction_grating",
    "cap_tol_1um"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "artisan": 100,
@@ -959,7 +959,7 @@
    "mirror_amalgam",
    "in2_polariser_crystal"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 250,
   "lab": {
    "master": 180,
@@ -995,7 +995,7 @@
    "lens_grinding",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "artisan": 150,
@@ -1027,7 +1027,7 @@
    "opt_nicol_prism",
    "opt_photometry"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "artisan": 140,
@@ -1061,7 +1061,7 @@
    "cap_tol_100um",
    "opt_diffraction_grating"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 140,
   "lab": {
    "artisan": 160,
@@ -1093,7 +1093,7 @@
    "cap_tol_100um",
    "lens_grinding"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "artisan": 140,
@@ -1127,7 +1127,7 @@
    "cap_tol_100um",
    "mat_glass_lead"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 130,
   "lab": {
    "glassblower": 180,
@@ -1163,7 +1163,7 @@
    "opt_abbe_condenser",
    "opt_nicol_prism"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 200,
   "lab": {
    "master": 150,
@@ -1230,7 +1230,7 @@
    "discharge_xray",
    "electromagnet"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 400,
   "lab": {
    "master": 300,
@@ -1277,7 +1277,7 @@
    "lens_grinding",
    "sea_backstaff"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 150.0,
   "lab": {
    "artisan": 300.0,
@@ -1344,7 +1344,7 @@
   "pre": [
    "telescope",
    "cap_tol_100um",
-   "transit_instrument"
+   "opt_transit_instrument"
   ],
   "kb": "",
   "ph": 200,
@@ -1378,7 +1378,7 @@
    "telescope",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "artisan": 120,
@@ -1440,7 +1440,7 @@
    "cap_tol_100um",
    "mat_cast_iron"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 140,
   "lab": {
    "smith": 180,
@@ -1470,7 +1470,7 @@
   "pre": [
    "cap_measure_temp"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 70,
   "lab": {
    "artisan": 100,
@@ -1500,7 +1500,7 @@
   "pre": [
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 60,
   "lab": {
    "artisan": 100,
@@ -1561,7 +1561,7 @@
   "pre": [
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 60,
   "lab": {
    "glassblower": 80,
@@ -1592,7 +1592,7 @@
    "cap_tol_100um",
    "mat_cast_iron"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "artisan": 100.0,
@@ -1627,7 +1627,7 @@
    "cap_measure_temp_hi",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 80,
   "lab": {
    "smith": 120,
@@ -1661,7 +1661,7 @@
    "cap_measure_elec",
    "galvanometer"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 150,
   "lab": {
    "smith": 150,
@@ -1695,7 +1695,7 @@
    "spectroscope",
    "cap_measure_temp_hi"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "artisan": 140,
@@ -1730,7 +1730,7 @@
    "thermodynamics_theory",
    "opt_photocell"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 180,
   "lab": {
    "master": 150,
@@ -1764,7 +1764,7 @@
    "thermometer",
    "balance_analytical"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 100,
   "lab": {
    "artisan": 120,
@@ -1798,7 +1798,7 @@
    "cap_measure_elec",
    "cap_tol_10um"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 200,
   "lab": {
    "master": 180,
@@ -1838,9 +1838,10 @@
   "cat": "measurement",
   "pre": [
    "discharge_xray",
-   "vacuum_tube"
+   "vacuum_tube",
+   "cap_vac_1e3"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 180,
   "lab": {
    "master": 160,
@@ -1860,7 +1861,7 @@
   "sch": 1,
   "art": 0,
   "conf": "C",
-  "note": "Cesium or other photoemissive surface in vacuum emits electrons when light strikes. Current amplified by dynamo or triode. Single photon detectable in dark conditions.",
+  "note": "Cesium or other photoemissive surface in vacuum emits electrons when light strikes. Current amplified by dynamo or triode. Single photon detectable in dark conditions. [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: photoemissive surface in vacuum tube needs high vacuum]",
   "traits": [
    "infrastructure"
   ]
@@ -1871,9 +1872,10 @@
   "cat": "measurement",
   "pre": [
    "galvanometer",
-   "clock_pendulum"
+   "clock_pendulum",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 200,
   "lab": {
    "master": 180,
@@ -1895,7 +1897,7 @@
   "sch": 2,
   "art": 1,
   "conf": "B",
-  "note": "Heavy mass damped by springs or pendulum. Frame sits on ground. Relative motion drives pen against rotating drum. Natural period of 10-20 seconds maximizes sensitivity to distant earthquakes.",
+  "note": "Heavy mass damped by springs or pendulum. Frame sits on ground. Relative motion drives pen against rotating drum. Natural period of 10-20 seconds maximizes sensitivity to distant earthquakes. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: precision mechanical linkage and pen mechanism]",
   "traits": [
    "infrastructure"
   ]
@@ -1908,7 +1910,7 @@
    "clock_pendulum",
    "cap_measure_time_s"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 220,
   "lab": {
    "master": 200,
@@ -1943,7 +1945,7 @@
    "galvanometer",
    "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 140,
   "lab": {
    "master": 120,
@@ -1974,7 +1976,7 @@
    "galvanometer",
    "cap_measure_elec"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 120,
   "lab": {
    "artisan": 140,
@@ -2017,7 +2019,7 @@
   },
   "mat": {
    "brass_kg": 2.5,
-   "nichrome_wire_kg": 0.3,
+   "nichrome_kg": 0.3,
    "timber_m3": 0.2
   },
   "cap": 1000,
@@ -2040,7 +2042,7 @@
    "galvanometer",
    "cap_measure_time_s"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 160,
   "lab": {
    "master": 140,
@@ -2073,9 +2075,10 @@
   "pre": [
    "cap_power_electric",
    "discharge_xray",
-   "vacuum_tube"
+   "vacuum_tube",
+   "cap_vac_1e3"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 300,
   "lab": {
    "master": 250,
@@ -2097,7 +2100,7 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Cathode ray tube, beam deflected by time-base and signal voltages. Traces waveform directly on screen. Requires 1000+ volt HT supply and precise synchronization.",
+  "note": "Cathode ray tube, beam deflected by time-base and signal voltages. Traces waveform directly on screen. Requires 1000+ volt HT supply and precise synchronization. [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: cathode ray tube requires vacuum for electron beam propagation]",
   "traits": [
    "infrastructure"
   ]
@@ -2110,7 +2113,7 @@
    "cap_measure_time_ms",
    "photography"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 160,
   "lab": {
    "artisan": 140,
@@ -2145,7 +2148,7 @@
    "photography",
    "cap_power_electric"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 140,
   "lab": {
    "artisan": 130,
@@ -2176,7 +2179,7 @@
    "photography",
    "cap_power_electric"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 280,
   "lab": {
    "master": 200,
@@ -2213,7 +2216,7 @@
    "cap_measure_len",
    "units_standards"
   ],
-  "kb": "",
+  "kb": "30_glass_optics.md",
   "ph": 500,
   "lab": {
    "master": 400,

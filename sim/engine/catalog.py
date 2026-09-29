@@ -4,12 +4,16 @@ This module is deliberately the only place which walks ``data/production``.
 Consumers may still accept an explicit production mapping for small unit tests,
 but their default view must come from here.
 """
+import dataclasses
 from dataclasses import dataclass
 import json
 import os
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Tuple
 
-from .mods import ModError, ModManifest, get_ordered_mods, load_mod_production
+from .mods import ModError, ModManifest, get_ordered_mods, load_mod_production, load_mod_tree
+from .mods_ids import check_new_id, is_mod_content
+from .mods_base import check_not_removed, claim_fields, claim_removal, deep_merge
+from .mods_remove import RECIPE, TRADE, check_trade_references, scan_removed
 
 
 @dataclass(frozen=True)
@@ -17,9 +21,20 @@ class Trade:
     id: str
     family: str = "craft"
     training: Optional[str] = None
+    training_years: Optional[float] = None
     note: str = ""
     initially_absent: bool = False
     source: str = ""
+
+
+def _trade_from(trade_id: str, metadata: Mapping[str, Any], source: str) -> Trade:
+    return Trade(trade_id,
+                 family=metadata.get("family", "craft"),
+                 training=metadata.get("training"),
+                 training_years=metadata.get("training_years"),
+                 note=metadata.get("note", ""),
+                 initially_absent=bool(metadata.get("initially_absent", False)),
+                 source=source)
 
 
 _production_cache: Dict[Tuple[str, str], Dict[str, Any]] = {}
@@ -77,10 +92,17 @@ def validate_mod_material_paths(nodes: Iterable[Mapping[str, Any]],
     producers = set(production)
     for entry in production.values():
         producers.update((entry.get("outputs") or {}).keys())
-    prefixes = tuple(manifest.id + "_" for manifest in manifests)
+    manifests = list(manifests)
+    removed = scan_removed(manifests, RECIPE)
+    for node in nodes:
+        for material in (node.get("mat") or {}):
+            if material in removed and material not in producers:
+                raise ModError("technology %s references material %s; mod %s removed the "
+                               "recipe that produced it" % (node.get("id"), material,
+                                                            removed[material]))
     for node in nodes:
         node_id = str(node.get("id", ""))
-        if not node_id.startswith(prefixes):
+        if not is_mod_content(node_id, manifests):
             continue
         for material in (node.get("mat") or {}):
             if material not in producers:
@@ -89,17 +111,29 @@ def validate_mod_material_paths(nodes: Iterable[Mapping[str, Any]],
                                (node_id, material))
 
 
+def load_mod_tree_nodes(root: str, mods_dir: Optional[str] = None) -> Iterable[Dict[str, Any]]:
+    """Technology nodes of the base tree with enabled mods applied."""
+    with open(os.path.join(root, "data", "tech_tree.json"), encoding="utf-8") as source:
+        base_tree = json.load(source)
+    tree = load_mod_tree(base_tree, get_ordered_mods(mods_dir or os.path.join(root, "mods")),
+                         copy_base=False)
+    return tree["nodes"]
+
+
 def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = None,
-                        mods_dir: Optional[str] = None) -> Dict[str, Trade]:
+                        mods_dir: Optional[str] = None,
+                        nodes: Iterable[Mapping[str, Any]] = ()) -> Dict[str, Trade]:
     """Return trade identity/metadata without requiring a wage-table row.
 
     ``trade_families.json`` remains a supported shorthand.  Mods may instead
     use ``data/world/trades.json`` with a ``trades`` object whose values carry
-    ``family`` and optional ``training`` metadata.
+    ``family`` and optional ``training`` and ``training_years`` metadata.
     """
     mods_dir = mods_dir or os.path.join(root, "mods")
     manifests = get_ordered_mods(mods_dir)
     registry: Dict[str, Trade] = {}
+    claims: Dict[Any, str] = {}
+    by_id = {manifest.id: manifest for manifest in manifests}
 
     def add_file(path: str, manifest: Optional[ModManifest]) -> None:
         if not os.path.isfile(path):
@@ -110,19 +144,29 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
         additions.update({key: {"family": value} for key, value in
                           (raw.get("trade_families") or {}).items()})
         for trade_id, metadata in additions.items():
-            if manifest and not trade_id.startswith(manifest.id + "_"):
-                raise ModError("%s introduces un-prefixed trade id %r" % (path, trade_id))
+            if manifest and isinstance(metadata, dict) and metadata.get("remove") is True:
+                if trade_id not in registry:
+                    raise ModError("mod %s: %s removes missing trade %r" %
+                                   (manifest.id, path, trade_id))
+                claim_removal(claims, TRADE, trade_id, manifest, by_id)
+                del registry[trade_id]
+                continue
+            if manifest and isinstance(metadata, dict) and metadata.get("override") is True:
+                check_not_removed(claims, TRADE, trade_id, manifest, by_id)
+                if trade_id not in registry:
+                    raise ModError("mod %s: %s overrides missing trade %r" %
+                                   (manifest.id, path, trade_id))
+                claim_fields(claims, TRADE, trade_id, metadata, manifest, by_id)
+                registry[trade_id] = _trade_from(trade_id, deep_merge(
+                    dataclasses.asdict(registry[trade_id]), metadata), registry[trade_id].source)
+                continue
+            if manifest:
+                check_new_id(manifest, trade_id, False, path)
             if trade_id in registry:
                 raise ModError("trade %s is already defined before %s" % (trade_id, path))
             if isinstance(metadata, str):
                 metadata = {"family": metadata}
-            registry[trade_id] = Trade(
-                trade_id,
-                family=metadata.get("family", "craft"),
-                training=metadata.get("training"),
-                note=metadata.get("note", ""),
-                initially_absent=bool(metadata.get("initially_absent", False)),
-                source=path)
+            registry[trade_id] = _trade_from(trade_id, metadata, path)
 
     world = os.path.join(root, "data", "world")
     add_file(os.path.join(world, "trades.json"), None)
@@ -131,32 +175,15 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
         world = os.path.join(manifest.directory, "data", "world")
         add_file(os.path.join(world, "trades.json"), manifest)
         add_file(os.path.join(world, "trade_families.json"), manifest)
-    for entry in (production or load_production_catalog(root, mods_dir)).values():
+    production = production or load_production_catalog(root, mods_dir)
+    check_trade_references(registry, production, nodes, scan_removed(manifests, TRADE))
+    for entry in production.values():
         for trade_id in (entry.get("labour_hours") or {}):
             registry.setdefault(trade_id, Trade(trade_id, source="production"))
         for capital in entry.get("capital") or ():
             for trade_id in (capital.get("build_labour_hours") or {}):
                 registry.setdefault(trade_id, Trade(trade_id, source="production capital"))
     return registry
-
-
-def transitional_wage_rates(registry: Mapping[str, Trade],
-                            legacy_rates: Mapping[str, float]) -> Dict[str, float]:
-    """Inject temporary wages for registered trades while equilibrium wages evolve.
-
-    Legacy rates are economic inputs, not identity or calibration targets.
-    A trade absent from the legacy table receives its family's median solely as
-    a compatibility bridge until the labour market replaces this provider.
-    """
-    rates = dict(legacy_rates)
-    for trade_id, trade in registry.items():
-        if trade_id in rates:
-            continue
-        family_rates = [rate for known, rate in rates.items()
-                        if registry.get(known, Trade(known)).family == trade.family]
-        rates[trade_id] = (sorted(family_rates)[len(family_rates) // 2]
-                           if family_rates else rates.get("labourer", 0.05))
-    return rates
 
 
 def reset_catalog_caches() -> None:

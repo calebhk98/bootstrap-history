@@ -115,12 +115,17 @@ ALARM_IDENTITY_COVER_MULTIPLIER = declare(
 
 
 class StatePressureMixin:
-    def state_interest(self, node_record):
+    def state_trait_weights(self):
+        """What the state cares about, per trait, for this civilisation."""
         weights = self.value_weights
         state_weights = dict(self.STATE_WEIGHTS)
         state_weights.update({"military": weights["w_military"], "labour_saving": weights["w_labour_saving"],
                   "information": weights["w_information"], "commerce": weights["w_commerce"],
                   "religious_adjacent": STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT * weights["w_religious_rigidity"]})
+        return state_weights
+
+    def state_interest(self, node_record):
+        state_weights = self.state_trait_weights()
         return sum(state_weights.get(trait, 0.0) for trait in node_record.get("traits", []))
 
     def alarm_of(self, node_record):
@@ -641,7 +646,7 @@ class StatePressureMixin:
             helps.append("visible wealth is half of what makes you a target")
         # THE LEVER, NAMED. This screen must not leave a player with no command
         # in it that means "get smaller". It is `withdraw`.
-        _last = getattr(self.state.household, "last_withdrawal", None)
+        _last = self.state.household.last_withdrawal
         if _last is not None and self.state.scenario.year - _last < self.WITHDRAW_EVERY:
             _lever_note = ("you stepped back in %d; again no sooner than %d"
                   % (_last, _last + self.WITHDRAW_EVERY))
@@ -717,7 +722,7 @@ class StatePressureMixin:
             "a heuristic.")
     EMINENCE_WEALTH_VISIBLE_THRESHOLD = declare(
         "EMINENCE_WEALTH_VISIBLE_THRESHOLD", 250000.0, kind="temporary_heuristic",
-        unit="denarii", source=None, confidence="D",
+        book_money=True, unit="denarii", source=None, confidence="D",
         why="Capital treated as '1.0 visibly rich' for the prominence "
             "hazard, and reused verbatim by eminence_report's own "
             "what_would_change_it note and by household_scale's "
@@ -868,8 +873,8 @@ class StatePressureMixin:
     # not a quarter-million one - see the measured trajectories in this
     # section's own commit for where Rome and Han actually cross it.
     HOUSEHOLD_WEALTH_SATURATES_AT = declare(
-        "HOUSEHOLD_WEALTH_SATURATES_AT", 10000000.0, kind="temporary_heuristic",
-        unit="denarii", source=None,
+        "HOUSEHOLD_WEALTH_SATURATES_AT", 100800.0, kind="temporary_heuristic",
+        unit="labourer-years of the opening wage", source=None,
         confidence="D",
         why="Capital at which household_scale()'s wealth term saturates - "
             "ten times prominence_hazard's own 250,000-denarii 'visibly "
@@ -894,7 +899,7 @@ class StatePressureMixin:
         1.77 billion denarii while eminence itself never once crossed its
         own danger line (see the Rome dice-free trial this mechanic was
         measured against). Every term sqrt-saturates or caps at 1.0, the same
-        diminishing shape military_leverage() and agrarian_slack() already
+        diminishing shape military_leverage() already
         use: the five-hundredth employee does not make you five hundred
         times more noticeable than the first.
         """
@@ -902,7 +907,7 @@ class StatePressureMixin:
         head_s = min(1.0, math.sqrt(max(0.0, head)
                                     / self.HOUSEHOLD_HEADCOUNT_SATURATES_AT))
         wealth_s = min(1.0, max(0.0, self.state.household.capital)
-                       / self.HOUSEHOLD_WEALTH_SATURATES_AT)
+                       / (self.HOUSEHOLD_WEALTH_SATURATES_AT * self.base_annual_wage("labourer")))
         danger = self.cfg["eminence_danger"]
         emin_s = min(1.0, max(0.0, self.state.household.eminence) / danger)
         return (self.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_s

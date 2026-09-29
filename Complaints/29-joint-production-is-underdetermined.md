@@ -1,5 +1,7 @@
 # Joint production has no cost-side answer, and never will
 
+**Status:** partly - joint-product value split exists; the solver still uses a mass split
+
 **Type:** Modelling limitation, structural
 **Priority:** Medium. It cannot be fixed by better data.
 

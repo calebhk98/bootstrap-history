@@ -14,6 +14,8 @@ sim/world/agriculture.py's and sim/world/deposits.py's own precedent for
 the same discipline). It reports the disagreement; it never asserts a
 tolerance tight enough to tempt anyone into retuning a marginal budget
 share or the Gini coefficient to close it.
+
+sim/world/demand.py standalone: household budgets, Stone-Geary demand and derived producer demand (unittest-style).
 """
 import ast
 import glob
@@ -21,11 +23,10 @@ import io
 import json
 import os
 import re
-import subprocess
-import sys
 import tokenize
 import unittest
 
+from sim.tests import demand_fixtures as fixtures
 from sim.world import demand
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
@@ -94,7 +95,7 @@ class HouseholdDemandShapeTests(unittest.TestCase):
     """
 
     def setUp(self):
-        self.basket = demand.DEFAULT_BASKET
+        self.basket = fixtures.BASKET
         self.income = 1000.0
 
     def _quantity(self, good, price, other_price=1.0):
@@ -119,8 +120,8 @@ class HouseholdDemandShapeTests(unittest.TestCase):
             quantity_after = self._quantity(good, 1.5)
             return (quantity_before - quantity_after) / quantity_before
 
-        food_fall = pct_fall(demand.FOOD)
-        silver_fall = pct_fall(demand.SILVER)
+        food_fall = pct_fall(fixtures.FOOD)
+        silver_fall = pct_fall(fixtures.SILVER)
         self.assertLess(food_fall, silver_fall)
 
     def test_silver_demand_is_unit_elastic_in_expenditure(self):
@@ -129,20 +130,20 @@ class HouseholdDemandShapeTests(unittest.TestCase):
         # quantity should be invariant to price for SILVER specifically
         # (see market_clearing_price's own docstring for the closed form
         # this is a special case of).
-        expenditure_at = [price * self._quantity(demand.SILVER, price)
+        expenditure_at = [price * self._quantity(fixtures.SILVER, price)
                            for price in (0.5, 1.0, 3.0, 10.0)]
         for value in expenditure_at[1:]:
             self.assertAlmostEqual(value, expenditure_at[0], delta=1e-6)
 
     def test_below_subsistence_household_gets_scaled_down_floor_not_negative(self):
-        basket = demand.DEFAULT_BASKET
+        basket = fixtures.BASKET
         prices = {basket_good.name: 10.0 for basket_good in basket}
         # income far below what even the food floor costs at this price
         poor_income = 1.0
         quantity = demand.household_quantity_demanded_per_capita(
-            demand.FOOD, prices, poor_income, basket)
+            fixtures.FOOD, prices, poor_income, basket)
         self.assertGreaterEqual(quantity, 0.0)
-        self.assertLess(quantity, demand.FOOD.subsistence_quantity_per_capita_per_year)
+        self.assertLess(quantity, fixtures.FOOD.subsistence_quantity_per_capita_per_year)
 
     def test_basket_must_sum_shares_to_one(self):
         bad_basket = (
@@ -162,14 +163,14 @@ class AggregateDemandAndInequalityTests(unittest.TestCase):
 
     def test_top_bin_buys_far_more_silver_per_capita_than_bottom_bin(self):
         bins = demand.income_bins(1_000_000.0, 500.0, gini=0.45, num_bins=10)
-        prices = {"wheat_kg": 0.3, "manufactures": 1.0, "silver_kg": 50.0}
+        prices = {"wheat_kg": 0.3, "manufactures": 1.0, "platinum_g": 1.0, "silver_kg": 50.0}
         richest, poorest = bins[0], bins[-1]
         rich_qty = demand.household_quantity_demanded_per_capita(
-            demand.SILVER, prices, richest.income_per_capita_per_year,
-            demand.DEFAULT_BASKET)
+            fixtures.SILVER, prices, richest.income_per_capita_per_year,
+            fixtures.BASKET)
         poor_qty = demand.household_quantity_demanded_per_capita(
-            demand.SILVER, prices, poorest.income_per_capita_per_year,
-            demand.DEFAULT_BASKET)
+            fixtures.SILVER, prices, poorest.income_per_capita_per_year,
+            fixtures.BASKET)
         self.assertGreater(rich_qty, poor_qty)
 
     def test_inequality_shape_moves_who_buys_not_the_aggregate_clearing_price(self):
@@ -194,13 +195,13 @@ class AggregateDemandAndInequalityTests(unittest.TestCase):
         # aggregate price for a population that can all afford its own
         # necessities.
         population, mean_income, supply = 1_000_000.0, 500.0, 10.0
-        other_prices = {"wheat_kg": 0.3, "manufactures": 1.0}
+        other_prices = {"wheat_kg": 0.3, "manufactures": 1.0, "platinum_g": 1.0}
         unequal_bins = demand.income_bins(population, mean_income, gini=0.55)
         equal_bins = demand.income_bins(population, mean_income, gini=0.15)
         price_unequal = demand.market_clearing_price(
-            demand.SILVER, supply, other_prices, unequal_bins, demand.DEFAULT_BASKET)
+            fixtures.SILVER, supply, other_prices, unequal_bins, fixtures.BASKET)
         price_equal = demand.market_clearing_price(
-            demand.SILVER, supply, other_prices, equal_bins, demand.DEFAULT_BASKET)
+            fixtures.SILVER, supply, other_prices, equal_bins, fixtures.BASKET)
         self.assertAlmostEqual(price_unequal, price_equal, delta=1e-6)
 
 
@@ -213,26 +214,26 @@ class ClosedFormMatchesDirectSummationTests(unittest.TestCase):
 
     def test_closed_form_price_reproduces_the_target_quantity_by_direct_sum(self):
         bins = demand.income_bins(2_000_000.0, 400.0, gini=0.42, num_bins=15)
-        other_prices = {"wheat_kg": 0.28, "manufactures": 1.2}
+        other_prices = {"wheat_kg": 0.28, "manufactures": 1.2, "platinum_g": 1.0}
         target_quantity = 5000.0
         price = demand.market_clearing_price(
-            demand.SILVER, target_quantity, other_prices, bins, demand.DEFAULT_BASKET)
+            fixtures.SILVER, target_quantity, other_prices, bins, fixtures.BASKET)
 
         full_prices = dict(other_prices, silver_kg=price)
         direct_quantity = demand.aggregate_household_demand(
-            demand.SILVER, full_prices, bins, demand.DEFAULT_BASKET)
+            fixtures.SILVER, full_prices, bins, fixtures.BASKET)
         self.assertAlmostEqual(direct_quantity, target_quantity, delta=1e-3)
 
     def test_raises_when_quantity_is_below_the_price_insensitive_floor(self):
         bins = demand.income_bins(1000.0, 500.0, gini=0.4)
-        other_prices = {"manufactures": 1.0, "silver_kg": 1.0}
+        other_prices = {"manufactures": 1.0, "platinum_g": 1.0, "silver_kg": 1.0}
         # FOOD has a positive subsistence floor, so it has a positive
         # floor quantity (population times its subsistence floor times
         # (1 minus its marginal budget share)); asking for less than that
         # floor cannot be cleared by demand.
         with self.assertRaises(ValueError):
             demand.market_clearing_price(
-                demand.FOOD, 1.0, other_prices, bins, demand.DEFAULT_BASKET)
+                fixtures.FOOD, 1.0, other_prices, bins, fixtures.BASKET)
 
 
 class DerivedDemandTests(unittest.TestCase):
@@ -361,10 +362,8 @@ class NoBookPriceHardcodeTests(unittest.TestCase):
                 if node.value.endswith(".json") and node.value != ".json":
                     opened_paths.add(node.value)
         self.assertEqual(
-            opened_paths, {"resources.json"},
-            "sim/world/demand.py references a JSON filename other than "
-            "resources.json (its own __main__ illustrative-scale source, "
-            "same as sim/world/deposits.py's precedent): %s" % opened_paths)
+            opened_paths, set(),
+            "sim/world/demand.py references a JSON filename: %s" % opened_paths)
         # data/prices.json is never one of the files ABOVE, so its
         # wage/purchase-price tables cannot be read regardless of what the
         # docstring prose says about it - a subscript check on top of the
@@ -372,8 +371,7 @@ class NoBookPriceHardcodeTests(unittest.TestCase):
 
     def test_surplus_budget_shares_are_declared_as_temporary_heuristic_not_calibrated(self):
         from sim import constants
-        for name in ("FOOD_SURPLUS_BUDGET_SHARE", "MANUFACTURES_SURPLUS_BUDGET_SHARE",
-                     "SILVER_SURPLUS_BUDGET_SHARE", "GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN"):
+        for name in ("GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN",):
             self.assertEqual(constants.REGISTRY[name]["kind"], "temporary_heuristic", name)
 
 
@@ -436,10 +434,10 @@ class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
 
     def test_report_food_budget_share(self):
         prices = {"wheat_kg": self.wheat_price,
-                  "manufactures": self.manufactures_price,
+                  "manufactures": self.manufactures_price, "platinum_g": 1.0,
                   "silver_kg": self._silver_price()}
         food_share = demand.household_budget_share(
-            demand.FOOD, prices, self.bins, demand.DEFAULT_BASKET)
+            fixtures.FOOD, prices, self.bins, fixtures.BASKET)
         print("\nCalibrationAgainstHistoricalTargetsTests: household food "
               "budget share = %.1f%% (historical target %.0f-%.0f%%)"
               % (100.0 * food_share,
@@ -454,9 +452,9 @@ class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
         annual_lead_kg = self.resources["empire_output_100ad"]["lead"]["t_per_yr"] * 1000.0
         annual_silver_kg = annual_lead_kg * outputs["silver_kg"] / outputs["lead_kg"]
         return demand.market_clearing_price(
-            demand.SILVER, annual_silver_kg,
-            {"wheat_kg": self.wheat_price, "manufactures": self.manufactures_price},
-            self.bins, demand.DEFAULT_BASKET)
+            fixtures.SILVER, annual_silver_kg,
+            {"wheat_kg": self.wheat_price, "manufactures": self.manufactures_price, "platinum_g": 1.0},
+            self.bins, fixtures.BASKET)
 
     def test_report_silver_to_lead_ratio(self):
         silver_price = self._silver_price()
@@ -729,22 +727,6 @@ class NoLoneLetterMathsNotationTests(unittest.TestCase):
                         os.path.relpath(path, _REPO_ROOT), line_number,
                         category, snippet, text.strip()))
         self.assertEqual(offenders, [])
-
-
-class ModuleRunsCleanlyTests(unittest.TestCase):
-    """python3 -m sim.world.demand must print a readable summary - the
-    same bar sim/world/agriculture.py's and sim/world/deposits.py's own
-    __main__ blocks are held to.
-    """
-
-    def test_main_block_runs_and_reports_headline_numbers(self):
-        result = subprocess.run(
-            [sys.executable, "-m", "sim.world.demand"],
-            cwd=_REPO_ROOT, capture_output=True, text=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("COMPLAINTS/29", result.stdout)
-        self.assertIn("silver:lead price ratio", result.stdout)
-        self.assertIn("food budget share", result.stdout)
 
 
 if __name__ == "__main__":

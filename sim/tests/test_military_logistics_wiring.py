@@ -11,6 +11,8 @@ sim/tests/test_military_logistics.py already covers standalone.
 Uses the full engine harness (sim/tests/harness.py), unlike test_military_
 logistics.py's plain unittest style, because this crossing lives in
 sim/engine/society.py and cannot be exercised without a real Sim.
+
+Soldier iron and ammunition supply is derived in kilograms and never converted to money.
 """
 from .harness import *  # noqa: F401,F403
 

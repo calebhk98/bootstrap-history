@@ -153,6 +153,8 @@ check("...and it is actually gone from the list, not just zeroed in place",
 # pay the founder, and tops up a turn where some of it was already sold by
 # hand instead of selling the whole directive again on top.
 s = sim(capital=1e7)
+# Fed by its own farm, so no hunger reprices wages during the step.
+s.farm_land.quality, s.farm_land.hectares = 1.3, s.farm_land.hectares * 2.0
 _r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "work",
                                   "hours": 100, "trade": "labourer"})
 check("allocate accepts a standing work-for-wages order naming a trade",
@@ -169,7 +171,7 @@ _pay_by_hand, _err = s.work_for_wages("labourer", 40.0)
 s.step()
 check("a standing work order tops up to the full directive rather than "
       "selling it twice on top of hours already sold by hand this year",
-      abs(s.wages_earned - 100.0 * _rate_per_hour) < 0.05,
+      abs(s.wages_earned - 100.0 * _rate_per_hour) < 0.01 * 100.0 * _rate_per_hour,
       (s.wages_earned, 100.0 * _rate_per_hour))
 check("...and the standing order's own hour tally resets for the next "
       "year exactly like an ordinary `work` call does",

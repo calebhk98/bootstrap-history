@@ -1,5 +1,7 @@
 # Interface repetition is a class of UX problem worth addressing systematically
 
+**Status:** open
+
 Repetition was a significant UX cost in the playtests. The underlying simulation did not feel repetitive when values and consequences changed; the interface often did.
 
 A useful rule:

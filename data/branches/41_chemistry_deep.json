@@ -10,13 +10,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Purification by dissolving in hot solvent and cooling to form pure crystals",
+  "kb": "20_chemistry.md",
   "ph": 45,
   "lab": {
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -35,14 +35,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Direct phase change from solid to gas, without melting",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 200,
    "glassblower": 40
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 3,
@@ -61,14 +61,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Liquid boils, condenses on cooling finger, returns to pot. Solvent does not escape.",
+  "kb": "20_chemistry.md",
   "ph": 40,
   "lab": {
    "chemist": 100,
    "glassblower": 60
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.15,
   "dev_years": 2,
@@ -82,7 +82,7 @@
   "cat": "lab_technique",
   "pre": [
    "lab_apparatus",
-   "reflux",
+   "ch2_lab_reflux",
    "distillation_alcohol"
   ],
   "req_any": [
@@ -98,14 +98,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Solvent condenses, fills siphon chamber, auto-empties. Repeats hundreds of times. Exhausts the solid.",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 250,
    "glassblower": 100
   },
   "mat": {
-   "mat_glass_labware": 5
+   "glass_raw_kg": 5
   },
   "build_yrs": 0.3,
   "dev_years": 5,
@@ -124,13 +124,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Bubbling steam through solid or liquid, carrying volatile oil, then condensing the mixture",
+  "kb": "20_chemistry.md",
   "ph": 50,
   "lab": {
    "chemist": 120
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -150,14 +150,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Distillation at reduced pressure lowers boiling point and prevents thermal decomposition",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 280,
    "machinist": 150
   },
   "mat": {
-   "mat_glass_labware": 4,
+   "glass_raw_kg": 4,
    "mat_mercury": 2
   },
   "build_yrs": 0.4,
@@ -178,13 +178,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Adding a third liquid to break a constant-boiling mixture",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -199,18 +199,18 @@
   "pre": [
    "lab_apparatus",
    "thermometer",
-   "recrystallisation"
+   "ch2_lab_recrystallisation"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Crystallising mixtures at different temperatures to separate compounds by solubility difference",
+  "kb": "20_chemistry.md",
   "ph": 70,
   "lab": {
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 4
+   "glass_raw_kg": 4
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -229,13 +229,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Small dissolved molecules pass through parchment; large molecules do not",
+  "kb": "20_chemistry.md",
   "ph": 45,
   "lab": {
    "chemist": 100
   },
   "mat": {
-   "mat_parchment": 2
+   "parchment_sheet": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -255,13 +255,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Charged molecules move through a gel toward the electrode of opposite charge",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 280
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -293,7 +293,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Liquid solvent carries dissolved compounds up paper at different rates, separating them",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 150
@@ -337,14 +337,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Solvent flows down a column of adsorbent, carrying compounds at different speeds",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 250,
    "machinist": 80
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -358,21 +358,21 @@
   "cat": "lab_technique",
   "pre": [
    "lab_apparatus",
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1100",
    "thermometer"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Carrier gas flows through a heated column. Vapours of different compounds emerge at different times.",
+  "kb": "20_chemistry.md",
   "ph": 150,
   "lab": {
    "chemist": 350,
    "machinist": 200
   },
   "mat": {
-   "mat_glass_labware": 4,
+   "glass_raw_kg": 4,
    "steel_plate_kg": 1
   },
   "build_yrs": 0.5,
@@ -388,18 +388,18 @@
   "pre": [
    "lab_apparatus",
    "potash_soda",
-   "coal_tar_products"
+   "chm_coal_tar_distillation"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Resin beads swap ions with the solution, removing one ion and adding another",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 300
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 6,
@@ -427,13 +427,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Shaking a solution with an immiscible solvent transfers target compounds to the new phase",
+  "kb": "20_chemistry.md",
   "ph": 45,
   "lab": {
    "chemist": 100
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -452,7 +452,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Spinning a solution accelerates settling of suspended particles by artificial gravity",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 200,
@@ -460,7 +460,7 @@
   },
   "mat": {
    "cast_iron_kg": 3,
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.4,
   "dev_years": 5,
@@ -480,14 +480,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Freezing aqueous solution then evaporating ice under vacuum without melting",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 350,
    "machinist": 150
   },
   "mat": {
-   "mat_glass_labware": 4,
+   "glass_raw_kg": 4,
    "mat_mercury": 1
   },
   "build_yrs": 0.5,
@@ -507,13 +507,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Isolating and weighing a pure compound to determine the original amount of an element",
+  "kb": "20_chemistry.md",
   "ph": 50,
   "lab": {
    "chemist": 150
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -541,14 +541,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Slowly adding a reagent of known concentration until an endpoint colour change occurs",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 180,
    "glassblower": 40
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -562,18 +562,18 @@
   "cat": "analysis",
   "pre": [
    "lab_apparatus",
-   "coal_tar_products"
+   "chm_coal_tar_distillation"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Dyes that change colour sharply at specific pH values, used to detect endpoints",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 250
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -608,13 +608,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Titrating with an oxidising or reducing agent whose colour change marks the endpoint",
+  "kb": "20_chemistry.md",
   "ph": 80,
   "lab": {
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -633,13 +633,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Titrating with a chelating agent that binds metal ions; indicator changes when metal is bound",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 250
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -674,13 +674,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Digesting organic matter in sulphuric acid to convert nitrogen to ammonium, then distilling and titrating",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 300
   },
   "mat": {
-   "mat_glass_labware": 4
+   "glass_raw_kg": 4
   },
   "build_yrs": 0.3,
   "dev_years": 5,
@@ -694,7 +694,7 @@
   "cat": "analysis",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -708,14 +708,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Burning organic compound in oxygen, absorbing CO2 and H2O, weighing them to find C and H",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 320,
    "machinist": 100
   },
   "mat": {
-   "mat_glass_labware": 5,
+   "glass_raw_kg": 5,
    "copper_kg": 2
   },
   "build_yrs": 0.4,
@@ -731,19 +731,19 @@
   "pre": [
    "lab_apparatus",
    "spectroscope",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Spraying a solution into a flame and measuring the colour of light emitted by the metal ions",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 300,
    "optician": 100
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 5,
@@ -762,13 +762,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Comparing the colour intensity of a solution to a standard, or measuring absorbance",
+  "kb": "20_chemistry.md",
   "ph": 75,
   "lab": {
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -787,15 +787,15 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring light absorbance at specific wavelengths to determine concentration",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 320,
    "optician": 120
   },
   "mat": {
-   "mat_glass_labware": 2,
-   "mat_glass_boro": 1
+   "glass_raw_kg": 2,
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.35,
   "dev_years": 6,
@@ -815,14 +815,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Applying a slowly increasing voltage to an electrode in solution; current flow begins when ions are reduced",
+  "kb": "20_chemistry.md",
   "ph": 155,
   "lab": {
    "chemist": 350,
    "machinist": 120
   },
   "mat": {
-   "mat_glass_labware": 3,
+   "glass_raw_kg": 3,
    "mat_mercury": 1
   },
   "build_yrs": 0.4,
@@ -837,20 +837,20 @@
   "cat": "analysis",
   "pre": [
    "lab_apparatus",
-   "glass_boro",
+   "glass_borosilicate",
    "vacuum_tube"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "A thin glass membrane that responds to hydrogen ion concentration, generating a voltage",
+  "kb": "20_chemistry.md",
   "ph": 150,
   "lab": {
    "chemist": 320,
    "glassblower": 180
   },
   "mat": {
-   "mat_glass_boro": 2,
+   "glass_borosilicate_kg": 2,
    "silver_kg": 0.5
   },
   "build_yrs": 0.4,
@@ -872,13 +872,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring electrical conductivity of a solution to determine salt concentration",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 3,
@@ -897,14 +897,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring refractive index of a solution to determine composition",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 220,
    "optician": 80
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -923,13 +923,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "The temperature at which a pure solid melts is a physical constant that identifies the substance",
+  "kb": "20_chemistry.md",
   "ph": 40,
   "lab": {
    "chemist": 80
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.1,
   "dev_years": 1,
@@ -943,7 +943,7 @@
   "cat": "industrial_process",
   "pre": [
    "nitric_acid",
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1300"
   ],
   "req_any": [
@@ -958,7 +958,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising SO2 to SO3 over a catalyst, then absorbing in water to make H2SO4",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 280,
@@ -980,7 +980,7 @@
   "cat": "industrial_process",
   "pre": [
    "nitric_acid",
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1300"
   ],
   "req_any": [
@@ -995,7 +995,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising HCl to Cl2 with air over a heated catalyst",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 250,
@@ -1023,7 +1023,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "Electrolyzing NaOH solution with a flowing mercury cathode to produce Cl2 and NaOH without contamination",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 300,
@@ -1046,7 +1046,7 @@
   "cat": "industrial_process",
   "pre": [
    "potash_soda",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -1060,7 +1060,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Digesting bauxite in hot NaOH, filtering, acidifying, and calcining to obtain pure Al2O3",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 280,
@@ -1082,7 +1082,7 @@
   "cat": "industrial_process",
   "pre": [
    "steam_high_pressure",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -1095,7 +1095,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Injecting hot water and compressed air into underground sulphur deposits, liquefying it, and pumping to surface",
+  "kb": "20_chemistry.md",
   "ph": 150,
   "lab": {
    "chemist": 250,
@@ -1116,7 +1116,7 @@
   "name": "Ostwald process for HNO3",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1100"
   ],
   "req_any": [
@@ -1131,7 +1131,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising ammonia to nitric acid over a platinum gauze, in two stages",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 300,
@@ -1139,7 +1139,7 @@
   },
   "mat": {
    "steel_plate_kg": 40,
-   "mat_platinum_bulk": 0.5
+   "platinum_g": 500.0
   },
   "cap": 400,
   "build_yrs": 1.5,
@@ -1153,13 +1153,13 @@
   "name": "Birkeland-Eyde process for NOx",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
-   "electric_arc"
+   "cap_gas_o2h2",
+   "chm_electric_arc_nitrogen"
   ],
   "traits": [
    "commerce"
   ],
-  "kb": "Passing air through an electric arc to produce nitrogen oxides, then absorbing in water for HNO3",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 250,
@@ -1180,14 +1180,13 @@
   "name": "Cyanamide process",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
-   "cap_heat_1300",
-   "calcium_carbide"
+   "cap_gas_o2h2",
+   "cap_heat_1300"
   ],
   "traits": [
    "commerce"
   ],
-  "kb": "Reacting calcium carbide with nitrogen gas at high temperature to produce calcium cyanamide",
+  "kb": "20_chemistry.md",
   "ph": 115,
   "lab": {
    "chemist": 280,
@@ -1208,7 +1207,7 @@
   "name": "Fischer-Tropsch synthesis",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1100"
   ],
   "req_any": [
@@ -1223,7 +1222,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Converting CO and H2 (syngas) over a catalyst to produce liquid hydrocarbons",
+  "kb": "20_chemistry.md",
   "ph": 145,
   "lab": {
    "chemist": 320,
@@ -1244,7 +1243,7 @@
   "name": "Bergius coal liquefaction",
   "cat": "industrial_process",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1300"
   ],
   "req_any": [
@@ -1259,7 +1258,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Hydrogenating coal at high temperature and pressure over a catalyst to produce liquid oil",
+  "kb": "20_chemistry.md",
   "ph": 150,
   "lab": {
    "chemist": 330,
@@ -1295,7 +1294,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Heating heavy oil fractions to 700-900 C to break C-C bonds and produce lighter products",
+  "kb": "20_chemistry.md",
   "ph": 150.0,
   "lab": {
    "chemist": 368.0,
@@ -1317,7 +1316,7 @@
   "name": "Catalytic cracking of oil",
   "cat": "industrial_process",
   "pre": [
-   "cap_heat_800",
+   "cap_heat_1100",
    "ch2_process_thermal_cracking",
    "chm_catalyst_concept"
   ],
@@ -1333,7 +1332,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Cracking oil over a zeolite or clay catalyst at 500 C, selective for gasoline-range products",
+  "kb": "20_chemistry.md",
   "ph": 135,
   "lab": {
    "chemist": 300,
@@ -1368,7 +1367,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Converting low-octane alkanes to high-octane aromatics and branched alkanes over a catalyst at 500 C",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 310,
@@ -1389,7 +1388,7 @@
   "name": "Alkylation of aromatic hydrocarbons",
   "cat": "industrial_process",
   "pre": [
-   "cap_heat_700",
+   "cap_heat_0700",
    "ch2_rxn_friedel_crafts",
    "chm_benzene"
   ],
@@ -1405,14 +1404,14 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Adding alkyl groups to benzene or toluene using a Lewis acid catalyst",
+  "kb": "20_chemistry.md",
   "ph": 115,
   "lab": {
    "chemist": 260,
    "engineer": 160
   },
   "mat": {
-   "mat_glass_boro": 10
+   "glass_borosilicate_kg": 10
   },
   "cap": 300,
   "build_yrs": 1.2,
@@ -1440,7 +1439,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Converting H2S in refinery tail gas to elemental sulphur by partial oxidation",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 270,
@@ -1477,7 +1476,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "Cooking wood chips in hot caustic soda solution to dissolve lignin, leaving cellulose fibres",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 300,
@@ -1514,7 +1513,7 @@
    "commerce",
    "infrastructure"
   ],
-  "kb": "Cooking wood in bisulphite solution at 150 C to dissolve lignin while preserving cellulose",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 280,
@@ -1557,13 +1556,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Condensing an alcohol with a carboxylic acid in the presence of an acid catalyst to form an ester",
+  "kb": "20_chemistry.md",
   "ph": 55,
   "lab": {
    "chemist": 150
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -1600,13 +1599,13 @@
    "labour_saving",
    "commerce"
   ],
-  "kb": "Hydrolyzing fat with alkali to produce glycerol and soap (fatty acid salt)",
+  "kb": "20_chemistry.md",
   "ph": 65,
   "lab": {
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 2,
@@ -1642,13 +1641,13 @@
    "labour_saving",
    "military"
   ],
-  "kb": "Substituting NO2 groups onto aromatic rings using nitric acid and sulphuric acid",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 240
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -1662,7 +1661,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "sulfuric_acid_conc"
+   "chm_contact_sulfuric"
   ],
   "req_any": [
    {
@@ -1676,13 +1675,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Substituting SO3H groups onto aromatic rings using fuming sulphuric acid",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -1696,7 +1695,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "cap_heat_700"
+   "cap_heat_0700"
   ],
   "req_any": [
    {
@@ -1718,13 +1717,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Substituting Cl or Br groups onto benzene and derivatives using the halogen and a Lewis acid catalyst",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 230
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 4,
@@ -1738,7 +1737,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "cap_heat_700"
+   "cap_heat_0700"
   ],
   "req_any": [
    {
@@ -1758,13 +1757,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Attaching alkyl or acyl groups to aromatic rings using an acylium or alkyl cation generated by Lewis acid",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -1799,13 +1798,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Condensing two aldehyde or ketone molecules by enolate nucleophilic attack, then dehydrating to unsaturated product",
+  "kb": "20_chemistry.md",
   "ph": 105,
   "lab": {
    "chemist": 270
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -1819,7 +1818,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "cap_heat_700"
+   "cap_heat_0700"
   ],
   "req_any": [
    {
@@ -1840,13 +1839,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Using an alkyl magnesium halide to nucleophilically attack carbonyls, forming alcohols and amines",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 290
   },
   "mat": {
-   "mat_glass_boro": 3
+   "glass_borosilicate_kg": 3
   },
   "build_yrs": 0.25,
   "dev_years": 5,
@@ -1881,13 +1880,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Converting aromatic amines to diazonium salts, which couple with aromatic nucleophiles to form azo dyes",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 6,
@@ -1901,7 +1900,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "cap_heat_700"
+   "cap_heat_0700"
   ],
   "req_any": [
    {
@@ -1922,13 +1921,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Reducing aromatic nitro compounds to amines using iron powder in acetic acid",
+  "kb": "20_chemistry.md",
   "ph": 75,
   "lab": {
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -1942,7 +1941,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -1964,13 +1963,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Adding hydrogen to unsaturated compounds over a catalyst",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -1996,13 +1995,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Oxidising organic compounds with potassium permanganate, cold or hot",
+  "kb": "20_chemistry.md",
   "ph": 65,
   "lab": {
    "chemist": 160
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -2016,7 +2015,7 @@
   "cat": "organic_reaction",
   "pre": [
    "lab_apparatus",
-   "sulfuric_acid_conc"
+   "chm_contact_sulfuric"
   ],
   "req_any": [
    {
@@ -2029,13 +2028,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Oxidising alcohols and aldehydes using acidified potassium dichromate",
+  "kb": "20_chemistry.md",
   "ph": 70,
   "lab": {
    "chemist": 170
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -2063,13 +2062,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Polymerising alkenes by adding monomer units across the double bond",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 290
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 6,
@@ -2088,13 +2087,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Polymerising using diol and diacid (or diamine and diacid) with loss of water or HCl",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 6,
@@ -2122,13 +2121,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Crosslinking rubber with sulphur at 150-200 C to form a stiffer, more resilient material",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
   },
   "mat": {
-   "mat_glass_boro": 1
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -2163,13 +2162,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising ethanol to acetic acid, using permanganate or dichromate or air over a catalyst",
+  "kb": "20_chemistry.md",
   "ph": 70,
   "lab": {
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -2196,13 +2195,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Producing acetone from isopropanol oxidation or cumene process",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 240
   },
   "mat": {
-   "mat_glass_boro": 1
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -2215,8 +2214,7 @@
   "name": "Acetylene from calcium carbide",
   "cat": "product",
   "pre": [
-   "calcium_carbide",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "traits": [
    "commerce",
@@ -2228,7 +2226,7 @@
    "chemist": 200
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 2,
@@ -2240,7 +2238,7 @@
   "name": "Methanol synthesis",
   "cat": "product",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_1300"
   ],
   "req_any": [
@@ -2255,13 +2253,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Synthesising methanol from CO and H2 over a catalyst",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 7,
@@ -2295,13 +2293,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing two ethanol molecules with loss of water, catalysed by conc. H2SO4 at 140 C",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 150
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -2336,13 +2334,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Chlorinating acetone or ethanol with hypochlorous acid formed in-situ",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -2377,13 +2375,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Chlorinating methane or carbon disulfide with chlorine gas at high temperature",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 240
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -2397,7 +2395,7 @@
   "cat": "product",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -2418,13 +2416,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Producing phenol from cumene hydroperoxide or by hydrolysing chlorobenzene",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 270
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 5,
@@ -2437,7 +2435,7 @@
   "name": "Benzene from coal tar",
   "cat": "product",
   "pre": [
-   "coal_tar_products",
+   "chm_coal_tar_distillation",
    "distillation_alcohol"
   ],
   "traits": [
@@ -2449,7 +2447,7 @@
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 2,
@@ -2461,7 +2459,7 @@
   "name": "Toluene from coal tar",
   "cat": "product",
   "pre": [
-   "coal_tar_products",
+   "chm_coal_tar_distillation",
    "distillation_alcohol"
   ],
   "traits": [
@@ -2473,7 +2471,7 @@
    "chemist": 190
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 2,
@@ -2485,7 +2483,7 @@
   "name": "Xylene from coal tar and synthesis",
   "cat": "product",
   "pre": [
-   "coal_tar_products",
+   "chm_coal_tar_distillation",
    "distillation_alcohol"
   ],
   "req_any": [
@@ -2500,13 +2498,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Isolating xylene isomers from coal tar or synthesising from toluene",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 220
   },
   "mat": {
-   "mat_glass_labware": 3
+   "glass_raw_kg": 3
   },
   "build_yrs": 0.2,
   "dev_years": 3,
@@ -2520,7 +2518,7 @@
   "cat": "product",
   "pre": [
    "lab_apparatus",
-   "rxn_bechamp_reduction"
+   "ch2_rxn_bechamp_reduction"
   ],
   "req_any": [
    {
@@ -2541,13 +2539,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Reducing nitrobenzene to aniline using iron and acetic acid",
+  "kb": "20_chemistry.md",
   "ph": 75,
   "lab": {
    "chemist": 200
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -2561,18 +2559,18 @@
   "cat": "product",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "traits": [
    "commerce"
   ],
-  "kb": "Synthesising urea from ammonia and CO2 at high pressure",
+  "kb": "20_chemistry.md",
   "ph": 95,
   "lab": {
    "chemist": 240
   },
   "mat": {
-   "mat_glass_boro": 1
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -2586,7 +2584,7 @@
   "cat": "product",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -2607,13 +2605,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Oxidising methanol to formaldehyde over a silver or copper catalyst",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 230
   },
   "mat": {
-   "mat_glass_boro": 1
+   "glass_borosilicate_kg": 1
   },
   "build_yrs": 0.2,
   "dev_years": 3,
@@ -2626,18 +2624,18 @@
   "name": "Glycerol as soap byproduct and synthetic",
   "cat": "product",
   "pre": [
-   "rxn_saponification"
+   "ch2_rxn_saponification"
   ],
   "traits": [
    "commerce"
   ],
-  "kb": "Glycerol is produced as a byproduct of soap making and can be synthesised from dihydroxyacetone",
+  "kb": "20_chemistry.md",
   "ph": 60,
   "lab": {
    "chemist": 150
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -2664,13 +2662,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Producing citric acid by fermentation of sugar with Aspergillus niger or by chemical synthesis",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -2698,13 +2696,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Mixing nitrocellulose with camphor or other plasticiser to make a flexible plastic",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 280
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -2731,13 +2729,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Dissolving cellulose in NaOH, treating with CS2, then regenerating the cellulose fibre",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 7,
@@ -2750,8 +2748,7 @@
   "name": "Cellulose acetate plastic",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "acetic_anhydride"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -2764,13 +2761,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Acetylating cellulose with acetic anhydride in the presence of sulphuric acid catalyst",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 300
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 6,
@@ -2784,7 +2781,7 @@
   "cat": "polymer",
   "pre": [
    "lab_apparatus",
-   "phenol"
+   "ch2_prod_phenol"
   ],
   "req_any": [
    {
@@ -2804,13 +2801,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing phenol and formaldehyde with ammonia or acid catalyst to form thermosetting resin",
+  "kb": "20_chemistry.md",
   "ph": 135,
   "lab": {
    "chemist": 320
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 7,
@@ -2824,8 +2821,8 @@
   "cat": "polymer",
   "pre": [
    "lab_apparatus",
-   "urea",
-   "formaldehyde"
+   "ch2_prod_urea",
+   "ch2_prod_formaldehyde"
   ],
   "req_any": [
    {
@@ -2839,13 +2836,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing urea and formaldehyde to form a thermosetting resin",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 300
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 6,
@@ -2858,7 +2855,6 @@
   "name": "Polyvinyl chloride (PVC)",
   "cat": "polymer",
   "pre": [
-   "vinyl_chloride",
    "lab_apparatus",
    "electrolysis_industrial"
   ],
@@ -2874,7 +2870,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising vinyl chloride by free radical addition",
+  "kb": "20_chemistry.md",
   "ph": 200.0,
   "lab": {
    "chemist": 280.0,
@@ -2895,7 +2891,6 @@
   "name": "Polystyrene",
   "cat": "polymer",
   "pre": [
-   "styrene",
    "lab_apparatus"
   ],
   "req_any": [
@@ -2910,13 +2905,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising styrene by free radical or anionic addition",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 270
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -2930,7 +2925,7 @@
   "cat": "polymer",
   "pre": [
    "lab_apparatus",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {
@@ -2943,7 +2938,7 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising ethylene at high pressure and temperature with peroxide catalyst",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 290
@@ -2962,7 +2957,6 @@
   "name": "Polymethyl methacrylate (PMMA)",
   "cat": "polymer",
   "pre": [
-   "methyl_methacrylate",
    "lab_apparatus"
   ],
   "req_any": [
@@ -2977,13 +2971,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising methyl methacrylate to form a transparent plastic",
+  "kb": "20_chemistry.md",
   "ph": 125,
   "lab": {
    "chemist": 300
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 6,
@@ -2996,8 +2990,7 @@
   "name": "Nylon-66 polyamide fibre",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "adipic_acid"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -3010,13 +3003,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing hexamethylene diamine and adipic acid to form polyamide fibre",
+  "kb": "20_chemistry.md",
   "ph": 140,
   "lab": {
    "chemist": 320
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 8,
@@ -3029,8 +3022,7 @@
   "name": "Polyethylene terephthalate (PET) polyester",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "ethylene_glycol"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -3044,13 +3036,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Condensing ethylene glycol with terephthalic acid or ester to form polyester",
+  "kb": "20_chemistry.md",
   "ph": 135,
   "lab": {
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 8,
@@ -3063,8 +3055,7 @@
   "name": "Neoprene synthetic rubber",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "chloroprene"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -3078,13 +3069,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising chloroprene to form an elastic rubber with good oil resistance",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 7,
@@ -3098,8 +3089,7 @@
   "cat": "polymer",
   "pre": [
    "lab_apparatus",
-   "butadiene",
-   "styrene"
+   "ch2_polymer_polystyrene"
   ],
   "req_any": [
    {
@@ -3113,13 +3103,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Copolymerising butadiene and styrene to form a rubber-like elastomer",
+  "kb": "20_chemistry.md",
   "ph": 130,
   "lab": {
    "chemist": 310
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.25,
   "dev_years": 7,
@@ -3132,8 +3122,7 @@
   "name": "Silicone polymers",
   "cat": "polymer",
   "pre": [
-   "lab_apparatus",
-   "silicon_metal"
+   "lab_apparatus"
   ],
   "req_any": [
    {
@@ -3152,13 +3141,13 @@
   "traits": [
    "commerce"
   ],
-  "kb": "Polymerising organosiloxanes to form silicone oils, rubbers, and resins",
+  "kb": "20_chemistry.md",
   "ph": 145,
   "lab": {
    "chemist": 340
   },
   "mat": {
-   "mat_glass_boro": 2
+   "glass_borosilicate_kg": 2
   },
   "build_yrs": 0.3,
   "dev_years": 8,
@@ -3178,13 +3167,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring heats of reaction and predicting unknown heats from known ones",
+  "kb": "20_chemistry.md",
   "ph": 90,
   "lab": {
    "chemist": 230
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -3205,13 +3194,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Measuring reaction rates and determining the order with respect to each reagent",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 270
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 4,
@@ -3232,13 +3221,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Understanding that reversible reactions reach an equilibrium where forward and reverse rates are equal",
+  "kb": "20_chemistry.md",
   "ph": 70,
   "lab": {
    "chemist": 180
   },
   "mat": {
-   "mat_glass_labware": 1
+   "glass_raw_kg": 1
   },
   "build_yrs": 0.1,
   "dev_years": 2,
@@ -3254,12 +3243,12 @@
   "cat": "physical_chemistry",
   "pre": [
    "lab_apparatus",
-   "equilibrium"
+   "ch2_phys_equilibrium"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Shifting equilibrium by changing concentration, temperature, or pressure",
+  "kb": "20_chemistry.md",
   "ph": 65,
   "lab": {
    "chemist": 160
@@ -3284,7 +3273,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "The Gibbs phase rule determines the number of degrees of freedom in a multi-phase system",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
@@ -3309,13 +3298,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Boiling point elevation, freezing point depression, osmotic pressure, and vapour pressure lowering depend only on solute number, not identity",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -3336,7 +3325,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "The mole is the amount of substance equal to the mass in grams numerically equal to the atomic or molecular weight",
+  "kb": "20_chemistry.md",
   "ph": 65,
   "lab": {
    "chemist": 150
@@ -3361,13 +3350,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Ranking metals and other species by their tendency to lose electrons",
+  "kb": "20_chemistry.md",
   "ph": 85,
   "lab": {
    "chemist": 220
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.15,
   "dev_years": 3,
@@ -3383,18 +3372,18 @@
   "cat": "physical_chemistry",
   "pre": [
    "lab_apparatus",
-   "electrochemical_series"
+   "ch2_phys_electrochemical_series"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "The voltage needed to drive an electrochemical reaction is greater than the theoretical voltage because of activation barriers",
+  "kb": "20_chemistry.md",
   "ph": 110,
   "lab": {
    "chemist": 280
   },
   "mat": {
-   "mat_glass_labware": 2
+   "glass_raw_kg": 2
   },
   "build_yrs": 0.2,
   "dev_years": 5,
@@ -3410,13 +3399,13 @@
   "cat": "physical_chemistry",
   "pre": [
    "lab_apparatus",
-   "electrochemical_series",
+   "ch2_phys_electrochemical_series",
    "logarithms"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "The potential of a half-cell depends on the concentration of ions and the standard potential",
+  "kb": "20_chemistry.md",
   "ph": 100,
   "lab": {
    "chemist": 260
@@ -3451,7 +3440,7 @@
    "labour_saving",
    "commerce"
   ],
-  "kb": "Electrochemically oxidising a metal anode to form a protective oxide layer",
+  "kb": "20_chemistry.md",
   "ph": 120,
   "lab": {
    "chemist": 300

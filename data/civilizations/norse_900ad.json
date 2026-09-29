@@ -21,6 +21,11 @@
     "structures": 1.7
   },
   "currency": "hacksilver by weight",
+  "coin_standard": {
+    "material": "silver_kg",
+    "kg_per_unit": 0.025,
+    "source": "Money was weighed silver (hacksilver, ingots, arm rings) valued by weight. The unit here is the eyrir (ounce) at about 25 g, a later-formalised unit, with reconstructions of 24 to 27 g (Kilger; Graham-Campbell). Confidence medium."
+  },
   "debt_bondage": true,
   "fire_quarter": "longhouses by the shore",
   "handicap_remedies": {
@@ -379,5 +384,17 @@
         "A recognised fellowship of healers and teachers"
       ]
     ]
+  },
+  "starting_interest_rate": 0.2,
+  "starting_tax_share": 0.04,
+  "_internal": {
+    "starting_interest_rate": {
+      "source": "No Norse lending record survives for this date. Set from the neighbouring Carolingian and Anglo-Saxon world, where credit was informal and short-term rates high. Weak evidence.",
+      "confidence": "D"
+    },
+    "starting_tax_share": {
+      "source": "Levies were tribute, thing dues, and ship-levy service to a chieftain or king, not a steady share of revenue. A low share reflects weak state reach; an estimate.",
+      "confidence": "D"
+    }
   }
 }

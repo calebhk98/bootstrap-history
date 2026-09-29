@@ -1,5 +1,7 @@
 # Han China farms an empire and flips one coin for all of it
 
+**Status:** open
+
 Complaints/47 fixed the wrong half of a two-part bug and the fix made the
 remaining half measurable. Weather is now drawn per home region and pooled
 by each region's share of the cultivable land, which took an unshocked

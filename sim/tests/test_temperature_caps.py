@@ -45,6 +45,8 @@ entries pin the MECHANISM independent of any future edit to the real data
 integration class pins the actual acceptance tests this task was given,
 against the real data/production/70_energy.json and
 data/civilizations/*.json.
+
+Techniques state the temperature they reach and processes the temperature they need; the cheapest working technique wins.
 """
 import unittest
 

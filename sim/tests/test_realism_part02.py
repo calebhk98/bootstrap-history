@@ -27,7 +27,7 @@ _GATES = {
  "mt2_pelletising": {"met_ore_crushing_sorting", "cap_heat_1100"},
  "sc2_institution_doctorate": {"fin_university", "sc2_institution_examination"},
  "sc2_institution_referee": {"sc2_institution_research_group", "sc2_institution_textbook"},
- "sc2_institution_research_group": {"school_founded", "sc2_institution_funded_programme"},
+ "sc2_institution_research_group": {"school_founded"},
  "sc2_probability_axioms": {"arithmetic_positional", "algebra_symbolic"},
  "tr_hopper_wagon": {"tr_wooden_waggonway", "tr_sleeper_ballast"},
  "sc2_notation_decimal_point": {"sc2_notation_positional"},

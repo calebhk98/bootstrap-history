@@ -4,7 +4,7 @@
   "name": "Roman masonry arch",
   "cat": "structures",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 60.0,
   "lab": {
    "mason": 120.0
@@ -33,7 +33,7 @@
   "pre": [
    "civ_arch_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -60,7 +60,7 @@
    "civ_vault_barrel",
    "mat_pozzolana"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250.0,
   "lab": {
    "mason": 300.0
@@ -89,7 +89,7 @@
   "pre": [
    "civ_arch_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 300.0,
   "lab": {
    "labourer": 800.0,
@@ -116,7 +116,7 @@
   "pre": [
    "civ_surveying_groma"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150.0,
   "lab": {
    "labourer": 600.0,
@@ -145,7 +145,7 @@
   "name": "Groma: Roman X-staff surveying tool",
   "cat": "tools",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 20.0,
   "lab": {
    "carpenter": 20.0
@@ -172,7 +172,7 @@
   "name": "Chorobates: Roman water levelling rod",
   "cat": "tools",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 25.0,
   "lab": {
    "carpenter": 30.0
@@ -202,7 +202,7 @@
    "civ_arch_roman",
    "civ_surveying_groma"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 220.0,
   "lab": {
    "labourer": 200.0,
@@ -227,7 +227,7 @@
   "name": "Roman fired brick and tile",
   "cat": "materials",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 40.0,
   "lab": {
    "potter": 80.0
@@ -251,7 +251,7 @@
   "name": "Marble veneer and ashlar facing",
   "cat": "materials",
   "pre": [],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -275,7 +275,7 @@
    "civ_brick_tile",
    "civ_arch_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200.0,
   "lab": {
    "carpenter": 100.0,
@@ -302,7 +302,7 @@
   "pre": [
    "mat_glass_soda"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -329,7 +329,7 @@
    "civ_arch_roman",
    "civ_vault_barrel"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -377,7 +377,7 @@
    "mat_pozzolana",
    "cap_power_human"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 60.0,
   "lab": {
    "carpenter": 100.0,
@@ -410,7 +410,7 @@
    "civ_arch_roman",
    "cap_tol_1mm"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "carpenter": 300,
@@ -443,7 +443,7 @@
    "civ_truss_triangulated",
    "cn_timber_truss"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "carpenter": 400
@@ -502,7 +502,7 @@
    "civ_truss_triangulated",
    "civ_arch_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "carpenter": 600,
@@ -536,7 +536,7 @@
    "blast_furnace",
    "civ_arch_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "smith": 400,
@@ -566,9 +566,10 @@
   "name": "Wrought iron working and riveting",
   "cat": "materials",
   "pre": [
-   "mat_wrought_iron"
+   "mat_wrought_iron",
+   "cap_heat_0700"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
@@ -582,7 +583,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Wrought iron from bloomery furnace is ductile, tough, and resistant to corrosion. Smith heating and hand-forging creates toughness. Rivets are driven hot; the cooled rivet locks parts together. Roman and medieval smiths knew this; it is not high art, but skilled work."
+  "note": "Wrought iron from bloomery furnace is ductile, tough, and resistant to corrosion. Smith heating and hand-forging creates toughness. Rivets are driven hot; the cooled rivet locks parts together. Roman and medieval smiths knew this; it is not high art, but skilled work. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C]"
  },
  {
   "id": "civ_bridge_wrought_iron_truss",
@@ -593,7 +594,7 @@
    "civ_iron_wrought",
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "smith": 800,
@@ -627,7 +628,7 @@
    "drawplate_wire",
    "mat_wrought_iron"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "artisan": 300
@@ -656,7 +657,7 @@
    "cap_measure_len",
    "geometry_analytic"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 300,
   "lab": {
    "engineer": 600,
@@ -909,7 +910,7 @@
   "pre": [
    "civ_statics"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "carpenter": 400,
@@ -937,7 +938,7 @@
   "pre": [
    "civ_statics"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "labourer": 300
@@ -991,10 +992,10 @@
   "name": "Compressed air caisson and decompression",
   "cat": "foundations",
   "pre": [
-   "civ_caisson",
+   "cn_caisson",
    "cap_power_steam"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "engineer": 300,
@@ -1053,7 +1054,7 @@
    "civ_statics",
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 180,
   "lab": {
    "miner": 600,
@@ -1084,7 +1085,7 @@
   "cat": "excavation",
   "pre": [
    "civ_tunnel_rock_drill",
-   "civ_caisson"
+   "cn_caisson"
   ],
   "kb": "",
   "ph": 250,
@@ -1115,7 +1116,7 @@
    "civ_arch_roman",
    "civ_statics"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "mason": 800,
@@ -1148,7 +1149,7 @@
    "civ_dam_gravity",
    "civ_arch_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "engineer": 400,
@@ -1179,7 +1180,7 @@
   "pre": [
    "civ_soil_mechanics"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "labourer": 1200
@@ -1240,7 +1241,7 @@
    "civ_aqueduct_roman",
    "analytical_chemistry"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "chemist": 300,
@@ -1272,7 +1273,7 @@
    "bellows_water_blown",
    "civ_aqueduct_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "engineer": 300,
@@ -1303,7 +1304,7 @@
   "pre": [
    "civ_pumping_station"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "carpenter": 300,
@@ -1332,7 +1333,7 @@
   "pre": [
    "civ_sewer_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "labourer": 8000.0,
@@ -1366,7 +1367,7 @@
    "civ_sewer_separate",
    "germ_theory"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "chemist": 400,
@@ -1401,7 +1402,7 @@
    "cn_rolled_I_beam",
    "cn_welded_connection"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 300,
   "lab": {
    "carpenter": 80.0,
@@ -1466,7 +1467,7 @@
    "cap_tol_100um",
    "cn_crane_treadwheel"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "carpenter": 100.0,
@@ -1526,7 +1527,7 @@
   "name": "Prestressed concrete",
   "cat": "materials",
   "pre": [
-   "civ_reinforced_concrete"
+   "cn_reinforced_concrete"
   ],
   "kb": "",
   "ph": 180,
@@ -1587,7 +1588,7 @@
    "mat_bulk_steel",
    "civ_bending_moment"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 250,
   "lab": {
    "engineer": 400,
@@ -1646,15 +1647,16 @@
   "cat": "materials",
   "pre": [
    "mat_glass_soda",
-   "precision_three_plate"
+   "precision_three_plate",
+   "cap_tol_100um"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "glassblower": 250
   },
   "mat": {
-   "mat_glass_soda": 100
+   "glass_raw_kg": 100
   },
   "cap": 200,
   "up": 30,
@@ -1666,7 +1668,7 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Large flat panes of clear glass. Cast plate glass (poured onto a flat table, then ground and polished) allows sizes to 3-4 metres. Transforms storefronts and windows. Sheet glass (drawn from a bath) is cheaper but smaller. Large panes are fragile but stunning.",
+  "note": "Large flat panes of clear glass. Cast plate glass (poured onto a flat table, then ground and polished) allows sizes to 3-4 metres. Transforms storefronts and windows. Sheet glass (drawn from a bath) is cheaper but smaller. Large panes are fragile but stunning. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy]",
   "traits": [
    "luxury"
   ]
@@ -1679,14 +1681,14 @@
    "civ_steel_frame",
    "refractory_fireclay"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "master": 300
   },
   "mat": {
    "brick_1000": 100,
-   "refractory_fireclay": 50
+   "clay_kg": 50
   },
   "cap": 300,
   "up": 0.0,
@@ -1710,7 +1712,7 @@
   "pre": [
    "civ_factor_safety"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "scholar": 400
@@ -1740,7 +1742,7 @@
    "mat_wrought_iron",
    "mat_copper"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "smith": 150
@@ -1797,7 +1799,7 @@
    "telescope",
    "cap_measure_len"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "scholar": 250
@@ -1827,7 +1829,7 @@
   "pre": [
    "civ_surveying_groma"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 180,
   "lab": {
    "scholar": 300
@@ -1857,7 +1859,7 @@
    "civ_cofferdam",
    "civ_arch_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200,
   "lab": {
    "mason": 600,
@@ -1889,7 +1891,7 @@
   "pre": [
    "civ_gate_sluice"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 150,
   "lab": {
    "carpenter": 400,
@@ -1922,7 +1924,7 @@
   "pre": [
    "civ_arch_roman"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 100,
   "lab": {
    "carpenter": 250,
@@ -1953,7 +1955,7 @@
    "steam_atmospheric",
    "water_power_scale"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 200.0,
   "lab": {
    "carpenter": 400.0,
@@ -1985,7 +1987,7 @@
   "pre": [
    "civ_road_paved"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 80,
   "lab": {
    "mason": 300,
@@ -2019,7 +2021,7 @@
    "arc_light_lamp",
    "power_grid"
   ],
-  "kb": "",
+  "kb": "85_transport_civil.md",
   "ph": 120,
   "lab": {
    "electrician": 300

@@ -1,4 +1,4 @@
-"""WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-young.md):
+"""WIRING ONE (Complaints/closed/48-technology-cannot-stop-people-dying-young.md):
 does the engine actually pass a disease burden to sim/world/demography.py,
 or does every game still run at PRE_INDUSTRIAL_DISEASE_BURDEN forever while
 the eight medical entries in _TECH_EFFECTS.json do nothing?
@@ -11,9 +11,9 @@ checks that completing one of the eight named technologies actually lowers
 `Sim._disease_burden()`, that the lowered burden actually reaches
 `Population.step` through `Sim._demographic_recovery`, that a civilisation
 holding none of the eight (Rome, at the start of the game) is provably
-unaffected, and that the food-effect technologies sharing _TECH_EFFECTS.
-json's `population` field with the eight disease ones are excluded by
-construction rather than by accident.
+unaffected, and that food technologies do not move it.
+
+The medical nodes drive a live disease burden, so technology can lower mortality.
 """
 import unittest
 
@@ -68,11 +68,7 @@ class DiseaseBurdenRespondsToUnlockedTechnologyTests(unittest.TestCase):
         self.assertEqual(test_sim._disease_burden(), 0.0)
 
     def test_food_effect_technologies_do_not_move_disease_burden_at_all(self):
-        # crop_rotation, fud_three_field_rotation, fud_seed_drill,
-        # mat_newworld_crops and ag2_canning all carry a `population` field
-        # in _TECH_EFFECTS.json too - CALORIES, not disease. Holding every
-        # one of them must not move _disease_burden by so much as a bit,
-        # because _disease_burden only ever sums DISEASE_BURDEN_TECH_IDS.
+        # Food technologies act through the farming technique, not disease.
         test_sim = _rome_sim()
         food_effect_techs = ("crop_rotation", "fud_three_field_rotation",
                               "fud_seed_drill", "mat_newworld_crops", "ag2_canning")
@@ -90,22 +86,8 @@ class DiseaseBurdenRespondsToUnlockedTechnologyTests(unittest.TestCase):
         self.assertLessEqual(burden, 1.0)
 
 
-class DiseaseBurdenIsLiveNotQueuedTests(unittest.TestCase):
-    """The eight disease technologies drive `_disease_burden` LIVE, off
-    `self.has()`, rather than feeding `_pop_tech_pending` (apply_tech_effects,
-    society.py) like every other `population`-carrying entry and ramping into
-    `_pop_scale_base` over POP_TECH_RAMP_YEARS - a path WIRING_MILESTONE_4.md
-    SS1.3 already established is read by nothing, so queuing these eight
-    there as well would have the same tree-author weight doing two jobs at
-    once for no reason. The five FOOD-effect technologies are untouched and
-    still queue as normal.
-    """
-
-    def test_completing_a_disease_technology_does_not_queue_pop_tech_pending(self):
-        test_sim = _rome_sim()
-        test_sim.household.done.add("germ_theory")
-        test_sim.apply_tech_effects("germ_theory")
-        self.assertEqual(test_sim._pop_tech_pending, [])
+class DiseaseBurdenIsLiveTests(unittest.TestCase):
+    """The disease technologies drive `_disease_burden` live, off `self.has()`."""
 
     def test_completing_a_disease_technology_moves_disease_burden_immediately(self):
         test_sim = _rome_sim()
@@ -114,12 +96,6 @@ class DiseaseBurdenIsLiveNotQueuedTests(unittest.TestCase):
         test_sim.apply_tech_effects("sanitation_antisepsis")
         after = test_sim._disease_burden()
         self.assertLess(after, before)
-
-    def test_completing_a_food_technology_still_queues_pop_tech_pending(self):
-        test_sim = _rome_sim()
-        test_sim.household.done.add("crop_rotation")
-        test_sim.apply_tech_effects("crop_rotation")
-        self.assertEqual(len(test_sim._pop_tech_pending), 1)
 
 
 class DiseaseBurdenReachesPopulationStepTests(unittest.TestCase):

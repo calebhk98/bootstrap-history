@@ -1,5 +1,7 @@
 # Event severity needs visual hierarchy
 
+**Status:** open
+
 A tiny failed technique and a civilization-scale population collapse could appear at similar prominence.
 
 ## WHY IT MATTERS

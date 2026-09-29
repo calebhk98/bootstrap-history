@@ -5,11 +5,33 @@ folder to disable that mod; no registry or Python edit is required. The loader
 orders mods by dependencies and then by id, rejects missing dependencies,
 dependency cycles, declared conflicts, and ambiguous duplicate ids.
 
+## Ids and namespaces
+
+A mod id has the form `<author>_<name>_<suffix>`: lowercase letters, digits and
+underscores, starting with a letter, ending in a random suffix of four or more
+lowercase letters or digits (for example `ana_steamage_k3f9`). The random suffix
+is what keeps two authors who never spoke from picking the same id; make one up
+rather than choosing a word. The loader rejects any other shape with a message
+saying so. A mod id never contains `:`.
+
+Every new technology, recipe, material, civilisation, trade or topic tag a mod
+creates is named `<mod_id>:<name>`, for example `ana_steamage_k3f9:boiler`. The
+`:` cannot occur in a mod id, so a namespace belongs to exactly one mod and a
+mod can never create an id inside another's. The name part is lowercase letters,
+digits and underscores, starting with a letter. Players type the full id.
+A civilisation's file name writes the `:` as `+`
+(`ana_steamage_k3f9+realm.json`), since `:` is not portable in file names.
+
+A mod that uses another mod's ids anywhere in its data files (a prerequisite,
+a material, a goal node, a starting technology, a recipe input) must list that
+mod in `dependencies`, directly or through a chain of dependencies; otherwise
+the load fails with an error naming both mods.
+
 A manifest has this shape:
 
 ```json
 {
-  "id": "example_mod",
+  "id": "ana_example_k3f9",
   "name": "Example Mod",
   "version": "1.0.0",
   "dependencies": [],
@@ -22,7 +44,8 @@ A mod may provide:
 * `data/branches/*.json`: a list of technology nodes (or an object with a
   `nodes` list).
 * `data/goals.json`: `{ "goals": [...] }`, using the base goal catalog shape.
-* `data/civilizations/*.json`: civilization files using the base schema.
+* `data/civilizations/*.json`: civilization files using the base schema, or
+  override patches of an existing civilisation.
 * `data/production/*.json`: production recipe files using the base schema.
 * `data/world/trade_families.json`: additive `trade_families` entries (the
   backwards-compatible shorthand trade registry).
@@ -31,11 +54,59 @@ A mod may provide:
   descriptive metadata belong here; a wage is deliberately not part of trade
   identity.
 
-New technology, recipe, civilization, and trade ids must start with
-`<mod_id>_`. A technology or recipe may instead deliberately patch an existing
-id with `"override": true`; overrides are deep merges and fail if their target
-does not exist. Technology nodes may also use `"replaces": "existing_id"`.
-Unmarked collisions are errors which name both sources.
+* `data/world/needs.json`: `needs` (household spending categories, ids
+  `<mod_id>:<name>`, each with a `surplus_budget_share` weight) and `goods`
+  (`satisfies`: {need: effectiveness per unit}, optional `supply_per_year`).
+  A recipe entry may carry `satisfies` and `supply_per_year` for its main
+  output instead. Demand for the good, the demand it derives for its inputs
+  through recipes, and a scarcity price where its supply is limited follow
+  from these; no basket entry is needed. See `sim/world/need_demand.py`.
+
+New technology, recipe, civilization, and trade ids must be
+`<mod_id>:<name>`. A technology or recipe may instead deliberately patch an existing
+id with `"override": true`; an override is a deep merge that changes only the
+fields it names (defaults apply to new nodes only) and fails if its target does
+not exist. Technology nodes may also use `"replaces": "existing_id"`, which is
+the same patch aimed at that id. A new technology node must have a string
+`name`. Unmarked collisions are errors which name both sources.
+
+Goals (in `data/goals.json`, identified by their `node`) and trades (in
+`data/world/trades.json`, with `family`, `training`, `note`, `initially_absent`)
+take `"override": true` with the same meaning: a deep merge of only the named
+fields, a `null` inside a nested map deletes that key, and an override of a
+missing goal or trade is an error.
+
+Two mods that override the same field of the same technology, recipe, goal or
+trade are an error naming both mods, the id and the field, unless the later mod declares the
+other as a dependency (directly or transitively), in which case the dependent
+mod wins. Overrides of different fields merge.
+
+## Removing content
+
+An entry marked `"remove": true` deletes a base (or earlier mod) item by its
+id: a technology node in `data/branches`, a recipe in `data/production`, a
+trade in `data/world/trades.json`, or a goal in `data/goals.json` (identified
+by its `node`). Removing an id that does not exist is an error. After all mods
+load, any remaining technology prerequisite or `req_any` option, goal, recipe
+input or output, technology material, labour trade, or civilisation starting
+technology that still names a removed id is an error naming the referencing
+item and the removing mod. The trade check includes technology labour, and
+every base and mod civilisation is checked once at mod load, picked or not. Patch the reference away with an override (in the
+same mod or a mod that depends on the remover). Inside a nested map of an
+override, a `null` value deletes that key, for example
+`"inputs": {"removed_material": null}`.
+
+A mod that removes an id another unrelated mod overrides (in either order) is
+an error naming both mods; declare a dependency to choose a winner.
+
+## Civilisations
+
+A file `data/civilizations/<id>.json` is a new civilisation (namespaced with the mod id) unless it carries `"override": true`, in which case it patches the
+existing civilisation of that id (base or from another mod; write `:` as `+` in the file name) by deep merge,
+changing only the named fields; lists such as `starting_techs` are replaced
+whole. Unrelated mods patching the same field are an error naming both. A
+patch with `"hidden": true` keeps the civilisation out of the new-game menu and
+`civilization_ids()`; it still loads by name.
 
 ## Economic content
 

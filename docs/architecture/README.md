@@ -9,21 +9,33 @@ is now. None of this is an approved plan yet.
 | `CURRENT_CODE_ARCHITECTURE_REVIEW.md` | This repository measured against that target, recommending in-place expansion over a rewrite. | External design review, saved verbatim |
 | `PM_ASSESSMENT.md` | What we actually think, with the codebase measured rather than described. Agrees with most of the review, disagrees with it on five specific points, and names the requirement conflict that had to be resolved before any phase plan meant anything. | Ours |
 | `ENDOGENOUS_COSTS_AND_DOMAINS.md` | The plan. How a price gets calculated rather than looked up, which domains produce prices and which only consume them, and the milestones. Supersedes `PM_ASSESSMENT.md` §3.5 and §5. | Ours |
-| `PRICES_JSON_DELETION.md` | The deletion contract, remaining readers and ordered work required to remove `data/prices.json` rather than preserve or rename it. | Ours |
+| `DESIGN_PRINCIPLES.md` | Standing decisions that are not defects: what the model should not be "fixed" into (no blanket research-to-manufacture delay, no revenue nerf to keep the founder poor). | Ours |
 | `HOUSEHOLD_EXTRACTION.md` | Design for moving the founder's ~80 attributes onto their own object in `sim/engine/actors/`, so a government, a firm or a second player can own things too. Includes the measured reason `__getattr__` forwarding is not an option. | Ours |
+| `ACTORS.md` | Actor base, policy interface, government and firm actors, imitation of inventions. Current behaviour. | Ours |
 | `SIM_STATE_INVENTORY.md` | Every `Sim` instance attribute, measured, classified household / world / scenario / internal. The input to the extraction. | Ours |
-| `NAMING_PLAN.md` | The 3,813 short identifiers, what they mean, and how to rename them safely. Tiered by risk. | Ours |
-| `STATE_OF_THE_PROJECT.md` | Every `Complaints/` file and every milestone in `ENDOGENOUS_COSTS_AND_DOMAINS.md`, checked against the current code rather than against what was last said about it. | Ours |
+| `NAMING_PLAN.md` | The short identifiers, what they mean, and how to rename them safely. Tiered by risk. | Ours |
+| `STATE_OF_THE_PROJECT.md` | The milestones in `ENDOGENOUS_COSTS_AND_DOMAINS.md` and what to do next, each with the command that measures it. The issue table is not kept here: run `python3 sim/issue_status.py`. | Ours |
 | `SIM_DECOMPOSITION_REVISITED.md` | Reopens, on the stakeholder's request, the "no full decomposition" decision in `sim/ARCHITECTURE.md`; checks which of that decision's reasons still hold and recommends a staged, partial alternative. | Ours |
 | `WIRING_MILESTONE_4.md` | What wiring demography and agriculture into the engine actually broke and fixed, commit by commit. Feeds Milestone 4 in `STATE_OF_THE_PROJECT.md`. | Ours |
 | `DEMAND_AT_SCALE.md` | Whether `sim/world/demand.py`'s household-demand model holds outside Roman Egypt, against the stakeholder's own critique. | Ours |
 | `MAP_AND_WEATHER.md` | Why the map and the weather model are two disconnected systems, and what it would take to join them. | Ours |
+| `ECONOMY_MODEL_SURVEY.md` | How other models and games price goods, set wages, split joint products and create starting conditions, with what to borrow for each of our modules. | Ours, from external sources |
 
 Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
-`PRICES_JSON_DELETION.md` is its concrete exit checklist for the legacy file;
+`Complaints/123-delete-prices-json.md` is its concrete exit checklist for the
+legacy file (it is an issue, so it is tracked with the others);
 `PM_ASSESSMENT.md` is the reasoning that led to it; `STATE_OF_THE_PROJECT.md`
 is where its milestone table is kept current; the two external documents
 are inputs to all of them.
+
+## Issues
+
+Open problems, playtest reports and bug reports live in `Complaints/`, not
+here. Numbered files (`NN-slug.md`) are issues, each with a `**Status:**` line
+right after its title; finished ones are in `Complaints/closed/`; playtest and
+audit reports are in `Complaints/reports/`. `python3 sim/issue_status.py`
+prints the table and `--check` validates it. Decisions that are not defects
+belong in `DESIGN_PRINCIPLES.md`.
 
 The requirement conflict `PM_ASSESSMENT.md` §4 raised has been settled with the
 stakeholder: **the historical record must be a plausible outcome, not the only

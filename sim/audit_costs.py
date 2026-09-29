@@ -1,41 +1,16 @@
 #!/usr/bin/env python3
-"""How much of this simulation's cost base is calculated, and how much is read.
+"""How much of this simulation's cost base is calculated, and how much is missing.
 
     python3 sim/audit_costs.py                 the summary
     python3 sim/audit_costs.py --materials     every material, and who makes it
     python3 sim/audit_costs.py --json          machine-readable, for CI
 
-THE POINT OF THIS SCRIPT. The project's standing requirement is that costs are
-calculated from physical structure rather than looked up: a Roman soldier does
-not cost a hundred denarii because history says so, he costs what his food,
-equipment, transport and forgone wages cost. Progress toward that is easy to
-claim and hard to see, because replacing a book price with a hand-tuned curve
-over a book price looks like progress and is not. This script exists so the
-claim has a number attached, and so the number is measured from the tree as it
-stands rather than remembered from the last time somebody looked.
-
-WHAT IT FOUND THE FIRST TIME IT RAN, which is the reason it exists in this
-shape rather than as a price-coverage counter:
-
-    The tech tree records what every process CONSUMES and almost never what
-    anything PRODUCES.
-
-`mat` and `lab` are already physical - kilograms and hours - on 65% and 89% of
-2,864 nodes, with no material and no trade that the price tables do not know.
-That is a complete, authored input-output matrix on the consumption side. But
-of the 162 distinct materials those recipes consume, only 47 have a node whose
-id matches, only 7 of those carry a recipe of their own, and NOT ONE declares
-how much of the material it yields. `iron_bar_kg`, consumed by 590 nodes, has
-no producing node at all. `mat_copper` knows it needs 1,200 t of ore and 480 t
-of charcoal and does not say how much copper comes out the other end.
-
-A price cannot be solved out of a matrix with no outputs in it. That, and not
-the existence of `data/prices.json`, is the actual reason every cost in this
-engine bottoms out in a book value - and 190 of the 207 confidence-tagged
-entries in that book are marked `C`, the author's own estimate.
-
-So the measurement that matters is production-side coverage, and it is what
-this script leads with.
+Costs must come from physical structure, not a lookup. This report measures
+production-side coverage from data/production/ (what makes each material the
+tree consumes) and prices the tree's cost base with the same solver the runtime
+uses. Materials the solver cannot resolve are counted as missing, and when the
+wage provider or solver cannot be reached the cost section says it is
+unavailable rather than falling back to a book value.
 """
 import argparse
 import collections
@@ -48,7 +23,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
-from sim import simulator as S
+from sim import tool_costs
 from sim.presentation import (
     AUDIT_BAR_WIDTH_CHARS, AUDIT_UNPRICED_MATERIALS_SHOWN,
     AUDIT_RECIPE_LIST_TRUNCATE_CHARS)
@@ -95,20 +70,7 @@ def recipes_by_output_material():
     return {key: sorted(value) for key, value in index.items()}
 
 
-def wage_table(prices):
-    """Hourly wage per trade, as data.py derives it from prices.json."""
-    out = {}
-    for trade, value in (prices.get("wage_rates_denarii_per_hour") or {}).items():
-        if not isinstance(value, dict):
-            continue
-        if "rate" in value:
-            out[trade] = float(value["rate"])
-        elif "day_hs" in value:
-            out[trade] = float(value["day_hs"]) / 4.0 / 10.0
-    return out
-
-
-def _audit_materials_table(nodes, mat_price):
+def _audit_materials_table(nodes, solved_price):
     """{material -> consumption/production facts}, one entry per material any
     node consumes. The OUTPUT SIDE the module docstring is about: what makes it
     (from data/production/, not a guess) and whether the TREE names a node for
@@ -134,34 +96,19 @@ def _audit_materials_table(nodes, mat_price):
             "producer": producer["id"] if producer else None,
             "producer_has_recipe": bool(producer and (producer.get("mat") or producer.get("lab"))),
             "producer_declares_output": bool(producer and producer.get("annual_output_t")),
-            "book_price_denarii": mat_price.get(key),
+            "solved_price_denarii": solved_price.get(key),
         })
     return materials
 
 
-def _audit_cost_totals(nodes, wages, mat_price):
-    # Where the denarii actually are. `cap` is documented as capital BEYOND
-    # labour and materials, so these three are additive, not overlapping.
+def _audit_cost_totals(nodes):
+    """Where the denarii are at solved prices; `cap` is capital beyond labour and materials."""
     totals = collections.Counter()
     for node in nodes.values():
-        totals["labour"] += sum(wages[trade] * float(hours)
-                                for trade, hours in (node.get("lab") or {}).items()
-                                if trade in wages)
-        totals["materials"] += sum(mat_price[material_key] * float(quantity)
-                                   for material_key, quantity in (node.get("mat") or {}).items()
-                                   if material_key in mat_price)
+        totals["labour"] += node["_labour_cost"] or 0.0
+        totals["materials"] += node["_material_cost"] or 0.0
         totals["capital_lump"] += float(node.get("cap") or 0.0)
     return totals
-
-
-def _audit_price_confidence(prices):
-    conf = collections.Counter()
-    for section in ("purchase_prices_denarii", "wage_rates_denarii_per_hour",
-                    "transport_multipliers", "starting_kit_options"):
-        for value in (prices.get(section) or {}).values():
-            if isinstance(value, dict) and "conf" in value:
-                conf[value["conf"]] += 1
-    return conf
 
 
 def _audit_fields_populated(nodes):
@@ -173,20 +120,20 @@ def _audit_fields_populated(nodes):
 
 
 def audit():
-    tree, prices, nodes, _wages, _goods = S.load()
-    if not isinstance(nodes, dict):
-        nodes = {node["id"]: node for node in nodes}
-    wages = wage_table(prices)
-    mat_price = {material_key: float(value["p"])
-                 for material_key, value in (prices.get("purchase_prices_denarii") or {}).items()
-                 if isinstance(value, dict) and "p" in value}
+    nodes = tool_costs.load_tree_nodes()
+    cost_report = tool_costs.price_nodes(nodes)
+    solved_price = {}
+    if cost_report.available:
+        solved_price = tool_costs.solved_material_prices(nodes, tool_costs.runtime_wages())
 
     return {
         "nodes": len(nodes),
         "fields_populated": _audit_fields_populated(nodes),
-        "cost_base_denarii": dict(_audit_cost_totals(nodes, wages, mat_price)),
-        "price_confidence": dict(_audit_price_confidence(prices)),
-        "materials": _audit_materials_table(nodes, mat_price),
+        "costs_available": cost_report.available,
+        "costs_unavailable_reason": cost_report.reason,
+        "nodes_with_unresolved_costs": cost_report.incomplete_nodes,
+        "cost_base_denarii": dict(_audit_cost_totals(nodes)) if cost_report.available else {},
+        "materials": _audit_materials_table(nodes, solved_price),
     }
 
 
@@ -251,10 +198,14 @@ def _report_tree_side_question(audit):
 
 
 def _report_cost_base(audit):
-    """STILL PRICED FROM A BOOK block: where the denarii come from today."""
+    """COST BASE block: where the denarii come from at solved prices, or why they cannot be shown."""
+    if not audit["costs_available"]:
+        return ["COST BASE - unavailable: %s" % audit["costs_unavailable_reason"], ""]
     cost_base = audit["cost_base_denarii"]
     total = sum(cost_base.values()) or 1.0
-    lines = ["STILL PRICED FROM A BOOK - where the denarii come from today:"]
+    lines = ["COST BASE - at solved prices; %d nodes need a material or trade the "
+             "solver cannot resolve, so their materials count as a lower bound:"
+             % audit["nodes_with_unresolved_costs"]]
     for cost_key, label in (("materials", "materials (mat, physical)"),
                      ("capital_lump", "capital lump (cap, denarii)"),
                      ("labour", "hired labour (lab, physical)")):
@@ -262,26 +213,6 @@ def _report_cost_base(audit):
               % (label, format(cost_base[cost_key], ",.0f"), 100.0 * cost_base[cost_key] / total,
                  _bar(cost_base[cost_key] / total)))
     lines.append("  %-28s %14s" % ("TOTAL", format(total, ",.0f")))
-    lines.append("")
-    lines.append("  Materials and labour are already physical quantities, so pricing")
-    lines.append("  them endogenously converts %.1f%% of the cost base without editing"
-          % (100.0 * (cost_base["materials"] + cost_base["labour"]) / total))
-    lines.append("  a single node. The capital lump is %.1f%% and needs converting to a"
-          % (100.0 * cost_base["capital_lump"] / total))
-    lines.append("  bill of buildings, tools and land.")
-    lines.append("")
-    return lines
-
-
-def _report_price_confidence(audit):
-    confidence = audit["price_confidence"]
-    confidence_total = sum(confidence.values()) or 1
-    lines = ["CONFIDENCE IN THE BOOK ITSELF (data/prices.json):"]
-    for grade, meaning in (("A", "well attested"),
-                           ("B", "probable, contested in detail"),
-                           ("C", "the author's own estimate")):
-        lines.append("  %s  %-32s %4d  %5.1f%%"
-              % (grade, meaning, confidence.get(grade, 0), 100.0 * confidence.get(grade, 0) / confidence_total))
     lines.append("")
     return lines
 
@@ -312,8 +243,6 @@ def report(audit, show_materials=False):
     for line in _report_tree_side_question(audit):
         print(line)
     for line in _report_cost_base(audit):
-        print(line)
-    for line in _report_price_confidence(audit):
         print(line)
     if show_materials:
         for line in _report_every_material(audit):

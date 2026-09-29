@@ -18,6 +18,8 @@ this module's own numbers to the Diocletian's-Edict-derived calibration
 targets WITHOUT retuning anything to close a gap if one shows up - see that
 class and transport.py's own CALIBRATION TARGETS docstring section for the
 reading of where the two do and do not agree.
+
+sim/world/transport.py standalone: freight cost per tonne-km from animal metabolism, rolling resistance and gradient (unittest-style).
 """
 import unittest
 

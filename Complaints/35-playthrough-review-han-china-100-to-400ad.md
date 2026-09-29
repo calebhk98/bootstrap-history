@@ -1,8 +1,10 @@
 # Playthrough review: Han China, 100-400 AD
 
+**Status:** open - playthrough review, items not yet split into separate issues
+
 **Type:** Realism review, external
 **Priority:** Reference document. Several items already have work in flight.
-**Status:** Recorded at the stakeholder's request. NOTHING HERE HAS BEEN
+**Type:** Recorded at the stakeholder's request. NOTHING HERE HAS BEEN
 ACTED ON, and nothing in it was investigated before writing - it is the
 reviewer's account, kept as given, with project state noted where this
 repository already knows something about a point.

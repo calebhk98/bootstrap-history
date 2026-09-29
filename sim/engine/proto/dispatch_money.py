@@ -8,9 +8,15 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
+from .command_registry import command
 from .util import _qty
+from .. import purchase_rule
 
 
+@command("bounty", group="projects",
+         summary="pay someone else to solve it",
+         usage=["bounty <id>"], options={"<id>": "a technology"},
+         description="Posts a public prize instead of building it yourself.")
 def _cmd_bounty(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be bought. 'state' shows where you finished and how far you got" % ended}
@@ -55,8 +61,9 @@ def _cmd_bounty(sim, nodes, cmd, ended):
 def _buy_forest(sim, cmd, quantity):
     got = sim.buy_forest(quantity)
     if got <= 0:
-        return {"ok": False, "error": "cannot afford %.0f ha of coppice woodland "
-                                      "(you have %.0f denarii)" % (quantity, sim.capital)}
+        cost = quantity * sim.FOREST_COST_PER_HA * sim.price_index
+        return {"ok": False, "error": purchase_rule.refusal_text(
+            sim, "%.0f ha of coppice woodland" % quantity, cost)}
     return {"ok": True, "bought_ha": got, "forest_ha": round(sim.forest_ha, 1),
             "capital": round(sim.capital, 1)}
 
@@ -65,12 +72,9 @@ def _buy_nitre(sim, cmd, quantity):
     got = sim.build_nitre(quantity)
     if got <= 0:
         return {"ok": False,
-                "error": "cannot afford %.0f square metres of nitre bed "
-                         "(that is %s denarii and you have %s). Nothing "
-                         "was changed."
-                         % (quantity, "{:,.0f}".format(quantity * sim.NITRE_COST_PER_M2
-                                                * sim.price_index),
-                            "{:,.0f}".format(sim.capital))}
+                "error": purchase_rule.refusal_text(
+                    sim, "%.0f square metres of nitre bed" % quantity,
+                    quantity * sim.NITRE_COST_PER_M2 * sim.price_index)}
     return {"ok": True, "laid_m2": got,
             "nitre_bed_m2": round(sim.nitre_bed_m2, 1),
             "saltpetre_it_yields_per_year_tonnes":
@@ -135,15 +139,12 @@ def _buy_mine(sim, cmd, quantity):
     price = sim.mine_quote(mat, quantity).get("to_sink_it") if hasattr(sim, "mine_quote") else None
     got = sim.open_mine(mat, quantity, partial=False)
     if got <= 0:
-        if price is not None and price > sim.capital:
+        if price is not None and not purchase_rule.can_pay(sim, price):
             return {"ok": False,
-                    "error": "%.0f tonnes a year of %s costs %s denarii to "
-                             "sink and you have %s. Nothing was changed - ask "
-                             "for what you can pay for, or check the price "
-                             'first with {"cmd":"quote","what":"mine",'
-                             '"material":"%s","n":%g}.'
-                             % (float(quantity), mat, "{:,.0f}".format(price),
-                                "{:,.0f}".format(sim.capital), mat, float(quantity))}
+                    "error": purchase_rule.refusal_text(
+                        sim, "%.0f tonnes a year of %s" % (float(quantity), mat), price)
+                    + ' Check the price first with {"cmd":"quote","what":"mine",'
+                      '"material":"%s","n":%g}.' % (mat, float(quantity))}
         return {"ok": False, "error": "could not commission any %s capacity right now "
                                       "(ceiling reached, or standing too low for a "
                                       "concession that size)" % mat}
@@ -158,7 +159,10 @@ def _buy_mine(sim, cmd, quantity):
     reply = {"ok": True, "material": mat,
              "you_asked_for_t_per_yr": asked,
              "commissioned_t_per_yr": round(got, 2),
-             "ready_year": ready,
+             # Commissioned during that year's annual resolution, so a
+             # query shows the capacity from the following year.
+             "commissions_during_year": ready,
+             "ready_year": (None if ready is None else ready + 1),
              "years_until_producing": (None if ready is None
                                        else round(ready - sim.year, 1)),
              "already_producing_t_per_yr": round(sim.mine_capacity.get(mat, 0.0), 2),
@@ -209,7 +213,6 @@ _BUY_HANDLERS = {
     "food": _buy_farm,
     "housing": _buy_housing,
     "houses": _buy_housing,
-    "school": _buy_school,
     "trade_school": _buy_school,
     "trade school": _buy_school,
     "material": _buy_material,
@@ -220,6 +223,15 @@ _BUY_HANDLERS = {
 }
 
 
+@command("buy", group="money",
+         summary="farmland, housing, schools, stock, forest, nitre, mines, slaves",
+         usage=["buy forest <ha>", "buy nitre <m2>", "buy farm <ha>", "buy housing <n>",
+                "buy school <trade> <n>", "buy material <name> <tonnes>",
+                "buy mine <material> <tonnes_per_year>", "buy slaves <n>", "buy manumit <n>"],
+         options={"what": "forest, nitre, farm, housing, school, material, mine, slaves or manumit",
+                  "n": "the amount"},
+         description="Spends capital on durable things. Ask the price first with quote. "
+                     "See the economy topic for what each one does.")
 def _cmd_buy(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be bought. 'state' shows where you finished and how far you got" % ended}
@@ -239,11 +251,16 @@ def _cmd_buy(sim, nodes, cmd, ended):
                 "error": "n must be greater than zero, got %g. Nothing was changed." % quantity}
     handler = _BUY_HANDLERS.get(what)
     if handler is None:
-        return {"ok": False, "error": "what must be one of: forest, farm, housing, school, material, mine, slaves, manumit"}
+        return {"ok": False, "error": "what must be one of: forest, farm, housing, trade school, material, mine, slaves, manumit"}
     return handler(sim, cmd, quantity)
 
 
 
+@command("sell", group="money",
+         summary="sell material you have in stock",
+         usage=["sell <material> <tonnes>"],
+         options={"<material>": "a material in stock", "<tonnes>": "amount"},
+         description="Sells at the current value; you can only sell what you hold.")
 def _cmd_sell(sim, nodes, cmd, ended):
     material = str(cmd.get("material") or cmd.get("what") or "").lower()
     quantity, err = _qty(cmd, "n", 0)
@@ -258,6 +275,11 @@ def _cmd_sell(sim, nodes, cmd, ended):
 
 
 
+@command("money", group="money", aliases=("ledger", "accounts", "cash"),
+         summary="the whole ledger",
+         usage=["money"], options={},
+         description="What comes in and where it comes from, what goes out, and the "
+                     "rows sum to the totals.")
 def _cmd_money(sim, nodes, cmd, ended):
     # LESS THE YEAR YOU HAVE ALREADY PAID FOR: `hire` takes a finder's fee
     # and the first year's wages up front, and step() nets that advance off
@@ -353,6 +375,12 @@ def _cmd_money(sim, nodes, cmd, ended):
 
 
 
+@command("quote", group="money", aliases=("price", "cost"),
+         summary="what something costs before you commit",
+         usage=["quote mine <material> <tonnes_per_year>"],
+         options={"what": "mine (and other buy targets)", "material": "the material",
+                  "n": "the amount"},
+         description="Prices a purchase without making it.")
 def _cmd_quote(sim, nodes, cmd, ended):
     what = (cmd.get("what") or "mine").strip().lower()
     # EVERYTHING YOU CAN BUY, NOT JUST MINES: any purchase command with no
@@ -368,9 +396,9 @@ def _cmd_quote(sim, nodes, cmd, ended):
                 "to_buy_it": round(per * n_f, 1),
                 "per_hectare": round(per, 2),
                 "you_have": round(sim.capital, 1),
-                "you_could_raise": round(sim.spending_power("buy"), 1),
-                "you_can_afford_about": round(sim.spending_power("buy") / max(per, 1e-9), 1),
-                "afford_means": "cash plus half the credit line",
+                "you_could_raise": round(purchase_rule.purchase_budget(sim), 1),
+                "you_can_afford_about": purchase_rule.affordable_units(sim, per),
+                "afford_means": purchase_rule.afford_means(),
                 "it_yields_per_hectare_per_year":
                     "%.2f tonnes of charcoal, sustainably" % sim.CHARCOAL_PER_HA,
                 "note": "Coppice is bought once and yields every year after. "
@@ -384,9 +412,9 @@ def _cmd_quote(sim, nodes, cmd, ended):
                 "to_lay_it": round(per_n * n_n, 1),
                 "per_square_metre": round(per_n, 2),
                 "you_have": round(sim.capital, 1),
-                "you_could_raise": round(sim.spending_power("buy"), 1),
-                "you_can_afford_about": round(sim.spending_power("buy") / max(per_n, 1e-9), 0),
-                "afford_means": "cash plus half the credit line",
+                "you_could_raise": round(purchase_rule.purchase_budget(sim), 1),
+                "you_can_afford_about": purchase_rule.affordable_units(sim, per_n, decimals=0),
+                "afford_means": purchase_rule.afford_means(),
                 "it_yields_per_square_metre_per_year":
                     "%.4f tonnes of saltpetre" % sim.NITRE_YIELD_T_PER_M2,
                 "note": "Saltpetre is made, not mined: dung, straw and ash "
@@ -397,9 +425,26 @@ def _cmd_quote(sim, nodes, cmd, ended):
         n_s, err_s = _qty(cmd, "n", 1)
         if err_s:
             return {"ok": False, "error": err_s}
+        budget = purchase_rule.purchase_budget(sim)
+        per_person_base = sim.SLAVE_BASE_PRICE_DENARII * sim.price_index
+        lower, upper = 0.0, budget / max(per_person_base, 1e-9)
+        affordable = 0.0
+        for _ in range(20):
+            mid = (lower + upper) / 2.0
+            cost = sim.slave_quote(mid)
+            if cost <= budget:
+                affordable = mid
+                lower = mid
+            else:
+                upper = mid
+        affordable = int(affordable)
         return {"ok": True, "what": "slaves", "people": n_s,
                 "to_buy_them": round(sim.slave_quote(n_s), 1),
+                "per_person_base": round(per_person_base, 2),
                 "you_have": round(sim.capital, 1),
+                "you_could_raise": round(budget, 1),
+                "you_can_afford_about": affordable,
+                "afford_means": purchase_rule.afford_means(),
                 "note": "The price rises with how many you take at once, and "
                         "they are worth nothing to you for the first few "
                         "years while they learn the work. Freeing them "
@@ -419,6 +464,10 @@ def _cmd_quote(sim, nodes, cmd, ended):
 
 
 
+@command("close", group="money", aliases=("shut", "closemine", "close_mine"),
+         summary="shut a mine and stop paying upkeep",
+         usage=["close <material>"], options={"<material>": "the mine's material"},
+         description="Closes your own workings so they stop costing to keep standing.")
 def _cmd_close(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -430,6 +479,11 @@ def _cmd_close(sim, nodes, cmd, ended):
 
 
 
+@command("withdraw", group="society", aliases=("retire", "step_back", "obscurity"),
+         summary="step back from public life",
+         usage=["withdraw"], options={},
+         description="Lowers your eminence and reputation and raises your protection; "
+                     "the reply shows the new values. Refused if the run has ended.")
 def _cmd_withdraw(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -443,6 +497,10 @@ def _cmd_withdraw(sim, nodes, cmd, ended):
 
 
 
+@command("bribe", group="society",
+         summary="spend money to reduce a scandal",
+         usage=["bribe <amount>"], options={"<amount>": "money to spend"},
+         description="Buys down the current scandal at the price of the money.")
 def _cmd_bribe(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}

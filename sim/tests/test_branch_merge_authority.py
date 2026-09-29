@@ -40,6 +40,8 @@ because `judge`/`repair`/`apply-caps` write fields no branch has ever carried
 and because branch authors have been silently ignored for years. A fixture
 proves the MECHANISM is exact; it does not launder that backlog into a
 by-the-way side effect of a test run.
+
+Branch edits to existing tree nodes overlay field by field; an id defined in two branch files is an error.
 """
 import contextlib
 import io
@@ -168,7 +170,7 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         # compare the actual bytes `_write_json` produced.
         with open(self.tree_path, "rb") as file:
             bytes_v2 = file.read()
-        json.dump(tree_v1, open(self.tree_path + ".v1", "w"), indent=1)
+        json.dump(tree_v1, open(self.tree_path + ".v1", "w"), indent=2)
         with open(self.tree_path + ".v1", "rb") as file:
             bytes_v1_reserialised = file.read()
         self.assertEqual(bytes_v1_reserialised, bytes_v2)
@@ -342,7 +344,7 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         self.assertEqual(meta["merged_duplicate_ids"], {"fx_retired": "tl_survivor"})
 
     # ---- the data-loss refusal (Task 1) --------------------------------
-    def test_unpriced_material_refuses_to_write_without_the_override(self):
+    def test_undeclared_material_refuses_to_write_without_the_override(self):
         self._write_tree(_tree([]))
         with open(self.tree_path, "rb") as file:
             tree_before = file.read()
@@ -354,8 +356,8 @@ class BranchMergeAuthorityTests(unittest.TestCase):
 
         self.assertEqual(return_code, 1)
         self.assertIn("MERGE REFUSED", out)
-        self.assertIn("unpriced_material", out)
-        self.assertIn("UNPRICED material 'unobtainium_kg'", out)
+        self.assertIn("undeclared_material", out)
+        self.assertIn("UNDECLARED material 'unobtainium_kg'", out)
         self.assertIn("--accept-data-loss", out)
         with open(self.tree_path, "rb") as file:
             tree_after = file.read()
@@ -372,7 +374,7 @@ class BranchMergeAuthorityTests(unittest.TestCase):
 
         self.assertEqual(return_code, 0)
         self.assertNotIn("MERGE REFUSED", out)
-        self.assertIn("UNPRICED material 'unobtainium_kg'", out)
+        self.assertIn("UNDECLARED material 'unobtainium_kg'", out)
         self.assertIn("unknown trade 'nonexistent_trade'", out)
         nodes = {node["id"]: node for node in self._read_tree()["nodes"]}
         self.assertIn("fx_alpha", nodes)
@@ -436,6 +438,41 @@ class RealBranchCorpusHasNoUnresolvedCollisions(unittest.TestCase):
         self.assertEqual(return_code, 0, "the real branch corpus has an id defined in "
                                 "more than one file:\n" + buf.getvalue())
         self.assertNotIn("COLLISION", buf.getvalue())
+
+
+class CommittedTreeMatchesBranches(unittest.TestCase):
+    """The branches are the source of truth: merging them into a copy of the
+    committed tree must reproduce data/tech_tree.json node for node."""
+
+    def test_merge_of_real_branches_reproduces_committed_tree(self):
+        with open(treetool.TREE) as file:
+            committed = json.load(file)
+        tmpdir = tempfile.mkdtemp()
+        copy_path = os.path.join(tmpdir, "tech_tree.json")
+        with open(copy_path, "w") as file:
+            json.dump(committed, file)
+        with mock.patch.object(treetool, "TREE", copy_path):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                return_code = treetool.cmd_merge(types.SimpleNamespace(
+                    write=True, accept_data_loss=False))
+            self.assertEqual(return_code, 0, buf.getvalue())
+        with open(copy_path) as file:
+            merged = json.load(file)
+
+        committed_nodes = {node["id"]: node for node in committed["nodes"]}
+        merged_nodes = {node["id"]: node for node in merged["nodes"]}
+        self.assertEqual(set(committed_nodes), set(merged_nodes))
+        drifted = {}
+        for node_id, node in committed_nodes.items():
+            fields = [field for field in set(node) | set(merged_nodes[node_id])
+                      if node.get(field) != merged_nodes[node_id].get(field)]
+            if fields:
+                drifted[node_id] = sorted(fields)
+        self.assertEqual(drifted, {}, "data/tech_tree.json has drifted from data/branches/; "
+                         "port tree-only edits into the branches, then run "
+                         "`python3 sim/treetool.py merge --write`")
+        self.assertEqual(committed["meta"], merged["meta"])
 
 
 if __name__ == "__main__":

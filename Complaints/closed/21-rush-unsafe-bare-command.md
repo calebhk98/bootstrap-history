@@ -1,8 +1,10 @@
 # Bare `rush` mutates the portfolio without preview
 
+**Status:** closed
+
 **Type:** Destructive command UX  
 **Priority:** High
-**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** `_cmd_rush` (`sim/engine/proto/dispatch.py`) now returns a `preview`/`nothing_changed` response and requires `rush force` or `rush limit:N` to actually act - exactly the fix suggested here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): RESOLVED, verified.** `_cmd_rush` (`sim/engine/proto/dispatch.py`) now returns a `preview`/`nothing_changed` response and requires `rush force` or `rush limit:N` to actually act - exactly the fix suggested here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

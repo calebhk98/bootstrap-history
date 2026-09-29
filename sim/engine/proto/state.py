@@ -567,7 +567,7 @@ def _agent_state_training_and_hours(sim, active, full):
                               - sim.director_hours_committed()) > 200)
                   else None)),
         "founder_hours_sold_for_wages_this_year": round(
-            getattr(sim, "wage_hours_this_year", 0.0), 1),
+            sim.wage_hours_this_year, 1),
         # WHERE THE HOURS COME FROM: the pool can grow well past a single
         # founder's own hours, and that has to be explained here rather
         # than left unexplained. It is not the founder working harder: it
@@ -630,15 +630,14 @@ def _agent_state_standing(sim):
         # the figure alone, or a founder watching literacy_general climb
         # with no sense of where it stops cannot tell a slow success from
         # a mechanism that has already maxed out. See
-        # SocietyMixin.literacy_ceiling_general/_elite and agrarian_slack
-        # (society.py).
+        # SocietyMixin.literacy_ceiling_general/_elite (society.py).
         "literacy": {
             "general": round(float(sim.civ.get("literacy_general", 0.0)), 3),
             "general_ceiling_now": round(sim.literacy_ceiling_general(), 3),
             "elite": round(float(sim.civ.get("literacy_elite", 0.0)), 3),
             "elite_ceiling": round(sim.literacy_ceiling_elite(), 3),
             "schools_actually_teaching": sim._schooling_flow() > 0.0,
-            "farm_labour_freed_by_mechanisation": round(sim.agrarian_slack(), 3),
+            "farm_share_of_working_hours": round(sim.farm_share_of_hours(), 3),
         },
         # HOW MUCH OF WHAT YOU RUN HAS LEAKED TO COMPETITORS. See
         # SocietyMixin.diffusion_share/diffusion_index (society.py) for what

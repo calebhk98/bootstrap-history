@@ -46,8 +46,8 @@ from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS, GEOFILE, PRICES,
                          # caller relying on that surface - a split is not
                          # the moment to decide somebody's tool should stop
                          # working.
-                         _load_annual_wages, _load_tech_effects,
-                         _load_trade_notes, _load_wages)      # noqa: F401
+                         _load_tech_effects,
+                         _load_trade_notes)      # noqa: F401
 from sim.engine.core import Sim                                  # noqa: F401
 from sim.engine.protocol import (_agent_available, _agent_dispatch,  # noqa: F401
                              _agent_end_reason, _agent_help, _agent_state,

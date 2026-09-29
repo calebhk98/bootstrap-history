@@ -1,6 +1,8 @@
 # Wealth/state-notice saturation may be too flat at extreme fortunes
 
-**Source:** playtest findings document, BAL-002. **Status:** Design review,
+**Status:** open
+
+**Source:** playtest findings document, BAL-002. **Type:** Design review,
 not a confirmed defect, confirmed accurately described against the current
 code.
 
@@ -71,7 +73,7 @@ work (`Complaints/114`).
 
 ## Cross-references
 
-`Complaints/105` (ECON-003) and `Complaints/117` (BAL-001) both argue the
+`docs/architecture/DESIGN_PRINCIPLES.md` (ECON-003) and `Complaints/117` (BAL-001) both argue the
 same general point from different angles: do not solve a scale problem by
 capping the underlying quantity, solve it with new proportional
 consequences. `Complaints/114` (LATE-008) is the natural place for "state

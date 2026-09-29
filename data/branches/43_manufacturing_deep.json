@@ -9,7 +9,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "The chip, built-up edge, and shear plane",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "machinist": 80
@@ -33,7 +33,7 @@
    "mfg_chip_formation"
   ],
   "traits": [],
-  "kb": "Single-point tool geometry for turning",
+  "kb": "40_power_precision.md",
   "ph": 80,
   "lab": {
    "machinist": 60
@@ -54,18 +54,18 @@
   "name": "Carbon steel cutting tools",
   "cat": "cutting",
   "pre": [
-   "mat_crucible_steel",
+   "crucible_steel",
    "mfg_rake_clearance"
   ],
   "traits": [],
-  "kb": "Annealed and hardened carbon steel tooling",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "smith": 120,
    "machinist": 40
   },
   "mat": {
-   "mat_crucible_steel": 8
+   "tool_steel_kg": 8
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0.2,
@@ -80,20 +80,20 @@
   "name": "Mushet steel tooling",
   "cat": "cutting",
   "pre": [
-   "mat_crucible_steel",
+   "crucible_steel",
    "mfg_carbon_steel_tool"
   ],
   "traits": [
    "labour_saving"
   ],
-  "kb": "Self-hardening tungsten-vanadium tool steel",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "smith": 200,
    "chemist": 80
   },
   "mat": {
-   "mat_crucible_steel": 10,
+   "tool_steel_kg": 10,
    "mat_tungsten": 2
   },
   "build_yrs": 0.4,
@@ -124,7 +124,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Taylor-White heat treatment for tungsten-cobalt-vanadium alloys",
+  "kb": "40_power_precision.md",
   "ph": 400,
   "lab": {
    "smith": 500,
@@ -132,9 +132,9 @@
    "engineer": 200
   },
   "mat": {
-   "mat_crucible_steel": 15,
+   "tool_steel_kg": 15,
    "mat_tungsten": 8,
-   "mat_cobalt": 4
+   "cobalt_kg": 4
   },
   "cap": 200,
   "build_yrs": 0.6,
@@ -163,7 +163,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "HSS in production use for turning and milling",
+  "kb": "40_power_precision.md",
   "ph": 80,
   "lab": {
    "smith": 150,
@@ -193,15 +193,15 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Cobalt-chromium-tungsten cast alloy",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "smith": 80,
    "furnaceman": 60
   },
   "mat": {
-   "mat_crucible_steel": 3,
-   "mat_cobalt": 4,
+   "tool_steel_kg": 3,
+   "cobalt_kg": 4,
    "mat_chromium": 2,
    "mat_tungsten": 3
   },
@@ -227,10 +227,10 @@
   "cat": "cutting",
   "pre": [
    "mfg_carbon_steel_tool",
-   "brazing"
+   "mfg_brazing"
   ],
   "traits": [],
-  "kb": "Carbide or stellite brazed to a steel shank",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "smith": 120
@@ -258,7 +258,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Tungsten carbide in cobalt binder, powder sintered",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "chemist": 150,
@@ -266,7 +266,7 @@
   },
   "mat": {
    "mat_tungsten": 12,
-   "mat_cobalt": 3
+   "cobalt_kg": 3
   },
   "build_yrs": 0.4,
   "adopt_yrs": 1,
@@ -287,14 +287,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Throw-away carbide inserts in a precision holder",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "machinist": 200,
    "engineer": 80
   },
   "mat": {
-   "mat_cemented_carbide": 3,
+   "cemented_carbide_kg": 3,
    "steel_plate_kg": 5
   },
   "build_yrs": 0.4,
@@ -314,7 +314,7 @@
    "cap_measure_time_ms"
   ],
   "traits": [],
-  "kb": "Optimising surface speed and feed rate",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "engineer": 80,
@@ -347,7 +347,7 @@
    }
   ],
   "traits": [],
-  "kb": "Oil, water, or emulsion coolant",
+  "kb": "40_power_precision.md",
   "ph": 40,
   "lab": {
    "machinist": 20
@@ -386,7 +386,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Spindle, carriage, compound slide rest, chucks",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "machinist": 400,
@@ -412,7 +412,7 @@
   "cat": "machines",
   "pre": [
    "mfg_engine_lathe",
-   "indexing_head"
+   "mfg_indexing_head"
   ],
   "req_any": [
    {
@@ -427,7 +427,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Turret head with multiple tools, powered indexing",
+  "kb": "40_power_precision.md",
   "ph": 400,
   "lab": {
    "machinist": 500,
@@ -453,8 +453,8 @@
   "cat": "machines",
   "pre": [
    "mfg_turret_lathe",
-   "cam_lobe",
-   "escapement_lever"
+   "mfg_cam_lobe",
+   "mfg_escapement_lever"
   ],
   "req_any": [
    {
@@ -469,7 +469,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Cam-driven automatic with cam lobe sequencing",
+  "kb": "40_power_precision.md",
   "ph": 500,
   "lab": {
    "machinist": 600,
@@ -501,7 +501,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Six or eight independent spindles, one cam",
+  "kb": "40_power_precision.md",
   "ph": 600,
   "lab": {
    "machinist": 800,
@@ -543,7 +543,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Vertical spindle, XY table, precision boring for jigs and fixtures",
+  "kb": "40_power_precision.md",
   "ph": 400,
   "lab": {
    "machinist": 500,
@@ -580,7 +580,7 @@
    }
   ],
   "traits": [],
-  "kb": "Horizontal spindle for deep boring, better for chip clearance",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 450,
@@ -621,7 +621,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Drilling head on a radial arm, table fixed",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "machinist": 350,
@@ -664,7 +664,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Reciprocating cutting, flat or shaped surfaces",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "machinist": 350,
@@ -705,7 +705,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Open-side planer for large flat surfaces",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 400,
@@ -746,7 +746,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Vertical reciprocating tool for slots and keyways",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "machinist": 300,
@@ -772,7 +772,7 @@
   "cat": "machines",
   "pre": [
    "mfg_engine_lathe",
-   "indexing_head",
+   "mfg_indexing_head",
    "cap_tol_10um"
   ],
   "req_any": [
@@ -788,7 +788,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "XY table, vertical or horizontal spindle, indexing head",
+  "kb": "40_power_precision.md",
   "ph": 400,
   "lab": {
    "machinist": 500,
@@ -829,7 +829,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Spindle axis horizontal, XY and Z table feeds",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 400,
@@ -870,7 +870,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Spindle axis vertical, XY table, Z depth",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 400,
@@ -896,7 +896,7 @@
   "cat": "machines",
   "pre": [
    "mfg_universal_mill",
-   "optical_comparator"
+   "mfg_optical_comparator"
   ],
   "req_any": [
    {
@@ -910,7 +910,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Pantograph or CNC follower for complex profiles",
+  "kb": "40_power_precision.md",
   "ph": 450,
   "lab": {
    "machinist": 600,
@@ -950,7 +950,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Hob cutter indexing with gear blank for continuous cutting",
+  "kb": "40_power_precision.md",
   "ph": 450,
   "lab": {
    "machinist": 550,
@@ -991,7 +991,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Reciprocating gear-shaped cutter and workpiece indexing",
+  "kb": "40_power_precision.md",
   "ph": 400,
   "lab": {
    "machinist": 450,
@@ -1016,7 +1016,7 @@
   "name": "Gear grinding machine",
   "cat": "machines",
   "pre": [
-   "cylindrical_grinder",
+   "mfg_cylindrical_grinder",
    "cap_tol_10um",
    "cap_tol_1um"
   ],
@@ -1030,7 +1030,7 @@
    }
   ],
   "traits": [],
-  "kb": "Grinding wheel index-synchronized with gear blank",
+  "kb": "40_power_precision.md",
   "ph": 400,
   "lab": {
    "machinist": 500,
@@ -1071,7 +1071,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Long tool with multiple teeth, linear pull through workpiece",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 400,
@@ -1156,7 +1156,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Rotating wheel grinding OD of rotating part",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "artisan": 280.0,
@@ -1183,7 +1183,7 @@
   "name": "Centreless grinder",
   "cat": "machines",
   "pre": [
-   "cylindrical_grinder",
+   "mfg_cylindrical_grinder",
    "cap_tol_1um"
   ],
   "req_any": [
@@ -1198,7 +1198,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Grinding wheel and regulating wheel, no centers",
+  "kb": "40_power_precision.md",
   "ph": 400,
   "lab": {
    "machinist": 450,
@@ -1223,7 +1223,7 @@
   "name": "Internal grinder",
   "cat": "machines",
   "pre": [
-   "cylindrical_grinder",
+   "mfg_cylindrical_grinder",
    "cap_tol_1um"
   ],
   "req_any": [
@@ -1236,7 +1236,7 @@
    }
   ],
   "traits": [],
-  "kb": "Grinding wheel on spindle inside rotating bore",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 400,
@@ -1261,7 +1261,7 @@
   "name": "Tool and cutter grinder",
   "cat": "machines",
   "pre": [
-   "surface_grinder",
+   "prc_surface_grinder",
    "cap_tol_10um"
   ],
   "req_any": [
@@ -1276,7 +1276,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Grinder with work-holding fixtures for tool resharpening",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "machinist": 350,
@@ -1301,7 +1301,7 @@
   "name": "Honing machine",
   "cat": "machines",
   "pre": [
-   "cylindrical_grinder"
+   "mfg_cylindrical_grinder"
   ],
   "req_any": [
    {
@@ -1315,7 +1315,7 @@
    }
   ],
   "traits": [],
-  "kb": "Abrasive stone, low speed, high pressure, cross-hatch pattern",
+  "kb": "40_power_precision.md",
   "ph": 280,
   "lab": {
    "machinist": 300,
@@ -1344,7 +1344,7 @@
    "cap_measure_light"
   ],
   "traits": [],
-  "kb": "Abrasive paste, soft tool, slow speed, optical feedback",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "machinist": 350,
@@ -1369,7 +1369,7 @@
   "name": "Superfinishing machine",
   "cat": "machines",
   "pre": [
-   "honing",
+   "mfg_honing",
    "cap_tol_100nm"
   ],
   "req_any": [
@@ -1384,7 +1384,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Honing stone vibrating at high frequency, minimal traverse",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 400,
@@ -1426,7 +1426,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Band or reciprocating frame saw for cutting bar stock",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "machinist": 280,
@@ -1467,7 +1467,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Guillotine or rotating blades for sheet and strip",
+  "kb": "40_power_precision.md",
   "ph": 280,
   "lab": {
    "machinist": 300,
@@ -1508,7 +1508,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Vertical toggle or screw press with punches and dies",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "machinist": 350,
@@ -1549,7 +1549,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Hydraulic or mechanical press with bend dies",
+  "kb": "40_power_precision.md",
   "ph": 280,
   "lab": {
    "machinist": 320,
@@ -1647,7 +1647,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Screw or toggle press for controlled forging",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "machinist": 350,
@@ -1687,7 +1687,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Automatic heading machine for bolts and fasteners",
+  "kb": "40_power_precision.md",
   "ph": 400,
   "lab": {
    "machinist": 450,
@@ -1728,7 +1728,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Powered rollers forming angles, channels, tubes",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 400,
@@ -1770,7 +1770,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Lathe with wooden stake for metal spinning",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "machinist": 280,
@@ -1796,7 +1796,7 @@
   "cat": "machines",
   "pre": [
    "mfg_punch_press",
-   "lubricant"
+   "en_lubricating_oil"
   ],
   "traits": [
    "labour_saving"
@@ -1844,7 +1844,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Powered draw with carbide or steel dies",
+  "kb": "40_power_precision.md",
   "ph": 280,
   "lab": {
    "machinist": 300,
@@ -1868,7 +1868,7 @@
   "name": "Extrusion press",
   "cat": "machines",
   "pre": [
-   "mfg_hydraulic_press",
+   "met_hydraulic_press",
    "cap_heat_1100"
   ],
   "traits": [
@@ -1903,7 +1903,7 @@
    "cap_tol_10um"
   ],
   "traits": [],
-  "kb": "Tapered split sleeve for holding round work",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "machinist": 150
@@ -1930,7 +1930,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Radial scroll jaw chuck with self-centering",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "machinist": 180
@@ -1956,7 +1956,7 @@
    "cap_tol_100um"
   ],
   "traits": [],
-  "kb": "Independent jaw chuck, manually indexed",
+  "kb": "40_power_precision.md",
   "ph": 140,
   "lab": {
    "machinist": 160
@@ -1982,7 +1982,7 @@
    "electromagnet"
   ],
   "traits": [],
-  "kb": "Electro or permanent magnet holding",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "machinist": 200,
@@ -2009,7 +2009,7 @@
    "cap_tol_10um"
   ],
   "traits": [],
-  "kb": "Tapered or threaded spindle for holding bores",
+  "kb": "40_power_precision.md",
   "ph": 80,
   "lab": {
    "machinist": 100
@@ -2034,7 +2034,7 @@
    "cap_tol_10um"
   ],
   "traits": [],
-  "kb": "Spindle for mounting cutters between centers",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "machinist": 120
@@ -2060,7 +2060,7 @@
    "cap_tol_10um"
   ],
   "traits": [],
-  "kb": "Precise indexed spindle for milling flats and gears",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "machinist": 300,
@@ -2090,7 +2090,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Continuous or indexed rotation, larger than indexing head",
+  "kb": "40_power_precision.md",
   "ph": 220,
   "lab": {
    "machinist": 260,
@@ -2117,7 +2117,7 @@
    "cap_tol_100um"
   ],
   "traits": [],
-  "kb": "Punch and die mounted in guide posts",
+  "kb": "40_power_precision.md",
   "ph": 180,
   "lab": {
    "machinist": 200
@@ -2145,7 +2145,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Multiple stations on one press stroke",
+  "kb": "40_power_precision.md",
   "ph": 280,
   "lab": {
    "machinist": 350,
@@ -2174,7 +2174,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Pierce and blank in one stroke",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "machinist": 300,
@@ -2198,7 +2198,6 @@
   "name": "Green-sand flask pattern and mould",
   "cat": "tooling",
   "pre": [
-   "sand_casting",
    "met_green_sand_mold"
   ],
   "req_any": [
@@ -2211,13 +2210,13 @@
    }
   ],
   "traits": [],
-  "kb": "Sand mould packed around a pattern",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "artisan": 150
   },
   "mat": {
-   "sand_molding": 50
+   "sand_kg": 50
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -2235,7 +2234,7 @@
    "cap_tol_100um"
   ],
   "traits": [],
-  "kb": "Precision mould for foundry cores",
+  "kb": "40_power_precision.md",
   "ph": 180,
   "lab": {
    "machinist": 200,
@@ -2259,10 +2258,10 @@
   "cat": "tooling",
   "pre": [
    "cap_tol_100um",
-   "mat_crucible_steel"
+   "crucible_steel"
   ],
   "traits": [],
-  "kb": "Wooden or metal pattern sized for shrinkage",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "carpenter": 180,
@@ -2290,7 +2289,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Simple pass-fail limit gauges",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "machinist": 120
@@ -2317,7 +2316,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Cylindrical or tapered go-no-go gauge for holes",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "machinist": 140
@@ -2344,7 +2343,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Cylindrical go-no-go gauge for shafts",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "machinist": 140
@@ -2371,7 +2370,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Spring-loaded sliding gauge for external dimensions",
+  "kb": "40_power_precision.md",
   "ph": 110,
   "lab": {
    "machinist": 130
@@ -2398,7 +2397,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Pitch and form go-no-go for screws",
+  "kb": "40_power_precision.md",
   "ph": 140,
   "lab": {
    "machinist": 160
@@ -2425,7 +2424,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Precision vertical measurement with vernier scale",
+  "kb": "40_power_precision.md",
   "ph": 160,
   "lab": {
    "machinist": 180,
@@ -2457,7 +2456,7 @@
   "traits": [
    "infrastructure"
   ],
-  "kb": "Two cylinders exactly 100 or 200 mm apart, ground parallel",
+  "kb": "40_power_precision.md",
   "ph": 150,
   "lab": {
    "artisan": 160.0,
@@ -2489,7 +2488,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Mechanical gauge with 0.01 mm readability",
+  "kb": "40_power_precision.md",
   "ph": 180,
   "lab": {
    "artisan": 150.0,
@@ -2517,13 +2516,13 @@
   "name": "Comparator",
   "cat": "measurement",
   "pre": [
-   "dial_indicator",
+   "mfg_dial_indicator",
    "cap_tol_1um"
   ],
   "traits": [
    "information"
   ],
-  "kb": "Lever amplifier for 0.001 mm readability",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "machinist": 240,
@@ -2562,7 +2561,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Pneumatic pressure differential gauge for holes and bores",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "machinist": 300,
@@ -2594,7 +2593,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Projection of magnified profile on ground glass",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "engineer": 200.0,
@@ -2628,7 +2627,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Defined limit sizes and fits for interchangeable parts",
+  "kb": "40_power_precision.md",
   "ph": 140,
   "lab": {
    "engineer": 200,
@@ -2648,14 +2647,14 @@
   "name": "Control chart",
   "cat": "measurement",
   "pre": [
-   "tolerance_limit_system",
+   "mfg_tolerance_limit",
    "statistics_basic"
   ],
   "traits": [
    "information",
    "labour_saving"
   ],
-  "kb": "X-bar and R chart for process monitoring",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "engineer": 250,
@@ -2680,11 +2679,11 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Lot acceptance by sampling rather than 100 percent",
+  "kb": "40_power_precision.md",
   "ph": 180,
   "lab": {
    "engineer": 220,
-   "inspector": 150
+   "master": 150
   },
   "mat": {},
   "build_yrs": 0.5,
@@ -2703,7 +2702,7 @@
    "mat_wrought_iron"
   ],
   "traits": [],
-  "kb": "Heated rivet, set by impact",
+  "kb": "40_power_precision.md",
   "ph": 80,
   "lab": {
    "artisan": 100
@@ -2727,7 +2726,7 @@
    "mat_wrought_iron"
   ],
   "traits": [],
-  "kb": "Cold rivet driven by punch and die",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "artisan": 120
@@ -2752,14 +2751,14 @@
    "mat_wrought_iron"
   ],
   "traits": [],
-  "kb": "Heat to cherry-red and hammer together",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "smith": 140
   },
   "mat": {
    "iron_bar_kg": 8,
-   "mat_borax": 2
+   "borax_kg": 2
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0,
@@ -2774,14 +2773,14 @@
   "name": "Oxy-acetylene welding",
   "cat": "joining",
   "pre": [
-   "industrial_gases",
+   "cap_gas_o2h2",
    "cap_heat_2000",
    "met_acetylene_supply"
   ],
   "traits": [
    "infrastructure"
   ],
-  "kb": "Neutral flame from oxygen and acetylene",
+  "kb": "40_power_precision.md",
   "ph": 180,
   "lab": {
    "artisan": 120.0,
@@ -2810,13 +2809,12 @@
   "name": "Arc welding with bare electrode",
   "cat": "joining",
   "pre": [
-   "electrical_metrology",
    "cap_heat_2000",
    "cap_heat_3000",
    "cap_power_electric"
   ],
   "traits": [],
-  "kb": "Bare steel electrode and direct current power supply",
+  "kb": "40_power_precision.md",
   "ph": 160,
   "lab": {
    "electrician": 120.0,
@@ -2845,10 +2843,10 @@
   "cat": "joining",
   "pre": [
    "mfg_arc_weld_bare",
-   "flux"
+   "mfg_flux"
   ],
   "traits": [],
-  "kb": "Electrode coated with flux to shield the arc",
+  "kb": "40_power_precision.md",
   "ph": 140,
   "lab": {
    "machinist": 160,
@@ -2878,7 +2876,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Wire and flux submerged under granular flux, automatic",
+  "kb": "40_power_precision.md",
   "ph": 250,
   "lab": {
    "machinist": 300,
@@ -2909,7 +2907,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Pressure and current pulse at copper electrodes",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "electrician": 200.0,
@@ -2941,7 +2939,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Rotating roller electrodes for continuous seam",
+  "kb": "40_power_precision.md",
   "ph": 220,
   "lab": {
    "machinist": 260,
@@ -2970,7 +2968,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Flashing and upset of rails and rods",
+  "kb": "40_power_precision.md",
   "ph": 200,
   "lab": {
    "machinist": 240,
@@ -2990,12 +2988,11 @@
   "name": "Brazing",
   "cat": "joining",
   "pre": [
-   "cap_heat_800",
-   "mat_brass",
-   "cap_heat_1100"
+   "cap_heat_1100",
+   "mat_brass"
   ],
   "traits": [],
-  "kb": "Brass or copper filler, capillary flow into joint",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "smith": 150
@@ -3017,12 +3014,12 @@
   "name": "Silver soldering",
   "cat": "joining",
   "pre": [
-   "cap_heat_750",
+   "cap_heat_1100",
    "mat_silver",
    "cap_heat_0700"
   ],
   "traits": [],
-  "kb": "Silver-copper alloy filler for high-strength joints",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "smith": 120
@@ -3044,11 +3041,11 @@
   "name": "Soft soldering",
   "cat": "joining",
   "pre": [
-   "cap_heat_300",
+   "cap_heat_0700",
    "mat_lead"
   ],
   "traits": [],
-  "kb": "Lead-tin solder at 230 C",
+  "kb": "40_power_precision.md",
   "ph": 80,
   "lab": {
    "artisan": 100
@@ -3070,9 +3067,7 @@
   "id": "mfg_flux",
   "name": "Flux",
   "cat": "joining",
-  "pre": [
-   "mat_borax"
-  ],
+  "pre": [],
   "req_any": [
    {
     "group": "flux",
@@ -3084,13 +3079,13 @@
    }
   ],
   "traits": [],
-  "kb": "Chemical to dissolve oxides and promote wetting",
+  "kb": "40_power_precision.md",
   "ph": 60,
   "lab": {
    "artisan": 60
   },
   "mat": {
-   "mat_borax": 3
+   "borax_kg": 3
   },
   "build_yrs": 0.15,
   "adopt_yrs": 0,
@@ -3118,7 +3113,7 @@
    }
   ],
   "traits": [],
-  "kb": "Resin or bitumen adhesive for assembly",
+  "kb": "40_power_precision.md",
   "ph": 140,
   "lab": {
    "artisan": 120
@@ -3142,13 +3137,13 @@
    "hydrochloric_acid"
   ],
   "traits": [],
-  "kb": "Acid bath to dissolve oxides",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "chemist": 120
   },
   "mat": {
-   "hydrochloric_acid": 8
+   "hydrochloric_acid_kg": 8
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0.1,
@@ -3168,7 +3163,7 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Steel shot impacted under force to clean surface",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "machinist": 140
@@ -3204,13 +3199,13 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Sand or abrasive under air pressure",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "artisan": 100
   },
   "mat": {
-   "sand": 30
+   "sand_kg": 30
   },
   "build_yrs": 0.25,
   "adopt_yrs": 0.1,
@@ -3230,14 +3225,14 @@
   "traits": [
    "labour_saving"
   ],
-  "kb": "Parts rolling in drums with abrasive media",
+  "kb": "40_power_precision.md",
   "ph": 110,
   "lab": {
    "artisan": 100
   },
   "mat": {
    "cast_iron_kg": 50,
-   "media": 30
+   "ceramic_kg": 30
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
@@ -3255,14 +3250,14 @@
    "mfg_tumbling"
   ],
   "traits": [],
-  "kb": "Cloth wheel with rouge or paste compound",
+  "kb": "40_power_precision.md",
   "ph": 130,
   "lab": {
    "artisan": 150
   },
   "mat": {
    "mat_cotton": 15,
-   "rouge": 3
+   "mineral_pigment_kg": 3
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
@@ -3288,7 +3283,7 @@
   },
   "mat": {
    "mat_nickel": 4,
-   "copper_sulfate": 6
+   "blue_vitriol_kg": 6
   },
   "build_yrs": 0.4,
   "adopt_yrs": 0.3,
@@ -3306,7 +3301,7 @@
    "electrolysis_industrial"
   ],
   "traits": [],
-  "kb": "Electrolytic oxidation of aluminum surface",
+  "kb": "40_power_precision.md",
   "ph": 160,
   "lab": {
    "chemist": 190,
@@ -3314,7 +3309,7 @@
   },
   "mat": {
    "mat_aluminium": 8,
-   "sulfuric_acid": 4
+   "sulfuric_acid_kg": 4
   },
   "build_yrs": 0.4,
   "adopt_yrs": 0.4,
@@ -3339,10 +3334,10 @@
   "cat": "finishing",
   "pre": [
    "mat_zinc",
-   "cap_heat_450"
+   "cap_heat_0700"
   ],
   "traits": [],
-  "kb": "Hot-dip or electroplated zinc coating",
+  "kb": "40_power_precision.md",
   "ph": 130,
   "lab": {
    "furnaceman": 150
@@ -3362,9 +3357,7 @@
   "id": "mfg_painting",
   "name": "Painting",
   "cat": "finishing",
-  "pre": [
-   "mat_paint"
-  ],
+  "pre": [],
   "req_any": [
    {
     "group": "paint",
@@ -3376,13 +3369,13 @@
    }
   ],
   "traits": [],
-  "kb": "Brush, spray, or dip application of paint",
+  "kb": "40_power_precision.md",
   "ph": 80,
   "lab": {
    "artisan": 100
   },
   "mat": {
-   "paint": 5
+   "paint_kg": 5
   },
   "build_yrs": 0.2,
   "adopt_yrs": 0,
@@ -3397,19 +3390,18 @@
   "name": "Enamelling",
   "cat": "finishing",
   "pre": [
-   "cap_heat_800",
-   "glass_soda",
-   "cap_heat_0700",
-   "mat_glass_soda"
+   "cap_heat_1100",
+   "mat_glass_soda",
+   "cap_heat_0700"
   ],
   "traits": [],
-  "kb": "Fused glass coat on metal by heating",
+  "kb": "40_power_precision.md",
   "ph": 120,
   "lab": {
    "furnaceman": 140
   },
   "mat": {
-   "mat_glass_soda": 8
+   "glass_raw_kg": 8
   },
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
@@ -3424,17 +3416,16 @@
   "name": "Phosphating",
   "cat": "finishing",
   "pre": [
-   "phosphoric_acid",
    "chm_superphosphate"
   ],
   "traits": [],
-  "kb": "Zinc or iron phosphate coating for paint adhesion",
+  "kb": "40_power_precision.md",
   "ph": 100,
   "lab": {
    "chemist": 120
   },
   "mat": {
-   "phosphoric_acid": 6
+   "phosphoric_acid_kg": 6
   },
   "build_yrs": 0.25,
   "adopt_yrs": 0.2,
@@ -3449,18 +3440,17 @@
   "name": "Japanning",
   "cat": "finishing",
   "pre": [
-   "lacquer",
-   "cap_heat_150",
+   "cap_heat_0700",
    "mat_shellac"
   ],
   "traits": [],
-  "kb": "Glossy black or colored enamel, baked",
+  "kb": "40_power_precision.md",
   "ph": 110,
   "lab": {
    "artisan": 130
   },
   "mat": {
-   "lacquer": 6
+   "varnish_kg": 6
   },
   "build_yrs": 0.25,
   "adopt_yrs": 0.1,
@@ -3475,7 +3465,7 @@
   "name": "Moving assembly line",
   "cat": "organisation",
   "pre": [
-   "production_schedule"
+   "mfg_production_schedule"
   ],
   "traits": [
    "labour_saving",
@@ -3485,12 +3475,9 @@
   "ph": 250,
   "lab": {
    "engineer": 300,
-   "supervisor": 200
+   "master": 200
   },
-  "mat": {
-   "conveyor_system": 500,
-   "workstations": 200
-  },
+  "mat": {},
   "cap": 5000,
   "up": 1000,
   "build_yrs": 1,
@@ -3505,7 +3492,7 @@
   "name": "Work study",
   "cat": "organisation",
   "pre": [
-   "time_study"
+   "mfg_time_study"
   ],
   "traits": [
    "labour_saving",
@@ -3540,9 +3527,7 @@
   "lab": {
    "engineer": 180
   },
-  "mat": {
-   "chronograph": 1
-  },
+  "mat": {},
   "build_yrs": 0.3,
   "adopt_yrs": 0.5,
   "dev_years": 7,
@@ -3589,7 +3574,7 @@
   "kb": "89_remaining_arts.md#mfg_time_study",
   "ph": 100,
   "lab": {
-   "supervisor": 120
+   "master": 120
   },
   "mat": {},
   "build_yrs": 0.2,
@@ -3605,7 +3590,6 @@
   "name": "Production schedule",
   "cat": "organisation",
   "pre": [
-   "bill_of_materials",
    "fin_contract_law"
   ],
   "traits": [
@@ -3615,7 +3599,7 @@
   "kb": "89_remaining_arts.md#mfg_production_schedule",
   "ph": 130,
   "lab": {
-   "supervisor": 160
+   "master": 160
   },
   "mat": {},
   "build_yrs": 0.3,
@@ -3631,7 +3615,7 @@
   "name": "Bill of materials",
   "cat": "organisation",
   "pre": [
-   "drawing_office"
+   "mfg_drawing_office"
   ],
   "traits": [
    "information",
@@ -3656,7 +3640,7 @@
   "name": "Inventory and reorder point",
   "cat": "organisation",
   "pre": [
-   "production_schedule"
+   "mfg_production_schedule"
   ],
   "traits": [
    "information",
@@ -3665,7 +3649,7 @@
   "kb": "89_remaining_arts.md#mfg_production_schedule",
   "ph": 120,
   "lab": {
-   "supervisor": 140
+   "master": 140
   },
   "mat": {},
   "build_yrs": 0.3,
@@ -3681,7 +3665,7 @@
   "name": "Drawing office",
   "cat": "organisation",
   "pre": [
-   "orthographic_projection",
+   "mfg_orthographic",
    "prc_straightedge",
    "units_standards"
   ],
@@ -3691,8 +3675,7 @@
   "kb": "89_remaining_arts.md#mfg_drawing_office",
   "ph": 150,
   "lab": {
-   "scribe": 200,
-   "draftsman": 250
+   "scribe": 450
   },
   "mat": {
    "paper_kg": 100,
@@ -3734,7 +3717,7 @@
   "name": "Dimensioning and tolerancing conventions",
   "cat": "organisation",
   "pre": [
-   "tolerance_limit_system",
+   "mfg_tolerance_limit",
    "cap_measure_len",
    "mfg_drawing_office"
   ],
@@ -3772,7 +3755,7 @@
    "scribe": 150
   },
   "mat": {
-   "blueprint_paper": 20
+   "paper_kg": 20
   },
   "build_yrs": 0.35,
   "adopt_yrs": 0.3,
@@ -3787,7 +3770,7 @@
   "name": "Change order",
   "cat": "organisation",
   "pre": [
-   "drawing_office"
+   "mfg_drawing_office"
   ],
   "traits": [
    "information"
@@ -3821,9 +3804,7 @@
   "lab": {
    "machinist": 200
   },
-  "mat": {
-   "tool_storage": 500
-  },
+  "mat": {},
   "build_yrs": 0.5,
   "adopt_yrs": 0.3,
   "dev_years": 7,
@@ -3845,8 +3826,8 @@
   "kb": "89_remaining_arts.md#mfg_production_schedule",
   "ph": 130,
   "lab": {
-   "mechanic": 180,
-   "supervisor": 100
+   "machinist": 180,
+   "master": 100
   },
   "mat": {},
   "build_yrs": 0.4,
@@ -3871,7 +3852,7 @@
   "kb": "89_remaining_arts.md#mfg_production_schedule",
   "ph": 160,
   "lab": {
-   "inspector": 200,
+   "master": 200,
    "engineer": 150
   },
   "mat": {},
@@ -3894,7 +3875,7 @@
   "traits": [
    "information"
   ],
-  "kb": "Worm and wheel precision indexing for gear and screw cutting",
+  "kb": "40_power_precision.md",
   "ph": 350,
   "lab": {
    "machinist": 450,
@@ -3921,7 +3902,7 @@
    "cap_measure_light"
   ],
   "traits": [],
-  "kb": "Geometric cutting of eccentric profiles for automatic machines",
+  "kb": "40_power_precision.md",
   "ph": 300,
   "lab": {
    "machinist": 380,
@@ -3947,7 +3928,7 @@
    "cap_tol_10um"
   ],
   "traits": [],
-  "kb": "Ratchet and pawl indexer for cam-driven sequence control",
+  "kb": "40_power_precision.md",
   "ph": 240,
   "lab": {
    "machinist": 300,

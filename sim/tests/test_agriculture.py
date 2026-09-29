@@ -16,6 +16,8 @@ of a population that must farm and compares it to the historical 80-90%
 range WITHOUT retuning anything to close the gap if it does not land there -
 see that class and agriculture.py's own "ON THE HEADLINE NUMBER" docstring
 section for the reading of why it does not.
+
+sim/world/agriculture.py standalone: land, labour, technique and weather into food (unittest-style).
 """
 import random
 import unittest

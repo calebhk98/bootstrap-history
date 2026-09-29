@@ -1,26 +1,38 @@
 """Runner for the split regression suite.
 
 `python3 -m sim.tests` (or `python3 sim/tests/__main__.py`, or the
-`sim/test_regressions.py` shim) runs every topic module below, in the
-same order test_regressions.py always ran them in, and prints the same
-summary line it always has. `--only economy,labour` (comma-separated topic
-names, matching this list) runs just those modules - everything else about
+`sim/test_regressions.py` shim) runs every sim/tests/test_*.py topic in
+sorted order, discovered from disk (nothing is registered), and prints a
+summary line. `--only economy,labour` (comma-separated topic
+names, as `--list` prints them) runs just those modules - everything else about
 the run (the harness, --slow, --jobs) is unchanged. `--list` prints the
 topic names and exits.
 
 `--timing` adds a per-topic table to the summary: wall seconds, share of
 the run, and how many checks each topic bought. That table is what decides
-whether a topic belongs in harness.SLOW_TOPICS, and it is the command the
-percentages quoted in SLOW_TOPICS' own comment come from. It changes
+whether a topic deserves a module-level `SLOW_TOPIC = True`. It changes
 nothing about which checks run, so `--timing` can be added to any
 invocation, including `--only` and `--slow`.
+
+`--jobs N` (default: available cores; `--jobs 1` is the plain sequential run)
+runs each topic in its own fresh worker process, N at a time. Each worker
+buffers its output and the runner prints topics in the sorted order, so the
+output is the same as `--jobs 1` apart from timings. Workers run with
+`--jobs 1` inside, so in-topic subprocess parallelism does not multiply with
+topic parallelism, and each gets its own scratch directories. A topic that
+must not run beside others sets a module-level `SERIAL_TOPIC = True`; those
+run one at a time after the parallel batch. Per-topic times are remembered
+in `.cache/` so the next run starts the longest topics first.
 """
 import importlib
 import json
 import os
+import subprocess
 import sys
+import tempfile
 import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 
 # So `python3 sim/tests/__main__.py` (run as a plain script, no package
 # context) works exactly like `python3 -m sim.tests`: put the repo root on
@@ -42,314 +54,10 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-# Original test_regressions.py's own top-to-bottom order. A topic file's
-# name records which of the file's own section banners it came from - see
-# each module's own docstring for the exact original line range.
-TOPICS = [
-    "early_playtest",
-    "round2_policy_hazards_options",
-    "literacy_market_pricing",
-    "commodities_wired_in",
-    # round8_fixes/round9/round10/round12_naive15 were named for WHEN they
-    # were written (development rounds), not what they test, which made a
-    # behaviour impossible to find by name. Regrouped by theme instead - see
-    # each module's own docstring for which round-file(s) it came from and
-    # the exact original line range.
-    "ventures_lifecycle",
-    "project_pacing",
-    "affordability_and_credit",
-    "labour_hiring_and_wages",
-    "household_capacity_and_literacy",
-    "eminence_scandal_and_reputation",
-    "hazard_and_event_messaging",
-    "knowledge_risk_and_sacking",
-    "demographics_and_plague",
-    "civilisation_data_integrity",
-    "player_guidance_commands",
-    "material_production_commands",
-    "save_load_fog_mismatch",
-    "run_reproducibility",
-    "cross_screen_consistency",
-    "historical_events",
-    "names_and_fog",
-    "player_log",
-    "goods_market",
-    "mines",
-    "reputation",
-    "people_attrition_scholars",
-    "interface_honesty",
-    "fog_leak3",
-    "parallelism_note",
-    "sort_nearest",
-    "labour_productivity",
-    "arrears_hours",
-    "hedge_chain",
-    "market_saturation",
-    "round8g_display",
-    "five_things_winner",
-    "industrial_dashboard",
-    "scanners_and_scheduling",
-    "perf_optimizations",
-    "economic_caching",
-    "affordability_warning",
-    "arrears_visibility",
-    "allocate",
-    "craftsmen_wording",
-    "demographics",
-    # Focused complaint suites are first-class regressions too.  These used to
-    # exist on disk without appearing here, so the documented full-suite
-    # command silently skipped the fixes they were written to protect.
-    "complaints_09_16",
-    "complaint_13_specialist_supervision",
-    "complaints_17_24",
-    # Complaints/34: commissioned SCHOLAR hours bought nothing, because the
-    # project gate read the standing headcount. The same defect
-    # craft_hands_available() was written to fix, never extended to scholars.
-    "complaint_34_scholar_hours",
-    # Complaints/38: `path` printed one founder-hours budget and judged
-    # feasibility against a different one. The test asserts the printed and
-    # judged figures share a SOURCE, not merely that they currently agree.
-    "complaint_38_founder_lifetime",
-    # sim/engine/proto/: the agent-oriented compact output mode asked for in
-    # Complaints/35 section 1 - structured state WITHOUT losing the
-    # reason-carrying prose. Includes the byte-identical proof that the
-    # mode-off path is unchanged.
-    "compact_mode",
-    "dynamic_wages",
-    "economic_levers_inventory",
-    "explicit_starting_techs",
-    "realism_part02",
-    "realism_part03",
-    "realism_part04",
-    "realism_part05",
-    # Written as unittest.TestCase classes rather than top-level check() calls;
-    # _run_topic handles both. It had never run: unregistered here, and unable
-    # to import under the old rome.sim.tests rooting even if it had been.
-    "tierless_schema",
-    # sim/world/agriculture.py: land, labour, technique and weather into
-    # food, standalone and with no import of sim/engine/ - see that
-    # module's own docstring for why. Also unittest.TestCase-style.
-    "agriculture",
-    # sim/world/demography.py: age-cohort population dynamics, standalone
-    # and with no import of sim/engine/ - see that module's own docstring
-    # for why, and sim/world/__init__.py for the package as a whole. Also
-    # unittest.TestCase-style.
-    "demography",
-    # WIRING MILESTONE 4's seam: sim/engine/core.py's Sim._demographic_
-    # recovery now feeds sim/world/agriculture.py's real land+labour+weather
-    # harvest to sim/world/demography.py's Population.step, replacing a
-    # stand-in that assumed nutrition_ratio == 1.0 every year. Neither
-    # agriculture nor demography's own standalone suite can see this seam -
-    # each proves its own module correct in isolation, and the seam does
-    # not exist inside either module - so this is the one place a famine
-    # actually falling out of land/labour/weather/population, rather than
-    # a scripted hazard, is checked end to end. Depends on sim/engine/, so
-    # unlike agriculture/demography above it is NOT standalone. Also
-    # unittest.TestCase-style.
-    "agriculture_wiring",
-    # sim/world/military_logistics.py: rations, fodder, baggage-train range
-    # and firearm ammunition/maintenance as consumption arithmetic,
-    # standalone and with no import of sim/engine/ or the other sim/world/
-    # modules - see that module's own docstring for why. Also
-    # unittest.TestCase-style.
-    "military_logistics",
-    # sim/world/transport.py: freight cost per tonne-km from draught-animal
-    # metabolism, rolling resistance and gradient, standalone and with no
-    # import of sim/engine/ or the other sim/world/ modules - see that
-    # module's own docstring for why. Also unittest.TestCase-style.
-    "transport",
-    # sim/tests/test_material_freight.py: the crossing that wires transport.py
-    # into sim/engine/economy.py - a live Sim, through geography.json's own
-    # per-region `minerals` table, not standalone like "transport" above.
-    # Flat check()-at-import style, like most other topics.
-    "material_freight",
-    # sim/world/deposits.py: Ricardian rent (marginal-deposit pricing) from
-    # ore grade, depth and hardness, standalone and with no import of
-    # sim/engine/ or the other sim/world/ modules - see that module's own
-    # docstring for why and Complaints/32 for the gap it closes. Also
-    # unittest.TestCase-style.
-    "deposits",
-    # sim/world/demand.py: households with budgets and a Stone-Geary/LES
-    # demand system, plus derived (producer) demand read straight from
-    # data/production/*.json - standalone and with no import of sim/engine/
-    # or any other sim/world/ module - see that module's own docstring for
-    # why. Also unittest.TestCase-style.
-    "demand",
-    # docs/architecture/DEMAND_AT_SCALE.md: pins two structural defects in
-    # the demand system - the hard subsistence cliff and the Engel-curve
-    # floor - in the "assert the wrong behaviour, invert don't delete"
-    # style test_price_solver_cycles.py used before Complaints/31 was fixed.
-    "demand_at_scale",
-    # Guards the two silent bugs that made --burndown print "0 numbers
-    # declared" while 32 were declared, which left milestone 1 unmeasurable.
-    "constants_burndown",
-    # Pins Complaints/31: the price solver's resolvability pass refuses
-    # every recipe cycle, including the axe/iron example its own docstring
-    # uses. Written as assertions on the CURRENT wrong behaviour so the
-    # suite stays green and the defect stays impossible to miss.
-    "price_solver_cycles",
-    # Pins the technique-to-node link the price solver gates on. The tree
-    # records what a node CONSUMES and never what anything produces, so
-    # nothing joined a production recipe to the node that lets anyone run
-    # it, and the solve had no way to tell a Roman technique from a modern
-    # one. See Complaints/39 for the run that exposed it.
-    "price_solver_era_gate",
-    # Complaints/32's own follow-up: the solver printed RENT_IS_ZERO on
-    # every run although sim/world/deposits.py's Ricardian marginal-deposit
-    # model sat unimported next to it. Pins rent_hours_per_kg_by_ore_material
-    # (the demand-fixed-exogenously heuristic that closes the loop) and the
-    # iron blast-furnace/bloomery fallback --civ rome_100ad actually
-    # exercises.
-    "price_solver_rent",
-    # The last of the five standalone sim/world/ modules to be wired.
-    # military_logistics.py derives what a soldier's iron and ammunition
-    # cost to keep supplied, in KILOGRAMS - deliberately never converted to
-    # money, because a mass-to-currency conversion would need a price this
-    # crossing has no business inventing.
-    "military_logistics_wiring",
-    # Complaints/30 stage 3: a branch edit to an EXISTING tech-tree node was
-    # silently discarded, so data/branches/ was decorative for every id the
-    # tree already carried. Pins the field-by-field overlay, the fixed point
-    # (no edits means byte-identical output), and the new rule that an id
-    # defined in two branch files is an error naming both sides.
-    "branch_merge_authority",
-    # sim/world/land.py: Ricardian rent at the MARGIN OF CULTIVATION, which
-    # is a different mechanism from deposits.py's ore rent because a mine
-    # depletes and a field does not. Complaints/43 - land solved to exactly
-    # 0.0 and land scarcity is what drives a pre-industrial economy.
-    "land",
-    # The property Complaints/46 and Complaints/50 were each separately
-    # about, asserted directly for the first time: re-partitioning a
-    # territory must not change a single land figure. Same ground described
-    # as one region, as two, and as four must give the same parcels, the
-    # same price, the same quantity supplied and the same marginal tile.
-    # Both of those complaints were one instance each of a hand-drawn
-    # region being used as if it were a unit of physical quantity when it is
-    # only a label, and both were fixed for their own mechanism without the
-    # map underneath being migrated. This is the check that catches the
-    # third instance. Its fixture is four synthetic tiles rather than real
-    # geography, so regenerating the map cannot make it drift.
-    "land_tile_partition_invariance",
-    # Complaints/45: the unshocked baseline collapsed because Storage was
-    # rebuilt empty every year, so a good harvest was discarded while a bad
-    # one still cost lives. Pins the granary, the double-seed-deduction bug
-    # that was hiding behind it, and the proof that the farm workforce share
-    # does NOT respond to a famine.
-    "granary_persistence",
-    # sim/world/labour_market.py: the fixed point over TRADE ALLOCATION that
-    # solve_prices.py is for material prices, in the same labour-hours
-    # numeraire and needing no wages. Answers whether a famine can pull a
-    # blacksmith into the fields - mechanically yes, quantitatively almost
-    # not at all.
-    "labour_market",
-    # Complaints/44: England made process heat by FRICTION because a
-    # megajoule was a megajoule to the solver and you cannot forge with a
-    # warm bearing. A technique now states the temperature it reaches and a
-    # process the temperature it needs, using the tree's own cap_heat_*
-    # rungs, and choice of technique picks the cheapest one THAT WORKS.
-    "temperature_caps",
-    # tools/generate_geography_tiles.py's output: 1,139 equal-area land
-    # tiles of 150,000 km2 each, derived by ONE stated rule from Natural
-    # Earth land polygons and the Koppen-Geiger climate classification,
-    # rather than 21 hand-written regions sized by what they are called.
-    # Complaints/46. Added ALONGSIDE `regions`, which is untouched.
-    "geography_tiles",
-    # sim/world/shared_constants.py: one home for a physical fact several
-    # domains need, after land.py and agriculture.py were found holding six
-    # of them apiece - including one under a different name AND a different
-    # unit (fallow as a multiplier of 2.0 in one, a share of 0.5 in the
-    # other). Also the net that catches a future re-duplication.
-    "shared_constants",
-    # sim/engine/prices.py's own copy of the RENT_IS_ZERO bug: the function
-    # the engine switch calls was solving without the rent tables, so
-    # flipping it on would have discarded two rounds of rent work. Also
-    # pins that land rent is per-civilisation and cannot be shared between
-    # two civilisations holding the same technologies.
-    "engine_prices_civilization_rent",
-    # sim/engine/prices.py: the first wiring of the price solver into the
-    # engine - given a set of held technology ids, ask the solver for a
-    # price, cached on the gate nodes held rather than the full technology
-    # set, with data/prices.json as the fallback and a per-material
-    # provenance report ("solved" or "book") as the measurable burndown.
-    # Off by default; sim/engine/data.py's load() only calls it when
-    # use_solved_prices=True. See that module's own docstring.
-    "engine_prices",
-    # Complaints/46, the engine half: forest_land_ceiling scaled how much
-    # coppice woodland a civilisation can organise by len(home_regions) - the
-    # COUNT of labels its territory is filed under. Han China is 9,597,000 km2
-    # filed as one region and Rome is 9,517,500 km2 filed as seven, so China
-    # could reach a seventh of Rome's firewood on the same ground. Now per
-    # million km2 of real home land, which also pins that the count cannot
-    # come back: two territories of equal area get equal ceilings whatever
-    # their region count.
-    # Complaints/48: technology could only ever make mortality WORSE - the
-    # child-survival rate was a constant, so a civilisation that learned germ
-    # theory buried exactly as many children as one that had not. The eight
-    # medical nodes now drive a disease burden read live from what is held,
-    # instead of queueing a scalar population bonus on a forty-year ramp.
-    "disease_burden_wiring",
-    # Complaints/47: one weather draw decided the harvest in Britain and in
-    # Egypt on the same coin flip. Weather is now drawn per home region and
-    # pooled by each region's share of the cultivable land, so holding spread
-    # -out territory is worth something - which is what the grain fleet was
-    # for. Pins that the seed stays a pure function of (civ, region, year).
-    "regional_weather_wiring",
-    # Complaints/50: a region record was one weather draw, so Han China -
-    # the same size as the Roman Empire, with more cultivable land - flipped
-    # ONE coin where Rome flipped seven. Territory is now broken into
-    # geography.json's 150,000 km2 land_tiles and correlated by real
-    # distance through an exponential kernel, so diversification comes from
-    # being spread out rather than from row count.
-    "growing_season_weather_correlation",
-    # Complaints/49: not one recipe consumed iugerum_land, so two rounds of
-    # land-rent work reached no price anybody paid. Grown and land-limited
-    # materials now state land_iugera_years and the solver charges rent for
-    # it. Pins the property that matters: wheat priced identically in all
-    # five civilisations before, and must now rank with each one's own rent.
-    "price_solver_land",
-    "complaint_46_forest_area_not_region_count",
-    # Complaints/42: a civilisation holding a node whose own prerequisites it
-    # lacks. Seventeen do. Pinned by name rather than fixed, and failing in
-    # both directions, so the count can only move deliberately.
-    "civilisation_prerequisites",
-    # Guards the id()-reuse hazard that made the simulation non-deterministic;
-    # structural, so it catches the class rather than the one instance.
-    "determinism",
-    # The tool that makes the naming sweep affordable; verified here because a
-    # verification tool nobody verified is a rubber stamp.
-    "rename_prover",
-    # sim/code_health.py: the naming/duplication/complexity/misc scanner
-    # CLAUDE.md section 7 says does not exist as a committed tool. Tests the
-    # DETECTORS against small fixtures with a known answer, not the current
-    # state of this codebase - see that file's own docstring.
-    "code_health",
-    # The claim CLAUDE.md section 7 and .pylintrc both rest on: pylint's
-    # invalid-name reports nothing for three kinds of binding, so a clean
-    # pylint run is not a tree without short names. That claim rots
-    # silently if pylint ever gains a checker, so this topic runs the real
-    # pylint over a fixture holding one of each.
-    "pylint_blind_spots",
-    # treetool.py's four subcommands each rewrite a committed data file, and
-    # `judge` reads like a question while doing it. Two agents wrote
-    # data/judgement.json by accident before the default became report-only,
-    # both times with the instruction to pass --dry-run already written down
-    # in front of them. This pins the safe default, pins --write as the way
-    # past it, and pins --dry-run as still-accepted so existing careful
-    # callers keep working.
-    "treetool_writes_only_when_asked",
-    # The suite has to be able to run before anything above it can:
-    # this topic checks that it does so from a checkout of any name,
-    # in any directory. It is last because it re-runs one cheap topic
-    # in a child process.
-    "package_identity",
-    "state_schema",
-    "state_serialization",
-    "live_state_ownership",
-    "state_ownership_enforcement",
-    "schema_evolution",
-    "static_checks",
-    "suite_portability",
-]
+from sim.tests.discovery import discover_topics  # noqa: E402
+
+# Every sim/tests/test_*.py is a topic, in sorted order (see discovery.py).
+TOPICS = discover_topics()
 
 
 def _run_topic(slug, harness):
@@ -449,6 +157,105 @@ def _print_topic_timing(topic_costs):
              sum(count for _, _, count in topic_costs), len(topic_costs)))
 
 
+_TIMES_FILE = os.path.join(_REPO_ROOT, ".cache", "test_topic_seconds.json")
+
+
+def _load_topic_seconds():
+    try:
+        with open(_TIMES_FILE, encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_topic_seconds(topic_costs):
+    """Remember per-topic wall time so the next parallel run starts the longest first."""
+    known = _load_topic_seconds()
+    known.update({slug: seconds for slug, seconds, _ in topic_costs})
+    try:
+        os.makedirs(os.path.dirname(_TIMES_FILE), exist_ok=True)
+        handle_fd, temporary = tempfile.mkstemp(dir=os.path.dirname(_TIMES_FILE), suffix=".tmp")
+        with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
+            json.dump(known, handle)
+        os.replace(temporary, _TIMES_FILE)
+    except OSError:
+        pass
+
+
+def _worker_main(slug, result_path):
+    """Run one topic in this (fresh) process and dump its results as JSON."""
+    from sim.tests import harness
+    checks_before = len(harness.CHECKS_RUN)
+    started_at = time.time()
+    _run_topic(slug, harness)
+    with open(result_path, "w", encoding="utf-8") as handle:
+        json.dump({"seconds": time.time() - started_at,
+                   "checks": harness.CHECKS_RUN[checks_before:],
+                   "failures": harness.FAILURES,
+                   "skipped": harness.SKIPPED,
+                   "subproc_time": harness._SUBPROC_TIME[0],
+                   "subproc_calls": harness._SUBPROC_CALLS[0]}, handle)
+    return 0
+
+
+def _start_worker(slug, harness, result_dir):
+    """Launch a fresh process for one topic; in-topic parallelism is 1 per worker."""
+    result_path = os.path.join(result_dir, slug + ".json")
+    command = [sys.executable, os.path.abspath(__file__), "--worker", slug,
+               "--worker-result", result_path, "--worker-tag", slug, "--jobs", "1"]
+    if harness.SLOW:
+        command.append("--slow")
+    completed = harness._real_subprocess_run(command, capture_output=True, text=True,
+                                             cwd=_REPO_ROOT)
+    result = None
+    try:
+        with open(result_path, encoding="utf-8") as handle:
+            result = json.load(handle)
+    except (OSError, ValueError):
+        pass
+    return completed, result
+
+
+def _run_topics_parallel(run_now, harness, jobs):
+    """Run topics in worker processes; print and merge results in topic order."""
+    serial = set(harness.SERIAL_TOPICS)
+    seconds_before = _load_topic_seconds()
+    parallel_slugs = sorted((slug for slug in run_now if slug not in serial),
+                            key=lambda slug: -seconds_before.get(slug, 0.0))
+    serial_slugs = [slug for slug in run_now if slug in serial]
+    topic_costs = []
+    outcomes = {}
+    with tempfile.TemporaryDirectory(prefix="rome_suite_") as result_dir:
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = {slug: pool.submit(_start_worker, slug, harness, result_dir)
+                       for slug in parallel_slugs}
+            # Serial topics wait for the whole parallel batch, then run one at a time.
+            for future in futures.values():
+                future.exception()
+        for slug in serial_slugs:
+            outcomes[slug] = _start_worker(slug, harness, result_dir)
+        for slug, future in futures.items():
+            outcomes[slug] = future.result()
+    for slug in run_now:
+        completed, result = outcomes[slug]
+        sys.stdout.write(completed.stdout)
+        if result is None:
+            message = "%s: worker crashed (exit %s)" % (slug, completed.returncode)
+            print("  %-58s FAIL %s" % (message, completed.stderr.strip()[-400:]))
+            harness.CHECKS_RUN.append((message, 0.0))
+            harness.FAILURES.append(message)
+            topic_costs.append((slug, 0.0, 1))
+            continue
+        harness.CHECKS_RUN.extend((name, took) for name, took in result["checks"])
+        harness.FAILURES.extend(result["failures"])
+        harness.SKIPPED.extend(result["skipped"])
+        harness._SUBPROC_TIME[0] += result["subproc_time"]
+        harness._SUBPROC_CALLS[0] += result["subproc_calls"]
+        topic_costs.append((slug, result["seconds"], len(result["checks"])))
+    _save_topic_seconds(topic_costs)
+    return topic_costs
+
+
 def _parse_only(argv):
     for i, arg in enumerate(argv):
         if arg == "--only" and i + 1 < len(argv):
@@ -465,6 +272,11 @@ def main(argv=None):
         for slug in TOPICS:
             print(slug)
         return 0
+
+    if "--worker" in argv:
+        position = argv.index("--worker")
+        result_path = argv[argv.index("--worker-result") + 1]
+        return _worker_main(argv[position + 1], result_path)
 
     only = _parse_only(argv)
     if only is None:
@@ -513,13 +325,17 @@ def main(argv=None):
     # number in prose carries the command that produced it or it does not go
     # in. This loop is that command.
     topic_costs = []
-    for slug in TOPICS:
-        if slug in run_now:
-            checks_before = len(harness.CHECKS_RUN)
-            started_at = time.time()
-            _run_topic(slug, harness)
-            topic_costs.append((slug, time.time() - started_at,
-                                len(harness.CHECKS_RUN) - checks_before))
+    if harness.JOBS > 1 and len(run_now) > 1:
+        topic_costs = _run_topics_parallel(
+            [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)
+    else:
+        for slug in TOPICS:
+            if slug in run_now:
+                checks_before = len(harness.CHECKS_RUN)
+                started_at = time.time()
+                _run_topic(slug, harness)
+                topic_costs.append((slug, time.time() - started_at,
+                                    len(harness.CHECKS_RUN) - checks_before))
 
     print("=" * 72)
     print("%d checks, %d failures, %.0fs%s"

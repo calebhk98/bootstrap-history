@@ -236,7 +236,7 @@
   "pre": [
    "cap_vac_1torr",
    "fused_quartz",
-   "industrial_gases"
+   "cap_gas_o2h2"
   ],
   "req_any": [
    {

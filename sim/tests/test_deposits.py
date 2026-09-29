@@ -14,6 +14,8 @@ sim/world/agriculture.py's own CALIBRATION TARGETS section for the same
 discipline applied there first). It reports the disagreement; it never
 asserts a tolerance tight enough to tempt anyone into tuning a grade or a
 breaking-hours constant to close it.
+
+sim/world/deposits.py standalone: Ricardian rent from ore grade, depth and hardness (unittest-style).
 """
 import ast
 import json
@@ -341,7 +343,7 @@ class DepletionMechanismTests(unittest.TestCase):
 
 
 class SinkingCostTests(unittest.TestCase):
-    """sinking_cost_labour_hours, amortized_sinking_cost_labour_hours_per_kg
+    """shaft_cost_labour_hours, amortized_sinking_cost_labour_hours_per_kg
     and total_cost_labour_hours_per_kg - the stakeholder's first
     observation: a fixed, one-time cost to open a deposit, independent of
     what is down there, additive with the recurring per-tonne cost.
@@ -351,8 +353,8 @@ class SinkingCostTests(unittest.TestCase):
         surface = _make_deposit("s", depth_class="surface")
         alluvial = _make_deposit("a", material_moved="gravel",
                                   depth_class="alluvial", hardness_class=None)
-        self.assertEqual(deposits.sinking_cost_labour_hours(surface), 0.0)
-        self.assertEqual(deposits.sinking_cost_labour_hours(alluvial), 0.0)
+        self.assertEqual(deposits.shaft_cost_labour_hours(surface), 0.0)
+        self.assertEqual(deposits.shaft_cost_labour_hours(alluvial), 0.0)
 
     def test_shaft_and_aqueduct_classes_have_positive_fixed_cost(self):
         shallow = _make_deposit("sh", depth_class="shallow_vein")
@@ -360,14 +362,14 @@ class SinkingCostTests(unittest.TestCase):
         hydraulic = _make_deposit("h", material_moved="gravel",
                                    depth_class="alluvial_hydraulic",
                                    hardness_class=None)
-        self.assertGreater(deposits.sinking_cost_labour_hours(shallow), 0.0)
-        self.assertGreater(deposits.sinking_cost_labour_hours(deep), 0.0)
-        self.assertGreater(deposits.sinking_cost_labour_hours(hydraulic), 0.0)
+        self.assertGreater(deposits.shaft_cost_labour_hours(shallow), 0.0)
+        self.assertGreater(deposits.shaft_cost_labour_hours(deep), 0.0)
+        self.assertGreater(deposits.shaft_cost_labour_hours(hydraulic), 0.0)
         # A deep shaft (dewatering battery included) costs more to open
         # than a shallow one - the same DIRECTION as the recurring haulage
         # multiplier already asserts for these two classes.
-        self.assertGreater(deposits.sinking_cost_labour_hours(deep),
-                            deposits.sinking_cost_labour_hours(shallow))
+        self.assertGreater(deposits.shaft_cost_labour_hours(deep),
+                            deposits.shaft_cost_labour_hours(shallow))
 
     def test_zero_fixed_cost_leaves_total_cost_equal_to_extraction_cost(self):
         # Surface deposits pay no fixed cost at all, whatever their size -
@@ -389,8 +391,8 @@ class SinkingCostTests(unittest.TestCase):
                               ore_grade_kg_per_tonne=1.0)
         rich = _make_deposit("rich", depth_class="deep_vein",
                               ore_grade_kg_per_tonne=1000.0)
-        self.assertEqual(deposits.sinking_cost_labour_hours(lean),
-                          deposits.sinking_cost_labour_hours(rich))
+        self.assertEqual(deposits.shaft_cost_labour_hours(lean),
+                          deposits.shaft_cost_labour_hours(rich))
 
     def test_larger_reserve_amortizes_the_fixed_cost_more_thinly(self):
         # "The same cost to make a mine regardless of if there is 1 ton of

@@ -25,21 +25,7 @@ from sim.constants import declare
 class ProgressMixin:
     # -- main loop ----------------------------------------------------------
 
-    # A HIRED TRADE'S HOURS ARE A TOTAL, NOT A TOLL DUE EVERY YEAR. A project
-    # wanting 1,200 smith-hours over a 4-year calendar floor must not demand
-    # exactly 300 a year, every year, regardless of what the trade can
-    # actually supply: three smiths free or thirty should not draw the same
-    # 300 and waste the rest. Labour is a genuine CAP - nobody can do a
-    # billion hours in a year - but a company able to field more hands must
-    # be able to spend twice as much for half as long, not be held to a
-    # fixed yearly toll. lab_year_draw is the honest shape of the
-    # constraint: a TOTAL (node["lab"][trade_id], drawn down in
-    # project_state["lab_left"]), a per-year CEILING somewhat above the pace the node was
-    # calibrated at (a site has only so many benches, so extra hands beyond a
-    # multiple of that still go to waste), and a maximum calendar SPAN past
-    # which the undertaking is abandoned rather than left to drift for
-    # centuries - see lab_max_span just below for what that span is and why.
-    #
+    # Hired trade hours: total drawn down, per-year ceiling, calendar span limit.
     # A site can field more than its calibrated crew, but not without limit.
     LAB_CREW_RATE_MULT = declare(
         "LAB_CREW_RATE_MULT", 4.0, kind="temporary_heuristic",
@@ -59,17 +45,7 @@ class ProgressMixin:
         disagree with what step() actually offers.
         """
         project_state, node = self.state.projects.active[node_id], self.nodes[node_id]
-        # THE THROTTLE IS NOT APPLIED HERE, and must not be. step() spends
-        # `min(remaining, this) * throttle`, and folding the throttle in
-        # changes that to `min(remaining, this * throttle)`, which is a
-        # different number whenever the founder's remaining hours are the
-        # binding term: at remaining 100, a want of 500 and a throttle of
-        # 0.5, the first gives the project 50 hours and the second gives it
-        # 100. That is the material-shortage brake silently ceasing to apply
-        # in exactly the case it matters most, a busy year with the founder
-        # stretched thin, and no check in this suite caught it. What this
-        # returns is the project's WANT; every caller applies the brake for
-        # its own purpose.
+        # Throttle not applied here; caller applies. Returns WANT, not allocation.
         return max(project_state["ph_left"], node["ph"] / max(node["yrs"], 1.0))
 
     def active_hours_still_wanted(self):
@@ -250,20 +226,12 @@ class ProgressMixin:
             left, nominal = plan_entry["left"], plan_entry["nominal"]
             have = max(0.0, self.hours_you_can_call_on(trade_id)
                        - projects.trade_hours_used.get(trade_id, 0.0))
-            # THE CEILING IS A CREW, NOT A CALENDAR, so take whatever of this
-            # is both USEFUL (no more than is left to do) and AVAILABLE (no
-            # more than the trade can actually supply this year), up to the
-            # site's own headroom above its calibrated pace.
+            # Ceiling is crew, not calendar. Take what's useful and available.
             drawn = min(left, plan_entry["ceiling"], have)
             lab_left[trade_id] = max(0.0, left - drawn)
             projects.trade_hours_used[trade_id] = projects.trade_hours_used.get(trade_id, 0.0) + drawn
             hired_hours += drawn
-            # THE WARNING IS STILL DRAWN AT THE OLD PACE. Extra capacity above
-            # the historical figure is a bonus with no penalty either way; a
-            # SHORTFALL below the pace the node was actually calibrated
-            # against is what give-back and "short of trade" have always
-            # meant, and moving the goalposts to the new, larger ceiling would
-            # warn about a shortage of hands nobody ever expected to exist.
+            # Warning drawn at old pace. Shortfall triggers give-back.
             target = min(nominal, left)
             if target > 0:
                 worst = min(worst, drawn / target)
@@ -278,12 +246,7 @@ class ProgressMixin:
         else:
             project_state["status"] = "ACTIVE"
             project_state.pop("short_of_trade", None)
-        # THE DEADLINE: without one, a trade that never clears its balance
-        # would let a project creep forward forever at whatever sliver of
-        # progress could be found - technically still moving, never
-        # actually finishing, and never SAID to have failed. People die
-        # and what they knew goes with them; nothing here pretends
-        # otherwise.
+        # DEADLINE: prevents creep. Unmet trades trigger abandonment.
         if project_state["yrs"] >= self.lab_max_span(node_id) and any(value > 0.5 for value in lab_left.values()):
             unmet = sorted(trade_id for trade_id, value in lab_left.items() if value > 0.5)
             return hired_hours, worst, frac, (
@@ -293,42 +256,10 @@ class ProgressMixin:
         return hired_hours, worst, frac, None
 
     # ---- A FAILED ATTEMPT TEACHES YOU SOMETHING -----------------------------
-    # A player who had already won the game objected to the mechanic just
-    # below as it stood: a failure reset the calendar floor to zero and rolled
-    # again at the SAME probability, which models a society trying the exact
-    # same programme with the exact same odds as if the first attempt had
-    # never happened. Their own words: "if I fail my first crystal-growing
-    # programme, that failure itself teaches my engineers a huge amount. My
-    # next attempt should not be probabilistically identical." They also
-    # named the other half of it themselves - "the second attempt should
-    # probably inherit some progress" - because a high-pressure steam system
-    # or a zone-refining line is not only an engineering problem, it is a
-    # SOCIAL one: workshops retooled, a workforce that has seen the process
-    # once, suppliers who already adjusted, regulators or patrons who already
-    # sat through the pitch. A technical failure at the end does not erase
-    # that diffusion, which is most of what a long calendar floor represents
-    # in the first place (see _calendar_floor_remaining's own comment on what
-    # these floors are actually made of).
+    # Risk (engineering lesson) and calendar (social groundwork) both decrease.
+    # Both capped strictly short of zero; "should never be free".
     #
-    # So this does BOTH, because they answer two different questions the
-    # player asked in the same breath: the risk term is the ENGINEERING
-    # lesson (what failed, and why, is now known and will not recur in the
-    # same way), the calendar term is the SOCIAL one (the groundwork already
-    # laid does not have to be laid twice). Both are diminishing and both are
-    # capped strictly short of removing the danger or the wait entirely -
-    # "should never be free" was the explicit brief, and a mechanic that let
-    # enough failures drive the risk to zero or the wait to nothing would
-    # just be a slower way of removing the hazard altogether, which is not
-    # what was asked for.
-    #
-    # RISK: multiplies the node's own base risk by a factor that starts at
-    # 1.0 (attempt one is not "probabilistically identical" to anything - it
-    # IS the first data point, nothing has been learned yet) and decays
-    # toward RETRY_RISK_FLOOR as failures accumulate, geometrically, so the
-    # first failure buys the most and every one after buys less. Floored well
-    # above zero: an engineering team that has failed four times still faces
-    # a real chance of failing a fifth, because "we now understand this
-    # failure mode" does not mean "we have found every failure mode".
+    # RISK: Multiplies base risk, decaying geometrically toward RETRY_RISK_FLOOR.
     RETRY_RISK_FLOOR = declare(
         "RETRY_RISK_FLOOR", 0.40, kind="temporary_heuristic",
         unit="fraction of the naive (bare node) risk", source=None,
@@ -355,18 +286,8 @@ class ProgressMixin:
         return (self.RETRY_RISK_FLOOR
                 + (1.0 - self.RETRY_RISK_FLOOR) * self.RETRY_RISK_DECAY ** attempt_count)
 
-    # CALENDAR: a fraction of the years already spent on THIS attempt is
-    # banked toward the next one instead of being erased, on the same
-    # diminishing, capped shape as the risk term above and for the same
-    # reason - RETRY_CALENDAR_CAP is comfortably short of 1.0 so a retried
-    # programme is never instantly ready, only readier than the last one.
-    # Read off self.state.projects.active[node_id]["yrs"] AT THE MOMENT OF FAILURE, not off a
-    # recomputed floor: core.py's own completion gate (the reputation-
-    # shrinking floor for diffusion-limited nodes) already decided how many
-    # years this attempt actually took before calling here, and banking a
-    # share of THAT figure keeps this consistent with whatever the floor
-    # happened to be without this file needing a second copy of core.py's
-    # formula that could drift out of step with it.
+    # CALENDAR: Fraction of elapsed years banked toward next attempt, capped.
+    # Retried programmes readier than last, never instant.
     RETRY_CALENDAR_CAP = declare(
         "RETRY_CALENDAR_CAP", 0.65, kind="temporary_heuristic",
         unit="fraction of the elapsed calendar time on a failed attempt",
@@ -396,39 +317,8 @@ class ProgressMixin:
             return 0.0
         return self.RETRY_CALENDAR_CAP * (1.0 - self.RETRY_CALENDAR_DECAY ** attempt_index)
 
-    # CONTROL RELIEF: a player who holds a working process controller faces
-    # a lower chance of failing any node whose OWN stated failure mode is
-    # holding a continuous process at temperature, rate or composition - a
-    # zone-refining run, a Czochralski pull, a fractional distillation, a
-    # high-pressure boiler - rather than a one-shot mechanical build. This
-    # answers the player who reached zone_refining with a mature economy
-    # and complete prerequisites and found only dice waiting: the historical
-    # mitigation for "a process you cannot hold at temperature or rate" is
-    # closed-loop control (Minorsky 1922, the pneumatic three-term
-    # controller, Ziegler-Nichols tuning - see ctl_pneumatic_process_
-    # controller in the tree), not a bigger workshop or more capital.
-    #
-    # WHICH NODES QUALIFY IS DATA, NOT A LIST HERE. A node opts in by
-        # carrying failure_kind: "process_control" in the tree itself - the
-        # tag lives beside the other properties of the technology (risk,
-    # traits) in tech_tree.json / the branch files, the same place every
-    # other fact about a node lives. Nine core nodes carry it today
-    # (zone_refining, single_crystal, gecl4_purification, ge_reduction,
-    # lead_chamber, crucible_steel, high_temp_furnace, steam_high_pressure,
-    # electrolysis_industrial), chosen because each one's OWN note already
-    # describes a continuous hold-at-setpoint failure character, not because
-    # this function needed somewhere to point.
-    #
-    # BOUNDED, ON PURPOSE. CONTROL_RELIEF_FACTOR is a flat 35% cut, and nothing
-    # about it depends on failed_attempts, so it neither stacks unboundedly
-    # with retry-learning nor ever reaches zero by itself: a controlled
-    # zone_refining run at 0.45 base risk drops to about 0.29 on a first
-    # attempt, meaningfully more survivable, still a real coin's chance of
-    # failing. RETRY_RISK_FLOOR is untouched (this multiplies alongside it,
-    # not instead of it) so the worst case, many failures AND a controller,
-    # is 0.45 * RETRY_RISK_FLOOR * CONTROL_RELIEF_FACTOR =~ 0.12, never a
-    # formality. The brief was explicit that zone_refining's tension is the
-    # game's best late tension and this must not remove it, only mitigate it.
+    # CONTROL RELIEF: Process controller cuts risk by 35% for process-control nodes.
+    # Earned once, independent of failed_attempts. Nodes opt in via tree data.
     CONTROL_RELIEF_FACTOR = declare(
         "CONTROL_RELIEF_FACTOR", 0.65, kind="temporary_heuristic",
         unit="fraction of risk remaining after relief (a flat 35% cut)",
@@ -469,15 +359,7 @@ class ProgressMixin:
                 * self._control_relief_multiplier(node_id))
 
     # ---- WHAT A RISKY NODE ACTUALLY COSTS IN CALENDAR TIME -----------------
-    # `effective_risk` and `calendar_floor` answer two separate questions -
-    # "how likely is the next roll to fail" and "how many years before there
-    # even IS a next roll" - and must not be left for a player to multiply
-    # together by hand. A 45%-per-attempt, 4-year-floor node is not a
-    # 4-year project; on the bare geometric series 1/(1-p) it is 1.82
-    # attempts, and even that understates it for anything past the first
-    # failure, because retry learning (RETRY_RISK_FLOOR, RETRY_CALENDAR_CAP
-    # above) means neither the odds nor the clock a plain geometric series
-    # assumes are the ones a second, third or fourth attempt actually faces.
+    # effective_risk and calendar_floor answer separate questions about odds and wait.
     DIFFUSION_LIMITED_YEARS_THRESHOLD = declare(
         "DIFFUSION_LIMITED_YEARS_THRESHOLD", 5, kind="temporary_heuristic",
         unit="years (node['yrs'])", source=None, confidence="D",
@@ -580,22 +462,15 @@ class ProgressMixin:
         try:
             while True:
                 if attempt_index == initial_failed_attempts and _active is not None:
-                    # ALREADY MID-ATTEMPT: use the real elapsed clock, not a
-                    # recomputed banked fraction - more honest about a
-                    # project already part-way through its current attempt.
+                    # Mid-attempt: use real elapsed clock, not recomputed fraction.
                     years_this_attempt = max(0.0, floor - _active.get("yrs", 0.0))
                 elif attempt_index == initial_failed_attempts:
-                    # NOT ACTIVE: whether this is the very first attempt ever
-                    # (i0 == 0) or a restart after a manual `stop` (i0 > 0),
-                    # start_project always zeroes `yrs` - see assumption 3 -
-                    # so the next attempt pays the full floor either way.
+                    # Not active: start_project zeroes yrs, so pay full floor.
                     years_this_attempt = floor
                 else:
                     years_this_attempt = floor * (1.0 - self._retry_calendar_retain(node_id, attempt_index))
                 total += survive * years_this_attempt
-                # STAND IN FOR "i FAILURES SO FAR", ask effective_risk, then
-                # move on - the real count is restored in `finally` below,
-                # not here, so an exception mid-loop can never leave it wrong.
+                # Stand in for i failures, read effective_risk, restore in finally.
                 projects.failed_attempts[node_id] = attempt_index
                 survive *= self.effective_risk(node_id)
                 attempt_index += 1

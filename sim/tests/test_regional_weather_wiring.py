@@ -11,7 +11,12 @@ this checks that core.py actually builds land-share weights from Rome's
 seven home_regions, draws one independent multiplier per region, and pools
 them - and that the century-level acceptance target this wiring exists for
 is actually met.
+
+Weather is drawn per home region and pooled by cultivable-land share; the seed is a pure function of (civ, region, year).
 """
+
+# Skipped by a default run; --slow or --only runs it.
+SLOW_TOPIC = True
 import random
 import statistics
 import unittest
@@ -207,6 +212,8 @@ class UnshockedCenturyAcceptanceTests(unittest.TestCase):
         shocked = _rome_sim(events=False)
         shocked.farm_land = agriculture.Land(
             shocked.farm_land.hectares * 0.15, quality=shocked.farm_land.quality)
+        # The lost ground is gone for good, not left to be cleared again.
+        shocked._farm_arable_ceiling = shocked.farm_land.hectares
 
         for year in range(101, 111):
             control._demographic_recovery(year)

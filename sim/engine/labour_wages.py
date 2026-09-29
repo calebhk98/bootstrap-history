@@ -5,16 +5,18 @@ a file of their own (see labour.py's own docstring for the split).
 
 work_for_wages and wage_bill are the two directions of the same trade: a
 founder selling their own hours at the going rate, and a household paying
-its standing staff that same rate every year. Both read annual_wage, and
-annual_wage reads wage_cost_factors - the endogenous food, housing and
-trade-tool multipliers (TRADE_TOOL_BASKETS, HOUSING_PRESSURE_*, WAGE_SHARE_
-*) that blend real market prices into the historical wage table rather
-than reading it flat. Nothing here decides WHO can be hired or how many -
+its standing staff that same rate every year. Both read annual_wage, which
+starts from the labour-market schedule (wage_per_hour: subsistence floor,
+training premium, tightness) and applies wage_cost_factors - the food,
+housing and trade-tool multipliers (TRADE_TOOL_BASKETS, HOUSING_PRESSURE_*,
+WAGE_SHARE_*) that follow live market prices. Nothing here decides WHO can be hired or how many -
 that is labour_population.py's market depth and labour_capacity.py's
 household-room ceiling; this file only prices the trade once a person is
 in it.
 """
-from .data import (ANNUAL_WAGE, WAGES)
+from . import wage_provider
+from . import money_units
+from .data import TRADE_REGISTRY, WAGES
 from sim.constants import declare
 
 
@@ -59,8 +61,7 @@ class WagesMixin:
             return 0.0, ("there is nobody left to do the work: these are YOUR "
                          "hours, and the founder is dead. What you built goes "
                          "on; you do not.")
-        wage_rate = WAGES.get(trade)
-        if wage_rate is None:
+        if trade not in WAGES:
             here = sorted(candidate_trade for candidate_trade in WAGES if self.trade_available(candidate_trade))
             return 0.0, ("no such trade. you could work as: " + ", ".join(here))
         # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU
@@ -101,7 +102,7 @@ class WagesMixin:
                             household.reputation / self.WAGE_REPUTATION_SCALE)))
         before_practice = self.revenue()
         household.add_capital(pay)
-        household.wage_hours_this_year = (household.wage_hours_this_year or 0.0) + hours
+        household.wage_hours_this_year = household.wage_hours_this_year + hours
         household.wages_earned = (household.wages_earned or 0.0) + pay
         # SAY WHEN IT IS A BAD TRADE: selling your hours costs you the
         # practice those same hours were running (see practice_attention),
@@ -246,13 +247,10 @@ class WagesMixin:
     def wage_cost_factors(self, trade):
         """Endogenous food, housing and trade-tool multipliers for a wage.
 
-        The historical wage table remains the neutral benchmark and therefore
-        retains skill, training, hazard and bargaining differences between
-        jobs. Forty-five percent is subsistence food, twenty percent housing,
-        ten percent tools/consumables, and twenty-five percent that fixed
-        skill/difficulty premium. At neutral prices the weighted factor is
-        1.0 to within about a part in a million, preserving the calibrated
-        starting economy.
+        The labour-market schedule is the neutral benchmark; these factors
+        scale it by how far live food, housing and tool prices have moved.
+        At neutral prices the weighted factor is 1.0 to within about a part
+        in a million.
 
         It is not EXACTLY 1.0, and the difference is the model working. The
         tools term reads real market factors, and a society does not start
@@ -281,20 +279,46 @@ class WagesMixin:
                 "weighted": self.WAGE_SHARE_FOOD * food + self.WAGE_SHARE_HOUSING * housing
                             + self.WAGE_SHARE_TOOLS * tools + self.WAGE_SHARE_SKILL_AND_DIFFICULTY}
 
-    ANNUAL_WAGE_FALLBACK = declare(
-        "ANNUAL_WAGE_FALLBACK", 375.0, kind="temporary_heuristic",
-        unit="denarii/year at price_index=wage_index=1", source=None,
-        confidence="D",
-        why="What a trade with no entry of its own in ANNUAL_WAGE "
-            "(data.py) is assumed to be paid, so an unlisted trade still "
-            "gets a plausible wage rather than zero. A generic middling "
-            "figure, not an attested wage for any specific trade - every "
-            "trade this engine actually names has its own real ANNUAL_WAGE "
-            "entry; this is only reached for one that does not.")
+    def wage_schedule(self):
+        """This household's labour-market wage schedule. Its tightness
+        factors live in the economy state, so a save carries them."""
+        factors = self.state.economy.wage_tightness_factors
+        cached = getattr(self, "_wage_schedule_cache", None)
+        if cached is None or cached.tightness_factors is not factors:
+            cached = self._wage_schedule_cache = wage_provider.build_schedule(
+                TRADE_REGISTRY, self.civ, tightness_factors=factors)
+        return cached
+
+    def money_per_labour_hour(self):
+        """Money one hour of the unskilled numeraire trade is worth here."""
+        return self.wage_schedule().money_per_labour_hour
+
+    def book_money(self, denarii):
+        """An authored book-denarii amount in this civilisation's coin."""
+        return money_units.book_to_money(denarii, self.money_per_labour_hour())
+
+    def wage_per_hour(self, trade):
+        """Money one hour of this trade costs before local prices and
+        scarcity: the single wage every consumer reads."""
+        return self.wage_schedule().wage_per_hour(trade)
+
+    def base_annual_wage(self, trade):
+        return self.wage_schedule().annual_wage(trade)
+
+    def wage_document(self):
+        """The wage vector in the shape the price solver reads."""
+        return self.wage_schedule().document()
+
+    def update_wages(self):
+        """One year of wage adjustment toward the trades that are short."""
+        hours = self.state.economy.society_labour_hours
+        if not hours:
+            return
+        self.wage_schedule().step(self._hours_needed_by_trade(), hours)
 
     def annual_wage(self, trade, include_local_scarcity=True):
         """Current annual wage, derived from living costs and labour scarcity."""
-        base = ANNUAL_WAGE.get(trade, self.ANNUAL_WAGE_FALLBACK)
+        base = self.base_annual_wage(trade)
         factors = self.wage_cost_factors(trade)
         local = self.labour_price_factor(trade) if include_local_scarcity else 1.0
         return (base * factors["weighted"] * self.price_index

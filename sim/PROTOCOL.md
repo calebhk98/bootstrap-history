@@ -58,6 +58,16 @@ Two fixes, usable separately or together:
       {"cmd":"available"}                          every node that can legally start now,
                                                     with cost, founder hours, calendar
                                                     floor, prerequisites and its note
+      {"cmd":"available","state":"blocked","tag":"mechanical_power"}
+                                                   filters: state is startable (default),
+                                                    blocked, active or done; tag is a
+                                                    topic, category a node category; find
+                                                    also matches stems and topic words.
+                                                    Non-startable states reply with
+                                                    "rows" (id, name, tags, why_not,
+                                                    missing); an empty search adds
+                                                    "try_instead". Fog limits every list
+                                                    to nodes the player has heard of.
       {"cmd":"why","id":"zinc_metal"}              the full explanation for one node:
                                                     cost, staff, risk, chain, what it
                                                     unlocks, why it is or isn't startable
@@ -102,7 +112,53 @@ Two fixes, usable separately or together:
                                                     an idle year repeated N times is N
                                                     idle years, not one. Non-blocking:
                                                     the years still run.
+      {"cmd":"move_base"}                          list the tiles your nation holds that
+                                                    you could move to, with people,
+                                                    days on the road and the cost
+      {"cmd":"move_base","to":"italia_01"}         move the base (typed: `move <tile>`).
+                                                    The town and its trades come from
+                                                    that tile's share of the nation.
+                                                    Costs the journey's wages, part of
+                                                    this year's founder hours, local
+                                                    contracts and most local standing.
+                                                    Refused for a tile nobody lives on.
       {"cmd":"quit"}                               end the session
+      {"cmd":"help"}                               front page and topic list
+      {"cmd":"help","topic":"commands"}            every command, grouped (see below)
+      {"cmd":"help","topic":"hire"}                one command, or any alias, in detail
+
+      THE COMMAND LIST IS NOT MAINTAINED HERE. The examples above are a tour;
+      `help` is the complete list, generated from the command registry
+      (engine/proto/command_registry.py). Each handler declares its own
+      summary, usage, options, description and aliases with @command, and the
+      dispatch table, typed aliases and help are all read from that one
+      registry, so a command cannot run without being documented. The suite
+      checks that every dispatchable command and typed alias appears in help.
+
+      help reply shapes. `topic:"commands"` returns `commands` (name to
+      summary and description), `usage` (name to example forms), `groups`
+      (group to command names) and `aliases` (alias to command). A command
+      or alias topic returns `command`: name, group, summary, usage, options
+      (option to meaning), description and aliases. A word that is also a
+      topic (money, log, stuck, ...) returns the topic text plus `command`.
+      An unknown word returns `no such topic`, `did you mean` and `topics`.
+
+      A project or hire that needs more people than exist in the country is
+      refused, and the reason says so plainly.
+
+      A `step` reply also carries `completed` (each record has `kind`:
+      "technology", "concern" or "granted"), `events`, and, when anything
+      completed or failed, `summary`: `completed`, `by_kind`, `failed`,
+      `minor_failures` and, when the goal moved, `goal` (`measures` of
+      label/before/after and `road_steps_gained`). The text rendering leads
+      with a one-line SUMMARY once a step has several results; the full list
+      follows it. Event messages: a failure starts "FAILED at" and is
+      compact and marked "(minor)" when its loss is small against what you
+      can fund (weighted up on the goal's road); a completion may be followed
+      by "goal effect:" lines (metric before -> after, or that it is on the
+      road; under fog never the total), and a finished concern left closed
+      says "STATUS: CLOSED / NOT OPERATING" with what switches on when opened
+      and, if free staff could not supervise it, "could not open it".
 
       The `state` object (also embedded in every `step` reply) reports: year,
       capital, revenue, founder hours available, founder_alive, scholars,
