@@ -3,8 +3,7 @@
 Split out of sim/engine/society.py, which had grown to 3,802 lines holding
 one SocietyMixin with 61 methods. This piece is the domestic side of
 adoption: applying a DONE node's one-off effects on the wider civilisation
-(apply_tech_effects), the agrarian slack that mechanisation frees up
-(_is_agri_mechanisation, agrarian_slack), how far literacy can spread and
+(apply_tech_effects), how far literacy can spread and
 how fast it does (literacy_ceiling_general, literacy_ceiling_elite,
 _schooling_flow, _advance_literacy), how long a new trade takes a labour
 market to absorb (_trade_absorption_years, _advance_trade_absorption,
@@ -14,7 +13,6 @@ adopted here is a separate subject; see society_diffusion.py. These are
 methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 """
-import math
 
 from sim.constants import declare
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
@@ -56,24 +54,6 @@ class AdoptionMixin:
     # as an actual RecursionError, not a theoretical risk. The room advice
     # these two nodes actually need lives in ROOM_SOURCES (labour.py)
     # instead, which has no such call back into itself.
-
-    # A lower death rate shows up in the census a generation later, not the
-    # year the node completes, so a "population" tech effect is spread over
-    # this many years rather than dumped on the first one. Forty years is
-    # two adult generations, which is about how long it takes a mortality
-    # improvement to finish working its way through age structure into a
-    # visibly larger population, and it is short enough that a civilization
-    # which never stops building these nodes still cannot make the ramp
-    # itself the fast part of the cascade.
-    POP_TECH_RAMP_YEARS = declare(
-        "POP_TECH_RAMP_YEARS", 40, kind="temporary_heuristic", unit="years",
-        source=None, confidence="C",
-        why="How many years a population-raising technology's total effect "
-            "is spread over before showing in the headcount - two adult "
-            "generations, roughly how long a mortality improvement takes "
-            "to work through age structure into a visibly larger "
-            "population (see comment above). A plausible order of "
-            "magnitude, not a fitted demographic transition time.")
 
     VALUE_WEIGHT_FLOOR = declare(
         "VALUE_WEIGHT_FLOOR", -1.0, kind="temporary_heuristic",
@@ -132,212 +112,38 @@ class AdoptionMixin:
                     self.state_capacity = self.civ[field]
                 changed.append(field)
             elif field == "population":
-                # SANITATION, ANTISEPSIS, BETTER FOOD AND THE LIKE RAISE THE
-                # POPULATION, AND THAT FEEDS BACK: more people is a bigger
-                # labour market and a bigger ceiling on trade (see pop_scale
-                # in economy.py, labour.py and geography.py). Unlike every
-                # other field above, this does NOT land in one year - a
-                # lower death rate shows up in the headcount a generation
-                # later, not the day a latrine opens - so it is queued here
-                # and spread over RAMP_YEARS by _demographic_recovery() in
-                # core.py, the same file that drives the mortality side of
-                # this same cascade. `delta` is this technology's total,
-                # eventual addition to this civilization's baseline
-                # population, as a fraction of it.
-                #
-                # EXCEPT FOR THE EIGHT DISEASE/SANITATION TECHNOLOGIES
-                # (Sim.DISEASE_BURDEN_TECH_IDS, core.py), which WIRING ONE
-                # (Complaints/closed/48-technology-cannot-stop-people-dying-young.
-                # md) gives a REAL, LIVE effect instead: core.py's own
-                # `_disease_burden` sums these same `population` weights
-                # straight off `self.has(...)` every year, which is a
-                # standing fact about a technology this civilisation holds
-                # ("it now boils its water"), not a one-off pulse that
-                # ramps in and then is done. Queuing them into
-                # `_pop_tech_pending` AS WELL would have the same tree-
-                # author weight doing two jobs at once, one of which
-                # (`_pop_tech_pending` draining into `_pop_scale_base`,
-                # which WIRING_MILESTONE_4.md SS1.3 already established is
-                # read by nothing) was already known-inert - so it is
-                # deliberately NOT queued for these eight; the five
-                # remaining FOOD-effect technologies that also carry a
-                # `population` field (crop_rotation, fud_three_field_
-                # rotation, fud_seed_drill, mat_newworld_crops, ag2_canning)
-                # are unaffected and still queue exactly as before.
-                if node_id not in self.DISEASE_BURDEN_TECH_IDS:
-                    self._pop_tech_pending.append(
-                        (delta / self.POP_TECH_RAMP_YEARS, self.POP_TECH_RAMP_YEARS))
+                # Only the disease technologies carry this weight; the
+                # disease burden reads it live from the tree.
                 changed.append(field)
         if changed:
             self.state.household.log.append((self.state.scenario.year, "%s changes the society: %s"
                              % (self.nodes[node_id]["name"], ", ".join(sorted(changed)))))
 
     # ---- EDUCATING A WHOLE SOCIETY, NOT JUST A HOUSEHOLD -------------------
-    # "Can we make the whole country's literacy rates improve? What if we
-    # make 5,000 schools and tractors and food production... can I create a
-    # 90%+ literate population?" Before this, literacy_general/literacy_elite
-    # moved only through the fixed, one-off deltas in _TECH_EFFECTS.json,
-    # applied once, the year a technology like printing_press or
-    # school_founded first completes (see apply_tech_effects above). Founding
-    # a hundred schools did nothing that founding one did not: nothing else
-    # in the engine ever read institution_units("school_founded") against
-    # literacy. This section is the missing half - a school or an academy
-    # that is actually OPEN teaches the society a little more every year it
-    # stays open, not only on the day its doors first unlocked - bounded by
-    # the user's own, historically correct caveat: a farming family that
-    # cannot spare a child from the harvest will not send that child to a
-    # classroom however many classrooms you build, so the CEILING literacy
-    # can approach is itself a function of how much of the countryside's
-    # labour has been freed by mechanised agriculture, and only the RATE of
-    # approach to that ceiling is a function of how much schooling is
-    # running.
-    AGRI_MECHANISATION_CATS = frozenset(
-        {"agriculture", "field_machinery", "crops", "soil"})
-
-    def _is_agri_mechanisation(self, node_id):
-        """Is `node_id` one of the technologies that lets a farm feed the same
-        number of mouths with fewer hands - the thing that frees a child
-        for a classroom instead of the harvest?
-
-        Reads the tree's own `cat` and `traits`, the same fixed, structural
-        tree data civ_cost_factor already keys off, rather than a second,
-        hand-maintained list that could drift out of step with which nodes
-        the tree actually has. THE TREE ALREADY NAMES THIS: `labour_saving`
-        is a trait, and the first version of this function matched on `food`
-        alone, which is also carried by tea, coffee and sugar imports, jam
-        and cheese making and a dozen other nodes that make farming more
-        PROFITABLE without freeing a single pair of hands from it - 136
-        nodes matched, most of them tier 0-1, so a household could reach
-        full mechanisation before touching anything resembling a reaper.
-        Requiring `labour_saving` as well narrows this to the 40 nodes that
-        are actually about doing the same farm work with fewer people: the
-        chaff cutter and the harrow at the cheap end, the reaper, the
-        threshing machine and tile drainage in the middle, the steam
-        tractor and the combine harvester at the top. tl_tractor is
-        checked by id on its own because the tree files it under the
-        generic `vehicle_types` category with every other wheeled thing
-        rather than with the rest of agriculture, and a tractor is exactly
-        what the user asked for by name.
-        """
-        node = self.nodes.get(node_id)
-        if not node:
-            return False
-        if node_id == "tl_tractor":
-            return True
-        if "labour_saving" not in (node.get("traits") or ()):
-            return False
-        return node.get("cat") in self.AGRI_MECHANISATION_CATS or "food" in node["traits"]
-
-    # Reaches full effect at 18 of the 40 matching nodes done (see
-    # _is_agri_mechanisation): a little under half, "substantially
-    # mechanised farming", not "literally every one of them".
-    AGRI_MECHANISATION_SATURATES_AT = declare(
-        "AGRI_MECHANISATION_SATURATES_AT", 18.0, kind="temporary_heuristic",
-        unit="matching done nodes (of 40)", source=None, confidence="D",
-        why="Count of mechanisation-trait nodes done at which "
-            "agrarian_slack() saturates at 1.0 - a little under half of "
-            "the 40 matching nodes, chosen to mean 'substantially "
-            "mechanised farming' rather than 'literally every one'. Not "
-            "fitted to any measured mechanisation threshold.")
-
-    def agrarian_slack(self):
-        """0..1: how much of the countryside's labour mechanised farming has
-        freed, which is the hard limit on how many children a family can
-        spare for a school instead of the fields.
-
-        This is the user's own instinct, already half-stated in
-        institution_unit_ceiling's own comment (projects.py) before this
-        function existed: "a lot of rural people without good farming don't
-        really want their kids to go to school, they want them working for
-        food or money." Nothing in this engine keeps a literal tonne of
-        grain, so this counts what the tree actually offers instead - the
-        reaper, the threshing machine, the seed drill, the tractor, better
-        rotations and fertiliser - the same shape military_leverage() already
-        uses for "how much of one branch of the tree have you actually
-        built": a plain count of matching DONE nodes (order cannot change a
-        sum of ones, so this needs no sorted() the way a weighted sum would,
-        see military_leverage's own unsorted count for the same reasoning),
-        square-rooted so the fifth mechanised technique matters far more than
-        the fifteenth, and capped at 1.0 so this can never be a lever on its
-        own - only a MULTIPLIER on what schooling is allowed to do, below.
-
-        CALLED EVERY YEAR SCHOOLING IS RUNNING, not once at completion like
-        apply_tech_effects - _advance_literacy reads the CEILING every year,
-        which reads this. Scanning self.household.done (up to 2,833 entries, and only
-        ever growing over the course of a long run) for a 40-node match every
-        single year of a 700-year run is the wrong direction: only 40 ids can
-        ever match at all (see _is_agri_mechanisation), fixed the moment the
-        tree loads, so this walks THAT list once, cached forever the same way
-        _is_foreign_institution caches (below) - nothing that changes after
-        construction - and does one `in self.household.done` set lookup per id, however
-        large self.household.done has grown.
-        """
-        ids = self.__dict__.get("_agri_mechanisation_ids")
-        if ids is None:
-            ids = self._agri_mechanisation_ids = tuple(
-                sorted(node_id for node_id in self.nodes if self._is_agri_mechanisation(node_id)))
-        mechanised_count = sum(1 for node_id in ids if node_id in self.state.projects.done)
-        if mechanised_count <= 0:
-            return 0.0
-        return min(1.0, math.sqrt(mechanised_count / self.AGRI_MECHANISATION_SATURATES_AT))
-
-    # What a pre-industrial society can reach on schooling and urban/clerical
-    # literacy alone, with farming still entirely by hand: a merchant class,
-    # a priesthood, a bureaucracy and their households, well above Rome's
-    # bare 12% general literacy and well short of a modern figure. Kept
-    # deliberately conservative rather than citing a campaign like Sweden's
-    # that reached near-universal reading through the church rather than
-    # freed farm labour, because this model has no lever for that route and
-    # a number this file cannot actually justify with a mechanism is not one
-    # it should claim.
-    LITERACY_ROOM_WITHOUT_MECHANISATION = declare(
-        "LITERACY_ROOM_WITHOUT_MECHANISATION", 0.35, kind="temporary_heuristic",
-        unit="dimensionless (literate share, 0..1)", source=None,
+    # A school teaches a little more every year it stays open. What limits
+    # literacy is the cost of a child's time: farm households need their
+    # children in the fields, so the reachable share falls with the farm
+    # share of the society's working hours, which the labour market sets.
+    UNABLE_TO_READ_SHARE = declare(
+        "UNABLE_TO_READ_SHARE", 0.01, kind="temporary_heuristic",
+        unit="dimensionless (share of any class, 0..1)", source=None,
         confidence="D",
-        why="Literacy ceiling reachable on schooling and urban/clerical "
-            "literacy alone, farming untouched by hand - a merchant class, "
-            "priesthood and bureaucracy, above Rome's own bare 12% general "
-            "literacy and well short of a modern figure. Kept deliberately "
-            "conservative rather than citing an outlier campaign this "
-            "model has no lever for (see comment above); not derived from "
-            "a model of pre-industrial literacy.")
-    LITERACY_MECHANISATION_ROOM = declare(
-        "LITERACY_MECHANISATION_ROOM", 0.55, kind="temporary_heuristic",
-        unit="dimensionless (literate share, 0..1, at full mechanisation)",
+        why="Share of people who cannot learn to read at all (severe "
+            "cognitive or sensory impairment), so no ceiling reaches 1.0. "
+            "A small round figure, not taken from a survey.")
+    FARM_CHILDREN_KEPT_FROM_SCHOOL = declare(
+        "FARM_CHILDREN_KEPT_FROM_SCHOOL", 0.8, kind="temporary_heuristic",
+        unit="dimensionless (share of farm households' children, 0..1)",
         source=None, confidence="D",
-        why="Extra literacy ceiling full agricultural mechanisation opens "
-            "up, taking the ceiling to exactly 0.90 together with "
-            "LITERACY_ROOM_WITHOUT_MECHANISATION - the answer to 'can I "
-            "create a 90%+ literate population', costing exactly what the "
-            "user's own caveat says it costs. Chosen to land on that "
-            "round target, not derived from a labour-supply model.")
-    LITERACY_CEILING_GENERAL_MAX = declare(
-        "LITERACY_CEILING_GENERAL_MAX", 0.90, kind="temporary_heuristic",
-        unit="dimensionless (literate share, 0..1)", source=None,
-        confidence="D",
-        why="Hard ceiling on general literacy however much mechanisation "
-            "and schooling a society has - a hard 10% of any "
-            "pre-transistor-era population (the very young, the infirm, "
-            "the itinerant) is not a schooling question at all. Round "
-            "figure, not derived from a demographic breakdown.")
+        why="Share of a farming household's children whose labour the farm "
+            "needs, so they cannot be spared for a classroom. Multiplied by "
+            "the farm share of hours; a round figure, not measured.")
 
     def literacy_ceiling_general(self):
-        """The most of the general population schooling could ever make
-        literate here, RIGHT NOW - not a fixed number, because
-        agrarian_slack() moves it as the countryside mechanises.
-
-        This is the answer to "can I create a 90%+ literate population": at
-        the limit, full mechanisation (agrarian_slack() == 1.0) puts the
-        ceiling at 0.35 + 0.55 == 0.90, and it costs exactly what the user's
-        own caveat says it costs - schools AND the agricultural machinery
-        that frees the children who would otherwise be working the harvest.
-        Never above 0.90: a hard 10% of any pre-transistor-era population -
-        the very young, the infirm, the itinerant - is not a schooling
-        question at all.
-        """
-        room = self.LITERACY_ROOM_WITHOUT_MECHANISATION
-        return min(self.LITERACY_CEILING_GENERAL_MAX,
-                   room + self.LITERACY_MECHANISATION_ROOM * self.agrarian_slack())
+        """The most of the general population schooling could make literate
+        now: everyone but the unable, less the farm children kept at work."""
+        kept_home = self.FARM_CHILDREN_KEPT_FROM_SCHOOL * self.farm_share_of_hours()
+        return (1.0 - self.UNABLE_TO_READ_SHARE) * (1.0 - kept_home)
 
     GENERATION_YEARS = declare(
         "GENERATION_YEARS", 25, kind="temporary_heuristic", unit="years",
@@ -345,24 +151,10 @@ class AdoptionMixin:
         why="Length of a human generation; spaces literacy census messages "
             "and decides when schooling has run for a generation.")
 
-    # The propertied and lettered class literacy_elite measures was never
-    # the class tied to the fields, so its ceiling does not read
-    # agrarian_slack() at all: an academy can teach every noble and priest's
-    # child a society has whether or not a single field has been mechanised.
-    # Left short of 1.0 for the same reason literacy_ceiling_general is: some
-    # fraction of any class is never going to be readers.
-    LITERACY_CEILING_ELITE = declare(
-        "LITERACY_CEILING_ELITE", 0.97, kind="temporary_heuristic",
-        unit="dimensionless (literate share, 0..1)", source=None,
-        confidence="D",
-        why="Ceiling on literacy among the propertied and lettered class, "
-            "left short of 1.0 for the same reason "
-            "LITERACY_CEILING_GENERAL_MAX is: some fraction of any class "
-            "is never going to be readers. Round figure, not derived from "
-            "any measured elite-literacy ceiling.")
-
     def literacy_ceiling_elite(self):
-        return self.LITERACY_CEILING_ELITE
+        """The propertied and lettered class is not tied to the fields, so
+        only those who cannot learn to read are left out."""
+        return 1.0 - self.UNABLE_TO_READ_SHARE
 
     def _schooling_flow(self):
         """0 if no school is open here at all; otherwise a small positive
@@ -626,13 +418,7 @@ class AdoptionMixin:
     def advance_society(self, year):
         """Once a year: everything in this file that moves on the society's
         own slow clock rather than on a project's. Called from step() right
-        alongside _demographic_recovery(), which is the same kind of thing -
-        a population figure that ramps in over generations - for population
-        instead of literacy and trades.
+        after _demographic_recovery().
         """
         self._advance_literacy(year)
         self._advance_trade_absorption(year)
-        # THE COUNTRY, NOT ONLY THE FOUNDER'S OWN CENSUS ENTRY. See
-        # "THE COUNTRY CHANGES TOO" above for why this is additional to,
-        # never a replacement for, apply_tech_effects' own population queue.
-        self._advance_food_diffusion_population(year)

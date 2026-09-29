@@ -630,15 +630,14 @@ def _agent_state_standing(sim):
         # the figure alone, or a founder watching literacy_general climb
         # with no sense of where it stops cannot tell a slow success from
         # a mechanism that has already maxed out. See
-        # SocietyMixin.literacy_ceiling_general/_elite and agrarian_slack
-        # (society.py).
+        # SocietyMixin.literacy_ceiling_general/_elite (society.py).
         "literacy": {
             "general": round(float(sim.civ.get("literacy_general", 0.0)), 3),
             "general_ceiling_now": round(sim.literacy_ceiling_general(), 3),
             "elite": round(float(sim.civ.get("literacy_elite", 0.0)), 3),
             "elite_ceiling": round(sim.literacy_ceiling_elite(), 3),
             "schools_actually_teaching": sim._schooling_flow() > 0.0,
-            "farm_labour_freed_by_mechanisation": round(sim.agrarian_slack(), 3),
+            "farm_share_of_working_hours": round(sim.farm_share_of_hours(), 3),
         },
         # HOW MUCH OF WHAT YOU RUN HAS LEAKED TO COMPETITORS. See
         # SocietyMixin.diffusion_share/diffusion_index (society.py) for what

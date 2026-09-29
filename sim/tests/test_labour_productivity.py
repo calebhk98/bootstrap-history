@@ -119,76 +119,45 @@ check("every trade named in LABOUR_PRODUCTIVITY_SOURCES is a real trade in "
 # country's literacy rates improve? What if we make 5,000 schools and
 # tractors and food production... can I create a 90%+ literate population?"
 # See SocietyMixin.advance_society (society.py).
-# ONE Sim, reused for every node: _is_agri_mechanisation reads only fixed
-# tree data (see its own docstring), so which Sim answers is irrelevant, and
-# the `_venture_ct` check a little above this one shows what happens to a
-# check's running time when it constructs a fresh Sim per node instead -
-# this file's own 3-second rule (see check() timing) exists precisely so a
-# check does not silently become the slowest thing in the suite this way.
-_s0_agri = sim()
-_agri_nodes = sorted(node_id for node_id in NODES if _s0_agri._is_agri_mechanisation(node_id))
-check("a genuinely farm-labour-saving slice of the tree exists and is a "
-      "modest fraction of it, not the whole `food`-tagged sprawl",
-      35 <= len(_agri_nodes) <= 45, len(_agri_nodes))
+from sim.engine.labour_allocation import FARM_TRADE as _FARM_TRADE
 
 s_noschool = sim(capital=2000000.0, manual=False)
-for k in _agri_nodes:
-    s_noschool.done.add(k)
-s_noschool._done_changed()
 _gen0 = s_noschool.civ["literacy_general"]
 for i in range(1, 301):
     s_noschool.advance_society(s_noschool.year + i)
-check("mechanising every farm technology with no school ever running moves "
-      "literacy not at all - this is something a society is TAUGHT, not a "
-      "free drift",
+check("with no school ever running literacy does not move at all - this "
+      "is something a society is TAUGHT, not a free drift",
       s_noschool.civ["literacy_general"] == _gen0, s_noschool.civ["literacy_general"])
 
 s_school = run_it(sim(capital=2000000.0, manual=False), "school_founded")
 _gen0b = s_school.civ["literacy_general"]
-_ceil_noagri = s_school.literacy_ceiling_general()
+_ceil_farming = s_school.literacy_ceiling_general()
 for i in range(1, 401):
     s_school.advance_society(s_school.year + i)
-check("a single running school, with no mechanised farming, raises "
-      "literacy over generations but plateaus well short of near-universal",
-      _gen0b < s_school.civ["literacy_general"] <= _ceil_noagri + 1e-6
-      and s_school.civ["literacy_general"] < 0.5,
-      (round(s_school.civ["literacy_general"], 3), round(_ceil_noagri, 3)))
+check("a single running school in a farming society raises literacy over "
+      "generations but plateaus at the ceiling the farm share sets",
+      _gen0b < s_school.civ["literacy_general"] <= _ceil_farming + 1e-6
+      and _ceil_farming < 0.9,
+      (round(s_school.civ["literacy_general"], 3), round(_ceil_farming, 3)))
 
 s_max = run_it(sim(capital=2000000.0, manual=False),
                "school_founded", "academy_network")
 s_max.inst_units = {"school_founded": 9.0, "academy_network": 9.0}
-for k in _agri_nodes:
-    s_max.done.add(k)
-s_max._done_changed()
-check("agrarian_slack saturates at 1.0 once enough of the farm-labour-saving "
-      "branch is done, not only once every last node of it is",
-      s_max.agrarian_slack() == 1.0, s_max.agrarian_slack())
+# A society with almost nobody left on the farms.
+s_max.state.economy.society_labour_hours = {_FARM_TRADE: 0.02, "other": 0.98}
 for i in range(1, 701):
     s_max.advance_society(s_max.year + i)
-check("heavy schooling AND agricultural mechanisation together, over "
-      "centuries, can reach a 90%+ literate general population - the "
-      "user's own question, answered yes",
-      s_max.civ["literacy_general"] >= 0.85, s_max.civ["literacy_general"])
-check("...but never above the model's own ceiling: some fraction of any "
-      "pre-transistor-era population is never a schooling question at all",
-      s_max.civ["literacy_general"] <= 0.90 + 1e-6, s_max.civ["literacy_general"])
+check("heavy schooling in a society with a small farm share, over "
+      "centuries, can reach a 90%+ literate general population",
+      s_max.civ["literacy_general"] >= 0.9, s_max.civ["literacy_general"])
+check("...and never reaches the whole population: some cannot learn to read",
+      s_max.civ["literacy_general"] < 1.0, s_max.civ["literacy_general"])
 check("the lettered/propertied class closes most of its own gap too, on "
-      "the same schooling, independent of farm mechanisation",
+      "the same schooling",
       s_max.civ["literacy_elite"] >= 0.95, s_max.civ["literacy_elite"])
 
-_few_agri = sim(capital=2000000.0)
-for k in _agri_nodes[:5]:
-    _few_agri.done.add(k)
-_few_agri._done_changed()
-check("a handful of mechanised techniques frees only a little slack, not "
-      "the whole ceiling",
-      0.0 < _few_agri.agrarian_slack() < 0.6, _few_agri.agrarian_slack())
-
-# --- determinism: agrarian_slack and _advance_literacy iterate self.done
-# (a set) and self.civ (a dict) only through counts and direct key reads,
-# never a float sum in an order that depends on PYTHONHASHSEED, but this is
-# proven rather than merely argued, the same way the rest of this suite
-# proves determinism elsewhere.
+# --- determinism: _advance_literacy reads self.civ (a dict) by key only;
+# proven under two hash seeds like the rest of this suite.
 def _edu_snapshot(seed_env):
     result = subprocess.run(
         [sys.executable, "-c",
@@ -200,7 +169,6 @@ def _edu_snapshot(seed_env):
          "s.done.add('school_founded'); s.operating.add('school_founded'); "
          "s.done.add('academy_network'); s.operating.add('academy_network'); "
          "s.inst_units = {'school_founded': 9.0, 'academy_network': 9.0}; "
-         "[s.done.add(k) for k in sorted(N) if s._is_agri_mechanisation(k)]; "
          "s._done_changed(); "
          "s.trades_created.add('electrician'); "
          "[s.advance_society(s.year + i) for i in range(1, 201)]; "

@@ -10,7 +10,7 @@
   "w_information": "how a society reacts to information moving freely",
   "adaptation_rate": "how fast people habituate to a marvel",
   "bribability": "how far money moves a verdict",
-  "population": "READ TWO DIFFERENT WAYS, depending on whether the entry is a FOOD technology or a DISEASE one, and the split is deliberate. For the five food entries (crop_rotation, fud_three_field_rotation, fud_seed_drill, mat_newworld_crops, ag2_canning) this is the eventual fraction of this civilization's baseline population added by the technology, as a one-off total rather than an annual rate, and it is NOT applied the year the node completes: apply_tech_effects (society.py) queues it and _demographic_recovery (core.py) spreads it over POP_TECH_RAMP_YEARS (40) years, because more food shows up in the headcount a generation later. For the eight DISEASE entries named in Sim.DISEASE_BURDEN_TECH_IDS (core.py) it is instead a WEIGHT, and nothing here is queued or ramped at all: _disease_burden() reads which of the eight the civilization currently holds, divides their weight by the weight of all eight, and hands demography.py a burden that lowers the death rate the year the latrine opens. The generational lag is then produced by the cohort model rather than imitated by a ramp - which is the whole reason the split exists (CLAUDE.md SS3.1: do not encode an outcome the simulation can derive). Only the RATIO between the eight matters for disease, not their absolute size. Keep these flat and small (0.01-0.02) and resist the temptation to rank them by true historical magnitude - New World crops probably did more for Old World population than any single sanitation node, but scoring it that way turns one node into this file's best investment and the rest into noise."
+  "population": "Disease and sanitation technologies only: a WEIGHT. _disease_burden() reads which of the eight technologies in Sim.DISEASE_BURDEN_TECH_IDS the civilisation holds, divides their weight by the weight of all eight, and hands the cohort model a burden that lowers the death rate. Only the ratio between the eight matters. Food technologies carry no population effect: they change the farming technique (sim/world/farming_technique.py) and population follows from the food."
  },
  "rag_paper": {
   "literacy_general": 0.02,
@@ -120,26 +120,6 @@
  "med_vaccination_progression": {
   "population": 0.02,
   "_why": "Variolation and then vaccination are the textbook case of a single technology visibly changing a population curve: smallpox alone is estimated to have killed 10% or more of every generation that had not had it."
- },
- "crop_rotation": {
-  "population": 0.02,
-  "_why": "Marling, the heavy plough and selective breeding are the package historians call the medieval agricultural revolution, and it is credited with the population growth that filled Europe's villages before the Black Death emptied them again."
- },
- "fud_three_field_rotation": {
-  "population": 0.02,
-  "_why": "Letting only a third of the land lie fallow each year instead of half is a flat one-sixth more land in production every year, for the same soil, forever - this is the single most-cited driver of the High Medieval population rise."
- },
- "fud_seed_drill": {
-  "population": 0.015,
-  "_why": "Jethro Tull's drill sows in rows at a measured depth instead of scattering by hand, and the yield gain it and the tools that followed it made possible is one of the standard explanations for Britain feeding a population that tripled across the 18th and 19th centuries without a matching rise in farmed acreage."
- },
- "mat_newworld_crops": {
-  "population": 0.02,
-  "_why": "The potato and maize are the most-studied case of a crop transfer raising a whole continent's population; Nunn and Qian (2011) attribute a substantial share of Old World population growth after 1700 to the potato alone. Scored no higher than the others here on purpose - see the _fields note on this column - because this file is not trying to be a faithful demographic model, only a modest and bounded one."
- },
- "ag2_canning": {
-  "population": 0.015,
-  "_why": "Preserving a harvest past the season it grew in turns a local crop failure into a supply problem instead of a famine, which is exactly the kind of shock that used to show up as a population collapse in the hazard file above."
  },
  "arithmetic_positional": {
   "literacy_elite": 0.03,

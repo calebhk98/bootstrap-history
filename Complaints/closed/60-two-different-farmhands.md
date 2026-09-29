@@ -1,6 +1,6 @@
 # Agricultural mechanisation frees a literacy ceiling and no farmhands
 
-**Status:** open
+**Status:** closed - the society's farming technique from its completed technologies feeds yield and labour per hectare; the farm workforce follows the food balance through the labour market (surplus now releases workers, within mobility limits); literacy ceilings come from the farm share of hours, not a mechanisation count. Pinned by sim/tests/test_population_farm_technique.py
 
 ## What the player saw
 

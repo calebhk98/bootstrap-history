@@ -1,6 +1,6 @@
 # Population-raising technology still writes to a number nothing reads
 
-**Status:** open
+**Status:** closed - the scalar and its queue are deleted; food technologies act through the farming technique (rotation, crop) and the cohort model, disease ones through the disease burden. Seed drill and canning had no mechanism to act through and their dead population effect was dropped. Pinned by sim/tests/test_population_farm_technique.py
 
 ## What the player saw
 

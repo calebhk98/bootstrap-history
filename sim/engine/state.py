@@ -358,7 +358,6 @@ class PopulationState:
 	pop_children: float = 0.0
 	pop_working_age: float = 0.0
 	pop_elderly: float = 0.0
-	_food_pop_bonus_applied: Optional[float] = None
 
 
 @dataclass
