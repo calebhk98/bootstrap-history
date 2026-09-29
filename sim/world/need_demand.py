@@ -13,6 +13,7 @@ them as arguments.
 """
 import collections
 import math
+import sys
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 from sim.constants import declare
@@ -415,6 +416,7 @@ class NeedDemandModel:
                                   for source, quantity in self.technology_demand.items())
 
         def excess_demand(price: float) -> float:
+            price = max(price, sys.float_info.min)
             trial = dict(prices)
             trial[material] = price
             final = self.final_demand(trial)
@@ -426,14 +428,17 @@ class NeedDemandModel:
             return own_final + elastic_derived - supply
 
         centre = prices[material]
-        low = centre * 10.0 ** (-CLEARING_SEARCH_SPAN_DECADES)
+        if not centre > 0.0:
+            return centre
+        low = max(centre * 10.0 ** (-CLEARING_SEARCH_SPAN_DECADES), sys.float_info.min)
         high = centre * 10.0 ** CLEARING_SEARCH_SPAN_DECADES
         if excess_demand(high) > 0.0:
             return high
         if excess_demand(low) < 0.0:
             return low
         for _step in range(CLEARING_BISECTION_STEPS):
-            middle = (low * high) ** 0.5
+            # Geometric midpoint in log space, so tiny prices cannot underflow to zero.
+            middle = math.exp((math.log(low) + math.log(high)) / 2.0)
             if excess_demand(middle) > 0.0:
                 low = middle
             else:
