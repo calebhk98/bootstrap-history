@@ -81,8 +81,9 @@ _lc, _rv = {}, {}
 for _cid in ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500",
              "england_1300"):
     _s = sim(civ=_cid)
-    _lc[_cid] = round(_s.living_cost(), 2)
     _rv[_cid] = round(_s.revenue(), 2)
+    _s.civ["starting_tax_share"] = 0.0      # isolate the price level from each civ's own tax
+    _lc[_cid] = round(_s.living_cost(), 2)
 check("living costs follow this society's price level",
       len(set(_lc.values())) == 5, _lc)
 check("...and so does what your practice pays",
