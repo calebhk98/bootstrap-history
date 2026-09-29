@@ -212,6 +212,8 @@ class UnshockedCenturyAcceptanceTests(unittest.TestCase):
         shocked = _rome_sim(events=False)
         shocked.farm_land = agriculture.Land(
             shocked.farm_land.hectares * 0.15, quality=shocked.farm_land.quality)
+        # The lost ground is gone for good, not left to be cleared again.
+        shocked._farm_arable_ceiling = shocked.farm_land.hectares
 
         for year in range(101, 111):
             control._demographic_recovery(year)
