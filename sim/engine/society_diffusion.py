@@ -496,31 +496,24 @@ class DiffusionMixin:
                              "otherwise be" % round(applied * 100)))
 
     # ---- DISEASE: THE COUNTRY IS HARDER TO KILL WHOLESALE ------------------
-    # _shocks' staff_loss branch (below) tells a household-level story
-    # (`loss`, reduced by the founder's own sanitation and vaccination) and
-    # an empire-wide one (`raw`, the hazard's historical, unmitigated rate -
-    # deliberately untouched by the founder's PERSONAL hedges: your
-    # quarantine protects your people, not everyone else's labour market).
-    # Invent the cure or the vaccine for a pandemic and the Black Death
-    # should become a minor period of some sickness rather than a
-    # catastrophe, which needs the EMPIRE's own figure to fall as the
-    # empire, not only the founder, absorbs germ theory, quarantine and
-    # vaccination by the time the hazard's window opens.
-    # medical_diffusion_relief is that number, read by _shocks directly
-    # against `raw`, never against `loss` (which stays the founder's own,
-    # private, has()-gated figure).
-    MEDICAL_DIFFUSION_RELIEF_CAP = declare(
-        "MEDICAL_DIFFUSION_RELIEF_CAP", 0.85, kind="temporary_heuristic",
-        unit="dimensionless (fraction of empire-wide epidemic harm removed)",
-        source=None, confidence="D",
-        why="Ceiling on how much the country's own absorbed medicine can "
-            "soften an empire-wide epidemic's raw historical rate, "
-            "leaving a residual so no cure ever reduces a historical "
-            "pandemic to literally nothing. Tuned, not measured against "
-            "any actual disease-control record.")
+    # National prevalence of an epidemic falls as the country absorbs the
+    # medicine; the household is exposed to that prevalence (see
+    # _shock_staff_loss). Relief is coverage (the diffusion index) times how
+    # far people follow the guidance; there is no fixed ceiling.
+    MEDICAL_COMPLIANCE_BASE = declare(
+        "MEDICAL_COMPLIANCE_BASE", 0.5, kind="temporary_heuristic",
+        unit="dimensionless (share following public-health guidance at "
+             "zero state capacity)", source=None, confidence="D",
+        why="Share of people who follow quarantine and hygiene guidance "
+            "with no administration behind it; state capacity supplies "
+            "the rest. Not derived from a behavioural model.")
+
+    def medical_compliance(self):
+        return (self.MEDICAL_COMPLIANCE_BASE
+                + (1.0 - self.MEDICAL_COMPLIANCE_BASE) * self.state_capacity)
 
     def medical_diffusion_relief(self):
-        return min(self.MEDICAL_DIFFUSION_RELIEF_CAP, self.medical_diffusion_index())
+        return min(1.0, self.medical_diffusion_index() * self.medical_compliance())
 
     # ---- WAR: A STATE THAT IS ACTUALLY ARMED LOSES LESS, AND SACKS LESS ----
     # military_leverage() and _military_war_relief() (further below)

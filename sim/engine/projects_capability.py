@@ -43,18 +43,9 @@ class CapabilityMixin:
     # quiet, so nothing here can drift out of step with what those functions
     # actually pay: a number is never invented here, only named.
     #
-    # plague_preparedness is the one CAPABILITY_INSTITUTIONS member
-    # deliberately absent: its hazard relief (HAZARD_COUNTERS) is has()-gated
-    # like corpus, so closing it costs nothing measurable today, and warning
-    # about it anyway would be exactly the false alarm this exists to avoid.
-    #
-    # Closing a plague plan costs nothing BECAUSE the relief is
-    # has()-gated, and whether has() is the right gate for quarantine
-    # procedure and stockpiles, as opposed to for copies of a book already
-    # in other people's hands, is an open question. See
-    # Complaints/55-a-plague-plan-you-closed-still-saves-you.md. If that
-    # complaint resolves towards has(), this entry should become an
-    # explicit "nothing" rather than an absence.
+    # plague_preparedness is absent: what it pays is hazard relief, which
+    # hazard_relief reads through running() and _counter_strength (a closed
+    # concern keeps only a residue), not a capability benefit of this table.
     NOT_OPERATING_BENEFIT = {
         "academy_network": "Scholar and artisan training, standing, and its "
                            "reduction of eminence risk",

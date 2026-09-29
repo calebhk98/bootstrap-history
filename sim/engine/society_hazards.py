@@ -24,6 +24,25 @@ from .hazard_window import hazards_not_yet_past
 
 class HazardsMixin:
 
+    KNOWLEDGE_RESIDUE_AFTER_CLOSURE = declare(
+        "KNOWLEDGE_RESIDUE_AFTER_CLOSURE", 0.3, kind="temporary_heuristic",
+        unit="dimensionless (fraction of a counter's relief kept)",
+        source=None, confidence="D",
+        why="Share of a hazard counter's relief that survives closing the "
+            "institution that delivered it: people who learned the "
+            "procedure and a public that saw it work remain, stockpiles "
+            "and trained staff do not. Not derived from a decay model.")
+
+    def _counter_strength(self, node):
+        """Fraction of a counter's relief in force: 0 if never built, full
+        while it is knowledge or a running concern, a residue once a
+        concern has been closed."""
+        if not self.has(node):
+            return 0.0
+        if self.running(node):
+            return 1.0
+        return self.KNOWLEDGE_RESIDUE_AFTER_CLOSURE
+
     def hazard_relief(self, kind):
         """How much of one kind of harm the things you have built take off.
 
@@ -34,14 +53,14 @@ class HazardsMixin:
         mult, why = 1.0, []
         for node, share, label in self.HAZARD_COUNTERS.get(kind, ()):
             if node == "_own_gold":
-                got = self.mine_capacity.get("gold", 0.0) > 0.0005
+                strength = 1.0 if self.mine_capacity.get("gold", 0.0) > 0.0005 else 0.0
             elif node == "_own_silver":
-                got = self.mine_capacity.get("silver", 0.0) > 0.01
+                strength = 1.0 if self.mine_capacity.get("silver", 0.0) > 0.01 else 0.0
             else:
-                got = self.has(node)
-            if got:
-                mult *= (1.0 - share)
-                why.append(label)
+                strength = self._counter_strength(node)
+            if strength > 0.0:
+                mult *= (1.0 - share * strength)
+                why.append(label if strength >= 1.0 else label + " (lapsed)")
         if kind == "output_factor":
             war_relief, reason = self._military_war_relief()
             if reason:
@@ -623,8 +642,14 @@ class HazardsMixin:
         """
         rng = self.rng
         if "staff_loss" in hazard and rng.random() < self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE:
+            historical = hazard["staff_loss"]
+            # National prevalence after the country's own medicine; the
+            # household is exposed to this, not to the historical rate.
+            med_relief = self.medical_diffusion_relief()
+            raw = historical * (1.0 - med_relief)
+            # Household mitigations cut its risk relative to that exposure.
             relief, why = self.hazard_relief("staff_loss")
-            loss = hazard["staff_loss"] * relief
+            loss = raw * relief
             household = self.state.household
             _people_before = (household.scholars + household.artisans
                               + sum(household.employees.values()))
@@ -632,65 +657,11 @@ class HazardsMixin:
             for trade in list(household.employees):
                 household.employees[trade] *= (1 - loss)
             household.directors_extra *= (1 - loss)
-            # THE MONEY GOES TOO, and the log has to say so: a plague that
-            # silently changes capital while the only message reads "staff
-            # -45%" reads as broken accounting. A plague empties the
-            # market as well as the workshop; that is real, and it has to
-            # be said.
+            # Cash goes with the trade that stopped.
             cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE)
-            # SAY WHAT ACTUALLY HAPPENED TO YOU: a household with no staff
-            # and no money left can genuinely take "staff -45%, and 0
-            # pence gone" repeatedly, which is not the event failing to
-            # fire, it is the event finding nothing left to take. An event
-            # should report the harm it did, not the harm it would have
-            # done to somebody else.
-            # THE WHOLE SOCIETY LOST PEOPLE TOO, not only your household,
-            # and your own hedges do not change that: the quarantine you
-            # built protects your people, not everyone else's labour
-            # market - the wage bill has to move the way a real
-            # population-wide plague would move it, not stay flat because
-            # only the household's own cohorts were touched.
-            # This uses the hazard's RAW rate, never `loss` above, which
-            # is personal and already reduced by your own hedges; and
-            # cutting self.population's actual cohorts (rather than
-            # accumulating a scalar deficit) naturally compounds two
-            # plagues in one lifetime onto whatever the first left
-            # behind, because the second cut is a fraction of the
-            # ALREADY-REDUCED population, not of some separately tracked
-            # deficit - see _apply_population_mortality_shock (core.py),
-            # which is what actually moves self.population; pop_scale
-            # and wage_index (also core.py) read it back out on demand.
-            #
-            # THE COUNTRY'S OWN MEDICINE, NOT ONLY THE FOUNDER'S: med_relief
-            # is medical_diffusion_relief() (above), how much of germ
-            # theory, quarantine and vaccination has actually spread
-            # through the society by the year this hazard's window
-            # opens, as opposed to `relief` just above, which is the
-            # founder's own private, has()-gated hedge. A founder who
-            # invents a vaccine for a pandemic CENTURIES early and lets
-            # it diffuse must see that reflected here, against the
-            # empire-wide figure, not only against `loss`.
-            historical = hazard["staff_loss"]
-            med_relief = self.medical_diffusion_relief()
-            raw = historical * (1.0 - med_relief)
             self._apply_population_mortality_shock(raw)
-            # The event has happened NOW.  Do not leave the population
-            # and wage screens at their pre-plague values until the next
-            # annual resolution; refresh (log-only now - see
-            # _refresh_demographic_indexes's own docstring) immediately.
+            # Refresh population and wage screens now, not at year end.
             self._refresh_demographic_indexes(year)
-            # SEVERITY HONESTY: the words have to match `loss`, the
-            # number the mechanic just applied above, not `raw`, the
-            # historical hazard's own unmitigated figure - a tester
-            # whose sanitation and quarantine cut a 28% plague down to
-            # 0.4% still read "staff -0%... (would have been -28%: ...)"
-            # in the same breath, and came away certain they had just
-            # lived through a 28% plague, because the sentence restated
-            # 28% twice and the near-zero number once. `relief` (mult)
-            # is the SAME diminishing fraction hazard_relief and
-            # hazard_advice already compute, and hazard_timeline's own
-            # "hedged" cutoff is this same 0.75 - reused, not a second
-            # estimate of what your hedges did.
             _hit = []
             if _people_before > 0.05:
                 if why and relief <= 0.25:
@@ -708,19 +679,8 @@ class HazardsMixin:
             if not _hit:
                 _hit.append("you had nothing it could take")
             msg = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(_hit))
-            # THE WHOLE SOCIETY LOST PEOPLE TOO, not only your household,
-            # and your own hedges do not change that: the quarantine you
-            # built protects your people, not everyone else's labour
-            # market (see the comment on `raw` above). Kept as a
-            # SEPARATE sentence, explicitly "either way", so a household
-            # that came through nearly untouched does not read this
-            # empire-wide toll as its own.
+            # Separate sentence so a spared household does not read the national toll as its own.
             if raw > 0.01:
-                # NO FIXED RECOVERY HORIZON TO QUOTE ANY MORE - see
-                # core.py's _apply_population_mortality_shock/pop_scale:
-                # recovery is now whatever self.population's own vital
-                # rates produce on the surviving cohort structure, not a
-                # number this hazard hands out at the moment it fires.
                 msg += (". Empire-wide, population -%d%%%s - wages (and "
                         "everything paid in them) stay dear until the "
                         "population does, either way"
@@ -733,12 +693,6 @@ class HazardsMixin:
                                round(med_relief * 100)))
                            if med_relief > 0.02 else ""))
             elif med_relief > 0.02 and historical > 0.01:
-                # THE COUNTRY CHANGED, SAY SO EVEN WHEN THE NUMBER
-                # ROUNDS TO NOTHING. A founder whose diffused medicine
-                # has cut a plague to under 1% empire-wide would
-                # otherwise see no "Empire-wide" clause at all and have
-                # no way to tell a mechanism that fired from one that
-                # never existed.
                 msg += (". Empire-wide: the country's own public health "
                         "- not only yours - has spread far enough that "
                         "this, historically a %d%% loss, barely "

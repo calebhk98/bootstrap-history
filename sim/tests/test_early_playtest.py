@@ -280,6 +280,7 @@ check("shutting a concern down does not make you forget how it worked",
 s = sim()
 bare, _ = s.hazard_relief("staff_loss")
 s.done.add("sanitation_antisepsis")
+s.operating.add("sanitation_antisepsis")
 s.done.add("germ_theory")
 better, why = s.hazard_relief("staff_loss")
 check("medicine blunts a plague", bare == 1.0 and better < 0.6 and why,

@@ -1,6 +1,6 @@
 # Household epidemic mitigation and national mortality diverge because one is uncapped and the other is capped at 85%
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_plague_mitigation_realism.py
 
 ## What the player saw
 
@@ -133,3 +133,12 @@ institutions, vaccination campaigns) should register in
 technology in neither, or wrongly in only the household list despite being
 framed as a public-health institution in its own note, would be the kind of
 mis-scoping worth a regression test once found.
+
+## Resolution
+
+The household is exposed to national prevalence (the historical rate after the
+country's own medicine); household mitigations scale that exposure, so the two
+are one chain, not two channels. `MEDICAL_DIFFUSION_RELIEF_CAP` is gone:
+national relief is coverage (the diffusion index, so a household technique
+reaches the country over time) times compliance
+(`MEDICAL_COMPLIANCE_BASE` plus state capacity), and can reach total.

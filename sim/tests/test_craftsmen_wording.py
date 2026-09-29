@@ -256,10 +256,12 @@ check("diffused medicine four centuries deep can turn even the Black Death "
       "barely registers" in _black_death or "softer" in _black_death,
       _black_death)
 
-check("medical diffusion relief is capped, never total - no amount of "
-      "diffused medicine makes a dated epidemic do nothing at all",
-      sim(civ="rome_100ad").MEDICAL_DIFFUSION_RELIEF_CAP < 1.0,
-      sim(civ="rome_100ad").MEDICAL_DIFFUSION_RELIEF_CAP)
+check("medical diffusion relief has no fixed ceiling: full coverage with a "
+      "capable state can remove the epidemic entirely",
+      (lambda nation: (setattr(nation, "state_capacity", 1.0),
+                       setattr(nation, "medical_diffusion_index", lambda: 1.0),
+                       nation.medical_diffusion_relief())[-1])(sim(civ="rome_100ad")) >= 1.0,
+      "relief at full coverage")
 
 # --- and this never touches the founder's own, personal figure (`loss`),
 # nor sack_chance/output_factor, which are a different category entirely.
