@@ -51,6 +51,9 @@ TYPED_HINTS = False
 # The short form used in the compact lines ("400 den", "net +12 den/yr"). Set
 # alongside TYPED_HINTS by whichever front end is rendering; see MONEY_WORDS.
 MONEY_SHORT = "den"
+# Which mine commission milestones to show in rendered text: one of
+# 'commissioned', 'ready', or 'both'. Set by cli.py based on player config.
+COMMISSION_DISPLAY = "both"
 
 
 def _typed_form(obj):

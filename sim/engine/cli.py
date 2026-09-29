@@ -1352,9 +1352,10 @@ _DISPLAY_WIDTH = 76
 def _apply_display_prefs(cfg=None):
     """Read the application's display preferences once and apply them for
     the rest of this process: how wide a line wraps (here, and in
-    protocol.py's renderers - see protocol.DISPLAY_WIDTH's own comment) and
+    protocol.py's renderers - see protocol.DISPLAY_WIDTH's own comment),
     how many rows a long table pages by default (protocol.
-    DEFAULT_AVAILABLE_LIMIT). Returns the config, so a caller that already
+    DEFAULT_AVAILABLE_LIMIT), and which mine commission milestones to show
+    in rendered text. Returns the config, so a caller that already
     needs it (cmd_menu, _new_game, _options_menu) is not reading the file
     twice.
 
@@ -1373,6 +1374,7 @@ def _apply_display_prefs(cfg=None):
     _DISPLAY_WIDTH = settings.resolve_display_width(cfg)
     _protocol.DISPLAY_WIDTH = _DISPLAY_WIDTH
     _protocol.DEFAULT_AVAILABLE_LIMIT = settings.resolve_rows_per_page(cfg)
+    _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(cfg)
     return cfg
 
 

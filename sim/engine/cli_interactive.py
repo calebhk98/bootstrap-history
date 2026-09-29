@@ -183,6 +183,7 @@ def _play_build_sim(args):
     # reply should be words too. See protocol.to_typed_hints.
     _protocol.TYPED_HINTS = True
     _protocol.MONEY_SHORT = money_short(sim.civ)
+    _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(app_cfg)
     return sim, nodes, session, app_cfg, kit, horizon
 
 

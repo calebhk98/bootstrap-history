@@ -59,7 +59,7 @@ from .proto.render import (
     render_step, render_money, render_stuck, render_mines, render_labour,
     render_population, render_ventures, render_risk, _advice_line,
     render_generic, render_log, render_policy, render_rush, render_path,
-    _RENDERERS, TYPED_HINTS, MONEY_SHORT, _typed_form, _JSON_HINT,
+    _RENDERERS, TYPED_HINTS, MONEY_SHORT, COMMISSION_DISPLAY, _typed_form, _JSON_HINT,
     _JSON_PAIR, _typed_deep, to_typed_hints, _DEN_RE, render_pretty
 )
 from .proto.typed import (

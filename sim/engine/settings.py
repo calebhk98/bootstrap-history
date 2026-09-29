@@ -97,7 +97,7 @@ from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 class Config(TypedDict):
     """The application-preferences file this module reads and writes
     (CONFIG_DEFAULTS, below, and load_config()'s/save_config()'s own
-    shape). Fixed at exactly these ten keys: `load_config` builds every
+    shape). Fixed at exactly these eleven keys: `load_config` builds every
     result by copying CONFIG_DEFAULTS and overwriting only keys already in
     that dict (`for key in CONFIG_DEFAULTS: if key in raw: ...`), and
     `save_config` writes back exactly `{key: ... for key in
@@ -109,6 +109,7 @@ class Config(TypedDict):
     display_width: Optional[int]
     rows_per_page: int
     show_welcome: bool
+    commission_display: str
     default_civ: str
     default_kit: str
     default_fog: bool
@@ -196,6 +197,7 @@ CONFIG_DEFAULTS: Config = {
     "display_width": None,     # None means "ask the terminal; see below"
     "rows_per_page": 30,
     "show_welcome": True,
+    "commission_display": "both",  # "commissioned", "ready", or "both"
     # REMEMBERED, NOT CONFIGURED - see the module docstring. These four plus
     # the horizon are the New Game wizard's last-used answers, written back
     # by cli.py's _new_game the moment a game actually starts, and are not
@@ -257,6 +259,18 @@ def resolve_rows_per_page(cfg: Optional[Config] = None) -> int:
     except (TypeError, ValueError):
         rows = FALLBACK_ROWS_PER_PAGE
     return rows if rows > 0 else FALLBACK_ROWS_PER_PAGE
+
+
+def resolve_commission_display(cfg: Optional[Config] = None) -> str:
+    """Which mine commission milestones to show in rendered text: one of
+    'commissioned' (when the mine starts), 'ready' (when it becomes ready),
+    or 'both' (both dates). Invalid values fall back to 'both'."""
+    if cfg is None:
+        cfg = load_config()
+    value = cfg.get("commission_display", "both")
+    if value in ("commissioned", "ready", "both"):
+        return value
+    return "both"
 
 
 def config_path() -> str:
