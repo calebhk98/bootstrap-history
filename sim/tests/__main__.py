@@ -242,6 +242,7 @@ TOPICS = [
     # blacksmith into the fields - mechanically yes, quantitatively almost
     # not at all.
     "labour_market",
+    "labour_allocation_wiring",
     # Complaints/44: England made process heat by FRICTION because a
     # megajoule was a megajoule to the solver and you cannot forge with a
     # warm bearing. A technique now states the temperature it reaches and a

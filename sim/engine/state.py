@@ -310,6 +310,7 @@ class EconomyState:
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
 	farm_hectares: Optional[float] = None
 	farm_stock_kg: float = 0.0
+	society_labour_hours: Dict[str, float] = field(default_factory=dict)
 	_dashboard_history: Optional[List[Any]] = None
 
 
