@@ -40,7 +40,7 @@ _lead_sim = sim(capital=5_000_000.0)
 _reply = _cmd_buy(_lead_sim, NODES, {"what": "mine", "material": "coal", "n": 10}, None)
 _commission_year = _reply.get("commissions_during_year")
 check("mine purchase names the year that commissions it",
-      _commission_year is not None and "ready_year" not in _reply, _reply)
+      _commission_year is not None and "ready_year" in _reply, _reply)
 if _commission_year is not None:
     _lead_sim.state.scenario.year = _commission_year - 1
     _lead_sim.commission_mines()

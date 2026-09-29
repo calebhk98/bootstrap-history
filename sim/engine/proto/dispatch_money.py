@@ -157,6 +157,7 @@ def _buy_mine(sim, cmd, quantity):
              # Commissioned during that year's annual resolution, so a
              # query shows the capacity from the following year.
              "commissions_during_year": ready,
+             "ready_year": (None if ready is None else ready + 1),
              "years_until_producing": (None if ready is None
                                        else round(ready - sim.year, 1)),
              "already_producing_t_per_yr": round(sim.mine_capacity.get(mat, 0.0), 2),
@@ -207,7 +208,6 @@ _BUY_HANDLERS = {
     "food": _buy_farm,
     "housing": _buy_housing,
     "houses": _buy_housing,
-    "school": _buy_school,
     "trade_school": _buy_school,
     "trade school": _buy_school,
     "material": _buy_material,
@@ -237,7 +237,7 @@ def _cmd_buy(sim, nodes, cmd, ended):
                 "error": "n must be greater than zero, got %g. Nothing was changed." % quantity}
     handler = _BUY_HANDLERS.get(what)
     if handler is None:
-        return {"ok": False, "error": "what must be one of: forest, farm, housing, school, material, mine, slaves, manumit"}
+        return {"ok": False, "error": "what must be one of: forest, farm, housing, trade school, material, mine, slaves, manumit"}
     return handler(sim, cmd, quantity)
 
 

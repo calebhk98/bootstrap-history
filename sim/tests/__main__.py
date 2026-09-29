@@ -327,6 +327,10 @@ TOPICS = [
     "complaint_98_schooling_message",
     # Complaints/61: every quoted affordable amount is purchasable as quoted.
     "complaint_61_quote_matches_purchase",
+    # Complaints/87: "school" renamed to "trade_school" to avoid confusion with literacy schooling
+    "trade_school_rename",
+    # Complaints/66: mine commission display setting showing commissioned/ready/both
+    "commission_display_setting",
     # Complaints/42: a civilisation holding a node whose own prerequisites it
     # lacks. Seventeen do. Pinned by name rather than fixed, and failing in
     # both directions, so the count can only move deliberately.

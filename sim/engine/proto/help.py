@@ -204,7 +204,7 @@ def _agent_help(sim, topic=None):
                         "is shown separately by 'materials' as stock on hand",
             "sell <material> <tonnes>": "sell material you actually have in stock",
             "hire / fire / train / commission": "see the labour topic",
-            "buy": "farmland, worker housing, a named trade school, material "
+            "buy": "farmland, worker housing, a trade school, material "
                    "stock, forest, nitre, mine, slaves, or manumit; see economy",
             "work <trade> <hours>": "do an ordinary job for ordinary pay",
             "allocate <id> <hours>": "a STANDING order: give this active "
