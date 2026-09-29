@@ -1,5 +1,7 @@
 # Project priority should be a first-class editable control
 
+**Status:** open
+
 The simulator reports project priorities in the portfolio, but priority management is not prominent enough in the main command discovery flow. Priority matters especially under partial funding when capital is scarce.
 
 ## Why it matters

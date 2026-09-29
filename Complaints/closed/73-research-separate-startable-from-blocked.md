@@ -1,5 +1,7 @@
 # Research/filter views should distinguish "startable now" from "known but blocked"
 
+**Status:** closed
+
 A filtered research view that repeatedly includes things the player cannot access creates noise, especially under fog.
 
 ## WHY IT MATTERS

@@ -1,6 +1,8 @@
 # Add a real state fiscal/budget model
 
-**Source:** playtest findings document, LATE-003. **Status:** Major
+**Status:** open
+
+**Source:** playtest findings document, LATE-003. **Type:** Major
 roadmap-sized feature recommendation, with an existing code-level admission
 that this is missing.
 
@@ -16,7 +18,7 @@ utilities, extending rather than replacing the existing `state_capacity`,
 `state_notice`, requisitions, forced offices, military diffusion and
 patronage mechanisms. This would also give industrialisation a source of
 capital besides the one household, which bears on `ECON-003`
-(`Complaints/105`)'s point about who else captures the gains.
+(`docs/architecture/DESIGN_PRINCIPLES.md`)'s point about who else captures the gains.
 
 ## Checked against the current code
 
@@ -75,7 +77,7 @@ numbers.
 
 ## Cross-references
 
-`Complaints/105` (ECON-003) for why this should redistribute rather than
+`docs/architecture/DESIGN_PRINCIPLES.md` (ECON-003) for why this should redistribute rather than
 merely reduce; `Complaints/106` (ECON-004) for the labour/demand
 prerequisites; `docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md` Part 3
 for the layer ordering.

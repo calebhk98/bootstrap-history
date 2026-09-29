@@ -1,6 +1,6 @@
 # Closed complaints
 
-Twenty-eight complaints whose fix has landed and been verified against the
+Complaints whose fix has landed and been verified against the
 code rather than against the complaint's own closing paragraph. They were
 moved here so `Complaints/` shows what is still open at a glance.
 
@@ -24,9 +24,10 @@ Three of them are worth reading even if you never hit the bug:
   never existed; it was an artefact of a `git commit` taking the whole index
   in a shared checkout. Kept for the process lesson.
 
-The status line at the top of each file records what closed it and how that
-was verified. `docs/architecture/STATE_OF_THE_PROJECT.md` holds the full
-table, including the complaints still open next door.
+Each file starts with a `**Status:** closed` line; the note beside it, or the
+audit paragraph below it, records what closed it and how that was verified.
+`python3 sim/issue_status.py` prints the full table, including the issues
+still open next door.
 
 ## What is NOT here
 
@@ -35,7 +36,7 @@ in `Complaints/`. Two in particular are parked states rather than open bugs
 and should not be closed by someone tidying up:
 
 - **42** is PINNED, not fixed: a regression test holds a known-defect count
-  at exactly 17 and fails in both directions, so the number can only move
+  and fails in both directions, so the number can only move
   deliberately.
 - **35** is a playthrough review, not a single bug, and several of its items
   remain entirely unaddressed.

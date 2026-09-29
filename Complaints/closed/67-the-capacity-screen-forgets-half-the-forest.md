@@ -1,5 +1,7 @@
 # The capacity screen and the throttle disagree because the screen only keeps the last tag it saw
 
+**Status:** closed
+
 ## What the player saw
 
 At one point the `capacity` response showed a small charcoal surplus, while

@@ -1,5 +1,7 @@
 # Freedman institution does not visibly apply its promised artisan capacity
 
+**Status:** open - `reports/RESOLUTION_AUDIT_01_26.md` says fixed, re-verify and close
+
 **Type:** State/tooltip inconsistency  
 **Priority:** High
 

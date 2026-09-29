@@ -1,5 +1,7 @@
 # A project can report its trade hours booked elsewhere with nobody else drawing on them
 
+**Status:** open
+
 ## What the player saw
 
 In the Mexica school project, the start/status output warned that

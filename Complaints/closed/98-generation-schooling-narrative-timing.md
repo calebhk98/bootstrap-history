@@ -1,5 +1,7 @@
 # "A generation of schooling..." can be narratively wrong immediately after schools open
 
+**Status:** closed
+
 When a school is first opened, the first logged schooling change can occur shortly after, but the log message says:
 
 > "a generation of schooling shows in the census"

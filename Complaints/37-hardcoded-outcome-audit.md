@@ -1,5 +1,7 @@
 # Adding `hardcoded_outcome`, and auditing every `declare()` call for more of it
 
+**Status:** partly - registry mechanism landed; hardcoded outcomes are still being migrated
+
 **Type:** Registry design / §3.1 compliance
 **Priority:** Informational. The mechanism is built; nothing new and confirmed
 was found to put in it yet.

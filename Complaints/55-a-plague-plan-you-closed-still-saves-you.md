@@ -1,5 +1,7 @@
 # A plague plan you shut down still protects you from the plague
 
+**Status:** open
+
 `plague_preparedness` is a venture. It can be opened, it costs upkeep, and
 it can be closed:
 

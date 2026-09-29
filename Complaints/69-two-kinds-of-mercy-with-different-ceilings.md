@@ -1,5 +1,7 @@
 # Household epidemic mitigation and national mortality diverge because one is uncapped and the other is capped at 85%
 
+**Status:** open
+
 ## What the player saw
 
 Broad health/public-infrastructure development reduced household staff-loss

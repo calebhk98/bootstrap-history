@@ -1,5 +1,7 @@
 # `quote forest` counts credit that `buy forest` will not take
 
+**Status:** closed
+
 ## What the player saw
 
 In the Rome run, `quote forest 100` reported affordability using cash plus

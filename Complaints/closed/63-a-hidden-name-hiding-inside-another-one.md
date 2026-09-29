@@ -1,5 +1,7 @@
 # Fog redaction is a raw string replace, and the tree already contains the id pair that breaks it
 
+**Status:** closed
+
 ## What the player saw
 
 A capability query under fog produced text resembling `"something you have

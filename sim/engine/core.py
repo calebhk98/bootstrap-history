@@ -231,7 +231,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "population never divides a formula by something vanishingly "
             "small. Guard value, not a demographic claim.")
 
-    # WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-young.md):
+    # WIRING ONE (Complaints/closed/48-technology-cannot-stop-people-dying-young.md):
     # the eight _TECH_EFFECTS.json entries whose `population` weight is a
     # DISEASE effect rather than a FOOD one, and so are the only entries
     # `_disease_burden` below is allowed to sum. _TECH_EFFECTS.json also
@@ -1631,7 +1631,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         self._refresh_demographic_indexes(year)
 
     def _disease_burden(self):
-        """WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-
+        """WIRING ONE (Complaints/closed/48-technology-cannot-stop-people-dying-
         young.md): this civilisation's CURRENT disease burden, 1.0 being
         the full pre-industrial infectious environment sim/world/
         self._demography.py already assumes by default, 0.0 being clean water,

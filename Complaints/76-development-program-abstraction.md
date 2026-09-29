@@ -1,5 +1,7 @@
 # Mature play needs a "development program" abstraction, not hundreds of individual clicks
 
+**Status:** open
+
 Once the economy and institutions were mature, the meaningful decision became "Commit up to 200k capital and ~15k directed hours to broad visible development over the next several years." The UI still operates primarily at individual-project granularity.
 
 ## WHY IT MATTERS

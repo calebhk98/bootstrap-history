@@ -1,5 +1,7 @@
 # Deleting `data/prices.json`
 
+**Status:** open
+
 `data/prices.json` is not a calibration dataset and will not survive the
 migration. Historical observations that are independently worth testing may be
 copied into narrowly scoped test fixtures with their own provenance, but the

@@ -1,5 +1,7 @@
 # A field that means something by not being there
 
+**Status:** open
+
 `sim/engine/actors/household.py` says this about itself, in its own class
 docstring:
 

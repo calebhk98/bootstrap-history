@@ -1,5 +1,7 @@
 # Plague risk UI does not explain repeated annual staff-loss waves
 
+**Status:** closed
+
 **Type:** Risk communication / balance watch  
 **Priority:** Medium
 

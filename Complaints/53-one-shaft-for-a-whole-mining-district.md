@@ -1,5 +1,7 @@
 # Laurion opens for the price of one shaft
 
+**Status:** open
+
 An attempt to derive `MINE_CAPEX_PER_T_YR_*` from `sim/world/deposits.py`'s
 sinking-cost model - six of the eleven §3.1 hardcoded outcomes - produced
 numbers two to three orders of magnitude below the ones it replaced, and was

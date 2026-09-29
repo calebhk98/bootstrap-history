@@ -1,5 +1,7 @@
 # The local labour market cannot shrink past a floor, so it outlives the country it sits in
 
+**Status:** open
+
 ## What the player saw
 
 Playing Mexica from 1500 under repeated epidemic and conquest shocks, national

@@ -1,8 +1,10 @@
 # Patron succession forces an unexplained automatic spend
 
+**Status:** closed
+
 **Type:** Agency / policy UX  
 **Priority:** Medium
-**Status (project-wide audit, 2026-09-18): RESOLVED, verified.** An `auto_court_heir` policy key now exists (`sim/engine/core.py`, `sim/engine/society.py`) with a documented default - exactly the fix suggested here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): RESOLVED, verified.** An `auto_court_heir` policy key now exists (`sim/engine/core.py`, `sim/engine/society.py`) with a documented default - exactly the fix suggested here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

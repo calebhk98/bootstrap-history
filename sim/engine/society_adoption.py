@@ -147,7 +147,7 @@ class AdoptionMixin:
                 #
                 # EXCEPT FOR THE EIGHT DISEASE/SANITATION TECHNOLOGIES
                 # (Sim.DISEASE_BURDEN_TECH_IDS, core.py), which WIRING ONE
-                # (Complaints/48-technology-cannot-stop-people-dying-young.
+                # (Complaints/closed/48-technology-cannot-stop-people-dying-young.
                 # md) gives a REAL, LIVE effect instead: core.py's own
                 # `_disease_burden` sums these same `population` weights
                 # straight off `self.has(...)` every year, which is a

@@ -1,5 +1,7 @@
 # `treetool.py merge` silently discards every branch edit to an existing node
 
+**Status:** closed
+
 **Type:** Tooling / data integrity
 **Priority:** High. It has probably already eaten work.
 

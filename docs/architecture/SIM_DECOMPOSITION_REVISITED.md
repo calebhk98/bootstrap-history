@@ -179,8 +179,8 @@ and `sim/engine/economy.py` concurrently in the same checkout," to the point
 that its author had to read every cited file's content from a fixed anchor
 commit rather than the live working tree, specifically because the working
 tree could not be trusted to hold still. `docs/architecture/
-STATE_OF_THE_PROJECT.md` records the same thing independently: "several
-other agents were live in this checkout while this document was written."
+STATE_OF_THE_PROJECT.md` says to re-run its commands before acting on a claim,
+for the same reason.
 This document's own research hit a live instance of the same fact: at the
 time of writing, `git status` in this checkout shows 37 files modified but
 uncommitted, `sim/engine/core.py` among them, left over from work already in

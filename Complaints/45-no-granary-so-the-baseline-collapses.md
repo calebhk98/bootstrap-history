@@ -1,5 +1,7 @@
 # Rome loses 78% of its people in a century with nothing bad happening
 
+**Status:** partly - granary stock persists; baseline still below the starting population
+
 Measured, not estimated, on the commit that wired agriculture into the
 engine:
 

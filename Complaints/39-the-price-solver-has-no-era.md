@@ -1,5 +1,7 @@
 # The price solver prices everything with all of human technology available
 
+**Status:** partly - era gating built; production coverage and labelling incomplete
+
 **Type:** Structural, and it affects every number the solver has ever printed
 **Priority:** High. Not urgent - nothing is broken today - but it silently bounds what the whole tool means.
 

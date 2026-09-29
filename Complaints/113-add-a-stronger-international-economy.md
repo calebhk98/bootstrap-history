@@ -1,6 +1,8 @@
 # Add a stronger international economy
 
-**Source:** playtest findings document, LATE-007. **Status:** Feature
+**Status:** open
+
+**Source:** playtest findings document, LATE-007. **Type:** Feature
 recommendation, roadmap-sized, partially named in the architecture plan.
 
 ## The player's reasoning

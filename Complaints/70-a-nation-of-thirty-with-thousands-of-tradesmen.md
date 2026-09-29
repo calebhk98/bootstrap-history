@@ -1,5 +1,7 @@
 # Event-visible headcounts can exceed the population they are drawn from, and the likely cause is the same floor as `Complaints/58`
 
+**Status:** open
+
 ## What the player saw
 
 After the national population had collapsed to extremely low values, event

@@ -1,5 +1,7 @@
 # `restore` can charge the full price off a timestamp a manual mothball never refreshed
 
+**Status:** closed
+
 ## What the player saw
 
 A concern had previously closed from staffing loss. Much later it was

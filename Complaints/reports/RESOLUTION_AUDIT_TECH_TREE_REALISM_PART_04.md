@@ -1,5 +1,9 @@
 # Resolution audit: combined tech-tree realism review, part 04
 
+> **Status of this audit.** It records fixes checked when it was written. The
+> regression modules it names are the evidence; re-run them with
+> `python3 sim/test_regressions.py --only <topic>` before relying on a claim.
+
 **Scope:** only `COMBINED_TECH_TREE_REALISM_REVIEW_part_04.md`: the remainder
 of the Norse inherited-state table, the complete Norse opening-project table,
 the complete England opening state, and English opening-project rows 1–107.

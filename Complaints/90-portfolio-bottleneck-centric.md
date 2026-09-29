@@ -1,5 +1,7 @@
 # Portfolio should become bottleneck-centric at large scale
 
+**Status:** open
+
 With 100+ projects active or startable, messages such as "priority #129 of 181" cease to be useful for decision making. The valuable information becomes aggregate trade pressure and resource consumption: for example, "Scribes: 9,034 h demand / 8,939 h supply, affecting 18 projects."
 
 ## Why it matters

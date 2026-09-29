@@ -1,5 +1,13 @@
 # Non-tech-tree complaint resolution audit (01–26)
 
+> **Status of this audit.** It records fixes checked when it was written. The
+> regression modules it names are the evidence; re-run them with
+> `python3 sim/test_regressions.py --only <topic>` before relying on a claim.
+>
+> The issue files `01`, `03`, `07`, `12` and `18` still carry their own
+> non-closed status even though this audit calls them fixed. Re-verify each
+> against the named tests and move the file to `closed/` when it holds.
+
 This audit covers the numbered, non-review complaints in this directory. It
 records the current implementation rather than treating the presence of a
 complaint file as proof that the issue remains open. The focused regression

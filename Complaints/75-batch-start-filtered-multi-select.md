@@ -1,5 +1,7 @@
 # Add batch start / filtered multi-select
 
+**Status:** open
+
 Several points in the Mexica run had dozens or hundreds of already-visible, legal projects: approximately 69 free/zero-hour techniques, approximately 180 visible projects below 500 currency, later 100+ projects in affordable tiers. Starting each individually is clerical work.
 
 ## WHY IT MATTERS

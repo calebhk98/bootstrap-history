@@ -1,4 +1,4 @@
-"""WIRING ONE (Complaints/48-technology-cannot-stop-people-dying-young.md):
+"""WIRING ONE (Complaints/closed/48-technology-cannot-stop-people-dying-young.md):
 does the engine actually pass a disease burden to sim/world/demography.py,
 or does every game still run at PRE_INDUSTRIAL_DISEASE_BURDEN forever while
 the eight medical entries in _TECH_EFFECTS.json do nothing?

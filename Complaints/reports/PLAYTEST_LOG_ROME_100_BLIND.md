@@ -1,5 +1,18 @@
 # Blind Playtest Log — One Person, and Everything They Know
 
+> **Where the findings went** (observation numbers refer to this log; issue
+> numbers refer to `Complaints/` and `Complaints/closed/`):
+>
+> - Venture staffing wording: 28 -> `01`. Machinist hours "booked": 111, 112, 120 -> `07`.
+> - Workshop revenue forecast: 59 -> `03`. Freedman capacity: 82, 146 -> `12`.
+> - Plague wage and population display: 172, 173, 178, 179 -> `18` and `closed/17`; repeat waves: 177 -> `closed/19`.
+> - Fixed and closed: waiting-on-money wording 54 -> `closed/02`; permanent versus active-only effects 80, 151, 170, 248 -> `closed/04`; scholar wording 95 -> `closed/05`; patron auto-spend 110, 269 -> `closed/06`; impossible expected time 125, 138, 159, 190, 210, 231 -> `closed/08`; global throttle 141, 167 -> `closed/09`; `capacity` help 142 -> `closed/10`; nitre size 144 -> `closed/11`; generic artisan supervision 147, 148, 263 -> `closed/13`; zero-time capabilities 150, 258 -> `closed/14`; interest units 155 -> `closed/15`; affordability ceilings 156 -> `closed/16`; training wording 181, 213 -> `closed/20`; bare `rush` 187 -> `closed/21`; search omission 245 -> `closed/22`; high-pressure steam 220 -> `closed/23`; Brayton turbine 221 -> `closed/24`; material inventory 64 -> `closed/26`.
+> - Economy snowballs (fires, debasement and supply shocks become noise): 153, 186, 226, 255, 259, 265, 270, 275 -> `117`, `104`; credit too forgiving 122 -> `110`; missing competition and imitation 101-105 -> `107`; state extraction too gentle 237, 238, 249, 260, 271 -> `109`, `114`; macro-history barely changes 268 -> `113`, `114`.
+> - Attrition closing institutions repeatedly: 134, 201, 244 -> `130` (new); specialist closure call to action -> `89`.
+> - Electropolishing needs the grid: 241 -> `125` (new).
+> - Terse "how it works" explanations: 273 -> `132` (new).
+> - Not filed: 104 and 277 (save location lost by the test harness, attributed to the runtime rather than the game); 264 (medicine coverage before the plague is a player-planning remark without a concrete defect); 274 (eminence mitigation is documented under `help eminence`); observations that only praise a system.
+
 Rules: blind playthrough; no source/data/docs/previous-session notes read. Goal is to play to win while recording expectations before outcomes.
 
 ## Observations

@@ -1,5 +1,7 @@
 # Goal/path UI can accidentally teach the wrong strategy
 
+**Status:** open
+
 The Rome transistor run became extremely inefficient because the visible goal/path information encouraged a direct prerequisite-chain mindset. The player focused on completing prerequisites in order rather than building a strong civilization first.
 
 The game's actual optimal strategy is often:

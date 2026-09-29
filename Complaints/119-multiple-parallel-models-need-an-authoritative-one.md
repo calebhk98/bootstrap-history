@@ -1,6 +1,8 @@
 # Multiple parallel models exist for related concepts; define which is authoritative
 
-**Source:** playtest findings document, ARCH-001. **Status:** Architecture
+**Status:** open
+
+**Source:** playtest findings document, ARCH-001. **Type:** Architecture
 recommendation, largely already answered by an existing document; this
 complaint's job is to say so precisely, per CLAUDE.md's own request, rather
 than duplicate the answer.
@@ -19,8 +21,8 @@ deliberately keep it as a research module, or retire it.
 ## What already exists, checked directly
 
 This exact question is already answered, per-module, in `docs/architecture/
-STATE_OF_THE_PROJECT.md` (Part 2's import table and Part 3's per-module
-write-up), and the answer is current as of the same day this review was
+STATE_OF_THE_PROJECT.md` (its milestone table and "What is not built or not linked"
+section, as first written), and the answer is current as of the same day this review was
 done:
 
     agriculture.py         imported by sim/engine/core.py
@@ -47,7 +49,7 @@ path (`sim/engine/labour.py`, the static `TRADE_DENSITY` classification the
 `labour_market.py` docstring itself names as what it is meant to replace),
 and neither reads the standalone module.
 
-`docs/architecture/STATE_OF_THE_PROJECT.md` Part 4 also already states the
+`docs/architecture/STATE_OF_THE_PROJECT.md` ("What to do next") also already states the
 intended migration path for the two fully-unwired modules, in priority
 order: wire `labour_market.py` into the engine first (named the single
 most-referenced missing piece across the open complaints), then wire
@@ -81,6 +83,6 @@ for prioritising the wiring work.
 
 ## Cross-references
 
-`docs/architecture/STATE_OF_THE_PROJECT.md` Parts 2-4 answer this finding
+`docs/architecture/STATE_OF_THE_PROJECT.md` (milestones, not-built and next-steps sections) answer this finding
 directly; read that document rather than re-deriving the answer.
 `Complaints/106` (ECON-004) is where the actual wiring work is tracked.

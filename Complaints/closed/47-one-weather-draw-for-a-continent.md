@@ -1,6 +1,8 @@
 # Rome's harvest in Britain and Egypt are the same coin flip
 
-**Status (project-wide audit, 2026-09-18): RESOLVED, verified against the
+**Status:** closed
+
+**Audit (2026-09-18): RESOLVED, verified against the
 live source, with a correction worth recording.** `_compute_farm_region_weights()`
 and `_pooled_farm_weather_multiplier()` (`sim/engine/core.py`) are both
 defined AND called: `_demographic_recovery`'s `farm_storage.step(...)` call

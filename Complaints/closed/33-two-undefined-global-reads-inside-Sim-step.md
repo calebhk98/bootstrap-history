@@ -1,9 +1,11 @@
 # WITHDRAWN: the "undefined global in `Sim.step`" was an artefact I created and then diagnosed
 
+**Status:** closed - withdrawn by its author, the bug never existed; kept for the process lesson
+
 **Type:** Retracted finding / process failure
 **Priority:** The retraction is low. The lesson is high.
 
-**Status: the bug described below DOES NOT EXIST and never did.** This file is
+**Outcome: the bug described below DOES NOT EXIST and never did.** This file is
 kept rather than deleted because the way it came to be written is worth more
 than the thing it claimed.
 

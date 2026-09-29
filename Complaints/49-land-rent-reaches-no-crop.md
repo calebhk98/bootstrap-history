@@ -1,5 +1,7 @@
 # We priced land and then never charged anybody for it
 
+**Status:** open
+
 Found while deciding whether the engine's solved-price switch could finally
 be turned on. It is the reason the answer is no, and it is larger than every
 other reason combined.

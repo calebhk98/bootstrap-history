@@ -1,5 +1,7 @@
 # Show goal-relevant deltas on completion/event messages
 
+**Status:** open
+
 A technology could materially change the literacy ceiling or actual literacy, but the completion message did not necessarily say so. The player had to query state and infer the cause.
 
 ## WHY IT MATTERS

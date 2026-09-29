@@ -1,6 +1,8 @@
 # The game cannot express the most important thing it simulates
 
-**Status (project-wide audit, 2026-09-18): RESOLVED, verified - but in an
+**Status:** closed
+
+**Audit (2026-09-18): RESOLVED, verified - but in an
 UNCOMMITTED working-tree change at the time of this audit.** `_disease_burden()`
 (`sim/engine/core.py`) is defined and is passed into
 `self.population.step(..., disease_burden=self._disease_burden())`. This

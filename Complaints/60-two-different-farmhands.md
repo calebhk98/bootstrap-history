@@ -1,5 +1,7 @@
 # Agricultural mechanisation frees a literacy ceiling and no farmhands
 
+**Status:** open
+
 ## What the player saw
 
 Broad agricultural research raised the Mexica literacy ceiling from roughly
@@ -82,7 +84,7 @@ workers - never moved.
 ## Cross-references
 
 No existing open complaint names this specific gap. Adjacent to
-`Complaints/48-technology-cannot-stop-people-dying-young.md` in spirit (a
+`Complaints/closed/48-technology-cannot-stop-people-dying-young.md` in spirit (a
 tree-authored effect with no live physical consequence) and to `59` in this
 same batch (`_pop_scale_base`, a different case of the same shape: a real
 number the tree computes that a different, live system does not read).

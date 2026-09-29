@@ -1,5 +1,7 @@
 # Project-start boilerplate repeats too often
 
+**Status:** open
+
 Repeated `start` commands re-explain fixed-price/quote behavior and related model semantics. The explanation is useful once and then becomes noise.
 
 ## WHY IT MATTERS

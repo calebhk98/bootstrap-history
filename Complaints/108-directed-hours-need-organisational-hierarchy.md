@@ -1,6 +1,8 @@
 # Directed hours need organisational hierarchy at scale
 
-**Source:** playtest findings document, LATE-002. **Status:** Major
+**Status:** open
+
+**Source:** playtest findings document, LATE-002. **Type:** Major
 roadmap-sized feature recommendation.
 
 ## The player's reasoning

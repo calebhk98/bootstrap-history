@@ -1,5 +1,7 @@
 # Elite literacy can be pushed past its own stated ceiling by the mechanism that never checks it
 
+**Status:** closed
+
 ## What the player saw
 
 The Mexica run reported elite literacy around 99.8% while the same state

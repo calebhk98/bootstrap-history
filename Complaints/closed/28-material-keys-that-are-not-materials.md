@@ -1,5 +1,7 @@
 # Three keys in the tree's material lists are not materials
 
+**Status:** closed
+
 **Type:** Data defect / schema
 **Priority:** Low, but it will not fix itself
 
