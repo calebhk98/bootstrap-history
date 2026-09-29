@@ -1,6 +1,6 @@
 # The mod system adds content but cannot change rules or remove content
 
-**Status:** partly - overrides, removal, civ patching, goal/trade overrides and world content done (test_mod_* topics); land tiles, namespaces, commands and new actor kinds remain, see mods/TASKS.md
+**Status:** partly - overrides, removal, civ patching, goal/trade overrides, world content, namespaced ids (`<mod_id>:<name>`), the unique mod id format and the declared-dependency check done (test_mod_* topics); land tiles, commands and new actor kinds remain, see mods/TASKS.md
 
 **Source:** playtester report that mods are "heavily restricted": no runnable
 code, no magic or elves, cannot change or hide Rome, cannot really change the

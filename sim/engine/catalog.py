@@ -11,6 +11,7 @@ import os
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Tuple
 
 from .mods import ModError, ModManifest, get_ordered_mods, load_mod_production, load_mod_tree
+from .mods_ids import check_new_id, is_mod_content
 from .mods_base import check_not_removed, claim_fields, claim_removal, deep_merge
 from .mods_remove import RECIPE, TRADE, check_trade_references, scan_removed
 
@@ -97,10 +98,9 @@ def validate_mod_material_paths(nodes: Iterable[Mapping[str, Any]],
                 raise ModError("technology %s references material %s; mod %s removed the "
                                "recipe that produced it" % (node.get("id"), material,
                                                             removed[material]))
-    prefixes = tuple(manifest.id + "_" for manifest in manifests)
     for node in nodes:
         node_id = str(node.get("id", ""))
-        if not node_id.startswith(prefixes):
+        if not is_mod_content(node_id, manifests):
             continue
         for material in (node.get("mat") or {}):
             if material not in producers:
@@ -157,8 +157,8 @@ def load_trade_registry(root: str, production: Optional[Mapping[str, Any]] = Non
                 registry[trade_id] = _trade_from(trade_id, deep_merge(
                     dataclasses.asdict(registry[trade_id]), metadata), registry[trade_id].source)
                 continue
-            if manifest and not trade_id.startswith(manifest.id + "_"):
-                raise ModError("%s introduces un-prefixed trade id %r" % (path, trade_id))
+            if manifest:
+                check_new_id(manifest, trade_id, False, path)
             if trade_id in registry:
                 raise ModError("trade %s is already defined before %s" % (trade_id, path))
             if isinstance(metadata, str):

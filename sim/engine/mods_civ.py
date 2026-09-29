@@ -3,16 +3,35 @@ import json
 import os
 from typing import Any, Dict, Iterable, List, Optional
 
-from .mods import _check_new_id
 from .mods_base import ModError, ModManifest, claim_fields, deep_merge
+from .mods_ids import SEPARATOR, check_new_id
 from .mods_remove import TECH, scan_removed
 
 CIVILIZATION = "civilization"
 
 
+def civ_file_stem(civ_id: str) -> str:
+    """File name stem for a civ id; `:` is not portable in file names, `+` stands in."""
+    return civ_id.replace(SEPARATOR, "+")
+
+
+def civ_id_from_stem(stem: str) -> str:
+    return stem.replace("+", SEPARATOR)
+
+
+def mod_civ_ids(manifest: ModManifest) -> List[str]:
+    """Civ ids one mod ships or patches, from its file names."""
+    directory = os.path.join(manifest.directory, "data", "civilizations")
+    if not os.path.isdir(directory):
+        return []
+    return [civ_id_from_stem(filename[:-5]) for filename in sorted(os.listdir(directory))
+            if filename.endswith(".json") and not filename.startswith("_")]
+
+
 def _mod_files(name: str, manifests: List[ModManifest]) -> Iterable[tuple]:
     for manifest in manifests:
-        path = os.path.join(manifest.directory, "data", "civilizations", name + ".json")
+        path = os.path.join(manifest.directory, "data", "civilizations",
+                            civ_file_stem(name) + ".json")
         if os.path.isfile(path):
             with open(path, encoding="utf-8") as source:
                 yield manifest, path, json.load(source)
@@ -37,7 +56,7 @@ def apply_mod_civilization(name: str, base: Optional[Dict[str, Any]],
             claim_fields(claims, CIVILIZATION, name, patch, manifest, by_id)
             civ = deep_merge(civ, dict(patch, id=name))
             continue
-        _check_new_id(manifest, name, False, path)
+        check_new_id(manifest, name, False, path)
         if civ is not None:
             raise ModError("civilization %s is defined in both %s and %s" %
                            (name, defined_by, path))
@@ -58,13 +77,11 @@ def check_starting_techs(civ: Dict[str, Any], manifests: Iterable[ModManifest],
 
 def civilization_names(base_dir: str, manifests: Iterable[ModManifest]) -> List[str]:
     """Every base and mod civilisation file name, hidden ones included."""
-    names = set()
-    directories = [base_dir] + [os.path.join(manifest.directory, "data", "civilizations")
-                                for manifest in manifests]
-    for directory in directories:
-        if os.path.isdir(directory):
-            names.update(filename[:-5] for filename in os.listdir(directory)
-                         if filename.endswith(".json") and not filename.startswith("_"))
+    names = {filename[:-5] for filename in os.listdir(base_dir)
+             if filename.endswith(".json") and not filename.startswith("_")} \
+        if os.path.isdir(base_dir) else set()
+    for manifest in manifests:
+        names.update(mod_civ_ids(manifest))
     return sorted(names)
 
 

@@ -11,7 +11,7 @@ from sim.engine import data
 from sim.engine.core import Sim
 
 BASE_CIVS = ["rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"]
-MOD_CIV = "egypt_100bc_egypt"
+MOD_CIV = "sample_egypt_100bc_e7k2:egypt"
 FIELDS = ("starting_interest_rate", "starting_tax_share")
 
 

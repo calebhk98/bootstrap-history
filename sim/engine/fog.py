@@ -280,8 +280,8 @@ class FogMixin:
         sorted_ids = sorted(self.nodes, key=lambda node_id: -len(node_id))
         for node_id in sorted_ids:
             if not self.is_visible(node_id):
-                # Use word boundaries to match whole ids only: id chars are [A-Za-z0-9_]
-                pattern = r'\b' + re.escape(node_id) + r'\b'
+                # Whole ids only; ':' joins a namespaced id, so it is not a boundary either
+                pattern = r'(?<![\w:])' + re.escape(node_id) + r'(?![\w:])'
                 scrubbed = re.sub(pattern, "something you have not heard of", scrubbed)
         return scrubbed
 

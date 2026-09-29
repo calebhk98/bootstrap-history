@@ -26,8 +26,9 @@ import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from .mods import get_ordered_mods, load_mod_tree
+from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
-                       is_hidden)
+                       is_hidden, mod_civ_ids)
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry,
                       transitional_wage_rates, validate_mod_material_paths)
@@ -293,10 +294,7 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
         have = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                       if filename.endswith(".json") and not filename.startswith("_"))
         for manifest in get_ordered_mods(MODDIR):
-            mod_civs = os.path.join(manifest.directory, "data", "civilizations")
-            if os.path.isdir(mod_civs):
-                have.extend(filename[:-5] for filename in os.listdir(mod_civs)
-                            if filename.endswith(".json") and not filename.startswith("_"))
+            have.extend(mod_civ_ids(manifest))
         raise SystemExit("unknown civilization %r. available: %s" % (name, ", ".join(have)))
     # Opening ownership is scenario data, not an optional convenience with an
     # implicit fallback.  Silently turning a missing declaration into an empty
@@ -332,10 +330,7 @@ def civilization_ids() -> List[str]:
     identifiers = {filename[:-5] for filename in os.listdir(CIVDIR)
                    if filename.endswith(".json") and not filename.startswith("_")}
     for manifest in get_ordered_mods(MODDIR):
-        directory = os.path.join(manifest.directory, "data", "civilizations")
-        if os.path.isdir(directory):
-            identifiers.update(filename[:-5] for filename in os.listdir(directory)
-                               if filename.endswith(".json") and not filename.startswith("_"))
+        identifiers.update(mod_civ_ids(manifest))
     return sorted(identifier for identifier in identifiers
                   if not is_hidden(load_civ(identifier)))
 
@@ -401,9 +396,8 @@ def load(use_solved_prices: bool = False,
     producers = set(production)
     for entry in production.values():
         producers.update((entry.get("outputs") or {}).keys())
-    mod_prefixes = tuple(manifest.id + "_" for manifest in manifests)
     for node in nodes.values():
-        if not node["id"].startswith(mod_prefixes):
+        if not is_mod_content(node["id"], manifests):
             continue
         for material in (node.get("mat") or {}):
             if material not in goods:
