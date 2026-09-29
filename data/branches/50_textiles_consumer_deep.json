@@ -1249,7 +1249,7 @@
    "artisan": 70
   },
   "mat": {
-   "mat_peroxide_h2o2_kg": 15
+   "hydrogen_peroxide_kg": 15
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.3,
@@ -1513,7 +1513,7 @@
    "chemist": 100
   },
   "mat": {
-   "mat_flame_retardant_kg": 25
+   "flame_retardant_kg": 25
   },
   "cap": "cap_heat_0700",
   "build_yrs": 0.4,
@@ -1537,7 +1537,7 @@
    "chemist": 90
   },
   "mat": {
-   "mat_pesticide_kg": 20
+   "camphor_kg": 20
   },
   "cap": 0,
   "build_yrs": 0.3,
@@ -1881,7 +1881,7 @@
    "chemist": 140
   },
   "mat": {
-   "mat_acetic_anhydride_kg": 50
+   "acetic_anhydride_kg": 50
   },
   "cap": "cap_heat_1100",
   "build_yrs": 0.6,
@@ -1907,7 +1907,7 @@
    "chemist": 180
   },
   "mat": {
-   "mat_adipic_acid_kg": 50
+   "adipic_acid_kg": 50
   },
   "cap": "cap_heat_1300",
   "build_yrs": 1,
@@ -1971,7 +1971,7 @@
    "chemist": 170
   },
   "mat": {
-   "mat_acrylonitrile_kg": 50
+   "acrylonitrile_kg": 50
   },
   "cap": "cap_heat_1300",
   "build_yrs": 1,
