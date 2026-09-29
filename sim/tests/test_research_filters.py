@@ -181,3 +181,64 @@ check("the empty-search tag counts cover only what the player can see",
 blocked_hint = _ask(fogged, find="gear")
 check("a search that misses startable nodes reports blocked matches by count",
       "known_but_blocked_matches" in blocked_hint, sorted(blocked_hint))
+
+# --- tags are data, and mods extend them
+from sim.engine import topic_tags as _topic_tags
+from sim.engine.mods import ModError as _ModError
+
+_tag_base = os.path.join(ROOT, "data", "world", "topic_tags.json")
+check("the base tags live in a data file", os.path.isfile(_tag_base))
+
+
+def _tag_mod(parent, mod_id, tags):
+    folder = os.path.join(parent, mod_id)
+    os.makedirs(os.path.join(folder, "data", "world"))
+    with open(os.path.join(folder, "mod.json"), "w") as handle:
+        json.dump({"id": mod_id, "name": mod_id, "version": "1",
+                   "dependencies": [], "conflicts": []}, handle)
+    with open(os.path.join(folder, "data", "world", "topic_tags.json"), "w") as handle:
+        json.dump({"tags": tags}, handle)
+
+
+_weaving_ids = sorted(node_id for node_id, node in NODES.items() if node["cat"] == "weaving")
+with tempfile.TemporaryDirectory() as _mods_tmp:
+    _tag_mod(_mods_tmp, "arcane", {
+        "arcane_sorcery": {"cats": ["weaving"], "words": ["spell"]},
+        "agriculture": {"cats": ["metallurgy"], "words": ["scythe"]}})
+    _topic_tags.use_mods_dir(_mods_tmp)
+    try:
+        _merged = _topic_tags.current()
+        check("a mod adds a new tag", "arcane_sorcery" in _merged, sorted(_merged))
+        check("a mod extends an existing tag without dropping its categories",
+              "metallurgy" in _merged["agriculture"]["cats"]
+              and "soil" in _merged["agriculture"]["cats"]
+              and "scythe" in _merged["agriculture"]["words"])
+        _mod_sim = sim(capital=1_000_000.0)
+        _new = _ask(_mod_sim, state="blocked", tag="arcane_sorcery", all=True)
+        _new_ids = sorted(row["id"] for row in _rows(_new) or [])
+        _expected = sorted(node_id for node_id in _weaving_ids
+                           if node_id not in _mod_sim.done and node_id not in _mod_sim.active
+                           and not _mod_sim.can_start(node_id))
+        check("`available tag:<new>` finds the new tag's nodes",
+              bool(_new_ids) and _new_ids == _expected, (_new.get("error"), len(_new_ids)))
+        check("...and their rows carry the new tag",
+              all("arcane_sorcery" in row["tags"] for row in _rows(_new)))
+        _spell = _ask(_mod_sim, find="spell", state="blocked", all=True)
+        check("a mod's search word reaches the tag's nodes",
+              bool(_rows(_spell)), _spell.get("error"))
+        _ext = _ask(_mod_sim, state="blocked", tag="agriculture", category="metallurgy", all=True)
+        check("an extended tag now covers the added category",
+              bool(_rows(_ext)), _ext.get("error"))
+    finally:
+        _topic_tags.use_mods_dir(None)
+    check("the default tags come back once the mod is gone",
+          "arcane_sorcery" not in _topic_tags.current())
+
+with tempfile.TemporaryDirectory() as _bad_tmp:
+    _tag_mod(_bad_tmp, "arcane", {"sorcery": {"cats": ["weaving"]}})
+    _refused = False
+    try:
+        _topic_tags.load_topic_tags(ROOT, _bad_tmp)
+    except _ModError:
+        _refused = True
+    check("a new tag without the mod id prefix is refused", _refused)

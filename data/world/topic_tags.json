@@ -1,0 +1,467 @@
+{
+ "_internal": "TRANSITIONAL: hand-kept grouping of node categories with everyday words, until nodes carry a tag field. Mods extend it additively; a new tag id needs the mod id prefix.",
+ "tags": {
+  "education": {
+   "cats": [
+    "notation",
+    "algebra",
+    "mathematics",
+    "geometry",
+    "writing",
+    "scripting",
+    "probability",
+    "foundations",
+    "method",
+    "knowledge",
+    "theory",
+    "calculation",
+    "institution"
+   ],
+   "words": [
+    "education",
+    "literacy",
+    "school",
+    "academy",
+    "teach",
+    "teacher",
+    "scholar",
+    "university",
+    "learning",
+    "curriculum",
+    "numeracy"
+   ]
+  },
+  "public_health": {
+   "cats": [
+    "public_health",
+    "sanitation",
+    "occupational_health",
+    "water_chemistry",
+    "safety",
+    "serology",
+    "obstetrics",
+    "medicine",
+    "diagnosis",
+    "therapeutics",
+    "pharmacology",
+    "surgery",
+    "dentistry"
+   ],
+   "words": [
+    "health",
+    "hygiene",
+    "sanitation",
+    "sewer",
+    "clean",
+    "disease",
+    "medicine",
+    "vaccine",
+    "sewage",
+    "plague"
+   ]
+  },
+  "agriculture": {
+   "cats": [
+    "agriculture",
+    "soil",
+    "plants",
+    "crops",
+    "animals",
+    "pests",
+    "field_machinery",
+    "livestock",
+    "dairy",
+    "fishing",
+    "fermentation",
+    "preservation",
+    "milling"
+   ],
+   "words": [
+    "farm",
+    "crop",
+    "plough",
+    "plow",
+    "harvest",
+    "grain",
+    "seed",
+    "irrigation",
+    "fertiliser",
+    "fertilizer",
+    "livestock",
+    "food"
+   ]
+  },
+  "mechanical_power": {
+   "cats": [
+    "power",
+    "steam_prime",
+    "steam_boiler",
+    "steam_auxiliary",
+    "water_prime",
+    "wind_prime",
+    "hydraulic_power",
+    "power_system",
+    "prime_alternative",
+    "prime_experimental",
+    "ic_prime",
+    "motor_subsystems",
+    "machines",
+    "machine",
+    "energy_storage"
+   ],
+   "words": [
+    "steam",
+    "engine",
+    "motor",
+    "rotary",
+    "crank",
+    "piston",
+    "boiler",
+    "turbine",
+    "waterwheel",
+    "windmill",
+    "drive",
+    "power",
+    "flywheel"
+   ]
+  },
+  "transmission": {
+   "cats": [
+    "machines",
+    "machine",
+    "machine_tools",
+    "wheels_running_gear",
+    "connections",
+    "electrical_dist",
+    "power_system",
+    "motor_subsystems",
+    "tooling",
+    "joining"
+   ],
+   "words": [
+    "gear",
+    "shaft",
+    "belt",
+    "pulley",
+    "chain",
+    "cam",
+    "coupling",
+    "clutch",
+    "bearing",
+    "transmission",
+    "linkage",
+    "crank"
+   ]
+  },
+  "precision_measurement": {
+   "cats": [
+    "measurement",
+    "metrology",
+    "precision",
+    "instruments",
+    "timekeeping",
+    "surveying",
+    "testing",
+    "analysis",
+    "diagnostics",
+    "laboratory",
+    "lab_technique",
+    "analytical_chemistry"
+   ],
+   "words": [
+    "measure",
+    "gauge",
+    "micrometer",
+    "calibrate",
+    "tolerance",
+    "clock",
+    "scale",
+    "instrument",
+    "precision",
+    "survey",
+    "thermometer"
+   ]
+  },
+  "printing_information": {
+   "cats": [
+    "printing",
+    "paper",
+    "press",
+    "publishing",
+    "lithography",
+    "intaglio",
+    "relief",
+    "ink",
+    "reproduction",
+    "media",
+    "media_base",
+    "information",
+    "data_handling",
+    "computing",
+    "cryptography",
+    "signalling",
+    "telegraphy",
+    "telephone",
+    "telephony",
+    "radio",
+    "signals",
+    "communications",
+    "television"
+   ],
+   "words": [
+    "print",
+    "press",
+    "paper",
+    "ink",
+    "type",
+    "book",
+    "publish",
+    "telegraph",
+    "telephone",
+    "radio",
+    "signal",
+    "message",
+    "computer"
+   ]
+  },
+  "transport": {
+   "cats": [
+    "transport",
+    "rail",
+    "aviation",
+    "marine",
+    "ships",
+    "navigation",
+    "carriage_engineering",
+    "vehicle_types",
+    "vehicles",
+    "bicycles",
+    "roads_surfaces",
+    "bridges",
+    "harbours",
+    "naval",
+    "warships",
+    "animal_traction",
+    "infrastructure",
+    "air",
+    "envelope"
+   ],
+   "words": [
+    "road",
+    "rail",
+    "ship",
+    "boat",
+    "cart",
+    "wagon",
+    "carriage",
+    "canal",
+    "harbour",
+    "bridge",
+    "aircraft",
+    "vehicle",
+    "sail",
+    "haul"
+   ]
+  },
+  "finance": {
+   "cats": [
+    "commerce",
+    "credit",
+    "banking",
+    "money",
+    "investment",
+    "insurance",
+    "accounting",
+    "economic",
+    "law"
+   ],
+   "words": [
+    "bank",
+    "credit",
+    "loan",
+    "money",
+    "coin",
+    "insurance",
+    "account",
+    "ledger",
+    "trade",
+    "market",
+    "invest",
+    "currency",
+    "bill"
+   ]
+  },
+  "institutions": {
+   "cats": [
+    "institution",
+    "institutions",
+    "institutional",
+    "organisation",
+    "organization",
+    "social",
+    "law",
+    "access",
+    "labour",
+    "security",
+    "milestone"
+   ],
+   "words": [
+    "guild",
+    "charter",
+    "court",
+    "state",
+    "office",
+    "corporation",
+    "company",
+    "institution",
+    "association",
+    "law",
+    "patent"
+   ]
+  },
+  "military_logistics": {
+   "cats": [
+    "weapons",
+    "military",
+    "fortification",
+    "tactics",
+    "armour",
+    "explosives",
+    "naval",
+    "warships",
+    "expedition"
+   ],
+   "words": [
+    "army",
+    "weapon",
+    "arms",
+    "siege",
+    "fort",
+    "supply",
+    "gunpowder",
+    "cannon",
+    "musket",
+    "armour",
+    "campaign",
+    "logistics"
+   ]
+  },
+  "metallurgy": {
+   "cats": [
+    "metallurgy",
+    "alloys",
+    "metals",
+    "smelting",
+    "casting",
+    "forming",
+    "heat_treatment",
+    "mining",
+    "mineral_extraction",
+    "material",
+    "materials",
+    "refining"
+   ],
+   "words": [
+    "iron",
+    "steel",
+    "copper",
+    "bronze",
+    "smelt",
+    "forge",
+    "ore",
+    "alloy",
+    "metal",
+    "cast",
+    "mine"
+   ]
+  },
+  "chemistry": {
+   "cats": [
+    "chemistry",
+    "chemical",
+    "chemical_engineering",
+    "organic_chemistry",
+    "organic_reaction",
+    "physical_chemistry",
+    "polymer",
+    "plastics",
+    "processing",
+    "industrial_process",
+    "fuel_production",
+    "binders",
+    "ceramics",
+    "glass_optics",
+    "environmental_chemistry"
+   ],
+   "words": [
+    "acid",
+    "alkali",
+    "reaction",
+    "chemical",
+    "distill",
+    "polymer",
+    "plastic",
+    "cement",
+    "glass",
+    "solvent"
+   ]
+  },
+  "electricity": {
+   "cats": [
+    "electrical",
+    "electrical_gen",
+    "electrical_storage",
+    "electronics",
+    "semiconductor",
+    "circuit_concept",
+    "component",
+    "lighting",
+    "ic_auxiliary",
+    "grid_operations",
+    "power_station",
+    "physics"
+   ],
+   "words": [
+    "electric",
+    "dynamo",
+    "generator",
+    "battery",
+    "circuit",
+    "transistor",
+    "valve",
+    "tube",
+    "lamp",
+    "grid",
+    "voltage",
+    "current"
+   ]
+  },
+  "textiles": {
+   "cats": [
+    "textiles",
+    "fibres",
+    "weaving",
+    "spinning",
+    "knitting",
+    "sewing",
+    "textile_production",
+    "leather",
+    "rope_cordage",
+    "finishing"
+   ],
+   "words": [
+    "cloth",
+    "loom",
+    "thread",
+    "yarn",
+    "weave",
+    "spin",
+    "fabric",
+    "wool",
+    "cotton",
+    "dye",
+    "sew"
+   ]
+  }
+ }
+}

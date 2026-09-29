@@ -5,125 +5,13 @@ or a search can never reveal what fog hides.
 """
 
 import difflib
-import re
+
+from .. import topic_tags
 
 STATES = ("startable", "blocked", "active", "done")
 _STATE_ALIASES = {"completed": "done", "complete": "done", "finished": "done",
                   "running": "active", "available": "startable",
                   "startable_now": "startable"}
-
-# TRANSITIONAL: broad topics are a hand-kept grouping of node categories, with
-# the everyday words a player might type for each. Migrate to a tag field on
-# the nodes themselves when the tree carries one.
-TOPIC_TAGS = {
-    "education": {
-        "cats": ("notation", "algebra", "mathematics", "geometry", "writing",
-                 "scripting", "probability", "foundations", "method", "knowledge",
-                 "theory", "calculation", "institution"),
-        "words": ("education", "literacy", "school", "academy", "teach", "teacher",
-                  "scholar", "university", "learning", "curriculum", "numeracy"),
-    },
-    "public_health": {
-        "cats": ("public_health", "sanitation", "occupational_health", "water_chemistry",
-                 "safety", "serology", "obstetrics", "medicine", "diagnosis",
-                 "therapeutics", "pharmacology", "surgery", "dentistry"),
-        "words": ("health", "hygiene", "sanitation", "sewer", "clean", "disease",
-                  "medicine", "vaccine", "sewage", "plague"),
-    },
-    "agriculture": {
-        "cats": ("agriculture", "soil", "plants", "crops", "animals", "pests",
-                 "field_machinery", "livestock", "dairy", "fishing", "fermentation",
-                 "preservation", "milling"),
-        "words": ("farm", "crop", "plough", "plow", "harvest", "grain", "seed",
-                  "irrigation", "fertiliser", "fertilizer", "livestock", "food"),
-    },
-    "mechanical_power": {
-        "cats": ("power", "steam_prime", "steam_boiler", "steam_auxiliary", "water_prime",
-                 "wind_prime", "hydraulic_power", "power_system", "prime_alternative",
-                 "prime_experimental", "ic_prime", "motor_subsystems", "machines",
-                 "machine", "energy_storage"),
-        "words": ("steam", "engine", "motor", "rotary", "crank", "piston", "boiler",
-                  "turbine", "waterwheel", "windmill", "drive", "power", "flywheel"),
-    },
-    "transmission": {
-        "cats": ("machines", "machine", "machine_tools", "wheels_running_gear",
-                 "connections", "electrical_dist", "power_system", "motor_subsystems",
-                 "tooling", "joining"),
-        "words": ("gear", "shaft", "belt", "pulley", "chain", "cam", "coupling",
-                  "clutch", "bearing", "transmission", "linkage", "crank"),
-    },
-    "precision_measurement": {
-        "cats": ("measurement", "metrology", "precision", "instruments", "timekeeping",
-                 "surveying", "testing", "analysis", "diagnostics", "laboratory",
-                 "lab_technique", "analytical_chemistry"),
-        "words": ("measure", "gauge", "micrometer", "calibrate", "tolerance", "clock",
-                  "scale", "instrument", "precision", "survey", "thermometer"),
-    },
-    "printing_information": {
-        "cats": ("printing", "paper", "press", "publishing", "lithography", "intaglio",
-                 "relief", "ink", "reproduction", "media", "media_base", "information",
-                 "data_handling", "computing", "cryptography", "signalling",
-                 "telegraphy", "telephone", "telephony", "radio", "signals",
-                 "communications", "television"),
-        "words": ("print", "press", "paper", "ink", "type", "book", "publish",
-                  "telegraph", "telephone", "radio", "signal", "message", "computer"),
-    },
-    "transport": {
-        "cats": ("transport", "rail", "aviation", "marine", "ships", "navigation",
-                 "carriage_engineering", "vehicle_types", "vehicles", "bicycles",
-                 "roads_surfaces", "bridges", "harbours", "naval", "warships",
-                 "animal_traction", "infrastructure", "air", "envelope"),
-        "words": ("road", "rail", "ship", "boat", "cart", "wagon", "carriage",
-                  "canal", "harbour", "bridge", "aircraft", "vehicle", "sail", "haul"),
-    },
-    "finance": {
-        "cats": ("commerce", "credit", "banking", "money", "investment", "insurance",
-                 "accounting", "economic", "law"),
-        "words": ("bank", "credit", "loan", "money", "coin", "insurance", "account",
-                  "ledger", "trade", "market", "invest", "currency", "bill"),
-    },
-    "institutions": {
-        "cats": ("institution", "institutions", "institutional", "organisation",
-                 "organization", "social", "law", "access", "labour", "security",
-                 "milestone"),
-        "words": ("guild", "charter", "court", "state", "office", "corporation",
-                  "company", "institution", "association", "law", "patent"),
-    },
-    "military_logistics": {
-        "cats": ("weapons", "military", "fortification", "tactics", "armour",
-                 "explosives", "naval", "warships", "expedition"),
-        "words": ("army", "weapon", "arms", "siege", "fort", "supply", "gunpowder",
-                  "cannon", "musket", "armour", "campaign", "logistics"),
-    },
-    "metallurgy": {
-        "cats": ("metallurgy", "alloys", "metals", "smelting", "casting", "forming",
-                 "heat_treatment", "mining", "mineral_extraction", "material",
-                 "materials", "refining"),
-        "words": ("iron", "steel", "copper", "bronze", "smelt", "forge", "ore",
-                  "alloy", "metal", "cast", "mine"),
-    },
-    "chemistry": {
-        "cats": ("chemistry", "chemical", "chemical_engineering", "organic_chemistry",
-                 "organic_reaction", "physical_chemistry", "polymer", "plastics",
-                 "processing", "industrial_process", "fuel_production", "binders",
-                 "ceramics", "glass_optics", "environmental_chemistry"),
-        "words": ("acid", "alkali", "reaction", "chemical", "distill", "polymer",
-                  "plastic", "cement", "glass", "solvent"),
-    },
-    "electricity": {
-        "cats": ("electrical", "electrical_gen", "electrical_storage", "electronics",
-                 "semiconductor", "circuit_concept", "component", "lighting",
-                 "ic_auxiliary", "grid_operations", "power_station", "physics"),
-        "words": ("electric", "dynamo", "generator", "battery", "circuit", "transistor",
-                  "valve", "tube", "lamp", "grid", "voltage", "current"),
-    },
-    "textiles": {
-        "cats": ("textiles", "fibres", "weaving", "spinning", "knitting", "sewing",
-                 "textile_production", "leather", "rope_cordage", "finishing"),
-        "words": ("cloth", "loom", "thread", "yarn", "weave", "spin", "fabric",
-                  "wool", "cotton", "dye", "sew"),
-    },
-}
 
 _SUFFIXES = ("ation", "ition", "ing", "ions", "ion", "ers", "er", "ed", "es", "al",
              "ic", "s")
@@ -140,14 +28,14 @@ def stem(term):
 def tags_of(node):
     """The broad topic tags a node belongs to, by its category."""
     cat = node.get("cat", "")
-    return [tag for tag, spec in TOPIC_TAGS.items() if cat in spec["cats"]]
+    return [tag for tag, spec in topic_tags.current().items() if cat in spec["cats"]]
 
 
 def _tag_words_hit(tag, term):
     root = stem(term)
     return any(term == word or root == stem(word) or
                (len(root) >= 4 and word.startswith(root))
-               for word in TOPIC_TAGS[tag]["words"])
+               for word in topic_tags.current()[tag]["words"])
 
 
 def _search_terms(find):
@@ -198,11 +86,11 @@ def parse_topic(cmd, nodes):
     tag = str(cmd.get("tag") or "").strip().strip('"\'').lower().replace(" ", "_")
     category = str(cmd.get("category") or cmd.get("cat") or "").strip().strip('"\'').lower()
     category = category.replace(" ", "_")
-    if tag and tag not in TOPIC_TAGS:
-        near = difflib.get_close_matches(tag, TOPIC_TAGS, n=3)
+    if tag and tag not in topic_tags.current():
+        near = difflib.get_close_matches(tag, list(topic_tags.current()), n=3)
         return "", "", ("unknown tag %r%s. The tags are: %s." % (
             tag, (" (did you mean %s?)" % ", ".join(near)) if near else "",
-            ", ".join(TOPIC_TAGS)))
+            ", ".join(topic_tags.current())))
     if category:
         cats = {node["cat"] for node in nodes.values()}
         if category not in cats:
@@ -277,7 +165,7 @@ def tag_overview(sim, nodes, known, startable, terms=()):
     """
     startable_set = set(startable)
     entries = []
-    for tag in TOPIC_TAGS:
+    for tag in topic_tags.current():
         members = [node_id for node_id in known if tag in tags_of(nodes[node_id])]
         if not members:
             continue
