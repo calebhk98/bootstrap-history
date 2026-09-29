@@ -3432,7 +3432,7 @@
    "furnaceman": 80
   },
   "mat": {
-   "ethylene_glycol": 5,
+   "ethylene_glycol_kg": 5,
    "mat_sulfur": 3
   },
   "cap": 0,
@@ -3565,7 +3565,7 @@
   },
   "mat": {
    "mat_petroleum_refined": 30,
-   "thickener_kg": 3
+   "aluminium_soap_kg": 3
   },
   "cap": 0,
   "up": 0,

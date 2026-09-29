@@ -1,0 +1,281 @@
+{
+ "_note": "Synthetic chemistry, explosives and nuclear materials that branch nodes consume and no other file here makes. Every quantity is stoichiometry, a latent heat or reaction enthalpy, a separative-work calculation or a reactor energy balance. Where a real process loses more than stoichiometry allows, the entry says so and is a labelled heuristic (rule 3.4). Labour is borrowed from a named neighbouring entry or left out, and says so.",
+ "materials": {
+  "ethylene_kg": {
+   "outputs": {
+    "ethylene_kg": 1000.0
+   },
+   "inputs": {
+    "ethanol_kg": 1642.0
+   },
+   "thermal_mj": 3000.0,
+   "temperature_needed_c": 350.0,
+   "basis": "per tonne of ethylene gas made by dehydrating ethanol vapour over an alumina catalyst",
+   "yield_basis": "STOICHIOMETRY. C2H5OH -> C2H4 + H2O: 46.07 g of ethanol gives 28.05 g of ethylene, so 1.642 kg of ethanol per kg at complete conversion. Heat is the physical floor: the reaction absorbs about 45 kJ per mole (gas phase) and the ethanol must first be vaporised, about 39 kJ per mole, together roughly 84 kJ per mole of ethylene or 3.0 GJ per tonne. Real conversion is below complete and the recycled ethanol, catalyst charge and heat losses are not modelled, so this understates cost (heuristic, conf C). Labour is left out.",
+   "conf": "C",
+   "requires_node": "chm_catalyst_concept"
+  },
+  "polyethylene_kg": {
+   "outputs": {
+    "polyethylene_kg": 1000.0
+   },
+   "inputs": {
+    "ethylene_kg": 1000.0
+   },
+   "mechanical_mj": 614.0,
+   "basis": "per tonne of low-density polyethylene by high-pressure free-radical polymerisation",
+   "yield_basis": "MASS CONSERVATION. n C2H4 -> (C2H4)n is an addition polymerisation with no by-product, so one kg of ethylene gives one kg of polymer at complete conversion. Shaft work is the isothermal compression floor for taking the gas from atmospheric pressure to about 1000 atmospheres (the pressure the chm_polyethylene node states), W = R T ln(p_out / p_in) per mole at 300 K, 17.2 kJ per mole of 28.05 g, so 0.61 MJ per kg. The polymerisation itself is exothermic, so no process heat is drawn. Real per-pass conversion is well below complete and unconverted gas is recompressed, so the compression work is understated; initiator peroxide is not modelled (heuristic, conf C). Labour is left out.",
+   "conf": "C",
+   "requires_node": "chm_polyethylene"
+  },
+  "chlorine_kg": {
+   "outputs": {
+    "chlorine_kg": 1000.0
+   },
+   "inputs": {
+    "salt_kg": 1648.0
+   },
+   "electrical_mj": 5960.0,
+   "basis": "per tonne of chlorine gas by electrolysis of sodium chloride brine",
+   "yield_basis": "STOICHIOMETRY AND ELECTROCHEMISTRY. 2 NaCl + 2 H2O -> Cl2 + H2 + 2 NaOH. Chlorine is 70.90 g/mol from two formula units of salt (2 x 58.44 g), so 1.648 kg of salt per kg. Electricity is the reversible floor: the cell potential is about 2.19 V (1.36 V chlorine evolution plus 0.83 V hydrogen evolution in alkaline solution) for 2 electrons per Cl2, 2 x 96485 C/mol x 2.19 V / 0.0709 kg = 5.96 MJ per kg. Real cells run well above the reversible voltage, so electricity is understated; the hydrogen and caustic soda co-products are not credited (heuristic, conf C). Labour is left out.",
+   "conf": "C",
+   "requires_node": "electrolysis_industrial"
+  },
+  "ethylene_glycol_kg": {
+   "outputs": {
+    "ethylene_glycol_kg": 1000.0
+   },
+   "inputs": {
+    "ethylene_kg": 452.0,
+    "chlorine_kg": 1142.0,
+    "sodium_carbonate_kg": 1708.0,
+    "water_kg": 290.0
+   },
+   "basis": "per tonne of ethylene glycol by the chlorohydrin route",
+   "yield_basis": "STOICHIOMETRY. C2H4 + Cl2 + H2O -> ClCH2CH2OH + HCl, then the chlorohydrin and the acid are neutralised and hydrolysed with soda: net C2H4 + Cl2 + Na2CO3 + H2O -> HOCH2CH2OH + 2 NaCl + CO2 (oxygen and hydrogen balance on both sides). Glycol is 62.07 g/mol, so per kg 0.452 kg ethylene, 1.142 kg chlorine, 1.708 kg sodium carbonate and 0.290 kg water. This is the pre-1937 industrial route, needing no catalyst. Complete conversion is assumed; the dichloroethane side reaction and the salt by-product credit are not modelled, so ethylene and chlorine are understated (heuristic, conf C). Labour is left out.",
+   "conf": "C",
+   "requires_node": "electrolysis_industrial"
+  },
+  "acetic_anhydride_kg": {
+   "outputs": {
+    "acetic_anhydride_kg": 1000.0
+   },
+   "inputs": {
+    "acetic_acid_kg": 1176.0
+   },
+   "thermal_mj": 1440.0,
+   "temperature_needed_c": 700.0,
+   "basis": "per tonne of acetic anhydride by the ketene route from acetic acid",
+   "yield_basis": "STOICHIOMETRY. CH3COOH -> CH2=C=O + H2O (ketene, about 700 C), then ketene + CH3COOH -> (CH3CO)2O. Net 2 CH3COOH -> (CH3CO)2O + H2O: 2 x 60.05 g of acid gives 102.09 g of anhydride, 1.176 kg of acid per kg at complete conversion. Heat is the enthalpy of the endothermic ketene step, about 147 kJ per mole of ketene, or 1.44 GJ per tonne, with no credit for the exothermic second step or for heat recovery. Real ketene yield is below complete, so acid use is understated, and the catalyst is not modelled (heuristic, conf C). Labour is left out.",
+   "conf": "C",
+   "requires_node": "cap_heat_0700"
+  },
+  "phenol_kg": {
+   "outputs": {
+    "phenol_kg": 1000.0
+   },
+   "inputs": {
+    "coal_tar_kg": 125000.0
+   },
+   "labour_hours": {
+    "chemist": 40.0,
+    "labourer": 100.0
+   },
+   "basis": "per tonne of phenol recovered from coal tar by fractionation and caustic wash",
+   "yield_basis": "EXTRACTED FROM A BY-PRODUCT. High-temperature coal tar carries on the order of one percent phenol by mass in its carbolic-oil fraction; recovery by fractionation, extraction into caustic soda and re-acidification is taken at 80 percent, giving 1 / (0.01 x 0.8) = 125 t of tar per tonne. The tar grade is an order-of-magnitude figure for tar from coking (conf C). Labour is borrowed from acetic_acid_kg's distillation line (the same fractionate-and-purify work), not derived. Caustic and acid reagents are not modelled.",
+   "conf": "C",
+   "requires_node": "chm_phenol"
+  },
+  "adipic_acid_kg": {
+   "outputs": {
+    "adipic_acid_kg": 1000.0
+   },
+   "inputs": {
+    "phenol_kg": 644.0,
+    "hydrogen_m3": 460.0,
+    "nitric_acid_kg": 1150.0
+   },
+   "labour_hours": {
+    "chemist": 30.0,
+    "labourer": 60.0
+   },
+   "basis": "per tonne of adipic acid via phenol, cyclohexanol and nitric acid oxidation",
+   "yield_basis": "STOICHIOMETRY of the route used for nylon 6,6 in the 1930s. Phenol + 3 H2 -> cyclohexanol (94.11 g of phenol and 6.05 g of hydrogen per mole); 3 cyclohexanol + 8 HNO3 -> 3 adipic acid + 8 NO + 7 H2O. Adipic acid is 146.14 g/mol: 0.644 kg of phenol, 0.0414 kg of hydrogen (0.460 normal cubic metres at 0.0899 kg per m3) and 8/3 mol x 63.01 g = 1.150 kg of nitric acid per kg. Complete conversion is assumed and the nitrogen oxide is not credited back as recovered nitric acid, so the acid is overstated and the phenol and hydrogen understated (heuristic, conf C). Labour is borrowed from nitric_acid_kg's line.",
+   "conf": "C",
+   "requires_node": "ch2_rxn_catalytic_hydrogenation"
+  },
+  "nylon_kg": {
+   "outputs": {
+    "nylon_kg": 1000.0
+   },
+   "inputs": {
+    "adipic_acid_kg": 1291.0,
+    "ammonia_kg": 150.5,
+    "hydrogen_m3": 396.0
+   },
+   "thermal_mj": 1080.0,
+   "temperature_needed_c": 280.0,
+   "basis": "per tonne of nylon 6,6 polymer from adipic acid, via hexamethylenediamine",
+   "yield_basis": "STOICHIOMETRY. The repeat unit C12H22N2O2 (226.32 g) is adipic acid (146.14) + hexamethylenediamine (116.21) - 2 H2O, so 0.646 kg of adipic acid and 0.514 kg of diamine per kg of polymer. The diamine is made from adipic acid: adipic acid + 2 NH3 -> adiponitrile + 4 H2O, then adiponitrile + 4 H2 -> diamine, giving 1.258 kg of acid, 0.293 kg of ammonia and 0.069 kg of hydrogen per kg of diamine. Summed per tonne of polymer: 1291 kg of adipic acid, 150.5 kg of ammonia and 0.0356 t of hydrogen (396 normal cubic m). Heat is the latent heat of vaporising the water of condensation, 0.478 kg per kg at 2.26 MJ/kg, about 1.08 GJ per tonne, a floor with no allowance for heating the charge. Complete conversion is assumed, and the catalysts are not modelled (heuristic, conf C). Labour is left out.",
+   "conf": "C",
+   "requires_node": "ch2_rxn_condensation_polymerisation"
+  },
+  "hydrogen_cyanide_kg": {
+   "outputs": {
+    "hydrogen_cyanide_kg": 1000.0
+   },
+   "inputs": {
+    "carbon_kg": 444.0,
+    "ammonia_kg": 630.0
+   },
+   "thermal_mj": 6700.0,
+   "temperature_needed_c": 1300.0,
+   "basis": "per tonne of hydrogen cyanide from coke and ammonia at high temperature",
+   "yield_basis": "STOICHIOMETRY. C + NH3 -> HCN + H2. HCN is 27.03 g/mol, so 0.444 kg of carbon and 0.630 kg of ammonia per kg. Heat is the reaction enthalpy, formation enthalpies +135 kJ/mol (HCN gas) against -46 kJ/mol (NH3), so +181 kJ per mole or 6.7 GJ per tonne, a physical floor; the reaction runs around 1300 C. The hydrogen co-product is not credited and real conversion is below complete (heuristic, conf C). Labour is left out.",
+   "conf": "C",
+   "requires_node": "cap_heat_1300"
+  },
+  "acrylonitrile_kg": {
+   "outputs": {
+    "acrylonitrile_kg": 1000.0
+   },
+   "inputs": {
+    "acetylene_kg": 491.0,
+    "hydrogen_cyanide_kg": 509.0
+   },
+   "basis": "per tonne of acrylonitrile from acetylene and hydrogen cyanide",
+   "yield_basis": "STOICHIOMETRY. C2H2 + HCN -> CH2=CHCN, an addition with no by-product: acrylonitrile is 53.06 g/mol from 26.04 g of acetylene and 27.03 g of hydrogen cyanide, so 0.491 kg and 0.509 kg per kg. The reaction is exothermic in aqueous cuprous chloride, so no process heat is charged. Complete conversion is assumed, so both inputs are understated, and the copper catalyst is not modelled (heuristic, conf C). Labour is left out.",
+   "conf": "C",
+   "requires_node": "chm_catalyst_concept"
+  },
+  "hydrogen_peroxide_kg": {
+   "outputs": {
+    "hydrogen_peroxide_kg": 1000.0
+   },
+   "inputs": {
+    "water_kg": 1059.0
+   },
+   "electrical_mj": 10400.0,
+   "basis": "per tonne of pure hydrogen peroxide made by electrolysis (persulphate route), counted as pure H2O2",
+   "yield_basis": "THERMODYNAMIC FLOOR. Net cell reaction 2 H2O -> H2O2 + H2, with the sulphuric acid carrier regenerated. Standard free energies of formation are -237.1 kJ/mol for liquid water and -120.4 kJ/mol for liquid hydrogen peroxide, so the reaction needs +354 kJ per mole of 34.01 g, 10.4 MJ per kg as electricity. Real cells run above the reversible voltage, so electricity is understated, and acid make-up and the hydrogen co-product credit are omitted (heuristic, conf C). Nodes quote peroxide in kg of the working solution; it is counted here as pure H2O2. Labour is left out.",
+   "conf": "C",
+   "requires_node": "electrolysis_industrial"
+  },
+  "flame_retardant_kg": {
+   "outputs": {
+    "flame_retardant_kg": 1000.0
+   },
+   "inputs": {
+    "borax_kg": 700.0,
+    "boric_acid_kg": 300.0
+   },
+   "basis": "per tonne of dry borax and boric acid blend for treating cellulose fabric",
+   "yield_basis": "COMPOSITION. The classic textile fireproofing bath is borax and boric acid dissolved together, the mix commonly given as seven parts borax to three parts boric acid by mass. The blend conserves mass, so a tonne of blend is 700 kg of one and 300 kg of the other. The ratio is a recipe convention, not derived (conf C). Labour of mixing and the water of solution are not modelled.",
+   "conf": "C",
+   "requires_node": "soda_leblanc"
+  },
+  "aluminium_soap_kg": {
+   "outputs": {
+    "aluminium_soap_kg": 1000.0
+   },
+   "inputs": {
+    "soap_kg": 1103.0,
+    "alum_kg": 541.0
+   },
+   "labour_hours": {
+    "labourer": 4.0
+   },
+   "basis": "per tonne of aluminium fatty-acid soap, the gelling agent that thickens petroleum into a jelly",
+   "yield_basis": "STOICHIOMETRY of double decomposition. 3 potassium stearate + KAl(SO4)2.12H2O -> aluminium tristearate + 2 K2SO4 + 12 H2O. Potassium stearate is 322.6 g/mol and aluminium tristearate 877.4 g/mol, so 3 x 322.6 / 877.4 = 1.103 kg of soap per kg; alum (474.46 g/mol) supplies one aluminium per tristearate, 0.541 kg per kg. Complete precipitation is assumed and wash water is not modelled (heuristic, conf C). Soap is the potash soap soap_kg makes. Labour is borrowed from soap_kg's line.",
+   "conf": "C",
+   "requires_node": "ch2_rxn_saponification"
+  },
+  "glycerol_kg": {
+   "outputs": {
+    "glycerol_kg": 1000.0
+   },
+   "inputs": {
+    "fat_kg": 10414.0,
+    "caustic_soda_kg": 1448.0
+   },
+   "thermal_mj": 990.0,
+   "temperature_needed_c": 180.0,
+   "basis": "per tonne of distilled glycerol recovered from the spent lye of soap making",
+   "yield_basis": "STOICHIOMETRY OF SAPONIFICATION. Triglyceride + 3 NaOH -> 3 soap + glycerol (92.09 g/mol). A tallow saponification value near 195 mg KOH per g means 1.159 mmol of triglyceride per g, so 0.1067 kg of glycerol per kg of fat at complete reaction; 90 percent recovery from lye and vacuum distillation gives 1 / (0.1067 x 0.9) = 10.4 t of fat per tonne, with 3 mol of NaOH per mol of fat (40.0 g/mol), 1.448 t. Heat is the latent heat of vaporising glycerol in distillation, about 91 kJ per mole, 0.99 GJ per tonne, under vacuum near 180 C. LABELLED HEURISTIC: the soap that the same batch makes is not credited, so glycerol is overpriced by the fat it shares with soap; solvent recovery and labour are not modelled. Saponification value and recovery are conf C.",
+   "conf": "C",
+   "requires_node": "chm_glycerol"
+  },
+  "fulminate_kg": {
+   "outputs": {
+    "fulminate_kg": 1000.0
+   },
+   "inputs": {
+    "mercury_kg": 705.0,
+    "nitric_acid_kg": 443.0,
+    "ethanol_kg": 162.0
+   },
+   "labour_hours": {
+    "chemist": 70.0,
+    "labourer": 70.0
+   },
+   "basis": "per tonne of mercury fulminate, Hg(ONC)2, made by dissolving mercury in nitric acid and adding ethanol",
+   "yield_basis": "STOICHIOMETRIC MINIMUM. Mercury fulminate is 284.63 g/mol containing one mercury (200.59 g) and two nitrogen atoms, taken from two molecules of nitric acid (2 x 63.01 g); the two carbon atoms are taken from one molecule of ethanol (46.07 g). Per kg: 0.705 kg mercury, 0.443 kg nitric acid, 0.162 kg ethanol. A real batch uses a large excess of acid and ethanol and recovers a fraction, so this understates cost (heuristic, conf C). Labour is copied from nitroglycerin_kg, the neighbouring hazardous batch synthesis.",
+   "conf": "C",
+   "requires_node": "chm_fulminate"
+  },
+  "uranium_ore_kg": {
+   "outputs": {
+    "uranium_ore_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "miner": 15.0
+   },
+   "extracted_from": "ore deposit",
+   "basis": "per tonne of run-of-mine uranium ore (uraninite / pitchblende veins), about 0.2% U3O8 by mass",
+   "yield_basis": "EXTRACTED. A mine-run vein grade of a fraction of a percent U3O8 is the order of magnitude of worked uranium ores; 0.2 percent is a representative figure, not a measured deposit (conf C). Labour is copied from nickel_ore_kg, the same hard-rock mining method.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "uranium_kg": {
+   "outputs": {
+    "uranium_kg": 1000.0
+   },
+   "inputs": {
+    "uranium_ore_kg": 655000.0
+   },
+   "labour_hours": {
+    "chemist": 20.0
+   },
+   "basis": "per tonne of natural uranium (0.711% U-235) as metal, leached from ore",
+   "yield_basis": "ORE GRADE TIMES RECOVERY. U3O8 (842.09 g/mol) is 84.8 percent uranium by mass, so a 0.2 percent U3O8 ore holds 0.170 percent uranium; sulphuric-acid leaching recovers about 90 percent, giving 1 / (0.00170 x 0.9) = 655 t of ore per tonne. Conversion from oxide to metal and the leach reagents are not modelled (heuristic, conf C). Labour is copied from nickel_kg's chemist line.",
+   "conf": "C",
+   "requires_node": "mt2_uranium_thorium_extraction"
+  },
+  "uranium_235_kg": {
+   "outputs": {
+    "uranium_235_kg": 1.0
+   },
+   "inputs": {
+    "uranium_kg": 194.7
+   },
+   "electrical_mj": 37400.0,
+   "basis": "per kg of 90% enriched uranium (mass of uranium at that enrichment) from natural feed with 0.25% tails",
+   "yield_basis": "SEPARATIVE WORK. Feed for a product at enrichment x_p from natural feed x_f = 0.711% with tails x_t = 0.25%: F = (x_p - x_t) / (x_f - x_t) = 194.7 kg per kg. Work in separative work units SWU = P V(x_p) + T V(x_t) - F V(x_f) with V(x) = (2x - 1) ln(x / (1 - x)) gives 208 SWU per kg. Electricity is taken at 50 kWh per SWU (gas centrifuge cascades), 180 MJ per SWU, 37.4 GJ per kg. That energy per SWU is a plant figure, not a derivation. Conversion to and from the gaseous hexafluoride, capital and labour are not modelled (heuristic, conf C).",
+   "conf": "C",
+   "requires_node": "in2_ultracentrifuge"
+  },
+  "plutonium_kg": {
+   "outputs": {
+    "plutonium_kg": 1.0
+   },
+   "inputs": {
+    "uranium_kg": 164.0
+   },
+   "basis": "per kg of plutonium-239 bred in a natural-uranium reactor and chemically separated",
+   "yield_basis": "REACTOR ENERGY BALANCE. A fission releases about 200 MeV, so 235 g-atoms of U-235 fissioned gives 0.95 MW-days of heat per gram fissioned. A natural-uranium reactor breeds roughly 0.9 g of Pu-239 per MW-day, a conversion ratio near 0.85 (0.85 x 239/235 / 0.95 = 0.91). One kg of plutonium therefore needs 1111 MW-days, or 1.17 kg of U-235 burned, carried by 1.17 / 0.00711 = 164 kg of natural uranium; the U-238 that becomes plutonium is inside that mass. Reactor heat is not credited, and reprocessing chemistry, capital and labour are not modelled (heuristic, conf C).",
+   "conf": "C",
+   "requires_node": "pwr_nuclear_fission"
+  }
+ }
+}

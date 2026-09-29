@@ -3199,7 +3199,7 @@
   },
   "mat": {
    "mat_nickel": 50,
-   "hydrogen": 200
+   "hydrogen_m3": 200
   },
   "cap": 440,
   "up": 0,
