@@ -778,7 +778,7 @@ def _parse_buy_or_quote(command, rest, words, nums, want_json):
     if out["what"] in ("nitre", "saltpetre", "nitre_bed"):
         out["what"] = "nitre"
     elif out["what"] not in ("forest", "farm", "food", "housing", "houses",
-                             "school", "trade_school", "material", "stock",
+                             "trade_school", "material", "stock",
                              "slaves", "mine", "mines", "people",
                              "manumit", "manumission", "free"):
         out["material"], out["what"] = out["what"], "mine"

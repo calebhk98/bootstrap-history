@@ -310,12 +310,13 @@ def _mine_rows_for_material(sim, material, workings, want):
         share = want * (working["capacity"] / total_rated) if total_rated > 0 else 0.0
         drawn = min(share, actual)
         util = (drawn / working["capacity"]) if working["capacity"] > 0 else 0.0
+        opened = working.get("opened_year")
         rows.append({
             "material": material,
-            "commissioned_year": working.get("opened_year") if working.get("opened_year")
-                                 is not None else "unknown (from a save "
+            "commissioned_year": opened if opened is not None else "unknown (from a save "
                                  "written before per-working tracking "
                                  "existed)",
+            "ready_year": (None if opened is None else opened + 1),
             "rated_capacity_t_per_yr": round(working["capacity"], 2),
             "actual_output_t_per_yr": round(actual, 2),
             "material_demand_t_per_yr": round(want, 2),
@@ -351,6 +352,7 @@ def _mine_pending_rows(dem, pending):
             "utilization": "sinking",
             "actually_supplying_demand": False,
             "commissions_during_year": ready,
+            "ready_year": (None if ready is None else ready + 1),
             "tonnes_a_year_when_it_is_ready": round(amt, 2),
             "shut_it_with": "close %s" % material})
     return rows

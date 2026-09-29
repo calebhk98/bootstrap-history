@@ -404,6 +404,7 @@ def render_mines(out):
         for row in rows:
             commissioned_year = row.get("commissioned_year")
             yr_s = "%d" % commissioned_year if isinstance(commissioned_year, (int, float)) else str(commissioned_year)
+            commission_text = _format_commission_display(row)
             lines.append("  %-9s %8s %10s %10s %6s %6s %10s%s"
                      % (row["material"], yr_s,
                         _fmt_num(row.get("rated_capacity_t_per_yr")),
@@ -411,8 +412,7 @@ def render_mines(out):
                         row.get("utilization") or "-",
                         "yes" if row.get("actually_supplying_demand") else "no",
                         _fmt_num(row["costs_you_a_year"]),
-                        "   (commissions during %s)" % _fmt_num(row["commissions_during_year"])
-                        if row.get("commissions_during_year") else ""))
+                        ("   " + commission_text) if commission_text else ""))
         lines.append("")
         lines.append("  they cost %s den/yr in all, against revenue of %s"
                  % (_fmt_num(out.get("they_cost_you_a_year_in_all")),
@@ -425,12 +425,44 @@ def render_mines(out):
     if pend:
         lines.append("")
         lines.append("  still being sunk: "
-                 + ", ".join("%s (commissions during %s)" % (material, _fmt_num(ready_year))
+                 + ", ".join(_format_pending_mine_display(material, ready_year)
                              for material, ready_year in pend.items()))
     if out.get("note"):
         lines.append("")
         lines.append(_wrap(out["note"], indent="  "))
     return "\n".join(lines)
+
+
+def _format_commission_display(row):
+    """Format the commission/ready information based on COMMISSION_DISPLAY setting."""
+    from . import render_typed as _render_typed
+    setting = _render_typed.COMMISSION_DISPLAY
+    commissioned = row.get("commissions_during_year")
+    ready = row.get("ready_year")
+    parts = []
+    if setting in ("commissioned", "both") and commissioned is not None:
+        parts.append("commissions during %s" % _fmt_num(commissioned))
+    if setting in ("ready", "both") and ready is not None:
+        parts.append("ready %s" % _fmt_num(ready))
+    if parts:
+        return "(" + ", ".join(parts) + ")"
+    return ""
+
+
+def _format_pending_mine_display(material, ready_year):
+    """Format pending mine display based on COMMISSION_DISPLAY setting."""
+    from . import render_typed as _render_typed
+    setting = _render_typed.COMMISSION_DISPLAY
+    # For pending mines, commissions_during_year is ready_year - 1
+    commissioned = ready_year - 1 if isinstance(ready_year, (int, float)) else None
+    parts = [material]
+    if setting in ("commissioned", "both") and commissioned is not None:
+        parts.append("commissions during %s" % _fmt_num(commissioned))
+    if setting in ("ready", "both") and ready_year is not None:
+        parts.append("ready %s" % _fmt_num(ready_year))
+    if len(parts) > 1:
+        return "%s (%s)" % (parts[0], ", ".join(parts[1:]))
+    return material
 
 
 # render_labour has two entirely separate screens behind one command - the

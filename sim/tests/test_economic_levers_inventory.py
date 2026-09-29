@@ -6,8 +6,8 @@ from sim.engine.proto.typed import parse_typed
 check("typed economic levers reach their protocol actions",
       parse_typed("buy farm 120")[0] == {"cmd": "buy", "what": "farm", "n": 120}
       and parse_typed("buy housing 5")[0] == {"cmd": "buy", "what": "housing", "n": 5}
-      and parse_typed("buy school smith 2")[0]
-          == {"cmd": "buy", "what": "school", "material": "smith", "n": 2}
+      and parse_typed("buy trade_school smith 2")[0]
+          == {"cmd": "buy", "what": "trade_school", "material": "smith", "n": 2}
       and parse_typed("materials")[0] == {"cmd": "materials"}
       and parse_typed("sell iron 5")[0]
           == {"cmd": "sell", "material": "iron", "n": 5})
@@ -28,7 +28,7 @@ check("worker housing directly expands household capacity",
 s.trades_created.add("chemist")
 s._add_labour_pressure("chemist", 2_000)
 scarcity0 = s.labour_price_factor("chemist")
-reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "school",
+reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "trade_school",
                                      "trade": "chemist", "n": 2})
 check("a named trade school makes its profession more common",
       reply["ok"] and s.market_supply("chemist") >= 4_000
