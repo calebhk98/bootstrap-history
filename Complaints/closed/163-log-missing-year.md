@@ -1,6 +1,6 @@
 # `step 2` printed only the first year's events and `log` shows nothing for the second
 
-**Status:** open
+**Status:** closed - measured: not a bug. `step N` logs and prints exactly what N single steps do (test_multi_year_step_log); the 'population still N% below trend' line is throttled in core.py `_refresh_demographic_indexes`, so it does not appear every year
 
 From 106 AD, `step 2` printed only "DURING 106" lines and landed on 108 AD. `log limit:12` has no 107 AD entries at all, not even the "population still N% below trend" line every other year logs.
 

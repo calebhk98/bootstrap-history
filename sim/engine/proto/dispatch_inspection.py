@@ -24,7 +24,7 @@ from .techtree import _agent_available, _brief, _node_explain
          summary="where you stand",
          usage=["state", "state full", "state compact"],
          options={"full": "include every field, not only the headline ones",
-                  "json / compact": "the raw reply; compact adds blocked_projects"},
+                  "json / compact": "json is the raw reply; compact is a short summary (year, money, net_per_year, founder_hours_free, projects with blockers, concerns, standing, danger, nearest_goal_blocker)"},
          description="Year, money, income, founder hours, active projects with "
                      "what each is waiting on, and what to look at next.")
 def _cmd_state(sim, nodes, cmd, ended):
@@ -81,7 +81,7 @@ def _cmd_score(sim, nodes, cmd, ended):
          summary="everything known about one thing",
          usage=["why <id or name>", "why <id> compact"],
          options={"<id>": "a technology or concern, by id or name",
-                  "compact": "add blocked, blocked_by and explanation fields"},
+                  "compact": "short reply: status, blocked_by, explanation"},
          description="Cost, staff, risk, chain, what it unlocks, and exactly why it "
                      "is or is not startable right now.")
 def _cmd_why(sim, nodes, cmd, ended):
@@ -486,7 +486,7 @@ def _stuck_startable_and_afford(sim, nodes, _fog):
 
 @command("stuck", group="overview", aliases=("blocked", "help_me", "why_stuck"),
          summary="why you are not getting on",
-         usage=["stuck", "stuck compact"], options={"compact": "add a blockers list"},
+         usage=["stuck", "stuck compact"], options={"compact": "short reply: a blockers list"},
          description="Gathers every kind of stall in one place: work blocked, no road "
                      "to the goal, nothing started, a shut venture, a binding raw "
                      "material, no room for people, arrears, a credit freeze.")
