@@ -140,6 +140,10 @@ DEFAULT_AVAILABLE_LIMIT = 30
 
 SAVE_SUFFIXES = (".json", ".save")
 
+# True while a person is typing at the keyboard (`play`): they own the machine,
+# so a typed save may go to any path. The JSON protocol keeps the sandbox.
+HUMAN_AT_KEYBOARD = False
+
 
 def _unsafe_path(path):
     """None if this is a reasonable place for a save file; a refusal if not.
@@ -151,6 +155,10 @@ def _unsafe_path(path):
     commands to this process can already run code as this user. It is here
     so the ordinary accident does not happen, not because a sandbox exists.
     """
+    if HUMAN_AT_KEYBOARD:
+        if not os.path.normpath(path).lower().endswith(SAVE_SUFFIXES):
+            return "a save file should end in %s" % " or ".join(SAVE_SUFFIXES)
+        return None
     if os.path.isabs(path) or path.startswith(("/", "\\")):
         return ("a save file must be a relative path, not an absolute one. "
                 "Try {\"cmd\":\"save\",\"file\":\"mygame.json\"}")

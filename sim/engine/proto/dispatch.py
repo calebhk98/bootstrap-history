@@ -58,7 +58,7 @@ _NAME_COMMANDS = _ID_COMMANDS + ("open",)
 @command("save", group="game",
          summary="write the game to a file",
          usage=["save <file>", '{"cmd":"save","file":"mygame.json"}'],
-         options={"<file>": "a relative file name"},
+         options={"<file>": "a file name (a relative name for scripts; typed in play, any path)"},
          description="Writes the whole game. See the sittings topic for scripting.")
 def _cmd_save(sim, nodes, cmd, ended):
     command = cmd.get("cmd")  # this handler serves both "save" and "load"; see below
@@ -224,11 +224,16 @@ def _cmd_step(sim, nodes, cmd, ended):
         # own diff can still be taken, cheaply, before it is gone.
         before_revealed = set(getattr(sim, "revealed", set()))
         before_operating = set(sim.operating)
+        _arrival_snapshot = _dashboard_snapshot(sim)
         sim.step()
         ran += 1
         hist = getattr(sim, "_dashboard_history", None)
         if hist is None:
             hist = sim._dashboard_history = []
+        if not hist:
+            # the arrival year is the first point `changes` can measure from
+            hist.append({**_arrival_snapshot, "revealed_added": [], "concerns_opened": [],
+                         "concerns_closed": [], "completed": []})
         _snap = _dashboard_snapshot(sim)
         _snap["revealed_added"] = sorted(
             set(getattr(sim, "revealed", set())) - before_revealed)

@@ -1,6 +1,6 @@
 # The load browser shows "None AD" and 0 technologies for a valid save
 
-**Status:** open
+**Status:** closed
 
 The main-menu "Load a saved game" list shows a saved game as year `None AD` and `0` technologies, although loading it restores the right year and techs.
 

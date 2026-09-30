@@ -1,6 +1,6 @@
 # Every game uses seed 1 unless told otherwise, so every player gets the same founder lifespan, the same invasion and plague rolls and the same early failures
 
-**Status:** open
+**Status:** closed
 
 All three Mexica runs lost the founder in 1538 at "about 73", all three were sacked in all three invasion years, and one tester's `patron_local` failed three times running (risks 15%, 11%, 8%, about 1 in 750). These are one random stream, not fate.
 

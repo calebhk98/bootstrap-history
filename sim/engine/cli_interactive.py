@@ -33,12 +33,13 @@ save/load module import back from this one.
 """
 import json, os, random, sys, time
 
-from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
+from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
                    load, load_civ, load_geography, money_short, money_word,
                    STARTING_KITS, win_condition_describe)
 from .core import Sim
 from . import protocol as _protocol
 from . import settings
+from .proto import util as proto_util
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
                        load_state, parse_typed, render_final, render_pretty,
                        save_state)
@@ -91,6 +92,8 @@ def cmd_play(args):
     # not line by line, because it is all the same kind of text - what a
     # first-timer needs and nobody else does - and a veteran who has turned
     # it off still gets the arrival capital/year from 'state' on request.
+    if fresh:
+        print("Seed: %d (replay these dice with --seed %d)" % (sim.seed, sim.seed))
     if fresh and app_cfg.get("show_welcome", True):
         _play_print_welcome(sim, kit)
 
@@ -123,6 +126,21 @@ def cmd_play(args):
             break
         _play_report_end_if_new(sim, nodes, args)
     return _play_finish(sim, nodes, args, session)
+
+
+DEFAULT_SEED_ENV = "ROME_DEFAULT_SEED"
+
+
+def resolve_seed(asked):
+    """The seed a sitting plays with: the one asked for, else the one named by
+    ROME_DEFAULT_SEED (the regression harness fixes it so its runs replay),
+    else a fresh draw so every new game rolls different dice."""
+    if asked is not None:
+        return int(asked)
+    fixed = os.environ.get(DEFAULT_SEED_ENV)
+    if fixed:
+        return int(fixed)
+    return random.SystemRandom().randrange(1, 2 ** 31)
 
 
 def _play_init(args):
@@ -175,10 +193,12 @@ def _play_build_sim(args):
     kit = getattr(args, "kit", None)
     if kit:
         cfg["start_kit"] = kit
+    seed = resolve_seed(getattr(args, "seed", None))
     sim = Sim(nodes, order,
-            DetRNG(args.seed) if getattr(args, "deterministic", False) else random.Random(args.seed),
+            DetRNG(seed) if getattr(args, "deterministic", False) else random.Random(seed),
             events=True, bounty_set=set(),
             manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg)
+    sim.seed = seed
     sim.goal = goal
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + horizon
@@ -194,6 +214,7 @@ def _play_build_sim(args):
     # The reader is a person typing words, so the worked examples inside every
     # reply should be words too. See protocol.to_typed_hints.
     _protocol.TYPED_HINTS = True
+    proto_util.HUMAN_AT_KEYBOARD = True
     _protocol.MONEY_SHORT = money_short(sim.civ)
     _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(app_cfg)
     return sim, nodes, session, app_cfg, kit, horizon
@@ -895,7 +916,7 @@ def _new_game(civs, cfg):
     args = Args()
     args.strategy = "recommended"
     args.goal = goal
-    args.seed = 1
+    args.seed = None
     args.horizon = horizon
     args.civ = civ["id"]
     args.kit = kit
@@ -1050,22 +1071,23 @@ def _new_game_pick_goal(tree, nodes, cfg):
     Returns the chosen goal's node id, or None if the player backed out.
     """
     print("-" * 78)
-    print(_wrap("THE GOAL. The transistor (1951) is the original target and "
-                "still the default, and from scratch it takes centuries - which "
-                "is the whole reason the founder does not age by default. Below "
-                "are the alternatives: achievements a single lifetime can "
+    goals = selectable_goals(tree, nodes)
+    default_goal_id = cfg.get("default_goal") or goals[0]["node"]
+    if default_goal_id not in nodes:
+        default_goal_id = goals[0]["node"]
+    default_gi = next((i for i, goal_row in enumerate(goals, 1)
+                       if goal_row["node"] == default_goal_id), 1)
+    print(_wrap("THE GOAL. %s is the default, the target `play` aims at when "
+                "no goal is named, and from scratch it takes centuries - which "
+                "is the whole reason the founder does not age by default. The "
+                "others are alternatives: achievements a single lifetime can "
                 "actually finish, and a handful almost as large as the "
                 "transistor itself. 'closure' is how many other things it needs "
                 "first; 'floor' is the fewest calendar years that work could "
-                "possibly take, with every dice roll going your way.",
+                "possibly take, with every dice roll going your way."
+                % nodes[goals[0]["node"]].get("name", goals[0]["node"]),
                 indent="   "))
     print()
-    goals = goal_catalog(tree, nodes)
-    default_goal_id = cfg.get("default_goal") or tree["meta"]["goal_node"]
-    if default_goal_id not in nodes:
-        default_goal_id = tree["meta"]["goal_node"]
-    default_gi = next((i for i, goal_row in enumerate(goals, 1)
-                       if goal_row["node"] == default_goal_id), 1)
     for i, goal_row in enumerate(goals, 1):
         node = goal_row["node"]
         need = closure(nodes, node)
@@ -1318,7 +1340,7 @@ def _load_game(cfg):
         pass
     args = Args()
     args.strategy = "recommended"
-    args.seed = 1
+    args.seed = None
     args.horizon = 500
     args.civ = None
     args.kit = "poor_scholar"

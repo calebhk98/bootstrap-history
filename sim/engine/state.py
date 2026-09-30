@@ -424,6 +424,7 @@ class SimulationState:
 	_fuzzy_salt: int = 0
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
+	_seed: Optional[int] = None
 
 
 ALL_STATE_CLASSES = (
