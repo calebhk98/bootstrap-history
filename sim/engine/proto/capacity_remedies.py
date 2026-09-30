@@ -1,18 +1,12 @@
 """Capacity remedies: the commands that would end each shortage the screen names."""
 
 import math
-import re
-
-# The commands a remedy sentence quotes, pulled out of the sentence itself so
-# the sentence stays the one place a remedy is worded.
-_QUOTED_COMMAND = re.compile(r"'((?:buy|quote|hire|train) [^']+)'")
-
 
 def _material_remedy(sim, row):
-    text = sim.shortage_remedy(row["material"])
+    plan = sim.shortage_remedy_plan(row["material"], row["shortfall_t_per_yr"])
     return {"shortage": row["material"],
-            "short": "%s t/year" % "{:,.0f}".format(-row["surplus_t_per_yr"]),
-            "commands": _QUOTED_COMMAND.findall(text), "how": text}
+            "short": "%s t/year" % "{:,.0f}".format(row["shortfall_t_per_yr"]),
+            "commands": plan["commands"], "how": plan["text"]}
 
 
 def _trade_remedy(sim, row):
@@ -33,7 +27,7 @@ def capacity_remedies(sim, material_rows, trade_rows):
     """One row per short material or oversubscribed trade, worst first, each
     with the commands that would fix it. Material wording comes from
     `shortage_remedy`."""
-    rows = [_material_remedy(sim, row) for row in material_rows if row["surplus_t_per_yr"] < 0]
+    rows = [_material_remedy(sim, row) for row in material_rows if row["shortfall_t_per_yr"] > 0]
     rows += [_trade_remedy(sim, row) for row in trade_rows if row.get("oversubscribed")]
     return rows
 
