@@ -1,6 +1,6 @@
 # Request: `step N` should end with what went wrong in those N years
 
-**Status:** open
+**Status:** closed - `step N` (N > 1) ends with a PROBLEMS OVER THESE YEARS block (sim/engine/proto/step_problems.py)
 
 Stepping in batches hid a 30-year route stall, two credit exhaustions and repeated mass closures until long after. Each year's output does report them, but in the middle of long screens.
 

@@ -174,7 +174,21 @@ def render_risk(out):
                         hazard.get("remaining_annual_wave_checks", 1),
                         _pct(hazard.get("chance_of_at_least_one_staff_loss_wave", 0)),
                         _pct(hazard.get("expected_cumulative_staff_loss", 0))))
+    lines.extend(_confiscation_lines(out.get("confiscation")))
     return "\n".join(lines)
+
+
+def _confiscation_lines(confiscation):
+    """The treasury's confiscation chance and what holds it off."""
+    if not confiscation:
+        return []
+    lines = ["", "TREASURY CONFISCATION: %s chance this year" % _pct(confiscation.get("chance_this_year", 0))]
+    held = confiscation.get("held_off_by") or []
+    lines.append(_wrap("held off by: " + ("; ".join(held) if held else "nothing yet"), indent="  "))
+    missing = confiscation.get("not_yet_in_force") or []
+    if missing:
+        lines.append(_wrap("not yet in force: " + "; ".join(missing), indent="  "))
+    return lines
 
 
 def _advice_line(kind, advice, indent="  "):

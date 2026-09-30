@@ -64,7 +64,8 @@ class HazardsMixin:
                     strength *= 1.0 - self.civ_diffusion(node)
             if strength > 0.0:
                 mult *= (1.0 - share * strength)
-                why.append(label if strength >= 1.0 else label + " (lapsed)")
+                why.append(label if strength >= 1.0 else
+                           "%s (lapsed: %s is closed)" % (label, self.nodes[node]["name"]))
         if kind == "output_factor":
             war_relief, reason = self._military_war_relief()
             if reason:
