@@ -435,10 +435,6 @@ def _agent_state_spend_and_net(sim):
     """This year's project spend, interest, and the two net-income figures
     (this year's actual, and the standing ordinary-year one).
     """
-    _standing_revenue = sim.revenue_capacity()
-    _standing_upkeep = sim.upkeep()
-    _standing_living = sim.living_cost(
-        _rev=_standing_revenue, _upkeep=_standing_upkeep)
     return {
         # net_per_year counts the STANDING flows only, never what projects
         # consume - usually the largest outflow by far - so it can report
@@ -477,12 +473,7 @@ def _agent_state_spend_and_net(sim):
         # is what credit_limit() already reads, with the identical
         # reasoning in its own docstring ("a lender does not cut your
         # line because you took a job this year").
-        "net_per_year": round(_standing_revenue - _standing_upkeep
-                              - _standing_living
-                              + min(_standing_living,
-                                    sim.wages_prepaid)
-                              - sim.mine_operating_cost()
-                              - max(0.0, -sim.capital) * sim.debt_interest_rate(), 1),
+        "net_per_year": round(sim.recurring_net(), 1),
     }
 
 

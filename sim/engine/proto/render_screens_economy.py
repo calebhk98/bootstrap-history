@@ -385,6 +385,12 @@ def _money_net_lines(out):
              "prints this same figure)     spent on projects last step: %s"
              % (_fmt_num(out.get("net_per_year")),
                 _fmt_num(out.get("spent_on_projects_last_year")))]
+    advance = (out.get("what_it_costs_you") or {}).get(
+        "of_which_already_paid_as_hiring_advances")
+    if advance:
+        lines.append("  (this year's hiring advances, %s, are a one-off credit and "
+                     "are not in the recurring figure: the same wages fall due "
+                     "again next year)" % _fmt_num(advance))
     if out.get("net_after_project_spend") is not None:
         lines.append("Net/yr after it: %s   (one-off; `state` prints this too, "
                  "alongside the recurring figure above)"
@@ -398,6 +404,10 @@ def _money_credit_lines(out):
                 out.get("of_that_limit_you_have_used") or "none",
                 _pct(out.get("interest_rate_on_arrears")),
                 _fmt_num(out.get("interest_paid_in_total")))]
+    if out.get("sustainable_debt") is not None:
+        lines.append("Sustainable debt at this surplus: %s   (%s)"
+                     % (_fmt_num(out["sustainable_debt"]),
+                        out.get("sustainable_debt_means") or ""))
     if out.get("still_owed_on_work_in_hand"):
         lines.append("Still owed on work in hand: %s" % _fmt_num(out["still_owed_on_work_in_hand"]))
     return lines

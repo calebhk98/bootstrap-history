@@ -179,6 +179,17 @@ class VenturesMixin:
                 max(0.0, self.state.household.artisans + own - art_used))
 
 
+    def opening_fee(self, node_id, units=None):
+        """(charge, size) for opening a concern now; `open` charges exactly this.
+
+        A starter founding of a scalable institution has a floor on its size;
+        reopening restores the prior size, not a full founding."""
+        if node_id in self.SCALABLE_INSTITUTIONS and units is not None:
+            unit_count = max(self.STARTER_FOUNDING_MIN_UNITS, float(units))
+        else:
+            unit_count = self.reopen_units(node_id)
+        return self.reopen_fee(node_id, unit_count), unit_count
+
     def open_venture(self, node_id, pay=True, units=None):
         """Start actually running something you have worked out how to do.
 
@@ -219,11 +230,7 @@ class VenturesMixin:
                 return self._expand_institution(node_id, float(units), pay)
             return False, "you are already running that"
         scalable = node_id in self.SCALABLE_INSTITUTIONS
-        # Starter founding has a floor. Reopening restores prior size, not 1.0.
-        if scalable and units is not None:
-            unit_count = max(self.STARTER_FOUNDING_MIN_UNITS, float(units))
-        else:
-            unit_count = self.reopen_units(node_id)
+        fee, unit_count = self.opening_fee(node_id, units)
         sch_free, art_free = self.venture_staff_free()
         need_sch, need_art = self.venture_hands(node_id)
         need_sch, need_art = need_sch * unit_count, need_art * unit_count
@@ -246,7 +253,6 @@ class VenturesMixin:
                            % (foreman_fte, foreman_trade,
                               self.venture_foreman_free(foreman_trade),
                               foreman_trade))
-        fee = self.reopen_fee(node_id, unit_count)
         projects = self.state.projects
         household = self.state.household
         scenario = self.state.scenario

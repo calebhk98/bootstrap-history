@@ -239,6 +239,7 @@ def _cmd_start(sim, nodes, cmd, ended):
             "estimated_annual_interest": round(
                 _gap * sim.debt_interest_rate(), 1),
             "you_would_then_owe": round(_after, 1),
+            **sim.debt_service_forecast(_after),
             "no_one_advances_past": round(_lim, 1),
             "what_happens_there":
                 "past that limit every project in hand halts unfinished, "
@@ -595,7 +596,8 @@ def _cmd_restore(sim, nodes, cmd, ended):
          summary="start running something you have worked out how to do",
          usage=["open <id>"], options={"<id>": "a finished concern"},
          description="Until you open it, it earns nothing and costs nothing. Finishing "
-                     "is not the same as running.")
+                     "is not the same as running. Opening charges a fee for stock and "
+                     "premises; `quote open <id>` shows it first.")
 def _cmd_open(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -616,6 +618,7 @@ def _cmd_open(sim, nodes, cmd, ended):
     _units = cmd.get("units")
     if _units is not None and not isinstance(_units, (int, float)):
         return {"ok": False, "error": "units must be a number"}
+    charge, _size = sim.opening_fee(node_id, _units)
     opened, msg = sim.open_venture(node_id, units=_units)
     if not opened:
         return {"ok": False, "error": msg}
@@ -624,7 +627,8 @@ def _cmd_open(sim, nodes, cmd, ended):
     # line in the player's own history, not just in the reply to this one
     # command. open_venture itself stays silent; see its docstring.
     sim.log.append((sim.year, "opened: %s (%s)" % (nodes[node_id]["name"], msg)))
-    return {"ok": True, "opened": msg, "capital": round(sim.capital, 1),
+    return {"ok": True, "opened": msg, "opening_charge": round(charge, 1),
+            "paid_now": round(charge, 1), "capital": round(sim.capital, 1),
             "revenue": round(sim.revenue(), 1), "upkeep": round(sim.upkeep(), 1)}
 
 

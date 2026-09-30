@@ -1397,6 +1397,8 @@ class StepPhasesMixin:
         # line); hours need it too.
         if project_state["ph_left"] < 0.5:
             project_state["ph_left"] = 0.0
+        if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor:
+            self.settle_cost_tail(node_id, project_state)
         if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
             self._complete(node_id)
             if _afford_context is not None:
