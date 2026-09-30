@@ -43,6 +43,23 @@ class HazardsMixin:
             return 1.0
         return self.KNOWLEDGE_RESIDUE_AFTER_CLOSURE
 
+    def apply_staff_survival(self, survival_share):
+        """Each person on the books survives a shock with probability
+        `survival_share`, rolled one by one so headcounts stay whole."""
+        household = self.state.household
+        household.scholars = self._surviving_people(household.scholars, survival_share)
+        household.artisans = self._surviving_people(household.artisans, survival_share)
+        for trade in sorted(household.employees):
+            survivors = self._surviving_people(household.employees[trade], survival_share)
+            if survivors > 0:
+                household.employees[trade] = survivors
+            else:
+                household.employees.pop(trade)
+
+    def _surviving_people(self, headcount, survival_share):
+        people = int(round(headcount))
+        return float(sum(1 for _ in range(people) if self.rng.random() < survival_share))
+
     def hazard_relief(self, kind, beyond_national=False):
         """How much of one kind of harm the things you have built take off.
 
@@ -54,18 +71,24 @@ class HazardsMixin:
         """
         mult, why = 1.0, []
         for node, share, label in self.HAZARD_COUNTERS.get(kind, ()):
+            adopted_nationally = 0.0
             if node == "_own_gold":
                 strength = 1.0 if self.mine_capacity.get("gold", 0.0) > 0.0005 else 0.0
             elif node == "_own_silver":
                 strength = 1.0 if self.mine_capacity.get("silver", 0.0) > 0.01 else 0.0
             else:
                 strength = self._counter_strength(node)
-                if beyond_national:
-                    strength *= 1.0 - self.civ_diffusion(node)
+                if beyond_national and strength > 0.0:
+                    adopted_nationally = self.civ_diffusion(node)
+            closed = 0.0 < strength < 1.0
+            strength *= 1.0 - adopted_nationally
             if strength > 0.0:
                 mult *= (1.0 - share * strength)
-                why.append(label if strength >= 1.0 else
-                           "%s (lapsed: %s is closed)" % (label, self.nodes[node]["name"]))
+                if closed:
+                    label = "%s (lapsed: %s is closed)" % (label, self.nodes[node]["name"])
+                if adopted_nationally > 0.0:
+                    label = "%s (partly adopted nationally)" % label
+                why.append(label)
         if kind == "output_factor":
             war_relief, reason = self._military_war_relief()
             if reason:
@@ -589,9 +612,7 @@ class HazardsMixin:
             _people_before = (household.scholars + household.artisans
                               + sum(household.employees.values()))
             _staff_before = self.staff_snapshot()
-            household.scholars *= (1 - loss); household.artisans *= (1 - loss)
-            for trade in list(household.employees):
-                household.employees[trade] *= (1 - loss)
+            self.apply_staff_survival(1 - loss)
             household.directors_extra *= (1 - loss)
             self.log_staff_reduction(hazard.get("name", "a plague"), _staff_before)
             # Cash goes with the trade that stopped.
@@ -674,9 +695,7 @@ class HazardsMixin:
         _act0 = len(projects.active)
         self.lose_capital(self.SACK_CAPITAL_LOSS)
         _staff_before = self.staff_snapshot()
-        household.artisans *= self.SACK_STAFF_RETENTION; household.scholars *= self.SACK_STAFF_RETENTION
-        for trade in list(household.employees):
-            household.employees[trade] *= self.SACK_STAFF_RETENTION
+        self.apply_staff_survival(self.SACK_STAFF_RETENTION)
         self.log_staff_reduction("the sack of a site", _staff_before)
         household.directors_extra *= self.SACK_DIRECTORS_RETENTION
         for node_id in sorted(projects.active):
