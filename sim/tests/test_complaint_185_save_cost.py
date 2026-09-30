@@ -59,6 +59,8 @@ def _run(test_sim, command, path):
 
 # --- a refusal that changes nothing does not rewrite the save ---------------
 refusal_sim, running_id, refusal_path = _fresh_session()
+refusal_sim.end_year = refusal_sim.cfg["start_year"] + 500
+_run(refusal_sim, {"cmd": "state"}, refusal_path)   # the first look sets a one-time flag
 with _CountWrites() as counted:
     _run(refusal_sim, {"cmd": "open", "id": running_id}, refusal_path)
     _run(refusal_sim, {"cmd": "open", "id": "no_such_node_anywhere"}, refusal_path)

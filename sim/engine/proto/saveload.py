@@ -28,15 +28,35 @@ def save_state(sim, path):
 		sim.state.population.pop_working_age = float(sim.population.working_age)
 		sim.state.population.pop_elderly = float(sim.population.elderly)
 
-	blob = serialize_state(sim.state)
+	# dumps (not dump, not indent) so the C encoder does the work
+	text = json.dumps(serialize_state(sim.state), sort_keys=True, default=str,
+					  separators=(",", ":"))
+	absolute = os.path.abspath(path)
+	# a command that changed nothing leaves the file as it is
+	if _ON_DISK.get(absolute) == (text, _stamp(absolute)):
+		return path
 	tmp = path + ".tmp"
-	parent = os.path.dirname(os.path.abspath(path))
+	parent = os.path.dirname(absolute)
 	if parent and not os.path.isdir(parent):
 		os.makedirs(parent, exist_ok=True)
 	with open(tmp, "w") as handle:
-		json.dump(blob, handle, indent=1, sort_keys=True, default=str)
+		handle.write(text)
 	os.replace(tmp, path)          # atomic: a crash mid-save cannot eat the game
+	_ON_DISK[absolute] = (text, _stamp(absolute))
 	return path
+
+
+# What this process last wrote or read for each save path, and the file's
+# size and modification time then; a save is skipped only while both agree.
+_ON_DISK = {}
+
+
+def _stamp(absolute):
+	try:
+		status = os.stat(absolute)
+	except OSError:
+		return None
+	return (status.st_size, status.st_mtime_ns)
 
 
 REQUIRED_V3_SECTIONS = (
@@ -232,7 +252,9 @@ def load_state(sim, path):
 	a clear reason and leave `sim` completely untouched.
 	"""
 	with open(path) as f:
-		blob = json.load(f)
+		text = f.read()
+	blob = json.loads(text)
+	_ON_DISK[os.path.abspath(path)] = (text, _stamp(os.path.abspath(path)))
 	bad = _validate_save(blob, sim)
 	if bad:
 		raise ValueError(bad)

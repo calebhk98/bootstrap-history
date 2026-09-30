@@ -66,8 +66,10 @@ class Actor:
 	def imitation_options(self, world: Any) -> List[Option]:
 		"""Priced options for the inventions that look most worth copying."""
 		candidates = []
+		known = self.knowledge
+		baseline = world.baseline_knowledge()
 		for node_id in world.founder_inventions():
-			if self.knows(node_id, world) or node_id in self.works:
+			if node_id in known or node_id in baseline or node_id in self.works:
 				continue
 			worth = self.imitation_worth(node_id, world)
 			if worth > 0:
