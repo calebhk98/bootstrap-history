@@ -218,15 +218,12 @@ class VenturesMixin:
             if node_id in self.SCALABLE_INSTITUTIONS and units and float(units) > 0:
                 return self._expand_institution(node_id, float(units), pay)
             return False, "you are already running that"
-        node = self.nodes[node_id]
         scalable = node_id in self.SCALABLE_INSTITUTIONS
         # Starter founding has a floor. Reopening restores prior size, not 1.0.
         if scalable and units is not None:
             unit_count = max(self.STARTER_FOUNDING_MIN_UNITS, float(units))
-        elif scalable:
-            unit_count = getattr(self.household, "inst_units", {}).get(node_id, 1.0)
         else:
-            unit_count = 1.0
+            unit_count = self.reopen_units(node_id)
         sch_free, art_free = self.venture_staff_free()
         need_sch, need_art = self.venture_hands(node_id)
         need_sch, need_art = need_sch * unit_count, need_art * unit_count
@@ -249,15 +246,11 @@ class VenturesMixin:
                            % (foreman_fte, foreman_trade,
                               self.venture_foreman_free(foreman_trade),
                               foreman_trade))
-        fee = self.venture_capex(node_id) * (unit_count if scalable else 1.0)
-        # If reopening within grace period, cost is discounted (premises remain).
+        fee = self.reopen_fee(node_id, unit_count)
         projects = self.state.projects
         household = self.state.household
         scenario = self.state.scenario
         governance = self.state.governance
-        _age = self.staff_closure_age(node_id)
-        if _age is not None and _age <= self.STAFF_CLOSURE_GRACE:
-            fee *= self.STAFF_CLOSURE_DISCOUNT
         if pay:
             if fee > self.spending_power("open"):
                 # Report the same spending power the test checked.
@@ -281,12 +274,14 @@ class VenturesMixin:
         if _oy is None:
             _oy = projects.opened_year = {}
         _oy.setdefault(node_id, scenario.year)
-        rev_now, up_now = node["rev"] * unit_count, node["up"] * unit_count
-        # Report ramp time upfront, not later in still_ramping().
+        rev_now = self.venture_real_earnings(node_id, unit_count, fully_ramped=True)
+        up_now = self.venture_real_upkeep(node_id, unit_count)
+        # A reopened concern keeps its original start, so it only mentions a ramp it is still climbing.
+        still_ramping = self.venture_ramp(node_id) < 1.0
         _ramp_note = (
             " It reaches that over the first %d years as custom finds it - "
             "expect less at first, not a mistake in the figure."
-            % self.cfg["revenue_ramp_years"]) if rev_now > 0 else ""
+            % self.cfg["revenue_ramp_years"]) if rev_now > 0 and still_ramping else ""
         # Flag net-loss concerns explicitly; exclude capability institutions.
         _loss_note = (
             " !! this costs more than it earns (%s a year net), even once "

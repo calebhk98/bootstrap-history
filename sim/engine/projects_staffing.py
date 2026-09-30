@@ -64,14 +64,14 @@ class StaffingMixin:
             "more, not any exact crossing of the line - attrition wobbles "
             "the balance every year, and an exact comparison closed and "
             "reopened the same concern almost every turn for centuries "
-            "(see this function's own comment). Shared with "
+            "(see concerns_to_close_for_staffing). Shared with "
             "staffing_closure_warnings, which measures room against the "
             "same band so a warning and the actual closure rule can never "
             "disagree about where the line is. Tuned to stop the flapping, "
             "not measured.")
 
     def close_unstaffed_ventures(self, year):
-        """Shut what nobody is left to watch, dearest to supervise first.
+        """Shut just enough of what nobody is left to watch, lowest net value first.
 
         Not a policy and not an automation you can switch off: it is the same
         rule `open` already applies, applied on the years after the first. A
@@ -79,58 +79,10 @@ class StaffingMixin:
         alternative - which is what the game did - is a fortune of concerns
         running themselves for ever on an empty payroll.
         """
-        # HYSTERESIS. Attrition is 3.5% a year and auto_hire tracks the
-        # ceiling, so the supervision balance wobbles across the line
-        # constantly, and an exact comparison would close and reopen a
-        # concern almost every single turn for centuries of endless
-        # re-opening busywork: nobody shuts a shop because they are a
-        # fortieth of a man short this spring. Close only when the shortfall
-        # is a real pair of hands.
-        projects = self.state.projects
         household = self.state.household
-        SLACK = self.STAFFING_CLOSURE_SLACK
-        closed = []
-        while projects.operating:
-            sch_used, art_used = self.venture_staff_used()
-            foremen_used = self.venture_foremen_used()
-            own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
-            foremen_ok = all(
-                used <= household.employees.get(trade, 0.0) + 0.01
-                for trade, used in foremen_used.items())
-            if (sch_used <= self.effective_scholars() + SLACK
-                    and art_used <= household.artisans + own + SLACK
-                    and foremen_ok):
-                break
-            # THE LEAST WORTH KEEPING, not the largest. Picking whichever
-            # concern needs the most hands is very nearly the same as picking
-            # the most PROFITABLE one to close, since a concern earning
-            # nothing with identical staffing to a profitable one would be
-            # kept over it. Shut the one that returns least for the people it
-            # ties up.
-            # sorted(): min() over a set returns whichever equal-keyed element
-            # came first in iteration order, which is not fixed.
-            # ONLY WHAT ACTUALLY HOLDS HANDS. The key divides by
-            # max(0.01, hands), so a concern that ties up NOBODY scored minus
-            # a hundred and seventy thousand and was chosen first every time -
-            # and closing it freed not one pair of hands, so the loop came
-            # round and closed the next, and the next, until nothing was open
-            # at all. That is how a founder who opened a school, an academy
-            # and an imperial patron on the same turn had all three shut by
-            # the staffing rule on the next one. You cannot answer a shortage
-            # of craftsmen by closing something no craftsman was watching.
-            _holders = [node_id for node_id in sorted(projects.operating)
-                        if self.venture_hands(node_id)[1] > 0.005
-                        or self.venture_hands(node_id)[0] > 0.005
-                        or self.venture_foreman(node_id)[1] > 0.005]
-            if not _holders:
-                break
-            worst = min(_holders,
-                        key=lambda k: ((self.nodes[k]["rev"] - self.nodes[k]["up"])
-                                       / max(0.01, self.venture_hands(k)[1]
-                                             + self.venture_foreman(k)[1]),
-                                       -self.venture_hands(k)[1]))
-            self.close_work(worst, self.CLOSED_FOR_STAFF, year)
-            closed.append(worst)
+        closed = self.concerns_to_close_for_staffing()
+        for node_id in closed:
+            self.close_work(node_id, self.CLOSED_FOR_STAFF, year)
         if closed:
             household.log.append((year, "nobody left to keep an eye on %d concern%s, so "
                                  "%s closed. You still know how; reopen with "
@@ -789,6 +741,7 @@ class StaffingMixin:
         # can go on" for a concern that was only ever switched off, not
         # forgotten.
         was_running = node_id in projects.operating
+        earned = self.venture_real_earnings(node_id) if was_running else 0.0
         self.close_work(node_id, self.CLOSED_BY_CHOICE)
         if not was_running:
             return True, ("%s was not running, so there was nothing to stop "
@@ -802,14 +755,15 @@ class StaffingMixin:
         if self.nodes[node_id]["up"] > 0 or self.nodes[node_id]["rev"] > 0:
             _freed.append("you stop paying %s a year for it and stop earning "
                           "the %s a year it brought in"
-                          % ("{:,.0f}".format(self.nodes[node_id]["up"]),
-                             "{:,.0f}".format(self.nodes[node_id]["rev"])))
+                          % ("{:,.0f}".format(self.venture_real_upkeep(node_id)),
+                             "{:,.0f}".format(earned)))
         if sch_held > 0.005 or art_held > 0.005:
             _freed.append("it frees %.2f scholars and %.2f craftsmen who were "
                           "tied up supervising it" % (sch_held, art_held))
-        return True, ("%s shut down: %s. You still know how to do it, and "
-                      "'restore %s' opens it again"
-                      % (node_id, "; ".join(_freed), node_id))
+        return True, ("%s shut down: %s. You still know how to do it; 'open %s' "
+                      "or 'restore %s' opens it again for %s denarii"
+                      % (node_id, "; ".join(_freed), node_id, node_id,
+                         "{:,.0f}".format(self.reopen_fee(node_id, self.reopen_units(node_id)))))
 
     RESTORE_COST_MIN_UPKEEP_YEARS = declare(
         "RESTORE_COST_MIN_UPKEEP_YEARS", 2.0, kind="temporary_heuristic",
@@ -825,10 +779,8 @@ class StaffingMixin:
     def restore_work(self, node_id):
         """Bring a mothballed work back, and open its doors again.
 
-        It costs about twice what `open` costs on its own, because it does two
-        things: it puts the plant back up - which rotted while it stood idle -
-        and it starts the concern trading. `open` alone assumes the plant is
-        still there.
+        A concern costs what `open` quotes for it; any other work costs a
+        share of building it again.
         """
         projects = self.state.projects
         household = self.state.household
@@ -840,23 +792,8 @@ class StaffingMixin:
                            'nothing to reopen: build it again with '
                            '{"cmd":"start","id":"%s"}' % node_id)
         node = self.nodes[node_id]
-        # A FLOOR FROM THE UPKEEP, not only a share of the build cost: thirty
-        # per cent of nothing is nothing, so a node that costs nothing to
-        # build while costing 20 a year to keep could otherwise be shut down
-        # and brought back around the annual tick for free, making its
-        # upkeep optional. The engine already gets this right for mines -
-        # `quote mine` says in as many words that mothballing is not free to
-        # reverse, because the shaft floods and the crew disperses. Two
-        # years of the upkeep avoided is what it costs to find the people
-        # and the plant again.
-        fee = max(self.project_cost(node_id) * self.RESTORE_COST_SHARE_OF_BUILD,
-                  node["up"] * self.RESTORE_COST_MIN_UPKEEP_YEARS)
-        # THE SAME GRACE `open` GIVES: a concern the staffing rule shut is a
-        # shop whose keeper was lost, not a work that was abandoned.
-        # open_venture charges a tenth to reopen one within a few years and
-        # says so in the closing message; `restore` - the verb a player
-        # actually reaches for - must honour that same discount, or a
-        # player pays double what the closing message promised.
+        # `open` quotes the same price for a concern.
+        fee = self.reopen_fee(node_id, self.reopen_units(node_id))
         _age = self.staff_closure_age(node_id)
         _in_grace = _age is not None and _age <= self.STAFF_CLOSURE_GRACE
         # SAY WHICH CASE THIS IS, not just a number: the closing message
@@ -869,7 +806,6 @@ class StaffingMixin:
         _grace_note = None
         if _age is not None:
             if _in_grace:
-                fee *= self.STAFF_CLOSURE_DISCOUNT
                 _grace_note = ("the staffing window is still open (shut %d "
                                "years ago, of %d allowed), so this is the "
                                "discounted tenth, not the full price"
@@ -877,9 +813,8 @@ class StaffingMixin:
             else:
                 _grace_note = ("the staffing discount only lasts %d years "
                                "after a closure, and it has been %d - too "
-                               "long for the tenth, so this is the full "
-                               "price, the same as rebuilding the plant "
-                               "from nothing"
+                               "long for the tenth, so this is the "
+                               "ordinary opening price"
                                % (self.STAFF_CLOSURE_GRACE, _age))
         if fee > self.spending_power("buy"):
             return False, ("bringing it back costs %s denarii%s, and between "

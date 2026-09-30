@@ -1,6 +1,6 @@
 # Yearly staff check closes many concerns at once that `open` then accepts immediately
 
-**Status:** open
+**Status:** closed - the yearly check now closes only the concerns drawing on a short resource, lowest net value first, and none that `open` would accept; a reopen keeps its original ramp start (opened_year is never reset) and no longer repeats the ramp promise
 
 Evidence, in order of severity:
 - 118 AD: staff were founder, 2 carpenters, 2 artisans, 1 smith. The smith died; the step closed exp_trade_route_extend, horse_collar, pwr_peat and tex_horizontal_loom. Straight after, with no hire, `open exp_trade_route_extend`, `open tex_horizontal_loom` and `open pwr_peat` all succeeded; only horse_collar (needs a smith) was refused.
