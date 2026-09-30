@@ -1,6 +1,6 @@
 # `quote farm` is refused although `buy farm` works and is advertised
 
-**Status:** open
+**Status:** closed - quote covers every buy target via buy_targets.py and quote_purchases.py; material quote shows market price (tests: player_command_fixes)
 
 `help economy` lists `buy farm 120`. `quote farm 20` gives "REFUSED: you can quote a mine, a forest or people". `buy farm 1000` does work (late game it cost about 505 den/ha). The same applies to other `buy` targets (housing, school, material, nitre): `quote` covers only mine, forest and slaves.
 

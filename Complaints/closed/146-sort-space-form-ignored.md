@@ -1,6 +1,6 @@
 # `available sort earns` is silently ignored; only `sort:earns` works
 
-**Status:** open
+**Status:** closed - `available sort <key>` already parsed; the real gap was that an unknown sort key was silently ignored, now refused with the valid keys, and the hint says smallest first (tests: player_command_fixes)
 
 `available sort earns limit 25` returns rows in id order with EARNS/YR 0 at the top; the real earners (tex_hand_ginning, pwr_peat) are not on page one. `available sort:earns reverse` (the colon form from `help commands`) sorts correctly.
 

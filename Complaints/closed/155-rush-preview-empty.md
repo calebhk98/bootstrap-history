@@ -1,6 +1,6 @@
 # `rush preview` always reports nothing
 
-**Status:** open
+**Status:** closed - preview (bare, and unbounded rush) now runs the forced rush and rolls back, so it lists would_start, refusals and totals (tests: player_command_fixes)
 
 At 507 AD, `rush preview` and `rush preview:true` both print "RUSH: 0 started, 0 not". On an identical copy of the save, `rush limit:3` started three projects and refused one.
 
