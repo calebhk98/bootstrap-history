@@ -118,15 +118,20 @@ def _material_capacity_rows(sim):
     return sorted(rows.values(), key=lambda r: (r["surplus_t_per_yr"], -r["demand_t_per_yr"]))
 
 
-# THE POWER LADDER, in the order the tree actually builds it. Each entry is a
-# real capability node; the label is the tree's OWN description of its scale
-# (node name/note), not a number this file made up - see _power_status.
-_POWER_LADDER = (
-    ("cap_power_muscle", "muscle and animal power"),
-    ("cap_power_water", "water power, tens of kW on one shaft"),
-    ("cap_power_steam", "portable steam power, hundreds of kW"),
-    ("cap_power_electric", "local electric power, kW scale (workshop-scale)"),
-    ("cap_power_grid", "grid electric power, MW scale (central generation)"))
+# THE POWER LADDER, in the order the tree builds it: nodes declaring `power_tier`, by rank.
+# The label is the tree's OWN description of the rung's scale - see _power_status.
+def _power_ladder(nodes):
+    rungs = [(node["mechanics"]["power_tier"]["rank"], node_id, node["mechanics"]["power_tier"]["label"])
+             for node_id, node in nodes.items() if "power_tier" in (node.get("mechanics") or {})]
+    return tuple((node_id, label) for _rank, node_id, label in sorted(rungs))
+
+
+def _power_scale_node(nodes, scale):
+    """The power_tier node for a scale ("workshop" or "grid"), or None."""
+    for node_id, node in nodes.items():
+        if ((node.get("mechanics") or {}).get("power_tier") or {}).get("scale") == scale:
+            return node_id
+    return None
 
 
 def _power_tiers(sim, nodes):
@@ -137,7 +142,7 @@ def _power_tiers(sim, nodes):
     """
     tiers = []
     highest = None
-    for nid, label in _POWER_LADDER:
+    for nid, label in _power_ladder(nodes):
         if nid not in nodes or not sim.is_visible(nid):
             continue
         built = sim.has(nid)
@@ -188,13 +193,14 @@ def _power_waiting_on(sim, nodes, grid_known):
     own docstring for why the grid split waits on grid_known too.
     """
     workshop_scale, grid_scale = [], []
+    grid_id, workshop_id = _power_scale_node(nodes, "grid"), _power_scale_node(nodes, "workshop")
     for node_id, node in nodes.items():
         if node_id in sim.done or not sim.is_visible(node_id):
             continue
         pre = node.get("pre") or []
-        if grid_known and not sim.has("cap_power_grid") and "cap_power_grid" in pre:
+        if grid_known and not sim.has(grid_id) and grid_id in pre:
             grid_scale.append(node_id)
-        elif not sim.has("cap_power_electric") and "cap_power_electric" in pre:
+        elif not sim.has(workshop_id) and workshop_id in pre:
             workshop_scale.append(node_id)
     out = {}
     if workshop_scale:
@@ -242,8 +248,8 @@ def _power_status(sim, nodes):
         out["note"] = ("nothing discovered yet: no generation, no demand.")
         return out
     out.update(_power_generation_block(sim))
-    elec_known = sim.is_visible("cap_power_electric")
-    grid_known = sim.is_visible("cap_power_grid")
+    elec_known = sim.is_visible(_power_scale_node(nodes, "workshop"))
+    grid_known = sim.is_visible(_power_scale_node(nodes, "grid"))
     if elec_known:
         out.update(_power_waiting_on(sim, nodes, grid_known))
     return out

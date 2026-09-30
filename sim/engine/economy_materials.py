@@ -672,8 +672,9 @@ class MaterialSupplyMixin:
         market = national * share * scale
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
         # This is the single most useful thing in the geography file.
-        if emp_key == "saltpetre" and self.running("exp_trade_route_extend"):
-            market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
+        for node_id in self.nodes_with_mechanic("supplies_material_by_sea_route"):
+            if emp_key in self.mechanic(node_id, "supplies_material_by_sea_route")["materials"] and self.running(node_id):
+                market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
         return market
 
     MARKET_STANDING_PATRON_IMPERIAL = declare(

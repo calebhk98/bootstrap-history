@@ -1009,7 +1009,15 @@
    "infrastructure"
   ],
   "mechanics": {
-   "disease_burden": true
+   "disease_burden": true,
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.45,
+     "label": "variolation and then vaccination",
+     "order": 4
+    }
+   ]
   }
  },
  {
@@ -1133,7 +1141,15 @@
    "medical"
   ],
   "mechanics": {
-   "disease_burden": true
+   "disease_burden": true,
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.3,
+     "label": "quarantine, clean water, sewage",
+     "order": 1
+    }
+   ]
   }
  },
  {
@@ -1491,7 +1507,17 @@
   "note": "Formal training programme for nurses. Florence Nightingale proved competent nursing cuts mortality by half. The profession becomes medicine's backbone.",
   "traits": [
    "status_threatening"
-  ]
+  ],
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.12,
+     "label": "people trained to nurse the sick",
+     "order": 10
+    }
+   ]
+  }
  },
  {
   "id": "med_medical_education",

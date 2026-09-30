@@ -301,11 +301,9 @@ class CompletionMixin:
         # would double-count every one of these three institutions against
         # a tree calibrated to open up much more slowly.
         if not self.policy.get("auto_hire", not self.manual):
-            if node_id == "freedman_staff":     self._grant_staff(artisans=self.GRANT_STAFF_FREEDMAN_ARTISANS)
-            if node_id == "school_founded":     self._grant_staff(scholars=self.GRANT_STAFF_SCHOOL_SCHOLARS)
-            if node_id == "academy_network":    self._grant_staff(scholars=self.GRANT_STAFF_ACADEMY_SCHOLARS,
-                                                              artisans=self.GRANT_STAFF_ACADEMY_ARTISANS)
-        if node_id == "mining_concession":  pass
+            grant = self.mechanic(node_id, "staff_grant")
+            if grant:
+                self._grant_staff(**grant)
         if self.is_venture(node_id) and not self.policy.get("auto_open", not self.manual):
             # Built is not open: say what is switched off until it is opened.
             benefit = self.NOT_OPERATING_BENEFIT.get(node_id)
@@ -516,49 +514,4 @@ class CompletionMixin:
         unit="fraction of real-erosion hazard removed",
         source="you can assay ore and coin yourself", confidence="D",
         why=_HAZARD_COUNTER_WHY)
-    HAZARD_COUNTERS = {
-        "staff_loss": [
-            ("sanitation_antisepsis", HAZARD_STAFF_LOSS_SANITATION_ANTISEPSIS, "boiled water, handwashing, clean wounds"),
-            ("med_quarantine_sanitation", HAZARD_STAFF_LOSS_MED_QUARANTINE_SANITATION, "quarantine, clean water, sewage"),
-            ("germ_theory", HAZARD_STAFF_LOSS_GERM_THEORY, "knowing what is actually killing them"),
-            ("md2_isolation_hospital", HAZARD_STAFF_LOSS_MD2_ISOLATION_HOSPITAL, "the sick kept apart from the well"),
-            ("med_vaccination_progression", HAZARD_STAFF_LOSS_MED_VACCINATION_PROGRESSION, "variolation and then vaccination"),
-            ("md2_vaccine_smallpox", HAZARD_STAFF_LOSS_MD2_VACCINE_SMALLPOX, "smallpox vaccine"),
-            ("md2_vaccine_plague", HAZARD_STAFF_LOSS_MD2_VACCINE_PLAGUE, "plague vaccine"),
-            ("md2_vaccine_typhoid", HAZARD_STAFF_LOSS_MD2_VACCINE_TYPHOID, "typhoid vaccine"),
-            ("md2_sand_filtration", HAZARD_STAFF_LOSS_MD2_SAND_FILTRATION, "filtered water"),
-            ("soap_hard", HAZARD_STAFF_LOSS_SOAP_HARD, "hard soap, in quantity"),
-            ("med_nursing_profession", HAZARD_STAFF_LOSS_MED_NURSING_PROFESSION, "people trained to nurse the sick"),
-            ("plague_preparedness", HAZARD_STAFF_LOSS_PLAGUE_PREPAREDNESS, "a plan made before the plague"),
-            ("crop_rotation", HAZARD_STAFF_LOSS_CROP_ROTATION, "fields that do not fail together"),
-            ("ag2_silage_silo", HAZARD_STAFF_LOSS_AG2_SILAGE_SILO, "fodder that keeps through a bad winter"),
-            ("fud_canning_appert_method", HAZARD_STAFF_LOSS_FUD_CANNING_APPERT_METHOD, "food that keeps"),
-        ],
-        "sack_chance": [
-            ("mil_trace_italienne", HAZARD_SACK_MIL_TRACE_ITALIENNE, "angled bastion walls no ram or ladder answers"),
-            ("mil_bastion", HAZARD_SACK_MIL_BASTION, "a bastioned enclosure"),
-            ("mil_concrete_fortification", HAZARD_SACK_MIL_CONCRETE_FORTIFICATION, "concrete fortification"),
-            ("mil_matchlock", HAZARD_SACK_MIL_MATCHLOCK, "firearms in the hands of your own people"),
-            ("mil_flintlock", HAZARD_SACK_MIL_FLINTLOCK, "reliable firearms"),
-            ("mil_artillery_piece", HAZARD_SACK_MIL_ARTILLERY_PIECE, "guns on the walls"),
-            ("gunpowder", HAZARD_SACK_GUNPOWDER, "corned powder"),
-            ("patron_imperial", HAZARD_SACK_PATRON_IMPERIAL, "a patron with soldiers"),
-            ("academy_network", HAZARD_SACK_ACADEMY_NETWORK, "the work is in too many places to burn"),
-            ("endowment_land", HAZARD_SACK_ENDOWMENT_LAND, "land nobody can carry away"),
-        ],
-        "output_factor": [
-            ("endowment_land", HAZARD_OUTPUT_ENDOWMENT_LAND, "land that yields whoever is emperor this year"),
-            ("crop_rotation", HAZARD_OUTPUT_CROP_ROTATION, "you feed yourself"),
-            ("water_power_scale", HAZARD_OUTPUT_WATER_POWER_SCALE, "power that does not come by ship"),
-            ("civ_road_paved", HAZARD_OUTPUT_CIV_ROAD_PAVED, "your own roads"),
-            ("fin_marine_insurance", HAZARD_OUTPUT_FIN_MARINE_INSURANCE, "losses spread rather than borne"),
-        ],
-        "real_erosion": [
-            ("_own_gold", HAZARD_EROSION_OWN_GOLD, "your own gold, dug not minted"),
-            ("_own_silver", HAZARD_EROSION_OWN_SILVER, "your own silver"),
-            ("endowment_land", HAZARD_EROSION_ENDOWMENT_LAND, "wealth held as land, not as coin"),
-            ("fin_bimetallism", HAZARD_EROSION_FIN_BIMETALLISM, "a standard the coin can be held to"),
-            ("fin_assay_office", HAZARD_EROSION_FIN_ASSAY_OFFICE, "you can prove what metal is in a coin"),
-            ("met_fire_assay", HAZARD_EROSION_MET_FIRE_ASSAY, "you can assay ore and coin yourself"),
-        ],
-    }
+    # HAZARD_COUNTERS: {kind: [(node, share, label)]} from each node's `hazard_counters` (MechanicsMixin).

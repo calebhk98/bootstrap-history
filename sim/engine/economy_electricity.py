@@ -178,41 +178,8 @@ class ElectricityMixin:
         "POWER_ANCHOR_KW_GRID", 3000.0, kind="temporary_heuristic",
         unit="kW", source="tech_tree.json note: 'MW scale'.",
         confidence="D", why=_POWER_ANCHOR_WHY)
-    POWER_ANCHOR_KW = {
-        'cap_power_water': POWER_ANCHOR_KW_WATER,
-        'cap_power_electric': POWER_ANCHOR_KW_ELECTRIC,
-        'cap_power_steam': POWER_ANCHOR_KW_STEAM,
-        'cap_power_grid': POWER_ANCHOR_KW_GRID,
-    }
-
-    # Standalone local generators: each an actual, distinct machine, so
-    # multiple different ones (a dynamo AND a wind generator) add.
-    GENERATION_LOCAL_NODES = {
-        "dynamo": "cap_power_electric",
-        "en_wind_electric": "cap_power_electric",
-        "en_alternator": "cap_power_steam",
-    }
-    # Grid-scale generating STATIONS (power_station category) - distinct
-    # from power_grid itself, which is transmission/distribution only (its
-    # own `pre` is wires, substations, transformers and steel; no generator
-    # anywhere in it - confirmed by reading it).
-    GENERATION_GRID_NODES = {
-        "en_hydroelectric_station": "cap_power_grid",
-        "en_thermal_station": "cap_power_grid",
-    }
-    TRANSMISSION_NODES = {
-        "power_grid": "cap_power_grid",
-    }
-    # Mechanical prime movers, informational only (see the class comment):
-    # each list is one upgrade CHAIN at a single site, so only the best
-    # member you have finished counts, never the sum of the chain.
-    MECHANICAL_PRIME_MOVER_CHAINS = {
-        "water": (("en_undershot_wheel", "en_overshot_wheel", "en_breastshot_wheel",
-                   "en_poncelet_wheel", "en_fourneyron_turbine", "en_francis_turbine",
-                   "en_kaplan_turbine", "en_pelton_wheel"), "cap_power_water"),
-        "steam": (("en_steam_turbine_impulse", "en_steam_turbine_curtis",
-                   "en_steam_turbine_reaction"), "cap_power_steam"),
-    }
+    # Anchors, generators and prime movers come from node `power_tier`, `power_generation`
+    # and `prime_mover` mechanics.
 
     def generation_breakdown_kw(self):
         """What this civilisation can actually generate and transmit, in
@@ -224,19 +191,23 @@ class ElectricityMixin:
         what resource_throttle() checks electrical demand against.
         """
         done = self.state.projects.done
-        local_kw = sum(self.POWER_ANCHOR_KW[tier]
-                       for nid, tier in sorted(self.GENERATION_LOCAL_NODES.items())
-                       if nid in done)
-        grid_kw = sum(self.POWER_ANCHOR_KW[tier]
-                      for nid, tier in sorted(self.GENERATION_GRID_NODES.items())
-                      if nid in done)
-        transmission_kw = sum(self.POWER_ANCHOR_KW[tier]
-                              for nid, tier in sorted(self.TRANSMISSION_NODES.items())
-                              if nid in done)
+        def anchor_kw(tier):
+            return self.mechanic(tier, "power_tier")["anchor_kw"]
+
+        def generation_kw(role):
+            return sum(anchor_kw(self.mechanic(nid, "power_generation")["tier"])
+                       for nid in self.nodes_with_mechanic("power_generation")
+                       if self.mechanic(nid, "power_generation")["role"] == role and nid in done)
+        local_kw = generation_kw("local")
+        grid_kw = generation_kw("grid")
+        transmission_kw = generation_kw("transmission")
         mechanical_kw = {}
-        for fam, (chain, tier) in sorted(self.MECHANICAL_PRIME_MOVER_CHAINS.items()):
-            mechanical_kw[fam] = (self.POWER_ANCHOR_KW[tier]
-                                  if any(nid in done for nid in chain) else 0.0)
+        families = {}
+        for nid in self.nodes_with_mechanic("prime_mover"):
+            spec = self.mechanic(nid, "prime_mover")
+            families.setdefault(spec["family"], (spec["tier"], []))[1].append(nid)
+        for fam, (tier, chain) in sorted(families.items()):
+            mechanical_kw[fam] = anchor_kw(tier) if any(nid in done for nid in chain) else 0.0
         sources_kw = {}
         for node_id in sorted(done):
             generator = self.nodes.get(node_id, {}).get("electricity_generation") or {}
@@ -325,11 +296,12 @@ class ElectricityMixin:
             "heavy loads - so an uncharacterised node's demand is present "
             "but never dominant. Not measured for any specific process.")
 
-    ELECTRICAL_PROCESSES = {
-        "electrolysis_industrial": ("bauxite_kg",
-                                    ALUMINIUM_KWH_PER_KG / BAUXITE_PER_ALUMINIUM_KG),
-        "arc_furnace_ferroalloys": ("iron_ore_kg", FERROALLOY_KWH_PER_KG_ORE),
-    }
+    @property
+    def ELECTRICAL_PROCESSES(self):
+        """{node id: (material key, kWh per kg of that material)} from `electrical_process`."""
+        return {node_id: (spec["material"], spec["kwh_per_kg_of_product"] / spec["kg_material_per_kg_product"])
+                for node_id, spec in ((node_id, self.mechanic(node_id, "electrical_process"))
+                                      for node_id in self.nodes_with_mechanic("electrical_process"))}
 
     # cap_power_electric/cap_power_grid are the CAPABILITY flags; power_grid
     # is the literal transmission node some tier-5 process nodes name in
@@ -338,8 +310,9 @@ class ElectricityMixin:
     # All three are treated as "this node needs generated electricity",
     # because that is what each one actually means physically, regardless
     # of which of the three a given node's author happened to write down.
-    _ELECTRICITY_GATE_TOKENS = frozenset(
-        {"cap_power_electric", "cap_power_grid", "power_grid"})
+    @property
+    def _ELECTRICITY_GATE_TOKENS(self):
+        return frozenset(self.nodes_with_mechanic("electricity_gate"))
 
     def _electricity_load_node_ids(self):
         """Every node id whose own prerequisite closure needs generated

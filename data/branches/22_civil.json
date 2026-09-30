@@ -138,7 +138,17 @@
    "commerce",
    "infrastructure"
   ],
-  "build_yrs": 1.0
+  "build_yrs": 1.0,
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "output_factor",
+     "share": 0.1,
+     "label": "your own roads",
+     "order": 3
+    }
+   ]
+  }
  },
  {
   "id": "civ_surveying_groma",

@@ -931,7 +931,7 @@ class HazardsMixin:
         founder = self.state.founder
         household = self.state.household
         last_patron_death = founder.last_patron_death
-        if (rng.random() < self.PATRON_DEATH_ANNUAL_CHANCE and self.running("patron_local")
+        if (rng.random() < self.PATRON_DEATH_ANNUAL_CHANCE and self.running_with_mechanic("patron_mortal")
                 and (last_patron_death is None or year - last_patron_death > self.PATRON_DEATH_COOLDOWN_YEARS)):
             founder.last_patron_death = year
             household.scandal += self.PATRON_DEATH_SCANDAL

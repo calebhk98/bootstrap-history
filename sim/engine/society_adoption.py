@@ -25,22 +25,24 @@ class AdoptionMixin:
     # institution costing thousands, leaving a player stuck with one scholar
     # for centuries, guessing among institution nodes in the hope one of
     # them helps.
-    STAFF_SOURCES = {
-        "scholars": [("HIRE", "{\"cmd\":\"hire\",\"trade\":\"scholar\",\"n\":2} "
-                              "hires literate men by the year; see {\"cmd\":\"labour\"}"),
-                     ("school_founded", "the school produces scholars in quantity, and "
-                                        "grants more every year it runs"),
-                     ("academy_network", "three academies produce more than one school"),
-                     ("collegium_licensed", "required before the school is legal")],
-        "artisans": [("HIRE", "{\"cmd\":\"hire\",\"trade\":\"smith\",\"n\":3} or any "
-                              "trade in {\"cmd\":\"labour\"}; or "
-                              "{\"cmd\":\"commission\",\"trade\":\"smith\",\"hours\":400} "
-                              "to buy one job instead of employing anybody"),
-                     ("freedman_staff", "buy, teach and free a technical staff"),
-                     ("workshop_first", "you need somewhere for them to work"),
-                     ("BUY", "{\"cmd\":\"buy\",\"what\":\"slaves\",\"n\":N} then "
-                             "manumit, though they are untrained for three years")],
-    }
+    @property
+    def STAFF_SOURCES(self):
+        """{"scholars"|"artisans": [(node or HIRE/BUY, advice)]}: HIRE first, the nodes
+        declaring `staff_advice` in their order, then BUY."""
+        hire = {
+            "scholars": ("HIRE", "{\"cmd\":\"hire\",\"trade\":\"scholar\",\"n\":2} "
+                                 "hires literate men by the year; see {\"cmd\":\"labour\"}"),
+            "artisans": ("HIRE", "{\"cmd\":\"hire\",\"trade\":\"smith\",\"n\":3} or any "
+                                 "trade in {\"cmd\":\"labour\"}; or "
+                                 "{\"cmd\":\"commission\",\"trade\":\"smith\",\"hours\":400} "
+                                 "to buy one job instead of employing anybody")}
+        buy = ("BUY", "{\"cmd\":\"buy\",\"what\":\"slaves\",\"n\":N} then "
+                      "manumit, though they are untrained for three years")
+        sources = {kind: [entry] for kind, entry in hire.items()}
+        for node_id, spec in self._effect_terms("staff_advice"):
+            sources[spec["kind"]].append((node_id, spec["advice"]))
+        sources["artisans"].append(buy)
+        return sources
     # fin_company_town and fin_chain_store are NOT added to the "artisans"
     # list above. _staff_advice (labour.py) calls is_visible() on every node
     # named here with no memo of its own, and missing_prereq_message - which
@@ -171,12 +173,10 @@ class AdoptionMixin:
         model is something a society is TAUGHT into, not something that
         drifts upward for free while nobody is teaching anybody.
         """
-        if not self.running("school_founded"):
-            return 0.0
-        flow = self.institution_units("school_founded") ** 0.5
-        if self.running("academy_network"):
-            flow += self.ACADEMY_SCHOOLING_FLOW_MULTIPLIER * self.institution_units("academy_network") ** 0.5
-        return flow
+        for node_id, spec in self._effect_terms("schooling_flow"):
+            if spec.get("required") and not self.running(node_id):
+                return 0.0
+        return self.effect_sum("schooling_flow")
 
     ACADEMY_SCHOOLING_FLOW_MULTIPLIER = declare(
         "ACADEMY_SCHOOLING_FLOW_MULTIPLIER", 1.5, kind="temporary_heuristic",

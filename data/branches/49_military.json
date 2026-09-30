@@ -296,7 +296,17 @@
   "conf": "A",
   "note": "Serpentine arm holds lit slow match and pivots into touchhole by trigger lever. Simpler and cheaper than wheel lock, becomes dominant for musketeers because ammunition availability matters more than convenience.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "sack_chance",
+     "share": 0.25,
+     "label": "firearms in the hands of your own people",
+     "order": 3
+    }
+   ]
+  }
  },
  {
   "id": "mil_flintlock",
@@ -332,7 +342,17 @@
   "conf": "B",
   "note": "Flint held in cock strikes steel frizzen, sparks fall into priming pan. More reliable than wheel lock, simpler than both, dominant by 1700. Enables fast aimed fire.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "sack_chance",
+     "share": 0.35,
+     "label": "reliable firearms",
+     "order": 4
+    }
+   ]
+  }
  },
  {
   "id": "mil_percussion_cap",
@@ -994,7 +1014,17 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Cannon cast in bronze or iron, requires sustained 1300 C furnace and careful cooling. Replaces trebuchets. Wall-battering capability becomes political."
+  "note": "Cannon cast in bronze or iron, requires sustained 1300 C furnace and careful cooling. Replaces trebuchets. Wall-battering capability becomes political.",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "sack_chance",
+     "share": 0.3,
+     "label": "guns on the walls",
+     "order": 5
+    }
+   ]
+  }
  },
  {
   "id": "mil_trunnion",
@@ -1616,7 +1646,17 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "The bastion answers the cannon because a round tower has dead ground at its foot where attackers hide, and an angled bastion does not. Low angled walls cannot be battered. Defense trades height for firepower."
+  "note": "The bastion answers the cannon because a round tower has dead ground at its foot where attackers hide, and an angled bastion does not. Low angled walls cannot be battered. Defense trades height for firepower.",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "sack_chance",
+     "share": 0.45,
+     "label": "angled bastion walls no ram or ladder answers",
+     "order": 0
+    }
+   ]
+  }
  },
  {
   "id": "mil_bastion",
@@ -1647,7 +1687,17 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Angled stone structure jutting from wall allows cannon to fire along curtain, eliminating dead ground. Acute angle makes it harder to breach. Replaces round tower."
+  "note": "Angled stone structure jutting from wall allows cannon to fire along curtain, eliminating dead ground. Acute angle makes it harder to breach. Replaces round tower.",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "sack_chance",
+     "share": 0.3,
+     "label": "a bastioned enclosure",
+     "order": 1
+    }
+   ]
+  }
  },
  {
   "id": "mil_glacis",
@@ -1807,7 +1857,17 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Portland cement concrete resists artillery better than stone and is cheaper. Can be cast in place quickly. Allows reinforcement by iron bars or steel. Modern fortifications are mostly concrete."
+  "note": "Portland cement concrete resists artillery better than stone and is cheaper. Can be cast in place quickly. Allows reinforcement by iron bars or steel. Modern fortifications are mostly concrete.",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "sack_chance",
+     "share": 0.3,
+     "label": "concrete fortification",
+     "order": 2
+    }
+   ]
+  }
  },
  {
   "id": "mil_trench",

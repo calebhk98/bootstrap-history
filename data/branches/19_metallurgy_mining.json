@@ -59,7 +59,17 @@
   "note": "Heat crushed ore in a cupel with lead, the base metals oxidize and are absorbed into the cupel, leaving a bead of precious metals. Works only if you understand that lead's affinity for impurities is the trick, and must be done at scale to check ore grade before large smelts. The assayer is the gatekeeper.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "real_erosion",
+     "share": 0.15,
+     "label": "you can assay ore and coin yourself",
+     "order": 5
+    }
+   ]
+  }
  },
  {
   "id": "met_water_ore_stamp",
@@ -95,7 +105,14 @@
   "traits": [
    "infrastructure",
    "labour_saving"
-  ]
+  ],
+  "mechanics": {
+   "labour_productivity": {
+    "trade": "miner",
+    "bonus": 0.08,
+    "order": 4
+   }
+  }
  },
  {
   "id": "met_jigging_gravity",
@@ -302,7 +319,14 @@
   "sch": 1,
   "art": 1,
   "conf": "A",
-  "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C]"
+  "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C]",
+  "mechanics": {
+   "labour_productivity": {
+    "trade": "furnaceman",
+    "bonus": 0.08,
+    "order": 6
+   }
+  }
  },
  {
   "id": "met_basic_lining_phosphorus",
@@ -484,7 +508,14 @@
   "sch": 1,
   "art": 1,
   "conf": "A",
-  "note": "Three rolls arranged so the middle roll reverses between passes. Bar goes down between bottom and middle, then back up between middle and top, then down again. Doubles throughput without a reversing mechanism. The middle roll is under enormous load from both sides and must be extraordinarily hard or it will deflect and produce bad gauging."
+  "note": "Three rolls arranged so the middle roll reverses between passes. Bar goes down between bottom and middle, then back up between middle and top, then down again. Doubles throughput without a reversing mechanism. The middle roll is under enormous load from both sides and must be extraordinarily hard or it will deflect and produce bad gauging.",
+  "mechanics": {
+   "labour_productivity": {
+    "trade": "smith",
+    "bonus": 0.1,
+    "order": 5
+   }
+  }
  },
  {
   "id": "met_reversing_mill",
@@ -745,7 +776,14 @@
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "A cam on a water wheel shaft lifts a heavy hammer, then the cam releases it and gravity and the impact do the forging work. Much faster than hand hammering and the work is uniform. The key is that the head must be hard iron or the repeated impact will deform it; case-hardening is necessary to survive. This is already established wherever there is a water-powered forge; it is the foundation of heavy forge work."
+  "note": "A cam on a water wheel shaft lifts a heavy hammer, then the cam releases it and gravity and the impact do the forging work. Much faster than hand hammering and the work is uniform. The key is that the head must be hard iron or the repeated impact will deform it; case-hardening is necessary to survive. This is already established wherever there is a water-powered forge; it is the foundation of heavy forge work.",
+  "mechanics": {
+   "labour_productivity": {
+    "trade": "smith",
+    "bonus": 0.08,
+    "order": 3
+   }
+  }
  },
  {
   "id": "met_drop_hammer",

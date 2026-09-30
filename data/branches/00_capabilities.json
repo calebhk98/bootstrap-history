@@ -480,7 +480,13 @@
   "note": "Oxen, horses, mules, or comparable domesticated draught animals can supply sustained traction and rotary power; an ox can provide roughly 400 W. This capability is not universal human muscle power and is absent where suitable working animals and harness traditions do not exist.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "power_tier": {
+    "rank": 0,
+    "label": "muscle and animal power"
+   }
+  }
  },
  {
   "id": "cap_power_water",
@@ -507,7 +513,14 @@
   "note": "Already available and barely used for anything but grinding grain, wherever a water wheel turns (Rome's Barbegal runs 16 overshot wheels and still mostly grinds grain). The technology gap is imagination, not engineering.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "power_tier": {
+    "rank": 1,
+    "label": "water power, tens of kW on one shaft",
+    "anchor_kw": 30.0
+   }
+  }
  },
  {
   "id": "cap_power_steam",
@@ -534,7 +547,14 @@
   "note": "Power where there is no river. Until you need that, water is cheaper and needs a far shorter prerequisite chain.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "power_tier": {
+    "rank": 2,
+    "label": "portable steam power, hundreds of kW",
+    "anchor_kw": 300.0
+   }
+  }
  },
  {
   "id": "cap_power_electric",
@@ -562,7 +582,16 @@
   "traits": [
    "inexplicable",
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "power_tier": {
+    "rank": 3,
+    "label": "local electric power, kW scale (workshop-scale)",
+    "anchor_kw": 10.0,
+    "scale": "workshop"
+   },
+   "electricity_gate": true
+  }
  },
  {
   "id": "cap_power_grid",
@@ -589,7 +618,16 @@
   "note": "The precondition for every energy-intensive process: arc furnaces, electrolysis, aluminium, and the sustained laboratory power a purity programme eats.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "power_tier": {
+    "rank": 4,
+    "label": "grid electric power, MW scale (central generation)",
+    "anchor_kw": 3000.0,
+    "scale": "grid"
+   },
+   "electricity_gate": true
+  }
  },
  {
   "id": "cap_measure_len",

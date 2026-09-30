@@ -92,7 +92,13 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "This already operates at scale wherever there is a river to turn it. The water pushes on the bucket; it is simple, portable, and tolerates muddy water and sand."
+  "note": "This already operates at scale wherever there is a river to turn it. The water pushes on the bucket; it is simple, portable, and tolerates muddy water and sand.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "water",
+    "tier": "cap_power_water"
+   }
+  }
  },
  {
   "id": "en_overshot_wheel",
@@ -125,7 +131,13 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "This already exists wherever a flowing stream gives a significant drop, and it is capable of real scale: Rome's 16-wheel Barbegal complex is the standing example. Weight of the water does the work; it needs a significant drop but delivers more power per wheel."
+  "note": "This already exists wherever a flowing stream gives a significant drop, and it is capable of real scale: Rome's 16-wheel Barbegal complex is the standing example. Weight of the water does the work; it needs a significant drop but delivers more power per wheel.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "water",
+    "tier": "cap_power_water"
+   }
+  }
  },
  {
   "id": "en_breastshot_wheel",
@@ -162,7 +174,13 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Water hits the wheel at mid-height, between overshot and undershot. Smeaton measured efficiency systematically: breastshot wins by combining gravity and impulse when head is moderate. This is how empirical engineering began."
+  "note": "Water hits the wheel at mid-height, between overshot and undershot. Smeaton measured efficiency systematically: breastshot wins by combining gravity and impulse when head is moderate. This is how empirical engineering began.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "water",
+    "tier": "cap_power_water"
+   }
+  }
  },
  {
   "id": "en_poncelet_wheel",
@@ -196,7 +214,13 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Buckets enter water tangentially with curved shape to eliminate impact shock. Efficiency gain of 10 percent; needs precision forging and fit."
+  "note": "Buckets enter water tangentially with curved shape to eliminate impact shock. Efficiency gain of 10 percent; needs precision forging and fit.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "water",
+    "tier": "cap_power_water"
+   }
+  }
  },
  {
   "id": "en_fourneyron_turbine",
@@ -231,7 +255,13 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Radial outflow turbine with guide vanes and buckets at exact angles. Efficiency 80+ percent; requires machining to hold form under pressure."
+  "note": "Radial outflow turbine with guide vanes and buckets at exact angles. Efficiency 80+ percent; requires machining to hold form under pressure.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "water",
+    "tier": "cap_power_water"
+   }
+  }
  },
  {
   "id": "en_francis_turbine",
@@ -265,7 +295,13 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Spiral guide vanes and curved buckets; flow reverses direction inside runner. High efficiency (85+ percent) across wide head range; sensitive to blade wear."
+  "note": "Spiral guide vanes and curved buckets; flow reverses direction inside runner. High efficiency (85+ percent) across wide head range; sensitive to blade wear.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "water",
+    "tier": "cap_power_water"
+   }
+  }
  },
  {
   "id": "en_pelton_wheel",
@@ -306,7 +342,13 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "A jet of water hits a double-cup bucket at high speed, splitting the jet tangentially to the wheel. Ideal for very high heads with low flow. The bucket profile is critical; casting is easier than machining but requires controlled cooling to avoid cracks."
+  "note": "A jet of water hits a double-cup bucket at high speed, splitting the jet tangentially to the wheel. Ideal for very high heads with low flow. The bucket profile is critical; casting is easier than machining but requires controlled cooling to avoid cracks.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "water",
+    "tier": "cap_power_water"
+   }
+  }
  },
  {
   "id": "en_kaplan_turbine",
@@ -340,7 +382,13 @@
   "sch": 0,
   "art": 5,
   "conf": "C",
-  "note": "Adjustable blade pitch changes angle under load; blade linkage responds to flow and head. Unique advantage in variable river flow; servo control needed."
+  "note": "Adjustable blade pitch changes angle under load; blade linkage responds to flow and head. Unique advantage in variable river flow; servo control needed.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "water",
+    "tier": "cap_power_water"
+   }
+  }
  },
  {
   "id": "en_penstock",
@@ -724,7 +772,13 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "High-speed dynamo (hundreds of rpm) needs gearbox from slow mill rotation. Intermittent generation; requires battery storage or backup engine. Wind variability is limiting."
+  "note": "High-speed dynamo (hundreds of rpm) needs gearbox from slow mill rotation. Intermittent generation; requires battery storage or backup engine. Wind variability is limiting.",
+  "mechanics": {
+   "power_generation": {
+    "role": "local",
+    "tier": "cap_power_electric"
+   }
+  }
  },
  {
   "id": "en_atmospheric_engine",
@@ -1739,7 +1793,13 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Single-stage design; steam expands in nozzle to high speed. All pressure drop occurs in nozzle. Very high rpm (up to 30,000). Needs reduction gear. Robust and simple."
+  "note": "Single-stage design; steam expands in nozzle to high speed. All pressure drop occurs in nozzle. Very high rpm (up to 30,000). Needs reduction gear. Robust and simple.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "steam",
+    "tier": "cap_power_steam"
+   }
+  }
  },
  {
   "id": "en_steam_turbine_reaction",
@@ -1779,7 +1839,13 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Stages of rotor and stator blades; steam expands through each stage, doing work and accelerating. Above a few hundred kW, this beats reciprocating engines: no reciprocating masses, no vibration, compact, efficient. Blade tolerances and metallurgy are severe."
+  "note": "Stages of rotor and stator blades; steam expands through each stage, doing work and accelerating. Above a few hundred kW, this beats reciprocating engines: no reciprocating masses, no vibration, compact, efficient. Blade tolerances and metallurgy are severe.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "steam",
+    "tier": "cap_power_steam"
+   }
+  }
  },
  {
   "id": "en_steam_turbine_curtis",
@@ -1812,7 +1878,13 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "Nozzle, bucket row, intermediate nozzle, bucket row, etc. Compromise between simple de Laval and complex Parsons. Better efficiency than single-stage, simpler than reaction."
+  "note": "Nozzle, bucket row, intermediate nozzle, bucket row, etc. Compromise between simple de Laval and complex Parsons. Better efficiency than single-stage, simpler than reaction.",
+  "mechanics": {
+   "prime_mover": {
+    "family": "steam",
+    "tier": "cap_power_steam"
+   }
+  }
  },
  {
   "id": "en_turbine_blading",
@@ -2827,7 +2899,13 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "No commutator; coil output goes directly to terminals. Voltage and frequency both proportional to speed. Needs regulation for grid duty. Can supply transformers and polyp..."
+  "note": "No commutator; coil output goes directly to terminals. Voltage and frequency both proportional to speed. Needs regulation for grid duty. Can supply transformers and polyp...",
+  "mechanics": {
+   "power_generation": {
+    "role": "local",
+    "tier": "cap_power_steam"
+   }
+  }
  },
  {
   "id": "en_exciter",
@@ -3548,7 +3626,13 @@
   "sch": 0,
   "art": 4,
   "conf": "C",
-  "note": "A dam, penstock, turbine, and dynamo coupled: water flow becomes rotary motion becomes electrical current. The scale is decided by head and flow. Long-distance transmission at high voltage makes remote hydro economical."
+  "note": "A dam, penstock, turbine, and dynamo coupled: water flow becomes rotary motion becomes electrical current. The scale is decided by head and flow. Long-distance transmission at high voltage makes remote hydro economical.",
+  "mechanics": {
+   "power_generation": {
+    "role": "grid",
+    "tier": "cap_power_grid"
+   }
+  }
  },
  {
   "id": "en_thermal_station",
@@ -3596,7 +3680,13 @@
      "peat_kg": 0.6
     }
    }
-  ]
+  ],
+  "mechanics": {
+   "power_generation": {
+    "role": "grid",
+    "tier": "cap_power_grid"
+   }
+  }
  },
  {
   "id": "en_pumped_storage",

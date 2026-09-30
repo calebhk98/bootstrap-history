@@ -954,7 +954,17 @@
   "conf": "B",
   "note": "Fix a legal ratio of gold to silver coins. Solves the problem of scarce gold by allowing silver to serve as backup. But if the market ratio diverges from the fixed ratio, people hoard the undervalued metal.",
   "gov": 2,
-  "sus": 2
+  "sus": 2,
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "real_erosion",
+     "share": 0.25,
+     "label": "a standard the coin can be held to",
+     "order": 3
+    }
+   ]
+  }
  },
  {
   "id": "fin_marine_insurance",
@@ -986,7 +996,17 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "A premium-for-indemnity contract transfers the risk of a specified cargo or vessel loss to underwriters. The project is not discovering risk: it establishes standard policies, shared loss records, underwriting practice, reserves, and enforceable claims among existing bankers and maritime lenders."
+  "note": "A premium-for-indemnity contract transfers the risk of a specified cargo or vessel loss to underwriters. The project is not discovering risk: it establishes standard policies, shared loss records, underwriting practice, reserves, and enforceable claims among existing bankers and maritime lenders.",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "output_factor",
+     "share": 0.15,
+     "label": "losses spread rather than borne",
+     "order": 4
+    }
+   ]
+  }
  },
  {
   "id": "fin_fire_insurance",
@@ -1789,7 +1809,17 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Official test of precious metal fineness, with a hallmark proving the state's guarantee. Allows buyers to trust the quality without testing every item."
+  "note": "Official test of precious metal fineness, with a hallmark proving the state's guarantee. Allows buyers to trust the quality without testing every item.",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "real_erosion",
+     "share": 0.2,
+     "label": "you can prove what metal is in a coin",
+     "order": 4
+    }
+   ]
+  }
  },
  {
   "id": "fin_futures",

@@ -924,7 +924,13 @@
   "note": "NOT UNOBTAINABLE. These are CROPS, not commodities, out of the Americas: you need seed stock once and then you grow them forever. One successful voyage home with potato seed changes the caloric ceiling of agriculture permanently.",
   "traits": [
    "food"
-  ]
+  ],
+  "mechanics": {
+   "farming_technique": {
+    "axis": "crop",
+    "entry": "POTATOES"
+   }
+  }
  },
  {
   "id": "mat_cryolite",

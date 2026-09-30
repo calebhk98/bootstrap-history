@@ -158,19 +158,7 @@ class TrainingMixin:
         source="prc_capstan_turret_lathe's own tree note: 'unskilled "
                "operator can repeat production'.",
         confidence="D", why=_LABOUR_PRODUCTIVITY_WHY)
-    LABOUR_PRODUCTIVITY_SOURCES = (
-        ("tex_treadle_loom", "artisan", LABOUR_PRODUCTIVITY_TEX_TREADLE_LOOM),
-        ("tex_flying_shuttle", "artisan", LABOUR_PRODUCTIVITY_TEX_FLYING_SHUTTLE),
-        ("tex_spinning_wheel", "artisan", LABOUR_PRODUCTIVITY_TEX_SPINNING_WHEEL),
-        ("met_trip_hammer", "smith", LABOUR_PRODUCTIVITY_MET_TRIP_HAMMER),
-        ("met_water_ore_stamp", "miner", LABOUR_PRODUCTIVITY_MET_WATER_ORE_STAMP),
-        ("met_three_high_mill", "smith", LABOUR_PRODUCTIVITY_MET_THREE_HIGH_MILL),
-        ("met_converter_furnace", "furnaceman", LABOUR_PRODUCTIVITY_MET_CONVERTER_FURNACE),
-        ("bellows_water_blown", "furnaceman", LABOUR_PRODUCTIVITY_BELLOWS_WATER_BLOWN),
-        ("mfg_rake_clearance", "machinist", LABOUR_PRODUCTIVITY_MFG_RAKE_CLEARANCE),
-        ("mfg_hss_development", "machinist", LABOUR_PRODUCTIVITY_MFG_HSS_DEVELOPMENT),
-        ("prc_capstan_turret_lathe", "machinist", LABOUR_PRODUCTIVITY_PRC_CAPSTAN_TURRET_LATHE),
-    )
+    # LABOUR_PRODUCTIVITY_SOURCES: [(node, trade, bonus)] from each node's `labour_productivity` (MechanicsMixin).
     # NEVER MORE THAN HALF AGAIN, however many of the above a run has built.
     # Every other saturating multiplier in this file (labour_price_factor,
     # literacy_factor) is capped for the same reason: an uncapped sum of

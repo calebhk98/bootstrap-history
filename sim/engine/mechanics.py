@@ -195,3 +195,28 @@ class MechanicsMixin:
     @property
     def ROOM_SOURCES(self):
         return tuple((node_id, spec["flat"]) for node_id, spec in self._effect_terms("room_places"))
+
+    @property
+    def LABOUR_PRODUCTIVITY_SOURCES(self):
+        return tuple((node_id, spec["trade"], spec["bonus"]) for node_id, spec in self._effect_terms("labour_productivity"))
+
+    @property
+    def HAZARD_COUNTERS(self):
+        """{kind: [(node or pseudo-source, share, label)]}: what each kind of harm is countered by.
+
+        Node entries come from `hazard_counters` lists; the two own-mine sources are not nodes.
+        """
+        index = self._mechanics_index()
+        cached = index.get("\0hazard_counters")
+        if cached is None:
+            entries = {"real_erosion": [
+                (0, "_own_gold", self.HAZARD_EROSION_OWN_GOLD, "your own gold, dug not minted"),
+                (1, "_own_silver", self.HAZARD_EROSION_OWN_SILVER, "your own silver")]}
+            for node_id, counters in index.get("hazard_counters", {}).items():
+                for counter in counters:
+                    entries.setdefault(counter["kind"], []).append(
+                        (counter["order"], node_id, counter["share"], counter["label"]))
+            cached = {kind: [(node, share, label) for _order, node, share, label in sorted(rows)]
+                      for kind, rows in entries.items()}
+            index["\0hazard_counters"] = cached
+        return cached

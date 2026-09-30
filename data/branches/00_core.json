@@ -64,6 +64,27 @@
       "market_hiring_factor": {
         "factor_per_unit_power": 1.5,
         "order": 2
+      },
+      "hazard_counters": [
+        {
+          "kind": "sack_chance",
+          "share": 0.4,
+          "label": "the work is in too many places to burn",
+          "order": 8
+        }
+      ],
+      "staff_grant": {
+        "scholars": 10,
+        "artisans": 10
+      },
+      "staff_advice": {
+        "kind": "scholars",
+        "advice": "three academies produce more than one school",
+        "order": 1
+      },
+      "schooling_flow": {
+        "per_sqrt_unit": 1.5,
+        "order": 1
       }
     },
     "name": "Three geographically separated academies",
@@ -180,6 +201,13 @@
       "carbon_kg": 60000.0,
       "iron_ore_kg": 150000.0,
       "lime_kg": 90000.0
+    },
+    "mechanics": {
+      "electrical_process": {
+        "material": "iron_ore_kg",
+        "kwh_per_kg_of_product": 5.0,
+        "kg_material_per_kg_product": 1.0
+      }
     },
     "name": "Electric arc furnace, carbides and ferroalloys",
     "note": "Temperatures no fuel-fired furnace reaches. Gives calcium carbide (hence acetylene), ferrosilicon, ferromanganese, tungsten and chromium steels, and high-purity graphite for the semiconductor programme. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
@@ -454,6 +482,13 @@
       "iron_bar_kg": 250.0,
       "leather_kg": 150.0,
       "timber_m3": 25.0
+    },
+    "mechanics": {
+      "labour_productivity": {
+        "trade": "furnaceman",
+        "bonus": 0.1,
+        "order": 7
+      }
     },
     "name": "Water-driven double-acting bellows",
     "note": "The single highest-leverage mechanical change available to pre-industrial metallurgy. Continuous high-volume blast is what separates a bloomery from a blast furnace.",
@@ -1117,6 +1152,11 @@
         "scales_with_units": true,
         "must_be_running": true,
         "order": 3
+      },
+      "staff_advice": {
+        "kind": "scholars",
+        "advice": "required before the school is legal",
+        "order": 2
       }
     },
     "name": "Licensed collegium of physicians and teachers",
@@ -1367,7 +1407,25 @@
       "iron_bar_kg": 250.0
     },
     "mechanics": {
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "farming_technique": {
+        "axis": "rotation",
+        "entry": "THREE_FIELD"
+      },
+      "hazard_counters": [
+        {
+          "kind": "staff_loss",
+          "share": 0.15,
+          "label": "fields that do not fail together",
+          "order": 12
+        },
+        {
+          "kind": "output_factor",
+          "share": 0.2,
+          "label": "you feed yourself",
+          "order": 1
+        }
+      ]
     },
     "name": "Legume rotation, heavy plough, marling, selective breeding",
     "note": "Columella already recommends legumes; the systematic three-field rotation and controlled comparison are yours. Slow because you cannot rush a growing season, which is why the yrs floor is 6. Feeds the surplus population that a technical civilisation requires and buys you enormous goodwill.",
@@ -1782,6 +1840,12 @@
       "shellac_kg": 90.0,
       "steel_plate_kg": 1.5
     },
+    "mechanics": {
+      "power_generation": {
+        "role": "local",
+        "tier": "cap_power_electric"
+      }
+    },
     "name": "Dynamo with self-excitation",
     "note": "The chicken-and-egg looks fatal: you need a field to make current and an electromagnet needs current. Residual magnetism in the iron core is enough to start it and the output builds itself up. Nobody guesses this and everybody wastes years on permanent magnets. Put it on the millpond shaft you already built. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
     "ph": 800.0,
@@ -1852,6 +1916,13 @@
       "carbon_kg": 30000.0,
       "cryolite_kg": 9000.0,
       "salt_kg": 200000.0
+    },
+    "mechanics": {
+      "electrical_process": {
+        "material": "bauxite_kg",
+        "kwh_per_kg_of_product": 15.0,
+        "kg_material_per_kg_product": 4.5
+      }
     },
     "name": "Chlor-alkali, aluminium and industrial electrochemistry",
     "note": "Aluminium needs cryolite (Greenland) or a synthetic fluoride bath from your own hydrofluoric acid, which is the realistic route for you. Chlorine gives bleach and disinfectant, which loops back into public health. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
@@ -2106,7 +2177,27 @@
         "scales_with_units": false,
         "must_be_running": true,
         "order": 6
-      }
+      },
+      "hazard_counters": [
+        {
+          "kind": "sack_chance",
+          "share": 0.15,
+          "label": "land nobody can carry away",
+          "order": 9
+        },
+        {
+          "kind": "output_factor",
+          "share": 0.3,
+          "label": "land that yields whoever is emperor this year",
+          "order": 0
+        },
+        {
+          "kind": "real_erosion",
+          "share": 0.4,
+          "label": "wealth held as land, not as coin",
+          "order": 2
+        }
+      ]
     },
     "name": "Endow the institute in land, not coin",
     "note": "Land outlives coin: whatever currency you are using will eventually be debased or disrupted, and land will not. This is how a programme outlives its founder. In Rome the vehicle is testamentary law and the fundatio (Pliny's alimenta, Trajan's own); every society you can play has some durable equivalent, and it is bought or built the way endowments are always built here: with a public benefaction and the right friends.",
@@ -2274,6 +2365,14 @@
       "hiring_factor": {
         "factor_per_unit_power": 0.5,
         "order": 1
+      },
+      "staff_grant": {
+        "artisans": 8
+      },
+      "staff_advice": {
+        "kind": "artisans",
+        "advice": "buy, teach and free a technical staff",
+        "order": 3
       }
     }
   },
@@ -2684,7 +2783,15 @@
     },
     "mat": {},
     "mechanics": {
-      "disease_burden": true
+      "disease_burden": true,
+      "hazard_counters": [
+        {
+          "kind": "staff_loss",
+          "share": 0.25,
+          "label": "knowing what is actually killing them",
+          "order": 2
+        }
+      ]
     },
     "name": "Germ theory of disease",
     "note": "The bead microscope makes this demonstrable rather than assertable, which is the whole difference. Galen's humoral theory is the obstacle and it is defended by the entire medical profession.",
@@ -3115,6 +3222,16 @@
       "nitre_kg": 1500.0,
       "sulfur_kg": 200.0
     },
+    "mechanics": {
+      "hazard_counters": [
+        {
+          "kind": "sack_chance",
+          "share": 0.15,
+          "label": "corned powder",
+          "order": 6
+        }
+      ]
+    },
     "name": "Corned gunpowder",
     "note": "75/15/10 by mass, and the ratio is worthless without corning: wet the mix, press the cake, break it into grains, sieve. OPTIONAL AND DANGEROUS. It buys imperial favour instantly and it makes every future usurper more dangerous, including during the Third Century Crisis when you most need the Empire to hold. Recommended: develop the chemistry, withhold the corning, and keep it as a survival card.",
     "ph": 300.0,
@@ -3213,6 +3330,12 @@
       "leather_kg": 3.0,
       "timber_m3": 6.0,
       "wool_kg": 1.0
+    },
+    "mechanics": {
+      "farming_technique": {
+        "axis": "toolkit",
+        "entry": "HORSE_COLLAR_AND_MOULDBOARD"
+      }
     },
     "name": "Rigid padded horse collar",
     "note": "A rigid padded collar transfers draft load to the shoulders without choking the horse. Fit and animal trials are the project; the whippletree and nailed horseshoe are separate nodes.",
@@ -4393,7 +4516,15 @@
       "market_hiring_factor": {
         "factor": 3.0,
         "order": 1
-      }
+      },
+      "hazard_counters": [
+        {
+          "kind": "sack_chance",
+          "share": 0.3,
+          "label": "a patron with soldiers",
+          "order": 7
+        }
+      ]
     },
     "name": "Imperial patronage",
     "note": "Approach through the a rationibus or the Praetorian Prefect, not the emperor. The optical telegraph is the demonstration that buys this: an empire's core problem is that a message to the Rhine takes weeks. Unlocks mining concessions, corvee labour and state funding, and puts a target on you.",
@@ -4447,7 +4578,8 @@
       "patron_protection": {
         "flat": 0.18,
         "order": 0
-      }
+      },
+      "patron_mortal": true
     },
     "name": "Secure a town patron",
     "note": "Cheapest entry gift is a pair of reading lenses for an ageing magistrate. Halves incoming suspicion.",
@@ -4663,7 +4795,15 @@
     "mat": {},
     "mechanics": {
       "capability": {},
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "hazard_counters": [
+        {
+          "kind": "staff_loss",
+          "share": 0.35,
+          "label": "a plan made before the plague",
+          "order": 11
+        }
+      ]
     },
     "name": "Quarantine, clean water, sanitation and variolation programme",
     "note": "You know the Antonine Plague arrives in 165 AD. This node is what decides whether your institute survives it. Highest expected-value defensive investment in the game. It is also the thing most likely to be called sorcery, so do it under a patron and in public.",
@@ -4810,6 +4950,11 @@
         "scales_with_units": false,
         "must_be_running": true,
         "order": 16
+      },
+      "electricity_gate": true,
+      "power_generation": {
+        "role": "transmission",
+        "tier": "cap_power_grid"
       }
     },
     "name": "Central generation and distribution",
@@ -5214,7 +5359,15 @@
       },
       "disease_burden": true,
       "founder_life_extension": true,
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "hazard_counters": [
+        {
+          "kind": "staff_loss",
+          "share": 0.3,
+          "label": "boiled water, handwashing, clean wounds",
+          "order": 0
+        }
+      ]
     },
     "name": "Boiled water, handwashing, wound irrigation, quarantine",
     "note": "Costs an argument, not a coin. Saves more lives than every machine in this document combined, wherever it is adopted. Sell it to the army first: an army already has field hospitals and an officer class that measures results (Rome's valetudinaria is the model).",
@@ -5294,6 +5447,19 @@
       },
       "market_hiring_factor": {
         "factor_per_unit_power": 1.0,
+        "order": 0
+      },
+      "staff_grant": {
+        "scholars": 4
+      },
+      "staff_advice": {
+        "kind": "scholars",
+        "advice": "the school produces scholars in quantity, and grants more every year it runs",
+        "order": 0
+      },
+      "schooling_flow": {
+        "per_sqrt_unit": 1.0,
+        "required": true,
         "order": 0
       }
     },
@@ -5684,6 +5850,16 @@
       "olive_oil_kg": 3000.0,
       "salt_kg": 8.0,
       "wood_ash_kg": 15.0
+    },
+    "mechanics": {
+      "hazard_counters": [
+        {
+          "kind": "staff_loss",
+          "share": 0.1,
+          "label": "hard soap, in quantity",
+          "order": 9
+        }
+      ]
     },
     "name": "Hard soap from oil and causticised lye",
     "note": "Soap as a cleanser is missing from some ancient economies and already known in others (notably attested among Gallic and Germanic peoples, per Pliny). This word is already in the vocabulary wherever it applies; do not redefine it. It is included here to prevent anachronism where soap does not yet exist for you.",
@@ -6489,6 +6665,16 @@
       "iron_bar_kg": 600.0,
       "timber_m3": 90.0
     },
+    "mechanics": {
+      "hazard_counters": [
+        {
+          "kind": "output_factor",
+          "share": 0.2,
+          "label": "power that does not come by ship",
+          "order": 2
+        }
+      ]
+    },
     "name": "Large watermill system: overshot wheels, millponds and leats",
     "note": "Build and manage a substantial watermill site: impound water, control it through leats, and drive one or more overshot wheels at useful power. Medieval England inherits this civil and hydraulic capability. General-purpose line shafts that distribute power among unrelated industrial machines are not included.",
     "ph": 450.0,
@@ -6551,6 +6737,11 @@
         "per_unit": 6.0,
         "words": "a place of your own to work in",
         "order": 0
+      },
+      "staff_advice": {
+        "kind": "artisans",
+        "advice": "you need somewhere for them to work",
+        "order": 4
       }
     },
     "name": "First workshop and laboratory",
