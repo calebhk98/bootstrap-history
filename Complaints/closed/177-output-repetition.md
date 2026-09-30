@@ -1,6 +1,6 @@
 # Screens repeat long explanations every time; completions print twice
 
-**Status:** partly - explain-once (`why`, `money`, `ventures`), single completion line, one household-wide staffing line and wrapped names done; the credit-start forecast block and the yearly "population still below trend" line still repeat
+**Status:** closed - explain-once, single completion line, household-wide staffing line, wrapped names, and the credit-start forecast (full prose once per game year, one summary line on later starts, figures kept in the JSON; `full` shows it again); the yearly "population still N% below trend" line is already throttled to once per 15 years
 
 - About a third of every `why` screen (14 of 41 lines at 119 AD) is the same "staff to keep it open is a share of a year, not a headcount" paragraph.
 - The "YOUR PRACTICE ... pays about a third ..." paragraph repeats on `money`, `ventures` and `help money`.

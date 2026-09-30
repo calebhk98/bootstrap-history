@@ -22,6 +22,33 @@ from .util import _flag
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
 
+_CREDIT_PROSE = {"on_credit": ("nothing_is_borrowed_yet", "what_happens_there"),
+                 "total_committed_across_active_work": ("what_this_means",)}
+
+
+def _shorten_credit_forecast(sim, cmd, out):
+    """Keep the credit forecast's explanatory prose to once per game year.
+
+    Later starts the same year keep every figure and lose the prose;
+    `credit_forecast_in_full` says which the reply is, and the text screen
+    prints a one-line summary for the short form. `full` asks for it all again.
+    """
+    blocks = [key for key in _CREDIT_PROSE if key in out]
+    if not blocks:
+        return
+    scenario = sim.state.scenario
+    said = scenario._said_explanations or {}
+    full = bool(cmd.get("full")) or said.get("credit_forecast") != sim.year
+    if full:
+        said["credit_forecast"] = sim.year
+        scenario._said_explanations = said
+    else:
+        for key in blocks:
+            for prose_key in _CREDIT_PROSE[key]:
+                out[key].pop(prose_key, None)
+    out["credit_forecast_in_full"] = full
+
+
 @command("start", group="projects", aliases=("begin", "research", "build"),
          summary="begin work on something",
          usage=["start <id or name>"], options={"<id>": "a technology or concern"},
@@ -268,6 +295,7 @@ def _cmd_start(sim, nodes, cmd, ended):
                 "the game lets you make."
                 % len(sim.active)),
         }
+    _shorten_credit_forecast(sim, cmd, out)
     # WARN, DO NOT SILENTLY ACCEPT. start_reason() already refuses a trade
     # that does not exist AT ALL (see "THE TRADE HAS TO EXIST" there), but
     # trade_available() goes true the moment you call `train`, two years
