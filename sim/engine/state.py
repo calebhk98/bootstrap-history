@@ -409,7 +409,6 @@ class SimulationState:
 	_fog: bool = False
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
-	_version: int = 3
 
 
 ALL_STATE_CLASSES = (
@@ -452,8 +451,6 @@ def serialize_state(obj: Any) -> Any:
 				continue
 			val = getattr(obj, f.name)
 			out[f.name] = serialize_state(val)
-		if isinstance(obj, SimulationState):
-			out["_version"] = 3
 		return out
 	from sim.engine.economy import _InvalidatingSet
 	if isinstance(obj, (set, _InvalidatingSet)):
@@ -616,11 +613,8 @@ def deserialize_state(blob: Any, target_type: Optional[type] = None) -> Any:
 	if blob is None:
 		return None
 	if target_type is None:
-		if isinstance(blob, dict) and ("_version" in blob or "household" in blob):
-			target_type = SimulationState
-		elif isinstance(blob, dict) and "ph_left" in blob:
-			target_type = ActiveProjectState
-		else:
+		if not isinstance(blob, dict):
 			return blob
+		target_type = ActiveProjectState if "ph_left" in blob else SimulationState
 
 	return _deserialize_typed(blob, target_type)

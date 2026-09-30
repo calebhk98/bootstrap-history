@@ -9,8 +9,6 @@ from sim.engine.state import (
     deserialize_state,
 )
 
-SAVE_VERSION = 3
-
 
 def save_state(sim, path):
 	"""Write the whole game to a file using automatic state serialization from live sim.state."""
@@ -29,7 +27,6 @@ def save_state(sim, path):
 		sim.state.population.pop_children = float(sim.population.children)
 		sim.state.population.pop_working_age = float(sim.population.working_age)
 		sim.state.population.pop_elderly = float(sim.population.elderly)
-	sim.state._version = 3
 
 	blob = serialize_state(sim.state)
 	tmp = path + ".tmp"
@@ -49,7 +46,6 @@ REQUIRED_V3_SECTIONS = (
 
 REQUIRED_METADATA_FIELDS = (
     "_civ", "_goal", "_civ_live", "_weights", "_fog", "_immortal", "_rng",
-    "_version",
 )
 
 REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
@@ -79,15 +75,12 @@ def _get_field(blob, field_name):
 
 
 def _check_save_shape(blob):
-    """None if `blob` is a JSON object carrying every required v3 section and
+    """None if `blob` is a JSON object carrying every required section and
     metadata field this build requires; otherwise the refusal message.
     """
     if not isinstance(blob, dict):
         return ("this is not a save from this game: expected a JSON object, "
                 "got %s" % type(blob).__name__)
-    if "_version" not in blob:
-        return "this is not a save from this game: missing '_version'"
-
     required = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
     missing = [f for f in required if f not in blob]
     if missing:
@@ -100,19 +93,6 @@ def _check_save_shape(blob):
         if not isinstance(blob.get(section), dict):
             return "this save is corrupt: section '%s' should be an object" % section
 
-    return None
-
-
-def _check_save_version(blob):
-    """None if `blob`'s version stamp is a whole number matching the one this
-    build writes; otherwise the refusal message.
-    """
-    if not isinstance(blob.get("_version"), int):
-        return "this save is corrupt: '_version' should be a whole number"
-    if blob["_version"] != SAVE_VERSION:
-        return ("this save uses format version %s; this build requires version %s. "
-                "Saved runs are not migrated; start a new run."
-                % (blob["_version"], SAVE_VERSION))
     return None
 
 
@@ -202,9 +182,6 @@ def _check_save_trade_name_sets(blob):
 def _validate_save(blob, sim):
 	"""Validate save file format and contents before mutating simulation."""
 	message = _check_save_shape(blob)
-	if message:
-		return message
-	message = _check_save_version(blob)
 	if message:
 		return message
 	message = _check_save_scalars(blob, sim)

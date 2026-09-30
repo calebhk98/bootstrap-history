@@ -289,20 +289,3 @@ check("...and mine_capacity (the derived property) agrees after the "
           - s_sv.mine_capacity.get("coal", 0.0)) < 1e-6,
       (s_sv.mine_capacity, s_sv2.mine_capacity))
 
-# Saves are intentionally ephemeral: a run is short, and silently translating
-# an older state shape would be less honest than refusing it.
-S.save_state(s_sv, _sv_path)
-with open(_sv_path) as _fh:
-    _stale_blob = json.load(_fh)
-_stale_blob["_version"] -= 1
-with open(_sv_path, "w") as _fh:
-    json.dump(_stale_blob, _fh)
-try:
-    S.load_state(sim(capital=1.0), _sv_path)
-    _stale_error = None
-except ValueError as _exc:
-    _stale_error = str(_exc)
-os.remove(_sv_path)
-check("a save from another format version is refused rather than migrated",
-      _stale_error is not None and "not migrated" in _stale_error,
-      _stale_error)

@@ -45,6 +45,9 @@ class ProgressMixin:
         disagree with what step() actually offers.
         """
         project_state, node = self.state.projects.active[node_id], self.nodes[node_id]
+        # A bounty is worked by whoever claims the prize, not by the poster.
+        if node_id in self.state.projects.bountied:
+            return 0.0
         # Throttle not applied here; caller applies. Returns WANT, not allocation.
         return max(project_state["ph_left"], node["ph"] / max(node["yrs"], 1.0))
 

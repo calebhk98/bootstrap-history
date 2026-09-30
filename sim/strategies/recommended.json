@@ -21,7 +21,7 @@
     "  gunpowder is deliberately LAST. See 03_SOCIAL_POLITICS.md: it buys favour and it arms",
     "  every future usurper during exactly the century when the Empire must not fragment.",
     "",
-    "BOUNTIES: nodes listed in `bounties` are bought as public prizes instead of built by hand. A prize converts denarii into somebody else's hours, which is the trade you most want to make, at about 2.5x the honest cost and a 65% saving on your own time. It only works where the craft already exists in the Empire and the artisan can recognise success without understanding why: 'the first glassworker who brings me a clear sphere the size of a millet seed' is a workable prize, 'the first man to zone-refine germanium' is not."
+    "BOUNTIES: nodes listed in `bounties` are bought as public prizes instead of built by hand. A prize converts denarii into somebody else's hours, which is the trade you most want to make, at about 2.5x the honest cost. It only works where the craft already exists in the Empire and the artisan can recognise success without understanding why: 'the first glassworker who brings me a clear sphere the size of a millet seed' is a workable prize, 'the first man to zone-refine germanium' is not."
   ],
   "order": [
     "arrival_orientation",

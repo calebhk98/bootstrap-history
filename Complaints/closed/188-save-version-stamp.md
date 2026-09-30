@@ -1,6 +1,6 @@
 # The save format carries a version stamp
 
-**Status:** open
+**Status:** closed - stamp, version check and old-key branch removed
 
 `sim/engine/proto/saveload.py:12` `SAVE_VERSION = 3`; `sim/engine/state.py:412` `_version: int = 3`, written at `:456`, checked at `:619` (`"_version" in blob or "household" in blob`).
 
