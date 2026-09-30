@@ -3354,7 +3354,7 @@
       "galena_kg": 280000.0
     },
     "name": "Lead sheet, pipe, litharge and cupellation control",
-    "note": "This is already done, and done well, wherever there is a developed lead-mining and -working tradition (Rome is the best-documented case). You need lead in bulk for the lead chamber process, for cable sheathing, for accumulators, and for acid plumbing. Also secures your galena supply for the crystal detector.",
+    "note": "Industrial production of lead sheet, pipe, and roasted litharge, with precise cupellation to purify galena in the quantities that chemistry and electronics demand. These capabilities enable the lead chamber process for sulfuric acid production, cable sheathing, battery accumulators, plumbing systems, and secure supply of pure galena for crystal detectors.",
     "ph": 200.0,
     "pre": [
       "workshop_first"
