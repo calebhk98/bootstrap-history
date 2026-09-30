@@ -12,6 +12,7 @@ from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from .saveload import load_state, save_state
 from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
+from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
 # The four handler groups moved out of this module, by subject - see each
@@ -205,6 +206,8 @@ def _cmd_step(sim, nodes, cmd, ended):
     end_year = sim.end_year
     ran = 0
     goal_before = sim.goal_snapshot()
+    route = route_nodes(sim) if years > 1 else set()
+    snapshots = []
     for _ in range(years):
         if sim.dead_reason or sim.year >= end_year:
             break
@@ -228,6 +231,10 @@ def _cmd_step(sim, nodes, cmd, ended):
         _snap["concerns_closed"] = sorted(before_operating - sim.operating)
         _snap["completed"] = sorted(sim.done - before_done)
         hist.append(_snap)
+        if route:
+            snapshots.append({**_snap, "route_startable": route_startable(sim, route)})
+        else:
+            snapshots.append(_snap)
         # sorted(), because this is a set difference and a set of strings
         # iterates in an order that depends on PYTHONHASHSEED. Two runs of
         # the same game with the same seed reported the same completions in
@@ -283,6 +290,9 @@ def _cmd_step(sim, nodes, cmd, ended):
     summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
     if summary:
         out["summary"] = summary
+    problems = step_problems(ran, snapshots, events, stalled_projects(sim))
+    if problems:
+        out["problems"] = problems
     if founder_died_this_step:
         out["the_founder_died_this_step"] = founder_died_this_step
     if stopped_early:

@@ -320,7 +320,7 @@ def score_report(sim, nodes):
     goal = sim.goal
     goal_reached = bool(goal and sim.goal_year)
     total = None
-    if goal_reached and all(component["normalized"] is not None for component in components.values()):
+    if all(component["normalized"] is not None for component in components.values()):
         total = round(sum(component["weighted"] for component in components.values()), 4)
     # A NUMBER TO COMPARE RUNS WITH, NOT ONLY A PERCENTAGE: a percentage
     # answers "how much of the possible score", a point figure answers
@@ -360,7 +360,7 @@ def score_report(sim, nodes):
                            "rescaled for a figure to compare runs with, "
                            "not a second score computed differently"}
     if not goal_reached:
-        out["no_score"] = "the goal was not reached"
+        out["goal_not_reached"] = "goal not reached"
     out["achievements"] = _score_achievements(sim, nodes)
     return out
 
@@ -376,12 +376,12 @@ def _score_lines(out, indent="  "):
     """
     lines = []
     if not out.get("goal_reached"):
-        lines.append(_wrap("no score: the goal was not reached%s"
+        lines.append(_wrap("Goal not reached%s"
                        % (" yet" if out.get("end_reason") is None else "")
                        + (". The breakdown below is provisional - what you "
                           "would be optimising if you reached %s."
                           % (out.get("goal_in_words") or "the goal")
-                          if out.get("end_reason") is None else "."),
+                          if out.get("end_reason") is None else "; the score below is what the run built anyway."),
                        indent=indent))
         lines.append("")
     for name in _SCORE_COMPONENT_ORDER:
@@ -398,11 +398,11 @@ def _score_lines(out, indent="  "):
                     "%.4f" % component["weighted"]))
     lines.append("")
     if out.get("total") is not None:
-        lines.append("%sTOTAL: %.1f%%  (%s / 1000 points)"
-                 % (indent, out["total"] * 100, _fmt_num(out.get("points"))))
+        lines.append("%sTOTAL: %.1f%%  (%s / 1000 points)%s"
+                 % (indent, out["total"] * 100, _fmt_num(out.get("points")),
+                    "" if out.get("goal_reached") else "  - goal not reached"))
     else:
-        lines.append("%sTOTAL: -- (%s)" % (indent, out.get("no_score")
-                 or "not computable until the run ends under fog"))
+        lines.append("%sTOTAL: -- (not computable until the run ends under fog)" % indent)
     ach = out.get("achievements") or {}
     if ach:
         lines.append("")

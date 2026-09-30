@@ -1169,7 +1169,7 @@ class StatePressureMixin:
         mitig, why = 1.0, []
         if self.state.household.protection > 0:
             mitig *= (1.0 - self.CONFISCATION_PROTECTION_DISCOUNT * self.state.household.protection)
-            why.append("a patron and standing high enough to matter")
+            why.append(self.CONFISCATION_PROTECTION_LABELS[0])
         dispersal = 0.0
         if self.has("academy_network"):
             dispersal = max(dispersal, self.CONFISCATION_DISPERSAL_ACADEMY_NETWORK)
@@ -1177,12 +1177,26 @@ class StatePressureMixin:
             dispersal = max(dispersal, self.CONFISCATION_DISPERSAL_ENDOWMENT_LAND)
         if dispersal > 0:
             mitig *= (1.0 - dispersal)
-            why.append("holdings too dispersed to be seized at a stroke")
+            why.append(self.CONFISCATION_PROTECTION_LABELS[1])
         lev = self.military_leverage()
         if lev > 0:
             mitig *= (1.0 - self.CONFISCATION_MILITARY_USEFULNESS_DISCOUNT * lev)
-            why.append("too useful to the state to strip clean")
+            why.append(self.CONFISCATION_PROTECTION_LABELS[2])
         return probability * mitig, why
+
+    CONFISCATION_PROTECTION_LABELS = (
+        "a patron and standing high enough to matter",
+        "holdings too dispersed to be seized at a stroke",
+        "too useful to the state to strip clean")
+
+    def confiscation_status(self):
+        """What the `risk` screen shows: this year's confiscation chance,
+        the protections holding it down, and those not yet in force."""
+        chance, active = self.confiscation_risk()
+        return {"chance_this_year": round(chance, 4),
+                "held_off_by": active,
+                "not_yet_in_force": [label for label in self.CONFISCATION_PROTECTION_LABELS
+                                     if label not in active]}
 
     CONFISCATION_PROTECTION_DISCOUNT = declare(
         "CONFISCATION_PROTECTION_DISCOUNT", 0.5, kind="temporary_heuristic",

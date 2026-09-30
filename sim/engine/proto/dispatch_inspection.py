@@ -242,6 +242,7 @@ def _cmd_materials(sim, nodes, cmd, ended):
 def _cmd_risk(sim, nodes, cmd, ended):
     knowledge_risk = sim.knowledge_risk()
     return {"ok": True, "knowledge_risk": knowledge_risk, "year": sim.year,
+            "confiscation": sim.confiscation_status(),
             "note": "What history is about to do to you, and what you have "
                     "built that blunts it. Every hazard here is fightable."}
 

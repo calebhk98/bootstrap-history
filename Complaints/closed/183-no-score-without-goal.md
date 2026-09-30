@@ -1,6 +1,6 @@
 # No final score when the goal is missed, although every component is computed
 
-**Status:** open
+**Status:** closed - `score` always shows the total, flagged "goal not reached"
 
 At the horizon `score` prints "no score: the goal was not reached" and then every component (technology coverage 0.857, literacy 0.970, workforce 0.849, institutions 0.828, ...). A run that transforms the society but misses the headline goal gets no number.
 
