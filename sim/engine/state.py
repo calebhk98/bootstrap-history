@@ -217,6 +217,9 @@ class HouseholdState:
 	trade_schools: Optional[int] = None
 	labour_pressure_records: Dict[str, Any] = field(default_factory=dict)
 	worker_housing_places: Optional[int] = None
+	# spare generic hands the reserve_staff policy keeps above what concerns hold (`reserve`)
+	reserve_craftsmen: int = 0
+	reserve_scholars: int = 0
 	_said_deputies: int = 0
 	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None

@@ -888,6 +888,15 @@ def _parse_keep(command, rest, words, nums, want_json):
     return {"cmd": "keep", "id": node_id, "staffed": mode in ("staffed", "on", "true")}, None
 
 
+def _parse_reserve(command, rest, words, nums, want_json):
+    if not rest:
+        return {"cmd": "reserve"}, None
+    kind = rest[0].lower()
+    if kind not in ("craftsmen", "scholars") or not nums:
+        return None, "say 'reserve craftsmen 5' or 'reserve scholars 1'. Bare 'reserve' shows both."
+    return {"cmd": "reserve", kind: nums[0]}, None
+
+
 def _parse_save_or_load(command, rest, words, nums, want_json):
     if not rest:
         return None, "%s needs a file name, e.g. '%s mygame.json'." % (command, command)
@@ -952,6 +961,7 @@ _COMMAND_PARSERS = {
     "priority": _parse_priority,
     "policy": _parse_policy,
     "keep": _parse_keep,
+    "reserve": _parse_reserve,
     "save": _parse_save_or_load,
     "load": _parse_save_or_load,
 }

@@ -1,4 +1,4 @@
-"""Staffing controls an actor can set: concerns to keep staffed.
+"""Staffing controls an actor can set: concerns to keep staffed, and a reserve of spare hands.
 
 Methods of Sim, a mixin only so they live in a file of their own. Written
 against the household actor's employees, so a firm or state can use them.
@@ -44,3 +44,32 @@ class StaffControlsMixin:
             short = math.ceil(min(shortfalls.get(resource, 0.0), claimed[resource]) - 0.01)
             self.hire_to_cover(GENERIC_RESOURCE_TRADES.get(resource, resource), short,
                                "keep_staffed", partial=True)
+
+    def hold_staff_reserve(self):
+        """reserve_staff: keep the set number of spare generic craftsmen and scholars.
+
+        Spare means free after every open concern's claim (`venture_staff_free`).
+        Buys housing first when the household has no room for them."""
+        if not self.state.founder.policy.get("reserve_staff", False):
+            return
+        household = self.state.household
+        scholars_free, craftsmen_free = self.venture_staff_free()
+        for trade, target, free in (("artisan", household.reserve_craftsmen, craftsmen_free),
+                                    ("scholar", household.reserve_scholars, scholars_free)):
+            short = math.ceil(target - free - 0.01)
+            if short <= 0:
+                continue
+            self._house_for_reserve(trade, short)
+            self.hire_to_cover(trade, short, "reserve_staff", partial=True)
+
+    def _house_for_reserve(self, trade, count):
+        """Buy worker housing for `count` more people if room is short and cash covers both."""
+        places = math.ceil(count - max(0.0, self.household_room()) - 1e-9)
+        if places <= 0:
+            return
+        cost = places * self.housing_price_per_place()
+        if cost + count * self.annual_wage(trade) > self.spending_power("buy"):
+            return
+        if self.build_worker_housing(places):
+            self.state.household.log.append((self.state.scenario.year,
+                                             "reserve_staff: you build housing for %d more people" % places))

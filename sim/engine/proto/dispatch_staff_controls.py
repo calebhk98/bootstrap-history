@@ -35,3 +35,27 @@ def _cmd_keep(sim, nodes, cmd, ended):
     return {"ok": True, "keep_staffed": _keep_listing(sim),
             "note": ("%s will be hired for each year before the closure rule" % node_id
                      if flag else "%s is no longer kept staffed" % node_id)}
+
+
+@command("reserve", group="labour",
+         summary="how many spare craftsmen and scholars the reserve_staff policy keeps",
+         usage=["reserve", "reserve craftsmen 5", "reserve scholars 1",
+                '{"cmd":"reserve","craftsmen":5,"scholars":1}'],
+         options={"craftsmen / scholars": "spare hands above what open concerns hold"},
+         description="Sets the size of the reserve; 'policy reserve_staff on' makes the game "
+                     "hire (and buy housing for) them each year. Bare reserve shows it.")
+def _cmd_reserve(sim, nodes, cmd, ended):
+    household = sim.state.household
+    for key in ("craftsmen", "scholars"):
+        if cmd.get(key) is None:
+            continue
+        value = cmd[key]
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or value < 0 or abs(value - round(value)) > 1e-6):
+            return {"ok": False, "error": "%s must be a whole number, zero or more" % key}
+        setattr(household, "reserve_" + key, int(round(value)))
+    return {"ok": True,
+            "reserve": {"craftsmen": household.reserve_craftsmen,
+                        "scholars": household.reserve_scholars},
+            "policy_reserve_staff": bool(sim.policy.get("reserve_staff", False)),
+            "note": "Spare hands are kept only while 'policy reserve_staff on'."}

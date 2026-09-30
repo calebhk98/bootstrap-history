@@ -31,7 +31,7 @@ from .dispatch_money import (
     _cmd_bounty, _cmd_buy, _cmd_sell, _cmd_money, _cmd_quote, _cmd_close,
     _cmd_withdraw, _cmd_bribe)
 from .dispatch_market import _cmd_market  # noqa: F401
-from .dispatch_staff_controls import _cmd_keep  # noqa: F401
+from .dispatch_staff_controls import _cmd_keep, _cmd_reserve  # noqa: F401
 from .dispatch_priority import _cmd_priority  # noqa: F401
 from .dispatch_labour import (
     _cmd_work, _cmd_allocate, _cmd_labour, _cmd_hire, _cmd_fire, _cmd_train,
