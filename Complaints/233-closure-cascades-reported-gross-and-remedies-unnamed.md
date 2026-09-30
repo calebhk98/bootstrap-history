@@ -18,3 +18,5 @@ What it would take: one annual recap line "closed N, reopened M, still shut K; c
 a way to mark public services as protected that `auto_open` and the closure rule respect; split departures by cause. Related: 93 (automation audit trail), 205, 89 and 150 (closed).
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 20, 54, 77, 84, 85, 96, 97, 112, 131, 139, 195, 206, 208, 215). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): A asks for a consolidated workforce screen: single-employee dependencies, businesses at immediate risk, reserve specialists, expected annual attrition, training pipeline, and a prominent warning before a multi-year advance with a critical business resting on one person (A's destitute mortal run lost its loom to the departure of its only carpenter). A liked `keep`, `reserve`, the academy and delegation;

@@ -15,3 +15,5 @@ reopens a concern and then expects the achievement to be lost. Other achievement
 `corpus_intact`, `outpaced_the_fastest_plan`) read durable fields and looked right.
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 212). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+Also reported (final playtests, B, Rome; `Complaints/reports/final-playtests-triage.md`): "No concern ever closed for want of staff" ticked although the 117 AD log said "nobody left to keep an eye on 2 concerns, so lens_grinding, opt_manometer closed". A (Rome, won 358 AD) correctly did not get it (a business closed for want of staff) and blamed not using `keep` and `reserve` consistently; the code cause above explains why B's run got it anyway. Reproduces: yes (code).

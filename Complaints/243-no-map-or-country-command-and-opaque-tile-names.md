@@ -11,3 +11,5 @@ showing the current base, resources, markets and reach. Replay:
 What it would take: aliases for `map`, `geography`, `country` (to `population` or a new overview); place names in `move`; a one-screen summary of the current base's region. Related: 140 (regions and tiles are two maps), 111.
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 123, 125). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md`): `move` lists `mexico_06`, `honduras_01` with no city names, so leaving Tenochtitlan before 1519 was not a real decision.

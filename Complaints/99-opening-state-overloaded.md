@@ -61,3 +61,5 @@ Likely in `sim/engine/proto/state.py` where the opening state is rendered, with 
 **Confidence:** Design recommendation
 
 Also reported (Han China 100 AD fog playtest, tester item(s) 8, 12, 64; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): the first screen and `help commands` print a couple of hundred lines of reference (every alias, every usage) and the five-command introduction does not say `help commands` has a beginner index; the tester wanted a short index, pagination and aliases on request. Reproduces: yes (`help commands` at the first prompt).
+
+Also reported (final playtests, B; `Complaints/reports/final-playtests-triage.md`): in-game `help sittings` explains one-command-per-process play (the README's Saving section shows it) and the game itself notes that most agents miss it; B asks for a pointer to it from `help` or the first screen. Reproduces: yes (the start screen lists `help` topics in a paragraph; `sittings` is one of thirteen).

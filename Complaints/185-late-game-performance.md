@@ -13,3 +13,5 @@ What it would take: profile the late-game step; make refusals that need no simul
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
 
 Also reported (Han China 100 AD fog playtest, tester item(s) 210, 221, 222; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): a single late-game `step` took 8 to 20 seconds at 1,000 to 1,860 employees and 250 to 375 concerns, growing with size; the tester wants a visible progress indicator even for single years (see 225 for the multi-year case, which also loses all years on interrupt).
+
+Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): final save about 917 KB in a hosted container where temporary storage can vanish; asks for clear export/import instructions, automatic rotating checkpoint backups, reliable save-browser metadata (filed as 250), save-version information, optional compression and a short human-readable summary beside the machine-readable save. The compact writer already exists; the rest is open. Reproduces: untested.

@@ -32,3 +32,5 @@ took on, times the reset share); a regression test that the charged amount equal
 a cost multiplier and for an opposed node.
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 35, 55, 70, 159). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+Also reported (final playtests, B and the severe-bug section of `Complaints/reports/final-playtests-triage.md`): the failure charge disagrees with the `why` forecast by a factor of tens in Rome, not two: blast furnace forecast 31,947 and charge 846,998; industrial zinc forecast about 119 thousand, charge 11.8 million. The cause there is materials (charge uses the static book material bill, the quote excludes materials already bought or held), filed as 251; fix them together.

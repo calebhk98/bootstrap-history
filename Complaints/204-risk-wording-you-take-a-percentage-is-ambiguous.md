@@ -13,3 +13,5 @@ The text comes from `sim/engine/proto/render_screens_status.py` (`"%s%s: you tak
 Found in an England 1300 blind playtest (fog on, poor_scholar kit, 1300 to 1375). Reports: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`, `Complaints/reports/playtest-england-1300-fog-yearly-log.md`; triage: `Complaints/reports/playtest-england-1300-fog-triage.md`.
 
 Also reported (Han China 100 AD fog playtest, tester item(s) 45; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): "Output factor: you take 100% of it" (Han, regency crisis) was read as a report of exposure; the event later said output fell to 94 percent. The tester wants severity and mitigation shown together before the event. Reproduces: untested (needs the dated event).
+
+Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md`): the Mexica invasion risk text should say what the design intent is ("you cannot stop the conquest, only protect what you know"), if that is the design, and show how much each hedge moves the chance (the tester's best reached 66% a year); see 270.

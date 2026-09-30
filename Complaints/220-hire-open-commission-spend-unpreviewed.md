@@ -26,3 +26,5 @@ What it would take: `quote hire <trade> <n>` and `quote open <id>` (and `quote c
 ("paid now: advance X, fee Y; from next year Z a year"); a line in `why` for the opening charge; expiry and eligibility in `help commission`.
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 15, 16, 19, 62). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+Also reported (final playtests, B; `Complaints/reports/final-playtests-triage.md`): `train` charges upkeep of about 3,056 per pair and trainees join the payroll automatically at scarcity wages (2,609 a year per engineer), which flipped income negative and froze all spending; a warning on `train` about the wage bill to come would help. Also C: asking to train 2 of a trade when the household cap was below 2 wasted a year once.

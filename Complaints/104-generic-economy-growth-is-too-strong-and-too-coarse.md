@@ -104,3 +104,5 @@ mechanisms are built, but that is a reason to do this deliberately alongside
 `LATE-010`'s domain-specific work, not a reason to shrink the coefficient in
 isolation). Treat this as advisory to the domain-by-domain migration effort,
 not a standalone ticket.
+
+Also reported (final playtests, A and B; `Complaints/reports/final-playtests-triage.md`): A: 451.8 million denarii at 361 AD from about 111 concerns and 330 employees, annual surplus 13.3 million, 'by the final century I rarely cared about the ordinary price of another invention'; they want the existing saturation mechanic expanded, not arbitrary cost multipliers. B: income +16 thousand a year (111 AD), +1 million (137 AD), +5 million (170 AD), about 400 million held by 216 AD, and money stops mattering by about 125 AD. B also asks whether population runs hot: 120.2 million by 302 AD from about 65 million after plague mitigation, against another run's 66.9 million at 361 AD (different run, untested here; `python3 sim/simulator.py` ensemble comparison would settle it, see CLAUDE.md 4.2).
