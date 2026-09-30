@@ -528,8 +528,9 @@ class ProductionMixin:
                    " and %d more" % (len(young) - 6) if len(young) > 6 else "",
                    young[0][1] * 100, self.cfg["revenue_ramp_years"]))
 
-    def practice_note(self):
-        """Why the practice pays less than the tree quotes, said once, plainly."""
+    def practice_note(self, brief=False):
+        """Why the practice pays less than the tree quotes, said once, plainly.
+        `brief` is the one-line form for screens that already explained it."""
         # ONLY WHAT THE LEDGER ACTUALLY SHOWS. Naming rows that were dropped
         # for being under half a denarius invites the reader to look for them.
         economy = self.state.economy
@@ -539,6 +540,10 @@ class ProductionMixin:
                       if self.nodes[node_id]["rev"] * scale > 0.5)
         if not prac:
             return None
+        if brief:
+            return ("%s %s your own practice, paid at about a third of what "
+                    "the tree quotes ('money full' says why)."
+                    % (", ".join(prac[:4]), "is" if len(prac) == 1 else "are"))
         return ("%s %s your own practice, and %s about a third of what the tree "
                 "quotes for the trade: the difference between one person in a "
                 "rented room and an organised concern. That gap does not close "

@@ -238,13 +238,18 @@ def _parse_bare_command(command, rest, words, nums, want_json):
     """A command that takes no arguments at all and always produces the same
     one-key dict, {"cmd": command}. Covers what were eight separate,
     identical original branches: money, values, materials, quit, score,
-    ventures, mines, stuck, capacity."""
+    ventures, mines, stuck, capacity. `money full` repeats the explanations
+    otherwise shown once."""
+    if command == "money" and "full" in [str(word).lower() for word in rest]:
+        return {"cmd": command, "full": True}, None
     return {"cmd": command}, None
 
 
 def _parse_ventures(command, rest, words, nums, want_json):
     # 'ventures limit:50 offset:20' pages the shut-concern list like 'log'.
     out = {"cmd": "ventures"}
+    if "full" in [str(word).lower() for word in rest]:
+        out["full"] = True
     low = [word.lower() for word in _absorb_key_colons(rest, (), ("limit", "offset"))]
     i = 0
     while i < len(low):
@@ -663,10 +668,13 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
     # does that, because resolving under fog has to filter candidates by
     # what the player has actually heard of, which needs the live Sim this
     # function does not have.
-    want = " ".join(rest)
+    # `why <id> full` repeats the explanations that are otherwise shown once.
+    full = command == "why" and len(rest) > 1 and str(rest[-1]).lower() == "full"
+    want = " ".join(rest[:-1] if full else rest)
     if want not in NODE_IDS:
         want = NODE_IDS_LOWER.get(want.lower(), want)
-    return {"cmd": command, "id": want}, None
+    return ({"cmd": command, "id": want, "full": True} if full
+            else {"cmd": command, "id": want}), None
 
 
 def _parse_withdraw(command, rest, words, nums, want_json):

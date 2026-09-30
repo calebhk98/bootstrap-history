@@ -62,6 +62,10 @@ from .cli_interactive_saveload import (_ingame_load, _ingame_save_milestone,
                                        _print_save_row, _save_listing)
 
 
+# Lines a sub-menu read but did not take, waiting to run as game commands.
+LINES_PUSHED_BACK = []
+
+
 def cmd_play(args):
     """The game, typed, for a person at a keyboard.
 
@@ -75,6 +79,7 @@ def cmd_play(args):
     regardless of what a player typed would make the player's choices not
     count. `run --trace` is still the way to watch the optimizer work.
     """
+    LINES_PUSHED_BACK.clear()
     result = _play_init(args)
     if result == 1:
         return 1
@@ -92,7 +97,7 @@ def cmd_play(args):
     while True:
         prompt = _play_prompt(sim)
         try:
-            line = input(prompt)
+            line = LINES_PUSHED_BACK.pop(0) if LINES_PUSHED_BACK else input(prompt)
         except (EOFError, KeyboardInterrupt):
             # Piped input runs out, and a person presses ctrl-D. Neither is a
             # crash, and the old loop raised EOFError out of the process.
@@ -583,10 +588,11 @@ def _ingame_options(sim, session):
             print("   3) move this save to a different file")
         print("   b) back to the game")
         try:
-            raw = input("\n   > ").strip().lower()
+            typed = input("\n   > ").strip()
         except (EOFError, KeyboardInterrupt):
             print()
             return session
+        raw = typed.lower()
         word = raw.split()[0] if raw.split() else ""
 
         if word in ("", "b", "back"):
@@ -692,7 +698,11 @@ def _ingame_options(sim, session):
             print("      python3 sim/simulator.py play --session %s" % session)
 
         else:
-            print("   -- not a choice right now.")
+            # Not a menu choice: say what was read, and give the line back
+            # to the game prompt so a piped command still runs.
+            print("   -- not a choice right now: %r. Back at the game prompt." % typed)
+            LINES_PUSHED_BACK.append(typed)
+            return session
 
 
 # THE SAME DEFAULT engine/society.py DECLARES AS EMINENCE_DANGER_WEIGHT_DEFAULT

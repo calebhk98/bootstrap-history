@@ -178,6 +178,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_said_scandal": "scenario",
 	"_said_parallelism": "scenario",
 	"_said_command_index": "scenario",
+	"_said_explanations": "scenario",
 
 	# PopulationState
 	"pop_children": "population",
