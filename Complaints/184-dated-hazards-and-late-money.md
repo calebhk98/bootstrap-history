@@ -14,3 +14,5 @@ Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played th
 
 - Dated historical crises stay as they are until the dynamic systems can produce them for each country: debasement and inflation from the economy work in progress, plagues from the population and medical systems, sacks after multiplayer. Do not replace them with random draws.
 - The late-game surplus is intended: advancing the whole society makes far more money than working only for yourself. What is missing is things to spend it on; that is filed separately as 194.
+
+**Also reported (England 1300 fog playtest, `Complaints/reports/playtest-england-1300-fog-triage.md`):** the same late-money pattern in a different civilisation. Capital went negative in the 1330s, then diversified agriculture, power and medicine made money no longer the bottleneck by about 1350, despite fire, war disruption and plague; fire and war supply losses became noise. The tester judged that pace acceptable. They praised the dated hazards as plannable causal modelling, the opposite of the Rome player's "scripted" reading.

@@ -14,3 +14,5 @@ Stakeholder request: add what very wealthy people and companies have actually do
 - Expeditions: exploration, colonies, trade missions.
 
 Many should be repeatable or scalable, cost upkeep, and be at risk from the same hazards as the rest of the household. Keep content in data so mods can add more.
+
+**Also reported (England 1300 fog playtest, `Complaints/reports/playtest-england-1300-fog-triage.md`):** things the tester would spend late money on: intermediate education institutions (212), partial knowledge hedges such as deposited copies and paid scribes (213), opening ventures in other towns (215), patronage of translations and university chairs, and relief from debt-service pressure (214). Lead metallurgy at 1375 was the one project money could not yet pay for, and the tester asked whether costs keep scaling faster than income in the second half. The "rich" lifestyle cost was praised as wealth having a running cost.
