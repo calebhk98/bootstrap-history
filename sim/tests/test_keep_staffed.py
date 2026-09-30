@@ -70,7 +70,7 @@ check("once off, the concern closes again", CONCERN not in flagged2.operating)
 
 # Within cash: a flagged concern is not hired for when the household is broke.
 poor = _lost_foreman_sim()
-poor.state.household.capital = 0.0
+poor.state.household.capital = -poor.credit_limit()  # in arrears to the limit: nothing left to spend
 _dispatch(poor, "keep %s staffed" % CONCERN)
 poor.step()
 check("no cash, no hire: the rule does not conjure people",

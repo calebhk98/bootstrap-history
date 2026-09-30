@@ -697,6 +697,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            "capabilities_you_know_how_to_run_but_have_not_opened":
                [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
                 for node_id in _idle_capability] or "nothing",
+           "keep_staffed": sorted(sim.state.projects.keep_staffed) or "none",
            "people_free_to_run_something_new": {
                "scholars": round(sch_free, 2), "craftsmen": round(art_free, 2)},
            # YOU ARE IN THAT COUNT: leaving this unsaid would make

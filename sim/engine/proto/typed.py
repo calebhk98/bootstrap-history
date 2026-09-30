@@ -876,6 +876,18 @@ def _parse_policy(command, rest, words, nums, want_json):
     return {"cmd": "policy", "set": {rest[0].lower(): flag}}, None
 
 
+def _parse_keep(command, rest, words, nums, want_json):
+    if not rest:
+        return {"cmd": "keep"}, None
+    node_id = rest[0]
+    if node_id not in NODE_IDS:
+        node_id = NODE_IDS_LOWER.get(node_id.lower(), node_id)
+    mode = rest[1].lower() if len(rest) > 1 else "staffed"
+    if mode not in ("staffed", "on", "off", "true", "false"):
+        return None, "say 'keep %s staffed' or 'keep %s off'." % (node_id, node_id)
+    return {"cmd": "keep", "id": node_id, "staffed": mode in ("staffed", "on", "true")}, None
+
+
 def _parse_save_or_load(command, rest, words, nums, want_json):
     if not rest:
         return None, "%s needs a file name, e.g. '%s mygame.json'." % (command, command)
@@ -939,6 +951,7 @@ _COMMAND_PARSERS = {
     "allocate": _parse_allocate,
     "priority": _parse_priority,
     "policy": _parse_policy,
+    "keep": _parse_keep,
     "save": _parse_save_or_load,
     "load": _parse_save_or_load,
 }

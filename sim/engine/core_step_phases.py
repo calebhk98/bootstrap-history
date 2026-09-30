@@ -125,6 +125,8 @@ class StepPhasesMixin:
         # staffing rule closes the concern.
         if self.state.founder.policy.get("auto_replace_foreman", False):
             self.replace_lost_foremen()
+        # Hire for the concerns named with `keep <id> staffed`, before the closure rule.
+        self.keep_flagged_concerns_staffed()
         self._resync_pools()
         # A HOUSEHOLD THAT CANNOT PAY ITS PEOPLE LETS THEM GO. This is the whole
         # answer to "you built it from nothing, so you must be able to rebuild
