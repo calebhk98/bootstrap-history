@@ -1,6 +1,6 @@
 # `bounty` has no quote: price multiplier, eligible categories and judging are unstated until it refuses or posts
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_spending_previews.py
 
 `help bounty` reads "bounty <id>: pay someone else to solve it" and nothing more. The tester's experience: a bounty on the research institute posted for 28.968 million, 2.5 times the ordinary quote of 11.587 million, finished two years later with no founder hours;
 a bounty on `power_grid` was refused for a missing prerequisite; one on the motors node was refused with "category electrical ... local craftspeople cannot recognise success without theory" although a 3 MW station and electricians existed; a bounty on an active project said to stop the project first and lose sunk work.

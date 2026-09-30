@@ -1,6 +1,6 @@
 # `hire`, `open` and `commission` spend cash that is neither previewed nor itemised in the reply
 
-**Status:** open
+**Status:** partly - quote hire/commission/open, itemised replies, the charge in `why`, and commission expiry in help landed (sim/tests/test_spending_previews.py); a wage-bill warning on `train` remains
 
 Three actions commit money the player was not shown first:
 
@@ -28,3 +28,6 @@ What it would take: `quote hire <trade> <n>` and `quote open <id>` (and `quote c
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 15, 16, 19, 62). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
 
 Also reported (final playtests, B; `Complaints/reports/final-playtests-triage.md`): `train` charges upkeep of about 3,056 per pair and trainees join the payroll automatically at scarcity wages (2,609 a year per engineer), which flipped income negative and froze all spending; a warning on `train` about the wage bill to come would help. Also C: asking to train 2 of a trade when the household cap was below 2 wasted a year once.
+
+
+What remains: `train` still gives no warning about the wage bill the trainees add when they join the payroll, and asking for more trainees than the household cap wastes a year without a preview.

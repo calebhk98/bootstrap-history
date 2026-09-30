@@ -1045,7 +1045,7 @@ def _staffing_build_crew(sim, node):
     }
 
 
-def _staffing_standing_crew(sim, _is_venture, _sup_sch, _sup_art, _free_sch, _free_art,
+def _staffing_standing_crew(sim, node_id, _is_venture, _sup_sch, _sup_art, _free_sch, _free_art,
                              _foreman_trade, _foreman_fte):
     """staff_to_keep_it_open and the rest of the venture-supervision
     fields - the STANDING crew `open` actually checks, a separate and
@@ -1074,6 +1074,8 @@ def _staffing_standing_crew(sim, _is_venture, _sup_sch, _sup_art, _free_sch, _fr
             {"trade": _foreman_trade, "fte": round(_foreman_fte, 2),
              "free_now": round(sim.venture_foreman_free(_foreman_trade), 2)}
             if _foreman_trade else None),
+        "charge_to_open": (round(sim.opening_fee(node_id)[0], 1)
+                           if _is_venture else None),
         "staff_to_keep_it_open_means": (
             "a SEPARATE requirement from staff_needed above, and the one "
             "'open' actually enforces once this is built: a continuous "
@@ -1119,7 +1121,7 @@ def _explain_staffing(sim, nodes, node_id, node):
                                      else (None, 0.0))
     out = {}
     out.update(_staffing_build_crew(sim, node))
-    out.update(_staffing_standing_crew(sim, _is_venture, _sup_sch, _sup_art, _free_sch,
+    out.update(_staffing_standing_crew(sim, node_id, _is_venture, _sup_sch, _sup_art, _free_sch,
                                         _free_art, _foreman_trade, _foreman_fte))
     return out
 

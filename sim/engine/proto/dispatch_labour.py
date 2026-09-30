@@ -13,6 +13,7 @@ from .command_registry import command
 from ..data import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state import _staff_fraction_note
 from .util import _num, _qty
+from .quote_spending import COMMISSION_NOTE
 
 
 @command("work", group="labour",
@@ -405,7 +406,9 @@ def _cmd_labour(sim, nodes, cmd, ended):
          summary="hire staff by the year",
          usage=["hire <trade> <n>", '{"cmd":"hire","trade":"smith","n":3}'],
          options={"<trade>": "a trade that exists here", "<n>": "how many"},
-         description="Paid every year whether or not there is work for them.")
+         description="Paid every year whether or not there is work for them. The first "
+                     "year is paid at once as an advance. `quote hire <trade> <n>` shows "
+                     "what is paid now and what is due each year after.")
 def _cmd_hire(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -417,6 +420,8 @@ def _cmd_hire(sim, nodes, cmd, ended):
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
+    wages_before = sim.wage_bill()
+    _count, fee_paid, _refusal = sim.hire_check(cmd.get("trade"), quantity)
     hired, err = sim.hire(cmd.get("trade"), quantity)
     if not hired:
         return {"ok": False, "error": err}
@@ -431,6 +436,8 @@ def _cmd_hire(sim, nodes, cmd, ended):
     return {"ok": True, "hired": cmd.get("trade"), "n": cmd.get("n"),
             "you_now_employ": round(sim.employees.get(str(cmd.get("trade")).lower(), 0.0), 2),
             "annual_wage_bill": round(sim.wage_bill(), 1),
+            "paid_now": round(fee_paid, 1),
+            "from_next_year_per_year": round(sim.wage_bill() - wages_before, 1),
             "capital": round(sim.capital, 1)}
 
 
@@ -447,6 +454,7 @@ def _cmd_fire(sim, nodes, cmd, ended):
     fired, err = sim.fire(cmd.get("trade"), quantity)
     if not fired:
         return {"ok": False, "error": err}
+    advance_credit = min(sim.living_cost(), sim.wages_prepaid)
     # Same reasoning as `hire` above: `err` here is fire()'s own success
     # message, which says exactly what happened - staff let go, an
     # apprenticeship cancelled, or both - and cmd["n"] alone would not.
@@ -455,6 +463,11 @@ def _cmd_fire(sim, nodes, cmd, ended):
            "annual_wage_bill": round(sim.wage_bill(), 1)}
     if err:
         out["what_happened"] = err
+    if advance_credit > 0.5:
+        out["advance_still_credited"] = round(advance_credit, 1)
+        out["advance_note"] = ("wages paid in advance this year are not refunded in "
+                               "cash; they stay as credit against this year's costs "
+                               "and nothing more is owed for the person who left")
     return out
 
 
@@ -502,18 +515,21 @@ def _cmd_train(sim, nodes, cmd, ended):
          summary="buy a job rather than a person",
          usage=["commission <trade> <hours>"],
          options={"<trade>": "the trade", "<hours>": "hours of that trade's work"},
-         description="Pays for hours of a trade's work once, with no continuing wage.")
+         description="Pays for hours of a trade's work once, with no continuing wage. "
+                     "The hours last this year only and cannot supervise a concern. "
+                     "`quote commission <trade> <hours>` shows the price first.")
 def _cmd_commission(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
     hours, err = _qty(cmd, "hours")
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
+    fee_paid, _refusal = sim.commission_check(cmd.get("trade"), hours)
     commissioned, msg = sim.commission(cmd.get("trade"), hours)
     if not commissioned:
         return {"ok": False, "error": msg}
     return {"ok": True, "commissioned": msg, "capital": round(sim.capital, 1),
-            "note": "These hours are available to your projects this year only."}
+            "paid_now": round(fee_paid, 1), "note": COMMISSION_NOTE}
 
 
 @command("move_base", group="labour", aliases=("move", "relocate", "moveto"),

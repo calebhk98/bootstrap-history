@@ -801,6 +801,10 @@ def _why_staff_keep_open(out):
                      "substitute; you have %s free now)"
                      % (_est(out, "staff_to_keep_it_open", foreman.get("fte")), foreman.get("trade"),
                         _fmt_num(foreman.get("free_now"))))
+        if out.get("charge_to_open"):
+            lines.append("  CHARGE TO OPEN: %s den, paid when you `open` it "
+                         "(`quote open <id>` shows it too)"
+                         % _fmt_num(out["charge_to_open"]))
         if out.get("staff_to_keep_it_open_means"):
             lines.append(_wrap("  " + out["staff_to_keep_it_open_means"], indent="     "))
         if out.get("more_supervision_than_you_have_free_right_now"):

@@ -1,6 +1,6 @@
 # `recurring` net includes the one-time hiring-advance credit, so it is not a next-year figure
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_spending_previews.py
 
 After `hire carpenter 1` the ledger prints wages 355,925 "of which already paid as hiring advances 355,922" and
 "Net/yr before the work in hand: 5,220 (recurring)". Revenue 438,185 minus living 432,962 is 5,223, so the wage is

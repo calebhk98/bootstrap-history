@@ -96,6 +96,13 @@ Two fixes, usable separately or together:
       {"cmd":"bounty","id":"zinc_metal"}           post a public prize instead of
                                                     building it yourself (tier <=2 crafts
                                                     only; converts denarii into hours)
+      {"cmd":"quote","what":"bounty","id":"zinc_metal"}   price, multiplier, eligibility and refusal
+      {"cmd":"quote","what":"hire","trade":"smith","n":2}   paid now and due each year after
+      {"cmd":"quote","what":"commission","trade":"smith","hours":200}   fee; hours last this year
+      {"cmd":"quote","what":"open","id":"fin_restaurant"}   the opening charge, before `open`
+                                                    Each quote returns `paid_now`, the figure the
+                                                    command then charges. hire, commission, open
+                                                    and bounty replies carry `paid_now` too.
       {"cmd":"buy","what":"forest","n":100}        buy 100 ha of coppice woodland
       {"cmd":"buy","what":"mine","material":"iron","n":500}   sink a mine
       {"cmd":"buy","what":"slaves","n":4}          the economic actions the optimizer

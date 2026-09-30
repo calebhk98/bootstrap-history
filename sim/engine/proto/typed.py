@@ -6,6 +6,7 @@ from . import command_registry
 from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
+from .quote_spending import SPENDING_QUOTERS
 
 # ---------------------------------------------------------------------------
 # TYPED COMMANDS, for a person at a keyboard.
@@ -770,6 +771,22 @@ def _parse_train(command, rest, words, nums, want_json):
     return out, None
 
 
+def _parse_spending_quote(words, nums):
+    # 'quote hire smith 2', 'quote commission smith 200', 'quote open <id>',
+    # 'quote bounty <id>': the same arguments the command itself takes.
+    what = words[0].lower()
+    if len(words) < 2:
+        return None, "quote %s needs %s." % (
+            what, "a trade" if what in ("hire", "commission") else "an id")
+    out = {"cmd": "quote", "what": what}
+    if what in ("hire", "commission"):
+        out["trade"] = words[1].lower()
+        out["hours" if what == "commission" else "n"] = nums[0] if nums else 1
+    else:
+        out["id"] = words[1]
+    return out, None
+
+
 def _parse_buy_or_quote(command, rest, words, nums, want_json):
     if not words:
         return None, ("%s needs something to %s, e.g. '%s iron 500'."
@@ -781,6 +798,8 @@ def _parse_buy_or_quote(command, rest, words, nums, want_json):
     # just typed.
     if len(words) > 1 and [word.lower() for word in words[:2]] == ["trade", "school"]:
         words = words[1:]
+    if command == "quote" and words[0].lower() in SPENDING_QUOTERS:
+        return _parse_spending_quote(words, nums)
     out = {"cmd": command, "what": words[0].lower()}
     if len(words) > 1:
         out["material"] = words[1].lower()
