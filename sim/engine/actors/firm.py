@@ -4,7 +4,7 @@ It values only the profit it expects from a concern it can enter, and runs
 the concern under the same upkeep and takings rules as the founder's, sharing
 the market with every other operator.
 """
-from typing import Any, Callable, Optional
+from typing import Any, Callable, List, Optional
 
 from .base import RecordedActor
 from .tuning import EXIT_LOSS_YEARS, VALUE_HORIZON_YEARS
@@ -15,6 +15,11 @@ class Firm(RecordedActor):
 
 	# Set by the registry: how many other operators share a concern's market.
 	rivals_of: Optional[Callable[[str, str], int]] = None
+
+	def imitation_candidates(self, world: Any) -> List[str]:
+		# a firm values only the concern it is aiming at
+		target = self.record.target
+		return [target] if target in world.demonstrated() else []
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		if node_id != self.record.target:
