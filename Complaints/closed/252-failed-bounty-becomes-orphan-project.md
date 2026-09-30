@@ -1,6 +1,6 @@
 # A failed bounty stays flagged as a bounty, is never worked by anyone, and nothing tells the player it became their job
 
-**Status:** open
+**Status:** closed
 
 The tester bountied `master_screw` in 127 AD; it failed in 128; it then sat 13 years at "0 offered, 0 effective" with priority 1 or 2 while 7,000 or more hours went unused. `allocate master_screw 700` said "its own pace this year - at most 0 hours". `stop` then `start` fixed it.
 

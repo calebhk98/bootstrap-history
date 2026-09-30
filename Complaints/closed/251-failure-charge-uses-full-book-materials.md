@@ -1,6 +1,6 @@
 # A failed project charges the full book material bill, 26 to 100 times the `why` forecast once materials were bought or mined: blast furnace forecast about 32 thousand, lost about 847 thousand; industrial zinc forecast 119 thousand, lost 11.8 million
 
-**Status:** open
+**Status:** closed
 
 `why` prints "IF IT FAILS: N gone (40% of the money)"; a failure then subtracts a different number. The tester's blast furnace (133 AD) quoted 31,947 and took 846,998; industrial zinc (270 AD) quoted about 119 thousand and took 11.8 million; bulk steel took 6.2 million. Cash really fell by those amounts.
 

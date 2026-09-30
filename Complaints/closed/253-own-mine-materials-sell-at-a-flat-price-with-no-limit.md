@@ -1,6 +1,6 @@
 # Material stock sells at a flat 80% of the buy price with no volume limit, price impact or link to demand, so mine output can be sold for years of demand at once (coal about 108 a tonne, 7,000 t in one command)
 
-**Status:** open
+**Status:** closed
 
 The tester ran a 4,000 t/yr coal mine at about 10 a tonne, then `sell coal 7000` returned about 755 thousand (about 108 a tonne) while `materials` listed demand at 254.5 t/yr. Selling 28 years of demand barely moved the price.
 
