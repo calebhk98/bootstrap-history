@@ -17,6 +17,7 @@ from .render_screens_economy import (
     render_changes, render_money, render_mines, render_labour,
     render_population, render_ventures,
 )
+from .render_screens_market import render_market
 from .render_screens_status import (
     render_values, render_final, render_score, render_error, render_stuck,
     render_risk, render_generic, render_log, render_policy, render_rush,
@@ -34,6 +35,7 @@ _RENDERERS = {
     "values": render_values, "rush": render_rush,
     "capacity": render_capacity, "industry": render_capacity,
     "materials": render_materials,
+    "market": render_market,
     "dashboard": render_capacity, "portfolio": render_portfolio,
     "economy": render_economy, "changes": render_changes,
     "population": render_population,

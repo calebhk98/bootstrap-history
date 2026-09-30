@@ -13,6 +13,7 @@ table of startable-today nodes, the one place here that reaches into the
 """
 
 from .score import _score_lines
+from ..knowledge_warning import warning_lines
 from .util import _factor, _fmt_num, _pct, _wrap
 from .render_screens_big import _available_row, available_header
 
@@ -390,6 +391,7 @@ def render_path(out):
     or with a script outside the game.
     """
     lines = ["ROUTE TO %s  [%s]" % (out.get("name"), out.get("id"))]
+    lines += [_wrap(line) for line in warning_lines(out.get("knowledge_loss_warning"))]
     if out.get("done"):
         lines.append("You have already built this.")
         return "\n".join(lines)

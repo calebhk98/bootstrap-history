@@ -254,6 +254,17 @@ def _parse_ventures(command, rest, words, nums, want_json):
     return out, None
 
 
+def _parse_market(command, rest, words, nums, want_json):
+    out = {"cmd": "market"}
+    low = [word.lower() for word in _absorb_key_colons(rest, (), ("limit", "offset"))]
+    i = 0
+    while i < len(low):
+        i, matched = _log_consume_limit_or_offset(out, low, i)
+        if not matched:
+            i += 1
+    return out, None
+
+
 def _parse_sell(command, rest, words, nums, want_json):
     if not words or not nums:
         return None, "sell needs a material and tonnes, e.g. 'sell iron 50'."
@@ -867,6 +878,7 @@ _COMMAND_PARSERS = {
     "quit": _parse_bare_command,
     "score": _parse_bare_command,
     "ventures": _parse_ventures,
+    "market": _parse_market,
     "mines": _parse_bare_command,
     "stuck": _parse_bare_command,
     "capacity": _parse_bare_command,

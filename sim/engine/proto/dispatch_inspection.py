@@ -10,6 +10,8 @@ these live in a separate file).
 """
 
 from .command_registry import command
+from ..market_report import goods_market_line
+from ..knowledge_warning import knowledge_loss_warning
 from ..critical_path_remaining import active_years_left, remaining_critical_path_years
 from ..data import closure, topo_order
 from .economy import (_agent_capacity, _agent_changes, _agent_economy,
@@ -117,6 +119,8 @@ def _cmd_why(sim, nodes, cmd, ended):
     explained["critical_path_years_remaining"] = (
         None if sim.fog else round(remaining_critical_path_years(
             nodes, node_id, sim.done, active_years_left(nodes, sim.active)), 1))
+    if goods_market_line(sim, node_id):
+        explained["goods_market_line"] = goods_market_line(sim, node_id)
     return dict(ok=True, **explained)
 
 
@@ -146,6 +150,9 @@ def _cmd_path(sim, nodes, cmd, ended):
     remaining = [node_id for node_id in order if node_id not in sim.done]
     out = {"ok": True, "id": node_id, "name": nodes[node_id]["name"], "done": node_id in sim.done,
            "remaining_count": len(remaining), "remaining": remaining}
+    warning = knowledge_loss_warning(sim)
+    if warning:
+        out["knowledge_loss_warning"] = warning
     # THE JOIN: "what the goal still needs" and "what I could start today"
     # are two separate reports - this one, and `available` - and by
     # midgame nearly everything on `available`'s several-hundred row list

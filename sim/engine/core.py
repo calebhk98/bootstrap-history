@@ -1695,6 +1695,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "what is still losable it takes - largest of the three "
             "states. Tuned, not measured.")
 
+    # (hedge node, loss chance, fraction lost), strongest first; corpus_hedge and
+    # the knowledge-loss warning both read this one table.
+    CORPUS_HEDGE_TIERS = (
+        ("corpus_dispersed", CORPUS_HEDGE_LOSS_CHANCE_DISPERSED,
+         CORPUS_HEDGE_FRACTION_LOST_DISPERSED),
+        ("corpus_written", CORPUS_HEDGE_LOSS_CHANCE_WRITTEN,
+         CORPUS_HEDGE_FRACTION_LOST_WRITTEN),
+    )
+
     def corpus_hedge(self):
         """(loss_chance, fraction_lost, hedge_name) a sacking faces right now.
 
@@ -1702,10 +1711,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         FogMixin.knowledge_risk for the fuller argument. `hedge_name` is
         None if neither corpus exists yet.
         """
-        if self.has("corpus_dispersed"):
-            return self.CORPUS_HEDGE_LOSS_CHANCE_DISPERSED, self.CORPUS_HEDGE_FRACTION_LOST_DISPERSED, "corpus_dispersed"
-        if self.has("corpus_written"):
-            return self.CORPUS_HEDGE_LOSS_CHANCE_WRITTEN, self.CORPUS_HEDGE_FRACTION_LOST_WRITTEN, "corpus_written"
+        for hedge_id, loss_chance, fraction_lost in self.CORPUS_HEDGE_TIERS:
+            if self.has(hedge_id):
+                return loss_chance, fraction_lost, hedge_id
         return self.CORPUS_HEDGE_LOSS_CHANCE_NONE, self.CORPUS_HEDGE_FRACTION_LOST_NONE, None
 
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --

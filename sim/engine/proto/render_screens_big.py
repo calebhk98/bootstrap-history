@@ -11,6 +11,8 @@ from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 from .tree_filters import render_state_rows
 from .wave_summary import summary_line
 from .step_problems import problems_lines
+from .render_screens_market import why_goods_market_lines
+from ..knowledge_warning import warning_lines
 # DISPLAY_WIDTH is NOT imported here: cli.py patches engine.protocol.DISPLAY_WIDTH
 # directly at runtime, so every reader of it in this file goes through the
 # protocol module itself, live, rather than a plain name bound once at import
@@ -269,6 +271,10 @@ def _state_standing(out):
     return lines
 
 
+def _state_knowledge_warning(out):
+    return [""] + warning_lines(out.get("knowledge_loss_warning")) if out.get("knowledge_loss_warning") else []
+
+
 def _state_at_risk(out):
     lines = []
     at_risk = out.get("at_risk")
@@ -404,7 +410,7 @@ def render_state(out):
     renderers = (
         _state_header, _state_money, _state_founder, _state_running,
         _state_stuck, _state_concerns, _state_employ, _state_standing,
-        _state_at_risk, _state_goal,
+        _state_knowledge_warning, _state_at_risk, _state_goal,
     )
     lines = _render_sections(out, renderers)
     lines = _state_completed_head(out, lines)
@@ -881,7 +887,8 @@ def render_why(out):
     return "\n".join(_render_sections(out, (
         _why_header, _why_cost, _why_hours_risk, _why_staff_needed,
         _why_staff_keep_open, _why_labour_materials, _why_upkeep_revenue,
-        _why_status, _why_chain, _why_unlocks_downstream, _why_trailing,
+        why_goods_market_lines, _why_status, _why_chain, _why_unlocks_downstream,
+        _why_trailing,
     )))
 
 
