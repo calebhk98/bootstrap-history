@@ -902,7 +902,13 @@
   "note": "A spinning drill bit on a hollow rotating rod; drilling mud circulates down the pipe, cooling and carrying cuttings up. Faster, deeper, better for hard rock. Needs precise engineering and circulation pumps.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "mining_tech": {
+    "yield": 1.0,
+    "cost": 0.8
+   }
+  }
  },
  {
   "id": "pwr_oil_refinery",

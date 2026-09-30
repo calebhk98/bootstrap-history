@@ -2073,7 +2073,17 @@
   "dev_people": 2,
   "note": "Jenner's cowpox observation; lymph from pustule; arm-to-arm transfer; lyophilization for storage; eradication by vaccination",
   "conf": "B",
-  "up": 0.0
+  "up": 0.0,
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.4,
+     "label": "smallpox vaccine",
+     "order": 5
+    }
+   ]
+  }
  },
  {
   "id": "md2_vaccine_rabies",
@@ -2121,7 +2131,17 @@
   "dev_people": 2,
   "note": "Heat-killed or chemical inactivation; partial protection; revaccination needed; enteric fever still endemic in poor sanitation",
   "conf": "B",
-  "up": 0.0
+  "up": 0.0,
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.2,
+     "label": "typhoid vaccine",
+     "order": 7
+    }
+   ]
+  }
  },
  {
   "id": "md2_vaccine_cholera",
@@ -2169,7 +2189,17 @@
   "dev_people": 2,
   "note": "Killed bacillus; variable efficacy; antiplague serum more immediately useful; vector control reduces need for vaccination",
   "conf": "B",
-  "up": 0.0
+  "up": 0.0,
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.35,
+     "label": "plague vaccine",
+     "order": 6
+    }
+   ]
+  }
  },
  {
   "id": "md2_vaccine_diphtheria",
@@ -2456,7 +2486,17 @@
   "dev_years": 12,
   "dev_people": 3,
   "note": "Biofilm layer (schmutzdecke) removes particles and pathogens; slow rate; microorganism breakthrough possible; pre-treatment needed",
-  "conf": "B"
+  "conf": "B",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.15,
+     "label": "filtered water",
+     "order": 8
+    }
+   ]
+  }
  },
  {
   "id": "md2_chlorination",
@@ -2682,7 +2722,17 @@
   "dev_years": 12,
   "dev_people": 2,
   "note": "Site isolation and water supply; large grounds for convalescence; design for natural ventilation; segregation by disease",
-  "conf": "B"
+  "conf": "B",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.2,
+     "label": "the sick kept apart from the well",
+     "order": 3
+    }
+   ]
+  }
  },
  {
   "id": "md2_vector_control",

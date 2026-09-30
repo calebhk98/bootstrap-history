@@ -28,7 +28,7 @@ check("it quotes risk's own expected loss per sacking",
       == _risk["expected_technologies_lost_per_sacking"], (_warning, _risk))
 _hedge = _warning["cheapest_hedge"]
 check("it names the cheapest hedge with cost and steps away, found from the hedge table",
-      _hedge["id"] in (tier[0] for tier in _near.CORPUS_HEDGE_TIERS)
+      _hedge["id"] in (tier[0] for tier in _near.corpus_hedge_tiers())
       and _hedge["steps_away"] >= 1 and _hedge["cost"] > 0, _hedge)
 check("the hedge's steps are the unbuilt nodes in its closure",
       _hedge["steps_away"] == len(closure(NODES, _hedge["id"]) - _near.done), _hedge)

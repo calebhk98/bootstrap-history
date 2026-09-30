@@ -741,7 +741,10 @@ class StartingMixin:
         # log, no mutation: see its own docstring) but it can call
         # is_visible() on a prerequisite chain, which is another recursive
         # descent nobody needs when only the boolean was asked for.
-        if state_interest_score < self.STATE_WARY_THRESHOLD and not self.running("patron_local"):
+        wary_patron = self.approval_patron("wary")
+        opposed_patron = self.approval_patron("opposed")
+        if (wary_patron and state_interest_score < self.STATE_WARY_THRESHOLD
+                and not self.running(wary_patron)):
             # NAME THE NODE, by the word you would type: a description like
             # "get at least a local patron first" with no id given leaves a
             # player unable to connect it to `patron_local`, even while it
@@ -757,17 +760,17 @@ class StartingMixin:
             # reveal.
             return False, (("the state is wary of this (state interest %.1f); "
                            "%s"
-                           % (state_interest_score, self._patron_advice("patron_local",
+                           % (state_interest_score, self._patron_advice(wary_patron,
                                                       "a local patron's name "
                                                       "behind you")))
                            if _why else None)
-        if state_interest_score < self.STATE_OPPOSED_THRESHOLD and not (
-                self.running("patron_senatorial")
+        if opposed_patron and state_interest_score < self.STATE_OPPOSED_THRESHOLD and not (
+                self.running(opposed_patron)
                 or self.state.household.protection > self.STATE_OPPOSITION_PROTECTION_OVERRIDE):
             return False, (("the state actively opposes this (state interest "
                            "%.1f); %s, or protection above %.2f (you have "
                            "%.2f)"
-                           % (state_interest_score, self._patron_advice("patron_senatorial",
+                           % (state_interest_score, self._patron_advice(opposed_patron,
                                                       "patronage at the very "
                                                       "top"),
                               self.STATE_OPPOSITION_PROTECTION_OVERRIDE,

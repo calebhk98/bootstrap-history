@@ -104,14 +104,6 @@ ALARM_PROTECTION_FLOOR = declare(
         "alarm never falls below this floor - protection can blunt "
         "suspicion, never erase it outright. Chosen for the same reason as "
         "ALARM_FAMILIARITY_FLOOR; not measured.")
-ALARM_IDENTITY_COVER_MULTIPLIER = declare(
-    "ALARM_IDENTITY_COVER_MULTIPLIER", 0.75, kind="temporary_heuristic",
-    unit="dimensionless multiplier", source=None, confidence="D",
-    why="A respectable cover identity reads an inexplicable effect as "
-        "learning rather than sorcery - see the comment just above this "
-        "constant's use - cutting alarm by a quarter. Tuned so having a "
-        "cover identity is a real, visible help without eliminating alarm "
-        "outright; not measured against any historical case.")
 
 
 class StatePressureMixin:
@@ -149,8 +141,7 @@ class StatePressureMixin:
         # A recognised scholar doing something strange is a scholar; a stranger
         # doing the same thing is a sorcerer. This is the persona working, and
         # it is what the node has always said it does.
-        if self.running("identity_cover"):
-            alarm *= ALARM_IDENTITY_COVER_MULTIPLIER
+        alarm = self.effect_factor("alarm_factor", alarm)
         return alarm
 
     def military_leverage(self):
@@ -308,29 +299,6 @@ class StatePressureMixin:
             "per_soldier_per_year()'s reported number at full leverage but "
             "not its direction or its melee-tier floor.")
 
-    PATRON_PROTECTION_LOCAL = declare(
-        "PATRON_PROTECTION_LOCAL", 0.18, kind="temporary_heuristic",
-        unit="dimensionless protection points (multiplies patronage_weight)",
-        source=None, confidence="D",
-        why="How much protection a local patron's name buys against "
-            "accusation, scaled by this society's own patronage_weight. No "
-            "attested source ties a specific protection value to a "
-            "specific patron tier; a real figure needs a model of how "
-            "much a patron of this rank could actually shield a client in "
-            "court or before a magistrate.")
-    PATRON_PROTECTION_SENATORIAL = declare(
-        "PATRON_PROTECTION_SENATORIAL", 0.26, kind="temporary_heuristic",
-        unit="dimensionless protection points (multiplies patronage_weight)",
-        source=None, confidence="D",
-        why="As PATRON_PROTECTION_LOCAL, senatorial tier - larger, tuned to "
-            "feel proportionate to the step up in patron standing, not "
-            "measured.")
-    PATRON_PROTECTION_IMPERIAL = declare(
-        "PATRON_PROTECTION_IMPERIAL", 0.32, kind="temporary_heuristic",
-        unit="dimensionless protection points (multiplies patronage_weight)",
-        source=None, confidence="D",
-        why="As PATRON_PROTECTION_SENATORIAL, imperial tier - the largest "
-            "of the three, tuned rather than measured.")
 
     MILITARY_USEFULNESS_PROTECTION = declare(
         "MILITARY_USEFULNESS_PROTECTION", 0.09, kind="temporary_heuristic",
@@ -351,35 +319,6 @@ class StatePressureMixin:
             "accusation. See this method's own comment on what "
             "identity_cover actually buys; the figure itself is invented "
             "game balance.")
-    CITIZENSHIP_PROTECTION = declare(
-        "CITIZENSHIP_PROTECTION", 0.10, kind="temporary_heuristic",
-        unit="dimensionless protection points", source=None,
-        confidence="D",
-        why="What formal citizenship (legal standing, the right to appeal "
-            "a verdict) is worth against accusation. Plausible in kind - "
-            "citizenship is a real legal shield - and invented in size.")
-    COLLEGIUM_LICENSED_PROTECTION = declare(
-        "COLLEGIUM_LICENSED_PROTECTION", 0.10, kind="temporary_heuristic",
-        unit="dimensionless protection points", source=None,
-        confidence="D",
-        why="What a licensed collegium (a legally recognised guild body) "
-            "is worth against accusation. Not sourced to any attested "
-            "collegium privilege.")
-    ENDOWMENT_LAND_PROTECTION = declare(
-        "ENDOWMENT_LAND_PROTECTION", 0.08, kind="temporary_heuristic",
-        unit="dimensionless protection points", source=None,
-        confidence="D",
-        why="What conspicuous benefaction - an endowment of land - is "
-            "worth against accusation: a visible act of civic generosity "
-            "that buys goodwill. Invented size.")
-    LEARNED_INSTITUTION_PROTECTION = declare(
-        "LEARNED_INSTITUTION_PROTECTION", 0.06, kind="temporary_heuristic",
-        unit="dimensionless protection points", source=None,
-        confidence="D",
-        why="What founding a university or a school is worth against "
-            "accusation - smallest of the built protections here, on the "
-            "reasoning that a teacher is respectable but less politically "
-            "connected than a patron or a magistracy. Tuned, not measured.")
     PRESSED_OFFICE_PROTECTION = declare(
         "PRESSED_OFFICE_PROTECTION", 0.10, kind="temporary_heuristic",
         unit="dimensionless protection points", source=None,
@@ -440,9 +379,8 @@ class StatePressureMixin:
         magistracies and, in a society with a bribability of 0.55, verdicts."""
         protection = 0.0
         weights = self.value_weights
-        if self.running("patron_local"):        protection += self.PATRON_PROTECTION_LOCAL * weights["patronage_weight"]
-        if self.running("patron_senatorial"):   protection += self.PATRON_PROTECTION_SENATORIAL * weights["patronage_weight"]
-        if self.running("patron_imperial"):     protection += self.PATRON_PROTECTION_IMPERIAL * weights["patronage_weight"]
+        for _node_id, patron_protection in self.effect_values("patron_protection"):
+            protection += patron_protection * weights["patronage_weight"]
         # AN ARMOURER IS PROTECTED DIFFERENTLY FROM A PHILOSOPHER, AND ONLY
         # WHEN SOMEBODY WANTS WHAT HE MAKES. Sejanus's people were safe until
         # they no longer had anything Tiberius needed, and the same logic
@@ -453,8 +391,7 @@ class StatePressureMixin:
         # to sell it to is not leverage, it is just a dangerous thing to be
         # caught doing, which is exactly what alarm_of's weapon_democratising
         # term already charges you for and this does NOT cancel.
-        if (self.running("patron_local") or self.running("patron_senatorial")
-                or self.running("patron_imperial")):
+        if self.running_with_mechanic("patron"):
             protection += self.MILITARY_USEFULNESS_PROTECTION * weights["patronage_weight"] * self.military_leverage()
         # identity_cover's tree description ("reduces all future
         # suspicion") does not match what it actually does: the mechanism
@@ -463,11 +400,7 @@ class StatePressureMixin:
         # persona: books, a house, clothes, a secretary and a reputation
         # for piety, so an inexplicable effect coming out of YOUR workshop
         # is read as learning rather than as sorcery.
-        if self.running("identity_cover"):      protection += self.IDENTITY_COVER_PROTECTION
-        if self.has("citizenship"):         protection += self.CITIZENSHIP_PROTECTION
-        if self.running("collegium_licensed"):  protection += self.COLLEGIUM_LICENSED_PROTECTION
-        if self.running("endowment_land"):      protection += self.ENDOWMENT_LAND_PROTECTION   # conspicuous benefaction
-        if self.running("fin_university") or self.running("school_founded"): protection += self.LEARNED_INSTITUTION_PROTECTION
+        protection = self.effect_sum("protection", protection)
         # BOTH A BURDEN AND A SHIELD. Once this household is large enough for
         # the state to press a civic office on it (state_notice() past
         # STATE_NOTICE_THRESHOLD - see office_report(), _state_pressure()),
@@ -636,12 +569,12 @@ class StatePressureMixin:
         settles = yearly / (1.0 - self.EMINENCE_DECAY_RATE)
         probability = max(0.0, (self.state.household.eminence - danger) / self.EMINENCE_HAZARD_SCALE)
         helps = []
-        if not self.running("academy_network"):
-            helps.append("a wide, dispersed institution is harder to destroy than "
-                         "one great man")
-        if self.running("patron_imperial"):
-            helps.append("you are as close to the throne as it is possible to "
-                         "stand, which is the most exposed place there is")
+        for node_id in self.nodes_with_mechanic("eminence_hazard_factor"):
+            spec = self.mechanic(node_id, "eminence_hazard_factor")
+            if self.running(node_id) and spec.get("hint_when_running"):
+                helps.append(spec["hint_when_running"])
+            elif not self.running(node_id) and spec.get("hint_when_absent"):
+                helps.append(spec["hint_when_absent"])
         if self.state.household.capital > self.EMINENCE_WEALTH_VISIBLE_THRESHOLD:
             helps.append("visible wealth is half of what makes you a target")
         # THE LEVER, NAMED. This screen must not leave a player with no command
@@ -731,20 +664,6 @@ class StatePressureMixin:
             "fiscal one. A round number marking enough personal wealth to "
             "be a courtier's envy, not measured against any specific "
             "attested Roman fortune.")
-    EMINENCE_IMPERIAL_PATRON_MULTIPLIER = declare(
-        "EMINENCE_IMPERIAL_PATRON_MULTIPLIER", 1.5, kind="temporary_heuristic",
-        unit="dimensionless multiplier", source=None, confidence="D",
-        why="Standing nearest the throne is the most exposed place there "
-            "is - see this method's own docstring - so an imperial patron "
-            "raises the hazard by half again. Tuned to be a real, visible "
-            "cost to the strongest patronage tier, not measured.")
-    EMINENCE_ACADEMY_NETWORK_MULTIPLIER = declare(
-        "EMINENCE_ACADEMY_NETWORK_MULTIPLIER", 0.65, kind="temporary_heuristic",
-        unit="dimensionless multiplier", source=None, confidence="D",
-        why="A wide, dispersed institution is harder to destroy than one "
-            "great man, cutting the hazard by over a third. Tuned to make "
-            "academy_network a real hedge without eliminating the hazard "
-            "outright; not measured.")
     EMINENCE_FAMILIARITY_RELIEF = declare(
         "EMINENCE_FAMILIARITY_RELIEF", 0.15, kind="temporary_heuristic",
         unit="dimensionless (fraction of hazard familiarity removes)",
@@ -788,11 +707,8 @@ class StatePressureMixin:
                   * weights.get("w_eminence_danger", self.EMINENCE_DANGER_WEIGHT_DEFAULT)
                   * (self.EMINENCE_HAZARD_REPUTATION_SHARE * rep * rep
                      + self.EMINENCE_HAZARD_WEALTH_SHARE * wealth))
-        if self.running("patron_imperial"):
-            hazard *= self.EMINENCE_IMPERIAL_PATRON_MULTIPLIER          # nearest the throne, most exposed to its turnover
-        # A wide, dispersed institution is harder to destroy than one great man.
-        if self.running("academy_network"):
-            hazard *= self.EMINENCE_ACADEMY_NETWORK_MULTIPLIER
+        # An imperial patron is nearest the throne (most exposed); a dispersed institution is harder to destroy.
+        hazard = self.effect_factor("eminence_hazard_factor", hazard)
         # AND A CITY GETS USED TO YOU: familiarity, the model's own measure
         # of how unsurprising you have become (it already decays the alarm
         # your work causes), must apply here too, or eminence is the one
@@ -1171,10 +1087,9 @@ class StatePressureMixin:
             mitig *= (1.0 - self.CONFISCATION_PROTECTION_DISCOUNT * self.state.household.protection)
             why.append(self.CONFISCATION_PROTECTION_LABELS[0])
         dispersal = 0.0
-        if self.has("academy_network"):
-            dispersal = max(dispersal, self.CONFISCATION_DISPERSAL_ACADEMY_NETWORK)
-        elif self.has("endowment_land"):
-            dispersal = max(dispersal, self.CONFISCATION_DISPERSAL_ENDOWMENT_LAND)
+        held = self.effect_best("confiscation_dispersal")
+        if held is not None:
+            dispersal = max(dispersal, held[1]["flat"])
         if dispersal > 0:
             mitig *= (1.0 - dispersal)
             why.append(self.CONFISCATION_PROTECTION_LABELS[1])
@@ -1207,23 +1122,6 @@ class StatePressureMixin:
             "partial mitigation rather than a full defence - this is the "
             "treasury's own claim, not a courtroom accusation protection "
             "otherwise defends against - not measured.")
-    CONFISCATION_DISPERSAL_ACADEMY_NETWORK = declare(
-        "CONFISCATION_DISPERSAL_ACADEMY_NETWORK", 0.35, kind="temporary_heuristic",
-        unit="dimensionless (fraction of confiscation risk removed)",
-        source=None, confidence="D",
-        why="How much a dispersed academy network mitigates confiscation "
-            "risk - 'too dispersed to seize at a stroke', the same reading "
-            "HAZARD_COUNTERS already gives academy_network against "
-            "sack_chance. Tuned to be the stronger of the two dispersal "
-            "hedges; not measured.")
-    CONFISCATION_DISPERSAL_ENDOWMENT_LAND = declare(
-        "CONFISCATION_DISPERSAL_ENDOWMENT_LAND", 0.20, kind="temporary_heuristic",
-        unit="dimensionless (fraction of confiscation risk removed)",
-        source=None, confidence="D",
-        why="How much an endowment of land mitigates confiscation risk - "
-            "weaker than CONFISCATION_DISPERSAL_ACADEMY_NETWORK because "
-            "land is still one seizable holding rather than a network "
-            "spread across multiple places. Tuned, not measured.")
     CONFISCATION_MILITARY_USEFULNESS_DISCOUNT = declare(
         "CONFISCATION_MILITARY_USEFULNESS_DISCOUNT", 0.4, kind="temporary_heuristic",
         unit="dimensionless (fraction discounted at military_leverage=1.0)",

@@ -655,9 +655,9 @@ class MaterialSupplyMixin:
         # imperial property. Charcoal is exempt because no amount of standing
         # makes a bulky crumbling fuel travel further than it can travel.
         if emp_key != "charcoal":
-            if self.running("patron_imperial"):     share *= self.MARKET_STANDING_PATRON_IMPERIAL
-            elif self.running("patron_senatorial"): share *= self.MARKET_STANDING_PATRON_SENATORIAL
-            elif self.has("citizenship"):       share *= self.MARKET_STANDING_CITIZENSHIP
+            favour = self.effect_best("market_standing")
+            if favour is not None:
+                share *= favour[1]["factor"]
             share = min(share, self.MARKET_STANDING_SHARE_CEILING)
         # GEOLOGY, NOT DEMOGRAPHY: mineral availability must scale with
         # mineral_scale() - the regions this civilization actually holds
@@ -672,33 +672,11 @@ class MaterialSupplyMixin:
         market = national * share * scale
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
         # This is the single most useful thing in the geography file.
-        if emp_key == "saltpetre" and self.running("exp_trade_route_extend"):
-            market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
+        for node_id in self.nodes_with_mechanic("supplies_material_by_sea_route"):
+            if emp_key in self.mechanic(node_id, "supplies_material_by_sea_route")["materials"] and self.running(node_id):
+                market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
         return market
 
-    MARKET_STANDING_PATRON_IMPERIAL = declare(
-        "MARKET_STANDING_PATRON_IMPERIAL", 6.0, kind="temporary_heuristic",
-        unit="multiple on buyable market share", source=None,
-        confidence="D",
-        why="How much further an imperial patron's standing opens the "
-            "market for a tracked material, on the reasoning that the "
-            "fiscus itself becomes a supplier and the metalla were largely "
-            "imperial property. The direction is a real institutional "
-            "fact; the sixfold size is tuned game balance, not derived "
-            "from any attested imperial-supply share.")
-    MARKET_STANDING_PATRON_SENATORIAL = declare(
-        "MARKET_STANDING_PATRON_SENATORIAL", 2.5, kind="temporary_heuristic",
-        unit="multiple on buyable market share", source=None,
-        confidence="D",
-        why="As MARKET_STANDING_PATRON_IMPERIAL, for a senatorial patron - "
-            "buying through their agents rather than the fiscus itself. "
-            "Tuned, not derived.")
-    MARKET_STANDING_CITIZENSHIP = declare(
-        "MARKET_STANDING_CITIZENSHIP", 1.4, kind="temporary_heuristic",
-        unit="multiple on buyable market share", source=None,
-        confidence="D",
-        why="What plain citizenship, with no patron at all, is worth over "
-            "a stranger buying at the margin. Tuned, not derived.")
     MARKET_STANDING_SHARE_CEILING = declare(
         "MARKET_STANDING_SHARE_CEILING", 0.60, kind="temporary_heuristic",
         unit="fraction of national output (maximum, any buyer)",

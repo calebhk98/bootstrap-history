@@ -302,7 +302,14 @@
     "traits": [
       "infrastructure",
       "labour_saving"
-    ]
+    ],
+    "mechanics": {
+      "labour_productivity": {
+        "trade": "machinist",
+        "bonus": 0.1,
+        "order": 10
+      }
+    }
   },
   {
     "id": "prc_automatic_screw_machine",

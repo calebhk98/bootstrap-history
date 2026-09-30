@@ -167,38 +167,6 @@ class CompletionMixin:
             "(REPUTATION_EASE_SCALE in economy.py reads reputation "
             "against this same implicit ceiling). A scale choice, not a "
             "measured social fact.")
-    GRANT_STAFF_FREEDMAN_ARTISANS = declare(
-        "GRANT_STAFF_FREEDMAN_ARTISANS", 8, kind="temporary_heuristic",
-        unit="artisans, granted once on completion", source=None,
-        confidence="D",
-        why="How many artisans a freedman staff hands over outright on "
-            "completion, when auto_hire is off (a manual player's own "
-            "mode) - a ONE-TIME grant, distinct from labour.py's "
-            "STAFF_ARTISANS_FREEDMAN_STAFF (the ongoing institutional "
-            "ceiling that same node also feeds; the two figures are not "
-            "required to match and do not). Declared as the INT the "
-            "source wrote: _grant_staff adds it straight into a float "
-            "accumulator, so nothing downstream needs it to already be a "
-            "float, and there is no reason to widen it. Tuned game "
-            "balance, not measured.")
-    GRANT_STAFF_SCHOOL_SCHOLARS = declare(
-        "GRANT_STAFF_SCHOOL_SCHOLARS", 4, kind="temporary_heuristic",
-        unit="scholars, granted once on completion", source=None,
-        confidence="D",
-        why="As GRANT_STAFF_FREEDMAN_ARTISANS, for school_founded's "
-            "one-time scholar grant.")
-    GRANT_STAFF_ACADEMY_SCHOLARS = declare(
-        "GRANT_STAFF_ACADEMY_SCHOLARS", 10, kind="temporary_heuristic",
-        unit="scholars, granted once on completion", source=None,
-        confidence="D",
-        why="As GRANT_STAFF_FREEDMAN_ARTISANS, for academy_network's "
-            "one-time scholar grant.")
-    GRANT_STAFF_ACADEMY_ARTISANS = declare(
-        "GRANT_STAFF_ACADEMY_ARTISANS", 10, kind="temporary_heuristic",
-        unit="artisans, granted once on completion", source=None,
-        confidence="D",
-        why="As GRANT_STAFF_FREEDMAN_ARTISANS, for academy_network's "
-            "one-time artisan grant.")
 
     def _complete(self, node_id):
         node = self.nodes[node_id]
@@ -301,11 +269,9 @@ class CompletionMixin:
         # would double-count every one of these three institutions against
         # a tree calibrated to open up much more slowly.
         if not self.policy.get("auto_hire", not self.manual):
-            if node_id == "freedman_staff":     self._grant_staff(artisans=self.GRANT_STAFF_FREEDMAN_ARTISANS)
-            if node_id == "school_founded":     self._grant_staff(scholars=self.GRANT_STAFF_SCHOOL_SCHOLARS)
-            if node_id == "academy_network":    self._grant_staff(scholars=self.GRANT_STAFF_ACADEMY_SCHOLARS,
-                                                              artisans=self.GRANT_STAFF_ACADEMY_ARTISANS)
-        if node_id == "mining_concession":  pass
+            grant = self.mechanic(node_id, "staff_grant")
+            if grant:
+                self._grant_staff(**grant)
         if self.is_venture(node_id) and not self.policy.get("auto_open", not self.manual):
             # Built is not open: say what is switched off until it is opened.
             benefit = self.NOT_OPERATING_BENEFIT.get(node_id)
@@ -351,142 +317,6 @@ class CompletionMixin:
         "is tuned game balance sized so the hazard remains real even "
         "fully countered, not measured against any historical mortality, "
         "sack or currency-debasement reduction.")
-    HAZARD_STAFF_LOSS_SANITATION_ANTISEPSIS = declare(
-        "HAZARD_STAFF_LOSS_SANITATION_ANTISEPSIS", 0.30, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="boiled water, handwashing, clean wounds", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_MED_QUARANTINE_SANITATION = declare(
-        "HAZARD_STAFF_LOSS_MED_QUARANTINE_SANITATION", 0.30, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="quarantine, clean water, sewage", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_GERM_THEORY = declare(
-        "HAZARD_STAFF_LOSS_GERM_THEORY", 0.25, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="knowing what is actually killing them", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_MD2_ISOLATION_HOSPITAL = declare(
-        "HAZARD_STAFF_LOSS_MD2_ISOLATION_HOSPITAL", 0.20, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="the sick kept apart from the well", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_MED_VACCINATION_PROGRESSION = declare(
-        "HAZARD_STAFF_LOSS_MED_VACCINATION_PROGRESSION", 0.45, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="variolation and then vaccination", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_MD2_VACCINE_SMALLPOX = declare(
-        "HAZARD_STAFF_LOSS_MD2_VACCINE_SMALLPOX", 0.40, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="smallpox vaccine", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_MD2_VACCINE_PLAGUE = declare(
-        "HAZARD_STAFF_LOSS_MD2_VACCINE_PLAGUE", 0.35, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="plague vaccine", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_MD2_VACCINE_TYPHOID = declare(
-        "HAZARD_STAFF_LOSS_MD2_VACCINE_TYPHOID", 0.20, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="typhoid vaccine", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_MD2_SAND_FILTRATION = declare(
-        "HAZARD_STAFF_LOSS_MD2_SAND_FILTRATION", 0.15, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="filtered water", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_SOAP_HARD = declare(
-        "HAZARD_STAFF_LOSS_SOAP_HARD", 0.10, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="hard soap, in quantity", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_MED_NURSING_PROFESSION = declare(
-        "HAZARD_STAFF_LOSS_MED_NURSING_PROFESSION", 0.12, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="people trained to nurse the sick", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_PLAGUE_PREPAREDNESS = declare(
-        "HAZARD_STAFF_LOSS_PLAGUE_PREPAREDNESS", 0.35, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="a plan made before the plague", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_CROP_ROTATION = declare(
-        "HAZARD_STAFF_LOSS_CROP_ROTATION", 0.15, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="fields that do not fail together", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_AG2_SILAGE_SILO = declare(
-        "HAZARD_STAFF_LOSS_AG2_SILAGE_SILO", 0.10, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="fodder that keeps through a bad winter", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_STAFF_LOSS_FUD_CANNING_APPERT_METHOD = declare(
-        "HAZARD_STAFF_LOSS_FUD_CANNING_APPERT_METHOD", 0.10, kind="temporary_heuristic",
-        unit="fraction of staff-loss hazard removed",
-        source="food that keeps", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_MIL_TRACE_ITALIENNE = declare(
-        "HAZARD_SACK_MIL_TRACE_ITALIENNE", 0.45, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="angled bastion walls no ram or ladder answers",
-        confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_MIL_BASTION = declare(
-        "HAZARD_SACK_MIL_BASTION", 0.30, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="a bastioned enclosure", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_MIL_CONCRETE_FORTIFICATION = declare(
-        "HAZARD_SACK_MIL_CONCRETE_FORTIFICATION", 0.30, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="concrete fortification", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_MIL_MATCHLOCK = declare(
-        "HAZARD_SACK_MIL_MATCHLOCK", 0.25, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="firearms in the hands of your own people", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_MIL_FLINTLOCK = declare(
-        "HAZARD_SACK_MIL_FLINTLOCK", 0.35, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="reliable firearms", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_MIL_ARTILLERY_PIECE = declare(
-        "HAZARD_SACK_MIL_ARTILLERY_PIECE", 0.30, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="guns on the walls", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_GUNPOWDER = declare(
-        "HAZARD_SACK_GUNPOWDER", 0.15, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="corned powder", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_PATRON_IMPERIAL = declare(
-        "HAZARD_SACK_PATRON_IMPERIAL", 0.30, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="a patron with soldiers", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_ACADEMY_NETWORK = declare(
-        "HAZARD_SACK_ACADEMY_NETWORK", 0.40, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="the work is in too many places to burn", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_SACK_ENDOWMENT_LAND = declare(
-        "HAZARD_SACK_ENDOWMENT_LAND", 0.15, kind="temporary_heuristic",
-        unit="fraction of sack-chance hazard removed",
-        source="land nobody can carry away", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_OUTPUT_ENDOWMENT_LAND = declare(
-        "HAZARD_OUTPUT_ENDOWMENT_LAND", 0.30, kind="temporary_heuristic",
-        unit="fraction of output-factor hazard removed",
-        source="land that yields whoever is emperor this year",
-        confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_OUTPUT_CROP_ROTATION = declare(
-        "HAZARD_OUTPUT_CROP_ROTATION", 0.20, kind="temporary_heuristic",
-        unit="fraction of output-factor hazard removed",
-        source="you feed yourself", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_OUTPUT_WATER_POWER_SCALE = declare(
-        "HAZARD_OUTPUT_WATER_POWER_SCALE", 0.20, kind="temporary_heuristic",
-        unit="fraction of output-factor hazard removed",
-        source="power that does not come by ship", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_OUTPUT_CIV_ROAD_PAVED = declare(
-        "HAZARD_OUTPUT_CIV_ROAD_PAVED", 0.10, kind="temporary_heuristic",
-        unit="fraction of output-factor hazard removed",
-        source="your own roads", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_OUTPUT_FIN_MARINE_INSURANCE = declare(
-        "HAZARD_OUTPUT_FIN_MARINE_INSURANCE", 0.15, kind="temporary_heuristic",
-        unit="fraction of output-factor hazard removed",
-        source="losses spread rather than borne", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
     HAZARD_EROSION_OWN_GOLD = declare(
         "HAZARD_EROSION_OWN_GOLD", 0.55, kind="temporary_heuristic",
         unit="fraction of real-erosion hazard removed",
@@ -496,69 +326,4 @@ class CompletionMixin:
         "HAZARD_EROSION_OWN_SILVER", 0.35, kind="temporary_heuristic",
         unit="fraction of real-erosion hazard removed",
         source="your own silver", confidence="D", why=_HAZARD_COUNTER_WHY)
-    HAZARD_EROSION_ENDOWMENT_LAND = declare(
-        "HAZARD_EROSION_ENDOWMENT_LAND", 0.40, kind="temporary_heuristic",
-        unit="fraction of real-erosion hazard removed",
-        source="wealth held as land, not as coin", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_EROSION_FIN_BIMETALLISM = declare(
-        "HAZARD_EROSION_FIN_BIMETALLISM", 0.25, kind="temporary_heuristic",
-        unit="fraction of real-erosion hazard removed",
-        source="a standard the coin can be held to", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_EROSION_FIN_ASSAY_OFFICE = declare(
-        "HAZARD_EROSION_FIN_ASSAY_OFFICE", 0.20, kind="temporary_heuristic",
-        unit="fraction of real-erosion hazard removed",
-        source="you can prove what metal is in a coin", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_EROSION_MET_FIRE_ASSAY = declare(
-        "HAZARD_EROSION_MET_FIRE_ASSAY", 0.15, kind="temporary_heuristic",
-        unit="fraction of real-erosion hazard removed",
-        source="you can assay ore and coin yourself", confidence="D",
-        why=_HAZARD_COUNTER_WHY)
-    HAZARD_COUNTERS = {
-        "staff_loss": [
-            ("sanitation_antisepsis", HAZARD_STAFF_LOSS_SANITATION_ANTISEPSIS, "boiled water, handwashing, clean wounds"),
-            ("med_quarantine_sanitation", HAZARD_STAFF_LOSS_MED_QUARANTINE_SANITATION, "quarantine, clean water, sewage"),
-            ("germ_theory", HAZARD_STAFF_LOSS_GERM_THEORY, "knowing what is actually killing them"),
-            ("md2_isolation_hospital", HAZARD_STAFF_LOSS_MD2_ISOLATION_HOSPITAL, "the sick kept apart from the well"),
-            ("med_vaccination_progression", HAZARD_STAFF_LOSS_MED_VACCINATION_PROGRESSION, "variolation and then vaccination"),
-            ("md2_vaccine_smallpox", HAZARD_STAFF_LOSS_MD2_VACCINE_SMALLPOX, "smallpox vaccine"),
-            ("md2_vaccine_plague", HAZARD_STAFF_LOSS_MD2_VACCINE_PLAGUE, "plague vaccine"),
-            ("md2_vaccine_typhoid", HAZARD_STAFF_LOSS_MD2_VACCINE_TYPHOID, "typhoid vaccine"),
-            ("md2_sand_filtration", HAZARD_STAFF_LOSS_MD2_SAND_FILTRATION, "filtered water"),
-            ("soap_hard", HAZARD_STAFF_LOSS_SOAP_HARD, "hard soap, in quantity"),
-            ("med_nursing_profession", HAZARD_STAFF_LOSS_MED_NURSING_PROFESSION, "people trained to nurse the sick"),
-            ("plague_preparedness", HAZARD_STAFF_LOSS_PLAGUE_PREPAREDNESS, "a plan made before the plague"),
-            ("crop_rotation", HAZARD_STAFF_LOSS_CROP_ROTATION, "fields that do not fail together"),
-            ("ag2_silage_silo", HAZARD_STAFF_LOSS_AG2_SILAGE_SILO, "fodder that keeps through a bad winter"),
-            ("fud_canning_appert_method", HAZARD_STAFF_LOSS_FUD_CANNING_APPERT_METHOD, "food that keeps"),
-        ],
-        "sack_chance": [
-            ("mil_trace_italienne", HAZARD_SACK_MIL_TRACE_ITALIENNE, "angled bastion walls no ram or ladder answers"),
-            ("mil_bastion", HAZARD_SACK_MIL_BASTION, "a bastioned enclosure"),
-            ("mil_concrete_fortification", HAZARD_SACK_MIL_CONCRETE_FORTIFICATION, "concrete fortification"),
-            ("mil_matchlock", HAZARD_SACK_MIL_MATCHLOCK, "firearms in the hands of your own people"),
-            ("mil_flintlock", HAZARD_SACK_MIL_FLINTLOCK, "reliable firearms"),
-            ("mil_artillery_piece", HAZARD_SACK_MIL_ARTILLERY_PIECE, "guns on the walls"),
-            ("gunpowder", HAZARD_SACK_GUNPOWDER, "corned powder"),
-            ("patron_imperial", HAZARD_SACK_PATRON_IMPERIAL, "a patron with soldiers"),
-            ("academy_network", HAZARD_SACK_ACADEMY_NETWORK, "the work is in too many places to burn"),
-            ("endowment_land", HAZARD_SACK_ENDOWMENT_LAND, "land nobody can carry away"),
-        ],
-        "output_factor": [
-            ("endowment_land", HAZARD_OUTPUT_ENDOWMENT_LAND, "land that yields whoever is emperor this year"),
-            ("crop_rotation", HAZARD_OUTPUT_CROP_ROTATION, "you feed yourself"),
-            ("water_power_scale", HAZARD_OUTPUT_WATER_POWER_SCALE, "power that does not come by ship"),
-            ("civ_road_paved", HAZARD_OUTPUT_CIV_ROAD_PAVED, "your own roads"),
-            ("fin_marine_insurance", HAZARD_OUTPUT_FIN_MARINE_INSURANCE, "losses spread rather than borne"),
-        ],
-        "real_erosion": [
-            ("_own_gold", HAZARD_EROSION_OWN_GOLD, "your own gold, dug not minted"),
-            ("_own_silver", HAZARD_EROSION_OWN_SILVER, "your own silver"),
-            ("endowment_land", HAZARD_EROSION_ENDOWMENT_LAND, "wealth held as land, not as coin"),
-            ("fin_bimetallism", HAZARD_EROSION_FIN_BIMETALLISM, "a standard the coin can be held to"),
-            ("fin_assay_office", HAZARD_EROSION_FIN_ASSAY_OFFICE, "you can prove what metal is in a coin"),
-            ("met_fire_assay", HAZARD_EROSION_MET_FIRE_ASSAY, "you can assay ore and coin yourself"),
-        ],
-    }
+    # HAZARD_COUNTERS: {kind: [(node, share, label)]} from each node's `hazard_counters` (MechanicsMixin).

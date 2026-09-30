@@ -289,7 +289,13 @@
   "sch": 1,
   "art": 3,
   "conf": "B",
-  "note": "The eccentric cam driving the sickle bar at the right frequency and the gathering platform timing, not just a rotating blade"
+  "note": "The eccentric cam driving the sickle bar at the right frequency and the gathering platform timing, not just a rotating blade",
+  "mechanics": {
+   "farming_technique": {
+    "axis": "toolkit",
+    "entry": "MECHANICAL_REAPER"
+   }
+  }
  },
  {
   "id": "ag2_reaper_binder",
@@ -2522,7 +2528,17 @@
   "sch": 1,
   "art": 2,
   "conf": "C",
-  "note": "Lactobacillus fermentation that produces lactic acid; pH drop halts spoilage at 3.8-4.0 in 3-6 weeks"
+  "note": "Lactobacillus fermentation that produces lactic acid; pH drop halts spoilage at 3.8-4.0 in 3-6 weeks",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.1,
+     "label": "fodder that keeps through a bad winter",
+     "order": 13
+    }
+   ]
+  }
  },
  {
   "id": "ag2_balanced_ration",

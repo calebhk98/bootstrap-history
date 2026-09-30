@@ -1141,11 +1141,8 @@ def cmd_sensitivity(args):
     print("%-24s %8s %16s %8s %8s   %s" %
           ("node removed", "success", "95% CI", "median", "delay", "verdict"))
     print("-" * 96)
-    cands = ["plague_preparedness", "corpus_written", "corpus_dispersed", "printing_press",
-             "rag_paper", "school_founded", "academy_network", "endowment_land",
-             "freedman_staff", "collegium_licensed", "patron_senatorial", "patron_imperial",
-             "semaphore_telegraph", "citizenship", "mirror_amalgam", "lens_grinding",
-             "crop_rotation", "world_map", "sanitation_antisepsis", "telegraph_electric"]
+    cands = sorted(node_id for node_id, node in nodes.items()
+                   if "ablation_candidate" in (node.get("mechanics") or {}))
     rows = _run_ablation_trials(cands, nodes, need, trial, base_rate)
     scored = _score_ablations(rows, base_med)
     _print_ablation_table(scored)

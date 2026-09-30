@@ -309,7 +309,10 @@
   "traits": [
    "infrastructure",
    "medical"
-  ]
+  ],
+  "mechanics": {
+   "disease_burden": true
+  }
  },
  {
   "id": "med_legal_physician",
@@ -398,7 +401,10 @@
   "traits": [
    "infrastructure",
    "medical"
-  ]
+  ],
+  "mechanics": {
+   "disease_burden": true
+  }
  },
  {
   "id": "med_autoclave",
@@ -1001,7 +1007,18 @@
   "note": "Variolation: pus from smallpox pustule (0.5-2% death). Cowpox: Jenner's insight, much safer. Pasteur: heat or chemical attenuation for rabies, anthrax, cholera. Toxoids (diphtheria, tetanus) are safest.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "disease_burden": true,
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.45,
+     "label": "variolation and then vaccination",
+     "order": 4
+    }
+   ]
+  }
  },
  {
   "id": "med_antitoxin_serum",
@@ -1122,7 +1139,18 @@
   "traits": [
    "infrastructure",
    "medical"
-  ]
+  ],
+  "mechanics": {
+   "disease_burden": true,
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.3,
+     "label": "quarantine, clean water, sewage",
+     "order": 1
+    }
+   ]
+  }
  },
  {
   "id": "med_vector_control",
@@ -1153,7 +1181,10 @@
   "traits": [
    "infrastructure",
    "medical"
-  ]
+  ],
+  "mechanics": {
+   "disease_burden": true
+  }
  },
  {
   "id": "med_nutrition_vitamins",
@@ -1352,7 +1383,10 @@
   "note": "Handwashing before delivery, clean gowns, sterile towels. Puerperal fever drops from 25% to 2%. Incubator for prematurity: warm box with temperature control increases survival from 10% to 40%.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "disease_burden": true
+  }
  },
  {
   "id": "med_dentistry",
@@ -1473,7 +1507,17 @@
   "note": "Formal training programme for nurses. Florence Nightingale proved competent nursing cuts mortality by half. The profession becomes medicine's backbone.",
   "traits": [
    "status_threatening"
-  ]
+  ],
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.12,
+     "label": "people trained to nurse the sick",
+     "order": 10
+    }
+   ]
+  }
  },
  {
   "id": "med_medical_education",

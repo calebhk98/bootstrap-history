@@ -419,7 +419,77 @@
         "status_threatening"
       ],
       "up": 9000.0,
-      "yrs": 10.0
+      "yrs": 10.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Scholar and artisan training, standing, and its reduction of eminence risk",
+          "scalable": "literacy"
+        },
+        "ablation_candidate": true,
+        "standing": {
+          "per_sqrt_unit": 10.0,
+          "order": 3
+        },
+        "eminence_hazard_factor": {
+          "factor": 0.65,
+          "hint_when_absent": "a wide, dispersed institution is harder to destroy than one great man",
+          "order": 1
+        },
+        "confiscation_dispersal": {
+          "tier": 2,
+          "flat": 0.35,
+          "gate": "has"
+        },
+        "institution_places": {
+          "flat": 120.0
+        },
+        "room_places": {
+          "flat": 50,
+          "order": 6
+        },
+        "staff_capacity": {
+          "scholars": 40.0,
+          "artisans": 50.0,
+          "directors": 6.0,
+          "scales_with_units": true,
+          "must_be_running": true,
+          "order": 7
+        },
+        "supervision_room": {
+          "per_unit": 30.0,
+          "words": "an academy network",
+          "order": 2
+        },
+        "hiring_factor": {
+          "factor_per_unit_power": 1.5,
+          "order": 3
+        },
+        "market_hiring_factor": {
+          "factor_per_unit_power": 1.5,
+          "order": 2
+        },
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.4,
+            "label": "the work is in too many places to burn",
+            "order": 8
+          }
+        ],
+        "staff_grant": {
+          "scholars": 10,
+          "artisans": 10
+        },
+        "staff_advice": {
+          "kind": "scholars",
+          "advice": "three academies produce more than one school",
+          "order": 1
+        },
+        "schooling_flow": {
+          "per_sqrt_unit": 1.5,
+          "order": 1
+        }
+      }
     },
     {
       "_src": "47_agri_food_deep.json",
@@ -3538,7 +3608,13 @@
       "up": 90.0,
       "yrs": 1.0,
       "_total_cost": 832.9,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "farming_technique": {
+          "axis": "toolkit",
+          "entry": "MECHANICAL_REAPER"
+        }
+      }
     },
     {
       "_src": "47_agri_food_deep.json",
@@ -4127,7 +4203,17 @@
       "up": 0.0,
       "yrs": 1.2,
       "_total_cost": 2115.0,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.1,
+            "label": "fodder that keeps through a bad winter",
+            "order": 13
+          }
+        ]
+      }
     },
     {
       "_src": "47_agri_food_deep.json",
@@ -7037,7 +7123,14 @@
         "infrastructure"
       ],
       "up": 35000.0,
-      "yrs": 12.0
+      "yrs": 12.0,
+      "mechanics": {
+        "electrical_process": {
+          "material": "iron_ore_kg",
+          "kwh_per_kg_of_product": 5.0,
+          "kg_material_per_kg_product": 1.0
+        }
+      }
     },
     {
       "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent carbon filaments require high vacuum bulb to prevent oxidation]",
@@ -7329,7 +7422,14 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "furnaceman",
+          "bonus": 0.1,
+          "order": 7
+        }
+      }
     },
     {
       "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [SCALED: this is an INDUSTRY, not a demonstration. At 300 tonnes of product a year it consumes about 900 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 1,200 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1300 added by a reviewer working node by node. Reason: produces liquid cast iron requiring water-blown continuous blast furnace heat]",
@@ -7395,7 +7495,30 @@
         "infrastructure"
       ],
       "up": 7000.0,
-      "yrs": 5.0
+      "yrs": 5.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan training capacity"
+        },
+        "mining_tech": {
+          "yield": 1.3,
+          "cost": 0.85,
+          "materials": [
+            "iron",
+            "coal"
+          ]
+        },
+        "room_places": {
+          "flat": 15,
+          "order": 9
+        },
+        "staff_capacity": {
+          "artisans": 15.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 11
+        }
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: steam engine cylinders need tight tolerance for piston sealing]",
@@ -8068,7 +8191,16 @@
         "infrastructure"
       ],
       "up": 20.0,
-      "yrs": 0.0
+      "yrs": 0.0,
+      "mechanics": {
+        "power_tier": {
+          "rank": 3,
+          "label": "local electric power, kW scale (workshop-scale)",
+          "anchor_kw": 10.0,
+          "scale": "workshop"
+        },
+        "electricity_gate": true
+      }
     },
     {
       "_src": "00_capabilities.json",
@@ -8103,7 +8235,16 @@
         "infrastructure"
       ],
       "up": 20.0,
-      "yrs": 0.0
+      "yrs": 0.0,
+      "mechanics": {
+        "power_tier": {
+          "rank": 4,
+          "label": "grid electric power, MW scale (central generation)",
+          "anchor_kw": 3000.0,
+          "scale": "grid"
+        },
+        "electricity_gate": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -8169,7 +8310,13 @@
         "infrastructure"
       ],
       "up": 20.0,
-      "yrs": 0.0
+      "yrs": 0.0,
+      "mechanics": {
+        "power_tier": {
+          "rank": 0,
+          "label": "muscle and animal power"
+        }
+      }
     },
     {
       "_src": "00_capabilities.json",
@@ -8204,7 +8351,14 @@
         "infrastructure"
       ],
       "up": 20.0,
-      "yrs": 0.0
+      "yrs": 0.0,
+      "mechanics": {
+        "power_tier": {
+          "rank": 2,
+          "label": "portable steam power, hundreds of kW",
+          "anchor_kw": 300.0
+        }
+      }
     },
     {
       "_src": "00_capabilities.json",
@@ -8239,7 +8393,14 @@
         "infrastructure"
       ],
       "up": 20.0,
-      "yrs": 0.0
+      "yrs": 0.0,
+      "mechanics": {
+        "power_tier": {
+          "rank": 1,
+          "label": "water power, tens of kW on one shaft",
+          "anchor_kw": 30.0
+        }
+      }
     },
     {
       "_src": "00_capabilities.json",
@@ -16678,7 +16839,37 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "ablation_candidate": true,
+        "living_cost_status": {
+          "flat": 200.0,
+          "book_money": true,
+          "gate": "has",
+          "order": 0
+        },
+        "reach": {
+          "factor": 1.15,
+          "gate": "has",
+          "order": 0
+        },
+        "mine_ceiling": {
+          "tier": 1,
+          "base": 6000.0,
+          "state_scale": 8000.0,
+          "gate": "has"
+        },
+        "market_standing": {
+          "tier": 1,
+          "factor": 1.4,
+          "gate": "has"
+        },
+        "protection": {
+          "flat": 0.1,
+          "gate": "has",
+          "order": 1
+        }
+      }
     },
     {
       "_src": "22_civil.json",
@@ -18341,7 +18532,17 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "output_factor",
+            "share": 0.1,
+            "label": "your own roads",
+            "order": 3
+          }
+        ]
+      }
     },
     {
       "_src": "22_civil.json",
@@ -23091,7 +23292,37 @@
         "commerce"
       ],
       "up": 400.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Scholar capacity, protection and credit",
+          "scalable": "population"
+        },
+        "ablation_candidate": true,
+        "credit_line": {
+          "per_unit": 4000.0,
+          "book_money": true,
+          "order": 4
+        },
+        "protection": {
+          "flat": 0.1,
+          "order": 2
+        },
+        "institution_places": {
+          "flat": 3.0
+        },
+        "staff_capacity": {
+          "scholars": 3.0,
+          "scales_with_units": true,
+          "must_be_running": true,
+          "order": 3
+        },
+        "staff_advice": {
+          "kind": "scholars",
+          "advice": "required before the school is legal",
+          "order": 2
+        }
+      }
     },
     {
       "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -26107,7 +26338,34 @@
         "status_threatening"
       ],
       "up": 2500.0,
-      "yrs": 8.0
+      "yrs": 8.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Standing, and the faster diffusion of technology through the economy"
+        },
+        "corpus": {
+          "rank": 2,
+          "dispersed": true,
+          "loss_chance": 0.12,
+          "fraction_lost": 0.08,
+          "diffusion_pace": 1.7
+        },
+        "ablation_candidate": true,
+        "standing": {
+          "flat": 6.0,
+          "order": 1
+        },
+        "institution_places": {
+          "flat": 8.0
+        },
+        "staff_capacity": {
+          "scholars": 8.0,
+          "directors": 1.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 8
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -26146,7 +26404,23 @@
         "information"
       ],
       "up": 600.0,
-      "yrs": 10.0
+      "yrs": 10.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Standing"
+        },
+        "corpus": {
+          "rank": 1,
+          "loss_chance": 0.45,
+          "fraction_lost": 0.22,
+          "diffusion_pace": 1.3
+        },
+        "ablation_candidate": true,
+        "standing": {
+          "flat": 3.0,
+          "order": 0
+        }
+      }
     },
     {
       "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -26230,7 +26504,28 @@
         "infrastructure"
       ],
       "up": 800.0,
-      "yrs": 6.0
+      "yrs": 6.0,
+      "mechanics": {
+        "ablation_candidate": true,
+        "farming_technique": {
+          "axis": "rotation",
+          "entry": "THREE_FIELD"
+        },
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.15,
+            "label": "fields that do not fail together",
+            "order": 12
+          },
+          {
+            "kind": "output_factor",
+            "share": 0.2,
+            "label": "you feed yourself",
+            "order": 1
+          }
+        ]
+      }
     },
     {
       "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 30 tonnes of product a year it consumes about 60 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 80 hectares of forest under permanent management, which you must own before you light it.]",
@@ -26288,7 +26583,22 @@
         "infrastructure"
       ],
       "up": 3200.0,
-      "yrs": 5.0
+      "yrs": 5.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan training capacity"
+        },
+        "room_places": {
+          "flat": 12,
+          "order": 8
+        },
+        "staff_capacity": {
+          "artisans": 12.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 10
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -26581,7 +26891,12 @@
       "up": 80.0,
       "yrs": 1.5,
       "_total_cost": 886.8,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "failure_relief": {
+          "failure_kind": "process_control"
+        }
+      }
     },
     {
       "_src": "62_control_ops_deep.json",
@@ -27042,7 +27357,13 @@
         "spectacle"
       ],
       "up": 6000.0,
-      "yrs": 7.0
+      "yrs": 7.0,
+      "mechanics": {
+        "power_generation": {
+          "role": "local",
+          "tier": "cap_power_electric"
+        }
+      }
     },
     {
       "_src": "42_electrical_deep.json",
@@ -33428,7 +33749,14 @@
         "infrastructure"
       ],
       "up": 40000.0,
-      "yrs": 15.0
+      "yrs": 15.0,
+      "mechanics": {
+        "electrical_process": {
+          "material": "bauxite_kg",
+          "kwh_per_kg_of_product": 15.0,
+          "kg_material_per_kg_product": 4.5
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -33653,7 +33981,13 @@
       "up": 28.0,
       "yrs": 1.4,
       "_total_cost": 1177.9,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "power_generation": {
+          "role": "local",
+          "tier": "cap_power_steam"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -34195,7 +34529,13 @@
       "up": 40.0,
       "yrs": 0.9,
       "_total_cost": 441.0,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "water",
+          "tier": "cap_power_water"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -35066,7 +35406,13 @@
       "up": 40.0,
       "yrs": 2.0,
       "_total_cost": 1135.6,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "water",
+          "tier": "cap_power_water"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -35108,7 +35454,13 @@
       "up": 50.0,
       "yrs": 2.2,
       "_total_cost": 1341.8,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "water",
+          "tier": "cap_power_water"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -35774,7 +36126,13 @@
       "up": 200.0,
       "yrs": 5.0,
       "_total_cost": 2925.6,
-      "kb_level": "none"
+      "kb_level": "none",
+      "mechanics": {
+        "power_generation": {
+          "role": "grid",
+          "tier": "cap_power_grid"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -35903,7 +36261,13 @@
       "up": 70.0,
       "yrs": 2.5,
       "_total_cost": 1643.0,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "water",
+          "tier": "cap_power_water"
+        }
+      }
     },
     {
       "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -36272,7 +36636,13 @@
       "up": 15.0,
       "yrs": 1.0,
       "_total_cost": 322.0,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "water",
+          "tier": "cap_power_water"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -36444,7 +36814,13 @@
       "up": 70.0,
       "yrs": 2.0,
       "_total_cost": 1548.6,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "water",
+          "tier": "cap_power_water"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -36566,7 +36942,13 @@
       "up": 18.0,
       "yrs": 1.2,
       "_total_cost": 310.5,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "water",
+          "tier": "cap_power_water"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -37182,7 +37564,13 @@
       "up": 65.0,
       "yrs": 2.8,
       "_total_cost": 1600.45,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "steam",
+          "tier": "cap_power_steam"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -37225,7 +37613,13 @@
       "up": 60.0,
       "yrs": 2.5,
       "_total_cost": 1414.3,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "steam",
+          "tier": "cap_power_steam"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -37273,7 +37667,13 @@
       "up": 400.0,
       "yrs": 3.0,
       "_total_cost": 4242.0,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "steam",
+          "tier": "cap_power_steam"
+        }
+      }
     },
     {
       "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -37565,7 +37965,13 @@
       "up": 0.0,
       "yrs": 4.0,
       "_total_cost": 999.96,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "power_generation": {
+          "role": "grid",
+          "tier": "cap_power_grid"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -38080,7 +38486,13 @@
       "up": 10.0,
       "yrs": 0.8,
       "_total_cost": 450.0,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "prime_mover": {
+          "family": "water",
+          "tier": "cap_power_water"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -38208,7 +38620,13 @@
       "up": 15.0,
       "yrs": 2.0,
       "_total_cost": 1071.5,
-      "kb_level": "recipe"
+      "kb_level": "recipe",
+      "mechanics": {
+        "power_generation": {
+          "role": "local",
+          "tier": "cap_power_electric"
+        }
+      }
     },
     {
       "_src": "52_energy_deep.json",
@@ -38332,7 +38750,66 @@
         "commerce"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection, credit and the lower interest rate"
+        },
+        "ablation_candidate": true,
+        "credit_line": {
+          "flat": 30000.0,
+          "book_money": true,
+          "order": 5
+        },
+        "debt_rate_discount": {
+          "flat": 0.02,
+          "order": 3
+        },
+        "protection": {
+          "flat": 0.08,
+          "order": 3
+        },
+        "confiscation_dispersal": {
+          "tier": 1,
+          "flat": 0.2,
+          "gate": "has"
+        },
+        "institution_places": {
+          "flat": 14.0
+        },
+        "room_places": {
+          "flat": 8,
+          "order": 4
+        },
+        "staff_capacity": {
+          "scholars": 6.0,
+          "artisans": 8.0,
+          "directors": 1.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 6
+        },
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.15,
+            "label": "land nobody can carry away",
+            "order": 9
+          },
+          {
+            "kind": "output_factor",
+            "share": 0.3,
+            "label": "land that yields whoever is emperor this year",
+            "order": 0
+          },
+          {
+            "kind": "real_erosion",
+            "share": 0.4,
+            "label": "wealth held as land, not as coin",
+            "order": 2
+          }
+        ]
+      }
     },
     {
       "_src": "30_expeditions.json",
@@ -38820,7 +39297,21 @@
         "military"
       ],
       "up": 1800.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The trade-route revenue bonus"
+        },
+        "reach": {
+          "factor": 1.3,
+          "order": 3
+        },
+        "supplies_material_by_sea_route": {
+          "materials": [
+            "saltpetre"
+          ]
+        }
+      }
     },
     {
       "_src": "30_expeditions.json",
@@ -39173,7 +39664,16 @@
         "commerce"
       ],
       "up": 60.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The lower interest rate"
+        },
+        "debt_rate_discount": {
+          "flat": 0.01,
+          "order": 4
+        }
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -39214,7 +39714,17 @@
         "infrastructure"
       ],
       "up": 150.0,
-      "yrs": 1.2
+      "yrs": 1.2,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "real_erosion",
+            "share": 0.2,
+            "label": "you can prove what metal is in a coin",
+            "order": 4
+          }
+        ]
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -39365,7 +39875,17 @@
         "commerce"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "real_erosion",
+            "share": 0.25,
+            "label": "a standard the coin can be held to",
+            "order": 3
+          }
+        ]
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -39647,7 +40167,27 @@
         "commerce"
       ],
       "up": 2000.0,
-      "yrs": 4.0
+      "yrs": 4.0,
+      "mechanics": {
+        "capability": {
+          "scalable": "population"
+        },
+        "institution_places": {
+          "flat": 34.0
+        },
+        "staff_capacity": {
+          "artisans": 30.0,
+          "directors": 4.0,
+          "scales_with_units": true,
+          "must_be_running": true,
+          "order": 19
+        },
+        "supervision_room": {
+          "per_unit": 20.0,
+          "words": "branches in other towns",
+          "order": 3
+        }
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -39999,7 +40539,19 @@
         "status_threatening"
       ],
       "up": 500.0,
-      "yrs": 4.0
+      "yrs": 4.0,
+      "mechanics": {
+        "capability": {},
+        "institution_places": {
+          "flat": 20.0
+        },
+        "staff_capacity": {
+          "artisans": 20.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 18
+        }
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -41194,7 +41746,17 @@
         "commerce"
       ],
       "up": 200.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "output_factor",
+            "share": 0.15,
+            "label": "losses spread rather than borne",
+            "order": 4
+          }
+        ]
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -42339,7 +42901,15 @@
         "commerce"
       ],
       "up": 0.0,
-      "yrs": 0.2
+      "yrs": 0.2,
+      "mechanics": {
+        "supervision_room": {
+          "flat": 4.0,
+          "gate": "has",
+          "words": "a partner who shares the watching, and whose own capital and attention are not on your payroll",
+          "order": 4
+        }
+      }
     },
     {
       "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -43017,7 +43587,16 @@
         "information"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "staff_capacity": {
+          "artisans": 4.0,
+          "directors": 2.0,
+          "scales_with_units": false,
+          "must_be_running": false,
+          "order": 17
+        }
+      }
     },
     {
       "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -43101,7 +43680,20 @@
         "information"
       ],
       "up": 300.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection",
+          "redundant_with": [
+            "school_founded"
+          ]
+        },
+        "protection": {
+          "flat": 0.06,
+          "group": "learned_institution",
+          "order": 4
+        }
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -43299,7 +43891,39 @@
       ],
       "up": 1400.0,
       "yrs": 2.0,
-      "_internal": "[AUDIT: this node currently draws from a flat +8 artisans figure rather than tracking actual market purchases. A person is not a material to be stocked. The node used to model hiring as consuming units of a fictitious good, but this was replaced with a one-time capital outlay for acquiring eight already-skilled people. Future work will link this to the household's actual purchase ledger so it draws down the same market as direct purchases.]"
+      "_internal": "[AUDIT: this node currently draws from a flat +8 artisans figure rather than tracking actual market purchases. A person is not a material to be stocked. The node used to model hiring as consuming units of a fictitious good, but this was replaced with a one-time capital outlay for acquiring eight already-skilled people. Future work will link this to the household's actual purchase ledger so it draws down the same market as direct purchases.]",
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan capacity",
+          "scalable": "population"
+        },
+        "ablation_candidate": true,
+        "institution_places": {
+          "flat": 10.0
+        },
+        "room_places": {
+          "flat": 10,
+          "order": 1
+        },
+        "staff_capacity": {
+          "artisans": 10.0,
+          "scales_with_units": true,
+          "must_be_running": true,
+          "order": 1
+        },
+        "hiring_factor": {
+          "factor_per_unit_power": 0.5,
+          "order": 1
+        },
+        "staff_grant": {
+          "artisans": 8
+        },
+        "staff_advice": {
+          "kind": "artisans",
+          "advice": "buy, teach and free a technical staff",
+          "order": 3
+        }
+      }
     },
     {
       "_src": "11_food_agriculture.json",
@@ -43655,7 +44279,17 @@
         "infrastructure"
       ],
       "up": 100.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.1,
+            "label": "food that keeps",
+            "order": 14
+          }
+        ]
+      }
     },
     {
       "_src": "00_core.json",
@@ -44320,7 +44954,13 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "farming_technique": {
+          "axis": "toolkit",
+          "entry": "HORSE_COLLAR_AND_MOULDBOARD"
+        }
+      }
     },
     {
       "_src": "11_food_agriculture.json",
@@ -44707,7 +45347,13 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "farming_technique": {
+          "axis": "toolkit",
+          "entry": "MECHANICAL_REAPER"
+        }
+      }
     },
     {
       "_src": "11_food_agriculture.json",
@@ -45359,7 +46005,13 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "farming_technique": {
+          "axis": "rotation",
+          "entry": "THREE_FIELD"
+        }
+      }
     },
     {
       "_src": "11_food_agriculture.json",
@@ -45984,7 +46636,18 @@
         "spectacle"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "disease_burden": true,
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.25,
+            "label": "knowing what is actually killing them",
+            "order": 2
+          }
+        ]
+      }
     },
     {
       "_src": "00_core.json",
@@ -46851,7 +47514,17 @@
         "military"
       ],
       "up": 1500.0,
-      "yrs": 1.5
+      "yrs": 1.5,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.15,
+            "label": "corned powder",
+            "order": 6
+          }
+        ]
+      }
     },
     {
       "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 200 tonnes of product a year it consumes about 400 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 533 hectares of forest under permanent management, which you must own before you light it.]",
@@ -49693,7 +50366,13 @@
         "infrastructure"
       ],
       "up": 150.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "farming_technique": {
+          "axis": "toolkit",
+          "entry": "HORSE_COLLAR_AND_MOULDBOARD"
+        }
+      }
     },
     {
       "_internal": "[FIXED after independent audit: paper and distilled spirits were listed and neither is load-bearing. An oiled linen envelope over a wood fire needs sailcloth and oil, both tier 0 and already available in any of these societies.]",
@@ -49872,7 +50551,28 @@
         "commerce"
       ],
       "up": 200.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection, credit and standing"
+        },
+        "standing": {
+          "flat": 1.0,
+          "order": 6
+        },
+        "credit_line": {
+          "flat": 400.0,
+          "book_money": true,
+          "order": 0
+        },
+        "protection": {
+          "flat": 0.12,
+          "order": 0
+        },
+        "alarm_factor": {
+          "factor": 0.75
+        }
+      }
     },
     {
       "_src": "53_information_deep.json",
@@ -58067,7 +58767,37 @@
         "status_threatening"
       ],
       "up": 4000.0,
-      "yrs": 8.0
+      "yrs": 8.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The price markup and staff-capacity bonus"
+        },
+        "workshop_markup": {
+          "flat": 0.35
+        },
+        "institution_places": {
+          "flat": 44.0
+        },
+        "room_places": {
+          "flat": 40,
+          "order": 7
+        },
+        "staff_capacity": {
+          "scholars": 4.0,
+          "artisans": 40.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 9
+        },
+        "hiring_factor": {
+          "factor": 1.5,
+          "order": 4
+        },
+        "market_hiring_factor": {
+          "factor": 1.5,
+          "order": 3
+        }
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_tol_10um added by a reviewer working node by node. Reason: emitter and collector regions require 10-50 micrometer manufacturing precision]",
@@ -58299,7 +59029,10 @@
         "spectacle"
       ],
       "up": 400.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "14_land_transport.json",
@@ -60737,7 +61470,17 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "mining_tech": {
+          "yield": 1.3,
+          "cost": 0.75,
+          "materials": [
+            "iron",
+            "coal"
+          ]
+        }
+      }
     },
     {
       "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -61914,7 +62657,13 @@
         "food"
       ],
       "up": 0.0,
-      "yrs": 0.0
+      "yrs": 0.0,
+      "mechanics": {
+        "farming_technique": {
+          "axis": "crop",
+          "entry": "POTATOES"
+        }
+      }
     },
     {
       "_src": "01_materials.json",
@@ -65226,7 +65975,17 @@
         "infrastructure"
       ],
       "up": 40.0,
-      "yrs": 2.5
+      "yrs": 2.5,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.2,
+            "label": "the sick kept apart from the well",
+            "order": 3
+          }
+        ]
+      }
     },
     {
       "_src": "44_medicine_deep.json",
@@ -66523,7 +67282,17 @@
         "infrastructure"
       ],
       "up": 40.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.15,
+            "label": "filtered water",
+            "order": 8
+          }
+        ]
+      }
     },
     {
       "_src": "44_medicine_deep.json",
@@ -67421,7 +68190,17 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.35,
+            "label": "plague vaccine",
+            "order": 6
+          }
+        ]
+      }
     },
     {
       "_src": "44_medicine_deep.json",
@@ -67496,7 +68275,17 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.4,
+            "label": "smallpox vaccine",
+            "order": 5
+          }
+        ]
+      }
     },
     {
       "_src": "44_medicine_deep.json",
@@ -67571,7 +68360,17 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.2,
+            "label": "typhoid vaccine",
+            "order": 7
+          }
+        ]
+      }
     },
     {
       "_src": "44_medicine_deep.json",
@@ -68036,7 +68835,10 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 0.0
+      "yrs": 0.0,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring]",
@@ -68079,7 +68881,10 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_internal": "[FIXED after independent audit: acetylation needs acetic anhydride, from acetic acid via wood distillation. Nitric acid was wrong and has been removed.]",
@@ -69051,7 +69856,17 @@
         "status_threatening"
       ],
       "up": 500.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.12,
+            "label": "people trained to nurse the sick",
+            "order": 10
+          }
+        ]
+      }
     },
     {
       "_src": "21_medicine.json",
@@ -69132,7 +69947,10 @@
         "infrastructure"
       ],
       "up": 150.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_src": "21_medicine.json",
@@ -69336,7 +70154,18 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "disease_burden": true,
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.3,
+            "label": "quarantine, clean water, sewage",
+            "order": 1
+          }
+        ]
+      }
     },
     {
       "_src": "21_medicine.json",
@@ -69733,7 +70562,18 @@
         "infrastructure"
       ],
       "up": 150.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "disease_burden": true,
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.45,
+            "label": "variolation and then vaccination",
+            "order": 4
+          }
+        ]
+      }
     },
     {
       "_src": "21_medicine.json",
@@ -69814,7 +70654,10 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_src": "21_medicine.json",
@@ -70114,7 +70957,13 @@
         "infrastructure"
       ],
       "up": 120.0,
-      "yrs": 1.4
+      "yrs": 1.4,
+      "mechanics": {
+        "mining_tech": {
+          "yield": 1.0,
+          "cost": 0.85
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -70286,7 +71135,14 @@
       "sus": 0,
       "traits": [],
       "up": 300.0,
-      "yrs": 2.5
+      "yrs": 2.5,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "furnaceman",
+          "bonus": 0.08,
+          "order": 6
+        }
+      }
     },
     {
       "_internal": "[FIXED after independent audit: it was tier 1 while depending on the blast furnace, which is a major independent metallurgical leap.]",
@@ -70649,7 +71505,13 @@
         "infrastructure"
       ],
       "up": 200.0,
-      "yrs": 1.8
+      "yrs": 1.8,
+      "mechanics": {
+        "mining_tech": {
+          "yield": 1.0,
+          "cost": 0.65
+        }
+      }
     },
     {
       "_src": "19_metallurgy_mining.json",
@@ -70833,7 +71695,17 @@
         "infrastructure"
       ],
       "up": 20.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "real_erosion",
+            "share": 0.15,
+            "label": "you can assay ore and coin yourself",
+            "order": 5
+          }
+        ]
+      }
     },
     {
       "_src": "19_metallurgy_mining.json",
@@ -71344,7 +72216,13 @@
         "religious_adjacent"
       ],
       "up": 400.0,
-      "yrs": 2.5
+      "yrs": 2.5,
+      "mechanics": {
+        "mining_tech": {
+          "yield": 1.4,
+          "cost": 0.85
+        }
+      }
     },
     {
       "_src": "19_metallurgy_mining.json",
@@ -71430,7 +72308,20 @@
       "sus": 0,
       "traits": [],
       "up": 400.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "room_places": {
+          "flat": 65,
+          "order": 12
+        },
+        "staff_capacity": {
+          "scholars": 6.0,
+          "artisans": 65.0,
+          "scales_with_units": false,
+          "must_be_running": false,
+          "order": 14
+        }
+      }
     },
     {
       "_src": "19_metallurgy_mining.json",
@@ -72077,7 +72968,14 @@
       "sus": 1,
       "traits": [],
       "up": 400.0,
-      "yrs": 2.5
+      "yrs": 2.5,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "smith",
+          "bonus": 0.1,
+          "order": 5
+        }
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range]",
@@ -72172,7 +73070,14 @@
       "sus": 0,
       "traits": [],
       "up": 120.0,
-      "yrs": 1.2
+      "yrs": 1.2,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "smith",
+          "bonus": 0.08,
+          "order": 3
+        }
+      }
     },
     {
       "_src": "19_metallurgy_mining.json",
@@ -72304,7 +73209,14 @@
         "labour_saving"
       ],
       "up": 80.0,
-      "yrs": 1.5
+      "yrs": 1.5,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "miner",
+          "bonus": 0.08,
+          "order": 4
+        }
+      }
     },
     {
       "_src": "19_metallurgy_mining.json",
@@ -74721,7 +75633,14 @@
         "labour_saving"
       ],
       "up": 0.0,
-      "yrs": 0.6
+      "yrs": 0.6,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "machinist",
+          "bonus": 0.15,
+          "order": 9
+        }
+      }
     },
     {
       "_src": "43_manufacturing_deep.json",
@@ -76116,7 +77035,14 @@
       "sus": 0,
       "traits": [],
       "up": 0.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "machinist",
+          "bonus": 0.06,
+          "order": 8
+        }
+      }
     },
     {
       "_src": "43_manufacturing_deep.json",
@@ -78365,7 +79291,17 @@
         "military"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.3,
+            "label": "guns on the walls",
+            "order": 5
+          }
+        ]
+      }
     },
     {
       "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -78618,7 +79554,17 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.3,
+            "label": "a bastioned enclosure",
+            "order": 1
+          }
+        ]
+      }
     },
     {
       "_src": "49_military.json",
@@ -79357,7 +80303,17 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.3,
+            "label": "concrete fortification",
+            "order": 2
+          }
+        ]
+      }
     },
     {
       "_src": "49_military.json",
@@ -79958,7 +80914,17 @@
         "weapon_democratising"
       ],
       "up": 0.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.35,
+            "label": "reliable firearms",
+            "order": 4
+          }
+        ]
+      }
     },
     {
       "_src": "49_military.json",
@@ -81002,7 +81968,17 @@
         "weapon_democratising"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.25,
+            "label": "firearms in the hands of your own people",
+            "order": 3
+          }
+        ]
+      }
     },
     {
       "_src": "49_military.json",
@@ -82386,7 +83362,17 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 4.0
+      "yrs": 4.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.45,
+            "label": "angled bastion walls no ram or ladder answers",
+            "order": 0
+          }
+        ]
+      }
     },
     {
       "_src": "49_military.json",
@@ -82794,7 +83780,10 @@
         "spectacle"
       ],
       "up": 700.0,
-      "yrs": 1.5
+      "yrs": 1.5,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: laminated cores require thin consistent sheets for efficiency]",
@@ -90266,7 +91255,89 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection, credit, state funding and status"
+        },
+        "ablation_candidate": true,
+        "standing": {
+          "flat": 8.0,
+          "order": 5
+        },
+        "credit_line": {
+          "flat": 60000.0,
+          "book_money": true,
+          "order": 3
+        },
+        "debt_rate_discount": {
+          "flat": 0.03,
+          "order": 2
+        },
+        "living_cost_status": {
+          "flat": 2500.0,
+          "book_money": true,
+          "order": 2
+        },
+        "reach": {
+          "factor": 1.6,
+          "order": 2
+        },
+        "mine_ceiling": {
+          "tier": 3,
+          "base": 20000.0,
+          "state_scale": 60000.0
+        },
+        "market_standing": {
+          "tier": 3,
+          "factor": 6.0
+        },
+        "patron": {
+          "tier": 3
+        },
+        "patron_lost_to_eminence": true,
+        "patron_protection": {
+          "flat": 0.32,
+          "order": 2
+        },
+        "eminence_hazard_factor": {
+          "factor": 1.5,
+          "hint_when_running": "you are as close to the throne as it is possible to stand, which is the most exposed place there is",
+          "order": 0
+        },
+        "state_funding": true,
+        "institution_places": {
+          "flat": 64.0
+        },
+        "room_places": {
+          "flat": 50,
+          "order": 5
+        },
+        "staff_capacity": {
+          "scholars": 14.0,
+          "artisans": 50.0,
+          "directors": 2.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 5
+        },
+        "hiring_factor": {
+          "factor": 3.0,
+          "order": 2
+        },
+        "market_hiring_factor": {
+          "factor": 3.0,
+          "order": 1
+        },
+        "hazard_counters": [
+          {
+            "kind": "sack_chance",
+            "share": 0.3,
+            "label": "a patron with soldiers",
+            "order": 7
+          }
+        ]
+      }
     },
     {
       "_src": "00_core.json",
@@ -90300,7 +91371,32 @@
         "commerce"
       ],
       "up": 200.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection and credit"
+        },
+        "credit_line": {
+          "flat": 3000.0,
+          "book_money": true,
+          "order": 1
+        },
+        "debt_rate_discount": {
+          "flat": 0.015,
+          "order": 0
+        },
+        "patron": {
+          "tier": 1
+        },
+        "patron_protection": {
+          "flat": 0.18,
+          "order": 0
+        },
+        "patron_mortal": true,
+        "state_approval": {
+          "gate": "wary"
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -90334,7 +91430,69 @@
         "commerce"
       ],
       "up": 1000.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection, credit and status"
+        },
+        "ablation_candidate": true,
+        "standing": {
+          "flat": 3.0,
+          "order": 4
+        },
+        "credit_line": {
+          "flat": 15000.0,
+          "book_money": true,
+          "order": 2
+        },
+        "debt_rate_discount": {
+          "flat": 0.03,
+          "order": 1
+        },
+        "living_cost_status": {
+          "flat": 900.0,
+          "book_money": true,
+          "order": 1
+        },
+        "reach": {
+          "factor": 1.3,
+          "order": 1
+        },
+        "mine_ceiling": {
+          "tier": 2,
+          "base": 9000.0,
+          "state_scale": 20000.0
+        },
+        "market_standing": {
+          "tier": 2,
+          "factor": 2.5
+        },
+        "patron": {
+          "tier": 2
+        },
+        "patron_lost_to_eminence": true,
+        "patron_protection": {
+          "flat": 0.26,
+          "order": 1
+        },
+        "institution_places": {
+          "flat": 10.0
+        },
+        "room_places": {
+          "flat": 6,
+          "order": 3
+        },
+        "staff_capacity": {
+          "scholars": 4.0,
+          "artisans": 6.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 4
+        },
+        "state_approval": {
+          "gate": "opposed"
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -90467,7 +91625,19 @@
         "spectacle"
       ],
       "up": 2000.0,
-      "yrs": 4.0
+      "yrs": 4.0,
+      "mechanics": {
+        "capability": {},
+        "ablation_candidate": true,
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.35,
+            "label": "a plan made before the plague",
+            "order": 11
+          }
+        ]
+      }
     },
     {
       "_src": "00_core.json",
@@ -90610,7 +91780,32 @@
         "infrastructure"
       ],
       "up": 70000.0,
-      "yrs": 25.0
+      "yrs": 25.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The price markup and staff-capacity bonus"
+        },
+        "workshop_markup": {
+          "flat": 0.45
+        },
+        "room_places": {
+          "flat": 130,
+          "order": 14
+        },
+        "staff_capacity": {
+          "scholars": 45.0,
+          "artisans": 130.0,
+          "directors": 6.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 16
+        },
+        "electricity_gate": true,
+        "power_generation": {
+          "role": "transmission",
+          "tier": "cap_power_grid"
+        }
+      }
     },
     {
       "_src": "20_precision.json",
@@ -90998,7 +92193,14 @@
         "labour_saving"
       ],
       "up": 80.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "machinist",
+          "bonus": 0.1,
+          "order": 10
+        }
+      }
     },
     {
       "_src": "20_precision.json",
@@ -93257,7 +94459,10 @@
         "status_threatening"
       ],
       "up": 1500.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "13_media.json",
@@ -96247,7 +97452,13 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "mining_tech": {
+          "yield": 1.0,
+          "cost": 0.8
+        }
+      }
     },
     {
       "_src": "17_energy.json",
@@ -96845,7 +98056,10 @@
         "information"
       ],
       "up": 1200.0,
-      "yrs": 1.5
+      "yrs": 1.5,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -96914,7 +98128,31 @@
         "infrastructure"
       ],
       "up": 35000.0,
-      "yrs": 20.0
+      "yrs": 20.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The trade-reach revenue bonus and staff capacity"
+        },
+        "reach": {
+          "factor": 1.35,
+          "order": 4
+        },
+        "mining_tech": {
+          "yield": 1.3,
+          "cost": 1.0
+        },
+        "room_places": {
+          "flat": 95,
+          "order": 13
+        },
+        "staff_capacity": {
+          "scholars": 8.0,
+          "artisans": 95.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 15
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -96993,7 +98231,23 @@
         "medical"
       ],
       "up": 300.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Your extra life-expectancy"
+        },
+        "disease_burden": true,
+        "founder_life_extension": true,
+        "ablation_candidate": true,
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.3,
+            "label": "boiled water, handwashing, clean wounds",
+            "order": 0
+          }
+        ]
+      }
     },
     {
       "_src": "54_science_method_deep.json",
@@ -101204,7 +102458,65 @@
         "status_threatening"
       ],
       "up": 2500.0,
-      "yrs": 4.0
+      "yrs": 4.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Scholar and artisan training and the standing it earns",
+          "scalable": "literacy"
+        },
+        "ablation_candidate": true,
+        "standing": {
+          "per_sqrt_unit": 4.0,
+          "order": 2
+        },
+        "protection": {
+          "flat": 0.06,
+          "group": "learned_institution",
+          "order": 5
+        },
+        "workshop_site": true,
+        "institution_places": {
+          "flat": 34.0
+        },
+        "room_places": {
+          "flat": 12,
+          "order": 2
+        },
+        "staff_capacity": {
+          "scholars": 12.0,
+          "artisans": 12.0,
+          "directors": 2.0,
+          "scales_with_units": true,
+          "must_be_running": true,
+          "order": 2
+        },
+        "supervision_room": {
+          "per_unit": 10.0,
+          "words": "a school, and the people it keeps",
+          "order": 1
+        },
+        "hiring_factor": {
+          "factor_per_unit_power": 1.0,
+          "order": 0
+        },
+        "market_hiring_factor": {
+          "factor_per_unit_power": 1.0,
+          "order": 0
+        },
+        "staff_grant": {
+          "scholars": 4
+        },
+        "staff_advice": {
+          "kind": "scholars",
+          "advice": "the school produces scholars in quantity, and grants more every year it runs",
+          "order": 0
+        },
+        "schooling_flow": {
+          "per_sqrt_unit": 1.0,
+          "required": true,
+          "order": 0
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -103107,7 +104419,10 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_measure_elec added by a reviewer working node by node. Reason: four-point probe and Hall effect require electrical measurement]",
@@ -103312,7 +104627,17 @@
         "inexplicable"
       ],
       "up": 600.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "staff_loss",
+            "share": 0.1,
+            "label": "hard soap, in quantity",
+            "order": 9
+          }
+        ]
+      }
     },
     {
       "_src": "00_core.json",
@@ -103511,7 +104836,13 @@
         "religious_adjacent"
       ],
       "up": 7000.0,
-      "yrs": 7.0
+      "yrs": 7.0,
+      "mechanics": {
+        "mining_tech": {
+          "yield": 1.6,
+          "cost": 0.65
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -103570,7 +104901,22 @@
         "infrastructure"
       ],
       "up": 12000.0,
-      "yrs": 12.0
+      "yrs": 12.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan training capacity"
+        },
+        "room_places": {
+          "flat": 45,
+          "order": 11
+        },
+        "staff_capacity": {
+          "artisans": 45.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 13
+        }
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: piston-cylinder precision for efficient sealing and smooth operation]",
@@ -103756,7 +105102,28 @@
         "spectacle"
       ],
       "up": 15000.0,
-      "yrs": 12.0
+      "yrs": 12.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The trade-reach revenue bonus and staff capacity"
+        },
+        "ablation_candidate": true,
+        "reach": {
+          "factor": 1.15,
+          "order": 5
+        },
+        "room_places": {
+          "flat": 25,
+          "order": 10
+        },
+        "staff_capacity": {
+          "scholars": 6.0,
+          "artisans": 25.0,
+          "scales_with_units": false,
+          "must_be_running": true,
+          "order": 12
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -104419,7 +105786,14 @@
         "status_threatening"
       ],
       "up": 50.0,
-      "yrs": 0.8
+      "yrs": 0.8,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "artisan",
+          "bonus": 0.06,
+          "order": 1
+        }
+      }
     },
     {
       "_src": "10_textiles.json",
@@ -105364,7 +106738,14 @@
         "status_threatening"
       ],
       "up": 20.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "artisan",
+          "bonus": 0.05,
+          "order": 2
+        }
+      }
     },
     {
       "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -105501,7 +106882,14 @@
         "labour_saving"
       ],
       "up": 40.0,
-      "yrs": 0.6
+      "yrs": 0.6,
+      "mechanics": {
+        "labour_productivity": {
+          "trade": "artisan",
+          "bonus": 0.03,
+          "order": 0
+        }
+      }
     },
     {
       "_src": "10_textiles.json",
@@ -120583,7 +121971,17 @@
         "infrastructure"
       ],
       "up": 900.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "hazard_counters": [
+          {
+            "kind": "output_factor",
+            "share": 0.2,
+            "label": "power that does not come by ship",
+            "order": 2
+          }
+        ]
+      }
     },
     {
       "_src": "00_core.json",
@@ -120623,7 +122021,38 @@
         "commerce"
       ],
       "up": 900.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan capacity",
+          "scalable": "population"
+        },
+        "hosts_bought_people": true,
+        "workshop_site": true,
+        "institution_places": {
+          "flat": 12.0
+        },
+        "room_places": {
+          "flat": 6,
+          "order": 0
+        },
+        "staff_capacity": {
+          "artisans": 6.0,
+          "scales_with_units": true,
+          "must_be_running": true,
+          "order": 0
+        },
+        "supervision_room": {
+          "per_unit": 6.0,
+          "words": "a place of your own to work in",
+          "order": 0
+        },
+        "staff_advice": {
+          "kind": "artisans",
+          "advice": "you need somewhere for them to work",
+          "order": 4
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -120662,7 +122091,10 @@
         "infrastructure"
       ],
       "up": 50.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 1500 tonnes of product a year it consumes about 18,000 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 24,000 hectares of forest under permanent management, which you must own before you light it.]",

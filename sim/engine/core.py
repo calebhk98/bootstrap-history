@@ -37,6 +37,7 @@ from sim.unit_conversions import PERCENT_SCALE
 
 from .economy import EconomyMixin
 from .fog import FogMixin
+from .mechanics import MechanicsMixin
 from .geography import GeographyMixin
 from .labour import LabourMixin
 from .labour_allocation import LabourAllocationMixin
@@ -193,7 +194,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
         "its members - see _cap_pooled_farm_weather_cells.")
 
 
-class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
+class Sim(MechanicsMixin, EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin):
     STATE_CAPACITY_DEFAULT = declare(
@@ -229,32 +230,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "population never divides a formula by something vanishingly "
             "small. Guard value, not a demographic claim.")
 
-    # WIRING ONE (Complaints/closed/48-technology-cannot-stop-people-dying-young.md):
-    # the eight _TECH_EFFECTS.json entries whose `population` weight is a
-    # DISEASE effect rather than a FOOD one, and so are the only entries
-    # `_disease_burden` below is allowed to sum. _TECH_EFFECTS.json also
-    # carries a `population` field on crop_rotation, fud_three_field_
-    # rotation, fud_seed_drill, mat_newworld_crops and ag2_canning - all
-    # five are calories reaching more mouths, not fewer infections, and
-    # summing them into a disease-burden calculation would be exactly the
-    # mistake the stakeholder's own brief warns against. This selection
-    # (which of _TECH_EFFECTS.json's `population` entries counts as
-    # "medical") is a classification a human made when writing that file,
-    # not something this engine derives - it is reused here, not invented.
-    # NOT a `declare()`d constant: it is a set of node ids, not a physical
-    # quantity or a tuned parameter.
-    DISEASE_BURDEN_TECH_IDS = (
-        "germ_theory", "sanitation_antisepsis", "med_aqueducts_latrines",
-        "med_quarantine_sanitation", "med_vector_control",
-        "med_obstetric_antisepsis", "med_asepsis_antisepsis",
-        "med_vaccination_progression",
-    )
+    # DISEASE_BURDEN_TECH_IDS (nodes declaring the `disease_burden` mechanic) is
+    # provided by MechanicsMixin; food techs in _TECH_EFFECTS.json do not declare it.
 
     def _localise_book_money_constants(self):
         """Give this Sim its own copy of every money constant authored in book
         denarii, in its civilisation's coin."""
         factor = book_money_factor(build_schedule(
             TRADE_REGISTRY, self.civ).money_per_labour_hour)
+        self._book_money_scale = factor
         for name in book_money_names():
             if hasattr(type(self), name):
                 setattr(self, name, getattr(type(self), name) * factor)
@@ -1650,35 +1634,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     # applies) is genuinely easy to get subtly different between two
     # independent copies. Calling this from both places is the only way to
     # make the two screens unable to disagree with each other.
-    CORPUS_HEDGE_LOSS_CHANCE_DISPERSED = declare(
-        "CORPUS_HEDGE_LOSS_CHANCE_DISPERSED", 0.12, kind="temporary_heuristic",
-        unit="dimensionless (probability a sack takes any corpus at all)",
-        source=None, confidence="D",
-        why="Chance a sack takes any of the corpus at all once it is "
-            "written and dispersed - lowest of the three hedge states, "
-            "because copies already sit in other people's hands beyond "
-            "this one site. Tuned, not measured.")
-    CORPUS_HEDGE_FRACTION_LOST_DISPERSED = declare(
-        "CORPUS_HEDGE_FRACTION_LOST_DISPERSED", 0.08, kind="temporary_heuristic",
-        unit="dimensionless (fraction of losable technologies taken)",
-        source=None, confidence="D",
-        why="If a sack does take from the corpus while dispersed, how "
-            "much of what is still losable it takes - smallest of the "
-            "three states. Tuned, not measured.")
-    CORPUS_HEDGE_LOSS_CHANCE_WRITTEN = declare(
-        "CORPUS_HEDGE_LOSS_CHANCE_WRITTEN", 0.45, kind="temporary_heuristic",
-        unit="dimensionless (probability a sack takes any corpus at all)",
-        source=None, confidence="D",
-        why="Chance a sack takes any of the corpus once it is merely "
-            "written down (not yet dispersed) - one set of books in one "
-            "place is still losable. Tuned, not measured.")
-    CORPUS_HEDGE_FRACTION_LOST_WRITTEN = declare(
-        "CORPUS_HEDGE_FRACTION_LOST_WRITTEN", 0.22, kind="temporary_heuristic",
-        unit="dimensionless (fraction of losable technologies taken)",
-        source=None, confidence="D",
-        why="If a sack does take from the corpus while merely written, "
-            "how much of what is still losable it takes. Tuned, not "
-            "measured.")
     CORPUS_HEDGE_LOSS_CHANCE_NONE = declare(
         "CORPUS_HEDGE_LOSS_CHANCE_NONE", 0.80, kind="temporary_heuristic",
         unit="dimensionless (probability a sack takes any corpus at all)",
@@ -1695,15 +1650,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "what is still losable it takes - largest of the three "
             "states. Tuned, not measured.")
 
-    # (hedge node, loss chance, fraction lost), strongest first; corpus_hedge and
-    # the knowledge-loss warning both read this one table.
-    CORPUS_HEDGE_TIERS = (
-        ("corpus_dispersed", CORPUS_HEDGE_LOSS_CHANCE_DISPERSED,
-         CORPUS_HEDGE_FRACTION_LOST_DISPERSED),
-        ("corpus_written", CORPUS_HEDGE_LOSS_CHANCE_WRITTEN,
-         CORPUS_HEDGE_FRACTION_LOST_WRITTEN),
-    )
-
     def corpus_hedge(self):
         """(loss_chance, fraction_lost, hedge_name) a sacking faces right now.
 
@@ -1711,9 +1657,9 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         FogMixin.knowledge_risk for the fuller argument. `hedge_name` is
         None if neither corpus exists yet.
         """
-        for hedge_id, loss_chance, fraction_lost in self.CORPUS_HEDGE_TIERS:
-            if self.has(hedge_id):
-                return loss_chance, fraction_lost, hedge_id
+        for node_id, loss_chance, fraction_lost in self.corpus_hedge_tiers():
+            if self.has(node_id):
+                return loss_chance, fraction_lost, node_id
         return self.CORPUS_HEDGE_LOSS_CHANCE_NONE, self.CORPUS_HEDGE_FRACTION_LOST_NONE, None
 
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --

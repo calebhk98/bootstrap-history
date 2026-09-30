@@ -109,12 +109,12 @@ check("stacking every productivity technology this run has wired in never "
 
 check("every node named in LABOUR_PRODUCTIVITY_SOURCES is a real node in "
       "the compiled tree, not a name that was never wired to anything",
-      all(node_id in NODES for node_id, _, _ in S.Sim.LABOUR_PRODUCTIVITY_SOURCES),
-      [node_id for node_id, _, _ in S.Sim.LABOUR_PRODUCTIVITY_SOURCES if node_id not in NODES])
+      all(node_id in NODES for node_id, _, _ in s2.LABOUR_PRODUCTIVITY_SOURCES),
+      [node_id for node_id, _, _ in s2.LABOUR_PRODUCTIVITY_SOURCES if node_id not in NODES])
 check("every trade named in LABOUR_PRODUCTIVITY_SOURCES is a real trade in "
       "the wage table",
-      all(trade in WAGES for _, trade, _ in S.Sim.LABOUR_PRODUCTIVITY_SOURCES),
-      [trade for _, trade, _ in S.Sim.LABOUR_PRODUCTIVITY_SOURCES if trade not in WAGES])
+      all(trade in WAGES for _, trade, _ in s2.LABOUR_PRODUCTIVITY_SOURCES),
+      [trade for _, trade, _ in s2.LABOUR_PRODUCTIVITY_SOURCES if trade not in WAGES])
 # EDUCATING A WHOLE SOCIETY. The user's own question: "can we make the whole
 # country's literacy rates improve? What if we make 5,000 schools and
 # tractors and food production... can I create a 90%+ literate population?"

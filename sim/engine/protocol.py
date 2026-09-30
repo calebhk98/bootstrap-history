@@ -39,7 +39,7 @@ from .proto.techtree import (
     _node_explain
 )
 from .proto.economy import (
-    _VALUE_MEANINGS, _agent_values, _material_capacity_rows, _POWER_LADDER,
+    _VALUE_MEANINGS, _agent_values, _material_capacity_rows, _power_ladder,
     _power_status, _agent_mines, _portfolio_constraint, _PORTFOLIO_ORDER,
     _portfolio_rows, _spare_capacity, _trade_demand_rows, _agent_portfolio,
     _agent_capacity, _dashboard_snapshot, _agent_economy, _agent_changes

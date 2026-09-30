@@ -549,15 +549,17 @@ check("...and does not order them, which was measured and made Rome's run "
       "perpetual upkeep against a household that starts with four hundred",
       all(node_id not in _p_order for node_id in _p_staff),
       [node_id for node_id in _p_staff if node_id in _p_order])
+from sim.engine.mechanics import staff_capacity_sources
+_staff_sources = staff_capacity_sources(NODES)
 check("the staffing list is read from the same table staff_capacity() "
       "itself iterates, so the two cannot drift apart",
-      all(node_id in {entry[0] for entry in S.Sim.STAFF_CAPACITY_SOURCES} for node_id in _p_staff),
+      all(node_id in {entry[0] for entry in _staff_sources} for node_id in _p_staff),
       sorted(_p_staff))
 check("every node staff_capacity() credits actually exists in the tree - "
       "bessemer_openhearth did not, so its sixty-five artisans were never "
       "once handed over",
-      [entry[0] for entry in S.Sim.STAFF_CAPACITY_SOURCES if entry[0] not in NODES] == [],
-      [entry[0] for entry in S.Sim.STAFF_CAPACITY_SOURCES if entry[0] not in NODES])
+      [entry[0] for entry in _staff_sources if entry[0] not in NODES] == [],
+      [entry[0] for entry in _staff_sources if entry[0] not in NODES])
 _p_zero = [node_id for node_id in _p_need if _p_c["slack"][node_id] <= 1e-6]
 _p_pos = {node_id: i for i, node_id in enumerate(_p_order)}
 check("every zero-slack (critical-path) node is ordered before every node "

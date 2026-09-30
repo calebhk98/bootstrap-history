@@ -153,7 +153,9 @@ class LabourAllocationMixin:
         year = self.state.scenario.year
         starting = set(self.civ.get("starting_techs", ()))
         adoption = {}
-        for node_id in farming_technique.TECHNIQUE_TECHNOLOGY_IDS:
+        declarations = {node_id: self.mechanic(node_id, "farming_technique")
+                        for node_id in self.nodes_with_mechanic("farming_technique")}
+        for node_id in declarations:
             if node_id not in projects.done:
                 continue
             if node_id in projects.granted or node_id in starting:
@@ -161,7 +163,7 @@ class LabourAllocationMixin:
             else:
                 age = year - (projects.done_year or {}).get(node_id, year)
                 adoption[node_id] = farming_technique.adoption_share(age)
-        return farming_technique.technique_from_adoption(adoption)
+        return farming_technique.technique_from_adoption(adoption, declarations)
 
     def farm_share_of_hours(self):
         """Share of the society's working hours spent farming."""
