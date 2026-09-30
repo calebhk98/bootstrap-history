@@ -1,6 +1,6 @@
 # Each simulated year gets slower as more is built
 
-**Status:** open
+**Status:** partly - firm imitation scan, `rivals_of`, the material-demand and price-table lookups and settlement summaries no longer rescan everything per call; a year at ~1,800 built nodes fell from roughly 17-23 s to 3-4 s with prices cached (`python3 /path/solves-style loop over a saved game`; the 135-year Rome seed 1 run went from 108 s to 24 s of CPU with the price cache warm). Remaining: a cold price solve is several seconds per unseen technology set and a year can need two or three; the flat remainder is per-project throttle, wage and revenue recomputation (`resource_throttle`, `annual_wage`, `revenue`), `_standing_material_terms` rebuilt on every completion, and `consider_entry`'s copy plans.
 
 Once the economy takes off, the cost of simulating one year grows with the
 number of completed nodes and running concerns. A default optimiser run for
