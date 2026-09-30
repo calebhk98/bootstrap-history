@@ -113,3 +113,35 @@ _module = os.path.join(ROOT, "sim", "engine", "project_materials.py")
 check("no reader of prices.json in the project materials module",
       os.path.exists(_module) and "prices.json" not in open(_module).read()
       and "PRICES" not in open(_module).read(), _module)
+
+# --- the bill fixed at the start survives a save and a load, and is not re-priced
+from sim.engine.proto.saveload import save_state, load_state
+_frozen = _start_sim.project_cost(_LEAD)
+_path = os.path.join(tempfile.mkdtemp(), "bill.json")
+save_state(_start_sim, _path)
+_reloaded = sim(capital=1.0)
+load_state(_reloaded, _path)
+check("start: the instalment bill is fixed at the start and survives save/load",
+      abs(_reloaded.project_cost(_LEAD) - _frozen) < 1e-6 and _frozen > 0,
+      (_reloaded.project_cost(_LEAD), _frozen))
+_start_sim.buy_material_stock("coal", 500.0)
+check("start: buying stock afterwards does not change a running project's bill",
+      abs(_start_sim.project_cost(_LEAD) - _frozen) < 1e-6, (_start_sim.project_cost(_LEAD), _frozen))
+
+# --- a bounty is a multiple of what this society would pay to build it -------
+_bounty_sim = sim(capital=5e7)
+check("bounty: priced from the same market-priced cost as the build",
+      abs(_bounty_sim.bounty_price(_LEAD)
+          - _bounty_sim.BOUNTY_PRICE_MULTIPLIER * _bounty_sim.project_cost(_LEAD)
+          / _bounty_sim.opposition_factor(_LEAD)) < 1e-6,
+      _bounty_sim.bounty_price(_LEAD))
+
+# --- `quote material` charges what `buy material` charges for the same order ---
+from sim.engine.proto.dispatch_money import _cmd_quote
+_quote_sim = sim(capital=5e7)
+_quoted = _cmd_quote(_quote_sim, NODES, {"what": "material", "material": "coal", "n": 2000}, None)
+_before = _quote_sim.capital
+_quote_sim.buy_material_stock("coal", 2000.0)
+check("quote: the quoted price for an order is what buying it costs",
+      abs(_quoted["to_buy_it"] - (_before - _quote_sim.capital)) < 1.0,
+      (_quoted["to_buy_it"], _before - _quote_sim.capital))

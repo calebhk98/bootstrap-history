@@ -825,10 +825,13 @@ def _why_labour_materials(out):
     if rows:
         lines.append("MATERIALS (tonnes; missing part priced at today's market):")
         for row in rows:
-            lines.append("  %-22s need %s, hold %s, missing %s -> %s den"
+            years = row.get("years_of_supply_it_takes")
+            lines.append("  %-22s need %s, hold %s, missing %s -> %s den%s"
                          % (row["material"], _fmt_num(row["needed_tonnes"]),
                             _fmt_num(row["held_tonnes"]), _fmt_num(row["missing_tonnes"]),
-                            _fmt_num(row["cost_of_missing"])))
+                            _fmt_num(row["cost_of_missing"]),
+                            "  (market and your own output supply this in about %s years)"
+                            % _fmt_num(years) if years and years > 1.0 else ""))
     elif out.get("materials"):
         lines.append("MATERIALS: " + ", ".join("%s %s" % (material, _fmt_num(quantity)) for material, quantity in out["materials"].items()))
     return lines

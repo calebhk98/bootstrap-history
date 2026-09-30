@@ -50,9 +50,10 @@ def _quote_material(sim, cmd, quantity):
         return {"ok": False, "error": "no market price for material %r; 'materials' lists "
                                       "the ones with a market" % (cmd.get("material"),)}
     tonnes = min(quantity, quote["market_available_tonnes_per_year"])
-    total = tonnes * quote["buy_per_tonne"]
+    total = sim.material_purchase_cost(quote["material"], tonnes)[0]
     return {"ok": True, "what": "material", "material": quote["material"],
             "tonnes": quantity, "per_tonne": round(quote["buy_per_tonne"], 2),
+            "average_per_tonne_for_this_order": round(total / tonnes, 2) if tonnes > 0 else None,
             "to_buy_it": round(total, 1),
             "sells_back_per_tonne": round(quote["sell_per_tonne"], 2),
             "market_available_tonnes_per_year":
@@ -63,7 +64,7 @@ def _quote_material(sim, cmd, quantity):
             "note": ("The market will sell at most %.1f tonnes a year, so a larger "
                      "order is cut to that." % quote["market_available_tonnes_per_year"]
                      if quantity > quote["market_available_tonnes_per_year"] else
-                     "The current market price; it moves as you and others buy.")}
+                     "The price rises as the order is filled, and moves as you and others buy.")}
 
 
 def _quote_manumit(sim, cmd, quantity):

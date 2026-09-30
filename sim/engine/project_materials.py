@@ -109,6 +109,10 @@ class ProjectMaterialsMixin:
                          "missing_tonnes": missing,
                          "price_per_tonne": mean_price, "cost_of_missing": cost,
                          "deliverable_now_tonnes": deliverable,
+                         "years_of_supply_it_takes": (
+                             None if lab_scale or missing <= 0 else missing / max(
+                                 1e-9, self._material_market_tonnes(emp_key)
+                                 + self._own_material_supply(tag))),
                          "priced": quoted is not None})
         return {"rows": rows, "cost_of_missing": total}
 
@@ -138,6 +142,12 @@ class ProjectMaterialsMixin:
         node = self.nodes[node_id]
         return ((node["_total_cost"] - node["_material_cost"]) * self.cost_money_factor()
                 * self.civ_cost_factor(node_id))
+
+    def bounty_price(self, node_id):
+        """A prize for the whole project: the multiplier times what this
+        society would pay to build it today, before opposition."""
+        return (self.project_cost_now(node_id) / self.opposition_factor(node_id)
+                * self.BOUNTY_PRICE_MULTIPLIER)
 
     def buy_project_materials(self, node_id):
         """Pay for what the market can deliver now of the missing materials

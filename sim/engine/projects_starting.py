@@ -210,8 +210,7 @@ class StartingMixin:
         # cost that ignores the civilization and price factors the build
         # applies would make `bounty` quote a wildly different price than
         # `why` does for the same node.
-        price = (node["_total_cost"] * self.BOUNTY_PRICE_MULTIPLIER * self.civ_cost_factor(node_id)
-                 * self.material_cost_factor(node_id) * self.cost_money_factor())
+        price = self.bounty_price(node_id)
         household = self.state.household
         projects = self.state.projects
         if price > household.capital:

@@ -195,8 +195,13 @@ _ok_se = [node_id for node_id in s_se.order if s_se.can_start(node_id, _memo=_me
 _ok_se = [node_id for node_id in _ok_se
           if not (NODES[node_id]["ph"] == 0 and NODES[node_id]["_total_cost"] <= 1)]
 _ok_se.sort(key=lambda k: s_se.project_cost(k), reverse=True)
-for _k_se in _ok_se[:15]:
-    S._agent_dispatch(s_se, NODES, {"cmd": "start", "id": _k_se})
+# A start whose up-front materials the purse cannot cover is refused, so walk
+# down the list and take the first 15 that go through.
+_started_se = 0
+for _k_se in _ok_se:
+    if _started_se >= 15:
+        break
+    _started_se += bool(S._agent_dispatch(s_se, NODES, {"cmd": "start", "id": _k_se}).get("ok"))
 _step_ce = S._agent_dispatch(s_se, NODES, {"cmd": "step", "years": 100})
 # CLOSE TO THE LIMIT now interrupts a batched step too (see the dedicated
 # check below), and it fires strictly BEFORE exhaustion by design - so this

@@ -52,8 +52,7 @@ def _cmd_bounty(sim, nodes, cmd, ended):
     if node_id in sim.active:
         return {"ok": False, "error": "%s is already active; stop it first if you want "
                                       "to switch to a bounty instead" % node_id}
-    price = (nodes[node_id]["_total_cost"] * 2.5 * sim.civ_cost_factor(node_id)
-             * sim.material_cost_factor(node_id) * sim.cost_money_factor())
+    price = sim.bounty_price(node_id)
     if not sim.post_bounty(node_id):
         return {"ok": False, "error": "cannot afford the bounty: needs about %.0f denarii, "
                                       "you have %.0f. Earn or wait, then try again" % (price, sim.capital)}

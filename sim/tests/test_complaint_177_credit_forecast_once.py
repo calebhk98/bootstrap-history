@@ -32,7 +32,7 @@ def _credit_lines(text):
 borrower = sim(capital=2695.0)
 first = _run(borrower, "start units_standards")
 second = _run(borrower, "start cn_damp_proof_course")
-third = _run(borrower, "start tx2_printing_block")
+third = _run(borrower, "start tr_lateen_sail")
 check("set-up: the second and third starts draw on credit",
       all(reply.get("ok") and "on_credit" in reply for reply in (second, third)), (second, third))
 
@@ -52,7 +52,7 @@ check("...and prints only a one-line summary of the block on screen",
 forced = sim(capital=2695.0)
 _run(forced, "start units_standards")
 _run(forced, "start cn_damp_proof_course")
-again = S._agent_dispatch(forced, NODES, {"cmd": "start", "id": "tx2_printing_block", "full": True})
+again = S._agent_dispatch(forced, NODES, {"cmd": "start", "id": "tr_lateen_sail", "full": True})
 check("'full' asks for the whole block again",
       again.get("ok") and "what_happens_there" in again.get("on_credit", {}), again)
 
@@ -60,6 +60,6 @@ next_year = sim(capital=2695.0)
 _run(next_year, "start units_standards")
 _run(next_year, "start cn_damp_proof_course")
 next_year.year += 1
-later = _run(next_year, "start tx2_printing_block")
+later = _run(next_year, "start tr_lateen_sail")
 check("a new year shows the full block again",
       later.get("ok") and "what_happens_there" in later.get("on_credit", {}), later)

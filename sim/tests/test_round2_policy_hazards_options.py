@@ -2181,8 +2181,8 @@ check("...and it really is the highest-leverage work available",
 
 # A break tester multiplied out the factors `why` shows for clock_pendulum,
 # got 4,747.6 against a stated 4,834, and called it the one card in the game
-# whose arithmetic does not work. It was: project_cost multiplies in the
-# scarce-material premium and the breakdown never listed it. A breakdown that
+# whose arithmetic does not work. It was: project_cost multiplies in a
+# factor the breakdown never listed. A breakdown that
 # omits a factor is worse than no breakdown, because it invites this exact
 # check and then fails it.
 _bad_math = []
@@ -2192,9 +2192,11 @@ for _civ_m in ("england_1300", "rome_100ad", "norse_900ad"):
         if _k not in NODES:
             continue
         _e = S._node_explain(_sm, NODES, _k)["cost"]
-        _prod = (_e["base_total"] * _e["civ_domain_factor"]
-                 * _e["material_distance_factor"] * _e["opposition_factor"]
-                 * _e["scarce_material_premium"] * _e["price_index"])
+        # labour and capital take the civ and price factors; the missing
+        # materials are already at today's market price.
+        _prod = (((_e["labour"] + _e["capital"]) * _e["civ_domain_factor"]
+                  * _e["price_index"] + _e["materials"])
+                 * _e["material_distance_factor"] * _e["opposition_factor"])
         if abs(_prod - _e["total"]) > max(2.0, _e["total"] * 0.005):
             _bad_math.append((_civ_m, _k, round(_prod, 1), _e["total"]))
 check("every cost breakdown multiplies out to the total it states",

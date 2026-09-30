@@ -815,6 +815,8 @@ def _material_row(row):
             "missing_tonnes": round(row["missing_tonnes"], 3),
             "price_per_tonne": round(row["price_per_tonne"], 2),
             "cost_of_missing": round(row["cost_of_missing"], 1),
+            **({"years_of_supply_it_takes": round(row["years_of_supply_it_takes"], 1)}
+               if row["years_of_supply_it_takes"] else {}),
             **({} if row["priced"] else {"note": "no market price; counted as free"})}
 
 
