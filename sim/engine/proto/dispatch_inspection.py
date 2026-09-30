@@ -498,7 +498,7 @@ def _stuck_startable_and_afford(sim, nodes, _fog):
                   and (not _fog or sim.is_visible(node_id))
                   and sim.start_reason(node_id)[0]]
     _afford = [node_id for node_id in _startable
-               if sim.project_cost(node_id) <= sim.spending_power("start")]
+               if sim.start_refusal(node_id) is None]
     return _startable, _afford
 
 
