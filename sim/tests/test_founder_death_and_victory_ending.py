@@ -79,6 +79,7 @@ check("population still names the civilisation", bool(_pop.get("civilisation")),
 
 # 224: victory screen, and finish-and-score under fog
 _win = _new_sim(fog=True, mortal=False)
+_win.end_year = _win.cfg["start_year"] + _win.cfg["horizon_years"]
 _real_step = _win.step
 
 

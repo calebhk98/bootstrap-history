@@ -18,7 +18,7 @@ from .economy import (_agent_capacity, _agent_changes, _agent_economy,
                       _agent_mines, _agent_portfolio, _agent_values)
 from .explain_once import already_explained
 from .nodes import _did_you_mean
-from .score import score_report
+from .score import final_report, score_report
 from .state import _agent_log, _agent_state, _waiting_on
 from .techtree import _agent_available, _brief, _node_explain
 
@@ -78,6 +78,18 @@ def _cmd_log(sim, nodes, cmd, ended):
 def _cmd_score(sim, nodes, cmd, ended):
     return {"ok": True, **score_report(sim, nodes)}
 
+
+
+@command("finish", group="game",
+         summary="end the run and see the score",
+         usage=["finish"], options={},
+         description="Ends the run here and shows the full score, including the "
+                     "technology share fog otherwise withholds. The save still loads, "
+                     "but the run stays ended.")
+def _cmd_finish(sim, nodes, cmd, ended):
+    if not ended:
+        sim.dead_reason = "you finished the run in %d AD and asked for the score" % sim.year
+    return {"ok": True, **final_report(sim, nodes)}
 
 
 @command("why", group="overview", aliases=("explain", "look", "inspect"),

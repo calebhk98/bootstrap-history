@@ -122,6 +122,14 @@ Two fixes, usable separately or together:
                                                     this year's founder hours, local
                                                     contracts and most local standing.
                                                     Refused for a tile nobody lives on.
+      {"cmd":"finish"}                             end the run here and return the final
+                                                    report with the full score (fog's
+                                                    withheld total included); the save
+                                                    still loads but the run stays ended.
+                                                    A `step` that reaches the goal also
+                                                    returns a "victory" block: date,
+                                                    elapsed years, points so far,
+                                                    achievements, how to get the score.
       {"cmd":"quit"}                               end the session
       {"cmd":"help"}                               front page and topic list
       {"cmd":"help","topic":"commands"}            every command, grouped (see below)

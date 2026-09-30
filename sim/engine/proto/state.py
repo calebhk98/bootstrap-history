@@ -603,6 +603,12 @@ def _agent_state_founder(sim):
     """
     return {
         "founder_alive": sim.founder_alive,
+        "founder_age": (sim.founder_age()
+                        if sim.founder_alive and not sim.cfg.get("immortal", True) else None),
+        "founder_usual_age_at_death": (
+            [round(sim.cfg["founder_arrival_age"] + sim.cfg["founder_life_mean"] - sim.cfg["founder_life_sd"]),
+             round(sim.cfg["founder_arrival_age"] + sim.cfg["founder_life_mean"] + sim.cfg["founder_life_sd"])]
+            if not sim.cfg.get("immortal", True) else None),
         # THE AGE ITSELF, AS A FIELD, not only inside a log sentence a script
         # would have to parse. See _founder_death_info.
         "founder_died_aged": (_founder_death_info(sim) or {}).get("aged_about"),

@@ -717,9 +717,7 @@ class HazardsMixin:
         # Exclude: society inheritance (granted), dispersed copies (beyond reach).
         # Losable: corpus_written only (local site); corpus_dispersed survives.
         projects = self.state.projects
-        losable = sorted(node_id for node_id in projects.done
-                         if node_id not in projects.granted
-                         and not self.corpus_is_dispersed(node_id))
+        losable = self.losable_node_ids()
         if losable:
             drop = rng.sample(losable, max(1, int(len(losable) * frac)))
             _lost = projects.forgotten

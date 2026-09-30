@@ -409,7 +409,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
 def _cmd_hire(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    if not sim.founder_alive and sim.directors_extra < 0.5:
+    if not sim.founder_alive and not sim.deputies_carry_the_work():
         return {"ok": False,
                 "error": "there is nobody left to take anyone on: the "
                          "founder is dead and no deputy remains to direct "

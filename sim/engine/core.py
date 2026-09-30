@@ -2034,6 +2034,15 @@ class Sim(MechanicsMixin, EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "losable. Tuned so full dissolution over "
             "DISSOLUTION_YEARS_UNTIL_END years is gradual, not "
             "instantaneous; not measured.")
+    DEPUTIES_CARRY_THE_WORK_FROM = declare(
+        "DEPUTIES_CARRY_THE_WORK_FROM", 0.5, kind="temporary_heuristic",
+        unit="deputies (continuous level of directors_extra)", source=None,
+        confidence="D",
+        why="How many deputies it takes before a programme can go on "
+            "without its founder; below it the deputies still do real "
+            "work but the dissolution clock keeps running. One rule, "
+            "read by the death notice, the clock, hiring and `state`. "
+            "Round number, not measured.")
     DISSOLUTION_YEARS_UNTIL_END = declare(
         "DISSOLUTION_YEARS_UNTIL_END", 12, kind="temporary_heuristic",
         unit="years", source=None, confidence="D",
