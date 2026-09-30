@@ -200,17 +200,11 @@ def _play_resolve_session(args, sim, session):
     sitting cannot start at all; the message has already been printed in
     that case.
     """
-    # A --session THAT DOES NOT EXIST IS A TYPO, NOT AN INVITATION: silently
-    # starting a brand new default game (Rome 100 AD, whatever civilisation
-    # was last played) and then writing it over that filename on the first
-    # command risks destroying a real, long-running save to a simple typo
-    # in the path. Starting a new game is what you do by naming a
-    # civilisation, so require that to be explicit.
-    if session and not os.path.exists(session) and not getattr(args, "civ", None):
-        print("there is no save at %r, and no --civ given, so I do not know "
-              "what game you meant. To resume, check the path; to start a new "
-              "game there, say which civilisation with --civ." % session)
-        return 1
+    # A --session THAT DOES NOT EXIST: if a save file is named but does not
+    # exist, and it is a new claim (not a checkpoint), then start a fresh
+    # game there using the default civilisation - same as plain `play` does.
+    # The Sim is already built with the default civ, so just mark it fresh.
+    # An existing save is loaded below.
     fresh = not (session and os.path.exists(session)) or _is_claimed_slot(session)
     # A CHECKPOINT DOES NOT GET AUTOSAVED OVER, EVER - see settings.is_checkpoint's
     # own comment for the whole story. `checkpoint_source` stays None for an

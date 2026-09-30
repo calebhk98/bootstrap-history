@@ -1,6 +1,6 @@
 # `goals` headlines the junction transistor; a default game plays toward the point-contact transistor
 
-**Status:** open
+**Status:** closed - goals now marks the actual default goal with <- DEFAULT
 
 `goals` lists "Grown and alloy junction transistor ... The original goal" (junction_transistor) first. A default `play` shows "Goal: point_contact_transistor". A new player cannot tell which one they are playing toward without reading `state`.
 
