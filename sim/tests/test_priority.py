@@ -53,7 +53,7 @@ _priority(test_sim, id="school_founded", position="first")
 check("inactive nodes keep their place in the master order",
       test_sim.order[0] == "other_node" and test_sim.order.index("school_founded") == 1, test_sim.order)
 
-reply = _priority(_three_active(), id="not_active_node", position="first")
+reply = _priority(_three_active(), id="arithmetic_positional", position="first")
 check("an inactive id is refused with a pointer to start",
       not reply["ok"] and "not active" in reply["error"], reply)
 

@@ -847,6 +847,19 @@ def _parse_allocate(command, rest, words, nums, want_json):
     return out, None
 
 
+def _parse_priority(command, rest, words, nums, want_json):
+    if not rest:
+        return {"cmd": "priority"}, None
+    out = {"cmd": "priority", "id": words[0]}
+    if len(words) > 1 and words[1].lower() in ("first", "top", "last", "bottom"):
+        out["position"] = "first" if words[1].lower() in ("first", "top") else "last"
+    elif nums:
+        out["position"] = int(nums[0])
+    else:
+        out["position"] = "first"
+    return out, None
+
+
 def _parse_policy(command, rest, words, nums, want_json):
     if not rest:
         return {"cmd": "policy"}, None
@@ -924,6 +937,7 @@ _COMMAND_PARSERS = {
     "quote": _parse_buy_or_quote,
     "close": _parse_close,
     "allocate": _parse_allocate,
+    "priority": _parse_priority,
     "policy": _parse_policy,
     "save": _parse_save_or_load,
     "load": _parse_save_or_load,

@@ -1,6 +1,6 @@
 # Project priority should be a first-class editable control
 
-**Status:** open
+**Status:** closed - `priority` command (list, first, last, rank) reorders active projects; allocate orders still outrank it; named bands and pause-protection not built, the ordering covers the need
 
 The simulator reports project priorities in the portfolio, but priority management is not prominent enough in the main command discovery flow. Priority matters especially under partial funding when capital is scarce.
 

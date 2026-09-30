@@ -608,7 +608,8 @@ def _agent_portfolio(sim, nodes, cmd=None):
                 "hours; each row above shows what IT got and why. "
                 "'trade_hours_demand_vs_supply' is the same question for "
                 "every hired trade your portfolio draws on, summed across "
-                "all of them, before you commit to one more."
+                "all of them, before you commit to one more. 'priority "
+                "<id> first' changes who is served first."
                 % (count, "" if count == 1 else "s",
                    "is" if count == 1 else "are",
                    "{:,.0f}".format(pool_total or 0.0))) if count else
