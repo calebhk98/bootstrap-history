@@ -215,8 +215,9 @@ def _brief(sim, nodes, node_id, fog):
                 "failure_costs": (round(sim.project_cost(node_id) * 0.4, 1)
                                   if node["risk"] else 0.0),
                 "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
-                "earns_per_year": _est if _est is not None else round(node["rev"], 1),
-                "costs_per_year_after": round(node["up"], 1),
+                "earns_per_year": (_est if _est is not None
+                                   else round(sim.venture_real_earnings(node_id), 1)),
+                "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
                 "how_much_rests_on_this": rests,
                 **_staff_fields(sim, node)}
     return {"id": node_id, "name": node["name"], "cat": node["cat"],
@@ -225,8 +226,8 @@ def _brief(sim, nodes, node_id, fog):
             "calendar_floor_years": round(sim.calendar_floor(node_id), 2),
             "nominal_calendar_floor_before_reputation": node["yrs"],
             "risk": sim.effective_risk(node_id),
-            "earns_per_year": round(node["rev"], 1),
-            "costs_per_year_after": round(node["up"], 1),
+            "earns_per_year": round(sim.venture_real_earnings(node_id), 1),
+            "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
             **available_economics.row_fields(sim, node_id, node),
             # _downstream_of, NOT downstream_count. The cached bitmask index
             # in data.py follows hard prerequisites only, and it must: adding
@@ -278,10 +279,10 @@ _SORT_KEYS = {
     "cost": lambda s, n, k: s.project_cost(k),
     "hours": lambda s, n, k: n[k]["ph"],
     "years": lambda s, n, k: n[k]["yrs"],
-    "earns": lambda s, n, k: n[k]["rev"],
-    "revenue": lambda s, n, k: n[k]["rev"],
-    "upkeep": lambda s, n, k: n[k]["up"],
-    "net": lambda s, n, k: available_economics.net_per_year(n[k]),
+    "earns": lambda s, n, k: s.venture_real_earnings(k),
+    "revenue": lambda s, n, k: s.venture_real_earnings(k),
+    "upkeep": lambda s, n, k: s.venture_real_upkeep(k),
+    "net": lambda s, n, k: available_economics.net_per_year(s, k),
     "payback": available_economics.sort_payback,
     "risk": lambda s, n, k: n[k]["risk"],
     "alpha": lambda s, n, k: n[k]["name"].lower(),
@@ -931,8 +932,8 @@ def _explain_revenue(sim, nodes, node_id, node):
         # is the whole of the user's original question - "shouldn't the
         # payback be something you don't know until after research?" So
         # revenue alone is fogged; see _fog_revenue_estimate.
-        "upkeep": node["up"],
-        "revenue": (node["rev"] if (not sim.fog
+        "upkeep": sim.venture_real_upkeep(node_id),
+        "revenue": (sim.venture_real_earnings(node_id) if (not sim.fog
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),
         "revenue_forecast_scope": (

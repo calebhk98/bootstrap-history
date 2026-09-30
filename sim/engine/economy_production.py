@@ -435,14 +435,12 @@ class ProductionMixin:
                 ramp = self.PRACTICE_SHARE
             else:
                 ramp = self.venture_ramp(node_id)
-            amt = self.concern_takings(node_id, ramp)
             if practice:
-                amt *= self.practice_attention()
+                amt = self.concern_takings(node_id, ramp) * self.practice_attention()
             else:
-                # SAME FACTOR revenue() APPLIES, so this row and the total it
-                # is supposed to add up to do not silently disagree - see the
-                # "the ledger's parts add up to the revenue it states" check.
-                amt *= self.goods_market_factor(node_id)
+                # The figure `ventures` and `why` print, and the factor
+                # revenue() applies, so the ledger's parts add up to its total.
+                amt = self.venture_real_earnings(node_id)
             if amt > 0.5:
                 rows[node_id] = round(amt, 1)
         # ALL OF IT, OR SAY WHAT IS MISSING: a ledger that shows only the

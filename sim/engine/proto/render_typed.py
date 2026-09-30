@@ -11,6 +11,7 @@ ARCHITECTURE.md.
 import json, re
 
 from .util import _fmt_num
+from .render_screens_start import render_start
 from .render_screens_big import render_state, render_step, render_available, render_why
 from .render_screens_economy import (
     render_capacity, render_materials, render_portfolio, render_economy,
@@ -40,6 +41,8 @@ _RENDERERS = {
     "economy": render_economy, "changes": render_changes,
     "population": render_population,
     "final": render_final, "score": render_score,
+    "start": render_start, "begin": render_start, "research": render_start,
+    "build": render_start,
 }
 
 

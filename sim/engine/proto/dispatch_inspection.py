@@ -371,7 +371,7 @@ def _stuck_shut_ventures(sim, nodes):
     # building at all.
     _shut = sorted(node_id for node_id in sim.done
                    if sim.is_venture(node_id) and node_id not in sim.operating
-                   and nodes[node_id]["rev"] > nodes[node_id]["up"])
+                   and sim.venture_real_earnings(node_id) > sim.venture_real_upkeep(node_id))
     if not _shut:
         return None
     # DO NOT RECOMMEND A COMMAND THAT WILL FAIL: picking the best-margin
@@ -397,7 +397,7 @@ def _stuck_shut_ventures(sim, nodes):
     _really_openable = [node_id for node_id in _shut if _openable(node_id)]
     if _really_openable:
         _best = max(_really_openable,
-                   key=lambda k: nodes[k]["rev"] - nodes[k]["up"])
+                   key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
         return {"what": "things you built and never opened",
                 "why": "%d finished concern(s) are shut and "
                        "earning nothing. The best you could "
@@ -405,10 +405,10 @@ def _stuck_shut_ventures(sim, nodes):
                        "would earn %s a year against %s of "
                        "upkeep: 'open %s'"
                        % (len(_shut), _best,
-                          "{:,.0f}".format(nodes[_best]["rev"]),
-                          "{:,.0f}".format(nodes[_best]["up"]),
+                          "{:,.0f}".format(sim.venture_real_earnings(_best)),
+                          "{:,.0f}".format(sim.venture_real_upkeep(_best)),
                           _best)}
-    _best = max(_shut, key=lambda k: nodes[k]["rev"] - nodes[k]["up"])
+    _best = max(_shut, key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
     _need_sch, _need_art = sim.venture_hands(_best)
     if _need_sch > _sch_free + 0.01 or _need_art > _art_free + 0.01:
         _why = ("it needs the full-time equivalent of %.2f "
@@ -431,8 +431,8 @@ def _stuck_shut_ventures(sim, nodes):
                    "close something to free the hands, "
                    "or raise the money, and try again"
                    % (len(_shut), _best,
-                      "{:,.0f}".format(nodes[_best]["rev"]),
-                      "{:,.0f}".format(nodes[_best]["up"]),
+                      "{:,.0f}".format(sim.venture_real_earnings(_best)),
+                      "{:,.0f}".format(sim.venture_real_upkeep(_best)),
                       _why)}
 
 

@@ -721,6 +721,15 @@ def _ventures_scope_notes_block(out):
     return lines
 
 
+def _market_lines(row):
+    """The first sentence of a row's market-saturation note (the JSON keeps all of it)."""
+    note = row.get("market")
+    if not note:
+        return []
+    return [_wrap("market saturation: " + note.split(". ")[0] + ". 'why %s' says more." % row.get("id"),
+                  indent="      ")]
+
+
 def _ventures_running_block(out):
     lines = ["", "RUNNING"]
     run = out.get("running")
@@ -737,6 +746,7 @@ def _ventures_running_block(out):
             if foreman:
                 lines.append("      specialist foreman: %s %s FTE"
                          % (_fmt_num(foreman.get("fte")), foreman.get("trade")))
+            lines.extend(_market_lines(row))
     else:
         lines.append("  nothing")
     return lines
@@ -759,6 +769,7 @@ def _ventures_idle_block(out):
             if foreman:
                 lines.append("      needs specialist foreman: %s %s FTE"
                          % (_fmt_num(foreman.get("fte")), foreman.get("trade")))
+            lines.extend(_market_lines(row))
     else:
         lines.append("  nothing")
     if out.get("and_more_you_could_open"):
