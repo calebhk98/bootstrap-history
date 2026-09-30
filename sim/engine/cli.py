@@ -1678,7 +1678,9 @@ def main():
     subparser.add_argument("--kit", default="poor_scholar",
                    help="starting wealth: " + ", ".join(STARTING_KITS))
     subparser.add_argument("--fog", action="store_true")
-    subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true")
+    subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true",
+                   default=None,
+                   help="show what unfinished work will need as estimates that tighten as you go; overrides the settings default")
     subparser.add_argument("--mortal", action="store_true")
     subparser.add_argument("--deterministic", action="store_true",
                    help="replace this session's rng with one whose random() always "

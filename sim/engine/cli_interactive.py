@@ -183,7 +183,13 @@ def _play_build_sim(args):
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + horizon
     sim.fog = bool(getattr(args, "fog", False))
-    sim.fuzzy_estimates = bool(getattr(args, "fuzzy_estimates", False))
+    # Flag or menu choice first; only a fresh game (no save on disk yet) falls
+    # back to the settings default, so resuming never switches it on unasked.
+    asked_fuzzy = getattr(args, "fuzzy_estimates", None)
+    if asked_fuzzy is None:
+        fresh_game = not (session and os.path.exists(session))
+        asked_fuzzy = fresh_game and bool(app_cfg.get("default_fuzzy_estimates", False))
+    sim.fuzzy_estimates = bool(asked_fuzzy)
     sim.revealed = set()
     # The reader is a person typing words, so the worked examples inside every
     # reply should be words too. See protocol.to_typed_hints.
@@ -565,6 +571,7 @@ def _ingame_options(sim, session):
               % (sim.civ.get("name", sim.civ.get("id", "?")), sim.cfg["start_year"]))
         print("   fog of war   : %-3s                          (fixed for this game)"
               % ("on" if sim.fog else "off"))
+        print("   fuzzy estimates : %-3s" % ("on" if sim.fuzzy_estimates else "off"))
         print("   mortality    : %s"
               % ("on - the founder ages, and can die of it" if mortal_on
                  else "off - the founder does not age"))
@@ -587,6 +594,8 @@ def _ingame_options(sim, session):
               % ("  (already on)" if mortal_on else ""))
         if session:
             print("   3) move this save to a different file")
+        print("   f) turn fuzzy estimates on from now on%s"
+              % ("  (already on)" if sim.fuzzy_estimates else ""))
         print("   b) back to the game")
         try:
             typed = input("\n   > ").strip()
@@ -658,6 +667,19 @@ def _ingame_options(sim, session):
                                   sim.rng.gauss(mean, std_dev))
                 sim.founder_alive = True
                 print("   -- done. Mortality is on from %d AD." % sim.year)
+            else:
+                print("   -- unchanged.")
+
+        elif word in ("f", "fuzzy") and not sim.fuzzy_estimates:
+            # One-way like mortality, unlike fog: turning it on only hides
+            # detail from now on, but turning it off would reveal exact
+            # figures the player was told to treat as uncertain.
+            print(_wrap("From now on the needs of unfinished work are shown as "
+                        "estimates that tighten as you start and finish it. "
+                        "This cannot be turned off again in this game."))
+            if _ask("   Turn fuzzy estimates on now? [y/N] ", ["y", "n"], "n") == "y":
+                sim.fuzzy_estimates = True
+                print("   -- done. Fuzzy estimates are on.")
             else:
                 print("   -- unchanged.")
 
@@ -791,7 +813,7 @@ def _ask(prompt, options, default=None):
 
 def _new_game(civs, cfg):
     """The wizard: pick a civilisation, read where you have landed, choose
-    fog/kit/mortality/goal/horizon, and start. Returns cmd_play's exit code once a
+    fog/fuzzy/kit/mortality/goal/horizon, and start. Returns cmd_play's exit code once a
     game has actually begun, or None if the player backed out first - in
     which case cmd_menu's own loop is what should run next, not this
     function again."""
@@ -802,6 +824,10 @@ def _new_game(civs, cfg):
     _new_game_print_opening(civ)
     fog = _new_game_ask_fog(cfg)
     if fog is None:
+        return None
+    print()
+    fuzzy = _new_game_ask_fuzzy(cfg)
+    if fuzzy is None:
         return None
     print()
     kit = _new_game_ask_kit(cfg)
@@ -835,6 +861,7 @@ def _new_game(civs, cfg):
     cfg["default_civ"] = civ["id"]
     cfg["default_kit"] = kit
     cfg["default_fog"] = (fog == "y")
+    cfg["default_fuzzy_estimates"] = (fuzzy == "y")
     cfg["default_mortal"] = (mortal == "y")
     cfg["default_goal"] = goal
     cfg["default_horizon"] = horizon
@@ -874,6 +901,7 @@ def _new_game(civs, cfg):
     args.kit = kit
     args.mortal = (mortal == "y")
     args.fog = (fog == "y")
+    args.fuzzy_estimates = (fuzzy == "y")
     args.session = session
     args.manual = True
     return cmd_play(args)
@@ -962,6 +990,21 @@ def _new_game_ask_fog(cfg):
     fog = _ask("\n   Fog of war? [%s] " % ("Y/n" if fog_default == "y" else "y/N"),
                ["y", "n"], fog_default)
     return fog
+
+
+def _new_game_ask_fuzzy(cfg):
+    """The fuzzy-estimates question. Returns "y"/"n", or None if the player
+    backed out.
+    """
+    print("-" * 78)
+    print(_wrap("FUZZY ESTIMATES. With it on, the staff, hours, money and time "
+                "that unfinished work will need are shown as labelled estimates "
+                "that tighten as you start and finish it; the checks still use "
+                "the true needs. You can turn it on later from the in-game "
+                "'options' command, but not off again.", indent="   "))
+    fuzzy_default = "y" if cfg.get("default_fuzzy_estimates", False) else "n"
+    return _ask("\n   Fuzzy estimates? [%s] " % ("Y/n" if fuzzy_default == "y" else "y/N"),
+                ["y", "n"], fuzzy_default)
 
 
 def _new_game_ask_kit(cfg):

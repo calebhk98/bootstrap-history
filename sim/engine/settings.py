@@ -97,7 +97,7 @@ from typing import Any, cast, Dict, List, NotRequired, Optional, TypedDict
 class Config(TypedDict):
     """The application-preferences file this module reads and writes
     (CONFIG_DEFAULTS, below, and load_config()'s/save_config()'s own
-    shape). Fixed at exactly these eleven keys: `load_config` builds every
+    shape). Fixed at exactly the keys listed here: `load_config` builds every
     result by copying CONFIG_DEFAULTS and overwriting only keys already in
     that dict (`for key in CONFIG_DEFAULTS: if key in raw: ...`), and
     `save_config` writes back exactly `{key: ... for key in
@@ -113,6 +113,7 @@ class Config(TypedDict):
     default_civ: str
     default_kit: str
     default_fog: bool
+    default_fuzzy_estimates: bool
     default_mortal: bool
     default_goal: Optional[str]
     default_horizon: int
@@ -207,6 +208,9 @@ CONFIG_DEFAULTS: Config = {
     "default_civ": "rome_100ad",
     "default_kit": "poor_scholar",
     "default_fog": True,
+    # Whether a new game shows unfinished work's needs as estimates; used
+    # when neither --fuzzy-estimates nor the new-game menu says otherwise.
+    "default_fuzzy_estimates": False,
     "default_mortal": False,
     # None means "the tree's own default" (meta.goal_node, the transistor) -
     # see _new_game, which resolves this the same way resolve_goal() does.
@@ -309,7 +313,7 @@ def save_config(cfg: Config) -> bool:
     # here, not a string literal, which is exactly the case TypedDict
     # indexing cannot type-check (mypy needs to see the literal key at the
     # call site) - see Config's own docstring for why this iteration is
-    # still guaranteed to only ever see one of Config's own ten keys.
+    # still guaranteed to only ever see one of Config's own keys.
     # `cast` changes nothing at runtime; `.get`/`[]` below are the same
     # calls this line already made.
     _cfg_untyped = cast(Dict[str, Any], cfg)

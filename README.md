@@ -42,12 +42,17 @@ python3 sim/simulator.py play --civ england_1300 --kit merchant --goal <goal> --
 - `--civ` picks the civilisation (see `civs`) and `--kit` the starting money.
 - `--goal` picks what you are working toward (see `goals`).
 - `--fog` hides everything except what you have built and could start next.
+- `--fuzzy-estimates` shows what unfinished work will need as labelled estimates that
+  tighten as you start and finish it. The new-game menu asks about it next to fog,
+  and the in-game `options` screen can turn it on later.
 - `--mortal` lets the founder die of old age; by default you are immortal.
 - `--seed` fixes the dice, so a game can be replayed.
 
 ## Playing
 
-Type plain words, one command per line. The first ones to learn:
+Type plain words, one command per line. The table below is only a
+starting set: there are dozens of commands. `help commands` lists every command
+and `help <command>` explains one. The first ones to learn:
 
 | Command | What it does |
 |---|---|
