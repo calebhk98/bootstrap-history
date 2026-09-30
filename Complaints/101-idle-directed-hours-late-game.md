@@ -39,3 +39,5 @@ At large scale, idle capacity represents lost opportunity. The current subtle fi
 Likely in `sim/engine/proto/state.py` where the `free_hours_going_unused` field is already implemented, and `sim/engine/proto/dispatch.py` for actionable suggestions tied to idle capacity.
 
 **Confidence:** Design recommendation
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 218, 223; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): at 400 AD about 11,700 directed founder-hours sat idle each year because every project was calendar- or payment-bound; the tester wanted that capacity pointed at something (more parallel starts, teaching, public services) and deliberately started optional research to use it. Reproduces: untested (late game).

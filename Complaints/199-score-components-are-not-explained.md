@@ -12,3 +12,5 @@ Reproduces on the current branch (resilience part):
 The score screen prints only raw and normalized values and weights. What it would take: one line per component naming its inputs ("resilience: mitigations in force against the hazards ahead, weighted by ..."), and for institutions the list of what counts and what is finished but closed. Related: 183 (closed: score when the goal is missed).
 
 Found in an England 1300 blind playtest (fog on, poor_scholar kit, 1300 to 1375). Reports: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`, `Complaints/reports/playtest-england-1300-fog-yearly-log.md`; triage: `Complaints/reports/playtest-england-1300-fog-triage.md`.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 197; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): resilience fell from 3 to 2 (raw) between 325 and 350 AD with the dispersed corpus running and no explanation; literacy 21 percent and institutions 13 stayed flat for 75 years. The tester asks for a delta line per component on `score`. Reproduces: untested (late game).

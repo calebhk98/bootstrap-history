@@ -11,3 +11,5 @@ Measured with every command as its own `--session` process on a 4-core container
 What it would take: profile the late-game step; make refusals that need no simulation cheap; cap or compress the log in the save.
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 210, 221, 222; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): a single late-game `step` took 8 to 20 seconds at 1,000 to 1,860 employees and 250 to 375 concerns, growing with size; the tester wants a visible progress indicator even for single years (see 225 for the multi-year case, which also loses all years on interrupt).

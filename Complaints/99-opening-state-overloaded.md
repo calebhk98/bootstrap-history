@@ -59,3 +59,5 @@ None in next 10 years
 Likely in `sim/engine/proto/state.py` where the opening state is rendered, with structure decisions in `sim/engine/proto/dispatch.py`.
 
 **Confidence:** Design recommendation
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 8, 12, 64; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): the first screen and `help commands` print a couple of hundred lines of reference (every alias, every usage) and the five-command introduction does not say `help commands` has a beginner index; the tester wanted a short index, pagination and aliases on request. Reproduces: yes (`help commands` at the first prompt).

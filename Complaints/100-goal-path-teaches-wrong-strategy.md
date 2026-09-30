@@ -40,3 +40,5 @@ Suggest that a broad approach can make the goal cheaper and faster, without pres
 Likely in `sim/engine/proto/techtree.py` and `sim/engine/proto/dispatch.py` where goal/path information is rendered.
 
 **Confidence:** Design recommendation
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 29; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): during deliberate saving years `stuck` answered "'start civ_glass_windows' would begin the cheapest thing you can pay for today" (replayed: yes, at the very start), which nudges a player toward collecting free filler; the tester asks to mark a planned project and savings target so the adviser respects it and shows the year it becomes affordable under current income. Reproduces: yes for the advice.
