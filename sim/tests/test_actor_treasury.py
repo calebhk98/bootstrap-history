@@ -138,6 +138,7 @@ check("the treasury books requisition and office separately",
 
 drawn = grown("rome_100ad", events=True)
 drawn.rng = AlwaysFires(1)
+drawn.military_demand_eligible = lambda: True  # the state can fight and has noticed the household
 treasury = government_of(drawn)
 capital_before, treasury_before = drawn.capital, treasury.money
 drawn._state_pressure(drawn.year)
