@@ -70,6 +70,11 @@ not exist. Technology nodes may also use `"replaces": "existing_id"`, which is
 the same patch aimed at that id. A new technology node must have a string
 `name`. Unmarked collisions are errors which name both sources.
 
+A technology's engine behaviour (standing, credit, staffing, hedges, power tiers and so
+on) is declared in its `mechanics` object, documented in `data/branches/MECHANICS.md`.
+A mod that adds a node gives it those behaviours by declaring mechanics; an
+override that names a mechanic changes or, with `null`, removes it.
+
 Goals (in `data/goals.json`, identified by their `node`) and trades (in
 `data/world/trades.json`, with `family`, `training`, `note`, `initially_absent`)
 take `"override": true` with the same meaning: a deep merge of only the named

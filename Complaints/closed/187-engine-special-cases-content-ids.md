@@ -1,6 +1,6 @@
 # The engine special-cases content ids
 
-**Status:** open
+**Status:** closed - node ids moved onto each node's `mechanics` field (data/branches/MECHANICS.md); pinned by sim/tests/test_engine_content_ids.py
 
 Examples: `sim/engine/core_step_phases.py:1754` `if self.running("sanitation_antisepsis")`; `sim/engine/projects_capability.py:54,70` keyed text for `corpus_dispersed`, `sanitation_antisepsis`; `sim/engine/fog.py:335` `hedge == "corpus_dispersed"`; `sim/engine/cli.py:1144-1148` a list of ids (`corpus_written`, `patron_imperial`, `citizenship`, `telegraph_electric`, ...). The code inventory also reports a hardcoded list of disease-burden tech ids in `engine/core.py`.
 

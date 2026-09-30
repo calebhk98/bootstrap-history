@@ -89,3 +89,9 @@ check("disease burden counts exactly the nodes declaring `disease_burden`",
 
 check("every node the mechanics data names is in the tree and every mechanics block is a dict",
       all(isinstance(node.get("mechanics", {}), dict) for node in NODES.values()), None)
+
+_documented = open(os.path.join(ROOT, "data", "branches", "MECHANICS.md"), encoding="utf-8").read()
+_used = sorted({name for node in NODES.values() for name in (node.get("mechanics") or {})})
+check("every mechanic name used in the tree is documented in data/branches/MECHANICS.md",
+      all("`%s`" % name in _documented for name in _used),
+      [name for name in _used if "`%s`" % name not in _documented])
