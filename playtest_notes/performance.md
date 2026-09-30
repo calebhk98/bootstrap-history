@@ -37,3 +37,10 @@ Steps over 1s: 320 (1.94s), 332 (2.20s), 353 (2.14s), 367 (3.38s), 369 (1.93s), 
 
 ## Suggestions
 - A player running one command per process pays ~0.45s every time. Two things would help agents and scripts: a batch mode (several commands per invocation, which piping multiple lines already gives) and a smaller save (e.g. capping or compressing the log).
+
+## Late game (552-559 AD): steps of 3-14 seconds
+After switching to "research and open everything" (about 250 concerns running, 240 projects in hand, 30-80 new starts a year via `rush`):
+- `step 1` wall times per year: 4.77, 4.76, 2.59, 9.02, 6.82, 11.10, 3.22, 14.12 seconds.
+- The save grew to 2.0 MB (374 KB at 256 AD). A bare `state` now takes 0.95s, so load+save alone doubled.
+- Same save stepped twice on separate copies (559 AD): first 7.14s, second 4.08s. So ~3s of a slow year is the price solver meeting a new set of technologies (cached on the second run), and ~3s is the year's simulation itself at this size.
+- So the late-game slowdown is partly real growth, which the price cache cannot absorb. The years with the most completions (30-40 a year here) are the slowest.
