@@ -28,7 +28,7 @@ Outlook at 546 AD: the 53 remaining nodes cost ~48M (bulk steel 14.8M, industria
 | Year | Money | Net/yr | Techs (score raw) | Literacy | Concerns running | What happened |
 |---|---|---|---|---|---|---|
 | 552 | 1.3M | +0.9M | 507 | 49% | ~130 | Baseline. Reopened 79 concerns via the log workaround; `rush` with a budget. |
-| 566 | 11.5M | +2.4M | - | 60% | ~200 | 2 deputies; bulk steel done; transistor ruled out (131-year serial floor). |
+| 566 | 11.5M | +2.4M | - | 60% | ~200 | 2 deputies; bulk steel done; transistor ruled out, WRONGLY: I read `why`'s "131.2-year serial floor" as time remaining; it is the whole chain's floor (bugs.md #13). |
 | 567 | 19.8M | +5.5M | - | 60% | - | **Achieved: Epidemics stop deciding who lives** (curb epidemic mortality). |
 | 572 | 37.3M | +7.0M | 1,381 | 62% | ~250 | 5 deputies, 44 scholars, 598 craftsmen. Found the bounty save-corruption bug on a copy. |
 | 582 | 86.3M | +17.6M | - | 81% | ~480 | **Achieved: A nation that reads** (75% literacy). Telegraph, newspapers, movable type shift w_information and w_novelty. |
@@ -50,4 +50,4 @@ Outlook at 546 AD: the 53 remaining nodes cost ~48M (bulk steel 14.8M, industria
 | w_labour_saving | -0.23 | -0.18 |
 | bribability | 0.55 | 0.50 |
 | unchanged | | religious rigidity 0.78, military 0.95, commerce 0.25, eminence danger 0.85, patronage 1 |
-Goals achieved in the run: A literate people (484), Epidemics stop deciding who lives (567), A nation that reads (582). The transistor goal was out of reach (131-year serial floor at 566).
+Goals achieved in the run: A literate people (484), Epidemics stop deciding who lives (567), A nation that reads (582). I declared the transistor out of reach at 566 by misreading the chain-wide 131.2-year floor as time remaining (bugs.md #13). At 600 the route had 14 nodes left (power grid active, zinc smelting and germanium blocked behind it), so with the route prioritised from 566 it may have been reachable; I did not test that.
