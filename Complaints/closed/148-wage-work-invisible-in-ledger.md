@@ -1,6 +1,6 @@
 # Wage work (`work` and `allocate work`) is missing from `money` and `log`
 
-**Status:** open
+**Status:** closed - wage income and displaced practice income now itemised in `money` (this year and last), a `log` line per sale, `work` states that the practice loss is uncollected income at the next step, and `work <trade> <hours> preview` shows the net first
 
 One-off: `work scholar 1500` replied "earned: 1,442 ... it cost your own practice: 1,769". `log` has no entry for it. Over the next `step 1` money fell by about 1,650 more than projects and running costs explain; neither `money` nor `log` itemises it.
 

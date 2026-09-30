@@ -209,6 +209,8 @@ class HouseholdState:
 	last_taught: Dict[str, int] = field(default_factory=dict)
 	training: List[List[Any]] = field(default_factory=list)
 	wage_hours_this_year: float = 0.0
+	wage_income_this_year: float = 0.0
+	wage_work_last_year: Optional[Dict[str, float]] = None
 	log: List[Tuple[Any, str]] = field(default_factory=list)
 	granted_staff: Optional[Dict[str, float]] = None
 	hours_this_year: Optional[Dict[str, float]] = None

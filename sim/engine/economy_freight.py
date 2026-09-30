@@ -665,7 +665,9 @@ class FreightMixin:
                        ("you are about %s tonnes a year short"
                         % "{:,.0f}".format(short)) if short >= 1.0
                        else "your own workings already cover the demand you have "
-                            "today, so this is the market, not you",
+                            "today, so this is the market, not you"
+                       if self.mine_capacity.get(binding, 0.0) > 0.0
+                       else "you have no working of it yet, so sink one",
                        binding, tonnes_short, binding, tonnes_short))
         return ("Nothing you own supplies %s and the market is out of it; the "
                 "work waits until something upstream of it is built."
