@@ -30,8 +30,10 @@ class Firm(RecordedActor):
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0
 			takings = world.concern_takings(node_id, self.record.opened_year[node_id]) / (1.0 + rivals)
-			margin = takings - world.upkeep(node_id)
-			self.money += margin
+			upkeep = world.upkeep(node_id)
+			margin = takings - upkeep
+			self.credit(takings, "takings")
+			self.debit(upkeep, "upkeep")
 			self.record.last_margin = margin
 			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
 

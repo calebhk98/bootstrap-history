@@ -392,6 +392,9 @@ class ActorRecord:
 	loss_years: int = 0
 	founded_year: Optional[int] = None
 	last_margin: float = 0.0
+	# purpose -> money in and out over the actor's life; money = income - outlays
+	income: Dict[str, float] = field(default_factory=dict)
+	outlays: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass

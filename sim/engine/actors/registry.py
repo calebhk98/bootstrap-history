@@ -90,8 +90,9 @@ class ActorRegistry:
 			if expected <= 0 or worth <= plan["total"] or stake > capital_limit:
 				continue
 			firm_id = "firm:%d" % (len(self.state.records) + 1)
-			self.add(firm_id, ActorRecord(
-				kind="firm", name=firm_id, money=stake, target=node_id,
+			founded_firm = self.add(firm_id, ActorRecord(
+				kind="firm", name=firm_id, target=node_id,
 				last_margin=expected, founded_year=world.year))
+			founded_firm.credit(stake, "pooled capital")
 			founded.append(firm_id)
 		return founded

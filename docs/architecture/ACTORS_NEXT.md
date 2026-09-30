@@ -69,7 +69,7 @@ replaces, and how it is checked. Fingerprint check for all of them:
 
 Run `--quick` for iteration and the full set before merging.
 
-### 1. Money between actors is conserved and audited
+### 1. Money between actors is conserved and audited (done)
 
 Reads: the founder's household purse, the government record.
 Changes: a general `transfer(payer, payee, amount, purpose)` between any two
@@ -78,8 +78,16 @@ its purse equals its opening money plus income minus outlays; the state's
 takings from the founder are received by the government actor.
 Replaces: the founder's levy vanishing. The founder's own numbers do not
 change; the state's do.
-Tests: `sim/tests/test_actor_treasury.py`. Fingerprint: expected identical on
-every household field, because the founder is charged exactly as before.
+Tests: `sim/tests/test_actor_treasury.py`. Fingerprint: identical on every
+household field, because the founder is charged exactly as before (measured
+with the `--quick` set).
+
+What the ledger showed (`python3 sim/actor_ledger.py <civ> <years> <seed>`):
+the state's income is almost entirely the modelled tax base, its outlays are a
+tiny fraction of it, and the founder's levies are a small part of income. So
+the treasury accumulates and nothing spends it. That is the measured argument
+for 2, 5 and 6: without a state that spends and needs, a real budget has no
+consumer.
 Retires: nothing yet. It is the precondition for 2 to 5, because a state
 whose purse is not fed by real flows cannot be given real spending.
 
