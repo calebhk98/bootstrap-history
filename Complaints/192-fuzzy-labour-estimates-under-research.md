@@ -23,8 +23,8 @@ Possible extension from the request: list several trades as candidates (includin
 - A settings/`play` option, off by default, alongside `--fog` (the existing fog code in `sim/engine/fog.py` is the place to look).
 - No content ids; the noise applies to whatever labour fields a node has.
 
-## Open questions for the stakeholder
+## Stakeholder decisions
 
-1. Should money cost, founder hours and calendar floor also be fuzzy, or only labour?
-2. Should wrong trades appear as candidates (the extension above), or only uncertain counts of the right trades?
-3. When should the truth become exact: at `start`, after the first year of work, or only at completion?
+1. Fuzzy: labour counts and trades, and also money cost, founder hours and the calendar floor.
+2. Wrong trades: yes, list a few candidate trades the work does not need, each with an estimate, alongside the real ones.
+3. When the truth is revealed (left to the project manager): estimates are drawn when a node is first shown; they tighten at `start` (the spread halves) and keep narrowing in proportion to the work done; completion shows the exact figures. A refusal at `start`/`open` states the real need of the refused resource. The decoy trades drop out at `start`.

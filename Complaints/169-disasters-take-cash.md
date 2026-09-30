@@ -1,6 +1,6 @@
 # Wealth exposure: disasters take cash, confiscation risk is hidden, and nothing shelters money
 
-**Status:** partly - `risk` shows the confiscation chance and protections; lapsed hedges name the closed concern; sheltering cash is a design question
+**Status:** partly - held: sheltering cash is kept as a candidate test mod (stakeholder decision)
 
 "fire in the insula district ... destroyed" 10,763 (120 AD), 77,957 (132), 1,662,217 (177), 3,597,323 (218), 3,825,853 (227); "banditry or a frontier war ... cost you" 757,232 (177), 1,399,197 (197). In 177 the two took about a quarter of the cash held. Sackings in the third-century crisis took most of the cash each time (14.1M of ~17M in 235).
 
