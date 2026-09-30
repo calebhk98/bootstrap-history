@@ -1,6 +1,6 @@
 # Treasury confiscation risk and its protections are not on `risk` or `state`
 
-**Status:** open
+**Status:** closed - merged into 169
 
 "THE TREASURY IS LOOKING AT YOUR FORTUNE: a 1% chance this year of outright confiscation" (568 AD), "a 5% chance" (593 AD), each shown only in that year's step output; `risk` and `state` never list it. Its protections ("holdings too dispersed to be seized at a stroke") are not explained anywhere else. Converting ~200M of cash into land (forest, farm) was followed by no further warnings.
 

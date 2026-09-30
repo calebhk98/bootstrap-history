@@ -15,3 +15,5 @@ Why it matters: this was the single largest drain on income in the run. Each clo
 What it would take: make the yearly check close only enough concerns to cover the shortfall, lowest-value first, using the same test `open` uses; a regression test with one foreman lost among several concerns.
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
+
+Related: 149 (foreman not shown on `why`), 180 (auto-replace foreman request).

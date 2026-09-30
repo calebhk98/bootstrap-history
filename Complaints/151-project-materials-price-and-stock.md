@@ -15,3 +15,5 @@ Why it matters: this decided the run. The mid-game became a wall of 0.3-0.5M (la
 What it would take: one consistent material price between market and project; projects drawing owned stock/mine output first (or stop charging for materials that the flow must supply anyway); `why` showing "at today's supply this takes about N years" and the shortfall per material; `why` saying which owned supply lowers scarcity.
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
+
+Related: 178 (market price information), 186 (the solver is off by default, so project costs come from the price book).

@@ -9,3 +9,5 @@ The foreman trade shows up only in the `open` refusal and in `ventures` after th
 What it would take: print the specialist foreman on `why` (and a FOREMAN column or marker in `available`).
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
+
+Related: 150 (the yearly closure rule), 180 (automation to replace a lost foreman).

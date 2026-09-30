@@ -11,3 +11,5 @@
 What it would take: a market screen (goods, price, demand, your share, saturation), all wages on one screen, `quote material`, and the saturation a new concern would face shown on `why`.
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
+
+Merged from 147: to learn charcoal's market price I had to `buy material charcoal_kg 1` and watch capital change. Project-side material prices are a separate defect (151).

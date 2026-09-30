@@ -1,4 +1,4 @@
-# Fires and banditry destroy a share of cash, scaled to wealth, without explanation
+# Wealth exposure: disasters take cash, confiscation risk is hidden, and nothing shelters money
 
 **Status:** open
 
@@ -9,3 +9,13 @@ It is unclear what a tenement fire burns when the wealth is coin. If exposure of
 What it would take: say what the loss is proportional to; give at least one data-driven way to spread or shelter wealth.
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
+
+## Merged from 182: treasury confiscation and lapsed hedges
+
+"THE TREASURY IS LOOKING AT YOUR FORTUNE: a 1% chance this year of outright confiscation" (568 AD), "a 5% chance" (593 AD), each shown only in that year's step output; `risk` and `state` never list it. Its protections ("holdings too dispersed to be seized at a stroke") are not explained anywhere else. Converting ~200M of cash into land (forest, farm) was followed by no further warnings.
+
+Similarly "(lapsed)" hedges in plague messages (boiled water, quarantine, smallpox vaccine) mean the concern providing them is closed; nothing tells the player which concern to reopen.
+
+What it would take: list confiscation chance and its current protections on `risk`; name the concern behind each lapsed hedge.
+
+(Merged from 182.) Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
