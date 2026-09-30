@@ -33,7 +33,7 @@ def _capacity_resources(out):
                  % (row["material"], _fmt_num(row["capacity_t_per_yr"]),
                     _fmt_num(row["demand_t_per_yr"]),
                     _fmt_num(row["surplus_t_per_yr"]),
-                    "  SHORT" if row["surplus_t_per_yr"] < 0 else ""))
+                    "  SHORT" if row["shortfall_t_per_yr"] > 0 else ""))
         if row.get("yield_note"):
             lines.append(_wrap(row["yield_note"], indent="      "))
     return lines

@@ -94,7 +94,8 @@ def _material_capacity_rows(sim):
             "your_own_capacity_t_per_yr": round(own, 1),
             "market_capacity_t_per_yr": round(market, 1),
             "demand_t_per_yr": round(need, 1),
-            "surplus_t_per_yr": round(own + market - need, 1)}
+            "surplus_t_per_yr": round(own + market - need, 1),
+            "shortfall_t_per_yr": round(sim.material_shortfall_t(emp_key, by_tag), 1)}
     # OWNED CAPACITY WITH NO CURRENT DEMAND. A mine you sank and no longer
     # need does not simply vanish from what you could still supply.
     for mat in sim.mine_capacity:
@@ -108,7 +109,8 @@ def _material_capacity_rows(sim):
             "your_own_capacity_t_per_yr": round(own, 1),
             "market_capacity_t_per_yr": round(market, 1),
             "demand_t_per_yr": 0.0,
-            "surplus_t_per_yr": round(own + market, 1)}
+            "surplus_t_per_yr": round(own + market, 1),
+            "shortfall_t_per_yr": 0.0}
     for mat, row in rows.items():
         if mat in sim.mine_capacity:
             note = sim.mine_depletion_note(mat)

@@ -1,6 +1,6 @@
 # Project-start boilerplate repeats too often
 
-**Status:** open
+**Status:** closed - start now explains the fixed price and the untrained-trade instructions once per game (explain_once), then points back; numbers stay in the reply
 
 Repeated `start` commands re-explain fixed-price/quote behavior and related model semantics. The explanation is useful once and then becomes noise.
 
