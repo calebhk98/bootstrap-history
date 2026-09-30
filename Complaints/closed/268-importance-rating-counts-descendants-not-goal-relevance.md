@@ -1,6 +1,6 @@
 # `RESTS` and "how much rests on this" count descendants, so narrow but critical prerequisites (manganese, nitre beds, Boolean algebra) read as minor
 
-**Status:** open
+**Status:** closed
 
 Both Rome testers: critical supply nodes that gated the endgame were not flagged as ALL or much in `available`; "a few things" undervalues a prerequisite with few descendants that the chosen goal cannot do without.
 

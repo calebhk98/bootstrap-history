@@ -850,13 +850,18 @@ class StartingMixin:
     def start_refusal(self, node_id, extra_owed=0.0):
         """Why the project cannot begin now, or None. Changes no state.
 
-        extra_owed is money already committed by starts not yet applied
-        (a preview's earlier picks), counted like work in hand.
+        The first entry of start_blockers, so the refusal and every readout
+        that lists blockers are one function.
         """
-        may_start, why = self.start_reason(node_id)
-        if not may_start:
-            return why
-        # commit past cash but not past what cash plus credit can carry
+        blockers = self.start_blockers(node_id, extra_owed)
+        return blockers[0]["text"] if blockers else None
+
+    def _money_refusal(self, node_id, extra_owed=0.0):
+        """Why the bill is past cash plus credit (materials due now included), or None.
+
+        extra_owed is money already committed by starts not yet applied,
+        counted like work in hand.
+        """
         price = self.project_cost(node_id)
         projects = self.state.projects
         refusal = self.project_material_upfront_refusal(node_id)

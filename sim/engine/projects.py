@@ -55,6 +55,7 @@ already gives for keeping its own cross-cutting constants on ITS
 composition point rather than in one of ITS four sub-mixins - so these stay
 here, on the composition point all six inherit from, instead.
 """
+from .blockers import BlockersMixin
 from .projects_capability import CapabilityMixin
 from .projects_ventures import VenturesMixin
 from .projects_staffing import StaffingMixin
@@ -67,7 +68,7 @@ from .projects_completion import CompletionMixin
 from sim.constants import declare
 
 
-class ProjectsMixin(CapabilityMixin, VenturesMixin, StaffingMixin,
+class ProjectsMixin(BlockersMixin, CapabilityMixin, VenturesMixin, StaffingMixin,
                      StaffingShortfallMixin, VentureQuotesMixin, HourQueueMixin,
                      StartingMixin, ProgressMixin, CompletionMixin):
     """Composition point only: every method below is defined in one of the

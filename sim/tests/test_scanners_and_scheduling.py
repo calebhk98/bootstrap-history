@@ -689,12 +689,12 @@ check("render_state no longer crashes when a staffing warning is live, and "
 # ======================================================================
 _s_ey = sim(civ="rome_100ad")
 _riskfree = next(node_id for node_id in NODES if NODES[node_id].get("risk", 1) == 0)
-check("risk-free node: expected calendar years is exactly the bare floor - "
+check("risk-free node: expected calendar years is exactly the earliest completion - "
       "there is nothing to retry",
       abs(_s_ey.expected_calendar_years(_riskfree)
-          - _s_ey.calendar_floor(_riskfree)) < 1e-9,
+          - _s_ey.earliest_completion_years(_riskfree)) < 1e-9,
       (_riskfree, _s_ey.expected_calendar_years(_riskfree),
-       _s_ey.calendar_floor(_riskfree)))
+       _s_ey.earliest_completion_years(_riskfree)))
 _pct_floor = _s_ey.calendar_floor("point_contact_transistor")
 _pct_exp = _s_ey.expected_calendar_years("point_contact_transistor")
 check("a risky node's expected calendar cost is strictly more than its bare "

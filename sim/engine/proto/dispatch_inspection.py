@@ -317,7 +317,13 @@ def route_blockers(sim, nodes, road, count):
     with the reason start_reason gives; shared by `stuck` and `path`.
     """
     near = sorted(road, key=lambda node_id: len(closure(nodes, node_id) - sim.done))
-    return [{"id": node_id, "why": sim.start_reason(node_id)[1]} for node_id in near[:count]]
+    rows = []
+    for node_id in near[:count]:
+        blockers = sim.start_blockers(node_id)
+        rows.append({"id": node_id, "why": blockers[0]["text"] if blockers else sim.start_reason(node_id)[1],
+                     "kind": blockers[0]["kind"] if blockers else None,
+                     "kinds": list(dict.fromkeys(blocker["kind"] for blocker in blockers))})
+    return rows
 
 
 def _stuck_road_to_goal(sim, nodes, _fog):

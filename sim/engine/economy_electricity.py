@@ -199,6 +199,19 @@ class ElectricityMixin:
             "total_kw": local_kw + grid_kw + mod_generation_kw,
         }
 
+    def installed_generation_kw_by_tier(self):
+        """{tier node id: kW of built generating plant filed under that tier}.
+
+        Transmission is not generation, so it is left out.
+        """
+        done = self.state.projects.done
+        by_tier = {}
+        for node_id in self.nodes_with_mechanic("power_generation"):
+            spec = self.mechanic(node_id, "power_generation")
+            if node_id in done and spec["role"] != "transmission":
+                by_tier[spec["tier"]] = by_tier.get(spec["tier"], 0.0) + self.mechanic(spec["tier"], "power_tier")["anchor_kw"]
+        return by_tier
+
     def generation_capacity_kw(self):
         """The one number resource_throttle() needs: total_kw, cached."""
         return self.generation_breakdown_kw()["total_kw"]

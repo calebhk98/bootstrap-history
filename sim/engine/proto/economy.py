@@ -145,11 +145,15 @@ def _power_tiers(sim, nodes):
     """
     tiers = []
     highest = None
+    installed_by_tier = sim.installed_generation_kw_by_tier()
     for nid, label in _power_ladder(nodes):
         if nid not in nodes or not sim.is_visible(nid):
             continue
         built = sim.has(nid)
-        tiers.append({"capability": label, "id": nid, "built": built})
+        installed_kw = round(installed_by_tier.get(nid, 0.0), 1)
+        tiers.append({"capability": label, "id": nid, "built": built,
+                      "installed_kw": installed_kw,
+                      "no_generation_installed": installed_kw <= 0.0})
         if built:
             highest = label
     return tiers, highest

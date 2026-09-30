@@ -112,6 +112,10 @@ _COST_KEYS = ("total", "labour", "materials", "capital", "base_total",
               "what_start_would_actually_charge")
 
 
+_VAGUE_NEED = ("you do not have what it takes to begin this yet (people, money or "
+               "hours); 'start' names the exact need")
+
+
 def _fuzz_messages(sim, node_id, out, actor):
     node = sim.nodes[node_id]
     for key, kind, real in (("more_scholars_than_this_society_can_supply", "scholars", node["sch"]),
@@ -130,9 +134,10 @@ def _fuzz_messages(sim, node_id, out, actor):
     reason = out.get("start_blocked_reason")
     if (reason and re.search(r"\d", reason) and not out.get("done") and not out.get("active")
             and not out.get("missing_prerequisites")):
-        out["start_blocked_reason"] = (
-            "you do not have what it takes to begin this yet (people, money or "
-            "hours); 'start' names the exact need")
+        out["start_blocked_reason"] = _VAGUE_NEED
+    for blocker in out.get("blockers") or []:
+        if re.search(r"\d", blocker["text"]) and blocker["kind"] in ("specialists", "money"):
+            blocker["text"] = _VAGUE_NEED
 
 
 def fuzz_why(sim, node_id, out, actor=None):
@@ -158,6 +163,9 @@ def fuzz_why(sim, node_id, out, actor=None):
     for key in ("calendar_floor_years", "nominal_calendar_floor_before_reputation"):
         if key in out:
             out[key] = _scale(sim, node_id, "floor", out[key], 2, actor)
+    if "earliest_completion_years" in out:
+        out["earliest_completion_years"] = _scale(sim, node_id, "floor", out["earliest_completion_years"], 2, actor)
+        out["earliest_completion_year"] = round(sim.state.scenario.year + out["earliest_completion_years"], 1)
     if "expected_calendar_years_with_retries" in out:
         out["expected_calendar_years_with_retries"] = _scale(
             sim, node_id, "floor", out["expected_calendar_years_with_retries"], 2, actor)

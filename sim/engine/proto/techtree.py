@@ -243,6 +243,8 @@ def _brief(sim, nodes, node_id, fog):
 def _full_entry(sim, nodes, node_id, fog):
     entry = _brief(sim, nodes, node_id, fog)
     node = nodes[node_id]
+    entry["on_road_to_goal"] = sim.on_road_to_goal(node_id)
+    entry["is_supply_or_capability"] = node["cat"] in ("material", "capability")
     if fog:
         entry["summary"] = sim.fog_summary(node_id)
         if node["lab"]:
@@ -463,7 +465,8 @@ def _heard_of_block(sim, nodes, fog, find, want_subject, _sort_fn, reverse, hear
         heard_more = max(0, len(_heard_all) - heard_offset - len(heard))
         heard_from = heard_offset
     heard_block = [{"id": node_id, "name": nodes[node_id]["name"],
-                    "why_not": sim.start_reason(node_id)[1]} for node_id in heard]
+                    "why_not": sim.start_reason(node_id)[1],
+                    "kind": (sim.start_blockers(node_id) or [{"kind": None}])[0]["kind"]} for node_id in heard]
     return heard_more, heard_from, heard_block
 
 
@@ -977,6 +980,10 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
     return {
         "calendar_floor_years": round(sim.calendar_floor(node_id), 2),
         "nominal_calendar_floor_before_reputation": node["yrs"],
+        # The soonest finish with no failure: the longer of the floor above
+        # and the payment schedule, which reputation does not shorten.
+        "earliest_completion_years": round(sim.earliest_completion_years(node_id), 2),
+        "earliest_completion_year": round(sim.state.scenario.year + sim.earliest_completion_years(node_id), 1),
         "risk": sim.effective_risk(node_id),
         # THE EXPECTED TOTAL, RETRIES INCLUDED - not the floor and the risk
         # left for the player to combine by hand. A 45%-risk, 4-year-floor
@@ -1338,6 +1345,15 @@ def _explain_lineage(sim, nodes, node_id, node):
     return out
 
 
+def _blocker_fields(sim, node_id, started):
+    """The kind-classified blockers: the same list the `start` gate reads."""
+    if started:
+        return {"blocked_kind": None, "blockers": []}
+    blockers = [{"kind": blocker["kind"], "text": sim.fog_scrub(blocker["text"]), "ids": blocker["ids"]}
+                for blocker in sim.start_blockers(node_id)]
+    return {"blocked_kind": blockers[0]["kind"] if blockers else None, "blockers": blockers}
+
+
 def _explain_status(sim, nodes, node_id, node):
     """Done, active, startable now, and why not."""
     started = node_id in sim.done or node_id in sim.active
@@ -1350,6 +1366,7 @@ def _explain_status(sim, nodes, node_id, node):
         # been heard of. If you cannot see a thing, you cannot see its name
         # in someone else's sentence either.
         "start_blocked_reason": None if started else sim.fog_scrub(sim.start_reason(node_id)[1]),
+        **_blocker_fields(sim, node_id, started),
     }
 
 
