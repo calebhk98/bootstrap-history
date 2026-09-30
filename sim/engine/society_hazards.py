@@ -719,7 +719,7 @@ class HazardsMixin:
         projects = self.state.projects
         losable = sorted(node_id for node_id in projects.done
                          if node_id not in projects.granted
-                         and node_id != "corpus_dispersed")
+                         and not self.corpus_is_dispersed(node_id))
         if losable:
             drop = rng.sample(losable, max(1, int(len(losable) * frac)))
             _lost = projects.forgotten
@@ -740,8 +740,7 @@ class HazardsMixin:
         """
         # Name what was lost, not just the count.
         _named = sorted(drop)
-        _corpus = [tech_id for tech_id in ("corpus_written",
-                               "corpus_dispersed")
+        _corpus = [tech_id for tech_id in self.nodes_with_mechanic("corpus")
                    if tech_id in drop]
         # Report impact on goal road: how many lost nodes were on the path.
         _on_road = 0
@@ -761,7 +760,7 @@ class HazardsMixin:
                ", ".join(_named[:8])
                + (" and %d more" % (len(_named) - 8)
                   if len(_named) > 8 else ""),
-               "" if _hedge_before == "corpus_dispersed"
+               "" if _hedge_before == self.best_corpus_node()
                else " (the corpus was never printed and "
                     "dispersed)",
                ". THE CORPUS ITSELF WENT (%s): your hedge "

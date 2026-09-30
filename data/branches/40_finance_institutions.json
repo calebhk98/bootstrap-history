@@ -46,7 +46,12 @@
   "art": 0,
   "conf": "A",
   "note": "Money changers and deposit takers, attested across the ancient world (Rome's argentarii are the best-documented case): accept deposits, testify to witnesses about amounts held, but do not yet systematically lend.",
-  "yrs": 0.5
+  "yrs": 0.5,
+  "mechanics": {
+   "capability": {
+    "lost_benefit": "The lower interest rate"
+   }
+  }
  },
  {
   "id": "fin_maritime_loan",
@@ -1540,7 +1545,10 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Employer provides housing, food, and goods to workers in a closed economy. Workers cannot leave without losing housing and may be paid in company scrip. Highly profitable but politically dangerous."
+  "note": "Employer provides housing, food, and goods to workers in a closed economy. Workers cannot leave without losing housing and may be paid in company scrip. Highly profitable but politically dangerous.",
+  "mechanics": {
+   "capability": {}
+  }
  },
  {
   "id": "fin_trade_union",
@@ -2869,7 +2877,12 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Company operates identical stores in multiple cities, buying centrally and selling retail in each location. Achieves scale but requires sophisticated management and accounting."
+  "note": "Company operates identical stores in multiple cities, buying centrally and selling retail in each location. Achieves scale but requires sophisticated management and accounting.",
+  "mechanics": {
+   "capability": {
+    "scalable": "population"
+   }
+  }
  },
  {
   "id": "fin_trading_post",
@@ -3076,7 +3089,15 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "School awarding degrees that certify learning. Charges tuition but also grants scholarships. Attracts scholars and students and creates local employment."
+  "note": "School awarding degrees that certify learning. Charges tuition but also grants scholarships. Attracts scholars and students and creates local employment.",
+  "mechanics": {
+   "capability": {
+    "lost_benefit": "Protection",
+    "redundant_with": [
+     "school_founded"
+    ]
+   }
+  }
  },
  {
   "id": "fin_endowed_chair",

@@ -148,16 +148,8 @@ class CreditMixin:
         # this year's actual revenue, which can be zeroed out by temporary work).
         earning = self.revenue_capacity()
         base = earning * self.CREDIT_LINE_EARNING_MULTIPLE
-        if self.running("identity_cover"):     base += self.CREDIT_LINE_IDENTITY_COVER
-        if self.running("patron_local"):       base += self.CREDIT_LINE_PATRON_LOCAL
-        if self.running("patron_senatorial"):  base += self.CREDIT_LINE_PATRON_SENATORIAL
-        if self.running("patron_imperial"):    base += self.CREDIT_LINE_PATRON_IMPERIAL
-        # LINEAR, NOT SQRT: a licensed collegium's credit is collateral, not
-        # fame, and three of them really do stand behind three times the
-        # borrowing the first one did.
-        if self.running("collegium_licensed"):
-            base += self.CREDIT_LINE_PER_COLLEGIUM_UNIT * self.institution_units("collegium_licensed")
-        if self.running("endowment_land"):     base += self.CREDIT_LINE_ENDOWMENT_LAND      # real collateral
+        # A collegium's credit is linear in its units (collateral, not fame); land is real collateral.
+        base = self.effect_sum("credit_line", base)
         base += max(0.0, self.state.household.reputation) * self.CREDIT_LINE_PER_REPUTATION_POINT
         base += self.state.economy.forest_ha * self.CREDIT_LINE_PER_FOREST_HA                   # also collateral
         # Floor of one year's running costs: everyone can run a tab for a season.
@@ -351,11 +343,8 @@ class CreditMixin:
         currency underneath the currency.
         """
         rate = self.civ["starting_interest_rate"]     # the civ's own starting rate
-        if self.running("patron_local"):        rate -= self.DEBT_RATE_DISCOUNT_PATRON_LOCAL
-        if self.running("patron_senatorial"):   rate -= self.DEBT_RATE_DISCOUNT_PATRON_SENATORIAL
-        if self.running("patron_imperial"):     rate -= self.DEBT_RATE_DISCOUNT_PATRON_IMPERIAL
-        if self.running("endowment_land"):      rate -= self.DEBT_RATE_DISCOUNT_ENDOWMENT_LAND          # secured, not personal
-        if self.running("fin_argentarii"):      rate -= self.DEBT_RATE_DISCOUNT_BANKER          # a banker you know
+        for _node_id, discount in self.effect_values("debt_rate_discount"):
+            rate -= discount
         rate -= min(self.DEBT_RATE_REPUTATION_DISCOUNT_CAP,
                     max(0.0, self.state.household.reputation) / self.DEBT_RATE_REPUTATION_SCALE)
         return max(0.0, rate)
@@ -867,9 +856,8 @@ class CreditMixin:
                         + household_state.slaves * self.LIVING_COST_SLAVE_SHARE))
         tax = max(0.0, rev) * self.civ["starting_tax_share"]       # the civ's own starting tax share
         status = 0.0
-        if self.has("citizenship"):        status += self.LIVING_COST_STATUS_CITIZENSHIP * price_index
-        if self.running("patron_senatorial"):  status += self.LIVING_COST_STATUS_PATRON_SENATORIAL * price_index
-        if self.running("patron_imperial"):    status += self.LIVING_COST_STATUS_PATRON_IMPERIAL * price_index
+        for _node_id, upkeep_of_status in self.effect_values("living_cost_status"):
+            status += upkeep_of_status * price_index
         status += max(0.0, household_state.capital) * self.LIVING_COST_STATUS_PER_CAPITAL      # you cannot look poor and rich
         # A RUINED MAN STOPS KEEPING UP APPEARANCES: status spending must be
         # capped by what is actually left after eating (`room` below), not

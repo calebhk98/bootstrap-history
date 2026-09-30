@@ -388,20 +388,12 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         projects = self.state.projects
         earned = len(projects.done) - len(projects.granted)
         standing = STANDING_BASE_FLOOR + STANDING_PER_SQRT_EARNED * math.sqrt(max(0, earned))
-        if self.running("corpus_written"):     standing += STANDING_CORPUS_WRITTEN
-        if self.running("corpus_dispersed"):   standing += STANDING_CORPUS_DISPERSED
         # SQRT, NOT LINEAR. A third schoolhouse does not make you three times
         # as well known as the first one did - the standing a school buys is
         # mostly in having founded one at all, not in its size - so further
         # units add less each time, the same curve `earned` above already
         # uses for the same reason.
-        if self.running("school_founded"):
-            standing += STANDING_SCHOOL_FOUNDED_PER_SQRT_UNIT * self.institution_units("school_founded") ** 0.5
-        if self.running("academy_network"):
-            standing += STANDING_ACADEMY_NETWORK_PER_SQRT_UNIT * self.institution_units("academy_network") ** 0.5
-        if self.running("patron_senatorial"):  standing += STANDING_PATRON_SENATORIAL
-        if self.running("patron_imperial"):    standing += STANDING_PATRON_IMPERIAL
-        if self.running("identity_cover"):     standing += STANDING_IDENTITY_COVER
+        standing = self.effect_sum("standing", standing)
         # Scandal is the one thing that eats into standing rather than sitting
         # alongside it: being notorious is not the same as being unknown.
         return max(0.0, standing - STANDING_SCANDAL_PENALTY_PER_POINT * self.state.household.scandal)
@@ -422,7 +414,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         projects = self.state.projects
         diffused = len(projects.done - projects.granted)
         index = 1.0 + ECONOMY_INDEX_PER_DIFFUSED_NODE * diffused
-        if not self.running("corpus_dispersed"):
+        if not self.dispersed_corpus_running():
             index = 1.0 + ECONOMY_INDEX_PER_LOCKED_NODE * diffused      # knowledge locked in one workshop spreads slowly
         return index
 

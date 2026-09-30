@@ -306,12 +306,7 @@ class GoodsMixin:
         not multiply into an implausible number.
         """
         reach = 1.0
-        if self.has("citizenship"):                reach *= self.REACH_CITIZENSHIP
-        if self.running("patron_senatorial"):      reach *= self.REACH_PATRON_SENATORIAL
-        if self.running("patron_imperial"):        reach *= self.REACH_PATRON_IMPERIAL
-        if self.running("exp_trade_route_extend"): reach *= self.REACH_TRADE_ROUTE_EXTENDED
-        if self.running("railway"):                reach *= self.REACH_RAILWAY
-        if self.running("telegraph_electric"):      reach *= self.REACH_TELEGRAPH
+        reach = self.effect_factor("reach", reach)
         return min(reach, self.REACH_CEILING)
 
     REACH_CITIZENSHIP = declare(

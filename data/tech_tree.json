@@ -419,7 +419,14 @@
         "status_threatening"
       ],
       "up": 9000.0,
-      "yrs": 10.0
+      "yrs": 10.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Scholar and artisan training, standing, and its reduction of eminence risk",
+          "scalable": "literacy"
+        },
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "47_agri_food_deep.json",
@@ -7395,7 +7402,12 @@
         "infrastructure"
       ],
       "up": 7000.0,
-      "yrs": 5.0
+      "yrs": 5.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan training capacity"
+        }
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: steam engine cylinders need tight tolerance for piston sealing]",
@@ -16678,7 +16690,10 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "22_civil.json",
@@ -23091,7 +23106,14 @@
         "commerce"
       ],
       "up": 400.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Scholar capacity, protection and credit",
+          "scalable": "population"
+        },
+        "ablation_candidate": true
+      }
     },
     {
       "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]",
@@ -26107,7 +26129,18 @@
         "status_threatening"
       ],
       "up": 2500.0,
-      "yrs": 8.0
+      "yrs": 8.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Standing, and the faster diffusion of technology through the economy"
+        },
+        "corpus": {
+          "tier": "dispersed",
+          "rank": 2
+        },
+        "corpus_survives_sack": true,
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -26146,7 +26179,17 @@
         "information"
       ],
       "up": 600.0,
-      "yrs": 10.0
+      "yrs": 10.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Standing"
+        },
+        "corpus": {
+          "tier": "written",
+          "rank": 1
+        },
+        "ablation_candidate": true
+      }
     },
     {
       "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]",
@@ -26230,7 +26273,10 @@
         "infrastructure"
       ],
       "up": 800.0,
-      "yrs": 6.0
+      "yrs": 6.0,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 30 tonnes of product a year it consumes about 60 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 80 hectares of forest under permanent management, which you must own before you light it.]",
@@ -26288,7 +26334,12 @@
         "infrastructure"
       ],
       "up": 3200.0,
-      "yrs": 5.0
+      "yrs": 5.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan training capacity"
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -38332,7 +38383,13 @@
         "commerce"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection, credit and the lower interest rate"
+        },
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "30_expeditions.json",
@@ -38820,7 +38877,12 @@
         "military"
       ],
       "up": 1800.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The trade-route revenue bonus"
+        }
+      }
     },
     {
       "_src": "30_expeditions.json",
@@ -39173,7 +39235,12 @@
         "commerce"
       ],
       "up": 60.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The lower interest rate"
+        }
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -39647,7 +39714,12 @@
         "commerce"
       ],
       "up": 2000.0,
-      "yrs": 4.0
+      "yrs": 4.0,
+      "mechanics": {
+        "capability": {
+          "scalable": "population"
+        }
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -39999,7 +40071,10 @@
         "status_threatening"
       ],
       "up": 500.0,
-      "yrs": 4.0
+      "yrs": 4.0,
+      "mechanics": {
+        "capability": {}
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -43101,7 +43176,15 @@
         "information"
       ],
       "up": 300.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection",
+          "redundant_with": [
+            "school_founded"
+          ]
+        }
+      }
     },
     {
       "_src": "40_finance_institutions.json",
@@ -43299,7 +43382,14 @@
       ],
       "up": 1400.0,
       "yrs": 2.0,
-      "_internal": "[AUDIT: this node currently draws from a flat +8 artisans figure rather than tracking actual market purchases. A person is not a material to be stocked. The node used to model hiring as consuming units of a fictitious good, but this was replaced with a one-time capital outlay for acquiring eight already-skilled people. Future work will link this to the household's actual purchase ledger so it draws down the same market as direct purchases.]"
+      "_internal": "[AUDIT: this node currently draws from a flat +8 artisans figure rather than tracking actual market purchases. A person is not a material to be stocked. The node used to model hiring as consuming units of a fictitious good, but this was replaced with a one-time capital outlay for acquiring eight already-skilled people. Future work will link this to the household's actual purchase ledger so it draws down the same market as direct purchases.]",
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan capacity",
+          "scalable": "population"
+        },
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "11_food_agriculture.json",
@@ -45984,7 +46074,10 @@
         "spectacle"
       ],
       "up": 0.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -49872,7 +49965,12 @@
         "commerce"
       ],
       "up": 200.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection, credit and standing"
+        }
+      }
     },
     {
       "_src": "53_information_deep.json",
@@ -58067,7 +58165,12 @@
         "status_threatening"
       ],
       "up": 4000.0,
-      "yrs": 8.0
+      "yrs": 8.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The price markup and staff-capacity bonus"
+        }
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_tol_10um added by a reviewer working node by node. Reason: emitter and collector regions require 10-50 micrometer manufacturing precision]",
@@ -58299,7 +58402,10 @@
         "spectacle"
       ],
       "up": 400.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "14_land_transport.json",
@@ -68036,7 +68142,10 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 0.0
+      "yrs": 0.0,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring]",
@@ -68079,7 +68188,10 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_internal": "[FIXED after independent audit: acetylation needs acetic anhydride, from acetic acid via wood distillation. Nitric acid was wrong and has been removed.]",
@@ -69132,7 +69244,10 @@
         "infrastructure"
       ],
       "up": 150.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_src": "21_medicine.json",
@@ -69336,7 +69451,10 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_src": "21_medicine.json",
@@ -69733,7 +69851,10 @@
         "infrastructure"
       ],
       "up": 150.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_src": "21_medicine.json",
@@ -69814,7 +69935,10 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "disease_burden": true
+      }
     },
     {
       "_src": "21_medicine.json",
@@ -82794,7 +82918,10 @@
         "spectacle"
       ],
       "up": 700.0,
-      "yrs": 1.5
+      "yrs": 1.5,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: laminated cores require thin consistent sheets for efficiency]",
@@ -90266,7 +90393,13 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection, credit, state funding and status"
+        },
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -90300,7 +90433,12 @@
         "commerce"
       ],
       "up": 200.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection and credit"
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -90334,7 +90472,13 @@
         "commerce"
       ],
       "up": 1000.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Protection, credit and status"
+        },
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -90467,7 +90611,11 @@
         "spectacle"
       ],
       "up": 2000.0,
-      "yrs": 4.0
+      "yrs": 4.0,
+      "mechanics": {
+        "capability": {},
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -90610,7 +90758,12 @@
         "infrastructure"
       ],
       "up": 70000.0,
-      "yrs": 25.0
+      "yrs": 25.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The price markup and staff-capacity bonus"
+        }
+      }
     },
     {
       "_src": "20_precision.json",
@@ -93257,7 +93410,10 @@
         "status_threatening"
       ],
       "up": 1500.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "13_media.json",
@@ -96845,7 +97001,10 @@
         "information"
       ],
       "up": 1200.0,
-      "yrs": 1.5
+      "yrs": 1.5,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -96914,7 +97073,12 @@
         "infrastructure"
       ],
       "up": 35000.0,
-      "yrs": 20.0
+      "yrs": 20.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The trade-reach revenue bonus and staff capacity"
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -96993,7 +97157,15 @@
         "medical"
       ],
       "up": 300.0,
-      "yrs": 2.0
+      "yrs": 2.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Your extra life-expectancy"
+        },
+        "disease_burden": true,
+        "founder_life_extension": true,
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "54_science_method_deep.json",
@@ -101204,7 +101376,14 @@
         "status_threatening"
       ],
       "up": 2500.0,
-      "yrs": 4.0
+      "yrs": 4.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Scholar and artisan training and the standing it earns",
+          "scalable": "literacy"
+        },
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -103107,7 +103286,10 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 3.0
+      "yrs": 3.0,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_measure_elec added by a reviewer working node by node. Reason: four-point probe and Hall effect require electrical measurement]",
@@ -103570,7 +103752,12 @@
         "infrastructure"
       ],
       "up": 12000.0,
-      "yrs": 12.0
+      "yrs": 12.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan training capacity"
+        }
+      }
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: piston-cylinder precision for efficient sealing and smooth operation]",
@@ -103756,7 +103943,13 @@
         "spectacle"
       ],
       "up": 15000.0,
-      "yrs": 12.0
+      "yrs": 12.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "The trade-reach revenue bonus and staff capacity"
+        },
+        "ablation_candidate": true
+      }
     },
     {
       "_src": "00_core.json",
@@ -120623,7 +120816,13 @@
         "commerce"
       ],
       "up": 900.0,
-      "yrs": 1.0
+      "yrs": 1.0,
+      "mechanics": {
+        "capability": {
+          "lost_benefit": "Artisan capacity",
+          "scalable": "population"
+        }
+      }
     },
     {
       "_src": "00_core.json",
@@ -120662,7 +120861,10 @@
         "infrastructure"
       ],
       "up": 50.0,
-      "yrs": 0.5
+      "yrs": 0.5,
+      "mechanics": {
+        "ablation_candidate": true
+      }
     },
     {
       "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 1500 tonnes of product a year it consumes about 18,000 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 24,000 hectares of forest under permanent management, which you must own before you light it.]",

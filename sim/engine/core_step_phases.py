@@ -1761,7 +1761,7 @@ class StepPhasesMixin:
         # 7. founder mortality
         if self.state.founder.founder_alive:
             self.state.founder.life_left -= 1
-            if self.running("sanitation_antisepsis"):
+            if self.running_with_mechanic("founder_life_extension"):
                 self.state.founder.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
             if self.state.founder.life_left <= 0:
                 self.state.founder.founder_alive = False

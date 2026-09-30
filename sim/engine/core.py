@@ -37,6 +37,7 @@ from sim.unit_conversions import PERCENT_SCALE
 
 from .economy import EconomyMixin
 from .fog import FogMixin
+from .mechanics import MechanicsMixin
 from .geography import GeographyMixin
 from .labour import LabourMixin
 from .labour_allocation import LabourAllocationMixin
@@ -193,7 +194,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
         "its members - see _cap_pooled_farm_weather_cells.")
 
 
-class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
+class Sim(MechanicsMixin, EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin):
     STATE_CAPACITY_DEFAULT = declare(
@@ -229,32 +230,15 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             "population never divides a formula by something vanishingly "
             "small. Guard value, not a demographic claim.")
 
-    # WIRING ONE (Complaints/closed/48-technology-cannot-stop-people-dying-young.md):
-    # the eight _TECH_EFFECTS.json entries whose `population` weight is a
-    # DISEASE effect rather than a FOOD one, and so are the only entries
-    # `_disease_burden` below is allowed to sum. _TECH_EFFECTS.json also
-    # carries a `population` field on crop_rotation, fud_three_field_
-    # rotation, fud_seed_drill, mat_newworld_crops and ag2_canning - all
-    # five are calories reaching more mouths, not fewer infections, and
-    # summing them into a disease-burden calculation would be exactly the
-    # mistake the stakeholder's own brief warns against. This selection
-    # (which of _TECH_EFFECTS.json's `population` entries counts as
-    # "medical") is a classification a human made when writing that file,
-    # not something this engine derives - it is reused here, not invented.
-    # NOT a `declare()`d constant: it is a set of node ids, not a physical
-    # quantity or a tuned parameter.
-    DISEASE_BURDEN_TECH_IDS = (
-        "germ_theory", "sanitation_antisepsis", "med_aqueducts_latrines",
-        "med_quarantine_sanitation", "med_vector_control",
-        "med_obstetric_antisepsis", "med_asepsis_antisepsis",
-        "med_vaccination_progression",
-    )
+    # DISEASE_BURDEN_TECH_IDS (nodes declaring the `disease_burden` mechanic) is
+    # provided by MechanicsMixin; food techs in _TECH_EFFECTS.json do not declare it.
 
     def _localise_book_money_constants(self):
         """Give this Sim its own copy of every money constant authored in book
         denarii, in its civilisation's coin."""
         factor = book_money_factor(build_schedule(
             TRADE_REGISTRY, self.civ).money_per_labour_hour)
+        self._book_money_scale = factor
         for name in book_money_names():
             if hasattr(type(self), name):
                 setattr(self, name, getattr(type(self), name) * factor)
@@ -1702,10 +1686,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         FogMixin.knowledge_risk for the fuller argument. `hedge_name` is
         None if neither corpus exists yet.
         """
-        if self.has("corpus_dispersed"):
-            return self.CORPUS_HEDGE_LOSS_CHANCE_DISPERSED, self.CORPUS_HEDGE_FRACTION_LOST_DISPERSED, "corpus_dispersed"
-        if self.has("corpus_written"):
-            return self.CORPUS_HEDGE_LOSS_CHANCE_WRITTEN, self.CORPUS_HEDGE_FRACTION_LOST_WRITTEN, "corpus_written"
+        for node_id in self.corpus_nodes_best_first():
+            if self.has(node_id):
+                return (self.corpus_tier_constant(node_id, "CORPUS_HEDGE_LOSS_CHANCE"),
+                        self.corpus_tier_constant(node_id, "CORPUS_HEDGE_FRACTION_LOST"), node_id)
         return self.CORPUS_HEDGE_LOSS_CHANCE_NONE, self.CORPUS_HEDGE_FRACTION_LOST_NONE, None
 
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --

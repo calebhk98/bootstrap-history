@@ -17,6 +17,13 @@
       "scribe": 6000.0
     },
     "mat": {},
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Scholar and artisan training, standing, and its reduction of eminence risk",
+        "scalable": "literacy"
+      },
+      "ablation_candidate": true
+    },
     "name": "Three geographically separated academies",
     "note": "Three houses, sited far enough apart, geographically and politically, that no single disaster or crackdown takes all of them at once: a dry archive site, a western site, an eastern site. Every civilization you can play has its own version of this problem and its own ground to choose (Alexandria's papyrus-preserving dryness is the Roman answer; look to what your own geography and political map actually offer). Redundancy is the only defence and it is not optional. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. THE STATE WILL ACTIVELY RESIST THIS. A private association spanning several regions looks like exactly what every pre-modern government fears: a faction with a loyalty of its own (Trajan refuses Pliny even a licensed fire brigade at Nicomedia for this reason, Ep. 10.34). You need the favour of whoever actually rules where you are before you attempt it, and you should site the three houses under three different patrons so that it does not look like one organisation.",
     "ph": 2500.0,
@@ -451,6 +458,11 @@
       "iron_ore_kg": 3300000.0,
       "lime_kg": 25000.0
     },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Artisan training capacity"
+      }
+    },
     "name": "Tall shaft blast furnace and cast iron",
     "note": "Cast iron has been routine in Han China for 500 years and is unknown in the Mediterranean and Atlantic worlds; whichever of those you are building from, this is the biggest single technology gap you face. Height, continuous blast and a limestone flux turn a bloomery into a foundry. High risk: the first two or three furnaces will chill, scaffold or burn through. This becomes the financial engine of the middle game. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
     "ph": 900.0,
@@ -779,6 +791,9 @@
     "kind": "INSTITUTION",
     "lab": {},
     "mat": {},
+    "mechanics": {
+      "ablation_candidate": true
+    },
     "name": "Legal standing: a status the courts will hear",
     "note": "In Rome this is citizenship by grant, and what it buys is provocatio, the right of appeal, which is the difference between a governor executing you and Rome hearing you. Every society has its own version of the same thing and none of them is optional: registered household status and rank under the Han, a free man's standing at the thing in Scandinavia, a burgess of a borough in England, membership of a calpulli among the Mexica. Without it you are a body someone may dispose of. Buy it the way it is bought here, with a public benefaction and the right friends.",
     "ph": 250.0,
@@ -992,6 +1007,13 @@
       "scribe": 300.0
     },
     "mat": {},
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Scholar capacity, protection and credit",
+        "scalable": "population"
+      },
+      "ablation_candidate": true
+    },
     "name": "Licensed collegium of physicians and teachers",
     "note": "Unlicensed associations are illegal in most of these societies, and for the same reason: a state that cannot see inside a private association suspects it is a faction (Trajan refuses Pliny even a fire brigade at Nicomedia for exactly this fear, Ep. 10.34). Get the licence, under whatever name your own government gives it, or your school is read as a conspiracy.",
     "ph": 350.0,
@@ -1084,6 +1106,17 @@
     "mat": {
       "linen_rag_kg": 9000.0
     },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Standing, and the faster diffusion of technology through the economy"
+      },
+      "corpus": {
+        "tier": "dispersed",
+        "rank": 2
+      },
+      "corpus_survives_sack": true,
+      "ablation_candidate": true
+    },
     "name": "Print and disperse hundreds of copies across three continents",
     "note": "THE highest expected-value node in the tree, and it is cheap. The lesson of Alexandria is not that books burn, it is that single copies burn. Push copies into every library, temple archive and private collection from Britain to India. This is what carries the programme through 235-284 AD. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. Same objection as the press, multiplied. Hundreds of copies of a technical corpus in private hands is exactly what an anxious regime dislikes. Present it as a gift to the libraries of the Empire and give the first copies to the emperor's own foundations.",
     "ph": 800.0,
@@ -1122,6 +1155,16 @@
     },
     "mat": {
       "papyrus_sheet": 4000.0
+    },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Standing"
+      },
+      "corpus": {
+        "tier": "written",
+        "rank": 1
+      },
+      "ablation_candidate": true
     },
     "name": "Write the corpus: everything you know, in plain quantitative Greek and Latin",
     "note": "The largest single call on your personal hours in the entire game, and the one you must not cut. Write plainly and with numbers. The alchemists' habit of deliberate obscurity destroyed centuries of work. Assume every reader is competent and knows nothing.",
@@ -1200,6 +1243,9 @@
     "mat": {
       "iron_bar_kg": 250.0
     },
+    "mechanics": {
+      "ablation_candidate": true
+    },
     "name": "Legume rotation, heavy plough, marling, selective breeding",
     "note": "Columella already recommends legumes; the systematic three-field rotation and controlled comparison are yours. Slow because you cannot rush a growing season, which is why the yrs floor is 6. Feeds the surplus population that a technical civilisation requires and buys you enormous goodwill.",
     "ph": 450.0,
@@ -1244,6 +1290,11 @@
       "clay_kg": 12000.0,
       "coal_kg": 60000.0,
       "iron_bar_kg": 3000.0
+    },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Artisan training capacity"
+      }
     },
     "name": "Crucible steel",
     "note": "Huntsman fired his crucibles with coke, which is possible only because the steel is sealed inside a lidded clay pot: the fuel and the metal never meet, so the sulfur cannot get in. The closed crucible is doing as much work as the temperature. Melt blister steel in a closed crucible so the composition homogenises and the slag separates. The crucible surviving 1600 C is the hard part and is why this waits on good refractories. Gate on every cutting tool, every lead screw, and therefore on all precision. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
@@ -1885,6 +1936,12 @@
     "mat": {
       "iugerum_land": 600.0
     },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Protection, credit and the lower interest rate"
+      },
+      "ablation_candidate": true
+    },
     "name": "Endow the institute in land, not coin",
     "note": "Land outlives coin: whatever currency you are using will eventually be debased or disrupted, and land will not. This is how a programme outlives its founder. In Rome the vehicle is testamentary law and the fundatio (Pliny's alimenta, Trajan's own); every society you can play has some durable equivalent, and it is bought or built the way endowments are always built here: with a public benefaction and the right friends.",
     "ph": 500.0,
@@ -2028,7 +2085,14 @@
     ],
     "up": 1400.0,
     "yrs": 2.0,
-    "_internal": "[AUDIT: this node currently draws from a flat +8 artisans figure rather than tracking actual market purchases. A person is not a material to be stocked. The node used to model hiring as consuming units of a fictitious good, but this was replaced with a one-time capital outlay for acquiring eight already-skilled people. Future work will link this to the household's actual purchase ledger so it draws down the same market as direct purchases.]"
+    "_internal": "[AUDIT: this node currently draws from a flat +8 artisans figure rather than tracking actual market purchases. A person is not a material to be stocked. The node used to model hiring as consuming units of a fictitious good, but this was replaced with a one-time capital outlay for acquiring eight already-skilled people. Future work will link this to the household's actual purchase ledger so it draws down the same market as direct purchases.]",
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Artisan capacity",
+        "scalable": "population"
+      },
+      "ablation_candidate": true
+    }
   },
   {
     "adopt_yrs": 0.0,
@@ -2436,6 +2500,9 @@
       "scholar": 1500.0
     },
     "mat": {},
+    "mechanics": {
+      "disease_burden": true
+    },
     "name": "Germ theory of disease",
     "note": "The bead microscope makes this demonstrable rather than assertable, which is the whole difference. Galen's humoral theory is the obstacle and it is defended by the entire medical profession.",
     "ph": 350.0,
@@ -3144,6 +3211,11 @@
       "scribe": 400.0
     },
     "mat": {},
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Protection, credit and standing"
+      }
+    },
     "name": "Establish a respectable cover identity",
     "note": "Buy books, a house, clothes, a literate freed or hired secretary, and a reputation for piety (in Rome this is specifically the Alexandrian physician-philosopher persona; every society has its own version of a scholar-notable it will not look at twice: a monk or clerk under any literate king, a temple-trained scribe in Mesoamerica, a rune-literate skald or lawspeaker in Scandinavia). Reduces all future suspicion.",
     "ph": 500.0,
@@ -3180,6 +3252,11 @@
     "mat": {
       "iron_bar_kg": 2000.0,
       "steel_noric_kg": 300.0
+    },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "The price markup and staff-capacity bonus"
+      }
     },
     "name": "Tolerances, jigs, fixtures and interchangeable manufacture",
     "note": "A management and measurement innovation more than a mechanical one, and it is what turns a workshop into an industry. The army will want it for weapons before anyone else does, which is your funding argument. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. THE STATE WILL RESIST THIS. Interchangeable manufacture visibly replaces free urban artisans with unskilled hands and gauges. Suetonius, Vespasian 18: an engineer offers a cheap machine for hauling columns to the Capitol, and Vespasian rewards him but declines to use it, saying he must be allowed to feed his poor commons. Site it in the provinces, staff it conspicuously with freedmen, and frame it as arming the legions rather than as saving wages.",
@@ -3401,6 +3478,9 @@
       "emery_kg": 40.0,
       "glass_raw_kg": 60.0,
       "tin_kg": 8.0
+    },
+    "mechanics": {
+      "ablation_candidate": true
     },
     "name": "Ground and polished spherical lenses",
     "note": "Reading spectacles for a literate elite that goes presbyopic at forty and has no remedy. Enormous margin, obvious utility, zero threat. This is your best year-one revenue product and it also buys you your first patron.",
@@ -3803,6 +3883,9 @@
       "mercury_kg": 40.0,
       "tin_kg": 30.0
     },
+    "mechanics": {
+      "ablation_candidate": true
+    },
     "name": "Tin-mercury amalgam plate mirrors",
     "note": "Existing mirrors are small, dark and mostly polished bronze or lead-backed glass. A true plate mirror is a luxury good with an obscene margin. Mercury vapour will poison your workers; ventilate, rotate them, and do not let them eat in the shop.",
     "ph": 350.0,
@@ -4014,6 +4097,12 @@
     "kind": "INSTITUTION",
     "lab": {},
     "mat": {},
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Protection, credit, state funding and status"
+      },
+      "ablation_candidate": true
+    },
     "name": "Imperial patronage",
     "note": "Approach through the a rationibus or the Praetorian Prefect, not the emperor. The optical telegraph is the demonstration that buys this: an empire's core problem is that a message to the Rhine takes weeks. Unlocks mining concessions, corvee labour and state funding, and puts a target on you.",
     "ph": 900.0,
@@ -4047,6 +4136,11 @@
     "kind": "INSTITUTION",
     "lab": {},
     "mat": {},
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Protection and credit"
+      }
+    },
     "name": "Secure a town patron",
     "note": "Cheapest entry gift is a pair of reading lenses for an ageing magistrate. Halves incoming suspicion.",
     "ph": 400.0,
@@ -4079,6 +4173,12 @@
     "kind": "INSTITUTION",
     "lab": {},
     "mat": {},
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Protection, credit and status"
+      },
+      "ablation_candidate": true
+    },
     "name": "Senatorial patronage",
     "note": "Bought with a cure, a profit, or a public benefaction in their name. Pliny the Younger's circle is the target type.",
     "ph": 600.0,
@@ -4200,6 +4300,10 @@
       "scholar": 2500.0
     },
     "mat": {},
+    "mechanics": {
+      "capability": {},
+      "ablation_candidate": true
+    },
     "name": "Quarantine, clean water, sanitation and variolation programme",
     "note": "You know the Antonine Plague arrives in 165 AD. This node is what decides whether your institute survives it. Highest expected-value defensive investment in the game. It is also the thing most likely to be called sorcery, so do it under a patron and in public.",
     "ph": 700.0,
@@ -4327,6 +4431,11 @@
       "iron_sheet_kg": 60000.0,
       "steel_plate_kg": 90000.0
     },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "The price markup and staff-capacity bonus"
+      }
+    },
     "name": "Central generation and distribution",
     "note": "The precondition for every energy-intensive process that follows: arc furnaces, electrolysis, aluminium, and the sustained laboratory power a semiconductor programme consumes. This is a civilisational-scale project, not a workshop one. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. A power grid needs generation, transformers, transmission and the steel to build all three. It does not need a railway: this node required one, which pulled the whole eighteen-node railway programme and its serial time into the critical path to a transistor. Bulk steel, which the railway also needed, is the real shared dependency.",
     "ph": 900.0,
@@ -4418,6 +4527,9 @@
       "lead_kg": 400.0,
       "olive_oil_kg": 200.0,
       "tin_kg": 60.0
+    },
+    "mechanics": {
+      "ablation_candidate": true
     },
     "name": "Movable type and the screw press",
     "note": "A screw press for oil and wine is already common wherever agriculture is pressed this way (Rome among others), so half the machine already exists. The hard parts are the punch-cut matrix, the adjustable hand mould for casting type at speed, and oil-based ink that will not bead on metal. POLITICALLY AMBIGUOUS. Cheap accurate copying breaks the elite's control of what is known and by whom. Frame it as multiplying the classics, never as publishing. Print the classics first and visibly.",
@@ -4554,6 +4666,9 @@
       "linen_rag_kg": 6000.0,
       "paper_kg": 20.0
     },
+    "mechanics": {
+      "ablation_candidate": true
+    },
     "name": "Rag paper from linen",
     "note": "Cai Lun's paper is 105 AD in China and will not reach the Mediterranean for centuries. Ret and lime the rags, beat them to pulp with a water-driven stamper, lift on a wire mould, press and size. Cheaper than papyrus, far cheaper than parchment, and it is the substrate of everything in Module 80.",
     "ph": 400.0,
@@ -4593,6 +4708,11 @@
     "mat": {
       "steel_plate_kg": 400000.0,
       "timber_m3": 4000.0
+    },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "The trade-reach revenue bonus and staff capacity"
+      }
     },
     "name": "Iron rail, locomotive and permanent way",
     "note": "Where the existing road network is already excellent (Rome's is the classic case) the marginal gain from rail is smaller than it was in 1830s Britain, but bulk freight overland at a fortieth of the cost still changes what can be built inland. Politically superb: it is unambiguously an instrument of whatever state you serve. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. The 400 tonnes of rail steel is a demonstration line of roughly 4 km at about 100 kg per metre of track, not a network. A network is a further order of magnitude and is why the calendar floor here is a generation.",
@@ -4693,6 +4813,14 @@
       "scholar": 900.0
     },
     "mat": {},
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Your extra life-expectancy"
+      },
+      "disease_burden": true,
+      "founder_life_extension": true,
+      "ablation_candidate": true
+    },
     "name": "Boiled water, handwashing, wound irrigation, quarantine",
     "note": "Costs an argument, not a coin. Saves more lives than every machine in this document combined, wherever it is adopted. Sell it to the army first: an army already has field hospitals and an officer class that measures results (Rome's valetudinaria is the model).",
     "ph": 300.0,
@@ -4729,6 +4857,13 @@
       "scribe": 2000.0
     },
     "mat": {},
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Scholar and artisan training and the standing it earns",
+        "scalable": "literacy"
+      },
+      "ablation_candidate": true
+    },
     "name": "Found the school (the Museum)",
     "note": "The pivot of the entire game. Converts your hours into other people's hours permanently. Every year of delay here costs more than any single technology. Grants +4 scholars immediately and adds capacity for +2 scholars per year to the household training pipeline thereafter; this raises the reachable staff pool and deputy capacity, not the school headline count. Graduates become usable as hiring and training fill that capacity. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. OPTIONAL. Nothing in the technical tree requires it. It is simply the highest-leverage thing you can spend money on, because it converts your hours into other people's hours permanently. You may decline to found it and hire craftsmen forever instead; the simulator will let you, and will show you the cost.",
     "ph": 2000.0,
@@ -4919,6 +5054,9 @@
     "mat": {
       "iron_bar_kg": 900.0,
       "timber_m3": 250.0
+    },
+    "mechanics": {
+      "ablation_candidate": true
     },
     "name": "Optical semaphore chain",
     "note": "Chappe's chain did Paris to Lille, 230 km, in minutes. Rome to the Rhine in a day instead of a month is worth more to an emperor than any weapon. THIS is the demonstration that buys imperial patronage. Requires the telescope to read the arms at distance.",
@@ -5342,6 +5480,11 @@
       "iron_bar_kg": 9000.0,
       "steel_plate_kg": 25000.0
     },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Artisan training capacity"
+      }
+    },
     "name": "High pressure steam and adequate boilers",
     "note": "Power density enough for locomotives and ships. Be honest with your students about how many people early boilers killed, and build a hydraulic test and a relief valve into the very first one. A boiler explosion anywhere in a pre-industrial society will be read as divine judgment on the whole programme. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
     "ph": 700.0,
@@ -5512,6 +5655,12 @@
       "glass_raw_kg": 2000.0,
       "iron_bar_kg": 6000.0,
       "shellac_kg": 150.0
+    },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "The trade-reach revenue bonus and staff capacity"
+      },
+      "ablation_candidate": true
     },
     "name": "Electric telegraph",
     "note": "The killer application for an empire and the thing that makes your programme permanently indispensable to the State. Glass or ceramic insulators on poles, relays every few tens of kilometres, Daniell cells at each station. Once a distant frontier can answer the capital in an hour, no ruler will ever let your institute be closed. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
@@ -5914,6 +6063,12 @@
       "brick_1000": 30.0,
       "timber_m3": 40.0
     },
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Artisan capacity",
+        "scalable": "population"
+      }
+    },
     "name": "First workshop and laboratory",
     "note": "On navigable water. With a walled yard, a separate furnace shed downwind, and a door onto the street so that witnesses can see you are not conjuring.",
     "ph": 500.0,
@@ -5949,6 +6104,9 @@
     },
     "mat": {
       "papyrus_sheet": 200.0
+    },
+    "mechanics": {
+      "ablation_candidate": true
     },
     "name": "Publish an accurate world map and sailing directions",
     "note": "Nearly free, immediately impressive, militarily and commercially valuable, and hard to call magic. Present as compiled from Indian and Chinese merchant reports. Ptolemy's Geography is c. 150 AD, so you are 50 years early, which is credible rather than miraculous.",

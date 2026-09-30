@@ -148,7 +148,12 @@
   "traits": [
    "commerce",
    "military"
-  ]
+  ],
+  "mechanics": {
+   "capability": {
+    "lost_benefit": "The trade-route revenue bonus"
+   }
+  }
  },
  {
   "id": "exp_coastal_africa",

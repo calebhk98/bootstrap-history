@@ -167,11 +167,7 @@ class DiffusionMixin:
         done_year_map = projects.done_year or {}
         started = projects.opened_year.get(node_id, done_year_map.get(node_id, scenario.year))
         age = max(0.0, scenario.year - started)
-        pace = 1.0
-        if self.running("corpus_dispersed"):
-            pace = self.CORPUS_DIFFUSION_PACE_DISPERSED
-        elif self.running("corpus_written"):
-            pace = self.CORPUS_DIFFUSION_PACE_WRITTEN
+        pace = self.corpus_diffusion_pace()
         gen_lit = float(self.civ.get("literacy_general", 0.12))
         pace *= (self.LITERACY_DIFFUSION_PACE_BASE
                  + self.LITERACY_DIFFUSION_PACE_SPAN
@@ -336,10 +332,7 @@ class DiffusionMixin:
         """
         pace = 1.0
         if cat in ("medical", "information"):
-            if self.running("corpus_dispersed"):
-                pace = self.CORPUS_DIFFUSION_PACE_DISPERSED
-            elif self.running("corpus_written"):
-                pace = self.CORPUS_DIFFUSION_PACE_WRITTEN
+            pace = self.corpus_diffusion_pace()
             gen_lit = float(self.civ.get("literacy_general", 0.12))
             pace *= (self.LITERACY_DIFFUSION_PACE_BASE
                      + self.LITERACY_DIFFUSION_PACE_SPAN

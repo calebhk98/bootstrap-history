@@ -46,33 +46,7 @@ class CapabilityMixin:
     # plague_preparedness is absent: what it pays is hazard relief, which
     # hazard_relief reads through running() and _counter_strength (a closed
     # concern keeps only a residue), not a capability benefit of this table.
-    NOT_OPERATING_BENEFIT = {
-        "academy_network": "Scholar and artisan training, standing, and its "
-                           "reduction of eminence risk",
-        "blast_furnace": "Artisan training capacity",
-        "collegium_licensed": "Scholar capacity, protection and credit",
-        "corpus_dispersed": "Standing, and the faster diffusion of "
-                            "technology through the economy",
-        "corpus_written": "Standing",
-        "crucible_steel": "Artisan training capacity",
-        "endowment_land": "Protection, credit and the lower interest rate",
-        "exp_trade_route_extend": "The trade-route revenue bonus",
-        "fin_argentarii": "The lower interest rate",
-        "fin_university": "Protection",
-        "freedman_staff": "Artisan capacity",
-        "identity_cover": "Protection, credit and standing",
-        "interchangeable_parts": "The price markup and staff-capacity bonus",
-        "patron_imperial": "Protection, credit, state funding and status",
-        "patron_local": "Protection and credit",
-        "patron_senatorial": "Protection, credit and status",
-        "power_grid": "The price markup and staff-capacity bonus",
-        "railway": "The trade-reach revenue bonus and staff capacity",
-        "sanitation_antisepsis": "Your extra life-expectancy",
-        "school_founded": "Scholar and artisan training and the standing it earns",
-        "steam_high_pressure": "Artisan training capacity",
-        "telegraph_electric": "The trade-reach revenue bonus and staff capacity",
-        "workshop_first": "Artisan capacity",
-    }
+    # NOT_OPERATING_BENEFIT comes from each capability node's `lost_benefit` (MechanicsMixin).
 
     def capability_gaps(self):
         """Completed capability institutions that are NOT currently operating,
@@ -90,7 +64,8 @@ class CapabilityMixin:
         for node_id in sorted(self.NOT_OPERATING_BENEFIT):
             if node_id not in self.nodes or not self.has(node_id) or self.running(node_id):
                 continue
-            if node_id == "fin_university" and self.running("school_founded"):
+            if any(self.running(other) for other in
+                   self.mechanic(node_id, "capability").get("redundant_with", ())):
                 continue
             benefit = self.NOT_OPERATING_BENEFIT[node_id]
             out.append({
@@ -187,7 +162,7 @@ class CapabilityMixin:
         """
         if node_id not in self.SCALABLE_INSTITUTIONS:
             return 1.0
-        if node_id in ("school_founded", "academy_network"):
+        if self.mechanic(node_id, "capability").get("scalable") == "literacy":
             lit = max(self.LITERACY_GENERAL_FLOOR,
                       float(self.civ.get("literacy_general", self.LITERACY_REFERENCE_GENERAL)))
             return max(1.0, self.SCHOOL_CEILING_BASE_UNITS * self.pop_scale ** self.INSTITUTION_CEILING_POP_EXPONENT

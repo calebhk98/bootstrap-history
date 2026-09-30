@@ -655,9 +655,9 @@ class MaterialSupplyMixin:
         # imperial property. Charcoal is exempt because no amount of standing
         # makes a bulky crumbling fuel travel further than it can travel.
         if emp_key != "charcoal":
-            if self.running("patron_imperial"):     share *= self.MARKET_STANDING_PATRON_IMPERIAL
-            elif self.running("patron_senatorial"): share *= self.MARKET_STANDING_PATRON_SENATORIAL
-            elif self.has("citizenship"):       share *= self.MARKET_STANDING_CITIZENSHIP
+            favour = self.effect_best("market_standing")
+            if favour is not None:
+                share *= favour[1]["factor"]
             share = min(share, self.MARKET_STANDING_SHARE_CEILING)
         # GEOLOGY, NOT DEMOGRAPHY: mineral availability must scale with
         # mineral_scale() - the regions this civilization actually holds

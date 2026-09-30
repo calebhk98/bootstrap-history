@@ -223,10 +223,11 @@ class MiningMixin:
         comment for why a pump or a railway belongs on THIS side of the
         ledger and not only on cost)."""
         state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
-        if self.running("patron_imperial"):     base = self.MINE_CEILING_BASE_IMPERIAL + self.MINE_CEILING_STATE_SCALE_IMPERIAL * state_capacity
-        elif self.running("patron_senatorial"): base = self.MINE_CEILING_BASE_SENATORIAL + self.MINE_CEILING_STATE_SCALE_SENATORIAL * state_capacity
-        elif self.has("citizenship"):       base = self.MINE_CEILING_BASE_CITIZEN + self.MINE_CEILING_STATE_SCALE_CITIZEN * state_capacity
-        else:                               base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
+        favour = self.effect_best("mine_ceiling")
+        if favour is not None:
+            base = favour[1]["base"] + favour[1]["state_scale"] * state_capacity
+        else:
+            base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
         base *= 1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE, max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII)
         geo = self.mineral_scale(mat)
         yld, _cost = self.mining_tech(mat)
@@ -553,13 +554,10 @@ class MiningMixin:
         book yield is a real historical claim, thirty times is the
         abolished unobtainable category with its sign flipped."""
         yield_mult, cost_mult = 1.0, 1.0
-        techs = self.MINING_TECH
-        if mat in ("iron", "coal"):
-            techs = dict(techs, **self.MINING_TECH_STEEL)
-        for node in sorted(techs):
-            if self.running(node):
-                yield_mult *= techs[node]["yield"]
-                cost_mult *= techs[node]["cost"]
+        for node_id, spec in self._effect_terms("mining_tech"):
+            if self.running(node_id) and mat in spec.get("materials", (mat,)):
+                yield_mult *= spec["yield"]
+                cost_mult *= spec["cost"]
         return min(yield_mult, self.MINING_TECH_YIELD_CEILING), max(self.MINING_TECH_COST_FLOOR, cost_mult)
 
     MINING_TECH_YIELD_CEILING = declare(
