@@ -884,7 +884,7 @@ not expect to move, moved" is.
 
 I ran the weather-specific test files directly rather than assume their own
 docstrings' claims about pass/fail state, since those docstrings are
-themselves prose and CLAUDE.md §8 asks that assertions be measured:
+themselves prose and CLAUDE.md §6 asks that assertions be measured:
 
 ```
 python3 -m unittest sim.tests.test_regional_weather_wiring -v

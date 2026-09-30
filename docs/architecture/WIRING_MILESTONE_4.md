@@ -685,7 +685,7 @@ Re-run whatever produced `sim/ARCHITECTURE.md`'s 165/411 counts and
 `pop_children`/`pop_working_age`/`pop_elderly`) is new; `pop_scale`/
 `wage_index` move from stored attributes to computed properties, which
 changes which column of `SIM_STATE_INVENTORY.md`'s table they belong in.
-This is CLAUDE.md §8's own working rule, applied to this milestone rather
+This is CLAUDE.md §6's own working rule, applied to this milestone rather
 than deferred.
 
 **Agriculture wiring is a parallel track, not a later step of this same
