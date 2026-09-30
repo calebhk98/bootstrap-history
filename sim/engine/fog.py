@@ -234,7 +234,7 @@ class FogMixin:
         chance, frac, hedge = self.corpus_hedge()
         projects = self.state.projects
         scenario = self.state.scenario
-        at_risk = len(projects.done - projects.granted)
+        at_risk = len(set(self.losable_node_ids(keep_dispersed=False)))
         # WHAT YOU HAVE ALREADY LOST, and have to build again: without this,
         # the only record of a sacking is a log line a century back, and
         # the only way to discover a loss is one cryptic refusal at a time

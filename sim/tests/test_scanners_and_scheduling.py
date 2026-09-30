@@ -39,7 +39,8 @@ _fogscan_args = {
 }
 # save/load/quit: side effects (a file written, the run ended) unrelated to
 # what this test is about, and excluded for that reason, not for safety.
-_fogscan_skip = {"save", "load", "quit"}
+# finish ends the run and on purpose shows the road that fog hid until then.
+_fogscan_skip = {"save", "load", "quit", "finish"}
 _word_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 _fogscan_leaks = {}
 for _c in S.KNOWN_COMMANDS:

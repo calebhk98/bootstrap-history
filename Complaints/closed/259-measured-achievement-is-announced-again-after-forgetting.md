@@ -1,6 +1,6 @@
 # "achieved: A literate people, not just a literate few" is announced repeatedly (1539, 1546, 1548)
 
-**Status:** open
+**Status:** closed
 
 Run 2 (C) saw the same achievement announced three times.
 
