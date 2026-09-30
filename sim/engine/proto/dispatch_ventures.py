@@ -149,10 +149,12 @@ def _cmd_start(sim, nodes, cmd, ended):
            "expected_calendar_years_with_retries": round(
                sim.expected_calendar_years(node_id), 2),
            "the_bill_you_have_taken_on": bill,
-           "note": "This is the price as of today, and it is now fixed for "
-                   "this project. Quotes move with prices, the coinage and "
-                   "what a material costs to get: a figure you read years "
-                   "ago is not what you will pay."}
+           "note": "The price is fixed at start (explained earlier; `full` shows it again)."
+           if already_explained(sim, "start_price_fixed", cmd) else
+           "This is the price as of today, and it is now fixed for "
+           "this project. Quotes move with prices, the coinage and "
+           "what a material costs to get: a figure you read years "
+           "ago is not what you will pay."}
     # SAID AT THE MOMENT OF COMMITMENT, NOT DISCOVERED 60% IN. A player
     # who had already won the game found the first workshop/lab stalled
     # at 60% "until I stopped adding new work for a year", with nothing
@@ -307,6 +309,9 @@ def _cmd_start(sim, nodes, cmd, ended):
     short = sorted(trade for trade in node["lab"] if sim.market_supply(trade) <= 0.0)
     if short:
         out["warning"] = (
+            "no one can do this work YET: %s. (Instructions given earlier; `full` shows them again.)"
+            % ", ".join(short)
+            if already_explained(sim, "start_untrained_trade", cmd) else
             "no one can do this work YET: %s. The trade exists here or is "
             "being taught, but nobody is trained and ready, and this "
             "project cannot progress at all until someone is. If that is "
