@@ -685,7 +685,8 @@ class ProductionMixin:
         _units = (self.institution_units(node_id) if node_id in self.state.projects.operating else 1.0) \
             if node_id in self.SCALABLE_INSTITUTIONS else 1.0
         upkeep_amount = node["up"] * _units
-        if node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0:
+        if (node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0
+                or self.mechanic(node_id, "upkeep_full")):
             return upkeep_amount
         places = self.institution_places(node_id) * _units
         if places <= 0:

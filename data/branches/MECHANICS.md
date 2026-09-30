@@ -67,7 +67,24 @@ change; read them from the node data (no command summarises them).
 | `supplies_material_by_sea_route` | `materials` it brings by an existing trade route |
 | `farming_technique` | `axis` (`rotation`, `toolkit`, `crop`) and `entry` (a name in `sim/world/agriculture.py`) |
 | `ablation_candidate` | offered by the `sensitivity` command |
+| `upkeep_full` | the work bills its whole upkeep every year it is open, whatever the household headcount: for a work that serves a town or a state rather than the household's own people (see Benefactions below) |
 | `power_tier`, `power_generation`, `prime_mover`, `electricity_gate`, `electrical_process` | the power ladder: `rank`, `label`, `anchor_kw`, `scale`; generator `role` and `tier`; prime-mover `family`; nodes whose presence means "needs generated electricity"; process electricity per kg |
+
+## Benefactions
+
+Works that a rich person or company pays for with no takings of their own
+(`data/branches/56_benefactions.json`, ids starting `ben_`) are ordinary nodes:
+`rev` is 0, cost comes from `lab` and `mat`, and `up` is derived from annual
+staff hours and consumables plus a share of the build (each node's `_internal`
+field gives the working). They act only through the channels above:
+`schooling_flow` and `standing` (schools, libraries), `staff_capacity`
+(foundations, patronage), `hazard_counters` (hospitals, water, granaries,
+harbours, insurance), `protection`, `patron_protection`, `alarm_factor` and
+`eminence_hazard_factor` (games, temples, grants to the state), `credit_line`
+and `debt_rate_discount` (a house bank), `reach` and `supervision_room`
+(harbours, telegraph, expeditions). `capability.scalable` makes each repeatable,
+dearer each time. A work's effect holds only while its doors are open, so
+stopping the upkeep stops the effect. Every size is a `temporary_heuristic`.
 
 Every mechanic name used in the tree must appear in this file
 (`sim/tests/test_engine_content_ids.py` checks it).
