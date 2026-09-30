@@ -422,29 +422,7 @@ class CapacityMixin:
         "ROOM_PLACES_POWER_GRID", 130, kind="temporary_heuristic",
         unit="household places", source=None, confidence="D",
         why=_ROOM_SOURCES_WHY)
-    ROOM_SOURCES = (
-        ("workshop_first", ROOM_PLACES_WORKSHOP_FIRST),
-        ("freedman_staff", ROOM_PLACES_FREEDMAN_STAFF),
-        ("school_founded", ROOM_PLACES_SCHOOL_FOUNDED),
-        ("patron_senatorial", ROOM_PLACES_PATRON_SENATORIAL),
-        ("endowment_land", ROOM_PLACES_ENDOWMENT_LAND),
-        ("patron_imperial", ROOM_PLACES_PATRON_IMPERIAL),
-        ("academy_network", ROOM_PLACES_ACADEMY_NETWORK),
-        ("interchangeable_parts", ROOM_PLACES_INTERCHANGEABLE_PARTS),
-        ("crucible_steel", ROOM_PLACES_CRUCIBLE_STEEL),
-        ("blast_furnace", ROOM_PLACES_BLAST_FURNACE),
-        ("telegraph_electric", ROOM_PLACES_TELEGRAPH_ELECTRIC),
-        ("steam_high_pressure", ROOM_PLACES_STEAM_HIGH_PRESSURE),
-        # met_open_hearth_furnace, NOT "bessemer_openhearth": a stale id
-        # here silently drops out of `k in self.nodes` filtering, from
-        # every piece of advice this function gives, without any error -
-        # the sixty-five places an open-hearth furnace is actually worth
-        # (see staff_capacity(), which uses the right id) then never get
-        # offered as a reason to build or reopen one.
-        ("met_open_hearth_furnace", ROOM_PLACES_MET_OPEN_HEARTH_FURNACE),
-        ("railway", ROOM_PLACES_RAILWAY),
-        ("power_grid", ROOM_PLACES_POWER_GRID),
-    )
+    # ROOM_SOURCES: [(node id, places)] from each node's `room_places` (MechanicsMixin).
     # fin_trial_balance, fin_company_town and fin_chain_store - the
     # organisation entries added alongside STAFF_CAPACITY_SOURCES above - are
     # deliberately NOT in ROOM_SOURCES, even though every one of them raises
@@ -681,91 +659,8 @@ class CapacityMixin:
         unit="directors (branch managers)", source=None, confidence="D",
         why=_STAFF_CAPACITY_WHY)
 
-    STAFF_CAPACITY_SOURCES = (
-        ("workshop_first",         0.0,   STAFF_ARTISANS_WORKSHOP_FIRST, 0.0, True,  True),
-        ("freedman_staff",         0.0,   STAFF_ARTISANS_FREEDMAN_STAFF, 0.0, True,  True),
-        ("school_founded",        STAFF_SCHOLARS_SCHOOL_FOUNDED, STAFF_ARTISANS_SCHOOL_FOUNDED, STAFF_DIRECTORS_SCHOOL_FOUNDED, True,  True),
-        ("collegium_licensed",     STAFF_SCHOLARS_COLLEGIUM_LICENSED, 0.0, 0.0, True,  True),
-        ("patron_senatorial",      STAFF_SCHOLARS_PATRON_SENATORIAL, STAFF_ARTISANS_PATRON_SENATORIAL, 0.0, False, True),
-        ("patron_imperial",       STAFF_SCHOLARS_PATRON_IMPERIAL, STAFF_ARTISANS_PATRON_IMPERIAL, STAFF_DIRECTORS_PATRON_IMPERIAL, False, True),
-        ("endowment_land",         STAFF_SCHOLARS_ENDOWMENT_LAND, STAFF_ARTISANS_ENDOWMENT_LAND, STAFF_DIRECTORS_ENDOWMENT_LAND, False, True),
-        ("academy_network",       STAFF_SCHOLARS_ACADEMY_NETWORK, STAFF_ARTISANS_ACADEMY_NETWORK, STAFF_DIRECTORS_ACADEMY_NETWORK, True,  True),
-        ("corpus_dispersed",       STAFF_SCHOLARS_CORPUS_DISPERSED, 0.0, STAFF_DIRECTORS_CORPUS_DISPERSED, False, True),
-        ("interchangeable_parts",  STAFF_SCHOLARS_INTERCHANGEABLE_PARTS, STAFF_ARTISANS_INTERCHANGEABLE_PARTS, 0.0, False, True),
-        ("crucible_steel",         0.0,   STAFF_ARTISANS_CRUCIBLE_STEEL, 0.0, False, True),
-        ("blast_furnace",          0.0,   STAFF_ARTISANS_BLAST_FURNACE, 0.0, False, True),
-        ("telegraph_electric",     STAFF_SCHOLARS_TELEGRAPH_ELECTRIC, STAFF_ARTISANS_TELEGRAPH_ELECTRIC, 0.0, False, True),
-        ("steam_high_pressure",    0.0,   STAFF_ARTISANS_STEAM_HIGH_PRESSURE, 0.0, False, True),
-        # met_open_hearth_furnace, NOT "bessemer_openhearth", which is not in
-        # the tree: self.has() of a node that does not exist is False
-        # forever, so the sixty-five artisans the late game's biggest single
-        # training step is supposed to hand over would never be handed over.
-        ("met_open_hearth_furnace", STAFF_SCHOLARS_MET_OPEN_HEARTH_FURNACE, STAFF_ARTISANS_MET_OPEN_HEARTH_FURNACE, 0.0, False, False),
-        ("railway",                STAFF_SCHOLARS_RAILWAY, STAFF_ARTISANS_RAILWAY, 0.0, False, True),
-        ("power_grid",            STAFF_SCHOLARS_POWER_GRID, STAFF_ARTISANS_POWER_GRID, STAFF_DIRECTORS_POWER_GRID, False, True),
-        # ORGANISATION, NOT INDUSTRY: the same question - "how many more
-        # people can this household feed, house and oversee" - answered by
-        # the tech tree's own finance/organisation branch
-        # (data/branches/40_finance_institutions.json) instead of by a
-        # furnace. A player asked to play as Walmart or Amazon hits this
-        # wall (see literate_capacity, household_room, buy_slaves):
-        # supervision and housing, never market depth. Rome and Han's own
-        # dice-free trials already reach several thousand employees on the
-        # INDUSTRIAL entries above alone; what a household that big also
-        # needs is the organisational technology history actually used to
-        # run one - books honest enough that a manager far from you cannot
-        # simply lie about what he did with your money, tied housing, and a
-        # network of branches in other towns.
-        #
-        # fin_societas ("Partnership between two or more parties to share
-        # profits and losses. Legally recognised, but partners remain
-        # personally liable") is deliberately NOT here, even though Rome's
-        # own civilisation file grants it for free in year one
-        # (starting_techs, rome_100ad.json) and no other node touched here
-        # is a starting grant for any of the five civilisations (checked by
-        # hand against every civ file's own starting_techs) - hanging a
-        # director on a starting grant would be a silent day-one buff to
-        # every single Rome run, not a choice a founder makes. A director in
-        # this table is a trained deputy who can run something the founder
-        # never visits, and fin_trial_balance below is the node whose own
-        # note argues for exactly that ("the foundation of trust between
-        # owner and manager across distance. Without it, the manager can
-        # simply lie"). A partner is a different thing: somebody beside you
-        # sharing the watching, not somebody you can trust at a distance,
-        # and the tree already distinguishes the two. So the partnership's
-        # effect lives in supervision_room() instead, where it reads as "one
-        # more capable person to oversee with" rather than as a deputy the
-        # accounting has not yet been invented to supervise - and where
-        # Rome beginning with a legally recognised partnership form while a
-        # Norse or Mexica founder must build one is exactly the asymmetry
-        # the starting_techs list exists to express, attributed there rather
-        # than routed around.
-        #
-        # fin_trial_balance, the top of fin_double_entry -> fin_ledger ->
-        # fin_trial_balance, is the accounting, not a bigger market, so it
-        # buys clerks (ar) and deputies (di), never scholars or the ceiling
-        # on craftsmen a furnace trains.
-        ("fin_trial_balance",      0.0,   STAFF_ARTISANS_FIN_TRIAL_BALANCE, STAFF_DIRECTORS_FIN_TRIAL_BALANCE, False, False),
-        # fin_company_town ("Employer provides housing, food, and goods to
-        # workers... Highly profitable but politically dangerous"): the
-        # housing half of "feed, house and oversee" bought outright, at the
-        # going concern's own cost (it runs at a loss on the books, like a
-        # school, which is why it belongs in CAPABILITY_INSTITUTIONS rather
-        # than being shed as an ordinary mistake - see economy.py).
-        ("fin_company_town",       0.0,  STAFF_ARTISANS_FIN_COMPANY_TOWN, 0.0, False, True),
-        # fin_chain_store ("operates identical stores in multiple cities,
-        # buying centrally and selling retail in each location... requires
-        # sophisticated management and accounting"): REACH, named in the
-        # tree's own words. One household drawing on one town is the whole
-        # of the household-room wall this section answers; a second unit of
-        # this is a second city's worth of the same organisation, which is
-        # exactly what SCALABLE_INSTITUTIONS/institution_units already means
-        # for a second school "built across town" - here it is a second town,
-        # not a second schoolroom. Its branch managers are the `di` term:
-        # layers of supervision a founder's own two thousand hours a year
-        # could never provide alone.
-        ("fin_chain_store",        0.0,  STAFF_ARTISANS_FIN_CHAIN_STORE, STAFF_DIRECTORS_FIN_CHAIN_STORE, True,  True),
-    )
+    # STAFF_CAPACITY_SOURCES: [(node, scholars, artisans, directors, scales_with_units, must_be_running)]
+    # from each node's `staff_capacity` (MechanicsMixin).
 
     STAFF_CAPITAL_INCOME_RATE = declare(
         "STAFF_CAPITAL_INCOME_RATE", 0.06, kind="temporary_heuristic",
@@ -987,12 +882,7 @@ class CapacityMixin:
         room = (self.SUPERVISION_ROOM_SELF
                 + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra
                 + max(0.0, household.worker_housing_places or 0.0))
-        if self.running("workshop_first"):
-            room += self.SUPERVISION_ROOM_WORKSHOP_FIRST * self.institution_units("workshop_first")
-        if self.running("school_founded"):
-            room += self.SUPERVISION_ROOM_SCHOOL_FOUNDED * self.institution_units("school_founded")
-        if self.running("academy_network"):
-            room += self.SUPERVISION_ROOM_ACADEMY_NETWORK * self.institution_units("academy_network")
+        room = self.effect_sum("supervision_room", room)
         # A SECOND TOWN, NOT A SECOND SCHOOLROOM. workshop_first, school_founded
         # and academy_network above are each a single PLACE a founder can stand
         # in; fin_chain_store is the tree's own word for the thing that is not
@@ -1005,33 +895,6 @@ class CapacityMixin:
         # own 12 there: most of what a branch is worth is still bounded by
         # whether the household can pay its clerks, not by whether a director
         # could in principle watch them.
-        if self.running("fin_chain_store"):
-            room += self.SUPERVISION_ROOM_FIN_CHAIN_STORE * self.institution_units("fin_chain_store")
-        # A PARTNER IS NOT ON YOUR PAYROLL, which is why a partnership belongs
-        # in this headroom and not only in the institutional ceiling above.
-        # (Headroom, not a free staff: hiring INTO it is still scaled by what
-        # the household can afford - see _staff_scale in hired_room - so this
-        # raises how many people a founder may oversee, never how many they
-        # can pay for.) fin_societas is the tree's own "share profits and
-        # losses... partners remain personally liable": a partner brings their
-        # own capital and their own attention, so the household can oversee
-        # more people without first being able to afford to pay for the
-        # oversight. Gating it on what the founder can pay would model a hired
-        # manager, which is a different node.
-        #
-        # has(), not running(): fin_societas has neither revenue nor upkeep
-        # (see ProjectsMixin's CAPABILITY_INSTITUTIONS comment), so it can
-        # never be "opened" and a running() test would make it dead for ever.
-        #
-        # 4.0 against the founder's own 6.0 above: a partner is a capable
-        # person sharing the burden, not a second founder. Rome begins with
-        # this and no other civilisation does (starting_techs, rome_100ad.json),
-        # so a Roman household oversees 10 people in year one where a Norse
-        # one oversees 6 and must build the partnership to catch up. That
-        # asymmetry is the point of the starting_techs list, not a side effect
-        # of it to be routed around.
-        if self.has("fin_societas"):
-            room += self.SUPERVISION_ROOM_FIN_SOCIETAS
         return room
 
     def supervision_room_from(self):
@@ -1055,20 +918,12 @@ class CapacityMixin:
             rows.append({"source": "your deputies", "people":
                          round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra, 2),
                          "what_it_is": "people you have trained to direct work"})
-        for key, per, words in (
-                ("workshop_first", self.SUPERVISION_ROOM_WORKSHOP_FIRST, "a place of your own to work in"),
-                ("school_founded", self.SUPERVISION_ROOM_SCHOOL_FOUNDED, "a school, and the people it keeps"),
-                ("academy_network", self.SUPERVISION_ROOM_ACADEMY_NETWORK, "an academy network"),
-                ("fin_chain_store", self.SUPERVISION_ROOM_FIN_CHAIN_STORE, "branches in other towns")):
-            if self.running(key):
+        for key, spec in self._effect_terms("supervision_room"):
+            if self.effect_holds(key, spec):
                 rows.append({"source": key,
-                             "people": round(per * self.institution_units(key), 2),
-                             "what_it_is": words})
-        if self.has("fin_societas"):
-            rows.append({"source": "fin_societas", "people": self.SUPERVISION_ROOM_FIN_SOCIETAS,
-                         "what_it_is": "a partner who shares the watching, and "
-                                       "whose own capital and attention are not "
-                                       "on your payroll"})
+                             "people": (round(self.effect_value(key, spec), 2) if "per_unit" in spec
+                                        else self.effect_value(key, spec)),
+                             "what_it_is": spec["words"]})
         return rows
 
     # THE SAME COEFFICIENTS market_supply() USES for identical formulas below
@@ -1136,14 +991,7 @@ class CapacityMixin:
         # already do on what it costs to found (institution_unit_cost) - a
         # second school teaches nearly as many more people as the first
         # did; a ninth does not teach nine times as many as one did.
-        if self.running("school_founded"):
-            cap *= 1.0 + self.SCHOOL_FOUNDED_HIRING_COEFFICIENT * self.institution_units("school_founded") ** self.HIRING_MULTIPLIER_EXPONENT
-        if self.running("freedman_staff"):
-            cap *= 1.0 + self.FREEDMAN_STAFF_HIRING_COEFFICIENT * self.institution_units("freedman_staff") ** self.HIRING_MULTIPLIER_EXPONENT
-        if self.running("patron_imperial"):   cap *= self.PATRON_IMPERIAL_HIRING_MULTIPLIER
-        if self.running("academy_network"):
-            cap *= 1.0 + self.ACADEMY_NETWORK_HIRING_COEFFICIENT * self.institution_units("academy_network") ** self.HIRING_MULTIPLIER_EXPONENT
-        if self.running("interchangeable_parts"): cap *= self.INTERCHANGEABLE_PARTS_HIRING_MULTIPLIER
+        cap = self.effect_factor("hiring_factor", cap, self.HIRING_MULTIPLIER_EXPONENT)
         return cap
 
     # ---- how a SOCIETY reacts to a TECHNOLOGY -------------------------------

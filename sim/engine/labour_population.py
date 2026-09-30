@@ -456,12 +456,7 @@ class PopulationMixin:
             cap = base * self.SCARCE_TRADE_HIRING_SHARE
         else:
             cap = base * self.UNCOMMON_TRADE_HIRING_SHARE   # uncommon: glassblowers, engravers, masters
-        if self.running("school_founded"):
-            cap *= 1.0 + self.SCHOOL_FOUNDED_HIRING_COEFFICIENT * self.institution_units("school_founded") ** self.HIRING_MULTIPLIER_EXPONENT
-        if self.running("patron_imperial"):       cap *= self.PATRON_IMPERIAL_HIRING_MULTIPLIER
-        if self.running("academy_network"):
-            cap *= 1.0 + self.ACADEMY_NETWORK_HIRING_COEFFICIENT * self.institution_units("academy_network") ** self.HIRING_MULTIPLIER_EXPONENT
-        if self.running("interchangeable_parts"): cap *= self.INTERCHANGEABLE_PARTS_HIRING_MULTIPLIER
+        cap = self.effect_factor("market_hiring_factor", cap, self.HIRING_MULTIPLIER_EXPONENT)
         # A trade that needs reading cannot be bought past how many people
         # here can read (FINDINGS_ROUND2 section Q). scholar and scribe are
         # the only literate trades that reach this branch - the taught ones

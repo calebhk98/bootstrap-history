@@ -464,7 +464,7 @@ class StepPhasesMixin:
         # that hides it lies about the cost of everything", and hiding the
         # acquisition from a player is the worst version of that.
         if self.state.founder.policy.get("auto_buy_people", False):
-            if self.state.household.capital > self.book_money(6000.0) and self.state.household.artisans < 12 and self.running("workshop_first"):
+            if self.state.household.capital > self.book_money(6000.0) and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
                 got = self.buy_slaves(min(6, int(self.state.household.capital // self.book_money(1500.0))))
                 if got:
                     self.state.household.log.append((self.state.scenario.year, "bought %d people for the workshop" % got))
@@ -1727,7 +1727,7 @@ class StepPhasesMixin:
                     self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %d den lost, "
                                          "and you withdraw from public life for a while" % take))
                 elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
-                    for pat in ("patron_imperial", "patron_senatorial"):
+                    for pat in self.patrons_lost_to_eminence():
                         if pat in self.state.projects.done:
                             self.state.projects.done.discard(pat)
                             self._done_changed()

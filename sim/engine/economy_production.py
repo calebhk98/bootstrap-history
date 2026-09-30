@@ -55,7 +55,7 @@ class ProductionMixin:
             "proportionate rather than derived from anything.")
 
     def state_funding(self):
-        if not self.running("patron_imperial"):
+        if not self.running_with_mechanic("state_funding"):
             return 0.0
         return (self.STATE_FUNDING_BASE * self.state.economy.economy * self.state_capacity
                 * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
@@ -304,7 +304,7 @@ class ProductionMixin:
 
     def workshop_output(self):
         """What your standing staff produces and sells, over and above projects."""
-        if not (self.running("workshop_first") or self.running("school_founded")):
+        if not self.running_with_mechanic("workshop_site"):
             return 0.0
         household = self.state.household
         craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
@@ -316,8 +316,7 @@ class ProductionMixin:
         wage += ((household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE)
                  * self.base_annual_wage("artisan"))
         mark = self.WORKSHOP_WAGE_MARKUP_BASE
-        if self.running("interchangeable_parts"):  mark += self.WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS
-        if self.running("power_grid"):             mark += self.WORKSHOP_MARKUP_BONUS_POWER_GRID
+        mark = self.effect_sum("workshop_markup", mark)
         # AND EVERYTHING YOU KNOW HOW TO DO, which is where the value of a
         # capability actually shows up.
         #
@@ -817,6 +816,7 @@ class ProductionMixin:
         apart. Anything absent is sized by its own upkeep at about a wage a
         head, the right order for a building whose cost is its people.
         """
-        if node_id in self.INSTITUTION_PLACES:
-            return self.INSTITUTION_PLACES[node_id]
+        places = self.mechanic(node_id, "institution_places")
+        if places is not None:
+            return places["flat"]
         return max(1.0, self.nodes[node_id]["up"] / self.INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD)

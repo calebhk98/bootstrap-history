@@ -307,8 +307,7 @@ class DiffusionMixin:
         update_protection() already applies to military_leverage()'s own
         bonus there: a workshop with nobody to arm is a private matter, not
         the army's equipment."""
-        return (self.running("patron_local") or self.running("patron_senatorial")
-                or self.running("patron_imperial"))
+        return bool(self.running_with_mechanic("patron"))
 
     def _diffusion_pace(self, cat):
         """How much faster than DIFFUSION_HALF_LIFE_YEARS[cat]'s bare figure

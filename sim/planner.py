@@ -78,6 +78,7 @@ if _REPO_ROOT not in sys.path:
 from sim.engine.data import (STRATS, closure, downstream_count, load, load_civ,
                              topo_order, resolve_goal)
 from sim.engine.core import Sim
+from sim.engine.mechanics import staff_capacity_sources
 from sim.engine.cli import load_strategy
 
 
@@ -270,7 +271,7 @@ def pick_staffing(nodes, need, sim):
     doubles it.
     """
     want = []
-    for key, scholars_needed, artisans_needed, _di, _scaled, _run in Sim.STAFF_CAPACITY_SOURCES:
+    for key, scholars_needed, artisans_needed, _di, _scaled, _run in staff_capacity_sources(nodes):
         if scholars_needed <= 0 and artisans_needed <= 0:
             continue
         if key not in nodes or key in need or key in sim.done or key in sim.granted:

@@ -368,7 +368,20 @@
   "sch": 1,
   "art": 1,
   "conf": "A",
-  "note": "A large reverberatory basin where you can melt pig iron, scrap, and iron ore together at controlled temperatures. Much slower than a converter but gives you time to remove impurities chemically. The furnace can recycle scrap and burnt parts that a converter wastes. Fuel cost is higher but flexibility is the gain."
+  "note": "A large reverberatory basin where you can melt pig iron, scrap, and iron ore together at controlled temperatures. Much slower than a converter but gives you time to remove impurities chemically. The furnace can recycle scrap and burnt parts that a converter wastes. Fuel cost is higher but flexibility is the gain.",
+  "mechanics": {
+   "room_places": {
+    "flat": 65,
+    "order": 12
+   },
+   "staff_capacity": {
+    "scholars": 6.0,
+    "artisans": 65.0,
+    "scales_with_units": false,
+    "must_be_running": false,
+    "order": 14
+   }
+  }
  },
  {
   "id": "met_continuous_casting",
@@ -1755,7 +1768,13 @@
   "traits": [
    "infrastructure",
    "religious_adjacent"
-  ]
+  ],
+  "mechanics": {
+   "mining_tech": {
+    "yield": 1.4,
+    "cost": 0.85
+   }
+  }
  },
  {
   "id": "met_winding_engine",
@@ -1823,7 +1842,13 @@
   "note": "Drill a hole, tamp black powder down with sand, light a fuse. The explosion fractures the rock around it. Later, dynamite (nitroglycerin absorbed in kieselguhr) replaced powder: more powerful, more stable, but far more hazardous. The critical skill is calculating the powder quantity and hole depth to maximize fragmentation without wasting powder or causing a flyrock accident.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "mining_tech": {
+    "yield": 1.0,
+    "cost": 0.85
+   }
+  }
  },
  {
   "id": "met_dynamite_blasting",
@@ -1856,7 +1881,13 @@
   "note": "Three times more powerful than black powder per unit mass and much more reliable. Nitroglycerin is unstable and prone to detonation from shock, so it is absorbed in diatomite to stabilize it. Dynamite revolutionized mining and tunneling but also killed thousands during its development. A single accident in handling or storage is catastrophic. Must be stored separately from fuses and primers.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "mining_tech": {
+    "yield": 1.0,
+    "cost": 0.65
+   }
+  }
  },
  {
   "id": "met_pneumatic_drill",

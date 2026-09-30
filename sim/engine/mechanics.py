@@ -7,6 +7,20 @@ The vocabulary is documented in data/branches/VOCABULARY.md.
 """
 
 
+def nodes_declaring(nodes, name):
+    """[(node id, spec)] for nodes declaring mechanic `name`, in (order, id) sequence."""
+    found = [(node_id, node["mechanics"][name]) for node_id, node in nodes.items()
+             if name in (node.get("mechanics") or {})]
+    return sorted(found, key=lambda item: (item[1].get("order", 0), item[0]))
+
+
+def staff_capacity_sources(nodes):
+    """[(node, scholars, artisans, directors, scales_with_units, must_be_running)] from `staff_capacity`."""
+    return tuple((node_id, spec.get("scholars", 0.0), spec.get("artisans", 0.0), spec.get("directors", 0.0),
+                  spec["scales_with_units"], spec["must_be_running"])
+                 for node_id, spec in nodes_declaring(nodes, "staff_capacity"))
+
+
 class MechanicsMixin:
     """Lookups over the `mechanics` field of the loaded tree."""
 
@@ -142,6 +156,11 @@ class MechanicsMixin:
         """The engine constant `<prefix>_<TIER>` for a corpus node's declared tier."""
         return getattr(self, "%s_%s" % (prefix, self.mechanic(node_id, "corpus")["tier"].upper()))
 
+    def patrons_lost_to_eminence(self):
+        """Patron nodes an eminent household can lose to a quarrel, highest tier first."""
+        return sorted(self.nodes_with_mechanic("patron_lost_to_eminence"),
+                      key=lambda node_id: -self.mechanic(node_id, "patron")["tier"])
+
     def corpus_hedge_tiers(self):
         """[(hedge node, loss chance, fraction lost)], strongest first; corpus_hedge and
         the knowledge-loss warning both read this one rule."""
@@ -168,3 +187,11 @@ class MechanicsMixin:
             if self.running(node_id):
                 return self.corpus_tier_constant(node_id, "CORPUS_DIFFUSION_PACE")
         return 1.0
+
+    @property
+    def STAFF_CAPACITY_SOURCES(self):
+        return staff_capacity_sources(self.nodes)
+
+    @property
+    def ROOM_SOURCES(self):
+        return tuple((node_id, spec["flat"]) for node_id, spec in self._effect_terms("room_places"))

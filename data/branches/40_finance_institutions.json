@@ -50,6 +50,10 @@
   "mechanics": {
    "capability": {
     "lost_benefit": "The lower interest rate"
+   },
+   "debt_rate_discount": {
+    "flat": 0.01,
+    "order": 4
    }
   }
  },
@@ -100,7 +104,15 @@
   "art": 0,
   "conf": "A",
   "note": "Contractual partnership between two or more parties to share profits and losses. Legally recognised, but partners remain personally liable.",
-  "yrs": 0.2
+  "yrs": 0.2,
+  "mechanics": {
+   "supervision_room": {
+    "flat": 4.0,
+    "gate": "has",
+    "words": "a partner who shares the watching, and whose own capital and attention are not on your payroll",
+    "order": 4
+   }
+  }
  },
  {
   "id": "fin_testament",
@@ -388,7 +400,16 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Periodic total of all accounts to verify that debits equal credits. Catches errors before they propagate and corrupt future records."
+  "note": "Periodic total of all accounts to verify that debits equal credits. Catches errors before they propagate and corrupt future records.",
+  "mechanics": {
+   "staff_capacity": {
+    "artisans": 4.0,
+    "directors": 2.0,
+    "scales_with_units": false,
+    "must_be_running": false,
+    "order": 17
+   }
+  }
  },
  {
   "id": "fin_bill_exchange",
@@ -1547,7 +1568,16 @@
   "conf": "C",
   "note": "Employer provides housing, food, and goods to workers in a closed economy. Workers cannot leave without losing housing and may be paid in company scrip. Highly profitable but politically dangerous.",
   "mechanics": {
-   "capability": {}
+   "capability": {},
+   "institution_places": {
+    "flat": 20.0
+   },
+   "staff_capacity": {
+    "artisans": 20.0,
+    "scales_with_units": false,
+    "must_be_running": true,
+    "order": 18
+   }
   }
  },
  {
@@ -2881,6 +2911,21 @@
   "mechanics": {
    "capability": {
     "scalable": "population"
+   },
+   "institution_places": {
+    "flat": 34.0
+   },
+   "staff_capacity": {
+    "artisans": 30.0,
+    "directors": 4.0,
+    "scales_with_units": true,
+    "must_be_running": true,
+    "order": 19
+   },
+   "supervision_room": {
+    "per_unit": 20.0,
+    "words": "branches in other towns",
+    "order": 3
    }
   }
  },
@@ -3096,6 +3141,11 @@
     "redundant_with": [
      "school_founded"
     ]
+   },
+   "protection": {
+    "flat": 0.06,
+    "group": "learned_institution",
+    "order": 4
    }
   }
  },

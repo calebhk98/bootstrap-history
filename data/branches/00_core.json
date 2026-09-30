@@ -22,7 +22,49 @@
         "lost_benefit": "Scholar and artisan training, standing, and its reduction of eminence risk",
         "scalable": "literacy"
       },
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "standing": {
+        "per_sqrt_unit": 10.0,
+        "order": 3
+      },
+      "eminence_hazard_factor": {
+        "factor": 0.65,
+        "hint_when_absent": "a wide, dispersed institution is harder to destroy than one great man",
+        "order": 1
+      },
+      "confiscation_dispersal": {
+        "tier": 2,
+        "flat": 0.35,
+        "gate": "has"
+      },
+      "institution_places": {
+        "flat": 120.0
+      },
+      "room_places": {
+        "flat": 50,
+        "order": 6
+      },
+      "staff_capacity": {
+        "scholars": 40.0,
+        "artisans": 50.0,
+        "directors": 6.0,
+        "scales_with_units": true,
+        "must_be_running": true,
+        "order": 7
+      },
+      "supervision_room": {
+        "per_unit": 30.0,
+        "words": "an academy network",
+        "order": 2
+      },
+      "hiring_factor": {
+        "factor_per_unit_power": 1.5,
+        "order": 3
+      },
+      "market_hiring_factor": {
+        "factor_per_unit_power": 1.5,
+        "order": 2
+      }
     },
     "name": "Three geographically separated academies",
     "note": "Three houses, sited far enough apart, geographically and politically, that no single disaster or crackdown takes all of them at once: a dry archive site, a western site, an eastern site. Every civilization you can play has its own version of this problem and its own ground to choose (Alexandria's papyrus-preserving dryness is the Roman answer; look to what your own geography and political map actually offer). Redundancy is the only defence and it is not optional. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. THE STATE WILL ACTIVELY RESIST THIS. A private association spanning several regions looks like exactly what every pre-modern government fears: a faction with a loyalty of its own (Trajan refuses Pliny even a licensed fire brigade at Nicomedia for this reason, Ep. 10.34). You need the favour of whoever actually rules where you are before you attempt it, and you should site the three houses under three different patrons so that it does not look like one organisation.",
@@ -461,6 +503,24 @@
     "mechanics": {
       "capability": {
         "lost_benefit": "Artisan training capacity"
+      },
+      "mining_tech": {
+        "yield": 1.3,
+        "cost": 0.85,
+        "materials": [
+          "iron",
+          "coal"
+        ]
+      },
+      "room_places": {
+        "flat": 15,
+        "order": 9
+      },
+      "staff_capacity": {
+        "artisans": 15.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 11
       }
     },
     "name": "Tall shaft blast furnace and cast iron",
@@ -792,7 +852,34 @@
     "lab": {},
     "mat": {},
     "mechanics": {
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "living_cost_status": {
+        "flat": 200.0,
+        "book_money": true,
+        "gate": "has",
+        "order": 0
+      },
+      "reach": {
+        "factor": 1.15,
+        "gate": "has",
+        "order": 0
+      },
+      "mine_ceiling": {
+        "tier": 1,
+        "base": 6000.0,
+        "state_scale": 8000.0,
+        "gate": "has"
+      },
+      "market_standing": {
+        "tier": 1,
+        "factor": 1.4,
+        "gate": "has"
+      },
+      "protection": {
+        "flat": 0.1,
+        "gate": "has",
+        "order": 1
+      }
     },
     "name": "Legal standing: a status the courts will hear",
     "note": "In Rome this is citizenship by grant, and what it buys is provocatio, the right of appeal, which is the difference between a governor executing you and Rome hearing you. Every society has its own version of the same thing and none of them is optional: registered household status and rank under the Han, a free man's standing at the thing in Scandinavia, a burgess of a borough in England, membership of a calpulli among the Mexica. Without it you are a body someone may dispose of. Buy it the way it is bought here, with a public benefaction and the right friends.",
@@ -1012,7 +1099,25 @@
         "lost_benefit": "Scholar capacity, protection and credit",
         "scalable": "population"
       },
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "credit_line": {
+        "per_unit": 4000.0,
+        "book_money": true,
+        "order": 4
+      },
+      "protection": {
+        "flat": 0.1,
+        "order": 2
+      },
+      "institution_places": {
+        "flat": 3.0
+      },
+      "staff_capacity": {
+        "scholars": 3.0,
+        "scales_with_units": true,
+        "must_be_running": true,
+        "order": 3
+      }
     },
     "name": "Licensed collegium of physicians and teachers",
     "note": "Unlicensed associations are illegal in most of these societies, and for the same reason: a state that cannot see inside a private association suspects it is a faction (Trajan refuses Pliny even a fire brigade at Nicomedia for exactly this fear, Ep. 10.34). Get the licence, under whatever name your own government gives it, or your school is read as a conspiracy.",
@@ -1112,10 +1217,24 @@
       },
       "corpus": {
         "tier": "dispersed",
-        "rank": 2
+        "rank": 2,
+        "dispersed": true
       },
-      "corpus_survives_sack": true,
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "standing": {
+        "flat": 6.0,
+        "order": 1
+      },
+      "institution_places": {
+        "flat": 8.0
+      },
+      "staff_capacity": {
+        "scholars": 8.0,
+        "directors": 1.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 8
+      }
     },
     "name": "Print and disperse hundreds of copies across three continents",
     "note": "THE highest expected-value node in the tree, and it is cheap. The lesson of Alexandria is not that books burn, it is that single copies burn. Push copies into every library, temple archive and private collection from Britain to India. This is what carries the programme through 235-284 AD. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. Same objection as the press, multiplied. Hundreds of copies of a technical corpus in private hands is exactly what an anxious regime dislikes. Present it as a gift to the libraries of the Empire and give the first copies to the emperor's own foundations.",
@@ -1164,7 +1283,11 @@
         "tier": "written",
         "rank": 1
       },
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "standing": {
+        "flat": 3.0,
+        "order": 0
+      }
     },
     "name": "Write the corpus: everything you know, in plain quantitative Greek and Latin",
     "note": "The largest single call on your personal hours in the entire game, and the one you must not cut. Write plainly and with numbers. The alchemists' habit of deliberate obscurity destroyed centuries of work. Assume every reader is competent and knows nothing.",
@@ -1294,6 +1417,16 @@
     "mechanics": {
       "capability": {
         "lost_benefit": "Artisan training capacity"
+      },
+      "room_places": {
+        "flat": 12,
+        "order": 8
+      },
+      "staff_capacity": {
+        "artisans": 12.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 10
       }
     },
     "name": "Crucible steel",
@@ -1940,7 +2073,40 @@
       "capability": {
         "lost_benefit": "Protection, credit and the lower interest rate"
       },
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "credit_line": {
+        "flat": 30000.0,
+        "book_money": true,
+        "order": 5
+      },
+      "debt_rate_discount": {
+        "flat": 0.02,
+        "order": 3
+      },
+      "protection": {
+        "flat": 0.08,
+        "order": 3
+      },
+      "confiscation_dispersal": {
+        "tier": 1,
+        "flat": 0.2,
+        "gate": "has"
+      },
+      "institution_places": {
+        "flat": 14.0
+      },
+      "room_places": {
+        "flat": 8,
+        "order": 4
+      },
+      "staff_capacity": {
+        "scholars": 6.0,
+        "artisans": 8.0,
+        "directors": 1.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 6
+      }
     },
     "name": "Endow the institute in land, not coin",
     "note": "Land outlives coin: whatever currency you are using will eventually be debased or disrupted, and land will not. This is how a programme outlives its founder. In Rome the vehicle is testamentary law and the fundatio (Pliny's alimenta, Trajan's own); every society you can play has some durable equivalent, and it is bought or built the way endowments are always built here: with a public benefaction and the right friends.",
@@ -2091,7 +2257,24 @@
         "lost_benefit": "Artisan capacity",
         "scalable": "population"
       },
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "institution_places": {
+        "flat": 10.0
+      },
+      "room_places": {
+        "flat": 10,
+        "order": 1
+      },
+      "staff_capacity": {
+        "artisans": 10.0,
+        "scales_with_units": true,
+        "must_be_running": true,
+        "order": 1
+      },
+      "hiring_factor": {
+        "factor_per_unit_power": 0.5,
+        "order": 1
+      }
     }
   },
   {
@@ -3214,6 +3397,22 @@
     "mechanics": {
       "capability": {
         "lost_benefit": "Protection, credit and standing"
+      },
+      "standing": {
+        "flat": 1.0,
+        "order": 6
+      },
+      "credit_line": {
+        "flat": 400.0,
+        "book_money": true,
+        "order": 0
+      },
+      "protection": {
+        "flat": 0.12,
+        "order": 0
+      },
+      "alarm_factor": {
+        "factor": 0.75
       }
     },
     "name": "Establish a respectable cover identity",
@@ -3256,6 +3455,31 @@
     "mechanics": {
       "capability": {
         "lost_benefit": "The price markup and staff-capacity bonus"
+      },
+      "workshop_markup": {
+        "flat": 0.35
+      },
+      "institution_places": {
+        "flat": 44.0
+      },
+      "room_places": {
+        "flat": 40,
+        "order": 7
+      },
+      "staff_capacity": {
+        "scholars": 4.0,
+        "artisans": 40.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 9
+      },
+      "hiring_factor": {
+        "factor": 1.5,
+        "order": 4
+      },
+      "market_hiring_factor": {
+        "factor": 1.5,
+        "order": 3
       }
     },
     "name": "Tolerances, jigs, fixtures and interchangeable manufacture",
@@ -4101,7 +4325,75 @@
       "capability": {
         "lost_benefit": "Protection, credit, state funding and status"
       },
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "standing": {
+        "flat": 8.0,
+        "order": 5
+      },
+      "credit_line": {
+        "flat": 60000.0,
+        "book_money": true,
+        "order": 3
+      },
+      "debt_rate_discount": {
+        "flat": 0.03,
+        "order": 2
+      },
+      "living_cost_status": {
+        "flat": 2500.0,
+        "book_money": true,
+        "order": 2
+      },
+      "reach": {
+        "factor": 1.6,
+        "order": 2
+      },
+      "mine_ceiling": {
+        "tier": 3,
+        "base": 20000.0,
+        "state_scale": 60000.0
+      },
+      "market_standing": {
+        "tier": 3,
+        "factor": 6.0
+      },
+      "patron": {
+        "tier": 3
+      },
+      "patron_lost_to_eminence": true,
+      "patron_protection": {
+        "flat": 0.32,
+        "order": 2
+      },
+      "eminence_hazard_factor": {
+        "factor": 1.5,
+        "hint_when_running": "you are as close to the throne as it is possible to stand, which is the most exposed place there is",
+        "order": 0
+      },
+      "state_funding": true,
+      "institution_places": {
+        "flat": 64.0
+      },
+      "room_places": {
+        "flat": 50,
+        "order": 5
+      },
+      "staff_capacity": {
+        "scholars": 14.0,
+        "artisans": 50.0,
+        "directors": 2.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 5
+      },
+      "hiring_factor": {
+        "factor": 3.0,
+        "order": 2
+      },
+      "market_hiring_factor": {
+        "factor": 3.0,
+        "order": 1
+      }
     },
     "name": "Imperial patronage",
     "note": "Approach through the a rationibus or the Praetorian Prefect, not the emperor. The optical telegraph is the demonstration that buys this: an empire's core problem is that a message to the Rhine takes weeks. Unlocks mining concessions, corvee labour and state funding, and puts a target on you.",
@@ -4139,6 +4431,22 @@
     "mechanics": {
       "capability": {
         "lost_benefit": "Protection and credit"
+      },
+      "credit_line": {
+        "flat": 3000.0,
+        "book_money": true,
+        "order": 1
+      },
+      "debt_rate_discount": {
+        "flat": 0.015,
+        "order": 0
+      },
+      "patron": {
+        "tier": 1
+      },
+      "patron_protection": {
+        "flat": 0.18,
+        "order": 0
       }
     },
     "name": "Secure a town patron",
@@ -4177,7 +4485,60 @@
       "capability": {
         "lost_benefit": "Protection, credit and status"
       },
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "standing": {
+        "flat": 3.0,
+        "order": 4
+      },
+      "credit_line": {
+        "flat": 15000.0,
+        "book_money": true,
+        "order": 2
+      },
+      "debt_rate_discount": {
+        "flat": 0.03,
+        "order": 1
+      },
+      "living_cost_status": {
+        "flat": 900.0,
+        "book_money": true,
+        "order": 1
+      },
+      "reach": {
+        "factor": 1.3,
+        "order": 1
+      },
+      "mine_ceiling": {
+        "tier": 2,
+        "base": 9000.0,
+        "state_scale": 20000.0
+      },
+      "market_standing": {
+        "tier": 2,
+        "factor": 2.5
+      },
+      "patron": {
+        "tier": 2
+      },
+      "patron_lost_to_eminence": true,
+      "patron_protection": {
+        "flat": 0.26,
+        "order": 1
+      },
+      "institution_places": {
+        "flat": 10.0
+      },
+      "room_places": {
+        "flat": 6,
+        "order": 3
+      },
+      "staff_capacity": {
+        "scholars": 4.0,
+        "artisans": 6.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 4
+      }
     },
     "name": "Senatorial patronage",
     "note": "Bought with a cure, a profit, or a public benefaction in their name. Pliny the Younger's circle is the target type.",
@@ -4434,6 +4795,21 @@
     "mechanics": {
       "capability": {
         "lost_benefit": "The price markup and staff-capacity bonus"
+      },
+      "workshop_markup": {
+        "flat": 0.45
+      },
+      "room_places": {
+        "flat": 130,
+        "order": 14
+      },
+      "staff_capacity": {
+        "scholars": 45.0,
+        "artisans": 130.0,
+        "directors": 6.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 16
       }
     },
     "name": "Central generation and distribution",
@@ -4712,6 +5088,25 @@
     "mechanics": {
       "capability": {
         "lost_benefit": "The trade-reach revenue bonus and staff capacity"
+      },
+      "reach": {
+        "factor": 1.35,
+        "order": 4
+      },
+      "mining_tech": {
+        "yield": 1.3,
+        "cost": 1.0
+      },
+      "room_places": {
+        "flat": 95,
+        "order": 13
+      },
+      "staff_capacity": {
+        "scholars": 8.0,
+        "artisans": 95.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 15
       }
     },
     "name": "Iron rail, locomotive and permanent way",
@@ -4862,7 +5257,45 @@
         "lost_benefit": "Scholar and artisan training and the standing it earns",
         "scalable": "literacy"
       },
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "standing": {
+        "per_sqrt_unit": 4.0,
+        "order": 2
+      },
+      "protection": {
+        "flat": 0.06,
+        "group": "learned_institution",
+        "order": 5
+      },
+      "workshop_site": true,
+      "institution_places": {
+        "flat": 34.0
+      },
+      "room_places": {
+        "flat": 12,
+        "order": 2
+      },
+      "staff_capacity": {
+        "scholars": 12.0,
+        "artisans": 12.0,
+        "directors": 2.0,
+        "scales_with_units": true,
+        "must_be_running": true,
+        "order": 2
+      },
+      "supervision_room": {
+        "per_unit": 10.0,
+        "words": "a school, and the people it keeps",
+        "order": 1
+      },
+      "hiring_factor": {
+        "factor_per_unit_power": 1.0,
+        "order": 0
+      },
+      "market_hiring_factor": {
+        "factor_per_unit_power": 1.0,
+        "order": 0
+      }
     },
     "name": "Found the school (the Museum)",
     "note": "The pivot of the entire game. Converts your hours into other people's hours permanently. Every year of delay here costs more than any single technology. Grants +4 scholars immediately and adds capacity for +2 scholars per year to the household training pipeline thereafter; this raises the reachable staff pool and deputy capacity, not the school headline count. Graduates become usable as hiring and training fill that capacity. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. OPTIONAL. Nothing in the technical tree requires it. It is simply the highest-leverage thing you can spend money on, because it converts your hours into other people's hours permanently. You may decline to found it and hire craftsmen forever instead; the simulator will let you, and will show you the cost.",
@@ -5415,6 +5848,12 @@
       "copper_kg": 600.0,
       "iron_bar_kg": 9000.0
     },
+    "mechanics": {
+      "mining_tech": {
+        "yield": 1.6,
+        "cost": 0.65
+      }
+    },
     "name": "Newcomen atmospheric engine",
     "note": "Appallingly inefficient, around 0.5 to 1 percent, but it does not care: its job is pumping water out of coal and metal mines, where the fuel is free at the pithead. Do not attempt this before water power is exhausted; Italy and Gaul have rivers. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
     "ph": 900.0,
@@ -5483,6 +5922,16 @@
     "mechanics": {
       "capability": {
         "lost_benefit": "Artisan training capacity"
+      },
+      "room_places": {
+        "flat": 45,
+        "order": 11
+      },
+      "staff_capacity": {
+        "artisans": 45.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 13
       }
     },
     "name": "High pressure steam and adequate boilers",
@@ -5660,7 +6109,22 @@
       "capability": {
         "lost_benefit": "The trade-reach revenue bonus and staff capacity"
       },
-      "ablation_candidate": true
+      "ablation_candidate": true,
+      "reach": {
+        "factor": 1.15,
+        "order": 5
+      },
+      "room_places": {
+        "flat": 25,
+        "order": 10
+      },
+      "staff_capacity": {
+        "scholars": 6.0,
+        "artisans": 25.0,
+        "scales_with_units": false,
+        "must_be_running": true,
+        "order": 12
+      }
     },
     "name": "Electric telegraph",
     "note": "The killer application for an empire and the thing that makes your programme permanently indispensable to the State. Glass or ceramic insulators on poles, relays every few tens of kilometres, Daniell cells at each station. Once a distant frontier can answer the capital in an hour, no ruler will ever let your institute be closed. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down.",
@@ -6067,6 +6531,26 @@
       "capability": {
         "lost_benefit": "Artisan capacity",
         "scalable": "population"
+      },
+      "hosts_bought_people": true,
+      "workshop_site": true,
+      "institution_places": {
+        "flat": 12.0
+      },
+      "room_places": {
+        "flat": 6,
+        "order": 0
+      },
+      "staff_capacity": {
+        "artisans": 6.0,
+        "scales_with_units": true,
+        "must_be_running": true,
+        "order": 0
+      },
+      "supervision_room": {
+        "per_unit": 6.0,
+        "words": "a place of your own to work in",
+        "order": 0
       }
     },
     "name": "First workshop and laboratory",
