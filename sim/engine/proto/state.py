@@ -198,16 +198,8 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
                 "running at %d%% of the pace its hours alone "
                 "would allow; 'capacity' shows the shortfall"
                 % (sim.binding, round(_thr * 100)))
-    # FOUNDER HOURS - AND WHY THIS MUCH OF THEM: a project sharing the pool
-    # with ten others and one sitting alone must not both say the
-    # identical "your hours" - the priority rank and share among active
-    # projects has to be shown too. The numbers below are read from
-    # step()'s own bookkeeping (core.py, "pool_rank_this_year" and
-    # neighbours) - never recomputed - so this sentence and what actually
-    # happened cannot disagree.
-    _rank = progress.get("pool_rank_this_year")
-    _count = progress.get("pool_active_count_this_year")
-    _total = progress.get("pool_total_this_year")
+    # Rank, count and pool come from the live queue the allocator also uses.
+    _rank, _count, _total = sim.hour_standing(node_id) or (None, None, None)
     if _rank and _count and _count > 1:
         return ("your hours: priority #%d of %d active projects sharing "
                 "this year's %s directed hours; 'portfolio' shows what "
@@ -310,6 +302,7 @@ def _agent_state_active_projects(sim, nodes):
     active = {}
     for node_id, progress in sim.active.items():
         node = nodes[node_id]
+        _standing = sim.hour_standing(node_id) or (None, None, None)
         bill = progress.get("cost_left")
         _at_risk = progress.get("stalled_years", 0)
         if bill is None:
@@ -349,10 +342,9 @@ def _agent_state_active_projects(sim, nodes):
                      # agreement between two pieces of code that happen to
                      # compute it the same way. None before the first step()
                      # a fresh project has lived through.
-                     "pool_rank_this_year": progress.get("pool_rank_this_year"),
-                     "pool_active_count_this_year":
-                         progress.get("pool_active_count_this_year"),
-                     "pool_total_this_year": progress.get("pool_total_this_year"),
+                     "pool_rank_this_year": _standing[0],
+                     "pool_active_count_this_year": _standing[1],
+                     "pool_total_this_year": _standing[2],
                      "pool_remaining_before_this_year":
                          progress.get("pool_remaining_before_this_year"),
                      "underfunded_this_year": progress.get("underfunded_this_year", False),

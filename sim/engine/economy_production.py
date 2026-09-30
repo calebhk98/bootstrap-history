@@ -634,7 +634,7 @@ class ProductionMixin:
         # to know.
         practice_set = self._practice_set()
         operating = self.state.projects.operating
-        return sum(self.institution_upkeep(node_id)
+        return sum(self.venture_real_upkeep(node_id)
                    for node_id in self._revenue_upkeep_candidates()
                    if node_id in operating or node_id in practice_set)
 

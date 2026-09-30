@@ -1411,52 +1411,7 @@ class StepPhasesMixin:
         #    attention finishes nothing, which is a real failure mode but not the
         #    one we are trying to model here.
         #
-        # ONLY THE HANDFUL OF KEYS active_sorted ACTUALLY NEEDS, NOT EVERY
-        # NODE IN THE TREE: a bare `{k: i for i, k in enumerate(self.order)}`
-        # would build a fresh 2,849-entry dict from scratch every single
-        # year to answer `rank.get(k, 9999)` for the at most a few dozen
-        # keys in self.state.projects.active. Nothing below reads `rank` for any
-        # node NOT in self.state.projects.active (checked: its only other use is
-        # the `_pool_rank` loop variable a few lines further down, an
-        # unrelated name), so recording a position for every other one of
-        # the ~2,849 nodes would be pure waste.
-        # This still walks self.order and cannot skip any of it in the
-        # worst case (an active key can be anywhere in `order`), so it is
-        # not a complexity win - but it stops paying for ~2,849 dict
-        # insertions when only a few dozen are ever read, and exits the
-        # walk the moment every active key's position has been found
-        # (start_project, in projects.py, moves a project to the FRONT of
-        # `order` the instant a human starts it by hand, so active keys
-        # skew early there in practice, though the automated 4b loop above
-        # does not reorder `order` and gives no such guarantee - the early
-        # exit is a bonus, not a requirement of correctness). Recomputed
-        # fresh every call: no cache, no staleness risk.
-        _active_left = set(self.state.projects.active)
-        rank = {}
-        if _active_left:
-            for i, node_id in enumerate(self.order):
-                if node_id in _active_left:
-                    rank[node_id] = i
-                    _active_left.discard(node_id)
-                    if not _active_left:
-                        break
-        # A STANDING ALLOCATION IS A PROMISE, NOT A PRIORITY BID. Without
-        # this, a project the player explicitly told `allocate` to give 500
-        # hours a year could still be starved by three higher-`order`
-        # undirected projects taking the whole pool first - the exact
-        # opposite of what asking for an explicit split means. Every project
-        # the player has put a standing instruction on is moved to the
-        # FRONT of the queue (still ordered among themselves by the usual
-        # priority, so two directed projects do not disagree about which of
-        # them goes first); everything without one shares whatever is left
-        # exactly as it always has, by the same `order`-based priority. A
-        # player who never calls `allocate` has an empty hour_allocations,
-        # every project sorts into the same single undirected bucket it
-        # always did, and this line changes nothing for them.
-        active_sorted = sorted(
-            self.state.projects.active,
-            key=lambda k: (0 if self.state.household.hour_allocations.get(k, 0.0) > 0 else 1,
-                           rank.get(k, 9999)))
+        active_sorted = self.hour_priority_queue()
         remaining = pool
         self.state.projects.trade_hours_used = {}
         # Summed as the loop runs, not re-read from self.state.projects.active afterwards,

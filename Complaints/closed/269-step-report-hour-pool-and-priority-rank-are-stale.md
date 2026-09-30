@@ -1,6 +1,6 @@
 # RUNNING lines quote last year's hour pool ("sharing this year's 200 directed hours") and "priority #9 of 9" counts finished work
 
-**Status:** open
+**Status:** closed
 
 B (107 AD and 129 AD): after a new year began with 2,000 hours free, RUNNING still said "sharing this year's 200 directed hours"; the step report showed "priority #9 of 9" while `priority` listed five active projects.
 

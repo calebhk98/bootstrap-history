@@ -35,9 +35,15 @@ def afford_means():
 
 
 def refusal_text(actor, what, cost):
-    """Refusal that cites the same budget the quote reports."""
-    return ("cannot afford %s: it costs %s denarii and you could raise %s "
-            "(cash %s, plus credit). Nothing was changed."
-            % (what, "{:,.0f}".format(cost),
-               "{:,.0f}".format(purchase_budget(actor)),
-               "{:,.0f}".format(actor.capital)))
+    """Refusal that states the rule, the budget and the amount short."""
+    budget = purchase_budget(actor)
+    short = max(0.0, cost - budget)
+    share = actor.SPENDING_DRAW_SHARE_ORDINARY
+    return ("cannot afford %s: it costs %s denarii and you could raise %s, "
+            "so you are %s short. The rule: %s (cash %s, %d%% of your credit "
+            "line of %s, net of any debt). Earning or paying down %s "
+            "would allow it. Nothing was changed."
+            % (what, "{:,.0f}".format(cost), "{:,.0f}".format(budget),
+               "{:,.0f}".format(short), afford_means(),
+               "{:,.0f}".format(actor.capital), round(share * 100),
+               "{:,.0f}".format(actor.credit_limit()), "{:,.0f}".format(short)))
