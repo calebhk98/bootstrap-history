@@ -1,6 +1,6 @@
 # We priced land and then never charged anybody for it
 
-**Status:** open
+**Status:** closed - crops now declare `land_iugera_years` and the solver charges it against `iugerum_land`'s rent (`python3 sim/solve_prices.py --civ rome_100ad --why wheat_kg` shows land as 49.3% of the process cost); schema in data/production/_SCHEMA.md; tests test_price_solver_land.py
 
 Found while deciding whether the engine's solved-price switch could finally
 be turned on. It is the reason the answer is no, and it is larger than every

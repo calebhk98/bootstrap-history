@@ -1,6 +1,6 @@
 # Turning on solved prices today would make land free
 
-**Status:** partly - rent landed; the endogenous-only switch stays off
+**Status:** closed - land is no longer free: `python3 sim/solve_prices.py --civ rome_100ad --why iugerum_land` prices it at a nonzero Ricardian rent for Rome and for Han China; the solved-only switch and the ores still at zero rent are tracked in Complaints/123 and 186
 
 Found by measuring the new `sim/engine/prices.py` wiring rather than by
 reading it. The wiring itself is right and is correctly defaulted OFF; this

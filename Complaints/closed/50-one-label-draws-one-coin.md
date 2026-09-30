@@ -1,6 +1,6 @@
 # Han China farms an empire and flips one coin for all of it
 
-**Status:** open
+**Status:** closed - weather is now correlated across equal-area land tiles by distance (sim/tests/test_growing_season_weather_correlation.py); the unshocked century for Han China ends at 111.3% against Rome 103.9% (harness `sim(civ=..., events=False)`, 100 steps)
 
 Complaints/47 fixed the wrong half of a two-part bug and the fix made the
 remaining half measurable. Weather is now drawn per home region and pooled

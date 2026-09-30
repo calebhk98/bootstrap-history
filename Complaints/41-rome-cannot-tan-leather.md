@@ -257,3 +257,5 @@ civilisation at once. The sweep that found these two is four lines and is not
 yet in the suite, because it needs a judgement about what each society should
 have rather than a graph walk. `Complaints/42`'s test covers the structural
 half; this half still needs a historian.
+
+Update: tanning and fulling are now held by every civilisation that used them (fulling not by mexica_1500, on purpose), and `lead_metallurgy` was handled by Complaints/closed/164. Still open: the Roman start lacks the heat rung its industries imply (Complaints/127), the two tree holes (citric acid, dichromate route) and the duplicate zinc nodes, and the sweep for a technology missing from every civilisation is not in the suite.
