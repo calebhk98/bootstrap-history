@@ -178,7 +178,11 @@ class CompletionMixin:
         if self.rng.random() < _risk_this_attempt:
             _yrs_before = projects.active[node_id]["yrs"]
             projects.failed_attempts[node_id] += 1
-            projects.active[node_id]["ph_left"] = node["ph"] * self.FAILURE_RESET_SHARE
+            claimed = node_id in projects.bountied
+            # A bounty's claimant redoes the work: the poster's prize holds and
+            # no hours or money fall on the poster.
+            projects.active[node_id]["ph_left"] = (
+                0.0 if claimed else node["ph"] * self.FAILURE_RESET_SHARE)
             # THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not
             # reset the multi-year diffusion clock to zero, restarting the
             # whole process from nothing. Even ONE failed attempt already
@@ -193,12 +197,20 @@ class CompletionMixin:
             # programme is only ever readier, never instantly ready.
             _retain = self._retry_calendar_retain(node_id)
             projects.active[node_id]["yrs"] = _yrs_before * _retain
-            _lost = node["_total_cost"] * self.FAILURE_RESET_SHARE * self.cost_money_factor()
+            _lost = 0.0 if claimed else self.failure_loss(node_id)
             _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
             household.capital -= _lost
             # A failure always announces itself; its size sets how loudly.
             _next_risk = self.effective_risk(node_id)
             _banked = projects.active[node_id]["yrs"]
+            if claimed:
+                household.log.append((scenario.year,
+                    "%s %s: the claimant's attempt failed. The prize you posted holds "
+                    "and they try again (attempt %d, chance of failing %d%%); nothing "
+                    "more falls on you."
+                    % (FAILED_PREFIX, node["name"],
+                       projects.failed_attempts[node_id] + 1, round(_next_risk * 100))))
+                return
             if _severity == "minor":
                 household.log.append((scenario.year,
                     "%s %s %s: lost %s denarii, %d%% of the hours to redo; "

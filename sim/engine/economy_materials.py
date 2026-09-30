@@ -955,18 +955,50 @@ class MaterialSupplyMixin:
         household._stock_throttle_sig = None
         return tonnes
 
+    def _material_sold_tonnes_this_year(self):
+        """{stock key: tonnes sold to the market so far this year}."""
+        economy = self.state.economy
+        year = self.state.scenario.year
+        record = economy._material_sold_this_year
+        if not record or record.get("year") != year:
+            record = economy._material_sold_this_year = {"year": year, "tonnes": {}}
+        return record["tonnes"]
+
+    def material_sale_proceeds(self, material, tonnes, already=0.0):
+        """(money, mean money per tonne) for selling `tonnes` more of a
+        material after `already` tonnes sold this year. Sales are the buy
+        side mirrored, marked TEMPORARY HEURISTIC: the sell price is the
+        quoted one divided by the same demand-pressure factor buying climbs
+        (sold tonnes load the market like bought ones), so a bigger sale
+        fetches a lower mean price."""
+        quote = self.material_trade_quote(material)
+        if not quote or tonnes <= 0:
+            return 0.0, 0.0
+        emp_key, tag = self._material_tag(quote["material"])
+        baseline = self._price_factor_across_purchase(emp_key, tag, 0.0, 0.0)
+        across = self._price_factor_across_purchase(emp_key, tag, already, tonnes)
+        mean_price = quote["sell_per_tonne"] * baseline / max(across, baseline)
+        return mean_price * tonnes, mean_price
+
     def sell_material_stock(self, material, tonnes):
+        """Sell stock at the market: the order is cut to what the market
+        absorbs in a year, and the price falls as the year's sales add up."""
         quote = self.material_trade_quote(material)
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:
             return 0.0
-        sold = min(tonnes, self.material_stock_t(quote["stock_key"]))
+        key = quote["stock_key"]
+        sold_so_far = self._material_sold_tonnes_this_year()
+        absorbs = max(0.0, quote["market_available_tonnes_per_year"] - sold_so_far.get(key, 0.0))
+        sold = min(tonnes, self.material_stock_t(key), absorbs)
         if sold <= 0:
             return 0.0
+        money = self.material_sale_proceeds(material, sold, sold_so_far.get(key, 0.0))[0]
         opening = self._material_opening_stock()
-        self._material_stock()[quote["stock_key"]] -= sold
-        opening[quote["stock_key"]] = opening.get(quote["stock_key"], 0.0) - sold
-        self.state.household.add_capital(sold * quote["sell_per_tonne"])
+        self._material_stock()[key] -= sold
+        opening[key] = opening.get(key, 0.0) - sold
+        sold_so_far[key] = sold_so_far.get(key, 0.0) + sold
+        self.state.household.add_capital(money)
         self.state.household._stock_throttle_sig = None
         return sold
 

@@ -212,8 +212,7 @@ def _brief(sim, nodes, node_id, fog):
                 # small thing and were not expecting what it took off a large
                 # project. Zero when the work cannot fail, so nothing invents
                 # a danger that is not there.
-                "failure_costs": (round(sim.project_cost(node_id) * 0.4, 1)
-                                  if node["risk"] else 0.0),
+                "failure_costs": round(sim.failure_loss(node_id), 1),
                 "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
                 "earns_per_year": (_est if _est is not None
                                    else round(sim.venture_real_earnings(node_id), 1)),
@@ -1000,7 +999,7 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
         # takes a flat 40% of the money and puts 40% of the hours back on the
         # slate, and a player deciding whether to risk it is holding the size
         # of the project in their head, not the percentage.
-        "failure_costs": round(sim.project_cost(node_id) * 0.4, 1) if node["risk"] else 0.0,
+        "failure_costs": round(sim.failure_loss(node_id), 1),
         "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
     }
 

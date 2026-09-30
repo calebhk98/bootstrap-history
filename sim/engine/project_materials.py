@@ -116,15 +116,37 @@ class ProjectMaterialsMixin:
                          "priced": quoted is not None})
         return {"rows": rows, "cost_of_missing": total}
 
+    def _up_front_materials_money(self, node_id):
+        """Money the start would spend now on the materials the market can
+        deliver, or zero when the start could not pay it."""
+        _total, up_front = self.project_material_parts(node_id)
+        up_front *= self.opposition_factor(node_id) * self.material_cost_factor(node_id)
+        if up_front <= 0 or not purchase_rule.can_pay(self, up_front):
+            return 0.0
+        return up_front
+
     def settle_project_materials(self, node_id):
         """Buy the materials the market can deliver now (when the money can
         be raised) and return what is left to pay in instalments."""
         full = self.project_cost_now(node_id)
-        _total, up_front = self.project_material_parts(node_id)
-        up_front *= self.opposition_factor(node_id) * self.material_cost_factor(node_id)
-        if up_front <= 0 or not purchase_rule.can_pay(self, up_front):
+        if self._up_front_materials_money(node_id) <= 0:
             return full
         return full - self.buy_project_materials(node_id)
+
+    def failure_bill(self, node_id):
+        """The money bill the player bears for this project: the frozen bill
+        once it runs, else what a start today would leave to pay after the
+        up-front materials (which stay in stock and are not at risk)."""
+        if node_id in self.state.projects.active:
+            return self.project_cost(node_id)
+        return self.project_cost_now(node_id) - self._up_front_materials_money(node_id)
+
+    def failure_loss(self, node_id):
+        """Money a failed attempt costs; the one figure `why` quotes and
+        `_complete` charges."""
+        if not self.nodes[node_id]["risk"]:
+            return 0.0
+        return max(0.0, self.failure_bill(node_id)) * self.FAILURE_RESET_SHARE
 
     def project_material_parts(self, node_id):
         """(cost of the missing materials, of which paid for at the start),

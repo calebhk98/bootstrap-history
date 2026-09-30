@@ -318,6 +318,7 @@ class EconomyState:
 	money_real: float = 1.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
 	_material_stock_opening: Optional[Dict[str, Any]] = None
+	_material_sold_this_year: Optional[Dict[str, Any]] = None
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
 	farm_hectares: Optional[float] = None
 	farm_stock_kg: float = 0.0

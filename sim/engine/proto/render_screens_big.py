@@ -761,7 +761,7 @@ def _why_hours_risk(out):
                  % (out["attempts_already_failed"],
                     _pct(out.get("risk_before_any_attempt"))))
     if out.get("failure_costs"):
-        lines.append("IF IT FAILS: %s gone (40%% of the money) and %s of your "
+        lines.append("IF IT FAILS: %s gone (a share of the money you still pay) and %s of your "
                  "hours to do again. It can fail more than once."
                  % (_fmt_num(out.get("failure_costs")),
                     _fmt_num(out.get("failure_costs_hours"))))

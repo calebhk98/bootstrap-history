@@ -1,6 +1,6 @@
 # `why` quotes one failure loss and a failure charges another (Han pays about twice the quote on its strong domains)
 
-**Status:** open
+**Status:** closed
 
 `why` prints "IF IT FAILS: N gone (40% of the money)". The charge when the roll fails is computed from a
 different base, so the two disagree by a factor that depends on the civilisation, the opposition factor

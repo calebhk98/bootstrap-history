@@ -259,8 +259,10 @@ def _cmd_sell(sim, nodes, cmd, ended):
         return {"ok": False, "error": err or "n must be greater than zero"}
     sold = sim.sell_material_stock(material, quantity)
     if sold <= 0:
-        return {"ok": False, "error": "you have none of that material stock to sell"}
+        return {"ok": False, "error": "nothing sold: you hold none of that material, or the "
+                "market has taken all of it that it will absorb this year"}
     return {"ok": True, "material": material, "sold_tonnes": sold,
+            "asked_tonnes": quantity,
             "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
             "capital": round(sim.capital, 1)}
 
