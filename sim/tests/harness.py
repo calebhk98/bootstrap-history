@@ -20,6 +20,9 @@ import concurrent.futures as _concurrent_futures
 import threading
 import tempfile
 
+# Games started without --seed draw a fresh one; the suite needs them to replay.
+os.environ.setdefault("ROME_DEFAULT_SEED", "1")
+
 # ruff reports collections, copy, glob and re (from the combined import just
 # above) and tempfile as unused in THIS file - correctly, harness.py itself
 # never calls them. They stay because other topic modules use them bare

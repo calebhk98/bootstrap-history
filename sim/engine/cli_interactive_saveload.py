@@ -28,7 +28,7 @@ with a workaround.
 
 import json, os
 
-from .data import CIVDIR, closure, load
+from .data import civilization_ids, closure, load, load_civ
 from . import settings
 from .protocol import load_state, save_state
 
@@ -197,11 +197,9 @@ def _ingame_load(cfg, sim, session, args):
 
 
 def _load_civ_list():
-    civs = []
-    for civ_filename in sorted(os.listdir(CIVDIR)):
-        if not civ_filename.endswith(".json") or civ_filename.startswith("_"):
-            continue
-        civs.append(json.load(open(os.path.join(CIVDIR, civ_filename))))
+    """Every playable civilisation, base and mod, earliest first: the same
+    roster `civs` prints."""
+    civs = [load_civ(civ_id) for civ_id in civilization_ids()]
     civs.sort(key=lambda c: c.get("year", 0))
     return civs
 
@@ -254,8 +252,8 @@ def _print_save_row(i, row, civ_index, need, marker=None):
     """
     if not row["readable"]:
         print("   %d) %s" % (i, row["filename"]))
-        print("      could not be read as a save from this game; skipping "
-              "its details")
+        print("      UNREADABLE: this file is not a save this build can read "
+              "(damaged, or from another program)")
         print()
         return
     civ_record = civ_index.get(row["civ_id"], {})
@@ -279,6 +277,8 @@ def _print_save_row(i, row, civ_index, need, marker=None):
         status.append("ended: %s" % row["dead_reason"])
     elif row.get("founder_alive") is False:
         status.append("founder has died")
+    else:
+        status.append("founder alive")
     done = row.get("done") or []
     if row["fog"]:
         status.append("%d technologies built" % len(done))

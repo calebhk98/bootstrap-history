@@ -1,6 +1,6 @@
 # `changes 10` at 1310 is refused although the game began in 1300
 
-**Status:** open
+**Status:** closed
 
 Ten years into a run, `changes 10` answers "this run's own record only goes back to 1301 AD, 9 years ago; ask for 9 or fewer". The record starts the year after arrival, so "the last ten years" and "the first ten years" are off by one. Minor, but the refusal reads as a bug.
 

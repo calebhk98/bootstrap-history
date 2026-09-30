@@ -46,7 +46,7 @@ python3 sim/simulator.py play --civ england_1300 --kit merchant --goal <goal> --
   tighten as you start and finish it. The new-game menu asks about it next to fog,
   and the in-game `options` screen can turn it on later.
 - `--mortal` lets the founder die of old age; by default you are immortal.
-- `--seed` fixes the dice, so a game can be replayed.
+- `--seed N` fixes the dice, so a game can be replayed. Without it each new game draws a fresh seed, prints it at the start and keeps it in the save.
 
 ## Playing
 

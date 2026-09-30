@@ -18,6 +18,7 @@ def save_state(sim, path):
 	sim.state._weights = dict(sim.value_weights)
 	sim.state._fog = sim.fog
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
+	sim.state._seed = getattr(sim, "seed", None)
 	try:
 		rng_state = sim.rng.getstate()
 		sim.state._rng = [rng_state[0], list(rng_state[1]), rng_state[2]]
@@ -281,6 +282,8 @@ def load_state(sim, path):
 		sim.cfg["immortal"] = bool(state._immortal)
 	if state._goal is not None:
 		sim.goal = state._goal
+	if state._seed is not None:
+		sim.seed = state._seed
 	if state._rng is not None:
 		rng_version, _keys, rng_gaussian = state._rng
 		sim.rng.setstate((rng_version, tuple(int(state_int) for state_int in _keys), rng_gaussian))

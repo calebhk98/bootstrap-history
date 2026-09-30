@@ -755,6 +755,20 @@ def goal_catalog(tree: JSONDict, nodes: Optional[Nodes] = None) -> List[JSONDict
     return goals
 
 
+def selectable_goals(tree: JSONDict, nodes: Nodes) -> List[JSONDict]:
+    """goal_catalog with the default goal (meta.goal_node) first, added by name
+    when the catalog does not list it, so a menu shows the goal `play` aims at
+    when no --goal is given."""
+    default_goal = resolve_goal(tree, nodes, None)
+    catalog = list(goal_catalog(tree, nodes))
+    listed = next((entry for entry in catalog if entry["node"] == default_goal), None)
+    if listed is None:
+        listed = {"node": default_goal, "name": nodes[default_goal].get("name", default_goal)}
+    else:
+        catalog.remove(listed)
+    return [listed] + catalog
+
+
 def goal_lookup(tree: JSONDict, node_id: str) -> Optional[JSONDict]:
     """The goal_catalog entry for `node_id`, or None if it is not one of the
     named, selectable goals (an arbitrary node id is still a legal --goal

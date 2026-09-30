@@ -511,20 +511,24 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
                 blob = json.load(handle)
             if not isinstance(blob, dict) or "_civ" not in blob:
                 continue
+            scenario = blob.get("scenario") or {}
+            household = blob.get("household") or {}
+            founder = blob.get("founder") or {}
+            projects = blob.get("projects") or {}
             row.update({
                 "readable": True,
                 "civ_id": blob.get("_civ"),
-                "year": blob.get("year"),
+                "year": scenario.get("year"),
                 "fog": bool(blob.get("_fog", False)),
-                "founder_alive": blob.get("founder_alive", True),
-                "dead_reason": blob.get("dead_reason"),
-                "goal_year": blob.get("goal_year"),
+                "founder_alive": founder.get("founder_alive", True),
+                "dead_reason": founder.get("dead_reason"),
+                "goal_year": scenario.get("goal_year"),
                 "goal": blob.get("_goal"),
-                "reputation": blob.get("reputation"),
-                "scholars": blob.get("scholars"),
-                "artisans": blob.get("artisans"),
-                "capital": blob.get("capital"),
-                "done": ((blob.get("done") or {}).get("__set__") or []),
+                "reputation": household.get("reputation"),
+                "scholars": household.get("scholars"),
+                "artisans": household.get("artisans"),
+                "capital": household.get("capital"),
+                "done": ((projects.get("done") or {}).get("__set__") or []),
             })
         except (OSError, ValueError):
             pass
