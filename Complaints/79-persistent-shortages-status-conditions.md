@@ -34,3 +34,5 @@ Design recommendation
 ## Cross-references
 
 Related to the repetition audit in the findings (section 5, item 5: "Persistent resource warnings"). UX-009 in findings is this complaint.
+
+Also reported (England 1300 fog playtest): the annual charcoal message kept saying "about 1 more hectare" for years while the tester bought a hectare in each of several successive years (five in all) and clear glass was still throttled. They suspect it is correct because demand keeps moving, but it looks like a stuck recommendation; asked for the message to show supply against demand in tonnes a year so the causal picture is visible. The advice text is built in `sim/engine/economy_freight.py` ("Charcoal is grown, not bought: about N more hectare"). Report: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`.

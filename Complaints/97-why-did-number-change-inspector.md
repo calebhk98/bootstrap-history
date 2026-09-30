@@ -48,3 +48,5 @@ The game's central design is that systems feed back into each other. A player tr
 Likely a new command or enhancement in `sim/engine/proto/dispatch.py` and `sim/engine/proto/state.py` where change accounting could be added.
 
 **Confidence:** Design recommendation
+
+Also reported (England 1300 fog playtest): the tester asked repeatedly for a "what changed this year and why" causal summary covering why a hazard was softened, why wages changed (after the famine they stayed about 9 percent high, with the cause spread over several screens), and what caused a venture to shut, plus a built-in yearly retrospective. They noted `recap` (a five-year summary of completions, new branches and events) is useful but does not attribute causes. Related: 181 (closed), 202, 211. Report: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`.

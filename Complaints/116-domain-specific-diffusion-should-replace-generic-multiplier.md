@@ -64,3 +64,5 @@ close.
 proposes to shrink; read the two together. `docs/architecture/ENDOGENOUS_
 COSTS_AND_DOMAINS.md` Part 3 is the domain-ordering plan this finding
 endorses rather than duplicates.
+
+Also reported (England 1300 fog playtest): the tester asked for a clearer distinction between personal discovery, local adoption and civilisation-wide diffusion, and for causal attribution of national diffusion ("if personal technologies are spreading into national public health or productivity, show which discoveries and institutions contribute and by roughly how much"). The Black Death event credited "the country's own public health" for softening the national loss without saying whether the player's work was part of it (see 202). They also want diffusion mechanics such as apprenticeships, textbooks, professional communities, regional diffusion and decay after practitioner loss. Report: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`.

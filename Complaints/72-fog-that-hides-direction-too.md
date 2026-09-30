@@ -35,3 +35,5 @@ Design recommendation
 ## Cross-references
 
 Related to BUG-006 (fog scrubbing can leak hidden IDs). UX-004 also addresses incomplete search discoverability under fog.
+
+Also reported (England 1300 fog playtest): `case_hardening` stayed blocked by one completely unheard prerequisite for years, and epidemiology likewise; searches around metallurgy, steel, furnace, charcoal and temperature gave no clue, so the tester drifted into "adjacent-branch fishing". The missing step turned out to be a workshop and laboratory culture, found only by browsing wider name sets. The tester suggests thematic hints that keep the identity hidden ("you are missing a heat-treatment control idea", "this depends on a better way to judge temperature") and, separately, a related-names search (see 196). They also note that reasoning from visible names worked well and made fog feel fair, so hints should stay coarse. Reports: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`, `Complaints/reports/playtest-england-1300-fog-yearly-log.md`.
