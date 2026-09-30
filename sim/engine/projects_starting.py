@@ -448,7 +448,7 @@ class StartingMixin:
                                'know how, so restoring it is cheaper than '
                                'starting over: {"cmd":"restore","id":"%s"} for '
                                "about %.0f denarii"
-                               % (node_id, self.project_cost(node_id) * self.RESTORE_COST_SHARE_OF_BUILD)) if _why else None)
+                               % (node_id, self.reopen_fee(node_id, self.reopen_units(node_id)))) if _why else None)
             return False, ("already done" if _why else None)
         return None
 

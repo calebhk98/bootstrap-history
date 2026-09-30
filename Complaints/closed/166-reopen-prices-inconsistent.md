@@ -1,6 +1,6 @@
 # Reopening a shut concern has three different prices, none stated up front
 
-**Status:** open
+**Status:** closed - `open`, `mothball` and `restore` charge one price, and the `mothball` reply states it
 
 - After a staff-loss closure: "reopening soon costs a tenth of what opening did" (closure message).
 - After `mothball`, `open <id>` charged 1x yearly upkeep (nitre_beds: 10,781).

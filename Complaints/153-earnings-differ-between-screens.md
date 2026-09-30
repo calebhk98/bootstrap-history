@@ -1,6 +1,6 @@
 # `open`, `mothball`, `why` and `available` quote base earnings; `ventures` and `money` show a much higher real figure
 
-**Status:** open
+**Status:** partly - `open` and `mothball` replies now quote venture_real_earnings (the figure `ventures` prints); `why` and `available` still quote base earnings, and `ventures` lacks the saturation line
 
 136 AD: `mothball nitre_beds` said "stop earning the 9,433 a year it brought in" against upkeep 10,781 (a loss-maker), while `ventures` in the same session listed nitre_beds at EARNS 17,214 / COSTS 10,781. refractory_fireclay: 4,043 vs 7,377. Both ratios exactly 1.825, so a multiplier (probably the trade-route revenue bonus) is left out of the decision screens. Earlier horse_collar was quoted 6,064 and earned 8,137 in `ventures`. Late game, master_screw showed 1,448 in `money` and 2,021 in the `mothball` reply.
 
