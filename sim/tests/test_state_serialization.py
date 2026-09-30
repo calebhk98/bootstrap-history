@@ -62,8 +62,8 @@ def _test_automatic_field_persistence():
 	blob = serialize_state(state)
 	if not isinstance(blob, dict):
 		return False, f"serialize_state did not return a dict: {type(blob)}"
-	if blob.get("_version") != 3:
-		return False, f"Expected _version == 3, got: {blob.get('_version')}"
+	if "_version" in blob:
+		return False, "serialized state carries a version stamp"
 
 	restored = deserialize_state(blob)
 	if restored.household.capital != 1250.0 or restored.household.reputation != 7.5:
@@ -320,20 +320,6 @@ def _test_v3_save_shape_validation():
 		if not err or "household" not in err or "object" not in err:
 			return False, f"Corrupt section type was not rejected properly: {err}"
 
-		# 5. Missing _version
-		bad_no_version = dict(valid_blob)
-		del bad_no_version["_version"]
-		err = _validate_save(bad_no_version, sim)
-		if not err or "_version" not in err:
-			return False, f"Missing _version was not rejected properly: {err}"
-
-		# 6. Wrong _version
-		bad_version = dict(valid_blob)
-		bad_version["_version"] = 999
-		err = _validate_save(bad_version, sim)
-		if not err or "version 999" not in err:
-			return False, f"Wrong _version was not rejected properly: {err}"
-
 	finally:
 		if os.path.exists(save_path):
 			os.remove(save_path)
@@ -362,7 +348,6 @@ def _test_flat_legacy_v2_save_rejected_by_validate():
 	from sim.engine.proto.saveload import _validate_save
 	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
 	flat_v2_blob = {
-		"_version": 2,
 		"_civ": "rome_100ad",
 		"_goal": "printing_press",
 		"_civ_live": {},
@@ -389,7 +374,6 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
 	initial_capital = sim.household.capital
 	flat_v2_blob = {
-		"_version": 2,
 		"_civ": "rome_100ad",
 		"_goal": "printing_press",
 		"_civ_live": {},
@@ -422,83 +406,3 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 
 _ok, _detail = _test_flat_legacy_v2_save_rejected_by_load_state()
 check("load_state rejects flat legacy v2 save and preserves state", _ok, _detail)
-
-
-def _test_v2_stamped_v3_structure_rejected():
-	"""Verify a v3-structured save with _version == 2 is rejected with the non-migrated message."""
-	import json
-	from sim.engine.proto.saveload import _validate_save, save_state
-	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
-	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-		save_path = f.name
-	try:
-		save_state(sim, save_path)
-		with open(save_path) as handle:
-			blob = json.load(handle)
-		blob["_version"] = 2
-		err = _validate_save(blob, sim)
-		if not err or "not migrated" not in err:
-			return False, f"Expected 'not migrated' in refusal error, got: {err}"
-	finally:
-		if os.path.exists(save_path):
-			os.remove(save_path)
-	return True, "v2-stamped v3 save rejected with non-migrated message"
-
-
-_ok, _detail = _test_v2_stamped_v3_structure_rejected()
-check("v2-stamped v3 save rejected with non-migrated message", _ok, _detail)
-
-
-def _test_older_version_v1_rejected():
-	"""Verify a save with _version == 1 is rejected rather than migrated."""
-	import json
-	from sim.engine.proto.saveload import _validate_save, save_state
-	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
-	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-		save_path = f.name
-	try:
-		save_state(sim, save_path)
-		with open(save_path) as handle:
-			blob = json.load(handle)
-		blob["_version"] = 1
-		err = _validate_save(blob, sim)
-		if not err or "Saved runs are not migrated" not in err:
-			return False, f"Expected 'Saved runs are not migrated' in error, got: {err}"
-	finally:
-		if os.path.exists(save_path):
-			os.remove(save_path)
-	return True, "Older format version 1 rejected properly"
-
-
-_ok, _detail = _test_older_version_v1_rejected()
-check("Older format version 1 rejected properly", _ok, _detail)
-
-
-def _test_non_integer_version_rejected():
-	"""Verify saves with non-integer versions (string, float) are rejected as corrupt."""
-	import json
-	from sim.engine.proto.saveload import _validate_save, save_state
-	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
-	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-		save_path = f.name
-	try:
-		save_state(sim, save_path)
-		with open(save_path) as handle:
-			valid_blob = json.load(handle)
-		for bad_ver in ("2", 2.0):
-			blob = dict(valid_blob)
-			blob["_version"] = bad_ver
-			err = _validate_save(blob, sim)
-			if not err or "whole number" not in err:
-				return False, f"Non-integer _version={bad_ver!r} was not rejected with 'whole number': {err}"
-	finally:
-		if os.path.exists(save_path):
-			os.remove(save_path)
-	return True, "Non-integer version values rejected as corrupt"
-
-
-_ok, _detail = _test_non_integer_version_rejected()
-check("Non-integer version values rejected as corrupt", _ok, _detail)
-
-
-

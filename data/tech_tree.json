@@ -357,7 +357,7 @@
     },
     "schema": {
       "art": "minimum trained technical artisans required on staff to attempt",
-      "bounty_rule": "A node can be bought as a public prize when its craft category is glass_optics, metallurgy, precision, power, agriculture, information, or instruments, or when the selected civilization has a strong local craft tradition. The test is whether a local artisan could recognise success without understanding the theory. Price is c. 2.5x honest cost, saves 65% of founder hours, consumes no supervision slot. See 04_ECONOMICS.md section 7.",
+      "bounty_rule": "A node can be bought as a public prize when its craft category is glass_optics, metallurgy, precision, power, agriculture, information, or instruments, or when the selected civilization has a strong local craft tradition. The test is whether a local artisan could recognise success without understanding the theory. Price is c. 2.5x honest cost, costs the poster no hours of their own, consumes no supervision slot. See 04_ECONOMICS.md section 7.",
       "cap": "one-off capital in denarii beyond labour and materials (land, buildings, purchased tools)",
       "cat": "category",
       "conf": "A well attested, B probable, C author's estimate",

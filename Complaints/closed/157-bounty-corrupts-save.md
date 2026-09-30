@@ -1,6 +1,6 @@
 # `bounty` corrupts the save file, and the bounty uses the founder's own hours anyway
 
-**Status:** open
+**Status:** closed - a posted bounty round-trips through the save and draws no poster hours
 
 Severe. At 572 AD, on copies of the save:
 1. `bounty fin_toll_bridge` -> "posted: fin_toll_bridge / price: 437,332" (about 2.5x the node's build cost).

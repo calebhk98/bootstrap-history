@@ -309,7 +309,6 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             population=PopulationState(),
             actors=ActorsState(),
             _civ=self.civ.get("id"),
-            _version=3,
         )
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
