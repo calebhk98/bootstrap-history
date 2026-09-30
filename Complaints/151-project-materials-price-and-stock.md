@@ -17,3 +17,11 @@ What it would take: one consistent material price between market and project; pr
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
 
 Related: 178 (market price information), 186 (the solver is off by default, so project costs come from the price book).
+
+## Stakeholder decisions
+
+- One source of truth. A research node declares only physical needs: materials (quantities) and people (trades, hours). It never states a price. The economy links those quantities to the current market price and to demand automatically, so research authors never touch prices (this is also why `data/prices.json` is being deleted, see 186).
+- Overview screens (`available`, `path`, the `why` headline) show what the whole project would cost if every missing material were bought now at current market prices.
+- The detail view (`why <id>`) shows, per material: the quantity needed, how much you already hold (stock and own output), what is missing, and what the missing part costs at current market prices.
+- Buying is demand: a project that needs a large quantity (e.g. copper for a nationwide power grid) raises that material's price as it is bought, through the normal market rules, not a special case.
+- Projects draw owned stock and own output first; paying for a material delivers it (no separate "materials fee" on top of physical supply).

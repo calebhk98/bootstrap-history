@@ -11,3 +11,5 @@ What it would take: switch play onto solved prices behind `perf_fingerprint.py` 
 Found by a code inventory made for the new-player playtest (`playtest_notes/code_systems_inventory.md`); each claim below was re-checked by grep.
 
 Related: `Complaints/123` (the exit checklist for making solved prices the default, per `docs/architecture/STATE_OF_THE_PROJECT.md`); this issue adds the player-visible symptom (151).
+
+Stakeholder decision: yes; delete `data/prices.json` as soon as possible. Sequence with 151 (projects price materials from the market) and the exit checklist in 123.

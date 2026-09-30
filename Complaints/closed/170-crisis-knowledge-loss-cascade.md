@@ -1,6 +1,6 @@
 # The third-century crisis erased ~150 years of progress in under 20 years
 
-**Status:** partly - warning escalates; whether loss should compound this steeply is a design question
+**Status:** closed - the warning escalates in `state`/`path`; the harshness of undefended knowledge loss is intended (stakeholder decision: that is what the hedges are for)
 
 Sackings (`log find:sacked`): 235 (14.1M taken, 119 people), 242 (8.6M, 114, "8 projects back to the beginning"), 246 (3.2M, 88), 250 (1.1M, 48), 252 (0.2M, 15), 253. Technologies "built by you" fell from 91 to 21, route steps remaining from 69 to 135, net income from +1.2M to +1.2k/yr. The run then went through two insolvencies (279, 291).
 
@@ -9,3 +9,5 @@ Sackings (`log find:sacked`): 235 (14.1M taken, 119 people), 242 (8.6M, 114, "8 
 What it would take: a stronger, escalating warning in `state` and `path` when a knowledge-loss window is within ~30 years, naming the cheapest hedge and its distance; consider whether loss should compound this steeply.
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
+
+Stakeholder decision: the loss stays harsh. Losing an undefended corpus is meant to hurt (Alexandria, the post-Roman collapse); with proper hedges the loss per sack is small (on the order of a twentieth). A past bug where a built hedge was not counted is covered by the existing `risk`-vs-sack regression checks.
