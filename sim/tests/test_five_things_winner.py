@@ -56,7 +56,7 @@ _hmode_cfg = os.path.join(_hmode_dir, "cfg.json")
 _hmode_saves = tempfile.mkdtemp()
 _hmode_env = dict(os.environ, ROME_SIM_CONFIG=_hmode_cfg, ROME_SAVE_DIR=_hmode_saves)
 _hmode1 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                         input="1\n2\ny\n\nn\n\n\nquit\n", capture_output=True,
+                         input="1\n2\ny\n\n\nn\n\n\nquit\n", capture_output=True,
                          text=True, timeout=60, env=_hmode_env)
 # THE FLOOR IS THE CHOSEN GOAL'S, NOT THE DEFAULT GOAL'S: it is computed with
 # critical_path for whatever the player just picked, not read from a
@@ -94,7 +94,7 @@ _endless_dir = tempfile.mkdtemp()
 _endless_saves = tempfile.mkdtemp()
 _endless_env = dict(os.environ, ROME_SAVE_DIR=_endless_saves)
 _endless_wiz = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                              input="1\n2\ny\n\nn\n\n4\nstep 600\nstate\nquit\n",
+                              input="1\n2\ny\n\n\nn\n\n4\nstep 600\nstate\nquit\n",
                               capture_output=True, text=True, timeout=120,
                               env=_endless_env)
 check("choosing Endless lets a `step` cross where a 500-year Standard "
@@ -290,7 +290,7 @@ _sess7_env = dict(os.environ, ROME_SAVE_DIR=_sess7_saves)
 _sess7_session = os.path.join(_sess7_saves, "rome_100ad.json")
 _sess7 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play",
                         "--civ", "rome_100ad", "--session", _sess7_session],
-                       input="restart\ny\n2\ny\n\nn\n\n\nquit\n", capture_output=True,
+                       input="restart\ny\n2\ny\n\n\nn\n\n\nquit\n", capture_output=True,
                        text=True, timeout=60, env=_sess7_env)
 check("...accepting starts a genuinely new game through the same wizard, "
       "leaving the original session file untouched on disk",
