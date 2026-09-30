@@ -14,7 +14,7 @@ table of startable-today nodes, the one place here that reaches into the
 
 from .score import _score_lines
 from .util import _factor, _fmt_num, _pct, _wrap
-from .render_screens_big import _available_row
+from .render_screens_big import _available_row, available_header
 
 def render_values(out):
     lines = ["WHAT THIS SOCIETY BELIEVES"]
@@ -389,9 +389,7 @@ def render_path(out):
     lines.append("STARTABLE TODAY, TOWARD THIS GOAL  (cheapest first)")
     if isinstance(rows, list) and rows:
         _width = max([34] + [len(entry.get("id") or "") for entry in rows])
-        lines.append("%-*s %-20s %9s %7s %5s %5s %8s %7s %6s %6s"
-                 % (_width, "ID", "NAME", "COST", "HOURS", "YEARS", "RISK", "EARNS/YR",
-                    "UPKEEP", "STAFF", "RESTS"))
+        lines.append(available_header(_width))
         for entry in rows:
             lines.append(_available_row(entry, _width, None))
         if out.get("and_more_startable_today"):
@@ -399,6 +397,11 @@ def render_path(out):
     else:
         lines.append("  nothing - " + (out.get("note") or
                  "everything left on this route is waiting on something else"))
+    if out.get("nearest_blockers"):
+        lines.append("")
+        lines.append("NEAREST TO STARTABLE, AND WHAT HOLDS EACH BACK")
+        for blocker in out["nearest_blockers"]:
+            lines.append(_wrap("%s: %s" % (blocker["id"], blocker["why"]), indent="  "))
     if out.get("on_this_route_but_shut_down"):
         lines.append("")
         lines.append("ON THIS ROUTE BUT SHUT DOWN: "

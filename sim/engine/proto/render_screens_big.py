@@ -459,12 +459,25 @@ def _available_row(entry, width=None, purse=None):
     staff = entry.get("needs_staff") or "-"
     if entry.get("short_of_staff"):
         staff += "*"
-    return "%-*s %-20s %9s %7s %5s %5s %8s %7s %6s %6s" % (
-        width, (entry.get("id") or ""), (entry.get("name") or "")[:20],
+    foreman = entry.get("specialist_foreman")
+    payback = entry.get("payback_years")
+    return _AVAILABLE_ROW_FORMAT % (
+        width, (entry.get("id") or ""), (entry.get("name") or "")[:14],
         _fmt_num(entry.get("cost")) + _cost_marker(entry, purse),
         _fmt_num(hours), _fmt_num(years), _pct(risk),
         _fmt_range(entry.get("earns_per_year")), _fmt_num(entry.get("costs_per_year_after")),
-        staff, rests)
+        _fmt_num(entry.get("net_per_year")) if "net_per_year" in entry else "-",
+        _fmt_num(payback) if payback is not None else "-",
+        staff, (foreman["trade"][:7] if foreman else "-"), rests)
+
+
+_AVAILABLE_ROW_FORMAT = "%-*s %-14s %9s %5s %5s %5s %8s %7s %8s %5s %6s %-7s %6s"
+
+
+def available_header(width):
+    return _AVAILABLE_ROW_FORMAT % (
+        width, "ID", "NAME", "COST", "HOURS", "YEARS", "RISK", "EARNS/YR", "UPKEEP",
+        "NET/YR", "PAYB", "STAFF", "FOREMAN", "RESTS")
 
 
 # render_available is split the same way: the header/width setup, then one
@@ -490,9 +503,7 @@ def _available_top(out):
     _rows_here = (out.get("available") or []) + (out.get("cheapest_now") or [])
     _width = max([34] + [len(row.get("id") or "") for row in _rows_here
                      if isinstance(row, dict)])
-    header = ("%-*s %-20s %9s %7s %5s %5s %8s %7s %6s %6s"
-              % (_width, "ID", "NAME", "COST", "HOURS", "YEARS", "RISK", "EARNS/YR",
-                 "UPKEEP", "STAFF", "RESTS"))
+    header = available_header(_width)
 
     return lines, _purse, _width, header
 
@@ -559,6 +570,9 @@ def _available_legend_block(out, _purse):
         lines.append("")
         lines.append("  STAFF is the standing people it needs: 2s = two scholars, "
                  "1a = one craftsman.")
+        lines.append("  NET/YR is earnings less upkeep; PAYB is years to earn the cost back "
+                 "(takings ramp up over the first years, upkeep does not); FOREMAN is "
+                 "the specialist trade 'open' will need free.")
         if any(entry.get("short_of_staff") for entry in _shown if isinstance(entry, dict)):
             lines.append("  A * after STAFF means you do not have them yet - 'hire' "
                      "or 'train' first, or the work waits.")

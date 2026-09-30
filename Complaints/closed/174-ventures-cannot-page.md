@@ -1,6 +1,6 @@
 # `ventures` hides most shut concerns and cannot be paged
 
-**Status:** open
+**Status:** closed - `ventures` takes offset/limit (default 20 rows, "ventures offset:N" hint); shut_concerns_in_all reports the total
 
 At 534 AD `ventures` listed 12 "YOU KNOW HOW, AND HAVE NOT OPENED" rows then "...and 117 more"; `state` said 142. `help ventures` shows no options; `ventures all`, `ventures offset:12`, `ventures limit:200`, `ventures full` all print the same rows; `ventures json` is capped at 20 (`and_more_you_could_open`). `stuck` names only "the best you could open".
 
