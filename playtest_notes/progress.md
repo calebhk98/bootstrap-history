@@ -23,3 +23,13 @@ Game: `play --civ rome_100ad --seed 1` (poor_scholar kit, default goal point_con
 | 507-546 | 11.2M | +0.9M on paper, ~0.3M/yr actually saved | 107 | Built ~170 cheap earners; ~200 concerns running, but ~60 close and reopen every year (bugs #5). Justinianic plague and banditry take ~1-2M a year. Forest purchase cut zinc smelting from 63M to 26.7M. Bulk steel (14.8M) refused for lack of funds three years running. |
 
 Outlook at 546 AD: the 53 remaining nodes cost ~48M (bulk steel 14.8M, industrial zinc 26.7M after the forest, power grid 4.0M, the rest ~3M), before 25-30% failure risks on the two biggest. With 54 years left, that needs ~0.9M/yr actually saved; the real rate since 529 is ~0.3M/yr.
+
+## New goal from 552 AD: research and open as much as possible, change the society
+| Year | Money | Net/yr | Techs (score raw) | Literacy | Concerns running | What happened |
+|---|---|---|---|---|---|---|
+| 552 | 1.3M | +0.9M | 507 | 49% | ~130 | Baseline. Reopened 79 concerns via the log workaround; `rush` with a budget. |
+| 566 | 11.5M | +2.4M | - | 60% | ~200 | 2 deputies; bulk steel done; transistor ruled out (131-year serial floor). |
+| 567 | 19.8M | +5.5M | - | 60% | - | **Achieved: Epidemics stop deciding who lives** (curb epidemic mortality). |
+| 572 | 37.3M | +7.0M | 1,381 | 62% | ~250 | 5 deputies, 44 scholars, 598 craftsmen. Found the bounty save-corruption bug on a copy. |
+| 582 | 86.3M | +17.6M | - | 81% | ~480 | **Achieved: A nation that reads** (75% literacy). Telegraph, newspapers, movable type shift w_information and w_novelty. |
+| 585 | 111.2M | +18.9M | - | 81% | ~480 | Scholars are the binding limit (65 needed, 0 free, town cap ~67); training 10; frontier narrowing (rush starts only 16). |
