@@ -3,6 +3,7 @@
 import math, re
 
 from ..data import closure
+from ..knowledge_warning import knowledge_loss_warning
 
 def _agent_end_reason(sim):
     """None while the run is live; otherwise why it stopped, for state() and
@@ -877,6 +878,9 @@ def _agent_state(sim, nodes, cmd=None):
     out.update(_agent_state_progress(sim, active))
     out.update(_agent_state_risk_and_pressure(sim))
     out.update(_agent_state_goal(sim, nodes, end_reason))
+    warning = knowledge_loss_warning(sim)
+    if warning:
+        out["knowledge_loss_warning"] = warning
     return _agent_state_shorten(out, full)
 
 
