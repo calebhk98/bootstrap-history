@@ -428,6 +428,10 @@ def _agent_state_operations(sim, nodes):
         # is exactly where the corpus bug's lesson said a DONE/OPERATING
         # split has to be loud: see ProjectsMixin.capability_gaps.
         "critical_capabilities_not_operating": sim.capability_gaps() or None,
+        # Specialists on the payroll that no project or open concern uses.
+        "idle_specialists": sim.idle_specialists() or None,
+        # Open concerns that one death would close.
+        "depends_on_one_person": sim.sole_supervisors() or None,
     }
 
 

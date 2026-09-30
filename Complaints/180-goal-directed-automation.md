@@ -1,6 +1,6 @@
 # Request: goal-directed automation (`pursue <goal>`), and smarter policies
 
-**Status:** open
+**Status:** partly - auto_replace_foreman policy and the state depends_on_one_person warning are done; still open: pursue-goal, a policy following stuck route-blocker advice, a keep-N-spare reserve policy, per-goal allocate
 
 Mid-game I wrote ~40 lines of shell to do each year what the game could: open concerns that pay, hire when short, follow `stuck`'s route-blocker advice, start what `path` lists within cash, step. `rush` is not a substitute: it picks from hundreds of startable nodes "with no idea what you are building toward".
 
