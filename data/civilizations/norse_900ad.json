@@ -259,6 +259,7 @@
     "mat_vitriols",
     "mat_wrought_iron",
     "med_obstetric_practice",
+    "med_surgical_kit_good",
     "med_trepanation",
     "med_wound_suturing",
     "met_bloomery_bog_iron",
@@ -276,6 +277,7 @@
     "opt_sundial",
     "opt_water_globe_magnifier",
     "prn_carbon_ink",
+    "prn_codex_bound",
     "prn_parchment_sheets",
     "prn_scribal_copying",
     "prn_sculpture",
@@ -288,7 +290,6 @@
     "sea_clinker_hull",
     "sea_coastal_pilotage",
     "sea_keel_deep",
-    "sea_merchant_ships_large",
     "sea_sounding_lines",
     "sea_square_sail",
     "sea_steering_oars",
@@ -382,6 +383,10 @@
       [
         "Licensed collegium of physicians and teachers",
         "A recognised fellowship of healers and teachers"
+      ],
+      [
+        "Found the school (the Museum)",
+        "Found the school (the church or hall school)"
       ]
     ]
   },
@@ -395,6 +400,53 @@
     "starting_tax_share": {
       "source": "Levies were tribute, thing dues, and ship-levy service to a chieftain or king, not a steady share of revenue. A low share reflects weak state reach; an estimate.",
       "confidence": "D"
+    }
+  },
+  "needs_first": {
+    "Mediterranean crafts": {
+      "node": "kt_mediterranean_crafts",
+      "because": "this society does not know the Mediterranean public-works, surveying and stage crafts; learn them first, by engaging craftsmen and copying the works",
+      "ids": [
+        "civ_glass_windows",
+        "civ_marble_facing",
+        "fin_government",
+        "fin_maritime_loan",
+        "fin_tax_farming",
+        "hom_flush_latrine_simple",
+        "hom_hypocaust",
+        "hom_lead_plumbing",
+        "hom_perfume_enfleurage",
+        "hom_public_bath",
+        "lnd_cursus_publicus",
+        "lnd_milestone",
+        "lnd_paved_road_network",
+        "med_cataract_couching",
+        "med_legal_physician",
+        "opt_dioptra",
+        "opt_geared_mechanisms",
+        "opt_groma",
+        "opt_water_clock",
+        "prn_library_archive",
+        "prn_mosaic_fresco",
+        "prn_papyrus_sheets",
+        "prn_theatre_pantomime",
+        "sea_mortise_tenon",
+        "sea_pharos_lighthouse",
+        "sea_spritsail",
+        "tex_dye_murex"
+      ]
+    },
+    "eastern trade goods": {
+      "node": "exp_trade_route_extend",
+      "because": "this society does not trade in the eastern goods these depend on; extend the trade routes first",
+      "ids": [
+        "mat_camphor",
+        "mat_natron",
+        "mat_olive_oil",
+        "mat_shellac",
+        "mat_silk",
+        "sea_monsoon_route"
+      ]
     }
   }
 }

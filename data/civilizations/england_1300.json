@@ -359,6 +359,7 @@
     "hom_candle_tallow",
     "hom_flush_latrine_simple",
     "hom_furniture_wooden",
+    "hom_lead_plumbing",
     "hom_locks_keys",
     "hom_mirror_bronze_polished",
     "hom_musical_instruments",
@@ -445,6 +446,7 @@
     "prn_carbon_ink",
     "prn_codex_bound",
     "prn_library_archive",
+    "prn_mosaic_fresco",
     "prn_parchment_sheets",
     "prn_scribal_copying",
     "prn_sculpture",
@@ -463,6 +465,7 @@
     "sea_lead_sheathing",
     "sea_lodestone",
     "sea_merchant_ships_large",
+    "sea_mortise_tenon",
     "sea_sounding_lines",
     "sea_square_sail",
     "sea_steering_oars",
@@ -560,6 +563,10 @@
       [
         "Licensed collegium of physicians and teachers",
         "A chartered guild of physicians and teachers"
+      ],
+      [
+        "Found the school (the Museum)",
+        "Found the school (the cathedral school)"
       ]
     ]
   },
@@ -573,6 +580,33 @@
     "starting_tax_share": {
       "source": "Lay subsidies at a tenth of moveables in towns and a fifteenth in the country, plus customs and manorial dues. Granted irregularly, so the yearly share is an estimate.",
       "confidence": "C"
+    }
+  },
+  "needs_first": {
+    "Mediterranean crafts": {
+      "node": "kt_mediterranean_crafts",
+      "because": "this society does not know the Mediterranean public-works, surveying and stage crafts; learn them first, by engaging craftsmen and copying the works",
+      "ids": [
+        "hom_hypocaust",
+        "hom_public_bath",
+        "lnd_cursus_publicus",
+        "med_legal_physician",
+        "opt_groma",
+        "prn_papyrus_sheets",
+        "sea_pharos_lighthouse",
+        "sea_spritsail",
+        "tex_dye_murex"
+      ]
+    },
+    "eastern trade goods": {
+      "node": "exp_trade_route_extend",
+      "because": "this society does not trade in the eastern goods these depend on; extend the trade routes first",
+      "ids": [
+        "mat_camphor",
+        "mat_natron",
+        "mat_shellac",
+        "sea_monsoon_route"
+      ]
     }
   }
 }

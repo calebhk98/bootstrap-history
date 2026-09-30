@@ -386,6 +386,7 @@
     "mat_brass",
     "mat_bronze",
     "mat_calamine",
+    "mat_camphor",
     "mat_carbon_black",
     "mat_charcoal",
     "mat_emery",
@@ -403,6 +404,7 @@
     "mat_olive_oil",
     "mat_papyrus",
     "mat_parchment",
+    "mat_pozzolana",
     "mat_pyrolusite",
     "mat_salt",
     "mat_shellac",
@@ -414,6 +416,7 @@
     "mat_vitriols",
     "mat_wrought_iron",
     "med_amputation",
+    "med_aqueducts_latrines",
     "med_bone_setting",
     "med_cataract_couching",
     "med_herbal_pharmacy",
@@ -463,6 +466,7 @@
     "sc2_institution_textbook",
     "sea_anchor",
     "sea_coastal_pilotage",
+    "sea_harbours_pozzolana",
     "sea_lead_sheathing",
     "sea_lodestone",
     "sea_merchant_ships_large",
@@ -552,5 +556,6 @@
       "source": "Portoria customs (a few per cent), the vicesima on some transactions, and local dues combined into one share of a trading household's revenue. An estimate, not a fiscal reconstruction.",
       "confidence": "C"
     }
-  }
+  },
+  "needs_first": {}
 }
