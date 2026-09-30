@@ -65,7 +65,38 @@ Measure with these; none of their output is copied here.
   (`Complaints/140`); `data/tech_tree.json` duplicates the branches
   (`Complaints/141`).
 
-## What to do next, in order
+## Playtest defects come before the roadmap
+
+A playtest measures the game only if the game does what it says. Defects that
+change which strategy wins, or make a run look rigged, are fixed before the
+next round of playtests and before roadmap work whose effect those playtests
+would measure. Order within the backlog:
+
+1. **Money created or destroyed off the books**: a charge that differs from
+   its quote, work that stalls without saying so, sales with no market limit
+   (`Complaints/218`, `251`, `252`, `253`).
+2. **A run that looks fixed or never ends**: default seed, the mortal
+   founder's age and death, the victory ending (`254` to `257`, `259`, `224`,
+   `263`, `264`).
+3. **Content that leaks between civilisations, or costs nothing**, with a
+   validator check so the class stops recurring (`128`, `226` to `228`,
+   `231`, `249`, `260` to `262`).
+4. **Text that disagrees with the number applied**: the displayed and the
+   applied figure must come from one function (`244`, `258`, `265`, `266`,
+   `269`).
+5. **Next tranche**: interrupted multi-year steps lose the game (`225`);
+   spending that is not previewed (`220`, `222`, `240`, `248`); staffing
+   closures with no cause or remedy (`205`, `219`, `223`, `233`); alerts that
+   drown in the step report (`81`, `84`); capability and blocker readouts that
+   disagree (`129`, `234`, `238`, `239`, `267`, `268`).
+6. **Search, grammar and small text** (`196`, `197`, `210`, `217`, `221`,
+   `236`) and the review in `Complaints/35`, which still has to be split into
+   issues.
+
+Pick up from the lowest-numbered group with open issues:
+`python3 sim/issue_status.py --status open` lists them.
+
+## Roadmap, in order
 
 Ordered by what each item unblocks. Decisions on the roadmap issues
 (104-116) are in their status lines; `python3 sim/issue_status.py` lists
