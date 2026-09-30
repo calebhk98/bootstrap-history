@@ -1,6 +1,6 @@
 # Epidemic reports say "lapsed: Germ theory of disease is closed" for knowledge that cannot be closed or opened
 
-**Status:** open
+**Status:** closed
 
 Every epidemic year in all three Mexica runs listed "lapsed: Germ theory of disease is closed" and "lapsed: Silage and the silo is closed"; `open germ_theory` answers "that is knowledge, not a going concern". Closed 182 (merged into 169) and 202 were about naming the concern to reopen; this is a wrong label.
 

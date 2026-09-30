@@ -1,6 +1,6 @@
 # Sacks and epidemics leave "0.55 carpenters" and "0.4 scribes" on staff
 
-**Status:** open
+**Status:** closed
 
 C: fractional headcounts after sacks and plagues in all three runs.
 
