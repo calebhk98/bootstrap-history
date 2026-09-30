@@ -38,9 +38,10 @@ from .labour_settlement import SettlementMixin
 from .labour_wages import WagesMixin
 from .labour_training import TrainingMixin
 from .labour_bondage import BondageMixin
+from .labour_staff_ledger import StaffLedgerMixin
 
 
-class LabourMixin(CapacityMixin, PopulationMixin, SettlementMixin, WagesMixin, TrainingMixin, BondageMixin):
+class LabourMixin(CapacityMixin, PopulationMixin, SettlementMixin, WagesMixin, TrainingMixin, BondageMixin, StaffLedgerMixin):
     """Composition point only: every method below is defined in one of the
     five sibling modules above, not here. This class exists so that
     sim/engine/core.py's `class Sim(..., LabourMixin, ...)` keeps working

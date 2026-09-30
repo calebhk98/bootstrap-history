@@ -819,6 +819,10 @@ def _cmd_policy(sim, nodes, cmd, ended):
                              "people die off. It spends only a share of "
                              "your surplus, so with no surplus it hires "
                              "nobody",
+                "auto_replace_foreman": "rehire a specialist foreman (say a "
+                                        "glassblower) when the last one "
+                                        "supervising an open concern is lost. "
+                                        "Off by default",
                 "auto_buy_people": "buy slaves when the workshop is short-handed",
                 "auto_manumit": "free people you hold, over time",
                 "auto_train": "teach trades this society does not have when a "

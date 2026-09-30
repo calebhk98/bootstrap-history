@@ -121,6 +121,10 @@ class StepPhasesMixin:
             self.state.household.log.append((self.state.scenario.year, "you lose %s to death and to better offers"
                              % ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
                                          for trade_id, count in sorted(_lost.items()))))
+        # Rehire a specialist foreman an open concern just lost, before the
+        # staffing rule closes the concern.
+        if self.state.founder.policy.get("auto_replace_foreman", False):
+            self.replace_lost_foremen()
         self._resync_pools()
         # A HOUSEHOLD THAT CANNOT PAY ITS PEOPLE LETS THEM GO. This is the whole
         # answer to "you built it from nothing, so you must be able to rebuild
@@ -163,6 +167,7 @@ class StepPhasesMixin:
         if payroll > can_pay and self.state.household.employees:
             short = payroll - can_pay
             gone = 0.0
+            _before_shed = self.staff_snapshot()
             # shed, dearest first, until the wages you are left with fit
             for trade_id in sorted(self.state.household.employees, key=lambda t: -self.annual_wage(t)):
                 if short <= 0:
@@ -184,6 +189,7 @@ class StepPhasesMixin:
                 if self.state.household.employees[trade_id] < 0.5:
                     self.state.household.employees.pop(trade_id)
             self._resync_pools()
+            self.log_staff_reduction("a payroll you cannot meet", _before_shed)
             # ALWAYS, not only when it worked. Losing the staff you paid to hire
             # is more consequential than any of the flavour events that do get
             # logged, and a player who is not told has to notice their own wage
@@ -275,8 +281,12 @@ class StepPhasesMixin:
             # permanently, the moment its last person is lost. Iterating
             # trades_created too is what keeps a trade whose last person
             # just died still eligible for replacement.
+            # ONLY A TRADE SOMETHING DRAWS ON: a project in hand or an open
+            # concern. Otherwise the top-up pays idle specialists for decades
+            # and rehires ones the player fired (see idle_specialists).
+            _drawn_on = self.trades_drawn_on()
             for trade_id in sorted(set(self.state.household.employees) | set(self.state.household.trades_created)):
-                if trade_id in ("artisan", "scholar"):
+                if trade_id in ("artisan", "scholar") or trade_id not in _drawn_on:
                     continue
                 have = self.state.household.employees.get(trade_id, 0.0)
                 want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.state.household.trades_created else 0.0)

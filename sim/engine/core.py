@@ -520,6 +520,10 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # only thing standing between you and something you need.
             "auto_commission": not manual,
             "auto_bribe":    not manual,   # pay your way out of a scandal
+            # Rehire a specialist foreman an open concern has lost. Off by
+            # default in manual play, and off unattended too: the optimizer's
+            # auto_hire already replaces trades that concerns draw on.
+            "auto_replace_foreman": False,
         }
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
         self._said_wage_cascade = -999     # last year a wage-cascade note was printed; -999 guarantees the first qualifying year always warns

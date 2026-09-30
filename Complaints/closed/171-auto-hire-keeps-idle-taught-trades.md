@@ -1,6 +1,6 @@
 # `auto_hire` keeps idle taught specialists on full pay with no warning
 
-**Status:** open
+**Status:** closed - auto_hire now replaces a taught trade only when a project or open concern draws on it; state lists idle_specialists with their wage bill
 
 Two machinists trained in 179 AD stayed on the payroll at ~7.6k/yr each through decades with no project using them, at one point more than 8x total revenue; later `auto_hire` re-hired a machinist after I fired them. `stuck` pointed at arrears, not the wage bill.
 
