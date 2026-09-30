@@ -347,7 +347,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         # pop_scale is a computed property over the age-cohort population;
         # a mortality shock cuts the cohorts directly.
         # An age-cohort population (docs/architecture/WIRING_MILESTONE_4.md
-        # SS6), built and proven standalone in sim/world/self._demography.py, and
+        # SS6), built and proven standalone in sim/world/demography.py, and
         # read and mutated by pop_scale/wage_index (below) and by _shocks()
         # (society.py). `Population.stationary()` finds the model's OWN
         # stable age structure for a population of this civilisation's
@@ -697,7 +697,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         why="How much scarcer labour raises its own price - see pop_scale/"
             "wage_index below: at this elasticity, a Black-Death-sized "
             "shortfall reproduces roughly the cited real-wage doubling over "
-            "the timescale sim/world/self._demography.py's own vital rates take "
+            "the timescale sim/world/demography.py's own vital rates take "
             "to close it. FLAGGED AS A CLAUDE.md SS3.1/3.2 RISK: chosen "
             "specifically to land in the range that reproduces a known "
             "historical wage-index outcome (Phelps Brown and Hopkins), "
@@ -757,7 +757,7 @@ class Sim(EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         _shocks() (society.py).
 
         AGE-DIFFERENTIATED BY THE SAME STARVATION_VULNERABILITY_* RATIOS
-        sim/world/self._demography.py already declares for its own nutrition-
+        sim/world/demography.py already declares for its own nutrition-
         driven excess mortality (children hit 1.6x as hard as working-age
         adults, the elderly 1.4x - see that module for the sourcing), scaled
         so the POPULATION-WEIGHTED AVERAGE loss equals `raw` exactly. This
