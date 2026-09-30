@@ -1,6 +1,6 @@
 # lead_metallurgy says Rome already has it, but Rome must build it at great cost
 
-**Status:** open
+**Status:** closed - description no longer claims Rome already has it; cost and grants unchanged
 
 `why lead_metallurgy`: "This is already done, and done well, wherever there is a developed lead-mining and -working tradition (Rome is the best-documented case)." In a Rome game it is not granted, and costs ~460k (materials 300 t charcoal + 280 t galena) with a 10% failure risk.
 
