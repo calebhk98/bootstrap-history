@@ -957,11 +957,6 @@ class Population(object):
     def total(self) -> float:
         return self.children + self.working_age + self.elderly
 
-    @property
-    def working_age_population(self) -> float:
-        """The number this whole module exists to be able to answer."""
-        return self.working_age
-
     def copy(self) -> "Population":
         """An independent Population with its own, separately-advancing
         random stream (re-seeded from a draw of this one's), for branching a

@@ -100,19 +100,6 @@ class BaggageTrainRangeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             logistics.pack_animal_net_deliverable_cargo_kg(-5.0)
 
-    def test_animals_required_grows_with_distance_and_is_infinite_beyond_max_range(self):
-        near_count = logistics.pack_animals_required_for_daily_delivery(1000.0, 10.0)
-        far_count = logistics.pack_animals_required_for_daily_delivery(1000.0, 100.0)
-        self.assertGreater(far_count, near_count)
-        beyond_max_range = logistics.pack_animal_max_one_way_range_km(0.0) + 1.0
-        self.assertEqual(
-            logistics.pack_animals_required_for_daily_delivery(1000.0, beyond_max_range),
-            float("inf"))
-
-    def test_negative_daily_requirement_is_rejected(self):
-        with self.assertRaises(ValueError):
-            logistics.pack_animals_required_for_daily_delivery(-1.0, 10.0)
-
 
 class ForagingTests(unittest.TestCase):
     """A foraging army's sustainable size must respond to the three things

@@ -93,7 +93,7 @@ people are actually here" as a headcount rather than a ratio, and it is
 built entirely out of `civ["population"]` (a fixed config number, e.g.
 `data/civilizations/rome_100ad.json`'s `"population": 65000000`) times a
 ratio of two scalar fields. `demography.Population.total` and
-`.working_age_population` are direct, better-typed replacements for exactly
+`.working_age` are direct, better-typed replacements for exactly
 this computation, and `national_trade_population`'s per-trade pools
 (scholar via `literacy_elite`, scribe via `literacy_general`, everything
 else via `TRADE_DENSITY`) are downstream consumers worth wiring at the same
@@ -364,7 +364,7 @@ a share of PEOPLE. The historical 80-90% target
 a farming household — children, the elderly, the household's own spinners
 and tool-menders — not full-time field-workers. Converting one to the other
 needs a dependency ratio: (people per working-age adult), which is exactly
-`demography.Population.total / demography.Population.working_age_population`
+`demography.Population.total / demography.Population.working_age`
 once the two are wired together — a quantity `agriculture.py` explicitly
 does not have on its own (its own docstring, reason (a) under "ON THE
 HEADLINE NUMBER", names this precisely) and `demography.py` can supply
