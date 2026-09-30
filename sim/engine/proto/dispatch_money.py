@@ -52,8 +52,7 @@ def _cmd_bounty(sim, nodes, cmd, ended):
     if node_id in sim.active:
         return {"ok": False, "error": "%s is already active; stop it first if you want "
                                       "to switch to a bounty instead" % node_id}
-    price = (nodes[node_id]["_total_cost"] * 2.5 * sim.civ_cost_factor(node_id)
-             * sim.material_cost_factor(node_id) * sim.cost_money_factor())
+    price = sim.bounty_price(node_id)
     if not sim.post_bounty(node_id):
         return {"ok": False, "error": "cannot afford the bounty: needs about %.0f denarii, "
                                       "you have %.0f. Earn or wait, then try again" % (price, sim.capital)}
@@ -121,7 +120,7 @@ def _buy_material(sim, cmd, quantity):
     if got <= 0:
         return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
     return {"ok": True, "material": material, "bought_tonnes": got,
-            "stock_on_hand_tonnes": sim.material_stock_t(material),
+            "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
             "capital": round(sim.capital, 1)}
 
 
@@ -262,7 +261,7 @@ def _cmd_sell(sim, nodes, cmd, ended):
     if sold <= 0:
         return {"ok": False, "error": "you have none of that material stock to sell"}
     return {"ok": True, "material": material, "sold_tonnes": sold,
-            "stock_on_hand_tonnes": sim.material_stock_t(material),
+            "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
             "capital": round(sim.capital, 1)}
 
 

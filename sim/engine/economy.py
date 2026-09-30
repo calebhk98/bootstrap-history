@@ -13,6 +13,7 @@ from .economy_freight import FreightMixin
 from .economy_mining import MiningMixin
 from .economy_credit import CreditMixin
 from .economy_production import ProductionMixin
+from .project_materials import ProjectMaterialsMixin
 
 
 class _InvalidatingSet(set):
@@ -281,7 +282,7 @@ ECONOMY_INDEX_PER_LOCKED_NODE = declare(
 
 
 class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMixin,
-                    MiningMixin, CreditMixin, ProductionMixin):
+                    MiningMixin, CreditMixin, ProductionMixin, ProjectMaterialsMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
     EconomyMixin's methods are grouped by subject across sibling modules
@@ -416,11 +417,17 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         unpaid remainder of the true cost be forgiven outright, leaving
         money decorative and only hours real.
         """
-        node = self.nodes[node_id]
-        return (node["_total_cost"] * self.cost_money_factor()
-                * self.opposition_factor(node_id)
-                * self.civ_cost_factor(node_id) * self.material_cost_factor(node_id)
-                * self.material_market_factor(node_id))
+        frozen = (self.state.projects.active.get(node_id) or {}).get("bill")
+        if frozen is not None:
+            return frozen
+        return self.project_cost_now(node_id)
+
+    def project_cost_now(self, node_id):
+        """The cost if the project started today: labour and capital, plus
+        the materials you do not already hold at current market prices."""
+        materials, _up_front = self.project_material_parts(node_id)
+        return ((self.project_cost_without_materials(node_id) + materials)
+                * self.material_cost_factor(node_id) * self.opposition_factor(node_id))
 
     def _done_changed(self):
         """Call after anything adds to or removes from self.household.done.

@@ -1,6 +1,6 @@
 # Projects price materials far above market, never draw owned stock, and paying does not deliver the flow
 
-**Status:** open
+**Status:** partly - projects now price only the materials they lack at the current market quote (rising as the order fills), draw owned stock and own output first, and buy what the market can deliver at start into stock; `why` lists per-material need, held, missing and cost. Remains: the part beyond what the market sells in a year is charged at the start price in instalments instead of bought year by year, own output is counted per project without competition from other projects, the book `_material_cost` field still exists in node data (goes with 186), and `why` does not yet say which owned supply lowered the scarcity premium.
 
 Price: at 129 AD, buying 1 t showed charcoal_kg ~101 den/t and firewood_kg ~24 den/t; `materials` listed galena_kg at 73.5 den/t. `why lead_metallurgy` lists MATERIALS charcoal_kg 300,000 + galena_kg 280,000 (~30.5k + ~20.6k at those prices) but charges 532,296 for materials before the civ multiplier.
 
@@ -25,3 +25,11 @@ Related: 178 (market price information), 186 (the solver is off by default, so p
 - The detail view (`why <id>`) shows, per material: the quantity needed, how much you already hold (stock and own output), what is missing, and what the missing part costs at current market prices.
 - Buying is demand: a project that needs a large quantity (e.g. copper for a nationwide power grid) raises that material's price as it is bought, through the normal market rules, not a special case.
 - Projects draw owned stock and own output first; paying for a material delivers it (no separate "materials fee" on top of physical supply).
+
+## What was built
+
+- `sim/engine/project_materials.py`: the project side asks the economy for the price and availability of quantities. `project_material_bill(node)` returns rows (needed, held from stock and own output, missing, mean price, cost of the missing part). `material_purchase_cost` prices an order along the same capped quadratic scarcity curve as `material_price_factor`, adding the order to that material's yearly demand.
+- `project_cost` (economy.py) is labour and capital (civ and price factors) plus the missing materials at market, times distance and opposition. An active project keeps the bill fixed at its start (`bill` in its record).
+- `start` (projects_starting.py) buys the deliverable part of the missing materials into stock and refuses the start if that money cannot be raised; the rest is paid in instalments and the supply throttle still paces it.
+- `buy material` and `quote material` use the same order pricing, and stock is kept under the commodity key the throttle reads, so buying `charcoal_kg` now feeds the throttle.
+- Test: `sim/tests/test_complaint_151_project_materials.py`.
