@@ -32,7 +32,7 @@ def _cmd_state(sim, nodes, cmd, ended):
 
 
 
-@command("available", group="overview", aliases=("a", "av", "options"),
+@command("available", group="overview", aliases=("a", "av"),
          summary="what you could begin today",
          usage=["available", "available <subject>", "available find <text>",
                 "available state:blocked tag:<topic>", "available sort:price reverse"],

@@ -1,6 +1,6 @@
 # `simulator.py --help` prints developer documentation
 
-**Status:** open
+**Status:** closed - --help now shows player-facing descriptions
 
 `python3 sim/simulator.py --help` (the README tells players to run it) prints a module docstring about cli.py / cli_interactive.py / cli_agent.py, `cmd_sweep` placement and `_wilson_interval`, instead of one line per command. It lists `agent`, `plan`, `search`, `run`, `compare`, `sweep`, `sensitivity`, none of which the README mentions.
 
