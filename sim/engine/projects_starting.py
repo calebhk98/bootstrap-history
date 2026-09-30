@@ -20,18 +20,23 @@ from sim.constants import declare
 
 class StartingMixin:
     def initialize_project(self, node_id, *, ph_left=None, spent=0.0,
-                           cost_left=None, include_labor=True):
+                           cost_left=None, include_labor=True, bill=None):
         """Create and register one consistently-shaped active project."""
         if node_id not in self.nodes:
             raise ValueError("unknown project %s" % node_id)
         if node_id in self.state.projects.active:
             raise ValueError("project %s is already active" % node_id)
         node = self.nodes[node_id]
+        if cost_left is None:
+            bill = self.settle_project_materials(node_id)
+            cost_left = bill
         record = dict(
             ph_left=float(node["ph"] if ph_left is None else ph_left),
             yrs=0.0, spent=float(spent),
-            cost_left=float(self.project_cost(node_id) if cost_left is None else cost_left),
+            cost_left=float(cost_left),
             status="ACTIVE")
+        if bill is not None:
+            record["bill"] = float(bill)
         if include_labor:
             record["lab_left"] = dict(node["lab"])
         self.state.projects.active[node_id] = record
@@ -855,6 +860,9 @@ class StartingMixin:
         # commit past cash but not past what cash plus credit can carry
         price = self.project_cost(node_id)
         projects = self.state.projects
+        refusal = self.project_material_upfront_refusal(node_id)
+        if refusal:
+            return refusal
         # money already sunk into this node comes off the bill
         paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
         price -= paid_now
@@ -888,10 +896,13 @@ class StartingMixin:
         refusal = self.start_refusal(node_id)
         if refusal:
             return False, refusal
-        price = self.project_cost(node_id)
         projects = self.state.projects
         household = self.state.household
         scenario_year = self.state.scenario.year
+        # Materials due now are bought (and banked as stock) first; what
+        # is left is the bill paid in instalments.
+        bill = self.settle_project_materials(node_id)
+        price = bill
         _paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
         price -= _paid_now
         node = self.nodes[node_id]
@@ -913,7 +924,7 @@ class StartingMixin:
         # founder-hours and (wrongly) concludes the hired-labour total must be
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
-        self.initialize_project(node_id, spent=_already, cost_left=price)
+        self.initialize_project(node_id, spent=_already, cost_left=price, bill=bill)
         # A genuinely instantaneous capability should not need an otherwise
         # empty annual turn merely to trip the completion check in step().
         # Keep anything with money, labour, risk, or a calendar floor on the

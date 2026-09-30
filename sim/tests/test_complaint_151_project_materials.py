@@ -95,6 +95,8 @@ check("why: the headline materials figure is the cost of the missing part",
 
 # --- starting pays for the missing materials and delivers them ----------------
 _start_sim = sim(capital=5e7)
+run_it(_start_sim, *_start_sim.nodes[_LEAD]["pre"])
+_start_sim.artisans = _start_sim.scholars = 50.0
 _fuel_key = _start_sim._material_tag(sorted(_needed)[0])[0]
 _stock_before = _start_sim.material_stock_t(_fuel_key)
 _capital_before = _start_sim.capital

@@ -51,6 +51,7 @@ from . import commodities as _commod
 from sim.constants import declare
 from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
+from .project_materials import tonnes_per_unit
 
 
 class MaterialSupplyMixin:
@@ -876,26 +877,31 @@ class MaterialSupplyMixin:
         per_kg = self._book_price_per_kg(material)
         if per_kg is None:
             return None
-        buy = per_kg * KILOGRAMS_PER_TONNE * self.price_index * self.material_price_factor(material)
-        return {"material": material, "buy_per_tonne": buy,
+        emp_key = self._material_tag(material)[0]
+        buy = (per_kg / tonnes_per_unit(material) * self.price_index
+               * self.material_price_factor(emp_key))
+        return {"material": material, "stock_key": emp_key, "buy_per_tonne": buy,
                 "sell_per_tonne": buy * self.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
-                "market_available_tonnes_per_year": self._material_market_tonnes(material)}
+                "market_available_tonnes_per_year": self._material_market_tonnes(emp_key)}
 
     def buy_material_stock(self, material, tonnes):
+        """Buy a material at the market: the price climbs as the order is
+        filled, and the order is cut to what the market sells in a year."""
         quote = self.material_trade_quote(material)
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:
             return 0.0
-        # The market figure is an annual flow ceiling, not an infinite shop.
         tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
-        cost = tonnes * quote["buy_per_tonne"]
+        if tonnes <= 0:
+            return 0.0
+        cost = self.material_purchase_cost(quote["material"], tonnes)[0]
         household = self.state.household
-        if tonnes <= 0 or not purchase_rule.can_pay(self, cost):
+        if not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
         opening = self._material_opening_stock()
-        self._material_stock()[quote["material"]] += tonnes
-        opening[quote["material"]] = opening.get(quote["material"], 0.0) + tonnes
+        self._material_stock()[quote["stock_key"]] += tonnes
+        opening[quote["stock_key"]] = opening.get(quote["stock_key"], 0.0) + tonnes
         household._stock_throttle_sig = None
         return tonnes
 
@@ -904,12 +910,12 @@ class MaterialSupplyMixin:
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:
             return 0.0
-        sold = min(tonnes, self.material_stock_t(quote["material"]))
+        sold = min(tonnes, self.material_stock_t(quote["stock_key"]))
         if sold <= 0:
             return 0.0
         opening = self._material_opening_stock()
-        self._material_stock()[quote["material"]] -= sold
-        opening[quote["material"]] = opening.get(quote["material"], 0.0) - sold
+        self._material_stock()[quote["stock_key"]] -= sold
+        opening[quote["stock_key"]] = opening.get(quote["stock_key"], 0.0) - sold
         self.state.household.add_capital(sold * quote["sell_per_tonne"])
         self.state.household._stock_throttle_sig = None
         return sold

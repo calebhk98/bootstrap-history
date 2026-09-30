@@ -804,6 +804,20 @@ def _rests_band(node):
             "nothing else; this is worth having for itself")
 
 
+def _material_row(row):
+    """One `why` line per material: needed, held, missing, and the market
+    cost of the missing part."""
+    return {"material": row["material"],
+            "needed_tonnes": round(row["needed_tonnes"], 3),
+            "held_tonnes": round(row["held_tonnes"], 3),
+            "held_from_stock_tonnes": round(row["held_from_stock_tonnes"], 3),
+            "held_from_own_output_tonnes": round(row["held_from_own_output_tonnes"], 3),
+            "missing_tonnes": round(row["missing_tonnes"], 3),
+            "price_per_tonne": round(row["price_per_tonne"], 2),
+            "cost_of_missing": round(row["cost_of_missing"], 1),
+            **({} if row["priced"] else {"note": "no market price; counted as free"})}
+
+
 def _explain_identity(sim, nodes, node_id, node):
     """Name, note, hours and the raw labour/material bills - the parts of
     `why` that need nothing computed, only read off the node and fog-
@@ -837,6 +851,7 @@ def _explain_identity(sim, nodes, node_id, node):
         # question.
         "hired_labour": node["lab"],
         "materials": node["mat"],
+        "material_rows": [_material_row(row) for row in sim.project_material_bill(node_id)["rows"]],
     }
 
 
@@ -850,20 +865,17 @@ def _explain_cost(sim, nodes, node_id, node):
     # every civilization) would make `why` compare two civilizations as
     # byte-identical when what they are actually charged differs - a player
     # plans against the quote, so the quote must not lie about it.
+    bill = sim.project_material_bill(node_id)
     return {"labour": round(node["_labour_cost"], 1),
-                 "materials": round(node["_material_cost"], 1),
+                 # WHAT THE MISSING MATERIALS COST AT TODAY'S MARKET PRICE;
+                 # what you already hold is not charged. Per-material rows
+                 # are in material_rows.
+                 "materials": round(bill["cost_of_missing"], 1),
                  "capital": node["cap"],
-                 "base_total": round(node["_total_cost"], 1),
+                 "base_total": round(node["_labour_cost"] + node["cap"]
+                                     + bill["cost_of_missing"], 1),
                  "civ_domain_factor": round(sim.civ_cost_factor(node_id), 3),
                  "material_distance_factor": round(sim.material_cost_factor(node_id), 3),
-                 # THE SCARCITY PREMIUM: project_cost multiplies this in, so
-                 # the breakdown must list it too - what the market charges
-                 # for a material it barely sells. Same lesson as
-                 # price_index below - a breakdown that omits a factor
-                 # project_cost actually uses is worse than no breakdown,
-                 # because it invites a player to multiply the shown
-                 # factors out and then fails that check.
-                 "scarce_material_premium": round(sim.material_market_factor(node_id), 3),
                  "opposition_factor": round(sim.opposition_factor(node_id), 3),
                  # THE FACTOR ACTUALLY MULTIPLIED IN, not a decoy:
                  # project_cost multiplies by cost_money_factor()

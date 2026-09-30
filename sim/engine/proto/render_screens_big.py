@@ -730,17 +730,15 @@ def _why_cost(out):
     # player who multiplies the printed terms out finds a total that does
     # not match and reads it as an undisclosed overhead: a breakdown that
     # omits a term invites the check and then fails it.
-    lines.append("COST: %s den total%s  (%s labour + %s materials + %s capital, then "
-             "x%s your civ, x%s distance, x%s scarcity, x%s opposition, "
-             "x%s prices)"
+    lines.append("COST: %s den total%s  (%s labour + %s capital, x%s your civ, x%s prices; "
+             "+ %s for the materials you do not hold, at today's market prices; "
+             "then x%s distance, x%s opposition)"
              % (_est(out, "cost", cost.get("total")), _est_tag(out, "cost"),
-                _est(out, "cost", cost.get("labour")),
-                _est(out, "cost", cost.get("materials")), _est(out, "cost", cost.get("capital")),
-                _factor(cost.get("civ_domain_factor")),
+                _est(out, "cost", cost.get("labour")), _est(out, "cost", cost.get("capital")),
+                _factor(cost.get("civ_domain_factor")), _factor(cost.get("price_index")),
+                _est(out, "cost", cost.get("materials")),
                 _factor(cost.get("material_distance_factor")),
-                _factor(cost.get("scarce_material_premium")),
-                _factor(cost.get("opposition_factor")),
-                _factor(cost.get("price_index"))))
+                _factor(cost.get("opposition_factor"))))
     if cost.get("already_paid_towards_this"):
         lines.append("!! %s den already sunk into this before it stopped: "
                  "'start' would actually charge %s den, not the total "
@@ -823,9 +821,16 @@ def _why_labour_materials(out):
                      + _est_tag(out, "hired_labour"))
         if out.get("estimates_note"):
             lines.append(_wrap("  " + out["estimates_note"], indent="  "))
-    mat = out.get("materials") or {}
-    if mat:
-        lines.append("MATERIALS: " + ", ".join("%s %s" % (material, _fmt_num(quantity)) for material, quantity in mat.items()))
+    rows = out.get("material_rows") or []
+    if rows:
+        lines.append("MATERIALS (tonnes; missing part priced at today's market):")
+        for row in rows:
+            lines.append("  %-22s need %s, hold %s, missing %s -> %s den"
+                         % (row["material"], _fmt_num(row["needed_tonnes"]),
+                            _fmt_num(row["held_tonnes"]), _fmt_num(row["missing_tonnes"]),
+                            _fmt_num(row["cost_of_missing"])))
+    elif out.get("materials"):
+        lines.append("MATERIALS: " + ", ".join("%s %s" % (material, _fmt_num(quantity)) for material, quantity in out["materials"].items()))
     return lines
 
 

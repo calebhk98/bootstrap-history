@@ -121,7 +121,7 @@ def _buy_material(sim, cmd, quantity):
     if got <= 0:
         return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
     return {"ok": True, "material": material, "bought_tonnes": got,
-            "stock_on_hand_tonnes": sim.material_stock_t(material),
+            "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
             "capital": round(sim.capital, 1)}
 
 
@@ -262,7 +262,7 @@ def _cmd_sell(sim, nodes, cmd, ended):
     if sold <= 0:
         return {"ok": False, "error": "you have none of that material stock to sell"}
     return {"ok": True, "material": material, "sold_tonnes": sold,
-            "stock_on_hand_tonnes": sim.material_stock_t(material),
+            "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
             "capital": round(sim.capital, 1)}
 
 
