@@ -1,6 +1,6 @@
 # Interface repetition is a class of UX problem worth addressing systematically
 
-**Status:** open
+**Status:** partly - explain-once (sim/engine/proto/explain_once.py) and a wave summary with minor-failure marking (wave_summary.py) landed; project-start boilerplate, fog blockers, shortage repeats and event fragmentation remain
 
 Repetition was a significant UX cost in the playtests. The underlying simulation did not feel repetitive when values and consequences changed; the interface often did.
 
@@ -65,3 +65,5 @@ Distributed across:
 - All related complaint instances (71-86, 87-101) for specific examples
 
 **Confidence:** Design recommendation - this is a class of UX problem, not a single bug. Each instance (UX-008, UX-009, UX-012, etc.) should be addressed individually, but this complaint unifies the observation that interface repetition is a systematic problem worth designing for.
+
+Update: item 7 (large completion waves) has a summary line and item 8 (tiny failures) is marked minor, and some long explanations show once per game. Still repeated: the fixed-price note and committed-total explanation on every `start` (Complaints/78), identical fog blockers (72), yearly shortage messages (79) and one log line per consequence of a disaster (80).

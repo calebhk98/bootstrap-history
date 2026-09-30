@@ -1,6 +1,6 @@
 # The energy file builds machines that nothing else can buy
 
-**Status:** open
+**Status:** closed - all seven machines (waterwheel, three heat engines, dynamo, motor, photovoltaic panel) are own materials in data/production/80_machines.json and the energy entries name them in `capital.build_materials` with empty `inputs`
 
 Raised by the stakeholder, who put it as: the electricity file should not
 care about the costs of materials, that belongs to the pricing side.

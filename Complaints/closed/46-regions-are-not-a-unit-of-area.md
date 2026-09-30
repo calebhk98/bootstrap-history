@@ -1,6 +1,6 @@
 # A region is not a unit of area, and land rent is reading the filing system
 
-**Status:** partly - intensive-margin rent landed; regions still not a unit of area
+**Status:** closed - land rent reads equal-area `land_tiles`, not region records (sim/world/land.py 'THE TWO MAP SYSTEMS', sim/tests/test_land_tile_partition_invariance.py); Han China now has a nonzero rent (34.5 h/iugerum via `solve_prices.py --civ han_china_100ad --why iugerum_land`); the leftover two-map duplication is Complaints/140
 
 Raised by the stakeholder, from a simple question: how can China with one
 region have more land than Rome with seven?

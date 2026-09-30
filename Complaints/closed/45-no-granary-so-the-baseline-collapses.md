@@ -1,6 +1,6 @@
 # Rome loses 78% of its people in a century with nothing bad happening
 
-**Status:** partly - granary stock persists; baseline still below the starting population
+**Status:** closed - the unshocked baseline no longer collapses: a 100-year no-event run (harness `sim(civ=..., events=False)`, 100 steps) ends at 103.9% (Rome), 111.3% (Han), 113.6% (Mexica), 103.9% (Norse), 113.4% (England) of the starting population
 
 Measured, not estimated, on the commit that wired agriculture into the
 engine:

@@ -1,6 +1,6 @@
 # Joint production has no cost-side answer, and never will
 
-**Status:** partly - joint-product value split exists; the solver still uses a mass split
+**Status:** closed - silver now priced by value share, not mass (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg` gives about 1108 h/kg against lead 0.084 h/kg, joint cost split 'by value share (demand-anchored)'); the '(*)' unanchored marks are gone; what is left of the silver price is Complaints/143
 
 **Type:** Modelling limitation, structural
 **Priority:** Medium. It cannot be fixed by better data.

@@ -1,6 +1,6 @@
 # Money constants and technology revenue are still in book denarii
 
-**Status:** open
+**Status:** partly - authored book denarii convert once at a single boundary (sim/engine/money_units.py); authored `rev` per node and the loosened pump guard remain
 
 Money is now anchored to each civilisation's coin, and costs are labour-hours
 inside the engine, but some numbers are still written in the old book
