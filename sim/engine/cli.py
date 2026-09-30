@@ -1681,6 +1681,7 @@ def main():
     subparser.add_argument("--kit", default="poor_scholar",
                    help="starting wealth: " + ", ".join(STARTING_KITS))
     subparser.add_argument("--fog", action="store_true")
+    subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true")
     subparser.add_argument("--mortal", action="store_true")
     subparser.add_argument("--deterministic", action="store_true",
                    help="replace this session's rng with one whose random() always "
@@ -1731,6 +1732,10 @@ def main():
     subparser.add_argument("--fog", action="store_true",
                    help="fog of war: you see what you have built and what you could "
                         "begin next, and nothing about where any of it leads")
+    subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true",
+                   help="staff, hours, money and calendar needs of unfinished work are "
+                        "shown as labelled estimates that tighten as you start and finish "
+                        "it (the checks still use the true needs)")
     subparser.add_argument("--mortal", action="store_true",
                    help="turn the founder's mortality back on (default: immortal, "
                         "same meaning as on 'run'/'compare'/'play')")

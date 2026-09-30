@@ -183,6 +183,7 @@ def _play_build_sim(args):
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + horizon
     sim.fog = bool(getattr(args, "fog", False))
+    sim.fuzzy_estimates = bool(getattr(args, "fuzzy_estimates", False))
     sim.revealed = set()
     # The reader is a person typing words, so the worked examples inside every
     # reply should be words too. See protocol.to_typed_hints.

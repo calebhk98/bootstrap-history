@@ -626,6 +626,9 @@ def _available_legend_block(out, _purse):
         lines.append("")
         lines.append("  STAFF is the standing people it needs: 2s = two scholars, "
                  "1a = one craftsman.")
+        if out.get("estimates_note"):
+            lines.append(_wrap("  COST, HOURS, YEARS and STAFF are estimates (~). "
+                               + out["estimates_note"], indent="  "))
         lines.append("  NET/YR is earnings less upkeep; PAYB is years to earn the cost back "
                  "(takings ramp up over the first years, upkeep does not); FOREMAN is "
                  "the specialist trade 'open' will need free.")
@@ -703,6 +706,17 @@ def _why_header(out):
     return lines
 
 
+def _est(out, key, value):
+    """A figure, shown as "~N" when the reply marks that field as an estimate."""
+    if key in (out.get("figures_are_estimates") or ()):
+        return "~" + _fmt_num(value)
+    return _fmt_num(value)
+
+
+def _est_tag(out, key):
+    return " (est.)" if key in (out.get("figures_are_estimates") or ()) else ""
+
+
 def _why_cost(out):
     lines = []
     lines.append("")
@@ -713,11 +727,12 @@ def _why_cost(out):
     # player who multiplies the printed terms out finds a total that does
     # not match and reads it as an undisclosed overhead: a breakdown that
     # omits a term invites the check and then fails it.
-    lines.append("COST: %s den total  (%s labour + %s materials + %s capital, then "
+    lines.append("COST: %s den total%s  (%s labour + %s materials + %s capital, then "
              "x%s your civ, x%s distance, x%s scarcity, x%s opposition, "
              "x%s prices)"
-             % (_fmt_num(cost.get("total")), _fmt_num(cost.get("labour")),
-                _fmt_num(cost.get("materials")), _fmt_num(cost.get("capital")),
+             % (_est(out, "cost", cost.get("total")), _est_tag(out, "cost"),
+                _est(out, "cost", cost.get("labour")),
+                _est(out, "cost", cost.get("materials")), _est(out, "cost", cost.get("capital")),
                 _factor(cost.get("civ_domain_factor")),
                 _factor(cost.get("material_distance_factor")),
                 _factor(cost.get("scarce_material_premium")),
@@ -733,9 +748,10 @@ def _why_cost(out):
 
 def _why_hours_risk(out):
     lines = []
-    lines.append("YOUR HOURS: %s     CALENDAR FLOOR: %s years     FAILURE RISK: %s"
-             % (_fmt_num(out.get("founder_hours")), _fmt_num(out.get("calendar_floor_years")),
-                _pct(out.get("risk"))))
+    lines.append("YOUR HOURS: %s%s     CALENDAR FLOOR: %s years%s     FAILURE RISK: %s"
+             % (_est(out, "founder_hours", out.get("founder_hours")), _est_tag(out, "founder_hours"),
+                _est(out, "calendar_floor_years", out.get("calendar_floor_years")),
+                _est_tag(out, "calendar_floor_years"), _pct(out.get("risk"))))
     if out.get("attempts_already_failed"):
         lines.append("ATTEMPTS ALREADY FAILED: %d. The risk above is what the next "
                  "attempt actually faces; it was %s before anyone tried. What "
@@ -754,8 +770,9 @@ def _why_hours_risk(out):
 def _why_staff_needed(out):
     lines = []
     staff, have = out.get("staff_needed") or {}, out.get("you_have") or {}
-    lines.append("STAFF NEEDED: %s scholars, %s artisans   (you have %s, %s%s)"
-             % (_fmt_num(staff.get("scholars")), _fmt_num(staff.get("artisans")),
+    lines.append("STAFF NEEDED: %s scholars, %s artisans%s   (you have %s, %s%s)"
+             % (_est(out, "staff_needed", staff.get("scholars")),
+                _est(out, "staff_needed", staff.get("artisans")), _est_tag(out, "staff_needed"),
                 _fmt_num(have.get("scholars")), _fmt_num(have.get("artisans")),
                 (" - " + out["you_have_counts"]) if out.get("you_have_counts") else ""))
     for _k_warn in ("more_scholars_than_this_society_can_supply",
@@ -772,15 +789,16 @@ def _why_staff_keep_open(out):
     # this is not the line above.
     open_staff = out.get("staff_to_keep_it_open")
     if open_staff is not None:
-        lines.append("STAFF TO KEEP IT OPEN: %s scholars, %s artisans   "
+        lines.append("STAFF TO KEEP IT OPEN: %s scholars, %s artisans%s   "
                  "(a share of their year, not a headcount - see below)"
-                 % (_fmt_num(open_staff.get("scholars")),
-                    _fmt_num(open_staff.get("artisans"))))
+                 % (_est(out, "staff_to_keep_it_open", open_staff.get("scholars")),
+                    _est(out, "staff_to_keep_it_open", open_staff.get("artisans")),
+                    _est_tag(out, "staff_to_keep_it_open")))
         foreman = out.get("specialist_foreman_to_keep_it_open")
         if foreman:
             lines.append("  SPECIALIST FOREMAN TO KEEP IT OPEN: %s %s FTE (generic artisans cannot "
                      "substitute; you have %s free now)"
-                     % (_fmt_num(foreman.get("fte")), foreman.get("trade"),
+                     % (_est(out, "staff_to_keep_it_open", foreman.get("fte")), foreman.get("trade"),
                         _fmt_num(foreman.get("free_now"))))
         if out.get("staff_to_keep_it_open_means"):
             lines.append(_wrap("  " + out["staff_to_keep_it_open_means"], indent="     "))
@@ -797,7 +815,11 @@ def _why_labour_materials(out):
     lines = []
     lab = out.get("hired_labour") or {}
     if lab:
-        lines.append("HIRED LABOUR: " + ", ".join("%s %sh" % (trade, _fmt_num(hours)) for trade, hours in lab.items()))
+        lines.append("HIRED LABOUR: " + ", ".join("%s %sh" % (trade, _est(out, "hired_labour", hours))
+                                                for trade, hours in lab.items())
+                     + _est_tag(out, "hired_labour"))
+        if out.get("estimates_note"):
+            lines.append(_wrap("  " + out["estimates_note"], indent="  "))
     mat = out.get("materials") or {}
     if mat:
         lines.append("MATERIALS: " + ", ".join("%s %s" % (material, _fmt_num(quantity)) for material, quantity in mat.items()))

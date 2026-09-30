@@ -3,6 +3,7 @@
 import re
 
 from ..data import money_word
+from .. import fuzzy_estimates
 
 from .economy import _dashboard_snapshot
 from . import command_registry
@@ -346,7 +347,11 @@ def _add_compact_fields(command, out, sim=None, nodes=None):
 
 def _agent_dispatch(sim, nodes, cmd):
     """Every reply, in the money of the place you are standing in."""
-    _out = _localise_money(_agent_dispatch_inner(sim, nodes, cmd), money_word(sim.civ))
+    _out = _agent_dispatch_inner(sim, nodes, cmd)
+    if sim.fuzzy_estimates and isinstance(cmd, dict):
+        _entry = command_registry.resolve(cmd.get("cmd") if isinstance(cmd.get("cmd"), str) else "")
+        _out = fuzzy_estimates.fuzz_reply(sim, _entry["name"] if _entry else None, cmd, _out)
+    _out = _localise_money(_out, money_word(sim.civ))
     _out = _localise_words(_out, ((sim.civ.get("local_words") or {}).get("pairs")))
     # Compact runs last so the short summary already carries the local vocabulary.
     if isinstance(cmd, dict) and cmd.get("compact"):
