@@ -4,6 +4,7 @@ import math, re
 
 from ..data import closure
 from ..knowledge_warning import knowledge_loss_warning
+from .state_shut_staffing import shut_for_want_of_staff
 
 def _agent_end_reason(sim):
     """None while the run is live; otherwise why it stopped, for state() and
@@ -429,6 +430,8 @@ def _agent_state_operations(sim, nodes):
         # is exactly where the corpus bug's lesson said a DONE/OPERATING
         # split has to be loud: see ProjectsMixin.capability_gaps.
         "critical_capabilities_not_operating": sim.capability_gaps() or None,
+        # Which people each shut, profitable concern is short of.
+        "shut_for_want_of_staff": shut_for_want_of_staff(sim, nodes),
         # Specialists on the payroll that no project or open concern uses.
         "idle_specialists": sim.idle_specialists() or None,
         # Open concerns that one death would close.

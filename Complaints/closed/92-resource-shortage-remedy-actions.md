@@ -1,6 +1,6 @@
 # Resource-shortage screens should offer direct remedy actions
 
-**Status:** open
+**Status:** closed - capacity lists the buy, quote, hire, train and housing commands under each short material and oversubscribed trade (capacity_remedies), worded by shortage_remedy
 
 The capacity screen was one of the strongest management tools and clearly identified shortages. However, it required the player to manually translate a measured shortage into separate commands to get a quote, inspect projects, or reduce demand.
 

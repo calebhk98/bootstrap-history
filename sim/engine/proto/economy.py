@@ -3,6 +3,7 @@
 from ..data import WAGES, trade_family
 
 from .state import _agent_state
+from .capacity_remedies import capacity_remedies
 
 # WHAT EACH TRAIT IN self.value_weights ACTUALLY DOES, in the player's own words. Event
 # text names these fields directly - "corpus_dispersed changes the society:
@@ -608,7 +609,8 @@ def _agent_portfolio(sim, nodes, cmd=None):
                 "hours; each row above shows what IT got and why. "
                 "'trade_hours_demand_vs_supply' is the same question for "
                 "every hired trade your portfolio draws on, summed across "
-                "all of them, before you commit to one more."
+                "all of them, before you commit to one more. 'priority "
+                "<id> first' changes who is served first."
                 % (count, "" if count == 1 else "s",
                    "is" if count == 1 else "are",
                    "{:,.0f}".format(pool_total or 0.0))) if count else
@@ -626,9 +628,11 @@ def _agent_capacity(sim, nodes, cmd=None):
     """
     state_out = _agent_state(sim, nodes)
     active_out = state_out.get("active") or {}
+    material_rows = _material_capacity_rows(sim)
     return {
         "ok": True,
-        "resources": _material_capacity_rows(sim),
+        "resources": material_rows,
+        "remedies": capacity_remedies(sim, material_rows, _trade_demand_rows(sim)),
         "power": _power_status(sim, nodes),
         "mines": _agent_mines(sim),
         "portfolio": _portfolio_rows(nodes, active_out),

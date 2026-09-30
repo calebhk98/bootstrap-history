@@ -1,6 +1,6 @@
 # Specialist-caused venture closures need a direct call to action in state
 
-**Status:** open
+**Status:** closed - state lists each shut profitable concern with the people it lacks (shut_for_want_of_staff) and the hire command, from the staffing shortfall test
 
 Auto-hire could replace general labor after attrition while a profitable concern stayed shut because it specifically needed a carpenter or foreman FTE. The detailed venture screen explains this specialist requirement, but the high-level state output did not make the specialist cause prominent enough to prompt action.
 

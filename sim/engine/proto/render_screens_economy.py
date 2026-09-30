@@ -8,6 +8,7 @@ split: nothing here touches the live Sim - see render.py and ARCHITECTURE.md.
 """
 
 from .util import _factor, _fmt_num, _pct, _wrap
+from .capacity_remedies import render_remedies
 
 # render_capacity is split into one function per screen section - resources,
 # power, mines, project portfolio, spare capacity - concatenated by
@@ -150,6 +151,7 @@ def _capacity_spare(out):
 def render_capacity(out):
     lines = ["THE INDUSTRIAL DASHBOARD"]
     lines += _capacity_resources(out)
+    lines += render_remedies(out.get("remedies"))
     lines += _capacity_power(out)
     lines += _capacity_mines(out)
     lines += _capacity_portfolio(out)

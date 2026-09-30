@@ -15,6 +15,7 @@ from .wave_summary import summary_line
 from .step_problems import problems_lines
 from .render_screens_market import why_goods_market_lines
 from ..knowledge_warning import warning_lines
+from .state_shut_staffing import render_shut_for_want_of_staff
 # DISPLAY_WIDTH is NOT imported here: cli.py patches engine.protocol.DISPLAY_WIDTH
 # directly at runtime, so every reader of it in this file goes through the
 # protocol module itself, live, rather than a plain name bound once at import
@@ -216,6 +217,8 @@ def _state_concerns(out):
             lines.append("  those shut concerns would clear %s den/yr between them, "
                      "and earn nothing while they are shut"
                      % _fmt_num(out["shut_concerns_would_earn_a_year"]))
+    if out.get("shut_for_want_of_staff"):
+        lines.extend(render_shut_for_want_of_staff(out["shut_for_want_of_staff"]))
     return lines
 
 
