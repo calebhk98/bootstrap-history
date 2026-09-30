@@ -244,7 +244,11 @@ def load_state(sim, path):
 						 "you want.")
 
 	old_revealed = set(sim.state.projects.revealed) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) and sim.state.projects.revealed else set()
+	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.state._fuzzy_salt
 	state = deserialize_state(blob)
+	if asked_fuzzy and not state._fuzzy_estimates:   # the option given on the command line stays on
+		state._fuzzy_estimates = True
+		state._fuzzy_salt = state._fuzzy_salt or asked_salt
 	if old_revealed and getattr(state, "projects", None):
 		state.projects.revealed = set(state.projects.revealed or set()) | old_revealed
 	sim.state = state

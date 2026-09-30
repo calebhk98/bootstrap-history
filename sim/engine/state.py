@@ -411,6 +411,8 @@ class SimulationState:
 	_civ_live: Dict[str, Any] = field(default_factory=dict)
 	_weights: Dict[str, Any] = field(default_factory=dict)
 	_fog: bool = False
+	_fuzzy_estimates: bool = False
+	_fuzzy_salt: int = 0
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
 

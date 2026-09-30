@@ -1,6 +1,6 @@
 # Request: staff and labour needs shown as uncertain estimates while something is unknown
 
-**Status:** open
+**Status:** closed - `--fuzzy-estimates` (off by default; `sim.fuzzy_estimates`) shows labelled, stable, per-actor estimates for staff, hired hours, money, founder hours and calendar floor on why/available/path/start; decoys, halving at start, narrowing with progress and exact completion done. Not covered: state/portfolio/ventures screens and the start credit-forecast block (see sim/engine/fuzzy_estimates.py)
 
 The stakeholder's request: an option (in the spirit of `--fog`) where, before and while you research something, the screens do not tell you exactly how many people of which trade it needs. You know roughly what making toys involves, not the exact crew. Today `why`, `available` and `start` give exact figures (STAFF NEEDED, STAFF TO KEEP IT OPEN, the specialist foreman, HIRED LABOUR hours), which makes planning a new venture more certain than it should be.
 
