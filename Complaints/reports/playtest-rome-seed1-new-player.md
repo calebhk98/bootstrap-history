@@ -16,7 +16,8 @@ An AI agent played as a new user: read only the README and what the game prints,
 
 ## Issues filed from this playtest
 Bugs: 146 sort form ignored, 147 quote farm, 148 wage work invisible, 149 foreman missing from `why`, 150 mass closures, 151 material price/stock/flow, 152 mine stock accounting, 153 earnings differ between screens, 154 credit freeze vs cash, 155 `rush preview`, 156 `buy school`, 157 `bounty` corrupts the save, 158 serial floor is whole-chain.
-Quirks and UX: 159-177.
-Feedback and requests: 178-185 (output repetition, market information, route blockers, goal-directed automation, `step N` summary, confiscation risk visibility, final score, design notes, late-game performance).
+Quirks and UX: 159-176.
+Feedback and requests: 177-185 (output repetition, market information, route blockers, goal-directed automation, `step N` summary, confiscation risk visibility, final score, design notes, late-game performance).
 
 The agent's raw notes (with more measurements) are in `playtest_notes/` at the repository root.
+Overlap with older issues: see `playtest-rome-seed1-duplicate-review.md` (no exact duplicates; 155 and 156 look like regressions of closed issues).
