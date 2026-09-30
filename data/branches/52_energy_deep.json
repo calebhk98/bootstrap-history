@@ -2076,7 +2076,8 @@
   "name": "Two-stroke cycle",
   "cat": "ic_prime",
   "pre": [
-   "cap_tol_1mm"
+   "cap_tol_1mm",
+   "lnd_otto_cycle_four_stroke"
   ],
   "traits": [
    "labour_saving"
@@ -2837,8 +2838,7 @@
   "name": "Commutator (split ring rectifier)",
   "cat": "electrical_gen",
   "pre": [
-   "cap_tol_100um",
-   "cap_power_steam"
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -2864,7 +2864,16 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Converts alternating coil voltage to pulsating DC at terminals. Brush contact is imperfect; arcing and wear occur. Performance depends on brush quality and speed (spark i..."
+  "note": "Converts alternating coil voltage to pulsating DC at terminals. Brush contact is imperfect; arcing and wear occur. Performance depends on brush quality and speed (spark i...",
+  "req_any": [
+   {
+    "group": "prime_mover",
+    "options": {
+     "cap_power_water": 1.0,
+     "cap_power_steam": 1.0
+    }
+   }
+  ]
  },
  {
   "id": "en_alternator",

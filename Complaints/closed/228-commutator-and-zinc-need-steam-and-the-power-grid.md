@@ -1,6 +1,6 @@
 # The dynamo's commutator needs high-pressure steam, and industrial zinc needs the power grid, although water power and coal-fired retorts are the described processes
 
-**Status:** open
+**Status:** closed
 
 Data (`data/tech_tree.json`):
 

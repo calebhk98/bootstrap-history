@@ -75,7 +75,7 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from sim.engine.data import (STRATS, closure, downstream_count, load, load_civ,
+from sim.engine.data import (STRATS, closure, downstream_count, hard_pre, load, load_civ,
                              topo_order, resolve_goal)
 from sim.engine.core import Sim
 from sim.engine.mechanics import staff_capacity_sources
@@ -117,7 +117,7 @@ def cpm(nodes, need):
     earliest_start, earliest_finish = {}, {}
     for node_id in order:
         node = nodes[node_id]
-        pred_ef = [earliest_finish[prereq] for prereq in node["pre"] if prereq in need]
+        pred_ef = [earliest_finish[prereq] for prereq in hard_pre(nodes, node_id) if prereq in need]
         earliest_start[node_id] = max(pred_ef) if pred_ef else 0.0
         earliest_finish[node_id] = earliest_start[node_id] + duration(node)
     total = max(earliest_finish.values()) if earliest_finish else 0.0
@@ -127,7 +127,7 @@ def cpm(nodes, need):
     # `need` (that is how it was reached in the first place).
     deps = {node_id: [] for node_id in need}
     for dependant_id in need:
-        for prereq in nodes[dependant_id]["pre"]:
+        for prereq in hard_pre(nodes, dependant_id):
             if prereq in need:
                 deps[prereq].append(dependant_id)
     latest_start, latest_finish, slack = {}, {}, {}

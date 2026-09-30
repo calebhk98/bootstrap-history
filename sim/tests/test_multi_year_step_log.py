@@ -47,7 +47,8 @@ check("every year with a log entry inside the step appears in the step's events"
       (logged_years, reported_years))
 printed = _RP("step", multi_reply)
 check("the printed step report shows events of every reported year",
-      all("DURING %d" % year in printed for year in reported_years),
+      all(("DURING %d" % year in printed) or ("COMPLETED %d" % year in printed)
+          for year in reported_years),
       (reported_years, printed[:800]))
 
 # The wage-cascade note is throttled, so most years legitimately have no such line.

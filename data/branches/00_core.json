@@ -1002,32 +1002,39 @@
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
-    "build_yrs": 0.0,
-    "cap": 0.0,
+    "build_yrs": 1.0,
+    "cap": 400.0,
     "cat": "precision",
-    "conf": "B",
+    "conf": "C",
     "dev_people": null,
     "dev_years": null,
     "gov": 0,
     "id": "clock_mechanical_escapement",
     "kb": "40_power_precision.md#clockwork_escapement",
     "kind": "ENGINEERING",
-    "lab": {},
-    "mat": {},
+    "lab": {
+      "machinist": 500.0,
+      "smith": 300.0
+    },
+    "mat": {
+      "iron_bloom_kg": 60.0,
+      "mat_bronze": 15.0
+    },
     "name": "Weight-driven mechanical clock with verge escapement",
-    "note": "A falling weight drives iron gears while a verge-and-foliot escapement meters their motion. Tower clocks emerging around 1300 indicate hours but are not pendulum clocks and do not measure reliably to the second. This inherited medieval mechanism is the causal predecessor of later pendulum regulation.",
-    "ph": 0.0,
+    "note": "A falling weight drives iron gears while a verge-and-foliot escapement meters their motion. Tower clocks emerging around 1300 indicate hours but are not pendulum clocks and do not measure reliably to the second. A civilisation that already runs tower clocks holds it from the start; anyone else must forge the gear train, cut the wheels and learn to regulate the escapement.",
+    "ph": 150.0,
     "pre": [
-      "cap_tol_1mm"
+      "cap_tol_1mm",
+      "opt_geared_mechanisms"
     ],
     "req_any": [],
     "rev": 0.0,
-    "risk": 0.0,
+    "risk": 0.05,
     "sch": 0.0,
     "sus": 0,
     "traits": [],
     "up": 0.0,
-    "yrs": 0.0
+    "yrs": 1.0
   },
   {
     "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: escapement and clock wheels require 0.1mm tolerance work]",
@@ -6841,7 +6848,6 @@
     "ph": 600.0,
     "pre": [
       "high_temp_furnace",
-      "power_grid",
       "zinc_metal"
     ],
     "req_any": [

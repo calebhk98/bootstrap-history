@@ -568,8 +568,27 @@ def cmd_validate(args):
     _print_validate_summary(nodes, goal_rows, default_goal)
     _print_validate_findings(errs, warns)
     _validate_reachability(args, errs, nodes, goal_rows)
+    errs += _validate_civilisation_starts(nodes, production)
     _print_validate_ok(errs)
     return 1 if errs else 0
+
+
+def _validate_civilisation_starts(nodes, production):
+    """Complaints/128: each civilisation's start must agree with itself.
+    A free node it neither holds nor gates is an error; the other two classes
+    are reported (held-without-prerequisite is pinned by its own test)."""
+    from sim import civ_start_check
+    results = civ_start_check.check_all(
+        nodes, civ_start_check.load_civilisations(ROOT), production)
+    print()
+    print("CIVILISATION STARTS (free but unheld / held without prerequisite / unmakeable material)")
+    print("\n".join(civ_start_check.report_lines(results)))
+    errors = ["%s: free node startable at arrival but not held or gated: %s"
+              % (name, ", ".join(found["free_unheld"]))
+              for name, found in sorted(results.items()) if found["free_unheld"]]
+    for message in errors:
+        print("ERROR: " + message)
+    return errors
 
 
 # Complaints/38: A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say

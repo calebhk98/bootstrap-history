@@ -69,7 +69,6 @@ KNOWN_VIOLATIONS = {
     ("norse_900ad", "med_trepanation"): ["med_surgical_kit_good"],
     ("norse_900ad", "med_wound_suturing"): ["med_surgical_kit_good"],
     ("rome_100ad", "ag2_refrigeration_ice"): ["fud_ice_harvesting_and_cutting"],
-    ("rome_100ad", "civ_dome_roman"): ["mat_pozzolana"],
     ("rome_100ad", "mfg_enamelling"): ["cap_heat_1100"],
     ("rome_100ad", "sc2_institution_textbook"): ["sc2_institution_curriculum", "sc2_institution_journal"],
 }

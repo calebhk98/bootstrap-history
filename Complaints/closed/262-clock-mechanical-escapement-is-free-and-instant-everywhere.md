@@ -1,6 +1,6 @@
 # `clock_mechanical_escapement` costs nothing and takes no time, and is startable in Rome 100 AD and in every civilisation that does not already hold it
 
-**Status:** open
+**Status:** closed
 
 Two testers: "Weight-driven mechanical clock with verge escapement" shows cost 0, 0 hours, 0 years, 0% risk; one started and completed it without advancing time; the other saw that its own note calls it an "inherited medieval mechanism" from about 1300.
 

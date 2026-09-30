@@ -1,6 +1,6 @@
 # Large merchant ships are free to learn, free to open and free to run, and became the tester's largest income by a wide margin
 
-**Status:** open
+**Status:** partly
 
 `sea_merchant_ships_large` has no prerequisite, zero cost, zero upkeep and a revenue of about 15 million a year (Han, 100 AD), against a starting
 cash of about 750 thousand. `available` lists it at the start with cost 0 and earnings 16 to 27 million; `ventures` says TO OPEN 0. The only gate is supervision:
@@ -19,3 +19,6 @@ What it would take: make a hull a purchased or built asset (timber, labour, yard
 the design knowledge free. The tester's sketch (a fleet with working capital, crews, maintenance, insurance, freight margin rather than gross sales) is in the tester notes, "Shipping proposal".
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 53, 62, 138). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+
+**Remaining:** Done: the ships node now has a timber, labour and capital bill and no free mortise prerequisite. Remaining: a hull is not yet a purchased asset with upkeep and loss, and revenue does not depend on cargo, route or ports.

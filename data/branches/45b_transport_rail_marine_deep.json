@@ -1307,7 +1307,9 @@
   "id": "tr_sleeping_car",
   "name": "Sleeping car for passengers",
   "cat": "rail",
-  "pre": [],
+  "pre": [
+   "lnd_standard_gauge"
+  ],
   "traits": [
    "luxury",
    "infrastructure"

@@ -238,7 +238,9 @@
     "fin_coined_money",
     "fin_contract_law",
     "fin_government",
+    "fin_maritime_loan",
     "fin_market",
+    "fin_tax_farming",
     "fin_testament",
     "fin_wage",
     "fud_heavy_mouldboard_plough_coulter",
@@ -246,6 +248,7 @@
     "hom_board_games",
     "hom_candle_beeswax",
     "hom_candle_tallow",
+    "hom_flush_latrine_simple",
     "hom_furniture_wooden",
     "hom_locks_keys",
     "hom_mirror_bronze_polished",
@@ -271,12 +274,12 @@
     "mat_brass",
     "mat_bronze",
     "mat_calamine",
+    "mat_camphor",
     "mat_carbon_black",
     "mat_cast_iron",
     "mat_charcoal",
     "mat_emery",
     "mat_galena",
-    "mat_glass_soda",
     "mat_gold",
     "mat_gypsum",
     "mat_lead",
@@ -303,6 +306,7 @@
     "med_trepanation",
     "med_wound_suturing",
     "opt_burning_glass",
+    "opt_geared_mechanisms",
     "opt_metal_mirror_polished",
     "opt_steelyards",
     "opt_sundial",
@@ -386,6 +390,10 @@
       [
         "Licensed collegium of physicians and teachers",
         "A registered guild of physicians and teachers"
+      ],
+      [
+        "Found the school (the Museum)",
+        "Found the school (the Imperial Academy)"
       ]
     ]
   },
@@ -399,6 +407,41 @@
     "starting_tax_share": {
       "source": "Land tax at a thirtieth of harvest, plus poll tax, a merchant surcharge, and corvee commuted to cash and the salt and iron regime. Merchants were taxed above farmers; the combined share on trading revenue is an estimate.",
       "confidence": "D"
+    }
+  },
+  "needs_first": {
+    "Mediterranean crafts": {
+      "node": "kt_mediterranean_crafts",
+      "because": "this society does not know the Mediterranean public-works, surveying and stage crafts; learn them first, by engaging craftsmen and copying the works",
+      "ids": [
+        "civ_glass_windows",
+        "civ_marble_facing",
+        "hom_hypocaust",
+        "hom_lead_plumbing",
+        "hom_perfume_enfleurage",
+        "hom_public_bath",
+        "lnd_cursus_publicus",
+        "mat_glass_soda",
+        "med_legal_physician",
+        "opt_dioptra",
+        "opt_groma",
+        "prn_mosaic_fresco",
+        "prn_papyrus_sheets",
+        "prn_parchment_sheets",
+        "prn_theatre_pantomime",
+        "sea_mortise_tenon",
+        "sea_pharos_lighthouse",
+        "sea_spritsail",
+        "tex_dye_murex",
+        "tex_dye_woad"
+      ]
+    },
+    "eastern trade goods": {
+      "node": "exp_trade_route_extend",
+      "because": "this society does not trade in the eastern goods these depend on; extend the trade routes first",
+      "ids": [
+        "sea_monsoon_route"
+      ]
     }
   }
 }
