@@ -69,3 +69,10 @@ At 507 AD, `rush preview` and `rush preview:true` both print "RUSH: 0 started, 0
 `help buy` lists `buy school <trade> <n>`, and `help economy` gives the example `buy school smith 2` ("makes two more smiths' worth of annual labour locally available").
 At 542 AD, `buy school smith 2`, `buy school scholar 1` and `buy school scholar 5` all give: "REFUSED: material must be one of: well-known workings: coal, copper, gold, iron, lead, silver, tin - or any other material key ...". That is the `buy mine` validation message, so `school` seems to be routed to the mine/material parser.
 This matters because scholars are capped ("reach ... will not stretch past 14.4 in total"), and `labour scholar` says schools widen that cap. The documented way to raise it does not work.
+
+## 12. `bounty` corrupts the save file (severe)
+Repro at 572 AD, on copies of my save:
+1. `bounty fin_toll_bridge` -> "posted: fin_toll_bridge / price: 437,332" (about 2.5x the node's build cost).
+2. The next invocation with the same `--session` file fails to load: "could not read the save file '...': this save is corrupt: active['fin_toll_bridge'] is missing 'lab_left'". Reproduced twice on fresh copies. Anyone playing through `--session` (the README's recommended way) loses the game the moment they post a bounty.
+Also, in a single process with no reload (`bounty fin_toll_bridge`, then `step 1`, then `why fin_toll_bridge`), the bountied node is just an ACTIVE project "waiting on your hours: priority #260 of 261". So the bounty does not "pay someone else to solve it" as `help bounty` says. It is a start at 2.5x the price that still uses the founder's hours.
+Not every node can be bountied: `bounty mt2_parkes_process` -> "REFUSED: not bounty-eligible (category processes)". `why` shows "BOUNTY: yes, could be posted as a public prize" for eligible ones.
