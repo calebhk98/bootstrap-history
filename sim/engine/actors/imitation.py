@@ -89,7 +89,7 @@ def work_year(actor: Any, node_id: str, work: Dict[str, Any], world: Any) -> boo
 	else:
 		affordable = 1.0
 	done = want * affordable
-	actor.money -= done * (work["money"] + work["labour_cost"])
+	actor.debit(done * (work["money"] + work["labour_cost"]), "copying")
 	for trade, amount in work["hours"].items():
 		actor.workforce[trade] = actor.workforce.get(trade, 0.0) + (
 			amount * done / world.hours_per_person_year)

@@ -20,5 +20,5 @@ class Government(RecordedActor):
 		return max(0.0, gain) * world.state_revenue() * GOVERNMENT_WORTH_SHARE_PER_GAIN
 
 	def advance(self, world: Any) -> None:
-		self.money += world.state_revenue() * GOVERNMENT_DISCRETIONARY_SHARE
+		self.credit(world.state_revenue() * GOVERNMENT_DISCRETIONARY_SHARE, "taxation")
 		super().advance(world)

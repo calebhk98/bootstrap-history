@@ -1235,7 +1235,8 @@ class StatePressureMixin:
         off_share, off_name = self.office_report()
         took = (req_share + off_share) * rev
         if took > 0.5:
-            self.state.household.capital -= took
+            office_paid = off_share * rev
+            self.pay_state(took, {"office": office_paid, "requisition": took - office_paid})
             last = self.state.household._said_requisition
             if year - last >= 15:
                 self.state.household._said_requisition = year
@@ -1276,7 +1277,7 @@ class StatePressureMixin:
                                + self.MILITARY_DEMAND_LEVERAGE_SHARE * lev)
                         * (1.0 - self.MILITARY_DEMAND_PROTECTION_DISCOUNT * self.state.household.protection))
                 take = max(0.0, take)
-                self.state.household.capital -= take
+                self.pay_state(take, "military supply")
                 name = state_pressure_cfg.get("military_name", "the arsenal")
                 self.state.household.log.append((year, "%s asks for your output: %s handed over "
                                      "in powder, iron or finished pieces. "
@@ -1305,6 +1306,8 @@ class StatePressureMixin:
                 had = max(0.0, self.state.household.capital)
                 self.lose_capital(self.CONFISCATION_CAPITAL_LOSS)
                 lost = had - max(0.0, self.state.household.capital)
+                # lose_capital already took it from the purse; the treasury receives it
+                self.state_treasury().credit(lost, "confiscation")
                 self.state.household.reputation = max(0.0, self.state.household.reputation - self.CONFISCATION_REPUTATION_LOSS)
                 name = state_pressure_cfg.get("confiscation_name", "confiscation")
                 self.state.household.log.append((year, "%s: the state takes what it judges a "

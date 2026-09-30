@@ -9,10 +9,11 @@ from .base import Actor, RecordedActor
 from .firm import Firm
 from .government import Government
 from .household import Household
+from . import ledger
 from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy, ValuePolicy, register_policy
 from .registry import ActorRegistry
 from .world import SimWorld
 
 __all__ = ["Actor", "RecordedActor", "Household", "Firm", "Government",
            "Policy", "ValuePolicy", "CallbackPolicy", "IdlePolicy", "Option",
-           "Decision", "register_policy", "ActorRegistry", "SimWorld"]
+           "Decision", "register_policy", "ActorRegistry", "SimWorld", "ledger"]

@@ -75,7 +75,19 @@ every other operator, and closes after consecutive losing years.
 
 Created per civilisation by `advance_actors`. It receives a share of the
 revenue derived from the working population's labour value, the civilisation's
-tax share and state capacity, and spends it on copies its policy chooses.
+tax share and state capacity, plus whatever the state takes from the founder,
+and spends it on copies its policy chooses.
+
+## Money between actors
+
+`actors/ledger.py`. Every change of an actor's purse goes through `credit` and
+`debit` with a purpose; `transfer(payer, payee, amount, purpose)` is the one
+way a loss becomes a gain. A recorded actor keeps `income` and `outlays` by
+purpose, so its purse equals its opening money plus income less outlays. The
+founder's household pays the state through `Sim.pay_state`, and the government
+of the founder's civilisation receives requisition, the pressed office,
+military supply and confiscation. `python3 sim/actor_ledger.py` prints each
+purpose's share of a run's income and outlays.
 
 ## State and persistence
 

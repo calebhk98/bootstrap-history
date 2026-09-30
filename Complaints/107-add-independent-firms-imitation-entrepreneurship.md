@@ -95,3 +95,5 @@ the founder's own margin from competitors, the player's choices (license,
 publish, patent, keep secret, spin off), joint-stock companies, other
 countries as full players with their own locations and policies, fog of war
 for actor observation, and workers leaving the founder to found firms.
+
+Update: actors now keep a ledger (`docs/architecture/ACTORS_NEXT.md`, increment 1), so a firm's takings, upkeep, copying and founding capital are booked by purpose and its purse always equals its ledger. Firm takings are still not taken from the founder's market and firm staff are still not drawn from the labour pool (increments 4 and 5).
