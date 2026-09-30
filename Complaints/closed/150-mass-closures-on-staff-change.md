@@ -17,3 +17,5 @@ What it would take: make the yearly check close only enough concerns to cover th
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
 
 Related: 149 (foreman not shown on `why`), 180 (auto-replace foreman request).
+
+Verified on the original playtest save (599 AD, 820 concerns running): the same `step 1` that closed 408 concerns before the fix now closes 8 (el2_capacitor_variable_air, el2_rheostat, hom_doll_fashion, hom_jigsaw_puzzle and others), leaving 939 running.
