@@ -419,9 +419,9 @@ def _agent_state_operations(sim, nodes):
         # many others, and a count of shut shops is not a reason to act.
         # A yearly figure is.
         "shut_concerns_would_earn_a_year": round(sum(
-            nodes[node_id]["rev"] - nodes[node_id]["up"] for node_id in sim.done
+            sim.venture_real_earnings(node_id) - sim.venture_real_upkeep(node_id) for node_id in sim.done
             if sim.is_venture(node_id) and node_id not in sim.operating
-            and nodes[node_id]["rev"] > nodes[node_id]["up"]), 0) or None,
+            and sim.venture_real_earnings(node_id) > sim.venture_real_upkeep(node_id)), 0) or None,
         # THE SAME GAP, for the handful of capabilities whose running()-gated
         # payout is not revenue at all - protection, standing, credit, a
         # staff ceiling - and so never showed up in shut_concerns above. This

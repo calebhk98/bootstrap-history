@@ -630,19 +630,11 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         # to print the SUPERVISION crew, not the BUILD crew - supervision
         # is a quarter of it, and it is the number the refusal actually
         # quotes.
-        _scale = (sim.economy ** 0.75) * sim.output_factor * sim.price_index
         _sup_s, _sup_a = sim.venture_hands(node_id)
         _foreman_trade, _foreman_fte = sim.venture_foreman(node_id)
-        # AT THE SAME MARKET PRICE `money` credits, for a goods-producing
-        # concern: goods_market_factor() is 1.0 for anything not in
-        # GOODS_CATEGORIES and for anything not yet open, so this changes
-        # nothing for every other row. See that method's own comment.
-        _mkt = sim.goods_market_factor(node_id) if node_id in sim.operating else 1.0
         row = {"id": node_id, "name": node["name"],
-                "earns_a_year": round(node["rev"] * _scale
-                                      * (sim.venture_ramp(node_id) if node_id in sim.operating
-                                         else 1.0) * _mkt, 1),
-                "costs_a_year": round(node["up"] * sim.price_index, 1),
+                "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
+                "costs_a_year": round(sim.venture_real_upkeep(node_id), 1),
                 "needs": {"scholars": round(_sup_s, 2),
                           "craftsmen": round(_sup_a, 2)},
                 "specialist_foreman": (

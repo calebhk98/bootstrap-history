@@ -10,11 +10,10 @@ class VentureQuotesMixin:
         revenue lacks, and, for a running concern, its revenue ramp and its
         goods market. `fully_ramped` leaves the ramp out (what it reaches).
         """
-        scale = (self.economy ** 0.75) * self.output_factor * self.price_index
         running = node_id in self.state.projects.operating
         ramp = 1.0 if fully_ramped or not running else self.venture_ramp(node_id)
         market = self.goods_market_factor(node_id) if running else 1.0
-        return self.nodes[node_id]["rev"] * units * scale * ramp * market
+        return self.concern_takings(node_id, ramp) * units * market
 
     def venture_real_upkeep(self, node_id, units=1.0):
         """Yearly running cost at the current price level, the figure `ventures` prints."""
