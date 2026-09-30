@@ -17,10 +17,11 @@ in it.
 from . import wage_provider
 from . import money_units
 from .data import TRADE_REGISTRY, WAGES
+from .labour_wage_ledger import WageLedgerMixin
 from sim.constants import declare
 
 
-class WagesMixin:
+class WagesMixin(WageLedgerMixin):
     """What a trade costs to keep on staff, and what selling your own hours
     at that same rate earns - see this module's own docstring for why wage
     pricing is kept apart from who can be hired at all.
@@ -104,6 +105,7 @@ class WagesMixin:
         household.add_capital(pay)
         household.wage_hours_this_year = household.wage_hours_this_year + hours
         household.wages_earned = (household.wages_earned or 0.0) + pay
+        household.wage_income_this_year = household.wage_income_this_year + pay
         # SAY WHEN IT IS A BAD TRADE: selling your hours costs you the
         # practice those same hours were running (see practice_attention),
         # and for a trained person it is usually a net loss. That is
@@ -139,6 +141,7 @@ class WagesMixin:
                        "; ".join(_bits),
                        (", and %d more" % _more) if _more else ""))
         lost = before_practice - self.revenue()
+        self.log_wage_work(trade, hours, pay, lost)
         if lost > pay:
             # THE THREE NUMBERS HAVE TO SUBTRACT: rounding each separately
             # can give "you earned 128 ... was worth 234 ... so this cost

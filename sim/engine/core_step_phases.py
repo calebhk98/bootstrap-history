@@ -1619,7 +1619,7 @@ class StepPhasesMixin:
         }
         # Reset AFTER the progress pass above, which is where the hours you sold
         # are subtracted from the hours you have left to direct.
-        self.state.household.wage_hours_this_year = 0.0
+        self.close_wage_year()
         # Contracted work is bought for a year and expires with it: hours you
         # paid a shop for in 142 are not still sitting there in 143.
         self.state.household.contract_hours = {}

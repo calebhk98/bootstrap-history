@@ -300,6 +300,10 @@ def _cmd_money(sim, nodes, cmd, ended):
             "capital": round(sim.capital, 1),
             "revenue": round(sim.revenue(), 1),
             "where_the_money_comes_from": sim.revenue_sources(),
+            **({"wage_work_this_year": sim.wage_work_this_year()}
+               if sim.wage_work_this_year() else {}),
+            **({"wage_work_last_year": sim.state.household.wage_work_last_year}
+               if sim.state.household.wage_work_last_year else {}),
             **({"still_building_up_custom": _ramp} if _ramp else {}),
             **({"about_your_own_practice": _prac} if _prac else {}),
             **({"materials_costing_you_a_premium": _mat_mkt} if _mat_mkt else {}),

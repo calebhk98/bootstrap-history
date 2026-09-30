@@ -715,7 +715,10 @@ def _parse_work_or_commission(command, rest, words, nums, want_json):
                       "'%s smith 200'." % (command, command))
     if not nums:
         return None, "%s needs a number of hours, e.g. '%s %s 200'." % (command, command, words[0])
-    return {"cmd": command, "trade": words[0].lower(), "hours": nums[0]}, None
+    out = {"cmd": command, "trade": words[0].lower(), "hours": nums[0]}
+    if command == "work" and any(str(word).lower() == "preview" for word in list(words) + list(rest)):
+        out["preview"] = True
+    return out, None
 
 
 def _parse_train(command, rest, words, nums, want_json):

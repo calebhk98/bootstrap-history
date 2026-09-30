@@ -335,7 +335,7 @@ def _money_from_block(out):
         # and read as what they are rather than as technologies.
         label = raw_key[1:].replace("_", " ") if raw_key.startswith("_") else raw_key
         lines.append("    %-38s %s" % (label, _fmt_num(value)))
-    lines.append("    %-38s %s" % ("(these add up to the revenue above)", ""))
+    lines.append("    %-38s %s" % ("(these add up to the revenue above; wage work is below)", ""))
     if out.get("still_building_up_custom"):
         lines.append(_wrap("STILL BUILDING UP: " + out["still_building_up_custom"],
                        indent="    "))
@@ -345,6 +345,22 @@ def _money_from_block(out):
     if out.get("the_market_you_sell_into"):
         lines.append(_wrap("THE MARKET: " + out["the_market_you_sell_into"],
                        indent="    "))
+    return lines
+
+
+def _money_wage_work_lines(out):
+    lines = []
+    for key, label in (("wage_work_this_year", "this year"),
+                       ("wage_work_last_year", "last year")):
+        wage = out.get(key)
+        if not wage:
+            continue
+        lines.append("  wage work %s: %s hours sold, wage %s, practice income given up %s, net %s"
+                 % (label, _fmt_num(wage.get("hours")), _fmt_num(wage.get("wage_income")),
+                    _fmt_num(wage.get("practice_income_displaced")), _fmt_num(wage.get("net"))))
+    if lines:
+        lines.append("    (the wage is paid into capital when the hours are sold and is not in the "
+                     "revenue above; the practice income given up is already out of it)")
     return lines
 
 
@@ -389,6 +405,7 @@ def render_money(out):
     lines = ["LEDGER"]
     lines += _money_header_line(out)
     lines += _money_from_block(out)
+    lines += _money_wage_work_lines(out)
     lines += _money_costs_block(out)
     lines += _money_net_lines(out)
     lines += _money_credit_lines(out)
