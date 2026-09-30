@@ -595,11 +595,26 @@ def _cmd_open(sim, nodes, cmd, ended):
 
 
 
+# Rows of the shut-concern list on one screen; offset/limit page past it.
+_VENTURES_PAGE = 20
+
+
 @command("ventures", group="projects",
          summary="what you run and could run",
-         usage=["ventures"], options={},
-         description="What you are running, and what you know how to run and have not opened.")
+         usage=["ventures", "ventures limit:50 offset:20"],
+         options={"limit / offset": "page through the concerns you know how to run and have not opened"},
+         description="What you are running, and what you know how to run and have not opened, "
+                     "twenty at a time.")
 def _cmd_ventures(sim, nodes, cmd, ended):
+    try:
+        offset = max(0, int(cmd.get("offset", 0)))
+    except (TypeError, ValueError):
+        offset = 0
+    try:
+        limit = int(cmd.get("limit", 0)) or _VENTURES_PAGE
+    except (TypeError, ValueError):
+        limit = _VENTURES_PAGE
+    limit = max(1, limit)
     sch_free, art_free = sim.venture_staff_free()
     running = sorted(sim.operating)
     idle = sorted(node_id for node_id in sim.done
@@ -657,7 +672,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            "running": [_vrow(node_id) for node_id in running] or "nothing",
            "you_know_how_but_have_not_opened":
                [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
-                for node_id in _idle_ordinary[:20]] or "nothing",
+                for node_id in _idle_ordinary[offset:offset + limit]] or "nothing",
            "capabilities_you_know_how_to_run_but_have_not_opened":
                [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
                 for node_id in _idle_capability] or "nothing",
@@ -723,8 +738,11 @@ def _cmd_ventures(sim, nodes, cmd, ended):
             "%s You did not open it and you cannot close it; it is not "
             "listed here, and it is most of your income until you build "
             "something. See 'money'." % _prac_note)
-    if len(_idle_ordinary) > 20:
-        out["and_more_you_could_open"] = len(_idle_ordinary) - 20
+    out["shut_concerns_in_all"] = len(_idle_ordinary)
+    out["showing_from"] = offset
+    if len(_idle_ordinary) > offset + limit:
+        out["and_more_you_could_open"] = len(_idle_ordinary) - offset - limit
+        out["next_page"] = "ventures offset:%d limit:%d" % (offset + limit, limit)
     return out
 
 

@@ -160,8 +160,8 @@ def _cmd_path(sim, nodes, cmd, ended):
         out["and_more_startable_today"] = len(_startable) - 30
     out["still_waiting_on_something_else"] = len(remaining) - len(_startable)
     if remaining and not _startable:
-        out["note"] = ("nothing on the route is startable today - see "
-                       "'stuck' for what the nearest of them are waiting on")
+        out["note"] = "nothing on the route is startable today"
+        out["nearest_blockers"] = route_blockers(sim, nodes, remaining, 3)
     # A ROUTE CAN BE ENTIRELY TRUE AND ENTIRELY UNABLE TO PAY THE RENT.
     # Early in any tree the critical path is almost pure knowledge, zero
     # revenue; following `path` with no word of that walks a new player
@@ -282,6 +282,14 @@ def _stuck_work_in_hand(sim, nodes):
                if _why_underfunded else {})}
 
 
+def route_blockers(sim, nodes, road, count):
+    """The nodes of an unstartable route nearest to being startable, each
+    with the reason start_reason gives; shared by `stuck` and `path`.
+    """
+    near = sorted(road, key=lambda node_id: len(closure(nodes, node_id) - sim.done))
+    return [{"id": node_id, "why": sim.start_reason(node_id)[1]} for node_id in near[:count]]
+
+
 def _stuck_road_to_goal(sim, nodes, _fog):
     # THE ROAD TO THE GOAL, not the tree at large: a report that leans on
     # whether ANYTHING in the tree is startable is useless when hundreds
@@ -297,14 +305,14 @@ def _stuck_road_to_goal(sim, nodes, _fog):
         _road = closure(nodes, _goal) - sim.done
         _road_open = [node_id for node_id in _road if sim.start_reason(node_id)[0]]
         if _road and not _road_open:
-            _near = sorted(_road, key=lambda k: len(closure(nodes, k) - sim.done))
+            _near = route_blockers(sim, nodes, _road, 5)
             return ({
                 "what": "the road to the goal",
                 "why": "%d of its nodes are still to build and NONE of them "
                        "is startable today. The nearest is %s: %s"
-                       % (len(_road), _near[0],
-                          sim.start_reason(_near[0])[1]),
-                "the_nearest_few": _near[:5]}, _goal_routing_off_under_fog)
+                       % (len(_road), _near[0]["id"], _near[0]["why"]),
+                "the_nearest_few": [row["id"] for row in _near]},
+                _goal_routing_off_under_fog)
     elif _goal in nodes and _fog:
         # SAY SO, THE WAY `rush` DOES: the road-to-the-goal branch above is
         # switched off under fog of war for exactly the reason `path`

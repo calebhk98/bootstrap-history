@@ -1,6 +1,6 @@
 # `why` does not show the specialist foreman a concern needs to open
 
-**Status:** partly - `why` shows the specialist foreman; `available` rows still have no foreman marker
+**Status:** closed - `why` and `available` (specialist_foreman field, FOREMAN column) both show the foreman
 
 `why tex_horizontal_loom`: "STAFF TO KEEP IT OPEN: 0 scholars, 0.27 artisans", with the advice "know this number before you spend money on the other one". After building it, `open tex_horizontal_loom` is refused: "no qualified foreman is free: this concern needs 0.25 carpenter FTE to supervise its specialist work ... Generic artisans cannot substitute for this trade." Same for horse_collar (smith), lens_grinding (glassblower), daniell_cell (potter), one concern needing a sailor.
 

@@ -5,7 +5,7 @@ import hashlib
 from ..data import closure, critical_path, downstream_count, is_downstream
 from ..fog import strip_self_play_advice
 
-from . import tree_filters
+from . import available_economics, tree_filters
 from .nodes import _downstream_of, _unlocked_by
 from .state import _waiting_on
 from .ventures import _VENTURE_SUPERVISION_NOTE
@@ -227,6 +227,7 @@ def _brief(sim, nodes, node_id, fog):
             "risk": sim.effective_risk(node_id),
             "earns_per_year": round(node["rev"], 1),
             "costs_per_year_after": round(node["up"], 1),
+            **available_economics.row_fields(sim, node_id, node),
             # _downstream_of, NOT downstream_count. The cached bitmask index
             # in data.py follows hard prerequisites only, and it must: adding
             # req_any options to it introduces real CYCLES (junction_transistor
@@ -280,6 +281,8 @@ _SORT_KEYS = {
     "earns": lambda s, n, k: n[k]["rev"],
     "revenue": lambda s, n, k: n[k]["rev"],
     "upkeep": lambda s, n, k: n[k]["up"],
+    "net": lambda s, n, k: available_economics.net_per_year(n[k]),
+    "payback": available_economics.sort_payback,
     "risk": lambda s, n, k: n[k]["risk"],
     "alpha": lambda s, n, k: n[k]["name"].lower(),
     "alphabetical": lambda s, n, k: n[k]["name"].lower(),
@@ -300,7 +303,7 @@ _SORT_KEYS = {
     "nearest": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
 }
 
-_SORT_KEY_NAMES = ("price", "hours", "years", "earns", "upkeep", "risk",
+_SORT_KEY_NAMES = ("price", "hours", "years", "earns", "upkeep", "net", "payback", "risk",
                    "alpha", "fewest_missing")
 
 

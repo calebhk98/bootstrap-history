@@ -739,6 +739,10 @@ def _ventures_running_block(out):
 
 def _ventures_idle_block(out):
     lines = ["", "YOU KNOW HOW, AND HAVE NOT OPENED  (ordinary earn/cost businesses)"]
+    if out.get("shut_concerns_in_all"):
+        lines.append("  %s shut in all; showing from %s"
+                 % (_fmt_num(out["shut_concerns_in_all"]),
+                    _fmt_num(out.get("showing_from", 0) + 1)))
     idle = out.get("you_know_how_but_have_not_opened")
     if isinstance(idle, list) and idle:
         lines.append("  %-34s %10s %10s %10s" % ("ID", "EARNS/YR", "COSTS/YR", "TO OPEN"))
@@ -753,7 +757,8 @@ def _ventures_idle_block(out):
     else:
         lines.append("  nothing")
     if out.get("and_more_you_could_open"):
-        lines.append("  ...and %s more" % _fmt_num(out["and_more_you_could_open"]))
+        lines.append("  ...and %s more: '%s'"
+                 % (_fmt_num(out["and_more_you_could_open"]), out.get("next_page", "ventures offset:N")))
     return lines
 
 
