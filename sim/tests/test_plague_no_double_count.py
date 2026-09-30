@@ -19,7 +19,8 @@ def _staff_after_plague_with_national_coverage(household, national_med_relief,
                                                household_has_sanitation=False):
     """Household staff after one forced staff_loss event, with the national
     medical relief (already factoring in compliance) pinned to a specific value."""
-    household.scholars, household.artisans = 100.0, 100.0
+    # Large headcount: losses are rolled per person, so the average must dominate.
+    household.scholars, household.artisans = 10000.0, 10000.0
     if household_has_sanitation:
         household.done.add("sanitation_antisepsis")
         household.operating.add("sanitation_antisepsis")
@@ -72,7 +73,7 @@ class NoDoubleCountMitigation(unittest.TestCase):
                            msg="Full national relief should lead to more survivors than half")
         self.assertGreater(half_national, zero_national,
                            msg="Half national relief should lead to more survivors than none")
-        self.assertEqual(full_national, 100.0,
+        self.assertEqual(full_national, 10000.0,
                          msg="At 100% national relief, no loss occurs")
 
     def test_household_relief_scales_with_national_coverage(self):

@@ -58,7 +58,7 @@ class HazardsMixin:
 
     def _surviving_people(self, headcount, survival_share):
         people = int(round(headcount))
-        return float(sum(1 for _ in range(people) if self.rng.random() < survival_share))
+        return float(sum(1 for _ in range(people) if self.rng.random() >= 1.0 - survival_share))
 
     def hazard_relief(self, kind, beyond_national=False):
         """How much of one kind of harm the things you have built take off.
