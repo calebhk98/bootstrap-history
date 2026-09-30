@@ -9,6 +9,7 @@ these live in a separate file).
 """
 
 from .command_registry import command
+from .explain_once import already_explained
 from .util import _qty
 from .buy_targets import canonical_target, target_names, usage_lines
 from .quote_purchases import FLAT_QUOTERS
@@ -289,6 +290,8 @@ def _cmd_money(sim, nodes, cmd, ended):
     _standing_fixed = (_standing_upkeep + _standing_living
                        - _standing_prepaid + sim.mine_operating_cost())
     _ramp, _prac = sim.still_ramping(), sim.practice_note()
+    if _prac and already_explained(sim, "practice", cmd):
+        _prac = sim.practice_note(brief=True)
     _mkt = sim.goods_market_summary()
     # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):
     # material_price_factor() responds for every material a node

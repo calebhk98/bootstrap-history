@@ -7,6 +7,8 @@ Pure presentation, same as every module in this split: nothing here touches
 the live Sim - see render.py and ARCHITECTURE.md.
 """
 
+import textwrap
+
 from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 from .tree_filters import render_state_rows
 from .wave_summary import summary_line
@@ -93,6 +95,30 @@ def _state_money(out):
     return lines
 
 
+def _staffing_warning_sentences(warnings):
+    """One sentence per warning, except that concerns sharing the same
+    household-wide spare headcount are named together in a single line."""
+    sentences = []
+    shared = {}
+    for warning in warnings or []:
+        if not isinstance(warning, dict):
+            sentences.append(warning)
+        elif (not warning.get("one_loss_closes_it")
+              and (warning.get("headline") or "").endswith("before it closes")):
+            shared.setdefault((warning.get("within"), warning.get("of")), []).append(warning)
+        else:
+            sentences.append(warning.get("headline"))
+    for (within, word), group in shared.items():
+        if len(group) == 1:
+            sentences.append(group[0]["headline"])
+            continue
+        names = [warning.get("name") for warning in group]
+        sentences.append("%s and %s: the household has %s spare %s before these close"
+                         % (", ".join(names[:-1]), names[-1],
+                            ("%.1f" % within).rstrip("0").rstrip("."), word))
+    return sentences
+
+
 def _state_founder(out):
     lines = []
     # WHETHER YOU AGE IS A FACT ABOUT THE GAME YOU ARE PLAYING, and the human
@@ -117,15 +143,10 @@ def _state_founder(out):
                  % (_fmt_num(_src.get("you")), _fmt_num(_dep),
                     _fmt_num(_src.get("hours_each_deputy_adds"))))
                 if _dep else ""))
-    for _warning in (out.get("supervision_close_to_the_edge") or []):
-        # EACH ENTRY IS A DICT (id/name/within/of/headline/...), not a bare
-        # string: staffing_closure_warnings() returns structured rows so a
-        # JSON caller gets the trade, the room and the fix command apart
-        # from the prose. This human-text renderer wants only the
-        # sentence, so it must read `.get("headline")` rather than
-        # concatenating the dict directly, which would crash `state`
-        # outright the moment any warning fires.
-        lines.append(_wrap("  " + (_warning.get("headline") if isinstance(_warning, dict) else _warning)))
+    for _warning in _staffing_warning_sentences(out.get("supervision_close_to_the_edge")):
+        # Each entry is a dict (see staffing_closure_warnings); only the
+        # sentence is shown here.
+        lines.append(_wrap("  " + _warning))
     if out.get("worth_knowing_early"):
         lines.append(_wrap("  " + out["worth_knowing_early"]))
     if out.get("free_hours_going_unused"):
@@ -319,6 +340,26 @@ def _state_goal(out):
     return lines
 
 
+def _events_without_completion_repeats(completed, events):
+    """The events minus each "completed: <name>" line that repeats a
+    COMPLETED record, and the tail of that line ("STATUS: CLOSED ... Open
+    it") keyed by name, to go on the single COMPLETED line instead."""
+    tails = {}
+    kept = []
+    for event in events or []:
+        message = event.get("message") or ""
+        name = next((record.get("name") for record in completed or []
+                     if record.get("name") and record.get("name") not in tails
+                     and (message == "completed: " + record["name"]
+                          or message.startswith("completed: %s. " % record["name"]))), None)
+        if name is None:
+            kept.append(event)
+        else:
+            after_name = message[len("completed: " + name):]
+            tails[name] = after_name.replace(". ", " - ", 1)
+    return kept, tails
+
+
 def _state_completed_head_lines(out):
     """The loudest lines in the reply, built but not yet merged in front of
     the rest of the screen - split out of _state_completed_head so that
@@ -340,10 +381,12 @@ def _state_completed_head_lines(out):
         headline = summary_line(out.get("summary"))
         if headline:
             head.append(headline)
+        events, repeats = _events_without_completion_repeats(completed, events)
         for record in completed or []:
-            head.append("  %s %s: %s"
+            head.append("  %s %s: %s%s"
                         % ("THIS SOCIETY NOW HAS" if record.get("granted")
-                           else "COMPLETED", record.get("year"), record.get("name")))
+                           else "COMPLETED", record.get("year"), record.get("name"),
+                           repeats.get(record.get("name"), "")))
         for record in lost or []:
             head.append("  LOST %s: %s%s"
                         % (record.get("year"), record.get("name"),
@@ -462,16 +505,22 @@ def _available_row(entry, width=None, purse=None):
         staff += "*"
     foreman = entry.get("specialist_foreman")
     payback = entry.get("payback_years")
-    return _AVAILABLE_ROW_FORMAT % (
-        width, (entry.get("id") or ""), (entry.get("name") or "")[:14],
+    name_lines = textwrap.wrap(entry.get("name") or "", _AVAILABLE_NAME_WIDTH,
+                               break_long_words=True) or [""]
+    row = _AVAILABLE_ROW_FORMAT % (
+        width, (entry.get("id") or ""), name_lines[0],
         _fmt_num(entry.get("cost")) + _cost_marker(entry, purse),
         _fmt_num(hours), _fmt_num(years), _pct(risk),
         _fmt_range(entry.get("earns_per_year")), _fmt_num(entry.get("costs_per_year_after")),
         _fmt_num(entry.get("net_per_year")) if "net_per_year" in entry else "-",
         _fmt_num(payback) if payback is not None else "-",
         staff, (foreman["trade"][:7] if foreman else "-"), rests)
+    # The rest of a long name goes on the lines below, under the NAME column.
+    return "\n".join([row] + [" " * (width + 1) + name_line
+                             for name_line in name_lines[1:]])
 
 
+_AVAILABLE_NAME_WIDTH = 14
 _AVAILABLE_ROW_FORMAT = "%-*s %-14s %9s %5s %5s %5s %8s %7s %8s %5s %6s %-7s %6s"
 
 

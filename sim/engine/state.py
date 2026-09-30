@@ -355,6 +355,7 @@ class ScenarioState:
 	_said_scandal: int = 0
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
+	_said_explanations: Optional[Dict[str, int]] = None
 
 
 @dataclass
