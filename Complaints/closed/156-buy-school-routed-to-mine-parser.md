@@ -1,6 +1,6 @@
 # `buy school <trade> <n>` is always refused with the mine error
 
-**Status:** open
+**Status:** closed - buy school, buy trade school and buy trade_school all reach the school handler; buy, quote and help read one target table, buy_targets.py (tests: player_command_fixes)
 
 `help buy` lists `buy school <trade> <n>`; `help economy` gives the example `buy school smith 2` ("makes two more smiths' worth of annual labour locally available"). At 542 AD, `buy school smith 2`, `buy school scholar 1` and `buy school scholar 5` all return "REFUSED: material must be one of: well-known workings: coal, copper, gold, iron, lead, silver, tin - or any other material key ...", the `buy mine` validation text.
 

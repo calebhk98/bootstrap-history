@@ -220,7 +220,7 @@ def _topic_economy(sim):
                           "a purchase from the live deficit plus 20% headroom."),
             "buy farm": "buy farm 120 lowers staple costs through productive land",
             "buy housing": "buy housing 5 adds five durable worker places",
-            "buy trade school": "buy school smith 2 makes two more smiths' worth "
+            "buy school": "buy school smith 2 makes two more smiths' worth "
                                 "of annual labour locally available",
             "materials": "materials shows durable stock and flow; buy material "
                          "iron 10 or sell iron 5 trades tonnes at current prices",

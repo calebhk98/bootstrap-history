@@ -3,6 +3,7 @@
 import json
 
 from . import command_registry
+from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
 
@@ -744,6 +745,8 @@ def _parse_buy_or_quote(command, rest, words, nums, want_json):
     # not only the first - dropping it would fail every documented
     # three-word buy with an error that lists the material the player
     # just typed.
+    if len(words) > 1 and [word.lower() for word in words[:2]] == ["trade", "school"]:
+        words = words[1:]
     out = {"cmd": command, "what": words[0].lower()}
     if len(words) > 1:
         out["material"] = words[1].lower()
@@ -753,10 +756,7 @@ def _parse_buy_or_quote(command, rest, words, nums, want_json):
     # protocol wants it spelled out as a mine in a mineral.
     if out["what"] in ("nitre", "saltpetre", "nitre_bed"):
         out["what"] = "nitre"
-    elif out["what"] not in ("forest", "farm", "food", "housing", "houses",
-                             "trade_school", "material", "stock",
-                             "slaves", "mine", "mines", "people",
-                             "manumit", "manumission", "free"):
+    elif canonical_target(out["what"]) is None:
         out["material"], out["what"] = out["what"], "mine"
     if out["what"] == "mines":
         out["what"] = "mine"

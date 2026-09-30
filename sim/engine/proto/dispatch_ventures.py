@@ -347,18 +347,19 @@ def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far):
     return None
 
 
-def _rush_preview(sim, nodes, cmd, ended):
+def _rush_preview(sim, nodes, cmd, ended, confirm=None):
     """Run the real rush, then roll the game back to how it was.
 
     Credit, costs and availability all move as projects begin, so only the
-    real start path can say what a rush would start.
+    real start path can say what a rush would start. An unbounded rush is
+    previewed as the forced run it would take to begin it.
     """
     saved_order = list(sim.order)
     with tempfile.TemporaryDirectory() as folder:
         snapshot = os.path.join(folder, "snapshot.json")
         save_state(sim, snapshot)
         try:
-            result = _cmd_rush(sim, nodes, dict(cmd, preview=False), ended)
+            result = _cmd_rush(sim, nodes, dict(cmd, preview=False, force=True), ended)
         finally:
             load_state(sim, snapshot)
             sim.order[:] = saved_order
@@ -371,7 +372,7 @@ def _rush_preview(sim, nodes, cmd, ended):
             "total_annual_draw": result["total_annual_draw"],
             "count_not_started": result["count_not_started"],
             "not_started": result["not_started"],
-            "how_to_confirm": "Repeat the same rush without 'preview' to begin these."}
+            "how_to_confirm": confirm or "Repeat the same rush without 'preview' to begin these."}
 
 
 @command("rush", group="projects", aliases=("startall", "start_all", "muster"),
@@ -419,14 +420,10 @@ def _cmd_rush(sim, nodes, cmd, ended):
     # Discovery must not mutate dozens of portfolio entries. A numeric limit
     # is an explicit bounded instruction; an unbounded run needs confirmation.
     if limit is None and not capped and not cmd.get("force"):
-        return {"ok": True, "preview": True,
-                "count_would_start": len(_ok),
-                "would_start": [{"id": node_id, "name": nodes[node_id]["name"],
-                                  "cost": round(sim.project_cost(node_id), 1)}
-                                 for node_id in _ok],
-                "nothing_changed": True,
-                "how_to_confirm": ("Use 'rush force' to begin this unbounded "
-                                   "set, or 'rush limit:N' to begin at most N.")}
+        return _rush_preview(
+            sim, nodes, cmd, ended,
+            confirm="Use 'rush force' to begin this unbounded set, or "
+                    "'rush limit:N' to begin at most N.")
     # AND STOP WHEN THE YEAR IS FULL: an unbounded 'rush limit:1000' could
     # start hundreds of things at once - a plantation, a whaling industry,
     # a theatre, a gambling house, nitre beds and lens grinding, all in

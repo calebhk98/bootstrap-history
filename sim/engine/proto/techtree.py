@@ -514,7 +514,7 @@ def _list_sort_and_paging_hints(out, sel, page, show_all, offset, sort_by, _sort
     if reverse:
         out["sorted_by"] += ", reversed"
     out["to_sort_or_page_differently"] = (
-        "add a 'sort' of %s, and 'reverse' to flip it; 'offset'/'limit' "
+        "add a 'sort' of %s (smallest first), and 'reverse' for largest first; 'offset'/'limit' "
         "page the list you could start, 'heard_offset' pages the "
         "heard-of one below it - all the way to the end."
         % ", ".join(_SORT_KEY_NAMES))
@@ -721,6 +721,10 @@ def _agent_available(sim, nodes, cmd=None):
     # did not already decide.
     (want_subject, find, show_all, limit, offset, afford, sort_by,
      _sort_fn, reverse, heard_offset) = _available_params(cmd)
+    if sort_by and _sort_fn is None:
+        return {"ok": False,
+                "error": "cannot sort by %r; sort by one of: %s. Nothing was changed."
+                         % (sort_by, ", ".join(_SORT_KEY_NAMES))}
 
     state, filter_error = tree_filters.parse_state(cmd)
     tag, category, topic_error = tree_filters.parse_topic(cmd, nodes)

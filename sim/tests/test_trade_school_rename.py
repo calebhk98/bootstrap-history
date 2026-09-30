@@ -24,5 +24,5 @@ check("buy trade_school command works",
 reply_old = S._agent_dispatch(test_sim, NODES,
                               {"cmd": "buy", "what": "school",
                                "trade": "chemist", "n": 1})
-check("old 'school' command is refused",
-      not reply_old["ok"], reply_old)
+check("'school' is the documented spelling and works",
+      reply_old["ok"], reply_old)

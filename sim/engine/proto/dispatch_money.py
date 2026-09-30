@@ -10,6 +10,8 @@ these live in a separate file).
 
 from .command_registry import command
 from .util import _qty
+from .buy_targets import canonical_target, target_names, usage_lines
+from .quote_purchases import FLAT_QUOTERS
 from .. import purchase_rule
 
 
@@ -199,24 +201,15 @@ def _buy_manumit(sim, cmd, quantity):
     return {"ok": True, "manumitted": got, "freedmen": sim.freedmen, "slaves": sim.slaves}
 
 
-# Dispatch over what is being bought: one small handler per kind, keyed by
-# every spelling this command must match. Same pattern as
-# _parse_command_body's own table - see that one's docstring for why a
-# dict beats a long if/elif chain here too.
+# One handler per canonical target in buy_targets.BUY_TARGETS; every
+# spelling of a target reaches its handler through canonical_target.
 _BUY_HANDLERS = {
     "forest": _buy_forest,
     "nitre": _buy_nitre,
-    "nitre_bed": _buy_nitre,
-    "saltpetre": _buy_nitre,
-    "nitre beds": _buy_nitre,
     "farm": _buy_farm,
-    "food": _buy_farm,
     "housing": _buy_housing,
-    "houses": _buy_housing,
-    "trade_school": _buy_school,
-    "trade school": _buy_school,
+    "school": _buy_school,
     "material": _buy_material,
-    "stock": _buy_material,
     "mine": _buy_mine,
     "slaves": _buy_slaves,
     "manumit": _buy_manumit,
@@ -225,10 +218,8 @@ _BUY_HANDLERS = {
 
 @command("buy", group="money",
          summary="farmland, housing, schools, stock, forest, nitre, mines, slaves",
-         usage=["buy forest <ha>", "buy nitre <m2>", "buy farm <ha>", "buy housing <n>",
-                "buy school <trade> <n>", "buy material <name> <tonnes>",
-                "buy mine <material> <tonnes_per_year>", "buy slaves <n>", "buy manumit <n>"],
-         options={"what": "forest, nitre, farm, housing, school, material, mine, slaves or manumit",
+         usage=usage_lines(),
+         options={"what": ", ".join(target_names()),
                   "n": "the amount"},
          description="Spends capital on durable things. Ask the price first with quote. "
                      "See the economy topic for what each one does.")
@@ -249,9 +240,9 @@ def _cmd_buy(sim, nodes, cmd, ended):
     if not (quantity > 0):
         return {"ok": False,
                 "error": "n must be greater than zero, got %g. Nothing was changed." % quantity}
-    handler = _BUY_HANDLERS.get(what)
+    handler = _BUY_HANDLERS.get(canonical_target(what))
     if handler is None:
-        return {"ok": False, "error": "what must be one of: forest, farm, housing, trade school, material, mine, slaves, manumit"}
+        return {"ok": False, "error": "what must be one of: " + ", ".join(target_names())}
     return handler(sim, cmd, quantity)
 
 
@@ -377,17 +368,17 @@ def _cmd_money(sim, nodes, cmd, ended):
 
 @command("quote", group="money", aliases=("price", "cost"),
          summary="what something costs before you commit",
-         usage=["quote mine <material> <tonnes_per_year>"],
-         options={"what": "mine (and other buy targets)", "material": "the material",
+         usage=[usage.replace("buy ", "quote ", 1) for usage in usage_lines()],
+         options={"what": "any buy target: " + ", ".join(target_names()), "material": "the material",
                   "n": "the amount"},
          description="Prices a purchase without making it.")
 def _cmd_quote(sim, nodes, cmd, ended):
-    what = (cmd.get("what") or "mine").strip().lower()
+    what = canonical_target(cmd.get("what") or "mine") or ""
     # EVERYTHING YOU CAN BUY, NOT JUST MINES: any purchase command with no
     # price shown anywhere, no way to ask for one, and no market to sell
     # it back into risks spending far more than intended. `quote` has to
     # cover every counter, not just one.
-    if what in ("forest", "coppice", "woodland"):
+    if what == "forest":
         n_f, err_f = _qty(cmd, "n", 100)
         if err_f:
             return {"ok": False, "error": err_f}
@@ -403,7 +394,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                     "%.2f tonnes of charcoal, sustainably" % sim.CHARCOAL_PER_HA,
                 "note": "Coppice is bought once and yields every year after. "
                         "There is no market to sell it back into."}
-    if what in ("nitre", "nitre_bed", "saltpetre"):
+    if what == "nitre":
         n_n, err_n = _qty(cmd, "n", 10000)
         if err_n:
             return {"ok": False, "error": err_n}
@@ -421,7 +412,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                         "turned for a couple of years. Cheap by the metre "
                         "and thin by the metre, so beds are laid in "
                         "thousands of square metres, not hundreds."}
-    if what in ("slaves", "people"):
+    if what == "slaves":
         n_s, err_s = _qty(cmd, "n", 1)
         if err_s:
             return {"ok": False, "error": err_s}
@@ -449,10 +440,16 @@ def _cmd_quote(sim, nodes, cmd, ended):
                         "they are worth nothing to you for the first few "
                         "years while they learn the work. Freeing them "
                         "afterwards makes them worth more, not less."}
+    if what in FLAT_QUOTERS:
+        quantity, err = _qty(cmd, "n", 1)
+        if err:
+            return {"ok": False, "error": err}
+        return FLAT_QUOTERS[what](sim, cmd, quantity)
     if what != "mine":
         return {"ok": False,
-                "error": "you can quote a mine, a forest or people: "
-                         "quote mine coal 500, quote forest 100, quote slaves 5"}
+                "error": "quote works for everything buy does: " + ", ".join(target_names())
+                         + ". For example: quote mine coal 500, quote farm 20, "
+                           "quote material iron 10"}
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err}
