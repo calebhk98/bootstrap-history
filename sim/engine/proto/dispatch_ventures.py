@@ -697,6 +697,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            "capabilities_you_know_how_to_run_but_have_not_opened":
                [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
                 for node_id in _idle_capability] or "nothing",
+           "keep_staffed": sorted(sim.state.projects.keep_staffed) or "none",
            "people_free_to_run_something_new": {
                "scholars": round(sch_free, 2), "craftsmen": round(art_free, 2)},
            # YOU ARE IN THAT COUNT: leaving this unsaid would make
@@ -811,6 +812,8 @@ def _cmd_policy(sim, nodes, cmd, ended):
         _stopped["credit"] = ("nobody will fund new work until %d"
                               % int(sim.credit_frozen_until))
     _pol = {"ok": True, "policy": dict(sim.policy), "changed": changed,
+            "reserve": {"craftsmen": sim.state.household.reserve_craftsmen,
+                        "scholars": sim.state.household.reserve_scholars},
             # WHAT THESE ARE FOR, BEFORE WHAT EACH ONE DOES: a player who
             # switches one on believing the engine knows the best line and
             # is offering to walk it for them will read the result as a
@@ -850,6 +853,10 @@ def _cmd_policy(sim, nodes, cmd, ended):
                                         "glassblower) when the last one "
                                         "supervising an open concern is lost. "
                                         "Off by default",
+                "reserve_staff": "keep the spare craftsmen and scholars set by "
+                                 "'reserve craftsmen N' / 'reserve scholars N' above "
+                                 "what open concerns hold, hiring (and buying "
+                                 "housing) each year. Off by default",
                 "auto_buy_people": "buy slaves when the workshop is short-handed",
                 "auto_manumit": "free people you hold, over time",
                 "auto_train": "teach trades this society does not have when a "

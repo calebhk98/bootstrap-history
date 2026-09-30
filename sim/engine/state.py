@@ -217,6 +217,9 @@ class HouseholdState:
 	trade_schools: Optional[int] = None
 	labour_pressure_records: Dict[str, Any] = field(default_factory=dict)
 	worker_housing_places: Optional[int] = None
+	# spare generic hands the reserve_staff policy keeps above what concerns hold (`reserve`)
+	reserve_craftsmen: int = 0
+	reserve_scholars: int = 0
 	_said_deputies: int = 0
 	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None
@@ -273,6 +276,8 @@ class ProjectsState:
 	forgotten: Dict[str, int] = field(default_factory=dict)
 	trade_hours_used: Dict[str, float] = field(default_factory=dict)
 	revealed: Set[str] = field(default_factory=set)
+	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)
+	keep_staffed: Set[str] = field(default_factory=set)
 	stalled: int = 0
 	# work id -> {"reason": str, "year": int}; only while the work is mothballed
 	closures: Dict[str, Dict[str, object]] = field(default_factory=dict)

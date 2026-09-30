@@ -55,7 +55,7 @@ REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
 # tree, because the tree is data and does get edited: a node can be renamed
 # or removed between when a save was written and when it is read back.
 _SET_FIELDS_OF_NODE_IDS = ("done", "granted", "mothballed", "operating",
-                           "bountied", "revealed")
+                           "bountied", "revealed", "keep_staffed")
 # Checked against the wage table instead, which is what they actually are.
 _SET_FIELDS_OF_TRADE_NAMES = ("trades_created", "trades_endemic")
 

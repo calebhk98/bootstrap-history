@@ -508,6 +508,9 @@ class Sim(MechanicsMixin, EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
             # default in manual play, and off unattended too: the optimizer's
             # auto_hire already replaces trades that concerns draw on.
             "auto_replace_foreman": False,
+            # Keep `reserve` spare craftsmen and scholars above what open
+            # concerns hold, hiring and housing them each year. Off always.
+            "reserve_staff": False,
         }
         # World-level "last time I said X" trackers; household ones live on HouseholdState.
         self._said_wage_cascade = -999     # last year a wage-cascade note was printed; -999 guarantees the first qualifying year always warns

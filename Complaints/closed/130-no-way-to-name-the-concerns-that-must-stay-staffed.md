@@ -1,6 +1,6 @@
 # No way to name the concerns that must stay staffed through attrition
 
-**Status:** open
+**Status:** closed - `keep <id> staffed` flags a concern; the yearly staff step hires its craftsmen, scholars and foreman (within cash and room) before the closure rule; `ventures` lists them (test: `--only keep_staffed`)
 
 **Source:** `reports/TOP_PROBLEMS.md` item 9 and `reports/PLAYTEST_LOG_ROME_100_BLIND.md` observations 201 and 244.
 

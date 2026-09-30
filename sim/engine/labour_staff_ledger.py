@@ -76,15 +76,29 @@ class StaffLedgerMixin:
                              "warning": "depends on one %s; losing them closes it" % trade})
         return rows
 
+    def hire_to_cover(self, trade, short, label, partial=False):
+        """Hire `short` whole people of `trade` for a stated policy; the count taken on.
+
+        `partial` takes as many as the household has room for instead of
+        refusing the lot. The wall, the cash and the literacy limit are
+        `hire`'s own, so a refusal simply hires nobody."""
+        if short <= 0:
+            return 0
+        if partial:
+            short = min(short, max(0, int(self.household_room() + 1e-9)))
+            if short <= 0:
+                return 0
+        hired, _why = self.hire(trade, short)
+        if not hired:
+            return 0
+        self.state.household.log.append((self.state.scenario.year,
+                                         "%s: you hire %d %s%s to keep your concerns supervised"
+                                         % (label, short, trade, "" if short == 1 else "s")))
+        return short
+
     def replace_lost_foremen(self):
         """auto_replace_foreman: hire the specialists open concerns need and lack."""
         household = self.state.household
         for trade, used in sorted(self.venture_foremen_used().items()):
             short = math.ceil(used - household.employees.get(trade, 0.0) - 0.01)
-            if short <= 0:
-                continue
-            hired, _why = self.hire(trade, short)
-            if hired:
-                household.log.append((self.state.scenario.year,
-                                      "auto_replace_foreman: you hire %d %s%s to keep your concerns supervised"
-                                      % (short, trade, "" if short == 1 else "s")))
+            self.hire_to_cover(trade, short, "auto_replace_foreman")
