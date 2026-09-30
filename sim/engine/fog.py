@@ -358,6 +358,11 @@ class FogMixin:
         """
         if self.nodes[node_id]["cat"] in self.NEVER_ABANDON:
             return True
+        return self.on_road_to_goal(node_id)
+
+    def on_road_to_goal(self, node_id: str) -> bool:
+        """Whether the goal needs this node. A yes/no with no distance, so it
+        names no route the player has not already been shown."""
         if not hasattr(self, "_goal_closure"):
             try:
                 self._goal_closure = closure(self.nodes, self.state._goal)

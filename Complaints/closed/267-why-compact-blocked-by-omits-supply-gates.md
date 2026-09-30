@@ -1,6 +1,6 @@
 # `why ... compact` returns `blocked_by` with only missing prerequisites, so items gated on a supply (manganese, nitre beds) look unblocked
 
-**Status:** open
+**Status:** closed
 
 B: `why ... compact` returns `blocked_by: []` for items gated on "a manganese supply ... any of mat_manganese", so scripts and players following `blocked_by` miss them; A had the same experience with bulk steel ("technology appears research-ready but beginning exposes a missing manganese supply").
 

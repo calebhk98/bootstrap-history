@@ -1,6 +1,6 @@
 # The shortage remedy text sizes a new mine against the market shortfall and ignores mines already being sunk
 
-**Status:** open
+**Status:** closed
 
 Tester (213 to 217 AD): bulk steel warned "coal 20,754 t short" and kept recommending another 20,754 t mine after coal 21,000 t/yr and iron 14,000 t/yr mines had already been commissioned and were three years from producing.
 Code reading: `sim/engine/economy_freight.py`, `material_shortfall_t` is demand minus own supply minus market, where own supply comes from `_own_material_supply`, which counts producing capacity, and `shortage_remedy_plan` sizes

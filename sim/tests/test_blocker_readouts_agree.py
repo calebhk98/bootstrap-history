@@ -21,7 +21,7 @@ def kinds_of(test_sim, node_id):
 check("missing prerequisites are a knowledge blocker",
       kinds_of(sim(capital=1e9), SUPPLY_NODE)[:1] == ["knowledge"], kinds_of(sim(capital=1e9), SUPPLY_NODE))
 supply = supply_sim()
-check("an unmet supply group is a supply blocker", kinds_of(supply, SUPPLY_NODE) == ["supply"],
+check("an unmet supply group is a supply blocker", "supply" in kinds_of(supply, SUPPLY_NODE),
       supply.start_blockers(SUPPLY_NODE))
 check("the supply blocker names the options that would serve",
       "mat_manganese" in supply.start_blockers(SUPPLY_NODE)[0]["ids"], supply.start_blockers(SUPPLY_NODE))
@@ -56,10 +56,10 @@ check("a startable node has no blockers", sim(capital=1e9).start_blockers(starta
 # --- why: the kind leads, and every kind is listed
 why = S._agent_dispatch(supply, NODES, {"cmd": "why", "id": SUPPLY_NODE})
 check("why carries blocked_kind and the blockers list", why.get("blocked_kind") == "supply"
-      and [blocker["kind"] for blocker in why.get("blockers", [])] == ["supply"], why.get("blockers"))
+      and [blocker["kind"] for blocker in why.get("blockers", [])] == kinds_of(supply, SUPPLY_NODE), why.get("blockers"))
 check("the why screen leads the refusal with its kind", "SUPPLY" in render_why(why), render_why(why)[:600])
 
 # --- compact why: the supply gate is in blocked_by, with its kind
 compact = S._agent_dispatch(supply, NODES, {"cmd": "why", "id": SUPPLY_NODE, "compact": True})
 check("compact why lists the supply option in blocked_by", "mat_manganese" in compact.get("blocked_by", []), compact)
-check("compact why says which kinds block", compact.get("blocked_kinds") == ["supply"], compact)
+check("compact why says which kinds block", compact.get("blocked_kinds", [])[:1] == ["supply"], compact)

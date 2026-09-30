@@ -1,6 +1,6 @@
 # The calendar floor `why` and `start` advertise is shorter than the payment schedule that actually binds, so the quoted finish year is wrong
 
-**Status:** open
+**Status:** closed
 
 `start` and `why` print "calendar floor" and "expected calendar years with retries", both shortened by reputation. The money is paid in annual instalments of the bill divided by the nominal,
 unshortened years (`sim/engine/core_step_phases.py`, `frac = min(1.0, 1.0 / max(1.0, node["yrs"]))`), so reputation never shortens the real schedule.

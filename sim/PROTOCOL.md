@@ -57,7 +57,10 @@ Two fixes, usable separately or together:
       {"cmd":"state"}                              current situation, in full
       {"cmd":"available"}                          every node that can legally start now,
                                                     with cost, founder hours, calendar
-                                                    floor, prerequisites and its note
+                                                    floor, prerequisites and its note;
+                                                    each row says on_road_to_goal (yes or
+                                                    no, never a distance) and
+                                                    is_supply_or_capability
       {"cmd":"available","state":"blocked","tag":"mechanical_power"}
                                                    filters: state is startable (default),
                                                     blocked, active or done; tag is a
@@ -70,7 +73,19 @@ Two fixes, usable separately or together:
                                                     to nodes the player has heard of.
       {"cmd":"why","id":"zinc_metal"}              the full explanation for one node:
                                                     cost, staff, risk, chain, what it
-                                                    unlocks, why it is or isn't startable
+                                                    unlocks, why it is or isn't startable.
+                                                    A blocked node carries blocked_kind and
+                                                    blockers, a list of {kind, text, ids}
+                                                    (kinds: knowledge, power, supply,
+                                                    specialists, money, politics, closed);
+                                                    the start refusal is the first entry.
+                                                    earliest_completion_years and
+                                                    earliest_completion_year are the
+                                                    soonest finish with no failure;
+                                                    compact adds blocked_kinds and puts
+                                                    the supply options in blocked_by.
+                                                    The heard-of rows of `available`, and
+                                                    the rows of path and stuck, carry kind.
       {"cmd":"path","id":"zinc_metal"}             everything still undone on the way
                                                     to this node, in dependency order
       {"cmd":"start","id":"zinc_metal"}            begin a project (error explains

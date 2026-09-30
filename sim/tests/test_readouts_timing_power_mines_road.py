@@ -65,7 +65,7 @@ gate_sim._done_changed()
 needs_electric = next(node_id for node_id, node in NODES.items()
                       if "cap_power_electric" in node["pre"] and node_id not in gate_sim.done)
 knowledge_blocker = next(blocker for blocker in gate_sim.start_blockers(needs_electric)
-                         if blocker["kind"] == "knowledge")
+                         if blocker["kind"] == "power")
 check("a power capability gate says installed generation does not satisfy it",
       "installed" in knowledge_blocker["text"] and "knowledge" in knowledge_blocker["text"], knowledge_blocker)
 

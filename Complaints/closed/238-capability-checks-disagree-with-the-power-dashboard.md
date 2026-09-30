@@ -1,6 +1,6 @@
 # The capacity dashboard shows generation that the capability checks ignore, and a "grid" capability is satisfied with zero grid generation
 
-**Status:** open
+**Status:** closed
 
 Tester evidence: at 244 AD the dashboard showed 300 kW of local generation from an alternator while the local-electric-power capability was unmet until a dynamo was built (the next start needed it, and completing it raised generation only 10 kW).
 At 300 AD the requirement list ticked "grid electric power, MW scale (central generation)" with 0 kW of grid generation and only 3,000 kW of transmission capacity; the hydro station (3 MW) came later and was opened by hand.

@@ -666,8 +666,19 @@ class FreightMixin:
                                    * self.price_index))),
                 "commands": ["buy nitre %d" % square_meters]}
         if binding in self.MINE_OPEX_PER_T:
+            sinking = [tranche for tranche in (self.state.economy.mine_tranches or []) if tranche[0] == binding]
+            sinking_tonnes = sum(tranche[1] for tranche in sinking)
+            if sinking_tonnes > 0.0:
+                ready_year = int(min(tranche[2] for tranche in sinking))
+                shortfall_t = max(0.0, shortfall_t - sinking_tonnes)
+                sinking_text = ("A working of %s tonnes a year is already being sunk, ready in %d. "
+                                % ("{:,.0f}".format(sinking_tonnes), ready_year))
+                if shortfall_t < 1.0:
+                    return {"text": sinking_text + "It covers the shortfall; wait for it.", "commands": []}
+            else:
+                sinking_text = ""
             tonnes_short = max(1, math.ceil(shortfall_t - 1e-9))
-            return {"text": (
+            return {"text": sinking_text + (
                 "The market will not sell you enough %s, so you have to dig "
                 "it: %s. 'quote mine %s %d' for the price, then 'buy mine "
                 "%s %d'. A shaft takes a few years to come into production."

@@ -505,6 +505,8 @@ def _available_row(entry, width=None, purse=None):
     downstream_count = entry.get("downstream_count")
     rests = (_fmt_num(downstream_count) if downstream_count is not None
              else _RESTS_SHORT.get(entry.get("how_much_rests_on_this"), "?"))
+    if entry.get("on_road_to_goal"):
+        rests += ">"   # on the road to your goal; the legend says so
     # THE ID IS NOT DECORATION, IT IS THE NEXT THING YOU TYPE: truncating
     # it would mean the longest ids could not be copied out of the table
     # at all, and `start` would refuse an id the table had just printed
@@ -638,6 +640,8 @@ def _available_legend_block(out, _purse):
         if any(entry.get("short_of_staff") for entry in _shown if isinstance(entry, dict)):
             lines.append("  A * after STAFF means you do not have them yet - 'hire' "
                      "or 'train' first, or the work waits.")
+        if any(entry.get("on_road_to_goal") for entry in _shown if isinstance(entry, dict)):
+            lines.append("  A > after RESTS means your goal needs it; it says nothing of how far away it is.")
         if _purse is not None and any(_cost_marker(entry, _purse) for entry in _shown
                                       if isinstance(entry, dict)):
             lines.append("  A * after COST means you could not raise it today: "
@@ -749,10 +753,14 @@ def _why_cost(out):
 
 def _why_hours_risk(out):
     lines = []
-    lines.append("YOUR HOURS: %s%s     CALENDAR FLOOR: %s years%s     FAILURE RISK: %s"
+    lines.append("YOUR HOURS: %s%s     CALENDAR FLOOR (a minimum): %s years%s     FAILURE RISK: %s"
              % (_est(out, "founder_hours", out.get("founder_hours")), _est_tag(out, "founder_hours"),
                 _est(out, "calendar_floor_years", out.get("calendar_floor_years")),
                 _est_tag(out, "calendar_floor_years"), _pct(out.get("risk"))))
+    if out.get("earliest_completion_years") is not None:
+        lines.append("EARLIEST FINISH, no failures: %s years (around %s); the bill is paid in yearly "
+                     "instalments that reputation does not shorten"
+                     % (_fmt_num(out["earliest_completion_years"]), _fmt_num(out.get("earliest_completion_year"))))
     if out.get("attempts_already_failed"):
         lines.append("ATTEMPTS ALREADY FAILED: %d. The risk above is what the next "
                  "attempt actually faces; it was %s before anyone tried. What "
@@ -880,7 +888,13 @@ def _why_status(out):
         # so itself, so a second "MISSING PREREQUISITES: ..." line here would
         # show the same list twice, once wrapped in a sentence and once
         # bare. Show the sentence; it is the more complete of the two.
-        lines.append(_wrap(out["start_blocked_reason"], indent="  "))
+        blockers = out.get("blockers") or []
+        if blockers:
+            for blocker in blockers:
+                lines.append(_wrap("BLOCKED BY %s: %s" % (blocker["kind"].upper(), blocker["text"]),
+                                   indent="  "))
+        else:
+            lines.append(_wrap(out["start_blocked_reason"], indent="  "))
     else:
         missing = out.get("missing_prerequisites")
         direct = out.get("direct_prerequisites")

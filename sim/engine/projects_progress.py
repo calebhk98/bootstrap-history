@@ -409,6 +409,20 @@ class ProgressMixin:
                         node["yrs"] / (1.0 + self.state.household.reputation / self.CALENDAR_FLOOR_REPUTATION_SCALE))
         return floor
 
+    def payment_schedule_years(self, node_id):
+        """Years the bill takes to pay in full: it is paid in equal yearly
+        instalments over the node's nominal years, which reputation never
+        shortens."""
+        return max(1.0, self.nodes[node_id]["yrs"])
+
+    def earliest_completion_years(self, node_id):
+        """The soonest the project can finish, with no failure: the longer of
+        the calendar floor and the payment schedule, less what a running
+        attempt has already served."""
+        earliest = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
+        running = self.state.projects.active.get(node_id)
+        return max(0.0, earliest - running.get("yrs", 0.0)) if running else earliest
+
     def expected_calendar_years(self, node_id, _max_extra_attempts=500):
         """Expected calendar years to SUCCEED at node_id, counting every retry the
         dice force - not the bare calendar_floor, and not a plain geometric
@@ -454,7 +468,7 @@ class ProgressMixin:
            learning (failed_attempts is never reset) - a real, separate
            wrinkle, and the player's own choice, not the dice's.
         """
-        floor = self.calendar_floor(node_id)
+        floor = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
         projects = self.state.projects
         initial_failed_attempts = projects.failed_attempts.get(node_id, 0)
         _had_key = node_id in projects.failed_attempts

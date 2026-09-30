@@ -1,6 +1,8 @@
 # Blocked-project messages do not say which kind of blocker they are
 
-**Status:** open
+**Status:** partly
+
+The kind is classified in one place (`start_blockers`, `sim/engine/blockers.py`) and read by the start refusal, `why`, `why compact`, `stuck`, `path` and the heard-of rows of `available`. Remaining: the "calendar" kind (a floor still to serve) is not a blocker entry, and the `stuck` sentences for work in hand, raw materials and shut ventures are still their own text without a kind label.
 
 **Source:** `reports/TOP_PROBLEMS.md` item 8 (finished knowledge versus active supply or capability, inconsistently surfaced).
 
