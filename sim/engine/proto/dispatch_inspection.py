@@ -10,6 +10,7 @@ these live in a separate file).
 """
 
 from .command_registry import command
+from ..critical_path_remaining import active_years_left, remaining_critical_path_years
 from ..data import closure, topo_order
 from .economy import (_agent_capacity, _agent_changes, _agent_economy,
                       _agent_mines, _agent_portfolio, _agent_values)
@@ -110,7 +111,13 @@ def _cmd_why(sim, nodes, cmd, ended):
                        if sim.fog
                        else "no idea - nothing in the tree is spelled much "
                             "like that"))}
-    return dict(ok=True, **_node_explain(sim, nodes, node_id))
+    explained = _node_explain(sim, nodes, node_id)
+    # The floor still ahead: finished nodes count nothing, active ones what
+    # is left of them. critical_path_years stays the from-scratch floor.
+    explained["critical_path_years_remaining"] = (
+        None if sim.fog else round(remaining_critical_path_years(
+            nodes, node_id, sim.done, active_years_left(nodes, sim.active)), 1))
+    return dict(ok=True, **explained)
 
 
 

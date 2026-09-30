@@ -706,6 +706,12 @@ def _why_staff_keep_open(out):
                  "(a share of their year, not a headcount - see below)"
                  % (_fmt_num(open_staff.get("scholars")),
                     _fmt_num(open_staff.get("artisans"))))
+        foreman = out.get("specialist_foreman_to_keep_it_open")
+        if foreman:
+            lines.append("  SPECIALIST FOREMAN TO KEEP IT OPEN: %s %s FTE (generic artisans cannot "
+                     "substitute; you have %s free now)"
+                     % (_fmt_num(foreman.get("fte")), foreman.get("trade"),
+                        _fmt_num(foreman.get("free_now"))))
         if out.get("staff_to_keep_it_open_means"):
             lines.append(_wrap("  " + out["staff_to_keep_it_open_means"], indent="     "))
         if out.get("more_supervision_than_you_have_free_right_now"):
@@ -806,11 +812,16 @@ def _why_chain(out):
     lines = []
     if out.get("chain_size") is not None:
         lines.append("")
-        lines.append("STILL TO BUILD BEHIND IT: %s of %s nodes, %s of your hours, %s den, %s-year serial floor"
+        floor_left = out.get("critical_path_years_remaining")
+        if floor_left is None:
+            floor_left = out.get("critical_path_years")
+        lines.append("STILL TO BUILD BEHIND IT: %s of %s nodes, %s of your hours, %s den, "
+                 "%s-year serial floor left (%s from scratch)"
                  % (_fmt_num(out["chain_size"]),
                     _fmt_num(out.get("chain_size_counting_what_you_have_built")),
                     _fmt_num(out.get("chain_founder_hours")),
-                    _fmt_num(out.get("chain_cost")), _fmt_num(out.get("critical_path_years"))))
+                    _fmt_num(out.get("chain_cost")), _fmt_num(floor_left),
+                    _fmt_num(out.get("critical_path_years"))))
     return lines
 
 

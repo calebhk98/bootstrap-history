@@ -1,6 +1,6 @@
 # `why`'s "STILL TO BUILD BEHIND IT ... serial floor" is the whole chain's floor, not what remains
 
-**Status:** open
+**Status:** closed - `why` shows the serial floor left over unfinished nodes and the from-scratch floor separately
 
 `why point_contact_transistor` at 118 AD: "STILL TO BUILD BEHIND IT: 141 of 159 nodes, 50,300 of your hours, 52,947,564 den, 131.2-year serial floor". At 600 AD: "14 of 159 nodes, 6,020 of your hours, 30,373,084 den, 131.2-year serial floor". Done nodes show it too: `why patron_imperial` (DONE) "0 of 17 nodes ... 17-year serial floor"; `why mat_bulk_steel` (DONE) "0 of 50 nodes ... 30.5-year serial floor".
 

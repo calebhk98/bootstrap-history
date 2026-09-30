@@ -313,7 +313,7 @@ def cmd_why(args):
     for prereq_id in node_record["pre"] or ["(none, you can start this on arrival)"]:
         print("   %s" % (("%-30s %s" % (prereq_id, nodes[prereq_id]["name"])) if prereq_id in nodes else prereq_id))
     need = closure(nodes, node_id) - {node_id}
-    print("\nFULL CHAIN BEHIND IT: %d nodes, %s of your hours, %s denarii, %.0f-year serial floor"
+    print("\nFULL CHAIN BEHIND IT: %d nodes, %s of your hours, %s denarii, %.0f-year serial floor from scratch"
           % (len(need), f"{sum(nodes[descendant_id]['ph'] for descendant_id in need):,}",
              f"{sum(nodes[descendant_id]['_total_cost'] for descendant_id in need):,.0f}", critical_path(nodes, node_id)[0]))
     print("   " + ", ".join(topo_order(nodes, need)))
