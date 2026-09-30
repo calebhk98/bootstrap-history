@@ -122,6 +122,21 @@ def _staffing_warning_sentences(warnings):
     return sentences
 
 
+def _founder_age_words(out):
+    if not out.get("founder_ages"):
+        return " (you do not age)"
+    if not out.get("founder_alive"):
+        return ""
+    age, usual = out.get("founder_age"), out.get("founder_usual_age_at_death")
+    if age is None:
+        return ""
+    words = ", aged about %s" % age
+    if usual:
+        words += " (people in your place mostly die between %s and %s%s)" % (
+            usual[0], usual[1], "; you are past the middle of that" if age >= (usual[0] + usual[1]) / 2 else "")
+    return words
+
+
 def _state_founder(out):
     lines = []
     # WHETHER YOU AGE IS A FACT ABOUT THE GAME YOU ARE PLAYING, and the human
@@ -139,7 +154,7 @@ def _state_founder(out):
                 ("DEAD (aged about %s at death, in %s)"
                  % (out.get("founder_died_aged"), out.get("founder_died_in"))
                  if out.get("founder_died_aged") is not None else "DEAD"),
-                " and ageing" if out.get("founder_ages") else " (you do not age)",
+                _founder_age_words(out),
                 _fmt_num(out.get("founder_hours_available")),
                 ("   (%s of your own, plus %s deputies directing work in your "
                  "name at %s hours each)"
@@ -416,7 +431,21 @@ def _state_completed_head_lines(out):
             head.append("  DURING %s: %s" % (event.get("year"), event.get("message")))
         if out.get("stopped_early"):
             head.append("  " + out["stopped_early"])
+    if out.get("victory"):
+        head = _victory_lines(out["victory"]) + head
     return head
+
+
+def _victory_lines(victory):
+    lines = ["=" * 70, "VICTORY: %s, in %s AD, %s years after you arrived"
+             % (victory.get("goal_in_words") or "the goal", victory.get("year"), victory.get("elapsed_years"))]
+    if victory.get("points_so_far") is not None:
+        lines.append("  score so far: %s of 1000" % victory["points_so_far"])
+    if victory.get("achievements"):
+        lines.append("  achievements: " + ", ".join(victory["achievements"]))
+    lines.append(_wrap("  " + victory.get("to_see_your_score", ""), indent="  "))
+    lines.append("=" * 70)
+    return lines
 
 
 def _state_completed_head(out, lines):

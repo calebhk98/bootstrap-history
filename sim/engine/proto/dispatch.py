@@ -12,6 +12,7 @@ from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from .saveload import load_state, save_state
+from .score import victory_report
 from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
@@ -211,6 +212,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     end_year = sim.end_year
     ran = 0
     goal_before = sim.goal_snapshot()
+    goal_year_before = sim.goal_year
     route = route_nodes(sim) if years > 1 else set()
     snapshots = []
     for _ in range(years):
@@ -303,6 +305,8 @@ def _cmd_step(sim, nodes, cmd, ended):
     problems = step_problems(ran, snapshots, events, stalled_projects(sim))
     if problems:
         out["problems"] = problems
+    if goal_year_before is None and sim.goal_year is not None:
+        out["victory"] = victory_report(sim, nodes)
     if founder_died_this_step:
         out["the_founder_died_this_step"] = founder_died_this_step
     if stopped_early:

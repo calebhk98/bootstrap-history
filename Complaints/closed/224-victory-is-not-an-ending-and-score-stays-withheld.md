@@ -1,6 +1,6 @@
 # Reaching the goal under fog does not end the run, the score total stays withheld, and there is no finish-and-score action
 
-**Status:** open
+**Status:** closed
 
 The tester won (junction transistor, 399 AD) and `score` still printed "TOTAL: -- (not computable until the run ends under fog)"
 with technology coverage withheld. Winning is deliberately not an ending (`sim/engine/proto/state.py`, `_agent_end_reason`: the run continues to the

@@ -1,6 +1,6 @@
 # A mortal founder's age is never shown, the death age is arrival age plus years elapsed, and the status line reads "DEAD ... and ageing"
 
-**Status:** open
+**Status:** closed
 
 In mortal mode every `state` says "You: alive and ageing" with no number; then the founder dies "aged about 73" with no warning. After death `state` says "You: DEAD (aged about 73 at death, in 1538) and ageing, 0 founder-hours free this year". Reproduced (Mexica 1500, `--mortal --fog`, seed 1): text as quoted, every year 1500 to 1538.
 

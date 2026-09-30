@@ -1715,6 +1715,29 @@ class StepPhasesMixin:
                 self.state.household.log.append((self.state.scenario.year, "your term is served and the debt is discharged; "
                                      "you are your own man again"))
 
+    def _deputy_hours_sentence(self):
+        if self.state.household.directors_extra <= 0:
+            return "You trained no deputy to take over."
+        return ("Your deputies carry about %d hours a year, which is not enough "
+                "to take over." % round(self.deputy_hours()))
+
+    def _deputy_consequence(self):
+        if self.deputies_carry_the_work():
+            return ("Your %.1f deputies direct the work in your name and the "
+                    "programme goes on without you." % self.state.household.directors_extra)
+        return (self._deputy_hours_sentence() + " Nothing that needs your hours "
+                "can be begun again, and what you built will be forgotten over "
+                "the next twelve years unless deputies grow to carry the work.")
+
+    def _what_survived_the_dissolution(self):
+        kept = [node_id for node_id in self.state.projects.done
+                if self.corpus_is_dispersed(node_id)]
+        if kept:
+            return ("the school dispersed, but its codices survive in other "
+                    "hands (%d works of yours with them)"
+                    % len(self.state.projects.done - self.state.projects.granted))
+        return "the school dispersed and the work was forgotten"
+
     def _step_founder_mortality(self):
         # 7. founder mortality
         if self.state.founder.founder_alive:
@@ -1723,32 +1746,14 @@ class StepPhasesMixin:
                 self.state.founder.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
             if self.state.founder.life_left <= 0:
                 self.state.founder.founder_alive = False
-                # SAY WHAT IT MEANS, not only that it happened: the engine is
-                # not in fact silent about the consequence of the founder's
-                # death - deputies carry the work, and with none the
-                # programme dissolves over twelve years - but that has to
-                # be said here, in the same line, not left for the player
-                # to work out on their own.
-                _dep = self.state.household.directors_extra
-                self.state.household.log.append((self.state.scenario.year, "THE FOUNDER DIES, aged about %d. %s"
-                                 % (self.cfg["founder_arrival_age"] + self.state.scenario.year
-                                    - self.cfg["start_year"],
-                                    ("Your %.1f deputies direct the work in your "
-                                     "name and the programme goes on without you: "
-                                     "that is what training them was for."
-                                     % _dep) if _dep >= 0.5 else
-                                    "You trained no deputy, so there is nobody to "
-                                    "direct anything. Nothing that needs your "
-                                    "hours can ever be begun again, and what you "
-                                    "built will be forgotten over the next twelve "
-                                    "years unless a deputy appears. This run is "
-                                    "effectively over; 'state' shows how far you "
-                                    "got.")))
+                self.state.household.log.append(
+                    (self.state.scenario.year, "THE FOUNDER DIES, aged about %d. %s"
+                     % (self.founder_age(), self._deputy_consequence())))
         # a programme with no director is not paused, it is dissolving
-        if not self.state.founder.founder_alive and self.state.household.directors_extra < 0.5:
+        if not self.state.founder.founder_alive and not self.deputies_carry_the_work():
             self.state.projects.stalled += 1
             if self.state.projects.stalled >= self.DISSOLUTION_YEARS_BEFORE_FORGETTING:
-                losable = sorted(node_id for node_id in self.state.projects.done if node_id not in self.state.projects.granted)
+                losable = self.losable_node_ids()
                 # sorted() matters: self.state.projects.done is a SET, and a set iterates in an
                 # order that depends on PYTHONHASHSEED, so feeding it unsorted to
                 # rng.sample made the same --seed give a different answer on every
@@ -1759,18 +1764,13 @@ class StepPhasesMixin:
                         self.state.projects.operating.discard(node_id)
                         self.state.projects.done.discard(node_id)
                         self._done_changed()
-            # COUNT IT DOWN WHERE THE PLAYER CAN SEE IT: twelve years of a
-            # dissolving programme passing with nothing said but the
-            # shedding itself would read as merely unlucky rather than as
-            # the run actually being finished.
             if self.state.projects.stalled in (3, 6, 9, 11):
                 self.state.household.log.append((self.state.scenario.year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
-                                     "since the founder died with no deputy to "
-                                     "take over. What you built is being "
+                                     "since the founder died. %s What you built is being "
                                      "forgotten. The run ends at twelve."
-                                 % self.state.projects.stalled))
+                                 % (self.state.projects.stalled, self._deputy_hours_sentence())))
             if self.state.projects.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
                 self._catastrophe("the founder died without training successors; "
-                                  "the school dispersed and the work was forgotten")
+                                  + self._what_survived_the_dissolution())
         else:
             self.state.projects.stalled = 0

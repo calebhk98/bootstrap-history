@@ -309,6 +309,24 @@ def _score_achievements(sim, nodes):
     return out
 
 
+def victory_report(sim, nodes):
+    """What to show the moment the goal completes: the date, the years it took,
+    the score so far and the achievements, and how the fogged total is revealed."""
+    report = score_report(sim, nodes)
+    won = sorted(name for name, entry in (report.get("achievements") or {}).items() if entry.get("won"))
+    if report.get("total") is None:
+        how = ("type 'finish' to end the run and see the full score, or keep building; "
+               "the score is shown when the run ends")
+    else:
+        how = "type 'score' for the breakdown, or 'finish' to end the run here"
+    return {"goal_in_words": report.get("goal_in_words"),
+            "year": sim.goal_year,
+            "elapsed_years": sim.goal_year - sim.cfg["start_year"],
+            "points_so_far": report.get("points"),
+            "achievements": won,
+            "to_see_your_score": how}
+
+
 def score_report(sim, nodes):
     """The full score: the gate, the seven weighted components, the total,
     and the achievements - read by both the `score` command (any time) and

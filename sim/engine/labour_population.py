@@ -613,7 +613,7 @@ class PopulationMixin:
                     round(have / reach, 4) if reach > 1e-9 else None,
             })
         return {
-            "civilisation": self.civ.get("name", self.civ.get("id", "")),
+            "civilisation": self.civ.get("short_name", self.civ.get("name", self.civ.get("id", ""))),
             "population": round(pop),
             "reference_population_before_simulated_changes": round(reference_pop),
             "population_change_from_reference": round(scale_from_baseline - 1.0, 4),

@@ -40,7 +40,7 @@ _RENDERERS = {
     "dashboard": render_capacity, "portfolio": render_portfolio,
     "economy": render_economy, "changes": render_changes,
     "population": render_population,
-    "final": render_final, "score": render_score,
+    "final": render_final, "finish": render_final, "score": render_score,
     "start": render_start, "begin": render_start, "research": render_start,
     "build": render_start,
 }

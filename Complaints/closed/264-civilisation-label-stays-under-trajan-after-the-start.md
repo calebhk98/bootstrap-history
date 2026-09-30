@@ -1,6 +1,6 @@
 # The population screen and end screens call the civilisation "The Roman Empire under Trajan" in 361 AD and 600 AD
 
-**Status:** open
+**Status:** closed
 
 Two testers saw "The Roman Empire under Trajan" at the end of long runs. Reproduced at the start; the label is the civilisation's static `name` (`data/civilizations/rome_100ad.json`) printed by `population` ("POPULATION: The Roman Empire under Trajan") at any year. Nothing separates the scenario's starting description from the current label.
 

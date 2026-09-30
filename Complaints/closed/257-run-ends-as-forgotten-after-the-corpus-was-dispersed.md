@@ -1,6 +1,6 @@
 # The run ends "the school dispersed and the work was forgotten" one year after the students printed and dispersed the codices, and the ending does not count the dispersal
 
-**Status:** open
+**Status:** closed
 
 Run 2 (C): codices dispersed in 1549 by the founder's students (the tester's most moving moment), then the run ended in 1550 with "the school dispersed and the work was forgotten"; `open corpus_dispersed` was then refused because the run had ended.
 

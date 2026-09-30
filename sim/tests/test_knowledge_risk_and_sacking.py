@@ -308,10 +308,10 @@ check("the fixture is what it claims to be: both corpora done, neither "
       (s_fix.has("corpus_written"), s_fix.has("corpus_dispersed"),
        "corpus_written" in s_fix.operating, "corpus_dispersed" in s_fix.operating))
 _fix_losable_before = [node_id for node_id in s_fix.done
-                       if node_id not in s_fix.granted]
+                       if node_id not in s_fix.granted and not s_fix.nodes[node_id].get("win_condition")]
 check("...and its losable pool (done, non-starting, not granted) really is "
-      "1,214, the figure the rest of this check is measured against",
-      len(_fix_losable_before) == 1214, len(_fix_losable_before))
+      "1,211 once measured goals are left out, the figure the rest of this check is measured against",
+      len(_fix_losable_before) == 1211, len(_fix_losable_before))
 _fix_pl, _fix_frac, _fix_hedge = s_fix.corpus_hedge()
 check("Sim.corpus_hedge() - the one function that answers what THIS "
       "household's corpus is worth against a sacking - returns the "
@@ -333,14 +333,14 @@ s_fix._shocks(s_fix.year)
 _fix_lost = len(getattr(s_fix, "forgotten", None) or {})
 _fix_msgs = [message for _, message in s_fix.log[_before_fix_log:] if "KNOWLEDGE LOST" in message]
 check("THE CHECK THAT FAILS IF THE SACK AND `risk` EVER DISAGREE AGAIN, "
-      "run against a real player's own save: this sack takes 97 "
-      "technologies (8% of the 1,213 losable once corpus_dispersed is "
+      "run against a real player's own save: this sack takes 96 "
+      "technologies (8% of the 1,210 losable once corpus_dispersed is "
       "excluded) - the figure `risk` promised - not 267 (corpus_written's "
       "22%) and not 485 (the undefended 40% this exact save actually took "
       "before this fix, five times the loss the screen had said to "
       "expect)",
-      _fix_lost == max(1, int((len(_fix_losable_before) - 1) * 0.08)) == 97,
-      (_fix_lost, "expected 97 of 1213"))
+      _fix_lost == max(1, int((len(_fix_losable_before) - 1) * 0.08)) == 96,
+      (_fix_lost, "expected 96 of 1210"))
 check("...and the corpus that was just credited with hedging this "
       "sacking is still standing afterwards - dispersal put it beyond "
       "this one site's reach, not merely beyond this one dice roll's",

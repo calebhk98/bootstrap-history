@@ -308,6 +308,7 @@
   "literacy_elite": 0.4,
   "literacy_general": 0.03,
   "name": "The Mexica Triple Alliance",
+  "short_name": "The Mexica Triple Alliance",
   "notes": [
     "NO IRON, NO DRAUGHT ANIMALS, NO PRACTICAL WHEEL. Obsidian is sharper than steel and shatters. Every metallurgy node starts from copper and gold.",
     "Chinampa agriculture yields more per hectare than any European system, so the food constraint that shapes the Roman tree does not bind here.",

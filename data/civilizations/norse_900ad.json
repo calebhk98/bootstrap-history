@@ -167,6 +167,7 @@
   "literacy_elite": 0.15,
   "literacy_general": 0.02,
   "name": "Scandinavia in the Viking age",
+  "short_name": "Scandinavia",
   "notes": [
     "Population is 1.5 million against Rome's 65 million. You will never assemble a large workforce, so every plan must be capital-light and skill-heavy.",
     "Base reach 4: these ships already go to Greenland, the Caspian and Newfoundland. The Atlantic is not a barrier here, which flips the entire expedition branch."
