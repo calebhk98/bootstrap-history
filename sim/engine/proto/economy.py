@@ -297,7 +297,7 @@ def _mine_rows_for_material(sim, material, workings, want):
         # years has to be able to see that here, not just infer it from a
         # lower revenue somewhere else.
         actual = sim.mine_yield_t_for(working)
-        # UTILISATION: rated capacity against what is really being drawn -
+        # UTILISATION: share of what the working raises that is really drawn -
         # the question the player actually asked. Demand for this material
         # is shared across its workings in proportion to their own rated
         # capacity (the model has no finer-grained way to say which working
@@ -309,7 +309,7 @@ def _mine_rows_for_material(sim, material, workings, want):
         # asset the player asked to see.
         share = want * (working["capacity"] / total_rated) if total_rated > 0 else 0.0
         drawn = min(share, actual)
-        util = (drawn / working["capacity"]) if working["capacity"] > 0 else 0.0
+        util = (drawn / actual) if actual > 0 else 0.0
         opened = working.get("opened_year")
         rows.append({
             "material": material,
@@ -322,7 +322,7 @@ def _mine_rows_for_material(sim, material, workings, want):
             "material_demand_t_per_yr": round(want, 2),
             "costs_you_a_year": round(sim.mine_operating_cost_for(working), 1),
             "utilization": ("%d%%" % round(100.0 * util))
-                           if working["capacity"] > 0 else "-",
+                           if actual > 0 else "-",
             # WHETHER IT IS ACTUALLY SUPPLYING ANYTHING, as a plain flag,
             # not only as a percentage a reader has to interpret. A
             # tester's own question was exactly this: does the game count

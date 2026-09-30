@@ -480,6 +480,7 @@ class ElectricityMixin:
         self.household._material_demand_cache = self.annual_material_demand()
         industrial, lab = self._throttle_demand_split(self.household._material_demand_cache)
         stock = self._material_stock()
+        opening_stock = self._material_opening_stock()
         # IDEMPOTENT WHEN NOTHING HAS ACTUALLY CHANGED. protocol.py's own
         # `why` handler calls this twice in a row to build one message
         # (sim.binding, then sim.resource_throttle() again for the percentage)
@@ -541,7 +542,7 @@ class ElectricityMixin:
             # with a large generic market figure and no demand for years
             # would otherwise accumulate thousands of tonnes nobody ever
             # produced or paid for).
-            own_and_stock = stock.get(emp_key, 0.0) + self._own_material_supply(tag)
+            own_and_stock = opening_stock.get(emp_key, 0.0) + self._own_material_supply(tag)
             have = own_and_stock + self._material_market_tonnes(emp_key)
             # Lab-scale first, and unconditionally: drawn from whatever is
             # banked or flowing in this year, topped up by a direct purchase
