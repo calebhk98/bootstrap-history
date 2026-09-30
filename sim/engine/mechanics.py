@@ -142,6 +142,13 @@ class MechanicsMixin:
         """The engine constant `<prefix>_<TIER>` for a corpus node's declared tier."""
         return getattr(self, "%s_%s" % (prefix, self.mechanic(node_id, "corpus")["tier"].upper()))
 
+    def corpus_hedge_tiers(self):
+        """[(hedge node, loss chance, fraction lost)], strongest first; corpus_hedge and
+        the knowledge-loss warning both read this one rule."""
+        return [(node_id, self.corpus_tier_constant(node_id, "CORPUS_HEDGE_LOSS_CHANCE"),
+                 self.corpus_tier_constant(node_id, "CORPUS_HEDGE_FRACTION_LOST"))
+                for node_id in self.corpus_nodes_best_first()]
+
     def corpus_is_dispersed(self, node_id):
         """Whether a corpus node's copies sit beyond one site's reach (a sack cannot take them)."""
         return bool((self.mechanic(node_id, "corpus") or {}).get("dispersed"))

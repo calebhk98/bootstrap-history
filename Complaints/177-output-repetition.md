@@ -1,6 +1,6 @@
 # Screens repeat long explanations every time; completions print twice
 
-**Status:** open
+**Status:** partly - explain-once (`why`, `money`, `ventures`), single completion line, one household-wide staffing line and wrapped names done; the credit-start forecast block and the yearly "population still below trend" line still repeat
 
 - About a third of every `why` screen (14 of 41 lines at 119 AD) is the same "staff to keep it open is a share of a year, not a headcount" paragraph.
 - The "YOUR PRACTICE ... pays about a third ..." paragraph repeats on `money`, `ventures` and `help money`.

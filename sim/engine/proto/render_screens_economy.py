@@ -431,6 +431,9 @@ def render_mines(out):
                         _fmt_num(row["costs_you_a_year"]),
                         ("   " + commission_text) if commission_text else ""))
         lines.append("")
+        lines.append("  RATED: tonnes/yr sunk. ACTUAL: tonnes/yr raised now (rated, less "
+                     "depletion, times mining technology). UTIL: share of ACTUAL that "
+                     "demand draws; the rest banks into stock.")
         lines.append("  they cost %s den/yr in all, against revenue of %s"
                  % (_fmt_num(out.get("they_cost_you_a_year_in_all")),
                     _fmt_num(out.get("your_revenue_is"))))

@@ -51,7 +51,7 @@ check("...and `why` now says outright that this is a share of a year, not "
       _why_sg.get("these_are_a_share_of_their_year_not_a_headcount")
       and "not a headcount" in _why_sg["these_are_a_share_of_their_year_not_a_headcount"],
       _why_sg.get("these_are_a_share_of_their_year_not_a_headcount"))
-_vent_sg = S._agent_dispatch(s_shut, NODES, {"cmd": "ventures"})
+_vent_sg = S._agent_dispatch(s_shut, NODES, {"cmd": "ventures", "full": True})
 check("...and `ventures` - the other screen that shows venture_hands's "
       "numbers - carries the same explanation, not a different one",
       _vent_sg.get("these_are_a_share_of_their_year_not_a_headcount")

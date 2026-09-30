@@ -1,6 +1,6 @@
 # The third-century crisis erased ~150 years of progress in under 20 years
 
-**Status:** open
+**Status:** partly - warning escalates; whether loss should compound this steeply is a design question
 
 Sackings (`log find:sacked`): 235 (14.1M taken, 119 people), 242 (8.6M, 114, "8 projects back to the beginning"), 246 (3.2M, 88), 250 (1.1M, 48), 252 (0.2M, 15), 253. Technologies "built by you" fell from 91 to 21, route steps remaining from 69 to 135, net income from +1.2M to +1.2k/yr. The run then went through two insolvencies (279, 291).
 

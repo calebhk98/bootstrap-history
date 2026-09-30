@@ -1,6 +1,6 @@
 # Market information: what a player cannot see, and how many commands it takes
 
-**Status:** open
+**Status:** partly - `market` shows saturation per category, every priceable material and all wages; `why` names the goods category. Per-good sale price and demand, and `economy full` are not done
 
 - Sale price of what concerns sell, and demand for it: no command.
 - Material price: `materials` lists only materials already tracked (charcoal and firewood appeared only after I bought some); no `quote material`.

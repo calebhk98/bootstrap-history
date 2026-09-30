@@ -58,6 +58,8 @@ here, on the composition point all six inherit from, instead.
 from .projects_capability import CapabilityMixin
 from .projects_ventures import VenturesMixin
 from .projects_staffing import StaffingMixin
+from .projects_staffing_shortfall import StaffingShortfallMixin
+from .projects_venture_quotes import VentureQuotesMixin
 from .projects_starting import StartingMixin
 from .projects_progress import ProgressMixin
 from .projects_completion import CompletionMixin
@@ -65,6 +67,7 @@ from sim.constants import declare
 
 
 class ProjectsMixin(CapabilityMixin, VenturesMixin, StaffingMixin,
+                     StaffingShortfallMixin, VentureQuotesMixin,
                      StartingMixin, ProgressMixin, CompletionMixin):
     """Composition point only: every method below is defined in one of the
     six sibling modules above, not here - what IS defined directly here is
