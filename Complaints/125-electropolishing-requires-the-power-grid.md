@@ -34,3 +34,5 @@ rectifier) and keep `power_grid` as one option, not the only one. Edit the
 branch file in `data/branches/`, rebuild with `python3 sim/treetool.py merge`,
 run `python3 sim/simulator.py validate`, and add a test that the node is
 startable with a dynamo and no grid.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 183, 179; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): the tester's two transistor branches were both blocked on electropolishing's `power_grid` gate after the grid was lost; a small laboratory with working workshop power, a 3 MW hydro station and a shunt dynamo could not do chemical surface preparation. The same gate shape on zinc and the commutator is 228.

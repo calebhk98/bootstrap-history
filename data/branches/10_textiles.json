@@ -408,7 +408,14 @@
    "commerce",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "mechanics": {
+   "labour_productivity": {
+    "trade": "artisan",
+    "bonus": 0.05,
+    "order": 2
+   }
+  }
  },
  {
   "id": "tex_horizontal_loom",
@@ -479,7 +486,14 @@
   "traits": [
    "commerce",
    "labour_saving"
-  ]
+  ],
+  "mechanics": {
+   "labour_productivity": {
+    "trade": "artisan",
+    "bonus": 0.03,
+    "order": 0
+   }
+  }
  },
  {
   "id": "tex_mordanting",
@@ -743,7 +757,14 @@
    "commerce",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "mechanics": {
+   "labour_productivity": {
+    "trade": "artisan",
+    "bonus": 0.06,
+    "order": 1
+   }
+  }
  },
  {
   "id": "tex_spinning_jenny",

@@ -306,50 +306,9 @@ class GoodsMixin:
         not multiply into an implausible number.
         """
         reach = 1.0
-        if self.has("citizenship"):                reach *= self.REACH_CITIZENSHIP
-        if self.running("patron_senatorial"):      reach *= self.REACH_PATRON_SENATORIAL
-        if self.running("patron_imperial"):        reach *= self.REACH_PATRON_IMPERIAL
-        if self.running("exp_trade_route_extend"): reach *= self.REACH_TRADE_ROUTE_EXTENDED
-        if self.running("railway"):                reach *= self.REACH_RAILWAY
-        if self.running("telegraph_electric"):      reach *= self.REACH_TELEGRAPH
+        reach = self.effect_factor("reach", reach)
         return min(reach, self.REACH_CEILING)
 
-    REACH_CITIZENSHIP = declare(
-        "REACH_CITIZENSHIP", 1.15, kind="temporary_heuristic",
-        unit="multiple on market reach", source=None, confidence="D",
-        why="How much further citizenship extends a goods market's reach. "
-            "Reuses the same flag _material_market_tonnes() already reads "
-            "for the buying side, but the specific multiplier here is a "
-            "separate, tuned guess, not derived from any attested trade "
-            "network model.")
-    REACH_PATRON_SENATORIAL = declare(
-        "REACH_PATRON_SENATORIAL", 1.3, kind="temporary_heuristic",
-        unit="multiple on market reach", source=None, confidence="D",
-        why="As REACH_CITIZENSHIP, for a senatorial patron's network. "
-            "Tuned, not derived.")
-    REACH_PATRON_IMPERIAL = declare(
-        "REACH_PATRON_IMPERIAL", 1.6, kind="temporary_heuristic",
-        unit="multiple on market reach", source=None, confidence="D",
-        why="As REACH_PATRON_SENATORIAL, for the imperial tier. Tuned, not "
-            "derived.")
-    REACH_TRADE_ROUTE_EXTENDED = declare(
-        "REACH_TRADE_ROUTE_EXTENDED", 1.3, kind="temporary_heuristic",
-        unit="multiple on market reach", source=None, confidence="D",
-        why="What an extended trade route is worth to how far finished "
-            "goods can travel to buyers. Tuned, not derived.")
-    REACH_RAILWAY = declare(
-        "REACH_RAILWAY", 1.35, kind="temporary_heuristic",
-        unit="multiple on market reach", source=None, confidence="D",
-        why="What a railway is worth to market reach for goods, mirroring "
-            "the same flag's cost-side effect in mining_tech(). A real "
-            "figure would come from actual freight-cost and travel-time "
-            "reductions a railway buys, which this file does not model.")
-    REACH_TELEGRAPH = declare(
-        "REACH_TELEGRAPH", 1.15, kind="temporary_heuristic",
-        unit="multiple on market reach", source=None, confidence="D",
-        why="What the electric telegraph is worth to market reach - "
-            "information about demand and price travelling faster than "
-            "goods themselves, a real effect with an invented size here.")
     REACH_CEILING = declare(
         "REACH_CEILING", 3.0, kind="temporary_heuristic",
         unit="multiple on market reach (maximum)", source=None,
@@ -598,10 +557,14 @@ class GoodsMixin:
         economy.farm_hectares = (getattr(economy, "farm_hectares", 0.0) or 0.0) + hectares
         return hectares
 
+    def housing_price_per_place(self):
+        """What one place of worker housing costs now (`buy housing`, `quote housing`, room advice)."""
+        return self.HOUSING_COST_PER_PLACE * self.price_index
+
     def build_worker_housing(self, places):
         """Add durable worker housing and relieve household crowding."""
         places = float(places)
-        cost = places * self.HOUSING_COST_PER_PLACE * self.price_index
+        cost = places * self.housing_price_per_place()
         household = self.state.household
         if places <= 0 or cost > household.capital:
             return 0.0

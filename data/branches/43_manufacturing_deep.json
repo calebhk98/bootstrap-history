@@ -47,7 +47,14 @@
   "dev_people": 2,
   "risk": 0.15,
   "note": "Rake reduces cutting force and heat; clearance allows the tool to enter without rubbing. The tradeoff is tool strength. Geometry alone saves 30 percent power and doubles tool life.",
-  "up": 0.0
+  "up": 0.0,
+  "mechanics": {
+   "labour_productivity": {
+    "trade": "machinist",
+    "bonus": 0.06,
+    "order": 8
+   }
+  }
  },
  {
   "id": "mfg_carbon_steel_tool",
@@ -151,7 +158,14 @@
     }
    }
   ],
-  "up": 0.0
+  "up": 0.0,
+  "mechanics": {
+   "labour_productivity": {
+    "trade": "machinist",
+    "bonus": 0.15,
+    "order": 9
+   }
+  }
  },
  {
   "id": "mfg_hss_production",

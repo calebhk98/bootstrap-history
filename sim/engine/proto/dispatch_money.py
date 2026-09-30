@@ -9,7 +9,10 @@ these live in a separate file).
 """
 
 from .command_registry import command
+from .explain_once import already_explained
 from .util import _qty
+from .buy_targets import canonical_target, target_names, usage_lines
+from .quote_purchases import FLAT_QUOTERS
 from .. import purchase_rule
 
 
@@ -49,8 +52,7 @@ def _cmd_bounty(sim, nodes, cmd, ended):
     if node_id in sim.active:
         return {"ok": False, "error": "%s is already active; stop it first if you want "
                                       "to switch to a bounty instead" % node_id}
-    price = (nodes[node_id]["_total_cost"] * 2.5 * sim.civ_cost_factor(node_id)
-             * sim.material_cost_factor(node_id) * sim.cost_money_factor())
+    price = sim.bounty_price(node_id)
     if not sim.post_bounty(node_id):
         return {"ok": False, "error": "cannot afford the bounty: needs about %.0f denarii, "
                                       "you have %.0f. Earn or wait, then try again" % (price, sim.capital)}
@@ -118,7 +120,7 @@ def _buy_material(sim, cmd, quantity):
     if got <= 0:
         return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
     return {"ok": True, "material": material, "bought_tonnes": got,
-            "stock_on_hand_tonnes": sim.material_stock_t(material),
+            "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
             "capital": round(sim.capital, 1)}
 
 
@@ -199,24 +201,15 @@ def _buy_manumit(sim, cmd, quantity):
     return {"ok": True, "manumitted": got, "freedmen": sim.freedmen, "slaves": sim.slaves}
 
 
-# Dispatch over what is being bought: one small handler per kind, keyed by
-# every spelling this command must match. Same pattern as
-# _parse_command_body's own table - see that one's docstring for why a
-# dict beats a long if/elif chain here too.
+# One handler per canonical target in buy_targets.BUY_TARGETS; every
+# spelling of a target reaches its handler through canonical_target.
 _BUY_HANDLERS = {
     "forest": _buy_forest,
     "nitre": _buy_nitre,
-    "nitre_bed": _buy_nitre,
-    "saltpetre": _buy_nitre,
-    "nitre beds": _buy_nitre,
     "farm": _buy_farm,
-    "food": _buy_farm,
     "housing": _buy_housing,
-    "houses": _buy_housing,
-    "trade_school": _buy_school,
-    "trade school": _buy_school,
+    "school": _buy_school,
     "material": _buy_material,
-    "stock": _buy_material,
     "mine": _buy_mine,
     "slaves": _buy_slaves,
     "manumit": _buy_manumit,
@@ -225,10 +218,8 @@ _BUY_HANDLERS = {
 
 @command("buy", group="money",
          summary="farmland, housing, schools, stock, forest, nitre, mines, slaves",
-         usage=["buy forest <ha>", "buy nitre <m2>", "buy farm <ha>", "buy housing <n>",
-                "buy school <trade> <n>", "buy material <name> <tonnes>",
-                "buy mine <material> <tonnes_per_year>", "buy slaves <n>", "buy manumit <n>"],
-         options={"what": "forest, nitre, farm, housing, school, material, mine, slaves or manumit",
+         usage=usage_lines(),
+         options={"what": ", ".join(target_names()),
                   "n": "the amount"},
          description="Spends capital on durable things. Ask the price first with quote. "
                      "See the economy topic for what each one does.")
@@ -249,9 +240,9 @@ def _cmd_buy(sim, nodes, cmd, ended):
     if not (quantity > 0):
         return {"ok": False,
                 "error": "n must be greater than zero, got %g. Nothing was changed." % quantity}
-    handler = _BUY_HANDLERS.get(what)
+    handler = _BUY_HANDLERS.get(canonical_target(what))
     if handler is None:
-        return {"ok": False, "error": "what must be one of: forest, farm, housing, trade school, material, mine, slaves, manumit"}
+        return {"ok": False, "error": "what must be one of: " + ", ".join(target_names())}
     return handler(sim, cmd, quantity)
 
 
@@ -270,7 +261,7 @@ def _cmd_sell(sim, nodes, cmd, ended):
     if sold <= 0:
         return {"ok": False, "error": "you have none of that material stock to sell"}
     return {"ok": True, "material": material, "sold_tonnes": sold,
-            "stock_on_hand_tonnes": sim.material_stock_t(material),
+            "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
             "capital": round(sim.capital, 1)}
 
 
@@ -298,6 +289,8 @@ def _cmd_money(sim, nodes, cmd, ended):
     _standing_fixed = (_standing_upkeep + _standing_living
                        - _standing_prepaid + sim.mine_operating_cost())
     _ramp, _prac = sim.still_ramping(), sim.practice_note()
+    if _prac and already_explained(sim, "practice", cmd):
+        _prac = sim.practice_note(brief=True)
     _mkt = sim.goods_market_summary()
     # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):
     # material_price_factor() responds for every material a node
@@ -309,6 +302,10 @@ def _cmd_money(sim, nodes, cmd, ended):
             "capital": round(sim.capital, 1),
             "revenue": round(sim.revenue(), 1),
             "where_the_money_comes_from": sim.revenue_sources(),
+            **({"wage_work_this_year": sim.wage_work_this_year()}
+               if sim.wage_work_this_year() else {}),
+            **({"wage_work_last_year": sim.state.household.wage_work_last_year}
+               if sim.state.household.wage_work_last_year else {}),
             **({"still_building_up_custom": _ramp} if _ramp else {}),
             **({"about_your_own_practice": _prac} if _prac else {}),
             **({"materials_costing_you_a_premium": _mat_mkt} if _mat_mkt else {}),
@@ -377,17 +374,17 @@ def _cmd_money(sim, nodes, cmd, ended):
 
 @command("quote", group="money", aliases=("price", "cost"),
          summary="what something costs before you commit",
-         usage=["quote mine <material> <tonnes_per_year>"],
-         options={"what": "mine (and other buy targets)", "material": "the material",
+         usage=[usage.replace("buy ", "quote ", 1) for usage in usage_lines()],
+         options={"what": "any buy target: " + ", ".join(target_names()), "material": "the material",
                   "n": "the amount"},
          description="Prices a purchase without making it.")
 def _cmd_quote(sim, nodes, cmd, ended):
-    what = (cmd.get("what") or "mine").strip().lower()
+    what = canonical_target(cmd.get("what") or "mine") or ""
     # EVERYTHING YOU CAN BUY, NOT JUST MINES: any purchase command with no
     # price shown anywhere, no way to ask for one, and no market to sell
     # it back into risks spending far more than intended. `quote` has to
     # cover every counter, not just one.
-    if what in ("forest", "coppice", "woodland"):
+    if what == "forest":
         n_f, err_f = _qty(cmd, "n", 100)
         if err_f:
             return {"ok": False, "error": err_f}
@@ -403,7 +400,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                     "%.2f tonnes of charcoal, sustainably" % sim.CHARCOAL_PER_HA,
                 "note": "Coppice is bought once and yields every year after. "
                         "There is no market to sell it back into."}
-    if what in ("nitre", "nitre_bed", "saltpetre"):
+    if what == "nitre":
         n_n, err_n = _qty(cmd, "n", 10000)
         if err_n:
             return {"ok": False, "error": err_n}
@@ -421,7 +418,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                         "turned for a couple of years. Cheap by the metre "
                         "and thin by the metre, so beds are laid in "
                         "thousands of square metres, not hundreds."}
-    if what in ("slaves", "people"):
+    if what == "slaves":
         n_s, err_s = _qty(cmd, "n", 1)
         if err_s:
             return {"ok": False, "error": err_s}
@@ -449,10 +446,16 @@ def _cmd_quote(sim, nodes, cmd, ended):
                         "they are worth nothing to you for the first few "
                         "years while they learn the work. Freeing them "
                         "afterwards makes them worth more, not less."}
+    if what in FLAT_QUOTERS:
+        quantity, err = _qty(cmd, "n", 1)
+        if err:
+            return {"ok": False, "error": err}
+        return FLAT_QUOTERS[what](sim, cmd, quantity)
     if what != "mine":
         return {"ok": False,
-                "error": "you can quote a mine, a forest or people: "
-                         "quote mine coal 500, quote forest 100, quote slaves 5"}
+                "error": "quote works for everything buy does: " + ", ".join(target_names())
+                         + ". For example: quote mine coal 500, quote farm 20, "
+                           "quote material iron 10"}
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err}

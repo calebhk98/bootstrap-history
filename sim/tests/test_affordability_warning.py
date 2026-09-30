@@ -99,12 +99,15 @@ _agg = r_units.get("total_committed_across_active_work")
 check("...but starting the second foundation on top of the first DOES warn "
       "about what both together have committed you to",
       _agg is not None, r_units)
+# Materials due at the start are paid then (into stock), so what is still
+# owed plus what left the purse for materials is the two projects' full cost.
 check("...naming the true combined total (both projects' own cost_left), "
       "not just this one project's bill",
-      _agg and abs(_agg["you_have_promised"] - (_sci_cost + _units_cost)) < 1.0,
+      _agg and abs(_agg["you_have_promised"] + (_purse - s.capital)
+                   - (_sci_cost + _units_cost)) < 1.0,
       _agg)
 check("...against what is actually held right now, not a padded estimate",
-      _agg and abs(_agg["you_currently_hold"] - _purse) < 1.0, _agg)
+      _agg and abs(_agg["you_currently_hold"] - s.capital) < 1.0, _agg)
 check("...and the credit this combination is likely to draw is bigger than "
       "the single-project on_credit forecast alone suggested",
       _agg and _agg["likely_to_draw_on_credit_between_them"]

@@ -28,8 +28,12 @@ def help_topic(name, aliases=()):
 JSON_MODE_NOTE = (
     "add the word 'json' to almost any command (or \"json\":true in a JSON "
     "command) to get its reply as the raw structured object instead of the "
-    "rendered screen; 'compact' implies 'json' and, on 'why', 'state' and "
-    "'stuck', adds a small shared set of blocked/explanation fields")
+    "rendered screen. 'compact' implies 'json' but is a short summary, not the "
+    "full reply: 'state' and 'step' give year, money, net_per_year, "
+    "founder_hours_free, projects (id, name, blocker), concerns (running, "
+    "shut), standing, danger, goal, nearest_goal_blocker (and, for 'step', "
+    "completed, lost and events); 'why' gives status, blocked_by and "
+    "explanation; 'stuck' gives blockers. Other commands ignore 'compact'")
 
 
 def _command_text(name, fog):
@@ -220,7 +224,7 @@ def _topic_economy(sim):
                           "a purchase from the live deficit plus 20% headroom."),
             "buy farm": "buy farm 120 lowers staple costs through productive land",
             "buy housing": "buy housing 5 adds five durable worker places",
-            "buy trade school": "buy school smith 2 makes two more smiths' worth "
+            "buy school": "buy school smith 2 makes two more smiths' worth "
                                 "of annual labour locally available",
             "materials": "materials shows durable stock and flow; buy material "
                          "iron 10 or sell iron 5 trades tonnes at current prices",

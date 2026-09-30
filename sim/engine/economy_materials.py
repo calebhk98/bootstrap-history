@@ -51,6 +51,7 @@ from . import commodities as _commod
 from sim.constants import declare
 from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
+from .project_materials import tonnes_per_unit
 
 
 class MaterialSupplyMixin:
@@ -267,15 +268,37 @@ class MaterialSupplyMixin:
         resolve; importantly, this subsystem no longer opens or interprets
         that legacy file independently.
         """
-        held = frozenset(self.state.projects.done)
+        projects = self.state.projects
+        stamp = (getattr(projects, "_done_ver", 0), len(projects.done))
         cached = getattr(self, "_material_prices_cache", None)
+        # the same done set object at the same version and size: no need to
+        # rebuild and compare the frozenset on every lookup
+        if cached is not None and cached[2] == stamp and cached[3] is projects.done:
+            return cached[1]
+        held = frozenset(projects.done)
         if cached is None or cached[0] != held:
             from .data import calculated_goods_prices
             prices = calculated_goods_prices(
                 held, civilization_id=self.civ.get("id"),
                 money_per_labour_hour=self.money_per_labour_hour())
-            cached = self._material_prices_cache = (held, prices)
-        return cached[1]
+        else:
+            prices = cached[1]
+        self._material_prices_cache = (held, prices, stamp, projects.done)
+        return prices
+
+    def _done_memo(self, name, key, compute):
+        """`compute()` remembered per (name, key) while the done set is
+        unchanged; for answers that depend only on what is built."""
+        projects = self.state.projects
+        stamp = (getattr(projects, "_done_ver", 0), len(projects.done))
+        memo = getattr(self, "_done_memo_store", None)
+        if memo is None or memo[0] != stamp or memo[1] is not projects.done:
+            memo = self._done_memo_store = (stamp, projects.done, {})
+        table = memo[2]
+        entry = (name, key)
+        if entry not in table:
+            table[entry] = compute()
+        return table[entry]
 
     def _book_price_per_kg(self, tag):
         """Denarii/kg for a raw material key (for example aluminium_kg) from
@@ -326,6 +349,10 @@ class MaterialSupplyMixin:
         return (cid, "mine:" + cid)
 
     def _generic_national_output_t_per_yr(self, tag):
+        return self._done_memo("national_output", tag,
+                               lambda: self._generic_national_output_uncached(tag))
+
+    def _generic_national_output_uncached(self, tag):
         """National output for a commodity/material this file has no
         curated resources.json figure for - the MARKET half of supply (see
         _material_market_tonnes). Prefers real data over a guess wherever
@@ -352,6 +379,10 @@ class MaterialSupplyMixin:
                    min(self.GENERIC_OUTPUT_CEILING_T_PER_YR, out))
 
     def _generic_market_share(self, tag):
+        return self._done_memo("market_share", tag,
+                               lambda: self._generic_market_share_uncached(tag))
+
+    def _generic_market_share_uncached(self, tag):
         """What fraction of _generic_national_output_t_per_yr an ordinary
         buyer (no special standing) can reach, for a commodity/material
         MARKET_SHARE has no curated figure for. Same two-tier preference as
@@ -503,8 +534,17 @@ class MaterialSupplyMixin:
         if cache is not None and cache[0] == cache_key:
             return cache[1].copy()
 
+        # progress on a project bumps the active version without changing which
+        # projects are active; the demand depends only on which are active
+        active_keys = tuple(projects.active_keys_sorted())
+        keyed = getattr(self, "_annual_mat_demand_keys", None)
+        if (cache is not None and keyed is not None
+                and keyed[0] == active_keys and keyed[1] == cache_key[1]):
+            self.household._annual_mat_demand_cache = (cache_key, cache[1])
+            return cache[1].copy()
+
         demand = collections.Counter()
-        for node_id in projects.active_keys_sorted():
+        for node_id in active_keys:
             node = self.nodes[node_id]
             span = max(1.0, float(node.get("build_yrs") or node.get("yrs") or 1.0))
             coke = self.chosen_fuel(node_id) == "coke"
@@ -516,6 +556,21 @@ class MaterialSupplyMixin:
         # A furnace does not eat charcoal only while it is being built. It eats
         # charcoal every year it runs, forever. Omitting that was why forest
         # ownership never mattered in the model and always mattered in reality.
+        for material, amount in self._standing_material_terms():
+            demand[material] += amount
+        self.household._annual_mat_demand_cache = (cache_key, demand)
+        self._annual_mat_demand_keys = (active_keys, cache_key[1])
+        return demand.copy()
+
+    def _standing_material_terms(self):
+        """(material, tonnes per year) for every finished installation that
+        keeps drawing material, in done order; depends only on what is done."""
+        projects = self.state.projects
+        version = getattr(projects, "_done_ver", 0)
+        cached = getattr(self, "_standing_terms_cache", None)
+        if cached is not None and cached[0] == version and cached[1] is projects.done:
+            return cached[2]
+        terms = []
         for node_id in self.done_in_order():
             node = self.nodes[node_id]
             if node["up"] <= 0 or not node["mat"]:
@@ -524,12 +579,12 @@ class MaterialSupplyMixin:
             coke = self.chosen_fuel(node_id) == "coke"
             for material, quantity in sorted(node["mat"].items()):
                 if coke and material in ("charcoal_kg", "firewood_kg"):
-                    demand["coal_kg"] += (self.STANDING_MATERIAL_DRAW_SHARE * float(quantity)
-                                           * self.COKE_PER_CHARCOAL / span / KILOGRAMS_PER_TONNE)
+                    terms.append(("coal_kg", (self.STANDING_MATERIAL_DRAW_SHARE * float(quantity)
+                                              * self.COKE_PER_CHARCOAL / span / KILOGRAMS_PER_TONNE)))
                     continue
-                demand[material] += self.STANDING_MATERIAL_DRAW_SHARE * float(quantity) / span / KILOGRAMS_PER_TONNE
-        self.household._annual_mat_demand_cache = (cache_key, demand)
-        return demand.copy()
+                terms.append((material, self.STANDING_MATERIAL_DRAW_SHARE * float(quantity) / span / KILOGRAMS_PER_TONNE))
+        self._standing_terms_cache = (version, projects.done, terms)
+        return terms
 
     STANDING_MATERIAL_DRAW_SHARE = declare(
         "STANDING_MATERIAL_DRAW_SHARE", 0.5, kind="temporary_heuristic",
@@ -655,9 +710,9 @@ class MaterialSupplyMixin:
         # imperial property. Charcoal is exempt because no amount of standing
         # makes a bulky crumbling fuel travel further than it can travel.
         if emp_key != "charcoal":
-            if self.running("patron_imperial"):     share *= self.MARKET_STANDING_PATRON_IMPERIAL
-            elif self.running("patron_senatorial"): share *= self.MARKET_STANDING_PATRON_SENATORIAL
-            elif self.has("citizenship"):       share *= self.MARKET_STANDING_CITIZENSHIP
+            favour = self.effect_best("market_standing")
+            if favour is not None:
+                share *= favour[1]["factor"]
             share = min(share, self.MARKET_STANDING_SHARE_CEILING)
         # GEOLOGY, NOT DEMOGRAPHY: mineral availability must scale with
         # mineral_scale() - the regions this civilization actually holds
@@ -672,33 +727,11 @@ class MaterialSupplyMixin:
         market = national * share * scale
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
         # This is the single most useful thing in the geography file.
-        if emp_key == "saltpetre" and self.running("exp_trade_route_extend"):
-            market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
+        for node_id in self.nodes_with_mechanic("supplies_material_by_sea_route"):
+            if emp_key in self.mechanic(node_id, "supplies_material_by_sea_route")["materials"] and self.running(node_id):
+                market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
         return market
 
-    MARKET_STANDING_PATRON_IMPERIAL = declare(
-        "MARKET_STANDING_PATRON_IMPERIAL", 6.0, kind="temporary_heuristic",
-        unit="multiple on buyable market share", source=None,
-        confidence="D",
-        why="How much further an imperial patron's standing opens the "
-            "market for a tracked material, on the reasoning that the "
-            "fiscus itself becomes a supplier and the metalla were largely "
-            "imperial property. The direction is a real institutional "
-            "fact; the sixfold size is tuned game balance, not derived "
-            "from any attested imperial-supply share.")
-    MARKET_STANDING_PATRON_SENATORIAL = declare(
-        "MARKET_STANDING_PATRON_SENATORIAL", 2.5, kind="temporary_heuristic",
-        unit="multiple on buyable market share", source=None,
-        confidence="D",
-        why="As MARKET_STANDING_PATRON_IMPERIAL, for a senatorial patron - "
-            "buying through their agents rather than the fiscus itself. "
-            "Tuned, not derived.")
-    MARKET_STANDING_CITIZENSHIP = declare(
-        "MARKET_STANDING_CITIZENSHIP", 1.4, kind="temporary_heuristic",
-        unit="multiple on buyable market share", source=None,
-        confidence="D",
-        why="What plain citizenship, with no patron at all, is worth over "
-            "a stranger buying at the margin. Tuned, not derived.")
     MARKET_STANDING_SHARE_CEILING = declare(
         "MARKET_STANDING_SHARE_CEILING", 0.60, kind="temporary_heuristic",
         unit="fraction of national output (maximum, any buyer)",
@@ -859,9 +892,17 @@ class MaterialSupplyMixin:
                 economy.capacity_pool[key] = economy.capacity_pool.get(key, 0.0) + stock.pop(key)
         return stock
 
-    def capacity_reserves(self):
-        """Operational hours and abstract capacities, never tradable stock."""
-        return self.state.economy.capacity_pool
+    def _material_opening_stock(self):
+        """Stock as it stood when this year's accounting began. Every recompute
+        of the year works from this snapshot (plus trades made since), so the
+        year's own output is banked once however often it is recomputed."""
+        economy = self.state.economy
+        year = self.state.scenario.year
+        record = economy._material_stock_opening
+        if not record or record.get("year") != year:
+            record = economy._material_stock_opening = {
+                "year": year, "tonnes": dict(self._material_stock())}
+        return record["tonnes"]
 
     def material_stock_t(self, emp_key):
         """Tonnes of `emp_key` currently banked - the STOCK half of stock vs
@@ -886,24 +927,31 @@ class MaterialSupplyMixin:
         per_kg = self._book_price_per_kg(material)
         if per_kg is None:
             return None
-        buy = per_kg * KILOGRAMS_PER_TONNE * self.price_index * self.material_price_factor(material)
-        return {"material": material, "buy_per_tonne": buy,
+        emp_key = self._material_tag(material)[0]
+        buy = (per_kg / tonnes_per_unit(material) * self.price_index
+               * self.material_price_factor(emp_key))
+        return {"material": material, "stock_key": emp_key, "buy_per_tonne": buy,
                 "sell_per_tonne": buy * self.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
-                "market_available_tonnes_per_year": self._material_market_tonnes(material)}
+                "market_available_tonnes_per_year": self._material_market_tonnes(emp_key)}
 
     def buy_material_stock(self, material, tonnes):
+        """Buy a material at the market: the price climbs as the order is
+        filled, and the order is cut to what the market sells in a year."""
         quote = self.material_trade_quote(material)
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:
             return 0.0
-        # The market figure is an annual flow ceiling, not an infinite shop.
         tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
-        cost = tonnes * quote["buy_per_tonne"]
+        if tonnes <= 0:
+            return 0.0
+        cost = self.material_purchase_cost(quote["material"], tonnes)[0]
         household = self.state.household
-        if tonnes <= 0 or not purchase_rule.can_pay(self, cost):
+        if not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
-        self._material_stock()[quote["material"]] += tonnes
+        opening = self._material_opening_stock()
+        self._material_stock()[quote["stock_key"]] += tonnes
+        opening[quote["stock_key"]] = opening.get(quote["stock_key"], 0.0) + tonnes
         household._stock_throttle_sig = None
         return tonnes
 
@@ -912,10 +960,12 @@ class MaterialSupplyMixin:
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:
             return 0.0
-        sold = min(tonnes, self.material_stock_t(quote["material"]))
+        sold = min(tonnes, self.material_stock_t(quote["stock_key"]))
         if sold <= 0:
             return 0.0
-        self._material_stock()[quote["material"]] -= sold
+        opening = self._material_opening_stock()
+        self._material_stock()[quote["stock_key"]] -= sold
+        opening[quote["stock_key"]] = opening.get(quote["stock_key"], 0.0) - sold
         self.state.household.add_capital(sold * quote["sell_per_tonne"])
         self.state.household._stock_throttle_sig = None
         return sold

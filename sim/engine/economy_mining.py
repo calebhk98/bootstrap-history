@@ -223,10 +223,11 @@ class MiningMixin:
         comment for why a pump or a railway belongs on THIS side of the
         ledger and not only on cost)."""
         state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
-        if self.running("patron_imperial"):     base = self.MINE_CEILING_BASE_IMPERIAL + self.MINE_CEILING_STATE_SCALE_IMPERIAL * state_capacity
-        elif self.running("patron_senatorial"): base = self.MINE_CEILING_BASE_SENATORIAL + self.MINE_CEILING_STATE_SCALE_SENATORIAL * state_capacity
-        elif self.has("citizenship"):       base = self.MINE_CEILING_BASE_CITIZEN + self.MINE_CEILING_STATE_SCALE_CITIZEN * state_capacity
-        else:                               base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
+        favour = self.effect_best("mine_ceiling")
+        if favour is not None:
+            base = favour[1]["base"] + favour[1]["state_scale"] * state_capacity
+        else:
+            base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
         base *= 1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE, max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII)
         geo = self.mineral_scale(mat)
         yld, _cost = self.mining_tech(mat)
@@ -248,24 +249,6 @@ class MiningMixin:
         why="How much further a more capable state extends the imperial-"
             "tier ceiling. Tuned, not derived from any state-capacity "
             "output relationship.")
-    MINE_CEILING_BASE_SENATORIAL = declare(
-        "MINE_CEILING_BASE_SENATORIAL", 9000.0, kind="temporary_heuristic",
-        unit="tonnes/year (base)", source=None, confidence="D",
-        why="As MINE_CEILING_BASE_IMPERIAL, for the senatorial-patron tier.")
-    MINE_CEILING_STATE_SCALE_SENATORIAL = declare(
-        "MINE_CEILING_STATE_SCALE_SENATORIAL", 20000.0, kind="temporary_heuristic",
-        unit="tonnes/year per unit of state_capacity", source=None,
-        confidence="D",
-        why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the senatorial tier.")
-    MINE_CEILING_BASE_CITIZEN = declare(
-        "MINE_CEILING_BASE_CITIZEN", 6000.0, kind="temporary_heuristic",
-        unit="tonnes/year (base)", source=None, confidence="D",
-        why="As MINE_CEILING_BASE_IMPERIAL, for a citizen with no patron.")
-    MINE_CEILING_STATE_SCALE_CITIZEN = declare(
-        "MINE_CEILING_STATE_SCALE_CITIZEN", 8000.0, kind="temporary_heuristic",
-        unit="tonnes/year per unit of state_capacity", source=None,
-        confidence="D",
-        why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the citizen tier.")
     MINE_CEILING_BASE_STRANGER = declare(
         "MINE_CEILING_BASE_STRANGER", 3000.0, kind="temporary_heuristic",
         unit="tonnes/year (base)", source=None, confidence="D",
@@ -445,104 +428,29 @@ class MiningMixin:
     # railway are independent improvements, not alternatives.
     # Mechanical (water-wheel or animal) mine drainage - the first tier of the
     # pumping problem the class comment describes.
-    MINING_TECH_YIELD_MET_MINE_PUMPING = declare(
-        "MINING_TECH_YIELD_MET_MINE_PUMPING", 1.4, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH_COST_MET_MINE_PUMPING = declare(
-        "MINING_TECH_COST_MET_MINE_PUMPING", 0.85, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
     # The Newcomen atmospheric engine, built specifically to drain flooding coal
     # and tin workings - a later, stronger tier on the same drainage problem as
     # met_mine_pumping, compounding with it.
-    MINING_TECH_YIELD_STEAM_ATMOSPHERIC = declare(
-        "MINING_TECH_YIELD_STEAM_ATMOSPHERIC", 1.6, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH_COST_STEAM_ATMOSPHERIC = declare(
-        "MINING_TECH_COST_STEAM_ATMOSPHERIC", 0.65, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
     # Black-powder blasting breaks rock faster per man-hour; it does not put new
     # ore in the ground, so cost only, no yield term.
-    MINING_TECH_YIELD_MET_BLACK_POWDER_BLASTING = declare(
-        "MINING_TECH_YIELD_MET_BLACK_POWDER_BLASTING", 1.0, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH_COST_MET_BLACK_POWDER_BLASTING = declare(
-        "MINING_TECH_COST_MET_BLACK_POWDER_BLASTING", 0.85, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
     # Dynamite blasting, a stronger version of the same black-powder effect; cost
     # only, no yield term.
-    MINING_TECH_YIELD_MET_DYNAMITE_BLASTING = declare(
-        "MINING_TECH_YIELD_MET_DYNAMITE_BLASTING", 1.0, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH_COST_MET_DYNAMITE_BLASTING = declare(
-        "MINING_TECH_COST_MET_DYNAMITE_BLASTING", 0.65, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
     # Rotary drilling speeds face advance; cost only, no yield term, the same
     # reasoning as blasting.
-    MINING_TECH_YIELD_PWR_ROTARY_DRILLING = declare(
-        "MINING_TECH_YIELD_PWR_ROTARY_DRILLING", 1.0, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH_COST_PWR_ROTARY_DRILLING = declare(
-        "MINING_TECH_COST_PWR_ROTARY_DRILLING", 0.8, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
     # A railway creates REACH, not extraction efficiency: ore too far from a
     # market to be worth carting becomes worth lifting once a railway can move it
     # - a yield (economically-reachable tonnage) effect, not a per-tonne cost
     # effect, reused from goods_reach_factor()'s own self.running("railway")
     # check.
-    MINING_TECH_YIELD_RAILWAY = declare(
-        "MINING_TECH_YIELD_RAILWAY", 1.3, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH_COST_RAILWAY = declare(
-        "MINING_TECH_COST_RAILWAY", 1.0, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH = {
-        'met_mine_pumping': {"yield": MINING_TECH_YIELD_MET_MINE_PUMPING, "cost": MINING_TECH_COST_MET_MINE_PUMPING},
-        'steam_atmospheric': {"yield": MINING_TECH_YIELD_STEAM_ATMOSPHERIC, "cost": MINING_TECH_COST_STEAM_ATMOSPHERIC},
-        'met_black_powder_blasting': {"yield": MINING_TECH_YIELD_MET_BLACK_POWDER_BLASTING, "cost": MINING_TECH_COST_MET_BLACK_POWDER_BLASTING},
-        'met_dynamite_blasting': {"yield": MINING_TECH_YIELD_MET_DYNAMITE_BLASTING, "cost": MINING_TECH_COST_MET_DYNAMITE_BLASTING},
-        'pwr_rotary_drilling': {"yield": MINING_TECH_YIELD_PWR_ROTARY_DRILLING, "cost": MINING_TECH_COST_PWR_ROTARY_DRILLING},
-        'railway': {"yield": MINING_TECH_YIELD_RAILWAY, "cost": MINING_TECH_COST_RAILWAY},
-    }
+    # MINING_TECH: each technology's yield/cost multipliers are its node's `mining_tech` mechanic.
     # The first step of cheap steel making low-grade ore worth digging - iron did
     # not change how ore comes out of the ground, it changed whether digging it
     # was worth doing at all (see the class comment above); for coal, the same
     # entry represents a cheap-steel industry becoming a coking-coal customer
     # large enough to justify the pit, drainage and rail spur a smaller demand
     # would not.
-    MINING_TECH_STEEL_YIELD_BLAST_FURNACE = declare(
-        "MINING_TECH_STEEL_YIELD_BLAST_FURNACE", 1.3, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH_STEEL_COST_BLAST_FURNACE = declare(
-        "MINING_TECH_STEEL_COST_BLAST_FURNACE", 0.85, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
     # Bessemer/open-hearth bulk steel, the second and further step of the same
     # effect as blast_furnace, further from ore than the last.
-    MINING_TECH_STEEL_YIELD_MAT_BULK_STEEL = declare(
-        "MINING_TECH_STEEL_YIELD_MAT_BULK_STEEL", 1.3, kind="temporary_heuristic",
-        unit="dimensionless multiple on extractable tonnage",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH_STEEL_COST_MAT_BULK_STEEL = declare(
-        "MINING_TECH_STEEL_COST_MAT_BULK_STEEL", 0.75, kind="temporary_heuristic",
-        unit="dimensionless multiple on cost per tonne/year",
-        source=None, confidence="D", why="How much this technology raises what a working can pull from the same deposit ('yield') and lowers the cost of sinking or running a tonne/year of capacity ('cost'). The MECHANISM and its direction are real historical claims, argued in the class comment above (a pump makes flooded ore reachable, blasting breaks rock faster, a railway makes distant ore worth lifting); the SPECIFIC multiplier is an invented, plausible size for that effect, not fitted to any output record for a specific mine or technology.")
-    MINING_TECH_STEEL = {
-        'blast_furnace': {"yield": MINING_TECH_STEEL_YIELD_BLAST_FURNACE, "cost": MINING_TECH_STEEL_COST_BLAST_FURNACE},
-        'mat_bulk_steel': {"yield": MINING_TECH_STEEL_YIELD_MAT_BULK_STEEL, "cost": MINING_TECH_STEEL_COST_MAT_BULK_STEEL},
-    }
 
     def mining_tech(self, mat):
         """(yield_mult, cost_mult) technology has bought this material's
@@ -553,13 +461,10 @@ class MiningMixin:
         book yield is a real historical claim, thirty times is the
         abolished unobtainable category with its sign flipped."""
         yield_mult, cost_mult = 1.0, 1.0
-        techs = self.MINING_TECH
-        if mat in ("iron", "coal"):
-            techs = dict(techs, **self.MINING_TECH_STEEL)
-        for node in sorted(techs):
-            if self.running(node):
-                yield_mult *= techs[node]["yield"]
-                cost_mult *= techs[node]["cost"]
+        for node_id, spec in self._effect_terms("mining_tech"):
+            if self.running(node_id) and mat in spec.get("materials", (mat,)):
+                yield_mult *= spec["yield"]
+                cost_mult *= spec["cost"]
         return min(yield_mult, self.MINING_TECH_YIELD_CEILING), max(self.MINING_TECH_COST_FLOOR, cost_mult)
 
     MINING_TECH_YIELD_CEILING = declare(

@@ -797,6 +797,16 @@ class ForwardingPropertiesMixin:
 		self.state._fog = bool(value)
 
 	@property
+	def fuzzy_estimates(self):
+		return self.state._fuzzy_estimates
+
+	@fuzzy_estimates.setter
+	def fuzzy_estimates(self, value):
+		self.state._fuzzy_estimates = bool(value)
+		if value and not self.state._fuzzy_salt:
+			self.state._fuzzy_salt = self.rng.getrandbits(30) + 1
+
+	@property
 	def goal(self):
 		return self.state._goal
 

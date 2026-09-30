@@ -605,6 +605,3 @@ class Ledger:
         taken = min(have, kilograms)
         self._stock[commodity_id] -= taken
         return taken
-
-    def on_hand(self, commodity_id: str) -> float:
-        return self._stock[commodity_id]

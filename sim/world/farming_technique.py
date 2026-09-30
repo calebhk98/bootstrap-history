@@ -15,23 +15,19 @@ Technique = collections.namedtuple("Technique", ["crop", "rotation", "toolkit"])
 DEFAULT_TECHNIQUE = Technique(
     agriculture.DEFAULT_CROP, agriculture.DEFAULT_ROTATION, agriculture.DEFAULT_TOOLKIT)
 
-# Which table entry each technology brings.
-ROTATION_TECHNOLOGIES = {
-    "crop_rotation": agriculture.THREE_FIELD,
-    "fud_three_field_rotation": agriculture.THREE_FIELD,
-}
-TOOLKIT_TECHNOLOGIES = {
-    "horse_collar": agriculture.HORSE_COLLAR_AND_MOULDBOARD,
-    "fud_heavy_mouldboard_plough_coulter": agriculture.HORSE_COLLAR_AND_MOULDBOARD,
-    "fud_mechanical_reaper": agriculture.MECHANICAL_REAPER,
-    "ag2_reaper": agriculture.MECHANICAL_REAPER,
-}
-CROP_TECHNOLOGIES = {
-    "mat_newworld_crops": agriculture.POTATOES,
-}
 
-TECHNIQUE_TECHNOLOGY_IDS = tuple(sorted(
-    set(ROTATION_TECHNOLOGIES) | set(TOOLKIT_TECHNOLOGIES) | set(CROP_TECHNOLOGIES)))
+
+def entries_by_axis(declarations):
+    """Group technology declarations into {axis: {node id: table entry}}.
+
+    A declaration is {"axis": "rotation"|"toolkit"|"crop", "entry": <name of an
+    entry in sim.world.agriculture>}, taken from a node's `farming_technique`.
+    """
+    grouped = {"rotation": {}, "toolkit": {}, "crop": {}}
+    for node_id, declaration in declarations.items():
+        grouped[declaration["axis"]][node_id] = getattr(agriculture, declaration["entry"])
+    return grouped
+
 
 # Which way is "better" for each numeric field, per table.
 _BETTER_IS_LOWER = {
@@ -80,15 +76,17 @@ def _axis(default, table, adoption):
     return _best_per_field(entries) if entries else default
 
 
-def technique_from_adoption(adoption):
-    """Technique for `adoption`: technology id -> adopted share (0..1)."""
+def technique_from_adoption(adoption, declarations):
+    """Technique for `adoption` (technology id -> adopted share, 0..1), given the
+    technologies' `farming_technique` declarations (node id -> declaration)."""
+    entries = entries_by_axis(declarations)
     crop = DEFAULT_TECHNIQUE.crop
-    for node_id in sorted(CROP_TECHNOLOGIES):
-        crop = _blend(crop, CROP_TECHNOLOGIES[node_id], adoption.get(node_id, 0.0))
+    for node_id in sorted(entries["crop"]):
+        crop = _blend(crop, entries["crop"][node_id], adoption.get(node_id, 0.0))
     return Technique(
         crop,
-        _axis(DEFAULT_TECHNIQUE.rotation, ROTATION_TECHNOLOGIES, adoption),
-        _axis(DEFAULT_TECHNIQUE.toolkit, TOOLKIT_TECHNOLOGIES, adoption))
+        _axis(DEFAULT_TECHNIQUE.rotation, entries["rotation"], adoption),
+        _axis(DEFAULT_TECHNIQUE.toolkit, entries["toolkit"], adoption))
 
 
 def hours_per_hectare(technique):

@@ -58,6 +58,7 @@ def cmd_agent(args):
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + args.horizon
     sim.fog = bool(getattr(args, "fog", False))
+    sim.fuzzy_estimates = bool(getattr(args, "fuzzy_estimates", False))
     sim.revealed = set()
     pretty = bool(getattr(args, "pretty", False))
 

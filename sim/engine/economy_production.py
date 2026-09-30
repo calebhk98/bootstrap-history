@@ -55,7 +55,7 @@ class ProductionMixin:
             "proportionate rather than derived from anything.")
 
     def state_funding(self):
-        if not self.running("patron_imperial"):
+        if not self.running_with_mechanic("state_funding"):
             return 0.0
         return (self.STATE_FUNDING_BASE * self.state.economy.economy * self.state_capacity
                 * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
@@ -284,27 +284,10 @@ class ProductionMixin:
             "profit) and, per the comment above, deliberately less than a "
             "2x markup. Chosen to make the mechanism function at all, not "
             "measured against any real workshop's margins.")
-    WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS = declare(
-        "WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS", 0.35,
-        kind="temporary_heuristic", unit="extra output denarii per denarius of wages",
-        source=None, confidence="D",
-        why="How much interchangeable parts (a real productivity-raising "
-            "technology) raises the workshop markup. The DIRECTION is a "
-            "real historical claim; the SIZE is tuned game feel, not "
-            "derived from any attested productivity gain from "
-            "interchangeability specifically.")
-    WORKSHOP_MARKUP_BONUS_POWER_GRID = declare(
-        "WORKSHOP_MARKUP_BONUS_POWER_GRID", 0.45, kind="temporary_heuristic",
-        unit="extra output denarii per denarius of wages", source=None,
-        confidence="D",
-        why="As WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS, for electrical "
-            "power - larger because electrification is judged the bigger "
-            "productivity jump of the two, a judgement call rather than a "
-            "measurement.")
 
     def workshop_output(self):
         """What your standing staff produces and sells, over and above projects."""
-        if not (self.running("workshop_first") or self.running("school_founded")):
+        if not self.running_with_mechanic("workshop_site"):
             return 0.0
         household = self.state.household
         craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
@@ -316,8 +299,7 @@ class ProductionMixin:
         wage += ((household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE)
                  * self.base_annual_wage("artisan"))
         mark = self.WORKSHOP_WAGE_MARKUP_BASE
-        if self.running("interchangeable_parts"):  mark += self.WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS
-        if self.running("power_grid"):             mark += self.WORKSHOP_MARKUP_BONUS_POWER_GRID
+        mark = self.effect_sum("workshop_markup", mark)
         # AND EVERYTHING YOU KNOW HOW TO DO, which is where the value of a
         # capability actually shows up.
         #
@@ -435,14 +417,12 @@ class ProductionMixin:
                 ramp = self.PRACTICE_SHARE
             else:
                 ramp = self.venture_ramp(node_id)
-            amt = self.concern_takings(node_id, ramp)
             if practice:
-                amt *= self.practice_attention()
+                amt = self.concern_takings(node_id, ramp) * self.practice_attention()
             else:
-                # SAME FACTOR revenue() APPLIES, so this row and the total it
-                # is supposed to add up to do not silently disagree - see the
-                # "the ledger's parts add up to the revenue it states" check.
-                amt *= self.goods_market_factor(node_id)
+                # The figure `ventures` and `why` print, and the factor
+                # revenue() applies, so the ledger's parts add up to its total.
+                amt = self.venture_real_earnings(node_id)
             if amt > 0.5:
                 rows[node_id] = round(amt, 1)
         # ALL OF IT, OR SAY WHAT IS MISSING: a ledger that shows only the
@@ -528,8 +508,9 @@ class ProductionMixin:
                    " and %d more" % (len(young) - 6) if len(young) > 6 else "",
                    young[0][1] * 100, self.cfg["revenue_ramp_years"]))
 
-    def practice_note(self):
-        """Why the practice pays less than the tree quotes, said once, plainly."""
+    def practice_note(self, brief=False):
+        """Why the practice pays less than the tree quotes, said once, plainly.
+        `brief` is the one-line form for screens that already explained it."""
         # ONLY WHAT THE LEDGER ACTUALLY SHOWS. Naming rows that were dropped
         # for being under half a denarius invites the reader to look for them.
         economy = self.state.economy
@@ -539,6 +520,10 @@ class ProductionMixin:
                       if self.nodes[node_id]["rev"] * scale > 0.5)
         if not prac:
             return None
+        if brief:
+            return ("%s %s your own practice, paid at about a third of what "
+                    "the tree quotes ('money full' says why)."
+                    % (", ".join(prac[:4]), "is" if len(prac) == 1 else "are"))
         return ("%s %s your own practice, and %s about a third of what the tree "
                 "quotes for the trade: the difference between one person in a "
                 "rented room and an organised concern. That gap does not close "
@@ -700,7 +685,8 @@ class ProductionMixin:
         _units = (self.institution_units(node_id) if node_id in self.state.projects.operating else 1.0) \
             if node_id in self.SCALABLE_INSTITUTIONS else 1.0
         upkeep_amount = node["up"] * _units
-        if node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0:
+        if (node_id not in self.CAPABILITY_INSTITUTIONS or upkeep_amount <= 0
+                or self.mechanic(node_id, "upkeep_full")):
             return upkeep_amount
         places = self.institution_places(node_id) * _units
         if places <= 0:
@@ -709,86 +695,11 @@ class ProductionMixin:
         return upkeep_amount * (self.INSTITUTION_FLOOR
                      + (1.0 - self.INSTITUTION_FLOOR) * used)
 
-    _INSTITUTION_PLACES_WHY = (
-        "Roughly how many people one unit of this institution is built "
-        "to support, for institution_upkeep()'s enrolment-scaled "
-        "billing. Read off labour.py's STAFF_CAPACITY_SOURCES table "
-        "(outside this file's scope) by hand, mostly as that row's "
-        "'sc'+'ar' staffing columns - not a strict, checked formula, so "
-        "the two tables can drift apart if one changes without the "
-        "other; a real fix would derive institution_places() FROM "
-        "STAFF_CAPACITY_SOURCES directly instead of copying a number "
-        "read off it.")
-    INSTITUTION_PLACES_WORKSHOP_FIRST = declare(
-        "INSTITUTION_PLACES_WORKSHOP_FIRST", 12.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_SCHOOL_FOUNDED = declare(
-        "INSTITUTION_PLACES_SCHOOL_FOUNDED", 34.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_ACADEMY_NETWORK = declare(
-        "INSTITUTION_PLACES_ACADEMY_NETWORK", 120.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_FREEDMAN_STAFF = declare(
-        "INSTITUTION_PLACES_FREEDMAN_STAFF", 10.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_COLLEGIUM_LICENSED = declare(
-        "INSTITUTION_PLACES_COLLEGIUM_LICENSED", 3.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_PATRON_SENATORIAL = declare(
-        "INSTITUTION_PLACES_PATRON_SENATORIAL", 10.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_PATRON_IMPERIAL = declare(
-        "INSTITUTION_PLACES_PATRON_IMPERIAL", 64.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_ENDOWMENT_LAND = declare(
-        "INSTITUTION_PLACES_ENDOWMENT_LAND", 14.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_CORPUS_DISPERSED = declare(
-        "INSTITUTION_PLACES_CORPUS_DISPERSED", 8.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_INTERCHANGEABLE_PARTS = declare(
-        "INSTITUTION_PLACES_INTERCHANGEABLE_PARTS", 44.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
     # Read off STAFF_CAPACITY_SOURCES (labour.py) the same way
     # every other row here is: a unit's ar+di, so a chain store
     # with three people in it is not billed as though every
     # branch were already fully staffed.
-    INSTITUTION_PLACES_FIN_COMPANY_TOWN = declare(
-        "INSTITUTION_PLACES_FIN_COMPANY_TOWN", 20.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source="labour.py STAFF_CAPACITY_SOURCES row for "
-               "fin_company_town: ar=20.0, di=0.0.",
-        confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_FIN_CHAIN_STORE = declare(
-        "INSTITUTION_PLACES_FIN_CHAIN_STORE", 34.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source="labour.py STAFF_CAPACITY_SOURCES row for "
-               "fin_chain_store: ar=30.0, di=4.0.",
-        confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES = {
-        'workshop_first': INSTITUTION_PLACES_WORKSHOP_FIRST,
-        'school_founded': INSTITUTION_PLACES_SCHOOL_FOUNDED,
-        'academy_network': INSTITUTION_PLACES_ACADEMY_NETWORK,
-        'freedman_staff': INSTITUTION_PLACES_FREEDMAN_STAFF,
-        'collegium_licensed': INSTITUTION_PLACES_COLLEGIUM_LICENSED,
-        'patron_senatorial': INSTITUTION_PLACES_PATRON_SENATORIAL,
-        'patron_imperial': INSTITUTION_PLACES_PATRON_IMPERIAL,
-        'endowment_land': INSTITUTION_PLACES_ENDOWMENT_LAND,
-        'corpus_dispersed': INSTITUTION_PLACES_CORPUS_DISPERSED,
-        'interchangeable_parts': INSTITUTION_PLACES_INTERCHANGEABLE_PARTS,
-        'fin_company_town': INSTITUTION_PLACES_FIN_COMPANY_TOWN,
-        'fin_chain_store': INSTITUTION_PLACES_FIN_CHAIN_STORE,
-    }
+    # People one unit supports: each institution's `institution_places` mechanic.
     INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD = declare(
         "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD", 250.0,
         kind="temporary_heuristic", book_money=True, unit="denarii of upkeep per head",
@@ -812,6 +723,7 @@ class ProductionMixin:
         apart. Anything absent is sized by its own upkeep at about a wage a
         head, the right order for a building whose cost is its people.
         """
-        if node_id in self.INSTITUTION_PLACES:
-            return self.INSTITUTION_PLACES[node_id]
+        places = self.mechanic(node_id, "institution_places")
+        if places is not None:
+            return places["flat"]
         return max(1.0, self.nodes[node_id]["up"] / self.INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD)

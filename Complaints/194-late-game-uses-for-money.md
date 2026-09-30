@@ -1,0 +1,20 @@
+# Request: things a very rich founder can spend on
+
+**Status:** partly - fifteen ordinary works in data/branches/56_benefactions.json (schools, library, research foundation, hospital, water works, harbour, telegraph, games, temple, patronage, house bank, underwriting, grain dole, state subsidy, expedition) act through existing mechanics; museums, newspapers, gambling houses, colonies, paying off a state's debt outright and electric city lighting remain (they exist only as businesses with no effect, or as no node)
+
+Late in a run the founder holds tens to hundreds of millions of denarii with little to buy: research is paced by prerequisites and calendar floors, so idle cash only raises confiscation risk. The surplus itself is intended (advancing the whole society earns far more than working for yourself); what is missing is uses for it.
+
+Stakeholder request: add what very wealthy people and companies have actually done with money through history, as ordinary data-driven works (nodes or purchasable works using the node `mechanics` field, see data/branches/MECHANICS.md), each acting through the normal rules (literacy, health, reputation, protection, state favour, society values, demand, labour), not through special cases. Examples to choose from:
+
+- Endowments: schools, universities, libraries, museums, hospitals, observatories, research prizes and foundations.
+- Public works: aqueducts, baths, roads, bridges, ports, lighthouses, canals, railways, telegraph and telephone networks, electric lighting for a city.
+- Patronage and display: public games and festivals, theatres, sports arenas, temples, monuments, patronage of artists and scholars.
+- Commerce and finance: banks, insurance, joint-stock companies, gambling houses, newspapers.
+- Grants to the state: grain doles, funding the army or navy, paying off public debt (buying protection and favour).
+- Expeditions: exploration, colonies, trade missions.
+
+Many should be repeatable or scalable, cost upkeep, and be at risk from the same hazards as the rest of the household. Keep content in data so mods can add more.
+
+**Also reported (England 1300 fog playtest, `Complaints/reports/playtest-england-1300-fog-triage.md`):** things the tester would spend late money on: intermediate education institutions (212), partial knowledge hedges such as deposited copies and paid scribes (213), opening ventures in other towns (215), patronage of translations and university chairs, and relief from debt-service pressure (214). Lead metallurgy at 1375 was the one project money could not yet pay for, and the tester asked whether costs keep scaling faster than income in the second half. The "rich" lifestyle cost was praised as wealth having a running cost.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 53, 157, 167, 172, 180; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): with cash at 140 billion and more, the tester's list of money sinks: fleet hulls and charter (227), nationwide school and clinic rollout with coverage targets, disaster reconstruction and relief, safety upgrades, endowments with chosen beneficiaries, branches and provincial expansion (see 215), political settlements, and a hydro station (research bill 5 million, 3 MW, opening 0.8 million against net 8.7 billion, which read as pocket change). `buy housing` was praised as the one simple, useful sink but does not involve site or commute choices.

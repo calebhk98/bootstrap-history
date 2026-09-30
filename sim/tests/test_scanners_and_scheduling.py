@@ -416,13 +416,14 @@ check("`score` is reachable through the real JSON protocol, not only "
 _s_nogoal = sim()
 _s_nogoal.year = _s_nogoal.cfg["start_year"] + _s_nogoal.cfg["horizon_years"]
 _rep_nogoal = _SCORE(_s_nogoal, NODES)
-check("a run that ends without the goal gets 'no score: the goal was not "
-      "reached', not a number",
-      _rep_nogoal["total"] is None
-      and _rep_nogoal["no_score"] == "the goal was not reached",
+check("a run that ends without the goal still gets its total, flagged "
+      "goal not reached",
+      _rep_nogoal["total"] is not None and _rep_nogoal["points"] is not None
+      and _rep_nogoal["goal_not_reached"] == "goal not reached",
       _rep_nogoal["total"])
-check("...and the rendered ending screen says so in the same words",
-      "no score: the goal was not reached" in _RSCORE(_rep_nogoal),
+check("...and the rendered ending screen shows the total with the flag",
+      "TOTAL: " in _RSCORE(_rep_nogoal) and "goal not reached" in _RSCORE(_rep_nogoal)
+      and "TOTAL: --" not in _RSCORE(_rep_nogoal),
       _RSCORE(_rep_nogoal))
 
 # --- MID-RUN: inspectable before the goal is reached, clearly provisional,
@@ -432,7 +433,7 @@ _rep_mid = _SCORE(_s_mid, NODES)
 check("mid-run, before the goal and before the horizon, `score` still "
       "shows every component - what you are optimising, not only what you "
       "already won",
-      _rep_mid["total"] is None and not _rep_mid["goal_reached"]
+      _rep_mid["total"] is not None and not _rep_mid["goal_reached"]
       and all(component.get("raw") is not None for component in _rep_mid["components"].values()),
       _rep_mid["components"].keys())
 check("...and says the goal has not been reached YET, not that it never "
@@ -610,9 +611,10 @@ check("...and it is printed on the rendered score screen too, not only in "
       "the JSON a script would read",
       "1000 points" in _RF(_final_sc) or "/ 1000" in _RF(_final_sc),
       _RF(_final_sc)[:400])
-check("a run with no score at all (goal never reached) has no points "
-      "either - nothing invented to fill a number in",
-      _rep_nogoal.get("points") is None, _rep_nogoal.get("points"))
+check("a run that missed the goal has a points figure too, the same "
+      "rescaled total",
+      _rep_nogoal.get("points") == round(_rep_nogoal["total"] * 1000),
+      _rep_nogoal.get("points"))
 # PERFECT SCORE NEVER EXCEEDS 1000. Every component clamps its own
 # normalized figure to [0, 1] before SCORE_WEIGHTS (which sum to exactly
 # 1.0 - checked above) are applied, so there is no way to push `total`

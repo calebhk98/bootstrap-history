@@ -20,18 +20,23 @@ from sim.constants import declare
 
 class StartingMixin:
     def initialize_project(self, node_id, *, ph_left=None, spent=0.0,
-                           cost_left=None, include_labor=True):
+                           cost_left=None, include_labor=True, bill=None):
         """Create and register one consistently-shaped active project."""
         if node_id not in self.nodes:
             raise ValueError("unknown project %s" % node_id)
         if node_id in self.state.projects.active:
             raise ValueError("project %s is already active" % node_id)
         node = self.nodes[node_id]
+        if cost_left is None:
+            bill = self.settle_project_materials(node_id)
+            cost_left = bill
         record = dict(
             ph_left=float(node["ph"] if ph_left is None else ph_left),
             yrs=0.0, spent=float(spent),
-            cost_left=float(self.project_cost(node_id) if cost_left is None else cost_left),
+            cost_left=float(cost_left),
             status="ACTIVE")
+        if bill is not None:
+            record["bill"] = float(bill)
         if include_labor:
             record["lab_left"] = dict(node["lab"])
         self.state.projects.active[node_id] = record
@@ -197,35 +202,25 @@ class StartingMixin:
             "make it. Tuned so a bounty is a genuine but expensive "
             "shortcut, not measured against any real prize-versus-wage "
             "ratio.")
-    BOUNTY_FOUNDER_HOURS_SHARE = declare(
-        "BOUNTY_FOUNDER_HOURS_SHARE", 0.35, kind="temporary_heuristic",
-        unit="fraction of the node's founder-hours still owed",
-        source=None, confidence="D",
-        why="A bounty saves the founder most, not all, of their own hours "
-            "on the work - some direction and oversight is still needed, "
-            "which is why this is 0.35 rather than 0.0 ('save 65% of your "
-            "own hours', this method's own docstring). Tuned split, not "
-            "measured.")
-
     def post_bounty(self, node_id):
-        """Pay well over the odds, save 65% of your own hours, gain visibility."""
+        """Pay well over the odds so someone else does the work; gain visibility."""
         node = self.nodes[node_id]
         # BOUNTY_PRICE_MULTIPLIER x the cost THIS society would actually
         # incur, not x an abstract base: applying the multiplier to a base
         # cost that ignores the civilization and price factors the build
         # applies would make `bounty` quote a wildly different price than
         # `why` does for the same node.
-        price = (node["_total_cost"] * self.BOUNTY_PRICE_MULTIPLIER * self.civ_cost_factor(node_id)
-                 * self.material_cost_factor(node_id) * self.cost_money_factor())
+        price = self.bounty_price(node_id)
         household = self.state.household
         projects = self.state.projects
         if price > household.capital:
             return False
         household.costCapital(price)
         household.bounties_paid += 1
-        self.initialize_project(
-            node_id, ph_left=node["ph"] * self.BOUNTY_FOUNDER_HOURS_SHARE,
-            spent=price, cost_left=0.0, include_labor=False)
+        # The prize pays for all the work: no poster hours, no hired trades.
+        self.initialize_project(node_id, ph_left=0.0, spent=price, cost_left=0.0,
+                                include_labor=False)
+        projects.active[node_id]["lab_left"] = {}
         projects.bountied.add(node_id)
         # A public prize makes you conspicuous - and that is what `scandal`
         # and `eminence` measure; see core.py's note on scandal.
@@ -457,7 +452,7 @@ class StartingMixin:
                                'know how, so restoring it is cheaper than '
                                'starting over: {"cmd":"restore","id":"%s"} for '
                                "about %.0f denarii"
-                               % (node_id, self.project_cost(node_id) * self.RESTORE_COST_SHARE_OF_BUILD)) if _why else None)
+                               % (node_id, self.reopen_fee(node_id, self.reopen_units(node_id)))) if _why else None)
             return False, ("already done" if _why else None)
         return None
 
@@ -573,11 +568,22 @@ class StartingMixin:
     # in the optimizer's own start loop would let a person at the keyboard
     # be frozen out on paper while carrying on borrowing and starting
     # things regardless.
+    def _cash_covers_start(self, node_id):
+        """True when cash in hand pays for this start on top of what work in hand still owes."""
+        projects = self.state.projects
+        price = self.project_cost(node_id)
+        price -= min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
+        owed = sum(projects.active[active_id].get("cost_left") or 0.0
+                   for active_id in sorted(projects.active))
+        return owed + price <= self.state.household.capital
+
     def _check_credit_frozen(self, node_id, node, ignore_trade, _memo, _why):
         scenario_year = self.state.scenario.year
         household = self.state.household
         credit_frozen = household.credit_frozen_until or 0
         if scenario_year < credit_frozen:
+            if self._cash_covers_start(node_id):
+                return None
             # SAY IF IT WILL NEVER LIFT IN TIME: a freeze date past the
             # run's own horizon is not a date, it is the end of the run
             # wearing a date's clothes.
@@ -739,7 +745,10 @@ class StartingMixin:
         # log, no mutation: see its own docstring) but it can call
         # is_visible() on a prerequisite chain, which is another recursive
         # descent nobody needs when only the boolean was asked for.
-        if state_interest_score < self.STATE_WARY_THRESHOLD and not self.running("patron_local"):
+        wary_patron = self.approval_patron("wary")
+        opposed_patron = self.approval_patron("opposed")
+        if (wary_patron and state_interest_score < self.STATE_WARY_THRESHOLD
+                and not self.running(wary_patron)):
             # NAME THE NODE, by the word you would type: a description like
             # "get at least a local patron first" with no id given leaves a
             # player unable to connect it to `patron_local`, even while it
@@ -755,17 +764,17 @@ class StartingMixin:
             # reveal.
             return False, (("the state is wary of this (state interest %.1f); "
                            "%s"
-                           % (state_interest_score, self._patron_advice("patron_local",
+                           % (state_interest_score, self._patron_advice(wary_patron,
                                                       "a local patron's name "
                                                       "behind you")))
                            if _why else None)
-        if state_interest_score < self.STATE_OPPOSED_THRESHOLD and not (
-                self.running("patron_senatorial")
+        if opposed_patron and state_interest_score < self.STATE_OPPOSED_THRESHOLD and not (
+                self.running(opposed_patron)
                 or self.state.household.protection > self.STATE_OPPOSITION_PROTECTION_OVERRIDE):
             return False, (("the state actively opposes this (state interest "
                            "%.1f); %s, or protection above %.2f (you have "
                            "%.2f)"
-                           % (state_interest_score, self._patron_advice("patron_senatorial",
+                           % (state_interest_score, self._patron_advice(opposed_patron,
                                                       "patronage at the very "
                                                       "top"),
                               self.STATE_OPPOSITION_PROTECTION_OVERRIDE,
@@ -850,6 +859,9 @@ class StartingMixin:
         # commit past cash but not past what cash plus credit can carry
         price = self.project_cost(node_id)
         projects = self.state.projects
+        refusal = self.project_material_upfront_refusal(node_id)
+        if refusal:
+            return refusal
         # money already sunk into this node comes off the bill
         paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
         price -= paid_now
@@ -883,10 +895,13 @@ class StartingMixin:
         refusal = self.start_refusal(node_id)
         if refusal:
             return False, refusal
-        price = self.project_cost(node_id)
         projects = self.state.projects
         household = self.state.household
         scenario_year = self.state.scenario.year
+        # Materials due now are bought (and banked as stock) first; what
+        # is left is the bill paid in instalments.
+        bill = self.settle_project_materials(node_id)
+        price = bill
         _paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
         price -= _paid_now
         node = self.nodes[node_id]
@@ -908,7 +923,7 @@ class StartingMixin:
         # founder-hours and (wrongly) concludes the hired-labour total must be
         # nearly done too. Setting the real total here, before any of that
         # runs, is what fixed it.
-        self.initialize_project(node_id, spent=_already, cost_left=price)
+        self.initialize_project(node_id, spent=_already, cost_left=price, bill=bill)
         # A genuinely instantaneous capability should not need an otherwise
         # empty annual turn merely to trip the completion check in step().
         # Keep anything with money, labour, risk, or a calendar floor on the

@@ -64,7 +64,8 @@ class HazardsMixin:
                     strength *= 1.0 - self.civ_diffusion(node)
             if strength > 0.0:
                 mult *= (1.0 - share * strength)
-                why.append(label if strength >= 1.0 else label + " (lapsed)")
+                why.append(label if strength >= 1.0 else
+                           "%s (lapsed: %s is closed)" % (label, self.nodes[node]["name"]))
         if kind == "output_factor":
             war_relief, reason = self._military_war_relief()
             if reason:
@@ -587,10 +588,12 @@ class HazardsMixin:
             household = self.state.household
             _people_before = (household.scholars + household.artisans
                               + sum(household.employees.values()))
+            _staff_before = self.staff_snapshot()
             household.scholars *= (1 - loss); household.artisans *= (1 - loss)
             for trade in list(household.employees):
                 household.employees[trade] *= (1 - loss)
             household.directors_extra *= (1 - loss)
+            self.log_staff_reduction(hazard.get("name", "a plague"), _staff_before)
             # Cash goes with the trade that stopped.
             cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE)
             self._apply_population_mortality_shock(raw)
@@ -670,9 +673,11 @@ class HazardsMixin:
                     + sum(household.employees.values()))
         _act0 = len(projects.active)
         self.lose_capital(self.SACK_CAPITAL_LOSS)
+        _staff_before = self.staff_snapshot()
         household.artisans *= self.SACK_STAFF_RETENTION; household.scholars *= self.SACK_STAFF_RETENTION
         for trade in list(household.employees):
             household.employees[trade] *= self.SACK_STAFF_RETENTION
+        self.log_staff_reduction("the sack of a site", _staff_before)
         household.directors_extra *= self.SACK_DIRECTORS_RETENTION
         for node_id in sorted(projects.active):
             projects.active[node_id]["ph_left"] = self.nodes[node_id]["ph"]
@@ -714,7 +719,7 @@ class HazardsMixin:
         projects = self.state.projects
         losable = sorted(node_id for node_id in projects.done
                          if node_id not in projects.granted
-                         and node_id != "corpus_dispersed")
+                         and not self.corpus_is_dispersed(node_id))
         if losable:
             drop = rng.sample(losable, max(1, int(len(losable) * frac)))
             _lost = projects.forgotten
@@ -735,8 +740,7 @@ class HazardsMixin:
         """
         # Name what was lost, not just the count.
         _named = sorted(drop)
-        _corpus = [tech_id for tech_id in ("corpus_written",
-                               "corpus_dispersed")
+        _corpus = [tech_id for tech_id in self.nodes_with_mechanic("corpus")
                    if tech_id in drop]
         # Report impact on goal road: how many lost nodes were on the path.
         _on_road = 0
@@ -756,7 +760,7 @@ class HazardsMixin:
                ", ".join(_named[:8])
                + (" and %d more" % (len(_named) - 8)
                   if len(_named) > 8 else ""),
-               "" if _hedge_before == "corpus_dispersed"
+               "" if _hedge_before == self.best_corpus_node()
                else " (the corpus was never printed and "
                     "dispersed)",
                ". THE CORPUS ITSELF WENT (%s): your hedge "
@@ -927,7 +931,7 @@ class HazardsMixin:
         founder = self.state.founder
         household = self.state.household
         last_patron_death = founder.last_patron_death
-        if (rng.random() < self.PATRON_DEATH_ANNUAL_CHANCE and self.running("patron_local")
+        if (rng.random() < self.PATRON_DEATH_ANNUAL_CHANCE and self.running_with_mechanic("patron_mortal")
                 and (last_patron_death is None or year - last_patron_death > self.PATRON_DEATH_COOLDOWN_YEARS)):
             founder.last_patron_death = year
             household.scandal += self.PATRON_DEATH_SCANDAL

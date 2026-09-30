@@ -3,6 +3,7 @@
 import json
 
 from . import command_registry
+from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
 
@@ -237,8 +238,36 @@ def _parse_bare_command(command, rest, words, nums, want_json):
     """A command that takes no arguments at all and always produces the same
     one-key dict, {"cmd": command}. Covers what were eight separate,
     identical original branches: money, values, materials, quit, score,
-    ventures, mines, stuck, capacity."""
+    ventures, mines, stuck, capacity. `money full` repeats the explanations
+    otherwise shown once."""
+    if command == "money" and "full" in [str(word).lower() for word in rest]:
+        return {"cmd": command, "full": True}, None
     return {"cmd": command}, None
+
+
+def _parse_ventures(command, rest, words, nums, want_json):
+    # 'ventures limit:50 offset:20' pages the shut-concern list like 'log'.
+    out = {"cmd": "ventures"}
+    if "full" in [str(word).lower() for word in rest]:
+        out["full"] = True
+    low = [word.lower() for word in _absorb_key_colons(rest, (), ("limit", "offset"))]
+    i = 0
+    while i < len(low):
+        i, matched = _log_consume_limit_or_offset(out, low, i)
+        if not matched:
+            i += 1
+    return out, None
+
+
+def _parse_market(command, rest, words, nums, want_json):
+    out = {"cmd": "market"}
+    low = [word.lower() for word in _absorb_key_colons(rest, (), ("limit", "offset"))]
+    i = 0
+    while i < len(low):
+        i, matched = _log_consume_limit_or_offset(out, low, i)
+        if not matched:
+            i += 1
+    return out, None
 
 
 def _parse_sell(command, rest, words, nums, want_json):
@@ -639,10 +668,13 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
     # does that, because resolving under fog has to filter candidates by
     # what the player has actually heard of, which needs the live Sim this
     # function does not have.
-    want = " ".join(rest)
+    # `why <id> full` repeats the explanations that are otherwise shown once.
+    full = command == "why" and len(rest) > 1 and str(rest[-1]).lower() == "full"
+    want = " ".join(rest[:-1] if full else rest)
     if want not in NODE_IDS:
         want = NODE_IDS_LOWER.get(want.lower(), want)
-    return {"cmd": command, "id": want}, None
+    return ({"cmd": command, "id": want, "full": True} if full
+            else {"cmd": command, "id": want}), None
 
 
 def _parse_withdraw(command, rest, words, nums, want_json):
@@ -714,7 +746,10 @@ def _parse_work_or_commission(command, rest, words, nums, want_json):
                       "'%s smith 200'." % (command, command))
     if not nums:
         return None, "%s needs a number of hours, e.g. '%s %s 200'." % (command, command, words[0])
-    return {"cmd": command, "trade": words[0].lower(), "hours": nums[0]}, None
+    out = {"cmd": command, "trade": words[0].lower(), "hours": nums[0]}
+    if command == "work" and any(str(word).lower() == "preview" for word in list(words) + list(rest)):
+        out["preview"] = True
+    return out, None
 
 
 def _parse_train(command, rest, words, nums, want_json):
@@ -744,6 +779,8 @@ def _parse_buy_or_quote(command, rest, words, nums, want_json):
     # not only the first - dropping it would fail every documented
     # three-word buy with an error that lists the material the player
     # just typed.
+    if len(words) > 1 and [word.lower() for word in words[:2]] == ["trade", "school"]:
+        words = words[1:]
     out = {"cmd": command, "what": words[0].lower()}
     if len(words) > 1:
         out["material"] = words[1].lower()
@@ -753,10 +790,7 @@ def _parse_buy_or_quote(command, rest, words, nums, want_json):
     # protocol wants it spelled out as a mine in a mineral.
     if out["what"] in ("nitre", "saltpetre", "nitre_bed"):
         out["what"] = "nitre"
-    elif out["what"] not in ("forest", "farm", "food", "housing", "houses",
-                             "trade_school", "material", "stock",
-                             "slaves", "mine", "mines", "people",
-                             "manumit", "manumission", "free"):
+    elif canonical_target(out["what"]) is None:
         out["material"], out["what"] = out["what"], "mine"
     if out["what"] == "mines":
         out["what"] = "mine"
@@ -813,6 +847,19 @@ def _parse_allocate(command, rest, words, nums, want_json):
     return out, None
 
 
+def _parse_priority(command, rest, words, nums, want_json):
+    if not rest:
+        return {"cmd": "priority"}, None
+    out = {"cmd": "priority", "id": words[0]}
+    if len(words) > 1 and words[1].lower() in ("first", "top", "last", "bottom"):
+        out["position"] = "first" if words[1].lower() in ("first", "top") else "last"
+    elif nums:
+        out["position"] = int(nums[0])
+    else:
+        out["position"] = "first"
+    return out, None
+
+
 def _parse_policy(command, rest, words, nums, want_json):
     if not rest:
         return {"cmd": "policy"}, None
@@ -827,6 +874,27 @@ def _parse_policy(command, rest, words, nums, want_json):
     else:
         return None, "say 'on' or 'off', e.g. 'policy auto_hire off'."
     return {"cmd": "policy", "set": {rest[0].lower(): flag}}, None
+
+
+def _parse_keep(command, rest, words, nums, want_json):
+    if not rest:
+        return {"cmd": "keep"}, None
+    node_id = rest[0]
+    if node_id not in NODE_IDS:
+        node_id = NODE_IDS_LOWER.get(node_id.lower(), node_id)
+    mode = rest[1].lower() if len(rest) > 1 else "staffed"
+    if mode not in ("staffed", "on", "off", "true", "false"):
+        return None, "say 'keep %s staffed' or 'keep %s off'." % (node_id, node_id)
+    return {"cmd": "keep", "id": node_id, "staffed": mode in ("staffed", "on", "true")}, None
+
+
+def _parse_reserve(command, rest, words, nums, want_json):
+    if not rest:
+        return {"cmd": "reserve"}, None
+    kind = rest[0].lower()
+    if kind not in ("craftsmen", "scholars") or not nums:
+        return None, "say 'reserve craftsmen 5' or 'reserve scholars 1'. Bare 'reserve' shows both."
+    return {"cmd": "reserve", kind: nums[0]}, None
 
 
 def _parse_save_or_load(command, rest, words, nums, want_json):
@@ -851,7 +919,8 @@ _COMMAND_PARSERS = {
     "materials": _parse_bare_command,
     "quit": _parse_bare_command,
     "score": _parse_bare_command,
-    "ventures": _parse_bare_command,
+    "ventures": _parse_ventures,
+    "market": _parse_market,
     "mines": _parse_bare_command,
     "stuck": _parse_bare_command,
     "capacity": _parse_bare_command,
@@ -889,7 +958,10 @@ _COMMAND_PARSERS = {
     "quote": _parse_buy_or_quote,
     "close": _parse_close,
     "allocate": _parse_allocate,
+    "priority": _parse_priority,
     "policy": _parse_policy,
+    "keep": _parse_keep,
+    "reserve": _parse_reserve,
     "save": _parse_save_or_load,
     "load": _parse_save_or_load,
 }

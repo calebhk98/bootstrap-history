@@ -126,3 +126,5 @@ a CLAUDE.md SS3.1/SS3.2 question.
 Testable directly once reproduced: after any step in which a project logs
 `short_of_trade` for a trade, call `trade_demand_vs_supply()` for that same
 trade and assert it also shows `oversubscribed: true` for that year.
+
+Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md`): Mexica run 1, 1511 to 1515: the portfolio showed the written corpus at '600 offered, 0 effective, of 6,000 hrs total to go' while money still paid in and completion was projected; B had the same '0 offered, 0 effective' on an orphan bounty (252).

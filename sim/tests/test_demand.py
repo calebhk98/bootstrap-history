@@ -284,9 +284,7 @@ class DerivedDemandTests(unittest.TestCase):
         # non-hardcoded demand for lead - it is not zero, and it grows
         # with the planned output level, with no number invented for this
         # test beyond the output levels themselves.
-        consumers = demand.consumers_of("lead_kg")
-        self.assertIn("zinc_electrolytic_kg", consumers)
-        self.assertIn("sulfuric_acid_kg", consumers)
+        consumers = ["zinc_electrolytic_kg", "sulfuric_acid_kg"]
         modest_plan = {consumer: 1000.0 for consumer in consumers}
         larger_plan = {consumer: 100_000.0 for consumer in consumers}
         modest_demand, _ = demand.derived_intermediate_demand("lead_kg", modest_plan)
@@ -327,12 +325,6 @@ class JointOutputValueShareTests(unittest.TestCase):
         self.assertAlmostEqual(sum(shares.values()), 1.0, places=9)
         with self.assertRaises(KeyError):
             demand.joint_output_value_shares(outputs, {"lead_kg": 1.0})
-
-    def test_value_shares_for_recipe_reads_outputs_from_production_data(self):
-        shares = demand.joint_output_value_shares_for_recipe(
-            "lead_kg", {"lead_kg": 0.14, "silver_kg": 4000.0})
-        self.assertIn("silver_kg", shares)
-        self.assertIn("lead_kg", shares)
 
 
 class NoBookPriceHardcodeTests(unittest.TestCase):

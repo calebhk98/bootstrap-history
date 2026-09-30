@@ -14,7 +14,7 @@ from .harness import *  # noqa: F401,F403
 # plague with no word of why. Every entry must say what it leads to.
 s_hz = sim()
 _steps = []
-for _kind in sorted(S.Sim.HAZARD_COUNTERS):
+for _kind in sorted(s_hz.HAZARD_COUNTERS):
     _steps += s_hz.hedge_first_steps(_kind)
 check("every hedge the game suggests says what it gets you",
       _steps and all(step.get("because_it_gives_you") for step in _steps),

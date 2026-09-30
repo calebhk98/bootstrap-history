@@ -3,6 +3,8 @@
 import math, re
 
 from ..data import closure
+from ..knowledge_warning import knowledge_loss_warning
+from .state_shut_staffing import shut_for_want_of_staff
 
 def _agent_end_reason(sim):
     """None while the run is live; otherwise why it stopped, for state() and
@@ -418,9 +420,9 @@ def _agent_state_operations(sim, nodes):
         # many others, and a count of shut shops is not a reason to act.
         # A yearly figure is.
         "shut_concerns_would_earn_a_year": round(sum(
-            nodes[node_id]["rev"] - nodes[node_id]["up"] for node_id in sim.done
+            sim.venture_real_earnings(node_id) - sim.venture_real_upkeep(node_id) for node_id in sim.done
             if sim.is_venture(node_id) and node_id not in sim.operating
-            and nodes[node_id]["rev"] > nodes[node_id]["up"]), 0) or None,
+            and sim.venture_real_earnings(node_id) > sim.venture_real_upkeep(node_id)), 0) or None,
         # THE SAME GAP, for the handful of capabilities whose running()-gated
         # payout is not revenue at all - protection, standing, credit, a
         # staff ceiling - and so never showed up in shut_concerns above. This
@@ -428,6 +430,12 @@ def _agent_state_operations(sim, nodes):
         # is exactly where the corpus bug's lesson said a DONE/OPERATING
         # split has to be loud: see ProjectsMixin.capability_gaps.
         "critical_capabilities_not_operating": sim.capability_gaps() or None,
+        # Which people each shut, profitable concern is short of.
+        "shut_for_want_of_staff": shut_for_want_of_staff(sim, nodes),
+        # Specialists on the payroll that no project or open concern uses.
+        "idle_specialists": sim.idle_specialists() or None,
+        # Open concerns that one death would close.
+        "depends_on_one_person": sim.sole_supervisors() or None,
     }
 
 
@@ -873,6 +881,9 @@ def _agent_state(sim, nodes, cmd=None):
     out.update(_agent_state_progress(sim, active))
     out.update(_agent_state_risk_and_pressure(sim))
     out.update(_agent_state_goal(sim, nodes, end_reason))
+    warning = knowledge_loss_warning(sim)
+    if warning:
+        out["knowledge_loss_warning"] = warning
     return _agent_state_shorten(out, full)
 
 

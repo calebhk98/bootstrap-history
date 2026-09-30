@@ -45,6 +45,9 @@ class ProgressMixin:
         disagree with what step() actually offers.
         """
         project_state, node = self.state.projects.active[node_id], self.nodes[node_id]
+        # A bounty is worked by whoever claims the prize, not by the poster.
+        if node_id in self.state.projects.bountied:
+            return 0.0
         # Throttle not applied here; caller applies. Returns WANT, not allocation.
         return max(project_state["ph_left"], node["ph"] / max(node["yrs"], 1.0))
 
@@ -335,14 +338,14 @@ class ProgressMixin:
             "sourced; the specific 35% cut is tuned to leave meaningful "
             "risk, not measured from any real reliability improvement "
             "figure for early control systems.")
-    CONTROL_RELIEF_CAPABILITY = "ctl_pneumatic_process_controller"
 
     def _control_relief_multiplier(self, node_id):
-        if self.nodes[node_id].get("failure_kind") != "process_control":
-            return 1.0
-        if self.CONTROL_RELIEF_CAPABILITY not in self.state.projects.done:
-            return 1.0
-        return self.CONTROL_RELIEF_FACTOR
+        failure_kind = self.nodes[node_id].get("failure_kind")
+        for relief_id in self.nodes_with_mechanic("failure_relief"):
+            if (self.mechanic(relief_id, "failure_relief")["failure_kind"] == failure_kind
+                    and relief_id in self.state.projects.done):
+                return self.CONTROL_RELIEF_FACTOR
+        return 1.0
 
     def effective_risk(self, node_id):
         """This node's actual chance of failing on its NEXT attempt, after

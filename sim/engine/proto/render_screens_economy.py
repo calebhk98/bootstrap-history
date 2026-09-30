@@ -8,6 +8,7 @@ split: nothing here touches the live Sim - see render.py and ARCHITECTURE.md.
 """
 
 from .util import _factor, _fmt_num, _pct, _wrap
+from .capacity_remedies import render_remedies
 
 # render_capacity is split into one function per screen section - resources,
 # power, mines, project portfolio, spare capacity - concatenated by
@@ -32,7 +33,7 @@ def _capacity_resources(out):
                  % (row["material"], _fmt_num(row["capacity_t_per_yr"]),
                     _fmt_num(row["demand_t_per_yr"]),
                     _fmt_num(row["surplus_t_per_yr"]),
-                    "  SHORT" if row["surplus_t_per_yr"] < 0 else ""))
+                    "  SHORT" if row["shortfall_t_per_yr"] > 0 else ""))
         if row.get("yield_note"):
             lines.append(_wrap(row["yield_note"], indent="      "))
     return lines
@@ -150,6 +151,7 @@ def _capacity_spare(out):
 def render_capacity(out):
     lines = ["THE INDUSTRIAL DASHBOARD"]
     lines += _capacity_resources(out)
+    lines += render_remedies(out.get("remedies"))
     lines += _capacity_power(out)
     lines += _capacity_mines(out)
     lines += _capacity_portfolio(out)
@@ -335,7 +337,7 @@ def _money_from_block(out):
         # and read as what they are rather than as technologies.
         label = raw_key[1:].replace("_", " ") if raw_key.startswith("_") else raw_key
         lines.append("    %-38s %s" % (label, _fmt_num(value)))
-    lines.append("    %-38s %s" % ("(these add up to the revenue above)", ""))
+    lines.append("    %-38s %s" % ("(these add up to the revenue above; wage work is below)", ""))
     if out.get("still_building_up_custom"):
         lines.append(_wrap("STILL BUILDING UP: " + out["still_building_up_custom"],
                        indent="    "))
@@ -345,6 +347,22 @@ def _money_from_block(out):
     if out.get("the_market_you_sell_into"):
         lines.append(_wrap("THE MARKET: " + out["the_market_you_sell_into"],
                        indent="    "))
+    return lines
+
+
+def _money_wage_work_lines(out):
+    lines = []
+    for key, label in (("wage_work_this_year", "this year"),
+                       ("wage_work_last_year", "last year")):
+        wage = out.get(key)
+        if not wage:
+            continue
+        lines.append("  wage work %s: %s hours sold, wage %s, practice income given up %s, net %s"
+                 % (label, _fmt_num(wage.get("hours")), _fmt_num(wage.get("wage_income")),
+                    _fmt_num(wage.get("practice_income_displaced")), _fmt_num(wage.get("net"))))
+    if lines:
+        lines.append("    (the wage is paid into capital when the hours are sold and is not in the "
+                     "revenue above; the practice income given up is already out of it)")
     return lines
 
 
@@ -389,6 +407,7 @@ def render_money(out):
     lines = ["LEDGER"]
     lines += _money_header_line(out)
     lines += _money_from_block(out)
+    lines += _money_wage_work_lines(out)
     lines += _money_costs_block(out)
     lines += _money_net_lines(out)
     lines += _money_credit_lines(out)
@@ -414,6 +433,9 @@ def render_mines(out):
                         _fmt_num(row["costs_you_a_year"]),
                         ("   " + commission_text) if commission_text else ""))
         lines.append("")
+        lines.append("  RATED: tonnes/yr sunk. ACTUAL: tonnes/yr raised now (rated, less "
+                     "depletion, times mining technology). UTIL: share of ACTUAL that "
+                     "demand draws; the rest banks into stock.")
         lines.append("  they cost %s den/yr in all, against revenue of %s"
                  % (_fmt_num(out.get("they_cost_you_a_year_in_all")),
                     _fmt_num(out.get("your_revenue_is"))))
@@ -699,6 +721,15 @@ def _ventures_scope_notes_block(out):
     return lines
 
 
+def _market_lines(row):
+    """The first sentence of a row's market-saturation note (the JSON keeps all of it)."""
+    note = row.get("market")
+    if not note:
+        return []
+    return [_wrap("market saturation: " + note.split(". ")[0] + ". 'why %s' says more." % row.get("id"),
+                  indent="      ")]
+
+
 def _ventures_running_block(out):
     lines = ["", "RUNNING"]
     run = out.get("running")
@@ -715,6 +746,7 @@ def _ventures_running_block(out):
             if foreman:
                 lines.append("      specialist foreman: %s %s FTE"
                          % (_fmt_num(foreman.get("fte")), foreman.get("trade")))
+            lines.extend(_market_lines(row))
     else:
         lines.append("  nothing")
     return lines
@@ -722,6 +754,10 @@ def _ventures_running_block(out):
 
 def _ventures_idle_block(out):
     lines = ["", "YOU KNOW HOW, AND HAVE NOT OPENED  (ordinary earn/cost businesses)"]
+    if out.get("shut_concerns_in_all"):
+        lines.append("  %s shut in all; showing from %s"
+                 % (_fmt_num(out["shut_concerns_in_all"]),
+                    _fmt_num(out.get("showing_from", 0) + 1)))
     idle = out.get("you_know_how_but_have_not_opened")
     if isinstance(idle, list) and idle:
         lines.append("  %-34s %10s %10s %10s" % ("ID", "EARNS/YR", "COSTS/YR", "TO OPEN"))
@@ -733,10 +769,12 @@ def _ventures_idle_block(out):
             if foreman:
                 lines.append("      needs specialist foreman: %s %s FTE"
                          % (_fmt_num(foreman.get("fte")), foreman.get("trade")))
+            lines.extend(_market_lines(row))
     else:
         lines.append("  nothing")
     if out.get("and_more_you_could_open"):
-        lines.append("  ...and %s more" % _fmt_num(out["and_more_you_could_open"]))
+        lines.append("  ...and %s more: '%s'"
+                 % (_fmt_num(out["and_more_you_could_open"]), out.get("next_page", "ventures offset:N")))
     return lines
 
 

@@ -1141,11 +1141,8 @@ def cmd_sensitivity(args):
     print("%-24s %8s %16s %8s %8s   %s" %
           ("node removed", "success", "95% CI", "median", "delay", "verdict"))
     print("-" * 96)
-    cands = ["plague_preparedness", "corpus_written", "corpus_dispersed", "printing_press",
-             "rag_paper", "school_founded", "academy_network", "endowment_land",
-             "freedman_staff", "collegium_licensed", "patron_senatorial", "patron_imperial",
-             "semaphore_telegraph", "citizenship", "mirror_amalgam", "lens_grinding",
-             "crop_rotation", "world_map", "sanitation_antisepsis", "telegraph_electric"]
+    cands = sorted(node_id for node_id, node in nodes.items()
+                   if "ablation_candidate" in (node.get("mechanics") or {}))
     rows = _run_ablation_trials(cands, nodes, need, trial, base_rate)
     scored = _score_ablations(rows, base_med)
     _print_ablation_table(scored)
@@ -1334,8 +1331,14 @@ def cmd_goals(args):
     trial per civilisation.
     """
     tree, prices, nodes, wages, goods = load()
-    default_goal = tree["meta"]["goal_node"]
+    default_goal = resolve_goal(tree, nodes, None)
     catalog = goal_catalog(tree, nodes)
+
+    # Ensure the default goal appears in the catalog even if not in meta.goals
+    catalog_nodes = set(goal["node"] for goal in catalog)
+    if default_goal not in catalog_nodes and default_goal in nodes:
+        catalog.insert(0, {"node": default_goal, "name": nodes[default_goal].get("name", default_goal)})
+
     print("%-34s %9s %10s  %-11s %s" % ("name", "closure", "floor(yr)", "scale", "node"))
     print("-" * 100)
     for goal in catalog:
@@ -1475,11 +1478,13 @@ def _pick_session_filename(civ_id):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description="Rome 100 AD to Transistor: tech-tree simulator, planner and game.",
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     # NOT required: typing the bare command should open the menu rather than
     # print a usage error at somebody who has just arrived.
     sub = parser.add_subparsers(dest="cmd", required=False)
-    subparser = sub.add_parser("validate")
+    subparser = sub.add_parser("validate", help="check the tech tree for errors")
     subparser.add_argument("--deep", action="store_true",
                    help="also run one dice-free, immortal, CPM-ordered trial per "
                         "goal per civilisation (see 'goals' for the roster) and "
@@ -1487,17 +1492,15 @@ def main():
                         "horizon - a lower bound on reachability, not a verdict. "
                         "Takes real time (one Sim trial per cell); the structural "
                         "checks above run either way and are instant.")
-    sub.add_parser("civs")
-    sub.add_parser("goals", help="list the selectable goals - the transistor and every "
-                                 "alternative in data/tech_tree.json meta.goals - with "
-                                 "each one's closure size and dice-free critical-path floor.")
-    subparser = sub.add_parser("path"); subparser.add_argument("goal", nargs="?")
-    subparser = sub.add_parser("costs"); subparser.add_argument("--top", type=int, default=20)
-    subparser = sub.add_parser("why"); subparser.add_argument("node")
+    sub.add_parser("civs", help="list the playable civilisations")
+    sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
+    subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
+    subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)
+    subparser = sub.add_parser("why", help="explain what a node does and costs"); subparser.add_argument("node")
     subparser.add_argument("--goal", default=None,
                    help="which goal to report 'on the critical path' against. "
                         "Default: the tree's own default goal (the transistor).")
-    subparser = sub.add_parser("sweep")
+    subparser = sub.add_parser("sweep", help="test how changes to a parameter affect the outcome")
     subparser.add_argument("axis", choices=["capital", "lifespan", "hours", "mortality"])
     subparser.add_argument("--strategy", default="recommended")
     subparser.add_argument("--goal", default=None,
@@ -1507,7 +1510,8 @@ def main():
     subparser.add_argument("--seed", type=int, default=1)
     subparser.add_argument("--horizon", type=int, default=500)
     for name in ("run", "compare"):
-        subparser = sub.add_parser(name)
+        help_text = "run the game to completion with the recommended strategy" if name == "run" else "compare multiple runs against each other"
+        subparser = sub.add_parser(name, help=help_text)
         subparser.add_argument("--strategy", default="recommended")
         subparser.add_argument("--goal", default=None,
                        help="which goal to aim at. See 'goals' for the roster; "
@@ -1560,7 +1564,7 @@ def main():
                        help="if any trial reaches the goal, write the order the "
                             "best one finished its work in to FILE, as a "
                             "strategy you can pass back to --strategy")
-    subparser = sub.add_parser("sensitivity")
+    subparser = sub.add_parser("sensitivity", help="measure sensitivity of success to strategy changes")
     subparser.add_argument("--strategy", default="recommended")
     subparser.add_argument("--goal", default=None,
                    help="which goal to measure sensitivity against. See 'goals' "
@@ -1659,7 +1663,7 @@ def main():
                         "this search's behaviour before move 3 existed")
     sub.add_parser("menu", help="pick a civilisation, read where you have landed, "
                                 "and start. This is what a bare invocation does.")
-    subparser = sub.add_parser("play")
+    subparser = sub.add_parser("play", help="play the game interactively from the keyboard")
     subparser.add_argument("--strategy", default="recommended")
     subparser.add_argument("--goal", default=None,
                    help="which goal to play toward. See 'goals' for the roster "
@@ -1674,6 +1678,9 @@ def main():
     subparser.add_argument("--kit", default="poor_scholar",
                    help="starting wealth: " + ", ".join(STARTING_KITS))
     subparser.add_argument("--fog", action="store_true")
+    subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true",
+                   default=None,
+                   help="show what unfinished work will need as estimates that tighten as you go; overrides the settings default")
     subparser.add_argument("--mortal", action="store_true")
     subparser.add_argument("--deterministic", action="store_true",
                    help="replace this session's rng with one whose random() always "
@@ -1724,6 +1731,10 @@ def main():
     subparser.add_argument("--fog", action="store_true",
                    help="fog of war: you see what you have built and what you could "
                         "begin next, and nothing about where any of it leads")
+    subparser.add_argument("--fuzzy-estimates", dest="fuzzy_estimates", action="store_true",
+                   help="staff, hours, money and calendar needs of unfinished work are "
+                        "shown as labelled estimates that tighten as you start and finish "
+                        "it (the checks still use the true needs)")
     subparser.add_argument("--mortal", action="store_true",
                    help="turn the founder's mortality back on (default: immortal, "
                         "same meaning as on 'run'/'compare'/'play')")

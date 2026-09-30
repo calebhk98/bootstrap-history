@@ -425,7 +425,7 @@ _menu_env.pop("ROME_SAVE_DIR", None)
 # end for a script and the wrong one for the human the menu exists to greet;
 # `play` speaks typed words over the same dispatcher. So the commands fed
 # here are typed, and what comes back is the rendered view rather than JSON.
-_menu_input = "1\n1\ny\n\ny\n\n\nstate\nquit\n"
+_menu_input = "1\n1\ny\n\n\ny\n\n\nstate\nquit\n"
 _pm = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                      input=_menu_input, capture_output=True, text=True, timeout=120,
                      cwd=_menu_dir, env=_menu_env)
@@ -476,7 +476,7 @@ json.dump({"save_dir": os.path.join(_redir_cfg_dir, "not_this_one")},
           open(_redir_cfg, "w"))
 _redir_env = dict(os.environ, ROME_SAVE_DIR=_redir_dir, ROME_SIM_CONFIG=_redir_cfg)
 _pr = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                     input="1\n1\ny\n\nn\n\n\n\nquit\n", capture_output=True, text=True,
+                     input="1\n1\ny\n\n\nn\n\n\n\nquit\n", capture_output=True, text=True,
                      timeout=120, cwd=_redir_dir, env=_redir_env)
 check("ROME_SAVE_DIR redirects the menu's save away from the config file's "
       "own save_dir, and away from the default",
@@ -512,7 +512,7 @@ check("...and a LATER invocation - no flag, nothing repeated - shows it back "
 _load_dir = tempfile.mkdtemp()
 _load_cfg = os.path.join(_load_dir, "cfg.json")
 _load_env = dict(os.environ, ROME_SAVE_DIR=_load_dir, ROME_SIM_CONFIG=_load_cfg)
-subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\nn\n\nn\n\n\n\nquit\n",
+subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\nn\n\n\nn\n\n\n\nquit\n",
                capture_output=True, text=True, timeout=120, cwd=_load_dir, env=_load_env)
 _pl_load = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                           input="2\nb\nq\n", capture_output=True, text=True, timeout=60,
@@ -541,7 +541,7 @@ check("picking a save from the Load Game list actually resumes it, not a "
 _fogload_dir = tempfile.mkdtemp()
 _fogload_cfg = os.path.join(_fogload_dir, "cfg.json")
 _fogload_env = dict(os.environ, ROME_SAVE_DIR=_fogload_dir, ROME_SIM_CONFIG=_fogload_cfg)
-subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\ny\n\nn\n\n\n\nquit\n",
+subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\ny\n\n\nn\n\n\n\nquit\n",
                capture_output=True, text=True, timeout=120, cwd=_fogload_dir, env=_fogload_env)
 _pl_fogload = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                              input="2\nb\nq\n", capture_output=True, text=True, timeout=60,
@@ -821,7 +821,7 @@ _rem_env = dict(os.environ, ROME_SIM_CONFIG=_rem_cfg, ROME_SAVE_DIR=_rem_saves)
 # is not named would. Both answers have to be in the script or the wizard
 # consumes the horizon as the goal.
 _rem1 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                       input="1\n1\nn\nmerchant\ny\n\n5\n321\nquit\n",
+                       input="1\n1\nn\n\nmerchant\ny\n\n5\n321\nquit\n",
                        capture_output=True, text=True, timeout=120, env=_rem_env)
 _rem_cfg_read = json.load(open(_rem_cfg)) if os.path.exists(_rem_cfg) else {}
 check("finishing the New Game wizard remembers every answer as next time's "
@@ -2181,8 +2181,8 @@ check("...and it really is the highest-leverage work available",
 
 # A break tester multiplied out the factors `why` shows for clock_pendulum,
 # got 4,747.6 against a stated 4,834, and called it the one card in the game
-# whose arithmetic does not work. It was: project_cost multiplies in the
-# scarce-material premium and the breakdown never listed it. A breakdown that
+# whose arithmetic does not work. It was: project_cost multiplies in a
+# factor the breakdown never listed. A breakdown that
 # omits a factor is worse than no breakdown, because it invites this exact
 # check and then fails it.
 _bad_math = []
@@ -2192,9 +2192,11 @@ for _civ_m in ("england_1300", "rome_100ad", "norse_900ad"):
         if _k not in NODES:
             continue
         _e = S._node_explain(_sm, NODES, _k)["cost"]
-        _prod = (_e["base_total"] * _e["civ_domain_factor"]
-                 * _e["material_distance_factor"] * _e["opposition_factor"]
-                 * _e["scarce_material_premium"] * _e["price_index"])
+        # labour and capital take the civ and price factors; the missing
+        # materials are already at today's market price.
+        _prod = (((_e["labour"] + _e["capital"]) * _e["civ_domain_factor"]
+                  * _e["price_index"] + _e["materials"])
+                 * _e["material_distance_factor"] * _e["opposition_factor"])
         if abs(_prod - _e["total"]) > max(2.0, _e["total"] * 0.005):
             _bad_math.append((_civ_m, _k, round(_prod, 1), _e["total"]))
 check("every cost breakdown multiplies out to the total it states",

@@ -5,7 +5,7 @@ import hashlib
 from ..data import closure, critical_path, downstream_count, is_downstream
 from ..fog import strip_self_play_advice
 
-from . import tree_filters
+from . import available_economics, tree_filters
 from .nodes import _downstream_of, _unlocked_by
 from .state import _waiting_on
 from .ventures import _VENTURE_SUPERVISION_NOTE
@@ -215,8 +215,9 @@ def _brief(sim, nodes, node_id, fog):
                 "failure_costs": (round(sim.project_cost(node_id) * 0.4, 1)
                                   if node["risk"] else 0.0),
                 "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
-                "earns_per_year": _est if _est is not None else round(node["rev"], 1),
-                "costs_per_year_after": round(node["up"], 1),
+                "earns_per_year": (_est if _est is not None
+                                   else round(sim.venture_real_earnings(node_id), 1)),
+                "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
                 "how_much_rests_on_this": rests,
                 **_staff_fields(sim, node)}
     return {"id": node_id, "name": node["name"], "cat": node["cat"],
@@ -225,8 +226,9 @@ def _brief(sim, nodes, node_id, fog):
             "calendar_floor_years": round(sim.calendar_floor(node_id), 2),
             "nominal_calendar_floor_before_reputation": node["yrs"],
             "risk": sim.effective_risk(node_id),
-            "earns_per_year": round(node["rev"], 1),
-            "costs_per_year_after": round(node["up"], 1),
+            "earns_per_year": round(sim.venture_real_earnings(node_id), 1),
+            "costs_per_year_after": round(sim.venture_real_upkeep(node_id), 1),
+            **available_economics.row_fields(sim, node_id, node),
             # _downstream_of, NOT downstream_count. The cached bitmask index
             # in data.py follows hard prerequisites only, and it must: adding
             # req_any options to it introduces real CYCLES (junction_transistor
@@ -277,9 +279,11 @@ _SORT_KEYS = {
     "cost": lambda s, n, k: s.project_cost(k),
     "hours": lambda s, n, k: n[k]["ph"],
     "years": lambda s, n, k: n[k]["yrs"],
-    "earns": lambda s, n, k: n[k]["rev"],
-    "revenue": lambda s, n, k: n[k]["rev"],
-    "upkeep": lambda s, n, k: n[k]["up"],
+    "earns": lambda s, n, k: s.venture_real_earnings(k),
+    "revenue": lambda s, n, k: s.venture_real_earnings(k),
+    "upkeep": lambda s, n, k: s.venture_real_upkeep(k),
+    "net": lambda s, n, k: available_economics.net_per_year(s, k),
+    "payback": available_economics.sort_payback,
     "risk": lambda s, n, k: n[k]["risk"],
     "alpha": lambda s, n, k: n[k]["name"].lower(),
     "alphabetical": lambda s, n, k: n[k]["name"].lower(),
@@ -300,7 +304,7 @@ _SORT_KEYS = {
     "nearest": lambda s, n, k: sum(1 for prereq_id in n[k]["pre"] if prereq_id not in s.done),
 }
 
-_SORT_KEY_NAMES = ("price", "hours", "years", "earns", "upkeep", "risk",
+_SORT_KEY_NAMES = ("price", "hours", "years", "earns", "upkeep", "net", "payback", "risk",
                    "alpha", "fewest_missing")
 
 
@@ -514,7 +518,7 @@ def _list_sort_and_paging_hints(out, sel, page, show_all, offset, sort_by, _sort
     if reverse:
         out["sorted_by"] += ", reversed"
     out["to_sort_or_page_differently"] = (
-        "add a 'sort' of %s, and 'reverse' to flip it; 'offset'/'limit' "
+        "add a 'sort' of %s (smallest first), and 'reverse' for largest first; 'offset'/'limit' "
         "page the list you could start, 'heard_offset' pages the "
         "heard-of one below it - all the way to the end."
         % ", ".join(_SORT_KEY_NAMES))
@@ -721,6 +725,10 @@ def _agent_available(sim, nodes, cmd=None):
     # did not already decide.
     (want_subject, find, show_all, limit, offset, afford, sort_by,
      _sort_fn, reverse, heard_offset) = _available_params(cmd)
+    if sort_by and _sort_fn is None:
+        return {"ok": False,
+                "error": "cannot sort by %r; sort by one of: %s. Nothing was changed."
+                         % (sort_by, ", ".join(_SORT_KEY_NAMES))}
 
     state, filter_error = tree_filters.parse_state(cmd)
     tag, category, topic_error = tree_filters.parse_topic(cmd, nodes)
@@ -796,6 +804,22 @@ def _rests_band(node):
             "nothing else; this is worth having for itself")
 
 
+def _material_row(row):
+    """One `why` line per material: needed, held, missing, and the market
+    cost of the missing part."""
+    return {"material": row["material"],
+            "needed_tonnes": round(row["needed_tonnes"], 3),
+            "held_tonnes": round(row["held_tonnes"], 3),
+            "held_from_stock_tonnes": round(row["held_from_stock_tonnes"], 3),
+            "held_from_own_output_tonnes": round(row["held_from_own_output_tonnes"], 3),
+            "missing_tonnes": round(row["missing_tonnes"], 3),
+            "price_per_tonne": round(row["price_per_tonne"], 2),
+            "cost_of_missing": round(row["cost_of_missing"], 1),
+            **({"years_of_supply_it_takes": round(row["years_of_supply_it_takes"], 1)}
+               if row["years_of_supply_it_takes"] else {}),
+            **({} if row["priced"] else {"note": "no market price; counted as free"})}
+
+
 def _explain_identity(sim, nodes, node_id, node):
     """Name, note, hours and the raw labour/material bills - the parts of
     `why` that need nothing computed, only read off the node and fog-
@@ -829,6 +853,7 @@ def _explain_identity(sim, nodes, node_id, node):
         # question.
         "hired_labour": node["lab"],
         "materials": node["mat"],
+        "material_rows": [_material_row(row) for row in sim.project_material_bill(node_id)["rows"]],
     }
 
 
@@ -842,20 +867,17 @@ def _explain_cost(sim, nodes, node_id, node):
     # every civilization) would make `why` compare two civilizations as
     # byte-identical when what they are actually charged differs - a player
     # plans against the quote, so the quote must not lie about it.
+    bill = sim.project_material_bill(node_id)
     return {"labour": round(node["_labour_cost"], 1),
-                 "materials": round(node["_material_cost"], 1),
+                 # WHAT THE MISSING MATERIALS COST AT TODAY'S MARKET PRICE;
+                 # what you already hold is not charged. Per-material rows
+                 # are in material_rows.
+                 "materials": round(bill["cost_of_missing"], 1),
                  "capital": node["cap"],
-                 "base_total": round(node["_total_cost"], 1),
+                 "base_total": round(node["_labour_cost"] + node["cap"]
+                                     + bill["cost_of_missing"], 1),
                  "civ_domain_factor": round(sim.civ_cost_factor(node_id), 3),
                  "material_distance_factor": round(sim.material_cost_factor(node_id), 3),
-                 # THE SCARCITY PREMIUM: project_cost multiplies this in, so
-                 # the breakdown must list it too - what the market charges
-                 # for a material it barely sells. Same lesson as
-                 # price_index below - a breakdown that omits a factor
-                 # project_cost actually uses is worse than no breakdown,
-                 # because it invites a player to multiply the shown
-                 # factors out and then fails that check.
-                 "scarce_material_premium": round(sim.material_market_factor(node_id), 3),
                  "opposition_factor": round(sim.opposition_factor(node_id), 3),
                  # THE FACTOR ACTUALLY MULTIPLIED IN, not a decoy:
                  # project_cost multiplies by cost_money_factor()
@@ -924,8 +946,8 @@ def _explain_revenue(sim, nodes, node_id, node):
         # is the whole of the user's original question - "shouldn't the
         # payback be something you don't know until after research?" So
         # revenue alone is fogged; see _fog_revenue_estimate.
-        "upkeep": node["up"],
-        "revenue": (node["rev"] if (not sim.fog
+        "upkeep": sim.venture_real_upkeep(node_id),
+        "revenue": (sim.venture_real_earnings(node_id) if (not sim.fog
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),
         "revenue_forecast_scope": (

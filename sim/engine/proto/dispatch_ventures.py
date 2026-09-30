@@ -10,6 +10,7 @@ here. Behaviour is unchanged and moved verbatim.
 """
 
 from .command_registry import command
+from .explain_once import already_explained
 import os
 import tempfile
 
@@ -19,6 +20,33 @@ from .nodes import _did_you_mean
 from .saveload import load_state, save_state
 from .util import _flag
 from .ventures import _VENTURE_SUPERVISION_NOTE
+
+
+_CREDIT_PROSE = {"on_credit": ("nothing_is_borrowed_yet", "what_happens_there"),
+                 "total_committed_across_active_work": ("what_this_means",)}
+
+
+def _shorten_credit_forecast(sim, cmd, out):
+    """Keep the credit forecast's explanatory prose to once per game year.
+
+    Later starts the same year keep every figure and lose the prose;
+    `credit_forecast_in_full` says which the reply is, and the text screen
+    prints a one-line summary for the short form. `full` asks for it all again.
+    """
+    blocks = [key for key in _CREDIT_PROSE if key in out]
+    if not blocks:
+        return
+    scenario = sim.state.scenario
+    said = scenario._said_explanations or {}
+    full = bool(cmd.get("full")) or said.get("credit_forecast") != sim.year
+    if full:
+        said["credit_forecast"] = sim.year
+        scenario._said_explanations = said
+    else:
+        for key in blocks:
+            for prose_key in _CREDIT_PROSE[key]:
+                out[key].pop(prose_key, None)
+    out["credit_forecast_in_full"] = full
 
 
 @command("start", group="projects", aliases=("begin", "research", "build"),
@@ -121,10 +149,12 @@ def _cmd_start(sim, nodes, cmd, ended):
            "expected_calendar_years_with_retries": round(
                sim.expected_calendar_years(node_id), 2),
            "the_bill_you_have_taken_on": bill,
-           "note": "This is the price as of today, and it is now fixed for "
-                   "this project. Quotes move with prices, the coinage and "
-                   "what a material costs to get: a figure you read years "
-                   "ago is not what you will pay."}
+           "note": "The price is fixed at start (explained earlier; `full` shows it again)."
+           if already_explained(sim, "start_price_fixed", cmd) else
+           "This is the price as of today, and it is now fixed for "
+           "this project. Quotes move with prices, the coinage and "
+           "what a material costs to get: a figure you read years "
+           "ago is not what you will pay."}
     # SAID AT THE MOMENT OF COMMITMENT, NOT DISCOVERED 60% IN. A player
     # who had already won the game found the first workshop/lab stalled
     # at 60% "until I stopped adding new work for a year", with nothing
@@ -267,6 +297,7 @@ def _cmd_start(sim, nodes, cmd, ended):
                 "the game lets you make."
                 % len(sim.active)),
         }
+    _shorten_credit_forecast(sim, cmd, out)
     # WARN, DO NOT SILENTLY ACCEPT. start_reason() already refuses a trade
     # that does not exist AT ALL (see "THE TRADE HAS TO EXIST" there), but
     # trade_available() goes true the moment you call `train`, two years
@@ -278,6 +309,9 @@ def _cmd_start(sim, nodes, cmd, ended):
     short = sorted(trade for trade in node["lab"] if sim.market_supply(trade) <= 0.0)
     if short:
         out["warning"] = (
+            "no one can do this work YET: %s. (Instructions given earlier; `full` shows them again.)"
+            % ", ".join(short)
+            if already_explained(sim, "start_untrained_trade", cmd) else
             "no one can do this work YET: %s. The trade exists here or is "
             "being taught, but nobody is trained and ready, and this "
             "project cannot progress at all until someone is. If that is "
@@ -347,18 +381,19 @@ def _rush_cap_refusal(caps, budget, cost, draw, cost_so_far, draw_so_far):
     return None
 
 
-def _rush_preview(sim, nodes, cmd, ended):
+def _rush_preview(sim, nodes, cmd, ended, confirm=None):
     """Run the real rush, then roll the game back to how it was.
 
     Credit, costs and availability all move as projects begin, so only the
-    real start path can say what a rush would start.
+    real start path can say what a rush would start. An unbounded rush is
+    previewed as the forced run it would take to begin it.
     """
     saved_order = list(sim.order)
     with tempfile.TemporaryDirectory() as folder:
         snapshot = os.path.join(folder, "snapshot.json")
         save_state(sim, snapshot)
         try:
-            result = _cmd_rush(sim, nodes, dict(cmd, preview=False), ended)
+            result = _cmd_rush(sim, nodes, dict(cmd, preview=False, force=True), ended)
         finally:
             load_state(sim, snapshot)
             sim.order[:] = saved_order
@@ -371,7 +406,7 @@ def _rush_preview(sim, nodes, cmd, ended):
             "total_annual_draw": result["total_annual_draw"],
             "count_not_started": result["count_not_started"],
             "not_started": result["not_started"],
-            "how_to_confirm": "Repeat the same rush without 'preview' to begin these."}
+            "how_to_confirm": confirm or "Repeat the same rush without 'preview' to begin these."}
 
 
 @command("rush", group="projects", aliases=("startall", "start_all", "muster"),
@@ -419,14 +454,10 @@ def _cmd_rush(sim, nodes, cmd, ended):
     # Discovery must not mutate dozens of portfolio entries. A numeric limit
     # is an explicit bounded instruction; an unbounded run needs confirmation.
     if limit is None and not capped and not cmd.get("force"):
-        return {"ok": True, "preview": True,
-                "count_would_start": len(_ok),
-                "would_start": [{"id": node_id, "name": nodes[node_id]["name"],
-                                  "cost": round(sim.project_cost(node_id), 1)}
-                                 for node_id in _ok],
-                "nothing_changed": True,
-                "how_to_confirm": ("Use 'rush force' to begin this unbounded "
-                                   "set, or 'rush limit:N' to begin at most N.")}
+        return _rush_preview(
+            sim, nodes, cmd, ended,
+            confirm="Use 'rush force' to begin this unbounded set, or "
+                    "'rush limit:N' to begin at most N.")
     # AND STOP WHEN THE YEAR IS FULL: an unbounded 'rush limit:1000' could
     # start hundreds of things at once - a plantation, a whaling industry,
     # a theatre, a gambling house, nitre beds and lens grinding, all in
@@ -598,11 +629,26 @@ def _cmd_open(sim, nodes, cmd, ended):
 
 
 
+# Rows of the shut-concern list on one screen; offset/limit page past it.
+_VENTURES_PAGE = 20
+
+
 @command("ventures", group="projects",
          summary="what you run and could run",
-         usage=["ventures"], options={},
-         description="What you are running, and what you know how to run and have not opened.")
+         usage=["ventures", "ventures limit:50 offset:20"],
+         options={"limit / offset": "page through the concerns you know how to run and have not opened"},
+         description="What you are running, and what you know how to run and have not opened, "
+                     "twenty at a time.")
 def _cmd_ventures(sim, nodes, cmd, ended):
+    try:
+        offset = max(0, int(cmd.get("offset", 0)))
+    except (TypeError, ValueError):
+        offset = 0
+    try:
+        limit = int(cmd.get("limit", 0)) or _VENTURES_PAGE
+    except (TypeError, ValueError):
+        limit = _VENTURES_PAGE
+    limit = max(1, limit)
     sch_free, art_free = sim.venture_staff_free()
     running = sorted(sim.operating)
     idle = sorted(node_id for node_id in sim.done
@@ -617,19 +663,11 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         # to print the SUPERVISION crew, not the BUILD crew - supervision
         # is a quarter of it, and it is the number the refusal actually
         # quotes.
-        _scale = (sim.economy ** 0.75) * sim.output_factor * sim.price_index
         _sup_s, _sup_a = sim.venture_hands(node_id)
         _foreman_trade, _foreman_fte = sim.venture_foreman(node_id)
-        # AT THE SAME MARKET PRICE `money` credits, for a goods-producing
-        # concern: goods_market_factor() is 1.0 for anything not in
-        # GOODS_CATEGORIES and for anything not yet open, so this changes
-        # nothing for every other row. See that method's own comment.
-        _mkt = sim.goods_market_factor(node_id) if node_id in sim.operating else 1.0
         row = {"id": node_id, "name": node["name"],
-                "earns_a_year": round(node["rev"] * _scale
-                                      * (sim.venture_ramp(node_id) if node_id in sim.operating
-                                         else 1.0) * _mkt, 1),
-                "costs_a_year": round(node["up"] * sim.price_index, 1),
+                "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
+                "costs_a_year": round(sim.venture_real_upkeep(node_id), 1),
                 "needs": {"scholars": round(_sup_s, 2),
                           "craftsmen": round(_sup_a, 2)},
                 "specialist_foreman": (
@@ -660,10 +698,11 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            "running": [_vrow(node_id) for node_id in running] or "nothing",
            "you_know_how_but_have_not_opened":
                [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
-                for node_id in _idle_ordinary[:20]] or "nothing",
+                for node_id in _idle_ordinary[offset:offset + limit]] or "nothing",
            "capabilities_you_know_how_to_run_but_have_not_opened":
                [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
                 for node_id in _idle_capability] or "nothing",
+           "keep_staffed": sorted(sim.state.projects.keep_staffed) or "none",
            "people_free_to_run_something_new": {
                "scholars": round(sch_free, 2), "craftsmen": round(art_free, 2)},
            # YOU ARE IN THAT COUNT: leaving this unsaid would make
@@ -721,13 +760,22 @@ def _cmd_ventures(sim, nodes, cmd, ended):
     # as the two screens flatly contradicting each other unless this says
     # which side the practice falls on.
     _prac_note = sim.practice_note()
+    if _prac_note and already_explained(sim, "practice", cmd):
+        _prac_note = sim.practice_note(brief=True)
+    if already_explained(sim, "staffing_share", cmd):
+        out["these_are_a_share_of_their_year_not_a_headcount"] = (
+            "Staff figures here are a share of a person's year, not a "
+            "headcount ('ventures full' explains it again).")
     if _prac_note:
         out["your_practice_is_not_a_venture"] = (
             "%s You did not open it and you cannot close it; it is not "
             "listed here, and it is most of your income until you build "
             "something. See 'money'." % _prac_note)
-    if len(_idle_ordinary) > 20:
-        out["and_more_you_could_open"] = len(_idle_ordinary) - 20
+    out["shut_concerns_in_all"] = len(_idle_ordinary)
+    out["showing_from"] = offset
+    if len(_idle_ordinary) > offset + limit:
+        out["and_more_you_could_open"] = len(_idle_ordinary) - offset - limit
+        out["next_page"] = "ventures offset:%d limit:%d" % (offset + limit, limit)
     return out
 
 
@@ -769,6 +817,8 @@ def _cmd_policy(sim, nodes, cmd, ended):
         _stopped["credit"] = ("nobody will fund new work until %d"
                               % int(sim.credit_frozen_until))
     _pol = {"ok": True, "policy": dict(sim.policy), "changed": changed,
+            "reserve": {"craftsmen": sim.state.household.reserve_craftsmen,
+                        "scholars": sim.state.household.reserve_scholars},
             # WHAT THESE ARE FOR, BEFORE WHAT EACH ONE DOES: a player who
             # switches one on believing the engine knows the best line and
             # is offering to walk it for them will read the result as a
@@ -804,6 +854,14 @@ def _cmd_policy(sim, nodes, cmd, ended):
                              "people die off. It spends only a share of "
                              "your surplus, so with no surplus it hires "
                              "nobody",
+                "auto_replace_foreman": "rehire a specialist foreman (say a "
+                                        "glassblower) when the last one "
+                                        "supervising an open concern is lost. "
+                                        "Off by default",
+                "reserve_staff": "keep the spare craftsmen and scholars set by "
+                                 "'reserve craftsmen N' / 'reserve scholars N' above "
+                                 "what open concerns hold, hiring (and buying "
+                                 "housing) each year. Off by default",
                 "auto_buy_people": "buy slaves when the workshop is short-handed",
                 "auto_manumit": "free people you hold, over time",
                 "auto_train": "teach trades this society does not have when a "

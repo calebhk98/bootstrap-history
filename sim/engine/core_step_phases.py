@@ -121,6 +121,12 @@ class StepPhasesMixin:
             self.state.household.log.append((self.state.scenario.year, "you lose %s to death and to better offers"
                              % ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
                                          for trade_id, count in sorted(_lost.items()))))
+        # Rehire a specialist foreman an open concern just lost, before the
+        # staffing rule closes the concern.
+        if self.state.founder.policy.get("auto_replace_foreman", False):
+            self.replace_lost_foremen()
+        # Hire for the concerns named with `keep <id> staffed`, before the closure rule.
+        self.keep_flagged_concerns_staffed()
         self._resync_pools()
         # A HOUSEHOLD THAT CANNOT PAY ITS PEOPLE LETS THEM GO. This is the whole
         # answer to "you built it from nothing, so you must be able to rebuild
@@ -163,6 +169,7 @@ class StepPhasesMixin:
         if payroll > can_pay and self.state.household.employees:
             short = payroll - can_pay
             gone = 0.0
+            _before_shed = self.staff_snapshot()
             # shed, dearest first, until the wages you are left with fit
             for trade_id in sorted(self.state.household.employees, key=lambda t: -self.annual_wage(t)):
                 if short <= 0:
@@ -184,6 +191,7 @@ class StepPhasesMixin:
                 if self.state.household.employees[trade_id] < 0.5:
                     self.state.household.employees.pop(trade_id)
             self._resync_pools()
+            self.log_staff_reduction("a payroll you cannot meet", _before_shed)
             # ALWAYS, not only when it worked. Losing the staff you paid to hire
             # is more consequential than any of the flavour events that do get
             # logged, and a player who is not told has to notice their own wage
@@ -275,8 +283,12 @@ class StepPhasesMixin:
             # permanently, the moment its last person is lost. Iterating
             # trades_created too is what keeps a trade whose last person
             # just died still eligible for replacement.
+            # ONLY A TRADE SOMETHING DRAWS ON: a project in hand or an open
+            # concern. Otherwise the top-up pays idle specialists for decades
+            # and rehires ones the player fired (see idle_specialists).
+            _drawn_on = self.trades_drawn_on()
             for trade_id in sorted(set(self.state.household.employees) | set(self.state.household.trades_created)):
-                if trade_id in ("artisan", "scholar"):
+                if trade_id in ("artisan", "scholar") or trade_id not in _drawn_on:
                     continue
                 have = self.state.household.employees.get(trade_id, 0.0)
                 want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.state.household.trades_created else 0.0)
@@ -285,6 +297,7 @@ class StepPhasesMixin:
                     self.state.household.employees[trade_id] = have + short
                     self.state.household.capital -= short * self.annual_wage(trade_id)
             self._resync_pools()
+        self.hold_staff_reserve()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:
         # letting contracted craftsmen count toward a project's staff
         # requirement only helps a person who thinks to type `commission`
@@ -454,7 +467,7 @@ class StepPhasesMixin:
         # that hides it lies about the cost of everything", and hiding the
         # acquisition from a player is the worst version of that.
         if self.state.founder.policy.get("auto_buy_people", False):
-            if self.state.household.capital > self.book_money(6000.0) and self.state.household.artisans < 12 and self.running("workshop_first"):
+            if self.state.household.capital > self.book_money(6000.0) and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
                 got = self.buy_slaves(min(6, int(self.state.household.capital // self.book_money(1500.0))))
                 if got:
                     self.state.household.log.append((self.state.scenario.year, "bought %d people for the workshop" % got))
@@ -1619,7 +1632,7 @@ class StepPhasesMixin:
         }
         # Reset AFTER the progress pass above, which is where the hours you sold
         # are subtracted from the hours you have left to direct.
-        self.state.household.wage_hours_this_year = 0.0
+        self.close_wage_year()
         # Contracted work is bought for a year and expires with it: hours you
         # paid a shop for in 142 are not still sitting there in 143.
         self.state.household.contract_hours = {}
@@ -1717,7 +1730,7 @@ class StepPhasesMixin:
                     self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %d den lost, "
                                          "and you withdraw from public life for a while" % take))
                 elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
-                    for pat in ("patron_imperial", "patron_senatorial"):
+                    for pat in self.patrons_lost_to_eminence():
                         if pat in self.state.projects.done:
                             self.state.projects.done.discard(pat)
                             self._done_changed()
@@ -1751,7 +1764,7 @@ class StepPhasesMixin:
         # 7. founder mortality
         if self.state.founder.founder_alive:
             self.state.founder.life_left -= 1
-            if self.running("sanitation_antisepsis"):
+            if self.running_with_mechanic("founder_life_extension"):
                 self.state.founder.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
             if self.state.founder.life_left <= 0:
                 self.state.founder.founder_alive = False

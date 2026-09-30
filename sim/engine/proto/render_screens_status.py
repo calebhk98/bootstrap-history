@@ -13,8 +13,9 @@ table of startable-today nodes, the one place here that reaches into the
 """
 
 from .score import _score_lines
+from ..knowledge_warning import warning_lines
 from .util import _factor, _fmt_num, _pct, _wrap
-from .render_screens_big import _available_row
+from .render_screens_big import _available_row, available_header
 
 def render_values(out):
     lines = ["WHAT THIS SOCIETY BELIEVES"]
@@ -174,7 +175,21 @@ def render_risk(out):
                         hazard.get("remaining_annual_wave_checks", 1),
                         _pct(hazard.get("chance_of_at_least_one_staff_loss_wave", 0)),
                         _pct(hazard.get("expected_cumulative_staff_loss", 0))))
+    lines.extend(_confiscation_lines(out.get("confiscation")))
     return "\n".join(lines)
+
+
+def _confiscation_lines(confiscation):
+    """The treasury's confiscation chance and what holds it off."""
+    if not confiscation:
+        return []
+    lines = ["", "TREASURY CONFISCATION: %s chance this year" % _pct(confiscation.get("chance_this_year", 0))]
+    held = confiscation.get("held_off_by") or []
+    lines.append(_wrap("held off by: " + ("; ".join(held) if held else "nothing yet"), indent="  "))
+    missing = confiscation.get("not_yet_in_force") or []
+    if missing:
+        lines.append(_wrap("not yet in force: " + "; ".join(missing), indent="  "))
+    return lines
 
 
 def _advice_line(kind, advice, indent="  "):
@@ -376,6 +391,7 @@ def render_path(out):
     or with a script outside the game.
     """
     lines = ["ROUTE TO %s  [%s]" % (out.get("name"), out.get("id"))]
+    lines += [_wrap(line) for line in warning_lines(out.get("knowledge_loss_warning"))]
     if out.get("done"):
         lines.append("You have already built this.")
         return "\n".join(lines)
@@ -389,9 +405,7 @@ def render_path(out):
     lines.append("STARTABLE TODAY, TOWARD THIS GOAL  (cheapest first)")
     if isinstance(rows, list) and rows:
         _width = max([34] + [len(entry.get("id") or "") for entry in rows])
-        lines.append("%-*s %-20s %9s %7s %5s %5s %8s %7s %6s %6s"
-                 % (_width, "ID", "NAME", "COST", "HOURS", "YEARS", "RISK", "EARNS/YR",
-                    "UPKEEP", "STAFF", "RESTS"))
+        lines.append(available_header(_width))
         for entry in rows:
             lines.append(_available_row(entry, _width, None))
         if out.get("and_more_startable_today"):
@@ -399,6 +413,11 @@ def render_path(out):
     else:
         lines.append("  nothing - " + (out.get("note") or
                  "everything left on this route is waiting on something else"))
+    if out.get("nearest_blockers"):
+        lines.append("")
+        lines.append("NEAREST TO STARTABLE, AND WHAT HOLDS EACH BACK")
+        for blocker in out["nearest_blockers"]:
+            lines.append(_wrap("%s: %s" % (blocker["id"], blocker["why"]), indent="  "))
     if out.get("on_this_route_but_shut_down"):
         lines.append("")
         lines.append("ON THIS ROUTE BUT SHUT DOWN: "

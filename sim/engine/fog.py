@@ -332,8 +332,8 @@ class FogMixin:
             "hedged_by": hedge if (not self.state._fog
                                    or self.is_visible(hedge or "")) else "nothing yet",
             "better_hedge_available": (
-                None if hedge == "corpus_dispersed" else
-                ("corpus_dispersed" if not self.state._fog
+                None if hedge == self.best_corpus_node() else
+                (self.best_corpus_node() if not self.state._fog
                  else "there is said to be a way to guard against this; "
                       "you have not found it yet")),
             "known_hazards_ahead": upcoming,

@@ -209,12 +209,17 @@ class HouseholdState:
 	last_taught: Dict[str, int] = field(default_factory=dict)
 	training: List[List[Any]] = field(default_factory=list)
 	wage_hours_this_year: float = 0.0
+	wage_income_this_year: float = 0.0
+	wage_work_last_year: Optional[Dict[str, float]] = None
 	log: List[Tuple[Any, str]] = field(default_factory=list)
 	granted_staff: Optional[Dict[str, float]] = None
 	hours_this_year: Optional[Dict[str, float]] = None
 	trade_schools: Optional[int] = None
 	labour_pressure_records: Dict[str, Any] = field(default_factory=dict)
 	worker_housing_places: Optional[int] = None
+	# spare generic hands the reserve_staff policy keeps above what concerns hold (`reserve`)
+	reserve_craftsmen: int = 0
+	reserve_scholars: int = 0
 	_said_deputies: int = 0
 	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None
@@ -271,6 +276,8 @@ class ProjectsState:
 	forgotten: Dict[str, int] = field(default_factory=dict)
 	trade_hours_used: Dict[str, float] = field(default_factory=dict)
 	revealed: Set[str] = field(default_factory=set)
+	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)
+	keep_staffed: Set[str] = field(default_factory=set)
 	stalled: int = 0
 	# work id -> {"reason": str, "year": int}; only while the work is mothballed
 	closures: Dict[str, Dict[str, object]] = field(default_factory=dict)
@@ -310,6 +317,7 @@ class EconomyState:
 	economy: float = 1.0
 	money_real: float = 1.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
+	_material_stock_opening: Optional[Dict[str, Any]] = None
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
 	farm_hectares: Optional[float] = None
 	farm_stock_kg: float = 0.0
@@ -353,6 +361,7 @@ class ScenarioState:
 	_said_scandal: int = 0
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
+	_said_explanations: Optional[Dict[str, int]] = None
 
 
 @dataclass
@@ -383,6 +392,9 @@ class ActorRecord:
 	loss_years: int = 0
 	founded_year: Optional[int] = None
 	last_margin: float = 0.0
+	# purpose -> money in and out over the actor's life; money = income - outlays
+	income: Dict[str, float] = field(default_factory=dict)
+	outlays: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -407,9 +419,10 @@ class SimulationState:
 	_civ_live: Dict[str, Any] = field(default_factory=dict)
 	_weights: Dict[str, Any] = field(default_factory=dict)
 	_fog: bool = False
+	_fuzzy_estimates: bool = False
+	_fuzzy_salt: int = 0
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
-	_version: int = 3
 
 
 ALL_STATE_CLASSES = (
@@ -452,8 +465,6 @@ def serialize_state(obj: Any) -> Any:
 				continue
 			val = getattr(obj, f.name)
 			out[f.name] = serialize_state(val)
-		if isinstance(obj, SimulationState):
-			out["_version"] = 3
 		return out
 	from sim.engine.economy import _InvalidatingSet
 	if isinstance(obj, (set, _InvalidatingSet)):
@@ -616,11 +627,8 @@ def deserialize_state(blob: Any, target_type: Optional[type] = None) -> Any:
 	if blob is None:
 		return None
 	if target_type is None:
-		if isinstance(blob, dict) and ("_version" in blob or "household" in blob):
-			target_type = SimulationState
-		elif isinstance(blob, dict) and "ph_left" in blob:
-			target_type = ActiveProjectState
-		else:
+		if not isinstance(blob, dict):
 			return blob
+		target_type = ActiveProjectState if "ph_left" in blob else SimulationState
 
 	return _deserialize_typed(blob, target_type)

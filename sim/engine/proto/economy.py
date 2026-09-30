@@ -3,6 +3,7 @@
 from ..data import WAGES, trade_family
 
 from .state import _agent_state
+from .capacity_remedies import capacity_remedies
 
 # WHAT EACH TRAIT IN self.value_weights ACTUALLY DOES, in the player's own words. Event
 # text names these fields directly - "corpus_dispersed changes the society:
@@ -93,7 +94,8 @@ def _material_capacity_rows(sim):
             "your_own_capacity_t_per_yr": round(own, 1),
             "market_capacity_t_per_yr": round(market, 1),
             "demand_t_per_yr": round(need, 1),
-            "surplus_t_per_yr": round(own + market - need, 1)}
+            "surplus_t_per_yr": round(own + market - need, 1),
+            "shortfall_t_per_yr": round(sim.material_shortfall_t(emp_key, by_tag), 1)}
     # OWNED CAPACITY WITH NO CURRENT DEMAND. A mine you sank and no longer
     # need does not simply vanish from what you could still supply.
     for mat in sim.mine_capacity:
@@ -107,7 +109,8 @@ def _material_capacity_rows(sim):
             "your_own_capacity_t_per_yr": round(own, 1),
             "market_capacity_t_per_yr": round(market, 1),
             "demand_t_per_yr": 0.0,
-            "surplus_t_per_yr": round(own + market, 1)}
+            "surplus_t_per_yr": round(own + market, 1),
+            "shortfall_t_per_yr": 0.0}
     for mat, row in rows.items():
         if mat in sim.mine_capacity:
             note = sim.mine_depletion_note(mat)
@@ -118,15 +121,20 @@ def _material_capacity_rows(sim):
     return sorted(rows.values(), key=lambda r: (r["surplus_t_per_yr"], -r["demand_t_per_yr"]))
 
 
-# THE POWER LADDER, in the order the tree actually builds it. Each entry is a
-# real capability node; the label is the tree's OWN description of its scale
-# (node name/note), not a number this file made up - see _power_status.
-_POWER_LADDER = (
-    ("cap_power_muscle", "muscle and animal power"),
-    ("cap_power_water", "water power, tens of kW on one shaft"),
-    ("cap_power_steam", "portable steam power, hundreds of kW"),
-    ("cap_power_electric", "local electric power, kW scale (workshop-scale)"),
-    ("cap_power_grid", "grid electric power, MW scale (central generation)"))
+# THE POWER LADDER, in the order the tree builds it: nodes declaring `power_tier`, by rank.
+# The label is the tree's OWN description of the rung's scale - see _power_status.
+def _power_ladder(nodes):
+    rungs = [(node["mechanics"]["power_tier"]["rank"], node_id, node["mechanics"]["power_tier"]["label"])
+             for node_id, node in nodes.items() if "power_tier" in (node.get("mechanics") or {})]
+    return tuple((node_id, label) for _rank, node_id, label in sorted(rungs))
+
+
+def _power_scale_node(nodes, scale):
+    """The power_tier node for a scale ("workshop" or "grid"), or None."""
+    for node_id, node in nodes.items():
+        if ((node.get("mechanics") or {}).get("power_tier") or {}).get("scale") == scale:
+            return node_id
+    return None
 
 
 def _power_tiers(sim, nodes):
@@ -137,7 +145,7 @@ def _power_tiers(sim, nodes):
     """
     tiers = []
     highest = None
-    for nid, label in _POWER_LADDER:
+    for nid, label in _power_ladder(nodes):
         if nid not in nodes or not sim.is_visible(nid):
             continue
         built = sim.has(nid)
@@ -188,13 +196,14 @@ def _power_waiting_on(sim, nodes, grid_known):
     own docstring for why the grid split waits on grid_known too.
     """
     workshop_scale, grid_scale = [], []
+    grid_id, workshop_id = _power_scale_node(nodes, "grid"), _power_scale_node(nodes, "workshop")
     for node_id, node in nodes.items():
         if node_id in sim.done or not sim.is_visible(node_id):
             continue
         pre = node.get("pre") or []
-        if grid_known and not sim.has("cap_power_grid") and "cap_power_grid" in pre:
+        if grid_known and not sim.has(grid_id) and grid_id in pre:
             grid_scale.append(node_id)
-        elif not sim.has("cap_power_electric") and "cap_power_electric" in pre:
+        elif not sim.has(workshop_id) and workshop_id in pre:
             workshop_scale.append(node_id)
     out = {}
     if workshop_scale:
@@ -242,8 +251,8 @@ def _power_status(sim, nodes):
         out["note"] = ("nothing discovered yet: no generation, no demand.")
         return out
     out.update(_power_generation_block(sim))
-    elec_known = sim.is_visible("cap_power_electric")
-    grid_known = sim.is_visible("cap_power_grid")
+    elec_known = sim.is_visible(_power_scale_node(nodes, "workshop"))
+    grid_known = sim.is_visible(_power_scale_node(nodes, "grid"))
     if elec_known:
         out.update(_power_waiting_on(sim, nodes, grid_known))
     return out
@@ -297,7 +306,7 @@ def _mine_rows_for_material(sim, material, workings, want):
         # years has to be able to see that here, not just infer it from a
         # lower revenue somewhere else.
         actual = sim.mine_yield_t_for(working)
-        # UTILISATION: rated capacity against what is really being drawn -
+        # UTILISATION: share of what the working raises that is really drawn -
         # the question the player actually asked. Demand for this material
         # is shared across its workings in proportion to their own rated
         # capacity (the model has no finer-grained way to say which working
@@ -309,7 +318,7 @@ def _mine_rows_for_material(sim, material, workings, want):
         # asset the player asked to see.
         share = want * (working["capacity"] / total_rated) if total_rated > 0 else 0.0
         drawn = min(share, actual)
-        util = (drawn / working["capacity"]) if working["capacity"] > 0 else 0.0
+        util = (drawn / actual) if actual > 0 else 0.0
         opened = working.get("opened_year")
         rows.append({
             "material": material,
@@ -322,7 +331,7 @@ def _mine_rows_for_material(sim, material, workings, want):
             "material_demand_t_per_yr": round(want, 2),
             "costs_you_a_year": round(sim.mine_operating_cost_for(working), 1),
             "utilization": ("%d%%" % round(100.0 * util))
-                           if working["capacity"] > 0 else "-",
+                           if actual > 0 else "-",
             # WHETHER IT IS ACTUALLY SUPPLYING ANYTHING, as a plain flag,
             # not only as a percentage a reader has to interpret. A
             # tester's own question was exactly this: does the game count
@@ -608,7 +617,8 @@ def _agent_portfolio(sim, nodes, cmd=None):
                 "hours; each row above shows what IT got and why. "
                 "'trade_hours_demand_vs_supply' is the same question for "
                 "every hired trade your portfolio draws on, summed across "
-                "all of them, before you commit to one more."
+                "all of them, before you commit to one more. 'priority "
+                "<id> first' changes who is served first."
                 % (count, "" if count == 1 else "s",
                    "is" if count == 1 else "are",
                    "{:,.0f}".format(pool_total or 0.0))) if count else
@@ -626,9 +636,11 @@ def _agent_capacity(sim, nodes, cmd=None):
     """
     state_out = _agent_state(sim, nodes)
     active_out = state_out.get("active") or {}
+    material_rows = _material_capacity_rows(sim)
     return {
         "ok": True,
-        "resources": _material_capacity_rows(sim),
+        "resources": material_rows,
+        "remedies": capacity_remedies(sim, material_rows, _trade_demand_rows(sim)),
         "power": _power_status(sim, nodes),
         "mines": _agent_mines(sim),
         "portfolio": _portfolio_rows(nodes, active_out),

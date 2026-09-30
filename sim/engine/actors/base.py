@@ -9,7 +9,8 @@ from typing import Any, Dict, List, Optional, Set
 
 from sim.engine.state import ActorRecord
 
-from . import imitation
+from . import imitation, ledger
+from .ledger import Purpose
 from .policy import Decision, Option, Policy, ValuePolicy
 from .tuning import ATTENTION_SPAN
 
@@ -45,6 +46,23 @@ class Actor:
 	def works(self) -> Dict[str, Dict[str, Any]]:
 		raise NotImplementedError
 
+	# ---- moving money -----------------------------------------------------
+	def credit(self, amount: float, purpose: Purpose) -> None:
+		"""Money in, with the purpose it came for."""
+		self.money += amount
+		self.note_income(purpose, amount)
+
+	def debit(self, amount: float, purpose: Purpose) -> None:
+		"""Money out, with the purpose it went for."""
+		self.money -= amount
+		self.note_outlay(purpose, amount)
+
+	def note_income(self, purpose: Purpose, amount: float) -> None:
+		"""Hook: an actor with books records what came in."""
+
+	def note_outlay(self, purpose: Purpose, amount: float) -> None:
+		"""Hook: an actor with books records what went out."""
+
 	# ---- what the actor values -------------------------------------------
 	def knows(self, node_id: str, world: Any) -> bool:
 		return node_id in self.knowledge or node_id in world.baseline_knowledge()
@@ -63,11 +81,18 @@ class Actor:
 		return max(0.0, self.money - committed)
 
 	# ---- imitation --------------------------------------------------------
+	def imitation_candidates(self, world: Any) -> List[str]:
+		"""The inventions this actor might value, in id order; an actor that
+		values only some of them narrows this so it is not scanned in full."""
+		return world.founder_inventions()
+
 	def imitation_options(self, world: Any) -> List[Option]:
 		"""Priced options for the inventions that look most worth copying."""
 		candidates = []
-		for node_id in world.founder_inventions():
-			if self.knows(node_id, world) or node_id in self.works:
+		known = self.knowledge
+		baseline = world.baseline_knowledge()
+		for node_id in self.imitation_candidates(world):
+			if node_id in known or node_id in baseline or node_id in self.works:
 				continue
 			worth = self.imitation_worth(node_id, world)
 			if worth > 0:
@@ -168,6 +193,14 @@ class RecordedActor(Actor):
 
 	def location(self) -> Optional[str]:
 		return self.record.location
+
+	def note_income(self, purpose: Purpose, amount: float) -> None:
+		for label, part in ledger.parts(purpose, amount).items():
+			self.record.income[label] = self.record.income.get(label, 0.0) + part
+
+	def note_outlay(self, purpose: Purpose, amount: float) -> None:
+		for label, part in ledger.parts(purpose, amount).items():
+			self.record.outlays[label] = self.record.outlays.get(label, 0.0) + part
 
 	def identity(self) -> str:
 		return self.actor_id

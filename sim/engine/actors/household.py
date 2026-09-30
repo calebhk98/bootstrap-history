@@ -17,7 +17,7 @@ persistent read and write delegates directly to the underlying typed state.
 import collections
 from collections import defaultdict
 from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
-					 Optional, Set, Tuple, TypedDict)
+					 Optional, Set, Tuple)
 
 from ..economy import _InvalidatingSet, _InvalidatingDict
 from .base import Actor
@@ -33,23 +33,6 @@ from sim.engine.state import (
 	ScenarioState,
 	PopulationState,
 )
-
-
-class MineWorking(TypedDict):
-	"""One entry of `self.mines`, below - a single owned mining operation.
-	Fixed at exactly these five fields: the only place any of these dicts is
-	built is `commission_mines()` (economy_mining.py), which always writes
-	all five, and every read site across economy_mining.py reads only
-	`material`, `capacity` and `intensity_yrs` (`opened_year` and
-	`capex_paid` exist for save/display, not for the mining arithmetic
-	itself) - none of them, in that file or anywhere else, adds a sixth
-	key. Contrast `ActiveProjectState` below, which stays a plain mapping
-	because ITS dicts genuinely do grow new keys at runtime."""
-	material: str
-	capacity: float
-	opened_year: int
-	capex_paid: float
-	intensity_yrs: float
 
 
 _SUBSYSTEM_MAP: Dict[str, str] = {
@@ -96,6 +79,8 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"last_taught": "household",
 	"training": "household",
 	"wage_hours_this_year": "household",
+	"wage_income_this_year": "household",
+	"wage_work_last_year": "household",
 	"log": "household",
 	"granted_staff": "household",
 	"hours_this_year": "household",
@@ -176,6 +161,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_said_scandal": "scenario",
 	"_said_parallelism": "scenario",
 	"_said_command_index": "scenario",
+	"_said_explanations": "scenario",
 
 	# PopulationState
 	"pop_children": "population",

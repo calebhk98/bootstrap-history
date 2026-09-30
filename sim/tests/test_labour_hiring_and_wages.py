@@ -195,11 +195,16 @@ s_rt = sim(capital=2000000.0, manual=False)
 s_rt.trades_created.add("machinist")          # taught once, long ago
 s_rt.employees.pop("machinist", None)
 s_rt._resync_pools()
+# A project in hand needs a machinist: auto_hire replaces only trades that
+# something draws on (complaint 171).
+s_rt.initialize_project("air_artificial_horizon")
 check("a trade taught and then lost counts as gone, not as available",
       s_rt.trade_available("machinist")
       and s_rt.market_supply("machinist") <= 0.0,
       (s_rt.trade_available("machinist"), s_rt.market_supply("machinist")))
 for _ in range(6):
+    if "air_artificial_horizon" not in s_rt.active:
+        s_rt.initialize_project("air_artificial_horizon")
     s_rt.step()
 check("...and the engine teaches it again rather than skipping every node "
       "that needs it",

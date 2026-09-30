@@ -26,7 +26,13 @@
   "traits": [
    "food",
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "farming_technique": {
+    "axis": "rotation",
+    "entry": "THREE_FIELD"
+   }
+  }
  },
  {
   "id": "fud_selective_breeding_pedigree",
@@ -386,7 +392,13 @@
   "traits": [
    "food",
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "farming_technique": {
+    "axis": "toolkit",
+    "entry": "HORSE_COLLAR_AND_MOULDBOARD"
+   }
+  }
  },
  {
   "id": "fud_seed_drill",
@@ -552,7 +564,13 @@
   "traits": [
    "food",
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "farming_technique": {
+    "axis": "toolkit",
+    "entry": "MECHANICAL_REAPER"
+   }
+  }
  },
  {
   "id": "fud_combine_harvester",
@@ -1129,7 +1147,17 @@
   "traits": [
    "food",
    "infrastructure"
-  ]
+  ],
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.1,
+     "label": "food that keeps",
+     "order": 14
+    }
+   ]
+  }
  },
  {
   "id": "fud_tin_plate_cans",

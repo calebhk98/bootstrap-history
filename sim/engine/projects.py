@@ -58,6 +58,8 @@ here, on the composition point all six inherit from, instead.
 from .projects_capability import CapabilityMixin
 from .projects_ventures import VenturesMixin
 from .projects_staffing import StaffingMixin
+from .projects_staffing_shortfall import StaffingShortfallMixin
+from .projects_venture_quotes import VentureQuotesMixin
 from .projects_starting import StartingMixin
 from .projects_progress import ProgressMixin
 from .projects_completion import CompletionMixin
@@ -65,6 +67,7 @@ from sim.constants import declare
 
 
 class ProjectsMixin(CapabilityMixin, VenturesMixin, StaffingMixin,
+                     StaffingShortfallMixin, VentureQuotesMixin,
                      StartingMixin, ProgressMixin, CompletionMixin):
     """Composition point only: every method below is defined in one of the
     six sibling modules above, not here - what IS defined directly here is
@@ -95,16 +98,7 @@ class ProjectsMixin(CapabilityMixin, VenturesMixin, StaffingMixin,
     # its own (is_venture() is false for both), so neither is ever opened,
     # closed, or capable of losing money - there is nothing for this set to
     # protect.
-    CAPABILITY_INSTITUTIONS = frozenset((
-        "academy_network", "blast_furnace", "collegium_licensed",
-        "corpus_dispersed", "corpus_written", "crucible_steel",
-        "endowment_land", "exp_trade_route_extend", "fin_argentarii",
-        "fin_chain_store", "fin_company_town", "fin_university",
-        "freedman_staff", "identity_cover",
-        "interchangeable_parts", "patron_imperial", "patron_local",
-        "patron_senatorial", "plague_preparedness", "power_grid", "railway",
-        "sanitation_antisepsis", "school_founded", "steam_high_pressure",
-        "telegraph_electric", "workshop_first"))
+    # CAPABILITY_INSTITUTIONS: nodes declaring the `capability` mechanic (MechanicsMixin).
     # ---- AN INSTITUTION IS A QUANTITY, WHERE A SECOND ONE MEANS ANYTHING --
     # "Can you have multiple things? What if I wanted to raise literacy to
     # 90%+, and wanted to open 5,000 schools?" is the question that exposed
@@ -133,9 +127,7 @@ class ProjectsMixin(CapabilityMixin, VenturesMixin, StaffingMixin,
     # below (population, not literacy - a branch network draws on merchants
     # and clerks, not the lettered few a second academy needs), so nothing
     # else here had to change to seat it.
-    SCALABLE_INSTITUTIONS = frozenset((
-        "workshop_first", "school_founded", "academy_network",
-        "freedman_staff", "collegium_licensed", "fin_chain_store"))
+    # SCALABLE_INSTITUTIONS: `capability` nodes whose spec sets `scalable` (MechanicsMixin).
     # YOU ARE A PAIR OF HANDS TOO. Requiring staff for every concern, however
     # small, meant a founder with nobody could open nothing at all - not a
     # bottling shed, not an inn - and since revenue now follows what you RUN,

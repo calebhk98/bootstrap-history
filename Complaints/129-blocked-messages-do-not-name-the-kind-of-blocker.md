@@ -34,3 +34,5 @@ Have each check return a kind (`knowledge`, `closed`, `material`, `staff`,
 `political`, `funds`) alongside its text, render the kind as a fixed leading
 label in `why`, `start` refusals and `stuck`, and expose it in the JSON
 protocol. Test: one node per kind, asserting the label.
+
+Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): asks that a blocked technology show the kind of block separately: KNOWLEDGE, SPECIALISTS, MATERIAL SUPPLY, CAPITAL, CALENDAR each READY or not, and that the capacity-report suggestions sit next to the blocked project (complaint 267 is the compact-output half: `blocked_by` omits supply gates).

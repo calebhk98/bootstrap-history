@@ -1,6 +1,6 @@
 # Mature play needs a "development program" abstraction, not hundreds of individual clicks
 
-**Status:** open
+**Status:** partly - one-shot spending caps on `rush` exist; no standing programme with category priorities, pause conditions or excluded projects
 
 Once the economy and institutions were mature, the meaningful decision became "Commit up to 200k capital and ~15k directed hours to broad visible development over the next several years." The UI still operates primarily at individual-project granularity.
 
@@ -32,3 +32,5 @@ Design recommendation
 ## Cross-references
 
 Related to UX-005 (batch start), UX-031 (idle directed hours), and UX-020 (portfolio bottleneck-centric view). Together these address the shift needed for mature-play UX.
+
+Update: the rush caps (max_total_cost, max_annual_draw, reserve_cash) cover the capital, cash-draw and reserve-floor parts as a single command. There is still no standing programme that persists across years, ranks categories, excludes projects or pauses on debt or shortage.

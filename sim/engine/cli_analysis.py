@@ -25,22 +25,8 @@ from .core import Sim
 from sim.constants import declare
 from sim.unit_conversions import PERCENT_SCALE
 from sim.presentation import EXPLAIN_NEAR_MATCH_SUGGESTIONS_SHOWN
-from sim.world.agriculture import (
-    DEFAULT_STORAGE_TECHNIQUE, annual_food_demand_kg_per_person,
-    calculate_granary_runway, granary_capacity_kg,
-)
 
 from .cli import _founder_lifetime_hours
-
-
-def granary_projection(sim):
-    """Player-facing forecast backed by the same calculation as the turn."""
-    demand = (sim._adult_equivalent_population(sim.population)
-              * annual_food_demand_kg_per_person())
-    return calculate_granary_runway(
-        sim.farm_stock_kg, demand,
-        DEFAULT_STORAGE_TECHNIQUE.spoilage_rate_per_year,
-        granary_capacity_kg(demand))
 
 
 def cmd_plan(args):
@@ -313,7 +299,7 @@ def cmd_why(args):
     for prereq_id in node_record["pre"] or ["(none, you can start this on arrival)"]:
         print("   %s" % (("%-30s %s" % (prereq_id, nodes[prereq_id]["name"])) if prereq_id in nodes else prereq_id))
     need = closure(nodes, node_id) - {node_id}
-    print("\nFULL CHAIN BEHIND IT: %d nodes, %s of your hours, %s denarii, %.0f-year serial floor"
+    print("\nFULL CHAIN BEHIND IT: %d nodes, %s of your hours, %s denarii, %.0f-year serial floor from scratch"
           % (len(need), f"{sum(nodes[descendant_id]['ph'] for descendant_id in need):,}",
              f"{sum(nodes[descendant_id]['_total_cost'] for descendant_id in need):,.0f}", critical_path(nodes, node_id)[0]))
     print("   " + ", ".join(topo_order(nodes, need)))

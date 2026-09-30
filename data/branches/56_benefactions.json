@@ -1,0 +1,852 @@
+[
+ {
+  "id": "ben_free_school_foundation",
+  "name": "Free school foundation",
+  "cat": "benefaction",
+  "pre": [
+   "school_founded",
+   "endowment_land"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_free_school_foundation",
+  "ph": 200,
+  "lab": {
+   "scholar": 3000,
+   "scribe": 1500,
+   "mason": 2500,
+   "carpenter": 1500,
+   "labourer": 2500
+  },
+  "mat": {
+   "timber_m3": 300,
+   "brick_1000": 60,
+   "iugerum_land": 400,
+   "parchment_sheet": 2000
+  },
+  "cap": 0,
+  "up": 22095,
+  "build_yrs": 3,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 2,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Pay for a school that takes pupils whose families cannot: teachers, books and a midday meal from a land endowment, on the model of the alimenta and of every later charity school. It adds to the flow of schooling the school already gives, so it raises literacy faster; a further foundation in another town is another unit, dearer each time, and only as many can be filled as the literate can spare.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"scholar\": 25000, \"scribe\": 5000}. Annual consumables: {\"parchment_sheet\": 2000, \"wheat_kg\": 60000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The free pupils it teaches and the standing it earns",
+    "scalable": "literacy"
+   },
+   "schooling_flow": {
+    "per_sqrt_unit": 0.5,
+    "order": 2
+   },
+   "standing": {
+    "per_sqrt_unit": 2.0,
+    "order": 7
+   }
+  }
+ },
+ {
+  "id": "ben_public_library",
+  "name": "Public library",
+  "cat": "benefaction",
+  "pre": [
+   "school_founded",
+   "printing_press"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_public_library",
+  "ph": 150,
+  "lab": {
+   "mason": 2500,
+   "carpenter": 1500,
+   "scribe": 1500,
+   "labourer": 2000
+  },
+  "mat": {
+   "timber_m3": 400,
+   "brick_1000": 80,
+   "parchment_sheet": 20000,
+   "paper_kg": 5000
+  },
+  "cap": 0,
+  "up": 6415,
+  "build_yrs": 2,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A reading room open to anyone who can read, with librarians to lend and copy. It teaches by example rather than by lesson, so its schooling flow is smaller than a school's, and it gives its founder the name of a man who gave a town its books. Branch libraries are further units.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"scribe\": 15000}. Annual consumables: {\"paper_kg\": 1000, \"parchment_sheet\": 3000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The readers a public library teaches and the standing it earns",
+    "scalable": "literacy"
+   },
+   "schooling_flow": {
+    "per_sqrt_unit": 0.4,
+    "order": 3
+   },
+   "standing": {
+    "per_sqrt_unit": 1.5,
+    "order": 8
+   }
+  }
+ },
+ {
+  "id": "ben_research_foundation",
+  "name": "Endowed research foundation with prizes and an observatory",
+  "cat": "benefaction",
+  "pre": [
+   "fin_research_institute",
+   "fin_learned_society"
+  ],
+  "traits": [
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_research_foundation",
+  "ph": 300,
+  "lab": {
+   "mason": 3000,
+   "carpenter": 1500,
+   "glassblower": 800,
+   "machinist": 1000,
+   "scholar": 2000,
+   "engineer": 500
+  },
+  "mat": {
+   "brick_1000": 100,
+   "timber_m3": 300,
+   "glass_raw_kg": 3000,
+   "copper_kg": 1000,
+   "iron_bar_kg": 2000,
+   "paper_kg": 2000
+  },
+  "cap": 0,
+  "up": 38169,
+  "build_yrs": 4,
+  "adopt_yrs": 3,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 2,
+  "art": 3,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Money left to a standing body of scholars: laboratories, an observatory, instrument makers, and an annual prize in silver for the best work. It raises the number of trained scholars the household can keep and the name of its founder; it does not by itself tell them what to discover.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book (left out here: those people are paid through staff capacity) plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {}. Annual consumables: {\"coal_kg\": 20000, \"copper_kg\": 200, \"glass_raw_kg\": 1000, \"iron_bar_kg\": 500, \"paper_kg\": 2000, \"silver_kg\": 100}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The extra scholars the foundation trains and the standing it earns",
+    "scalable": "literacy"
+   },
+   "staff_capacity": {
+    "scholars": 8.0,
+    "artisans": 6.0,
+    "directors": 2.0,
+    "scales_with_units": true,
+    "must_be_running": true,
+    "order": 21
+   },
+   "standing": {
+    "per_sqrt_unit": 3.0,
+    "order": 9
+   }
+  }
+ },
+ {
+  "id": "ben_hospital_foundation",
+  "name": "Endowed hospital",
+  "cat": "benefaction",
+  "pre": [
+   "med_hospital_institution",
+   "endowment_land"
+  ],
+  "traits": [
+   "medical",
+   "infrastructure"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_hospital_foundation",
+  "ph": 200,
+  "lab": {
+   "mason": 3000,
+   "carpenter": 1500,
+   "labourer": 3000,
+   "plumber": 500,
+   "engineer": 200
+  },
+  "mat": {
+   "brick_1000": 200,
+   "timber_m3": 400,
+   "iron_bar_kg": 1000,
+   "iugerum_land": 200,
+   "lead_kg": 3000
+  },
+  "cap": 0,
+  "up": 30931,
+  "build_yrs": 3,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 2,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Wards for the poor, physicians and nurses on the payroll, food and fuel bought every year. It lowers the share of your people the sickness of a bad year carries off. More hospitals in more towns are further units.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"artisan\": 50000, \"scholar\": 10000, \"scribe\": 2500}. Annual consumables: {\"charcoal_kg\": 60000, \"wheat_kg\": 100000, \"wine_common_kg\": 20000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The lower death toll among your people and the town",
+    "scalable": "population"
+   },
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.15,
+     "label": "an endowed hospital that takes the sick in",
+     "order": 15
+    }
+   ],
+   "standing": {
+    "per_sqrt_unit": 2.0,
+    "order": 10
+   }
+  }
+ },
+ {
+  "id": "ben_civic_water_works",
+  "name": "Aqueduct, baths and sewers for a town",
+  "cat": "benefaction",
+  "pre": [
+   "civ_aqueduct_roman",
+   "civ_sewer_roman"
+  ],
+  "traits": [
+   "infrastructure"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_civic_water_works",
+  "ph": 200,
+  "lab": {
+   "labourer": 30000,
+   "mason": 15000,
+   "engineer": 1500,
+   "plumber": 4000,
+   "carpenter": 2000
+  },
+  "mat": {
+   "stone_blocks": 60000,
+   "lead_kg": 80000,
+   "timber_m3": 1000
+  },
+  "cap": 0,
+  "up": 9769,
+  "build_yrs": 4,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A town's water supply given as a gift: the channel, the pipes, public baths that heat it, and the sewer that takes it away. It needs crews to keep it clear every year or it silts and leaks. It lowers the loss of your people to the water-borne diseases; the next town is another unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 6000, \"mason\": 2000, \"plumber\": 2000}. Annual consumables: {\"charcoal_kg\": 50000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The clean water piped in and the foul water piped out",
+    "scalable": "population"
+   },
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.12,
+     "label": "clean water piped in and foul water piped out",
+     "order": 16
+    }
+   ],
+   "standing": {
+    "per_sqrt_unit": 1.5,
+    "order": 11
+   }
+  }
+ },
+ {
+  "id": "ben_harbour_and_lighthouse",
+  "name": "Harbour works and lighthouse",
+  "cat": "benefaction",
+  "pre": [
+   "civ_harbour_dock",
+   "sea_pharos_lighthouse"
+  ],
+  "traits": [
+   "infrastructure",
+   "commerce"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_harbour_and_lighthouse",
+  "ph": 200,
+  "lab": {
+   "labourer": 40000,
+   "mason": 20000,
+   "sailor": 3000,
+   "engineer": 1500,
+   "carpenter": 4000
+  },
+  "mat": {
+   "stone_blocks": 120000,
+   "timber_m3": 3000,
+   "iron_bar_kg": 10000
+  },
+  "cap": 0,
+  "up": 17848,
+  "build_yrs": 5,
+  "adopt_yrs": 3,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 3,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A breakwater, quays and a fire on a tower. Ships that can shelter and find the mouth at night arrive; those that arrive bring buyers, so it widens the market you can reach and spares some losses at sea. The fire burns charcoal and the moles need dredging for as long as the harbour is kept.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 4000, \"mason\": 1500, \"sailor\": 3000}. Annual consumables: {\"charcoal_kg\": 100000, \"olive_oil_kg\": 5000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The wider market a safe harbour opens and the ships it spares"
+   },
+   "reach": {
+    "factor": 1.05,
+    "order": 4
+   },
+   "hazard_counters": [
+    {
+     "kind": "output_factor",
+     "share": 0.06,
+     "label": "a sheltered, lit harbour",
+     "order": 17
+    }
+   ],
+   "standing": {
+    "flat": 2.0,
+    "order": 12
+   }
+  }
+ },
+ {
+  "id": "ben_telegraph_network",
+  "name": "Telegraph lines to the provincial towns",
+  "cat": "benefaction",
+  "pre": [
+   "telegraph_electric",
+   "fin_telegraph_business"
+  ],
+  "traits": [
+   "information",
+   "infrastructure",
+   "commerce"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_telegraph_network",
+  "ph": 250,
+  "lab": {
+   "electrician": 6000,
+   "labourer": 15000,
+   "engineer": 1500
+  },
+  "mat": {
+   "copper_wire_kg": 30000,
+   "timber_m3": 1500,
+   "iron_bar_kg": 3000,
+   "glass_raw_kg": 5000
+  },
+  "cap": 0,
+  "up": 21220,
+  "build_yrs": 3,
+  "adopt_yrs": 3,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Wire on poles between the towns you trade with, an operator at each end. An order sent by wire lets one person direct agents far away, and news of prices reaches buyers the same day. The lines need linemen, cells and repair every year. Each further trunk is another unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"electrician\": 20000, \"labourer\": 8000}. Annual consumables: {\"coal_kg\": 30000, \"copper_kg\": 2000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The reach of your orders and your markets along the wires",
+    "scalable": "population"
+   },
+   "reach": {
+    "factor": 1.08,
+    "order": 5
+   },
+   "supervision_room": {
+    "per_unit": 12.0,
+    "words": "agents at the far end of a telegraph wire",
+    "order": 5
+   }
+  }
+ },
+ {
+  "id": "ben_public_games",
+  "name": "Public games and festivals",
+  "cat": "benefaction",
+  "pre": [
+   "civ_amphitheatre",
+   "patron_local"
+  ],
+  "traits": [
+   "spectacle"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_public_games",
+  "ph": 100,
+  "lab": {
+   "carpenter": 4000,
+   "artisan": 3000,
+   "labourer": 3000
+  },
+  "mat": {
+   "timber_m3": 300
+  },
+  "cap": 0,
+  "up": 652646,
+  "build_yrs": 1,
+  "adopt_yrs": 1,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Days of shows, races and feasting paid for out of one's own purse, the oldest way a rich man bought a city. The crowd is fed and the performers paid every year the games run, so it never stops costing. It makes the founder well known and a little safer with the people, and more visible to everyone else.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"artisan\": 40000, \"carpenter\": 3000, \"labourer\": 15000}. Annual consumables: {\"olive_oil_kg\": 100000, \"wheat_kg\": 3000000, \"wine_common_kg\": 1500000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The crowd's goodwill",
+    "scalable": "population"
+   },
+   "protection": {
+    "flat": 0.03,
+    "order": 7
+   },
+   "standing": {
+    "per_sqrt_unit": 3.0,
+    "order": 13
+   },
+   "eminence_hazard_factor": {
+    "factor": 1.1,
+    "order": 2,
+    "hint_when_running": "the games make you loved by the crowd and watched by those above you, who cannot give any"
+   }
+  }
+ },
+ {
+  "id": "ben_temple_endowment",
+  "name": "Temple and shrine endowment",
+  "cat": "benefaction",
+  "pre": [
+   "endowment_land",
+   "citizenship"
+  ],
+  "traits": [
+   "religious_adjacent"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_temple_endowment",
+  "ph": 100,
+  "lab": {
+   "mason": 8000,
+   "carpenter": 2500,
+   "artisan": 4000,
+   "labourer": 6000
+  },
+  "mat": {
+   "stone_blocks": 20000,
+   "timber_m3": 400,
+   "bronze_kg": 800,
+   "iugerum_land": 400
+  },
+  "cap": 0,
+  "up": 10647,
+  "build_yrs": 4,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A temple with land, servants and daily offerings. What is given to the gods is not easily taken back, and the priesthood speaks for its benefactor. It shields the founder somewhat and adds to his name; it needs its servants fed and its oil burnt for as long as it stands.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"artisan\": 10000, \"labourer\": 2000}. Annual consumables: {\"olive_oil_kg\": 5000, \"wheat_kg\": 20000, \"wine_common_kg\": 5000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The sanctuary and the priests' goodwill"
+   },
+   "protection": {
+    "flat": 0.04,
+    "order": 8
+   },
+   "standing": {
+    "flat": 2.0,
+    "order": 14
+   }
+  }
+ },
+ {
+  "id": "ben_scholar_and_artist_patronage",
+  "name": "Patronage of scholars, poets and artists",
+  "cat": "benefaction",
+  "pre": [
+   "patron_senatorial",
+   "school_founded",
+   "prn_theatre_pantomime"
+  ],
+  "traits": [
+   "spectacle",
+   "information"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_scholar_and_artist_patronage",
+  "ph": 150,
+  "lab": {
+   "scribe": 500,
+   "mason": 1000,
+   "carpenter": 500
+  },
+  "mat": {
+   "timber_m3": 100,
+   "parchment_sheet": 500
+  },
+  "cap": 0,
+  "up": 21438,
+  "build_yrs": 1,
+  "adopt_yrs": 1,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 1,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A table and a stipend for men who write, paint, play and calculate, and commissions for their work. The circle carries the patron's name wherever it goes and gives him people to call on. Commissions paid in silver are the yearly cost; a wider circle is another unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book (left out here: those people are paid through staff capacity) plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {}. Annual consumables: {\"paper_kg\": 1000, \"parchment_sheet\": 2000, \"silver_kg\": 60}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The circle of scholars and artists who keep your name",
+    "scalable": "population"
+   },
+   "standing": {
+    "per_sqrt_unit": 3.0,
+    "order": 15
+   },
+   "staff_capacity": {
+    "scholars": 3.0,
+    "artisans": 4.0,
+    "scales_with_units": true,
+    "must_be_running": true,
+    "order": 22
+   }
+  }
+ },
+ {
+  "id": "ben_house_bank",
+  "name": "House bank",
+  "cat": "benefaction",
+  "pre": [
+   "fin_deposit_bank",
+   "patron_local"
+  ],
+  "traits": [
+   "commerce"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_house_bank",
+  "ph": 200,
+  "lab": {
+   "merchant": 1500,
+   "scribe": 1500,
+   "mason": 1000,
+   "carpenter": 500
+  },
+  "mat": {
+   "brick_1000": 40,
+   "timber_m3": 100,
+   "iron_bar_kg": 2000,
+   "silver_kg": 300
+  },
+  "cap": 0,
+  "up": 7272,
+  "build_yrs": 2,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A banking house of your own, with a strongroom and a reserve of silver, taking deposits and lending them on. Its own depositors are the founder's credit: he can borrow more and more cheaply. Each branch is another unit. A bank that lends to the powerful is only as safe as they are.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"merchant\": 12000, \"scribe\": 10000}. Annual consumables: {\"parchment_sheet\": 500}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The credit and the lower rate a house bank gives",
+    "scalable": "population"
+   },
+   "credit_line": {
+    "per_unit": 12000.0,
+    "book_money": true,
+    "order": 6
+   },
+   "debt_rate_discount": {
+    "flat": 0.01,
+    "order": 5
+   }
+  }
+ },
+ {
+  "id": "ben_underwriting_syndicate",
+  "name": "Underwriting syndicate",
+  "cat": "benefaction",
+  "pre": [
+   "fin_reinsurance",
+   "fin_fire_insurance",
+   "fin_life_insurance"
+  ],
+  "traits": [
+   "commerce"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_underwriting_syndicate",
+  "ph": 200,
+  "lab": {
+   "merchant": 2000,
+   "scribe": 2000
+  },
+  "mat": {
+   "silver_kg": 2000,
+   "parchment_sheet": 500
+  },
+  "cap": 0,
+  "up": 16604,
+  "build_yrs": 2,
+  "adopt_yrs": 3,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 1,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A reserve of silver and a clerkroom that write cover for ships, houses and lives, and pay claims from the pool. Spreading risk over many policies is what turns a disaster into a bill; the reserve is tied up for as long as the syndicate writes.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"merchant\": 8000, \"scribe\": 8000}. Annual consumables: {\"parchment_sheet\": 500}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The spreading of your losses over other men's risks"
+   },
+   "hazard_counters": [
+    {
+     "kind": "output_factor",
+     "share": 0.1,
+     "label": "losses spread over a pool of underwritten risks",
+     "order": 18
+    }
+   ]
+  }
+ },
+ {
+  "id": "ben_grain_dole",
+  "name": "Public granary and grain dole",
+  "cat": "benefaction",
+  "pre": [
+   "fin_annona",
+   "endowment_land"
+  ],
+  "traits": [
+   "food"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_grain_dole",
+  "ph": 200,
+  "lab": {
+   "labourer": 20000,
+   "mason": 5000,
+   "carpenter": 2000,
+   "merchant": 1000,
+   "scribe": 1000
+  },
+  "mat": {
+   "stone_blocks": 40000,
+   "timber_m3": 1500,
+   "wheat_kg": 4000000
+  },
+  "cap": 0,
+  "up": 1059486,
+  "build_yrs": 2,
+  "adopt_yrs": 2,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Granaries and a register of households, grain bought each harvest and handed out each month. A bad harvest hurts the town less and the crowd owes its bread to a name. The grain bought every year is the cost, and it does not fall while the town grows.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"labourer\": 30000, \"merchant\": 6000, \"scribe\": 6000}. Annual consumables: {\"wheat_kg\": 8000000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The goodwill of the fed and the grain in store against a bad year",
+    "scalable": "population"
+   },
+   "protection": {
+    "flat": 0.04,
+    "order": 9
+   },
+   "hazard_counters": [
+    {
+     "kind": "staff_loss",
+     "share": 0.08,
+     "label": "a public granary against a bad year",
+     "order": 19
+    }
+   ],
+   "standing": {
+    "per_sqrt_unit": 2.0,
+    "order": 16
+   }
+  }
+ },
+ {
+  "id": "ben_state_subvention",
+  "name": "Subsidy to the army and the treasury",
+  "cat": "benefaction",
+  "pre": [
+   "fin_public_debt",
+   "patron_senatorial"
+  ],
+  "traits": [
+   "military",
+   "commerce"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_state_subvention",
+  "ph": 150,
+  "lab": {
+   "merchant": 800,
+   "scribe": 1000
+  },
+  "mat": {
+   "silver_kg": 3000
+  },
+  "cap": 0,
+  "up": 970528,
+  "build_yrs": 1,
+  "adopt_yrs": 1,
+  "risk": 0.1,
+  "rev": 0,
+  "sch": 1,
+  "art": 1,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "Silver paid every year toward the army, the fleet and the interest on what the state has borrowed. A state that lives on your money is slow to think ill of you, and the protection it gives counts as much as the society's patronage counts. Stop paying and it stops.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"merchant\": 2000}. Annual consumables: {\"silver_kg\": 3000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The state's favour",
+    "scalable": "population"
+   },
+   "patron_protection": {
+    "flat": 0.05,
+    "order": 3
+   },
+   "alarm_factor": {
+    "factor": 0.92
+   },
+   "standing": {
+    "per_sqrt_unit": 2.0,
+    "order": 17
+   }
+  }
+ },
+ {
+  "id": "ben_survey_and_trade_expedition",
+  "name": "Sponsored survey and trade expedition",
+  "cat": "benefaction",
+  "pre": [
+   "exp_openocean_navigation",
+   "fin_survey_map",
+   "exp_trade_route_extend"
+  ],
+  "traits": [
+   "commerce"
+  ],
+  "kb": "04_BENEFACTIONS.md#ben_survey_and_trade_expedition",
+  "ph": 300,
+  "lab": {
+   "carpenter": 12000,
+   "sailor": 8000,
+   "labourer": 6000,
+   "smith": 3000,
+   "merchant": 1500,
+   "scholar": 800
+  },
+  "mat": {
+   "timber_m3": 3000,
+   "iron_bar_kg": 20000,
+   "twine_kg": 15000,
+   "wheat_kg": 300000,
+   "wine_common_kg": 50000
+  },
+  "cap": 0,
+  "up": 38158,
+  "build_yrs": 3,
+  "adopt_yrs": 2,
+  "risk": 0.15,
+  "rev": 0,
+  "sch": 1,
+  "art": 2,
+  "conf": "C",
+  "gov": 0,
+  "sus": 0,
+  "note": "A small fleet, a mapmaker and a factor sent to coasts and markets nobody in the household has visited. What comes back is charts and buyers, so the reach of your goods grows; ships and crews are provisioned and repaired every season. Each further season's fleet is another unit.",
+  "_internal": "Upkeep is derived, not a price: annual staff hours at the wage book plus annual consumables at the price book plus a maintenance share of the build cost. Annual staff hours: {\"carpenter\": 4000, \"merchant\": 3000, \"sailor\": 20000}. Annual consumables: {\"iron_bar_kg\": 1000, \"timber_m3\": 500, \"twine_kg\": 3000, \"wheat_kg\": 200000}. Sizes of the foundation and every number under mechanics are temporary_heuristic values (CLAUDE.md 4.4); revenue is 0 because a benefaction sells nothing.",
+  "mechanics": {
+   "upkeep_full": true,
+   "capability": {
+    "lost_benefit": "The trade the last expeditions opened",
+    "scalable": "population"
+   },
+   "reach": {
+    "factor": 1.06,
+    "order": 6
+   },
+   "standing": {
+    "per_sqrt_unit": 1.5,
+    "order": 18
+   }
+  }
+ }
+]

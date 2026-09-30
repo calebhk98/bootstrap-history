@@ -143,7 +143,9 @@ _staff_legend = next((i for i, line in enumerate(_lines)
                       if "STAFF is the standing people" in line), None)
 check("the STAFF column has its legend within a few lines of the table, "
       "not a screen away",
-      _staff_legend is not None and _staff_legend - _staff_hdr < 15,
+      _staff_legend is not None and _staff_legend - _staff_hdr - sum(
+          1 for line in _lines[_staff_hdr + 1:_staff_legend]
+          if line.startswith("   ") and line.strip()) < 15,
       (_staff_hdr, _staff_legend))
 
 

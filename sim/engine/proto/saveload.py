@@ -9,8 +9,6 @@ from sim.engine.state import (
     deserialize_state,
 )
 
-SAVE_VERSION = 3
-
 
 def save_state(sim, path):
 	"""Write the whole game to a file using automatic state serialization from live sim.state."""
@@ -29,17 +27,36 @@ def save_state(sim, path):
 		sim.state.population.pop_children = float(sim.population.children)
 		sim.state.population.pop_working_age = float(sim.population.working_age)
 		sim.state.population.pop_elderly = float(sim.population.elderly)
-	sim.state._version = 3
 
-	blob = serialize_state(sim.state)
+	# dumps (not dump, not indent) so the C encoder does the work
+	text = json.dumps(serialize_state(sim.state), sort_keys=True, default=str,
+					  separators=(",", ":"))
+	absolute = os.path.abspath(path)
+	# a command that changed nothing leaves the file as it is
+	if _ON_DISK.get(absolute) == (text, _stamp(absolute)):
+		return path
 	tmp = path + ".tmp"
-	parent = os.path.dirname(os.path.abspath(path))
+	parent = os.path.dirname(absolute)
 	if parent and not os.path.isdir(parent):
 		os.makedirs(parent, exist_ok=True)
 	with open(tmp, "w") as handle:
-		json.dump(blob, handle, indent=1, sort_keys=True, default=str)
+		handle.write(text)
 	os.replace(tmp, path)          # atomic: a crash mid-save cannot eat the game
+	_ON_DISK[absolute] = (text, _stamp(absolute))
 	return path
+
+
+# What this process last wrote or read for each save path, and the file's
+# size and modification time then; a save is skipped only while both agree.
+_ON_DISK = {}
+
+
+def _stamp(absolute):
+	try:
+		status = os.stat(absolute)
+	except OSError:
+		return None
+	return (status.st_size, status.st_mtime_ns)
 
 
 REQUIRED_V3_SECTIONS = (
@@ -49,7 +66,6 @@ REQUIRED_V3_SECTIONS = (
 
 REQUIRED_METADATA_FIELDS = (
     "_civ", "_goal", "_civ_live", "_weights", "_fog", "_immortal", "_rng",
-    "_version",
 )
 
 REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
@@ -59,7 +75,7 @@ REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
 # tree, because the tree is data and does get edited: a node can be renamed
 # or removed between when a save was written and when it is read back.
 _SET_FIELDS_OF_NODE_IDS = ("done", "granted", "mothballed", "operating",
-                           "bountied", "revealed")
+                           "bountied", "revealed", "keep_staffed")
 # Checked against the wage table instead, which is what they actually are.
 _SET_FIELDS_OF_TRADE_NAMES = ("trades_created", "trades_endemic")
 
@@ -79,15 +95,12 @@ def _get_field(blob, field_name):
 
 
 def _check_save_shape(blob):
-    """None if `blob` is a JSON object carrying every required v3 section and
+    """None if `blob` is a JSON object carrying every required section and
     metadata field this build requires; otherwise the refusal message.
     """
     if not isinstance(blob, dict):
         return ("this is not a save from this game: expected a JSON object, "
                 "got %s" % type(blob).__name__)
-    if "_version" not in blob:
-        return "this is not a save from this game: missing '_version'"
-
     required = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
     missing = [f for f in required if f not in blob]
     if missing:
@@ -100,19 +113,6 @@ def _check_save_shape(blob):
         if not isinstance(blob.get(section), dict):
             return "this save is corrupt: section '%s' should be an object" % section
 
-    return None
-
-
-def _check_save_version(blob):
-    """None if `blob`'s version stamp is a whole number matching the one this
-    build writes; otherwise the refusal message.
-    """
-    if not isinstance(blob.get("_version"), int):
-        return "this save is corrupt: '_version' should be a whole number"
-    if blob["_version"] != SAVE_VERSION:
-        return ("this save uses format version %s; this build requires version %s. "
-                "Saved runs are not migrated; start a new run."
-                % (blob["_version"], SAVE_VERSION))
     return None
 
 
@@ -204,9 +204,6 @@ def _validate_save(blob, sim):
 	message = _check_save_shape(blob)
 	if message:
 		return message
-	message = _check_save_version(blob)
-	if message:
-		return message
 	message = _check_save_scalars(blob, sim)
 	if message:
 		return message
@@ -255,7 +252,9 @@ def load_state(sim, path):
 	a clear reason and leave `sim` completely untouched.
 	"""
 	with open(path) as f:
-		blob = json.load(f)
+		text = f.read()
+	blob = json.loads(text)
+	_ON_DISK[os.path.abspath(path)] = (text, _stamp(os.path.abspath(path)))
 	bad = _validate_save(blob, sim)
 	if bad:
 		raise ValueError(bad)
@@ -267,7 +266,11 @@ def load_state(sim, path):
 						 "you want.")
 
 	old_revealed = set(sim.state.projects.revealed) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) and sim.state.projects.revealed else set()
+	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.state._fuzzy_salt
 	state = deserialize_state(blob)
+	if asked_fuzzy and not state._fuzzy_estimates:   # the option given on the command line stays on
+		state._fuzzy_estimates = True
+		state._fuzzy_salt = state._fuzzy_salt or asked_salt
 	if old_revealed and getattr(state, "projects", None):
 		state.projects.revealed = set(state.projects.revealed or set()) | old_revealed
 	sim.state = state

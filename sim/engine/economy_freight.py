@@ -603,70 +603,85 @@ class FreightMixin:
             "plausible safety margin, not derived from how much the "
             "portfolio typically moves.")
 
-    def shortage_remedy(self, binding):
-        """One sentence on what would end this shortage, in things you can type.
+    def material_shortfall_t(self, material, by_tag=None):
+        """Tonnes per year of `material` demand that neither your own
+        workings nor the market cover: the one shortfall figure the capacity
+        rows and the remedy text both use."""
+        if by_tag is None:
+            by_tag = self._demand_by_supply_tag(self.annual_material_demand())
+        need, own = self.demand_and_own_supply_by_material(by_tag).get(material, (0.0, 0.0))
+        if need <= 0.0:
+            return 0.0
+        return max(0.0, need - own - self._material_market_tonnes(material))
+
+    def shortage_remedy(self, binding, shortfall_t=None):
+        """One sentence on what would end this shortage, in things you can type."""
+        return self.shortage_remedy_plan(binding, shortfall_t)["text"]
+
+    def shortage_remedy_plan(self, binding, shortfall_t=None):
+        """{"text", "commands"} for what would end this shortage.
 
         Must say what fixes it, not only the material and the percentage:
         naming a shortage without a remedy tells a player they are stuck
-        without telling them it is fixable. Every binding constraint in
-        the model has exactly one answer; this is that answer, said out
-        loud.
+        without telling them it is fixable. `shortfall_t` is the tonnes per
+        year still uncovered (material_shortfall_t() when omitted); every
+        command's size comes from it, so the suggestion covers the shortfall
+        the capacity screen reports.
         """
         if not binding:
-            return ""
+            return {"text": "", "commands": []}
         if binding == "charcoal":
             need = max(0.0, self.annual_material_demand().get("charcoal_kg", 0.0)
                        / KILOGRAMS_PER_TONNE - self.state.economy.forest_ha * self.CHARCOAL_PER_HA)
             hectares_needed = max(1.0, round(need / max(self.CHARCOAL_PER_HA, 1e-9)))
-            return ("Charcoal is grown, not bought: about %s more hectare%s of "
-                    "coppice would cover it ('buy forest %d', roughly %s "
-                    "denarii). Ask the price first with 'quote forest %d'."
-                    % ("{:,.0f}".format(hectares_needed), "" if hectares_needed == 1 else "s", hectares_needed,
-                       "{:,.0f}".format(hectares_needed * self.FOREST_COST_PER_HA * self.price_index),
-                       hectares_needed))
+            return {"text": (
+                "Charcoal is grown, not bought: about %s more hectare%s of "
+                "coppice would cover it ('buy forest %d', roughly %s "
+                "denarii). Ask the price first with 'quote forest %d'."
+                % ("{:,.0f}".format(hectares_needed), "" if hectares_needed == 1 else "s", hectares_needed,
+                   "{:,.0f}".format(hectares_needed * self.FOREST_COST_PER_HA * self.price_index),
+                   hectares_needed)),
+                "commands": ["quote forest %d" % hectares_needed, "buy forest %d" % hectares_needed]}
+        if shortfall_t is None:
+            shortfall_t = self.material_shortfall_t(binding)
         if binding == "saltpetre":
             demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / KILOGRAMS_PER_TONNE
             available = (self.state.economy.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
                          + self._material_market_tonnes("saltpetre")
                          + self._material_stock().get("saltpetre", 0.0))
-            deficit = max(0.0, demand - available)
+            deficit = max(shortfall_t, demand - available, 0.0)
             # Twenty per cent headroom prevents a tiny change in the portfolio
             # putting the player straight back into shortage, without turning a
             # one-tonne deficit into the old fixed sixteen-tonne recommendation.
             square_meters = max(100, int(math.ceil(
                 deficit * self.NITRE_SHORTAGE_SAFETY_BUFFER
                 / max(self.NITRE_YIELD_T_PER_M2, 1e-12) / 100.0)) * 100)
-            return ("Saltpetre is made in nitre beds, not mined: you are about "
-                    "%.2f tonnes/year short. With a 20%% safety buffer, 'buy "
-                    "nitre %d' lays enough bed at %.4f tonnes per square metre "
-                    "per year (about %s denarii)."
-                    % (deficit, square_meters, self.NITRE_YIELD_T_PER_M2,
-                       "{:,.0f}".format(square_meters * self.NITRE_COST_PER_M2
-                                       * self.price_index)))
+            return {"text": (
+                "Saltpetre is made in nitre beds, not mined: you are about "
+                "%.2f tonnes/year short. With a 20%% safety buffer, 'buy "
+                "nitre %d' lays enough bed at %.4f tonnes per square metre "
+                "per year (about %s denarii)."
+                % (deficit, square_meters, self.NITRE_YIELD_T_PER_M2,
+                   "{:,.0f}".format(square_meters * self.NITRE_COST_PER_M2
+                                   * self.price_index))),
+                "commands": ["buy nitre %d" % square_meters]}
         if binding in self.MINE_OPEX_PER_T:
-            dem = self.annual_material_demand()
-            # SAME GROUPING resource_throttle() uses (_demand_by_supply_tag):
-            # copper's shortfall can now come from copper_wire_kg or
-            # wire_drawn_kg as much as from copper_kg itself (36 electrical
-            # nodes draw drawn wire), and this sentence would otherwise name
-            # a "you are X tonnes short" figure that silently excluded them.
-            keys = {"coal": ("coal_kg",), "iron": ("iron_bar_kg", "iron_ore_kg"),
-                    "copper": ("copper_kg", "copper_wire_kg", "wire_drawn_kg"),
-                    "lead": ("lead_kg",), "tin": ("tin_kg",),
-                    "silver": ("silver_kg",),
-                    "gold": ("gold_kg",)}.get(binding, ())
-            short = max(0.0, sum(dem.get(material_key, 0.0) for material_key in keys)
-                        - self.mine_capacity.get(binding, 0.0))
-            tonnes_short = max(1.0, round(short))
-            return ("The market will not sell you enough %s, so you have to dig "
-                    "it: %s. 'quote mine %s %d' for the price, then 'buy mine "
-                    "%s %d'. A shaft takes a few years to come into production."
-                    % (binding,
-                       ("you are about %s tonnes a year short"
-                        % "{:,.0f}".format(short)) if short >= 1.0
-                       else "your own workings already cover the demand you have "
-                            "today, so this is the market, not you",
-                       binding, tonnes_short, binding, tonnes_short))
-        return ("Nothing you own supplies %s and the market is out of it; the "
-                "work waits until something upstream of it is built."
-                % binding)
+            tonnes_short = max(1, math.ceil(shortfall_t - 1e-9))
+            return {"text": (
+                "The market will not sell you enough %s, so you have to dig "
+                "it: %s. 'quote mine %s %d' for the price, then 'buy mine "
+                "%s %d'. A shaft takes a few years to come into production."
+                % (binding,
+                   ("you are about %s tonnes a year short"
+                    % "{:,.0f}".format(shortfall_t)) if shortfall_t >= 1.0
+                   else "your own workings already cover the demand you have "
+                        "today, so this is the market, not you"
+                   if self.mine_capacity.get(binding, 0.0) > 0.0
+                   else "you have no working of it yet, so sink one",
+                   binding, tonnes_short, binding, tonnes_short)),
+                "commands": ["quote mine %s %d" % (binding, tonnes_short),
+                             "buy mine %s %d" % (binding, tonnes_short)]}
+        return {"text": (
+            "Nothing you own supplies %s and the market is out of it; the "
+            "work waits until something upstream of it is built."
+            % binding), "commands": []}

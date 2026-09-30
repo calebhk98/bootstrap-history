@@ -14,15 +14,10 @@ sim/engine/proto/*.py:
               _split_json_flag and its own long comment for why this and
               'compact' are two different fields rather than one spelled
               two ways.
-  'compact' - a CONTENT switch, new: on 'why', 'state' (and 'step', which
-              is a state reply plus what happened) and 'stuck' - the three
-              commands whose whole job is explaining why something is
-              blocked - it folds their existing reasoning fields into one
-              small, identically-shaped extra set of keys
-              ("blocked"/"blocked_by"/"explanation" on `why`,
-              "blocked_projects" on `state`, "blockers" on `stuck`), on
-              top of every field the plain reply already had. Nothing is
-              removed. See dispatch.py's _add_compact_fields.
+  'compact' - a SHORT SUMMARY of the reply on 'state', 'step', 'why' and
+              'stuck' (see sim/engine/proto/compact.py): only the fields a
+              turn needs, far smaller than 'json' and than the text screen.
+              Implies 'json'. Complaints/173.
 
 The compact agent output mode keeps reason-carrying prose; the mode-off path is byte-identical.
 """
@@ -41,8 +36,10 @@ from .harness import *  # noqa: F401,F403
 # ===========================================================================
 
 from sim.engine.proto.typed import parse_typed as _PT, _split_json_flag
-from sim.engine.proto.dispatch import (_add_compact_fields, _compact_why,
-                                   _compact_state, _compact_stuck)
+from sim.engine.proto.dispatch import _add_compact_fields
+from sim.engine.proto.compact import compact_why as _compact_why
+from sim.engine.proto.compact import compact_state as _compact_state
+from sim.engine.proto.compact import compact_stuck as _compact_stuck
 
 
 # --- the three commands that already had their own hand-rolled 'json' scan
@@ -176,175 +173,154 @@ check("_add_compact_fields is a no-op for a command the table does not cover",
       == {"ok": True, "capital": 5.0},
       _add_compact_fields("money", {"ok": True, "capital": 5.0}))
 
-# --- `why`, blocked: the illustrative shape the task asked for by name -
-# {"blocked_by": ..., "explanation": ...} - built from fields the plain
-# reply already carries (missing_prerequisites, start_blocked_reason),
-# never invented.
+# --- `why`, blocked: status/blocked/blocked_by/explanation only.
 _why_blocked = {"ok": True, "id": "x", "name": "X", "done": False, "active": False,
                 "can_start_now": False,
                 "missing_prerequisites": ["units_standards", "patron_local"],
                 "start_blocked_reason": "MISSING PREREQUISITES: units_standards, "
-                                        "patron_local"}
+                                        "patron_local", "cost": 5, "detail": "long"}
 _compact = _compact_why(_why_blocked)
-check("_compact_why adds status/blocked/blocked_by/explanation and keeps "
-      "every original field",
+check("compact_why gives status/blocked/blocked_by/explanation and drops the rest",
       (_compact["status"] == "blocked" and _compact["blocked"] is True
        and _compact["blocked_by"] == ["units_standards", "patron_local"]
        and _compact["explanation"] == _why_blocked["start_blocked_reason"]
-       and all(_compact[key] == value for key, value in _why_blocked.items())),
+       and "detail" not in _compact and "cost" not in _compact),
       _compact)
-
-# --- `why`, startable: blocked is false and blocked_by is empty, not
-# omitted - a script checking `resp["blocked"]` should never have to also
-# check whether the key exists.
-_why_open = {"ok": True, "id": "y", "name": "Y", "done": False, "active": False,
-            "can_start_now": True}
-_compact_open = _compact_why(_why_open)
-check("_compact_why on a startable node: blocked False, blocked_by empty, "
-      "no explanation manufactured out of nothing",
+_compact_open = _compact_why({"ok": True, "id": "y", "name": "Y", "done": False,
+                              "active": False, "can_start_now": True})
+check("compact_why on a startable node: blocked False, blocked_by empty, "
+      "no explanation manufactured",
       (_compact_open["status"] == "startable" and _compact_open["blocked"] is False
        and _compact_open["blocked_by"] == [] and "explanation" not in _compact_open),
       _compact_open)
 
-# --- `state`/`step`: every reason already on the per-project dict
-# (why_underfunded, waiting_on, the abandonment countdown) lands in one
-# flat, iterable list; a project with nothing wrong is not listed at all.
+# --- `state`: the short summary, from a synthetic full reply.
 _fake_state = {
-    "ok": True, "year": 120,
+    "ok": True, "year": 120, "capital": 500.0, "net_per_year": -12.0,
+    "founder_hours_available": 900.0, "concerns_you_run": 2,
+    "you_know_how_to_run_but_have_not_opened": 3, "reputation": 5.0,
+    "eminence": 0.1, "protection": 0.02, "scandal_now": 1.0, "scandal_danger": 25.0,
+    "prominence": {"now": 0.3, "dangerous_above": 26.0, "note": "long prose"},
+    "goal": "g", "goal_reached": False, "ended": False,
+    "literacy": {"general": 0.1},
     "active": {
         "proj_a": {"name": "Project A", "why_underfunded": "short of smith-hours"},
         "proj_b": {"name": "Project B", "waiting_on": "your hours"},
-        "proj_c": {"name": "Project C", "will_be_abandoned_in_years": 1,
-                   "because_nobody_here_can": ["smith"]},
+        "proj_c": {"name": "Project C", "will_be_abandoned_in_years": 1},
         "proj_d": {"name": "Project D"},
     },
     "stuck": {"you_are_stuck": "you have been in arrears 9 years..."},
 }
 _compact_state_out = _compact_state(_fake_state)
-_ids_listed = sorted(row["id"] for row in _compact_state_out["blocked_projects"])
-check("_compact_state lists every project with a reason, and only those",
-      _ids_listed == ["proj_a", "proj_b", "proj_c"], _ids_listed)
-check("_compact_state's per-project explanation is the field the plain "
-      "reply already had, not a rewritten one",
-      next(row["explanation"] for row in _compact_state_out["blocked_projects"]
-           if row["id"] == "proj_a") == "short of smith-hours")
-check("_compact_state folds the abandonment countdown into the "
-      "explanation when that is the only reason on record",
-      "abandoned" in next(row["explanation"]
-                          for row in _compact_state_out["blocked_projects"]
-                          if row["id"] == "proj_c"))
-check("_compact_state surfaces stall_diagnosis's headline as a top-level "
-      "'explanation' too, since that is the one sentence a stuck run's "
-      "own state reply already leads with",
-      _compact_state_out["explanation"] == _fake_state["stuck"]["you_are_stuck"])
-check("_compact_state changes nothing on the original dict (no in-place "
-      "mutation of the reply the plain path would have returned)",
-      "blocked_projects" not in _fake_state and "explanation" not in _fake_state)
-check("_compact_state on a reply with nothing active adds no empty key",
-      "blocked_projects" not in _compact_state({"ok": True, "active": {}}),
-      _compact_state({"ok": True, "active": {}}))
+_by_id = {row["id"]: row for row in _compact_state_out["projects"]}
+check("compact_state lists every active project with its one-line blocker",
+      sorted(_by_id) == ["proj_a", "proj_b", "proj_c", "proj_d"]
+      and _by_id["proj_a"]["blocker"] == "short of smith-hours"
+      and _by_id["proj_b"]["blocker"] == "your hours"
+      and "abandoned" in _by_id["proj_c"]["blocker"]
+      and _by_id["proj_d"]["blocker"] is None, _by_id)
+check("compact_state carries the headline fields and no bulk fields",
+      (_compact_state_out["year"] == 120 and _compact_state_out["money"] == 500.0
+       and _compact_state_out["net_per_year"] == -12.0
+       and _compact_state_out["founder_hours_free"] == 900.0
+       and _compact_state_out["concerns"] == {"running": 2, "shut": 3}
+       and _compact_state_out["standing"]["reputation"] == 5.0
+       and _compact_state_out["danger"]["prominence"] == 0.3
+       and _compact_state_out["danger"]["scandal"] == 1.0
+       and _compact_state_out["stuck"].startswith("you have been in arrears")
+       and "literacy" not in _compact_state_out), _compact_state_out)
+check("compact_state does not mutate the reply it was given",
+      "projects" not in _fake_state and "money" not in _fake_state)
+check("compact_state adds no step keys to a plain state reply",
+      "events" not in _compact_state_out and "completed" not in _compact_state_out)
+_compact_step = _compact_state(dict(_fake_state, events=[{"year": 120, "message": "m"}],
+                                    completed=[{"id": "t1", "name": "T"}], lost=[]))
+check("compact on a step reply keeps what happened, in short form",
+      (_compact_step["completed"] == ["t1"] and _compact_step["lost"] == []
+       and _compact_step["events"] == [{"year": 120, "message": "m"}]), _compact_step)
 
-# --- `stuck`: the two id-keyed sub-dicts (each_waiting_on,
-# each_why_underfunded) become one list of {id, explanation}, the same
-# shape `why` and `state` use above, with the underfunded reason folded in
-# as an extra field on the matching row rather than a second parallel list
-# a reader has to zip by hand.
+# --- `stuck`: one entry per reason, per-project reasons as {id, explanation}.
 _fake_stuck = {
-    "ok": True,
+    "ok": True, "you_could_begin": 4, "and_could_pay_for": 2,
+    "and_the_cheapest_thing_you_could_start_now": "cheap",
     "what_is_holding_you_up": [
         {"what": "work in hand", "how_many": 2,
-         "each_waiting_on": {"proj_a": "your hours", "proj_b": "smith-hours"},
-         "each_why_underfunded": {"proj_b": "arrears ate the cash for it"}},
+         "each_waiting_on": {"proj_a": "your hours", "proj_b": "smith-hours"}},
         {"what": "money", "why": "3 things are startable and the cheapest "
                                  "costs more than you can raise"},
     ],
 }
-_compact_stuck_out = _compact_stuck(_fake_stuck)
-_blockers = _compact_stuck_out["blockers"]
-check("_compact_stuck produces one entry per reason, in order",
+_blockers = _compact_stuck(_fake_stuck)["blockers"]
+check("compact_stuck produces one entry per reason, in order",
       [blocker["reason"] for blocker in _blockers] == ["work in hand", "money"], _blockers)
-check("_compact_stuck flattens each_waiting_on into a list of {id, explanation}",
-      sorted((project["id"], project["explanation"]) for project in _blockers[0]["projects"])
-      == [("proj_a", "your hours"), ("proj_b", "smith-hours")],
+check("compact_stuck flattens each_waiting_on into {id, explanation}",
+      _blockers[0]["projects"] == [{"id": "proj_a", "explanation": "your hours"},
+                                   {"id": "proj_b", "explanation": "smith-hours"}],
       _blockers[0]["projects"])
-check("_compact_stuck folds each_why_underfunded onto the matching project "
-      "row instead of leaving it a second dict to cross-reference by hand",
-      next(project["also_why_underfunded"] for project in _blockers[0]["projects"]
-           if project["id"] == "proj_b") == "arrears ate the cash for it")
-check("_compact_stuck carries the plain 'why' sentence through for a "
-      "reason that never had a per-project breakdown",
-      _blockers[1]["explanation"]
-      == "3 things are startable and the cheapest costs more than you can raise")
+check("compact_stuck carries a plain 'why' sentence through",
+      _blockers[1]["explanation"].startswith("3 things are startable"))
+check("compact_stuck keeps the counts and the cheapest start",
+      _compact_stuck(_fake_stuck)["could_begin"] == 4
+      and _compact_stuck(_fake_stuck)["cheapest_start"] == "cheap")
 
 
 # ===========================================================================
-# PART 3: end-to-end, through the real dispatcher, on a live Sim - the
-# commands that do not depend on whatever the other six agents are
-# mid-editing in society.py right now (that risk is real and is exactly
-# why PART 2 above tests the enrichers on synthetic data too: this part is
-# the live-integration check, not the only check).
+# PART 3: end-to-end through the real dispatcher on a live Sim, including the
+# size claim: compact is much smaller than json and than the text screen.
 # ===========================================================================
 
 _ptest_sim = sim()
 _ptest_blocked = next(node_id for node_id in ORDER
                       if node_id not in _ptest_sim.done and not _ptest_sim.can_start(node_id))
-_ptest_why_plain = S._agent_dispatch(_ptest_sim, NODES, {"cmd": "why", "id": _ptest_blocked})
 _ptest_why_compact = S._agent_dispatch(
     _ptest_sim, NODES, {"cmd": "why", "id": _ptest_blocked, "compact": True})
-check("live `why` on an actually-blocked node: compact mode is a strict "
-      "superset of the plain reply",
-      all(_ptest_why_compact.get(key) == value for key, value in _ptest_why_plain.items()),
-      (_ptest_why_plain, _ptest_why_compact))
-check("live `why` compact reply says blocked:true and names what it is "
-      "blocked by, for a node this fresh game cannot start yet",
+check("live `why` compact says blocked:true and names what blocks it",
       _ptest_why_compact.get("blocked") is True and _ptest_why_compact.get("blocked_by"),
       _ptest_why_compact)
-check("live `why` compact reply is JSON-serialisable (this is what an "
-      "agent would actually receive over the wire)",
-      bool(json.dumps(_ptest_why_compact)))
 
 _ptest_stuck_plain = S._agent_dispatch(_ptest_sim, NODES, {"cmd": "stuck"})
 _ptest_stuck_compact = S._agent_dispatch(_ptest_sim, NODES, {"cmd": "stuck", "compact": True})
-check("live `stuck`: compact mode is a strict superset of the plain reply",
-      all(_ptest_stuck_compact.get(key) == value for key, value in _ptest_stuck_plain.items()),
-      (_ptest_stuck_plain, _ptest_stuck_compact))
-check("live `stuck` compact reply carries a 'blockers' list matching the "
-      "number of reasons the plain reply gave",
-      (isinstance(_ptest_stuck_compact.get("what_is_holding_you_up"), list)
-       and len(_ptest_stuck_compact["blockers"])
-       == len(_ptest_stuck_compact["what_is_holding_you_up"])),
-      _ptest_stuck_compact)
+check("live `stuck` compact has one blocker per reason the plain reply gave",
+      len(_ptest_stuck_compact["blockers"])
+      == len(_ptest_stuck_plain["what_is_holding_you_up"]), _ptest_stuck_compact)
+check("live `stuck` compact is smaller than `stuck json`",
+      len(json.dumps(_ptest_stuck_compact)) < len(json.dumps(_ptest_stuck_plain)),
+      (len(json.dumps(_ptest_stuck_compact)), len(json.dumps(_ptest_stuck_plain))))
 
-# --- `available` never claimed an enricher (see this file's own module
-# docstring on which commands were deliberately left out): compact mode on
-# it is a pure no-op beyond json presentation, and that is asserted here so
-# a future change to _COMPACT_ENRICHERS does not silently start rewriting a
-# reply this task's own report says was left alone on purpose.
-# TWO FRESH SIMS, not one sim asked twice. _agent_available carries one
-# real piece of state across calls on the SAME Sim - "MOST RESTS ON THESE"
-# (s._said_stack_caution) is only ever said once per Sim, deliberately, so
-# it does not bury itself in noise on the tenth 'available' of a session -
-# and re-using _ptest_sim for both halves of this comparison would make the
-# second call's reply differ from the first's for a reason that has
-# nothing to do with compact mode at all.
-_ptest_avail_plain = S._agent_dispatch(sim(), NODES, {"cmd": "available"})
-_ptest_avail_compact = S._agent_dispatch(sim(), NODES, {"cmd": "available", "compact": True})
-check("`available` is unaffected by compact mode - not one of the three "
-      "commands the enricher covers, by deliberate choice (see module "
-      "docstring)",
-      _ptest_avail_plain == _ptest_avail_compact, (_ptest_avail_plain, _ptest_avail_compact))
+_size_sim = sim()
+_started = next(node_id for node_id in ORDER if _size_sim.can_start(node_id))
+_size_sim.start_project(_started)
+_state_json = S._agent_dispatch(_size_sim, NODES, {"cmd": "state", "json": True})
+_state_compact = S._agent_dispatch(_size_sim, NODES,
+                                   {"cmd": "state", "json": True, "compact": True})
+_json_bytes = len(json.dumps(_state_json))
+_compact_bytes = len(json.dumps(_state_compact))
+_text_bytes = len(_RSTATE(_state_json))
+check("live `state compact` is far smaller than `state json` (under a third)",
+      _compact_bytes * 3 < _json_bytes, (_compact_bytes, _json_bytes))
+check("live `state compact` is smaller than the text screen",
+      _compact_bytes < _text_bytes, (_compact_bytes, _text_bytes))
+_fields_needed = ("year", "money", "net_per_year", "founder_hours_free", "projects",
+                  "concerns", "standing", "danger", "nearest_goal_blocker")
+check("live `state compact` has every field a turn needs",
+      all(field in _state_compact for field in _fields_needed),
+      sorted(_state_compact))
+check("live `state compact` lists the project just started, with a blocker key",
+      any(row["id"] == _started and "blocker" in row for row in _state_compact["projects"]),
+      _state_compact["projects"])
+check("live `state compact` names the nearest goal blocker",
+      isinstance(_state_compact["nearest_goal_blocker"], dict)
+      and "id" in _state_compact["nearest_goal_blocker"],
+      _state_compact["nearest_goal_blocker"])
+check("live `state compact` money and net match the full reply",
+      _state_compact["money"] == _state_json["capital"]
+      and _state_compact["net_per_year"] == _state_json["net_per_year"])
 
-# --- the typed path all the way through: a person (or agent) typing plain
-# words at `play`'s prompt reaches the same enriched reply a hand-written
-# JSON command would, because parse_typed's output is handed to the exact
-# same _agent_dispatch every other front door calls.
 _typed_cmd, _typed_err = _PT("why %s compact" % _ptest_blocked)
 check("typed 'why <id> compact' parses with no error", _typed_err is None, _typed_err)
 _typed_resp = S._agent_dispatch(sim(), NODES, _typed_cmd)
-check("typed 'why <id> compact', run through the real dispatcher end to "
-      "end, carries the same blocked_by the hand-written JSON command did",
-      _typed_resp.get("blocked_by") == _ptest_why_compact.get("blocked_by"),
-      _typed_resp)
+check("typed 'why <id> compact' end to end gives the same blocked_by",
+      _typed_resp.get("blocked_by") == _ptest_why_compact.get("blocked_by"), _typed_resp)
 
 
 # ===========================================================================

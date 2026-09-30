@@ -33,3 +33,5 @@ each owned technology implies from the tree's own capability nodes and flags a
 lower declared rung, and checks declared "absent" facts (for example a
 `needs_first` group) against owned techs. Data-driven, no civilisation ids in
 code. Test with a deliberately broken fixture.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 21; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): Han's briefing says "Glass. The Han have almost none ... a thing you must start from sand and a furnace", yet `starting_techs` contains `mat_glass_soda`, so `civ_glass_windows` (prerequisite `mat_glass_soda` only) is zero cost, zero time, CAN START NOW at arrival; `opt_dioptra`, `opt_geared_mechanisms` and the groma are also free. Reproduces: yes (`available find glass` in a new Han game).

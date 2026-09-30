@@ -22,6 +22,7 @@ in this directory, read that one.
 |---|---|---:|---:|
 | [`00_NONOBVIOUS_TRICKS.md`](00_NONOBVIOUS_TRICKS.md) | The tricks that make everything else buildable. READ FIRST. | 11 | 0 |
 | [`03_SOCIAL_POLITICS.md`](03_SOCIAL_POLITICS.md) |  | 10 | 10 |
+| [`04_BENEFACTIONS.md`](04_BENEFACTIONS.md) |  | 15 | 15 |
 | [`10_metallurgy.md`](10_metallurgy.md) | Metallurgy, fuel and refractories | 19 | 182 |
 | [`20_chemistry.md`](20_chemistry.md) | Chemistry, acids, alkalis and energetics | 16 | 188 |
 | [`30_glass_optics.md`](30_glass_optics.md) | Glass, optics and scientific instruments | 17 | 168 |
@@ -75,6 +76,26 @@ Sorted by module, then by node id.
 | `patron_local` | 400.0 | [`patron_local`](03_SOCIAL_POLITICS.md#patron_local---a-town-patron-patronus-municipii) |
 | `patron_senatorial` | 600.0 | [`patron_senatorial`](03_SOCIAL_POLITICS.md#patron_senatorial---senatorial-patronage) |
 | `school_founded` | 2,000.0 | [`school_founded`](03_SOCIAL_POLITICS.md#school_founded---the-school-museum) |
+
+### 04_BENEFACTIONS.md
+
+| Node | Your hours | Recipe |
+|---|---:|---|
+| `ben_civic_water_works` | 200.0 | [`ben_civic_water_works`](04_BENEFACTIONS.md#ben_civic_water_works---aqueduct-baths-and-sewers-for-a-town) |
+| `ben_free_school_foundation` | 200.0 | [`ben_free_school_foundation`](04_BENEFACTIONS.md#ben_free_school_foundation---free-school-foundation-alimenta) |
+| `ben_grain_dole` | 200.0 | [`ben_grain_dole`](04_BENEFACTIONS.md#ben_grain_dole---public-granary-and-grain-dole) |
+| `ben_harbour_and_lighthouse` | 200.0 | [`ben_harbour_and_lighthouse`](04_BENEFACTIONS.md#ben_harbour_and_lighthouse---harbour-works-and-lighthouse) |
+| `ben_hospital_foundation` | 200.0 | [`ben_hospital_foundation`](04_BENEFACTIONS.md#ben_hospital_foundation---endowed-hospital) |
+| `ben_house_bank` | 200.0 | [`ben_house_bank`](04_BENEFACTIONS.md#ben_house_bank---house-bank) |
+| `ben_public_games` | 100.0 | [`ben_public_games`](04_BENEFACTIONS.md#ben_public_games---public-games-and-festivals) |
+| `ben_public_library` | 150.0 | [`ben_public_library`](04_BENEFACTIONS.md#ben_public_library---public-library) |
+| `ben_research_foundation` | 300.0 | [`ben_research_foundation`](04_BENEFACTIONS.md#ben_research_foundation---endowed-research-foundation) |
+| `ben_scholar_and_artist_patronage` | 150.0 | [`ben_scholar_and_artist_patronage`](04_BENEFACTIONS.md#ben_scholar_and_artist_patronage---patronage-of-scholars-poets-and-artists) |
+| `ben_state_subvention` | 150.0 | [`ben_state_subvention`](04_BENEFACTIONS.md#ben_state_subvention---subsidy-to-the-army-and-the-treasury) |
+| `ben_survey_and_trade_expedition` | 300.0 | [`ben_survey_and_trade_expedition`](04_BENEFACTIONS.md#ben_survey_and_trade_expedition---sponsored-survey-and-trade-expedition) |
+| `ben_telegraph_network` | 250.0 | [`ben_telegraph_network`](04_BENEFACTIONS.md#ben_telegraph_network---telegraph-lines-to-the-provincial-towns) |
+| `ben_temple_endowment` | 100.0 | [`ben_temple_endowment`](04_BENEFACTIONS.md#ben_temple_endowment---temple-and-shrine-endowment) |
+| `ben_underwriting_syndicate` | 200.0 | [`ben_underwriting_syndicate`](04_BENEFACTIONS.md#ben_underwriting_syndicate---underwriting-syndicate) |
 
 ### 10_metallurgy.md
 
@@ -2921,7 +2942,7 @@ Sorted by module, then by node id.
 
 | status | nodes |
 |---|---:|
-| linked to a specific recipe entry | 893 |
+| linked to a specific recipe entry | 908 |
 | linked to a domain module, no specific entry | 1843 |
 | documented in a top-level prose file | 0 |
 | no link BY DESIGN (capability rungs, materials, unobtainables) | 95 |

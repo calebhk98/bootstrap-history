@@ -37,34 +37,39 @@ def _tile_centres(home_regions: Tuple[str, ...]) -> Dict[str, Tuple[float, float
             for tile_id in _capacities(home_regions)}
 
 
+@functools.lru_cache(maxsize=64)
+def _summary(home_regions: Tuple[str, ...]) -> Tuple[Tuple[str, ...], float, float, Optional[str]]:
+    """(sorted tile ids, total capacity, best tile's capacity, default base tile)."""
+    capacities = _capacities(home_regions)
+    default = (min(capacities, key=lambda tile_id: (-capacities[tile_id], tile_id))
+               if capacities else None)
+    return (tuple(sorted(capacities)), sum(capacities.values()),
+            max(capacities.values(), default=0.0), default)
+
+
 def tile_ids(home_regions: List[str]) -> List[str]:
-    return sorted(_capacities(tuple(home_regions)))
+    return list(_summary(tuple(home_regions))[0])
 
 
 def population_share(home_regions: List[str], tile_id: str) -> float:
     """Fraction of the nation's people living on `tile_id` (0 if not held)."""
-    capacities = _capacities(tuple(home_regions))
-    total = sum(capacities.values())
+    total = _summary(tuple(home_regions))[1]
     if total <= 0.0:
         return 0.0
-    return capacities.get(tile_id, 0.0) / total
+    return _capacities(tuple(home_regions)).get(tile_id, 0.0) / total
 
 
 def relative_capacity(home_regions: List[str], tile_id: str) -> float:
     """Capacity of `tile_id` as a fraction of the nation's best tile."""
-    capacities = _capacities(tuple(home_regions))
-    best = max(capacities.values(), default=0.0)
+    best = _summary(tuple(home_regions))[2]
     if best <= 0.0:
         return 0.0
-    return capacities.get(tile_id, 0.0) / best
+    return _capacities(tuple(home_regions)).get(tile_id, 0.0) / best
 
 
 def default_base_tile(home_regions: List[str]) -> Optional[str]:
     """The best-endowed tile, ties broken by id."""
-    capacities = _capacities(tuple(home_regions))
-    if not capacities:
-        return None
-    return min(capacities, key=lambda tile_id: (-capacities[tile_id], tile_id))
+    return _summary(tuple(home_regions))[3]
 
 
 def distance_km(home_regions: List[str], from_tile: str, to_tile: str) -> float:

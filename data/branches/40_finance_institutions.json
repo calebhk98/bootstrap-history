@@ -46,7 +46,16 @@
   "art": 0,
   "conf": "A",
   "note": "Money changers and deposit takers, attested across the ancient world (Rome's argentarii are the best-documented case): accept deposits, testify to witnesses about amounts held, but do not yet systematically lend.",
-  "yrs": 0.5
+  "yrs": 0.5,
+  "mechanics": {
+   "capability": {
+    "lost_benefit": "The lower interest rate"
+   },
+   "debt_rate_discount": {
+    "flat": 0.01,
+    "order": 4
+   }
+  }
  },
  {
   "id": "fin_maritime_loan",
@@ -95,7 +104,15 @@
   "art": 0,
   "conf": "A",
   "note": "Contractual partnership between two or more parties to share profits and losses. Legally recognised, but partners remain personally liable.",
-  "yrs": 0.2
+  "yrs": 0.2,
+  "mechanics": {
+   "supervision_room": {
+    "flat": 4.0,
+    "gate": "has",
+    "words": "a partner who shares the watching, and whose own capital and attention are not on your payroll",
+    "order": 4
+   }
+  }
  },
  {
   "id": "fin_testament",
@@ -383,7 +400,16 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Periodic total of all accounts to verify that debits equal credits. Catches errors before they propagate and corrupt future records."
+  "note": "Periodic total of all accounts to verify that debits equal credits. Catches errors before they propagate and corrupt future records.",
+  "mechanics": {
+   "staff_capacity": {
+    "artisans": 4.0,
+    "directors": 2.0,
+    "scales_with_units": false,
+    "must_be_running": false,
+    "order": 17
+   }
+  }
  },
  {
   "id": "fin_bill_exchange",
@@ -928,7 +954,17 @@
   "conf": "B",
   "note": "Fix a legal ratio of gold to silver coins. Solves the problem of scarce gold by allowing silver to serve as backup. But if the market ratio diverges from the fixed ratio, people hoard the undervalued metal.",
   "gov": 2,
-  "sus": 2
+  "sus": 2,
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "real_erosion",
+     "share": 0.25,
+     "label": "a standard the coin can be held to",
+     "order": 3
+    }
+   ]
+  }
  },
  {
   "id": "fin_marine_insurance",
@@ -960,7 +996,17 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "A premium-for-indemnity contract transfers the risk of a specified cargo or vessel loss to underwriters. The project is not discovering risk: it establishes standard policies, shared loss records, underwriting practice, reserves, and enforceable claims among existing bankers and maritime lenders."
+  "note": "A premium-for-indemnity contract transfers the risk of a specified cargo or vessel loss to underwriters. The project is not discovering risk: it establishes standard policies, shared loss records, underwriting practice, reserves, and enforceable claims among existing bankers and maritime lenders.",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "output_factor",
+     "share": 0.15,
+     "label": "losses spread rather than borne",
+     "order": 4
+    }
+   ]
+  }
  },
  {
   "id": "fin_fire_insurance",
@@ -1540,7 +1586,19 @@
   "sch": 0,
   "art": 1,
   "conf": "C",
-  "note": "Employer provides housing, food, and goods to workers in a closed economy. Workers cannot leave without losing housing and may be paid in company scrip. Highly profitable but politically dangerous."
+  "note": "Employer provides housing, food, and goods to workers in a closed economy. Workers cannot leave without losing housing and may be paid in company scrip. Highly profitable but politically dangerous.",
+  "mechanics": {
+   "capability": {},
+   "institution_places": {
+    "flat": 20.0
+   },
+   "staff_capacity": {
+    "artisans": 20.0,
+    "scales_with_units": false,
+    "must_be_running": true,
+    "order": 18
+   }
+  }
  },
  {
   "id": "fin_trade_union",
@@ -1751,7 +1809,17 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Official test of precious metal fineness, with a hallmark proving the state's guarantee. Allows buyers to trust the quality without testing every item."
+  "note": "Official test of precious metal fineness, with a hallmark proving the state's guarantee. Allows buyers to trust the quality without testing every item.",
+  "mechanics": {
+   "hazard_counters": [
+    {
+     "kind": "real_erosion",
+     "share": 0.2,
+     "label": "you can prove what metal is in a coin",
+     "order": 4
+    }
+   ]
+  }
  },
  {
   "id": "fin_futures",
@@ -2869,7 +2937,27 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "Company operates identical stores in multiple cities, buying centrally and selling retail in each location. Achieves scale but requires sophisticated management and accounting."
+  "note": "Company operates identical stores in multiple cities, buying centrally and selling retail in each location. Achieves scale but requires sophisticated management and accounting.",
+  "mechanics": {
+   "capability": {
+    "scalable": "population"
+   },
+   "institution_places": {
+    "flat": 34.0
+   },
+   "staff_capacity": {
+    "artisans": 30.0,
+    "directors": 4.0,
+    "scales_with_units": true,
+    "must_be_running": true,
+    "order": 19
+   },
+   "supervision_room": {
+    "per_unit": 20.0,
+    "words": "branches in other towns",
+    "order": 3
+   }
+  }
  },
  {
   "id": "fin_trading_post",
@@ -3076,7 +3164,20 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "School awarding degrees that certify learning. Charges tuition but also grants scholarships. Attracts scholars and students and creates local employment."
+  "note": "School awarding degrees that certify learning. Charges tuition but also grants scholarships. Attracts scholars and students and creates local employment.",
+  "mechanics": {
+   "capability": {
+    "lost_benefit": "Protection",
+    "redundant_with": [
+     "school_founded"
+    ]
+   },
+   "protection": {
+    "flat": 0.06,
+    "group": "learned_institution",
+    "order": 4
+   }
+  }
  },
  {
   "id": "fin_endowed_chair",
