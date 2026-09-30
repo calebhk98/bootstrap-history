@@ -113,24 +113,29 @@
   "cat": "transport",
   "pre": [],
   "kb": "85_transport_civil.md",
-  "ph": 0,
-  "lab": {},
-  "mat": {},
-  "cap": 0,
+  "ph": 40.0,
+  "lab": {
+   "carpenter": 200.0
+  },
+  "mat": {
+   "wood_kg": 60.0
+  },
+  "cap": 150.0,
   "up": 0.0,
-  "yrs": 0,
-  "risk": 0.0,
+  "yrs": 0.3,
+  "risk": 0.02,
   "sus": 0,
   "gov": 0,
   "rev": 0,
   "sch": 0,
   "art": 0,
-  "conf": "A",
+  "conf": "C",
   "note": "Already built wherever there is a skilled wheelwright. Radial spokes in tension carry load far better than solid wood. This invention alone made fast carriages possible.",
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "build_yrs": 0.3
  },
  {
   "id": "lnd_axle_pivot_front",

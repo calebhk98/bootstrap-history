@@ -1,6 +1,6 @@
 # Rome data: `mat_copper` is blocked on `blast_furnace`; Rome starts without `mat_pozzolana` (and with `sea_harbours_pozzolana` unstarted)
 
-**Status:** open
+**Status:** closed
 
 Two contradictions in the Rome start, both checked in data:
 

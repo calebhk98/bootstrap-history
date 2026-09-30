@@ -1,6 +1,6 @@
 # Roman and Mediterranean content is presented as local fact and startable in a Han campaign
 
-**Status:** open
+**Status:** partly
 
 Evidence on the current branch (Han, 100 AD, `available` and the node notes):
 
@@ -18,3 +18,6 @@ What it would take: mark nodes with the civilisations they apply to (or an "impo
 sentence plus a civ-specific comparison; localise the kit descriptions. Related: 136 (the engine assumes Rome), 132, 126.
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 5, 22, 59, 74, 133). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+
+**Remaining:** Not addressed beyond the per-civilisation start fixes (Han no longer holds Roman-only items free). Remaining: Roman-only artefacts flagged per civilisation, second-person notes, kit descriptions and the `patron_senatorial` prerequisite label.

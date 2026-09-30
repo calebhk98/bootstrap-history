@@ -292,19 +292,26 @@
    "mat_pozzolana"
   ],
   "kb": "70_medicine_biology.md",
-  "ph": 0,
-  "lab": {},
-  "mat": {},
-  "cap": 0,
+  "ph": 120.0,
+  "lab": {
+   "mason": 6000.0,
+   "labourer": 12000.0,
+   "engineer": 300.0
+  },
+  "mat": {
+   "stone_kg": 500000.0,
+   "lime_kg": 50000.0
+  },
+  "cap": 8000.0,
   "up": 0,
-  "yrs": 0,
-  "risk": 0,
+  "yrs": 3.0,
+  "risk": 0.05,
   "sus": 0,
   "gov": 3,
   "rev": 0,
   "sch": 0,
   "art": 0,
-  "conf": "A",
+  "conf": "C",
   "note": "Abundant clean water and sewage separation are already established wherever aqueduct and drainage engineering has matured. This infrastructure, once mature, is the foundation for any public health improvement.",
   "traits": [
    "infrastructure",
@@ -312,7 +319,8 @@
   ],
   "mechanics": {
    "disease_burden": true
-  }
+  },
+  "build_yrs": 3.0
  },
  {
   "id": "med_legal_physician",

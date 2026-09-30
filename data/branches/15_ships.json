@@ -4,7 +4,6 @@
   "name": "Large merchant sailing ships",
   "cat": "ships",
   "pre": [
-   "sea_mortise_tenon",
    "sea_square_sail"
   ],
   "kb": "85_transport_civil.md",

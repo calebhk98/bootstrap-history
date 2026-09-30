@@ -1,6 +1,6 @@
 # Nothing validates that a starting state agrees with itself
 
-**Status:** open
+**Status:** partly
 
 **Source:** `reports/COMBINED_TECH_TREE_REALISM_REVIEW_part_01.md`, suggestion 6 (audit scenario grants for internal contradictions automatically).
 
@@ -35,3 +35,6 @@ lower declared rung, and checks declared "absent" facts (for example a
 code. Test with a deliberately broken fixture.
 
 Also reported (Han China 100 AD fog playtest, tester item(s) 21; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): Han's briefing says "Glass. The Han have almost none ... a thing you must start from sand and a furnace", yet `starting_techs` contains `mat_glass_soda`, so `civ_glass_windows` (prerequisite `mat_glass_soda` only) is zero cost, zero time, CAN START NOW at arrival; `opt_dioptra`, `opt_geared_mechanisms` and the groma are also free. Reproduces: yes (`available find glass` in a new Han game).
+
+
+**Remaining:** Done: `sim/civ_start_check.py` (run by `validate`) reports, per civilisation, free nodes startable at arrival that are neither held nor gated (an error), held nodes missing prerequisites, and materials no available recipe makes. Remaining: no check of declared capability rungs or briefing claims against owned techs.

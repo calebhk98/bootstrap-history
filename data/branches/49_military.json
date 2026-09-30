@@ -955,7 +955,8 @@
   "cat": "weapons",
   "pre": [
    "mil_smokeless_powder",
-   "mat_nitrocellulose"
+   "mat_nitrocellulose",
+   "mat_petroleum_refined"
   ],
   "traits": [
    "military"

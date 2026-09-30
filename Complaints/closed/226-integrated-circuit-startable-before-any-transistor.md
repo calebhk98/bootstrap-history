@@ -1,6 +1,6 @@
 # The integrated circuit is startable, and completes, with only photolithography and solid-state theory behind it
 
-**Status:** open
+**Status:** closed
 
 `com_integrated_circuit` has `pre: ['com_photolithography', 'quantum_solidstate_theory']` and a materials bill of quartz sand, two acids, brass and copper
 (`data/tech_tree.json`, source `data/branches/24_comms_computing.json`). No semiconductor-grade silicon, crystal growth, doping, transistor or

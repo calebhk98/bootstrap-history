@@ -416,7 +416,6 @@
     "mat_vitriols",
     "mat_wrought_iron",
     "med_amputation",
-    "med_aqueducts_latrines",
     "med_bone_setting",
     "med_cataract_couching",
     "med_herbal_pharmacy",
@@ -556,6 +555,5 @@
       "source": "Portoria customs (a few per cent), the vicesima on some transactions, and local dues combined into one share of a trading household's revenue. An estimate, not a fiscal reconstruction.",
       "confidence": "C"
     }
-  },
-  "needs_first": {}
+  }
 }

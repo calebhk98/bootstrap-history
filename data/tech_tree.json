@@ -61907,10 +61907,10 @@
       "_total_cost": 0.0,
       "adopt_yrs": 0.0,
       "art": 0.0,
-      "build_yrs": 0.0,
-      "cap": 0.0,
+      "build_yrs": 0.3,
+      "cap": 150.0,
       "cat": "transport",
-      "conf": "A",
+      "conf": "C",
       "dev_people": null,
       "dev_years": null,
       "gov": 0,
@@ -61918,15 +61918,19 @@
       "kb": "85_transport_civil.md",
       "kb_level": "module",
       "kind": "ENGINEERING",
-      "lab": {},
-      "mat": {},
+      "lab": {
+        "carpenter": 200.0
+      },
+      "mat": {
+        "wood_kg": 60.0
+      },
       "name": "Spoked wheel",
       "note": "Already built wherever there is a skilled wheelwright. Radial spokes in tension carry load far better than solid wood. This invention alone made fast carriages possible.",
-      "ph": 0.0,
+      "ph": 40.0,
       "pre": [],
       "req_any": [],
       "rev": 0.0,
-      "risk": 0.0,
+      "risk": 0.02,
       "sch": 0.0,
       "sus": 0,
       "traits": [
@@ -61934,7 +61938,7 @@
         "infrastructure"
       ],
       "up": 0.0,
-      "yrs": 0.0
+      "yrs": 0.3
     },
     {
       "_src": "14_land_transport.json",
@@ -69815,10 +69819,10 @@
       "_total_cost": 0.0,
       "adopt_yrs": 0.0,
       "art": 0.0,
-      "build_yrs": 0.0,
-      "cap": 0.0,
+      "build_yrs": 3.0,
+      "cap": 8000.0,
       "cat": "public_health",
-      "conf": "A",
+      "conf": "C",
       "dev_people": null,
       "dev_years": null,
       "gov": 3,
@@ -69826,17 +69830,24 @@
       "kb": "70_medicine_biology.md",
       "kb_level": "module",
       "kind": "INFRASTRUCTURE",
-      "lab": {},
-      "mat": {},
+      "lab": {
+        "mason": 6000.0,
+        "labourer": 12000.0,
+        "engineer": 300.0
+      },
+      "mat": {
+        "stone_kg": 500000.0,
+        "lime_kg": 50000.0
+      },
       "name": "Aqueducts and public latrines",
       "note": "Abundant clean water and sewage separation are already established wherever aqueduct and drainage engineering has matured. This infrastructure, once mature, is the foundation for any public health improvement.",
-      "ph": 0.0,
+      "ph": 120.0,
       "pre": [
         "mat_pozzolana"
       ],
       "req_any": [],
       "rev": 0.0,
-      "risk": 0.0,
+      "risk": 0.05,
       "sch": 0.0,
       "sus": 0,
       "traits": [
@@ -69844,7 +69855,7 @@
         "medical"
       ],
       "up": 0.0,
-      "yrs": 0.0,
+      "yrs": 3.0,
       "mechanics": {
         "disease_burden": true
       }
@@ -81395,7 +81406,8 @@
       "ph": 100.0,
       "pre": [
         "mil_smokeless_powder",
-        "mat_nitrocellulose"
+        "mat_nitrocellulose",
+        "mat_petroleum_refined"
       ],
       "req_any": [],
       "rev": 0.0,
@@ -104840,7 +104852,6 @@
       "note": "Large merchant ships of 350 tonnes or more already operate on some routes (Rome's Alexandria grain fleet is the best-documented case; the Fayum papyri and shipwrecks confirm sophisticated hull design and large crews).",
       "ph": 120.0,
       "pre": [
-        "sea_mortise_tenon",
         "sea_square_sail"
       ],
       "req_any": [],

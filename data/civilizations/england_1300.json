@@ -465,7 +465,6 @@
     "sea_lead_sheathing",
     "sea_lodestone",
     "sea_merchant_ships_large",
-    "sea_mortise_tenon",
     "sea_sounding_lines",
     "sea_square_sail",
     "sea_steering_oars",
@@ -593,6 +592,7 @@
         "med_legal_physician",
         "opt_groma",
         "prn_papyrus_sheets",
+        "sea_mortise_tenon",
         "sea_pharos_lighthouse",
         "sea_spritsail",
         "tex_dye_murex"
