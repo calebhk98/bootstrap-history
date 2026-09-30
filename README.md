@@ -72,8 +72,8 @@ Add `--session FILE` and the game is written to that file after every command
 and read back when you start again:
 
 ```bash
-python3 sim/simulator.py play --session mygame.json
-echo "step 5" | python3 sim/simulator.py play --session mygame.json
+python3 sim/simulator.py play --civ rome_100ad --session mygame.json    # start a new saved game
+echo "step 5" | python3 sim/simulator.py play --session mygame.json     # carry on from it
 ```
 
 Inside a game, `save <file>` and `load <file>` do the same by hand, and the

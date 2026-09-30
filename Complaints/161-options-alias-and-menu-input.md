@@ -1,6 +1,6 @@
 # `options` is listed as an alias of `available`, and the Options menu swallows piped input
 
-**Status:** closed - removed options alias from available command
+**Status:** partly - stale options alias removed; the Options menu still swallows piped input without echoing it
 
 `help commands` lists "options: available" under aliases; typing `options` opens the Options menu (horizon, mortality, save path), as the intro describes. When commands are piped (`options`, `help work`, `labour`), the menu consumes the next lines as menu choices, prints "-- not a choice right now." for each without echoing what it read, and exits; the commands never run.
 

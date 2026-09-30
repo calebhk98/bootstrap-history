@@ -1,6 +1,6 @@
 # `play --session FILE` for a new file refuses without `--civ`, contrary to the README
 
-**Status:** closed - play --session now starts default civilisation when file doesn't exist
+**Status:** closed - the guard against a mistyped --session path is deliberate; the README now starts a saved game with --civ
 
 The README shows `python3 sim/simulator.py play --session mygame.json` as a way to start. With no save at that path: "no --civ given, so I do not know what game you meant". Plain `play` starts the default civ.
 

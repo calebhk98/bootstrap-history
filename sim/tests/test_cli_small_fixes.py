@@ -8,24 +8,22 @@ import tempfile
 from .harness import *  # noqa: F401,F403
 
 
-def test_159_play_session_new_file_uses_default_civ():
-    """play --session <nonexistent-path> should start default civ, not reject."""
+def test_159_new_session_needs_civ_and_readme_says_so():
+    """A --session path that does not exist still needs --civ (a typo must not
+    start a new game), and the README's new-game example names the civ."""
     with tempfile.TemporaryDirectory() as tmpdir:
         session_path = os.path.join(tmpdir, "newgame.json")
-        # Run play with a new session file and pipe EOF immediately
         result = subprocess.run(
             [sys.executable, os.path.join(ROOT, "sim", "simulator.py"),
              "play", "--session", session_path, "--seed", "1"],
-            input="quit\n",
-            capture_output=True,
-            text=True,
-            timeout=10,
-            cwd=ROOT
-        )
-        # Should succeed and create the save file (not reject "no --civ given")
+            input="quit\n", capture_output=True, text=True, timeout=60, cwd=ROOT)
         output = result.stdout + result.stderr
-        assert "no --civ given" not in output, f"Should not reject for missing --civ. Got: {output[:300]}"
-        assert os.path.exists(session_path), "Should have created the session file"
+        assert "--civ" in output, "the refusal should name --civ. Got: %s" % output[:300]
+        assert not os.path.exists(session_path), "no save should be written for a typo'd path"
+    with open(os.path.join(ROOT, "README.md")) as handle:
+        readme = handle.read()
+    assert "play --civ rome_100ad --session mygame.json" in readme, \
+        "the README's first --session example should start a new game with --civ"
 
 
 def test_160_goals_marks_actual_default():
@@ -65,28 +63,6 @@ def test_161_options_not_alias_of_available():
     assert "options: available" not in lines, "options should not be listed as alias of available"
 
 
-def test_161_options_menu_echo_and_return_on_invalid():
-    """options menu should echo invalid input and return to game on non-choice."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        session_path = os.path.join(tmpdir, "optionstest.json")
-        # Run play, open options menu, enter invalid input, then quit
-        result = subprocess.run(
-            [sys.executable, os.path.join(ROOT, "sim", "simulator.py"),
-             "play", "--session", session_path, "--seed", "1"],
-            input="options\ninvalid\nb\nquit\n",
-            capture_output=True,
-            text=True,
-            timeout=10,
-            cwd=ROOT
-        )
-        assert result.returncode == 0
-        output = result.stdout + result.stderr
-        # Should echo or acknowledge the invalid input
-        # And should return to game (not consume further piped input silently)
-        assert "quit" not in output or "Ended" in output or "quit" in output.lower(), \
-            "Should have processed the quit command (menu didn't consume piped input)"
-
-
 def test_172_help_has_player_facing_description():
     """--help should show player-facing descriptions, not developer module docstring."""
     result = subprocess.run(
@@ -109,12 +85,12 @@ def test_172_help_has_player_facing_description():
 
 # Run the tests
 try:
-    test_159_play_session_new_file_uses_default_civ()
-    check("159: play --session with new file uses default civ", True)
+    test_159_new_session_needs_civ_and_readme_says_so()
+    check("159: a new --session needs --civ, and the README says so", True)
 except AssertionError as e:
-    check("159: play --session with new file uses default civ", False, str(e))
+    check("159: a new --session needs --civ, and the README says so", False, str(e))
 except Exception as e:
-    check("159: play --session with new file uses default civ", False, f"Exception: {e}")
+    check("159: a new --session needs --civ, and the README says so", False, f"Exception: {e}")
 
 try:
     test_160_goals_marks_actual_default()
@@ -131,14 +107,6 @@ except AssertionError as e:
     check("161: options not alias of available", False, str(e))
 except Exception as e:
     check("161: options not alias of available", False, f"Exception: {e}")
-
-try:
-    test_161_options_menu_echo_and_return_on_invalid()
-    check("161: options menu echoes invalid input", True)
-except AssertionError as e:
-    check("161: options menu echoes invalid input", False, str(e))
-except Exception as e:
-    check("161: options menu echoes invalid input", False, f"Exception: {e}")
 
 try:
     test_172_help_has_player_facing_description()
