@@ -598,10 +598,14 @@ class GoodsMixin:
         economy.farm_hectares = (getattr(economy, "farm_hectares", 0.0) or 0.0) + hectares
         return hectares
 
+    def housing_price_per_place(self):
+        """What one place of worker housing costs now (`buy housing`, `quote housing`, room advice)."""
+        return self.HOUSING_COST_PER_PLACE * self.price_index
+
     def build_worker_housing(self, places):
         """Add durable worker housing and relieve household crowding."""
         places = float(places)
-        cost = places * self.HOUSING_COST_PER_PLACE * self.price_index
+        cost = places * self.housing_price_per_place()
         household = self.state.household
         if places <= 0 or cost > household.capital:
             return 0.0

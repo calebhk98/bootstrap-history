@@ -26,7 +26,7 @@ def _quote_farm(sim, cmd, quantity):
 
 def _quote_housing(sim, cmd, quantity):
     return _flat_unit_quote(
-        sim, "housing", "places", sim.HOUSING_COST_PER_PLACE * sim.price_index, quantity,
+        sim, "housing", "places", sim.housing_price_per_place(), quantity,
         "Worker housing is bought once and adds places for people you employ.")
 
 

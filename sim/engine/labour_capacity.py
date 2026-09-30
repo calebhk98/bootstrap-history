@@ -506,18 +506,21 @@ class CapacityMixin:
              % (" and ".join("%s (+%d)" % (node_id, places) for node_id, places in reopen[:2]),
                 "it" if len(reopen) == 1 else "them"))
             if reopen else "")
+        _housing_bit = ("Housing is bought: 'buy housing N' adds N places at %s each. "
+                        % "{:,.0f}".format(self.housing_price_per_place()))
         if not want:
             if reopen:
-                return ("Room is not bought, it is built - or in this case, "
+                return ("%sThe rest is built - or in this case, "
                         "reopened: %s'open %s'."
-                        % (_reopen_bit, reopen[0][0]))
-            return ("Room comes from institutions and heavy industry, and you "
-                    "have every one of them this society offers; what is left "
-                    "grows on its own as they run.")
+                        % (_housing_bit, _reopen_bit, reopen[0][0]))
+            return ("%sBeyond that, room comes from institutions and heavy "
+                    "industry, and you have every one of them this society "
+                    "offers; what is left grows on its own as they run."
+                    % _housing_bit)
         _now = [(node_id, places) for node_id, places in want if self.start_reason(node_id, _why=False)[0]]
-        return ("Room is not bought, it is built: %s%s. Each is somewhere for "
+        return ("%sMore room is built: %s%s. Each is somewhere for "
                 "people to work and somebody to oversee them.%s"
-                % (_reopen_bit,
+                % (_housing_bit, _reopen_bit,
                    "; ".join("%s (+%d places)" % (node_id, places) for node_id, places in want[:3]),
                    "" if _now else " None is startable today; they are listed "
                                    "nearest first, so the first is what to work "

@@ -1,6 +1,6 @@
 # `labour` says household room "is not bought, it is built", but `buy housing` works
 
-**Status:** open
+**Status:** closed - `labour`, the `hire`/`train` refusals list `buy housing N` with its per-place price (housing_price_per_place, shared with `quote housing`) before the nodes
 
 `labour` when full: "to make room: Room is not bought, it is built: blast_furnace (+15 places); freedman_staff (+10 places); school_founded (+12 places)". The nearest cost ~1.8M. `buy housing 10` worked at once for ~40k (+10 places). The `hire` refusal repeats "Room is not bought".
 
