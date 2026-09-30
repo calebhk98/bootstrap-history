@@ -15,8 +15,12 @@ class VentureQuotesMixin:
         market = self.goods_market_factor(node_id) if running else 1.0
         return self.concern_takings(node_id, ramp) * units * market
 
-    def venture_real_upkeep(self, node_id, units=1.0):
-        """Yearly running cost at the current price level, the figure `ventures` prints."""
+    def venture_real_upkeep(self, node_id, units=None):
+        """Yearly running cost at the current price level: the figure every
+        screen quotes and the ledger charges (`upkeep`). `units` prices a
+        stated number of units of the concern instead of what is open now."""
+        if units is None:
+            return self.institution_upkeep(node_id) * self.price_index
         return self.nodes[node_id]["up"] * units * self.price_index
 
     def reopen_units(self, node_id):
