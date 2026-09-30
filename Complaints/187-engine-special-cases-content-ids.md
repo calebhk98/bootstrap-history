@@ -9,3 +9,5 @@ This conflicts with CLAUDE.md 4.7 ("No `if civ == \"rome\"`, no `if node == \"st
 What it would take: move each effect onto a data field on the node (e.g. an `effects`/`capability` block), and read that in the engine.
 
 Found by a code inventory made for the new-player playtest (`playtest_notes/code_systems_inventory.md`); each claim below was re-checked by grep.
+
+Related: `Complaints/135`, `136` (engine names civilisation ids); this issue is the same pattern for technology node ids.

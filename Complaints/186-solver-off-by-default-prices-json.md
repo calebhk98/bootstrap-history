@@ -9,3 +9,5 @@ This conflicts with CLAUDE.md 4.5 ("Prices are calculated, not looked up"; `pric
 What it would take: switch play onto solved prices behind `perf_fingerprint.py` checks, then remove the book reads.
 
 Found by a code inventory made for the new-player playtest (`playtest_notes/code_systems_inventory.md`); each claim below was re-checked by grep.
+
+Related: `Complaints/123` (the exit checklist for making solved prices the default, per `docs/architecture/STATE_OF_THE_PROJECT.md`); this issue adds the player-visible symptom (151).
