@@ -78,25 +78,6 @@ class DiffusionMixin:
             "head start on the next improvement (see comment above). "
             "Capped so this is never read as eventually reaching 1.0; not "
             "measured.")
-    CORPUS_DIFFUSION_PACE_DISPERSED = declare(
-        "CORPUS_DIFFUSION_PACE_DISPERSED", 1.7, kind="temporary_heuristic",
-        unit="dimensionless (diffusion pace multiplier)", source=None,
-        confidence="D",
-        why="How much faster knowledge diffuses to rivals once it is "
-            "written AND dispersed - a rival can read it rather than "
-            "reverse-engineer it from watching the workshop. Shared "
-            "between diffusion_share (this founder's own venture) and "
-            "_diffusion_pace (the whole society's adoption) so the two "
-            "never disagree about what dispersal is worth. Tuned, not "
-            "measured.")
-    CORPUS_DIFFUSION_PACE_WRITTEN = declare(
-        "CORPUS_DIFFUSION_PACE_WRITTEN", 1.3, kind="temporary_heuristic",
-        unit="dimensionless (diffusion pace multiplier)", source=None,
-        confidence="D",
-        why="How much faster knowledge diffuses once merely written down "
-            "(not yet dispersed) - smaller than "
-            "CORPUS_DIFFUSION_PACE_DISPERSED because copies still sit in "
-            "one place. Shared with _diffusion_pace; tuned, not measured.")
     LITERACY_DIFFUSION_PACE_BASE = declare(
         "LITERACY_DIFFUSION_PACE_BASE", 0.7, kind="temporary_heuristic",
         unit="dimensionless (pace multiplier floor)", source=None,

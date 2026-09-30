@@ -104,14 +104,6 @@ ALARM_PROTECTION_FLOOR = declare(
         "alarm never falls below this floor - protection can blunt "
         "suspicion, never erase it outright. Chosen for the same reason as "
         "ALARM_FAMILIARITY_FLOOR; not measured.")
-ALARM_IDENTITY_COVER_MULTIPLIER = declare(
-    "ALARM_IDENTITY_COVER_MULTIPLIER", 0.75, kind="temporary_heuristic",
-    unit="dimensionless multiplier", source=None, confidence="D",
-    why="A respectable cover identity reads an inexplicable effect as "
-        "learning rather than sorcery - see the comment just above this "
-        "constant's use - cutting alarm by a quarter. Tuned so having a "
-        "cover identity is a real, visible help without eliminating alarm "
-        "outright; not measured against any historical case.")
 
 
 class StatePressureMixin:
@@ -307,29 +299,6 @@ class StatePressureMixin:
             "per_soldier_per_year()'s reported number at full leverage but "
             "not its direction or its melee-tier floor.")
 
-    PATRON_PROTECTION_LOCAL = declare(
-        "PATRON_PROTECTION_LOCAL", 0.18, kind="temporary_heuristic",
-        unit="dimensionless protection points (multiplies patronage_weight)",
-        source=None, confidence="D",
-        why="How much protection a local patron's name buys against "
-            "accusation, scaled by this society's own patronage_weight. No "
-            "attested source ties a specific protection value to a "
-            "specific patron tier; a real figure needs a model of how "
-            "much a patron of this rank could actually shield a client in "
-            "court or before a magistrate.")
-    PATRON_PROTECTION_SENATORIAL = declare(
-        "PATRON_PROTECTION_SENATORIAL", 0.26, kind="temporary_heuristic",
-        unit="dimensionless protection points (multiplies patronage_weight)",
-        source=None, confidence="D",
-        why="As PATRON_PROTECTION_LOCAL, senatorial tier - larger, tuned to "
-            "feel proportionate to the step up in patron standing, not "
-            "measured.")
-    PATRON_PROTECTION_IMPERIAL = declare(
-        "PATRON_PROTECTION_IMPERIAL", 0.32, kind="temporary_heuristic",
-        unit="dimensionless protection points (multiplies patronage_weight)",
-        source=None, confidence="D",
-        why="As PATRON_PROTECTION_SENATORIAL, imperial tier - the largest "
-            "of the three, tuned rather than measured.")
 
     MILITARY_USEFULNESS_PROTECTION = declare(
         "MILITARY_USEFULNESS_PROTECTION", 0.09, kind="temporary_heuristic",
@@ -350,35 +319,6 @@ class StatePressureMixin:
             "accusation. See this method's own comment on what "
             "identity_cover actually buys; the figure itself is invented "
             "game balance.")
-    CITIZENSHIP_PROTECTION = declare(
-        "CITIZENSHIP_PROTECTION", 0.10, kind="temporary_heuristic",
-        unit="dimensionless protection points", source=None,
-        confidence="D",
-        why="What formal citizenship (legal standing, the right to appeal "
-            "a verdict) is worth against accusation. Plausible in kind - "
-            "citizenship is a real legal shield - and invented in size.")
-    COLLEGIUM_LICENSED_PROTECTION = declare(
-        "COLLEGIUM_LICENSED_PROTECTION", 0.10, kind="temporary_heuristic",
-        unit="dimensionless protection points", source=None,
-        confidence="D",
-        why="What a licensed collegium (a legally recognised guild body) "
-            "is worth against accusation. Not sourced to any attested "
-            "collegium privilege.")
-    ENDOWMENT_LAND_PROTECTION = declare(
-        "ENDOWMENT_LAND_PROTECTION", 0.08, kind="temporary_heuristic",
-        unit="dimensionless protection points", source=None,
-        confidence="D",
-        why="What conspicuous benefaction - an endowment of land - is "
-            "worth against accusation: a visible act of civic generosity "
-            "that buys goodwill. Invented size.")
-    LEARNED_INSTITUTION_PROTECTION = declare(
-        "LEARNED_INSTITUTION_PROTECTION", 0.06, kind="temporary_heuristic",
-        unit="dimensionless protection points", source=None,
-        confidence="D",
-        why="What founding a university or a school is worth against "
-            "accusation - smallest of the built protections here, on the "
-            "reasoning that a teacher is respectable but less politically "
-            "connected than a patron or a magistracy. Tuned, not measured.")
     PRESSED_OFFICE_PROTECTION = declare(
         "PRESSED_OFFICE_PROTECTION", 0.10, kind="temporary_heuristic",
         unit="dimensionless protection points", source=None,
@@ -724,20 +664,6 @@ class StatePressureMixin:
             "fiscal one. A round number marking enough personal wealth to "
             "be a courtier's envy, not measured against any specific "
             "attested Roman fortune.")
-    EMINENCE_IMPERIAL_PATRON_MULTIPLIER = declare(
-        "EMINENCE_IMPERIAL_PATRON_MULTIPLIER", 1.5, kind="temporary_heuristic",
-        unit="dimensionless multiplier", source=None, confidence="D",
-        why="Standing nearest the throne is the most exposed place there "
-            "is - see this method's own docstring - so an imperial patron "
-            "raises the hazard by half again. Tuned to be a real, visible "
-            "cost to the strongest patronage tier, not measured.")
-    EMINENCE_ACADEMY_NETWORK_MULTIPLIER = declare(
-        "EMINENCE_ACADEMY_NETWORK_MULTIPLIER", 0.65, kind="temporary_heuristic",
-        unit="dimensionless multiplier", source=None, confidence="D",
-        why="A wide, dispersed institution is harder to destroy than one "
-            "great man, cutting the hazard by over a third. Tuned to make "
-            "academy_network a real hedge without eliminating the hazard "
-            "outright; not measured.")
     EMINENCE_FAMILIARITY_RELIEF = declare(
         "EMINENCE_FAMILIARITY_RELIEF", 0.15, kind="temporary_heuristic",
         unit="dimensionless (fraction of hazard familiarity removes)",
@@ -1196,23 +1122,6 @@ class StatePressureMixin:
             "partial mitigation rather than a full defence - this is the "
             "treasury's own claim, not a courtroom accusation protection "
             "otherwise defends against - not measured.")
-    CONFISCATION_DISPERSAL_ACADEMY_NETWORK = declare(
-        "CONFISCATION_DISPERSAL_ACADEMY_NETWORK", 0.35, kind="temporary_heuristic",
-        unit="dimensionless (fraction of confiscation risk removed)",
-        source=None, confidence="D",
-        why="How much a dispersed academy network mitigates confiscation "
-            "risk - 'too dispersed to seize at a stroke', the same reading "
-            "HAZARD_COUNTERS already gives academy_network against "
-            "sack_chance. Tuned to be the stronger of the two dispersal "
-            "hedges; not measured.")
-    CONFISCATION_DISPERSAL_ENDOWMENT_LAND = declare(
-        "CONFISCATION_DISPERSAL_ENDOWMENT_LAND", 0.20, kind="temporary_heuristic",
-        unit="dimensionless (fraction of confiscation risk removed)",
-        source=None, confidence="D",
-        why="How much an endowment of land mitigates confiscation risk - "
-            "weaker than CONFISCATION_DISPERSAL_ACADEMY_NETWORK because "
-            "land is still one seizable holding rather than a network "
-            "spread across multiple places. Tuned, not measured.")
     CONFISCATION_MILITARY_USEFULNESS_DISCOUNT = declare(
         "CONFISCATION_MILITARY_USEFULNESS_DISCOUNT", 0.4, kind="temporary_heuristic",
         unit="dimensionless (fraction discounted at military_leverage=1.0)",

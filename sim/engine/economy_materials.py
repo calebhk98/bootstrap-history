@@ -677,29 +677,6 @@ class MaterialSupplyMixin:
                 market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
         return market
 
-    MARKET_STANDING_PATRON_IMPERIAL = declare(
-        "MARKET_STANDING_PATRON_IMPERIAL", 6.0, kind="temporary_heuristic",
-        unit="multiple on buyable market share", source=None,
-        confidence="D",
-        why="How much further an imperial patron's standing opens the "
-            "market for a tracked material, on the reasoning that the "
-            "fiscus itself becomes a supplier and the metalla were largely "
-            "imperial property. The direction is a real institutional "
-            "fact; the sixfold size is tuned game balance, not derived "
-            "from any attested imperial-supply share.")
-    MARKET_STANDING_PATRON_SENATORIAL = declare(
-        "MARKET_STANDING_PATRON_SENATORIAL", 2.5, kind="temporary_heuristic",
-        unit="multiple on buyable market share", source=None,
-        confidence="D",
-        why="As MARKET_STANDING_PATRON_IMPERIAL, for a senatorial patron - "
-            "buying through their agents rather than the fiscus itself. "
-            "Tuned, not derived.")
-    MARKET_STANDING_CITIZENSHIP = declare(
-        "MARKET_STANDING_CITIZENSHIP", 1.4, kind="temporary_heuristic",
-        unit="multiple on buyable market share", source=None,
-        confidence="D",
-        why="What plain citizenship, with no patron at all, is worth over "
-            "a stranger buying at the margin. Tuned, not derived.")
     MARKET_STANDING_SHARE_CEILING = declare(
         "MARKET_STANDING_SHARE_CEILING", 0.60, kind="temporary_heuristic",
         unit="fraction of national output (maximum, any buyer)",

@@ -1256,9 +1256,11 @@
         "lost_benefit": "Standing, and the faster diffusion of technology through the economy"
       },
       "corpus": {
-        "tier": "dispersed",
         "rank": 2,
-        "dispersed": true
+        "dispersed": true,
+        "loss_chance": 0.12,
+        "fraction_lost": 0.08,
+        "diffusion_pace": 1.7
       },
       "ablation_candidate": true,
       "standing": {
@@ -1320,8 +1322,10 @@
         "lost_benefit": "Standing"
       },
       "corpus": {
-        "tier": "written",
-        "rank": 1
+        "rank": 1,
+        "loss_chance": 0.45,
+        "fraction_lost": 0.22,
+        "diffusion_pace": 1.3
       },
       "ablation_candidate": true,
       "standing": {
@@ -4579,7 +4583,10 @@
         "flat": 0.18,
         "order": 0
       },
-      "patron_mortal": true
+      "patron_mortal": true,
+      "state_approval": {
+        "gate": "wary"
+      }
     },
     "name": "Secure a town patron",
     "note": "Cheapest entry gift is a pair of reading lenses for an ageing magistrate. Halves incoming suspicion.",
@@ -4670,6 +4677,9 @@
         "scales_with_units": false,
         "must_be_running": true,
         "order": 4
+      },
+      "state_approval": {
+        "gate": "opposed"
       }
     },
     "name": "Senatorial patronage",

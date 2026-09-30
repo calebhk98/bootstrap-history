@@ -178,14 +178,6 @@ class AdoptionMixin:
                 return 0.0
         return self.effect_sum("schooling_flow")
 
-    ACADEMY_SCHOOLING_FLOW_MULTIPLIER = declare(
-        "ACADEMY_SCHOOLING_FLOW_MULTIPLIER", 1.5, kind="temporary_heuristic",
-        unit="dimensionless", source=None, confidence="D",
-        why="How much more schooling flow an academy network unit "
-            "contributes than a school unit does - a bigger, later "
-            "institution teaching more per unit. Tuned to feel "
-            "proportionate, not measured against any attested academy "
-            "output.")
 
     # HOW FAST LITERACY CLOSES THE GAP TO ITS CEILING, per unit of
     # _schooling_flow, per year. At flow 1.0 (a single ordinary school and
@@ -287,7 +279,7 @@ class AdoptionMixin:
                 bits.append("the lettered and propertied class is now %d%% "
                             "literate" % round(changed["literacy_elite"] * 100))
             school_phrase = "schooling shows in the census"
-            school_started = self.done_year.get("school_founded")
+            school_started = self.done_year.get(self.school_node())
             if school_started is not None and year - school_started >= self.GENERATION_YEARS:
                 school_phrase = "a generation of schooling shows in the census"
             self.state.household.log.append((year, "%s: %s" % (school_phrase, "; ".join(bits))))

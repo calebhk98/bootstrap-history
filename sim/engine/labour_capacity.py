@@ -355,73 +355,6 @@ class CapacityMixin:
     # STAFF_CAPACITY_SOURCES needs for its own unit-scaled arithmetic - two
     # declared names per figure rather than one, so a rename or a cast can
     # never silently turn a place count into a fraction of one.
-    _ROOM_SOURCES_WHY = (
-        "Household places this institution adds to the hiring/teaching "
-        "ceiling, read off the same design pass as STAFF_CAPACITY_SOURCES's "
-        "artisan column (see that table's own _why) - not an independent "
-        "figure, and not derived from anything physical: a real answer "
-        "would come from how many people a workshop, a school or a furnace "
-        "of a given real size actually employs and supervises.")
-    ROOM_PLACES_WORKSHOP_FIRST = declare(
-        "ROOM_PLACES_WORKSHOP_FIRST", 6, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_FREEDMAN_STAFF = declare(
-        "ROOM_PLACES_FREEDMAN_STAFF", 10, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_SCHOOL_FOUNDED = declare(
-        "ROOM_PLACES_SCHOOL_FOUNDED", 12, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_PATRON_SENATORIAL = declare(
-        "ROOM_PLACES_PATRON_SENATORIAL", 6, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_ENDOWMENT_LAND = declare(
-        "ROOM_PLACES_ENDOWMENT_LAND", 8, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_PATRON_IMPERIAL = declare(
-        "ROOM_PLACES_PATRON_IMPERIAL", 50, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_ACADEMY_NETWORK = declare(
-        "ROOM_PLACES_ACADEMY_NETWORK", 50, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_INTERCHANGEABLE_PARTS = declare(
-        "ROOM_PLACES_INTERCHANGEABLE_PARTS", 40, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_CRUCIBLE_STEEL = declare(
-        "ROOM_PLACES_CRUCIBLE_STEEL", 12, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_BLAST_FURNACE = declare(
-        "ROOM_PLACES_BLAST_FURNACE", 15, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_TELEGRAPH_ELECTRIC = declare(
-        "ROOM_PLACES_TELEGRAPH_ELECTRIC", 25, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_STEAM_HIGH_PRESSURE = declare(
-        "ROOM_PLACES_STEAM_HIGH_PRESSURE", 45, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_MET_OPEN_HEARTH_FURNACE = declare(
-        "ROOM_PLACES_MET_OPEN_HEARTH_FURNACE", 65, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_RAILWAY = declare(
-        "ROOM_PLACES_RAILWAY", 95, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
-    ROOM_PLACES_POWER_GRID = declare(
-        "ROOM_PLACES_POWER_GRID", 130, kind="temporary_heuristic",
-        unit="household places", source=None, confidence="D",
-        why=_ROOM_SOURCES_WHY)
     # ROOM_SOURCES: [(node id, places)] from each node's `room_places` (MechanicsMixin).
     # fin_trial_balance, fin_company_town and fin_chain_store - the
     # organisation entries added alongside STAFF_CAPACITY_SOURCES above - are
@@ -532,132 +465,6 @@ class CapacityMixin:
     # than a violation - nothing here stands in for a historical OUTCOME
     # (a wage, a price, an army size), only for an untouched mechanism
     # (how fast an institution actually trains people).
-    _STAFF_CAPACITY_WHY = (
-        "One institution's contribution to the scholars/artisans/directors "
-        "ceiling in STAFF_CAPACITY_SOURCES, once running. Sized for game "
-        "pacing against this tree's own calendar, not measured from any "
-        "real institution's actual output; see that table's own surrounding "
-        "comments for the specific history behind figures that were found "
-        "wrong (met_open_hearth_furnace's stale id, fin_societas kept out, "
-        "power_grid's own size).")
-    STAFF_SCHOLARS_SCHOOL_FOUNDED = declare(
-        "STAFF_SCHOLARS_SCHOOL_FOUNDED", 12.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_COLLEGIUM_LICENSED = declare(
-        "STAFF_SCHOLARS_COLLEGIUM_LICENSED", 3.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_PATRON_SENATORIAL = declare(
-        "STAFF_SCHOLARS_PATRON_SENATORIAL", 4.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_PATRON_IMPERIAL = declare(
-        "STAFF_SCHOLARS_PATRON_IMPERIAL", 14.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_ENDOWMENT_LAND = declare(
-        "STAFF_SCHOLARS_ENDOWMENT_LAND", 6.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_ACADEMY_NETWORK = declare(
-        "STAFF_SCHOLARS_ACADEMY_NETWORK", 40.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_CORPUS_DISPERSED = declare(
-        "STAFF_SCHOLARS_CORPUS_DISPERSED", 8.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_INTERCHANGEABLE_PARTS = declare(
-        "STAFF_SCHOLARS_INTERCHANGEABLE_PARTS", 4.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_TELEGRAPH_ELECTRIC = declare(
-        "STAFF_SCHOLARS_TELEGRAPH_ELECTRIC", 6.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_MET_OPEN_HEARTH_FURNACE = declare(
-        "STAFF_SCHOLARS_MET_OPEN_HEARTH_FURNACE", 6.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_RAILWAY = declare(
-        "STAFF_SCHOLARS_RAILWAY", 8.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_SCHOLARS_POWER_GRID = declare(
-        "STAFF_SCHOLARS_POWER_GRID", 45.0, kind="temporary_heuristic",
-        unit="scholars", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_WORKSHOP_FIRST = declare(
-        "STAFF_ARTISANS_WORKSHOP_FIRST", 6.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_FREEDMAN_STAFF = declare(
-        "STAFF_ARTISANS_FREEDMAN_STAFF", 10.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_SCHOOL_FOUNDED = declare(
-        "STAFF_ARTISANS_SCHOOL_FOUNDED", 12.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_PATRON_SENATORIAL = declare(
-        "STAFF_ARTISANS_PATRON_SENATORIAL", 6.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_PATRON_IMPERIAL = declare(
-        "STAFF_ARTISANS_PATRON_IMPERIAL", 50.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_ENDOWMENT_LAND = declare(
-        "STAFF_ARTISANS_ENDOWMENT_LAND", 8.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_ACADEMY_NETWORK = declare(
-        "STAFF_ARTISANS_ACADEMY_NETWORK", 50.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_INTERCHANGEABLE_PARTS = declare(
-        "STAFF_ARTISANS_INTERCHANGEABLE_PARTS", 40.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_CRUCIBLE_STEEL = declare(
-        "STAFF_ARTISANS_CRUCIBLE_STEEL", 12.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_BLAST_FURNACE = declare(
-        "STAFF_ARTISANS_BLAST_FURNACE", 15.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_TELEGRAPH_ELECTRIC = declare(
-        "STAFF_ARTISANS_TELEGRAPH_ELECTRIC", 25.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_STEAM_HIGH_PRESSURE = declare(
-        "STAFF_ARTISANS_STEAM_HIGH_PRESSURE", 45.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_MET_OPEN_HEARTH_FURNACE = declare(
-        "STAFF_ARTISANS_MET_OPEN_HEARTH_FURNACE", 65.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_RAILWAY = declare(
-        "STAFF_ARTISANS_RAILWAY", 95.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_POWER_GRID = declare(
-        "STAFF_ARTISANS_POWER_GRID", 130.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_DIRECTORS_SCHOOL_FOUNDED = declare(
-        "STAFF_DIRECTORS_SCHOOL_FOUNDED", 2.0, kind="temporary_heuristic",
-        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_DIRECTORS_PATRON_IMPERIAL = declare(
-        "STAFF_DIRECTORS_PATRON_IMPERIAL", 2.0, kind="temporary_heuristic",
-        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_DIRECTORS_ENDOWMENT_LAND = declare(
-        "STAFF_DIRECTORS_ENDOWMENT_LAND", 1.0, kind="temporary_heuristic",
-        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_DIRECTORS_ACADEMY_NETWORK = declare(
-        "STAFF_DIRECTORS_ACADEMY_NETWORK", 6.0, kind="temporary_heuristic",
-        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_DIRECTORS_CORPUS_DISPERSED = declare(
-        "STAFF_DIRECTORS_CORPUS_DISPERSED", 1.0, kind="temporary_heuristic",
-        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_DIRECTORS_POWER_GRID = declare(
-        "STAFF_DIRECTORS_POWER_GRID", 6.0, kind="temporary_heuristic",
-        unit="directors", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_FIN_TRIAL_BALANCE = declare(
-        "STAFF_ARTISANS_FIN_TRIAL_BALANCE", 4.0, kind="temporary_heuristic",
-        unit="artisans (clerks)", source=None, confidence="D",
-        why=_STAFF_CAPACITY_WHY)
-    STAFF_DIRECTORS_FIN_TRIAL_BALANCE = declare(
-        "STAFF_DIRECTORS_FIN_TRIAL_BALANCE", 2.0, kind="temporary_heuristic",
-        unit="directors (deputies)", source=None, confidence="D",
-        why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_FIN_COMPANY_TOWN = declare(
-        "STAFF_ARTISANS_FIN_COMPANY_TOWN", 20.0, kind="temporary_heuristic",
-        unit="artisans", source=None, confidence="D", why=_STAFF_CAPACITY_WHY)
-    STAFF_ARTISANS_FIN_CHAIN_STORE = declare(
-        "STAFF_ARTISANS_FIN_CHAIN_STORE", 30.0, kind="temporary_heuristic",
-        unit="artisans (branch staff)", source=None, confidence="D",
-        why=_STAFF_CAPACITY_WHY)
-    STAFF_DIRECTORS_FIN_CHAIN_STORE = declare(
-        "STAFF_DIRECTORS_FIN_CHAIN_STORE", 4.0, kind="temporary_heuristic",
-        unit="directors (branch managers)", source=None, confidence="D",
-        why=_STAFF_CAPACITY_WHY)
 
     # STAFF_CAPACITY_SOURCES: [(node, scholars, artisans, directors, scales_with_units, must_be_running)]
     # from each node's `staff_capacity` (MechanicsMixin).
@@ -845,26 +652,6 @@ class CapacityMixin:
         "SUPERVISION_ROOM_PER_DIRECTOR_EXTRA", 14.0, kind="temporary_heuristic",
         unit="people per trained deputy", source=None, confidence="D",
         why=_SUPERVISION_ROOM_WHY)
-    SUPERVISION_ROOM_WORKSHOP_FIRST = declare(
-        "SUPERVISION_ROOM_WORKSHOP_FIRST", 6.0, kind="temporary_heuristic",
-        unit="people per unit", source=None, confidence="D",
-        why=_SUPERVISION_ROOM_WHY)
-    SUPERVISION_ROOM_SCHOOL_FOUNDED = declare(
-        "SUPERVISION_ROOM_SCHOOL_FOUNDED", 10.0, kind="temporary_heuristic",
-        unit="people per unit", source=None, confidence="D",
-        why=_SUPERVISION_ROOM_WHY)
-    SUPERVISION_ROOM_ACADEMY_NETWORK = declare(
-        "SUPERVISION_ROOM_ACADEMY_NETWORK", 30.0, kind="temporary_heuristic",
-        unit="people per unit", source=None, confidence="D",
-        why=_SUPERVISION_ROOM_WHY)
-    SUPERVISION_ROOM_FIN_CHAIN_STORE = declare(
-        "SUPERVISION_ROOM_FIN_CHAIN_STORE", 20.0, kind="temporary_heuristic",
-        unit="people per unit", source=None, confidence="D",
-        why=_SUPERVISION_ROOM_WHY)
-    SUPERVISION_ROOM_FIN_SOCIETAS = declare(
-        "SUPERVISION_ROOM_FIN_SOCIETAS", 4.0, kind="temporary_heuristic",
-        unit="people", source=None, confidence="D",
-        why=_SUPERVISION_ROOM_WHY)
 
     def supervision_room(self):
         """People you can direct and pay BEYOND what your institutions train.
@@ -949,30 +736,6 @@ class CapacityMixin:
         why="How much a school widens the local hiring pool, at one unit: "
             "cap *= 1 + this * units**HIRING_MULTIPLIER_EXPONENT. Tuned "
             "game balance.")
-    FREEDMAN_STAFF_HIRING_COEFFICIENT = declare(
-        "FREEDMAN_STAFF_HIRING_COEFFICIENT", 0.5, kind="temporary_heuristic",
-        unit="dimensionless", source=None, confidence="D",
-        why="As SCHOOL_FOUNDED_HIRING_COEFFICIENT, for a freedman staff, "
-            "smaller because it widens the pool less than a school does.")
-    ACADEMY_NETWORK_HIRING_COEFFICIENT = declare(
-        "ACADEMY_NETWORK_HIRING_COEFFICIENT", 1.5, kind="temporary_heuristic",
-        unit="dimensionless", source=None, confidence="D",
-        why="As SCHOOL_FOUNDED_HIRING_COEFFICIENT, for an academy network, "
-            "larger because it is a bigger, later institution.")
-    PATRON_IMPERIAL_HIRING_MULTIPLIER = declare(
-        "PATRON_IMPERIAL_HIRING_MULTIPLIER", 3.0, kind="temporary_heuristic",
-        unit="dimensionless multiplier", source=None, confidence="D",
-        why="A flat tripling of the local hiring pool once an imperial "
-            "patron's name is behind you - a flat multiplier rather than a "
-            "unit-scaled one because there is only one imperial patron. "
-            "Tuned to make the patronage genuinely open doors, not "
-            "measured from any real patron's actual reach.")
-    INTERCHANGEABLE_PARTS_HIRING_MULTIPLIER = declare(
-        "INTERCHANGEABLE_PARTS_HIRING_MULTIPLIER", 1.5, kind="temporary_heuristic",
-        unit="dimensionless multiplier", source=None, confidence="D",
-        why="Interchangeable parts widen who can be productively hired "
-            "(less need for a single all-round master craftsman), applied "
-            "as a flat half-again multiplier. Tuned, not measured.")
 
     def hired_cap(self):
         # a civilization of 1.5 million cannot staff what one of 65 million can

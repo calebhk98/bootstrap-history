@@ -152,9 +152,19 @@ class MechanicsMixin:
         spec = self._mechanics_index().get("corpus", {})
         return sorted(spec, key=lambda node_id: (-spec[node_id]["rank"], node_id))
 
-    def corpus_tier_constant(self, node_id, prefix):
-        """The engine constant `<prefix>_<TIER>` for a corpus node's declared tier."""
-        return getattr(self, "%s_%s" % (prefix, self.mechanic(node_id, "corpus")["tier"].upper()))
+    def approval_patron(self, gate):
+        """The patron node whose backing lifts the state's `gate` ("wary" or "opposed") on a project, or None."""
+        for node_id in self.nodes_with_mechanic("state_approval"):
+            if self.mechanic(node_id, "state_approval")["gate"] == gate:
+                return node_id
+        return None
+
+    def school_node(self):
+        """The node whose operation is required for any schooling to happen, or None."""
+        for node_id, spec in self._effect_terms("schooling_flow"):
+            if spec.get("required"):
+                return node_id
+        return None
 
     def patrons_lost_to_eminence(self):
         """Patron nodes an eminent household can lose to a quarrel, highest tier first."""
@@ -164,8 +174,8 @@ class MechanicsMixin:
     def corpus_hedge_tiers(self):
         """[(hedge node, loss chance, fraction lost)], strongest first; corpus_hedge and
         the knowledge-loss warning both read this one rule."""
-        return [(node_id, self.corpus_tier_constant(node_id, "CORPUS_HEDGE_LOSS_CHANCE"),
-                 self.corpus_tier_constant(node_id, "CORPUS_HEDGE_FRACTION_LOST"))
+        return [(node_id, self.mechanic(node_id, "corpus")["loss_chance"],
+                 self.mechanic(node_id, "corpus")["fraction_lost"])
                 for node_id in self.corpus_nodes_best_first()]
 
     def corpus_is_dispersed(self, node_id):
@@ -185,7 +195,7 @@ class MechanicsMixin:
         """Diffusion pace of the best corpus node currently operating (1.0 if none)."""
         for node_id in self.corpus_nodes_best_first():
             if self.running(node_id):
-                return self.corpus_tier_constant(node_id, "CORPUS_DIFFUSION_PACE")
+                return self.mechanic(node_id, "corpus")["diffusion_pace"]
         return 1.0
 
     @property

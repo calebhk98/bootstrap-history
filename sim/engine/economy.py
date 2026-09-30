@@ -241,52 +241,6 @@ STANDING_PER_SQRT_EARNED = declare(
         "does not accumulate linearly); the 0.55 coefficient is simply "
         "tuned until the early game felt right. A real mechanism needs a "
         "model of who hears about a given work and how impressed they are.")
-STANDING_CORPUS_WRITTEN = declare(
-    "STANDING_CORPUS_WRITTEN", 3.0, kind="temporary_heuristic",
-    unit="reputation points", source=None, confidence="D",
-    why="Flat bonus for having written a corpus of your own knowledge down "
-        "at all, before it has spread anywhere. Invented game balance; a "
-        "real figure would follow from how rare and how legible written "
-        "work is in this society.")
-STANDING_CORPUS_DISPERSED = declare(
-    "STANDING_CORPUS_DISPERSED", 6.0, kind="temporary_heuristic",
-    unit="reputation points", source=None, confidence="D",
-    why="Further bonus once that corpus is actually copied into other "
-        "libraries - twice the written-only bonus because now other people, "
-        "not just you, hold the proof of what you know. Tuned, not derived.")
-STANDING_SCHOOL_FOUNDED_PER_SQRT_UNIT = declare(
-    "STANDING_SCHOOL_FOUNDED_PER_SQRT_UNIT", 4.0, kind="temporary_heuristic",
-    unit="reputation points per sqrt(school units)", source=None,
-    confidence="D",
-    why="Founding a school buys standing mostly by having founded one at "
-        "all, not by its size - sqrt so a third schoolhouse does not make "
-        "you three times as well known as the first. The curve shape is "
-        "reasoned; the coefficient is tuned until playtests felt right.")
-STANDING_ACADEMY_NETWORK_PER_SQRT_UNIT = declare(
-    "STANDING_ACADEMY_NETWORK_PER_SQRT_UNIT", 10.0,
-    kind="temporary_heuristic", unit="reputation points per sqrt(network units)",
-    source=None, confidence="D",
-    why="Same sqrt-saturating shape as the school bonus, larger because an "
-        "academy network is a bigger, later institution. No independent "
-        "source; picked to feel roughly proportionate to the school figure.")
-STANDING_PATRON_SENATORIAL = declare(
-    "STANDING_PATRON_SENATORIAL", 3.0, kind="temporary_heuristic",
-    unit="reputation points", source=None, confidence="D",
-    why="Flat standing from having a senatorial-tier patron's name attached "
-        "to you. A real figure would follow from how visible that patron's "
-        "own standing is in this specific society, not a flat constant "
-        "reused across every civilisation in the game.")
-STANDING_PATRON_IMPERIAL = declare(
-    "STANDING_PATRON_IMPERIAL", 8.0, kind="temporary_heuristic",
-    unit="reputation points", source=None, confidence="D",
-    why="As STANDING_PATRON_SENATORIAL, for the imperial tier - larger "
-        "because that patron is more visible, tuned rather than derived.")
-STANDING_IDENTITY_COVER = declare(
-    "STANDING_IDENTITY_COVER", 1.0, kind="temporary_heuristic",
-    unit="reputation points", source=None, confidence="D",
-    why="Small standing bonus for having a respectable cover identity at "
-        "all. Invented game balance, smallest of this group because a cover "
-        "identity is a starting requirement, not an achievement.")
 STANDING_SCANDAL_PENALTY_PER_POINT = declare(
     "STANDING_SCANDAL_PENALTY_PER_POINT", 0.5, kind="temporary_heuristic",
     unit="reputation points lost per point of household.scandal",

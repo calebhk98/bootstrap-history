@@ -284,23 +284,6 @@ class ProductionMixin:
             "profit) and, per the comment above, deliberately less than a "
             "2x markup. Chosen to make the mechanism function at all, not "
             "measured against any real workshop's margins.")
-    WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS = declare(
-        "WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS", 0.35,
-        kind="temporary_heuristic", unit="extra output denarii per denarius of wages",
-        source=None, confidence="D",
-        why="How much interchangeable parts (a real productivity-raising "
-            "technology) raises the workshop markup. The DIRECTION is a "
-            "real historical claim; the SIZE is tuned game feel, not "
-            "derived from any attested productivity gain from "
-            "interchangeability specifically.")
-    WORKSHOP_MARKUP_BONUS_POWER_GRID = declare(
-        "WORKSHOP_MARKUP_BONUS_POWER_GRID", 0.45, kind="temporary_heuristic",
-        unit="extra output denarii per denarius of wages", source=None,
-        confidence="D",
-        why="As WORKSHOP_MARKUP_BONUS_INTERCHANGEABLE_PARTS, for electrical "
-            "power - larger because electrification is judged the bigger "
-            "productivity jump of the two, a judgement call rather than a "
-            "measurement.")
 
     def workshop_output(self):
         """What your standing staff produces and sells, over and above projects."""
@@ -713,86 +696,11 @@ class ProductionMixin:
         return upkeep_amount * (self.INSTITUTION_FLOOR
                      + (1.0 - self.INSTITUTION_FLOOR) * used)
 
-    _INSTITUTION_PLACES_WHY = (
-        "Roughly how many people one unit of this institution is built "
-        "to support, for institution_upkeep()'s enrolment-scaled "
-        "billing. Read off labour.py's STAFF_CAPACITY_SOURCES table "
-        "(outside this file's scope) by hand, mostly as that row's "
-        "'sc'+'ar' staffing columns - not a strict, checked formula, so "
-        "the two tables can drift apart if one changes without the "
-        "other; a real fix would derive institution_places() FROM "
-        "STAFF_CAPACITY_SOURCES directly instead of copying a number "
-        "read off it.")
-    INSTITUTION_PLACES_WORKSHOP_FIRST = declare(
-        "INSTITUTION_PLACES_WORKSHOP_FIRST", 12.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_SCHOOL_FOUNDED = declare(
-        "INSTITUTION_PLACES_SCHOOL_FOUNDED", 34.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_ACADEMY_NETWORK = declare(
-        "INSTITUTION_PLACES_ACADEMY_NETWORK", 120.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_FREEDMAN_STAFF = declare(
-        "INSTITUTION_PLACES_FREEDMAN_STAFF", 10.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_COLLEGIUM_LICENSED = declare(
-        "INSTITUTION_PLACES_COLLEGIUM_LICENSED", 3.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_PATRON_SENATORIAL = declare(
-        "INSTITUTION_PLACES_PATRON_SENATORIAL", 10.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_PATRON_IMPERIAL = declare(
-        "INSTITUTION_PLACES_PATRON_IMPERIAL", 64.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_ENDOWMENT_LAND = declare(
-        "INSTITUTION_PLACES_ENDOWMENT_LAND", 14.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_CORPUS_DISPERSED = declare(
-        "INSTITUTION_PLACES_CORPUS_DISPERSED", 8.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_INTERCHANGEABLE_PARTS = declare(
-        "INSTITUTION_PLACES_INTERCHANGEABLE_PARTS", 44.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source=None, confidence="D", why=_INSTITUTION_PLACES_WHY)
     # Read off STAFF_CAPACITY_SOURCES (labour.py) the same way
     # every other row here is: a unit's ar+di, so a chain store
     # with three people in it is not billed as though every
     # branch were already fully staffed.
-    INSTITUTION_PLACES_FIN_COMPANY_TOWN = declare(
-        "INSTITUTION_PLACES_FIN_COMPANY_TOWN", 20.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source="labour.py STAFF_CAPACITY_SOURCES row for "
-               "fin_company_town: ar=20.0, di=0.0.",
-        confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES_FIN_CHAIN_STORE = declare(
-        "INSTITUTION_PLACES_FIN_CHAIN_STORE", 34.0,
-        kind="temporary_heuristic", unit="people per unit",
-        source="labour.py STAFF_CAPACITY_SOURCES row for "
-               "fin_chain_store: ar=30.0, di=4.0.",
-        confidence="D", why=_INSTITUTION_PLACES_WHY)
-    INSTITUTION_PLACES = {
-        'workshop_first': INSTITUTION_PLACES_WORKSHOP_FIRST,
-        'school_founded': INSTITUTION_PLACES_SCHOOL_FOUNDED,
-        'academy_network': INSTITUTION_PLACES_ACADEMY_NETWORK,
-        'freedman_staff': INSTITUTION_PLACES_FREEDMAN_STAFF,
-        'collegium_licensed': INSTITUTION_PLACES_COLLEGIUM_LICENSED,
-        'patron_senatorial': INSTITUTION_PLACES_PATRON_SENATORIAL,
-        'patron_imperial': INSTITUTION_PLACES_PATRON_IMPERIAL,
-        'endowment_land': INSTITUTION_PLACES_ENDOWMENT_LAND,
-        'corpus_dispersed': INSTITUTION_PLACES_CORPUS_DISPERSED,
-        'interchangeable_parts': INSTITUTION_PLACES_INTERCHANGEABLE_PARTS,
-        'fin_company_town': INSTITUTION_PLACES_FIN_COMPANY_TOWN,
-        'fin_chain_store': INSTITUTION_PLACES_FIN_CHAIN_STORE,
-    }
+    # People one unit supports: each institution's `institution_places` mechanic.
     INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD = declare(
         "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD", 250.0,
         kind="temporary_heuristic", book_money=True, unit="denarii of upkeep per head",

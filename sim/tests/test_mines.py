@@ -116,9 +116,7 @@ check("mine pumping and the Newcomen engine raise a depleted working's "
 # exponential. Cost is bounded on both ends even at maximum depletion with
 # every relevant technology built.
 s_bound = sim(capital=1.0)
-for _t in s_bound.MINING_TECH:
-    s_bound.done.add(_t); s_bound.operating.add(_t)
-for _t in s_bound.MINING_TECH_STEEL:
+for _t in s_bound.nodes_with_mechanic("mining_tech"):
     s_bound.done.add(_t); s_bound.operating.add(_t)
 s_bound._done_changed()
 # A working of its own, fully depleted from its own commissioning year (see

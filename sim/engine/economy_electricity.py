@@ -150,34 +150,6 @@ class ElectricityMixin:
             "figure, not 365.25: this file has no use for leap-year "
             "precision at kilowatt-scale estimates.")
 
-    _POWER_ANCHOR_WHY = (
-        "Turns the tech tree's own prose description of a generation "
-        "node's scale ('tens of kW', 'kW scale', 'hundreds of kW', 'MW "
-        "scale' - see tech_tree.json) into an actual kilowatt figure "
-        "resource_throttle() can compare demand against. Each is the "
-        "geometric-ish midpoint of the decade the tree's own note names - "
-        "a judgement call made explicitly, per the class comment above, "
-        "rather than a specific rated capacity for any specific machine.")
-    POWER_ANCHOR_KW_WATER = declare(
-        "POWER_ANCHOR_KW_WATER", 30.0, kind="temporary_heuristic",
-        unit="kW", source="tech_tree.json note: 'tens of kW on one shaft'.",
-        confidence="D", why=_POWER_ANCHOR_WHY)
-    POWER_ANCHOR_KW_ELECTRIC = declare(
-        "POWER_ANCHOR_KW_ELECTRIC", 10.0, kind="temporary_heuristic",
-        unit="kW", source="tech_tree.json note: 'kW scale' - smaller "
-               "than cap_power_water's own because this node is one "
-               "dynamo diverting a slice of an existing shaft's output, "
-               "not the shaft's whole output turned electrical (see "
-               "the class comment above).",
-        confidence="D", why=_POWER_ANCHOR_WHY)
-    POWER_ANCHOR_KW_STEAM = declare(
-        "POWER_ANCHOR_KW_STEAM", 300.0, kind="temporary_heuristic",
-        unit="kW", source="tech_tree.json note: 'portable, hundreds of kW'.",
-        confidence="D", why=_POWER_ANCHOR_WHY)
-    POWER_ANCHOR_KW_GRID = declare(
-        "POWER_ANCHOR_KW_GRID", 3000.0, kind="temporary_heuristic",
-        unit="kW", source="tech_tree.json note: 'MW scale'.",
-        confidence="D", why=_POWER_ANCHOR_WHY)
     # Anchors, generators and prime movers come from node `power_tier`, `power_generation`
     # and `prime_mover` mechanics.
 
@@ -267,18 +239,6 @@ class ElectricityMixin:
     # node's own iron_ore_kg draw at a simplifying 1:1 ore-to-product mass
     # assumption - the one approximation in this pair, disclosed because the
     # tree carries no separate output-mass field for this node.
-    FERROALLOY_KWH_PER_KG_ORE = declare(
-        "FERROALLOY_KWH_PER_KG_ORE", 5.0, kind="engineering_estimate",
-        unit="kWh/kg ore (1:1 ore-to-product mass assumed)",
-        source="Submerged-arc ferroalloy/carbide furnaces run several "
-               "thousand kWh per tonne of product for this process FAMILY "
-               "(ferrosilicon, ferrochrome, calcium carbide); several "
-               "thousand kWh/t is roughly several kWh/kg.",
-        confidence="C",
-        why="Specific energy for arc_furnace_ferroalloys, applied to its "
-            "own iron_ore_kg draw at a simplifying 1:1 ore-to-product mass "
-            "assumption - the disclosed approximation in this pair, since "
-            "the tree carries no separate output-mass field for this node.")
     # Anything else gated on cap_power_electric/cap_power_grid/power_grid
     # that this file cannot characterise individually - a modest generic
     # workshop load, the same order of magnitude as cap_power_electric's own

@@ -45,45 +45,6 @@ class CreditMixin:
             "model of what a moneylender could actually observe and enforce "
             "against a given borrower's income, which this engine does not "
             "have.")
-    CREDIT_LINE_IDENTITY_COVER = declare(
-        "CREDIT_LINE_IDENTITY_COVER", 400.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Extra credit a respectable cover identity is worth. Tuned so "
-            "the opening decision (reach a cover identity or not) is a real "
-            "one; not sourced to any attested figure.")
-    CREDIT_LINE_PATRON_LOCAL = declare(
-        "CREDIT_LINE_PATRON_LOCAL", 3000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Extra credit a local patron's name is worth. Game-balance "
-            "figure, not a sourced credit line.")
-    CREDIT_LINE_PATRON_SENATORIAL = declare(
-        "CREDIT_LINE_PATRON_SENATORIAL", 15000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Extra credit a senatorial patron's name is worth. Scaled up "
-            "from the local-patron figure by feel, not by any attested "
-            "ratio of patron wealth or standing.")
-    CREDIT_LINE_PATRON_IMPERIAL = declare(
-        "CREDIT_LINE_PATRON_IMPERIAL", 60000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Extra credit an imperial patron's name is worth. As with the "
-            "other patron tiers, a tuned step up rather than a sourced "
-            "figure - see the CREDIT_LINE_SERVICEABLE bound below for the "
-            "mechanism that stops this alone turning into an unpayable "
-            "trap.")
-    CREDIT_LINE_PER_COLLEGIUM_UNIT = declare(
-        "CREDIT_LINE_PER_COLLEGIUM_UNIT", 4000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii per licensed collegium unit", source=None,
-        confidence="D",
-        why="Credit value of one licensed collegium, linear rather than "
-            "sqrt because this is collateral (a real, seizable asset) "
-            "rather than fame - see the comment this replaces for that "
-            "reasoning. The rate itself is tuned, not appraised.")
-    CREDIT_LINE_ENDOWMENT_LAND = declare(
-        "CREDIT_LINE_ENDOWMENT_LAND", 30000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii", source=None, confidence="D",
-        why="Credit value of an endowment of land, treated as real "
-            "collateral. No land valuation model backs this figure; it is "
-            "a flat, tuned amount.")
     CREDIT_LINE_PER_REPUTATION_POINT = declare(
         "CREDIT_LINE_PER_REPUTATION_POINT", 250.0, kind="temporary_heuristic",
         book_money=True, unit="denarii of credit per reputation point", source=None,
@@ -282,42 +243,6 @@ class CreditMixin:
                              % (len(shed), "" if len(shed) == 1 else "s",
                                 ", ".join(shed))))
 
-    DEBT_RATE_DISCOUNT_PATRON_LOCAL = declare(
-        "DEBT_RATE_DISCOUNT_PATRON_LOCAL", 0.015, kind="temporary_heuristic",
-        unit="fraction off the base annual rate", source=None,
-        confidence="D",
-        why="How much cheaper a local patron's name makes borrowing. No "
-            "source ties a specific rate discount to a specific patronage "
-            "tier; a real figure needs a model of how a lender actually "
-            "prices counterparty risk in a patronage economy.")
-    DEBT_RATE_DISCOUNT_PATRON_SENATORIAL = declare(
-        "DEBT_RATE_DISCOUNT_PATRON_SENATORIAL", 0.03, kind="temporary_heuristic",
-        unit="fraction off the base annual rate", source=None,
-        confidence="D",
-        why="As DEBT_RATE_DISCOUNT_PATRON_LOCAL, larger tier - tuned to "
-            "feel proportionate, not derived from lending data.")
-    DEBT_RATE_DISCOUNT_PATRON_IMPERIAL = declare(
-        "DEBT_RATE_DISCOUNT_PATRON_IMPERIAL", 0.03, kind="temporary_heuristic",
-        unit="fraction off the base annual rate", source=None,
-        confidence="D",
-        why="As DEBT_RATE_DISCOUNT_PATRON_SENATORIAL - the imperial and "
-            "senatorial tiers happen to carry the same discount here, which "
-            "is itself an unexamined choice rather than a considered one.")
-    DEBT_RATE_DISCOUNT_ENDOWMENT_LAND = declare(
-        "DEBT_RATE_DISCOUNT_ENDOWMENT_LAND", 0.02, kind="temporary_heuristic",
-        unit="fraction off the base annual rate", source=None,
-        confidence="D",
-        why="Secured lending against land collateral is cheaper than "
-            "personal credit in general, which is a real effect; the "
-            "specific two-point discount is tuned, not taken from an "
-            "attested Roman secured-loan rate.")
-    DEBT_RATE_DISCOUNT_BANKER = declare(
-        "DEBT_RATE_DISCOUNT_BANKER", 0.01, kind="temporary_heuristic",
-        unit="fraction off the base annual rate", source=None,
-        confidence="D",
-        why="A banker you know (fin_argentarii) shaves a little off the "
-            "rate through a personal relationship - plausible in kind, "
-            "invented in size.")
     DEBT_RATE_REPUTATION_DISCOUNT_CAP = declare(
         "DEBT_RATE_REPUTATION_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
         unit="fraction off the base annual rate (maximum)", source=None,
@@ -908,22 +833,6 @@ class CreditMixin:
         why="As LIVING_COST_FREEDMAN_SHARE, for an enslaved household "
             "member - lower, reflecting a bare rather than a dignified "
             "standard of upkeep. Tuned, not measured.")
-    LIVING_COST_STATUS_CITIZENSHIP = declare(
-        "LIVING_COST_STATUS_CITIZENSHIP", 200.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at price_index=1", source=None, confidence="D",
-        why="Standing upkeep of maintaining the appearance citizenship "
-            "expects - clothes, hospitality, being seen. Tuned game "
-            "balance, not an attested figure.")
-    LIVING_COST_STATUS_PATRON_SENATORIAL = declare(
-        "LIVING_COST_STATUS_PATRON_SENATORIAL", 900.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at price_index=1", source=None, confidence="D",
-        why="As LIVING_COST_STATUS_CITIZENSHIP, for a senatorial patron's "
-            "expectations of you. Tuned, not attested.")
-    LIVING_COST_STATUS_PATRON_IMPERIAL = declare(
-        "LIVING_COST_STATUS_PATRON_IMPERIAL", 2500.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at price_index=1", source=None, confidence="D",
-        why="As LIVING_COST_STATUS_PATRON_SENATORIAL, for the imperial "
-            "tier. Tuned, not attested.")
     LIVING_COST_STATUS_PER_CAPITAL = declare(
         "LIVING_COST_STATUS_PER_CAPITAL", 0.015, kind="temporary_heuristic",
         unit="fraction of capital spent on appearances per year",

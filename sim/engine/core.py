@@ -1634,35 +1634,6 @@ class Sim(MechanicsMixin, EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     # applies) is genuinely easy to get subtly different between two
     # independent copies. Calling this from both places is the only way to
     # make the two screens unable to disagree with each other.
-    CORPUS_HEDGE_LOSS_CHANCE_DISPERSED = declare(
-        "CORPUS_HEDGE_LOSS_CHANCE_DISPERSED", 0.12, kind="temporary_heuristic",
-        unit="dimensionless (probability a sack takes any corpus at all)",
-        source=None, confidence="D",
-        why="Chance a sack takes any of the corpus at all once it is "
-            "written and dispersed - lowest of the three hedge states, "
-            "because copies already sit in other people's hands beyond "
-            "this one site. Tuned, not measured.")
-    CORPUS_HEDGE_FRACTION_LOST_DISPERSED = declare(
-        "CORPUS_HEDGE_FRACTION_LOST_DISPERSED", 0.08, kind="temporary_heuristic",
-        unit="dimensionless (fraction of losable technologies taken)",
-        source=None, confidence="D",
-        why="If a sack does take from the corpus while dispersed, how "
-            "much of what is still losable it takes - smallest of the "
-            "three states. Tuned, not measured.")
-    CORPUS_HEDGE_LOSS_CHANCE_WRITTEN = declare(
-        "CORPUS_HEDGE_LOSS_CHANCE_WRITTEN", 0.45, kind="temporary_heuristic",
-        unit="dimensionless (probability a sack takes any corpus at all)",
-        source=None, confidence="D",
-        why="Chance a sack takes any of the corpus once it is merely "
-            "written down (not yet dispersed) - one set of books in one "
-            "place is still losable. Tuned, not measured.")
-    CORPUS_HEDGE_FRACTION_LOST_WRITTEN = declare(
-        "CORPUS_HEDGE_FRACTION_LOST_WRITTEN", 0.22, kind="temporary_heuristic",
-        unit="dimensionless (fraction of losable technologies taken)",
-        source=None, confidence="D",
-        why="If a sack does take from the corpus while merely written, "
-            "how much of what is still losable it takes. Tuned, not "
-            "measured.")
     CORPUS_HEDGE_LOSS_CHANCE_NONE = declare(
         "CORPUS_HEDGE_LOSS_CHANCE_NONE", 0.80, kind="temporary_heuristic",
         unit="dimensionless (probability a sack takes any corpus at all)",
@@ -1686,10 +1657,9 @@ class Sim(MechanicsMixin, EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
         FogMixin.knowledge_risk for the fuller argument. `hedge_name` is
         None if neither corpus exists yet.
         """
-        for node_id in self.corpus_nodes_best_first():
+        for node_id, loss_chance, fraction_lost in self.corpus_hedge_tiers():
             if self.has(node_id):
-                return (self.corpus_tier_constant(node_id, "CORPUS_HEDGE_LOSS_CHANCE"),
-                        self.corpus_tier_constant(node_id, "CORPUS_HEDGE_FRACTION_LOST"), node_id)
+                return loss_chance, fraction_lost, node_id
         return self.CORPUS_HEDGE_LOSS_CHANCE_NONE, self.CORPUS_HEDGE_FRACTION_LOST_NONE, None
 
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --
