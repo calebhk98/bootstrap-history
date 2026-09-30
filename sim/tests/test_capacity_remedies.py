@@ -44,3 +44,19 @@ commands = rows[0]["commands"] if rows else []
 check("an oversubscribed trade offers hiring it", any(command.startswith("hire smith") for command in commands), rows)
 check("...and housing when the household has no room for that many",
       any(command.startswith("buy housing") for command in commands), rows)
+
+# Complaint 193: one shortfall per material, so the suggested size covers what the row reports.
+import math
+import re
+
+for row in capacity["resources"]:
+    if row["surplus_t_per_yr"] >= 0 or row["material"] not in ("coal", "iron", "copper", "lead", "tin", "silver"):
+        continue
+    remedy = remedies[row["material"]]
+    bought = [int(match) for command in remedy["commands"]
+              for match in re.findall(r"^buy mine \w+ (\d+)$", command)]
+    check("the suggested %s mine covers the shortfall the row reports" % row["material"],
+          bool(bought) and bought[0] >= -row["surplus_t_per_yr"] - 0.05,
+          (row, remedy))
+    check("...and the remedy sentence states the same shortfall for %s" % row["material"],
+          "{:,.0f}".format(-row["surplus_t_per_yr"]) in remedy["how"], (row, remedy["how"]))
