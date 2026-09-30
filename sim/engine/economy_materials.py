@@ -849,10 +849,6 @@ class MaterialSupplyMixin:
                 "year": year, "tonnes": dict(self._material_stock())}
         return record["tonnes"]
 
-    def capacity_reserves(self):
-        """Operational hours and abstract capacities, never tradable stock."""
-        return self.state.economy.capacity_pool
-
     def material_stock_t(self, emp_key):
         """Tonnes of `emp_key` currently banked - the STOCK half of stock vs
         flow, which is the thing a player asking "how much iron do I actually

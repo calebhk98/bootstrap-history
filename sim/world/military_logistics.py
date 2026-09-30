@@ -478,33 +478,6 @@ def pack_animal_net_deliverable_cargo_kg(
     return max(0.0, capacity - 2.0 * days_one_way * fodder)
 
 
-def pack_animals_required_for_daily_delivery(
-        daily_requirement_kg: float, one_way_distance_km: float,
-        march_rate_km_per_day: Optional[float] = None) -> float:
-    """How many pack animals a column needs, in a continuous rotation, to
-    deliver `daily_requirement_kg` of net cargo every day to a force
-    stationed `one_way_distance_km` from base.
-
-    Each animal is unavailable for the whole round trip (out, unload, back)
-    before it can carry another load, so sustaining a steady daily delivery
-    needs enough animals in the rotation to cover that whole round-trip
-    duration: `daily_requirement_kg * round_trip_days /
-    net_deliverable_cargo_per_animal_kg`. Returns `float("inf")` at or
-    beyond the zero-delivery range, where no number of animals helps.
-    """
-    if daily_requirement_kg < 0.0:
-        raise ValueError(
-            "daily_requirement_kg cannot be negative: %r" % (daily_requirement_kg,))
-    march_rate = (ARMY_MARCH_RATE_KM_PER_DAY if march_rate_km_per_day is None
-                  else march_rate_km_per_day)
-    net_cargo_per_animal = pack_animal_net_deliverable_cargo_kg(
-        one_way_distance_km, march_rate)
-    if net_cargo_per_animal <= 0.0:
-        return float("inf")
-    round_trip_days = 2.0 * one_way_distance_km / march_rate
-    return daily_requirement_kg * round_trip_days / net_cargo_per_animal
-
-
 # ============================================================================
 # FORAGING: THE ALTERNATIVE TO CARRYING FOOD
 # ============================================================================

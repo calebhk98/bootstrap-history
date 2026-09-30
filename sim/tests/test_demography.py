@@ -721,13 +721,6 @@ class WorkingAgePopulationTests(unittest.TestCase):
     job regardless of how the rest of it behaves.
     """
 
-    def test_working_age_population_is_directly_readable(self):
-        population = demography.Population(300.0, 450.0, 180.0, seed=1)
-        self.assertEqual(population.working_age_population, 450.0)
-        population.step(population._subsistence_food())
-        self.assertEqual(population.working_age_population,
-                          population.working_age)
-
     def test_working_age_share_falls_under_sustained_famine(self):
         # Children die fastest and are born least under famine, so a
         # population sustained at low food for a generation should show a
@@ -746,8 +739,8 @@ class WorkingAgePopulationTests(unittest.TestCase):
         for _year in range(40):
             fed_twin.step(base_food)
             starved_twin.step(base_food * 0.6)
-        self.assertLess(starved_twin.working_age_population,
-                         fed_twin.working_age_population)
+        self.assertLess(starved_twin.working_age,
+                         fed_twin.working_age)
 
 
 class DeterminismTests(unittest.TestCase):

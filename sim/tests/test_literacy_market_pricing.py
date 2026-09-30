@@ -376,6 +376,6 @@ ledger.add("copper", 500.0)
 taken = ledger.remove("copper", 800.0)
 check("a stock ledger cannot be overdrawn: taking more than is on hand "
       "returns only what was actually there",
-      taken == 500.0 and ledger.on_hand("copper") == 0.0,
-      (taken, ledger.on_hand("copper")))
+      taken == 500.0 and ledger.remove("copper", 1.0) == 0.0,
+      taken)
 

@@ -603,17 +603,6 @@ def aggregate_household_demand(
         for income_bin in bins)
 
 
-def aggregate_household_demand_all_goods(
-        prices: Dict[str, float], bins: List["IncomeBin"],
-        basket: Sequence["Good"]) -> Dict[str, float]:
-    """aggregate_household_demand for every good in `basket` at once - the
-    per-good quantities a caller pricing a whole basket would actually
-    want, in one dict.
-    """
-    return {good.name: aggregate_household_demand(good, prices, bins, basket)
-            for good in basket}
-
-
 def household_budget_share(
         good: "Good", prices: Dict[str, float], bins: List["IncomeBin"],
         basket: Sequence["Good"]) -> float:
@@ -898,26 +887,6 @@ def derived_intermediate_demand(
     return total, by_recipe
 
 
-def consumers_of(
-        material_key: str, production: Optional[Dict[str, Any]] = None) -> List[str]:
-    """Every recipe_key whose input_coefficients_per_unit_output includes
-    `material_key` at all - which downstream processes would generate
-    demand for it if run, independent of any particular output level.
-    Used for reporting (this module's own __main__ block, and
-    sim/tests/test_demand.py) rather than by any pricing function above.
-    """
-    production = production if production is not None else production_data()
-    consumers = []
-    for recipe_key, entry in production.items():
-        try:
-            coefficients = input_coefficients_per_unit_output(recipe_key, production)
-        except (ValueError, KeyError):
-            continue
-        if coefficients.get(material_key, 0.0):
-            consumers.append(recipe_key)
-    return sorted(consumers)
-
-
 def _illustrative_recursive_labour_content_price_per_kg(
         material_key: str, production: Optional[Dict[str, Any]] = None,
         _memo: Optional[Dict[str, float]] = None,
@@ -1014,19 +983,6 @@ def joint_output_value_shares(
     if total <= 0.0:
         raise ValueError("total joint value is not positive: %r" % (values,))
     return {name: value / total for name, value in values.items()}
-
-
-def joint_output_value_shares_for_recipe(
-        recipe_key: str, prices: Dict[str, float],
-        production: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
-    """joint_output_value_shares, reading `recipe_key`'s own `outputs`
-    dict from data/production/ directly rather than making a caller copy
-    it out by hand.
-    """
-    production = production if production is not None else production_data()
-    if recipe_key not in production:
-        raise KeyError("no data/production/ entry for %r" % (recipe_key,))
-    return joint_output_value_shares(production[recipe_key]["outputs"], prices)
 
 
 # ============================================================================
