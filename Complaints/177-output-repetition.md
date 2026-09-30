@@ -13,3 +13,5 @@ I filtered most output with grep to find the line that mattered.
 What it would take: a verbosity setting (explain once, then one-line pointers); dedupe completion lines; one household-wide staffing line; wider or wrapped names.
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
+
+Update: the `available` table gained NET/YR, PAYB and FOREMAN columns (162, 149), and NAME is now cut to 14 characters to keep the width near 130. Names are harder to read than before; wrapping or a second line for long names would fix both.
