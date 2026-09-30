@@ -41,3 +41,5 @@ Likely in `sim/engine/proto/state.py` where the `free_hours_going_unused` field 
 **Confidence:** Design recommendation
 
 Also reported (Han China 100 AD fog playtest, tester item(s) 218, 223; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): at 400 AD about 11,700 directed founder-hours sat idle each year because every project was calendar- or payment-bound; the tester wanted that capacity pointed at something (more parallel starts, teaching, public services) and deliberately started optional research to use it. Reproduces: untested (late game).
+
+Also reported (final playtests, A and B; `Complaints/reports/final-playtests-triage.md`): both Rome testers had long stretches of unused directed hours while waiting on calendar floors (B: the 24-year power grid), both said the gates themselves are fine and want the wait explained and a way to spend the hours.

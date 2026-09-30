@@ -18,3 +18,5 @@ keep retries as a separate uncertainty. If the payment pace is meant to be short
 Related: 240 (whole years burned by tiny remainders).
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 41, 44, 58, 71, 95, 99, 100, 116, 129, 140, 158, 173, 187, 202, 204). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): when a project has a three-year minimum but insufficient industrial capacity would make it take twenty, the portfolio should say so: remaining founder-hours, remaining investment, current absorption rate, earliest effective completion (see 90).

@@ -9,3 +9,5 @@ Checked: no existing complaint covers this (16 and 61, closed, were about the ce
 What it would take: one more line on the start warning and on `money`/`state` when in arrears: interest per year at the projected draw, as a share of recurring net, and the largest draw whose interest stays under a chosen share of surplus. Related: 95 (funding concepts), 16 and 61 (closed).
 
 Found in an England 1300 blind playtest (fog on, poor_scholar kit, 1300 to 1375). Reports: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`, `Complaints/reports/playtest-england-1300-fog-yearly-log.md`; triage: `Complaints/reports/playtest-england-1300-fog-triage.md`.
+
+Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md`): debt after smallpox is a trap with no exit: hiring is refused 'past half your line', the population is gone and concerns close for want of hands; the refusal should state how much to pay down (filed with the other refusal texts as 265).

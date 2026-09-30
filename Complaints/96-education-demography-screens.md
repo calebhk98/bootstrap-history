@@ -38,3 +38,5 @@ Likely new screens in `sim/engine/proto/render_screens_big.py` or similar, with 
 **Confidence:** Design recommendation
 
 Also reported (Han China 100 AD fog playtest, tester item(s) 28, 73, 210; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): the tester needed `state`, `money`, `values`, `population` and `score` to assemble goal progress; general literacy appears only as a raw fraction (0.06) on `score`, elite and general literacy are easy to confuse (elite 99 percent while general stayed at 6 percent for about 70 years), and there is no consolidated view of the chosen secondary goals, reserve target and open or closed institutions. Reproduces: yes (`score` shows the raw value).
+
+Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): `score` showed literacy as 0.75 while the literacy milestone read BLOCKED; a threshold milestone should print the exact figure against the requirement (for example 74.96% of 75.00%). Probably rounding, not a logic error. Reproduces: untested (needs a late game).

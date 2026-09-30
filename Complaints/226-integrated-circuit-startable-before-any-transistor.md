@@ -16,3 +16,5 @@ What it would take: add the transistor (or planar-process) and semiconductor-gra
 design knowledge and add a separate fabrication capability. A test that no node in the `com_` branch is startable before its named material chain would catch the class.
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 162, 165). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+Also reported (final playtests, B; `Complaints/reports/final-playtests-triage.md`): `en_two_stroke_cycle` needs only `cap_tol_1mm` (itself a free inherited capability) and is startable around 109 AD, earning 2,900 to 10,500 a year for a cost of 2,005; not used in B's run. Checked in data: `pre ['cap_tol_1mm']`, cost about 70 capital and 90 hours, risk 11%, revenue 800 book units. Same class as the integrated circuit.

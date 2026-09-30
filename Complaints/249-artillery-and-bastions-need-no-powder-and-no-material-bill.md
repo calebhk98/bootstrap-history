@@ -11,3 +11,5 @@ The tester notes a cannon can be cast without powder, but a usable defence needs
 What it would take: make the defence benefit depend on the powder supply and on a built fortification (a concern with a material and labour bill), and add gunpowder as a prerequisite (or a `req_any` group) of the piece that uses it. Same class as 226 and closed 23 and 24.
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 91). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
+
+Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md`): in the Mexica runs the sack chance reached 66% a year at best however much was built; walls, powder and rifles 'barely mattered'. Consistent with the defence being credited without the materials (this complaint) and with a fixed dice stream (254).
