@@ -81,11 +81,18 @@ class Actor:
 		return max(0.0, self.money - committed)
 
 	# ---- imitation --------------------------------------------------------
+	def imitation_candidates(self, world: Any) -> List[str]:
+		"""The inventions this actor might value, in id order; an actor that
+		values only some of them narrows this so it is not scanned in full."""
+		return world.founder_inventions()
+
 	def imitation_options(self, world: Any) -> List[Option]:
 		"""Priced options for the inventions that look most worth copying."""
 		candidates = []
-		for node_id in world.founder_inventions():
-			if self.knows(node_id, world) or node_id in self.works:
+		known = self.knowledge
+		baseline = world.baseline_knowledge()
+		for node_id in self.imitation_candidates(world):
+			if node_id in known or node_id in baseline or node_id in self.works:
 				continue
 			worth = self.imitation_worth(node_id, world)
 			if worth > 0:
