@@ -1,6 +1,6 @@
 # Comments name a non-existent path `sim/world/self._demography.py`
 
-**Status:** open
+**Status:** closed - replaced incorrect paths in sim/engine/core.py (3 instances)
 
 `sim/engine/core.py:351`, `:701`, `:761` refer to "sim/world/self._demography.py", which looks like a find-and-replace of `_demography` applied to prose. The real module is `sim/world/demography.py`. The inventory reports the same pattern for agriculture.
 
