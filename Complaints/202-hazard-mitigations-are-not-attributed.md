@@ -15,3 +15,5 @@ Reproduces by code reading (the messages are built in `society_hazards.py`); the
 What it would take: a per-hazard table of active mitigations with their share and status (in force, lapsed and why, residual), and an attribution clause for the national part. Related: 94 (timing), 97 (why did a number change), 182 (closed), 201, 203.
 
 Found in an England 1300 blind playtest (fog on, poor_scholar kit, 1300 to 1375). Reports: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`, `Complaints/reports/playtest-england-1300-fog-yearly-log.md`; triage: `Complaints/reports/playtest-england-1300-fog-triage.md`.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 163; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): the tester read "(lapsed: X is closed)" on a risk line and tried to `open` the labelled hedge (smallpox vaccine, asepsis), which is knowledge and refuses ("that is knowledge, not a going concern"); the closed concern named in the parentheses is the one to reopen. The wording should say "reopen <id>" and name the hedge and the concern separately.

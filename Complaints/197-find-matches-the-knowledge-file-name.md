@@ -11,3 +11,5 @@ Reproduces on the current branch:
 What it would take: either do not match the `kb` path in player-facing search (the anchor exists so ids resolve, not as a subject), or file the node's `kb` under the document it belongs to; then a test that a search word only matches what a player can see (id, name, aliases, a real category). Related: 22 (closed; made `find` match the anchor), 196.
 
 Found in an England 1300 blind playtest (fog on, poor_scholar kit, 1300 to 1375). Reports: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`, `Complaints/reports/playtest-england-1300-fog-yearly-log.md`; triage: `Complaints/reports/playtest-england-1300-fog-triage.md`.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 27, 52; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): `available find glass` returns mirror, gypsum plaster, silica brick, cement and malting beside the glass nodes; `available steel` returns papyrus and glass; `available print` returns cryptography; nothing says why a row matched. Reproduces: yes (`available find glass` lists 15 rows, `available glass` 5).

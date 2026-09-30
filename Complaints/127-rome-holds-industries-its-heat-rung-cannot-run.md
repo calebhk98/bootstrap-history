@@ -32,3 +32,5 @@ buy what its own smiths already have distorts the opening.
 Either grant the rung to Rome (and check the other civilisations' industries
 against their rungs) or change what the industries require. Decide with the
 validator in `Complaints/128`, then add a test on the Roman start.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 67; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): the same problem in reverse for Han: `data/civilizations/han_china_100ad.json` grants `cap_heat_1300` (and `cap_heat_0700`) but not `cap_heat_1100`, the rung `cap_heat_1300` itself requires (`data/tech_tree.json`), so anything gated on 1100 (for example `mt2_zinc_by_retort`) makes a Han player research a rung the node's own note says bronze, glass and bloomery societies already have. Reproduces: yes (data). Likely one of the pinned violations in 42.

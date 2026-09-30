@@ -19,3 +19,5 @@ Similarly "(lapsed)" hedges in plague messages (boiled water, quarantine, smallp
 What it would take: list confiscation chance and its current protections on `risk`; name the concern behind each lapsed hedge.
 
 (Merged from 182.) Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 47, 118, 132, 149, 185; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): a fire destroyed nothing when cash was already negative (123 AD) and 10 billion when it was positive, which reads as a cash-only hazard with no physical premises; property seizures of 7, 11, 25 and 74 billion came after treasury notices that printed a rounded 0 percent, later 5 and 10 percent; 92 percent protection did not prevent them. They ask for decimals or "less than 1 percent", exposure separated from eminence, and ways to shelter money (endowments, diversified assets). Reproduces: untested (late game).

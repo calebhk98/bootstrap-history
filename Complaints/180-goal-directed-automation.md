@@ -14,3 +14,5 @@ Requests:
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
 
 Related: 149, 150.
+
+Also reported (Han China 100 AD fog playtest, tester item(s) 113, 190, 85, 171, 172; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): asks for replace-only versus expand modes for `auto_hire`, worker targets, protected minimum staff by trade, a budget cap, a keep-these-services-open priority that `auto_open` respects, and exclusions for `rush` (see 230). The tester did not find `auto_replace_foreman`, `reserve` or `keep`, which already answer part of it (see 233). Reproduces: n/a (request).
