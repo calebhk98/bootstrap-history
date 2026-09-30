@@ -11,7 +11,7 @@ Real earners (tex_hand_ginning 291.8/yr, pwr_peat 303.2/yr, pwr_oil_shale, hom_t
 ## 2. `quote farm` refused although `help economy` advertises farms
 `help economy` lists `buy farm 120`, but `quote farm 20` gives:
 `REFUSED: you can quote a mine, a forest or people`.
-So a new player cannot find out what farmland costs before buying it.
+So a new player cannot find out what farmland costs before buying it. (`buy farm 1000` itself works: at 594 AD it cost ~505k, ~505 den/ha.)
 
 ## 3. `work` is missing from the log, and the money it costs is never itemised
 After `work scholar 1500` (reply: earned 1,442, "cost your own practice 1,769"), `log` has no entry for it.
@@ -76,3 +76,4 @@ Repro at 572 AD, on copies of my save:
 2. The next invocation with the same `--session` file fails to load: "could not read the save file '...': this save is corrupt: active['fin_toll_bridge'] is missing 'lab_left'". Reproduced twice on fresh copies. Anyone playing through `--session` (the README's recommended way) loses the game the moment they post a bounty.
 Also, in a single process with no reload (`bounty fin_toll_bridge`, then `step 1`, then `why fin_toll_bridge`), the bountied node is just an ACTIVE project "waiting on your hours: priority #260 of 261". So the bounty does not "pay someone else to solve it" as `help bounty` says. It is a start at 2.5x the price that still uses the founder's hours.
 Not every node can be bountied: `bounty mt2_parkes_process` -> "REFUSED: not bounty-eligible (category processes)". `why` shows "BOUNTY: yes, could be posted as a public prize" for eligible ones.
+**Late-game oscillation (584-588 AD):** with ~700-960 concerns, the closures alternate year by year: 586 "nobody left to keep an eye on 464 concerns", 587 reopened 461 (all accepted by `open`, with no new generic staff needed since ~690 craftsmen sat free), 588 "nobody left to keep an eye on 482 concerns". The binding resource is scholars (town cap ~75, all employed). It looks as if the yearly check, finding a scholar shortfall, closes every concern at once (including ones needing no scholars, e.g. ag2_baler, ag2_bone_meal), rather than the few marginal ones. Each wave also resets the 3-year revenue ramp on everything it touches.

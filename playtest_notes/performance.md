@@ -44,3 +44,6 @@ After switching to "research and open everything" (about 250 concerns running, 2
 - The save grew to 2.0 MB (374 KB at 256 AD). A bare `state` now takes 0.95s, so load+save alone doubled.
 - Same save stepped twice on separate copies (559 AD): first 7.14s, second 4.08s. So ~3s of a slow year is the price solver meeting a new set of technologies (cached on the second run), and ~3s is the year's simulation itself at this size.
 - So the late-game slowdown is partly real growth, which the price cache cannot absorb. The years with the most completions (30-40 a year here) are the slowest.
+
+## `open` costs ~0.3s even when it only refuses
+At 585 AD (702 concerns running), one invocation carrying 1,008 `open <id>` lines took 265s. 892 of those were answered "already running". Timed on a copy: 1 x `open ag2_roller` (already running) 1.22s including load+save; 20 x the same 6.74s, i.e. ~0.29s per refusal. A player never sends 1,000 opens by hand, but a refusal that needs no simulation should be near-instant. The slowness here was mostly my own approach, forced by `ventures` not listing shut concerns (quirks #21): the complete fix on my side was to diff the complete *running* list from `ventures json` against everything ever built.

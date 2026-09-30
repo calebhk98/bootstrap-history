@@ -33,3 +33,21 @@ Outlook at 546 AD: the 53 remaining nodes cost ~48M (bulk steel 14.8M, industria
 | 572 | 37.3M | +7.0M | 1,381 | 62% | ~250 | 5 deputies, 44 scholars, 598 craftsmen. Found the bounty save-corruption bug on a copy. |
 | 582 | 86.3M | +17.6M | - | 81% | ~480 | **Achieved: A nation that reads** (75% literacy). Telegraph, newspapers, movable type shift w_information and w_novelty. |
 | 585 | 111.2M | +18.9M | - | 81% | ~480 | Scholars are the binding limit (65 needed, 0 free, town cap ~67); training 10; frontier narrowing (rush starts only 16). |
+| 594 | 91M | +30M | - | 84% | ~850 | Treasury confiscation chance reached 5%/yr; moved ~170M into 100,000 ha forest + 10,000 ha farm (no warning since). Draught animals move w_labour_saving. |
+| 600 | 41.7M | +36.7M | 2,459 | 85% | 827 | **Run ended at the horizon.** `rush` found nothing left to start in 598. |
+
+### 552 -> 600, measured with `score` and `values`
+| Measure | 552 AD | 600 AD |
+|---|---|---|
+| Technologies (score raw) | 507 | 2,459 (2,234 built by me) |
+| General literacy | 49% | 85% |
+| Workforce | 180 | 1,839 |
+| Institutions | 10 | 22 |
+| Deputies (founder-hours/yr) | 0 (2,000) | 17 (33,792) |
+| w_magic_fear | 0.63 | 0.49 |
+| w_information | -0.15 | 0.09 |
+| w_novelty | 0.08 | 0.18 |
+| w_labour_saving | -0.23 | -0.18 |
+| bribability | 0.55 | 0.50 |
+| unchanged | | religious rigidity 0.78, military 0.95, commerce 0.25, eminence danger 0.85, patronage 1 |
+Goals achieved in the run: A literate people (484), Epidemics stop deciding who lives (567), A nation that reads (582). The transistor goal was out of reach (131-year serial floor at 566).
