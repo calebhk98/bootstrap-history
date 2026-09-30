@@ -3,26 +3,39 @@
   "id": "sea_merchant_ships_large",
   "name": "Large merchant sailing ships",
   "cat": "ships",
-  "pre": [],
+  "pre": [
+   "sea_mortise_tenon",
+   "sea_square_sail"
+  ],
   "kb": "85_transport_civil.md",
-  "ph": 0,
-  "lab": {},
-  "mat": {},
-  "cap": 0,
-  "up": 0,
-  "yrs": 0,
-  "risk": 0,
+  "ph": 120.0,
+  "lab": {
+   "carpenter": 30000.0,
+   "smith": 2500.0,
+   "sailor": 6000.0
+  },
+  "mat": {
+   "wood_kg": 300000.0,
+   "iron_bloom_kg": 3000.0,
+   "cordage_kg": 6000.0,
+   "sailcloth_kg": 2500.0
+  },
+  "cap": 6000.0,
+  "up": 1500.0,
+  "yrs": 2.0,
+  "risk": 0.08,
   "sus": 0,
   "gov": 3,
   "rev": 8000,
   "sch": 0,
   "art": 0,
-  "conf": "A",
+  "conf": "C",
   "note": "Large merchant ships of 350 tonnes or more already operate on some routes (Rome's Alexandria grain fleet is the best-documented case; the Fayum papyri and shipwrecks confirm sophisticated hull design and large crews).",
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "build_yrs": 2.0
  },
  {
   "id": "sea_mortise_tenon",

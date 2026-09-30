@@ -2308,7 +2308,9 @@
   "cat": "electronics",
   "pre": [
    "com_photolithography",
-   "quantum_solidstate_theory"
+   "quantum_solidstate_theory",
+   "junction_transistor",
+   "silicon_path"
   ],
   "kb": "94_computing.md",
   "ph": 220,

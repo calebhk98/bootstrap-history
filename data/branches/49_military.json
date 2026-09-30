@@ -990,7 +990,8 @@
   "cat": "weapons",
   "pre": [
    "cap_heat_1300",
-   "mat_bronze"
+   "mat_bronze",
+   "gunpowder"
   ],
   "traits": [
    "military"
@@ -1003,7 +1004,8 @@
    "engineer": 60
   },
   "mat": {
-   "mat_bronze": 2000
+   "mat_bronze": 2000,
+   "gunpowder_kg": 300
   },
   "cap": 0,
   "up": 0,
@@ -1634,10 +1636,16 @@
   "kb": "97_military.md",
   "ph": 100,
   "lab": {
-   "engineer": 120
+   "engineer": 120.0,
+   "mason": 9000.0,
+   "labourer": 40000.0
   },
-  "mat": {},
-  "cap": 0,
+  "mat": {
+   "stone_kg": 600000.0,
+   "wood_kg": 30000.0,
+   "lime_kg": 80000.0
+  },
+  "cap": 3000.0,
   "up": 0,
   "build_yrs": 4,
   "adopt_yrs": 3,
@@ -1672,11 +1680,13 @@
   "kb": "97_military.md",
   "ph": 90,
   "lab": {
-   "engineer": 110,
-   "mason": 120
+   "engineer": 110.0,
+   "mason": 12000.0,
+   "labourer": 50000.0
   },
   "mat": {
-   "mat_stone": 5000
+   "stone_kg": 1500000.0,
+   "lime_kg": 200000.0
   },
   "cap": 0,
   "up": 0,

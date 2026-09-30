@@ -20148,10 +20148,10 @@
       "_total_cost": 0.0,
       "adopt_yrs": 0.0,
       "art": 0.0,
-      "build_yrs": 0.0,
-      "cap": 0.0,
+      "build_yrs": 1.0,
+      "cap": 400.0,
       "cat": "precision",
-      "conf": "B",
+      "conf": "C",
       "dev_people": null,
       "dev_years": null,
       "gov": 0,
@@ -20159,22 +20159,29 @@
       "kb": "40_power_precision.md#clockwork_escapement",
       "kb_level": "recipe",
       "kind": "ENGINEERING",
-      "lab": {},
-      "mat": {},
+      "lab": {
+        "machinist": 500.0,
+        "smith": 300.0
+      },
+      "mat": {
+        "iron_bloom_kg": 60.0,
+        "bronze_kg": 15.0
+      },
       "name": "Weight-driven mechanical clock with verge escapement",
-      "note": "A falling weight drives iron gears while a verge-and-foliot escapement meters their motion. Tower clocks emerging around 1300 indicate hours but are not pendulum clocks and do not measure reliably to the second. This inherited medieval mechanism is the causal predecessor of later pendulum regulation.",
-      "ph": 0.0,
+      "note": "A falling weight drives iron gears while a verge-and-foliot escapement meters their motion. Tower clocks emerging around 1300 indicate hours but are not pendulum clocks and do not measure reliably to the second. A civilisation that already runs tower clocks holds it from the start; anyone else must forge the gear train, cut the wheels and learn to regulate the escapement.",
+      "ph": 150.0,
       "pre": [
-        "cap_tol_1mm"
+        "cap_tol_1mm",
+        "opt_geared_mechanisms"
       ],
       "req_any": [],
       "rev": 0.0,
-      "risk": 0.0,
+      "risk": 0.05,
       "sch": 0.0,
       "sus": 0,
       "traits": [],
       "up": 0.0,
-      "yrs": 0.0
+      "yrs": 1.0
     },
     {
       "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: escapement and clock wheels require 0.1mm tolerance work]",
@@ -25084,7 +25091,9 @@
       "ph": 220.0,
       "pre": [
         "com_photolithography",
-        "quantum_solidstate_theory"
+        "quantum_solidstate_theory",
+        "junction_transistor",
+        "silicon_path"
       ],
       "req_any": [
         {
@@ -35737,10 +35746,17 @@
       "note": "Converts alternating coil voltage to pulsating DC at terminals. Brush contact is imperfect; arcing and wear occur. Performance depends on brush quality and speed (spark i...",
       "ph": 90.0,
       "pre": [
-        "cap_tol_100um",
-        "cap_power_steam"
+        "cap_tol_100um"
       ],
-      "req_any": [],
+      "req_any": [
+        {
+          "group": "prime_mover",
+          "options": {
+            "cap_power_water": 1.0,
+            "cap_power_steam": 1.0
+          }
+        }
+      ],
       "rev": 700.0,
       "risk": 0.1,
       "sch": 0.0,
@@ -39357,7 +39373,8 @@
       "note": "Explosion every revolution; double power from same size. But exhaust scavenging is poor; unburnt fuel leaves and efficiency is lower. Simpler than four-stroke; no camshaft needed.",
       "ph": 90.0,
       "pre": [
-        "cap_tol_1mm"
+        "cap_tol_1mm",
+        "lnd_otto_cycle_four_stroke"
       ],
       "req_any": [],
       "rev": 800.0,
@@ -59770,6 +59787,74 @@
       "yrs": 4.0
     },
     {
+      "id": "kt_mediterranean_crafts",
+      "name": "Bring in Mediterranean building, surveying and stage crafts",
+      "cat": "institution",
+      "pre": [],
+      "kb": "",
+      "ph": 150.0,
+      "lab": {
+        "mason": 300.0,
+        "scholar": 400.0,
+        "scribe": 200.0
+      },
+      "mat": {},
+      "cap": 2500.0,
+      "up": 0.0,
+      "yrs": 1.0,
+      "risk": 0.05,
+      "sus": 0,
+      "gov": 0,
+      "rev": 0.0,
+      "sch": 0.0,
+      "art": 1.0,
+      "conf": "C",
+      "note": "The Mediterranean world's public-works and instrument crafts (baths and underfloor heating, lead plumbing, surveying sights, stage and mosaic work, sea lighthouses, purple and woad dyes, courier posts, physician statutes) are known there and not elsewhere. A society that lacks them learns them by engaging craftsmen, copying texts and visiting the works; this node is that transfer, for any society that does not already hold them.",
+      "traits": [
+        "information"
+      ],
+      "build_yrs": 1.0,
+      "adopt_yrs": 0.0,
+      "req_any": [],
+      "dev_years": null,
+      "dev_people": null,
+      "_src": "57_knowledge_transfer.json"
+    },
+    {
+      "id": "kt_old_world_goods",
+      "name": "Bring across Old World goods, metals and institutions",
+      "cat": "expedition",
+      "pre": [],
+      "kb": "",
+      "ph": 300.0,
+      "lab": {
+        "merchant": 3000.0,
+        "sailor": 4000.0,
+        "scholar": 600.0
+      },
+      "mat": {},
+      "cap": 20000.0,
+      "up": 0.0,
+      "yrs": 3.0,
+      "risk": 0.25,
+      "sus": 0,
+      "gov": 1,
+      "rev": 0.0,
+      "sch": 0.0,
+      "art": 1.0,
+      "conf": "C",
+      "note": "A society with no contact with the Old World lacks its metals, cloths, oils, coin, glass, instruments and the crafts built on them. The knowledge can be carried in a head, but the stock, the craftsmen and the trade connections have to be brought across and established; this node is that establishment.",
+      "traits": [
+        "commerce"
+      ],
+      "build_yrs": 3.0,
+      "adopt_yrs": 0.0,
+      "req_any": [],
+      "dev_years": null,
+      "dev_people": null,
+      "_src": "57_knowledge_transfer.json"
+    },
+    {
       "_src": "00_core.json",
       "_total_cost": 4261.0,
       "adopt_yrs": 0.0,
@@ -62805,7 +62890,6 @@
       "note": "Poling and fire refining to get copper clean enough to draw into long fine wire without breaking. A separate node from electro-refining because you need it before you have any electricity.",
       "ph": 200.0,
       "pre": [
-        "blast_furnace",
         "cap_heat_1100"
       ],
       "req_any": [
@@ -80198,14 +80282,16 @@
         "engineer": 60.0
       },
       "mat": {
-        "bronze_kg": 2000.0
+        "bronze_kg": 2000.0,
+        "gunpowder_kg": 300.0
       },
       "name": "Artillery piece",
       "note": "Cannon cast in bronze or iron, requires sustained 1300 C furnace and careful cooling. Replaces trebuchets. Wall-battering capability becomes political.",
       "ph": 140.0,
       "pre": [
         "cap_heat_1300",
-        "mat_bronze"
+        "mat_bronze",
+        "gunpowder"
       ],
       "req_any": [],
       "rev": 0.0,
@@ -80458,10 +80544,12 @@
       "kind": "ENGINEERING",
       "lab": {
         "engineer": 110.0,
-        "mason": 120.0
+        "mason": 12000.0,
+        "labourer": 50000.0
       },
       "mat": {
-        "stone_kg": 5000.0
+        "stone_kg": 1500000.0,
+        "lime_kg": 200000.0
       },
       "name": "Bastion",
       "note": "Angled stone structure jutting from wall allows cannon to fire along curtain, eliminating dead ground. Acute angle makes it harder to breach. Replaces round tower.",
@@ -84257,7 +84345,7 @@
       "adopt_yrs": 3,
       "art": 0.0,
       "build_yrs": 4,
-      "cap": 0.0,
+      "cap": 3000.0,
       "cat": "fortification",
       "conf": "B",
       "dev_people": null,
@@ -84268,9 +84356,15 @@
       "kb_level": "module",
       "kind": "ENGINEERING",
       "lab": {
-        "engineer": 120.0
+        "engineer": 120.0,
+        "mason": 9000.0,
+        "labourer": 40000.0
       },
-      "mat": {},
+      "mat": {
+        "stone_kg": 600000.0,
+        "wood_kg": 30000.0,
+        "lime_kg": 80000.0
+      },
       "name": "Trace italienne",
       "note": "The bastion answers the cannon because a round tower has dead ground at its foot where attackers hide, and an angled bastion does not. Low angled walls cannot be battered. Defense trades height for firepower.",
       "ph": 100.0,
@@ -104720,10 +104814,10 @@
       "_total_cost": 0.0,
       "adopt_yrs": 0.0,
       "art": 0.0,
-      "build_yrs": 0.0,
-      "cap": 0.0,
+      "build_yrs": 2.0,
+      "cap": 6000.0,
       "cat": "ships",
-      "conf": "A",
+      "conf": "C",
       "dev_people": null,
       "dev_years": null,
       "gov": 3,
@@ -104731,23 +104825,35 @@
       "kb": "85_transport_civil.md",
       "kb_level": "module",
       "kind": "ENGINEERING",
-      "lab": {},
-      "mat": {},
+      "lab": {
+        "carpenter": 30000.0,
+        "smith": 2500.0,
+        "sailor": 6000.0
+      },
+      "mat": {
+        "wood_kg": 300000.0,
+        "iron_bloom_kg": 3000.0,
+        "cordage_kg": 6000.0,
+        "sailcloth_kg": 2500.0
+      },
       "name": "Large merchant sailing ships",
       "note": "Large merchant ships of 350 tonnes or more already operate on some routes (Rome's Alexandria grain fleet is the best-documented case; the Fayum papyri and shipwrecks confirm sophisticated hull design and large crews).",
-      "ph": 0.0,
-      "pre": [],
+      "ph": 120.0,
+      "pre": [
+        "sea_mortise_tenon",
+        "sea_square_sail"
+      ],
       "req_any": [],
       "rev": 8000.0,
-      "risk": 0.0,
+      "risk": 0.08,
       "sch": 0.0,
       "sus": 0,
       "traits": [
         "commerce",
         "infrastructure"
       ],
-      "up": 0.0,
-      "yrs": 0.0
+      "up": 1500.0,
+      "yrs": 2.0
     },
     {
       "_src": "15_ships.json",
@@ -115527,7 +115633,9 @@
       "name": "Sleeping car for passengers",
       "note": "Sleeping cars have bunk beds stacked vertically for economy, and superior suspension for ride comfort. The kernel is that passengers need privacy for sleeping; compartment design is essential. Early sleeping cars were dangerous if a coupling broke; springs and buffers improved safety.",
       "ph": 60.0,
-      "pre": [],
+      "pre": [
+        "lnd_standard_gauge"
+      ],
       "req_any": [],
       "rev": 234.7,
       "risk": 0.08,
@@ -123054,7 +123162,6 @@
       "ph": 600.0,
       "pre": [
         "high_temp_furnace",
-        "power_grid",
         "zinc_metal"
       ],
       "req_any": [

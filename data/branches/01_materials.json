@@ -118,7 +118,6 @@
   "name": "Copper (fire refined)",
   "cat": "material",
   "pre": [
-   "blast_furnace",
    "cap_heat_1100"
   ],
   "kb": "10_metallurgy.md#copper_refining",

@@ -1,0 +1,58 @@
+[
+ {
+  "id": "kt_mediterranean_crafts",
+  "name": "Bring in Mediterranean building, surveying and stage crafts",
+  "cat": "institution",
+  "pre": [],
+  "kb": "",
+  "ph": 150,
+  "lab": {
+   "mason": 300,
+   "scholar": 400,
+   "scribe": 200
+  },
+  "mat": {},
+  "cap": 2500,
+  "up": 0,
+  "yrs": 1.0,
+  "risk": 0.05,
+  "sus": 0,
+  "gov": 0,
+  "rev": 0,
+  "sch": 0,
+  "art": 1,
+  "conf": "C",
+  "note": "The Mediterranean world's public-works and instrument crafts (baths and underfloor heating, lead plumbing, surveying sights, stage and mosaic work, sea lighthouses, purple and woad dyes, courier posts, physician statutes) are known there and not elsewhere. A society that lacks them learns them by engaging craftsmen, copying texts and visiting the works; this node is that transfer, for any society that does not already hold them.",
+  "traits": [
+   "information"
+  ]
+ },
+ {
+  "id": "kt_old_world_goods",
+  "name": "Bring across Old World goods, metals and institutions",
+  "cat": "expedition",
+  "pre": [],
+  "kb": "",
+  "ph": 300,
+  "lab": {
+   "merchant": 3000,
+   "sailor": 4000,
+   "scholar": 600
+  },
+  "mat": {},
+  "cap": 20000,
+  "up": 0,
+  "yrs": 3.0,
+  "risk": 0.25,
+  "sus": 0,
+  "gov": 1,
+  "rev": 0,
+  "sch": 0,
+  "art": 1,
+  "conf": "C",
+  "note": "A society with no contact with the Old World lacks its metals, cloths, oils, coin, glass, instruments and the crafts built on them. The knowledge can be carried in a head, but the stock, the craftsmen and the trade connections have to be brought across and established; this node is that establishment.",
+  "traits": [
+   "commerce"
+  ]
+ }
+]
