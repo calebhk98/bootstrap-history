@@ -859,6 +859,18 @@ class MaterialSupplyMixin:
                 economy.capacity_pool[key] = economy.capacity_pool.get(key, 0.0) + stock.pop(key)
         return stock
 
+    def _material_opening_stock(self):
+        """Stock as it stood when this year's accounting began. Every recompute
+        of the year works from this snapshot (plus trades made since), so the
+        year's own output is banked once however often it is recomputed."""
+        economy = self.state.economy
+        year = self.state.scenario.year
+        record = economy._material_stock_opening
+        if not record or record.get("year") != year:
+            record = economy._material_stock_opening = {
+                "year": year, "tonnes": dict(self._material_stock())}
+        return record["tonnes"]
+
     def capacity_reserves(self):
         """Operational hours and abstract capacities, never tradable stock."""
         return self.state.economy.capacity_pool
@@ -903,7 +915,9 @@ class MaterialSupplyMixin:
         if tonnes <= 0 or not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
+        opening = self._material_opening_stock()
         self._material_stock()[quote["material"]] += tonnes
+        opening[quote["material"]] = opening.get(quote["material"], 0.0) + tonnes
         household._stock_throttle_sig = None
         return tonnes
 
@@ -915,7 +929,9 @@ class MaterialSupplyMixin:
         sold = min(tonnes, self.material_stock_t(quote["material"]))
         if sold <= 0:
             return 0.0
+        opening = self._material_opening_stock()
         self._material_stock()[quote["material"]] -= sold
+        opening[quote["material"]] = opening.get(quote["material"], 0.0) - sold
         self.state.household.add_capital(sold * quote["sell_per_tonne"])
         self.state.household._stock_throttle_sig = None
         return sold
