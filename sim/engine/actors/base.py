@@ -165,6 +165,11 @@ class Actor:
 				self.record_failure(node_id)
 		return finished
 
+	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
+		"""Licensed know-how arrives complete: learned, and the actor can make it."""
+		self.learn(chain, world)
+		self.on_copied(node_id, world)
+
 	def learn(self, chain: List[str], world: Any) -> None:
 		self.knowledge.update(chain)
 

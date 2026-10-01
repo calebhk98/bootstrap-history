@@ -11,11 +11,12 @@ from sim.engine.data import TRADES_ABSENT
 
 from . import supply
 from .world_budget import BudgetView
+from .world_disclosure import DisclosureView
 from .world_groups import GroupView
-from .tuning import OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
+from .tuning import OBSERVATION_RANGE_KM
 
 
-class SimWorld(BudgetView, GroupView):
+class SimWorld(BudgetView, GroupView, DisclosureView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:
@@ -59,7 +60,7 @@ class SimWorld(BudgetView, GroupView):
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
 		"""How much of an invention an observer at `location` can learn, 0..1."""
-		visibility = 1.0 if self.is_public(node_id) else SECRET_EXPOSURE
+		visibility = self.base_visibility(node_id)
 		if location is None:
 			return visibility
 		distance = self._sim.distance_to_tile_km(location)
@@ -155,7 +156,7 @@ class SimWorld(BudgetView, GroupView):
 			if node_id in projects.granted or not sim.is_venture(node_id):
 				continue
 			opened = (projects.opened_year or {}).get(node_id, self.year)
-			if self.year - opened >= PROOF_YEARS and self.concern_margin(node_id) > 0:
+			if self.year - opened >= self.proof_years(node_id) and self.concern_margin(node_id) > 0:
 				proven.append(node_id)
 		return proven
 

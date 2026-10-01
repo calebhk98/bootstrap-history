@@ -1,6 +1,6 @@
 # The state's soldiers are not a trade, and patron funding still ignores the treasury
 
-**Status:** partly - patron funding is now paid from the treasury and soldiers are out of production; a soldier trade is 447; the state's adoption is still a half-life curve
+**Status:** partly - patron funding is now paid from the treasury and soldiers are out of production; a soldier trade is 447; the state's adoption is what the government actor holds (the half-life curve and its constants are gone)
 
 Three things the state budget does not do yet, each measurable.
 

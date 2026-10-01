@@ -154,6 +154,23 @@ Two fixes, usable separately or together:
                                                     from the engine's own figures. `path` adds
                                                     the same leverage_points plus
                                                     years_following_the_chain_alone.
+      {"cmd":"disclose"}                           {inventions:[{id, mode, licensees, operating}],
+                                                    can_license_to:[actor ids]}: what you chose for
+                                                    each invention you made; mode is default (it
+                                                    spreads by being seen in use), secret, license
+                                                    or publish.
+      {"cmd":"disclose","id":"<id>","mode":"secret"|"publish"}
+                                                   secret: outsiders learn it only as fast as the
+                                                    trades and materials it needs allow, and
+                                                    believe the concern later. publish: anyone
+                                                    copies at once, you gain standing once, and it
+                                                    cannot be taken back.
+      {"cmd":"disclose","id":"<id>","mode":"license","licensee":"<firm or state id>","fee":N,"royalty":R}
+                                                   the licensee pays `fee` from its purse to you
+                                                    and can make it at once; a firm also pays you
+                                                    share R of its takings each year (a state has
+                                                    no takings, so no royalty). Replies {ok, note,
+                                                    inventions} or {ok:false, error}.
       {"cmd":"idle"}                               {directed_hours_this_year, committed_hours,
                                                     idle_hours, delay_kinds:{kind:[ids]},
                                                     what_the_wait_is, potential_uses:{

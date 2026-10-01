@@ -299,6 +299,9 @@ class ProjectsState:
 	forgotten: Dict[str, int] = field(default_factory=dict)
 	trade_hours_used: Dict[str, float] = field(default_factory=dict)
 	revealed: Set[str] = field(default_factory=set)
+	# node id -> what the founder chose to do with the invention: {"mode", "published_year",
+	# "licensees": {actor id -> {"fee", "royalty", "year"}}}; a node absent from it is on the default
+	disclosures: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)
 	keep_staffed: Set[str] = field(default_factory=set)
 	# node ids, `category:<cat>` and `trait:<trait>` the automatic starters (rush, auto_open, auto_commission) skip
