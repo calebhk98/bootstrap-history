@@ -65,7 +65,7 @@ class ModEconomicCatalogTests(unittest.TestCase):
                       "money_per_labour_hour": 1.0}
         solved = prices.solved_prices([], price_book, production_entries=production)
         self.assertIn("test_acme_k3f9:ingot", solved.resolvable_materials)
-        goods, provenance = prices.priced_goods_table([], {}, price_book, production_entries=production)
+        goods, provenance = prices.priced_goods_table([], price_book, production_entries=production)
         self.assertGreater(goods["test_acme_k3f9:ingot"], 0)
         self.assertEqual("solved", provenance["test_acme_k3f9:ingot"])
         self.assertEqual(10 * goods["test_acme_k3f9:ingot"],

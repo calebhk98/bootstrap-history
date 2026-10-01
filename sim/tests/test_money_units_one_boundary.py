@@ -111,14 +111,13 @@ class MaterialPricesAreInHours(unittest.TestCase):
             checked += 1
         self.assertGreater(checked, 100)
 
-    def test_book_material_hours_are_the_same_in_every_civilisation(self):
+    def test_material_hours_are_the_same_in_every_civilisation(self):
         per_civ = {}
         for name in ALL_CIVS:
             _tree, _prices, _nodes, _wages, goods = data.load(civilization_id=name)
             rate = data.starting_schedule(name).money_per_labour_hour
             per_civ[name] = {material: price / rate for material, price in goods.items()}
-        book_materials = set(data._book_prices()[1])
-        shared = book_materials.intersection(*(set(table) for table in per_civ.values()))
+        shared = set.intersection(*(set(table) for table in per_civ.values()))
         self.assertGreater(len(shared), 100)
         reference = per_civ["rome_100ad"]
         for name, table in per_civ.items():

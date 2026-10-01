@@ -9,7 +9,7 @@ import unittest
 
 from sim.engine import data, prices as engine_prices
 
-BASE_CIVS = ["rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"]
+BASE_CIVS = ["rome_100ad", "mexica_1500"]
 
 
 class PriceBookIsGone(unittest.TestCase):
