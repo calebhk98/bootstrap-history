@@ -241,6 +241,36 @@ class PopulationMixin:
             return "common"
         return "uncommon"          # glassblowers, engravers, opticians' forebears
 
+    def _density_is_placeholder(self, trade):
+        """Whether a trade's population estimate is a placeholder
+        (temporary_heuristic) or a cited estimate (engineering_estimate).
+        Used by population_report to mark which trade counts are rough
+        estimates rather than based on historical records (see complaint 176).
+        """
+        cls = self._trade_market_class(trade)
+
+        # TRADE_DENSITY entries that are temporary_heuristic (placeholders)
+        if cls == "uncommon":
+            return True
+        if cls == "scarce":
+            return True
+
+        # Scholar family trades use engagement fractions, not TRADE_DENSITY
+        if cls == "scholar":
+            # SCHOLAR_ENGAGEMENT_FRACTION is temporary_heuristic
+            return True
+
+        # Scribe is literate family but uses SCRIBE_ENGAGEMENT_FRACTION
+        if trade == "scribe":
+            return True
+
+        # Merchant uses MERCHANT_DENSITY which is temporary_heuristic
+        if trade == "merchant":
+            return True
+
+        # Common and abundant are engineering_estimate (not placeholders)
+        return False
+
     # HIRING A HANDFUL OF SMITHS MUST NOT MOVE THE STANDING WAGE. A market
     # supply pool sized for a single provincial town, not the whole country,
     # would make hiring five smiths where thousands actually exist move the
@@ -611,6 +641,7 @@ class PopulationMixin:
                 "you_employ": round(have, 2),
                 "share_of_the_reachable_pool_you_employ":
                     round(have / reach, 4) if reach > 1e-9 else None,
+                "is_placeholder": self._density_is_placeholder(trade),
             })
         return {
             "civilisation": self.civ.get("short_name", self.civ.get("name", self.civ.get("id", ""))),

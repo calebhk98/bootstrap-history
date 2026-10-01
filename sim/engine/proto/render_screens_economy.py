@@ -698,13 +698,21 @@ def render_population(out):
     lines.append("")
     lines.append("%-14s %14s %14s %10s %8s" % ("TRADE", "IN THE COUNTRY", "WITHIN REACH",
                                            "YOU EMPLOY", "% OF REACH"))
+    has_placeholder = False
     for row in out.get("trades") or []:
         share = row.get("share_of_the_reachable_pool_you_employ")
+        trade_name = row.get("trade", "")
+        if row.get("is_placeholder"):
+            trade_name = trade_name + "*"
+            has_placeholder = True
         lines.append("%-14s %14s %14s %10s %8s"
-                 % (row.get("trade"), _fmt_num(row.get("estimated_in_the_country")),
+                 % (trade_name, _fmt_num(row.get("estimated_in_the_country")),
                     _fmt_num(row.get("within_your_reach")) if row.get("exists_here") else "-",
                     _fmt_num(row.get("you_employ")),
                     ("%.1f%%" % (share * 100)) if share is not None else "-"))
+    if has_placeholder:
+        lines.append("")
+        lines.append("* = rough placeholder estimate (not based on historical records)")
     if out.get("what_this_means"):
         lines.append("")
         lines.append(_wrap(out["what_this_means"]))
