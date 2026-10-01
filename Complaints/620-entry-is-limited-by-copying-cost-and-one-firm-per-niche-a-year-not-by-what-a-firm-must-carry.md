@@ -1,6 +1,6 @@
 # What caps the number of firms in a niche is the rate of entry, because a firm's fixed costs are a tiny share of what a market pays
 
-**Status:** open - found while giving incumbents the means to grow (Complaint 550). Measure with `_fp`-style drivers: Rome seed 1, recommended strategy, `Sim.actors.active_firms()`, `rivals_of`, per decade, and `python3 sim/test_regressions.py --only firm_expansion`.
+**Status:** partly - what a concern must carry now follows the volume it sells and a firm pays what an hour earns, so entry stops where the market's size over a firm's does (test `firm_costs_scale`); the founder's payroll and priced labour still stay at the opening wage (Complaint 670)
 
 A firm's takings are the founder's concern takings scaled by `economy ** ECONOMY_OUTPUT_SCALING_EXPONENT`, shared by every seller in the goods category. What a firm must carry (upkeep, wages, the copy cost of its know-how) does not scale with the economy, so by the time the economy has grown tens of times the costs are a few percent of one seller's takings. An entrant needs only a positive margin that beats the capital it ties up at the market rate, so entry stays profitable until a category is shared out among very many sellers; what actually stops the count is the one-entrant-per-proven-concern-per-year rate limit, not the market.
 
@@ -9,3 +9,7 @@ Incumbents now expand (Complaint 550), which lowers the count for the same marke
 What is missing is a cost a firm must carry whatever its size and that grows with the market it serves: management and administration (Complaint 550's span-of-control exponent is a labelled stand-in), the licences and levies a visible firm owes, the rent on a site, and the wage table following the economy (labour is the scarce input, so a richer economy pays more per hour; see `Complaints/287`, `462`). Once those exist the number of firms per niche follows from the market and the cost of a minimum efficient size, and the rate limit stops being the binding one.
 
 Related: `535`, `550`, `471`, `185`, `600`.
+
+Done (firm-costs-scale): `Sim.output_volume_scale()` is the one volume factor takings use, and `concern_running_scale` applies it to the upkeep of a concern that sells (founder, `venture_real_upkeep`, and actors, `SimWorld.upkeep`): inputs are bought per unit sold. `Sim.market_wage_per_hour` is the wage table times `labour_pay_scale()` (`LABOUR_PAY_SHARE_OF_OUTPUT_GAIN`, a labelled temporary heuristic: labour is the scarce input, so an hour is bid up to what it makes); firms' wage bills, hiring cost, household and group budgets and `society_output` read it. What is left of a firm's margin is the authored margin of the concern, so entrants stop where the market's size over one firm's is reached. Measure: `python3 sim/test_regressions.py --only firm_costs_scale`, and firms per decade with `Sim.actors.active_firms()` on Rome seed 1.
+
+Not done: a site rent, management or visibility levy as its own size-dependent cost (the span-of-control exponent of Complaint 550 is still the only one), the founder's payroll (Complaint 670), and the rate limit of one entrant per proven concern a year.
