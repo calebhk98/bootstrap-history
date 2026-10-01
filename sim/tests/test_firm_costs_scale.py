@@ -64,23 +64,26 @@ def settled(growth=1.0, years=40, rate=0.12):
 	return game
 
 
-# ---- labour is the scarce input: a richer economy pays more an hour -------------------------------
+# ---- one wage for every employer; pay follows output per hour as far as the share says ------------
 game = actor_sim([NODE])
 founder_runs(game, "zz_scale", opened_ago=10)
+game.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = 1.0
 next_year(game)
 world = SimWorld(game)
 wage_before = world.concern_wage_bill("zz_scale")
 hour_before = world.wage_per_hour("labourer")
-output_before = world.society_output()
+founder_before = game.annual_wage("artisan")
 game.state.economy.economy *= 10.0
 game._revenue_cache_key = None
 world = SimWorld(game)
-check("when the economy grows a concern's wage bill grows with it",
+check("when pay follows output a concern's wage bill grows with the economy",
       world.concern_wage_bill("zz_scale") > 2.0 * wage_before, (wage_before, world.concern_wage_bill("zz_scale")))
 check("the wage an hour of labour earns rises with output per hour",
       world.wage_per_hour("labourer") > 2.0 * hour_before, (hour_before, world.wage_per_hour("labourer")))
-check("what the society makes follows its wage, so a growing economy makes more",
-      world.society_output() > 2.0 * output_before, (output_before, world.society_output()))
+check("the founder pays the same rise a firm does: one wage for every employer",
+      abs(game.annual_wage("artisan") / founder_before - world.wage_per_hour("labourer") / hour_before) < 1e-6)
+check("what the society makes follows the economy's output per hour",
+      world.society_output() > 2.0 * SimWorld(actor_sim([NODE])).society_output())
 
 # ---- running costs follow the volume a concern sells ---------------------------------------------
 game = actor_sim([NODE])
@@ -117,8 +120,9 @@ grown = settled(growth=10.0)
 steady_count = len(steady.actors.active_firms())
 grown_count = len(grown.actors.active_firms())
 check("firms entered the niche", steady_count > 0, steady_count)
-check("a market ten times the economy does not hold ten times the firms",
-      grown_count < 4 * max(1, steady_count), (steady_count, grown_count))
+check("firms grow more slowly than the volume they share: costs follow what is sold",
+      grown_count < 10.0 ** S.Sim.ECONOMY_OUTPUT_SCALING_EXPONENT * steady_count,
+      (steady_count, grown_count))
 count = len(grown.actors.active_firms())
 for _ in range(15):
 	next_year(grown)
