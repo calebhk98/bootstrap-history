@@ -1,6 +1,6 @@
 # Goal/path UI can accidentally teach the wrong strategy
 
-**Status:** open
+**Status:** partly - `leverage` and `path` show the six system levers beside the chain's calendar floor; still open: a savings target the adviser respects (342)
 
 The Rome transistor run became extremely inefficient because the visible goal/path information encouraged a direct prerequisite-chain mindset. The player focused on completing prerequisites in order rather than building a strong civilization first.
 

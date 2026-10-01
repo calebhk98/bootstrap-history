@@ -1,6 +1,6 @@
 # Portfolio should become bottleneck-centric at large scale
 
-**Status:** open
+**Status:** partly - `portfolio` now leads with `bottlenecks` grouped by the shared blocker kinds with pools from the engine; still open: startable-but-blocked work in the groups, drill-down actions, last year's allocation against this year's forecast (341)
 
 With 100+ projects active or startable, messages such as "priority #129 of 181" cease to be useful for decision making. The valuable information becomes aggregate trade pressure and resource consumption: for example, "Scribes: 9,034 h demand / 8,939 h supply, affecting 18 projects."
 

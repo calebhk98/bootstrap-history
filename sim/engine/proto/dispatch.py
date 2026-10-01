@@ -41,6 +41,8 @@ from .dispatch_market import _cmd_market  # noqa: F401
 from .dispatch_screens import (  # noqa: F401
     _cmd_map, _cmd_education, _cmd_demography, _cmd_divergence)
 from .dispatch_staff_controls import _cmd_keep, _cmd_reserve  # noqa: F401
+from .dispatch_figures import _cmd_figures  # noqa: F401
+from .dispatch_guidance import _cmd_leverage, _cmd_idle  # noqa: F401
 from .dispatch_priority import _cmd_priority  # noqa: F401
 from .dispatch_exclusions import _cmd_exclude, _cmd_include  # noqa: F401
 from .dispatch_labour import (
@@ -236,7 +238,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         # own diff can still be taken, cheaply, before it is gone.
         before_revealed = set(getattr(sim, "revealed", set()))
         before_operating = set(sim.operating)
-        _arrival_snapshot = _dashboard_snapshot(sim)
+        _arrival_snapshot = None if getattr(sim, "_dashboard_history", None) else _dashboard_snapshot(sim)
         stalled_before = set(stalled_projects(sim))
         goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
         population_before = sim.population.total
