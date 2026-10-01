@@ -184,6 +184,14 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False):
     return test_sim
 
 
+def state_seeking(game, requisition=0.16, office=0.06):
+    """Put the state in need: the rates it takes at full notice from the income it can see, as a
+    year's shortfall would leave them. Returns the game."""
+    record = game.state_treasury().record
+    record.levy_requisition_rate, record.levy_office_rate = requisition, office
+    return game
+
+
 def run_it(sim_state, *keys):
     """Build a concern AND keep its doors open.
 

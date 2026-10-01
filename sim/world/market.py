@@ -94,6 +94,7 @@ class MarketConditions:
     actor_supply_tonnes: float
     founder_sales_tonnes: float
     stock_tonnes: float
+    actor_demand_tonnes: float = 0.0
     demand_price_elasticity: float = DEFAULT_DEMAND_PRICE_ELASTICITY
     supply_price_elasticity: float = SHORT_RUN_SUPPLY_PRICE_ELASTICITY
     floor_ratio: float = DEFAULT_FLOOR_RATIO
@@ -112,7 +113,7 @@ class MarketOutcome:
 def _demand_at(conditions: MarketConditions, price_ratio: float) -> float:
     household = conditions.household_demand_at_anchor_tonnes * (
         price_ratio ** -conditions.demand_price_elasticity)
-    return household + conditions.committed_demand_tonnes
+    return household + conditions.committed_demand_tonnes + conditions.actor_demand_tonnes
 
 
 def _society_output_at(conditions: MarketConditions, price_ratio: float) -> float:
@@ -131,7 +132,8 @@ def clearing_price_ratio(conditions: MarketConditions) -> float:
     """The price over long-run cost at which demand equals the supply on
     offer, held between the floor and the ceiling."""
     low, high = conditions.floor_ratio, conditions.ceiling_ratio
-    if (conditions.committed_demand_tonnes == 0.0 and conditions.actor_supply_tonnes == 0.0
+    if (conditions.committed_demand_tonnes == 0.0 and conditions.actor_demand_tonnes == 0.0
+            and conditions.actor_supply_tonnes == 0.0
             and conditions.founder_sales_tonnes == 0.0 and conditions.stock_tonnes == 0.0
             and conditions.society_capacity_tonnes > 0.0
             and conditions.household_demand_at_anchor_tonnes > 0.0):

@@ -121,7 +121,7 @@ check("a firm that cannot find its staff in the pool earns less than one that ca
       (short.record.income.get("takings", 0.0), full_takings))
 
 # ---- one rule assesses every actor -------------------------------------------------------
-game = actor_sim([])
+game = state_seeking(actor_sim([]))
 treasury = game.state_treasury()
 scale_of_founder = game.visible_scale(2000.0, 60000000.0, 0.0)
 check("scale is one function of headcount, wealth and eminence for any taxpayer",
@@ -150,7 +150,7 @@ check("a state with no capacity collects nothing from anyone",
       treasury.assess(rich_firm, 1.0e6, world)[0] == 0.0
       and sum(game.levy_shares(game.visible_scale(2000.0, 60000000.0, 0.0))) == 0.0)
 
-game = actor_sim([mill])
+game = state_seeking(actor_sim([mill]))
 founder_runs(game, "test_mill", opened_ago=6)
 taxed = firm_runs(game, "firm:taxed", "test_mill", money=60000000.0)
 taxed.workforce["artisan"] = 2000.0

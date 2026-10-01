@@ -75,9 +75,8 @@ check("more military nodes done means a heavier reported burden, never a "
 
 # --- the crossing changes the NOTICE TEXT, not the MONEY. state_pressure_
 # report()'s military_supply notice now carries this figure once eligible;
-# the MILITARY_DEMAND_BASE_SHARE/LEVERAGE_SHARE arithmetic (money) is
-# untouched by this crossing - see military_equipment_burden_kg_per_soldier_
-# per_year()'s own "WHY NOT MONEY" section for why that boundary is kept.
+# money the state asks of a household is its unfunded army need, priced by the
+# budget (actors/budget.py), not by this crossing's own "WHY NOT MONEY" figure.
 def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     """Same construction as test_scanners_and_scheduling.py's own _grown():
     a household large enough to be past the general state-notice line, built
@@ -89,7 +88,7 @@ def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     grown_sim.capital = capital
     grown_sim.eminence = eminence
     grown_sim.update_protection()
-    return grown_sim
+    return state_seeking(grown_sim)
 
 
 _no_mil = _grown("rome_100ad")
@@ -115,16 +114,14 @@ check("the number IN the notice text is the same number the crossing's own "
       ("%.1f" % _expected_one_kg) in _notice["military_supply"],
       (_expected_one_kg, _notice["military_supply"]))
 
-_before_take = (_one_mil.MILITARY_DEMAND_BASE_SHARE, _one_mil.MILITARY_DEMAND_LEVERAGE_SHARE)
 _full_mil_grown = _grown("rome_100ad")
 _full_mil_grown.done.update(_all_military)
 _full_mil_grown._done_changed()
-check("MILITARY_DEMAND_BASE_SHARE/LEVERAGE_SHARE (the money mechanic) are "
-      "unchanged by this crossing regardless of leverage - only the notice "
-      "TEXT moves, per this crossing's own 'WHY NOT MONEY' rejection",
-      (_full_mil_grown.MILITARY_DEMAND_BASE_SHARE, _full_mil_grown.MILITARY_DEMAND_LEVERAGE_SHARE)
-      == _before_take, ((_full_mil_grown.MILITARY_DEMAND_BASE_SHARE,
-                          _full_mil_grown.MILITARY_DEMAND_LEVERAGE_SHARE), _before_take))
+check("the crossing's kilograms never become money on their own: a state that has "
+      "paid for its army asks even a full-leverage household for nothing - what it "
+      "asks is its unfunded army need (actors/budget.py)",
+      _full_mil_grown.state_military_ask(1.0e6, _full_mil_grown.household_scale()) == 0.0,
+      _full_mil_grown.state_military_ask(1.0e6, _full_mil_grown.household_scale()))
 
 
 # --- dormant households are unaffected: state_pressure_report() still

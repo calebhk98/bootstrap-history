@@ -412,6 +412,18 @@ class ActorRecord:
 	# purpose -> money in and out over the actor's life; money = income - outlays
 	income: Dict[str, float] = field(default_factory=dict)
 	outlays: Dict[str, float] = field(default_factory=dict)
+	# a state's standing need by line last year, and the part it could not pay
+	need: Dict[str, float] = field(default_factory=dict)
+	unfunded: Dict[str, float] = field(default_factory=dict)
+	# tonnes a year of each commodity the actor buys on the market
+	demand: Dict[str, float] = field(default_factory=dict)
+	# what the state seeks of the people it can see: share of income at full notice by kind of
+	# claim, and the visible income those shares are spread over
+	levy_requisition_rate: float = 0.0
+	levy_office_rate: float = 0.0
+	levy_base: float = 0.0
+	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
+	army: float = 0.0
 
 
 @dataclass

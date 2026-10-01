@@ -187,7 +187,7 @@ class StatePressureMixin:
             "the whole military branch as a strategy unto itself. Not "
             "measured against any historical count of decisive weapons.")
 
-    def military_equipment_burden_kg_per_soldier_per_year(self):
+    def military_equipment_burden_kg_per_soldier_per_year(self, adoption=None):
         """WHAT AN ARMY COSTS TO FIELD AND KEEP FED - THE ONE CROSSING TO
         sim/world/military_logistics.py THIS ENGINE WIRES IN, chosen out of
         that module's own ranked candidates (see its module docstring and
@@ -269,16 +269,16 @@ class StatePressureMixin:
         are sim/engine/economy.py's domain - a file this crossing is not
         permitted to touch. Inventing a conversion rate here would be
         exactly the kind of unjustified constant CLAUDE.md SS3.1 rules out,
-        dressed up as physics. The existing MILITARY_DEMAND_BASE_SHARE/
-        MILITARY_DEMAND_LEVERAGE_SHARE monetary mechanic below is therefore
-        left untouched by this crossing - see state_pressure_report()'s own
-        comment at the point this function's result is used.
+        dressed up as physics. The state's budget (actors/budget.py) prices
+        this mass at the market's quote; this function stays in kilograms.
         """
         melee_kg = military_logistics.annual_iron_and_ammunition_burden_kg_per_soldier()
         rifle_kg = military_logistics.annual_iron_and_ammunition_burden_kg_per_soldier(
             firearm=military_logistics.MODERN_SERVICE_RIFLE,
             engagements_per_year=self.MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR)
-        leverage = self.military_leverage()
+        # `adoption` (0..1) is how far an army has taken up the founder's work; the founder's
+        # own leverage stands in when it is not given
+        leverage = self.military_leverage() if adoption is None else adoption
         return melee_kg + leverage * (rifle_kg - melee_kg)
 
     MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR = declare(
@@ -975,23 +975,33 @@ class StatePressureMixin:
             return 0.0
         return min(1.0, (notice - threshold) / (1.0 - threshold))
 
+    def notice_over(self, scale):
+        """0..1: how far past the notice line a taxpayer of this visible scale
+        stands, as a share of the remaining distance to full notice."""
+        notice = self.state_capacity * scale
+        if notice <= self.STATE_NOTICE_THRESHOLD:
+            return 0.0
+        return min(1.0, (notice - self.STATE_NOTICE_THRESHOLD) / (1.0 - self.STATE_NOTICE_THRESHOLD))
+
     def levy_shares(self, scale, protection=0.0):
         """(requisition share, office share) of a year's revenue the state
         assesses on a taxpayer of this visible scale: one rule for the
-        founder's household, a firm or any other actor. Nothing is taken
-        below the notice line; protection bargains requisition down, never
-        the office."""
-        notice = self.state_capacity * scale
-        if notice <= self.STATE_NOTICE_THRESHOLD:
+        founder's household, a firm or any other actor. A visible taxpayer pays
+        the ordinary rate the society pays (output times tax share times state
+        capacity, as a share of income) plus the rates at full notice that
+        raise the need the state could not pay (Government.seek_shortfall), in
+        proportion to how far past the notice line he stands. Nothing is taken below the
+        line; protection bargains requisition down, never the office."""
+        over = self.notice_over(scale)
+        if over <= 0.0:
             return 0.0, 0.0
-        state_pressure_cfg = self.civ.get("state_pressure") or {}
-        over = min(1.0, (notice - self.STATE_NOTICE_THRESHOLD) / (1.0 - self.STATE_NOTICE_THRESHOLD))
-        requisition = float(state_pressure_cfg.get("requisition_base_share",
-                                                    self.REQUISITION_BASE_SHARE_DEFAULT)) * over
+        requisition_rate, office_rate = self.state_levy_rates()
+        # the share of income the whole society pays the state, then what the state's shortfall adds
+        ordinary_rate = float(self.civ["starting_tax_share"]) * self.state_capacity
+        requisition = (ordinary_rate + requisition_rate) * over
         if protection > 0:
             requisition *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * protection)
-        office = float(state_pressure_cfg.get("office_base_share", self.OFFICE_BASE_SHARE_DEFAULT)) * over
-        return max(0.0, requisition), max(0.0, office)
+        return max(0.0, requisition), max(0.0, office_rate * over)
 
     def requisition_report(self):
         """(share of this year's revenue, [why it is smaller than listed])
@@ -1014,15 +1024,6 @@ class StatePressureMixin:
                        "%d%%)" % round(self.state.household.protection * 100))
         return max(0.0, share), why
 
-    REQUISITION_BASE_SHARE_DEFAULT = declare(
-        "REQUISITION_BASE_SHARE_DEFAULT", 0.15, kind="temporary_heuristic",
-        unit="dimensionless (share of revenue at full notice)",
-        source=None, confidence="D",
-        why="Fallback requisition share for a civilisation file that does "
-            "not set its own requisition_base_share - most civ files do "
-            "set one (Rome's annona and munera, Han's monopolies, and so "
-            "on), so this only matters for a file that omits it. Invented "
-            "figure, not fitted to any attested requisition rate.")
     REQUISITION_PROTECTION_DISCOUNT = declare(
         "REQUISITION_PROTECTION_DISCOUNT", 0.55, kind="temporary_heuristic",
         unit="dimensionless (fraction discounted at protection=1.0)",
@@ -1051,16 +1052,6 @@ class StatePressureMixin:
         state_pressure_cfg = self.civ.get("state_pressure") or {}
         share = self.levy_shares(self.household_scale())[1]
         return share, state_pressure_cfg.get("office_name", "a civic office")
-
-    OFFICE_BASE_SHARE_DEFAULT = declare(
-        "OFFICE_BASE_SHARE_DEFAULT", 0.05, kind="temporary_heuristic",
-        unit="dimensionless (share of revenue at full notice)",
-        source=None, confidence="D",
-        why="Fallback pressed-office cost for a civilisation file that "
-            "does not set its own office_base_share. Invented figure, "
-            "smaller than REQUISITION_BASE_SHARE_DEFAULT because an office "
-            "also buys back protection (see this method's own docstring); "
-            "not fitted to any attested decurionate or shrievalty cost.")
 
     def military_demand_eligible(self):
         """Is this household both militarily useful and visible enough that
@@ -1209,20 +1200,6 @@ class StatePressureMixin:
                              "place; being useful to a state that fights")
         return out
 
-    MILITARY_DEMAND_BASE_SHARE = declare(
-        "MILITARY_DEMAND_BASE_SHARE", 0.10, kind="temporary_heuristic",
-        unit="dimensionless (share of revenue)", source=None,
-        confidence="D",
-        why="Base share of revenue a military supply demand takes, before "
-            "scaling with how militarily useful the household is. Invented "
-            "figure, not fitted to any attested requisition-in-kind rate.")
-    MILITARY_DEMAND_LEVERAGE_SHARE = declare(
-        "MILITARY_DEMAND_LEVERAGE_SHARE", 0.10, kind="temporary_heuristic",
-        unit="dimensionless (share of revenue at military_leverage=1.0)",
-        source=None, confidence="D",
-        why="Extra share of revenue a military demand takes for a household "
-            "at full military leverage - a state asks more of a workshop "
-            "that can supply more. Tuned, not measured.")
     MILITARY_DEMAND_PROTECTION_DISCOUNT = declare(
         "MILITARY_DEMAND_PROTECTION_DISCOUNT", 0.4, kind="temporary_heuristic",
         unit="dimensionless (fraction discounted at protection=1.0)",
@@ -1288,12 +1265,14 @@ class StatePressureMixin:
             last = self.state.household.last_military_demand
             if (year - last >= self.MILITARY_DEMAND_COOLDOWN_YEARS
                     and self.rng.random() < self.MILITARY_DEMAND_ANNUAL_CHANCE):
-                self.state.household.last_military_demand = year
-                lev = self.military_leverage()
-                take = (rev * (self.MILITARY_DEMAND_BASE_SHARE
-                               + self.MILITARY_DEMAND_LEVERAGE_SHARE * lev)
+                # what the state asks is the army's need it could not pay for, shared out by visible income
+                take = (self.state_military_ask(rev, self.household_scale())
                         * (1.0 - self.MILITARY_DEMAND_PROTECTION_DISCOUNT * self.state.household.protection))
                 take = max(0.0, take)
+            else:
+                take = 0.0
+            if take > 0.0:
+                self.state.household.last_military_demand = year
                 self.pay_state(take, "military supply")
                 name = state_pressure_cfg.get("military_name", "the arsenal")
                 self.state.household.log.append((year, "%s asks for your output: %s handed over "

@@ -47,6 +47,7 @@ class ActorRegistry:
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
 		self._staff: Optional[Dict[str, float]] = None
+		self._demand: Optional[Dict[str, float]] = None
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
 		for actor_id in sorted(state.records):
@@ -72,6 +73,7 @@ class ActorRegistry:
 		self.actors[actor_id] = actor
 		self._ordered_ids = None
 		self._staff = None
+		self._demand = None
 		return actor
 
 	def supply(self, material: str, world: Any) -> float:
@@ -79,14 +81,25 @@ class ActorRegistry:
 		return sum(actor.output_of(material, world) for actor in self.actors.values()
 				   if not (actor.kind == "firm" and actor.record.exited_year is not None))
 
+	def demand(self, commodity: str) -> float:
+		"""Tonnes a year of a commodity that every recorded actor buys on the market."""
+		if self._demand is None:
+			totals: Dict[str, float] = {}
+			for actor in self.actors.values():
+				for name, tonnes in actor.record.demand.items():
+					totals[name] = totals.get(name, 0.0) + tonnes
+			self._demand = totals
+		return self._demand.get(commodity, 0.0)
+
 	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> int:
 		"""Concerns of goods category `category` that actors operate, counted once per operator."""
 		return sum(1 for firm in self.active_firms() for node_id in firm.concerns
 				   if nodes[node_id].get("cat") == category)
 
 	def refresh_staff(self) -> None:
-		"""Forget the staffing tally so the next read counts every actor's workforce again."""
+		"""Forget the staffing and demand tallies so the next read counts every actor again."""
 		self._staff = None
+		self._demand = None
 
 	def staff_by_trade(self) -> Dict[str, float]:
 		"""People of each trade every recorded actor employs, in full-time equivalents."""

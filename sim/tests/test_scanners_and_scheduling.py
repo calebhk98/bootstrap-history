@@ -1622,8 +1622,8 @@ for _cv in _ALL_CIVS:
           "military/confiscation names and notes, not a shared generic one"
           % _cv,
           all(_sp.get(field_name) for field_name in (
-              "requisition_name", "requisition_note", "requisition_base_share",
-              "office_name", "office_note", "office_base_share",
+              "requisition_name", "requisition_note",
+              "office_name", "office_note",
               "military_name", "military_note",
               "confiscation_name", "confiscation_note")),
           _sp)
@@ -1640,7 +1640,7 @@ def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     grown_sim.capital = capital
     grown_sim.eminence = eminence
     grown_sim.update_protection()
-    return grown_sim
+    return state_seeking(grown_sim)
 
 
 _big = _grown("rome_100ad")
@@ -1738,7 +1738,7 @@ check("Norse state_capacity (0.15) caps notice so low that even an "
       _norse_extreme.state_notice() < _norse_extreme.STATE_NOTICE_THRESHOLD
       and _norse_extreme.requisition_report()[0] == 0.0,
       _norse_extreme.state_notice())
-_norse_built = sim(civ="norse_900ad")
+_norse_built = state_seeking(sim(civ="norse_900ad"))
 _norse_built.civ["state_capacity"] = 0.9          # as if centuries of kings,
 _norse_built.state_capacity = 0.9                 # bishops and taxes arrived
 _norse_built.employees["artisan"] = 2000.0

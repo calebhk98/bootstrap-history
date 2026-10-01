@@ -91,6 +91,7 @@ class MarketClearingMixin:
                                      + flows["drawn"].get(commodity, 0.0)),
             society_capacity_tonnes=entry["capacity_tonnes"],
             actor_supply_tonnes=self.actor_supply(commodity),
+            actor_demand_tonnes=self.actor_demand(commodity),
             founder_sales_tonnes=flows["sold"].get(commodity, 0.0),
             stock_tonnes=entry["stock_tonnes"],
             floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),
@@ -109,7 +110,7 @@ class MarketClearingMixin:
                      entry["capacity_tonnes"],
                      entry["stock_tonnes"], flows["bought"].get(commodity),
                      flows["drawn"].get(commodity), flows["sold"].get(commodity),
-                     self.actor_market_version(), self.state.scenario.year)
+                     self.actor_market_version(), self.actor_demand(commodity), self.state.scenario.year)
         cache = getattr(self.household, "_market_outcome_cache", None)
         if cache is None:
             cache = self.household._market_outcome_cache = {}
@@ -152,6 +153,7 @@ class MarketClearingMixin:
             "founder_purchases_tonnes": closing_conditions.committed_demand_tonnes,
             "founder_sales_tonnes": closing_conditions.founder_sales_tonnes,
             "actor_supply_tonnes": conditions.actor_supply_tonnes,
+            "actor_demand_tonnes": conditions.actor_demand_tonnes,
             "society_sales_tonnes": closing.society_sales_tonnes,
             "displaced_by_founder_tonnes":
                 market.society_sales_displaced_by_founder(closing_conditions),
