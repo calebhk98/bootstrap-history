@@ -1,6 +1,6 @@
 # Add political interest groups created by industrialisation
 
-**Status:** closed - interest groups are actors that organise, press the state and are answered (test interest_groups); what remains is split into 311, 312 and 432
+**Status:** partly - interest groups are actors that organise, press the state and are answered (test interest_groups); what remains is split into 311, 312 and 313; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
 **Source:** playtest findings document, LATE-008. **Type:** Feature
 recommendation, roadmap-sized, substantially overlapping already-planned

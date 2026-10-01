@@ -31,8 +31,8 @@ class ViewShareMixin:
         registry = self.actors
         economy = self.state.economy
         projects = self.state.projects
-        return ((self._material_prices(), demand, registry._demand),
-                (registry.version[0], len(registry.actors), self.state.scenario.year,
+        return ((self._material_prices(), demand),
+                (self.goods_market.others_stamp(), registry.version[0], len(registry.actors), self.state.scenario.year,
                  getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
                  len(projects.done), len(projects.operating),
                  economy.forest_ha, economy.nitre_bed_m2, self.population.total,

@@ -1,6 +1,6 @@
 # The state budget models only an army and officials, so every state is in surplus and the need-driven levy never fires
 
-**Status:** closed - roads, public buildings, court, dole and navy lines, an army that follows threat, and no hoarded surplus are built (`budget_lines.py`, `government_surplus.py`; tests state_budget, state_surplus); a healthy state's large surplus from a fitted revenue share is 448
+**Status:** partly - roads, public buildings, court, dole and navy lines, an army that follows threat, and no hoarded surplus are built (`budget_lines.py`, `government_surplus.py`; tests state_budget, state_surplus); a healthy state's large surplus from a fitted revenue share is 448; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
 The government's standing need is an army (it wants the civilisation's opening `standing_army` share of the people and keeps what it can fund, changing by at most `ARMY_ADJUSTMENT_RATE` a year; paid at the labourer's wage and equipped by `military_logistics` iron) and a corps of officials (`ADMINISTRATIVE_SPAN`). Its revenue is society output times `starting_tax_share` times state capacity; a visible founder or firm pays the same share of its own income. Measure both over a long run:
 

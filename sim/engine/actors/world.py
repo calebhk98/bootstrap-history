@@ -152,7 +152,8 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 	def concern_gross(self, node_id: str) -> float:
 		"""Yearly takings of the founder's concern once it has ramped up."""
 		sim = self._sim
-		return sim.concern_takings(node_id, 1.0) * sim.goods_market_factor(node_id)
+		return (sim.concern_takings(node_id, 1.0) * sim.goods_market_factor(node_id)
+				* sim.node_output_market_factor(self.nodes[node_id]))
 
 	def market_key(self, node_id: str) -> str:
 		"""What a concern's operators share: a goods category is one market, any other concern its own."""
@@ -163,7 +164,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		"""Yearly takings one more operator would have at full ramp once `entrants` operators
 		(itself included) have joined the `rivals` already selling."""
 		sim = self._sim
-		takings = sim.concern_takings(node_id, 1.0)
+		takings = sim.concern_takings(node_id, 1.0) * sim.node_output_market_factor(self.nodes[node_id])
 		category = self.nodes[node_id].get("cat")
 		if category in sim.GOODS_CATEGORIES:
 			return takings * sim.goods_category_factor_with_entrants(category, entrants)
@@ -195,7 +196,8 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		of capacity gets its share of the demand; a concern with no market model splits with the
 		capacity of its rivals."""
 		sim = self._sim
-		takings = sim.concern_takings(node_id, self.ramp(opened_year)) * capacity
+		takings = (sim.concern_takings(node_id, self.ramp(opened_year)) * capacity
+				   * sim.node_output_market_factor(self.nodes[node_id]))
 		category = self.nodes[node_id].get("cat")
 		if category in sim.GOODS_CATEGORIES:
 			return takings * sim.goods_category_factor(category)
@@ -204,6 +206,23 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 	def concerns_making(self, material: str) -> Any:
 		"""The nodes whose concerns put `material` on the market."""
 		return supply.nodes_making(material)
+
+	def materials_made_by(self, node_id: str) -> Any:
+		"""The materials a concern puts on the market."""
+		return supply.materials_made_by(node_id)
+
+	def market_forget(self, actor_id: str) -> None:
+		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
+		self._sim.goods_market.forget(actor_id)
+
+	def market_sale(self, seller_id: str, material: str, tonnes: float) -> None:
+		"""An actor sells `tonnes` of a material into the one goods market this year."""
+		sim = self._sim
+		sim.goods_market.note_sale(seller_id, sim._material_tag(material)[0], tonnes)
+
+	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float) -> None:
+		"""An actor buys `tonnes` of a commodity at the one goods market this year."""
+		self._sim.goods_market.note_purchase(buyer_id, commodity, tonnes)
 
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
 		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,

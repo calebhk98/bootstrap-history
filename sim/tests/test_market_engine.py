@@ -9,6 +9,8 @@ capacity follows the price.
 """
 from .harness import *  # noqa: F401,F403
 
+from sim.engine.goods_market_api import FOUNDER
+
 MATERIAL = "iron"
 
 
@@ -47,7 +49,7 @@ check("a richer society buys more and the shortage lifts the price above long-ru
 # --- stock windfall: every household finds iron in their room.
 s = sim(civ="rome_100ad", capital=1e9)
 before = s.market_price_ratio(MATERIAL)
-s.market_add_stock(MATERIAL, s.market_state(MATERIAL)["capacity_tonnes"] * 0.5)
+s.goods_market.add_stock(MATERIAL, s.market_state(MATERIAL)["capacity_tonnes"] * 0.5)
 after = s.market_price_ratio(MATERIAL)
 check("a windfall of stock lowers the price at once, with no production change",
       after < before - 0.05, (before, after))
@@ -58,7 +60,7 @@ check("a windfall of stock lowers the price at once, with no production change",
 s = sim(civ="rome_100ad", capital=1e9)
 base_state = s.market_state(MATERIAL)
 tonnes = base_state["capacity_tonnes"] * 0.05
-s.market_note_purchase(MATERIAL, tonnes)
+s.goods_market.note_purchase(FOUNDER, MATERIAL, tonnes)
 bought_state = s.market_state(MATERIAL)
 check("what the founder buys adds demand: the year, closed now, would price higher",
       bought_state["price_ratio_if_year_closed_now"] > base_state["price_ratio_if_year_closed_now"],
@@ -103,12 +105,11 @@ check("producers cut capacity while the price sits below cost",
 check("...and a glut's price recovers toward long-run cost as they do",
       price_path[-1] > price_path[0], price_path)
 
-# --- a firm's output is one call: stub it and watch the price.
+# --- a firm's output is one sale in the book: record it and watch the price.
 s = sim(civ="rome_100ad", capital=1e9)
 base_ratio = s.market_price_ratio(MATERIAL)
 _firm_output = s.market_state(MATERIAL)["capacity_tonnes"] * 0.2
-s.actor_supply = lambda material: _firm_output
-s.actor_market_version = lambda: 1
+s.goods_market.note_sale("firm:stub", MATERIAL, _firm_output)
 check("actor supply (once firms produce) lowers the price through the same clearing",
       s.market_price_ratio(MATERIAL) < base_ratio, (base_ratio, s.market_price_ratio(MATERIAL)))
 

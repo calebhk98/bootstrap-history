@@ -1,6 +1,6 @@
 # Mining labour per tonne was checked against sources; silver is still far below whole-workforce figures
 
-**Status:** closed - mine works are decomposed and charged (348); the remaining gap is 641
+**Status:** partly - mine works are decomposed and charged (348); the remaining gap is 349; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
 The suspicion in 410 and 570 was that the deposit model charges too little labour per tonne of rock. Checked (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`, `python3 sim/test_regressions.py --only mine_labour_per_tonne`):
 

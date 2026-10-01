@@ -1,6 +1,6 @@
 # The state's soldiers are not a trade, and patron funding still ignores the treasury
 
-**Status:** closed - patron funding is paid from the treasury (`Government.pay_patron`) and the state's adoption is what the government holds (test invention_disclosure); the soldier trade is 447
+**Status:** partly - patron funding is paid from the treasury (`Government.pay_patron`) and the state's adoption is what the government holds (test invention_disclosure); the soldier trade is 314; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
 Three things the state budget does not do yet, each measurable.
 

@@ -68,7 +68,7 @@ class ForeignCapacityMixin:
         """Tonnes a year this society's own households want of a commodity
         it cannot make, from the same model at its own prices and size now;
         zero when no household good is part of the commodity."""
-        prices = self._material_prices()
+        prices = self.goods_market.household_prices()
         cache = getattr(self.household, "_home_final_tonnes_cache", None)
         if cache is None or cache[0] is not prices:
             per_hour = self.money_per_labour_hour()

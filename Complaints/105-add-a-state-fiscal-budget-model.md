@@ -1,6 +1,6 @@
 # Add a real state fiscal/budget model
 
-**Status:** closed - revenue, army, officials, the budget lines (286), borrowing (106) and the state's adoption (287) are built; what remains is the soldier trade (314) and revenue as a fitted share (315)
+**Status:** partly - revenue, army, officials, the budget lines (286), borrowing (106) and the state's adoption (287) are built; what remains is the soldier trade (314) and revenue as a fitted share (315); reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
 **Source:** playtest findings document, LATE-003. **Type:** Major
 roadmap-sized feature recommendation, with an existing code-level admission

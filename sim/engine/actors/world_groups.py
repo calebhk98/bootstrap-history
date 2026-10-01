@@ -2,6 +2,8 @@
 employers whose hands the founder's hiring bids up. Mixed into `SimWorld`."""
 from typing import Any, Dict, List
 
+from sim.engine.goods_market_api import FOUNDER
+
 
 class Sector:
 	"""One body of people hurt by the same cause: what it lost, what it lives on, who it is."""
@@ -48,11 +50,9 @@ class GroupView:
 		"""Producers of each commodity the founder sold into the market this year: what the
 		society's own producers sell less at the price, and the people that income keeps."""
 		sim = self._sim
-		flows = sim.state.economy.market_flows or {}
-		sold = flows.get("sold") or {} if flows.get("year") == self.year else {}  # type: ignore[attr-defined]
 		wage = self._annual_labourer_wage()
 		sectors = []
-		for commodity in sorted(sold):
+		for commodity in sim.goods_market.commodities_sold_by(FOUNDER):
 			state = sim.market_state(commodity)
 			quote = self._commodity_quote(commodity)
 			if state is None or quote is None:

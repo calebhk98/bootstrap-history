@@ -10,7 +10,7 @@ def cash_remedies(actor):
     found = []
     for material in sorted(actor._material_stock()):
         stock = actor.material_stock_t(material)
-        _key, tonnes, money = actor.material_sale_offer(material, stock)
+        _key, tonnes, money = actor.goods_market.quote_sell(material, stock)
         if money > 0:
             found.append((money, "sell %s %s (brings %s now)" % (
                 material, "{:,.1f}".format(tonnes), "{:,.0f}".format(money))))
