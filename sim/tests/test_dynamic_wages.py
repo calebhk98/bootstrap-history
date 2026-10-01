@@ -26,38 +26,38 @@ s = sim()
 # market round-trip to a book value it is supposed to be replacing.
 _expected = ANNUAL_WAGE["smith"] * s.price_index * s.wage_index
 check("neutral starting conditions preserve the calibrated wage table",
-      abs(s.annual_wage("smith") - _expected) / _expected < 1e-4,
-      (s.annual_wage("smith"), _expected))
+      abs(s.labour_market.quote_annual("smith") - _expected) / _expected < 1e-4,
+      (s.labour_market.quote_annual("smith"), _expected))
 
-baseline = s.annual_wage("smith")
+baseline = s.labour_market.quote_annual("smith")
 s.essential_price_ratio = lambda: 0.60
 check("cheaper staple food lowers the wage required to live",
-      s.annual_wage("smith") < baseline * 0.85,
-      (baseline, s.annual_wage("smith")))
+      s.labour_market.quote_annual("smith") < baseline * 0.85,
+      (baseline, s.labour_market.quote_annual("smith")))
 
 s = sim()
 s.headcount = lambda: 9.0
 s.supervision_room = lambda: 10.0
-crowded = s.annual_wage("smith")
+crowded = s.labour_market.quote_annual("smith")
 s.supervision_room = lambda: 20.0
 check("expanding housing capacity relieves wage pressure",
-      s.annual_wage("smith") < crowded, (crowded, s.annual_wage("smith")))
+      s.labour_market.quote_annual("smith") < crowded, (crowded, s.labour_market.quote_annual("smith")))
 
 s = sim()
-normal = s.annual_wage("smith")
+normal = s.labour_market.quote_annual("smith")
 s.material_price_factor = lambda material: 2.0 if material == "iron" else 1.0
 check("scarce job tools raise the wage of a trade that must maintain them",
-      s.annual_wage("smith") > normal, (normal, s.annual_wage("smith")))
+      s.labour_market.quote_annual("smith") > normal, (normal, s.labour_market.quote_annual("smith")))
 
 s = sim()
 check("skill and job difficulty still distinguish trades at neutral prices",
-      s.annual_wage("chemist") > s.annual_wage("labourer") * 2,
-      (s.annual_wage("chemist"), s.annual_wage("labourer")))
+      s.labour_market.quote_annual("chemist") > s.labour_market.quote_annual("labourer") * 2,
+      (s.labour_market.quote_annual("chemist"), s.labour_market.quote_annual("labourer")))
 
 s.employees["smith"] = 1
 check("the payroll uses the same derived wage quoted for one employee",
-      abs(s.wage_bill() - s.annual_wage("smith")) < 1e-6,
-      (s.wage_bill(), s.annual_wage("smith")))
+      abs(s.wage_bill() - s.labour_market.quote_annual("smith")) < 1e-6,
+      (s.wage_bill(), s.labour_market.quote_annual("smith")))
 
 detail = S._agent_dispatch(s, NODES, {"cmd": "labour", "trade": "smith"})
 check("labour detail exposes every wage component",

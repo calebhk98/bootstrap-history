@@ -64,7 +64,7 @@ game = actor_sim([])
 trade = "smith"
 supply_before = game.market_supply(trade)
 exist_before = game.people_who_exist(trade)
-price_before = game.labour_price_factor(trade)
+price_before = game.labour_market.price_factor(trade)
 firm = game.actors.add("firm:smiths", ActorRecord(kind="firm", money=1.0e6))
 firm.workforce[trade] = 5.0
 game.actors.refresh_staff()
@@ -89,7 +89,7 @@ game = actor_sim([mill])
 founder_runs(game, "test_mill", opened_ago=6)
 trade_held, _fte = game.venture_foreman("test_mill")
 check("the test concern needs a skilled foreman trade", trade_held == "smith", trade_held)
-price_before = game.labour_price_factor("smith")
+price_before = game.labour_market.price_factor("smith")
 firm = firm_runs(game, "firm:mill", "test_mill")
 next_year(game)
 check("a firm running a concern holds the staff that concern needs",
@@ -97,8 +97,8 @@ check("a firm running a concern holds the staff that concern needs",
 check("those staff count in the pool the founder competes in",
       game.actor_staff_fte("smith") >= firm.workforce["smith"] - 1e-9)
 check("a firm hiring raises what the founder pays for the same trade",
-      game.labour_price_factor("smith") > price_before,
-      (game.labour_price_factor("smith"), price_before))
+      game.labour_market.price_factor("smith") > price_before,
+      (game.labour_market.price_factor("smith"), price_before))
 staff_year_one = dict(firm.workforce)
 next_year(game)
 check("keeping the same staff the next year is not hiring more",

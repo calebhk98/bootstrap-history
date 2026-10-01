@@ -46,7 +46,7 @@ class RefusalListsRemedies(unittest.TestCase):
     def test_fire_remedy_quotes_the_wage_it_stops(self):
         household = _indebted_household()
         household.state.household.employees["smith"] = 2
-        wage = household.annual_wage("smith")
+        wage = household.labour_market.quote_annual("smith")
         text = _refusal(household)
         self.assertIn("fire smith", text)
         self.assertIn("{:,.0f}".format(wage), text)

@@ -1792,7 +1792,7 @@ for _ in range(4):
 #    step happened to record instead of being worked out against today.
 s = sim(civ="han_china_100ad")
 # Enough of Han's own money for the hires, so the stall is about scribes.
-s.capital = 1000 * s.annual_wage("scholar")
+s.capital = 1000 * s.labour_market.quote_annual("scholar")
 for _p in NODES["logarithms"]["pre"]:
     s.done.add(_p)
 s._done_changed()
@@ -1828,7 +1828,7 @@ check("auto_hire on a poor household hires nobody and stays solvent",
       % (s.capital, sum(s.employees.values()), s.bondage_years_left))
 s = sim(civ="han_china_100ad")
 # Han's coin is small, so a fixed purse is a fraction of a labourer-year.
-s.capital = 1000 * s.annual_wage("labourer")
+s.capital = 1000 * s.labour_market.quote_annual("labourer")
 s.policy["auto_hire"] = True
 for _ in range(10):
     s.step()

@@ -76,13 +76,13 @@ check("a literate person can always be found, even before any teaching",
 # (labour_price_factor), the same principle market_pressure already applies
 # to slaves -- and it decays, the same way.
 s = sim(civ="rome_100ad", capital=1e9)
-f0 = s.labour_price_factor("millwright")
-s._add_labour_pressure("millwright", 6 * s.HOURS_PER_PERSON_YEAR)
-f1 = s.labour_price_factor("millwright")
+f0 = s.labour_market.price_factor("millwright")
+s.labour_market.press("millwright", 6 * s.HOURS_PER_PERSON_YEAR)
+f1 = s.labour_market.price_factor("millwright")
 check("leaning hard on a scarce trade's local supply raises what it costs",
       f1 > f0 * 1.5, "before=%.3f after=%.3f" % (f0, f1))
 s.year += 5
-f2 = s.labour_price_factor("millwright")
+f2 = s.labour_market.price_factor("millwright")
 check("recent demand pressure decays: the same trade is not dearer forever",
       f2 < f1 and f2 < 1.3, "immediate=%.3f +5yr=%.3f" % (f1, f2))
 
@@ -94,13 +94,13 @@ thin = sim(civ="rome_100ad", capital=1e9)
 thick = sim(civ="rome_100ad", capital=1e9)
 thick.employees["millwright"] = 20.0
 pressure_hours = 6 * thin.HOURS_PER_PERSON_YEAR
-thin._add_labour_pressure("millwright", pressure_hours)
-thick._add_labour_pressure("millwright", pressure_hours)
+thin.labour_market.press("millwright", pressure_hours)
+thick.labour_market.press("millwright", pressure_hours)
 check("a bigger trained workforce in a trade makes the same recent demand "
       "cheaper to satisfy",
-      thick.labour_price_factor("millwright") < thin.labour_price_factor("millwright"),
+      thick.labour_market.price_factor("millwright") < thin.labour_market.price_factor("millwright"),
       "thin supply=%.3f thick supply=%.3f"
-      % (thin.labour_price_factor("millwright"), thick.labour_price_factor("millwright")))
+      % (thin.labour_market.price_factor("millwright"), thick.labour_market.price_factor("millwright")))
 
 # --- R, end to end: hiring the same trade repeatedly through `hire` really
 # does cost more each time, not only in the internal factor.
