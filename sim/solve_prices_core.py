@@ -1170,9 +1170,12 @@ def land_rent_hours_per_iugerum(production_entries, wage_by_trade,
         # files, handled the same way a missing ore recipe is: no rent
         # guessed, the old zero-rent answer stands.
         return {}
-    if outcome.price_kg_grain_equivalent_per_iugerum <= 0.0:
+    # The production data's land material is the iugerum.
+    rent_kg_per_iugerum = (outcome.price_kg_grain_equivalent_per_hectare
+                           * land.IUGERUM_HECTARES)
+    if rent_kg_per_iugerum <= 0.0:
         return {}
-    rent_hours = outcome.price_kg_grain_equivalent_per_iugerum * wheat_price_per_kg
+    rent_hours = rent_kg_per_iugerum * wheat_price_per_kg
     return {"iugerum_land": rent_hours}
 
 

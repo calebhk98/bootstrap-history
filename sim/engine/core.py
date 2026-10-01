@@ -912,7 +912,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
         outcome - Complaints/50's own finding).
 
         DOES NOT READ sim/world/land.py (see the import comment at this
-        file's own top). `land.py`'s `arable_iugera` and geography.json's own
+        file's own top). `land.py`'s `arable_hectares` and geography.json's own
         `land`/`land_tiles` blocks are two independently-sourced estimates
         of the same physical quantity (arable land area) that happen to
         agree to within a fixed unit conversion for the 21 shipped regions
