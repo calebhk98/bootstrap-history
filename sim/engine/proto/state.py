@@ -56,6 +56,12 @@ def _agent_end_reason(sim):
     return None
 
 
+# Hazard fields only the `risk` screen needs.
+_RISK_ONLY_KEYS = ("note", "what_you_can_do", "staff_loss_before_what_you_have_built",
+                   "output_factor", "output_factor_after_what_you_have_built",
+                   "national_public_health")
+
+
 def _risk_without_the_essays(knowledge_risk):
     """knowledge_risk with the hazard prose stripped, for embedding in state."""
     if not isinstance(knowledge_risk, dict):
@@ -64,7 +70,7 @@ def _risk_without_the_essays(knowledge_risk):
     ahead = out.get("known_hazards_ahead")
     if isinstance(ahead, list):
         out["known_hazards_ahead"] = [
-            {key: value for key, value in hazard.items() if key not in ("note", "what_you_can_do")}
+            {key: value for key, value in hazard.items() if key not in _RISK_ONLY_KEYS}
             for hazard in ahead if isinstance(hazard, dict)]
         out["the_full_account_of_each"] = '{"cmd":"risk"}'
     return out

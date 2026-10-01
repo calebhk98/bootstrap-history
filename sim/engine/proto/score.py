@@ -315,7 +315,8 @@ def _score_achievements(sim, nodes):
         "won": len(sim.forgotten or {}) == 0,
         "what": "the corpus was never diminished by a sacking"}
     out["never_understaffed"] = {
-        "won": not sim.state.projects.ever_closed_for_staff,
+        "won": (not sim.state.projects.ever_closed_for_staff
+                and not getattr(sim, "shut_for_staff", None)),
         "what": "no concern ever closed for want of staff"}
     out["clean_ledger"] = {
         "won": (sim.insolvent_years == 0

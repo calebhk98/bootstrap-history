@@ -88,6 +88,11 @@ Two fixes, usable separately or together:
                                                     (kinds: knowledge, power, supply,
                                                     specialists, money, politics, closed);
                                                     the start refusal is the first entry.
+                                                    standing_effect gives the reputation and
+                                                    scandal finishing it adds; hazard_effect,
+                                                    when it softens a hazard ahead, lists
+                                                    {name, kind, years, now, with_it}, the
+                                                    same figures `risk` prints.
                                                     earliest_completion_years and
                                                     earliest_completion_year are the
                                                     soonest finish with no failure;
@@ -257,6 +262,15 @@ Two fixes, usable separately or together:
       `portfolio`'s own `constraint` field on each project is exactly this
       classification, and is built from the same `waiting_on` sentence, not
       a second guess at it.
+
+      HAZARD FIGURES. In `risk`, each hazard's `what_you_can_do[kind]` carries
+      `mitigations`: one {node, label, status ("in force" or "lapsed"),
+      removes_share, points} per defence, and for a lapsed one closed_because,
+      concern_to_open and how. `staff_loss_before_what_you_have_built`,
+      `staff_loss_after_what_you_have_built`, `output_factor_after_what_you_have_built`
+      and `national_public_health` ({share_removed, from}) are the figures the
+      yearly shocks apply. Each `score` component has a `counts` sentence;
+      `institutions` also lists `counted` and `finished_but_closed`.
 
       MACHINE-READABLE MODES. 'state json', 'portfolio json' and 'risk json'
       (typed, inside `play`) print the raw reply - the exact line a script

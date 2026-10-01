@@ -1,6 +1,6 @@
 # Completing the corpus says "closed / not in effect until open", yet `risk` and `state` already count it as a hedge
 
-**Status:** open
+**Status:** closed
 
 On completion the log says the written corpus is "STATUS: CLOSED / NOT OPERATING ... Not in effect until open: Standing". At the next checkpoint, before opening it, `state` and `risk` already credit it as a knowledge hedge (sack-loss chance from 80 to 45 percent, fraction lost from 40 to 22 percent).
 

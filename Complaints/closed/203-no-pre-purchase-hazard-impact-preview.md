@@ -1,6 +1,6 @@
 # Resilience projects give no "before and after" hazard estimate before the money is spent
 
-**Status:** open
+**Status:** closed
 
 Silage and the silo cost about 76 thousand pence, and the tester learned only afterwards that they lowered the Great Famine staff-loss estimate from about 12 to 11 percent. They liked the modest effect but wanted the number before paying: "at current conditions this would reduce expected famine staff loss from ~12% to ~11%", without revealing hidden tree information.
 
