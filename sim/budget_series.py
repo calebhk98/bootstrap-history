@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """budget_series.py: the state's budget year by year, summarised by decade.
 
-    python3 sim/budget_series.py rome_100ad 200 1 [out.json]
+    python3 sim/budget_series.py rome_100ad 200 1 [rows.jsonl]
+    python3 sim/budget_series.py rows.jsonl      summarise rows a cut-off run wrote
 
 Prints, for each decade, the state's revenue, each spending line, surplus or
 deficit, the levy rates it sets, the army it keeps and what it took from the
@@ -21,8 +22,9 @@ from sim.engine.actors import SimWorld  # noqa: E402
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 
 
-def run(civ_id, years, seed):
-	"""One row per simulated year."""
+def run(civ_id, years, seed, out_path=None):
+	"""One row per simulated year; with `out_path`, each row is also appended there as a JSON line
+	as it is made, so a long run that is cut off still leaves its years."""
 	tree, _prices, nodes, _wages, _goods = S.load()
 	goal = tree["meta"]["goal_node"]
 	_lab, order, _b = S.load_strategy("recommended", nodes, goal)
@@ -50,6 +52,9 @@ def run(civ_id, years, seed):
 			"founder_income": game.revenue(),
 		})
 		taken_before = taken
+		if out_path:
+			with open(out_path, "a") as handle:
+				handle.write(json.dumps(rows[-1]) + "\n")
 	return rows
 
 
@@ -82,11 +87,13 @@ def main(argv):
 	civ_id = argv[1] if len(argv) > 1 else default_civilisation_id()
 	years = int(argv[2]) if len(argv) > 2 else 200
 	seed = int(argv[3]) if len(argv) > 3 else 1
-	rows = run(civ_id, years, seed)
+	out_path = argv[4] if len(argv) > 4 else None
+	if civ_id.endswith(".jsonl"):  # summarise rows a run already wrote
+		with open(civ_id) as handle:
+			show([json.loads(line) for line in handle])
+		return 0
+	rows = run(civ_id, years, seed, out_path)
 	show(rows)
-	if len(argv) > 4:
-		with open(argv[4], "w") as handle:
-			json.dump(rows, handle)
 	return 0
 
 

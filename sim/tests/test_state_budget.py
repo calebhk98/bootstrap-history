@@ -271,8 +271,8 @@ wanted_poor = SimWorld(poor).army_wanted()
 check("a state that cannot pay for its army shrinks it, by at most the adjustment rate a year",
       sizes[0] < wanted_poor and all(later <= earlier * (1.0 + 1e-9) for earlier, later in zip(sizes, sizes[1:]))
       and abs(sizes[0] - wanted_poor * (1.0 - ARMY_ADJUSTMENT_RATE)) < 1e-6 * wanted_poor, (sizes, wanted_poor))
-poor_treasury.money = 1.0e30
 for _year in range(3):
+    poor_treasury.money = 1.0e30  # a purse that covers whatever the army costs, restored as the state sweeps its surplus
     one_year(poor)
 check("when it can pay again the army regrows toward the force it wants, at the same bounded rate",
       sizes[-1] < poor_treasury.record.army <= sizes[-1] * (1.0 + ARMY_ADJUSTMENT_RATE) ** 3 + 1e-6, poor_treasury.record.army)

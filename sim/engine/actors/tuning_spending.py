@@ -62,3 +62,10 @@ MAX_STATE_SHARE_OF_TRADE = declare(
 	why="The most of a skilled trade the state can keep on its lines; beyond it the "
 		"trade's private customers go unserved and its people leave. Stands in for a "
 		"model of how a state competes with private demand for craftsmen.")
+RESERVE_CEILING_YEARS_OF_NEED = declare(
+	"RESERVE_CEILING_YEARS_OF_NEED", 2.0, kind="temporary_heuristic",
+	unit="years of the standing need", source=None, confidence="D",
+	why="The most reserve a state keeps; what a surplus leaves beyond it goes on things the "
+		"budget does not name (campaigns, building beyond upkeep, gifts, waste). Stands in for "
+		"those lines; without it a state in surplus hoards for ever and no later shortfall "
+		"is ever felt.")

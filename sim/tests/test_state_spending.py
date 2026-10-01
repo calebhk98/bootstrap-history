@@ -113,3 +113,25 @@ check("a state in deficit, with its standing need unpaid, funds nobody",
       (poor.state_funding(), poor.state_treasury().record.outlays))
 check("the founder's revenue includes only what the treasury paid",
       poor.revenue() <= rich.revenue() and rich.revenue() > 0.0, (poor.revenue(), rich.revenue()))
+
+# ---- a surplus is not hoarded for ever, so a later collapse is felt -----------------------------
+from sim.engine.actors.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
+
+hoard = sim()
+hoard_treasury = hoard.state_treasury()
+hoard_treasury.money = 1.0e18
+one_year(hoard)
+standing_need = sum(hoard_treasury.record.need.values())
+check("reserve beyond a few years of the standing need is spent on what the budget does not name",
+      abs(hoard_treasury.money - RESERVE_CEILING_YEARS_OF_NEED * standing_need) < 1e-6 * standing_need
+      and hoard_treasury.record.outlays.get("discretionary", 0.0) > 0.0,
+      (hoard_treasury.money, standing_need, hoard_treasury.record.outlays))
+check("the purse still equals income less outlays after the sweep",
+      abs(hoard_treasury.money - (1.0e18 + sum(hoard_treasury.record.income.values())
+                                  - sum(hoard_treasury.record.outlays.values()))) < 1e-6 * 1.0e18, hoard_treasury.money)
+collapse = sim()
+collapse.state.economy.output_factor = 1.0e-9  # what the economy makes all but stops
+for _year in range(8):
+    one_year(collapse)
+check("when revenue collapses the reserve lasts a few years, then the state goes short and seeks it of the taxpayers it sees",
+      sum(collapse.state_treasury().record.unfunded.values()) > 0.0, collapse.state_treasury().record.unfunded)
