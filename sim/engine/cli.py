@@ -383,6 +383,13 @@ def _check_node_materials(node_id, node_record, goods, producible):
     return errs, warns
 
 
+def _check_node_stock(node_id, node_record, known_materials):
+    """Stock a node holds or grants must be a material the catalogue produces."""
+    return ["%s: %s names stock %s that nothing produces" % (node_id, field_name, material)
+            for field_name in ("holds", "grants")
+            for material in (node_record.get(field_name) or {}) if material not in known_materials]
+
+
 def _check_node_trades(node_id, node_record, wages):
     errs = []
     for trade_id in node_record["lab"]:
@@ -428,6 +435,7 @@ def _validate_nodes(nodes, goods, wages, producible=()):
         material_errs, material_warns = _check_node_materials(node_id, node_record, goods, producible)
         errs += material_errs
         warns += material_warns
+        errs += _check_node_stock(node_id, node_record, known_materials)
         errs += _check_node_trades(node_id, node_record, wages)
         errs += _check_node_risk(node_id, node_record)
         warns += _check_node_confidence(node_id, node_record)

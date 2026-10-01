@@ -1742,9 +1742,8 @@
   "name": "Ramie cultivation and fibre",
   "cat": "fibres",
   "kind": "RESOURCE",
-  "pre": [
-   "tx2_ramie_plant_stock"
-  ],
+  "pre": [],
+  "holds": {"ramie_stock_kg": 50},
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 50,
@@ -1850,9 +1849,8 @@
   "name": "Silk: cultivated fibre",
   "cat": "fibres",
   "kind": "RESOURCE",
-  "pre": [
-   "tx2_silkworm_stock"
-  ],
+  "pre": [],
+  "holds": {"silkworm_eggs_kg": 0.02},
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 40,
@@ -1877,6 +1875,7 @@
    "tx2_silk_fibre",
    "cap_heat_0700"
   ],
+  "holds": {"silkworm_eggs_kg": 0.02},
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 80,

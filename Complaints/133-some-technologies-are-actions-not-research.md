@@ -1,6 +1,6 @@
 # Some technologies are actions, not research
 
-**Status:** open
+**Status:** partly - one expedition now returns held stock; the audit of the rest is not done
 
 Several tree nodes model something you do or build as if it were something
 you learn. Examples: an expedition to the Americas is a voyage (ships,
@@ -24,3 +24,12 @@ them as research lets a player "know" a continent or a grid into existence.
   machinery; dependents check for the built work or the completed action.
 - Audit the tree for nodes of each kind (expeditions, grids, networks,
   colonies, surveys).
+
+## Progress
+
+`exp_import_draught_animals` is an action (a voyage with crews and risk) and now says what it
+returns: a node's `grants` adds a founding herd to the held stock when it completes, and the Mexica
+gate on draught-animal work lifts on holding the animals (Complaints/365). Other expeditions that
+return living stock (`exp_transplant_botany`, `fud_pepper_cultivation`, `ag2_tea_voyage`,
+`ag2_coffee_voyage`) can use the same `grants` field. The audit of grids, networks, colonies and
+surveys, and the construction class, are untouched.

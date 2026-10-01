@@ -45,6 +45,13 @@ def not_traded_materials():
 
 
 @functools.lru_cache(maxsize=None)
+def exports_refused(civilization_id):
+    """Materials this partner will not sell abroad: its own `will_not_sell` data. A transitional
+    field; a state actor's export policy would replace it."""
+    return frozenset(load_civ(civilization_id).get("will_not_sell") or ())
+
+
+@functools.lru_cache(maxsize=None)
 def _foreign_solved_materials(civilization_id):
     """Materials the economy can make with its own technologies; the rest are
     priced only as if some technology were held."""
@@ -74,6 +81,12 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         return sorted(record["civilization"] for record in foreign_economy_records()
                       if record.get("enabled", False) and record["civilization"] != own
                       and record["from_year"] <= year <= record["until_year"])
+
+    def partner_refusal(self, civilization_id, material):
+        """Why the partner will not sell the material, else None."""
+        if material in exports_refused(civilization_id):
+            return "%s will not sell %s" % (load_civ(civilization_id).get("name", civilization_id), material)
+        return None
 
     def _foreign_economy_facts(self, civilization_id):
         """Population, route and prices of one foreign economy in home money,
@@ -223,6 +236,9 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
                 partners, key=lambda partner: partner[:2]):
             home_makes = self._foreign_sides(commodity, facts)[0]
             if home_makes and not self._output_is_sourced(commodity):
+                continue
+            if not home_makes and exports_refused(civilization_id).intersection(
+                    self._commodity_materials(commodity)):
                 continue
             entry = self._foreign_entry(civilization_id, commodity, facts)
             if entry is None:

@@ -56,6 +56,9 @@ def gated_ids(civilisation, held):
     for key, entry in (civilisation.get("needs_first") or {}).items():
         if key.startswith("_") or not isinstance(entry, dict):
             continue
+        opening = civilisation.get("opening_stock") or {}
+        if entry.get("material") and opening.get(entry["material"], 0.0) >= entry.get("units", 0.0):
+            continue
         if entry.get("node") and entry["node"] not in held:
             gated.update(entry.get("ids") or ())
     return gated

@@ -37,9 +37,10 @@ check("the leaf, which stands on the land, is what carries the hectare",
 han_techs = set(load_civ(PARTNER)["starting_techs"])
 rome_techs = set(load_civ(HOME)["starting_techs"])
 check("the partner starts with every node sericulture needs",
-      {"tx2_sericulture", "tx2_silk_fibre", "tx2_silkworm_stock"} <= han_techs, None)
-check("the partner holds the native stock, not the Indian Ocean route it would otherwise need",
-      "tx2_silkworm_native_stock" in han_techs and "sea_monsoon_route" not in han_techs, None)
+      {"tx2_sericulture", "tx2_silk_fibre"} <= han_techs, None)
+check("the partner holds the eggs itself, with no stock node and no Indian Ocean route",
+      load_civ(PARTNER)["opening_stock"].get("silkworm_eggs_kg", 0) > 0
+      and "sea_monsoon_route" not in han_techs and not {n for n in han_techs if n.endswith("_stock")}, None)
 check("the home does not hold sericulture",
       "tx2_sericulture" not in rome_techs, None)
 check("silk is solved for the partner and not for the home",

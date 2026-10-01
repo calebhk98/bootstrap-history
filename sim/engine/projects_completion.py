@@ -261,6 +261,8 @@ class CompletionMixin:
         household.hour_allocations.pop(node_id, None)
         projects.done.add(node_id)
         self._done_changed()
+        for material, units in (node.get("grants") or {}).items():
+            self.grant_stock(material, units)
         if projects.done_year is None:
             projects.done_year = {}
         projects.done_year[node_id] = scenario.year
