@@ -2,14 +2,17 @@
 
 **Status:** partly - the game starts and steps with the default civilisation's file absent (sim/tests/test_civilisation_independence.py); no code names a civilisation id; the default comes from `default_civ`, falling back to the first civilisation present.
 
-Remains: Roman units are still the engine's units. Measure with
+Remains: land is hectares inside `sim/world/land.py` (the allocation, yield,
+intensity and rent functions; `RegionLand.arable_hectares`), and node money is
+labour hours (`Complaints/144`). The production data still names land in
+iugera (`iugerum_land`, `land_iugera_years`), and the price solver converts at
+that one edge (`Complaints/282`). Most engine messages still spell the money
+word "denarii" and are swapped for the civilisation's own word at the display
+edge (`sim/engine/proto/util.py`); comments and tests that say "Rome" as a
+calibration baseline remain. Measure with
 `grep -rEoi "denari|iuger" sim/engine sim/world --include=*.py | wc -l` and
 `grep -rEoi "roman|\brome\b" sim/engine sim/world --include=*.py | wc -l`.
-Internal money and land are still denarii and iugera, with each civilisation's
-own units not yet confined to the display edge; that is the physical-units
-work (money_units, `Complaints/123`). Prose comments that say "Rome" as a
-calibration baseline also remain. Tests still use Rome as the default
-fixture.
+Tests still use Rome as the default fixture.
 
 Every civilisation should be one data file that the rest of the game does not
 depend on. Rome is not: deleting `data/civilizations/rome_100ad.json` stops
