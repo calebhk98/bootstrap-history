@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """budget_series.py: the state's budget year by year, summarised by decade.
 
-    python3 sim/budget_series.py rome_100ad 200 1 [rows.jsonl]
+    python3 sim/budget_series.py <civilisation id> <years> <seed> [rows.jsonl]
     python3 sim/budget_series.py rows.jsonl      summarise rows a cut-off run wrote
 
 Set BUDGET_SERIES_IDLE_FOUNDER=1 to leave the founder idle (a fast run of the state alone).
