@@ -60,3 +60,5 @@ revaluation (inflation from a metal glut) is not wired; amortisation is still
 in the solver's cost rather than confined to decisions to build; the goods
 market and wages do not use this clearing; a material's own deposits and a
 mine's output feed supply only through what the founder sells.
+
+Related: 102, 326, 338, 359, 364.

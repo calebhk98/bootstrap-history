@@ -118,3 +118,5 @@ materials clear, not finished goods or the founder's venture revenue; firm
 and state output enter through `actor_supply`, a stub that returns zero until
 actors produce goods; demand elasticity and capacity adjustment are labelled
 heuristics.
+
+Related: 135, 359, 364.

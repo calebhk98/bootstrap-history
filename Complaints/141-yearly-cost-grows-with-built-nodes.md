@@ -22,3 +22,5 @@ imitation candidates, capacity and revenue sums, fog checks) and make them
 incremental or cached on what changed, keeping results identical
 (`sim/perf_fingerprint.py`, determinism tests). Then decide whether the
 slow checks need 200 simulated years or can prove the same property in fewer.
+
+Related: 181, 321.

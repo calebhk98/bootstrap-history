@@ -16,3 +16,5 @@ Fix: correct the entries or prices, then restore the declarations and delete the
 The capital charge did not repair the zero-revenue makers: none of caustic soda, glycerol, superphosphate (phosphoric acid), polyethylene, gunpowder or mirror amalgam has a plant in its entry, and their entries state no labour (the data files say "Labour is left out"), so the solved price equals the inputs and a batch adds nothing. They need entries with labour borrowed from a named neighbour and a stated plant, not a figure here. Solvay soda stays withdrawn: its entry adds far more than its staff costs, because the civilisation's price for soda is the labour-heavy route's, so its derived payback falls under the floor (`Complaints/336`).
 
 Restored with a declared output and a basis taken from the entry's own hours: bleaching powder (about three hundred tonnes) and hand papermaking (one vat, about half a tonne). Both earn their staff's wages, since neither entry states a plant.
+
+Related: 140, 295, 317, 335, 337.

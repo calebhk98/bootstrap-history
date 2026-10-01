@@ -13,7 +13,7 @@ Measured for Rome at arrival with nothing held: blast_furnace quote 365,587, cha
 
 This is the same two-call-site disagreement as complaint 214 (there the civilisation and opposition factors; here the materials), now a factor of tens. The tester avoided nothing: they could not price a retry, and lost 11.8 million where they expected 119 thousand.
 
-What it would take (not done here): one function for "what a failure costs" used by the quote and by `_complete`, based on what the player actually paid in (bill as frozen plus up-front materials), and a regression test that, after `buy_project_materials` and with stock in hand, the charge equals the quote. Decide whether bought materials should be lost on failure at all (they are still in stock). Also: 218, 151, 241.
+What it would take (not done here): one function for "what a failure costs" used by the quote and by `_complete`, based on what the player actually paid in (bill as frozen plus up-front materials), and a regression test that, after `buy_project_materials` and with stock in hand, the charge equals the quote. Decide whether bought materials should be lost on failure at all (they are still in stock). Also: 214, 147, 237.
 
 
 Found in the final blind playtests of this branch (Rome 100 AD fog, won 301 AD; tester bug 1; Rome, measured by harness). Reports: `Complaints/reports/playtest-rome-fog-demo-65pct.md`; triage: `Complaints/reports/final-playtests-triage.md`.

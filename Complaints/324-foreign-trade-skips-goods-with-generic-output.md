@@ -23,3 +23,5 @@ output (minerals, wool, cloth, cotton) plus goods this society cannot make.
 Sourced output per region for more goods, an industrial demand model for
 intermediates (`Complaints/102`), and a land and labour cap on a partner's
 output through its own trades.
+
+Related: 109, 300, 338, 346, 347, 350, 351, 353.

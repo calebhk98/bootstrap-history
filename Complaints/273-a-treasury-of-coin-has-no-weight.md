@@ -10,7 +10,7 @@ A fortune held as bronze cash coin is a large mass, yet holding it costs nothing
 
 ## Why it matters
 
-A weightless treasury is a hardcoded outcome (`CLAUDE.md` 4.1) and it hides why people held wealth as land, goods or credit instead. It also makes confiscation and banditry (169) cheaper to shrug off.
+A weightless treasury is a hardcoded outcome (`CLAUDE.md` 4.1) and it hides why people held wealth as land, goods or credit instead. It also makes confiscation and banditry (165) cheaper to shrug off.
 
 ## What it would take
 

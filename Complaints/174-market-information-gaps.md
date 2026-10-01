@@ -12,7 +12,7 @@ What it would take: a market screen (goods, price, demand, your share, saturatio
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.
 
-Merged from 147: to learn charcoal's market price I had to `buy material charcoal_kg 1` and watch capital change. Project-side material prices are a separate defect (151).
+Merged from 147: to learn charcoal's market price I had to `buy material charcoal_kg 1` and watch capital change. Project-side material prices are a separate defect (147).
 
 Also reported (England 1300 fog playtest): the tester found the market-saturation explanation in `money`/`ventures` excellent, but only after opening (a loom plus a rope walk sharing the textiles market; the loom earned about a third of its tree quote). They wanted the collision visible before buying: the market bucket, remaining demand and expected cannibalisation, and a pre-opening demand view by category. On the current branch `why` already prints "Sells into the textiles market, where N other concerns of yours also sell; it would earn about X% of its quoted figure there. 'market' shows every category." (checked with `why tex_horizontal_loom` at the start, where N is 0 and X is 98), so the first-order request appears done. Whether X accounts for saturation by concerns already open, and how it reads with several, was not tested; the tester's build may predate the line. Report: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`.
 

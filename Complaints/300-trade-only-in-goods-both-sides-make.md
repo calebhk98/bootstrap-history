@@ -27,3 +27,5 @@ goods cross is decided by value per tonne against the route's freight, not by
 name. Open: the partner's technology and population stay at its civilisation
 file's opening (`docs/architecture/ACTORS_NEXT.md` increment 7), and tariffs,
 embargoes and exchange rates (`Complaints/109`).
+
+Related: 324, 338, 339, 346, 347, 350, 351, 353.

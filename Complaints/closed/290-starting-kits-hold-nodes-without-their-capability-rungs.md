@@ -2,7 +2,7 @@
 
 **Status:** closed - every shipped start now holds the capability rungs its held nodes need
 
-Moving the capability names out of the capital field and into `pre` (283) made 84 nodes in `data/branches/50_textiles_consumer_deep.json` state the rungs they really need. Several starting kits already hold those nodes without the rung, which `python3 sim/simulator.py validate` reports under "held-without-prereq" and "rung-gap" (before and after, per civilisation: England 7 and 1 became 11 and 5; Norse 4 and 0 became 7 and 3; Rome 3 and 1 became 7 and 5; Han and Mexica did not move).
+Moving the capability names out of the capital field and into `pre` (279) made 84 nodes in `data/branches/50_textiles_consumer_deep.json` state the rungs they really need. Several starting kits already hold those nodes without the rung, which `python3 sim/simulator.py validate` reports under "held-without-prereq" and "rung-gap" (before and after, per civilisation: England 7 and 1 became 11 and 5; Norse 4 and 0 became 7 and 3; Rome 3 and 1 became 7 and 5; Han and Mexica did not move).
 
 ## What it would take
 

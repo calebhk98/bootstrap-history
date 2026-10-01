@@ -15,3 +15,5 @@ cart's capital.
 A per-good landed-cost term from the route's travel days (now kept on every leg),
 the cargo's value and the market rate; fleet growth from the freight margin over
 the carrier's cost of capital; the same capital charge in domestic freight.
+
+Related: 323.

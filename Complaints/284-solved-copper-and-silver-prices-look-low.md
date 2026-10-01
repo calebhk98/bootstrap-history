@@ -13,3 +13,5 @@ What it would take: check ore grade, recovery, labour per tonne and fuel for the
 - [x] Audited the chain (`python3 sim/solve_prices.py --civ rome_100ad --why copper_kg`): mining is priced from the deposits (rent on `copper_ore_kg` is the marginal deposit's cost), smelting and charcoal were already costed, but crushing, washing and roasting the ore were not. `copper_kg` now carries dressing and roasting labour with a stated basis (conf D rates). Copper rose from about 2.6 to about 3.7 labour hours per kg for Rome (England 2.2 to 3.2, Norse 2.1 to 3.2, Han 2.6 to 3.7, Mexica 2.0 to 3.1).
 - The recipe's 50 tonnes of ore per tonne of copper is about twice the rock the deposits imply at their grades and the 80% recovery (about 28 tonnes); not changed (it would make copper cheaper), worth a grade audit.
 - Silver: see 139, 291 and 305.
+
+Related: 333, 342, 343, 344, 349.

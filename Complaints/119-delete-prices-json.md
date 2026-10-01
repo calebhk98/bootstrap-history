@@ -175,3 +175,5 @@ sourced test fixture.
 - `BOOK_LABOURER_WAGE_DENARII_PER_HOUR` and node `up` and `cap` are still authored book money; node `rev` is now derived from output for nodes that gate production entries and have a staff or plant to derive from, and is nil for sciences that make nothing, while the rest keep authored `rev` (see Complaints/283, 295, 296).
 - `photovoltaic_panel_m2` and `electrical_mj_photovoltaic` have no `requires_node` (the only base technology that fits is a mod node), so no gated solve prices them.
 - `rg -n 'prices\.json|\bPRICES\b' sim tools` still finds prose in comments, test docstrings and the test harness's own `PRICES` name for the wage document; data and docs outside `sim` also mention the file.
+
+Related: 38, 309.

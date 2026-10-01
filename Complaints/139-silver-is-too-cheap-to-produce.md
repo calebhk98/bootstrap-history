@@ -1,6 +1,6 @@
 # Silver is too cheap to produce
 
-**Status:** partly - ore dressing, roasting, cupel bellows and hearth attendance are now costed and the silver recoveries applied; silver is still far cheaper than the attested day wage implies, see 410
+**Status:** partly - ore dressing, roasting, cupel bellows and hearth attendance are now costed and the silver recoveries applied; silver is still far cheaper than the attested day wage implies, see 305
 
 Money is anchored to each civilisation's coin metal at its solved production
 cost. For Rome the solved cost of silver makes the opening labourer wage about
@@ -71,7 +71,7 @@ number to hit the day wage.
 - Solved silver, labour hours per kg (`python3 sim/solve_prices.py --civ <civ> --why silver_kg`): Rome 224 before, 319 after; Han 233 to 333; England 156 to 205; Norse 112 to 135. One Rome denarius went from about 0.61 to about 0.86 labour hours.
 - Rome silver breakdown per kg after (319): charcoal about 56, galena (mining, from deposit cost) about 113, furnaceman about 74, dressing, roasting and bellows about 68, smith about 8, capital under 1.
 - Drainage and ventilation are not a missing step: they are inside `HAULAGE_MULTIPLIER_DEEP_VEIN`, underived. Left as is, filed in 305.
-- Rome's opening wage is still about twelve denarii for a ten-hour day against the attested one. The physics at the deposits' grades does not close the gap; 410 lists where it may lie (grade, drainage, mine ownership and the state's take) without tuning.
+- Rome's opening wage is still about twelve denarii for a ten-hour day against the attested one. The physics at the deposits' grades does not close the gap; 305 lists where it may lie (grade, drainage, mine ownership and the state's take) without tuning.
 
 ## Update (silver-and-gold-cost)
 
@@ -80,3 +80,5 @@ Ore grade rechecked against Laurion and Rio Tinto assays and kept; see 305 and 3
 ## Update (mine-labour-per-tonne)
 
 Labour per tonne of rock checked against Kongsberg and Melle figures and fire-setting wood added to hard rock; silver moved from about 319 to about 335 hours per kg and the gap remains. See 342, 343, 344.
+
+Related: 284, 349.

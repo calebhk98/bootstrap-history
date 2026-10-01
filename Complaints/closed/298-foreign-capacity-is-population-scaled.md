@@ -1,6 +1,6 @@
 # A foreign economy's output and demand are the home society's, scaled by population
 
-**Status:** closed - a foreign economy's capacity comes from its own regions, techniques and households; what still limits it is filed as 482
+**Status:** closed - a foreign economy's capacity comes from its own regions, techniques and households; what still limits it is filed as 324
 
 A foreign economy named in `data/world/foreign_economies.json` opens each
 commodity at the home society's reference output times the population ratio,
