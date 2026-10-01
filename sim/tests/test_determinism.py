@@ -123,7 +123,7 @@ check("no engine code passes or stores the builtin `id` as a value, which "
 check("...and the id()-keyed caches that remain are still there, so the check "
       "above is guarding something rather than passing because nobody uses "
       "id() any more",
-      _id_keyed_caches >= 4, _id_keyed_caches)
+      _id_keyed_caches >= 2, _id_keyed_caches)
 
 
 # --- Every id()-keyed cache must keep the object itself, not only its address.

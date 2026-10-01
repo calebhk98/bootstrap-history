@@ -51,6 +51,16 @@ class NeedleAndFireclay(unittest.TestCase):
             self.assertFalse(set(nodes["refractory_fireclay"]["pre"]) - held, name)
 
 
+    def test_a_society_without_iron_holds_the_hand_needle(self):
+        # Complaints/301: the hand needle named bone and bronze but was priced in iron bar.
+        nodes = _nodes()
+        with open(os.path.join(ROOT, "data", "civilizations", "mexica_1500.json")) as handle:
+            held = set(json.load(handle)["starting_techs"])
+        self.assertNotIn("iron_bar_kg", nodes["tx2_needle_hand"].get("mat") or {})
+        self.assertIn("tx2_needle_hand", held)
+        self.assertFalse(set(nodes["tx2_needle_hand"]["pre"]) - held)
+
+
 class ZincNodes(unittest.TestCase):
     def test_industrial_zinc_scales_up_the_retort_technique(self):
         # Complaints/40: two zinc nodes were alternatives with unrelated prerequisites.
