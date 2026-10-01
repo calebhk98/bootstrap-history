@@ -17,3 +17,5 @@ Also reported (Han China 100 AD fog playtest, tester item(s) 210, 221, 222; `Com
 Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): final save about 917 KB in a hosted container where temporary storage can vanish; asks for clear export/import instructions, automatic rotating checkpoint backups, reliable save-browser metadata (filed as 250), save-version information, optional compression and a short human-readable summary beside the machine-readable save. The compact writer already exists; the rest is open. Reproduces: untested.
 
 **Also:** a multi-year `step N` with a `--session` file now saves after every simulated year (`sim/engine/proto/step_progress.py`), so an interrupt keeps the finished years. Each save costs what one late-game save costs, so a long step pays it once a year; measure before and after with a late save if saves are slowed further.
+
+Update (Complaint 550): see `471` for the measured per-year CPU at years 100 and 150 after firms began to grow instead of multiplying.

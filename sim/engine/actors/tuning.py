@@ -89,7 +89,7 @@ ATTENTION_SPAN = declare(
 		"copying plan for in a year; stands in for limited attention and "
 		"keeps the yearly evaluation bounded.")
 EXPANSION_RATE = declare(
-	"EXPANSION_RATE", 0.25, kind="temporary_heuristic",
+	"EXPANSION_RATE", 0.5, kind="temporary_heuristic",
 	unit="share of present capacity per year", source=None, confidence="D",
 	why="The most capacity a firm adds to a concern in a year, however good the return; stands in for "
 		"the time to build plant and to find and train the people.")
