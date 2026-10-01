@@ -12,7 +12,8 @@ class VentureQuotesMixin:
         """
         running = node_id in self.state.projects.operating
         ramp = 1.0 if fully_ramped or not running else self.venture_ramp(node_id)
-        market = self.goods_market_factor(node_id) if running else 1.0
+        market = (self.goods_market_factor(node_id) * self.node_output_market_factor(self.nodes[node_id])
+                  if running else 1.0)
         return self.concern_takings(node_id, ramp) * units * market
 
     def venture_real_upkeep(self, node_id, units=None):

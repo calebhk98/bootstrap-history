@@ -75,6 +75,12 @@ class NodeRevenue(unittest.TestCase):
                 self.assertLessEqual(sum(node["_output_per_year"].values()) / 1000.0,
                                      declared * (1 + 1e-9), node_id)
 
+    def test_output_derived_nodes_repay_their_cost_no_faster_than_the_floor(self):
+        for node_id, node in self.derived().items():
+            if node["rev"] > 0:
+                self.assertGreaterEqual(node["_total_cost"] / node["rev"],
+                                        node_revenue.MINIMUM_PAYBACK_YEARS, node_id)
+
     def test_knowledge_nodes_earn_nothing(self):
         found = [node_id for node_id, node in self.nodes.items() if node.get("_revenue_basis") == "knowledge"]
         self.assertGreater(len(found), 5)
@@ -102,6 +108,20 @@ class NodeRevenue(unittest.TestCase):
     def test_output_baskets_return_none_without_a_physical_basis(self):
         node = {"id": "nothing_gates_this", "sch": 0, "art": 0}
         self.assertIsNone(node_output.output_baskets(node, production_data(), self.goods))
+
+
+class SimMarketFactor(unittest.TestCase):
+
+    def test_the_engine_applies_the_market_to_an_output_node_and_not_to_an_authored_one(self):
+        import random
+        from sim import simulator
+        _tree, _prices, nodes, _wages, _goods = simulator.load()
+        sim = simulator.Sim(nodes, [], random.Random(1), events=False, manual=True,
+                            civ=simulator.load_civ("rome_100ad"))
+        derived = next(node for node in nodes.values() if node.get("_revenue_basis") == "output")
+        authored = next(node for node in nodes.values() if node.get("_revenue_basis") == "authored")
+        self.assertEqual(sim.node_output_market_factor(authored), 1.0)
+        self.assertGreater(sim.node_output_market_factor(derived), 0.0)
 
 
 if __name__ == "__main__":

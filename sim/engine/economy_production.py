@@ -21,7 +21,7 @@ grouping evidence, and for why this lives in a separate file.
 """
 from .data import trade_family
 from sim.constants import declare
-from . import money_units
+from . import money_units, node_revenue_market
 
 
 class ProductionMixin:
@@ -218,7 +218,7 @@ class ProductionMixin:
                     # services, institutions and patronage the brief asked to
                     # leave alone - see that method's own comment for why.
                     total_revenue += (node["rev"] * _units * self.venture_ramp(node_id) * self.price_index
-                          * self.goods_market_factor(node_id))
+                          * self.goods_market_factor(node_id) * self.node_output_market_factor(node))
         # THERE IS ONLY SO MUCH MARKET. Uncapped, this compounds: every venture
         # pays back quickly, so its income buys the next one, and nothing
         # stops a run's capital from growing far past what a real market this
@@ -386,6 +386,12 @@ class ProductionMixin:
             "replaces: '40,000 of tier-weighted method roughly doubles "
             "what a workshop makes'), not fitted to any measured "
             "productivity data.")
+
+    def node_output_market_factor(self, node):
+        """This year's market over long-run prices for what an output-derived node sells and buys; one otherwise."""
+        if not node.get("_output_per_year"):
+            return 1.0
+        return node_revenue_market.market_factor(node, self._material_prices(), self.market_price_ratio)
 
     def concern_takings(self, node_id, ramp):
         """Yearly takings of one concern at a given ramp, before market saturation."""
