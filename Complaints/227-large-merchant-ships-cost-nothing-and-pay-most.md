@@ -21,4 +21,4 @@ the design knowledge free. The tester's sketch (a fleet with working capital, cr
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 53, 62, 138). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
 
 
-**Remaining:** Done: the ships node now has a timber, labour and capital bill and no free mortise prerequisite. Remaining: a hull is not yet a purchased asset with upkeep and loss, and revenue does not depend on cargo, route or ports.
+**Remaining:** Done: the ships node has a timber, labour and capital bill and no free mortise prerequisite. Remaining: a hull is not yet a purchased asset with upkeep and loss, and revenue does not depend on cargo, route or ports; this needs an asset and route model (see 113) and is not started.

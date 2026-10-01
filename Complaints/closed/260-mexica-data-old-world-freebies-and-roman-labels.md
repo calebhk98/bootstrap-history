@@ -1,6 +1,6 @@
 # Mexica data: 96 zero-cost Old World nodes are startable at 1500 (draught power, coin, brass, olive oil, silk, wheels, sleeping car) and Roman labels remain
 
-**Status:** partly
+**Status:** closed
 
 The civilisation text says the Mexica have "no draught animals, no iron, no wheel in practical use". The data disagree. The tree holds 144 nodes with no cost at all (`cap`, `ph`, `lab`, `mat` and `yrs` all zero); Rome starts with most of them as inherited techs, every other civilisation gets the ones it does not list as instant free starts. Measured (prerequisites met by the start or by another free node; script below):
 
@@ -24,4 +24,4 @@ What it would take: per civilisation, mark which free nodes are inherited by the
 Found in the final blind playtests of this branch (three mortal fog Mexica 1500 runs; C civ data problems and bug 6; counts measured by script). Reports: `Complaints/reports/playtest-mexica-1500-mortal-three-runs.md`; triage: `Complaints/reports/final-playtests-triage.md`.
 
 
-**Remaining:** Done: Old World free nodes the Mexica lack are gated behind a liftable node via `needs_first`; the school is named per civilisation. Remaining: currency and unit labels in engine output (denarii) are not yet per-civilisation data; the vaccination node naming was not revisited.
+**Resolution:** the words for a civilisation's money are the `currency_words` field of its own file (`sim/engine/data.py` holds no per-currency table); the reply layer rewrites the book unit with them. The vaccination node is already named neutrally (variolation to attenuated vaccines). Offline analysis tables (`cli.py`, `cli_analysis.py`) still print the book unit, which they do not convert.
