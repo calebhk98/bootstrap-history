@@ -1,6 +1,6 @@
 # Add a generic "why did this number change?" inspector
 
-**Status:** partly - `figures` / `why <figure>` (sim/engine/figures.py, figures_headline.py) show last year, this year and named causes for cash, income, upkeep, recurring net, population, literacy, price index and one hazard; still open: a full per-year cash ledger (340), causes for wages, state notice, epidemic severity, project throughput and venture shutdowns
+**Status:** partly - `figures` / `why <figure>` (sim/engine/figures.py, figures_headline.py) show last year, this year and named causes for cash, income, upkeep, recurring net, population, literacy, price index and one hazard, and the cash figure's causes come from the cash book (340, closed); still open: causes for wages, state notice, epidemic severity, project throughput and venture shutdowns
 
 Many important numbers change significantly each turn. A player trying to understand the civilization's trajectory needs to see what caused each major change.
 
