@@ -301,7 +301,7 @@ def has_luck_component(node: JSONDict) -> bool:
     return node.get("kind") != "SCIENCE" or bool(node.get("mat")) or bool(node.get("lab"))
 
 
-def load(held_technology_ids: Iterable[str] = (),
+def load(held_technology_ids: Optional[Iterable[str]] = None,
          civilization_id: Optional[str] = None
          ) -> Tuple[JSONDict, JSONDict, Nodes, Dict[str, float], Dict[str, float]]:
     """Load the tree and derive each node's cost from calculated prices.
@@ -310,8 +310,12 @@ def load(held_technology_ids: Iterable[str] = (),
     document is the opening schedule in the shape the price solver reads.
     `goods` is the solver's price for every material the recipes can make
     under `held_technology_ids`, in the civilisation's coin; a material only a
-    technology not yet held can make is priced as if it were held (see
+    technology not yet held can make is priced at the nearest technique that
+    makes it, with the technologies held for everything else (see
     `sim.engine.prices.priced_goods_table`). A material nothing makes is absent.
+    Left as `None`, `held_technology_ids` is the starting technologies of
+    `civilization_id` (the reference civilisation if none), so a concern's
+    derived revenue is priced against techniques some civilisation holds.
 
     `civilization_id` decides whose coin and whose held territory prices are
     stated against (see `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION);
@@ -325,6 +329,8 @@ def load(held_technology_ids: Iterable[str] = (),
     wages = schedule.wages_per_hour()
     rate = schedule.money_per_labour_hour
     document = schedule.document()
+    if held_technology_ids is None:
+        held_technology_ids = load_civ(civilization_id)["starting_techs"]
     from . import prices as price_solver
     goods, _provenance = price_solver.priced_goods_table(
         held_technology_ids, document, civilization_id=civilization_id)
@@ -356,9 +362,9 @@ def load(held_technology_ids: Iterable[str] = (),
 
 def goods_provenance(held_technology_ids: Iterable[str] = (),
                       civilization_id: Optional[str] = None) -> Dict[str, str]:
-    """{material: "solved" | "gated"} for every material the solver prices:
-    "gated" ones are priced as if the technology were held (see
-    `sim.engine.prices.priced_goods_table`).
+    """{material: "solved" | "gated" | "mature"} for every material the solver prices:
+    "gated" ones are priced at a technique not held, "mature" ones where nothing
+    in reach makes them (see `sim.engine.prices.priced_goods_table`).
 
     `civilization_id` should be the SAME civilization `held_technology_ids`
     came from: land rent is solved against its territory, and left at `None`

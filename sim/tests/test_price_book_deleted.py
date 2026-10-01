@@ -34,7 +34,7 @@ class PriceBookIsGone(unittest.TestCase):
         goods, provenance = engine_prices.priced_goods_table(
             [], data.starting_schedule().document())
         self.assertGreater(len(goods), 100)
-        self.assertTrue(set(provenance.values()) <= {"solved", "gated"})
+        self.assertTrue(set(provenance.values()) <= {"solved", "gated", "mature"})
         self.assertTrue(all(price > 0.0 for price in goods.values()))
 
     def test_gated_material_is_priced_as_if_the_technology_were_held(self):

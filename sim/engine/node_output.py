@@ -16,8 +16,8 @@ from sim.world.wages import HOURS_PER_WORKER_YEAR
 
 ENERGY_CARRIERS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 # TRANSITIONAL (CLAUDE.md 4.4): the goods table prices an energy carrier at one flat pool figure, while an
-# entry pays the price graded to its own temperature or kind of work (see `solve_prices_core`), so neither
-# energy it buys nor energy it sells is valued here. Needs the solver to expose each entry's graded price.
+# entry pays the price graded to its own temperature or kind of work (see `solve_prices_core`), so the
+# energy a node buys is valued at the pool figure. Needs the solver to expose each entry's graded price.
 
 # (production table, {node id: entries}); the table is kept so a hit is confirmed with `is`
 _ENTRIES_BY_NODE: List[Any] = [None, None]
@@ -44,6 +44,9 @@ def _purchases_per_batch(entry: Mapping[str, Any]) -> Dict[str, float]:
     bought = defaultdict(float)
     for material, quantity in (entry.get("inputs") or {}).items():
         bought[material] += quantity
+    for carrier in ENERGY_CARRIERS:
+        if entry.get(carrier):
+            bought[carrier] += entry[carrier]
     return bought
 
 

@@ -370,9 +370,10 @@ class MaterialSupplyMixin:
         if tag in ledger.commodities:
             return ledger.country_output(tag, built=self.state.projects.done)
         price = self._denarii_price_per_kg(tag)
-        if price is None or price <= 0:
+        price_power = None if price is None or price <= 0 else price ** self.GENERIC_OUTPUT_PRICE_EXPONENT
+        if not price_power:     # unpriced, free, or so cheap the power underflows
             return self.GENERIC_OUTPUT_CEILING_T_PER_YR
-        out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / (price ** self.GENERIC_OUTPUT_PRICE_EXPONENT)
+        out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / price_power
         return max(self.GENERIC_OUTPUT_FLOOR_T_PER_YR,
                    min(self.GENERIC_OUTPUT_CEILING_T_PER_YR, out))
 
