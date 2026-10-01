@@ -102,7 +102,7 @@ class WagesMixin(WageLedgerMixin):
                * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                             household.reputation / self.WAGE_REPUTATION_SCALE)))
         before_practice = self.revenue()
-        household.add_capital(pay)
+        household.credit(pay, "wages for your own work")
         household.wage_hours_this_year = household.wage_hours_this_year + hours
         household.wages_earned = (household.wages_earned or 0.0) + pay
         household.wage_income_this_year = household.wage_income_this_year + pay

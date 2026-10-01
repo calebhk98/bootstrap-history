@@ -307,7 +307,7 @@ class StepPhasesMixin:
                 short = want - have
                 if short > 0.02 and self.state.household.capital > self.annual_wage(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
                     self.state.household.employees[trade_id] = have + short
-                    self.state.household.capital -= short * self.annual_wage(trade_id)
+                    self.state.household.debit(short * self.annual_wage(trade_id), "wages advanced for replacement staff")
             self._resync_pools()
         self.hold_staff_reserve()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:
@@ -352,7 +352,10 @@ class StepPhasesMixin:
         self.state.founder.living_cost_paid += living_cost
         mine_cost = self.mine_operating_cost()
         self.state.economy.mine_cost_paid += mine_cost
-        self.state.household.capital += self.revenue() - self.upkeep() - living_cost - mine_cost
+        revenue, upkeep = self.revenue(), self.upkeep()
+        self.state.household.credit(revenue - upkeep - living_cost - mine_cost, {
+            "venture revenue": revenue, "running costs of concerns": -upkeep,
+            "living costs": -living_cost, "mine running costs": -mine_cost})
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run
         # sank a large mine, lost its revenue and then ran three centuries at
@@ -950,7 +953,7 @@ class StepPhasesMixin:
                 # The shortage is real and unresolved; more money is not the
                 # answer to it.
                 spend = min(self.state.household.capital * 0.05, self.book_money(2000.0))
-                self.state.household.capital -= spend
+                self.state.household.debit(spend, "nitre beds laid down")
                 self.state.economy.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
                 self.state.household.log.append((self.state.scenario.year, "laid down %d square metres of nitre bed "
                                      "for %d denarii (auto_mine)"
@@ -1359,7 +1362,7 @@ class StepPhasesMixin:
         # second place a standing allocation can go unhonoured, and the
         # completion check. Nothing to return - project_state carries every
         # result the caller (and the rest of the game) reads back.
-        self.state.household.capital -= money
+        self.state.household.debit(money, "project payments")
         self.state.household.total_spend += money
         project_state["spent"] += money
         project_state["cost_left"] = max(0.0, project_state["cost_left"] - money)
@@ -1659,7 +1662,7 @@ class StepPhasesMixin:
                 and self.state.founder.policy.get("auto_bribe", not self.manual)):
             spend = min(self.state.household.capital * self.AUTO_BRIBE_CAPITAL_SHARE,
                         self.state.household.scandal * self.AUTO_BRIBE_COST_PER_SCANDAL_POINT)
-            self.state.household.capital -= spend
+            self.state.household.debit(spend, "bribes")
             self.state.household.bribes_ytd = self.BRIBES_YTD_DECAY * self.state.household.bribes_ytd + spend
             self.state.household.scandal -= (spend / self.BRIBE_SCANDAL_REDUCTION_SCALE
                                        * self.value_weights["bribability"])
@@ -1700,7 +1703,7 @@ class StepPhasesMixin:
                 roll = self.rng.random()
                 if roll < self.EMINENCE_OUTCOME_CONFISCATION_SHARE:
                     take = self.state.household.capital * self.EMINENCE_CONFISCATION_CAPITAL_LOSS
-                    self.state.household.capital -= take
+                    self.state.household.debit(take, "confiscation by the state")
                     self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
                     self.state.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
                     self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %d den lost, "

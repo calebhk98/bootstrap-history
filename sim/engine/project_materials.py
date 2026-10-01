@@ -186,7 +186,7 @@ class ProjectMaterialsMixin:
                 continue
             money = row["price_per_tonne"] * tonnes * factor
             emp_key = self._material_tag(row["material"])[0]
-            household.capital -= money
+            household.debit(money, "materials bought for projects")
             self.market_note_purchase(emp_key, tonnes)
             stock[emp_key] += tonnes
             opening[emp_key] = opening.get(emp_key, 0.0) + tonnes

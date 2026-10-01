@@ -208,7 +208,7 @@ class CompletionMixin:
             projects.active[node_id]["yrs"] = _yrs_before * _retain
             _lost = 0.0 if claimed else self.failure_loss(node_id)
             _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
-            household.capital -= _lost
+            household.debit(_lost, "failure losses")
             # A failure always announces itself; its size sets how loudly.
             _next_risk = self.effective_risk(node_id)
             _banked = projects.active[node_id]["yrs"]

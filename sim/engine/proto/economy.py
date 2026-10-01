@@ -2,6 +2,7 @@
 
 from ..data import WAGES, trade_family
 from .. import figures_headline  # noqa: F401  (registers the headline figures)
+from .. import cash_book
 from ..figures import figure_snapshot
 
 from .state import _agent_state
@@ -670,7 +671,9 @@ def _dashboard_snapshot(sim):
     """One year's worth of the numbers `changes` diffs against later - a
     timestamped copy of figures already computed elsewhere (price_index,
     literacy, mine_capacity, ...), not a new figure of its own. Called once
-    per simulated year from the `step` dispatch below."""
+    per simulated year from the `step` dispatch below. It also closes the cash book's
+    period, so the book and the snapshots share their year boundaries."""
+    cash_book.close_period(sim)
     return {
         "year": sim.year,
         "price_index": round(sim.price_index, 4),

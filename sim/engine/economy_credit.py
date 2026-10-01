@@ -285,7 +285,7 @@ class CreditMixin:
             return 0.0
         rate = self.debt_interest_rate()
         owed = -household.capital * rate
-        household.capital -= owed
+        household.debit(owed, "interest on arrears")
         household.interest_paid = (household.interest_paid or 0.0) + owed
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
             household.log.append((year, "interest on %0.f denarii of arrears at %.1f%% a year"
@@ -470,7 +470,7 @@ class CreditMixin:
                 #
                 # Closing it is both the fix and the more honest event: what a
                 # creditor can carry away is the shop.
-                household.capital += self.nodes[node_id]["up"] * self.CREDITOR_SEIZURE_VALUE_MULTIPLE
+                household.credit(self.nodes[node_id]["up"] * self.CREDITOR_SEIZURE_VALUE_MULTIPLE, "concern seized by creditors")
                 self.close_work(node_id, self.CLOSED_CREDITOR_SEIZURE, year)
                 taken.append(node_id)
             # Only say it if it happened: firing this every year regardless
@@ -518,7 +518,7 @@ class CreditMixin:
             term = float(self.civ.get("bondage_years", self.DEBT_BONDAGE_DEFAULT_TERM_YEARS))
             household.bondage_years_left = term
             household.bondage_debt = -household.capital
-            household.capital = 0.0
+            household.reset_cash(0.0, "debt taken into bondage")
             household.log.append((year, "BONDAGE: you cannot pay, and you enter service for "
                                  "your debt. For about %d years most of your hours "
                                  "belong to someone else. It is not the end: it is "
@@ -536,7 +536,7 @@ class CreditMixin:
         # are simply in arrears, which already has consequences of its own.
         if household.capital < -limit and year - getattr(household, "last_settlement", -999) >= self.SETTLEMENT_MIN_INTERVAL_YEARS:
             household.last_settlement = year
-            household.capital = -limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION
+            household.reset_cash(-limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, "debts written off in settlement")
             # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
             # fixed "reputation -12" against a reputation of 4.9 would say
             # the same thing twice while the second application does

@@ -853,7 +853,7 @@ class StaffingMixin:
         if any(prereq_id not in projects.done for prereq_id in node["pre"]):
             return False, ("you no longer have what it stands on: "
                            + ", ".join(prereq_id for prereq_id in node["pre"] if prereq_id not in projects.done))
-        household.capital -= fee
+        household.debit(fee, "known technique restored")
         projects.done.add(node_id)
         self._done_changed()
         projects.mothballed.discard(node_id)

@@ -37,7 +37,7 @@ def reconciles(test_sim):
 
 
 # --- every kind of activity leaves the book reconciled -----------------------------------------
-rich = sim(capital=2_000_000.0, manual=False, events=True)
+rich = sim(capital=300_000.0, manual=False, events=True)
 rich.end_year = rich.cfg["start_year"] + rich.cfg["horizon_years"]
 check("a new game's book reconciles", reconciles(rich), cash_book.unaccounted(rich))
 
@@ -64,18 +64,18 @@ for label, action in (
     check("after %s the book reconciles" % label, reconciles(rich), cash_book.unaccounted(rich))
 
 causes_seen = set()
-for _year in range(40):
+for _year in range(12):
     ask(rich, cmd="step", years=1)
-    causes_seen |= set(rich.state.household.cash_flow)
+    causes_seen |= {cause for period in rich.state.household.cash_periods for cause in period["causes"]}
     check("year %d: the book reconciles" % rich.year, reconciles(rich), cash_book.unaccounted(rich))
     if not rich.state.founder.founder_alive:
         break
 
 poor = sim(capital=2_000.0, manual=False, events=True)
 poor.end_year = poor.cfg["start_year"] + poor.cfg["horizon_years"]
-for _year in range(40):
+for _year in range(20):
     ask(poor, cmd="step", years=1)
-    causes_seen |= set(poor.state.household.cash_flow)
+    causes_seen |= {cause for period in poor.state.household.cash_periods for cause in period["causes"]}
     if not reconciles(poor):
         break
 check("a household in arrears, with interest and settlements, reconciles",

@@ -591,7 +591,7 @@ class FreightMixin:
         household = self.state.household
         if not purchase_rule.can_pay(self, cost):
             return 0.0
-        household.capital -= cost
+        household.debit(cost, "nitre beds laid down")
         self.state.economy.nitre_bed_m2 += square_metres
         return square_metres
 

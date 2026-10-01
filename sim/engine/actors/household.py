@@ -44,6 +44,9 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"wages_prepaid": "household",
 	"wages_earned": "household",
 	"interest_paid": "household",
+	"cash_flow": "household",
+	"cash_mark": "household",
+	"cash_periods": "household",
 	"reputation": "household",
 	"scandal": "household",
 	"scandal_last_year": "household",
@@ -232,6 +235,8 @@ class Household(Actor):
 				population=PopulationState(),
 			)
 
+		self._state.household.cash_mark = float(starting_capital)
+
 		# Wrap mutation-aware collections with callbacks if provided
 		if operating_changed is not None:
 			self._state.projects.operating = _InvalidatingSet(
@@ -294,6 +299,12 @@ class Household(Actor):
 	@money.setter
 	def money(self, value: float) -> None:
 		self.capital = value
+
+	def credit(self, amount: float, purpose: Any) -> None:
+		self._state.household.credit(amount, purpose)
+
+	def debit(self, amount: float, purpose: Any) -> None:
+		self._state.household.debit(amount, purpose)
 
 	@property
 	def workforce(self) -> Any:

@@ -958,7 +958,7 @@ class MaterialSupplyMixin:
         household = self.state.household
         if not purchase_rule.can_pay(self, cost):
             return 0.0
-        household.capital -= cost
+        household.debit(cost, "materials bought")
         self.market_note_purchase(quote["stock_key"], tonnes)
         opening = self._material_opening_stock()
         self._material_stock()[quote["stock_key"]] += tonnes
@@ -1018,7 +1018,7 @@ class MaterialSupplyMixin:
         self._material_stock()[key] -= sold
         opening[key] = opening.get(key, 0.0) - sold
         sold_so_far[key] = sold_so_far.get(key, 0.0) + sold
-        self.state.household.add_capital(money)
+        self.state.household.credit(money, "materials sold")
         self.state.household._stock_throttle_sig = None
         return sold
 

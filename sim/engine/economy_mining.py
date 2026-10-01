@@ -717,7 +717,7 @@ class MiningMixin:
             cost = t_per_yr * cap * self.price_index * scale
         if t_per_yr <= 0:
             return 0.0
-        household.capital -= cost
+        household.debit(cost, "mines opened")
         # Each investment is its own working with its own sinking time.
         # Pooling them and taking the LATEST ready date would mean a
         # player who invests spare cash every year, which is exactly what
@@ -800,7 +800,7 @@ class MiningMixin:
             kept = []
             for working in self._workings_of(material):
                 cut = working["capacity"] * self.MOTHBALL_CUT_SHARE
-                household.add_capital(cut * self._mine_opex(material) * self.price_index)
+                household.credit(cut * self._mine_opex(material) * self.price_index, "mine running costs saved by mothballing")
                 working["capacity"] -= cut
                 if working["capacity"] >= 1.0:
                     kept.append(working)
@@ -938,6 +938,6 @@ class MiningMixin:
         # A shaft that costs nothing needs no budget check.
         if cost > 0 and not purchase_rule.can_pay(self, cost):
             return 0.0
-        household.capital -= cost
+        household.debit(cost, "forest bought")
         economy.forest_ha += hectares
         return hectares

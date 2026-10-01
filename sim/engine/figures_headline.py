@@ -3,24 +3,16 @@
 Each reads the engine function that produces the number; nothing is
 recomputed here. Registration is the whole of adding a figure.
 """
+from . import cash_book
 from .figures import figure
 from .hazard_window import hazards_not_yet_past
 
 HAZARD_KINDS = ("staff_loss", "sack_chance", "output_factor", "real_erosion")
 
 
-@figure("cash", "cash on hand", unit="money")
+@figure("cash", "cash on hand", unit="money", since=cash_book.causes_since)
 def _cash(sim):
-    return {
-        "value": sim.capital,
-        "flows": {
-            "recurring revenue": sim.revenue(),
-            "running costs of concerns": -sim.upkeep(),
-            "living costs": -sim.living_cost(),
-            "mine running costs": -sim.mine_operating_cost(),
-            "project payments last year": -getattr(sim, "spend_last_year", 0.0),
-        },
-    }
+    return {"value": sim.capital}
 
 
 @figure("income", "recurring revenue per year", unit="money per year")
