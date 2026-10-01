@@ -33,8 +33,10 @@ class NodeRevenue(unittest.TestCase):
         for node_id, node in self.derived().items():
             sold = sum(quantity * self.goods[material]
                        for material, quantity in node["_output_per_year"].items())
+            sold += sum(basket["value"] for basket in (node.get("_energy_sold_per_year") or {}).values())
             bought = sum(quantity * self.goods.get(material, 0.0)
                          for material, quantity in node["_purchases_per_year"].items())
+            bought += sum(basket["value"] for basket in (node.get("_energy_bought_per_year") or {}).values())
             self.assertAlmostEqual(node["rev_hours"], max(0.0, sold - bought) / self.rate,
                                    delta=1e-6 * max(1.0, node["rev_hours"]), msg=node_id)
 
