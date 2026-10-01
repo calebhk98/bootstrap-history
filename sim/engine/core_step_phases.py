@@ -1401,8 +1401,7 @@ class StepPhasesMixin:
                     (node_id, round(_inner_gap, 0), project_state["why_underfunded"]))
             elif _inner_gap > 1.0 and project_state.get("short_of_trade"):
                 _directed_hours_unused.append((node_id, round(_inner_gap, 0),
-                    "trade hours already booked: " + ", ".join(
-                        sorted(project_state["short_of_trade"])[:2])))
+                    self.trade_shortfall_note(project_state)))
         # Count it HERE, after the hired-hours scaling and the
         # affordability clamp, not before them: accumulating the notional
         # figure instead would make project_spend_last_year disagree with

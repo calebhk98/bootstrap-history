@@ -163,6 +163,30 @@ class ProgressMixin:
                       "desired": min(left, ceiling)}
         return out
 
+    def trade_shortage_kind(self, trade_id, need, total_demand=None):
+        """Why a trade is short for a project that wants `need` hours a year
+        of it: "staffing" when the society cannot field that much at all,
+        "booked" when it can but the portfolio's demand exceeds it, else None.
+        `total_demand` None means the caller already knows the project fell
+        short, so what the society can field decides between the two."""
+        supply = self.hours_you_can_call_on(trade_id)
+        if supply < need:
+            return "staffing"
+        if total_demand is None or total_demand > supply + 1e-6:
+            return "booked"
+        return None
+
+    def trade_shortfall_note(self, project_state):
+        """The step-log reason for a project short of hired trades: booked
+        by other work, or more than the society can field at all."""
+        short = sorted(project_state.get("short_of_trade") or [])
+        staffing = [trade_id for trade_id in short
+                    if trade_id in (project_state.get("short_of_trade_staffing") or [])]
+        booked = [trade_id for trade_id in short if trade_id not in staffing]
+        if booked:
+            return "trade hours already booked: " + ", ".join(booked[:2])
+        return "nobody to do the work: this society cannot field enough " + ", ".join(staffing[:2])
+
     def trade_demand_vs_supply(self):
         """Aggregate, by hired trade: what this year's ACTIVE portfolio
         wants from it (summed trade_draw_plan 'desired', the same demand
@@ -225,6 +249,8 @@ class ProgressMixin:
         hired_hours = 0.0
         worst = 1.0
         plan = self.trade_draw_plan(node_id, lab_left)
+        need_by_trade = {trade_id: min(entry["nominal"], entry["left"])
+                         for trade_id, entry in plan.items()}
         for trade_id, plan_entry in sorted(plan.items()):
             left, nominal = plan_entry["left"], plan_entry["nominal"]
             have = max(0.0, self.hours_you_can_call_on(trade_id)
@@ -241,14 +267,19 @@ class ProgressMixin:
         if worst < 1.0:
             project_state["status"] = "BLOCKED_INPUTS"
             frac *= worst
-            project_state["short_of_trade"] = sorted(
+            short_trades = sorted(
                 trade_id for trade_id, left in lab_left.items()
                 if left > 0 and (self.hours_you_can_call_on(trade_id)
                                   - projects.trade_hours_used.get(trade_id, 0.0))
                 < min(left, node["lab"][trade_id] / max(1.0, node["yrs"])))[:3]
+            project_state["short_of_trade"] = short_trades
+            project_state["short_of_trade_staffing"] = [
+                trade_id for trade_id in short_trades
+                if self.trade_shortage_kind(trade_id, need_by_trade.get(trade_id, 0.0)) == "staffing"]
         else:
             project_state["status"] = "ACTIVE"
             project_state.pop("short_of_trade", None)
+            project_state.pop("short_of_trade_staffing", None)
         # DEADLINE: prevents creep. Unmet trades trigger abandonment.
         if project_state["yrs"] >= self.lab_max_span(node_id) and any(value > 0.5 for value in lab_left.values()):
             unmet = sorted(trade_id for trade_id, value in lab_left.items() if value > 0.5)
