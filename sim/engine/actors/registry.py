@@ -210,7 +210,8 @@ class ActorRegistry:
 		for node_id in world.proven_concerns():
 			key = world.market_key(node_id)
 			rivals = self.rivals_of(node_id, "")
-			expected = world.entry_gross(node_id, rivals, waiting.get(key, 0) + 1) - world.upkeep(node_id)
+			expected = (world.entry_gross(node_id, rivals, waiting.get(key, 0) + 1)
+						 - world.upkeep(node_id) - world.concern_wage_bill(node_id))
 			if expected <= 0:
 				continue
 			probe = Firm("probe", ActorRecord(kind="firm"))

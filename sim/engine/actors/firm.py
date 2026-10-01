@@ -58,11 +58,13 @@ class Firm(RecordedActor):
 			self.record.staffing[node_id] = found
 			takings = found * world.concern_takings(node_id, self.record.opened_year[node_id], rivals)
 			upkeep = world.upkeep(node_id)
+			wages = found * world.concern_wage_bill(node_id)
 			self.credit(takings, "takings")
 			self.debit(upkeep, "upkeep")
+			self.debit(wages, "wages")
 			levy = world.government().collect(self, takings, world)
 			royalty = world.collect_royalty(self, node_id, takings)
-			margin = takings - upkeep - levy - royalty
+			margin = takings - upkeep - wages - levy - royalty
 			self.record.last_margin = margin
 			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
 

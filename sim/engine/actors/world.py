@@ -121,6 +121,11 @@ class SimWorld(BudgetView, GroupView, DisclosureView):
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
 		return {trade: people for trade, people in staff.items() if people > 0.0}
 
+	def concern_wage_bill(self, node_id: str) -> float:
+		"""Yearly wages of the people running this concern needs, at what hiring them costs now."""
+		return sum(people * self.hours_per_person_year * self.hiring_wage_per_hour(trade)
+				   for trade, people in self.concern_staff(node_id).items())
+
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		"""People of a trade left in the pool for this actor after the founder's staff and
 		everyone else's. None for a trade nobody here practises yet, which has no pool."""
