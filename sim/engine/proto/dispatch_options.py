@@ -29,5 +29,14 @@ def _cmd_options(sim, nodes, cmd, ended):
             config[key] = value
             if not settings.save_config(config):
                 return {"ok": False, "error": "could not write the config file %s" % settings.config_path()}
-    return {"ok": True, "options": settings_table.rows(config), "config_file": settings.config_path(),
+    return {"ok": True, "options": _fogged(sim, nodes, settings_table.rows(config)), "config_file": settings.config_path(),
             "note": "Saved settings are read when the program starts a game."}
+
+
+def _fogged(sim, nodes, rows):
+    """A setting whose value names a technology this founder has not heard of shows no id."""
+    for row in rows:
+        for field in ("value", "shown_as"):
+            if row.get(field) in nodes and not sim.is_visible(row[field]):
+                row[field] = "(a technology you have not heard of)"
+    return rows
