@@ -23,10 +23,10 @@
    },
    "inputs": {
     "galena_kg": 1770.0,
-    "charcoal_kg": 320.0
+    "charcoal_kg": 640.0
    },
    "labour_hours": {
-    "furnaceman": 60.0,
+    "furnaceman": 120.0,
     "smith": 15.0
    },
    "energy_mj": 0.0,
@@ -49,7 +49,7 @@
     }
    ],
    "basis": "per tonne of refined lead metal smelted and cupelled from argentiferous galena",
-   "yield_basis": "JOINT PRODUCTION - smelting galena for lead and pulling silver out of the same bullion are one process, not two, and pretending otherwise misprices both. PbS (239.3 g/mol) is 86.6% lead by mass; at 75% PbS the ore assays ~65% Pb. Roast-reduction smelting recovers on the order of 90% of that, and a further small loss is taken across the cupellation + litharge-reduction cycle described below, giving an overall ~87% ore-to-metal recovery, hence 1770 kg of ore per tonne of lead. Lead's low melting point (327 C) and easy reducibility mean far less fuel than copper needs - 320 kg charcoal per tonne against copper's 4000. Silver content of galena is wildly variable by deposit - some ores are essentially silver-free, others (the reason Athens fought over Laurion, and Rome prized Spanish lead) run rich. 0.5 kg Ag per tonne of contained lead (500 g/t) is a middling figure for a historically-worked silver-lead district, not a universal constant; treat it as the single least certain number in this entry. Cupellation - blowing air across molten bullion so lead oxidises to litharge (PbO) while silver, which does not oxidise under these conditions, stays behind as a bright bead - recovers about 92% of that silver. The litharge is not lost: it is re-smelted with charcoal back to metallic lead, which is why the lead output is not decimated by the cupellation step and why one entry can honestly report both outputs from one recipe.",
+   "yield_basis": "JOINT PRODUCTION - smelting galena for lead and pulling silver out of the same bullion are one process, not two, and pretending otherwise misprices both. PbS (239.3 g/mol) is 86.6% lead by mass; at 75% PbS the ore assays ~65% Pb. Roast-reduction smelting recovers on the order of 90% of that, and a further small loss is taken across the cupellation + litharge-reduction cycle described below, giving an overall ~87% ore-to-metal recovery, hence 1770 kg of ore per tonne of lead. Lead's low melting point (327 C) and easy reducibility mean far less fuel than copper needs - 320 kg charcoal per tonne against copper's 4000. Silver content of galena is wildly variable by deposit - some ores are essentially silver-free, others (the reason Athens fought over Laurion, and Rome prized Spanish lead) run rich. 0.5 kg Ag per tonne of contained lead (500 g/t) is a middling figure for a historically-worked silver-lead district, not a universal constant; treat it as the single least certain number in this entry. Cupellation - blowing air across molten bullion so lead oxidises to litharge (PbO) while silver, which does not oxidise under these conditions, stays behind as a bright bead - recovers about 92% of that silver. The litharge is not lost: it is re-smelted with charcoal back to metallic lead, which is why the lead output is not decimated by the cupellation step and why one entry can honestly report both outputs from one recipe. FUEL AND LABOUR COUNT BOTH REDUCTIONS: the ore is reduced to bullion once and the cupellation litharge is reduced to lead a second time (PbO + C -> Pb + CO, about 0.06 kg of carbon per kg of lead stoichiometrically; real furnaces burn several times that), so charcoal and furnace hours are two passes at the first pass's per-tonne figures (LABELLED HEURISTIC, conf D: the second pass is taken equal to the first, not separately measured).",
    "requires_node": "mat_lead",
    "conf": "C"
   },
@@ -59,11 +59,11 @@
    },
    "inputs": {},
    "labour_hours": {
-    "miner": 25.0
+    "miner": 54.0
    },
    "extracted_from": "ore deposit",
-   "basis": "per tonne of dressed native-silver / argentite (Ag2S) ore, ~0.5% Ag by mass",
-   "yield_basis": "EXTRACTED, a second and historically dominant route to silver that has nothing to do with lead: the New World silver of Potosi and Zacatecas (from 1545) was mined as silver ore in its own right, not as a lead by-product. 0.5% Ag (5 kg/tonne) reflects a genuinely rich, workable historical silver district; modern remaining ore is usually far leaner (0.01-0.03%) because the rich near-surface ore was worked out first - same caveat as copper_ore_kg's grade note. Labour is high because these are deep hard-rock veins worked without the easy visual sorting galena allows.",
+   "basis": "per tonne of silver-bearing rock raised, ~0.08% Ag by mass (the output-weighted grade of the silver deposits in data/world/deposits.json)",
+   "yield_basis": "DERIVED FROM THE DEPOSITS: grade is the output-weighted silver grade of data/world/deposits.json (about 0.8 kg of silver per tonne of rock) and labour per tonne is the output-weighted rock-breaking and haulage hours of sim/world/deposits.py for those deposits (extraction_cost_labour_hours_per_kg times grade); an earlier 5 kg per tonne grade and 25 hours per tonne were not the deposits' own. EXTRACTED, a second and historically dominant route to silver that has nothing to do with lead: the New World silver of Potosi and Zacatecas (from 1545) was mined as silver ore in its own right, not as a lead by-product. 0.5% Ag (5 kg/tonne) reflects a genuinely rich, workable historical silver district; modern remaining ore is usually far leaner (0.01-0.03%) because the rich near-surface ore was worked out first - same caveat as copper_ore_kg's grade note. Labour is high because these are deep hard-rock veins worked without the easy visual sorting galena allows.",
    "requires_node": null,
    "conf": "C"
   },
@@ -72,16 +72,16 @@
     "silver_kg": 1000.0
    },
    "inputs": {
-    "silver_ore_kg": 266667.0,
+    "silver_ore_kg": 1700000.0,
     "mercury_kg": 1000.0
    },
    "labour_hours": {
-    "labourer": 300.0,
+    "labourer": 1900.0,
     "furnaceman": 50.0
    },
    "energy_mj": 0.0,
    "basis": "per tonne of silver recovered by mercury amalgamation of native/argentite ore (the patio process)",
-   "yield_basis": "The DIRECT ore route to silver, distinct from the lead_kg entry's galena by-product route - both are real and coexisted (Old World lead-silver smelting vs. New World patio amalgamation from 1554). At 0.5% Ag and a 75% amalgamation recovery (patio-process recoveries are commonly cited in the 60-80% range, being a slow open-air process), one tonne of silver needs on the order of 267,000 tonnes... no, 266,667 kg (267 t) of ore, which is why silver mining moves such disproportionate ore tonnage relative to output. The patio process mixed crushed ore with mercury, salt and a copper-sulphate catalyst and had labourers or mules tread the paste for weeks; roughly 1 kg of mercury was consumed per kg of silver recovered, a commonly cited historical ratio for this specific process (much higher than the loss rate an enclosed retort would give, because the patio was open to weather and slow). Furnaceman hours cover final amalgam retorting.",
+   "yield_basis": "The DIRECT ore route to silver, distinct from the lead_kg entry's galena by-product route - both are real and coexisted (Old World lead-silver smelting vs. New World patio amalgamation from 1554). At the deposits' ~0.08% Ag (0.8 kg/t) and a 75% amalgamation recovery (patio-process recoveries are commonly cited in the 60-80% range, being a slow open-air process), one tonne of silver needs about 1.7 million kg (1,700 t) of rock, which is why silver mining moves such disproportionate ore tonnage relative to output. The patio process mixed crushed ore with mercury, salt and a copper-sulphate catalyst and had labourers or mules tread the paste for weeks; roughly 1 kg of mercury was consumed per kg of silver recovered, a commonly cited historical ratio for this specific process (much higher than the loss rate an enclosed retort would give, because the patio was open to weather and slow). Furnaceman hours cover final amalgam retorting. Labourer hours keep the earlier 1.1 hours per tonne of rock for crushing and treading, scaled to the larger rock tonnage (LABELLED HEURISTIC, conf D).",
    "conf": "C"
   },
   "cassiterite_kg": {
