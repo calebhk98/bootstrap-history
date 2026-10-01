@@ -1,6 +1,6 @@
 # Top-level `help` mentions pasteable JSON commands to a non-technical player
 
-**Status:** open
+**Status:** closed
 
 The "how to send a command" section of `help` ends "Pasting a JSON command works too, if you happen to have one", and the following paragraph is about scripts and agents (one command per invocation). The tester (a first-time player) called this technical noise in an otherwise clear help screen. Closed complaint 172 made `--help` player-facing; the in-game `help` first screen still carries agent-protocol text.
 

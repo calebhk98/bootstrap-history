@@ -112,7 +112,7 @@ check("236.1: the epidemic goal does not call 85 per cent four-fifths",
 with open(os.path.join(ROOT, "data", "tech_tree.json"), encoding="utf-8") as _handle:
     _tree_text = _handle.read()
 check("236.2: the algebra note's sentence matches its equation",
-      "add 5 and triple it" not in _tree_text and "triple a number and add 5" in _tree_text)
+      "add 5 and triple it" not in _tree_text and "triple it and add 5" in _tree_text)
 _text = _play("han_china_100ad", ["available", "labour laborer", "help commands"])
 check("236.3: the digest title counts the rows it prints",
       "CHEAPEST SIX RIGHT NOW" not in _text, _text[-600:])
@@ -120,12 +120,14 @@ _labour = proto([{"cmd": "labour", "trade": "laborer"}], civ="han_china_100ad", 
 check("236.6: 'labour laborer' is accepted as 'labour labourer'",
       _labour.get("ok") is not False, _labour)
 check("236.7: help commands lists options",
-      "options" in _text.split("help commands")[-1], _text[-1500:])
+      "options: typed play only" in _text, _text[-1500:])
 from sim.engine.data import STARTING_KITS as _KITS
 check("236.4: the poor_scholar kit does not claim a few months",
       "months" not in _KITS["poor_scholar"]["desc"], _KITS["poor_scholar"]["desc"])
 check("236.5: the absurd kit description has no patch history",
       "used to" not in _KITS["absurd"]["desc"], _KITS["absurd"]["desc"])
+check("236.9: player text does not name internal functions",
+      "funding_capacity" not in open(os.path.join(HERE, "engine", "proto", "dispatch_ventures.py")).read().split("what_this_means")[1].split("%")[0])
 _ventures = proto([{"cmd": "ventures", "closed": True}], civ="han_china_100ad", kit="poor_scholar")[0][-1]
 check("236.11: 'ventures closed' says what it shows instead of silently ignoring the word",
       "closed" in json.dumps(_ventures).lower(), list(_ventures))

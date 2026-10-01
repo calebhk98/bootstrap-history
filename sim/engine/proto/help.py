@@ -49,7 +49,9 @@ def _topic_commands(sim):
     names = list(command_registry.COMMANDS)
     return {
         "commands": {"json / compact": JSON_MODE_NOTE,
-                     **{name: _command_text(name, sim.fog) for name in names}},
+                     **{name: _command_text(name, sim.fog) for name in names},
+                     "options": "typed play only: the few settings you can change "
+                                "without restarting, and where the game is saved"},
         "usage": {name: command_registry.COMMANDS[name]["usage"] for name in names},
         "groups": command_registry.grouped(),
         "aliases": command_registry.alias_map(),
@@ -114,13 +116,12 @@ def _front_page(sim, typed_hints):
         "when you cannot see why you are not getting on": '{"cmd":"stuck"}',
         "how to send a command": (
             'One command per line, in plain words: "available", '
-            '"step 5", "hire smith 2", "why fud_wheelbarrow". Pasting a '
-            'JSON command works too, if you happen to have one.'
+            '"step 5", "hire smith 2", "why fud_wheelbarrow".'
             if typed_hints else
             'One JSON object per line on standard input, for example '
             '{"cmd":"available"} or {"cmd":"step","years":5}. Each reply is '
             'one JSON object.'),
-        "you do not need to hold this process open": (
+        **({} if typed_hints else {"you do not need to hold this process open": (
             'Pass --session FILE and the whole game is written to that '
             'file after every command and read back when you start '
             'again. So a script or an agent may run one command per '
@@ -129,7 +130,7 @@ def _front_page(sim, typed_hints):
             'prints the readable screen and exits, and the next '
             'invocation carries on from exactly where it left off. '
             'There is no need for a held-open pipe, a FIFO or tmux. '
-            'See {"cmd":"help","topic":"sittings"}.'),
+            'See {"cmd":"help","topic":"sittings"}.')}),
         "one command in detail": 'help <command> or help <alias>, e.g. {"cmd":"help","topic":"hire"}',
         "more": {topic_name: '{"cmd":"help","topic":"%s"}' % topic_name for topic_name in HELP_TOPICS},
     }

@@ -291,8 +291,8 @@ def _cmd_start(sim, nodes, cmd, ended):
                 "'on_credit' priced only this project against your cash; "
                 "your other work in hand draws on the same cash at the "
                 "same time, so the real combined draw is bigger than "
-                "that figure alone suggests. 'your_real_ceiling' is "
-                "what funding_capacity() judges you could service in "
+                "that figure alone suggests. 'your_real_ceiling_if_it_comes_to_that' is "
+                "what the game judges you could service in "
                 "total before it stops being safe - cash, half your "
                 "credit line, and about five years of what your "
                 "standing income can spare - not a hard limit today. "
@@ -646,7 +646,8 @@ _VENTURES_PAGE = 20
 @command("ventures", group="projects",
          summary="what you run and could run",
          usage=["ventures", "ventures limit:50 offset:20"],
-         options={"limit / offset": "page through the concerns you know how to run and have not opened"},
+         options={"limit / offset": "page through the concerns you know how to run and have not opened",
+                  "closed": "show only what is shut or never opened, not what is running"},
          description="What you are running, and what you know how to run and have not opened, "
                      "twenty at a time.")
 def _cmd_ventures(sim, nodes, cmd, ended):
@@ -704,8 +705,10 @@ def _cmd_ventures(sim, nodes, cmd, ended):
     # same way.
     _idle_ordinary = [node_id for node_id in idle if node_id not in sim.CAPABILITY_INSTITUTIONS]
     _idle_capability = [node_id for node_id in idle if node_id in sim.CAPABILITY_INSTITUTIONS]
+    only_closed = bool(cmd.get("closed"))
     out = {"ok": True,
-           "running": [_vrow(node_id) for node_id in running] or "nothing",
+           "running": ([_vrow(node_id) for node_id in running] or "nothing")
+                      if not only_closed else "not shown: you asked for closed concerns only",
            "you_know_how_but_have_not_opened":
                [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
                 for node_id in _idle_ordinary[offset:offset + limit]] or "nothing",

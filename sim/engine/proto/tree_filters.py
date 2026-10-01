@@ -48,7 +48,7 @@ def _haystack(nodes, node_id):
     if isinstance(aliases, str):
         aliases = [aliases]
     return " ".join([node_id.replace("_", " "), node_id, node.get("name", ""),
-                     node.get("kb", ""), node.get("cat", "").replace("_", " ")]
+                     node.get("cat", "").replace("_", " ")]
                     + aliases).lower()
 
 
@@ -81,6 +81,12 @@ def parse_state(cmd):
     return state, None
 
 
+def subject_names():
+    """The subject headings `available <subject>` knows, in order."""
+    from .techtree import SUBJECTS
+    return list(SUBJECTS.values())
+
+
 def parse_topic(cmd, nodes):
     """(tag, category, error) from the tag and category options."""
     tag = str(cmd.get("tag") or "").strip().strip('"\'').lower().replace(" ", "_")
@@ -88,9 +94,10 @@ def parse_topic(cmd, nodes):
     category = category.replace(" ", "_")
     if tag and tag not in topic_tags.current():
         near = difflib.get_close_matches(tag, list(topic_tags.current()), n=3)
-        return "", "", ("unknown tag %r%s. The tags are: %s." % (
+        return "", "", ("unknown tag %r%s. The tags are: %s. Tags and subjects are different lists; "
+                        "to look for a word or a subject type 'available %s' (subjects: %s)." % (
             tag, (" (did you mean %s?)" % ", ".join(near)) if near else "",
-            ", ".join(topic_tags.current())))
+            ", ".join(topic_tags.current()), tag.replace("_", " "), ", ".join(subject_names())))
     if category:
         cats = {node["cat"] for node in nodes.values()}
         if category not in cats:

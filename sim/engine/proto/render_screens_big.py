@@ -617,7 +617,7 @@ def _available_subjects_block(out, header, _width, _purse):
             summary_row["subject"][:24], _fmt_num(summary_row["things"]), _fmt_num(summary_row["cheapest"]),
             _fmt_num(summary_row["dearest"]), _fmt_num(summary_row["you_could_pay_for"])))
     lines.append("")
-    lines.append("CHEAPEST SIX RIGHT NOW, sorted by cost:")
+    lines.append("CHEAPEST RIGHT NOW, sorted by cost:")
     lines.append(header)
     for entry in sorted(out.get("cheapest_six") or [], key=lambda e: e.get("cost", 0)):
         lines.append(_available_row(entry, _width, _purse))
@@ -640,6 +640,17 @@ def _available_empty_block(out):
     # something is broken.
     lines.append(out.get("nothing_matched")
              or "Nothing you could begin today matches that.")
+    if out.get("known_but_blocked_matches"):
+        lines.append("%d known but not startable yet match: add state:blocked to list them."
+                     % out["known_but_blocked_matches"])
+    hint = out.get("try_instead") or {}
+    if hint.get("tags"):
+        lines.append("Topics with things you know of (use tag:<name>):")
+        for entry in hint["tags"]:
+            lines.append("  %-24s %d startable, %d blocked" % (
+                entry["tag"], entry["startable"], entry["blocked"]))
+    for entry in hint.get("closest_visible", []):
+        lines.append("  close: %s (%s), %s" % (entry["name"], entry["id"], entry["state"]))
     return lines
 
 
@@ -657,6 +668,9 @@ def _available_list_block(out, header, _width, _purse):
     if out.get("more"):
         lines.append("")
         lines.append(out["more"])
+    if out.get("how_matched"):
+        lines.append("")
+        lines.append("  Search: " + out["how_matched"] + ".")
     return lines
 
 
