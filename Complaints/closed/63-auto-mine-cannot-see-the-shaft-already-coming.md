@@ -66,7 +66,7 @@ online) is consistent with the code as it stands.
 None of the existing complaints in the index name auto-mine or
 `mine_pending` specifically. Worth reading alongside `Complaints/54-a-shaft-that-costs-nothing-to-sink.md`
 only in the sense that both are mining-economics findings in the same
-module; they are otherwise unrelated (56 is about the sinking-cost
+module; they are otherwise unrelated (54 is about the sinking-cost
 amortisation being too small to matter, not about auto-investment sizing).
 
 ## What would resolve it

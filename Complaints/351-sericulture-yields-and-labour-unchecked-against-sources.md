@@ -16,3 +16,5 @@ Open each, replace the stated orders of magnitude with the sourced figures, and
 check the silk price against Han bolt prices (the Juyan slips) once a wage and
 grain price for Han are sourced. Rome's silk import tonnage moves with the
 labour figure, which is the number that matters most.
+
+Related: 109, 300, 324, 338, 339, 346, 347, 350, 353.

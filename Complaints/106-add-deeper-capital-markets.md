@@ -1,6 +1,6 @@
 # Add deeper capital markets
 
-**Status:** partly - a loanable-funds market per civilisation is built (rate, premium, credit ceilings, the state borrows, interest shared among lenders); banks, bonds, equity, insurance and crises remain; next: 308 (firms raise capital), 412
+**Status:** partly - a loanable-funds market per civilisation is built (rate, premium, credit ceilings, the state borrows, interest shared among lenders); banks, bonds, equity, insurance and crises remain; next: 308 (firms raise capital), 307
 
 **Source:** playtest findings document, LATE-004. **Type:** Major
 roadmap-sized feature recommendation. Genuinely new; not currently named in
@@ -66,3 +66,5 @@ Each civilisation has one loanable-funds market (`sim/world/capital_market.py` p
 Every constant that is not derived is declared a `temporary_heuristic` (`RATE_ELASTICITY`, `RATE_FLOOR_SHARE`, `RATE_CEILING_SHARE`, `ARREARS_PREMIUM_AT_CEILING`, `LENDER_RESERVE_SHARE`, `SAVING_SHARE_OF_SURPLUS`, `LENDING_HORIZON_YEARS`, `BACKGROUND_BORROWING_SHARE`, `LENDABLE_RESERVE_SHARE`, `STANDING_DISCOUNT_CAP`, `TRACK_RECORD_YEARS`); `python3 sim/code_health.py` lists them. Measure the series with a 150-year game printing `market_rate()`, `debt_interest_rate()` and `credit_limit()` each decade.
 
 Still open: firms raising capital on purpose (308), the state reserve that dominates supply (307), and everything in the original finding beyond a pooled loan market: banks and deposits, bonds, equity and joint-stock firms, insurance, investment funds, crises.
+
+Related: 332.

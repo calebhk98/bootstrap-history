@@ -18,4 +18,6 @@ each year: at the ceiling for the first four years, falling only as imports buil
 An opening trade history for a route that already ran (flows at the level the
 route's own freight, lift and merchants' capital allow), derived rather than
 stated, so the opening price is cost plus the merchants' terms. The adjustment
-speed and capital limits are themselves labelled heuristics (630).
+speed and capital limits are themselves labelled heuristics (346).
+
+Related: 109, 300, 324, 338, 339, 347, 350, 351.

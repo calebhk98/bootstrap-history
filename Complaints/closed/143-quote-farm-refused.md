@@ -6,6 +6,6 @@
 
 Why it matters: the help says "ASK THE PRICE FIRST with quote"; for most purchases the player cannot.
 
-What it would take: `quote` for every `buy` target,. Material prices are covered in 178.
+What it would take: `quote` for every `buy` target,. Material prices are covered in 174.
 
 Found in a new-player playtest (Rome 100 AD, poor_scholar kit, seed 1, played through `play --session`), report: `Complaints/reports/playtest-rome-seed1-new-player.md`.

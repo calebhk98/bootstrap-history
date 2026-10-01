@@ -10,3 +10,5 @@ Two measurements from the disclosure work (`disclose`, `python3 sim/simulator.py
 Fixing 2 means giving the relief a per-weapon basis (each held military node removes its own share of the harm, with diminishing returns as `hazard_relief` already does) instead of an average over everything the founder built.
 
 Update (Complaint 331): incumbent firms now expand through normal rules before new ones are needed; Rome seed 1 reaches about 3100 firms at year 150 instead of about 7600. What still lets the count climb is in `345`.
+
+Related: 341, 354.

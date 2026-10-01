@@ -21,3 +21,5 @@ A per-partner yearly value ledger (imports paid for by exports plus coin
 metal), and hulls, pack strings and carts as capital with a build cost, so a
 route's yearly tonnage is what its carriers can lift
 (`sim/world/sea_freight.py` already gives the physical inputs per hull).
+
+Related: 326, 340.

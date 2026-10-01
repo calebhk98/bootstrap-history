@@ -11,3 +11,5 @@ The anchor is a second source of position next to the tiles, and it is why `Sim.
 ## What it would take
 
 Derive the anchor from tiles and re-derive `RAW_DISTANCE_BANDS` and `route_difficulty` so reach is calibrated against tile geometry, then check the fingerprint and the foreign-trade tests. Related: 136.
+
+Related: 281.

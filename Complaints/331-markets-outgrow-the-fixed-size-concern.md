@@ -10,3 +10,5 @@ Complaint 330 part 1 made entry bounded by the market: an entrant expects taking
 3. The pooled stake (`ENTREPRENEURIAL_CAPITAL_SHARE`) is a per-entrant ceiling, not a drawn-down savings pool; no entrant ever competes for the same capital.
 
 Fix direction: let a firm's capacity scale with the market it serves (its output and staff, so wages and upkeep follow), or tie wages to the economy index. Re-measure with the driver before and after.
+
+Related: 341, 354.

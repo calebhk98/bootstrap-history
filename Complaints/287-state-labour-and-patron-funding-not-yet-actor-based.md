@@ -10,4 +10,4 @@ Three things the state budget does not do yet, each measurable.
 
 Check 3 with `grep -rn "state_military_diffusion" sim --include=*.py`.
 
-Done: item 2. `Sim.state_funding` is what the treasury paid (`Government.pay_patron`, from the purse after the standing need, nothing when any need went unpaid); the old formula survives as `patron_funding_ask`, a labelled heuristic for what a patron would give. Item 1 in part: `society_output` excludes soldiers under arms, so a larger army lowers revenue; the trade itself and the wage are 447. Item 3 is untouched.
+Done: item 2. `Sim.state_funding` is what the treasury paid (`Government.pay_patron`, from the purse after the standing need, nothing when any need went unpaid); the old formula survives as `patron_funding_ask`, a labelled heuristic for what a patron would give. Item 1 in part: `society_output` excludes soldiers under arms, so a larger army lowers revenue; the trade itself and the wage are 314. Item 3 is untouched.

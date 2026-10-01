@@ -7,3 +7,5 @@
 A good priced at the "mature" fallback (`python3 -c` over `data.goods_provenance` listing materials not `solved`) also enters a node's revenue at a technique nobody in reach holds; the same holds for an energy requirement graded at the mature table (`sim/engine/energy_prices.py` falls back to it when no held technique reaches the temperature).
 
 What it would take: re-derive (cache key already includes the held gate set) when the set of held gate technologies changes, and say which node figures a player sees move. Measure with `python3 sim/node_revenue_report.py` at two held sets. See `Complaints/283`, `Complaints/310` (closed), `Complaints/302`.
+
+Related: 140, 295, 318, 329, 335, 336, 337.

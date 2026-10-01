@@ -19,3 +19,5 @@ Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md
 **Also:** a multi-year `step N` with a `--session` file now saves after every simulated year (`sim/engine/proto/step_progress.py`), so an interrupt keeps the finished years. Each save costs what one late-game save costs, so a long step pays it once a year; measure before and after with a late save if saves are slowed further.
 
 Update (Complaint 331): see `321` for the measured per-year CPU at years 100 and 150 after firms began to grow instead of multiplying.
+
+Related: 304.

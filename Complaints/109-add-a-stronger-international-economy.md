@@ -62,3 +62,5 @@ player's own civilisation.
 buyer needs. `Complaints/103` (LATE-001) for the actor-extraction machinery
 a foreign competitor firm would reuse. `docs/architecture/ENDOGENOUS_COSTS_
 AND_DOMAINS.md` Part 3 for the Layer 4 domestic-trade overlap.
+
+Related: 338, 346, 347, 350, 351, 353.

@@ -22,3 +22,5 @@ A price level for the whole economy from its coin stock against output (with
 velocity and real output as modelled quantities, not the fixed share the
 opening stock uses now), read by wages, the debt rate and the market's
 long-run costs.
+
+Related: 109, 300, 324, 326, 339, 346, 347, 350, 351, 353.

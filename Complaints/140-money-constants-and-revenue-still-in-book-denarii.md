@@ -1,6 +1,6 @@
 # Money constants and technology revenue are still in book denarii
 
-**Status:** partly - seven more money constants are labour hours now; nine remain in book denarii and are documented as genuine money amounts (eight) or still to document (the eminence threshold); revenue is still authored, not derived; the pump guard is still loosened
+**Status:** partly - seven more money constants are labour hours now; nine remain in book denarii and are documented as genuine money amounts (eight) or still to document (the eminence threshold); revenue is derived from output for nodes that make something (`sim/engine/node_output.py`, 283) and authored for the rest; the pump guard is still loosened
 
 Money is now anchored to each civilisation's coin, and costs are labour-hours
 inside the engine, but some numbers are still written in the old book
@@ -87,3 +87,5 @@ Find them with `grep -rn "denari" sim/engine --include=*.py` and the
 - [ ] `EMINENCE_WEALTH_VISIBLE_THRESHOLD` (in `sim/engine/society_state_pressure.py`, owned by the state-budget work at the time) still needs the same decision: it reads as a wealth threshold, which is a stock of labour-valued goods, so it probably belongs in labour hours.
 
 Update (concern-margins-and-capital-charge): the guard stands at the same quarter-year as `node_revenue.MINIMUM_PAYBACK_YEARS`. Making it stricter means raising that heuristic floor, which caps many more authored revenues, and three output-derived wage-heavy nodes (hand papermaking, phenol, rope walk) would then fail on gross revenue although they earn only their wages (`Complaints/336`). Not done.
+
+Related: 283, 295, 317, 318, 329, 335, 337.

@@ -12,7 +12,7 @@ Found by a code inventory made for the new-player playtest (`playtest_notes/code
 
 Related: `Complaints/119` (the exit checklist for making solved prices the default, per `docs/architecture/STATE_OF_THE_PROJECT.md`); this issue adds the player-visible symptom (147).
 
-Stakeholder decision: yes; delete `data/prices.json` as soon as possible. Sequence with 151 (projects price materials from the market) and the exit checklist in 123.
+Stakeholder decision: yes; delete `data/prices.json` as soon as possible. Sequence with 147 (projects price materials from the market) and the exit checklist in 119.
 
 Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): `python3 sim/simulator.py validate` passes with one warning, reproduced: `el2_inductor_ferrite_core: material ferrite_kg has a production entry but no solved price (cost is a lower bound)`.
 

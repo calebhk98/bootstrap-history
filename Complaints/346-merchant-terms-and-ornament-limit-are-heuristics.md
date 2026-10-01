@@ -24,3 +24,5 @@ A merchant labour and credit market that sets margin and capital (and the speed
 at which a trade relationship builds), a held-stock model of ornament metal
 instead of a per-head yearly limit, goods that differ by origin so a partial gap
 moves part of a market, and sourced output for more goods (`Complaints/324`).
+
+Related: 109, 300, 338, 347, 350, 351, 353.

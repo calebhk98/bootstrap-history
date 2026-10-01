@@ -1,6 +1,6 @@
 # Capability names are stored in the capital field of some nodes
 
-**Status:** closed - 115 capability names moved into `pre` (84 added, 31 were already there), the stray `cap` strings removed; start kits that hold those nodes without the rungs are in 336
+**Status:** closed - 115 capability names moved into `pre` (84 added, 31 were already there), the stray `cap` strings removed; start kits that hold those nodes without the rungs are in 290
 
 About a hundred nodes in `data/branches/50_textiles_consumer_deep.json` and
 neighbouring files carry a capability name (for example `"cap_tol_1mm"`) under

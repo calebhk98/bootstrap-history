@@ -10,3 +10,5 @@
 - Revenue is still derived at opening prices and scaled by the generic index (`287`), so it does not follow what the goods fetch.
 
 What replaces the heuristic: aggregate demand for hands (every actor's staff plus the army) cleared against the working population, with takings that follow the market's own price and volume. Until then the share stays at zero and the pay scale is an off switch, with upkeep following volume sold carrying the firm count (345). Related: `101`, `283`, `341`, `345`.
+
+Related: 330, 331.

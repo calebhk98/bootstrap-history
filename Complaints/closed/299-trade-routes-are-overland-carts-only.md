@@ -1,6 +1,6 @@
 # Freight between economies is a two-ox cart over the great-circle distance
 
-**Status:** closed - freight is the cheapest route over the map's links by sea, river, caravan or cart; what it still omits is filed as 484
+**Status:** closed - freight is the cheapest route over the map's links by sea, river, caravan or cart; what it still omits is filed as 326
 
 `_route_freight_per_tonne` in `sim/engine/foreign_economies.py` prices the
 haul as the land cart already used for domestic freight, scaled by distance and

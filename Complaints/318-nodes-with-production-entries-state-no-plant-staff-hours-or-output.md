@@ -9,3 +9,5 @@ Separately, several nodes declare `annual_output_t` (crucible steel, clear glass
 Extraction and by-product entries (`extracted_from` with no capital or inputs: peat, opium, flotation concentrates, air gases, coal seams) are skipped on purpose: a deposit or a parent stream sets their output, not staff.
 
 Fix: state a plant (`capital` with `annual_output_at_basis`, a physical fact with a stated basis) or a declared tonnage for each, or re-point the declared ones to the node that gates their entries. Do not invent a figure to make the payback floor go away; each needs a source for the plant's yearly throughput. See `Complaints/283`.
+
+Related: 140, 295, 317, 329, 335, 336, 337.

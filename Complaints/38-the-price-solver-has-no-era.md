@@ -174,3 +174,5 @@ else for exactly that reason.
 ## Update: priced at what a civilisation can reach
 
 A material nothing held makes is no longer priced at the mature technique when something in reach makes it: it is priced at the nearest technique in the tree with the civilisation's own techniques for everything else (`Complaints/302`, `sim/engine/prices.py` `entries_in_reach`). What remains: materials nothing in reach delivers still fall back to the mature technique, labelled "mature" (count per civilisation with `data.goods_provenance`); derived node revenue is priced once at the reference civilisation (`Complaints/310`); the solver leaves placeholder prices on materials no technique delivers (`Complaints/309`).
+
+Related: 119.

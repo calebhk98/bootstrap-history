@@ -1,8 +1,8 @@
 # Mine works were a lump multiplier and the grade basis was unstated
 
-**Status:** closed - barren rock, hoisting, carrying, drainage, timbering and ventilation are separate physical terms (`sim/world/mine_works.py`); the remaining gap is 641
+**Status:** closed - barren rock, hoisting, carrying, drainage, timbering and ventilation are separate physical terms (`sim/world/mine_works.py`); the remaining gap is 349
 
-Opened sources: Bettenay 2022 (Metalla 26.2, Tables 2-4, local text), Agricola De re metallica (Hoover translation, Project Gutenberg), Diodorus 5.36-38 (Thayer). Not opened: Strabo 3.2.10 as text (only the figures quoted in 410), Pliny NH 33 (only the passages Agricola's notes quote), Hopper, Davies, Domergue, Conophagos, Kongsberg originals (only Bettenay's tabulation).
+Opened sources: Bettenay 2022 (Metalla 26.2, Tables 2-4, local text), Agricola De re metallica (Hoover translation, Project Gutenberg), Diodorus 5.36-38 (Thayer). Not opened: Strabo 3.2.10 as text (only the figures quoted in 305), Pliny NH 33 (only the passages Agricola's notes quote), Hopper, Davies, Domergue, Conophagos, Kongsberg originals (only Bettenay's tabulation).
 
 ## Decomposition of Bettenay's realistic Melle model (Table 4, notes)
 
@@ -13,7 +13,7 @@ Opened sources: Bettenay 2022 (Metalla 26.2, Tables 2-4, local text), Agricola D
 
 ## Grade basis
 
-`ore_grade_kg_per_tonne` is metal per tonne of ore as presented to dressing, not per tonne of rock broken: the entries' own sources call them ore grades, and the lead recipe dresses that ore. Rock broken per tonne of ore is higher by the barren share. The grade values themselves are unchanged and unsourced (641).
+`ore_grade_kg_per_tonne` is metal per tonne of ore as presented to dressing, not per tonne of rock broken: the entries' own sources call them ore grades, and the lead recipe dresses that ore. Rock broken per tonne of ore is higher by the barren share. The grade values themselves are unchanged and unsourced (349).
 
 ## What is charged now
 
