@@ -269,7 +269,7 @@ from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from sim.world import mine_fire_setting, tile_lookup
+from sim.world import mine_fire_setting, mine_works, tile_lookup
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -350,41 +350,6 @@ BREAKING_HOURS_PER_TONNE_HARD = declare(
         "reason Rio Tinto's copper and Dacia's gold come out as this "
         "module's costliest deposits - see the module docstring's ALLUVIAL "
         "GOLD AND DEEP VEIN GOLD section.")
-
-HAULAGE_MULTIPLIER_SHALLOW_VEIN = declare(
-    "HAULAGE_MULTIPLIER_SHALLOW_VEIN", 1.5,
-    kind="engineering_estimate",
-    unit="multiplier on breaking hours (dimensionless)",
-    source=None,
-    confidence="D",
-    why="A modest extra labour charge for hoisting broken ore up a ladder "
-        "or basket-and-windlass from a shaft too deep to simply carry ore "
-        "out on foot, but shallow enough that standing water is not yet a "
-        "problem needing continuous pumping. No specific ancient hoisting-"
-        "rate figure is behind this number; it is a placeholder pending a "
-        "real derivation from shaft depth and basket-hoist rate, which is "
-        "why it is a temporary_heuristic-confidence figure declared at "
-        "engineering_estimate kind only because the DIRECTION (deeper "
-        "costs more) is not in doubt even though the SIZE is.")
-
-HAULAGE_MULTIPLIER_DEEP_VEIN = declare(
-    "HAULAGE_MULTIPLIER_DEEP_VEIN", 3.5,
-    kind="engineering_estimate",
-    unit="multiplier on breaking hours (dimensionless)",
-    source="Roman deep mines - Rio Tinto above all - are the standard "
-           "textbook example of ancient continuous dewatering: recovered "
-           "drainage-wheel batteries (compartmentalised Archimedes-screw "
-           "and reverse-overshot-wheel trains) lifted water from shafts "
-           "on the order of a hundred metres deep, run continuously, which "
-           "on top of the long ore-hoist itself is a substantial standing "
-           "labour charge quite separate from breaking the rock.",
-    confidence="D",
-    why="Same reasoning as HAULAGE_MULTIPLIER_SHALLOW_VEIN's own "
-        "declaration - the DIRECTION (deep, wet workings cost much more "
-        "than shallow dry ones) is well attested by the archaeology; the "
-        "specific multiplier is this file's own placeholder pending a real "
-        "derivation from shaft depth, water inflow rate and a drainage "
-        "wheel's lift-rate, none of which this project has yet.")
 
 ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE = declare(
     "ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE", 1.5,
@@ -611,12 +576,6 @@ _HARDNESS_BREAKING_HOURS = {
     "hard": BREAKING_HOURS_PER_TONNE_HARD,
 }
 
-_DEPTH_HAULAGE_MULTIPLIER = {
-    "surface": 1.0,
-    "shallow_vein": HAULAGE_MULTIPLIER_SHALLOW_VEIN,
-    "deep_vein": HAULAGE_MULTIPLIER_DEEP_VEIN,
-}
-
 # Shaft depth per depth class; classes with no shaft are absent.
 _SHAFT_DEPTH_METRES = {
     "shallow_vein": SHAFT_DEPTH_METRES_SHALLOW_VEIN,
@@ -683,12 +642,24 @@ def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
     elif deposit.depth_class == "alluvial":
         hours_per_tonne_material = ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE
     else:
-        hours_per_tonne_material = (
-            _HARDNESS_BREAKING_HOURS[deposit.hardness_class]
-            * _DEPTH_HAULAGE_MULTIPLIER[deposit.depth_class]
-            + mine_fire_setting.fire_setting_labour_hours_per_tonne_rock(
-                deposit.hardness_class))
+        hours_per_tonne_material = vein_hours_per_tonne_ore(deposit)
     return hours_per_tonne_material / deposit.ore_grade_kg_per_tonne
+
+
+def vein_hours_per_tonne_ore(deposit: "Deposit") -> float:
+    """Labourer-hours per tonne of ore presented from a vein or surface
+    working: breaking and fire-setting every tonne of rock broken (ore plus
+    the barren rock that comes with it), then hoisting, carrying, draining
+    and timbering (sim/world/mine_works.py)."""
+    rock_per_ore = mine_works.rock_broken_tonnes_per_tonne_ore(deposit.depth_class)
+    on_rock = (_HARDNESS_BREAKING_HOURS[deposit.hardness_class]
+               + mine_fire_setting.fire_setting_labour_hours_per_tonne_rock(
+                   deposit.hardness_class))
+    on_ore = sum(mine_works.works_hours_per_tonne_ore(
+        deposit.depth_class, deposit.hardness_class,
+        _lift_hours_per_tonne_metre(), shaft_depth_metres(deposit),
+        mine_fire_setting.MINING_SHIFT_HOURS).values())
+    return on_rock * rock_per_ore + on_ore
 
 
 # ============================================================================
@@ -735,7 +706,12 @@ def shaft_cost_labour_hours(deposit: "Deposit") -> float:
     support = SHAFT_SUPPORT_HOURS_PER_METRE * (
         depth + depth ** 2 / (2.0 * SHAFT_SUPPORT_DEPTH_SCALE_METRES))
     drainage = SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD * depth
-    return breaking + spoil_lift + support + drainage + HOIST_FRAME_HOURS
+    # A ventilation shaft is sunk and lined like the working shaft but has
+    # no hoist frame and no sump.
+    ventilation = (mine_works.VENTILATION_OPENINGS_PER_WORKING_SHAFT
+                   * (breaking + spoil_lift + support))
+    return (breaking + spoil_lift + support + drainage + HOIST_FRAME_HOURS
+            + ventilation)
 
 
 def shaft_rock_capacity_tonnes_per_year(deposit: "Deposit") -> float:
