@@ -39,15 +39,15 @@ check("...which is at least two orders of magnitude above the pre-fix "
 # spikes hard, and a literacy-bound trade (scribe) still hits ITS ceiling
 # (literate_capacity, not market depth) rather than being waved through.
 s_rip = sim(capital=1e9)
-s_rip._add_labour_pressure("smith", 10 * s_rip.HOURS_PER_PERSON_YEAR)
+s_rip.labour_market.press("smith", 10 * s_rip.HOURS_PER_PERSON_YEAR)
 check("ten more smiths barely moves the going wage in a city this size",
-      s_rip.labour_price_factor("smith") < 1.03,
-      s_rip.labour_price_factor("smith"))
+      s_rip.labour_market.price_factor("smith") < 1.03,
+      s_rip.labour_market.price_factor("smith"))
 s_spike = sim(capital=1e9)
-s_spike._add_labour_pressure("millwright", 10 * s_spike.HOURS_PER_PERSON_YEAR)
+s_spike.labour_market.press("millwright", 10 * s_spike.HOURS_PER_PERSON_YEAR)
 check("...while the same ten against a genuinely scarce trade still spikes",
-      s_spike.labour_price_factor("millwright") > 2.0,
-      s_spike.labour_price_factor("millwright"))
+      s_spike.labour_market.price_factor("millwright") > 2.0,
+      s_spike.labour_market.price_factor("millwright"))
 
 # --- reachable_trade_population and national_trade_population: the two
 # numbers 'population' shows side by side. Reach well above the old
@@ -107,7 +107,7 @@ check("'population' is in KNOWN_COMMANDS and survives the fog/pointer "
 # actually feels a price premium bite (not only in the literate-wall text,
 # which already said this before this fix existed).
 s_fr = sim(capital=50.0)
-s_fr._add_labour_pressure("millwright", 10 * s_fr.HOURS_PER_PERSON_YEAR)
+s_fr.labour_market.press("millwright", 10 * s_fr.HOURS_PER_PERSON_YEAR)
 ok_fr, msg_fr = s_fr.hire("millwright", 3)
 check("a cash refusal driven by a real price premium says this is one "
       "household's reach into one town's market, not a national figure",

@@ -52,7 +52,7 @@ soldiers = lines["army"].labour.get("labourer", 0.0)
 check("the army is the civilisation's opening standing force, held at the same share of the people",
       abs(soldiers - game.civ["standing_army"]) < 1e-6 * soldiers, (soldiers, game.civ.get("standing_army")))
 check("army pay is the soldiers' hours at the labourer's wage",
-      abs(lines["army"].wages - soldiers * game.HOURS_PER_PERSON_YEAR * game.wage_per_hour("labourer"))
+      abs(lines["army"].wages - soldiers * game.HOURS_PER_PERSON_YEAR * game.labour_market.quote("labourer"))
       < 1e-6 * lines["army"].wages, lines["army"].wages)
 check("the army's iron comes from military logistics: tonnes follow the soldiers and their equipment",
       lines["army"].materials and all(tonnes > 0.0 for tonnes in lines["army"].materials.values()),
@@ -73,11 +73,11 @@ check("a civilisation that opens with no standing force has no army line",
 # ---- revenue is the economy's yield, spending is the standing need ----------------------------
 game, treasury = budget_sim()
 revenue = SimWorld(game).state_revenue()
+need = sum(line.money for line in budget.standing_lines(SimWorld(game)))
 one_year(game)
 income, outlays = treasury.record.income, treasury.record.outlays
 check("the whole of the state's revenue is booked as income from taxation",
       abs(income.get("taxation", 0.0) - revenue) < 1e-6 * revenue, (income, revenue))
-need = sum(line.money for line in budget.standing_lines(SimWorld(game)))
 check("the state spends its standing need, by purpose",
       outlays.get("army", 0.0) > 0.0 and outlays.get("administration", 0.0) > 0.0
       and abs(sum(outlays.values()) - need) < 0.02 * need, (outlays, need))

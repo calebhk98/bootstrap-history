@@ -177,7 +177,7 @@ for civ_id in ("england_1300", "han_china_100ad", "norse_900ad"):
 
 # ---- employers squeezed by the founder's hiring ----------------------------------------------
 squeezed = sim()
-squeezed._add_labour_pressure("artisan", squeezed.market_supply("artisan") * 3.0)
+squeezed.labour_market.press("artisan", squeezed.market_supply("artisan") * 3.0)
 squeezed.state_treasury().money = 1.0e12
 world = SimWorld(squeezed)
 sectors = {sector.subject: sector for sector in world.squeezed_employers()}

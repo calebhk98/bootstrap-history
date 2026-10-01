@@ -17,7 +17,7 @@ from .quote_spending import SPENDING_QUOTERS, bounty_refusal
 from .. import cash_book, purchase_rule
 
 
-@command("bounty", group="projects",
+@command("bounty", shape="tech", group="projects",
          summary="pay someone else to solve it",
          usage=["bounty <id>"], options={"<id>": "a technology"},
          description="Posts a public prize instead of building it yourself, paid in full "
@@ -247,7 +247,7 @@ def _cmd_sell(sim, nodes, cmd, ended):
 
 
 
-@command("money", group="money", aliases=("ledger", "accounts", "cash"),
+@command("money", shape="bare", group="money", aliases=("ledger", "accounts", "cash"),
          summary="the whole ledger",
          usage=["money"], options={},
          description="What comes in and where it comes from, what goes out, and the "

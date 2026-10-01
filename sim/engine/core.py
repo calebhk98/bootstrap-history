@@ -39,6 +39,7 @@ from sim.unit_conversions import PERCENT_SCALE
 from .economy import EconomyMixin
 from .market_clearing import MarketClearingMixin
 from .foreign_economies import ForeignEconomiesMixin
+from .living_stock import LivingStockMixin
 from .market_demand import MarketDemandMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
@@ -201,7 +202,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
-          StepPhasesMixin, LabourAllocationMixin):
+          StepPhasesMixin, LabourAllocationMixin, LivingStockMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -605,6 +606,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             self.state.projects.done.add(tech_id)
             self._done_changed()
             self.state.projects.granted.add(tech_id)
+        self.grant_opening_stock()
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;
         # they do not mean every society on Earth already owns it.  In

@@ -758,12 +758,12 @@ def _agent_economy(sim, cmd=None):
         # THE SAME FORMULA `labour`'s own row() uses for "a_year_of_one", not
         # a second version of a wage this file already prints elsewhere.
         out["wages_by_trade"] = [
-            {"trade": trade, "a_year_of_one": round(sim.annual_wage(trade), 0),
+            {"trade": trade, "a_year_of_one": round(sim.labour_market.quote_annual(trade), 0),
              "wage_foundation": {
                  "base_for_skill_and_difficulty": round(sim.base_annual_wage(trade), 2),
-                 **{factor_key: round(value, 3) for factor_key, value in sim.wage_cost_factors(trade).items()},
+                 **{factor_key: round(value, 3) for factor_key, value in sim.labour_market.cost_factors(trade).items()},
                  "demographic_scarcity": round(sim.wage_index, 3),
-                 "local_trade_scarcity": round(sim.labour_price_factor(trade), 3)}}
+                 "local_trade_scarcity": round(sim.labour_market.price_factor(trade), 3)}}
             for trade in sorted(WAGES) if sim.trade_available(trade)]
     return out
 

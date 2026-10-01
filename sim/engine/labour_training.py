@@ -32,7 +32,7 @@ class TrainingMixin:
 
     # ---- a technology can make the SAME worker do more, without replacing
     # them ------------------------------------------------------------------
-    # THE SECOND QUESTION: everything market_supply() and labour_pressure()
+    # THE SECOND QUESTION: everything market_supply() and the labour market pressure
     # model is about how many HOURS a trade can supply and what hiring more
     # of them costs; neither asks an hour, once bought, to be worth more
     # than any other hour of the same trade. A flying shuttle does not hire
@@ -85,7 +85,7 @@ class TrainingMixin:
     #                       faster one per hour; machinist.
     # LABOUR_PRODUCTIVITY_SOURCES: [(node, trade, bonus)] from each node's `labour_productivity` (MechanicsMixin).
     # NEVER MORE THAN HALF AGAIN, however many of the above a run has built.
-    # Every other saturating multiplier in this file (labour_price_factor,
+    # Every other saturating multiplier in this file (labour market price_factor,
     # literacy_factor) is capped for the same reason: an uncapped sum of
     # small, individually-defensible bonuses is still an uncapped sum, and
     # this compounds with hired_cap, market_supply's own institutional
@@ -96,7 +96,7 @@ class TrainingMixin:
         why="However many productivity-raising technologies a run has "
             "built, no trade's hour may be worth more than half again its "
             "base value. Every other saturating multiplier in this file "
-            "(labour_price_factor, literacy_factor) is capped for the "
+            "(labour market price_factor, literacy_factor) is capped for the "
             "same reason: an uncapped sum of small, individually-"
             "defensible bonuses is still an uncapped sum, and this "
             "compounds with hired_cap and market_supply's own "
@@ -147,7 +147,7 @@ class TrainingMixin:
         # a project's labour draw actually runs into is how much WORK gets
         # out of the hours it can call on, which is this number, not how
         # many people the town could in principle hire (market_supply, still
-        # unchanged, still governs hiring capacity and labour_price_factor).
+        # unchanged, still governs hiring capacity and labour market price_factor).
         return ((self.market_supply(trade) + self.state.household.contract_hours.get(trade, 0.0))
                 * self.labour_productivity(trade))
 
@@ -184,15 +184,12 @@ class TrainingMixin:
     def hire_fee(self, trade, count):
         """Paid the moment people are taken on: a finder's fee that is also
         the first year's wage, scaled by how hard the local trade is leaned on."""
-        return (count * self.annual_wage(trade, include_local_scarcity=False)
-                * self.labour_price_factor(trade))
+        return self.labour_market.hire_cost(trade, count)
 
     def commission_fee(self, trade, hours):
         """What a one-off job of `hours` costs: a premium over the wage, more
         again when buying deep into what the local market can spare."""
-        return (hours * self.wage_per_hour(trade) * self.COMMISSION_PREMIUM_MULTIPLIER
-                * self.wage_index * self.price_index
-                * self.labour_price_factor(trade))
+        return self.labour_market.commission_cost(trade, hours, self.COMMISSION_PREMIUM_MULTIPLIER)
 
     def hire_check(self, trade, count):
         """Everything `hire` and `quote hire` agree on before money moves: the
@@ -243,10 +240,10 @@ class TrainingMixin:
         # actually pays to take a skilled man off someone else's bench. Buying
         # deep into a trade's LOCAL supply bids its price up, the same
         # principle market_pressure already applies to slaves (see
-        # labour_price_factor for why it is not a one-way ratchet: teaching
+        # labour market price_factor for why it is not a one-way ratchet: teaching
         # or hiring your way to a bigger supply of the trade brings the price
         # back down).
-        _lpf_now = self.labour_price_factor(trade)
+        _lpf_now = self.labour_market.price_factor(trade)
         fee = self.hire_fee(trade, count)
         if fee > self.spending_power("buy"):
             _msg = self._cash_in_hand_refusal(
@@ -296,7 +293,7 @@ class TrainingMixin:
         # See step() 2, where it is netted off living_cost.
         household.wages_prepaid = (household.wages_prepaid or 0.0) + fee
         household.employees[trade] = household.employees.get(trade, 0.0) + float(count)
-        self._add_labour_pressure(trade, float(count) * self.HOURS_PER_PERSON_YEAR)
+        self.labour_market.hire(self.state.household, trade, float(count) * self.HOURS_PER_PERSON_YEAR)
         self._resync_pools()
         # SAY HOW MANY, AND HOW MANY YOU NOW HAVE: a reply that only names
         # the trade, with no number, gives a player no way to notice a
@@ -387,7 +384,7 @@ class TrainingMixin:
         why="What it costs, per person taught, to keep the SOURCE "
             "trade's people fed while they are pulled off their own "
             "bench to learn something new - a premium over their "
-            "ordinary annual wage, the same idea labour_price_factor "
+            "ordinary annual wage, the same idea labour market price_factor "
             "prices for hiring and market_pressure prices for buying "
             "slaves. Tuned premium, not a measured opportunity cost.")
 
@@ -448,10 +445,10 @@ class TrainingMixin:
                               self._room_advice()))
         # Teaching pulls the SOURCE trade's people off their own bench for the
         # duration, which is exactly what market_pressure prices for buying
-        # slaves and labour_price_factor now prices for hiring: the more of
+        # slaves and labour market price_factor now prices for hiring: the more of
         # `frm` you have already pulled recently, the dearer feeding the next
         # batch while they learn.
-        fee = count * self.annual_wage(frm) * self.TEACHING_FEE_MULTIPLIER
+        fee = count * self.labour_market.quote_annual(frm) * self.TEACHING_FEE_MULTIPLIER
         if fee > self.spending_power("buy"):
             return None, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
@@ -460,7 +457,7 @@ class TrainingMixin:
 
     def trainee_wage_bill(self, trade, count):
         """Yearly wage the people taught will add once they join the staff."""
-        return count * self.annual_wage(trade)
+        return count * self.labour_market.quote_annual(trade)
 
     def train(self, trade, count, frm=None):
         """Teach a trade that does not exist here into existence.
@@ -482,7 +479,7 @@ class TrainingMixin:
         household.teaching_hours_this_year = (household.teaching_hours_this_year or 0.0) + hours
         household.trades_created.add(trade)
         household.training.append([0.0, current_year + self.TEACHING_MATURATION_YEARS, trade, float(count)])
-        self._add_labour_pressure(frm, float(count) * self.HOURS_PER_PERSON_YEAR)
+        self.labour_market.press(frm, float(count) * self.HOURS_PER_PERSON_YEAR)
         # SAY WHAT IT TOOK: teaching can quietly eat most of a year's
         # founder-hours, with nothing left afterward to supervise what it
         # just cost elsewhere to run - the reply has to report the actual
@@ -632,7 +629,7 @@ class TrainingMixin:
                            % (trade, max(0.0, spare), hours))
         # A shop charges more for a one-off than it pays its own man for a
         # year, and more again if you are buying deep into what the local
-        # market can spare this year (see labour_price_factor).
+        # market can spare this year (see labour market price_factor).
         fee = self.commission_fee(trade, hours)
         if fee > self.spending_power("buy"):
             return None, self._cash_in_hand_refusal(
@@ -655,5 +652,5 @@ class TrainingMixin:
         household.debit(fee, "commissioned craftsmen")
         household.contract_hours[trade] = household.contract_hours.get(trade, 0.0) + hours
         household.commissioned[trade] = household.commissioned.get(trade, 0.0) + hours
-        self._add_labour_pressure(trade, hours)
+        self.labour_market.hire(household, trade, hours)
         return True, ("%.0f hours of a %s bought for %.0f denarii" % (hours, trade, fee))

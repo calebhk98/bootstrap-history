@@ -373,7 +373,7 @@ class FreightMixin:
         the material CHEAPER, only available. Both halves are here: `need`
         and `_material_market_tonnes(emp_key)` are resource_throttle()'s own
         figures, so demand approaching the market ceiling raises the price on
-        the same saturating curve labour_price_factor uses (negligible at a
+        the same saturating curve labour market price_factor uses (negligible at a
         fifth of the ceiling, roughly double at the whole of it); owning
         enough of your own extraction (mine_capacity, forest_ha,
         nitre_bed_m2) to cover the need removes the premium rather than

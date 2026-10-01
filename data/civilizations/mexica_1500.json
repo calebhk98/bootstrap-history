@@ -437,6 +437,8 @@
     "_doc": "Things this society cannot begin at all until it has the one thing they all rest on. Distinct from cost_multipliers, which make a domain dearer: these are not dear here, they are impossible. A break tester started horse_collar in the Valley of Mexico in 1500 on the same screen as a menu describing a society with no draught animals, and `why` there still called it a collar for a draught horse. Every entry is liftable by the node it names.",
     "draught animals": {
       "node": "exp_import_draught_animals",
+      "material": "draught_animal_kg",
+      "units": 1000,
       "because": "there is no draught animal in Mesoamerica: no horse, no ox, no mule, nothing that pulls. Every load in this society moves on a human back. Bring animals across first and all of this opens at once",
       "ids": [
         "ag2_horse_hoe",

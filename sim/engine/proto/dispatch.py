@@ -1,5 +1,8 @@
 """The command table: every accepted command name (and alias) mapped to the small handler that answers it, and the dispatcher that resolves names, guards fog, validates the command, and looks the handler up."""
 
+import importlib
+import os
+import pkgutil
 import re
 
 from ..data import money_word
@@ -23,51 +26,33 @@ from .step_stops import newly_startable_goal, severe_stop_reason
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
-# The four handler groups moved out of this module, by subject - see each
-# one's own docstring. This stays the composition point: the command table
-# below, KNOWN_COMMANDS/_ID_COMMANDS/_NAME_COMMANDS above, the fog guard and
-# name resolution in _agent_dispatch_inner, and every name protocol.py's
-# shim re-exports (including every _cmd_* below, imported back from wherever
-# it now lives so `from .proto.dispatch import _cmd_x` keeps working).
-from .dispatch_inspection import (
-    _cmd_state, _cmd_available, _cmd_log, _cmd_score, _cmd_why, _cmd_path,
-    _cmd_materials, _cmd_risk, _cmd_values, _cmd_stuck, _cmd_mines,
-    _cmd_capacity, _cmd_portfolio, _cmd_economy, _cmd_changes,
-    _cmd_population)
-from .dispatch_money import (
-    _cmd_bounty, _cmd_buy, _cmd_sell, _cmd_money, _cmd_quote, _cmd_close,
-    _cmd_withdraw, _cmd_bribe)
-from .dispatch_market import _cmd_market  # noqa: F401
-from .dispatch_screens import (  # noqa: F401
-    _cmd_map, _cmd_education, _cmd_demography, _cmd_divergence)
-from .dispatch_staff_controls import _cmd_keep, _cmd_reserve  # noqa: F401
-from .dispatch_disclosure import _cmd_disclose  # noqa: F401
-from .dispatch_figures import _cmd_figures  # noqa: F401
-from .dispatch_guidance import _cmd_leverage, _cmd_idle  # noqa: F401
-from .dispatch_priority import _cmd_priority  # noqa: F401
-from .dispatch_exclusions import _cmd_exclude, _cmd_include  # noqa: F401
-from .dispatch_labour import (
-    _cmd_work, _cmd_allocate, _cmd_labour, _cmd_hire, _cmd_fire, _cmd_train,
-    _cmd_commission, _cmd_move_base)
-from .dispatch_ventures import (
-    _cmd_start, _cmd_stop, _cmd_rush, _cmd_mothball, _cmd_restore,
-    _cmd_open, _cmd_ventures, _cmd_policy)
-
-# Every command that names a technology. Under fog, NONE of them may say
-# anything about one you have not heard of - including refusing it for a reason
-# that describes it.
-_ID_COMMANDS = ("why", "path", "start", "stop", "bounty", "mothball", "restore")
-
-# Every command whose `id` a typed NAME should resolve onto, before anything
-# else touches it. `open` is not in _ID_COMMANDS above - it is safe without
-# the fog guard, because you can only open something you have already done -
-# but a player still types its name, not its id, so it needs the same
-# resolution the fog-guarded commands get.
-_NAME_COMMANDS = _ID_COMMANDS + ("open",)
+# Every dispatch_*.py module in this package registers its commands with
+# @command when imported; they are found by name here, so a new module needs
+# no edit. Each module's _cmd_* handlers are re-exported from this module so
+# `from .proto.dispatch import _cmd_x` keeps working.
+for _module_info in sorted(pkgutil.iter_modules([os.path.dirname(__file__)]),
+                           key=lambda info: info.name):
+    if _module_info.name.startswith("dispatch_"):
+        _module = importlib.import_module("%s.%s" % (__package__, _module_info.name))
+        globals().update({name: value for name, value in vars(_module).items()
+                          if name.startswith("_cmd_")})
 
 
+def id_commands():
+    """Commands that name a technology. Under fog, NONE of them may say
+    anything about one you have not heard of - including refusing it for a
+    reason that describes it."""
+    return command_registry.names_with_shape("tech")
 
-@command("save", group="game",
+
+def name_commands():
+    """Commands whose `id` a typed NAME should resolve onto before anything
+    else touches it: the id commands, plus those safe without the fog guard
+    (you can only open something already done) that still take a name."""
+    return command_registry.names_with_shape("tech", "tech_done")
+
+
+@command("save", shape="file", group="game",
          summary="write the game to a file",
          usage=["save <file>", '{"cmd":"save","file":"mygame.json"}'],
          options={"<file>": "a file name (a relative name for scripts; typed in play, any path)"},
@@ -366,7 +351,7 @@ def _cmd_step(sim, nodes, cmd, ended):
 
 
 
-@command("quit", group="game", aliases=("q", "exit", "bye"),
+@command("quit", shape="bare", group="game", aliases=("q", "exit", "bye"),
          summary="stop",
          usage=["quit"], options={},
          description="Ends the session.")
@@ -378,7 +363,7 @@ def _cmd_quit(sim, nodes, cmd, ended):
 
 # "load" shares the save handler.
 command_registry.register_command(
-    "load", group="game", summary="read a game from a file",
+    "load", group="game", shape="file", summary="read a game from a file",
     usage=["load <file>"], options={"<file>": "a file written by save"},
     description="Replaces the current game with a saved one.",
     handler=_cmd_save)
@@ -434,7 +419,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # takes a raw id unchanged - this only fires when what was given is NOT
     # already one, so scripts and the `agent` protocol lose nothing.
     if (isinstance(cmd.get("cmd"), str) and isinstance(cmd.get("id"), str)
-            and cmd["cmd"].strip().lower() in _NAME_COMMANDS
+            and cmd["cmd"].strip().lower() in name_commands()
             and cmd["id"] not in nodes):
         _name_cands = _resolve_by_name(cmd["id"])
         if sim.fog:
@@ -504,7 +489,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         # already says only "this needs N other things you have not heard
         # of yet", which is the honest answer.
         _goal_why = (_op == "why" and _node_id == sim.goal)
-        if _op in _ID_COMMANDS and isinstance(_node_id, str) and not _goal_why and (
+        if _op in id_commands() and isinstance(_node_id, str) and not _goal_why and (
                 _node_id not in nodes or not sim.is_visible(_node_id)):
             if _node_id == sim.goal:
                 # You know its name; you were handed it on arrival. Telling you

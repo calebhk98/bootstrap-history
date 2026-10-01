@@ -13,7 +13,7 @@ check("part 02's Rome-only grants are not ambient Mexica knowledge",
 
 _GATES = {
  "tx2_cashmere": {"tx2_cashmere_goat_stock"}, "tx2_jute_fibre": {"tx2_jute_seed_stock"},
- "tx2_mohair": {"tx2_angora_goat_stock"}, "tx2_ramie_fibre": {"tx2_ramie_plant_stock"},
+ "tx2_mohair": {"tx2_angora_goat_stock"},
  "tx2_paperclip": {"mfg_wire_drawing", "mt2_spring_steel", "mat_paper"},
  "hom_safety_pin": {"mfg_wire_drawing", "mt2_spring_steel", "cap_tol_100um"},
  "tx2_flyer": {"tex_spinning_wheel"}, "tx2_drawing_pin": {"mfg_wire_drawing", "mat_paper"},
@@ -34,7 +34,6 @@ _GATES = {
  "sc2_notation_roots": {"algebra_symbolic"}, "ag2_pyrethrum": {"ag2_pyrethrum_stock"},
  "sc2_notation_exponents": {"algebra_symbolic"},
  "hom_sprung_mattress": {"mfg_wire_drawing", "tl_coil_spring", "mt2_spring_steel"},
- "tx2_silk_fibre": {"tx2_silkworm_stock"},
  "sc2_institution_examination": {"school_founded", "sc2_institution_curriculum"},
  "sea_sternpost_rudder": {"sea_skeleton_first"},
  "mt2_type_metal": {"mat_antimony", "prn_type_punch"},
@@ -42,12 +41,15 @@ _GATES = {
 }
 _missing = {i: sorted(required - set(NODES[i]["pre"])) for i, required in _GATES.items()
             if not required <= set(NODES[i]["pre"])}
-check("all 33 part 02 hard gates have their causal prerequisites", not _missing, _missing)
+check("all part 02 hard gates have their causal prerequisites", not _missing, _missing)
 
 _SUPPORT = {"tx2_cashmere_goat_stock", "tx2_jute_seed_stock", "tx2_angora_goat_stock",
-            "tx2_ramie_plant_stock", "tx2_silkworm_stock", "ag2_guano_deposit_access",
+            "ag2_guano_deposit_access",
             "ag2_hop_stock", "ag2_pyrethrum_stock", "fud_whaling_gear", "lnd_whippletree",
             "lnd_nailed_horseshoe", "mat_antimony"}
+check("silk and ramie fibre need the living stock held, not a research node standing for it",
+      "silkworm_eggs_kg" in NODES["tx2_silk_fibre"]["holds"] and "ramie_stock_kg" in NODES["tx2_ramie_fibre"]["holds"],
+      None)
 check("all part 02 supporting acquisition and split nodes exist",
       _SUPPORT <= set(NODES), sorted(_SUPPORT - set(NODES)))
 check("the collar, whippletree, and horseshoe are independent nodes",

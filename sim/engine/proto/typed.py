@@ -819,16 +819,8 @@ def _parse_figure(command, rest, words, nums, want_json):
 
 _COMMAND_PARSERS = {
     "figures": _parse_figure,
-    "money": _parse_bare_command,
-    "values": _parse_bare_command,
-    "materials": _parse_bare_command,
-    "quit": _parse_bare_command,
-    "score": _parse_bare_command,
     "ventures": _parse_ventures,
     "market": _parse_market,
-    "mines": _parse_bare_command,
-    "stuck": _parse_bare_command,
-    "capacity": _parse_bare_command,
     "sell": _parse_sell,
     "risk": _parse_risk,
     "rush": _parse_rush,
@@ -837,14 +829,6 @@ _COMMAND_PARSERS = {
     "help": _parse_help,
     "step": _parse_step,
     "log": _parse_log,
-    "open": _parse_open_or_named_tech,
-    "why": _parse_open_or_named_tech,
-    "path": _parse_open_or_named_tech,
-    "start": _parse_open_or_named_tech,
-    "stop": _parse_open_or_named_tech,
-    "bounty": _parse_open_or_named_tech,
-    "mothball": _parse_open_or_named_tech,
-    "restore": _parse_open_or_named_tech,
     "withdraw": _parse_withdraw,
     "retire": _parse_withdraw,
     "portfolio": _parse_portfolio,
@@ -868,10 +852,17 @@ _COMMAND_PARSERS = {
     "policy": _parse_policy,
     "keep": _parse_keep,
     "reserve": _parse_reserve,
-    "exclude": _parse_exclude_or_include,
-    "include": _parse_exclude_or_include,
-    "save": _parse_save_or_load,
-    "load": _parse_save_or_load,
+}
+
+
+# The parser for each argument shape a command can declare with
+# @command(shape=...); a command that needs more has its own entry above.
+_SHAPE_PARSERS = {
+    "bare": _parse_bare_command,
+    "tech": _parse_open_or_named_tech,
+    "tech_done": _parse_open_or_named_tech,
+    "file": _parse_save_or_load,
+    "word": _parse_exclude_or_include,
 }
 
 
@@ -890,6 +881,9 @@ def _parse_command_body(command, rest, words, nums, want_json):
     identically). This function only looks up which one applies.
     """
     handler = _COMMAND_PARSERS.get(command)
+    if handler is None:
+        entry = command_registry.resolve(command)
+        handler = _SHAPE_PARSERS.get(entry["shape"]) if entry else None
     if handler is not None:
         return handler(command, rest, words, nums, want_json)
     # Any command added to KNOWN_COMMANDS that this parser has not been taught

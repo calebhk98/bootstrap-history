@@ -205,7 +205,7 @@ class OpeningCapitalTests(unittest.TestCase):
                     continue
                 engine = self._sim(civ_name, kit)
                 self.assertGreaterEqual(
-                    engine.household.capital, engine.annual_wage("smith"), (civ_name, kit))
+                    engine.household.capital, engine.labour_market.quote_annual("smith"), (civ_name, kit))
 
 
 class NoBookFoodTests(unittest.TestCase):

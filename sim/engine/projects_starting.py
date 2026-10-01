@@ -17,6 +17,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 from . import purchase_rule
 from .blockers import blocker_kind
 from .interest_groups import check_group_prohibition
+from .living_stock import check_unheld_stock
 from .data import win_condition_describe
 from sim.constants import declare
 
@@ -827,6 +828,7 @@ class StartingMixin:
         _check_unobtainable,
         _check_foreign_only,
         _check_missing_prereqs,
+        check_unheld_stock,
         _check_substitution,
         _check_credit_frozen,
         _check_arrears,

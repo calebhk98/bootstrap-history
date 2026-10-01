@@ -27,7 +27,7 @@ def _normalise(sim, nodes, entry):
     return text, None
 
 
-@command("exclude", group="projects", aliases=("skip",),
+@command("exclude", shape="word", group="projects", aliases=("skip",),
          summary="never let rush or the automatic policies begin these",
          usage=["exclude", "exclude <id>", "exclude category:<category>",
                 "exclude trait:<trait>", '{"cmd":"exclude","what":"<id>"}'],
@@ -51,7 +51,7 @@ def _cmd_exclude(sim, nodes, cmd, ended):
                     "'include %s' undoes this." % (entry, entry)}
 
 
-@command("include", group="projects", aliases=("unexclude",),
+@command("include", shape="word", group="projects", aliases=("unexclude",),
          summary="take something off the exclusion list",
          usage=["include <entry>", "include all"],
          options={"<entry>": "an id, category:<category> or trait:<trait> you excluded",
