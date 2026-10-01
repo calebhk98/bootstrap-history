@@ -1,6 +1,6 @@
 # Nothing a player does before an attempt lowers its failure risk
 
-**Status:** open
+**Status:** partly - process-control nodes have one lever (a completed process controller lowers their risk); the general problem remains
 
 **Source:** `reports/TOP_PROBLEMS.md` items 2 and 4 (long calendar floors with unmitigable failure rolls). The platinum placeholder risk in item 4 was fixed separately; the general problem was not.
 
@@ -15,8 +15,9 @@ choices.
 
 ## Evidence
 
-- `sim/engine/projects_progress.py:466` - the effective risk is the node's
-  `risk` times a retry multiplier; no other input.
+- `sim/engine/projects_progress.py`, `effective_risk` - the node's `risk` times
+  the retry multiplier times `_control_relief_multiplier`, which only a completed
+  process controller moves, and only for process-control nodes.
 - `python3 sim/simulator.py why <node>` prints "Failure risk: N% per attempt"
   with no way to buy it down. Finding the exposed nodes means scanning
   `data/tech_tree.json` for high `risk` together with a long `yrs`; no
@@ -37,3 +38,5 @@ quality-control spend. It must go through the normal cost and staff rules
 (`CLAUDE.md` section 4.3) and be data-driven per node (`failure_kind` already
 exists on some nodes). Regression test: the same node quoted with and without
 the lever differs in risk and in cost.
+
+Checked against current code: `effective_risk` reads one extra input beyond retry learning, the process-controller relief; no pilot-plant, redundancy or quality-control lever exists for other nodes.

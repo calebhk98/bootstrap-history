@@ -218,7 +218,7 @@ The tree carries two nodes for one technique, from different branch files:
 
 Both are downward/retort distillation of calamine. They have different
 prerequisite chains, so which one a recipe points at changes when zinc
-becomes available. `data/branches/_SCHEMA.md` already warns that ids
+becomes available. the branch-merge notes (`data/branches/_SCHEMA.md`, which no longer exists) once warned that ids
 duplicated across branch files make the merge fight itself; this is the same
 failure in the node vocabulary rather than the material one. Flagged, not
 resolved - picking a winner is a tree edit, and the labelling deliberately

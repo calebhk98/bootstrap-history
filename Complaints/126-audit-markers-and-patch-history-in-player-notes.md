@@ -15,7 +15,7 @@ material "was charged as a material cost here with nothing gating it" and is
 
 ## Evidence
 
-- Writer: `sim/treetool.py:980` (the `apply-caps` step) appends the marker to
+- Writer: `sim/treetool.py:990` (the `apply-caps` step) appends the marker to
   `note`.
 - Count the affected nodes with
   `grep -c "\[REVIEWED" data/tech_tree.json` (counts lines, so it slightly
