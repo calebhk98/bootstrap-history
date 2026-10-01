@@ -410,26 +410,21 @@ class TrainingMixin:
             "prices for hiring and market_pressure prices for buying "
             "slaves. Tuned premium, not a measured opportunity cost.")
 
-    def train(self, trade, count, frm=None):
-        """Teach a trade that does not exist here into existence.
-
-        This is the answer to "there are no machinists in 100 AD". There are
-        smiths, and a smith who spends two years with you becomes the first
-        machinist in the world. It costs your own hours, which is the scarcest
-        thing you have, and it is per-trade: the machinists you made are no use
-        at all when you need a chemist.
-        """
+    def train_check(self, trade, count, frm=None):
+        """Everything `train` and `quote train` agree on before money or hours
+        move. Returns (plan, refusal); the plan holds the whole-person count,
+        the source trade, the founder hours and the keep paid now."""
         trade = str(trade or "").strip().lower()
         if trade not in WAGES:
-            return False, "no such trade: %s" % trade
+            return None, "no such trade: %s" % trade
         if count <= 0:
-            return False, "n must be greater than zero. Nothing was changed."
+            return None, "n must be greater than zero. Nothing was changed."
         # PEOPLE ARE WHOLE. See the identical check in hire() for why: a
         # taught trade is still a roster of actual people, not a quantity of
         # training-hours, and "0.03 engineers" was exactly as false whichever
         # verb put it there.
         if abs(count - round(count)) > 1e-6:
-            return False, ("you teach whole people, not %g of one. Teach %d or %d."
+            return None, ("you teach whole people, not %g of one. Teach %d or %d."
                            % (count, math.floor(count), math.ceil(count)))
         count = float(round(count))
         frm = (frm or ("smith" if trade in ("machinist", "engineer")
@@ -437,7 +432,7 @@ class TrainingMixin:
                        else "scribe" if trade == "chemist"
                        else "smith")).strip().lower()
         if frm in TRADES_ABSENT and frm not in self.state.household.trades_created:
-            return False, "you cannot teach from %ss; there are none" % frm
+            return None, "you cannot teach from %ss; there are none" % frm
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:
         # engineer, chemist, machinist and optician can ONLY be had this way
         # (trade_available refuses to hire them at all), so without this check
@@ -449,11 +444,11 @@ class TrainingMixin:
             cap = self.literate_capacity(trade)
             have = self._trade_headcount_pending(trade)
             if have + count > cap + 1e-6:
-                return False, self._literate_wall_refusal(trade, cap, have)
+                return None, self._literate_wall_refusal(trade, cap, have)
         hours = self.TEACHING_HOURS_PER_PERSON * count            # your hours, teaching, per person
         pool = self.director_pool() - self.director_hours_committed()
         if hours > pool:
-            return False, ("teaching %g %ss takes %.0f of your own hours and you have "
+            return None, ("teaching %g %ss takes %.0f of your own hours and you have "
                            "%.0f uncommitted this year" % (count, trade, hours, max(0.0, pool)))
         # THE SAME ROOM `hire` AND `buy` SHARE: household_room exists so all
         # three verbs agree on the same ceiling. `train` must check it too,
@@ -464,7 +459,7 @@ class TrainingMixin:
         room = self.household_room()
         if count > room:
             whole = int(max(0.0, room))
-            return False, ("you can feed, house and oversee %.2f more people, "
+            return None, ("you can feed, house and oversee %.2f more people, "
                            "and teaching %g would make %g. %s %s"
                            % (math.floor(max(0.0, room) * 100) / 100.0, count, count,
                               "Teach %d instead." % whole if whole >= 1
@@ -477,9 +472,25 @@ class TrainingMixin:
         # batch while they learn.
         fee = count * self.annual_wage(frm) * self.TEACHING_FEE_MULTIPLIER
         if fee > self.spending_power("buy"):
-            return False, self._cash_in_hand_refusal(
+            return None, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
                 % (count, trade, "" if count == 1 else "s"), fee)
+        return {"count": count, "from": frm, "hours": hours, "fee": fee}, None
+
+    def train(self, trade, count, frm=None):
+        """Teach a trade that does not exist here into existence.
+
+        This is the answer to "there are no machinists in 100 AD". There are
+        smiths, and a smith who spends two years with you becomes the first
+        machinist in the world. It costs your own hours, which is the scarcest
+        thing you have, and it is per-trade: the machinists you made are no use
+        at all when you need a chemist.
+        """
+        trade = str(trade or "").strip().lower()
+        plan, refusal = self.train_check(trade, count, frm)
+        if refusal:
+            return False, refusal
+        count, frm, hours, fee = plan["count"], plan["from"], plan["hours"], plan["fee"]
         household = self.state.household
         current_year = self.state.scenario.year
         household.capital -= fee
