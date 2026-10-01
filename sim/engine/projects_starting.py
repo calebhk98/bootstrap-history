@@ -671,7 +671,8 @@ class StartingMixin:
                             "any hours already bought under contract as that "
                             "share of one more. %s"
                            % (node["sch"], self.scholar_hands_available(),
-                              self._staff_advice("scholars")))
+                              self._staff_advice(
+                                  "scholars", node["sch"] - self.scholar_hands_available())))
                            if _why else None)
         return None
 
@@ -706,7 +707,8 @@ class StartingMixin:
                            "already bought under contract as that share of "
                            "one more. %s"
                            % (node["art"], self.craft_hands_available(),
-                              self._staff_advice("artisans")))
+                              self._staff_advice(
+                                  "artisans", node["art"] - self.craft_hands_available())))
                            if _why else None)
         return None
 

@@ -163,6 +163,14 @@ class ProgressMixin:
                       "desired": min(left, ceiling)}
         return out
 
+    def project_useful_hours(self, node_id):
+        """The most of your own hours active project `node_id` can use in a
+        year: its pace (project_hour_pace) bounded by the work left, times
+        the same resource throttle step() applies."""
+        project_state = self.state.projects.active[node_id]
+        return (min(project_state["ph_left"], self.project_hour_pace(node_id))
+                * self.project_resource_throttle(node_id))
+
     def trade_shortage_kind(self, trade_id, need, total_demand=None):
         """Why a trade is short for a project that wants `need` hours a year
         of it: "staffing" when the society cannot field that much at all,

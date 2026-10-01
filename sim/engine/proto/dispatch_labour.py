@@ -78,10 +78,12 @@ def _cmd_work(sim, nodes, cmd, ended):
 
 @command("allocate", group="labour", aliases=("direct", "assign", "split"),
          summary="a standing order for your own hours",
-         usage=["allocate", "allocate <id> <hours>", "allocate <id> off",
+         usage=["allocate", "allocate <id> <hours>", "allocate <id> <hours> useful",
+                "allocate <id> off",
                 "allocate work <trade> <hours>"],
          options={"<id>": "an active project", "<hours>": "hours every year; 0 or off clears it",
-                  "work <trade>": "sell hours as wages instead of a project"},
+                  "work <trade>": "sell hours as wages instead of a project",
+                  "useful": "cap the order at the hours the project can use now"},
          description="Gives a project this many of your hours every year, ahead of "
                      "anything undirected. Bare allocate lists what is set; hours "
                      "nobody directs are still shared by priority.")
@@ -160,9 +162,15 @@ def _cmd_allocate(sim, nodes, cmd, ended):
         had = sim.hour_allocations.pop(target_id, None)
         return ({"ok": True, "cleared": target_id, "had_been_a_year": had}
                 if had else {"ok": True, "cleared": target_id})
+    capped_from = None
+    if cmd.get("useful"):
+        useful = sim.project_useful_hours(target_id)
+        if hours > useful:
+            capped_from, hours = hours, useful
     sim.hour_allocations[target_id] = float(hours)
     return {"ok": True, "set": target_id, "name": nodes[target_id]["name"],
             "hours_a_year": float(hours),
+            **({"capped_to_useful_work_from": capped_from} if capped_from is not None else {}),
             "note": "this many of your own hours go to %s every year "
                     "from now on, ahead of anything you have not "
                     "directed - it can still never exceed what the pool "
