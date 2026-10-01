@@ -251,6 +251,13 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
             flows.append((civilization_id, flow, outcome.foreign))
         return home_conditions, flows
 
+    def home_makes_commodity(self, commodity, flows):
+        """Whether this society can make the commodity, as the partners in this year's trade see it;
+        true when none trade. A good only a partner makes gets no home capacity from its price."""
+        for civilization_id, _flow, _outcome in flows:
+            return self._foreign_sides(commodity, self._foreign_economy_facts(civilization_id))[0]
+        return True
+
     def foreign_trade_year_end(self, commodity, home_entry, flows):
         """Close the year abroad: each partner's capacity follows its price,
         its unsold goods carry on, the year's flow is paid for in coin and

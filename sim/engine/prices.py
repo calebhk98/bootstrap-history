@@ -492,6 +492,14 @@ def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable
                      if all(nearest[material] == rank for material in production_entries[key]["outputs"]))
 
 
+def _climate_allows(entry, civilization_id):
+    """Whether the territory has a climate the entry's crop grows in; entries naming none always do."""
+    if not entry or not entry.get("grown_in_climate_classes"):
+        return True
+    from . import crop_climate
+    return crop_climate.entry_grows_in(entry, civilization_id)
+
+
 def priced_goods_table(held_technology_ids: Iterable[str],
                        prices_json: Dict[str, Any],
                        production_entries: Optional[ProductionEntries] = None,
@@ -530,10 +538,14 @@ def priced_goods_table(held_technology_ids: Iterable[str],
                            civilization_id=civilization_id, interest_rate=interest_rate)
     goods_in_money = {}
     provenance = {}
+    territory = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
     for table, label in ((mature, "mature"), (in_reach, "gated"), (solved, "solved")):
         for material in table.resolvable_materials:
             if label != "mature" and material not in table.chosen_recipe_by_material:
                 continue    # no technique in this table delivers it (a heat it cannot reach): the price is a placeholder
+            if label != "mature" and not _climate_allows(
+                    entries.get(table.chosen_recipe_by_material[material]), territory):
+                continue    # a crop the territory's climate cannot grow stays priced as if imported
             goods_in_money[material] = hours_to_denarii(
                 table.prices_in_labour_hours[material], prices_json)
             provenance[material] = label

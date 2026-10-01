@@ -7,12 +7,12 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "labourer": 950.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of intensively pruned mulberry orchard per year, output as kg of fresh leaf",
-   "yield_basis": "GROWN. The 20-30 tonnes of leaf per hectare per year for an intensively pruned orchard is the figure silk_kg's own yield_basis uses; the low end is taken. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "yield_basis": "GROWN. The 20-30 tonnes of leaf per hectare per year for an intensively pruned orchard is the figure silk_kg's own yield_basis uses; the low end is taken. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: 150 labourer-hours per hectare for the orchard's tillage, pruning and manuring (borrowed from wheat_kg's field labour) plus about 800 for picking: the leaf is stripped by hand, and 20,000 kg at about 25 kg per worker-hour is 800 hours (an order-of-magnitude estimate; not checked against a source, none could be opened). Conf C.",
    "conf": "C",
    "requires_node": "tx2_silkworm_stock"
   },

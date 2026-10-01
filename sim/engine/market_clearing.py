@@ -187,8 +187,9 @@ class MarketClearingMixin:
                 commodity, entry, self._market_conditions(commodity, entry, True))
             outcome = market.clear_market(conditions)
             self.foreign_trade_year_end(commodity, entry, trade_flows)
-            entry["capacity_tonnes"] = market.adjusted_capacity(
-                entry["capacity_tonnes"], outcome.price_ratio)
+            if self.home_makes_commodity(commodity, trade_flows):
+                entry["capacity_tonnes"] = market.adjusted_capacity(
+                    entry["capacity_tonnes"], outcome.price_ratio)
             entry["stock_tonnes"] = market.stock_after_year(outcome)
             entry["price_ratio"] = outcome.price_ratio
             entry["society_sales_tonnes"] = outcome.society_sales_tonnes

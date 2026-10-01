@@ -248,7 +248,7 @@ class WhichMaterialsCarryLandTests(unittest.TestCase):
     def test_the_primary_grown_and_land_limited_materials_all_carry_it(self):
         expected = {
             "wheat_kg", "olive_oil_kg", "wine_common_kg", "cotton_kg",
-            "hemp_fiber_kg", "linen_kg", "silk_kg", "rose_petals_kg",
+            "hemp_fiber_kg", "linen_kg", "mulberry_leaves_kg", "pepper_kg", "cassia_kg", "rose_petals_kg",
             "dye_kg", "wool_kg", "milk_kg", "timber_m3", "wood_kg",
             "firewood_kg", "cork_kg", "oak_bark_kg", "shellac_kg",
             "rubber_kg", "ox", "mule",

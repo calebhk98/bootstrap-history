@@ -21,7 +21,9 @@ s = sim(civ="rome_100ad", capital=1e9)
 check("a fresh society's market is in balance: spot ratio is exactly one",
       abs(s.market_price_ratio(MATERIAL) - 1.0) < 1e-9, s.market_price_ratio(MATERIAL))
 check("...for a material nobody ever named too",
-      abs(s.market_price_ratio("silk_kg") - 1.0) < 1e-9, s.market_price_ratio("silk_kg"))
+      abs(s.market_price_ratio("fabric_kg") - 1.0) < 1e-9, s.market_price_ratio("fabric_kg"))
+check("...but not for one only a partner makes: its trade has to be built, so it opens dear",
+      s.market_price_ratio("silk_kg") > 1.5, s.market_price_ratio("silk_kg"))
 check("the actors' supply is one stub call, zero until firms exist",
       s.actor_supply(MATERIAL) == 0.0, s.actor_supply(MATERIAL))
 
