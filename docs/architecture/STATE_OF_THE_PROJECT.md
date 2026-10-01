@@ -73,27 +73,26 @@ next round of playtests and before roadmap work whose effect those playtests
 would measure. The rule used for every fix: where a screen shows a number and
 the engine applies one, both come from one function.
 
-The first tranche (money charged off the books, the fixed seed, the mortal
-founder and the victory ending, content leaking between civilisations, text
-that disagreed with the applied figure, unpreviewed spending, blocker
-readouts) is in. What is left, in order:
+The first two tranches (money charged off the books, the fixed seed, the
+mortal founder and the victory ending, content leaking between
+civilisations, text that disagreed with the applied figure, unpreviewed
+spending, blocker readouts, lost multi-year steps, staffing closures,
+hazard and score screens, report noise) are in. The stakeholder holds the
+next playtest until the open count is well down. What is left, in order:
 
-1. **Finish the partly fixed ones.** Each has a "remains" paragraph:
-   `128`, `129`, `208`, `214`, `220`, `227`, `231`, `240`, `244`, `249`,
-   `256`, `260`, `263`, `265`.
-2. **Losing the game or money without being told**: an interrupted
-   multi-year step loses the run (`225`); a forgotten technology is rebuilt
-   at full price (`237`); `stuck` recommends a concern `open` refuses
-   (`219`).
-3. **Staffing closures and alerts that drown in the step report**: `81`,
-   `84`, `205`, `206`, `233`, `235`, `246`.
-4. **Consequences stated without size or cause**: `216`, `241`, `242`,
-   `245`, `247`.
-5. **Search, grammar and small text** (`196`, `197`, `210`, `217`, `221`,
-   `236`) and the review in `Complaints/35`, which still has to be split into
-   issues.
-6. **Requests** (`211` to `213`, `215`, `229`, `230`, `243`, `270` to `272`)
-   wait behind the roadmap unless one blocks a playtest.
+1. **Defects and data errors**: `279` (coal as a smelting fuel before
+   coke), `280` (option ids that name no node), `126` (audit markers in
+   player notes), `68`, and the remains of `41`, `56`, `127`, `151`, `198`,
+   `199`, `204`, `205`, `227`, `231`, `236`, `249`, `265`.
+2. **Duplicated structures that cost every merge**: generate the tree from
+   its branches (`141`); every branch that touches data now regenerates
+   `data/tech_tree.json` and merges can leave it stale.
+3. **Screens the player lacks**: `71`, `88`, `90`, `94`, `95`, `96`, `97`,
+   `100`, `101`, `132`, `178`, `243`, `270`, `272`, and the remains of
+   `81`, `99`, `102`.
+4. **Scale tools and requests**: `75`, `76`, `93`, `124`, `180`, `194`,
+   `211` to `213`, `215`, `271`, `273` to `278`.
+5. **The roadmap** below, starting with civilisation independence.
 
 `python3 sim/issue_status.py --status open` and `--status partly` list what
 is still to do.
