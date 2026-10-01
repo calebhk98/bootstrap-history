@@ -179,7 +179,8 @@
     "instrument",
     "precision",
     "survey",
-    "thermometer"
+    "thermometer",
+    "physics"
    ]
   },
   "printing_information": {
@@ -372,7 +373,8 @@
     "alloy",
     "metal",
     "cast",
-    "mine"
+    "mine",
+    "furnace"
    ]
   },
   "chemistry": {
@@ -403,7 +405,8 @@
     "plastic",
     "cement",
     "glass",
-    "solvent"
+    "solvent",
+    "physics"
    ]
   },
   "electricity": {
@@ -433,7 +436,8 @@
     "lamp",
     "grid",
     "voltage",
-    "current"
+    "current",
+    "physics"
    ]
   },
   "textiles": {
