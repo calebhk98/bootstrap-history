@@ -1,6 +1,6 @@
 # Fog messages become repetitive without giving directional information
 
-**Status:** open
+**Status:** closed - a hidden prerequisite names its coarse kind (technique, theory, institution, material, facility, capability) once at least half of its own prerequisites are built; identity stays hidden (fog.py, `FOG_KIND_HINTS`). Related-names search and exploratory experiments are separate complaints.
 
 Repeated queries could return effectively the same "one prerequisite you have not heard of" for years. This is technically fog-safe but eventually provides no decision support.
 

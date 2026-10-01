@@ -1,6 +1,6 @@
 # Opening state is informative but overloaded
 
-**Status:** open
+**Status:** partly - `help commands` opens with a short beginner index and the welcome screen points at it and at `help sittings`; the state screen keeps its current order (no situation-first restructure), and `help commands` is still the full listing without pagination
 
 Before the player makes their first decision, the initial state output can expose them to:
 

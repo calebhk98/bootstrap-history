@@ -1,6 +1,6 @@
 # Interface repetition is a class of UX problem worth addressing systematically
 
-**Status:** partly - explain-once (sim/engine/proto/explain_once.py) and a wave summary with minor-failure marking (wave_summary.py) landed; project-start boilerplate, fog blockers, shortage repeats and event fragmentation remain
+**Status:** partly - explain-once and the wave summary landed; shortage repeats (79), event fragmentation (80) and fog blockers (72) are now closed; project-start boilerplate (78) remains
 
 Repetition was a significant UX cost in the playtests. The underlying simulation did not feel repetitive when values and consequences changed; the interface often did.
 
