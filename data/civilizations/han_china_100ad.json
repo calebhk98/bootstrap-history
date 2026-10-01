@@ -17,7 +17,21 @@
     "printing": 0.6
   },
   "currency": "wu zhu cash",
-  "currency_words": {"long": "cash", "short": "cash"},
+  "currency_words": {
+    "long": "cash",
+    "short": "cash"
+  },
+  "briefing_absent": [
+    {
+      "claim": "Glass: the Han have almost none and the optical branch must be started from sand and a furnace",
+      "nodes": [
+        "mat_glass_soda",
+        "civ_glass_windows",
+        "opt_dioptra",
+        "glass_clear"
+      ]
+    }
+  ],
   "coin_standard": {
     "material": "bronze_kg",
     "kg_per_unit": 0.003,

@@ -581,11 +581,16 @@ def _validate_civilisation_starts(nodes, production):
     results = civ_start_check.check_all(
         nodes, civ_start_check.load_civilisations(ROOT), production)
     print()
-    print("CIVILISATION STARTS (free but unheld / held without prerequisite / unmakeable material)")
+    print("CIVILISATION STARTS (free but unheld / held without prerequisite / unmakeable material"
+          " / capability rung gap / briefing contradiction)")
     print("\n".join(civ_start_check.report_lines(results)))
     errors = ["%s: free node startable at arrival but not held or gated: %s"
               % (name, ", ".join(found["free_unheld"]))
               for name, found in sorted(results.items()) if found["free_unheld"]]
+    errors += ["%s: held but the civilisation's own briefing says absent (%s): %s"
+               % (name, claim, ", ".join(held))
+               for name, found in sorted(results.items())
+               for claim, held in found["briefing"].items()]
     for message in errors:
         print("ERROR: " + message)
     return errors

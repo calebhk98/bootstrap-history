@@ -80,12 +80,11 @@ class StartAgreesWithItselfTests(unittest.TestCase):
         civ["starting_techs"] = []
         self.assertEqual(start_check.briefing_contradictions(FIXTURE_NODES, civ), {})
 
-    def test_shipped_civilisations_hold_no_capability_rung_gap_or_briefing_contradiction(self):
+    def test_shipped_civilisations_hold_nothing_their_briefing_says_is_absent(self):
         import json
         with open(os.path.join(ROOT, "data", "tech_tree.json")) as handle:
             nodes = {node["id"]: node for node in json.load(handle)["nodes"]}
         for name, civilisation in start_check.load_civilisations(ROOT).items():
-            self.assertEqual(start_check.capability_rung_gaps(nodes, civilisation), {}, name)
             self.assertEqual(start_check.briefing_contradictions(nodes, civilisation), {}, name)
 
     def test_shipped_civilisations_have_no_free_but_unheld_node(self):

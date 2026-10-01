@@ -17,6 +17,12 @@ tree's own prerequisite graph, node costs and the production recipes:
   unmakeable       a material a held node consumes whose every production
                    recipe is gated on a node the civilisation does not hold.
 
+  rung_gap         a held node needs, directly or through other capability
+                   nodes, a capability rung the civilisation does not hold
+                   (a high heat rung held without the lower one).
+  briefing         a held node the civilisation file's own `briefing_absent`
+                   claims ({"claim": text, "nodes": [ids]}) say it lacks.
+
 Used by `simulator.py validate`, and importable for tests.
 """
 import glob
@@ -95,6 +101,45 @@ def missing_prerequisites(nodes, civilisation):
     return found
 
 
+def capability_rung_gaps(nodes, civilisation):
+    """{held node: [capability nodes it implies that are not held]}.
+
+    Walks prerequisites only through capability nodes, so a held rung needs
+    every rung beneath it and a held tool needs the rungs it names."""
+    held = set(civilisation.get("starting_techs") or ())
+
+    def is_capability(node_id):
+        return node_id in nodes and nodes[node_id].get("cat") == "capability"
+
+    found = {}
+    for node_id in sorted(held):
+        if node_id not in nodes:
+            continue
+        seen = set()
+        stack = [pre for pre in nodes[node_id].get("pre") or () if is_capability(pre)]
+        while stack:
+            rung = stack.pop()
+            if rung in seen:
+                continue
+            seen.add(rung)
+            stack.extend(pre for pre in nodes[rung].get("pre") or () if is_capability(pre))
+        missing = sorted(seen - held)
+        if missing:
+            found[node_id] = missing
+    return found
+
+
+def briefing_contradictions(nodes, civilisation):
+    """{claim: [held nodes the claim says are absent]}."""
+    held = set(civilisation.get("starting_techs") or ())
+    found = {}
+    for entry in civilisation.get("briefing_absent") or ():
+        contradicted = sorted(node_id for node_id in entry.get("nodes") or () if node_id in held)
+        if contradicted:
+            found[entry.get("claim", "")] = contradicted
+    return found
+
+
 def _producers(production):
     """{material: [(gate node id or None, recipe)]}."""
     by_material = {}
@@ -136,7 +181,9 @@ def check_all(nodes, civilisations, production):
     """{civilisation: {"free_unheld": [...], "missing_prereq": {...}, "unmakeable": {...}}}"""
     return {name: {"free_unheld": free_unheld(nodes, civilisation),
                    "missing_prereq": missing_prerequisites(nodes, civilisation),
-                   "unmakeable": unmakeable_materials(nodes, civilisation, production)}
+                   "unmakeable": unmakeable_materials(nodes, civilisation, production),
+                   "rung_gap": capability_rung_gaps(nodes, civilisation),
+                   "briefing": briefing_contradictions(nodes, civilisation)}
             for name, civilisation in civilisations.items()}
 
 
@@ -144,7 +191,9 @@ def report_lines(results):
     """Per-civilisation summary lines for `validate`."""
     lines = []
     for name, found in sorted(results.items()):
-        lines.append("  %-20s free-but-unheld %3d   held-without-prereq %3d   unmakeable-material %3d"
+        lines.append("  %-20s free-but-unheld %3d   held-without-prereq %3d   "
+                     "unmakeable-material %3d   rung-gap %3d   briefing-contradiction %3d"
                      % (name, len(found["free_unheld"]), len(found["missing_prereq"]),
-                        len(found["unmakeable"])))
+                        len(found["unmakeable"]), len(found["rung_gap"]),
+                        len(found["briefing"])))
     return lines
