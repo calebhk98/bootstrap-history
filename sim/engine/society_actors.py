@@ -26,19 +26,13 @@ class ActorsMixin:
         return self.actors.staff_fte(trade)
 
     def actor_supply(self, material):
-        """Tonnes a year of `material` that firms and governments put on the market,
-        summed over every actor; the founder's own concerns are not included."""
-        state = self.state.actors
-        if state is None or not state.records:
-            return 0.0
-        return self.actors.supply(material, SimWorld(self))
+        """Tonnes of `material` that firms and governments sold into the market this year, summed
+        over every actor; the founder's own sales are not included."""
+        return self.goods_market.others_sold_tonnes(self._material_tag(material)[0])
 
     def actor_demand(self, commodity):
-        """Tonnes a year of a commodity that governments buy on the market with what they spend."""
-        state = self.state.actors
-        if state is None or not state.records:
-            return 0.0
-        return self.actors.demand(commodity)
+        """Tonnes of a commodity that governments bought on the market this year."""
+        return self.goods_market.others_bought_tonnes(commodity)
 
     def state_levy_rates(self):
         """(requisition, office) share of income the state takes at full notice; nothing
