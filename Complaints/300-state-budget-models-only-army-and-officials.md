@@ -2,7 +2,7 @@
 
 **Status:** open - found while building 109; next: more standing lines (works, court, dole, navy, war), then re-measure
 
-The government's standing need is an army (the civilisation's opening `standing_army`, held at the same share of the people, paid at the labourer's wage and equipped by `military_logistics` iron) and a corps of officials (`ADMINISTRATIVE_SPAN`). Its revenue is society output times `starting_tax_share` times state capacity; a visible founder or firm pays the same share of its own income. Measure both over a long run:
+The government's standing need is an army (it wants the civilisation's opening `standing_army` share of the people and keeps what it can fund, changing by at most `ARMY_ADJUSTMENT_RATE` a year; paid at the labourer's wage and equipped by `military_logistics` iron) and a corps of officials (`ADMINISTRATIVE_SPAN`). Its revenue is society output times `starting_tax_share` times state capacity; a visible founder or firm pays the same share of its own income. Measure both over a long run:
 
     python3 sim/actor_ledger.py rome_100ad 200 1
 

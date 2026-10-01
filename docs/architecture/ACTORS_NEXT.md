@@ -145,7 +145,13 @@ Replaces: `diffusion_share` and the category supply counting only the
 founder's concerns (heuristic retired: the leak to unnamed competitors).
 Touches economy code; needs the demand wiring in `Complaints/106`.
 
-### 5. The state's demand and labour
+### 5. The state's demand and labour (done)
+
+Built: the government keeps a budget (`sim/engine/actors/budget.py`,
+`world_budget.py`): an army and officials, paid at market wages and equipped
+through `military_logistics`; its staff come out of the shared labour pool and
+its iron purchases reach the market as `actor_demand_tonnes`. Its spending
+covers only those two lines, so every state runs a surplus (`Complaints/300`).
 
 Reads: the state's outlays by purpose from 1.
 Changes: what the state spends on wages and goods is demand: staff hired by
@@ -156,7 +162,15 @@ becomes a payment from the treasury to the founder, replacing
 Replaces: `state_funding`, the wage the founder pays for trades the state
 also hires.
 
-### 6. The state's need drives the levy
+### 6. The state's need drives the levy (done)
+
+Built: every visible actor, founder and firms alike, pays the society's
+ordinary share (`starting_tax_share` times state capacity) through
+`levy_shares`, and a need-driven levy on top raises the unfunded part of the
+budget, capped at `LEVY_RATE_CEILING`. The army moves toward what the state
+can pay at `ARMY_ADJUSTMENT_RATE`. Still open: the force the state wants
+follows population, not threat (`Complaints/300`); patron funding and the
+state's adoption curve (`Complaints/301`, increment 3).
 
 Reads: a spending model (standing costs, war, garrison from
 `sim/world/military_logistics.py`) against receipts.
