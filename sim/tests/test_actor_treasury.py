@@ -35,7 +35,7 @@ def actor_sim(extra_nodes):
     return game
 
 
-def grown(civ, employees=2000.0, capital=60000000.0, eminence=25.0, events=False):
+def grown(civ, employees=2000.0, capital=1.0e10, eminence=100.0, events=False):
     """A household large enough that the state has noticed it."""
     game = sim(civ=civ, events=events)
     game.employees["artisan"] = employees
