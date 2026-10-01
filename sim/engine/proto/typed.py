@@ -569,6 +569,10 @@ def _parse_changes(command, rest, words, nums, want_json):
     return {"cmd": "changes", "years": (nums[0] if nums else 5)}, None
 
 
+def _parse_automation(command, rest, words, nums, want_json):
+    return {"cmd": "automation", "years": int(nums[0]) if nums else 1}, None
+
+
 def _parse_bribe(command, rest, words, nums, want_json):
     if not nums:
         return None, "bribe needs an amount, e.g. 'bribe 500'."
@@ -872,6 +876,7 @@ _COMMAND_PARSERS = {
     "keep": _parse_keep,
     "reserve": _parse_reserve,
     "saving": _parse_saving,
+    "automation": _parse_automation,
 }
 
 

@@ -231,6 +231,8 @@ class HouseholdState:
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
 	saving_target: float = 0.0
+	# what the automatic policies did in the last few years (`automation`)
+	automation_audit: List[Any] = field(default_factory=list)
 	_said_deputies: int = 0
 	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None

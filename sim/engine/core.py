@@ -4,6 +4,7 @@ import collections, copy, math, os, random, sys
 from sim.constants import book_money_names, declare
 from .money_units import book_money_factor
 from .wage_provider import build_schedule
+from . import automation_audit
 from sim.engine.state import SimulationState, ActiveProjectState
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
                    nodes_in_civ_money, TECH_EFFECTS, TRADE_REGISTRY)
@@ -2118,6 +2119,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # direction as well as the level, and this is the only place that
         # knows both.
         self.state.household.scandal_last_year = self.state.household.scandal
+        automation_audit.begin_year(self)
 
         # step() is a readable sequence of phase calls, in the same order the
         # phases always ran in; the phases themselves are below, and each still
