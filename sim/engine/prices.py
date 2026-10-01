@@ -98,10 +98,10 @@ kind of downstream question.
 
 RENT MUST BE THREADED THROUGH HERE THE SAME WAY `main()` DOES IT (see
 Complaints/43). `sim/solve_prices.py`'s own `main()` computes
-`rent_hours_per_kg_by_ore_material` and `land_rent_hours_per_iugerum` once
+`rent_hours_per_kg_by_ore_material` and `land_rent_hours_per_hectare` once
 per run and threads the result through `compute_resolvable_materials` and
 `solve` as `rent_hours_per_kg_by_material` - that is how `python3 sim/
-solve_prices.py` prints a nonzero `iugerum_land`. `solved_prices` below
+solve_prices.py` prints a nonzero `hectare_land`. `solved_prices` below
 calls the same two functions and passes the result through the same
 argument, which is what keeps this module from silently falling into the
 RENT_IS_ZERO behaviour Complaints/43 is about, since that argument
@@ -111,7 +111,7 @@ RENT NEEDS A CIVILIZATION, AND SO DOES THE CACHE KEY.
 `rent_hours_per_kg_by_ore_material` is safe to leave out of the
 cache key (see WHAT THIS DOES NOT HANDLE above for its Rome-anchored
 demand figure, which is not yet per-civilization either) but
-`land_rent_hours_per_iugerum` is genuinely per-civilization -
+`land_rent_hours_per_hectare` is genuinely per-civilization -
 `sim/world/land.py` prices the margin of cultivation over a
 CIVILIZATION'S OWN HELD REGIONS, and two civilizations can hold the exact
 same gate-node set while holding completely different territory. A cache
@@ -190,7 +190,7 @@ class SolvedPrices(object):
     `resolvable_materials` is which materials have ANY path to a price under
     this held-technology set - the set `priced_goods_table` prices
     directly; everything outside it is priced as "gated" or not at all.
-    `civilization_id` is the civilization `land_rent_hours_per_iugerum` was
+    `civilization_id` is the civilization `land_rent_hours_per_hectare` was
     solved against (see RENT NEEDS A CIVILIZATION in the module docstring) -
     kept on the result so a caller inspecting a cache hit can see which
     territory its land rent came from, rather than having to trust the
@@ -334,7 +334,7 @@ def _solve_to_json(production_entries: ProductionEntries,
     rent_hours_per_kg_by_material = solve_prices.rent_hours_per_kg_by_ore_material(
         available_entries, wage_by_trade)
     rent_hours_per_kg_by_material.update(
-        solve_prices.land_rent_hours_per_iugerum(
+        solve_prices.land_rent_hours_per_hectare(
             available_entries, wage_by_trade, civilization_id=civilization_id))
 
     resolvable_materials = solve_prices.compute_resolvable_materials(
@@ -366,7 +366,7 @@ def solved_prices(held_technology_ids: Iterable[str],
     `civilization_id`, not on the full held-technology set, which is what
     keeps a whole game's worth of calls to a bound few dozen solves.
 
-    `civilization_id` decides whose territory `land_rent_hours_per_iugerum`
+    `civilization_id` decides whose territory `land_rent_hours_per_hectare`
     prices (see RENT NEEDS A CIVILIZATION in the module docstring); it
     defaults to `None`, which resolves to `solve_prices.
     DEFAULT_LAND_CIVILIZATION` (Rome), matching what the CLI does when

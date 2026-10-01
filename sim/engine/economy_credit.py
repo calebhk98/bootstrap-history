@@ -50,18 +50,21 @@ class CreditMixin:
         "CREDIT_LINE_PER_REPUTATION_POINT", 250.0, kind="temporary_heuristic",
         book_money=True, unit="denarii of credit per reputation point", source=None,
         confidence="D",
-        why="How much a point of reputation (itself a heuristic score, see "
+        why="Genuinely a money amount: a credit line is a nominal sum a lender will advance in the coin, not a quantity of anything physical. "
+            "How much a point of reputation (itself a heuristic score, see "
             "STANDING_* above) is worth in raw borrowing power. Doubly "
             "removed from any measurement: reputation is invented and this "
             "conversion rate is invented on top of it.")
-    CREDIT_LINE_PER_FOREST_HA = declare(
-        "CREDIT_LINE_PER_FOREST_HA", 120.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii of credit per hectare of owned forest", source=None,
+    CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA = declare(
+        "CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA", 2420.0, kind="temporary_heuristic",
+        unit="labour hours of credit per hectare of owned forest", source=None,
         confidence="D",
-        why="Forest is real collateral, so it counts toward credit the way "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "Forest is real collateral, so it counts toward credit the way "
             "FOREST_COST_PER_HA says it cost to buy; the per-hectare figure "
             "here is not tied back to that purchase price by any explicit "
             "loan-to-value ratio, just a plausible-feeling fraction of it.")
+    CREDIT_LINE_PER_FOREST_HA = money_units.PricedInLabourHours("CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA")
     CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE = declare(
         "CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE", 0.5, kind="temporary_heuristic",
         unit="fraction of upkeep added to the running-tab floor",

@@ -1001,7 +1001,7 @@ check("you cannot be paid for a trade this society does not have",
 # third of the way into a credit line nobody has withdrawn. A household with
 # credit left borrows and makes payroll; that is what credit is for.
 # (a) A payroll the remaining credit COVERS costs you nobody but attrition.
-s = sim(capital=6000.0)
+s = sim(capital=22400.0 * sim().money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
 # One labourer: wages track labour tightness now, so a smith or two people
 # would exceed the credit line and rightly be trimmed. The precondition on
@@ -1025,7 +1025,7 @@ check("staff are not let go while there is still credit to pay them",
 #     it. The tester's five went to zero in one step with two thirds of the
 #     credit line untouched; what should happen is that you keep as many as
 #     your remaining means will pay for.
-s = sim(capital=6000.0)
+s = sim(capital=22400.0 * sim().money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
 s.hire("smith", 5)
 # Means that cover living costs and a bit over half the payroll.
@@ -1038,7 +1038,7 @@ check("an unaffordable payroll is trimmed to what you can pay, not emptied",
 
 # ...and when they DO go, because there is genuinely no money left to borrow,
 # it is said. The old code logged only in the branch that never happened.
-s = sim(capital=6000.0)
+s = sim(capital=22400.0 * sim().money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
 s.hire("smith", 5)
 s.capital = -s.credit_limit() * 1.5

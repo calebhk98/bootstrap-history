@@ -367,7 +367,7 @@ def check_mass_conservation(where, entry):
     #
     # Only checked where every output and at least one input is quoted in
     # kilograms, because this file also carries cubic metres of timber,
-    # grams of platinum, thousands of bricks and an iugerum of land, and
+    # grams of platinum, thousands of bricks and a hectare of land, and
     # adding those together would be arithmetic about nothing. An entry
     # that fails this has either an inverted ratio or a unit slip, and both
     # are invisible on a read-through: the numbers look like numbers.

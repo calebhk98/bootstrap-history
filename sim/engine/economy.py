@@ -551,7 +551,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
             "is now calibrated around it - moving it requires re-tuning "
             "the early game, not just picking a better number.")
 
-    # ~1 iugerum of woodland per 0.25 ha. Named so that `quote forest` and the
+    # Named so that `quote forest` and the
     # purchase itself cannot drift apart: a player must be able to ask the
     # price of coppice before spending capital on it, not only after.
     FOREST_LABOUR_HOURS_PER_HA = declare(

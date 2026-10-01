@@ -22,7 +22,7 @@
   "mat": {
    "timber_m3": 300,
    "brick_1000": 60,
-   "iugerum_land": 400,
+   "hectare_land": 100.92,
    "parchment_sheet": 2000
   },
   "cap_hours": 0,
@@ -195,7 +195,7 @@
    "brick_1000": 200,
    "timber_m3": 400,
    "iron_bar_kg": 1000,
-   "iugerum_land": 200,
+   "hectare_land": 50.46,
    "lead_kg": 3000
   },
   "cap_hours": 0,
@@ -485,7 +485,7 @@
    "stone_blocks": 20000,
    "timber_m3": 400,
    "bronze_kg": 800,
-   "iugerum_land": 400
+   "hectare_land": 100.92
   },
   "cap_hours": 0,
   "up_hours": 214663.5275669549,

@@ -1784,7 +1784,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
     INSOLVENCY_FLOOR_MIN = declare(
         "INSOLVENCY_FLOOR_MIN", 4000.0, kind="temporary_heuristic",
         book_money=True, unit="denarii", source=None, confidence="D",
-        why="Floor on how deep into arrears a household can sit before "
+        why="Genuinely a money amount: it is a nominal debt threshold, and a debt is a promise of a fixed sum of the coin it was contracted in, whatever that coin later buys. "
+            "Floor on how deep into arrears a household can sit before "
             "insolvency's staff bleed can begin, for a household with "
             "very low revenue - so a household earning almost nothing is "
             "not bled the instant it dips a denarius below zero. Round "
@@ -1915,7 +1916,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
     AUTO_BRIBE_CAPITAL_THRESHOLD = declare(
         "AUTO_BRIBE_CAPITAL_THRESHOLD", 2000, kind="temporary_heuristic",
         book_money=True, unit="denarii", source=None, confidence="D",
-        why="Minimum capital before the optimizer's bribery policy will "
+        why="Genuinely a money amount: it is a threshold on coin held, so it is compared against capital as it is counted. "
+            "Minimum capital before the optimizer's bribery policy will "
             "spend at all, so a poor household is not bled dry bribing "
             "away scandal it might survive anyway. Round number, not "
             "measured.")
@@ -1929,7 +1931,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
     AUTO_BRIBE_COST_PER_SCANDAL_POINT = declare(
         "AUTO_BRIBE_COST_PER_SCANDAL_POINT", 260, kind="temporary_heuristic",
         book_money=True, unit="denarii per scandal point", source=None, confidence="D",
-        why="What buying down one point of scandal costs, capping total "
+        why="Genuinely a money amount: a bribe is handed over as coin and the sum is negotiated between the parties, not fixed by the labour of any good. "
+            "What buying down one point of scandal costs, capping total "
             "spend alongside AUTO_BRIBE_CAPITAL_SHARE. Invented figure, "
             "not sourced to any attested bribe schedule.")
     BRIBES_YTD_DECAY = declare(
@@ -1945,7 +1948,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
         "BRIBE_SCANDAL_REDUCTION_SCALE", 300.0, kind="temporary_heuristic",
         book_money=True, unit="denarii per scandal point removed (before bribability)",
         source=None, confidence="D",
-        why="How much bribery spend it takes to remove one point of "
+        why="Genuinely a money amount: a bribe is handed over as coin and the sum is negotiated between the parties, not fixed by the labour of any good. "
+            "How much bribery spend it takes to remove one point of "
             "scandal, scaled further by this society's own bribability "
             "weight. Invented figure, not sourced to any attested bribe "
             "schedule.")

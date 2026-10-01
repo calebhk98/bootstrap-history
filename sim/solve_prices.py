@@ -117,11 +117,11 @@ RENT ON GROWN AND LAND-LIMITED MATERIALS (Complaints/49 - "land rent
 reaches no crop"). `sim/world/land.py` computes a real, per-civilization
 Ricardian rent on arable land - both margins of it, extensive (better
 land against worse) and intensive (diminishing returns to more labour on
-the same ground) - and `land_rent_hours_per_iugerum` above turns that into
-`iugerum_land`'s own solved price. Without this section, nothing else in
+the same ground) - and `land_rent_hours_per_hectare` above turns that into
+`hectare_land`'s own solved price. Without this section, nothing else in
 `data/production/` looks that price up: `wheat_kg` has `inputs={}`, so its
 price is mathematically guaranteed to be labour cost alone, whatever an
-iugerum is worth, and the same is true of wool, timber, olives, wine and
+hectare is worth, and the same is true of wool, timber, olives, wine and
 every other material a recipe's own prose says comes "from arable land",
 "from pasture" or "from forest" without a single recipe actually consuming
 any - a real rent computed on the land side that reaches no price anybody
@@ -132,44 +132,44 @@ this needed its own route into a recipe's cost rather than reusing
 RENT_BEARING_ORE_MATERIALS' ore-grade mechanism above: a crop is not the
 material that earns a rent, the LAND it grows on is, and the crop merely
 OCCUPIES that land for a season rather than consuming it the way a
-smelter consumes ore. `land_iugera_years` (data/production/_SCHEMA.md) is
+smelter consumes ore. `land_hectare_years` (data/production/_SCHEMA.md) is
 the field that says so - a BATCH-level quantity, exactly like
 `labour_hours` or a capital good's `build_materials` above, of how many
-land-area-YEARS this recipe's whole batch ties up on `iugerum_land`.
+land-area-YEARS this recipe's whole batch ties up on `hectare_land`.
 LAND-AREA-YEARS, not bare area, because land held for two years costs
 twice what the same land held for one year does - the same reasoning
 `capital`'s own `service_life_years` already applies to a furnace, and
-the natural unit once yield (kg per iugerum per YEAR) and rent (hours per
-iugerum per YEAR) are both already flows: multiplying a flow by however
+the natural unit once yield (kg per hectare per YEAR) and rent (hours per
+hectare per YEAR) are both already flows: multiplying a flow by however
 long it is drawn on is what turns it into a cost, exactly as an hourly
 wage times hours worked is what turns it into a wage bill.
 
-HOW IT IS WIRED. `recipe_cost_and_allocation` reads `land_iugera_years`
-and multiplies it by `current_prices["iugerum_land"]` exactly the way it
+HOW IT IS WIRED. `recipe_cost_and_allocation` reads `land_hectare_years`
+and multiplies it by `current_prices["hectare_land"]` exactly the way it
 already prices an ordinary `inputs` entry - a NEW term
 (`land_cost_hours`), not folded into `material_cost_hours` itself, for
 the same reason CAPITAL's build bill gets its own term rather than being
 hand-added to `inputs`: naming what a cost IS matters as much as
 computing it right. `_dependency_materials` and `_has_external_anchor`
-both now see `iugerum_land` as a dependency whenever `land_iugera_years`
+both now see `hectare_land` as a dependency whenever `land_hectare_years`
 is nonzero, so the resolvability and cycle-productiveness passes above
 treat a land-consuming recipe exactly like one that consumes any other
 extracted material - no separate code path, because land-as-an-input and
-ore-as-an-input are the same shape once `iugerum_land` has a price.
+ore-as-an-input are the same shape once `hectare_land` has a price.
 
-WHY THIS DOES NOT CLOSE A CYCLE BACK ON ITSELF. `iugerum_land`'s own price
-never depends on the crop prices `land_iugera_years` feeds into:
-`land_rent_hours_per_iugerum` fixes it, once, before the main iteration
+WHY THIS DOES NOT CLOSE A CYCLE BACK ON ITSELF. `hectare_land`'s own price
+never depends on the crop prices `land_hectare_years` feeds into:
+`land_rent_hours_per_hectare` fixes it, once, before the main iteration
 starts, from land.py's PHYSICAL rent and wheat_kg's ZERO-LAND-RENT
 reference price (see that function's own docstring for why seeding
-`{"iugerum_land": 0.0}` into that ONE reference call keeps it that way
-even though wheat_kg now states a `land_iugera_years` of its own). wheat's
+`{"hectare_land": 0.0}` into that ONE reference call keeps it that way
+even though wheat_kg now states a `land_hectare_years` of its own). wheat's
 ACTUAL solved price - what bread, and every other consumer of wheat, pays
 - does include land rent, computed by the ordinary Jacobi iteration below;
 it is only the one-off unit-conversion call that stays rent-free, and it
 runs once, not every round. So the arrow runs one way: land.py's physical
 inputs (population, territory, fertility - no price anywhere in them) ->
-`iugerum_land`'s hours price (fixed) -> every land-consuming material's
+`hectare_land`'s hours price (fixed) -> every land-consuming material's
 own solved price (iterated) - never back around to land.py itself or to
 wheat's own reference price.
 
@@ -187,7 +187,7 @@ PASTURE AND FOREST PAY ARABLE LAND'S OWN RENT, AND THAT IS A HEURISTIC.
 sim/world/land.py computes ONE rent, from the margin of cultivation over
 ARABLE cropland; wool, milk, timber and every forest good above pay that
 SAME rent for their own pasture or woodland, because this project tracks
-only one `iugerum_land` material and one margin. Real pasture and
+only one `hectare_land` material and one margin. Real pasture and
 woodland were commonly land unfit for the plough and would earn a lower
 rent of their own at their own margin, so this overstates their true land
 cost. Tag: TEMPORARY HEURISTIC (CLAUDE.md 3.4), tracked against the same
@@ -788,7 +788,7 @@ from sim.solve_prices_core import (                  # noqa: E402
     capability_price_for_requirement,
     capability_required_grades,
     compute_resolvable_materials,
-    land_rent_hours_per_iugerum,
+    land_rent_hours_per_hectare,
     load_starting_technologies,
     minor_joint_byproducts_are_unanchored,
     recipe_cost_and_allocation,

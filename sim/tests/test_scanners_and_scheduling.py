@@ -1701,7 +1701,10 @@ check("military demand still needs SOME visible scale - a founder who has "
            and _tiny_notice.state_notice() > _tiny_notice.STATE_NOTICE_THRESHOLD_MILITARY),
       _tiny_notice.state_notice())
 
-_huge = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+# 60 million coin at the old coin value, stated in labour hours so it does not
+# move with what the coin metal costs
+HUGE_CAPITAL_ROME = 2.24e8 * sim(civ="rome_100ad").money_per_labour_hour()
+_huge = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 check("confiscation is a TAIL risk: it stays at zero until well past the "
       "general notice line, not the moment requisition starts",
       _big.confiscation_risk()[0] == 0.0 and _big.state_notice() > _big.STATE_NOTICE_THRESHOLD,
@@ -1709,8 +1712,8 @@ check("confiscation is a TAIL risk: it stays at zero until well past the "
 check("...and only arrives once a household is truly enormous",
       _huge.confiscation_risk()[0] > 0.0, _huge.state_notice())
 
-_huge_bare = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
-_huge_shielded = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+_huge_bare = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
+_huge_shielded = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 _huge_shielded.protection = 0.85
 _huge_shielded.done.add("academy_network")
 _huge_shielded._done_changed()
@@ -1750,7 +1753,7 @@ check("...but a Norse state that DID build up state_capacity (the same "
 # Fog safety (hard rule 3): nothing this mechanic prints may name a node id
 # the player has not discovered. _state_pressure only ever uses this
 # civilisation's own plain-language state_pressure names, never a tech id.
-_fogged = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+_fogged = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 _fogged.fog = True
 _fogged.year = _fogged.year
 _before_log = len(_fogged.log)
@@ -1772,7 +1775,7 @@ class _AlwaysFires(random.Random):
         return 0.0
 
 
-_det_off = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+_det_off = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 _det_off.events = False
 _det_off.rng = _AlwaysFires(1)
 _cap_before_off = _det_off.capital
@@ -1789,7 +1792,7 @@ check("...but the deterministic requisition/office tax still applies - it "
       "is not a roll of the dice, and a dice-free trial must still feel it",
       _det_off.capital < _cap_before_off, (_det_off.capital, _cap_before_off))
 
-_det_on = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+_det_on = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 _det_on.events = True
 _det_on.rng = _AlwaysFires(1)
 _det_on._state_pressure(_det_on.year)

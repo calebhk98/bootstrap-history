@@ -258,7 +258,8 @@
   "cat": "spinning",
   "kind": "ENGINEERING",
   "pre": [
-   "tex_spinning_wheel"
+   "tex_spinning_wheel",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -271,8 +272,7 @@
    "iron_bar_kg": 6,
    "wood_kg": 8
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "U-shaped guide of twisted metal, draws fibre at constant rate while imparting twist, basis of all frame spinning before the ring frame",
@@ -284,7 +284,8 @@
   "cat": "spinning",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_flyer"
+   "tx2_flyer",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -296,8 +297,7 @@
    "iron_bar_kg": 8,
    "wood_kg": 12
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Bobbin holds spun yarn, flyer guides it at controlled rate, differential speed creates twist, foundation spinning geometry before ring frame",
@@ -309,7 +309,8 @@
   "cat": "spinning",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_bobbin_and_flyer"
+   "tx2_bobbin_and_flyer",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -322,8 +323,7 @@
    "wood_kg": 30,
    "iron_bar_kg": 15
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "note": "Wooden spindle with metal cap, flyer rotates with spindle, early frame for coarser counts, easier to wind than flyer and bobbin",
@@ -352,8 +352,7 @@
    "cast_iron_kg": 80,
    "wood_kg": 50
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 1,
   "note": "Traveller slides on fixed ring, spindle rotates below, continuous yarn formation, allows higher speeds and finer counts, gradually displaced cap frame from 1870s",
@@ -381,8 +380,7 @@
    "iron_bar_kg": 80,
    "wood_kg": 80
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "note": "Carriage moves in and out, spindles move back and forth, intermittent action allows finer yarns than ring frame, handcraft for winding, steam-powered versions still require skill",
@@ -394,7 +392,8 @@
   "cat": "spinning",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_ring_frame"
+   "tx2_ring_frame",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -409,8 +408,7 @@
    "cast_iron_kg": 100,
    "iron_bar_kg": 60
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Ring frame with spindle speed matched to roller draft, fully continuous, better for coarser counts than mule, easier to automate than mule",
@@ -422,7 +420,8 @@
   "cat": "spinning",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_bobbin_and_flyer"
+   "tx2_bobbin_and_flyer",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -434,8 +433,7 @@
    "iron_bar_kg": 30,
    "wood_kg": 25
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Two or more bobbins feed into single twist spindle, creates plied yarn for strength and appearance, essential for warp threads",
@@ -567,8 +565,7 @@
    "iron_bar_kg": 40,
    "wood_kg": 30
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Pegged barrel or chain cam controls shaft raising, each peg or link controls one pick, allows complex patterns without Jacquard cost",
@@ -598,8 +595,7 @@
    "iron_bar_kg": 80,
    "wood_kg": 40
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "note": "Each warp thread on independent hook, punched cards control individual hooks, enables arbitrary patterns, complex and expensive",
@@ -636,7 +632,8 @@
   "cat": "weaving",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_shed"
+   "tx2_shed",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -649,8 +646,7 @@
    "wood_kg": 8,
    "iron_bar_kg": 3
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
   "note": "Pointed boat-shaped carrier holding bobbin, travels through shed, must be timed to stop at selvage, critical for loom speed",
@@ -678,8 +674,7 @@
    "cast_iron_kg": 40,
    "iron_bar_kg": 30
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0.5,
   "note": "Rotating cam drives picker sticks that strike shuttle, replaces hand throwing, enables power loom and higher speeds",
@@ -739,7 +734,8 @@
   "cat": "weaving",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_picking_mechanism"
+   "tx2_picking_mechanism",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -750,8 +746,7 @@
   "mat": {
    "iron_bar_kg": 4
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Expanding frame with sharp points, maintains woven cloth width against warp tension, prevents draw-in",
@@ -865,8 +860,7 @@
    "cast_iron_kg": 150,
    "iron_bar_kg": 100
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "note": "Empty shuttle automatically ejected and threaded shuttle inserted, eliminates hand threading, increases speed and reduces downtimes",
@@ -878,7 +872,8 @@
   "cat": "weaving",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_automatic_loom"
+   "tx2_automatic_loom",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -892,8 +887,7 @@
    "cast_iron_kg": 80,
    "iron_bar_kg": 60
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 1,
   "note": "Automatic supply of full bobbins when current runs out, eliminates manual bobbin replenishment, essential for unattended running",
@@ -921,8 +915,7 @@
    "iron_bar_kg": 60,
    "wood_kg": 40
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Reciprocating needles hold loops, springs pull down, needles rise to throw loop, produces high-quality hosiery, skilled operator control",
@@ -950,8 +943,7 @@
    "cast_iron_kg": 100,
    "iron_bar_kg": 60
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Rotating bed of needles forms tube, true circular motion, enables continuous production, coarse and fine gauges",
@@ -979,8 +971,7 @@
    "cast_iron_kg": 120,
    "iron_bar_kg": 70
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 1,
   "note": "Multiple yarn guides feed warp-wise, creates sheet fabric instead of tube, less stretch than weft knitting, high speed possible",
@@ -1005,8 +996,7 @@
   "mat": {
    "iron_bar_kg": 8
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Self-closing latch eliminates spring requirement, lighter pressure, enables higher gauge and finer yarns, invention transformed knitting",
@@ -1017,7 +1007,9 @@
   "name": "Scouring: removal of grease and soil",
   "cat": "finishing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_heat_0700"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 40,
@@ -1027,8 +1019,7 @@
   "mat": {
    "mat_olive_oil": 5
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Hot alkali bath removes natural oils and dirt, essential preparatory step for dyeing and bleaching, caustic or soap-based",
@@ -1039,7 +1030,9 @@
   "name": "Fulling: cloth densification",
   "cat": "finishing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_heat_0700"
+  ],
   "traits": [
    "labour_saving"
   ],
@@ -1051,8 +1044,7 @@
   "mat": {
    "mat_charcoal": 3
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Mechanical or chemical treatment matts fibres, shrinks and densifies cloth, essential for wool cloth, water-powered fulling mills",
@@ -1064,7 +1056,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_fulling"
+   "tx2_fulling",
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1073,8 +1066,7 @@
    "artisan": 60
   },
   "mat": {},
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Continued fulling process, creates thick dense cloth, especially for woollen fabrics and felt-like handle",
@@ -1086,7 +1078,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_fulling"
+   "tx2_fulling",
+   "cap_tol_1mm"
   ],
   "traits": [
    "labour_saving"
@@ -1101,8 +1094,7 @@
    "cast_iron_kg": 30,
    "iron_bar_kg": 20
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.5,
   "note": "Rotating cylinder with teasel or wire brushes teases fibre ends to surface, mechanical replacement for hand teasel",
@@ -1114,7 +1106,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_raising"
+   "tx2_raising",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -1129,8 +1122,7 @@
    "cast_iron_kg": 40,
    "iron_bar_kg": 25
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0.5,
   "note": "Rotating cylinders with sharp blades trim raised nap to uniform height, creates smooth surface, high speed continuous operation",
@@ -1142,7 +1134,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_cropping"
+   "tx2_cropping",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -1156,8 +1149,7 @@
    "cast_iron_kg": 30,
    "iron_bar_kg": 20
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Stationary blade against rotating grooved drum cuts pile uniformly, produces velvet and pile fabrics",
@@ -1184,8 +1176,7 @@
    "cast_iron_kg": 80,
    "iron_bar_kg": 40
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0.5,
   "note": "Heated rollers under controlled pressure compact surface, produces sheen and smoothness, essential for cotton satins",
@@ -1197,7 +1188,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "cap_tol_100um"
+   "cap_tol_100um",
+   "cap_heat_0700"
   ],
   "traits": [
    "labour_saving"
@@ -1211,8 +1203,7 @@
   "mat": {
    "caustic_soda_kg": 40
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Caustic soda under tension swell and align cotton fibres, increases lustre and dye uptake, becomes permanent feature of premium cotton",
@@ -1223,7 +1214,9 @@
   "name": "Singeing: flame removal of nap",
   "cat": "finishing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_heat_1100"
+  ],
   "traits": [
    "labour_saving"
   ],
@@ -1235,8 +1228,7 @@
   "mat": {
    "wood_kg": 10
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Open flame across cloth surface burns fine fibres, produces smooth finish, replaces hand holding over candle with continuous flame",
@@ -1248,7 +1240,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_scouring"
+   "tx2_scouring",
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1259,8 +1252,7 @@
   "mat": {
    "green_vitriol_kg": 5
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Enzymatic or chemical removal of starch sizing applied to warp, must precede dyeing and finishing",
@@ -1291,7 +1283,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "mat_chlorine"
+   "mat_chlorine",
+   "cap_heat_0700"
   ],
   "traits": [
    "labour_saving"
@@ -1305,8 +1298,7 @@
   "mat": {
    "bleach_kg": 8
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Chlorine water or bleach powder oxidises colour bodies, fastest industrial method, some fibre damage especially to cotton",
@@ -1319,7 +1311,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
-   "electrolysis_industrial"
+   "electrolysis_industrial",
+   "cap_heat_0700"
   ],
   "traits": [
    "labour_saving"
@@ -1333,8 +1326,7 @@
   "mat": {
    "hydrogen_peroxide_kg": 15
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Milder than chlorine, leaves no toxic residue, gentler on fibres, requires careful pH control, becomes preferred method by 1920s",
@@ -1345,7 +1337,9 @@
   "name": "Dyeing in fibre: pre-spin colouration",
   "cat": "finishing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_heat_0700"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 60,
@@ -1355,8 +1349,7 @@
   "mat": {
    "dye_kg": 20
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Loose fibres or cards dipped in dye bath, blends different coloured fibres before spinning, essential for heathers and mixtures",
@@ -1367,7 +1360,9 @@
   "name": "Dyeing in yarn: skein colouration",
   "cat": "finishing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_heat_0700"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 70,
@@ -1377,8 +1372,7 @@
   "mat": {
    "dye_kg": 30
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Skeins hung in dye bath, requires even access to liquor, risk of uneven colour, essential for solid-colour fabrics",
@@ -1389,7 +1383,9 @@
   "name": "Dyeing in piece: woven cloth colouration",
   "cat": "finishing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_heat_0700"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 80,
@@ -1399,8 +1395,7 @@
   "mat": {
    "dye_kg": 50
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Folded cloth in dye bath, most efficient use of dye, requires careful handling to avoid creases, standard for finished fabric",
@@ -1412,7 +1407,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "tex_dye_madder"
+   "tex_dye_madder",
+   "cap_heat_0700"
   ],
   "traits": [
    "labour_saving"
@@ -1425,8 +1421,7 @@
   "mat": {
    "dye_kg": 40
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Finished garment dipped in vat, enables custom colouration, risk of shrinkage, labour-intensive due to garment complexity",
@@ -1437,7 +1432,9 @@
   "name": "Block printing: carved design application",
   "cat": "finishing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 100,
@@ -1449,8 +1446,7 @@
    "wood_kg": 15,
    "dye_kg": 20
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "note": "Hand-carved wooden blocks with raised design, dipped in dye and stamped repeatedly, high labour for design creation",
@@ -1477,8 +1473,7 @@
    "cast_iron_kg": 100,
    "iron_bar_kg": 40
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 1,
   "note": "Engraved copper roller applies pattern continuously, replaces block printing, enables fine detail and high speed, expensive engraving",
@@ -1493,7 +1488,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "photography"
+   "photography",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -1507,8 +1503,7 @@
    "paper_kg": 20,
    "mat_silk": 10
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Silk or other mesh with photographic emulsion stencil, squeegee forces dye through, emerges in 1920s for fine art and textile printing",
@@ -1523,7 +1518,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "tex_mordanting"
+   "tex_mordanting",
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1534,8 +1530,7 @@
   "mat": {
    "mat_wax_kg": 10
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Wax, starch paste, tied thread, or clay blocks dye from selected areas; remove the resist after the dye bath to reveal the pattern. Each resist must survive the bath without bleeding into the fibre.",
@@ -1547,7 +1542,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_printing_block"
+   "tx2_printing_block",
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1559,8 +1555,7 @@
   "mat": {
    "mat_bleach_kg": 15
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Bleaching agent printed onto dyed cloth removes colour, creates light patterns on dark background, requires proper discharge agents",
@@ -1583,7 +1578,9 @@
   "name": "Waterproofing: moisture resistance",
   "cat": "finishing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_heat_0700"
+  ],
   "traits": [
    "labour_saving"
   ],
@@ -1596,8 +1593,7 @@
   "mat": {
    "olive_oil_kg": 30
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Oil or wax coating repels water, essential for outdoor wear, reduces breathability, various formulations tested in early 20th century",
@@ -1609,7 +1605,8 @@
   "cat": "finishing",
   "kind": "ENGINEERING",
   "pre": [
-   "mat_alum"
+   "mat_alum",
+   "cap_heat_0700"
   ],
   "traits": [
    "infrastructure"
@@ -1622,8 +1619,7 @@
   "mat": {
    "flame_retardant_kg": 25
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,
   "note": "Chemical treatment slows combustion, essential for children's wear and upholstery, various formulations with durability challenges",
@@ -1661,7 +1657,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
-   "mat_formaldehyde"
+   "mat_formaldehyde",
+   "cap_heat_0700"
   ],
   "traits": [
    "labour_saving",
@@ -1675,8 +1672,7 @@
   "mat": {
    "mat_formaldehyde": 20
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,
   "note": "Resin cross-linking sets cloth shape, major innovation in 1930s-1940s, requires formaldehyde chemistry and heat treatment",
@@ -1878,7 +1874,8 @@
   "cat": "fibres",
   "kind": "RESOURCE",
   "pre": [
-   "tx2_silk_fibre"
+   "tx2_silk_fibre",
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1889,8 +1886,7 @@
   "mat": {
    "mulberry_leaves_kg": 100
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "note": "Silkworm rearing and cocoon processing, stifling and degumming, labour-intensive, Chinese and Indian expertise",
@@ -1922,7 +1918,8 @@
   "name": "Rayon by nitration: cellulose nitrate",
   "cat": "fibres",
   "pre": [
-   "mat_nitrocellulose"
+   "mat_nitrocellulose",
+   "cap_heat_1100"
   ],
   "traits": [],
   "kb": "",
@@ -1933,8 +1930,7 @@
   "mat": {
    "mat_nitrocellulose": 30
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "note": "Cellulose nitrate dissolved and extruded, first artificial fibre, flammable and unstable, replaced by safer cupro rayon"
@@ -1946,7 +1942,8 @@
   "kind": "RESOURCE",
   "pre": [
    "mat_copper",
-   "mat_ammonia"
+   "mat_ammonia",
+   "cap_heat_1100"
   ],
   "traits": [
    "commerce",
@@ -1961,8 +1958,7 @@
    "copper_kg": 20,
    "mat_ammonia": 40
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 2,
   "note": "Cellulose in copper-ammonia complex spun through air, smoother than viscose, excellent silk-like lustre, emerges in 1890s",
@@ -1973,7 +1969,8 @@
   "name": "Rayon by viscose: alkali-carbon disulfide process",
   "cat": "fibres",
   "pre": [
-   "mat_charcoal"
+   "mat_charcoal",
+   "cap_heat_1100"
   ],
   "traits": [],
   "kb": "",
@@ -1984,8 +1981,7 @@
   "mat": {
    "mat_sodium_hydroxide_kg": 50
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.7,
   "adopt_yrs": 2,
   "note": "Most important rayon process, versatile and scalable, controls properties by coagulation bath, dominant by 1920s"
@@ -1997,7 +1993,8 @@
   "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
-   "ch2_polymer_cellulose_acetate"
+   "ch2_polymer_cellulose_acetate",
+   "cap_heat_1100"
   ],
   "traits": [
    "commerce",
@@ -2011,8 +2008,7 @@
   "mat": {
    "acetic_anhydride_kg": 50
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 2,
   "note": "Cellulose acetate spun directly, not regenerated cellulose, safer and easier than cupro, emerges in 1920s",
@@ -2024,7 +2020,8 @@
   "cat": "fibres",
   "kind": "RESOURCE",
   "pre": [
-   "mat_ammonia"
+   "mat_ammonia",
+   "cap_heat_1300"
   ],
   "traits": [
    "commerce",
@@ -2039,8 +2036,7 @@
   "mat": {
    "adipic_acid_kg": 50
   },
-  "cap": "cap_heat_1300",
-  "cap_hours": 26210.442926368123,
+  "cap_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 3,
   "note": "First fully synthetic fibre from petroleum, extraordinary durability and elasticity, DuPont patented 1935, launched 1940",
@@ -2054,7 +2050,8 @@
   "pre": [
    "cap_heat_1600",
    "cap_measure_temp",
-   "ch2_polymer_polyester"
+   "ch2_polymer_polyester",
+   "cap_heat_1300"
   ],
   "traits": [
    "commerce",
@@ -2069,8 +2066,7 @@
   "mat": {
    "mat_petroleum_refined": 50
   },
-  "cap": "cap_heat_1300",
-  "cap_hours": 26210.442926368123,
+  "cap_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 3,
   "note": "Polyethylene terephthalate condensation, extremely versatile, crease resistance, ICI developed pre-1950 but mass production post-war",
@@ -2107,8 +2103,7 @@
   "mat": {
    "acrylonitrile_kg": 50
   },
-  "cap": "cap_heat_1300",
-  "cap_hours": 26210.442926368123,
+  "cap_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "note": "Acrylonitrile-based polymerisation, wool-like properties, developed in 1940s, emerges as major fibre by late 1940s",
@@ -2131,8 +2126,7 @@
   "mat": {
    "glass_raw_kg": 100
   },
-  "cap": "cap_heat_1600",
-  "cap_hours": 32259.00667860692,
+  "cap_hours": 0,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "note": "Fine glass filaments drawn from melt, high strength and temperature resistance, industrial applications in 1930s",
@@ -2147,7 +2141,8 @@
   "cat": "fibres",
   "kind": "RESOURCE",
   "pre": [
-   "mat_asbestos"
+   "mat_asbestos",
+   "cap_heat_1100"
   ],
   "traits": [
    "infrastructure"
@@ -2160,8 +2155,7 @@
   "mat": {
    "mat_asbestos": 50
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Woven asbestos fibres, extreme heat resistance to 1100C plus, essential for protective wear and insulation, long-term health consequences unknown",
@@ -2172,7 +2166,9 @@
   "name": "Eye-pointed needle: self-threading sewing",
   "cat": "sewing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_100um"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 50,
@@ -2182,8 +2178,7 @@
   "mat": {
    "iron_bar_kg": 3
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
   "note": "Needle with eye at point, thread slides in from end during forward motion, essential for mechanical sewing machines",
@@ -2196,7 +2191,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "tx2_eye_pointed_needle",
-   "cap_tol_1mm"
+   "cap_tol_1mm",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -2207,8 +2203,7 @@
    "engineer": 100
   },
   "mat": {},
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Needle loop interlocks with bobbin loop, requires precise timing and tension, most important sewing machine invention",
@@ -2220,7 +2215,8 @@
   "cat": "sewing",
   "kind": "ENGINEERING",
   "pre": [
-   "tx2_eye_pointed_needle"
+   "tx2_eye_pointed_needle",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -2231,8 +2227,7 @@
    "engineer": 90
   },
   "mat": {},
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.5,
   "note": "Single needle thread creates loops, used in early machines and special applications, less strong than lockstitch",
@@ -2245,7 +2240,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "tx2_chain_stitch",
-   "cap_tol_1mm"
+   "cap_tol_1mm",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -2256,8 +2252,7 @@
    "engineer": 100
   },
   "mat": {},
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Multiple threads bind over edge, prevents fraying and seals edge, specialist machines emerge in 1890s",
@@ -2270,7 +2265,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "tx2_eye_pointed_needle",
-   "cap_tol_1mm"
+   "cap_tol_1mm",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -2285,8 +2281,7 @@
    "cast_iron_kg": 40,
    "iron_bar_kg": 30
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Cuts buttonhole and simultaneously binds edge with thread, replaces hand work, enables mass production of shirts",
@@ -2297,7 +2292,9 @@
   "name": "Cutting table: stacked cloth cutting",
   "cat": "sewing",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 60,
@@ -2307,8 +2304,7 @@
   "mat": {
    "wood_kg": 30
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Large flat table with edge, cloth stacked and cut to pattern, enables multiple pieces from single cutting",
@@ -2321,7 +2317,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "tx2_cutting_table",
-   "tx2_cap_power_motor"
+   "tx2_cap_power_motor",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -2336,8 +2333,7 @@
    "cast_iron_kg": 50,
    "iron_bar_kg": 30
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Motor-driven reciprocating blade cuts through stacked cloth, pattern template guides cutting, eliminates hand scissors",
@@ -2350,7 +2346,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "tex_pattern_cutting",
-   "tx2_sizing_systems"
+   "tx2_sizing_systems",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2361,8 +2358,7 @@
   "mat": {
    "paper_kg": 30
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Master patterns scaled to multiple sizes, essential for ready-to-wear, ratio grading becomes standard practice",
@@ -2432,8 +2428,7 @@
   "mat": {
    "brass_kg": 60
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "note": "Interlocking metal teeth on two tapes, slider engages hooks, invented in 1890s but refined in 1920s for widespread adoption"
@@ -2444,7 +2439,8 @@
   "cat": "sewing",
   "kind": "ENGINEERING",
   "pre": [
-   "mat_brass"
+   "mat_brass",
+   "cap_tol_1mm"
   ],
   "traits": [
    "labour_saving",
@@ -2459,8 +2455,7 @@
   "mat": {
    "brass_kg": 15
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Four-piece metal fastener, ball and socket interlock, emerges in late 19th century, easier than buttons for infant wear",
@@ -2472,7 +2467,8 @@
   "cat": "sewing",
   "kind": "ENGINEERING",
   "pre": [
-   "mfg_wire_drawing"
+   "mfg_wire_drawing",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2483,8 +2479,7 @@
   "mat": {
    "iron_bar_kg": 8
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "A matched bent-wire hook and closed eye made from consistently drawn wire, sewn to a garment as a reusable fastening.",
@@ -2497,7 +2492,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "mat_natural_rubber",
-   "mat_rubber_coagulated"
+   "mat_rubber_coagulated",
+   "cap_heat_1100"
   ],
   "traits": [
    "labour_saving",
@@ -2511,8 +2507,7 @@
   "mat": {
    "rubber_kg": 30
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Rubber covered thread or cord, recoverable stretch, essential for undergarments and sportswear, emerging in early 20th century",
@@ -2603,7 +2598,8 @@
   "pre": [
    "tx2_lockstitch",
    "tx2_eye_pointed_needle",
-   "cap_tol_1mm"
+   "cap_tol_1mm",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -2619,8 +2615,7 @@
    "iron_bar_kg": 40,
    "wood_kg": 20
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "note": "Human-powered treadle or hand crank, complex motion conversion, Singer and others dominated market, transformed home sewing",
@@ -2633,7 +2628,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "tx2_lockstitch",
-   "cap_power_steam"
+   "cap_power_steam",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -2648,8 +2644,7 @@
    "cast_iron_kg": 100,
    "iron_bar_kg": 60
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 1,
   "note": "Steam or electric powered, higher speeds and heavier fabrics, multiple machines linked by belts, factory standard from 1870s",
@@ -2696,8 +2691,7 @@
    "cast_iron_kg": 80,
    "iron_bar_kg": 50
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Rotating frames twist strand into rope, water-powered mills standard, enables continuous production",
@@ -2730,7 +2724,9 @@
   "id": "tx2_vegetable_tanning",
   "name": "Vegetable tanning: oak bark curing",
   "cat": "leather",
-  "pre": [],
+  "pre": [
+   "cap_heat_0700"
+  ],
   "traits": [],
   "kb": "",
   "ph": 50,
@@ -2740,8 +2736,7 @@
   "mat": {
    "oak_bark_kg": 50
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "note": "Tannins from oak bark bind to collagen, slow process taking months, produces supple and durable leather, traditional method"
@@ -2750,7 +2745,9 @@
   "id": "tx2_chrome_tanning",
   "name": "Chrome tanning: chromium salt curing",
   "cat": "leather",
-  "pre": [],
+  "pre": [
+   "cap_heat_1100"
+  ],
   "traits": [],
   "kb": "",
   "ph": 120,
@@ -2760,8 +2757,7 @@
   "mat": {
    "mat_chromium": 30
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "note": "Chromium sulfate rapidly tans hides, produces softer leather than vegetable tanning, faster but requires chemical control"
@@ -2772,7 +2768,8 @@
   "cat": "leather",
   "kind": "RESOURCE",
   "pre": [
-   "mat_alum"
+   "mat_alum",
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2783,8 +2780,7 @@
   "mat": {
    "alum_kg": 40
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "note": "Alum and salt pickle hides, faster than vegetable tanning, less durable, primarily for light leather goods",
@@ -2818,7 +2814,8 @@
   "kind": "RESOURCE",
   "pre": [
    "mat_leather",
-   "tx2_currying"
+   "tx2_currying",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2827,8 +2824,7 @@
    "artisan": 100
   },
   "mat": {},
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Controlled splitting of a prepared hide into grain and flesh layers with a guided knife. This is a leather-finishing process, not the much later powered band-knife splitter.",
@@ -2853,8 +2849,7 @@
   "mat": {
    "cast_iron_kg": 40
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Hot press with pattern die creates surface texture, replicates grain or adds decoration, mechanical equipment by 1890s",
@@ -2881,8 +2876,7 @@
    "cast_iron_kg": 100,
    "iron_bar_kg": 60
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Pneumatic or mechanical clamps pull upper leather over wooden last, tension nails sole attachment, eliminates hand work",
@@ -2894,7 +2888,8 @@
   "cat": "leather",
   "kind": "RESOURCE",
   "pre": [
-   "tx2_lasting_machine"
+   "tx2_lasting_machine",
+   "cap_tol_100um"
   ],
   "traits": [
    "labour_saving"
@@ -2905,8 +2900,7 @@
    "engineer": 140
   },
   "mat": {},
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 2,
   "note": "Chain of specialized machines and workers, division of labour, higher speed and lower cost, emerged in America mid-1800s",
@@ -2919,7 +2913,8 @@
   "kind": "RESOURCE",
   "pre": [
    "mat_natural_rubber",
-   "tl_vulcanized_rubber"
+   "tl_vulcanized_rubber",
+   "cap_heat_1100"
   ],
   "traits": [
    "commerce",
@@ -2934,8 +2929,7 @@
   "mat": {
    "rubber_kg": 40
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Vulcanised rubber soles reduce cost and improve water resistance, attached by cements or nailing, increasingly common from 1890s",
@@ -2947,7 +2941,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "chm_matches"
+   "chm_matches",
+   "cap_heat_0700"
   ],
   "traits": [
    "commerce",
@@ -2963,8 +2958,7 @@
   "mat": {
    "phosphorus_red_kg": 5
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Phosphorus on match strip, ignition requires friction on box strip, much safer than friction matches, Swedish invention 1844",
@@ -2976,7 +2970,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "chm_phosphorus_extraction"
+   "chm_phosphorus_extraction",
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2987,8 +2982,7 @@
   "mat": {
    "phosphorus_red_kg": 3
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.5,
   "note": "White phosphorus mixed with oxidiser at stick tip, ignites spontaneously in air, dangerous but widespread in 19th century",
@@ -3012,8 +3006,7 @@
    "iron_bar_kg": 15,
    "brass_kg": 20
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Thin steel blade held in guard, Gillette patent 1901, replaceable blade and guard system, transformed male grooming"
@@ -3037,8 +3030,7 @@
   "mat": {
    "mat_tool_steel": 10
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Stamped and honed thin steel blade, consumable product, razor-blade business model generates recurring revenue",
@@ -3070,7 +3062,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "soap_hard"
+   "soap_hard",
+   "cap_heat_0700"
   ],
   "traits": [
    "commerce",
@@ -3085,8 +3078,7 @@
   "mat": {
    "mat_olive_oil": 100
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Standardised formulation and cutting, wrapped and branded, Procter and Gamble transforms soap into mass-market good",
@@ -3098,7 +3090,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "soap_hard"
+   "soap_hard",
+   "cap_heat_0700"
   ],
   "traits": [
    "commerce",
@@ -3112,8 +3105,7 @@
   "mat": {
    "mat_olive_oil": 50
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Liquid soap formulation specifically for hair, emerges in early 20th century, mass production and branding key factors",
@@ -3124,7 +3116,9 @@
   "name": "Comb: hair grooming tool",
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 50,
@@ -3134,8 +3128,7 @@
   "mat": {
    "horn_kg": 5
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Horn or bone cut into teeth, traditional technology, mass production emerges in 1800s with celluloid versions",
@@ -3148,7 +3141,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "mat_glass_soda",
-   "mat_tin"
+   "mat_tin",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3160,8 +3154,7 @@
    "glass_raw_kg": 20,
    "mat_mercury": 5
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "A flat glass plate backed with a polished tin or lead-tin reflective layer and sealed from corrosion. The backing process, adhesion, and glass flatness distinguish it from an ancient polished-metal mirror.",
@@ -3172,7 +3165,9 @@
   "name": "Button: horn material",
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 40,
@@ -3182,8 +3177,7 @@
   "mat": {
    "horn_kg": 2
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
   "note": "Shaped horn disc, drilled and edges finished, traditional high-quality material, medieval production",
@@ -3194,7 +3188,9 @@
   "name": "Button: bone material",
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 40,
@@ -3204,8 +3200,7 @@
   "mat": {
    "bone_kg": 2
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
   "note": "Carved bone disc, fine quality and good durability, medieval production standard",
@@ -3216,7 +3211,9 @@
   "name": "Button: shell material",
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 50,
@@ -3226,8 +3223,7 @@
   "mat": {
    "shell_kg": 2
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
   "note": "Mother-of-pearl and other shells cut into discs, lustrous appearance, waterborne trade commodity",
@@ -3239,7 +3235,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "mat_celluloid"
+   "mat_celluloid",
+   "cap_heat_1100"
   ],
   "traits": [
    "commerce"
@@ -3252,8 +3249,7 @@
   "mat": {
    "celluloid_kg": 5
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "note": "Molded celluloid sheets stamped into buttons, cheaper and easier than natural materials, emerges in 1870s",
@@ -3285,7 +3281,9 @@
   "name": "Needle: sewing implement",
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_100um"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 40,
@@ -3295,8 +3293,7 @@
   "mat": {
    "iron_bar_kg": 1
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
   "note": "Polished iron or steel with eye, essential tool before sewing machines, hand-forged labour-intensive",
@@ -3308,7 +3305,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "hom_spectacles"
+   "hom_spectacles",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3320,8 +3318,7 @@
    "horn_kg": 2,
    "brass_kg": 3
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Horn or metal frame holding optical lenses, nose bridge and arms, emerged in medieval period with mass production in 1800s",
@@ -3333,7 +3330,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "hom_pocket_watch"
+   "hom_pocket_watch",
+   "cap_tol_100um"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3346,8 +3344,7 @@
    "brass_kg": 15,
    "mat_gold": 5
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "A fitted protective housing for an already-built portable watch, with hinged cover, stem opening, crystal seat, and access for winding and service. The case is meaningless before a pocket-watch movement exists; decorative brass, silver, or gold work follows the working timepiece.",
@@ -3371,8 +3368,7 @@
    "brass_kg": 20,
    "mat_rubber": 10
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Internal ink reservoir and feed system, iridium or gold nib, Waterman patent 1884 creates commercial success, transforms business writing"
@@ -3399,8 +3395,7 @@
    "steel_plate_kg": 10,
    "mat_rubber": 8
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,
   "note": "Small steel ball in socket, ink flows as ball rotates, Hungarian invention 1938, mass production challenges overcome by 1950s",
@@ -3411,7 +3406,8 @@
   "name": "Pencil: graphite and clay mixture",
   "cat": "consumer_goods",
   "pre": [
-   "mat_graphite_pure"
+   "mat_graphite_pure",
+   "cap_heat_1100"
   ],
   "traits": [],
   "kb": "",
@@ -3424,8 +3420,7 @@
    "graphite_kg": 20,
    "clay_kg": 30
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Ground graphite and clay mixed and fired, Cont\u00e9 and others develop proportions and hardness grades"
@@ -3437,7 +3432,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "mat_natural_rubber",
-   "mat_rubber_coagulated"
+   "mat_rubber_coagulated",
+   "cap_heat_1100"
   ],
   "traits": [
    "commerce"
@@ -3450,8 +3446,7 @@
   "mat": {
    "rubber_kg": 30
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Rubber abrasion removes graphite, cap-mounted or pencil-top versions, mass production emerges in late 1800s",
@@ -3465,7 +3460,8 @@
   "pre": [
    "mat_paper",
    "mfg_wire_drawing",
-   "mt2_spring_steel"
+   "mt2_spring_steel",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3476,8 +3472,7 @@
   "mat": {
    "iron_bar_kg": 3
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.5,
   "note": "Wire bent into overlapping loops, simple but effective, mass production by 1900s enables cheap office supplies",
@@ -3503,8 +3498,7 @@
    "cast_iron_kg": 40,
    "brass_kg": 20
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Lever mechanism bends staple through papers, powered by hand, emerges in late 1800s as office automation",
@@ -3517,7 +3511,8 @@
   "kind": "ENGINEERING",
   "pre": [
    "mat_paper",
-   "mfg_wire_drawing"
+   "mfg_wire_drawing",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3528,8 +3523,7 @@
   "mat": {
    "brass_kg": 3
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Short point with wide head, brass or steel, holds paper to boards without permanent damage",
@@ -3564,7 +3558,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "mat_paper"
+   "mat_paper",
+   "cap_heat_0700"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3575,8 +3570,7 @@
   "mat": {
    "starch_kg": 20
   },
-  "cap": "cap_heat_0700",
-  "cap_hours": 14113.315421890527,
+  "cap_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "note": "Starch-based adhesive applied to flap, dries to enable moistening, improvement over wax seals and tape",
@@ -3665,7 +3659,8 @@
   "name": "Jigsaw puzzle: dissectable picture",
   "cat": "consumer_goods",
   "pre": [
-   "printing_press"
+   "printing_press",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "",
@@ -3677,8 +3672,7 @@
    "paper_kg": 40,
    "wood_kg": 15
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Printed image on wood or cardboard, hand-sawed or die-cut into interlocking pieces, emerges in 18th century as education and entertainment"
@@ -3688,7 +3682,9 @@
   "name": "Doll: articulated child plaything",
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_1mm"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 80,
@@ -3699,8 +3695,7 @@
    "wood_kg": 5,
    "mat_cloth": 20
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Articulated limbs and face, wood or cloth construction, mass production with porcelain heads emerges in 19th century",
@@ -3726,8 +3721,7 @@
   "mat": {
    "iron_sheet_kg": 30
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Stamped and lithographed tin plate toy, jointed or wheeled, German and Japanese production emerges in late 1800s",
@@ -3754,8 +3748,7 @@
    "brass_kg": 30,
    "iron_sheet_kg": 40
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Spring-wound mechanism drives gears and linkages, walking or mechanical action, premium toy for wealthy children",
@@ -3784,8 +3777,7 @@
    "steel_plate_kg": 80,
    "mat_rubber": 20
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 2,
   "note": "Chain drive and pneumatic tyres, mass production enables affordability, transforms personal transport from 1890s",
@@ -3812,8 +3804,7 @@
    "brass_kg": 40,
    "glass_raw_kg": 30
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "note": "Fixed-focus simple lens, roll film, Kodak Brownie 1900 makes photography accessible to masses",
@@ -3841,8 +3832,7 @@
    "brass_kg": 50,
    "iron_sheet_kg": 80
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 2,
   "note": "Needle-vibration pickup playing wax cylinder or disc, horn amplification, emerges in 1890s and becomes major consumer product",
@@ -3854,7 +3844,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "radio"
+   "radio",
+   "cap_tol_100um"
   ],
   "traits": [
    "information",
@@ -3870,8 +3861,7 @@
    "brass_kg": 60,
    "mat_wood": 40
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 2,
   "note": "Crystal set or valve receiver and loudspeaker, mass production transforms home entertainment, major emergence in 1920s",
@@ -3893,8 +3883,7 @@
   "mat": {
    "glass_raw_kg": 100
   },
-  "cap": "cap_vac_1torr",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "note": "Double-walled glass with vacuum between, reflective surfaces, Thermos trade name, emerges in 1900s for portable hot beverages"
@@ -3905,7 +3894,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "met_tin_plate"
+   "met_tin_plate",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3916,8 +3906,7 @@
   "mat": {
    "iron_sheet_kg": 60
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Rolled and soldered tin plate, preserves food and other goods, mass production from 1810s onwards",
@@ -3952,7 +3941,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "mat_paper"
+   "mat_paper",
+   "cap_tol_1mm"
   ],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3963,8 +3953,7 @@
   "mat": {
    "paper_kg": 150
   },
-  "cap": "cap_tol_1mm",
-  "cap_hours": 20.161879174129325,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Laminated paper sheets glued and folded, replaces wooden crates for many applications, mass production by 1870s",
@@ -3976,7 +3965,8 @@
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
   "pre": [
-   "mat_paper"
+   "mat_paper",
+   "cap_tol_100um"
   ],
   "traits": [
    "commerce",
@@ -3990,8 +3980,7 @@
   "mat": {
    "paper_kg": 180
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Wavy paper core between flat faces, light and strong, enables efficient shipping, emerges in 1890s",
@@ -4002,7 +3991,9 @@
   "name": "Bottle: glass container",
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_heat_1100"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 60,
@@ -4012,8 +4003,7 @@
   "mat": {
    "glass_raw_kg": 100
   },
-  "cap": "cap_heat_1100",
-  "cap_hours": 22178.067091542256,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "note": "Hand-blown or later molded glass, seals and preserves liquids, mass production by 1870s",
@@ -4023,7 +4013,9 @@
   "id": "tx2_crown_cork",
   "name": "Crown cork: crimped bottle seal",
   "cat": "consumer_goods",
-  "pre": [],
+  "pre": [
+   "cap_tol_100um"
+  ],
   "traits": [],
   "kb": "",
   "ph": 90,
@@ -4033,8 +4025,7 @@
   "mat": {
    "iron_sheet_kg": 30
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Crimped tin cap with cork liner, seals carbonated beverages, bottling machine applies caps, invented 1891"
@@ -4044,7 +4035,9 @@
   "name": "Screw cap: threaded closure",
   "cat": "consumer_goods",
   "kind": "ENGINEERING",
-  "pre": [],
+  "pre": [
+   "cap_tol_100um"
+  ],
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 80,
@@ -4054,8 +4047,7 @@
   "mat": {
    "brass_kg": 30
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "note": "Threaded metal cap screws onto grooved bottle neck, reusable and reversible, evolves from wood to plastic",
@@ -4081,8 +4073,7 @@
   "mat": {
    "lead_kg": 50
   },
-  "cap": "cap_tol_100um",
-  "cap_hours": 2016.1879174129324,
+  "cap_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "note": "Collapsible metal tube with sealed cap, contents extruded by squeezing, enables portable toothpaste",
@@ -4101,7 +4092,6 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": "cap_power_electric",
   "cap_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,

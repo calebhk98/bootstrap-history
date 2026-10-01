@@ -39,7 +39,7 @@ from sim.solve_prices_core import (                 # noqa: E402
     capability_price_for_requirement,
     capability_required_grades,
     compute_resolvable_materials,
-    land_rent_hours_per_iugerum,
+    land_rent_hours_per_hectare,
     load_starting_technologies,
     minor_joint_byproducts_are_unanchored,
     recipe_cost_and_allocation,
@@ -82,9 +82,9 @@ def _print_extraction_rent_explanation(pad, material, entry, rent_by_kg):
     # MATERIALS in the module docstring.
     if entry.get("extracted_from"):
         material_rent_per_kg = rent_by_kg.get(material)
-        if material_rent_per_kg and material == "iugerum_land":
+        if material_rent_per_kg and material == "hectare_land":
             print("%s  EXTRACTED from %s - no cost of production, only a "
-                  "Ricardian rent of %s h/iugerum from sim/world/land.py's "
+                  "Ricardian rent of %s h/hectare from sim/world/land.py's "
                   "margin of cultivation over a civilization's own held "
                   "regions (see RENT ON ARABLE LAND)."
                   % (pad, entry["extracted_from"], format_hours(material_rent_per_kg)))
@@ -93,15 +93,15 @@ def _print_extraction_rent_explanation(pad, material, entry, rent_by_kg):
                   "%s h/kg from sim/world/deposits.py's marginal-deposit "
                   "supply curve (see RENT ON EXTRACTED MATERIALS)."
                   % (pad, entry["extracted_from"], format_hours(material_rent_per_kg)))
-        elif entry.get("land_iugera_years"):
+        elif entry.get("land_hectare_years"):
             # GROWN/land-limited (Complaints/49): this material's OWN
             # extracted_from rent term (the ore-style mechanism above) is
             # zero, as it always is for anything that is not one of the six
             # named ores - but that is not the same as "no rent at all" any
-            # more, because this recipe also consumes iugerum_land, whose
+            # more, because this recipe also consumes hectare_land, whose
             # own rent shows up in the LAND line below rather than here.
             print("%s  EXTRACTED from %s - no separate cost of production "
-                  "of its own; its land cost is priced through iugerum_land "
+                  "of its own; its land cost is priced through hectare_land "
                   "(see the LAND line below and RENT ON GROWN AND LAND-"
                   "LIMITED MATERIALS)."
                   % (pad, entry["extracted_from"]))
@@ -110,7 +110,7 @@ def _print_extraction_rent_explanation(pad, material, entry, rent_by_kg):
                   "labour and a rent this round fixed at 0.0 (see RENT ON "
                   "EXTRACTED MATERIALS - this material is not one of the "
                   "six ores sim/world/deposits.py covers, nor a material "
-                  "that consumes iugerum_land - see sim/world/land.py)."
+                  "that consumes hectare_land - see sim/world/land.py)."
                   % (pad, entry["extracted_from"]))
 
 
@@ -188,18 +188,18 @@ def _print_rent_this_batch(pad, outputs, rent_by_kg, total_process_cost):
 
 
 def _print_land(pad, entry, prices, total_process_cost):
-    land_iugera_years = entry.get("land_iugera_years") or 0.0
-    if land_iugera_years:
-        land_price = prices.get("iugerum_land")
-        land_cost = land_iugera_years * land_price if land_price is not None else None
+    land_hectare_years = entry.get("land_hectare_years") or 0.0
+    if land_hectare_years:
+        land_price = prices.get("hectare_land")
+        land_cost = land_hectare_years * land_price if land_price is not None else None
         share_text = ("%.1f%% of process cost" % (100.0 * land_cost / total_process_cost)
                      if land_cost is not None and total_process_cost > 0 else "n/a")
         print("%s  land (see RENT ON GROWN AND LAND-LIMITED MATERIALS): "
-              "%10.4g iugera-yrs @ %10s h/iugerum-yr = %10s h  (%s)" % (
-              pad, land_iugera_years,
+              "%10.4g hectare-yrs @ %10s h/hectare-yr = %10s h  (%s)" % (
+              pad, land_hectare_years,
               format_hours(land_price) if land_price is not None else "NO PRICE",
               format_hours(land_cost) if land_cost is not None else "?", share_text))
-    return land_iugera_years
+    return land_hectare_years
 
 
 def _print_capital(pad, entry, prices, wage_by_trade, outputs, total_process_cost):
@@ -323,7 +323,7 @@ def _resolved_recipe_id_or_none(pad, material, resolvable_materials, ancestors,
     return recipe_id
 
 
-def _next_recursion_targets(inputs, entry, graded_energy_keys, land_iugera_years, material):
+def _next_recursion_targets(inputs, entry, graded_energy_keys, land_hectare_years, material):
     # A GRADED energy dependency (this recipe stated its own requirement)
     # was already shown above, by name and by price, next to the pool's
     # own choice for comparison - recursing into the generic carrier
@@ -333,7 +333,7 @@ def _next_recursion_targets(inputs, entry, graded_energy_keys, land_iugera_years
     # redundant, so it is skipped rather than recursed into.
     energy_dependencies = [energy_key for energy_key in ENERGY_CARRIER_FIELDS
                           if entry.get(energy_key) and energy_key not in graded_energy_keys]
-    land_dependencies = ["iugerum_land"] if land_iugera_years and material != "iugerum_land" else []
+    land_dependencies = ["hectare_land"] if land_hectare_years and material != "hectare_land" else []
     return sorted(inputs) + energy_dependencies + land_dependencies
 
 
@@ -405,7 +405,7 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
 
     _print_rent_this_batch(pad, outputs, rent_by_kg, total_process_cost)
 
-    land_iugera_years = _print_land(pad, entry, prices, total_process_cost)
+    land_hectare_years = _print_land(pad, entry, prices, total_process_cost)
 
     _print_capital(pad, entry, prices, wage_by_trade, outputs, total_process_cost)
 
@@ -419,7 +419,7 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
 
     next_ancestors = ancestors + (material,)
     for input_material in _next_recursion_targets(inputs, entry, graded_energy_keys,
-                                                  land_iugera_years, material):
+                                                  land_hectare_years, material):
         print()
         print_why(input_material, production_entries, producers_of, resolvable_materials,
                   prices, wage_by_trade, chosen_recipe_by_material,
@@ -489,7 +489,7 @@ def _print_default_report_header(arguments):
           "labour. Rent on the ore of iron, copper, tin, lead, silver and "
           "mercury is now priced from sim/world/deposits.py's Ricardian "
           "marginal-deposit supply curve (see RENT ON EXTRACTED MATERIALS "
-          "in the module docstring); rent on iugerum_land is now priced "
+          "in the module docstring); rent on hectare_land is now priced "
           "from sim/world/land.py's margin of cultivation over %s's own "
           "held regions (pass --civ to price another civilization's "
           "territory instead); every other extracted material (forest, "
@@ -531,12 +531,12 @@ def _print_rent_summary(arguments, rent_hours_per_kg_by_material):
                      len(land.cultivable_land_for_civilization(
                          arguments.civ or DEFAULT_LAND_CIVILIZATION))))
             for land_material in sorted(land_rent):
-                print("   %-26s %10s h/iugerum rent"
+                print("   %-26s %10s h/hectare rent"
                       % (land_material, format_hours(land_rent[land_material])))
-        elif "iugerum_land" not in rent_hours_per_kg_by_material:
+        elif "hectare_land" not in rent_hours_per_kg_by_material:
             civilization_for_land = arguments.civ or DEFAULT_LAND_CIVILIZATION
             region_count = len(land.cultivable_land_for_civilization(civilization_for_land))
-            print("iugerum_land priced at zero rent this run - %s holds "
+            print("hectare_land priced at zero rent this run - %s holds "
                   "%d region(s), and none of its worse ones are needed to "
                   "feed its own stated population, so nothing better-than-"
                   "the-margin is actually being worked yet (see sim/world/"
@@ -756,9 +756,9 @@ def main(argv=None):
     # mechanism produced a material's rent, only that one exists. Uses
     # `arguments.civ` when given (land, unlike ore, is genuinely per-
     # civilization) and Rome's own territory otherwise - see
-    # land_rent_hours_per_iugerum's own docstring for why.
+    # land_rent_hours_per_hectare's own docstring for why.
     rent_hours_per_kg_by_material.update(
-        land_rent_hours_per_iugerum(production_entries, wage_by_trade,
+        land_rent_hours_per_hectare(production_entries, wage_by_trade,
                                     civilization_id=arguments.civ))
 
     unproductive_cycles = []

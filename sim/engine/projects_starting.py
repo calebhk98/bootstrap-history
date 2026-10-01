@@ -75,7 +75,8 @@ class StartingMixin:
         "BRIBE_DENARII_PER_SCANDAL_POINT", 300.0, kind="temporary_heuristic",
         book_money=True, unit="denarii per point of household.scandal, at bribability=1",
         source=None, confidence="D",
-        why="What it costs to erase one point of scandal outright. Scandal "
+        why="Genuinely a money amount: a bribe is handed over as coin and the sum is negotiated between the parties, not fixed by the labour of any good. "
+            "What it costs to erase one point of scandal outright. Scandal "
             "itself has no independent source model for who spreads it or "
             "how fast (the same gap STANDING_SCANDAL_PENALTY_PER_POINT in "
             "economy.py notes), so this conversion rate is a placeholder "
@@ -308,7 +309,8 @@ class StartingMixin:
     ARREARS_CHEAP_PROJECT_FLOOR = declare(
         "ARREARS_CHEAP_PROJECT_FLOOR", 600.0, kind="temporary_heuristic",
         book_money=True, unit="denarii", source=None, confidence="D",
-        why="Even deep in persistent arrears, a project costing less than "
+        why="Genuinely a money amount: it is a nominal debt threshold, and a debt is a promise of a fixed sum of the coin it was contracted in, whatever that coin later buys. "
+            "Even deep in persistent arrears, a project costing less than "
             "this is always 'cheap enough to need nobody's permission' - a "
             "flat floor under ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE's own "
             "surplus-based figure so a household with zero surplus is not "
@@ -327,7 +329,8 @@ class StartingMixin:
     ARREARS_HARD_STOP_FLOOR = declare(
         "ARREARS_HARD_STOP_FLOOR", 4000.0, kind="temporary_heuristic",
         book_money=True, unit="denarii", source=None, confidence="D",
-        why="However cheap a project looks, new work stops outright once "
+        why="Genuinely a money amount: it is a nominal debt threshold, and a debt is a promise of a fixed sum of the coin it was contracted in, whatever that coin later buys. "
+            "However cheap a project looks, new work stops outright once "
             "the household is this far underwater - a flat floor under "
             "ARREARS_HARD_STOP_REVENUE_MULTIPLE's revenue-based figure so "
             "a household with negligible revenue is not exempted from the "

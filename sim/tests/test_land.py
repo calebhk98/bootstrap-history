@@ -257,7 +257,7 @@ class RegionDataLoadsCleanlyTests(unittest.TestCase):
 
     def test_no_region_land_is_priced_from_a_wished_for_outcome(self):
         # A cheap, structural guard against the CLAUDE.md SS3.1 failure
-        # mode: this project's book price for iugerum_land (250 denarii)
+        # mode: this project's book price for hectare_land (250 denarii)
         # must not appear anywhere in geography.json's land data, since
         # none of these figures should have been reverse-engineered from
         # it.

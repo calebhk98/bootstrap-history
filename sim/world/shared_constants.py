@@ -142,7 +142,7 @@ WHEAT_ENERGY_KCAL_PER_KG = declare(
 # duplicated from agriculture.py to build the SAME diminishing-returns curve
 # (output scales with labour_hours ** LABOUR_OUTPUT_ELASTICITY, anchored to
 # reproduce the reference yield at the reference labour intensity) on a
-# per-iugerum basis without importing agriculture.py itself. See land.py's
+# per-hectare basis without importing agriculture.py itself. See land.py's
 # own module docstring, LABOUR INTENSITY section, for the physics; this is
 # now the one place that physics's own numbers live.
 
