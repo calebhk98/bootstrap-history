@@ -108,3 +108,25 @@ not a standalone ticket.
 Also reported (final playtests, A and B; `Complaints/reports/final-playtests-triage.md`): A: 451.8 million denarii at 361 AD from about 111 concerns and 330 employees, annual surplus 13.3 million, 'by the final century I rarely cared about the ordinary price of another invention'; they want the existing saturation mechanic expanded, not arbitrary cost multipliers. B: income +16 thousand a year (111 AD), +1 million (137 AD), +5 million (170 AD), about 400 million held by 216 AD, and money stops mattering by about 125 AD. B also asks whether population runs hot: 120.2 million by 302 AD from about 65 million after plague mitigation, against another run's 66.9 million at 361 AD (different run, untested here; `python3 sim/simulator.py` ensemble comparison would settle it, see CLAUDE.md 4.2).
 
 Related: 341, 354.
+
+## Remains list: every reader of the index, and of what derives from it
+
+Measured with `grep -rn "economy\.economy\b\|ECONOMY_OUTPUT_SCALING_EXPONENT\|output_volume_scale\|concern_running_scale\|concern_takings" sim`. The index is `state.economy.economy` (`Sim.economy`), written once a year by `_step_money` (core_step_phases.py) from `economy_index()` (economy.py).
+
+Direct readers of the index:
+- economy_production.py: `patron_funding_ask` (state funding ask), `revenue_key` (cache key), `_compute_revenue_uncached` (gross and the market-size ceiling), `output_volume_scale`, `revenue_sources` (workshop row), `practice_note`.
+- economy_absorption.py: workshop share of the absorbed deduction.
+- economy_goods.py: goods-category speed of re-equilibration (`GOODS_TAU_ECONOMY_EXPONENT`) and three cache keys.
+- market_demand.py: household income (`MEAN_INCOME_HOURS_PER_CAPITA` times the index) and `economy_size_ratio`.
+- market_clearing.py: the clearing cache signature.
+- view_share.py: the shared-answer stamp.
+- core_properties.py, household.py (field table), core.py, state.py (`EconomyState.economy`), perf_fingerprint.py (`BASELINE_FIELDS`).
+
+Readers of `output_volume_scale()` (the index to the 0.75):
+- economy_production.py: `concern_takings` (every concern's takings, the founder's and every firm's through actors/world.py), `concern_running_scale` (upkeep of every concern, `projects_venture_quotes.py` and `actors/world.py upkeep`).
+- actors/world.py `society_output` (state revenue, entrepreneurial capital limit, capital income).
+- labour_market_api.py `pay_scale` (via `LABOUR_PAY_SHARE_OF_OUTPUT_GAIN`, zero by default).
+
+Tests that set or read it: test_money_units_one_boundary, test_firm_costs_scale, test_market_engine.
+
+Remains, to be updated as the replacement lands: see the status line.
