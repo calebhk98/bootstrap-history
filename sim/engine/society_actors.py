@@ -17,6 +17,14 @@ class ActorsMixin:
             self._actor_registry = registry
         return registry
 
+    def actor_staff_fte(self, trade):
+        """People of this trade that firms and governments employ: they come out of the
+        same reachable pool the founder hires from."""
+        state = self.state.actors
+        if state is None or not state.records:
+            return 0.0
+        return self.actors.staff_fte(trade)
+
     def state_treasury(self):
         """The government actor of the founder's civilisation."""
         return self.actors.ensure_government(str(self.civ.get("id")), self.civ.get("name", ""))

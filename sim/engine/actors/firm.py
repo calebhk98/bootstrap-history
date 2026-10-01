@@ -31,19 +31,35 @@ class Firm(RecordedActor):
 			self.concerns.add(node_id)
 			self.record.opened_year[node_id] = world.year
 
+	def staff_concern(self, node_id: str, world: Any) -> float:
+		"""Take on the people running a concern needs from the shared pool; the share of
+		them found, which is the share of its output that gets made."""
+		found = 1.0
+		for trade, wanted in sorted(world.concern_staff(node_id).items()):
+			free = world.free_fte(trade, self.actor_id)
+			if free is None:
+				continue
+			free -= self.workforce.get(trade, 0.0)
+			taken = min(wanted, max(0.0, free))
+			self.workforce[trade] = self.workforce.get(trade, 0.0) + taken
+			found = min(found, taken / wanted)
+		return found
+
 	def operate(self, world: Any) -> None:
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0
-			takings = world.concern_takings(node_id, self.record.opened_year[node_id]) / (1.0 + rivals)
+			found = self.staff_concern(node_id, world)
+			takings = found * world.concern_takings(node_id, self.record.opened_year[node_id]) / (1.0 + rivals)
 			upkeep = world.upkeep(node_id)
-			margin = takings - upkeep
 			self.credit(takings, "takings")
 			self.debit(upkeep, "upkeep")
+			levy = world.government().collect(self, takings, world)
+			margin = takings - upkeep - levy
 			self.record.last_margin = margin
 			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
 
-	def advance(self, world: Any) -> None:
-		super().advance(world)
+	def act(self, world: Any) -> None:
+		super().act(world)
 		self.operate(world)
 		if self.record.loss_years >= EXIT_LOSS_YEARS:
 			self.concerns.clear()

@@ -225,10 +225,12 @@ class TrainingMixin:
         if trade not in TRADES_ABSENT:
             exist = self.people_who_exist(trade)
             on_books = self.state.household.employees.get(trade, 0.0)
-            if on_books + count > exist + 1e-6:
+            rivals = self.actor_staff_fte(trade)
+            if on_books + rivals + count > exist + 1e-6:
                 return None, None, ("only about %.1f %ss exist in this country and you "
-                               "already employ %.1f: there is nobody left to hire."
-                               % (exist, trade, on_books))
+                               "already employ %.1f%s: there is nobody left to hire."
+                               % (exist, trade, on_books,
+                                  " (firms and the state employ %.1f more)" % rivals if rivals > 0 else ""))
         # LITERACY IS A WALL, NOT A COST. Money buys the finder's fee below;
         # it cannot buy people who do not exist. See FINDINGS_ROUND2 section
         # Q and literate_capacity()'s docstring.

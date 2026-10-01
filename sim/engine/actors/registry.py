@@ -43,6 +43,7 @@ class ActorRegistry:
 		# which firms hold each concern (kept current by _ConcernWatch), and the ids in order
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
+		self._staff: Optional[Dict[str, float]] = None
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -65,7 +66,29 @@ class ActorRegistry:
 			watch()
 		self.actors[actor_id] = actor
 		self._ordered_ids = None
+		self._staff = None
 		return actor
+
+	def refresh_staff(self) -> None:
+		"""Forget the staffing tally so the next read counts every actor's workforce again."""
+		self._staff = None
+
+	def staff_by_trade(self) -> Dict[str, float]:
+		"""People of each trade every recorded actor employs, in full-time equivalents."""
+		if self._staff is None:
+			totals: Dict[str, float] = {}
+			for actor_id in sorted(self.actors):
+				for trade, people in self.actors[actor_id].workforce.items():
+					totals[trade] = totals.get(trade, 0.0) + people
+			self._staff = totals
+		return self._staff
+
+	def staff_fte(self, trade: str, excluding: Optional[str] = None) -> float:
+		"""People of one trade the actors employ, leaving out one actor's own staff."""
+		total = self.staff_by_trade().get(trade, 0.0)
+		if excluding is not None and excluding in self.actors:
+			total -= self.actors[excluding].workforce.get(trade, 0.0)
+		return max(0.0, total)
 
 	def add(self, actor_id: str, record: ActorRecord) -> RecordedActor:
 		self.state.records[actor_id] = record
@@ -107,6 +130,7 @@ class ActorRegistry:
 			if actor.kind == "firm" and actor.record.exited_year is not None:
 				continue
 			actor.advance(world)
+			self.refresh_staff()
 		self.consider_entry(world)
 
 	def consider_entry(self, world: Any) -> List[str]:

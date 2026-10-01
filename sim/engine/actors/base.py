@@ -74,6 +74,14 @@ class Actor:
 	def location(self) -> Optional[str]:
 		return None
 
+	def prominence(self) -> float:
+		"""How prominent the actor is as a person; a business has none."""
+		return 0.0
+
+	def standing(self) -> float:
+		"""Standing and patronage that bargain a levy down, 0..1."""
+		return 0.0
+
 	def copy_budget(self, world: Any) -> float:
 		"""Money it will commit to new copies this year."""
 		committed = sum((1.0 - work["progress"]) * (work["money"] + work["labour_cost"])
@@ -153,10 +161,19 @@ class Actor:
 	def identity(self) -> str:
 		return self.kind
 
-	def advance(self, world: Any) -> None:
-		"""One year of the actor's own business."""
+	def act(self, world: Any) -> None:
+		"""The actor's own business for the year."""
 		self.consider_imitation(world)
 		self.work_on_copies(world)
+
+	def advance(self, world: Any) -> None:
+		"""One year: act, then press the labour market for the people newly taken on."""
+		held = dict(self.workforce)
+		self.act(world)
+		for trade, people in sorted(self.workforce.items()):
+			added = people - held.get(trade, 0.0)
+			if added > 0:
+				world.press_labour(trade, added * world.hours_per_person_year)
 
 
 class RecordedActor(Actor):

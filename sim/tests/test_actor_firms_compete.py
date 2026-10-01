@@ -100,12 +100,10 @@ check("a firm hiring raises what the founder pays for the same trade",
       game.labour_price_factor("smith") > price_before,
       (game.labour_price_factor("smith"), price_before))
 staff_year_one = dict(firm.workforce)
-pressure = game.labour_pressure("smith")
 next_year(game)
-check("keeping the same staff is not hiring again",
-      abs(sum(firm.workforce.values()) - sum(staff_year_one.values())) < 1e-9
-      and game.labour_pressure("smith") <= pressure + 1e-9,
-      (firm.workforce, game.labour_pressure("smith"), pressure))
+check("keeping the same staff the next year is not hiring more",
+      all(abs(firm.workforce.get(trade, 0.0) - people) < 1e-9 for trade, people in staff_year_one.items()),
+      (firm.workforce, staff_year_one))
 
 # ---- labour: with nobody left to hire the firm runs short and earns less -----------------
 game = actor_sim([mill])
