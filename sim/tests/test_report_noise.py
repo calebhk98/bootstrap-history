@@ -71,6 +71,7 @@ help_reply = _agent_dispatch(sim(), NODES, {"cmd": "help", "topic": "commands"})
 first_key = next(iter(help_reply["help"]))
 check("help commands opens with a short beginner index", "start" in first_key.lower() or "begin" in first_key.lower(), list(help_reply["help"])[:3])
 hazard_game = sim(events=True)
+hazard_game.end_year = hazard_game.cfg["start_year"] + 500
 step_reply = _agent_dispatch(hazard_game, NODES, {"cmd": "step", "years": 3})
 check("a step with hazards on still returns events and alerts", step_reply.get("ok") and "events" in step_reply)
 
