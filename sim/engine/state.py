@@ -367,6 +367,8 @@ class EconomyState:
 	society_labour_hours: Dict[str, float] = field(default_factory=dict)
 	farm_hours_needed: Optional[float] = None
 	wage_tightness_factors: Dict[str, float] = field(default_factory=dict)
+	# tonnes a year per material the last throttle saw; the next year's prices read it before it is recomputed
+	material_demand_at_last_throttle: Optional[Dict[str, float]] = None
 	_dashboard_history: Optional[List[Any]] = None
 
 

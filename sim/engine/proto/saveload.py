@@ -29,8 +29,11 @@ def save_state(sim, path):
 		sim.state.population.pop_working_age = float(sim.population.working_age)
 		sim.state.population.pop_elderly = float(sim.population.elderly)
 
+	held_demand = sim.household._material_demand_cache
+	sim.state.economy.material_demand_at_last_throttle = None if held_demand is None else dict(held_demand)
+
 	# dumps (not dump, not indent) so the C encoder does the work
-	text = json.dumps(serialize_state(sim.state), sort_keys=True, default=str,
+	text = json.dumps(serialize_state(sim.state), default=str,
 					  separators=(",", ":"))
 	absolute = os.path.abspath(path)
 	# a command that changed nothing leaves the file as it is
