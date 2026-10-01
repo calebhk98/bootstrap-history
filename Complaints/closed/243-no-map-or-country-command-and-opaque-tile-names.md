@@ -1,6 +1,6 @@
 # There is no `map`, `country` or geography overview, and `move` lists tiles only by id
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_missing_screens.py
 
 `map` and `country` answer "no command called ...". `help map` finds nothing. Bare `move` lists tiles such as `china_10`, `china_11`, `taiwan_01` with population, travel days, hours lost and wages, but no names, regions, adjacency or
 what is at each place, so a player cannot choose where to base. `population` describes the country and one town but does not name the town. The tester asks for a `map`/`geography` alias, readable place names and a coordinate or region view
@@ -13,3 +13,8 @@ What it would take: aliases for `map`, `geography`, `country` (to `population` o
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 123, 125). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
 
 Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md`): `move` lists `mexico_06`, `honduras_01` with no city names, so leaving Tenochtitlan before 1519 was not a real decision.
+
+## Done
+
+- `map` (aliases `country`, `geography`, `atlas`) shows the base, the held tiles by people with name, region, terrain, days from the base and the named deposits on each, and the tiles bordering them (`sim/engine/proto/screen_map.py`). `move` rows carry the same name, region and terrain.
+- A tile is named by its country and number from the tile record (`sim/world/tile_names.py`); the data holds no town or historical place names, filed as Complaints/330.

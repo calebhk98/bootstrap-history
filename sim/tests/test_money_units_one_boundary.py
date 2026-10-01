@@ -111,21 +111,17 @@ class MaterialPricesAreInHours(unittest.TestCase):
             checked += 1
         self.assertGreater(checked, 100)
 
-    def test_book_material_hours_are_the_same_in_every_civilisation(self):
-        per_civ = {}
-        for name in ALL_CIVS:
-            _tree, _prices, _nodes, _wages, goods = data.load(civilization_id=name)
-            rate = data.starting_schedule(name).money_per_labour_hour
-            per_civ[name] = {material: price / rate for material, price in goods.items()}
-        book_materials = set(data._book_prices()[1])
-        shared = book_materials.intersection(*(set(table) for table in per_civ.values()))
-        self.assertGreater(len(shared), 100)
-        reference = per_civ["rome_100ad"]
-        for name, table in per_civ.items():
-            for material in shared:
-                self.assertAlmostEqual(table[material], reference[material],
-                                       delta=reference[material] * 1e-9 + 1e-12,
-                                       msg=(name, material))
+    def test_material_hours_do_not_depend_on_the_coin(self):
+        # Hours differ between civilisations (land rent, wage ratios); within
+        # one civilisation the coin is only the unit.
+        name = "rome_100ad"
+        rate = data.starting_schedule(name).money_per_labour_hour
+        light = data.calculated_goods_prices([], name, rate)
+        heavy = data.calculated_goods_prices([], name, rate * COIN_SCALE)
+        self.assertGreater(len(light), 100)
+        for material, price in light.items():
+            self.assertAlmostEqual(heavy[material] / (rate * COIN_SCALE), price / rate,
+                                   delta=price / rate * 1e-9 + 1e-12, msg=material)
 
 
 class EconomyWorksWithAnyCoin(unittest.TestCase):

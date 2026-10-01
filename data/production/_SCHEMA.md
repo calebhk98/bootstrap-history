@@ -286,7 +286,7 @@ product's true land cost. Tag: TEMPORARY HEURISTIC (CLAUDE.md 3.4); fixing
 it needs `sim/world/land.py` to carry a separate margin for pasture and
 forest, out of this round's scope. The AREA figures themselves (a mean
 annual increment, a stocking density) are physical facts, not part of this
-heuristic - only the RENT PER IUGERUM they get multiplied by is borrowed
+heuristic - only the RENT PER HECTARE they get multiplied by is borrowed
 from arable land's own margin.
 
 ## ENERGY

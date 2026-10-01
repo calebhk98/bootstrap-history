@@ -14,6 +14,7 @@ from .tree_filters import render_state_rows
 from .wave_summary import summary_line
 from .step_problems import problems_lines
 from ..shortage_conditions import condition_line
+from .event_severity import event_marker, order_events
 from .step_alerts import alert_lines
 from .render_screens_market import why_goods_market_lines
 from ..knowledge_warning import warning_lines
@@ -435,7 +436,7 @@ def _state_completed_head_lines(out):
                         % (record.get("year"), record.get("name"),
                            " (restore brings it back for a fraction of the cost)"
                            if record.get("can_be_restored") else ""))
-        for event in events or []:
+        for event in order_events(events):
             # "DURING 381", NOT "EVENT 381". step() captures the year at the
             # top, logs everything that happens during that year under it, and
             # increments at the end - so an event is stamped with the year being
@@ -447,7 +448,9 @@ def _state_completed_head_lines(out):
             # way, the two screens stop contradicting each other - and nothing
             # in any save or log changes, which a shift of the stamped year
             # itself could not have promised.
-            head.append("  DURING %s: %s" % (event.get("year"), event.get("message")))
+            marker = event_marker(event.get("message"))
+            head.append("  %sDURING %s: %s" % (marker + " " if marker else "",
+                                                event.get("year"), event.get("message")))
             head.extend("      - " + detail for detail in event.get("details") or [])
         if out.get("stopped_early"):
             head.append("  " + out["stopped_early"])

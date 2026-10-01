@@ -107,8 +107,8 @@ check("...and the cheapest really is the cheapest",
 _RUB = ("rubber_kg", "rubber_tubing_kg")
 for _r in _RUB:
     check("%s is priced like a distant import, not like a sentinel" % _r,
-          0 < PRICES["purchase_prices_denarii"][_r]["p"] < 1000,
-          PRICES["purchase_prices_denarii"][_r]["p"])
+          0 < GOODS[_r] / PRICES["money_per_labour_hour"] < 20000,
+          GOODS[_r] / PRICES["money_per_labour_hour"])
 # ...and the reason the sentinel existed - that nothing stopped you buying it -
 # is answered where it belongs, in the tree: you cannot use rubber until you
 # have gone and got some.

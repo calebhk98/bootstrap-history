@@ -583,6 +583,10 @@ def _parse_population(command, rest, words, nums, want_json):
     return {"cmd": "population"}, None
 
 
+def _parse_map(command, rest, words, nums, want_json):
+    return {"cmd": "map", "full": "full" in [word.lower() for word in words]}, None
+
+
 def _parse_move_base(command, rest, words, nums, want_json):
     # 'move' alone lists the tiles; 'move <tile>' (or 'move to <tile>') goes.
     names = [word for word in rest if word.lower() != "to"]
@@ -723,6 +727,8 @@ def _parse_allocate(command, rest, words, nums, want_json):
                           "to clear.")
         return out, None
     out = {"cmd": "allocate", "id": target}
+    if any(word.lower() == "useful" for word in words[1:]):
+        out["useful"] = True
     if _clear:
         out["hours"] = 0
     elif nums:
@@ -806,7 +812,13 @@ def _parse_save_or_load(command, rest, words, nums, want_json):
 # with every other because they all test the same resolved `command` value.
 # A dict lookup finds the one matching branch in one step instead of testing
 # each condition in turn, without changing which branch runs for any input.
+def _parse_figure(command, rest, words, nums, want_json):
+    """`figures` alone lists them; `figures <name>` explains one."""
+    return ({"cmd": command, "id": "_".join(rest)} if rest else {"cmd": command}), None
+
+
 _COMMAND_PARSERS = {
+    "figures": _parse_figure,
     "money": _parse_bare_command,
     "values": _parse_bare_command,
     "materials": _parse_bare_command,
@@ -840,6 +852,7 @@ _COMMAND_PARSERS = {
     "changes": _parse_changes,
     "bribe": _parse_bribe,
     "population": _parse_population,
+    "map": _parse_map,
     "move_base": _parse_move_base,
     "labour": _parse_labour,
     "hire": _parse_hire_or_fire,

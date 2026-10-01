@@ -1,9 +1,12 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
 from ..data import WAGES, trade_family
+from .. import figures_headline  # noqa: F401  (registers the headline figures)
+from ..figures import figure_snapshot
 
 from .state import _agent_state
 from .capacity_remedies import capacity_remedies
+from .portfolio_bottlenecks import blocker_kind_of, bottleneck_groups
 
 # WHAT EACH TRAIT IN self.value_weights ACTUALLY DOES, in the player's own words. Event
 # text names these fields directly - "corpus_dispersed changes the society:
@@ -484,6 +487,7 @@ def _portfolio_rows(nodes, active_out):
         constraint = _portfolio_constraint(entry.get("waiting_on"))
         row = {
             "id": node_id, "name": entry["name"], "constraint": constraint,
+            "blocker_kind": blocker_kind_of(constraint),
             "waiting_on": entry.get("waiting_on"),
             # READ, NOT RECOMPUTED, same as everything below it: arrears
             # gives unspendable founder hours back, so waiting_on above can
@@ -612,13 +616,16 @@ def _agent_portfolio(sim, nodes, cmd=None):
     rows = _portfolio_rows(nodes, active_out)
     pool_total = state_out.get("founder_hours_available")
     count = len(active_out)
+    trade_rows = _trade_demand_rows(sim)
     return {
         "ok": True,
         "active_project_count": count,
         "founder_hours_available_this_year": pool_total,
         "free_hours_going_unused": state_out.get("free_hours_going_unused"),
+        "bottlenecks": bottleneck_groups(sim, rows, trade_rows, pool_total,
+                                         state_out.get("resource_throttle"), state_out.get("throttle_binding")),
         "projects": rows,
-        "trade_hours_demand_vs_supply": _trade_demand_rows(sim),
+        "trade_hours_demand_vs_supply": trade_rows,
         "note": ("%d active project%s %s sharing this year's %s directed "
                 "hours; each row above shows what IT got and why. "
                 "'trade_hours_demand_vs_supply' is the same question for "
@@ -684,6 +691,7 @@ def _dashboard_snapshot(sim):
         "scandal": round(sim.scandal, 2),
         "reputation": round(sim.reputation, 1),
         "eminence": round(sim.eminence, 2),
+        "figures": figure_snapshot(sim),
     }
 
 

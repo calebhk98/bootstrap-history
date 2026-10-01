@@ -25,17 +25,23 @@ class AdoptionMixin:
     # institution costing thousands, leaving a player stuck with one scholar
     # for centuries, guessing among institution nodes in the hope one of
     # them helps.
+    def staff_hire_advice(self, kind, count=None):
+        """The hire command for `kind`, sized to `count` people when the
+        shortfall is known, else a typical order."""
+        if kind == "scholars":
+            return ("{\"cmd\":\"hire\",\"trade\":\"scholar\",\"n\":%d} "
+                    "hires literate men by the year; see {\"cmd\":\"labour\"}"
+                    % (count or 2))
+        return ("{\"cmd\":\"hire\",\"trade\":\"smith\",\"n\":%d} or any "
+                "trade in {\"cmd\":\"labour\"}; or "
+                "{\"cmd\":\"commission\",\"trade\":\"smith\",\"hours\":400} "
+                "to buy one job instead of employing anybody" % (count or 3))
+
     @property
     def STAFF_SOURCES(self):
         """{"scholars"|"artisans": [(node or HIRE/BUY, advice)]}: HIRE first, the nodes
         declaring `staff_advice` in their order, then BUY."""
-        hire = {
-            "scholars": ("HIRE", "{\"cmd\":\"hire\",\"trade\":\"scholar\",\"n\":2} "
-                                 "hires literate men by the year; see {\"cmd\":\"labour\"}"),
-            "artisans": ("HIRE", "{\"cmd\":\"hire\",\"trade\":\"smith\",\"n\":3} or any "
-                                 "trade in {\"cmd\":\"labour\"}; or "
-                                 "{\"cmd\":\"commission\",\"trade\":\"smith\",\"hours\":400} "
-                                 "to buy one job instead of employing anybody")}
+        hire = {kind: ("HIRE", self.staff_hire_advice(kind)) for kind in ("scholars", "artisans")}
         buy = ("BUY", "{\"cmd\":\"buy\",\"what\":\"slaves\",\"n\":N} then "
                       "manumit, though they are untrained for three years")
         sources = {kind: [entry] for kind, entry in hire.items()}
@@ -239,6 +245,35 @@ class AdoptionMixin:
             "visible boost without letting a country of diffused printing "
             "teach anyone by itself (still requires flow>0); not measured.")
 
+    def effective_schooling_flow(self):
+        """Schooling flow once diffused printing is counted: texts to teach
+        from make the same schooling effort teach faster, but only where
+        some school is open (a flow of zero stays zero)."""
+        flow = self._schooling_flow()
+        if flow <= 0.0:
+            return 0.0
+        return flow * (1.0 + self.PRINTING_DIFFUSION_SCHOOLING_BOOST
+                       * self.information_diffusion_index())
+
+    def literacy_next_year(self):
+        """{civ field: value} for each literacy figure the next year of
+        schooling would move, without applying it."""
+        flow = self.effective_schooling_flow()
+        moved = {}
+        if flow <= 0.0:
+            return moved
+        for field, ceiling, rate in (
+                ("literacy_general", self.literacy_ceiling_general(),
+                 self.LITERACY_GROWTH_RATE_GENERAL),
+                ("literacy_elite", self.literacy_ceiling_elite(),
+                 self.LITERACY_GROWTH_RATE_ELITE)):
+            current = float(self.civ.get(field, 0.0))
+            if current < ceiling - 1e-6:
+                after = min(ceiling, current + rate * flow * (ceiling - current))
+                if after - current > 1e-6:
+                    moved[field] = after
+        return moved
+
     def _advance_literacy(self, year):
         """Once a year: let running schools and academies close part of the
         gap between this society's literacy and what it could now reach.
@@ -249,35 +284,8 @@ class AdoptionMixin:
         a society does not leap to its ceiling, and it does not overshoot it
         and have to fall back either.
         """
-        flow = self._schooling_flow()
-        if flow <= 0.0:
-            return
-        # PRINTING SPREADING TO THE COUNTRY MAKES SCHOOLING ITSELF FASTER.
-        # The user's fourth point given a mechanical home: once movable
-        # type or the press has diffused past the one printer's workshop
-        # that built it, the same schooling effort teaches faster, because
-        # texts actually exist for it to teach FROM. Still requires flow>0
-        # above - a country full of diffused printing with no school open
-        # still teaches nobody, by the same "taught, not a free drift"
-        # rule every other figure in this section already follows.
-        flow *= (1.0 + self.PRINTING_DIFFUSION_SCHOOLING_BOOST * self.information_diffusion_index())
-        changed = {}
-        gen = float(self.civ.get("literacy_general", 0.0))
-        gen_ceil = self.literacy_ceiling_general()
-        if gen < gen_ceil - 1e-6:
-            gen_new = min(gen_ceil, gen + self.LITERACY_GROWTH_RATE_GENERAL
-                          * flow * (gen_ceil - gen))
-            if gen_new - gen > 1e-6:
-                self.civ["literacy_general"] = gen_new
-                changed["literacy_general"] = gen_new
-        eli = float(self.civ.get("literacy_elite", 0.0))
-        eli_ceil = self.literacy_ceiling_elite()
-        if eli < eli_ceil - 1e-6:
-            eli_new = min(eli_ceil, eli + self.LITERACY_GROWTH_RATE_ELITE
-                          * flow * (eli_ceil - eli))
-            if eli_new - eli > 1e-6:
-                self.civ["literacy_elite"] = eli_new
-                changed["literacy_elite"] = eli_new
+        changed = self.literacy_next_year()
+        self.civ.update(changed)
         if not changed:
             return
         # Census message at most once a generation, so small yearly gains stay quiet.

@@ -53,8 +53,7 @@ class RentIsWiredInTests(unittest.TestCase):
     def setUp(self):
         engine_prices.reset_caches_for_tests()
         self.addCleanup(engine_prices.reset_caches_for_tests)
-        with open(os.path.join(ROOT, "data", "prices.json")) as source:
-            self.prices_json = json.load(source)
+        self.prices_json = data.starting_schedule().document()
 
     def test_hectare_land_is_no_longer_zero_for_rome(self):
         # UPDATE (stakeholder maintainability item 6, the two map
@@ -117,8 +116,7 @@ class LandRentIsPerCivilizationTests(unittest.TestCase):
     def setUp(self):
         engine_prices.reset_caches_for_tests()
         self.addCleanup(engine_prices.reset_caches_for_tests)
-        with open(os.path.join(ROOT, "data", "prices.json")) as source:
-            self.prices_json = json.load(source)
+        self.prices_json = data.starting_schedule().document()
 
     def test_rome_and_han_china_get_different_land_rents(self):
         # Real starting_techs for two real civilizations - if their gate
@@ -172,9 +170,8 @@ class GoodsProvenanceCivilizationTests(unittest.TestCase):
             _starting_techs("rome_100ad"), civilization_id="rome_100ad")
         self.assertEqual(provenance.get("hectare_land"), "solved")
 
-    def test_load_with_use_solved_prices_produces_a_nonzero_land_price(self):
+    def test_load_produces_a_nonzero_land_price(self):
         _tree, prices_json, _nodes, _wages, goods = data.load(
-            use_solved_prices=True,
             held_technology_ids=_starting_techs("rome_100ad"),
             civilization_id="rome_100ad")
         self.assertIn("hectare_land", goods)

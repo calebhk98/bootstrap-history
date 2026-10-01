@@ -13,7 +13,7 @@ carried over from an earlier year. Covers: CHARCOAL_PER_HA/MARKET_SHARE
 fallback that fits an output-vs-price curve from those nine so that
 every OTHER material key behaves correctly without anyone having
 curated it by hand (_commodity_ledger()/_material_commodity_map()/
-_material_prices()/_book_price_per_kg()/_material_tag()/
+_material_prices()/_material_price_per_kg()/_material_tag()/
 _generic_national_output_t_per_yr()/_generic_market_share()/
 _normalize_material_name()); chosen_fuel() and annual_material_demand()
 (what a year's building programme actually needs); _own_material_supply()/
@@ -157,7 +157,7 @@ class MaterialSupplyMixin:
     #
     # data/review/COMMODITY_DYNAMISM.md, an audit run directly against
     # this engine, found 149 of the then 162 distinct material keys the
-    # tech tree used (about 92%) had a price read once from prices.json at
+    # tech tree used (about 92%) had a price read once at
     # load time and never revisited for scarcity, surplus or anything else,
     # because MATERIAL_CHECKS/MARKET_SHARE above only ever named 13 keys by
     # hand. The tree has since dropped to 159 distinct material keys, all
@@ -171,11 +171,9 @@ class MaterialSupplyMixin:
     #
     # The fix below is NOT a per-material rule. It is a generic fallback that
     # activates for any material key this file has no curated entry for,
-    # using the one number every material already has: its own book price in
-    # prices.json (every material key a node's `mat` dict names MUST have a
-    # prices.json entry already, or data.py's own load() would have raised
-    # building `_material_cost` in the first place - so this genuinely
-    # covers all 159, not just the ones anyone thought to add). A cheap,
+    # using the one number every material already has: its calculated price
+    # (the solver prices every material a node's `mat` dict names, or load()
+    # would have raised building `_material_cost`). A cheap,
     # plentiful material gets assumed to have a large national output and a
     # wide buyable share; a dear, rare one gets less of both - fitted, not
     # guessed, from the curated figures the 9 tracked commodities already
@@ -300,7 +298,7 @@ class MaterialSupplyMixin:
             table[entry] = compute()
         return table[entry]
 
-    def _book_price_per_kg(self, tag):
+    def _material_price_per_kg(self, tag):
         """Denarii/kg for a raw material key (for example aluminium_kg) from
         the calculator-backed table, or a curated commodity id from
         commodities.json's own base_price - the two files agree by
@@ -317,10 +315,10 @@ class MaterialSupplyMixin:
             return self.book_money(price) or None
         return None
 
-    def _book_denarii_price_per_kg(self, tag):
+    def _denarii_price_per_kg(self, tag):
         """The price in book denarii, the unit the output and market-share
         curves below were fitted in."""
-        price = self._book_price_per_kg(tag)
+        price = self._material_price_per_kg(tag)
         return None if price is None else price / self.book_money(1.0)
 
     def _material_tag(self, mat_key):
@@ -371,7 +369,7 @@ class MaterialSupplyMixin:
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
             return ledger.country_output(tag, built=self.state.projects.done)
-        price = self._book_denarii_price_per_kg(tag)
+        price = self._denarii_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_OUTPUT_CEILING_T_PER_YR
         out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / (price ** self.GENERIC_OUTPUT_PRICE_EXPONENT)
@@ -398,7 +396,7 @@ class MaterialSupplyMixin:
         if tag in ledger.commodities:
             return float(ledger.commodities[tag].get(
                 "market_share", self.GENERIC_MARKET_SHARE_LEDGER_FALLBACK))
-        price = self._book_denarii_price_per_kg(tag)
+        price = self._denarii_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK
         return max(self.GENERIC_MARKET_SHARE_FLOOR,
@@ -852,7 +850,7 @@ class MaterialSupplyMixin:
     # same way _material_tag already does: any future node that needs a
     # gram-scale quantity of anything gets this for free by being written
     # with a *_g key, the same way it already gets priced by
-    # _book_price_per_kg without anyone adding it to a list. A *_g key's
+    # _material_price_per_kg without anyone adding it to a list. A *_g key's
     # demand is met from stock - and, whatever stock cannot cover, bought
     # outright on the spot, uncapped by mine or market flow - and NEVER sets
     # `binding`: buying a gram of something is a purchase, not a capacity
@@ -935,7 +933,7 @@ class MaterialSupplyMixin:
     def material_trade_quote(self, material):
         """Current buy/sell quote for one tonne of a material commodity."""
         material = str(material or "").strip().lower()
-        per_kg = self._book_price_per_kg(material)
+        per_kg = self._material_price_per_kg(material)
         if per_kg is None:
             return None
         emp_key = self._material_tag(material)[0]
@@ -993,20 +991,28 @@ class MaterialSupplyMixin:
         mean_price = quote["sell_per_tonne"] * baseline / max(across, baseline)
         return mean_price * tonnes, mean_price
 
-    def sell_material_stock(self, material, tonnes):
-        """Sell stock at the market: the order is cut to what the market
-        absorbs in a year, and the price falls as the year's sales add up."""
+    def material_sale_offer(self, material, tonnes):
+        """(stock key, tonnes the market takes now, money for them): the one
+        figure `sell` pays and refusals quote as a way to raise cash."""
         quote = self.material_trade_quote(material)
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:
-            return 0.0
+            return None, 0.0, 0.0
         key = quote["stock_key"]
         sold_so_far = self._material_sold_tonnes_this_year()
         absorbs = max(0.0, quote["market_available_tonnes_per_year"] - sold_so_far.get(key, 0.0))
         sold = min(tonnes, self.material_stock_t(key), absorbs)
         if sold <= 0:
+            return key, 0.0, 0.0
+        return key, sold, self.material_sale_proceeds(material, sold, sold_so_far.get(key, 0.0))[0]
+
+    def sell_material_stock(self, material, tonnes):
+        """Sell stock at the market: the order is cut to what the market
+        absorbs in a year, and the price falls as the year's sales add up."""
+        key, sold, money = self.material_sale_offer(material, tonnes)
+        if sold <= 0:
             return 0.0
-        money = self.material_sale_proceeds(material, sold, sold_so_far.get(key, 0.0))[0]
+        sold_so_far = self._material_sold_tonnes_this_year()
         self.market_note_sale(key, sold)
         opening = self._material_opening_stock()
         self._material_stock()[key] -= sold

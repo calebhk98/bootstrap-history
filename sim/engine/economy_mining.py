@@ -107,7 +107,7 @@ class MiningMixin:
         production of `mat`, both from the deposits' physical works at the
         miner's wage. (None, None) for a name nothing prices."""
         if mat not in self.MINE_OPEX_MATERIALS:
-            price = self._book_price_per_kg(mat)
+            price = self._material_price_per_kg(mat)
             if price is None or price <= 0:
                 return None, None
         wage = self.wage_per_hour(self.MINE_TRADE)
@@ -125,12 +125,10 @@ class MiningMixin:
     def mineable(self, mat):
         """Can you sink standing production capacity in this material at
         all? True for the seven curated metals and, generalised, for any
-        material key or curated commodity id this file can find a book
-        price for - which in practice is anything a node in the tech tree
-        actually buys, since every one of those has a prices.json entry by
-        construction (data.py's own load() could not have computed
-        `_material_cost` otherwise). False only for a name that prices
-        nothing at all: a typo, not a real gap."""
+        material key or curated commodity id this file can find a
+        calculated price for - in practice anything a node in the tech tree
+        buys, since the solver prices every material a recipe makes. False
+        only for a name that prices nothing at all: a typo, not a real gap."""
         return self._mine_capex(self._normalize_material_name(mat)) is not None
 
     def mine_catalog_hint(self):

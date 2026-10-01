@@ -231,6 +231,7 @@ class StaffingMixin:
             return []
         sch_used, art_used = self.venture_staff_used()
         own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
+        founder_fixed = bool(self.cfg.get("immortal")) or not self.state.founder.founder_alive
         SLACK = self.STAFFING_CLOSURE_SLACK   # close_unstaffed_ventures' own hysteresis band
         sch_room = self.effective_scholars() + SLACK - sch_used
         art_room = household.artisans + own + SLACK - art_used
@@ -252,9 +253,12 @@ class StaffingMixin:
         for node_id in ranked:
             sch_need, art_need = self.venture_hands(node_id)
             candidates = []
-            if sch_need > 0.005:
+            # Only hired people leave; with a founder who cannot, the room
+            # left after losing every hired one is guaranteed, so no
+            # closure is coming from attrition.
+            if sch_need > 0.005 and not (founder_fixed and sch_room - household.scholars >= 0):
                 candidates.append(("scholars", sch_room))
-            if art_need > 0.005:
+            if art_need > 0.005 and not (founder_fixed and art_room - household.artisans >= 0):
                 candidates.append(("craftsmen", art_room))
             if not candidates:
                 continue

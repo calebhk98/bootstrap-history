@@ -17,6 +17,7 @@ from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
 from . import step_progress
 from .event_groups import group_disaster_events
+from .event_severity import tag_events
 from .step_alerts import step_alerts
 from .step_stops import newly_startable_goal, severe_stop_reason
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
@@ -37,7 +38,11 @@ from .dispatch_money import (
     _cmd_bounty, _cmd_buy, _cmd_sell, _cmd_money, _cmd_quote, _cmd_close,
     _cmd_withdraw, _cmd_bribe)
 from .dispatch_market import _cmd_market  # noqa: F401
+from .dispatch_screens import (  # noqa: F401
+    _cmd_map, _cmd_education, _cmd_demography, _cmd_divergence)
 from .dispatch_staff_controls import _cmd_keep, _cmd_reserve  # noqa: F401
+from .dispatch_figures import _cmd_figures  # noqa: F401
+from .dispatch_guidance import _cmd_leverage, _cmd_idle  # noqa: F401
 from .dispatch_priority import _cmd_priority  # noqa: F401
 from .dispatch_exclusions import _cmd_exclude, _cmd_include  # noqa: F401
 from .dispatch_labour import (
@@ -233,7 +238,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         # own diff can still be taken, cheaply, before it is gone.
         before_revealed = set(getattr(sim, "revealed", set()))
         before_operating = set(sim.operating)
-        _arrival_snapshot = _dashboard_snapshot(sim)
+        _arrival_snapshot = None if getattr(sim, "_dashboard_history", None) else _dashboard_snapshot(sim)
         stalled_before = set(stalled_projects(sim))
         goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
         population_before = sim.population.total
@@ -341,6 +346,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
     for disaster in disasters:
         out["events"] = group_disaster_events(out["events"], disaster["name"], disaster["messages"])
+    out["events"] = tag_events(out["events"])
     if summary:
         out["summary"] = summary
     problems = step_problems(ran, snapshots, events, stalled_projects(sim))

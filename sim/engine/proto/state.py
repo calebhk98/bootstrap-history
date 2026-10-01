@@ -135,20 +135,18 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
         supply = sim.hours_you_can_call_on(trade)
         total_demand = portfolio_demand.get(trade, {}).get(
             "demand_hours_this_year", need)
-        if supply < need or total_demand > supply + 1e-6:
-            # The society's CAPACITY is the durable fact and the one a player
-            # can act on; what is left after this year's bookings is noise that
-            # changes every step. Say the first, and only mention the second
-            # when it is what is actually binding.
-            if supply < need:
-                staffing_short.append(
-                    "%s (wants %.0f hours a year; this society can "
-                    "field %.0f at most)" % (trade, need, max(0.0, supply)))
-            elif total_demand > supply + 1e-6:
-                booked_short.append(
-                    "%s (wants %.0f hours a year; the %ss here can "
-                    "supply %.0f but your other work has them booked)"
-                    % (trade, need, trade, max(0.0, supply)))
+        # The society's capacity is the durable fact a player can act on;
+        # this year's bookings only matter when they are what binds.
+        kind = sim.trade_shortage_kind(trade, need, total_demand)
+        if kind == "staffing":
+            staffing_short.append(
+                "%s (wants %.0f hours a year; this society can "
+                "field %.0f at most)" % (trade, need, max(0.0, supply)))
+        elif kind == "booked":
+            booked_short.append(
+                "%s (wants %.0f hours a year; the %ss here can "
+                "supply %.0f but your other work has them booked)"
+                % (trade, need, trade, max(0.0, supply)))
     # BOTH, WHEN BOTH ARE TRUE, NOT JUST THE FIRST ONE FOUND: this loop
     # already knows every trade this project is short on, so returning the
     # moment staffing_short has anything in it would silently drop
@@ -564,7 +562,7 @@ def _agent_state_training_and_hours(sim, active, full):
              "now, not on you or your money. A calendar floor is not "
              "exclusive research time - start something else alongside "
              "it while it runs. 'available' or 'stuck' says what you "
-             "could begin today."
+             "could begin today; 'idle' splits the hours and names the delay."
              % "{:,.0f}".format(max(0.0, sim.director_pool()
                                     - sim.director_hours_committed())))
             if (active
@@ -577,7 +575,7 @@ def _agent_state_training_and_hours(sim, active, full):
             # completely, and hours do not carry.
             else ("%s founder-hours this year are going into nothing at all: "
                   "you have no work in hand. Hours do not carry to next year. "
-                  "'available' or 'stuck' says what you could begin today."
+                  "'available' or 'stuck' says what you could begin today; 'idle' splits the hours and names the delay."
                   % "{:,.0f}".format(max(0.0, sim.director_pool()
                                          - sim.director_hours_committed()))
                   if (not active

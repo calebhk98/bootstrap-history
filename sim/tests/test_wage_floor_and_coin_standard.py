@@ -3,8 +3,6 @@ money is anchored to the civilisation's coin, not to a book price."""
 import copy
 import json
 import os
-import subprocess
-import sys
 import unittest
 
 from sim.engine import catalog, data, prices as engine_prices, wage_provider
@@ -111,9 +109,9 @@ class CoinStandardMoneyTests(unittest.TestCase):
         light["coin_standard"]["kg_per_unit"] /= 2.0
         held = civ["starting_techs"]
         table_civ, _p = engine_prices.priced_goods_table(
-            held, {}, _schedule(civ).document(), civilization_id="rome_100ad")
+            held, _schedule(civ).document(), civilization_id="rome_100ad")
         table_light, _p = engine_prices.priced_goods_table(
-            held, {}, _schedule(light).document(), civilization_id="rome_100ad")
+            held, _schedule(light).document(), civilization_id="rome_100ad")
         self.assertAlmostEqual(table_light["wheat_kg"], 2.0 * table_civ["wheat_kg"])
 
 
@@ -210,41 +208,7 @@ class OpeningCapitalTests(unittest.TestCase):
                     engine.household.capital, engine.annual_wage("smith"), (civ_name, kit))
 
 
-_BOOK_RUNNER = """
-import builtins, io, json, sys
-mode = sys.argv[1]
-real_open = builtins.open
-def guarded_open(path, *args, **kwargs):
-    handle = real_open(path, *args, **kwargs)
-    if str(path).endswith("prices.json") and "b" not in (args[0] if args else kwargs.get("mode", "r")):
-        document = json.load(handle)
-        handle.close()
-        goods = document["purchase_prices_denarii"]
-        if mode == "remove_wheat":
-            goods.pop("wheat_kg", None)
-        elif mode == "double_wheat":
-            goods["wheat_kg"]["p"] *= 2.0
-        return io.StringIO(json.dumps(document))
-    return handle
-builtins.open = guarded_open
-from sim import simulator as S
-tree, prices, nodes, wages, goods = S.load()
-print(json.dumps({"labourer": wages["labourer"], "smith": wages["smith"]}))
-"""
-
-
 class NoBookFoodTests(unittest.TestCase):
-
-    def _wages(self, mode):
-        result = subprocess.run([sys.executable, "-c", _BOOK_RUNNER, mode],
-                                capture_output=True, text=True, timeout=600, cwd=ROOT)
-        self.assertEqual(result.returncode, 0, result.stderr[-800:])
-        return json.loads(result.stdout.strip().splitlines()[-1])
-
-    def test_wages_ignore_the_book_wheat_entry(self):
-        untouched = self._wages("none")
-        self.assertEqual(self._wages("remove_wheat"), untouched)
-        self.assertEqual(self._wages("double_wheat"), untouched)
 
     def test_the_book_food_reader_is_gone(self):
         self.assertFalse(hasattr(data, "_book_food_price_per_kg"))

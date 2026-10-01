@@ -122,6 +122,31 @@ Two fixes, usable separately or together:
       {"cmd":"exclude"}                             they left out, with the reason, under
                                                     "excluded". Bare exclude lists the entries.
                                                     `start` by hand is unaffected.
+      {"cmd":"figures"}                            the headline figures that explain their own
+      {"cmd":"figures","id":"<name>"}               change. With an id (cash, income, upkeep,
+      {"cmd":"why","id":"<figure name>"}            recurring_net, population, literacy_general,
+                                                    literacy_elite, price_index, hazard):
+                                                    {name, label, unit, current, previous,
+                                                    previous_year, change, causes:[{cause,
+                                                    previous, current, contribution}], drivers:
+                                                    [{driver, previous, current}], note}.
+                                                    The causes add up to the change; what the
+                                                    named parts leave out is a cause called
+                                                    "not itemised". previous is null until a
+                                                    year has been stepped. Figures register in
+                                                    sim/engine/figures_headline.py.
+      {"cmd":"leverage"}                           {leverage_points:[{lever, why_it_matters,
+                                                    figures}], note}: literacy, labour, finance,
+                                                    institutions, knowledge, materials, each
+                                                    from the engine's own figures. `path` adds
+                                                    the same leverage_points plus
+                                                    years_following_the_chain_alone.
+      {"cmd":"idle"}                               {directed_hours_this_year, committed_hours,
+                                                    idle_hours, delay_kinds:{kind:[ids]},
+                                                    what_the_wait_is, potential_uses:{
+                                                    startable_today, startable_at_no_cash_cost,
+                                                    train_oversubscribed_trades, wage_work}}.
+                                                    Never spends hours.
       {"cmd":"portfolio"}                          every active project: the founder-
                                                     hours it is ACTUALLY getting this
                                                     year and why (its rank in the queue,
@@ -199,6 +224,37 @@ Two fixes, usable separately or together:
                                                     this year's founder hours, local
                                                     contracts and most local standing.
                                                     Refused for a tile nobody lives on.
+      {"cmd":"map"} / {"cmd":"map","full":true}    the land you hold: "you_are_based_at",
+                                                    "tiles" (name, region, terrain,
+                                                    people, days_from_your_base,
+                                                    "deposits"), "next_door" (bordering
+                                                    tiles not held), "tiles_held". Names
+                                                    are a country and a number; the data
+                                                    names no towns. `move_base` rows carry
+                                                    the same name, region and terrain.
+                                                    Typed: `map`, `country`, `geography`.
+      {"cmd":"education"}                          "literacy" (general and elite, each
+                                                    with its ceiling, share of the
+                                                    ceiling and next year's value),
+                                                    "schools" (the visible schooling
+                                                    nodes), "schooling_flow",
+                                                    "effective_schooling_flow",
+                                                    "literate_trades", "trainees",
+                                                    "not_held".
+      {"cmd":"demography"}                         "cohorts", "last_year" (births, deaths,
+                                                    nutrition_ratio; null until a year has
+                                                    been simulated in this session),
+                                                    "disease_burden", "epidemics_under_way",
+                                                    "trades", "not_held".
+      {"cmd":"divergence"}                         start values against now ("population",
+                                                    "wage_index", "price_index",
+                                                    "literacy_general", "literacy_elite",
+                                                    "territory"), "technologies_you_built",
+                                                    "dated_events" (status happened, under
+                                                    way, upcoming or before the run began;
+                                                    "causes_checked" is false for all) and
+                                                    "cannot_know". Under fog an upcoming
+                                                    event has no name.
       {"cmd":"finish"}                             end the run here and return the final
                                                     report with the full score (fog's
                                                     withheld total included); the save
@@ -232,7 +288,10 @@ Two fixes, usable separately or together:
       refused, and the reason says so plainly.
 
       A `step` reply also carries `completed` (each record has `kind`:
-      "technology", "concern" or "granted"), `events`, and, when anything
+      "technology", "concern" or "granted"), `events` (each row has `severity`, one of
+      the eight tiers in `sim/engine/proto/event_severity.py`, run_ending first and
+      informational last; the text rendering lists the worst tiers first and
+      marks them), and, when anything
       completed or failed, `summary`: `completed`, `by_kind`, `failed`,
       `minor_failures` and, when the goal moved, `goal` (`measures` of
       label/before/after and `road_steps_gained`). The text rendering leads
@@ -275,7 +334,14 @@ Two fixes, usable separately or together:
                            other active projects, named by rank and total
       `portfolio`'s own `constraint` field on each project is exactly this
       classification, and is built from the same `waiting_on` sentence, not
-      a second guess at it.
+      a second guess at it. Each project also carries `blocker_kind`, that
+      constraint named in the shared blocker kinds of sim/engine/blockers.py
+      (staffing and trade_hours are specialists, materials is supply,
+      founder_hours is hours), and `portfolio` leads with `bottlenecks`:
+      [{kind, count, projects, hours_still_to_work, what_it_means, pools}],
+      one per kind, most fixable first; pools are the engine's demand against
+      supply for that kind (trade hours, directed hours, capital, the binding
+      material).
 
       HAZARD FIGURES. In `risk`, each hazard's `what_you_can_do[kind]` carries
       `mitigations`: one {node, label, status ("in force" or "lapsed"),

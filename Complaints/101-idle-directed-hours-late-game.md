@@ -1,6 +1,6 @@
 # Idle directed hours need better late-game handling
 
-**Status:** open
+**Status:** partly - `idle` shows directed, committed and idle hours, the kind of delay and what could use the hours, and `state` points at it; still open: a sized training and development-program suggestion and a pre-step warning that names the delay kind
 
 In the Rome run, thousands of directed hours per year were often unused while waiting for calendar floors on long projects. A mature optimized civilization can apparently reach vastly larger pools of idle capacity.
 

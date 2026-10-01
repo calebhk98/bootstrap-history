@@ -863,10 +863,9 @@ class CreditMixin:
     HOURS_PER_PERSON_YEAR = declare(
         "HOURS_PER_PERSON_YEAR", 2000.0, kind="engineering_estimate",
         unit="hours/person/year", source=
-        "prices.json: a 10-hour day, 250 working days a year, less feasts "
+        "A 10-hour day, 250 working days a year, less feasts "
         "and holidays.",
         confidence="B",
         why="Converts an annual wage into an hourly rate (stall_diagnosis' "
-            "own wage-comparison arithmetic) and back - the same working-"
-            "year convention prices.json itself uses, so the two stay "
-            "consistent.")
+            "own wage-comparison arithmetic) and back - the working-"
+            "year convention the wage provider uses.")

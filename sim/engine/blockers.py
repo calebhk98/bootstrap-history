@@ -8,14 +8,28 @@ Kinds: knowledge (prerequisites missing), power (a power capability missing),
 supply (a material or vessel group with no option in hand), specialists
 (people or trades missing), money (the bill is past cash and credit),
 politics (the state or a patron), closed (built once but shut),
-calendar (a floor of years still to serve, shown by `stuck`), idle (nothing in
-hand) and the terminal ones (done, active, goal, unavailable) where nothing is left to fix.
+calendar (a floor of years still to serve, shown by `stuck`), hours (running
+work waiting on the founder's own directed hours), idle (nothing in hand) and the terminal ones (done, active, goal, unavailable) where nothing is left to fix.
 """
 
 
 BLOCKER_KINDS = frozenset((
     "knowledge", "power", "supply", "specialists", "money", "politics", "closed",
-    "goal", "done", "active", "unavailable", "calendar", "idle"))
+    "goal", "done", "active", "unavailable", "calendar", "idle", "hours"))
+
+# Running work reads its blocker from the portfolio's constraint (the sentence
+# `waiting_on` builds); this names the shared kind each constraint stands for.
+RUNNING_CONSTRAINT_KIND = {
+    "staffing": "specialists", "trade_hours": "specialists", "materials": "supply",
+    "money": "money", "calendar": "calendar", "founder_hours": "hours", "unclear": "idle"}
+
+BLOCKER_MEANING = {
+    "specialists": "a trade is short or already booked: hire or train it, or pause a project that shares it",
+    "supply": "a material is throttling the whole economy: buy or sink the source",
+    "money": "the bill outruns what you can raise: wait, sell, or pause a draw",
+    "calendar": "only the calendar floor is left: it cannot be bought, so spend the hours elsewhere",
+    "hours": "your own directed hours are fully committed: reprioritise or raise the pool",
+    "idle": "no single cause is named: 'why <id>' for the project"}
 
 
 def blocker_kind(kind):

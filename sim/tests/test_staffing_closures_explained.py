@@ -127,6 +127,7 @@ spare_sim.done.add("ag2_canning")
 spare_sim._done_changed()
 spare_sim.open_venture("ag2_canning")
 spare_sim.state.household.artisans += 1.0
+spare_sim.cfg["immortal"] = False  # an immortal founder's own share is never at risk
 spare_warnings = spare_sim.staffing_closure_warnings()
 check("set-up: the concern is on the staffing warning list", spare_warnings, spare_warnings)
 if spare_warnings:

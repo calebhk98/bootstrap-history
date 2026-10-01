@@ -259,10 +259,12 @@
     "mat_iodine_compound": 1000.0
    },
    "inputs": {},
-   "labour_hours": {},
+   "labour_hours": {
+    "labourer": 30000.0
+   },
    "extracted_from": "seaweed (kelp ash from coastal weed)",
    "basis": "per tonne of iodine, as iodide salt, recovered from kelp ash",
-   "yield_basis": "EXTRACTED. Burnt kelp ('kelp' in the Scottish sense) carries on the order of 0.5-1 percent iodine by mass, and leaching plus crystallisation recovers most of it; at 0.75 percent about 133 tonnes of kelp ash stand behind a tonne, itself burnt from a couple of dozen times its mass of wet weed. Gathering and burning labour have no cited figure and are left out, so this is a floor. Conf C.",
+   "yield_basis": "EXTRACTED. Burnt kelp ('kelp' in the Scottish sense) carries on the order of 0.5-1 percent iodine by mass, and leaching plus crystallisation recovers most of it; at 0.75 percent about 133 tonnes of kelp ash stand behind a tonne, itself burnt from a couple of dozen times its mass of wet weed. LABELLED HEURISTIC for the labour (no cited figure): gathering and burning about 3200 tonnes of wet weed per tonne of iodine at roughly a tonne of wet weed gathered, spread to dry and burnt per labourer-day of ten hours, plus leaching and crystallising the ash, comes to about thirty thousand labourer-hours. Conf C.",
    "conf": "C",
    "requires_node": "analytical_chemistry"
   },

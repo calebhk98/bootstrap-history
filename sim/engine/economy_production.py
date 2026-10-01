@@ -645,11 +645,16 @@ class ProductionMixin:
         # Both halves of that follow `operating`, so closing something really
         # does stop the bleeding, and knowing how to do something costs nothing
         # to know.
+        return sum(self.upkeep_by_concern().values())
+
+    def upkeep_by_concern(self):
+        """{node id: yearly running cost} for each concern or practice that is paid for;
+        `upkeep` is its sum."""
         practice_set = self._practice_set()
         operating = self.state.projects.operating
-        return sum(self.venture_real_upkeep(node_id)
-                   for node_id in self._revenue_upkeep_candidates()
-                   if node_id in operating or node_id in practice_set)
+        return {node_id: self.venture_real_upkeep(node_id)
+                for node_id in self._revenue_upkeep_candidates()
+                if node_id in operating or node_id in practice_set}
 
     INSTITUTION_FLOOR = declare(
         "INSTITUTION_FLOOR", 0.20, kind="temporary_heuristic",

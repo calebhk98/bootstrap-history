@@ -8,7 +8,7 @@ in the book's denarii and take the path
 and nothing else converts.
 """
 from sim.constants import declare
-from typing import Dict, Iterable, Mapping
+from typing import Iterable, Mapping
 
 BOOK_LABOURER_WAGE_DENARII_PER_HOUR = declare(
     "BOOK_LABOURER_WAGE_DENARII_PER_HOUR", 0.049598551373284096,
@@ -48,9 +48,6 @@ def book_money_factor(money_per_labour_hour: float) -> float:
     return book_to_money(1.0, money_per_labour_hour)
 
 
-def convert_book_table(table: Mapping[str, float], money_per_labour_hour: float) -> Dict[str, float]:
-    factor = book_money_factor(money_per_labour_hour)
-    return {key: value * factor for key, value in table.items()}
 
 
 def price_nodes(nodes: Iterable[dict], schedule_wages: Mapping[str, float],
