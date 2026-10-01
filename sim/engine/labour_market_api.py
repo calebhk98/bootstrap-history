@@ -47,6 +47,16 @@ class LabourMarket:
             "survivable premium, not fitted to an observed labour-market "
             "price response.")
 
+    TOWN_SPARE_HOUSING_SHARE = declare(
+        "TOWN_SPARE_HOUSING_SHARE", 0.02, kind="temporary_heuristic",
+        unit="fraction of the home town's people (dwellings open to hired hands)",
+        source=None, confidence="D",
+        why="How much housing a town has free for incoming hired labour, as a share of its own "
+            "population; the housing term of a wage starts to bite when the people every employer "
+            "has taken on fill this. Tuned so a town of tens of thousands absorbs its firms and a household's "
+            "staff without a premium and a mass hiring by many employers does not; a real figure "
+            "would come from a dwelling stock and its vacancy, which nothing here models.")
+
     def __init__(self, sim):
         self._sim = sim
 
@@ -116,6 +126,26 @@ class LabourMarket:
         """What an hour pays against the opening schedule, at this economy's output per hour."""
         return self._sim.output_volume_scale() ** self._sim.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
 
+    def town_housing_room(self):
+        """People the home town can house beyond those already there: the spare share of its
+        dwellings plus the worker housing built in it."""
+        sim = self._sim
+        return (sim.home_town_population_estimate() * self.TOWN_SPARE_HOUSING_SHARE
+                + max(0.0, sim.state.household.worker_housing_places or 0.0))
+
+    def town_workers(self):
+        """People every employer in the town has on its books: the founder's household and every
+        firm and government."""
+        return self._sim.headcount() + self._sim.actor_staff_total()
+
+    def town_housing_factor(self):
+        """The housing multiplier on a wage. It reads how full the town's housing is from everyone
+        employed in it, so it is the same for every employer hiring there."""
+        sim = self._sim
+        occupancy = self.town_workers() / max(1.0, self.town_housing_room())
+        pressure = (occupancy - sim.HOUSING_PRESSURE_START_OCCUPANCY) / sim.HOUSING_PRESSURE_BAND
+        return 1.0 + sim.HOUSING_PRESSURE_MAX_MARKUP * max(0.0, min(1.0, pressure))
+
     def _annual(self, trade, scarcity):
         sim = self._sim
         base = sim.base_annual_wage(trade)
@@ -147,12 +177,8 @@ class LabourMarket:
         return people * self.unscarce_annual(trade) * self.price_factor(trade)
 
     def commission_cost(self, trade, hours, premium):
-        """What a one-off job of `hours` costs: the schedule's hour times a shop's `premium`, in
-        today's money, times the scarcity of the trade."""
-        sim = self._sim
-        return (hours * sim.wage_per_hour(trade) * premium
-                * sim.wage_index * sim.price_index
-                * self.price_factor(trade))
+        """What a one-off job of `hours` costs: the hour the market quotes, times a shop's `premium`."""
+        return hours * premium * self.quote(trade)
 
     def in_current_money(self, schedule_amount):
         """An amount at the opening schedule's prices, in today's money."""

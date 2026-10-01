@@ -274,15 +274,7 @@ class WagesMixin(WageLedgerMixin):
         another test module and had never run.
         """
         food = self.essential_price_ratio()
-        # Use structural places, not household_room(): that method includes
-        # staff_capacity, whose affordability calculation includes wage_bill,
-        # and would make wages recursively depend on themselves.
-        capacity = max(1.0, self.supervision_room())
-        occupancy = self.headcount() / capacity
-        # Housing pressure begins only when three quarters of the household's
-        # real places are occupied; adding housing/capacity lowers it again.
-        housing = 1.0 + self.HOUSING_PRESSURE_MAX_MARKUP * max(0.0, min(1.0,
-                        (occupancy - self.HOUSING_PRESSURE_START_OCCUPANCY) / self.HOUSING_PRESSURE_BAND))
+        housing = self.labour_market.town_housing_factor()
         basket = self.TRADE_TOOL_BASKETS.get(trade, ())
         tools = (sum(self.material_price_factor(material) for material in basket) / len(basket)
                  if basket else 1.0)

@@ -306,12 +306,13 @@ class ProductionMixin:
         household = self.state.household
         craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
         craft += household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE
+        market = self.labour_market
         wage = 0.0
         for trade, count in household.employees.items():
             if trade_family(trade) == "craft":
-                wage += count * self.base_annual_wage(trade)
+                wage += count * market.quote_annual(trade)
         wage += ((household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE)
-                 * self.base_annual_wage("artisan"))
+                 * market.quote_annual("artisan"))
         mark = self.WORKSHOP_WAGE_MARKUP_BASE
         mark = self.effect_sum("workshop_markup", mark)
         # AND EVERYTHING YOU KNOW HOW TO DO, which is where the value of a
@@ -330,7 +331,7 @@ class ProductionMixin:
         # makes the workshop you actually staff and pay for more productive,
         # which is how method has always paid. It needs a workshop and it needs
         # people; with neither, it is still worth nothing.
-        return self.labour_market.in_current_money(wage * mark * self.capability_factor())
+        return wage * mark * self.capability_factor()
 
     def capability_factor(self):
         """How much better your methods make the same pair of hands.

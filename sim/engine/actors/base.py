@@ -198,17 +198,21 @@ class Actor(Borrower):
 		self.work_on_copies(world)
 
 	def advance(self, world: Any) -> None:
-		"""One year: act, then press the labour market for the people newly taken on."""
+		"""One year: act, then press the labour market for the people newly taken on and ease it for those let go."""
 		held = dict(self.workforce)
 		self.act(world)
 		self.press_new_staff(held, world)
 
 	def press_new_staff(self, held: Dict[str, float], world: Any) -> None:
-		"""The labour market feels the people taken on since `held`."""
+		"""The labour market feels the people taken on since `held` and eases for those let go."""
 		for trade, people in sorted(self.workforce.items()):
 			added = people - held.get(trade, 0.0)
 			if added > 0:
 				world.labour_market.hire(self, trade, added * world.hours_per_person_year)
+		for trade, people in sorted(held.items()):
+			shed = people - self.workforce.get(trade, 0.0)
+			if shed > 0:
+				world.labour_market.release(self, trade, shed * world.hours_per_person_year)
 
 
 class RecordedActor(Actor):

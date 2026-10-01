@@ -36,10 +36,10 @@ check("cheaper staple food lowers the wage required to live",
       (baseline, s.labour_market.quote_annual("smith")))
 
 s = sim()
-s.headcount = lambda: 9.0
-s.supervision_room = lambda: 10.0
+_crowd = s.labour_market.town_housing_room() * 0.95
+s.headcount = lambda: _crowd
 crowded = s.labour_market.quote_annual("smith")
-s.supervision_room = lambda: 20.0
+s.state.household.worker_housing_places = s.labour_market.town_housing_room()
 check("expanding housing capacity relieves wage pressure",
       s.labour_market.quote_annual("smith") < crowded, (crowded, s.labour_market.quote_annual("smith")))
 

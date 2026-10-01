@@ -75,3 +75,95 @@ check("farm price per hectare is one engine function the quote reads",
 check("trade-school price per seat is one engine function the quote reads",
       hasattr(_priced, "trade_school_price_per_seat")
       and abs(_school_quote["per_unit"] - _priced.trade_school_price_per_seat()) < 0.006)
+
+
+# ---- the same comparison through the cash ledger: open, research, project bills, the hire wage ------
+def _ledger_outflow(game, *causes):
+    """Money the ledger shows paid out under these causes, the open period and the closed ones."""
+    household = game.state.household
+    totals = [household.cash_flow] + [period["causes"] for period in household.cash_periods]
+    return -sum(totals_by_cause.get(cause, 0.0) for totals_by_cause in totals for cause in causes)
+
+
+def _ledger_game():
+    game = _fresh()
+    game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
+    game.LIVING_COST_STATUS_PER_CAPITAL = 0.0   # status spending follows cash, which a charge changes
+    return game
+
+
+def _first_node(test):
+    probe = _ledger_game()
+    for node_id in ORDER:
+        if node_id not in probe.done and probe.can_start(node_id) and test(NODES[node_id]):
+            return node_id
+    return None
+
+
+def _openable_game(node_id):
+    game = _ledger_game()
+    game.state.projects.done.add(node_id)
+    game._done_changed()
+    return game
+
+
+def _first_openable():
+    for node_id in ORDER:
+        probe = _ledger_game()
+        if node_id in probe.done or not probe.is_venture(node_id):
+            continue
+        reply = S._agent_dispatch(_openable_game(node_id), NODES,
+                                  {"cmd": "quote", "what": "open", "id": node_id})
+        if reply.get("ok") and not reply.get("staff_short"):
+            return node_id
+    return None
+
+
+def _run_project(node_id):
+    game = _ledger_game()
+    quoted = S._agent_dispatch(game, NODES, {"cmd": "why", "id": node_id})["cost"]["total"]
+    reply = S._agent_dispatch(game, NODES, {"cmd": "start", "id": node_id})
+    for _year in range(8):
+        if node_id in game.done:
+            break
+        S._agent_dispatch(game, NODES, {"cmd": "step", "years": 1})
+    return game, quoted, reply
+
+
+_open_id = _first_openable()
+check("a venture exists to open in the table", _open_id is not None)
+if _open_id:
+    _open_quote = S._agent_dispatch(_openable_game(_open_id), NODES,
+                                    {"cmd": "quote", "what": "open", "id": _open_id})
+    _opener = _openable_game(_open_id)
+    _open_reply = S._agent_dispatch(_opener, NODES, {"cmd": "open", "id": _open_id})
+    check("open: the action succeeds", _open_reply.get("ok"), _open_reply)
+    check("open: the ledger shows exactly what was quoted",
+          abs(_ledger_outflow(_opener, "opening a venture") - _open_quote["paid_now"]) <= 0.051,
+          (_ledger_outflow(_opener, "opening a venture"), _open_quote["paid_now"]))
+
+for _label, _test in (
+        ("research", lambda node: not node["rev"] and not node["mat"]),
+        ("project", lambda node: node["rev"] > 0 and node["mat"])):
+    _node_id = _first_node(_test)
+    check("%s: a node exists to start in the table" % _label, _node_id is not None)
+    if not _node_id:
+        continue
+    _game, _quoted, _started = _run_project(_node_id)
+    check("%s: the project starts and finishes" % _label,
+          _started.get("ok") and _node_id in _game.done, _started)
+    _paid = _ledger_outflow(_game, "project payments", "materials bought for projects")
+    check("%s: the ledger shows exactly the bill that `why` quoted" % _label,
+          abs(_paid - _quoted) <= 0.11, (_paid, _quoted))
+
+# The hire's yearly wage: the fee plus what the first year's payroll adds beyond it is the quoted wage.
+_hired, _twin = _ledger_game(), _ledger_game()
+_hire_quote = S._agent_dispatch(_ledger_game(), NODES, {"cmd": "quote", "what": "hire", "trade": "smith", "n": 1})
+S._agent_dispatch(_hired, NODES, {"cmd": "hire", "trade": "smith", "n": 1})
+for _game in (_hired, _twin):
+    S._agent_dispatch(_game, NODES, {"cmd": "step", "years": 1})
+_hire_charged = (_ledger_outflow(_hired, "hiring fee and first year's wages")
+                 + _ledger_outflow(_hired, "living costs") - _ledger_outflow(_twin, "living costs"))
+check("hire wage: the first year's charge through the ledger is the quoted yearly wage",
+      abs(_hire_charged - _hire_quote["from_next_year_per_year"]) <= 0.11,
+      (_hire_charged, _hire_quote["from_next_year_per_year"]))

@@ -1728,9 +1728,8 @@ class StepPhasesMixin:
         #     you know.
         if self.state.household.bondage_years_left > 0:
             self.state.household.bondage_years_left -= 1
-            paid = self.labour_market.in_current_money(
-                self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE
-                * (self.wage_per_hour("labourer") * self.BONDAGE_WAGE_MARKUP))
+            paid = (self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE
+                    * self.BONDAGE_WAGE_MARKUP * self.labour_market.quote("labourer"))
             self.state.household.bondage_debt = max(0.0, self.state.household.bondage_debt - paid)
             if self.state.household.bondage_debt <= 0 and self.state.household.bondage_years_left > 0:
                 self.state.household.bondage_years_left = 0     # paid early
