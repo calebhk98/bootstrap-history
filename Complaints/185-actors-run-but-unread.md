@@ -1,6 +1,6 @@
 # Government and Firm actors run every year but nothing reads their results
 
-**Status:** closed - increments 1-6 of docs/architecture/ACTORS_NEXT.md are built and read by the engine; other countries as actors are 113
+**Status:** partly - increments 1-6 of docs/architecture/ACTORS_NEXT.md are built and read by the engine; other countries as actors are 109; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
 `sim/engine/core_step_phases.py:493` calls `self.advance_actors(...)` each year. The code inventory found no reader of their results outside `society_actors.py`: they do not affect the founder's revenue, prices, or any player screen.
 

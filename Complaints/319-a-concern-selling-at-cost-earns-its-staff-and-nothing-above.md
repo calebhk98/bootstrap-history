@@ -1,6 +1,6 @@
 # A concern that sells at solved cost earns its staff's wages and nothing above
 
-**Status:** closed - the solver repays each stated plant with interest at the civilisation's rate (test capital_charge); entries that state no plant are 580
+**Status:** partly - the solver repays each stated plant with interest at the civilisation's rate (test capital_charge); entries that state no plant are 335; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
 Solved prices are cost-based: a good's price repays its inputs, labour, the capital charge the entry states (build bill over service life and capacity) and rent. A node whose revenue is derived from output (`sim/engine/node_revenue.py`) earns that price less what it buys, and since derived upkeep (`sim/engine/node_upkeep.py`) charges its staff at the same wages, revenue less upkeep is only the capital charge less the plant's maintenance. Where the entries state no capital (the data's own judgement that capital is small against labour), the node earns exactly its staff's wages: revenue equals upkeep and the node never pays back what it cost to build. Measure with `python3 sim/node_revenue_report.py` (the line "earning exactly their upkeep" and the net payback distribution), per civilisation with `--civ`.
 

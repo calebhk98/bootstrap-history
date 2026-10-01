@@ -1,6 +1,6 @@
 # Silver chain does not yet charge for what a mine and a smelter actually do
 
-**Status:** closed - mine works are charged (342, 348); slag, roasting fuel and the grade basis are carried in 641
+**Status:** partly - mine works are charged (342, 348); slag, roasting fuel and the grade basis are carried in 349; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
 
 Rome's silver solves at about 319 labour hours per kg (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`) against about 3,700 hours per kg from Strabo's 40,000 workers and Polybius's daily revenue (see 305). Grade is not the gap (410's update). The physical items the recipes still leave out, each needing a source before a number moves:
 
