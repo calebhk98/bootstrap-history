@@ -47,6 +47,8 @@ class ActorRegistry:
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
 		self._staff: Optional[Dict[str, float]] = None
+		self._acting: Optional[RecordedActor] = None
+		self._staff_basis: Dict[str, float] = {}
 		# insertion position of each actor (the order supply is summed in), and the ids that are not firms
 		self._position: Dict[str, int] = {}
 		self._not_firms: Set[str] = set()
@@ -111,6 +113,8 @@ class ActorRegistry:
 				for trade, people in self.actors[actor_id].record.workforce.items():
 					totals[trade] = totals.get(trade, 0.0) + people
 			self._staff = totals
+			if self._acting is not None:
+				self._staff_basis = dict(self._acting.workforce)
 		return self._staff
 
 	def staff_fte(self, trade: str, excluding: Optional[str] = None) -> float:
@@ -155,12 +159,20 @@ class ActorRegistry:
 
 	def advance(self, world: Any) -> None:
 		self.world = world
+		first = True
 		for actor_id in sorted(self.actors):
 			actor = self.actors[actor_id]
 			if actor.kind == "firm" and actor.record.exited_year is not None:
 				continue
+			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`
+			self._acting, self._staff_basis = actor, dict(actor.workforce)
 			actor.advance(world)
-			self.refresh_staff()
+			# it stays when the acting actor's staff is what the count saw; the first actor of a
+			# year always recounts, since anything between years is unseen
+			if first or actor.workforce != self._staff_basis:
+				self.refresh_staff()
+			first = False
+		self._acting = None
 		self.consider_entry(world)
 
 	def consider_entry(self, world: Any) -> List[str]:

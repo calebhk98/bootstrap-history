@@ -134,3 +134,40 @@ _registry.actors["firm:042"].record.exited_year = 90
 _world = _TonnesWorld(["steelworks"])
 check("...and an exited firm no longer supplies",
       abs(_registry.supply("steel", _world) - 0.5) < 1e-12)
+
+
+# --- the staffing tally survives an actor's turn that left staff as it was found.
+_registry = _registry_of_firms(10)
+_registry.consider_entry = lambda world: []
+for _actor in _registry.actors.values():
+    _actor.advance = lambda world: None
+_registry.staff_by_trade()
+_registry.advance(_TonnesWorld([]))
+_tally_after_idle_year = _registry._staff
+_registry.staff_by_trade()
+_registry.actors["firm:009"].advance = lambda world: _registry.staff_by_trade()
+_registry.advance(_TonnesWorld([]))
+check("a year in which no actor's staff changed leaves the staffing tally standing after the first turn",
+      _tally_after_idle_year is None and _registry._staff is not None)
+
+
+def _hire(world):
+    _registry.actors["firm:003"].workforce["smith"] += 1.0
+
+
+_registry.actors["firm:003"].advance = _hire
+_registry.advance(_TonnesWorld([]))
+check("a year in which an actor took people on recounts the staffing",
+      _registry.staff_by_trade()["smith"] == 10 * 1.5 + 1.0, _registry._staff)
+
+
+def _hire_count_and_leave(world):
+    _registry.actors["firm:005"].workforce["smith"] += 2.0
+    _registry.staff_by_trade()
+    _registry.actors["firm:005"].workforce["smith"] -= 2.0
+
+
+_registry.actors["firm:005"].advance = _hire_count_and_leave
+_registry.advance(_TonnesWorld([]))
+check("a count taken in the middle of a turn that then undid its hiring is not kept",
+      _registry.staff_by_trade()["smith"] == 10 * 1.5 + 2.0, _registry._staff)
