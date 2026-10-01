@@ -1,6 +1,6 @@
 # `available electricity` returns only "Signal flags": `find` matches the knowledge-file name
 
-**Status:** partly
+**Status:** closed
 
 `available electricity` returns exactly one item, Signal flags for maritime communication, and no electrical technology. The cause is in the data: `com_signal_flags` has `"kb": "50_electricity.md"` (`data/branches/24_comms_computing.json`), and the search matches the doc anchor, so the filing-cabinet name of the knowledge file becomes a player-visible "subject". The tester read this as the category system being untrustworthy.
 
