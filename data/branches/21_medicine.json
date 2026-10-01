@@ -353,7 +353,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Imperial edict: physicians who follow established methods are not liable for death. This requires establishing consensus on best practice.",
+  "note": "Legal protection: physicians who follow established methods are not liable for death. This requires establishing consensus on best practice.",
   "traits": [
    "infrastructure",
    "status_threatening"
@@ -419,7 +419,7 @@
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "Asepsis: prevention of contamination. Antisepsis: chemical disinfection. Steam sterilization beats carbolic spray because it kills spores, not just surface germs. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring]",
+  "note": "Asepsis: prevention of contamination. Antisepsis: chemical disinfection. Steam sterilization beats carbolic spray because it kills spores, not just surface germs.",
   "traits": [
    "infrastructure",
    "medical"
@@ -427,7 +427,7 @@
   "mechanics": {
    "disease_burden": true
   },
-  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring]"
  },
  {
   "id": "med_autoclave",
@@ -818,12 +818,12 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Mirror and lens to view the retina. Reveals aneurysms, cotton-wool spots, diabetic changes. Requires skilled assembly. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lens and mirror optics require precision grinding]",
+  "note": "Mirror and lens to view the retina. Reveals aneurysms, cotton-wool spots, diabetic changes. Requires skilled assembly.",
   "traits": [
    "medical",
    "information"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lens and mirror optics require precision grinding]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lens and mirror optics require precision grinding] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lens and mirror optics require precision grinding]"
  },
  {
   "id": "med_endoscope",
@@ -989,8 +989,8 @@
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium]",
-  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium]"
+  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice.",
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium]"
  },
  {
   "id": "med_sterile_technique",
@@ -1369,11 +1369,11 @@
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "First broad-spectrum antibiotic 1935, derived from aniline dyes. Inhibits bacterial folate synthesis. Saves millions from streptococcal and gram-negative infections. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management]",
+  "note": "First broad-spectrum antibiotic 1935, derived from aniline dyes. Inhibits bacterial folate synthesis. Saves millions from streptococcal and gram-negative infections.",
   "traits": [
    "medical"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management]"
  },
  {
   "id": "med_penicillin",

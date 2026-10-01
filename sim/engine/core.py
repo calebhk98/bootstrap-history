@@ -12,6 +12,7 @@ from sim.world import demography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
+from sim.world import mineral_shares
 # Weather is drawn per geography.json land_tiles cell (see
 # `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
@@ -554,8 +555,10 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
         # below depends only on the civ file and the (static) geography
         # file, so it is computed once.
         self.geo = load_geography()
-        self._regions = {region_id: value for region_id, value in (self.geo.get("regions") or {}).items()
-                          if not region_id.startswith("_")}
+        regional_shares = mineral_shares.regional_mineral_shares(self.geo)
+        self._regions = {region_id: dict(value, minerals=regional_shares[region_id])
+                         for region_id, value in (self.geo.get("regions") or {}).items()
+                         if not region_id.startswith("_")}
         self._home_centroid = self._compute_home_centroid()
         # node id -> located_materials key. Lets material_cost_factor() find
         # the geography entry for a location-gated tech node (mat_gutta_percha,

@@ -514,11 +514,10 @@ def _cmd_train(sim, nodes, cmd, ended):
     _trade = str(cmd.get("trade") or "").strip().lower()
     if _trade in TRADES_ABSENT:
         out["means"] = (
-            "%s now exists here, but nobody can do that work yet: a "
-            "project needing it draws only on people trained or hired "
-            "into this exact trade, never a general market. "
-            "'hire %s <n>' adds more right away, without waiting; "
-            "otherwise the people above are it until they finish."
+            "%s now exists here. A project needing it draws only on people "
+            "trained or hired into this exact trade, never a general market. "
+            "'hire %s <n>' adds more right away, without waiting for training; "
+            "otherwise the people above are it."
             % (_trade, _trade))
     return out
 

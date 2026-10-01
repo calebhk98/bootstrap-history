@@ -329,7 +329,7 @@
     "lab": {},
     "mat": {},
     "name": "Six months of listening before you act",
-    "note": "OPTIONAL, and no longer a prerequisite for anything. It buys you accurate local prices, the actual law of this province, who is who, and a large reduction in early blunder risk. Skip it if you want to move fast and find out the hard way what things cost. The simulator lets you skip it, because a model that forces the cautious opening is not a model, it is an opinion.",
+    "note": "for anything. It buys you accurate local prices, the actual law of this province, who is who, and a large reduction in early blunder risk. Skip it if you want to move fast and find out the hard way what things cost. The simulator lets you skip it, because a model that forces the cautious opening is not a model, it is an opinion.",
     "ph": 900.0,
     "pre": [],
     "req_any": [],
@@ -341,7 +341,8 @@
       "commerce"
     ],
     "up": 0.0,
-    "yrs": 0.5
+    "yrs": 0.5,
+    "_internal": "OPTIONAL, and no longer a prerequisite"
   },
   {
     "adopt_yrs": 0.0,
