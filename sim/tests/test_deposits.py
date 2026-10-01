@@ -589,10 +589,12 @@ class PolymetallicByproductTests(unittest.TestCase):
         self.assertEqual(byproduct.metal, "silver")
         self.assertEqual(byproduct.material_key, "silver_kg")
         self.assertGreater(byproduct.ore_grade_kg_per_tonne, 0.0)
-        # Every OTHER named lead deposit carries none - this is a worked
-        # example on one deposit, not a blanket assumption.
+        # Lead in a district with a silver deposit carries that district's
+        # assay (Complaints/337); a lead deposit with no silver deposit in
+        # its district carries none.
+        silver_tiles = {deposit.tile for deposit in deposits.load_deposits("silver")}
         for name, deposit in lead_deposits.items():
-            if name != "britannia_lead":
+            if deposit.tile not in silver_tiles:
                 self.assertEqual(deposit.byproducts, (), name)
 
     def test_byproduct_quantity_is_fixed_by_the_grade_ratio_not_chosen(self):
