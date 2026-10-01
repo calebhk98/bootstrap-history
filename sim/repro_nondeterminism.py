@@ -27,7 +27,7 @@ somebody else will have it too. It is sporadic, which points at something
 sensitive to the memory allocator rather than to run order.
 
 WHAT IT LOOKS LIKE WHEN IT BITES. `--bisect` walks the two runs year by year.
-On rome_100ad/seed1 the first difference is at year index 18, in one field of
+On the default civilisation/seed1 the first difference is at year index 18, in one field of
 one project:
 
     potash_soda  ph_left   A=152.51383869514427  B=152.51383869514555

@@ -10,7 +10,7 @@ ROME 100 AD -> TRANSISTOR : tech-tree simulator, planner and game.
     python3 sim/simulator.py validate
     python3 sim/simulator.py civs                       who you can play
     python3 sim/simulator.py play --manual               free choice, no autopilot
-    python3 sim/simulator.py agent --civ rome_100ad --fog
+    python3 sim/simulator.py agent --civ <civilisation_id> --fog
 
 `agent` speaks one JSON object per line in and one per line out. It explains
 itself: it prints a welcome on first run and answers {"cmd":"help"}. There is
@@ -30,6 +30,7 @@ from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from . import money_units, wage_provider
+from .default_civilisation import default_civilisation_id
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
 
@@ -234,10 +235,11 @@ def money_short(civ: Optional[JSONDict]) -> str:
     return (civ.get("currency_words") or {}).get("short") or civ.get("currency") or "den"
 
 
-def load_civ(name: str = "rome_100ad") -> JSONDict:
+def load_civ(name: Optional[str] = None) -> JSONDict:
     """A civilization is DATA, not code. Swapping Rome for Han China, Viking
     Norway, Mexica Tenochtitlan or somewhere invented is a different file, not a
     different simulator. See data/civilizations/_SCHEMA.md."""
+    name = name or default_civilisation_id()
     path = os.path.join(CIVDIR, name + ".json")
     base_civ = json.load(open(path)) if os.path.exists(path) else None
     civ = apply_mod_civilization(name, base_civ, get_ordered_mods(MODDIR))
@@ -246,7 +248,7 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
         # civilizations, so the listing below excludes them - the same
         # convention cli.py applies everywhere it lists this directory. An
         # unfiltered listing would answer a typo with "available:
-        # _TECH_EFFECTS, england_1300, ...", naming a file nobody can play.
+        # _TECH_EFFECTS, ...", naming a file nobody can play.
         have = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                       if filename.endswith(".json") and not filename.startswith("_"))
         for manifest in get_ordered_mods(MODDIR):

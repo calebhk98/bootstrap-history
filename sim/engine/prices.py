@@ -461,7 +461,7 @@ def priced_goods_table(held_technology_ids: Iterable[str],
                      one of the three that authoring can close.
 
     The distinction matters because an undifferentiated solved/book count
-    for rome_100ad reads as 85 missing recipes, when sixty-eight of those
+    for the default civilisation reads as 85 missing recipes, when sixty-eight of those
     have recipes and are correctly gated out by era, leaving a real gap of
     nine - and five of THOSE want deleting rather than filling (two are
     people rather than materials, two are dead keys nothing consumes any

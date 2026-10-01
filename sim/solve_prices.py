@@ -677,7 +677,7 @@ tech-tree node that has to be reached before anyone can run that technique
 (see WHEN A TECHNIQUE BECOMES AVAILABLE in `data/production/_SCHEMA.md`).
 A civilisation's `starting_techs` is a set of exactly those ids, so
 
-    python3 sim/solve_prices.py --civ rome_100ad
+    python3 sim/solve_prices.py --civ <civilisation_id>
 
 filters the entries down to what Rome can actually do and then solves that
 smaller system. The whole rest of the mechanism is unchanged: the same
