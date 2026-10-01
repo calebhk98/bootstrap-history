@@ -14,6 +14,7 @@ from .data import load, load_civ, STARTING_KITS
 from .core import Sim
 from .protocol import _agent_dispatch, _agent_help, load_state, render_pretty, save_state
 from . import settings
+from .proto import step_progress
 
 # Session helpers: shared with cli_interactive.py's cmd_play for the same
 # reason (a --session file resumes the civilisation/goal it was started
@@ -121,6 +122,7 @@ def cmd_agent(args):
             indent=1) + "\n")
         sys.stderr.flush()
 
+    step_progress.set_after_year(step_progress.commit_and_report(session, sys.stderr))
     if args.script:
         try:
             cmds = json.load(open(args.script))

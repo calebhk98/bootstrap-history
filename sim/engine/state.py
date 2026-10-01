@@ -371,6 +371,7 @@ class PopulationState:
 	pop_children: float = 0.0
 	pop_working_age: float = 0.0
 	pop_elderly: float = 0.0
+	population_change_last_year: Optional[float] = None
 
 
 @dataclass
