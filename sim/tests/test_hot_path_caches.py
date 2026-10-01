@@ -46,3 +46,35 @@ for _ in range(3):
 _elapsed = time.process_time() - _start
 check("three early years of the default run take well under a minute of CPU",
       _elapsed < 60.0, "%.1fs" % _elapsed)
+
+
+# --- an actor's supply of a material looks only at the concerns that make it.
+from sim.engine.actors.base import Actor as _Actor
+
+
+class _CountingWorld:
+    year = 100
+
+    def __init__(self, makers):
+        self.makers, self.asked = frozenset(makers), []
+
+    def concerns_making(self, material):
+        return self.makers
+
+    def concern_output_tonnes(self, node_id, material, opened_year, staffed):
+        self.asked.append(node_id)
+        return 2.0
+
+
+class _ManyConcerns(_Actor):
+    concerns = ["node_%02d" % number for number in range(40)]
+
+
+_world = _CountingWorld(["node_07", "node_03"])
+_total = _ManyConcerns().output_of("steel", _world)
+check("an actor's supply asks only the concerns that make the material, in id order",
+      _world.asked == ["node_03", "node_07"] and _total == 4.0, _world.asked)
+_world = _CountingWorld([])
+_ManyConcerns().output_of("steel", _world)
+check("an actor with no concern making the material asks about none",
+      _world.asked == [], _world.asked)
