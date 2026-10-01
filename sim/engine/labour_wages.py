@@ -300,6 +300,23 @@ class WagesMixin(WageLedgerMixin):
         """An authored book-denarii amount in this civilisation's coin."""
         return money_units.book_to_money(denarii, self.money_per_labour_hour())
 
+    LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = declare(
+        "LABOUR_PAY_SHARE_OF_OUTPUT_GAIN", 1.0, kind="temporary_heuristic",
+        unit="exponent on output_volume_scale (1 = pay rises as fast as output per hour)",
+        source=None, confidence="D",
+        why="Labour is the scarce input, so employers bid an hour up to the value of what it "
+            "makes: when the economy lets the same people sell more, pay per hour follows. "
+            "Stands in for the labour market clearing against a productivity index that is "
+            "itself a heuristic (ECONOMY_OUTPUT_SCALING_EXPONENT); not fitted to wage data.")
+
+    def labour_pay_scale(self):
+        """What the hour of labour pays, against the opening schedule, at this economy's output per hour."""
+        return self.output_volume_scale() ** self.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
+
+    def market_wage_per_hour(self, trade):
+        """What an actor hiring this trade pays an hour at this economy's output."""
+        return self.wage_per_hour(trade) * self.labour_pay_scale()
+
     def wage_per_hour(self, trade):
         """Money one hour of this trade costs before local prices and
         scarcity: the single wage every consumer reads."""
@@ -325,4 +342,4 @@ class WagesMixin(WageLedgerMixin):
         factors = self.wage_cost_factors(trade)
         local = self.labour_price_factor(trade) if include_local_scarcity else 1.0
         return (base * factors["weighted"] * self.price_index
-                * self.wage_index * local)
+                * self.wage_index * local * self.labour_pay_scale())

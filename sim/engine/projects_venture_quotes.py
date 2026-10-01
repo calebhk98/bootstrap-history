@@ -20,9 +20,10 @@ class VentureQuotesMixin:
         """Yearly running cost at the current price level: the figure every
         screen quotes and the ledger charges (`upkeep`). `units` prices a
         stated number of units of the concern instead of what is open now."""
+        scale = self.price_index * self.concern_running_scale(node_id)
         if units is None:
-            return self.institution_upkeep(node_id) * self.price_index
-        return self.nodes[node_id]["up"] * units * self.price_index
+            return self.institution_upkeep(node_id) * scale
+        return self.nodes[node_id]["up"] * units * scale
 
     def reopen_units(self, node_id):
         """How much of a scalable institution a reopening restores (one, for anything else)."""

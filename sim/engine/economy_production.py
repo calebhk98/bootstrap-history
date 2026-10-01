@@ -407,11 +407,19 @@ class ProductionMixin:
             return 1.0
         return node_revenue_market.market_factor(node, self._material_prices(), self.market_price_ratio)
 
+    def output_volume_scale(self):
+        """How many times more a concern sells than its authored volume, at this economy."""
+        return self.state.economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT
+
+    def concern_running_scale(self, node_id):
+        """What a concern's running costs are multiplied by: the volume it sells, since inputs
+        are bought per unit sold. One for a node that sells nothing."""
+        return self.output_volume_scale() if self.nodes[node_id]["rev"] > 0 else 1.0
+
     def concern_takings(self, node_id, ramp):
         """Yearly takings of one concern at a given ramp, before market saturation."""
         economy = self.state.economy
-        return (self.nodes[node_id]["rev"] * ramp
-                * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
+        return (self.nodes[node_id]["rev"] * ramp * self.output_volume_scale()
                 * economy.output_factor * self.price_index)
 
     def ledger_concern_rows(self):

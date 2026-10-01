@@ -77,7 +77,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		sim = self._sim
 		def compute() -> float:
 			producing = max(0.0, sim.population.working_age - self.soldiers_under_arms())
-			return producing * sim.HOURS_PER_PERSON_YEAR * sim.wage_per_hour("labourer") * sim.state.economy.output_factor
+			return producing * sim.HOURS_PER_PERSON_YEAR * sim.market_wage_per_hour("labourer") * sim.state.economy.output_factor
 		return self._once("output", compute)
 
 	def state_revenue(self) -> float:
@@ -98,7 +98,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		return self._sim.state_treasury()
 
 	def wage_per_hour(self, trade: str) -> float:
-		return self._sim.wage_per_hour(trade)
+		return self._sim.market_wage_per_hour(trade)
 
 	@property
 	def hours_per_person_year(self) -> float:
@@ -107,7 +107,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 	def hiring_wage_per_hour(self, trade: str) -> float:
 		"""What an hour of this trade costs an actor that hires it now: the wage table
 		times the premium the local market's recent hiring has built up."""
-		return self._sim.wage_per_hour(trade) * self._sim.labour_price_factor(trade)
+		return self._sim.market_wage_per_hour(trade) * self._sim.labour_price_factor(trade)
 
 	def press_labour(self, trade: str, hours: float) -> None:
 		"""An actor takes on `hours` a year of a trade: the one local market feels it."""
@@ -208,7 +208,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 											self.ramp(opened_year), staffed)
 
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
-		return self.nodes[node_id]["up"] * self._sim.price_index * capacity
+		return self.nodes[node_id]["up"] * self._sim.price_index * self._sim.concern_running_scale(node_id) * capacity
 
 	def rng_for(self, *parts: Any) -> random.Random:
 		"""A random stream keyed by its inputs, so actors never disturb the world's own."""

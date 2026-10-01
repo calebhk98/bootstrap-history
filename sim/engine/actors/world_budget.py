@@ -63,7 +63,7 @@ class BudgetView:
 		return sim.military_equipment_burden_kg_per_soldier_per_year(sim.state_military_diffusion())
 
 	def pay_per_person_year(self, trade: str) -> float:
-		return self._sim.HOURS_PER_PERSON_YEAR * self._sim.wage_per_hour(trade)
+		return self._sim.HOURS_PER_PERSON_YEAR * self._sim.market_wage_per_hour(trade)
 
 	def commodity_of(self, material: str) -> str:
 		return self._sim._material_tag(material)[0]
