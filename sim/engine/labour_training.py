@@ -336,6 +336,7 @@ class TrainingMixin:
         note = None
         if have > 0:
             gone = min(count, have)
+            self.labour_market.release(household, trade, gone * self.HOURS_PER_PERSON_YEAR)
             household.employees[trade] = have - gone
             if household.employees[trade] <= 1e-9:
                 household.employees.pop(trade)

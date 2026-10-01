@@ -25,6 +25,13 @@ class ActorsMixin:
             return 0.0
         return self.actors.staff_fte(trade)
 
+    def actor_staff_total(self):
+        """People of every trade that firms and governments employ."""
+        state = self.state.actors
+        if state is None or not state.records:
+            return 0.0
+        return sum(self.actors.staff_by_trade().values())
+
     def actor_supply(self, material):
         """Tonnes a year of `material` that firms and governments put on the market,
         summed over every actor; the founder's own concerns are not included."""
