@@ -868,6 +868,10 @@ def _new_game(civs, cfg):
     horizon = _new_game_ask_horizon(cfg)
     if horizon is None:
         return None
+    print()
+    seed = _new_game_ask_seed(cfg)
+    if seed is False:
+        return None
 
     # REMEMBERED FOR NEXT TIME, SILENTLY - not a settings screen's job: a
     # player who favours one civilisation and kit should not have to retype
@@ -916,7 +920,7 @@ def _new_game(civs, cfg):
     args = Args()
     args.strategy = "recommended"
     args.goal = goal
-    args.seed = None
+    args.seed = seed
     args.horizon = horizon
     args.civ = civ["id"]
     args.kit = kit
@@ -1026,6 +1030,30 @@ def _new_game_ask_fuzzy(cfg):
     fuzzy_default = "y" if cfg.get("default_fuzzy_estimates", False) else "n"
     return _ask("\n   Fuzzy estimates? [%s] " % ("Y/n" if fuzzy_default == "y" else "y/N"),
                 ["y", "n"], fuzzy_default)
+
+
+def _new_game_ask_seed(cfg):
+    """The seed question. Returns the typed whole number, None for a random
+    draw (blank, unless settings hold a default seed), or False if the player
+    backed out."""
+    configured = cfg.get("default_seed")
+    if not isinstance(configured, int) or isinstance(configured, bool):
+        configured = None
+    shown = "default %d" % configured if configured is not None else "random"
+    while True:
+        try:
+            raw = input("   Seed (blank for a random one) [%s]: " % shown).strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return False
+        if not raw:
+            return configured
+        if raw in ("q", "quit", "exit"):
+            return False
+        try:
+            return int(raw)
+        except ValueError:
+            print("   -- a whole number, or blank for a random seed.")
 
 
 def _new_game_ask_kit(cfg):

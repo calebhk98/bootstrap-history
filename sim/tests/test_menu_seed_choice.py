@@ -26,8 +26,8 @@ def _run(arguments, text, env):
 
 def _seed_after_menu(name, seed_answer, config=None):
     saves, env = _env(name, config)
-    # civilisation, fog, fuzzy, kit, mortality, goal, horizon, then the seed
-    result = _run(["menu"], "1\n" + "\n" * 6 + seed_answer + "\n" + "\n" * 4 + "quit\n", env)
+    # civilisation, opening, fog, fuzzy, kit, mortality, goal, horizon, then the seed
+    result = _run(["menu"], "1\n" + "\n" * 7 + seed_answer + "\n" + "\n" * 4 + "quit\n", env)
     found = [path for path in glob.glob(os.path.join(saves, "*.json"))
              if not path.endswith(".meta.json")]
     seed = json.load(open(found[0])).get("_seed") if len(found) == 1 else None

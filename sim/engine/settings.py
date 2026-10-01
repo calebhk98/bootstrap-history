@@ -117,6 +117,7 @@ class Config(TypedDict):
     default_mortal: bool
     default_goal: Optional[str]
     default_horizon: int
+    default_seed: Optional[int]
 
 
 class SessionMeta(TypedDict):
@@ -216,6 +217,8 @@ CONFIG_DEFAULTS: Config = {
     # see _new_game, which resolves this the same way resolve_goal() does.
     "default_goal": None,
     "default_horizon": 500,
+    # None draws a fresh seed; a number is what the new-game menu's blank seed answer uses.
+    "default_seed": None,
 }
 
 # THE OLD HARDCODED NUMBERS, named, so a process that cannot ask its

@@ -4,7 +4,7 @@
     "goal_node": "point_contact_transistor",
     "goals": [
       {
-        "blurb": "The original goal: reach the device that starts the electronic age.",
+        "blurb": "Reach the junction device that made the electronic age practical.",
         "name": "Grown and alloy junction transistors",
         "node": "junction_transistor",
         "scale": "civilisation"
