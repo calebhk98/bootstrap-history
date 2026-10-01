@@ -743,6 +743,10 @@ def _parse_allocate(command, rest, words, nums, want_json):
 def _parse_priority(command, rest, words, nums, want_json):
     if not rest:
         return {"cmd": "priority"}, None
+    if not words or rest[0] != words[0]:
+        return None, ("say which project, e.g. 'priority <id> first', "
+                      "'priority <id> last' or 'priority <id> 2'. Bare "
+                      "'priority' lists the order.")
     out = {"cmd": "priority", "id": words[0]}
     if len(words) > 1 and words[1].lower() in ("first", "top", "last", "bottom"):
         out["position"] = "first" if words[1].lower() in ("first", "top") else "last"
