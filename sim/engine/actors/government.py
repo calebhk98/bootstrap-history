@@ -61,7 +61,7 @@ class Government(RecordedActor):
 		self.credit(world.state_revenue(), "taxation")
 		wanted = world.army_wanted()
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
-		lines = budget.standing_lines(world, soldiers)
+		lines = budget.standing_lines(world, soldiers) + budget.concession_lines(world.group_claims())
 		share = budget.funded_share(sum(line.money for line in lines), self.money)
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = {line.name: line.money for line in lines}

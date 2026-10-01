@@ -24,10 +24,11 @@ class Line:
 	wages: float = 0.0
 	materials: Dict[str, float] = field(default_factory=dict)  # commodity -> tonnes a year
 	material_cost: float = 0.0
+	transfer: float = 0.0  # money handed to someone outside the state's own service
 
 	@property
 	def money(self) -> float:
-		return self.wages + self.material_cost
+		return self.wages + self.material_cost + self.transfer
 
 
 def army_line(world: Any, soldiers: float) -> List[Line]:
@@ -46,6 +47,12 @@ def administration_line(world: Any) -> List[Line]:
 		return []
 	return [Line("administration", "office", {"scribe": officials},
 				 officials * world.pay_per_person_year("scribe"))]
+
+
+def concession_lines(claims: Dict[str, float]) -> List[Line]:
+	"""What the state has undertaken to make good to each interest group, one line per group,
+	named by the group's own line name. Unpaid, it is raised from taxpayers like any other need."""
+	return [Line(name, "requisition", transfer=amount) for name, amount in sorted(claims.items()) if amount > 0.0]
 
 
 def standing_lines(world: Any, soldiers: Optional[float] = None) -> List[Line]:

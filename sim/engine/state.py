@@ -426,6 +426,22 @@ class ActorRecord:
 	levy_base: float = 0.0
 	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
 	army: float = 0.0
+	# an interest group's kind (what hurt it), subject (the commodity or trade), what caused the
+	# hurt in words, people it speaks for, the income it lost (net of what the state made good),
+	# the share of the state's attention it commands, and what it asks of the state
+	group_kind: str = ""
+	subject: str = ""
+	cause: str = ""
+	members: float = 0.0
+	lost_income: float = 0.0
+	grievance: float = 0.0
+	strength: float = 0.0
+	peak_strength: float = 0.0
+	claim: float = 0.0
+	received_last_year: float = 0.0
+	demands: List[str] = field(default_factory=list)
+	petitions: int = 0
+	last_logged_year: Optional[int] = None
 
 
 @dataclass

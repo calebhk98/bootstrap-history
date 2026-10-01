@@ -16,6 +16,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 """
 from . import purchase_rule
 from .blockers import blocker_kind
+from .interest_groups import check_group_prohibition
 from .data import win_condition_describe
 from sim.constants import declare
 
@@ -834,6 +835,7 @@ class StartingMixin:
         _check_craft_staff,
         _check_absent_trades,
         _check_none_left_trades,
+        check_group_prohibition,
         _check_social_approval,
     )
 

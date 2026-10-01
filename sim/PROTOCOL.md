@@ -352,6 +352,24 @@ Two fixes, usable separately or together:
       yearly shocks apply. Each `score` component has a `counts` sentence;
       `institutions` also lists `counted` and `finished_but_closed`.
 
+      INTEREST GROUPS (Complaint 114). `groups` (aliases `interest_groups`, `factions`) lists
+      the groups the economy has organised against the founder: {name, kind, cause (in words),
+      people, income_lost_per_year, grievance_share, pull_on_the_state, state_undertakes_to_make_good,
+      demands, petitions, organised_since}, with `state_leaves_unpaid_to_raise_from_taxpayers`,
+      `state_in_deficit` and a `note`. `kind` is `displaced_producers` (the society's producers of
+      a commodity the founder sold into the market) or `squeezed_employers` (employers of a trade
+      whose price the founder's and the firms' hiring pushed up). A group's pull is the share of
+      the state's attention its lost income earns; the state's answer is decided by its capacity
+      and its purse: it books the claim as a line of its budget (`concession: group:<kind>:<subject>`),
+      what its purse cannot pay is raised in the levy on taxpayers it sees (`requisition_report`
+      names the group), a state not in deficit may forbid starting the techniques that make the
+      commodity (a `politics` blocker in `why`, lifted by protection above the state-opposition
+      line), and every petition puts blame (scandal) on the founder and a log line naming the
+      group and its cause. `risk` carries `interest_groups` and `state_attention` carries
+      `interest_groups` (names and causes) while any group is organised. Groups are actors of
+      kind `interest_group` in the actor registry (ActorRecord fields `group_kind`, `subject`,
+      `cause`, `members`, `lost_income`, `grievance`, `strength`, `claim`, `demands`).
+
       MACHINE-READABLE MODES. 'state json', 'portfolio json' and 'risk json'
       (typed, inside `play`) print the raw reply - the exact line a script
       would get from `agent` - instead of the rendered screen. Every player

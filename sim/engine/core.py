@@ -48,6 +48,7 @@ from .labour_allocation import LabourAllocationMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
+from .interest_groups import InterestGroupsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
 from .data import trade_family
@@ -198,7 +199,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, FogMixin, GeographyMixin, LabourMixin,
-          ProjectsMixin, SocietyMixin, ActorsMixin, ForwardingPropertiesMixin,
+          ProjectsMixin, SocietyMixin, ActorsMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",

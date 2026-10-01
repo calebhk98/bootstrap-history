@@ -7,10 +7,11 @@ from . import imitation
 from .base import RecordedActor
 from .firm import Firm
 from .government import Government
+from .group import InterestGroup
 from .policy import make_policy
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
 
-ACTOR_CLASSES = {"firm": Firm, "government": Government}
+ACTOR_CLASSES = {"firm": Firm, "government": Government, "interest_group": InterestGroup}
 
 
 class _ConcernWatch:
@@ -53,6 +54,7 @@ class ActorRegistry:
 		# insertion position of each actor (the order supply is summed in), and the ids that are not firms
 		self._position: Dict[str, int] = {}
 		self._not_firms: Set[str] = set()
+		self._bans: Optional[Dict[str, str]] = None
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
 		for actor_id in sorted(state.records):
@@ -84,6 +86,7 @@ class ActorRegistry:
 		self._ordered_ids = None
 		self._staff = None
 		self._demand = None
+		self._bans = None
 		return actor
 
 	def supply(self, material: str, world: Any) -> float:
@@ -187,6 +190,8 @@ class ActorRegistry:
 			first = False
 		self._acting = None
 		self.consider_entry(world)
+		self.consider_groups(world)
+		self._bans = None
 
 	def consider_entry(self, world: Any) -> List[str]:
 		"""Found a firm for each proven concern that a new entrant could profit from."""
@@ -217,3 +222,32 @@ class ActorRegistry:
 			founded_firm.credit(stake, "pooled capital")
 			founded.append(firm_id)
 		return founded
+
+	def consider_groups(self, world: Any) -> List[str]:
+		"""Organise a group for each body of people whose lost income has reached the point at
+		which they act on the state, and call a dissolved group back when its cause returns."""
+		from .group_tuning import GROUP_ORGANISING_WEIGHT
+		formed = []
+		for key, sector in sorted(world.sectors().items()):
+			if sector.lost_income / world.scope_revenue(sector.scope) < GROUP_ORGANISING_WEIGHT:
+				continue
+			group_id = "group:" + key
+			existing = self.actors.get(group_id)
+			if existing is not None and existing.record.exited_year is None:
+				continue
+			if existing is None:
+				existing = self.add(group_id, ActorRecord(**InterestGroup.founded_by(sector), founded_year=world.year))
+			else:
+				existing.record.exited_year = None
+			existing.record.lost_income = 0.0
+			existing.advance(world)
+			formed.append(group_id)
+		return formed
+
+	def prohibitions(self) -> Dict[str, str]:
+		"""Commodity -> name of the interest group whose demand to forbid the techniques that
+		make it the state is meeting this year."""
+		if self._bans is None:
+			self._bans = {group.record.subject: group.record.name for group in self.of_kind("interest_group")
+						  if group.record.exited_year is None and group.record.demands}
+		return self._bans
