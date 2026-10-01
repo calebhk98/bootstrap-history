@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """How much of node revenue and upkeep is derived, and what is left authored.
 
-    python3 sim/node_revenue_report.py [--civ rome_100ad] [--list]
+    python3 sim/node_revenue_report.py [--civ <civilisation id>] [--list]
 
 Counts nodes by the basis of their revenue and upkeep, the nodes still held under the payback
 floor, the payback distribution (build cost over yearly revenue, and over revenue less upkeep),
