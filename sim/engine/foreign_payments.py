@@ -78,14 +78,15 @@ class ForeignPaymentsMixin:
         return balance_of_payments.price_level(opening + ledger["partner_coin_units"], opening)
 
     def foreign_balance_of_payments(self, civilization_id):
-        """{goods in, goods out, net coin paid out by this society, home coin stock, price levels},
-        money in home units, cumulative."""
+        """{goods in, goods out, net coin paid out by this society, home coin stock, price levels, the
+        fleet's yearly lift}, money in home units, cumulative."""
         ledger = self._foreign_ledger(civilization_id)
         return {"goods_in_value": ledger["goods_in_value"], "goods_out_value": ledger["goods_out_value"],
                 "coin_paid_out_units": -ledger["home_coin_units"],
                 "home_coin_stock_units": self.home_coin_stock_units(),
                 "home_price_level": self.home_price_level(),
-                "partner_price_level": self.partner_price_level(civilization_id)}
+                "partner_price_level": self.partner_price_level(civilization_id),
+                "fleet_lift_tonnes_per_year": ledger["lift_tonnes_per_year"]}
 
     def _settle_flow(self, civilization_id, flow_tonnes, value, home_money_per_partner_coin):
         """Pay for one commodity's flow in coin: this society pays for imports and is paid for

@@ -4,6 +4,11 @@ the route's legs, and a shortage-year price ratio with and without trade.
 
     python3 sim/foreign_trade_report.py --years 100
     python3 sim/foreign_trade_report.py --years 100 --partner <civilisation id> [--civilization <civilisation id>]
+    python3 sim/foreign_trade_report.py --years 100 --partner <civilisation id> --baseline
+
+Besides the totals it prints, by decade: tonnes in and out, the balance of payments (goods in and
+out, coin paid out, the home coin stock and price level) and the price over long-run cost of the
+most traded goods. `--baseline` runs the same years with no partner for comparison.
 
 Partners are switched on for the run whether or not the data file enables
 them, so the report is how an economy is judged before enabling it.
@@ -39,10 +44,58 @@ def build(civilization_id, partner_id):
     return game
 
 
-def print_flows(game, years):
+DECADE_YEARS = 10
+MAIN_GOODS = 3
+
+
+def _snapshot(game, partner_id):
+    """The year just closed: tonnes by commodity (positive imported) and the ledger's totals."""
+    flows = {commodity: entry.get("trade_tonnes", 0.0)
+             for commodity, entry in game.state.economy.market_book.items()
+             if entry.get("trade_tonnes", 0.0)}
+    ratios = {commodity: entry.get("price_ratio", 1.0)
+              for commodity, entry in game.state.economy.market_book.items()}
+    bop = game.foreign_balance_of_payments(partner_id) if partner_id else {}
+    return flows, ratios, bop
+
+
+def print_decades(history, partner_id):
+    """One row per decade: mean tonnes in and out a year, goods and coin moved in the decade, the
+    home coin stock and price level at its end, and the most traded goods' price ratios."""
+    totals = collections.defaultdict(float)
+    for flows, _ratios, _bop in history:
+        for commodity, tonnes in flows.items():
+            totals[commodity] += abs(tonnes)
+    main = [commodity for commodity, _total in sorted(totals.items(), key=lambda pair: -pair[1])][:MAIN_GOODS]
+    print("by decade (tonnes a year; money in home units; price ratio is spot over long-run cost):")
+    print("  %-6s %9s %9s %14s %14s %14s %7s %9s %s" % (
+        "years", "in t", "out t", "goods in", "goods out", "coin stock", "level", "lift t",
+        " ".join("%12s" % commodity[:12] for commodity in main)))
+    previous = {"goods_in_value": 0.0, "goods_out_value": 0.0}
+    for start in range(0, len(history), DECADE_YEARS):
+        block = history[start:start + DECADE_YEARS]
+        into = sum(sum(max(0.0, tonnes) for tonnes in flows.values()) for flows, _r, _b in block)
+        out = sum(sum(max(0.0, -tonnes) for tonnes in flows.values()) for flows, _r, _b in block)
+        bop = block[-1][2] or {}
+        goods_in = bop.get("goods_in_value", 0.0) - previous["goods_in_value"]
+        goods_out = bop.get("goods_out_value", 0.0) - previous["goods_out_value"]
+        previous = {"goods_in_value": bop.get("goods_in_value", 0.0),
+                    "goods_out_value": bop.get("goods_out_value", 0.0)}
+        print("  %-6s %9.1f %9.1f %14.4g %14.4g %14.4g %7.3f %9.1f %s" % (
+            "%d-%d" % (start + 1, start + len(block)), into / len(block), out / len(block),
+            goods_in, goods_out, bop.get("home_coin_stock_units", 0.0), bop.get("home_price_level", 1.0),
+            bop.get("fleet_lift_tonnes_per_year", 0.0),
+            " ".join("%12.3f" % block[-1][1].get(commodity, 1.0) for commodity in main)))
+    if partner_id:
+        print("partner price level at the end: %.3f" % history[-1][2].get("partner_price_level", 1.0))
+
+
+def print_flows(game, years, partner_id=None):
     imports, exports = collections.defaultdict(float), collections.defaultdict(float)
+    history = []
     for _year in range(years):
         game.step()
+        history.append(_snapshot(game, partner_id))
         for commodity, entry in game.state.economy.market_book.items():
             flow = entry.get("trade_tonnes", 0.0)
             if flow > 0.0:
@@ -53,6 +106,7 @@ def print_flows(game, years):
         print("%s, tonnes a year averaged over %d years:" % (title, years))
         for commodity, total in sorted(flows.items(), key=lambda pair: -pair[1]):
             print("  %-22s %12.1f" % (commodity, total / years))
+    print_decades(history, partner_id)
 
 
 def print_shortage(civilization_id, partner_id):
@@ -72,16 +126,20 @@ def main():
     parser.add_argument("--civilization", default=None, help="default: the game's default civilisation")
     parser.add_argument("--partner", required=True, help="a civilisation id from data/civilizations")
     parser.add_argument("--years", type=int, default=100)
+    parser.add_argument("--baseline", action="store_true",
+                        help="run the same years with no partner, for comparison")
     arguments = parser.parse_args()
     if arguments.civilization is None:
         from sim.engine.default_civilisation import default_civilisation_id
         arguments.civilization = default_civilisation_id()
-    game = build(arguments.civilization, arguments.partner)
-    print("route to %s:" % arguments.partner)
-    for origin, destination, mode, distance_km, cost in game.foreign_route_legs(arguments.partner):
-        print("  %s -%s-> %s  %.0f km  %.1f per tonne" % (origin, mode, destination, distance_km, cost))
-    print_flows(game, arguments.years)
-    print_shortage(arguments.civilization, arguments.partner)
+    game = build(arguments.civilization, None if arguments.baseline else arguments.partner)
+    if not arguments.baseline:
+        print("route to %s:" % arguments.partner)
+        for origin, destination, mode, distance_km, cost in game.foreign_route_legs(arguments.partner):
+            print("  %s -%s-> %s  %.0f km  %.1f per tonne" % (origin, mode, destination, distance_km, cost))
+    print_flows(game, arguments.years, None if arguments.baseline else arguments.partner)
+    if not arguments.baseline:
+        print_shortage(arguments.civilization, arguments.partner)
     return 0
 
 

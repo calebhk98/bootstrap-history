@@ -187,3 +187,17 @@ check("tonnes the fleet could not lift are recorded as unmet, then the fleet gro
       and ledger["fleet_capital"] > 0.0, ledger)
 check("the fleet grows by no more than yards can build in a year",
       ledger["lift_tonnes_per_year"] <= max(5.0, opening_lift) * 1.1 + 5.0, ledger)
+
+# --- the ledger saves and loads, so a loaded game pays and lifts as the unbroken one does.
+saved = stubbed_pair(sim(civ="rome_100ad", capital=1e9), 100.0, 10.0)
+saved.foreign_economies = lambda: [PARTNER]
+saved._step_market()
+_save_path = os.path.join(tempfile.gettempdir(), "foreign_ledger_save_test.json")
+_protocol.save_state(saved, _save_path)
+loaded = sim(civ="rome_100ad", capital=1e9)
+_protocol.load_state(loaded, _save_path)
+os.remove(_save_path)
+check("the foreign ledger is not empty after a year of trade",
+      bool(saved.state.economy.foreign_ledger.get(PARTNER)), saved.state.economy.foreign_ledger)
+check("the foreign ledger survives a save and a load",
+      loaded.state.economy.foreign_ledger == saved.state.economy.foreign_ledger, None)
