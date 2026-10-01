@@ -53,7 +53,9 @@ def _word_game(name, seed):
     session = os.path.join(_saves_word, name + ".json")
     out = _run(["play", "--civ", "rome_100ad", "--seed", seed, "--session", session],
                "step 3\nstate\nquit\n", _env_word).stdout
-    return out.split("Seed:", 1)[-1]
+    # "(took N s)" timing lines differ between runs; the game itself must not
+    return "\n".join(line for line in out.split("Seed:", 1)[-1].splitlines()
+                     if not line.strip().startswith("(took "))
 _first, _second = _word_game("a", "hello"), _word_game("b", "hello")
 check("--seed takes a word and prints it back", _first.startswith(" hello"), _first[:200])
 check("the same word seed replays the same game", _first == _second.replace("b.json", "a.json"),

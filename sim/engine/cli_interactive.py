@@ -31,7 +31,7 @@ the same reason: it is called from here (`cmd_menu`, `cmd_play`) but also
 from `_save_listing` over there, so keeping it here would have made the
 save/load module import back from this one.
 """
-import json, os, random, sys, time
+import json, os, random, re, sys, time
 
 from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
                    load, load_civ, load_geography, money_short, money_word,
@@ -94,7 +94,7 @@ def cmd_play(args):
     # first-timer needs and nobody else does - and a veteran who has turned
     # it off still gets the arrival capital/year from 'state' on request.
     if fresh:
-        print("Seed: %d (replay these dice with --seed %d)" % (sim.seed, sim.seed))
+        print("Seed: %s (replay these dice with --seed %s)" % (sim.seed, sim.seed))
     if fresh and app_cfg.get("show_welcome", True):
         _play_print_welcome(sim, kit)
 
@@ -132,15 +132,31 @@ def cmd_play(args):
 DEFAULT_SEED_ENV = "ROME_DEFAULT_SEED"
 
 
+def normal_seed(text):
+    """A seed as the game keeps it: a whole number when it is all digits, else
+    the word in lower case. random.Random seeds from either and replays the
+    same dice for the same value."""
+    if isinstance(text, int):
+        return text
+    text = str(text).strip().lower()
+    return int(text) if text.isdigit() else text
+
+
+def valid_seed_text(text):
+    """A seed must be one word of letters, digits, '-' or '_', so it can be
+    passed back to --seed unquoted."""
+    return bool(re.fullmatch(r"[A-Za-z0-9_-]+", str(text).strip()))
+
+
 def resolve_seed(asked):
     """The seed a sitting plays with: the one asked for, else the one named by
     ROME_DEFAULT_SEED (the regression harness fixes it so its runs replay),
     else a fresh draw so every new game rolls different dice."""
     if asked is not None:
-        return int(asked)
+        return normal_seed(asked)
     fixed = os.environ.get(DEFAULT_SEED_ENV)
     if fixed:
-        return int(fixed)
+        return normal_seed(fixed)
     return random.SystemRandom().randrange(1, 2 ** 31)
 
 
@@ -1059,27 +1075,27 @@ def _new_game_ask_fuzzy(cfg):
 
 
 def _new_game_ask_seed(cfg):
-    """The seed question. Returns the typed whole number, None for a random
-    draw (blank, unless settings hold a default seed), or False if the player
-    backed out."""
+    """The seed question. Returns the typed seed (a number or a word), None
+    for a random draw (blank, unless settings hold a default seed), or False
+    if the player backed out."""
     configured = cfg.get("default_seed")
-    if not isinstance(configured, int) or isinstance(configured, bool):
+    if configured is not None and not valid_seed_text(configured):
         configured = None
-    shown = "default %d" % configured if configured is not None else "random"
+    shown = "default %s" % configured if configured is not None else "random"
     while True:
         try:
-            raw = input("   Seed (blank for a random one) [%s]: " % shown).strip().lower()
+            raw = input("   Seed, a number or a word (blank for a random one) [%s]: "
+                        % shown).strip()
         except (EOFError, KeyboardInterrupt):
             print()
             return False
         if not raw:
-            return configured
-        if raw in ("q", "quit", "exit"):
+            return None if configured is None else normal_seed(configured)
+        if raw.lower() in ("q", "quit", "exit"):
             return False
-        try:
-            return int(raw)
-        except ValueError:
-            print("   -- a whole number, or blank for a random seed.")
+        if valid_seed_text(raw):
+            return normal_seed(raw)
+        print("   -- one word of letters, digits, '-' or '_', or blank for a random seed.")
 
 
 def _new_game_ask_kit(cfg):
