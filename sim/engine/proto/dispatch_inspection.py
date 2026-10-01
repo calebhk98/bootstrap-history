@@ -22,6 +22,7 @@ from .economy import (_agent_capacity, _agent_changes, _agent_economy,
 from .explain_once import already_explained
 from .nodes import _did_you_mean
 from .score import final_report, score_report
+from .score_change import attach_change_since_last_score
 from .state import _agent_log, _agent_state, _waiting_on
 from .techtree import _agent_available, _brief, _node_explain
 
@@ -80,7 +81,7 @@ def _cmd_log(sim, nodes, cmd, ended):
          description="Each ending-score component, raw and weighted. Under fog the "
                      "technology-coverage share stays withheld until the run is over.")
 def _cmd_score(sim, nodes, cmd, ended):
-    return {"ok": True, **score_report(sim, nodes)}
+    return {"ok": True, **attach_change_since_last_score(sim, score_report(sim, nodes))}
 
 
 

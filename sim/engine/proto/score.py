@@ -445,6 +445,11 @@ def _score_lines(out, indent="  "):
         component = (out.get("components") or {}).get(name) or {}
         if component.get("counts"):
             lines.append(_wrap("%s: %s" % (name.replace("_", " "), component["counts"]), indent=indent + "  "))
+        change = component.get("since_last_score")
+        if change:
+            lines.append("%s    since your last score (%s): raw was %s, normalized %+.3f"
+                         % (indent, _fmt_num(change.get("year")), _fmt_num(change.get("raw_before")),
+                            change["normalized_change"]))
         if component.get("finished_but_closed"):
             lines.append(_wrap("finished but closed, so scoring nothing until opened: "
                                + ", ".join(component["finished_but_closed"]), indent=indent + "    "))

@@ -1,6 +1,6 @@
 # `score` does not say what resilience or institutions count; both read as contradictory
 
-**Status:** partly - `score` now prints a `counts` sentence per component, and lists which institutions are finished but closed; the rest is under Remains
+**Status:** closed - `score` prints a `counts` sentence per component, lists institutions finished but closed, and says what moved in each component since your last `score`
 
 - Resilience is reported high whatever the hazard screen says: at 1310 with nothing built, raw 4 gives normalized 0.960 (reproduced below), while `risk` shows severe staff loss for the coming famine and plague and an unhedged corpus. In the tester's run it rose to 0.994, then 0.998 while Black Death staff loss was still 29 to 40 percent per wave, many built technologies were unhedged, and the household was heavily leveraged.
 - Institutions stayed exactly 0 through 1350 despite a finished written corpus, an operating sanitation network, and trained engineers and machinists; it became 6 only after a university, a collegium and the corpus were all operating. If the score counts only opened formal institutions (the corpus was finished but closed at that point) the screen does not say so.
@@ -15,4 +15,4 @@ Found in an England 1300 blind playtest (fog on, poor_scholar kit, 1300 to 1375)
 
 Also reported (Han China 100 AD fog playtest, tester item(s) 197; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): resilience fell from 3 to 2 (raw) between 325 and 350 AD with the dispersed corpus running and no explanation; literacy 21 percent and institutions 13 stayed flat for 75 years. The tester asks for a delta line per component on `score`. Reproduces: untested (late game).
 
-**Remains:** `score` now prints a `counts` sentence per component, and lists which institutions are finished but closed. Still open: a per-component change line (what moved since the last `score`), which needs a saved previous snapshot.
+**Remains:** None. A second `score` prints, under each component, its raw value and the normalized change since the previous `score` (kept in `scenario.score_last_seen`; `sim/engine/proto/score_change.py`). Regression test: `sim/tests/test_screen_text_defects.py`.

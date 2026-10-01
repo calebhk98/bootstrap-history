@@ -406,6 +406,7 @@ class ScenarioState:
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
 	_said_explanations: Optional[Dict[str, int]] = None
+	score_last_seen: Optional[Dict[str, Any]] = None
 
 
 @dataclass

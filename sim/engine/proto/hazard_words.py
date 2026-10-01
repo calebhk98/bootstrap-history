@@ -58,7 +58,8 @@ def advice_header(kind, advice, hazard, indent="  "):
         return line
     if kind == "sack_chance" and after is not None:
         return "%s%s: %s (%s with nothing built)" % (
-            indent, name, figure_words(kind, after), _pct(hazard.get(kind)))
+            indent, name, figure_words(kind, after),
+            _pct(hazard.get("sack_chance_per_year", hazard.get(kind))))
     if kind == "output_factor" and after is not None:
         return "%s%s: %s in the worst year (%s with nothing built)" % (
             indent, name, figure_words(kind, after), _pct(hazard.get(kind)))
