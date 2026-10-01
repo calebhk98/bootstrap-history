@@ -1,6 +1,6 @@
 # The state's soldiers are not a trade, and patron funding still ignores the treasury
 
-**Status:** open - found while building 109; remains of ACTORS_NEXT increments 3 and 5
+**Status:** partly - patron funding is now paid from the treasury and soldiers are out of production; a soldier trade is 447; the state's adoption is still a half-life curve
 
 Three things the state budget does not do yet, each measurable.
 
@@ -9,3 +9,5 @@ Three things the state budget does not do yet, each measurable.
 3. **The state's adoption is a half-life curve.** `state_military_diffusion` still reads `DIFFUSION_HALF_LIFE_MILITARY_YEARS`, not what the government actor holds; the budget reads it (through `BudgetView.equipment_kg_per_soldier`) to scale equipment. Increment 3.
 
 Check 3 with `grep -rn "state_military_diffusion" sim --include=*.py`.
+
+Done: item 2. `Sim.state_funding` is what the treasury paid (`Government.pay_patron`, from the purse after the standing need, nothing when any need went unpaid); the old formula survives as `patron_funding_ask`, a labelled heuristic for what a patron would give. Item 1 in part: `society_output` excludes soldiers under arms, so a larger army lowers revenue; the trade itself and the wage are 447. Item 3 is untouched.

@@ -1,6 +1,10 @@
 """What a state asks the simulated world when it budgets: its people, its prices, its taxpayers."""
 from typing import Any, List, Tuple
 
+from sim.world import demand, territory
+
+from .tuning_spending import THREAT_ARMY_RESPONSE
+
 
 class BudgetView:
 	"""Read-only questions behind a state's standing need; mixed into `SimWorld`."""
@@ -13,13 +17,44 @@ class BudgetView:
 	def state_capacity(self) -> float:
 		return self._sim.state_capacity
 
+	def territory(self) -> Any:
+		"""Frontier, coast and road length of the tiles the state holds."""
+		return territory.holdings(list(self._sim.civ.get("home_regions") or []))
+
+	def urban_population(self) -> float:
+		return self.population_total() * float(self._sim.civ.get("urban_fraction", 0.0))
+
+	def subsistence_kg_per_person_year(self) -> float:
+		return demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR
+
+	def national_people(self, trade: str) -> float:
+		"""People of a trade in the whole country; the working age for unskilled labour."""
+		sim = self._sim
+		return sim.population.working_age if trade == "labourer" else sim.national_trade_population(trade)
+
+	def trade_exists(self, trade: str) -> bool:
+		return self._sim.trade_available(trade)
+
+	def threat_pressure(self) -> float:
+		"""Probability a year of the civilisation's own hazards sack a site: the declared
+		sack chances of those running now, before any relief the founder has bought."""
+		year = self.year
+		return sum(float(hazard.get("sack_chance", 0.0)) for hazard in self._sim.civ.get("hazards", [])
+				   if hazard.get("years") and hazard["years"][0] <= year <= hazard["years"][1])
+
 	def army_wanted(self) -> float:
-		"""Soldiers the state wants: the opening force's share of the people, held as they change."""
-		civ = self._sim.civ
-		opening = float(civ.get("standing_army", 0.0))
-		if opening <= 0.0:
-			return 0.0
-		return opening / float(civ["population"]) * self.population_total()
+		"""Soldiers the state wants: the opening force the civilisation starts with, raised by the
+		threat its hazards describe. The garrison follows the frontier, not the head count."""
+		opening = float(self._sim.civ.get("standing_army", 0.0))
+		return max(0.0, opening * (1.0 + THREAT_ARMY_RESPONSE * self.threat_pressure()))
+
+	def soldiers_under_arms(self) -> float:
+		"""Soldiers the state keeps now: what it paid for last year, else the force it wants."""
+		kept = self.government().record.army
+		return kept if kept > 0.0 else self.army_wanted()
+
+	def patron_ask(self) -> float:
+		return self._sim.patron_funding_ask()
 
 	def equipment_kg_per_soldier(self) -> float:
 		"""Iron and ammunition one equipped soldier uses a year, at the equipment the state's

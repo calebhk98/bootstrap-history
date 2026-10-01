@@ -463,6 +463,8 @@ class ActorRecord:
 	demands: List[str] = field(default_factory=list)
 	petitions: int = 0
 	last_logged_year: Optional[int] = None
+	# what the treasury paid the founder as patron this year
+	patron_grant: float = 0.0
 
 
 @dataclass
