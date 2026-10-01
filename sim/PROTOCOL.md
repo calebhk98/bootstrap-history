@@ -199,6 +199,37 @@ Two fixes, usable separately or together:
                                                     this year's founder hours, local
                                                     contracts and most local standing.
                                                     Refused for a tile nobody lives on.
+      {"cmd":"map"} / {"cmd":"map","full":true}    the land you hold: "you_are_based_at",
+                                                    "tiles" (name, region, terrain,
+                                                    people, days_from_your_base,
+                                                    "deposits"), "next_door" (bordering
+                                                    tiles not held), "tiles_held". Names
+                                                    are a country and a number; the data
+                                                    names no towns. `move_base` rows carry
+                                                    the same name, region and terrain.
+                                                    Typed: `map`, `country`, `geography`.
+      {"cmd":"education"}                          "literacy" (general and elite, each
+                                                    with its ceiling, share of the
+                                                    ceiling and next year's value),
+                                                    "schools" (the visible schooling
+                                                    nodes), "schooling_flow",
+                                                    "effective_schooling_flow",
+                                                    "literate_trades", "trainees",
+                                                    "not_held".
+      {"cmd":"demography"}                         "cohorts", "last_year" (births, deaths,
+                                                    nutrition_ratio; null until a year has
+                                                    been simulated in this session),
+                                                    "disease_burden", "epidemics_under_way",
+                                                    "trades", "not_held".
+      {"cmd":"divergence"}                         start values against now ("population",
+                                                    "wage_index", "price_index",
+                                                    "literacy_general", "literacy_elite",
+                                                    "territory"), "technologies_you_built",
+                                                    "dated_events" (status happened, under
+                                                    way, upcoming or before the run began;
+                                                    "causes_checked" is false for all) and
+                                                    "cannot_know". Under fog an upcoming
+                                                    event has no name.
       {"cmd":"finish"}                             end the run here and return the final
                                                     report with the full score (fog's
                                                     withheld total included); the save
