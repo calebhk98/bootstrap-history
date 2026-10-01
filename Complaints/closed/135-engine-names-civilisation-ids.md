@@ -1,6 +1,6 @@
 # Engine code names civilisation ids
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_civilisation_independence.py (the guard scans engine, world and tool code for every civilisation id in data/civilizations)
 
 CLAUDE.md section 4.7: the engine never special-cases content ids. These do.
 
