@@ -23,6 +23,7 @@ from dataclasses import dataclass
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, PERCENT_SCALE
 from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+from . import shortage_conditions
 from .invariants import check_labour_market_invariants
 
 
@@ -527,8 +528,16 @@ class StepPhasesMixin:
 
     def _step_dated_shocks(self):
         # 3. dated shocks
+        self.disaster_this_year = None
         if self.events:
-            self._shocks(self.state.scenario.year)
+            year = self.state.scenario.year
+            logged_before = len(self.log)
+            self._shocks(year)
+            names = [hazard.get("name", "a hazard") for hazard in self.civ.get("hazards", [])
+                     if hazard.get("years", [0, 0])[0] <= year <= hazard.get("years", [0, 0])[-1]]
+            if names:
+                self.disaster_this_year = {"name": ", ".join(names),
+                                           "messages": [message for _, message in self.log[logged_before:]]}
             if self.state.founder.dead_reason:
                 return True
         return False
@@ -950,9 +959,13 @@ class StepPhasesMixin:
             # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
             # 5% of plan" with no remedy attached reads as the game being
             # stuck rather than as something actionable.
-            self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: work running at %d%% of plan. %s"
-                             % (self.state.economy.binding.upper(), thr * 100,
-                                self.shortage_remedy(self.state.economy.binding))))
+            # One standing condition; the full message only when it is new or has moved materially.
+            if shortage_conditions.note_shortage(self, self.state.economy.binding, thr):
+                self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: work running at %d%% of plan. %s"
+                                 % (self.state.economy.binding.upper(), thr * 100,
+                                    self.shortage_remedy(self.state.economy.binding))))
+        else:
+            shortage_conditions.clear_shortage(self)
 
     def _step_progress_project(self, node_id, pool_rank, pool_total_this_year,
                               pool_active_count_this_year, remaining, hired_left,

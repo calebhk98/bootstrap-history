@@ -41,12 +41,12 @@ disaster_events = [
     {"year": 410, "message": "KNOWLEDGE LOST: 4 technologies forgotten - a, b, c, d"},
     {"year": 410, "message": "completed: Loom"},
 ]
-grouped = group_disaster_events(disaster_events, "Sack of Rome", disaster_events[:3])
+grouped = group_disaster_events(disaster_events, "Sack of Rome", [event["message"] for event in disaster_events[:3]])
 check("the consequences of one disaster collapse into one event",
       len(grouped) == 2 and grouped[0]["message"].startswith("Sack of Rome")
       and len(grouped[0]["details"]) == 3 and grouped[1]["message"] == "completed: Loom", grouped)
 check("a lone consequence is left as it was",
-      group_disaster_events(disaster_events, "Sack of Rome", disaster_events[3:]) == disaster_events)
+      group_disaster_events(disaster_events, "Sack of Rome", [disaster_events[3]["message"]]) == disaster_events)
 check("grouping nothing changes nothing", group_disaster_events(disaster_events, None, []) == disaster_events)
 
 # --- 72: under fog, a hidden prerequisite gives its coarse kind once the player is close
@@ -54,7 +54,7 @@ fogged = sim()
 fogged.fog = True
 hidden_node = next(node_id for node_id, node in NODES.items()
                    if not fogged.is_visible(node_id) and node.get("kind") == "INSTITUTION"
-                   and node["pre"] and all(prereq in fogged.done for prereq in node["pre"][:-1]))
+                   and len(node["pre"]) >= 2 and all(prereq in fogged.done for prereq in node["pre"][:-1]))
 for prereq in NODES[hidden_node]["pre"][:-1]:
     fogged.done.add(prereq)
 message = fogged.missing_prereq_message([hidden_node])
@@ -68,8 +68,12 @@ check("one far from anything known gets no kind hint",
 
 # --- 99 and 102: the first-screen help points at the beginner index and at sittings
 help_reply = _agent_dispatch(sim(), NODES, {"cmd": "help", "topic": "commands"})
-first_key = next(iter(help_reply))
-check("help commands opens with a short beginner index", "start" in first_key.lower() or "begin" in first_key.lower(), list(help_reply)[:3])
+first_key = next(iter(help_reply["help"]))
+check("help commands opens with a short beginner index", "start" in first_key.lower() or "begin" in first_key.lower(), list(help_reply["help"])[:3])
+hazard_game = sim(events=True)
+step_reply = _agent_dispatch(hazard_game, NODES, {"cmd": "step", "years": 3})
+check("a step with hazards on still returns events and alerts", step_reply.get("ok") and "events" in step_reply)
+
 from sim.engine.cli_interactive import _play_print_welcome
 import io, contextlib
 welcome = io.StringIO()

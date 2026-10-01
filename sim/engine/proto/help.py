@@ -48,6 +48,13 @@ def _topic_commands(sim):
     """The command index: every registered command, grouped, with aliases."""
     names = list(command_registry.COMMANDS)
     return {
+        "start here": {
+            "state": "where you stand", "available": "what you could begin today",
+            "why <id>": "what a thing is for and what it costs", "start <id>": "begin it",
+            "step <years>": "let time pass", "stuck": "why you are not getting on",
+            "help sittings": "playing one command per process, saved between runs",
+            "the rest": "everything below; help <command> shows one command's usage",
+        },
         "commands": {"json / compact": JSON_MODE_NOTE,
                      **{name: _command_text(name, sim.fog) for name in names},
                      "options": "typed play only: the few settings you can change "
