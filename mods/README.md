@@ -62,6 +62,12 @@ A mod may provide:
   through recipes, and a scarcity price where its supply is limited follow
   from these; no basket entry is needed. See `sim/world/need_demand.py`.
 
+* `data/world/units.json`: `units` (display units, ids `<mod_id>:<name>`, each with
+  `name`, `symbol`, `dimension` of `area`, `mass`, `temperature` or `money`, and a
+  `factor` and optional `offset` such that base = value * factor + offset; bases
+  are hectare, kilogram, Celsius and labour hour) and optional `field_rules`.
+  See `sim/PROTOCOL.md`, "Display units".
+
 New technology, recipe, civilization, and trade ids must be
 `<mod_id>:<name>`. A technology or recipe may instead deliberately patch an existing
 id with `"override": true`; an override is a deep merge that changes only the

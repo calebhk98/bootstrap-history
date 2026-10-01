@@ -3,7 +3,7 @@
 import re
 
 from ..data import money_word
-from .. import fuzzy_estimates
+from .. import fuzzy_estimates, units
 
 from .economy import _dashboard_snapshot
 from . import command_registry
@@ -411,6 +411,7 @@ def _agent_dispatch(sim, nodes, cmd):
         _out = fuzzy_estimates.fuzz_reply(sim, _entry["name"] if _entry else None, cmd, _out)
     _out = _localise_money(_out, money_word(sim.civ))
     _out = _localise_words(_out, ((sim.civ.get("local_words") or {}).get("pairs")))
+    _out = units.add_display(_out, sim)
     # Compact runs last so the short summary already carries the local vocabulary.
     if isinstance(cmd, dict) and cmd.get("compact"):
         _out = _add_compact_fields(cmd.get("cmd"), _out, sim, sim.nodes)

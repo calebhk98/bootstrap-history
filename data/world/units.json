@@ -1,0 +1,33 @@
+{
+  "_about": "Unit registry (Complaint 290). Each unit converts to its dimension's base unit: base = value * factor + offset. `factor_from` names a context value the engine supplies (hours_per_coin: labour hours one unit of the civilisation's coin is worth). `civilisations` limits a unit to those civilisations' menus. `label_from: civ_currency` takes the name and symbol from the civilisation's currency_words. A mod adds units in data/world/units.json named <mod_id>:<name>. field_rules say which reply fields hold a quantity of a dimension and in which unit the engine writes it; a pattern is a regular expression on the field name.",
+  "dimensions": {
+    "area": {"base": "hectare"},
+    "mass": {"base": "kilogram"},
+    "temperature": {"base": "celsius"},
+    "money": {"base": "labour_hour"}
+  },
+  "units": {
+    "hectare": {"name": "hectare", "symbol": "ha", "dimension": "area", "factor": 1},
+    "square_kilometre": {"name": "square kilometre", "symbol": "km2", "dimension": "area", "factor": 100},
+    "square_metre": {"name": "square metre", "symbol": "m2", "dimension": "area", "factor": 0.0001},
+    "acre": {"name": "acre", "symbol": "ac", "dimension": "area", "factor": 0.40468564224},
+    "iugerum": {"name": "iugerum", "symbol": "iug", "dimension": "area", "factor": 0.2518, "civilisations": ["rome_100ad"]},
+    "kilogram": {"name": "kilogram", "symbol": "kg", "dimension": "mass", "factor": 1},
+    "tonne": {"name": "tonne", "symbol": "t", "dimension": "mass", "factor": 1000},
+    "pound": {"name": "pound", "symbol": "lb", "dimension": "mass", "factor": 0.45359237},
+    "libra": {"name": "libra", "symbol": "lib", "dimension": "mass", "factor": 0.3272, "civilisations": ["rome_100ad"]},
+    "celsius": {"name": "degree Celsius", "symbol": "C", "dimension": "temperature", "factor": 1, "offset": 0},
+    "fahrenheit": {"name": "degree Fahrenheit", "symbol": "F", "dimension": "temperature", "factor": 0.5555555555555556, "offset": -17.77777777777778},
+    "kelvin": {"name": "kelvin", "symbol": "K", "dimension": "temperature", "factor": 1, "offset": -273.15},
+    "labour_hour": {"name": "labour hour", "symbol": "h", "dimension": "money", "factor": 1},
+    "civ_coin": {"name": "the civilisation's coin", "symbol": "coin", "dimension": "money", "factor_from": "hours_per_coin", "label_from": "civ_currency"}
+  },
+  "field_rules": [
+    {"pattern": "(?<!per)(^|_)(hectares?|ha)($|_)", "word": "hectares?|ha", "dimension": "area", "native": "hectare"},
+    {"pattern": "(?<!per)(^|_)m2($|_)", "word": "m2", "dimension": "area", "native": "square_metre"},
+    {"pattern": "(?<!per)(^|_)tonnes?($|_)", "word": "tonnes?", "dimension": "mass", "native": "tonne"},
+    {"pattern": "(?<!per)(^|_)kg($|_)", "word": "kg", "dimension": "mass", "native": "kilogram"},
+    {"pattern": "(^|_)celsius($|_)", "word": "celsius", "dimension": "temperature", "native": "celsius"},
+    {"pattern": "^(capital|revenue|net_per_year|net_after_project_spend|project_spend_this_year|sustainable_debt)$", "dimension": "money", "native": "civ_coin"}
+  ]
+}

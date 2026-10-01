@@ -7,6 +7,7 @@ narrative or a status line. Pure presentation, same as every module in this
 split: nothing here touches the live Sim - see render.py and ARCHITECTURE.md.
 """
 
+from .. import units_text
 from .util import _factor, _fmt_num, _pct, _wrap
 from .capacity_remedies import render_remedies
 
@@ -160,7 +161,7 @@ def render_capacity(out):
 
 
 def render_materials(out):
-    lines = ["MATERIAL STOCKS  (tonnes on hand; flows per year)",
+    lines = ["MATERIAL STOCKS  (%s on hand; flows per year)" % units_text.text_label("mass", "tonnes"),
          "  %-14s %10s %10s %10s %10s" %
          ("MATERIAL", "ON HAND", "YOUR FLOW", "DEMAND", "BUY/T")]
     for row in out.get("materials") or []:

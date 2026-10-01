@@ -38,7 +38,7 @@ import argparse, sys
 
 from .core import Sim
 from . import protocol as _protocol
-from . import settings
+from . import cli_units_options, settings
 # civ_of_save/goal_of_save are the only names this file reads from
 # .protocol; `cmd_agent` and everything else that needs
 # _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
@@ -1395,6 +1395,7 @@ def _apply_display_prefs(cfg=None):
     _protocol.DISPLAY_WIDTH = _DISPLAY_WIDTH
     _protocol.DEFAULT_AVAILABLE_LIMIT = settings.resolve_rows_per_page(cfg)
     _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(cfg)
+    cli_units_options.apply_saved_preferences(cfg)
     return cfg
 
 

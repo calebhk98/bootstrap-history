@@ -12,7 +12,8 @@ import json as _json
 import re as _re
 import tempfile as _tempfile
 from sim.engine import units as U
-from sim.engine.proto import _agent_dispatch, render_pretty
+from sim.engine.proto.dispatch import _agent_dispatch
+from sim.engine.proto.render_typed import render_pretty
 
 # Screens covered, by dimension: (render command name, command dict).
 COVERED = {
@@ -78,7 +79,9 @@ def _run(registry, label, fake_ids, fake_specs):
             text = render_pretty(command_name, reply)
             check(screen + " text uses blob", "blob" in text, text)
             if (command_name, dimension) != ("buy", "money"):
-                leaked = _re.findall(NATIVE_WORDS[dimension], text)
+                # Command syntax lines name the unit a command accepts; not a quantity.
+                shown_lines = [line for line in text.splitlines() if "<" not in line]
+                leaked = _re.findall(NATIVE_WORDS[dimension], "\n".join(shown_lines))
                 check(screen + " text keeps no native label", not leaked, (leaked, text))
     # Temperature has no screen in the game yet: the formatter and field rule
     # are exercised on a synthetic reply (see Complaint 290's remains).

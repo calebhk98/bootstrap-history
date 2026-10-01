@@ -359,3 +359,25 @@ Two fixes, usable separately or together:
       have lost runs parsing prose that was never meant to be machine-read.
       It is the identical resp dict either way, so the JSON and the prose can
       never disagree, and fog is scrubbed once, upstream of both.
+
+
+DISPLAY UNITS (Complaint 290)
+-----------------------------------------------------------------------------
+Replies keep the numbers the engine writes. When the player has chosen a unit
+for a dimension (`options`, saved as `display_units` in the application config:
+a unit id per dimension of `area`, `mass`, `temperature`, `money`), every
+quantity of that dimension in any reply gains a sibling field
+`<field>_display`: `{"value": 12.3, "unit": "acre", "symbol": "ac"}`. The
+original field is unchanged and still in its documented unit (`*_hectares` in
+hectares, `*_tonnes` in tonnes, `*_kg` in kilograms, money fields in the
+civilisation's coin). With nothing chosen no `_display` field appears and replies
+are byte-identical to before. Commands take the units their help names.
+
+Which fields are quantities is data: `field_rules` in `data/world/units.json`
+(a regular expression on the field name, the dimension, the native unit).
+Units, their symbols and conversions are data in the same file; a mod adds
+`<mod_id>:<name>` units in its own `data/world/units.json`. Code: `sim/engine/units.py`
+(registry, one `format_<dimension>` per dimension, `add_display`),
+`sim/engine/units_text.py` (text screens), `sim/engine/cli_units_options.py` (the
+options entry). Text screens show the chosen unit's value and symbol.
+Compound units (price per tonne, yield per hectare) are not converted yet.
