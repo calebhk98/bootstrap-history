@@ -38,7 +38,8 @@ from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, g
                    STARTING_KITS, win_condition_describe)
 from .core import Sim
 from . import protocol as _protocol
-from . import cli_units_options, settings
+from . import cli_options, cli_units_options, settings
+from .settings_table import normal_seed, valid_seed_text  # noqa: F401
 from .proto import step_progress
 from .proto import util as proto_util
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
@@ -132,22 +133,6 @@ def cmd_play(args):
 DEFAULT_SEED_ENV = "ROME_DEFAULT_SEED"
 
 
-def normal_seed(text):
-    """A seed as the game keeps it: a whole number when it is all digits, else
-    the word in lower case. random.Random seeds from either and replays the
-    same dice for the same value."""
-    if isinstance(text, int):
-        return text
-    text = str(text).strip().lower()
-    return int(text) if text.isdigit() else text
-
-
-def valid_seed_text(text):
-    """A seed must be one word of letters, digits, '-' or '_', so it can be
-    passed back to --seed unquoted."""
-    return bool(re.fullmatch(r"[A-Za-z0-9_-]+", str(text).strip()))
-
-
 def resolve_seed(asked):
     """The seed a sitting plays with: the one asked for, else the one named by
     ROME_DEFAULT_SEED (the regression harness fixes it so its runs replay),
@@ -211,9 +196,11 @@ def _play_build_sim(args):
     if kit:
         cfg["start_kit"] = kit
     seed = resolve_seed(getattr(args, "seed", None))
+    deterministic = (getattr(args, "deterministic", False)
+                     or bool(app_cfg.get("default_deterministic", False)))
     sim = Sim(nodes, order,
-            DetRNG(seed) if getattr(args, "deterministic", False) else random.Random(seed),
-            events=True, bounty_set=set(),
+            DetRNG(seed) if deterministic else random.Random(seed),
+            events=bool(app_cfg.get("default_events", True)), bounty_set=set(),
             manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg)
     sim.seed = seed
     sim.goal = goal
@@ -1432,154 +1419,8 @@ def _load_game(cfg):
 
 
 def _options_menu(cfg):
-    """Preferences about the APPLICATION, not about any one game: where
-    saves go, how wide a line wraps, how many rows a long table shows
-    before paging, and whether the welcome/tutorial text prints on a new
-    game. See settings.py's module docstring for why this screen holds
-    exactly these and none of the things a playthrough itself decides
-    (civilisation, starting kit, fog, mortality, horizon) - those are
-    remembered from the New Game wizard's last answers instead (see
-    _new_game), and the couple of them that are honestly changeable
-    mid-game (horizon, mortality) have their own, much smaller, in-game
-    'options' command (_ingame_options) for a game already running.
-    """
-    while True:
-        cfg = _apply_display_prefs(cfg)
-        cur_width = settings.resolve_display_width(cfg)
-        width_src = ("override" if isinstance(cfg.get("display_width"), (int, float))
-                                   and cfg["display_width"] else
-                    "detected from your terminal")
-        print()
-        print("-" * 78)
-        print("   OPTIONS")
-        print("-" * 78)
-        print(_wrap("Preferences about this PROGRAM, not about any one game - "
-                    "they apply whether you are starting a new one, loading an "
-                    "old one, or running it from the command line with flags. "
-                    "What a single playthrough is (civilisation, starting kit, "
-                    "fog, mortality, the horizon) is asked when that game "
-                    "starts, not here."))
-        print()
-        print("   1) save location      : %s"
-              % settings.resolve_save_dir(cfg, ensure=False))
-        print("   2) display width      : %d columns (%s)" % (cur_width, width_src))
-        print("   3) rows per table      : %d" % settings.resolve_rows_per_page(cfg))
-        print("   4) welcome/tutorial text on new games : %s"
-              % ("on" if cfg.get("show_welcome", True) else "off"))
-        print("   5) display units      : %s" % cli_units_options.summary_line(cfg))
-        print("   b) back to the main menu")
-        try:
-            raw = input("\n   > ").strip().lower()
-        except (EOFError, KeyboardInterrupt):
-            print(); return cfg
-        word = raw.split()[0] if raw.split() else ""
-
-        if word in ("", "b", "back"):
-            return cfg
-
-        elif word in ("5", "unit", "units"):
-            cfg = cli_units_options.edit_display_units(cfg, cfg.get("default_civ"), input)
-
-        elif word in ("1", "save", "location"):
-            cur = settings.resolve_save_dir(cfg, ensure=False)
-            print(_wrap("Where new games are saved, and where 'Load a saved "
-                        "game' looks. Existing save files are not moved - use "
-                        "'options' inside a game in progress to move that one "
-                        "game's save."))
-            if os.environ.get(settings.SAVE_DIR_ENV):
-                print(_wrap("Note: the %s environment variable is set to %r "
-                            "right now and overrides whatever is chosen here "
-                            "until it is unset."
-                            % (settings.SAVE_DIR_ENV,
-                               os.environ[settings.SAVE_DIR_ENV])))
-            try:
-                raw2 = input("   New save directory [currently %s, blank to "
-                             "leave unchanged]: " % cur).strip()
-            except (EOFError, KeyboardInterrupt):
-                print(); continue
-            if not raw2:
-                continue
-            newdir = os.path.expanduser(raw2)
-            try:
-                os.makedirs(newdir, exist_ok=True)
-                probe = os.path.join(newdir, ".rome-write-test")
-                with open(probe, "w"):
-                    pass
-                os.remove(probe)
-            except OSError as error:
-                print("   -- could not use that directory: %s" % error)
-                continue
-            cfg["save_dir"] = newdir
-            settings.save_config(cfg)
-            print("   -- saved. New games, and 'Load a saved game', will use %s"
-                  % newdir)
-
-        elif word in ("2", "width", "display"):
-            print(_wrap("How many columns text wraps to and tables are sized "
-                        "for. Left alone, the game asks your terminal and uses "
-                        "that (right now it reads %d). Set a number to "
-                        "override it - for a terminal that cannot be asked, or "
-                        "one you simply want narrower or wider - or type "
-                        "'auto' to go back to asking the terminal."
-                        % settings.resolve_display_width(
-                            dict(cfg, display_width=None))))
-            try:
-                raw2 = input("   New width [currently %d (%s), a number, "
-                             "'auto', or blank to leave unchanged]: "
-                             % (cur_width, width_src)).strip().lower()
-            except (EOFError, KeyboardInterrupt):
-                print(); continue
-            if not raw2:
-                continue
-            if raw2 in ("auto", "detect", "default"):
-                cfg["display_width"] = None
-                settings.save_config(cfg)
-                print("   -- saved. Width will be asked from your terminal "
-                      "from now on.")
-                continue
-            try:
-                display_width = int(raw2)
-                if display_width < 20:
-                    raise ValueError
-            except ValueError:
-                print("   -- a whole number of columns (at least 20), 'auto', "
-                      "or blank.")
-                continue
-            cfg["display_width"] = display_width
-            settings.save_config(cfg)
-            print("   -- saved. %d columns from now on." % display_width)
-
-        elif word in ("3", "rows", "page"):
-            try:
-                raw2 = input("   Rows per table before paging [currently %d, "
-                             "blank to leave unchanged]: "
-                             % settings.resolve_rows_per_page(cfg)).strip()
-            except (EOFError, KeyboardInterrupt):
-                print(); continue
-            if not raw2:
-                continue
-            try:
-                rows_per_page = int(raw2)
-                if rows_per_page <= 0:
-                    raise ValueError
-            except ValueError:
-                print("   -- a whole number of rows, more than 0.")
-                continue
-            cfg["rows_per_page"] = rows_per_page
-            settings.save_config(cfg)
-            print("   -- saved.")
-
-        elif word in ("4", "welcome", "tutorial"):
-            value = _ask("   Show the welcome message and tutorial on new games? "
-                     "[y/n] ", ["y", "n"],
-                     "y" if cfg.get("show_welcome", True) else "n")
-            if value:
-                cfg["show_welcome"] = (value == "y")
-                settings.save_config(cfg)
-                print("   -- saved.")
-
-        else:
-            print("   -- 1 to 4, or b.")
+    """The main menu's Options screen; see cli_options."""
+    return cli_options.options_menu(cfg)
 
 
 def cmd_menu(args):

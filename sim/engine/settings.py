@@ -118,7 +118,9 @@ class Config(TypedDict):
     default_mortal: bool
     default_goal: Optional[str]
     default_horizon: int
-    default_seed: Optional[int]
+    default_seed: Optional[Any]
+    default_events: bool
+    default_deterministic: bool
 
 
 class SessionMeta(TypedDict):
@@ -223,6 +225,9 @@ CONFIG_DEFAULTS: Config = {
     "default_horizon": 500,
     # None draws a fresh seed; a number is what the new-game menu's blank seed answer uses.
     "default_seed": None,
+    # Typed `play` games only; `agent` games take --no-events/--deterministic.
+    "default_events": True,
+    "default_deterministic": False,
 }
 
 # THE OLD HARDCODED NUMBERS, named, so a process that cannot ask its

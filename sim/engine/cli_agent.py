@@ -51,7 +51,7 @@ def cmd_agent(args):
     # no matter what was asked for.
     cfg = {"start_kit": args.kit, "horizon_years": args.horizon,
            "immortal": not getattr(args, "mortal", False)}
-    from .cli_interactive import normal_seed
+    from .settings_table import normal_seed
     seed = normal_seed(args.seed)
     sim = Sim(nodes, order,
             DetRNG(seed) if getattr(args, "deterministic", False) else random.Random(seed),
