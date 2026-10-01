@@ -82,5 +82,15 @@ class NotesNotAddressedToRome(unittest.TestCase):
                 self.assertNotIn(phrase, note, node["id"])
 
 
+class FortificationUpkeep(unittest.TestCase):
+    def test_large_masonry_fortifications_cost_upkeep_and_label_the_rate(self):
+        # Complaints/249: a built bastion was never maintained; lime mortar and stone need repair.
+        nodes = _nodes()
+        for node_id in ("mil_trace_italienne", "mil_bastion"):
+            node = nodes[node_id]
+            self.assertGreater(node["up_hours"], 0, node_id)
+            self.assertIn("HEURISTIC", node.get("_internal", ""), node_id)
+
+
 if __name__ == "__main__":
     unittest.main()

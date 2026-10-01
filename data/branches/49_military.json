@@ -1729,7 +1729,7 @@
    "lime_kg": 80000.0
   },
   "cap_hours": 60485.63752238797,
-  "up_hours": 0,
+  "up_hours": 491,
   "build_yrs": 4,
   "adopt_yrs": 3,
   "risk": 0.01,
@@ -1737,6 +1737,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
+  "_internal": "[HEURISTIC: yearly repair of stone and lime mortar taken as one percent of the construction labour of masons and labourers; no weathering or siege-damage model yet.]",
   "note": "The bastion answers the cannon because a round tower has dead ground at its foot where attackers hide, and an angled bastion does not. Low angled walls cannot be battered. Defense trades height for firepower.",
   "mechanics": {
    "hazard_counters": [
@@ -1773,7 +1774,7 @@
    "lime_kg": 200000.0
   },
   "cap_hours": 0,
-  "up_hours": 0,
+  "up_hours": 621,
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.01,
@@ -1781,6 +1782,7 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
+  "_internal": "[HEURISTIC: yearly repair of stone and lime mortar taken as one percent of the construction labour of masons and labourers; no weathering or siege-damage model yet.]",
   "note": "Angled stone structure jutting from wall allows cannon to fire along curtain, eliminating dead ground. Acute angle makes it harder to breach. Replaces round tower.",
   "mechanics": {
    "hazard_counters": [
