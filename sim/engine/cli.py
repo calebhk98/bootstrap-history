@@ -433,9 +433,14 @@ def _validate_nodes(nodes, goods, wages, producible=()):
         warns += _check_node_confidence(node_id, node_record)
         errs += _check_node_required_fields(node_id, node_record)
     if loose_option_ids:
+        node_tails = collections.Counter(node_id.split("_", 1)[1] for node_id in nodes if "_" in node_id)
+        node_tails.update(node_id.split("_", 2)[2] for node_id in nodes if node_id.count("_") >= 2)
+        near_misses = sorted(option_id for option_id in loose_option_ids if node_tails[option_id] == 1)
         warns.append("%d distinct req_any option ids are neither a node nor a material and are "
-                     "treated as purchasable commodities (e.g. %s)"
-                     % (len(loose_option_ids), ", ".join(sorted(loose_option_ids)[:5])))
+                     "treated as purchasable commodities (e.g. %s); %d of them are also the tail of "
+                     "one node id and may be a misspelt node (e.g. %s)"
+                     % (len(loose_option_ids), ", ".join(sorted(loose_option_ids)[:5]),
+                        len(near_misses), ", ".join(near_misses[:5]) or "none"))
     return errs, warns
 
 

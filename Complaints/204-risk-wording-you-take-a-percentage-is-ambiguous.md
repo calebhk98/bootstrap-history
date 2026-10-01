@@ -1,6 +1,6 @@
 # `risk` says "you take 80% of it" and "staff loss: you take 100% of it"; the reading is ambiguous
 
-**Status:** partly - `risk` now says a wave takes N% of your staff and that output falls to N% of normal, and lists how much each defence moves the figure; the rest is under Remains
+**Status:** partly - `risk` says a wave takes N% of your staff, output falls to N% of normal, the chance a site is sacked (with the figure with nothing built, no longer a dash), and lists how much each defence moves the figure; the rest is under Remains
 
 Hazard lines read "output factor: you take 80% of it (softened by ...)" and "staff loss: you take 100% of it". The tester could not tell whether the percentage is the output retained, the share of the penalty suffered, or something else; the war event text "trade and output fall to 88% of normal" was clear by contrast. (In the tester's run the line said 58 percent.)
 
@@ -16,4 +16,4 @@ Also reported (Han China 100 AD fog playtest, tester item(s) 45; `Complaints/rep
 
 Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md`): the Mexica invasion risk text should say what the design intent is ("you cannot stop the conquest, only protect what you know"), if that is the design, and show how much each hedge moves the chance (the tester's best reached 66% a year); see 270.
 
-**Remains:** `risk` now says a wave takes N% of your staff and that output falls to N% of normal, and lists how much each defence moves the figure. Still open: the Mexica invasion text stating the design intent (you cannot stop the conquest, only protect what you know); see 270.
+**Remains:** The wording is fixed for all three hazard kinds. Still open, and a design decision rather than text: the Mexica invasion line stating the design intent (that the conquest cannot be stopped, only what you know protected). The engine lets walls and friends lower the chance, so no sentence derived from the data says that; if the intent is wanted, it belongs in that hazard's `note` in `data/civilizations/mexica_1500.json` once decided. See 270.

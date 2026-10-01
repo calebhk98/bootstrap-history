@@ -1,6 +1,6 @@
 # Electroplating's source-of-current options name ids that are not in the tree
 
-**Status:** partly - misspelt node ids fixed and rejected by validate; commodity-style options remain
+**Status:** partly - misspelt node ids fixed and rejected by validate; `validate` also counts commodity-style options that are the tail of one node id; the per-id content decisions remain
 
 The electroplating node lists `dynamo_shunt_wound` and `rectifier_metal_layer` among its options for a source of current. Neither id exists in the tree; the real nodes are `el2_dynamo_shunt_wound` and `el2_rectifier_metal_layer`. So that option group has fewer real choices than it appears to have, and if `power_grid` is not among them it may have none.
 
@@ -26,6 +26,9 @@ purchasable commodity at a discount (`_substitution_group_best` in
 `sim/engine/projects_starting.py`), and many options are written that way on
 purpose (`air`, `oil_bath`, `peroxide`). `validate` prints one warning with the
 count of such ids. What is left is a content decision per id: make it a node, a
-production good, or leave it a commodity. Near-misses with a prefix other than
-the owning node's (for example `telephone_exchange` for `if_telephone_exchange`)
-are not detected.
+production good, or leave it a commodity. `validate` now also reports how many of those
+ids are the tail of exactly one node id (a possible misspelling under another
+prefix); the one real typo found that way, `telephone_exchange` in
+`el2_load_dispatch_and_scheduling`, now names `if_telephone_exchange`. The
+remaining ones listed (`oil_bath`, `peroxide`, `acetone`) are deliberate
+commodities or need the per-id decision.
