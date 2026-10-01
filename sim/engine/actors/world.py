@@ -122,8 +122,8 @@ class SimWorld(BudgetView, GroupView, DisclosureView):
 		return {trade: people for trade, people in staff.items() if people > 0.0}
 
 	def concern_wage_bill(self, node_id: str) -> float:
-		"""Yearly wages of the people running this concern needs, at what hiring them costs now."""
-		return sum(people * self.hours_per_person_year * self.hiring_wage_per_hour(trade)
+		"""Yearly wages of the people running this concern needs, at the going wage."""
+		return sum(people * self.hours_per_person_year * self.wage_per_hour(trade)
 				   for trade, people in self.concern_staff(node_id).items())
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
