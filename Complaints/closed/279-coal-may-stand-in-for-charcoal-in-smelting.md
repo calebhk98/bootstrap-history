@@ -1,6 +1,6 @@
 # Coal may stand in for charcoal where it cannot: smelting iron before coke
 
-**Status:** open
+**Status:** closed
 
 Once iron bar became makeable from a bloomery (complaint 127), coal's shaft-capital price fell far below charcoal's, and the Rome and England price solves now pick coal as their thermal fuel. As generic process heat that is physically defensible where pits are open: both societies burned coal locally. Raw coal cannot smelt iron, though: its sulphur makes the iron brittle, and coal only enters smelting once it is coked.
 

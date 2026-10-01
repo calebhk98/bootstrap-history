@@ -477,7 +477,7 @@
    },
    "inputs": {
     "nickel_ore_kg": 78431.0,
-    "coal_kg": 3000.0
+    "charcoal_kg": 3000.0
    },
    "labour_hours": {
     "furnaceman": 150.0,
