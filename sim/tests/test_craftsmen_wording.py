@@ -157,7 +157,7 @@ check("a node with none of the four diffusible traits never diffuses at "
       NODES["workshop_first"]["traits"])
 
 # --- military is the one category read from the state's own holdings: the
-# government actor's know-how, not a curve over time (Complaint 301).
+# government actor's know-how, not a curve over time (Complaint 287).
 s_nopatron = sim(civ="rome_100ad")
 for k in _MIL_NODES2:
     s_nopatron.done.add(k); s_nopatron.done_year[k] = s_nopatron.year

@@ -1,4 +1,4 @@
-"""Complaints 620 and 600: what a concern must carry grows with what it sells. When the economy
+"""Complaints 345 and 341: what a concern must carry grows with what it sells. When the economy
 grows and labour is the scarce input a concern's wage bill grows with it, its running costs follow
 the volume it sells, a category's takings are the market's own price times volume shared out, and
 the number of firms in a niche is set by the market's size over a firm's, so it stops growing when

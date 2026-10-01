@@ -1,4 +1,4 @@
-"""Complaints/279 (coal may stand in for charcoal where it cannot: smelting iron
+"""Complaints/275 (coal may stand in for charcoal where it cannot: smelting iron
 before coke).
 
 Raw coal cannot smelt metal ore before it is coked (its sulphur ruins the metal).

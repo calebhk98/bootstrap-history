@@ -1,5 +1,5 @@
 """Foreign trade falls out of the partner's own society, the map and freight
-(Complaints/380, 381, 382).
+(Complaints/298, 299, 300).
 
 Capacity comes from the partner's regions and techniques, freight from the
 cheapest route over the map's links and modes, and goods only one side makes

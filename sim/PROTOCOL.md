@@ -382,7 +382,7 @@ Two fixes, usable separately or together:
       yearly shocks apply. Each `score` component has a `counts` sentence;
       `institutions` also lists `counted` and `finished_but_closed`.
 
-      INTEREST GROUPS (Complaint 114). `groups` (aliases `interest_groups`, `factions`) lists
+      INTEREST GROUPS (Complaint 110). `groups` (aliases `interest_groups`, `factions`) lists
       the groups the economy has organised against the founder: {name, kind, cause (in words),
       people, income_lost_per_year, grievance_share, pull_on_the_state, state_undertakes_to_make_good,
       demands, petitions, organised_since}, with `state_leaves_unpaid_to_raise_from_taxpayers`,
@@ -409,7 +409,7 @@ Two fixes, usable separately or together:
       never disagree, and fog is scrubbed once, upstream of both.
 
 
-DISPLAY UNITS (Complaint 290)
+DISPLAY UNITS (Complaint 285)
 -----------------------------------------------------------------------------
 Replies keep the numbers the engine writes. When the player has chosen a unit
 for a dimension (`options`, saved as `display_units` in the application config:
@@ -431,7 +431,7 @@ options entry). Text screens show the chosen unit's value and symbol.
 Compound units (price per tonne, yield per hectare) are not converted yet.
 
 
-LOANABLE-FUNDS MARKET (Complaint 110)
+LOANABLE-FUNDS MARKET (Complaint 106)
 -----------------------------------------------------------------------------
 `money` gains `loanable_funds_market`, the civilisation's capital market as it
 met at the start of the current year (the screen prints it as one line under

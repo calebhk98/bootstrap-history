@@ -1,4 +1,4 @@
-"""Test for mine commission display setting (Complaint 66).
+"""Test for mine commission display setting (Complaint 64).
 
 The setting controls whether the mine purchase reply and mines screen show:
 - "commissioned" (when it will be commissioned)

@@ -129,7 +129,7 @@ class TileStructureTests(unittest.TestCase):
         self.assertEqual(len(self.tiles), self.land_tiles["tile_count"])
 
     def test_roughly_a_thousand_tiles_not_wildly_more_or_fewer(self):
-        # "Roughly a thousand" per Complaints/46's own arithmetic
+        # "Roughly a thousand" per Complaints/45's own arithmetic
         # (149,000,000 km2 / 150,000). Loose bounds - this is a sanity
         # check on the RULE (grid size, land threshold, Antarctica drop),
         # not a pinned count.
@@ -223,7 +223,7 @@ class RegionToTilesMappingTests(unittest.TestCase):
                 self.assertEqual(tiles[tile_id]["old_region"], region_id)
 
     def test_rome_holds_dramatically_more_tiles_than_han_china(self):
-        # THE ANCHOR CLAIM Complaints/46 is about: Rome's seven regions
+        # THE ANCHOR CLAIM Complaints/45 is about: Rome's seven regions
         # should now visibly be a much bigger territory than China's one,
         # in TILE COUNT, not just in the old single land_area_km2 number.
         with open(os.path.join(_REPO_ROOT, "data", "civilizations", "rome_100ad.json")) as handle:
@@ -295,7 +295,7 @@ class LandRentPerformanceTests(unittest.TestCase):
         elapsed = time.perf_counter() - start
         # Measured around 1-2ms on this environment for ~1,100 tiles,
         # against sim/solve_prices.py's own ~370ms whole-solve budget
-        # (Complaints/46). 250ms is a generous ceiling, not a tuned figure.
+        # (Complaints/45). 250ms is a generous ceiling, not a tuned figure.
         self.assertLess(elapsed, 0.25,
                         "rent computation over the whole tile set took %.4fs" % elapsed)
 

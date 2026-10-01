@@ -1,6 +1,6 @@
-"""Regression coverage for complaints 254 (fresh seed per new game), 263 (menu
-and play agree on goal and civilisations), 250 (save browser reads the nested
-save), 208 (typed save accepts absolute paths) and 209 (changes window counts
+"""Regression coverage for complaints 250 (fresh seed per new game), 259 (menu
+and play agree on goal and civilisations), 246 (save browser reads the nested
+save), 204 (typed save accepts absolute paths) and 205 (changes window counts
 from the arrival year)."""
 from .harness import *
 from sim.engine import settings as _settings

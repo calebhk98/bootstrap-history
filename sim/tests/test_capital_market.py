@@ -1,4 +1,4 @@
-"""Complaint 110: a civilisation has one loanable-funds market. What its actors save is the supply, what
+"""Complaint 106: a civilisation has one loanable-funds market. What its actors save is the supply, what
 they borrow is the demand, the yearly rate moves with the balance around the civilisation's starting
 rate, every borrower pays that rate plus a premium from its own standing and arrears, and credit limits
 are what lenders hold."""

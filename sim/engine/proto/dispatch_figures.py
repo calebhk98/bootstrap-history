@@ -1,4 +1,4 @@
-"""`figures`: why a headline number changed (Complaints/97). The figures register
+"""`figures`: why a headline number changed (Complaints/95). The figures register
 themselves in sim/engine/figures_headline.py; this only reads the registry."""
 
 from .. import figures_headline  # noqa: F401  (registers the figures)

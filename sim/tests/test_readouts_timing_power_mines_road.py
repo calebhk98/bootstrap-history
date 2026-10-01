@@ -1,10 +1,10 @@
-"""Readouts agree with the engine's own checks: Complaints/234, 238, 239, 268."""
+"""Readouts agree with the engine's own checks: Complaints/230, 234, 235, 264."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.proto.economy import _power_status
 
 # ===========================================================================
-# Complaints/234: the quoted finish is the earliest the payment schedule allows
+# Complaints/230: the quoted finish is the earliest the payment schedule allows
 # ===========================================================================
 SLOW_NODE = "sea_skeleton_first"
 
@@ -44,7 +44,7 @@ check("the retry expectation is never below the earliest completion",
 
 
 # ===========================================================================
-# Complaints/238: a capability flag is labelled as knowledge and shows the kW behind it
+# Complaints/234: a capability flag is labelled as knowledge and shows the kW behind it
 # ===========================================================================
 power_sim = sim(capital=1e9)
 power_sim.done.update({"cap_power_water", "cap_power_electric", "power_grid", "cap_power_grid"})
@@ -71,7 +71,7 @@ check("a power capability gate says installed generation does not satisfy it",
 
 
 # ===========================================================================
-# Complaints/239: a mine already being sunk is subtracted from the shortfall
+# Complaints/235: a mine already being sunk is subtracted from the shortfall
 # ===========================================================================
 mine_sim = sim(capital=1e9)
 before = mine_sim.shortage_remedy_plan("coal", 100.0)
@@ -88,7 +88,7 @@ check("only the tonnage still uncovered is proposed", "buy mine coal 60" in part
 
 
 # ===========================================================================
-# Complaints/268: a fog-safe marker for what lies on the road to the goal
+# Complaints/264: a fog-safe marker for what lies on the road to the goal
 # ===========================================================================
 road_sim = sim(capital=1e9)
 road_available = S._agent_dispatch(road_sim, NODES, {"cmd": "available", "all": True, "limit": 400})

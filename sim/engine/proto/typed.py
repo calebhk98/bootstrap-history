@@ -79,7 +79,7 @@ def _absorb_key_colons(rest, flag_keys, value_keys):
     return out
 
 
-# THE AGENT-ORIENTED COMPACT MODE. See Complaints/35 section 1: a player of
+# THE AGENT-ORIENTED COMPACT MODE. See Complaints/reports/playthrough-review-han-china-100-to-400ad.md section 1: a player of
 # this game who is itself an AI agent asked for "an explicit agent-oriented
 # compact mode that can return highly structured state without losing the
 # human-readable explanations... I wouldn't rush to remove the prose."

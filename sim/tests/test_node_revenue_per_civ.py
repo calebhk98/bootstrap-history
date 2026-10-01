@@ -1,6 +1,6 @@
 """Derived revenue and upkeep are priced for the civilisation playing, from what it can make and buy.
 
-Complaints/421: the baskets were solved once at the reference civilisation's techniques and shared."""
+Complaints/310: the baskets were solved once at the reference civilisation's techniques and shared."""
 import random
 import unittest
 

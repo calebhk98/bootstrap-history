@@ -1,8 +1,8 @@
-"""Regression tests for remaining small text defects in complaints 198 and 236.
+"""Regression tests for remaining small text defects in complaints 194 and 232.
 
-Complaint 198: Imperial edict node has Rome-specific flavour text
-Complaint 236 item 8: "people kept on your own staff" text appears with no context
-Complaint 236 item 10: Train reply misleading about when work can start
+Complaint 194: Imperial edict node has Rome-specific flavour text
+Complaint 232 item 8: "people kept on your own staff" text appears with no context
+Complaint 232 item 10: Train reply misleading about when work can start
 """
 from .harness import *
 
@@ -27,7 +27,7 @@ def _run(arguments, text, env, cwd=None):
                           capture_output=True, text=True, timeout=120, env=env, cwd=cwd)
 
 
-# ---- Complaint 198: "Imperial edict" is Rome-specific
+# ---- Complaint 194: "Imperial edict" is Rome-specific
 _saves_198, _env_198 = _env("198-imperial-edict")
 _why_198 = _run(["play", "--civ", "rome_100ad", "--kit", "poor_scholar",
                  "--fog", "--seed", "1", "--session",
@@ -36,7 +36,7 @@ _why_198 = _run(["play", "--civ", "rome_100ad", "--kit", "poor_scholar",
 check("198: why med_legal_physician does not contain 'Imperial edict' (Rome-specific wording)",
       "Imperial edict" not in _why_198, _why_198)
 
-# ---- Complaint 236 item 8: "people kept on your own staff" text
+# ---- Complaint 232 item 8: "people kept on your own staff" text
 _saves_236_8, _env_236_8 = _env("236-staff-text")
 _why_236_8 = _run(["play", "--civ", "han_china_100ad", "--kit", "poor_scholar",
                    "--fog", "--seed", "1", "--session",
@@ -46,7 +46,7 @@ check("236-8: why output should not include 'people kept on your own staff' with
       "people kept on your own staff" not in _why_236_8 or "art" in _why_236_8.lower(),
       _why_236_8)
 
-# ---- Complaint 236 item 10: Train reply is misleading
+# ---- Complaint 232 item 10: Train reply is misleading
 _saves_236_10, _env_236_10 = _env("236-train-text")
 _train_out = _run(["play", "--civ", "han_china_100ad", "--kit", "poor_scholar",
                    "--fog", "--seed", "1", "--session",

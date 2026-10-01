@@ -563,7 +563,7 @@ def cmd_validate(args):
 
 
 def _validate_civilisation_starts(nodes, production):
-    """Complaints/128: each civilisation's start must agree with itself.
+    """Complaints/124: each civilisation's start must agree with itself.
     A free node it neither holds nor gates is an error; the other two classes
     are reported (held-without-prerequisite is pinned by its own test)."""
     from sim import civ_start_check
@@ -585,7 +585,7 @@ def _validate_civilisation_starts(nodes, production):
     return errors
 
 
-# Complaints/38: A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say
+# Complaints/37: A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say
 # how big a number is, never to gate anything a player can actually do
 # (neither cmd_path nor cmd_why stops a player starting a project past this
 # many hours; this is a claim made TO the player, not a rule enforced on
@@ -654,7 +654,7 @@ def cmd_path(args):
     print("\nLongest serial chain (%.1f yr floor, cannot be bought down with money):" % yrs)
     for node_id in chain:
         print("   -> %s  (%.1f yr floor, %d your-hrs)" % (node_id, nodes[node_id]["yrs"], nodes[node_id]["ph"]))
-    # Complaints/38: the printed budget and the feasibility judgement below
+    # Complaints/37: the printed budget and the feasibility judgement below
     # both come from one call (_founder_lifetime_hours), so they say the
     # same thing about the same DEFAULTS whatever those are.
     lifetime_hours = _founder_lifetime_hours()
@@ -1204,7 +1204,7 @@ def _print_ablation_table(scored):
               (node_id, success_rate, confidence_interval, median_year or "never", ("%d yr" % delay) if median_year else "n/a", verdict))
 
 
-# Complaints/38 section 2: cmd_sweep's "mortality" axis sweeps
+# Complaints/37 section 2: cmd_sweep's "mortality" axis sweeps
 # founder_life_mean and needs a spread to draw around each mean point. This
 # USED to be a separately declared 4.0, half of DEFAULTS["founder_life_sd"]
 # (8.0) - the standard deviation every ordinary game, core.py's own

@@ -3,7 +3,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.proto.render_screens_big import _state_concerns
 
-# Complaint 89: state names the missing specialist behind each shut concern.
+# Complaint 87: state names the missing specialist behind each shut concern.
 
 _concern = "camera_obscura"   # needs a carpenter foreman to run
 foreman_trade, foreman_share = None, 0.0

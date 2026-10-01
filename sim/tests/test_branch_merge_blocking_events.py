@@ -1,6 +1,6 @@
 """`treetool.py merge` must not lose anything a branch author wrote.
 
-Complaints/54. The merge refuses to write while any event would drop a
+Complaints/52. The merge refuses to write while any event would drop a
 requirement. Unknown trades, unresolvable prerequisites and dependency cycles
 must stay at zero. Undeclared materials still block, and each remaining name is
 pinned with its event count. The pin fails in both directions: a new name (or a

@@ -25,7 +25,7 @@ FOREIGN_OPENING_IN_BALANCE = declare(
     why="A foreign economy's made or grown goods open with its capacity "
         "equal to its households' demand, so its own market is in balance "
         "until trade moves it; its land, labour and trades do not yet cap "
-        "that output (Complaints/113).")
+        "that output (Complaints/109).")
 
 
 @functools.lru_cache(maxsize=None)

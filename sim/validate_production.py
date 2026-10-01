@@ -185,7 +185,7 @@ def check_requires_node(where, entry, known_nodes):
     #
     # This exists because sim/solve_prices.py had no notion of WHEN: a
     # 100 AD scenario priced its electricity off a photovoltaic panel,
-    # which is the defect Complaints/39 records. A typo here reads as
+    # which is the defect Complaints/38 records. A typo here reads as
     # "this technique is never available", which is why the id is
     # checked against the tree rather than taken on trust.
     if "requires_node" in entry:

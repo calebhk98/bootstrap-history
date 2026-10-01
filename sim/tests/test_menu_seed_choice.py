@@ -1,6 +1,6 @@
 """Regression coverage for the new-game menu's seed question (blank draws a
 random seed, a number is used, settings may hold a default) and for `goals`
-agreeing with the menu's goal list (complaint 263)."""
+agreeing with the menu's goal list (complaint 259)."""
 from .harness import *
 
 _SIMULATOR = os.path.join(HERE, "simulator.py")

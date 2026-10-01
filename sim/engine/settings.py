@@ -202,7 +202,7 @@ CONFIG_DEFAULTS: Config = {
     "show_welcome": True,
     "commission_display": "both",  # "commissioned", "ready", or "both"
     # Unit id per dimension (area, mass, temperature, money) the player wants
-    # shown; a missing dimension means "as the game writes it" (Complaint 290).
+    # shown; a missing dimension means "as the game writes it" (Complaint 285).
     "display_units": {},
     # REMEMBERED, NOT CONFIGURED - see the module docstring. These four plus
     # the horizon are the New Game wizard's last-used answers, written back

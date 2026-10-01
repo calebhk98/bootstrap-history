@@ -1,4 +1,4 @@
-"""The `divergence` screen (Complaints/270): what the founder has changed
+"""The `divergence` screen (Complaints/266): what the founder has changed
 against where the run began, and which dated events came and went.
 
 The game holds start values (the civilisation the game began with) and the dated hazard

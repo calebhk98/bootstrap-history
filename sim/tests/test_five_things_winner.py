@@ -321,7 +321,7 @@ check("...accepting starts a genuinely new game through the same wizard, "
 # so there is no "real" recorded cohort state to preserve, only a value
 # that satisfies the current schema).
 #
-# Second: Complaints/45-no-granary-so-the-baseline-collapses.md added
+# Second: Complaints/44-no-granary-so-the-baseline-collapses.md added
 # `farm_stock_kg` to SAVE_FIELDS the same way, for the same reason - the
 # granary this field persists did not exist when this real player's game
 # was saved, so REQUIRED_SAVE_FIELDS refused the file again with "missing

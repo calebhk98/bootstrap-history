@@ -74,7 +74,7 @@
     "conf": "D", "source": "Generic placeholder for geography.json's small 0.02 Italian lead share.",
     "byproducts": [
      {"metal": "silver", "material_key": "silver_kg", "ore_grade_kg_per_tonne": 0.3, "conf": "D",
-      "source": "Assay taken from italia_silver_generic in the same district (same galena, silver as a trace constituent); generic, no assay of a specific working. Complaints/337."}
+      "source": "Assay taken from italia_silver_generic in the same district (same galena, silver as a trace constituent); generic, no assay of a specific working. Complaints/291."}
     ]},
    {"name": "gaul_germania_lead_generic", "lat": 49.5124, "lon": 6.021, "share_of_empire_output": 0.15, "material_moved": "ore",
     "ore_grade_kg_per_tonne": 100.0, "depth_class": "shallow_vein", "hardness_class": "medium",
@@ -93,7 +93,7 @@
     "source": "Cartagena/Sierra argentiferous galena, the same deep-worked district as rio_tinto_copper; 180 kg/t (18%) is a round figure for a rich galena vein.",
     "byproducts": [
      {"metal": "silver", "material_key": "silver_kg", "ore_grade_kg_per_tonne": 1.0, "conf": "C",
-      "source": "Assay taken from hispania_silver in the same district (Strabo 3.2.10 on the New Carthage mines, which raised silver from argentiferous galena): same rock, silver per tonne of the rock the lead is graded against. Complaints/337."}
+      "source": "Assay taken from hispania_silver in the same district (Strabo 3.2.10 on the New Carthage mines, which raised silver from argentiferous galena): same rock, silver per tonne of the rock the lead is graded against. Complaints/291."}
     ]},
    {"name": "laurion_lead", "lat": 37.9077, "lon": 22.102, "share_of_empire_output": 0.1, "material_moved": "ore",
     "ore_grade_kg_per_tonne": 80.0, "depth_class": "deep_vein", "hardness_class": "medium",
@@ -101,7 +101,7 @@
     "source": "Laurion's galena, worked to genuine depth through hundreds of shafts over the Classical and Hellenistic periods; by the Roman era the readily accessible rich ore is long since taken and what remains is leaner and deeper, hence a lower grade than Britain's or Spain's fresher veins.",
     "byproducts": [
      {"metal": "silver", "material_key": "silver_kg", "ore_grade_kg_per_tonne": 0.4, "conf": "C",
-      "source": "Assay taken from laurion_silver in the same district (Xenophon, Ways and Means: Laurion silver-lead ore): same rock. Complaints/337."}
+      "source": "Assay taken from laurion_silver in the same district (Xenophon, Ways and Means: Laurion silver-lead ore): same rock. Complaints/291."}
     ]}
   ],
   "silver": [

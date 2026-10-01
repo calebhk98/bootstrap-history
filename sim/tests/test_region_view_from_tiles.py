@@ -1,4 +1,4 @@
-"""Complaints/140, 285, 286: a region is a label over tiles, and a deposit is
+"""Complaints/136, 281, 282: a region is a label over tiles, and a deposit is
 placed by position, not by a tile id that a regenerated grid would drop.
 """
 import copy

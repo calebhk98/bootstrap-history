@@ -1,4 +1,4 @@
-"""Does a civilisation's starting state agree with itself? (Complaints/128)
+"""Does a civilisation's starting state agree with itself? (Complaints/124)
 
 Pure data check, no engine and no civilisation ids. For each civilisation
 file it reports three classes of contradiction between `starting_techs`, the
@@ -12,7 +12,7 @@ tree's own prerequisite graph, node costs and the production recipes:
                    civilisation should hold it, or the node should cost
                    something, or the civilisation should gate it.
   missing_prereq   a held node one of whose `pre` entries is not held
-                   (Complaints/42 pins the known set by name; this only
+                   (Complaints/41 pins the known set by name; this only
                    reports it).
   unmakeable       a material a held node consumes whose every production
                    recipe is gated on a node the civilisation does not hold.

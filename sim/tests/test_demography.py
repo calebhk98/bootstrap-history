@@ -200,7 +200,7 @@ class NutritionResponseTests(unittest.TestCase):
         self.assertEqual(values[-1], 1.0)
 
     def test_fertility_rises_above_baseline_on_surplus_then_saturates(self):
-        # Flipped for Complaints/45-no-granary-so-the-baseline-collapses.md:
+        # Flipped for Complaints/44-no-granary-so-the-baseline-collapses.md:
         # pinning fertility flat at 1.0 above subsistence is exactly the
         # response-side floor that complaint's diagnosis named as the reason
         # a granary alone only closed part of the century's unexplained
@@ -274,7 +274,7 @@ class NutritionResponseTests(unittest.TestCase):
 
 
 class MortalityDragDecompositionTests(unittest.TestCase):
-    """The unshocked-century follow-up to Complaints/45-no-granary-so-the-
+    """The unshocked-century follow-up to Complaints/44-no-granary-so-the-
     baseline-collapses.md: with the granary and the above-subsistence
     fertility ramp both in place, rome_100ad with events=False settled
     around 74% of its starting population over 100 years with no hazard of
@@ -460,7 +460,7 @@ class ZeroVarianceSubsistenceTests(unittest.TestCase):
 class GrowthCeilingTests(unittest.TestCase):
     """The stakeholder's own biological upper bound on human population
     growth, reproduced here as a sanity ceiling rather than a target -
-    Complaints/45-no-granary-so-the-baseline-collapses.md. Assume no
+    Complaints/44-no-granary-so-the-baseline-collapses.md. Assume no
     deaths, unlimited food, a 50/50 sex split, one child per pregnancy per
     woman per year, and reproductive ages 18 to 40 inclusive. In a stable
     age distribution the count of people aged `age` is proportional to

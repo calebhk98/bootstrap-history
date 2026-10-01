@@ -1,6 +1,6 @@
 """hot_path_caches: the per-year hot paths do not repeat work whose answer cannot have changed.
 
-Complaint 145: a year got slower as more was built because every concern's
+Complaint 141: a year got slower as more was built because every concern's
 output looked up the production catalog through a path-resolving call.
 """
 import os

@@ -1,4 +1,4 @@
-"""Complaints 243, 96 and 270: the map, education, demography and divergence
+"""Complaints 239, 94 and 266: the map, education, demography and divergence
 screens. Each figure on a screen must equal what the engine's own function
 returns, and a fogged player must not be shown a hidden node.
 """

@@ -2,7 +2,7 @@
 
 Direction for making the government actor a real participant rather than a
 scaffold. Current behaviour is in `ACTORS.md`; the tracked problems are
-`Complaints/189` (actors run but nothing reads them) and `Complaints/107`.
+`Complaints/185` (actors run but nothing reads them) and `Complaints/103`.
 Stakeholder decision recorded in 189: no quick fix. Do not skip the actor
 phase and do not wire a token consumer. Even a single-player game is
 multiplayer, because the country (Rome, China, ...) is another player, without
@@ -55,7 +55,7 @@ from outside, and nothing outside can be attributed to them.
   each such edge is named.
 - A consumer is built only after its producer has a real budget. A state
   spending rule sitting on an invented purse would be numbers on numbers
-  (the same argument `Complaints/109` makes about state finance).
+  (the same argument `Complaints/105` makes about state finance).
 - Heuristics stay labelled (`declare(..., kind="temporary_heuristic")`) and
   each increment says which ones it retires.
 
@@ -116,7 +116,7 @@ years only.
 Built: `state_military_diffusion` is the share of the founder's military
 inventions the government actor holds; the half-life constants are retired.
 Still open: that share falls as the founder invents more weapons, so the war
-relief caps need a per-weapon basis (`Complaints/535`).
+relief caps need a per-weapon basis (`Complaints/330`).
 
 Reads: the government's knowledge and copies in progress.
 Changes: `state_military_diffusion` and the state's other adoption effects read
@@ -148,7 +148,7 @@ come out of the same demand the founder sells into, so takings are no longer
 created.
 Replaces: `diffusion_share` and the category supply counting only the
 founder's concerns (heuristic retired: the leak to unnamed competitors).
-Touches economy code; needs the demand wiring in `Complaints/106`.
+Touches economy code; needs the demand wiring in `Complaints/102`.
 
 ### 5. The state's demand and labour (done)
 
@@ -156,7 +156,7 @@ Built: the government keeps a budget (`sim/engine/actors/budget.py`,
 `world_budget.py`): an army and officials, paid at market wages and equipped
 through `military_logistics`; its staff come out of the shared labour pool and
 its iron purchases reach the market as `actor_demand_tonnes`. Its spending
-covers only those two lines, so every state runs a surplus (`Complaints/300`).
+covers only those two lines, so every state runs a surplus (`Complaints/286`).
 
 Reads: the state's outlays by purpose from 1.
 Changes: what the state spends on wages and goods is demand: staff hired by
@@ -174,22 +174,22 @@ ordinary share (`starting_tax_share` times state capacity) through
 `levy_shares`, and a need-driven levy on top raises the unfunded part of the
 budget, capped at `LEVY_RATE_CEILING`. The army moves toward what the state
 can pay at `ARMY_ADJUSTMENT_RATE`. Still open: the force the state wants
-follows population, not threat (`Complaints/300`); patron funding (`Complaints/301`).
+follows population, not threat (`Complaints/286`); patron funding (`Complaints/287`).
 
 Reads: a spending model (standing costs, war, garrison from
 `sim/world/military_logistics.py`) against receipts.
 Changes: the shortfall between need and revenue is what the state seeks to
 raise, from those it can see, instead of a per-civilisation share of revenue.
 Replaces: `requisition_base_share`, `office_base_share` and the military demand
-shares as civilisation data (`Complaints/109`).
+shares as civilisation data (`Complaints/105`).
 
 ### 7. Other countries and fog
 
 Several governments, each with its own location, purse and view. A foreign
-state sees only what reaches it (`Complaints/113`). Interest groups
-(`Complaints/114`) are actors that press the state's policy.
+state sees only what reaches it (`Complaints/109`). Interest groups
+(`Complaints/110`) are actors that press the state's policy.
 
 ## Not decided here
 
 How a state's policy is chosen when a human plays it (the callback policy
-exists); credit and bonds for the state (`Complaints/110`).
+exists); credit and bonds for the state (`Complaints/106`).

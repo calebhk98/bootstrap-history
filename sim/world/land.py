@@ -1,6 +1,6 @@
 """Ricardian rent on ARABLE LAND: why a field is not priced like a mine.
 
-WHAT THIS IS FOR. Complaints/43 measured `hectare_land` solving to exactly
+WHAT THIS IS FOR. Complaints/42 measured `hectare_land` solving to exactly
 0.0 in `sim/solve_prices.py`: land has no cost of production (its own
 `data/production/40_organics.json` entry says so directly - "essentially no
 labour... a rent set by the worst hectare still worth taking"), and nothing
@@ -20,7 +20,7 @@ actually needed to meet a metal quota. This module is that mechanism.
 
 BOTH MARGINS OF RICARDO'S RENT ARE MODELLED, NOT ONLY THE EXTENSIVE ONE.
 Everything above is the EXTENSIVE margin - better land against worse.
-Complaints/46 records what an extensive-only model leaves out: Han China
+Complaints/45 records what an extensive-only model leaves out: Han China
 holds one region, Rome holds seven, and a civilization holding a single
 uniform region has nothing WORSE of its own to earn a differential rent
 over, so an extensive-only calculation prices land at exactly zero
@@ -141,7 +141,7 @@ extracting ore genuinely costs labour even at the margin, so "price equals
 marginal cost" is a real, nonzero number. Land's cost of "production" is
 genuinely near zero EVEN AT THE MARGIN (marking a boundary costs a scribe
 minutes, per `hectare_land`'s own `yield_basis`), so copying ore's algebra
-literally would reproduce Complaints/43's own zero. What land actually has
+literally would reproduce Complaints/42's own zero. What land actually has
 that a kilogram of homogeneous ore does not is a MARKET made of parcels of
 DIFFERENT quality trading at DIFFERENT rents simultaneously - a chernozem
 field and a stony hillside are not the same price even though both are
@@ -251,17 +251,17 @@ THE TWO MAP SYSTEMS: THE EXTENSIVE MARGIN READS `land_tiles`, NOT
 hand-drawn region is sized and named by whoever drew the map, so using one
 as the atomic parcel would make a civilization's own numbers depend on how
 many boxes its territory happens to be filed under, rather than on how much
-land, of what quality, it actually holds - the same defect Complaints/46
+land, of what quality, it actually holds - the same defect Complaints/45
 found in `forest_land_ceiling` (`sim/engine/economy_mining.py`) and
-Complaints/50 found in weather pooling (`sim/engine/core.py` - see that
+Complaints/49 found in weather pooling (`sim/engine/core.py` - see that
 file's `_compute_farm_weather_cells`). `north_africa` (5,750,000 km2, one
 `fertility_quality_multiplier` of 1.35, "96% Sahara, rated on the strength
-of the Nile" per Complaints/46) is the concrete case: one region record
+of the Nile" per Complaints/45) is the concrete case: one region record
 cannot show a margin between its own good land and its own bad land,
 because it has only one fertility figure to its name.
 
 `data/world/geography.json`'s `land_tiles` block (1,139 equal-area
-150,000 km2 tiles, `tools/generate_geography_tiles.py`, Complaints/46's own
+150,000 km2 tiles, `tools/generate_geography_tiles.py`, Complaints/45's own
 recommended fix, `region_to_tiles` mapping each of the 21 regions to the
 tiles that fall inside it) carries the SAME `land` fields a region record
 does - `land_area_km2`, `arable_fraction`, `fertility_quality_multiplier` -
@@ -305,7 +305,7 @@ hundredth the size. `tools/generate_geography_tiles.py`'s own generation
 rule documents that a tile's own `arable_fraction`/
 `fertility_quality_multiplier` are not independently surveyed either, but
 read off that tile's own Koppen-class sample mix. A future finer grid
-(Complaints/46 names the stakeholder's stated 10,000-tile goal) would
+(Complaints/45 names the stakeholder's stated 10,000-tile goal) would
 sharpen this further with no change needed here: this module reads
 whatever `land_tiles` the geography file hands it, at whatever grain that
 file happens to be generated at.
@@ -338,7 +338,7 @@ WHAT THIS MODULE DELIBERATELY DOES NOT DO.
     simplification, not a claim that fertility cannot be raised (or
     ruined) by what is done to it. This bullet is DIFFERENT FROM the
     INTENSIVE MARGIN (diminishing returns to labour on fixed land -
-    Complaints/46, see the LABOUR INTENSITY section): that mechanism never
+    Complaints/45, see the LABOUR INTENSITY section): that mechanism never
     claims land runs out or that fertility itself changes, only that the
     SAME land yields less per additional hour of labour applied to it,
     which is what lets a civilization's own population density raise its
@@ -533,12 +533,12 @@ def quantity_demanded_kg_grain_equivalent(population: float) -> float:
 
 
 # ============================================================================
-# LABOUR INTENSITY - THE INTENSIVE MARGIN (Complaints/46)
+# LABOUR INTENSITY - THE INTENSIVE MARGIN (Complaints/45)
 # ============================================================================
 # Everything above prices land by comparing ONE FLAT yield-per-hectare
 # (REFERENCE_WHEAT_YIELD_KG_PER_HECTARE, at whatever labour a "reference"
 # farmer applies) across regions of different fertility - the EXTENSIVE
-# margin, Ricardo's "worse land against better". Complaints/46 measured
+# margin, Ricardo's "worse land against better". Complaints/45 measured
 # what that leaves out: a civilization holding a single uniform region has
 # nothing WORSE of its own to earn a differential rent over, so it prices
 # land at exactly zero regardless of how many people are drawing on that
@@ -606,7 +606,7 @@ def quantity_demanded_kg_grain_equivalent(population: float) -> float:
 # HOURS_PER_HECTARE, LABOUR_OUTPUT_ELASTICITY and ANNUAL_LABOUR_HOURS_PER_
 # FARM_WORKER - THE EXACT PAIR OF DUPLICATIONS THAT PROMPTED sim/world/
 # shared_constants.py TO EXIST (see that module's own docstring and
-# Complaints/46). There is exactly one number behind each name and no
+# Complaints/45). There is exactly one number behind each name and no
 # second copy that can silently disagree with it.
 LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE = (
     _SHARED_REFERENCE_LABOUR_HOURS_PER_HECTARE)
@@ -757,7 +757,7 @@ def intensive_rent_kg_grain_equivalent_per_hectare(
     margin_of_cultivation` computes, this needs no OTHER region to compare
     against - a single, uniformly fertile region crowded by a large
     population earns this from itself alone, which is exactly what
-    Complaints/46 found missing.
+    Complaints/45 found missing.
 
     Rises with `labour_hours_per_hectare` (more crowding, more rent) and
     with `fertility_quality_multiplier` (better land still earns more,

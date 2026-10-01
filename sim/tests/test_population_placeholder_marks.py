@@ -1,5 +1,5 @@
 """Regression coverage for placeholder markers in the population screen
-(complaint 176). Trades with placeholder density estimates show an asterisk marker."""
+(complaint 172). Trades with placeholder density estimates show an asterisk marker."""
 from .harness import *
 
 _SIMULATOR = os.path.join(HERE, "simulator.py")

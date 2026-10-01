@@ -2,7 +2,7 @@
 now actually calls `solve_prices.rent_hours_per_kg_by_ore_material` and
 `solve_prices.land_rent_hours_per_hectare`, which it did not before - see
 RENT WAS MISSING FROM THIS FILE in that module's own docstring, and
-Complaints/43's own update sections for the finding this closes (the switch
+Complaints/42's own update sections for the finding this closes (the switch
 would have made land free the moment it was flipped, even though
 `sim/solve_prices.py`'s own CLI had already fixed that).
 
@@ -63,12 +63,12 @@ class RentIsWiredInTests(unittest.TestCase):
         # docstring, UPDATE (stakeholder maintainability item 6...)
         # section), not the seven hand-drawn `regions` records. The
         # tile-grain figure is lower than the old region-grain one (55.779
-        # hours/hectare, Complaints/43's own CLI
+        # hours/hectare, Complaints/42's own CLI
         # measurement from `python3 sim/solve_prices.py --civ rome_100ad`)
         # for two measured, physically sensible reasons, not because
         # anything here broke:
         #   1. north_africa's own single blended fertility_quality_
-        #      multiplier (1.35 - Complaints/46's own "96% Sahara, rated on
+        #      multiplier (1.35 - Complaints/45's own "96% Sahara, rated on
         #      the strength of the Nile") does not survive contact with
         #      its own 47 real tiles: they range 0.546-0.935 (measured
         #      directly off data/world/geography.json's land_tiles), so
@@ -91,7 +91,7 @@ class RentIsWiredInTests(unittest.TestCase):
             _starting_techs("rome_100ad"), self.prices_json,
             civilization_id="rome_100ad")
         self.assertIn("hectare_land", result.prices_in_labour_hours)
-        # Moves with tile fertility (arable-weighted, Complaints/134); re-read
+        # Moves with tile fertility (arable-weighted, Complaints/130); re-read
         # with `python3 sim/solve_prices.py --civ rome_100ad` when tile data moves.
         self.assertAlmostEqual(
             result.prices_in_labour_hours["hectare_land"], 145.65, places=2)

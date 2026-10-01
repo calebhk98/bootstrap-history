@@ -1,4 +1,4 @@
-"""Goods the home cannot make cross the partner border (Complaints/635, 480).
+"""Goods the home cannot make cross the partner border (Complaints/347, 322).
 
 Silk needs sericulture, which the home society did not hold; the partner that did holds it as
 starting knowledge and offers silk at its own cost plus freight plus the merchants' terms. A crop

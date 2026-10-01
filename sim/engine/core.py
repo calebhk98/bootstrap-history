@@ -373,9 +373,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             self._adult_equivalent_population(self.population),
             arable_hectares_ceiling=self._farm_arable_ceiling)
         self._set_farm_area(sized.hectares)
-        # WIRING THREE (Complaints/50-one-label-draws-one-coin.md), REPLACING
+        # WIRING THREE (Complaints/49-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
-        # weights` (Complaints/47): this civilisation's territory is broken
+        # weights` (Complaints/46): this civilisation's territory is broken
         # into geography.json `land_tiles` cells (see `_compute_farm_
         # weather_cells`'s own docstring for why tiles rather than region
         # records), each cell's SHARE of the civilisation's cultivable land,
@@ -396,7 +396,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self._farm_weather_cells = self._compute_farm_weather_cells()
         self._farm_weather_correlation_cholesky = (
             self._compute_farm_weather_correlation_cholesky(self._farm_weather_cells))
-        # THE GRANARY (Complaints/45-no-granary-so-the-baseline-collapses.md).
+        # THE GRANARY (Complaints/44-no-granary-so-the-baseline-collapses.md).
         # Started at zero, not at some invented reserve: this is an INITIAL
         # CONDITION (CLAUDE.md SS3.1's own allowed category, same as
         # `farm_land` just above), and the honest initial condition for "how
@@ -406,7 +406,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration (self._agriculture.py)
         # for where a sourced, physically-grounded number DOES enter this
         # mechanism (the CEILING on how large a buffer can grow, not the
-        # starting point). What actually answers Complaints/45 is that
+        # starting point). What actually answers Complaints/44 is that
         # `_demographic_recovery` below carries whatever THIS ATTRIBUTE holds
         # forward from year to year: it must not rebuild an
         # `self._agriculture.Storage` at stock_kg=0.0 every single year regardless
@@ -841,7 +841,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         WHY THIS STAYS A PURE FUNCTION OF (CIVILISATION ID, REGION, YEAR)
         RATHER THAN A STORED GENERATOR, EVEN THOUGH THE GRANARY ITSELF DOES
         PERSIST (see `_demographic_recovery` and `farm_stock_kg` below -
-        the stock needs to persist per Complaints/45; the weather draw does
+        the stock needs to persist per Complaints/44; the weather draw does
         not). A seed computed fresh from `(civilisation id, region, year)`
         has no sequential state to lose in the first place: year N's harvest
         draws the same weather whether it is reached by one unbroken run or
@@ -858,7 +858,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         collide - the same non-`declare()`d role `_population_seed`'s own
         formula plays just above in `__init__`.
 
-        WIRING TWO (Complaints/closed/47-one-weather-draw-for-a-continent.md):
+        WIRING TWO (Complaints/closed/46-one-weather-draw-for-a-continent.md):
         `region` defaults to `None`: no caller in this engine currently
         omits it, but a test or a future caller that wants "the" seed for a
         civilisation without naming a region still gets a well-defined
@@ -883,7 +883,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     # e.g. "italy_02" - already globally unique across every region, per
     # geography.json's own `land_tiles.tiles` keys), not a (region, index)
     # pair. That is what lets `_farm_year_weather_seed(year, region=cell_id)`
-    # below reuse that method completely unchanged (Complaints/47's WIRING
+    # below reuse that method completely unchanged (Complaints/46's WIRING
     # TWO): the parameter is documented there as "an optional region", but
     # nothing about the seed formula actually requires the string passed to
     # BE a region key - it only needs to uniquely name what is being drawn
@@ -893,8 +893,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         """[Sim._WeatherCell(cell_id, lat, lon, weight), ...] over this
         civilisation's own `home_regions`, broken into geography.json's
         150,000 km2 `land_tiles` cells rather than left as whole region
-        records - Complaints/50-one-label-draws-one-coin.md, replacing
-        Complaints/47's own `_compute_farm_region_weights`.
+        records - Complaints/49-one-label-draws-one-coin.md, replacing
+        Complaints/46's own `_compute_farm_region_weights`.
 
         WHY TILES, NOT "subdivide each region by area around its centroid"
         (this task's brief offered both). `land_tiles` already exists,
@@ -916,7 +916,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         fertile one, with "large" measured in actual square kilometres, not
         in how many rows a region occupies in geography.json (weighting by
         row count would let region count, not land area, predict the
-        outcome - Complaints/50's own finding).
+        outcome - Complaints/49's own finding).
 
         DOES NOT READ sim/world/land.py (see the import comment at this
         file's own top). `land.py`'s `arable_hectares` and geography.json's own
@@ -930,12 +930,12 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         numbers, does not introduce a second, independent estimate to drift
         out of step - it is the same source at finer grain.
 
-        NOTE (per this task's own coordination thread, Complaints/52-every-
+        NOTE (per this task's own coordination thread, Complaints/50-every-
         civilisation-farms-italian-soil.md): these weights are PROPORTIONS
         that sum to 1.0 over one civilisation's own cells, so a
         civilisation's ABSOLUTE arable endowment cancels out of them
         entirely - two civilisations with wildly different total farmland
-        can have identically-SHAPED weight lists. That is Complaints/52's
+        can have identically-SHAPED weight lists. That is Complaints/50's
         own finding (farm_land's total SIZE not reflecting soil quality or
         real arable area), not a defect in this pooling mechanism, which
         only ever needed relative shares; left alone here, deliberately.
@@ -1167,9 +1167,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
     def _pooled_farm_weather_multiplier(self, year, weather_stdev_fraction=None):
         """This year's harvest weather multiplier, pooled across this
         civilisation's own growing-season weather cells instead of one
-        draw for the whole territory (Complaints/47-one-weather-draw-for-
+        draw for the whole territory (Complaints/46-one-weather-draw-for-
         a-continent.md) and instead of one INDEPENDENT draw per home
-        region record (Complaints/50-one-label-draws-one-coin.md, the
+        region record (Complaints/49-one-label-draws-one-coin.md, the
         replacement this method now is).
 
         THE MECHANISM, IN ONE SENTENCE: draw one independent standard-
@@ -1177,7 +1177,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         `self._farm_weather_correlation_cholesky`, turn each correlated
         number into a clipped yield multiplier the same way `self._agriculture.
         draw_weather_multiplier` would, and take the arable-land-share-
-        weighted average - answering Complaints/50's own question ("over
+        weighted average - answering Complaints/49's own question ("over
         what distance does growing-season weather stop agreeing with
         itself?") with an actual number, rather than assuming one of two
         hardcoded extremes ("one region = perfectly correlated with
@@ -1190,7 +1190,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
            year), reusing `_farm_year_weather_seed` completely unchanged
            (see `_WeatherCell`'s own comment on why a tile id is a valid
            thing to pass as that method's `region` argument). This is
-           still, exactly as before Complaints/50, "no long-lived
+           still, exactly as before Complaints/49, "no long-lived
            generator, no `id()` as identity" (CLAUDE.md SS6): nothing here
            is constructed once and advanced across years or across cells:
            every single number is its own fresh `random.Random(seed)`.
@@ -1215,10 +1215,10 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         4. The civilisation's pooled multiplier is the ARABLE-LAND-SHARE-
            WEIGHTED AVERAGE of those per-cell multipliers (self._farm_
            weather_cells), following the same weighting principle
-           Complaints/47 established.
+           Complaints/46 established.
 
         WHAT THIS ACHIEVES, PRECISELY. A region record is not one weather
-        system regardless of its real size (Complaints/50: North Africa at
+        system regardless of its real size (Complaints/49: North Africa at
         5,750,000 km2 is not one growing season, and neither is China at
         9,597,000 km2 held as a single region), and two region records are
         not fully INDEPENDENT regardless of how close they sit (Gaul and
@@ -1290,7 +1290,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         "famine" code path, exactly as self._demography.py's own module
         docstring requires (CLAUDE.md SS3.1).
 
-        THE GRANARY CARRIES OVER BETWEEN YEARS (Complaints/45-no-granary-
+        THE GRANARY CARRIES OVER BETWEEN YEARS (Complaints/44-no-granary-
         so-the-baseline-collapses.md). This matters more than it looks:
         mortality and fertility both floor at nutrition_ratio == 1.0
         (self._demography.py's own `NUTRITION_YEAR_TO_YEAR_NOISE_STD` declaration
@@ -1326,7 +1326,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         into next year's opening stock, not anything about how one year's
         flows balance.
 
-        WHAT THIS DOES NOT CLAIM TO FIX (Complaints/45's follow-up: "with 0
+        WHAT THIS DOES NOT CLAIM TO FIX (Complaints/44's follow-up: "with 0
         large events, you shouldn't have a population decline over a
         century"). self._demography.py's `_fertility_multiplier` DOES ramp
         fertility up above nutrition_ratio == 1.0 (a bounded,
@@ -1444,13 +1444,13 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         worked_land = self._agriculture.Land(hectares_worked, quality=self.farm_land.quality)
         # THE GRANARY: opens the year at whatever `self.farm_stock_kg`
         # carried in from last year's close, not at zero - see this
-        # method's own docstring section on Complaints/45 for why that
+        # method's own docstring section on Complaints/44 for why that
         # single word ("carried" rather than "constructed fresh") is the
         # entire fix, and `farm_stock_kg` in SAVE_FIELDS
         # (sim/engine/proto/saveload.py) for why it survives a save.
         # `seed=` HERE IS DEFENSIVE, NOT LOAD-BEARING: `farm_storage.
         # step` below is always given an explicit `weather_multiplier`
-        # (Complaints/47), so `Storage`'s own internal
+        # (Complaints/46), so `Storage`'s own internal
         # `self._random`/`draw_weather_multiplier` path this seed feeds is
         # never actually reached from this call site. Still passed, rather
         # than left at the constructor's own `None` default,
@@ -1474,7 +1474,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         reserve_target_kg = self._agriculture.granary_capacity_kg(
             adult_equivalent_population
             * self._agriculture.annual_food_demand_kg_per_person(technique.crop))
-        # THE PER-REGION WEATHER DRAW (Complaints/closed/47-one-weather-
+        # THE PER-REGION WEATHER DRAW (Complaints/closed/46-one-weather-
         # draw-for-a-continent.md). `_pooled_farm_weather_multiplier`
         # draws one independent weather multiplier per home region this
         # civilisation holds and returns the arable-land-share-weighted
@@ -1547,7 +1547,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self._refresh_demographic_indexes(year)
 
     def _disease_burden(self):
-        """WIRING ONE (Complaints/closed/48-technology-cannot-stop-people-dying-
+        """WIRING ONE (Complaints/closed/47-technology-cannot-stop-people-dying-
         young.md): this civilisation's CURRENT disease burden, 1.0 being
         the full pre-industrial infectious environment sim/world/
         self._demography.py already assumes by default, 0.0 being clean water,

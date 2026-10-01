@@ -1,4 +1,4 @@
-"""Complaint 499 (and 412): a state's surplus is not swept out of the economy. Reserve beyond the need it
+"""Complaint 327 (and 412): a state's surplus is not swept out of the economy. Reserve beyond the need it
 holds against risk is lent through the loanable-funds market (the state as a saver, earning interest) and
 spent on works, a named purchase that hires people; no outlay of the state goes to nobody."""
 from .harness import *  # noqa: F401,F403

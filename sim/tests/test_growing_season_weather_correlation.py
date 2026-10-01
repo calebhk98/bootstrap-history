@@ -1,5 +1,5 @@
 """growing_season_weather_correlation: does the harvest weather draw actually
-answer Complaints/50-one-label-draws-one-coin.md's own question - "over what
+answer Complaints/49-one-label-draws-one-coin.md's own question - "over what
 distance does growing-season weather stop agreeing with itself?" - instead
 of the two hardcoded answers (a region record is one weather system; two
 region records draw independently) that complaint measured as both wrong?
@@ -55,7 +55,7 @@ class WeatherCellsTests(unittest.TestCase):
         self.assertEqual(len(test_sim._farm_weather_cells), 88)
 
     def test_han_chinas_one_region_still_resolves_to_many_cells(self):
-        # The whole point of Complaints/50: a region record is not one
+        # The whole point of Complaints/49: a region record is not one
         # weather system. China holds 69 land_tiles cells under its own
         # single home_regions entry - WIRING TWO gave this civilisation
         # exactly one weather draw for all of them; this wiring must not.
@@ -100,7 +100,7 @@ class WeatherCellsTests(unittest.TestCase):
 
 class SpatialCorrelationTests(unittest.TestCase):
     """`Sim._compute_farm_weather_correlation_cholesky` - the actual
-    distance-based correlation mechanism Complaints/50 asked for, checked
+    distance-based correlation mechanism Complaints/49 asked for, checked
     directly against synthetic cells rather than through the whole
     civilisation pipeline, so a failure here points at the linear algebra
     and not at geography.json's data.
@@ -130,7 +130,7 @@ class SpatialCorrelationTests(unittest.TestCase):
         self.assertGreater(rebuilt[1][0], rebuilt[1][2])
 
     def test_two_nearby_cells_correlate_far_more_than_two_distant_ones(self):
-        # Operationalises Complaints/50's own worked example: "Gaul and
+        # Operationalises Complaints/49's own worked example: "Gaul and
         # Hispania share weather systems; Britannia and Mesopotamia do
         # not." Read the real centroids off geography.json rather than
         # hand-picking new coordinates, so this test tracks the actual
@@ -151,7 +151,7 @@ class SpatialCorrelationTests(unittest.TestCase):
         britannia_levant = rebuilt[2][3]
         self.assertGreater(gaul_hispania, britannia_levant,
                             (gaul_hispania, britannia_levant))
-        # Not just "greater" - Complaints/50's own language is "share
+        # Not just "greater" - Complaints/49's own language is "share
         # weather systems" against "do not", which should read as
         # substantially, not marginally, more correlated.
         self.assertGreater(gaul_hispania, 2 * britannia_levant)
@@ -178,7 +178,7 @@ class PooledWeatherMultiplierTests(unittest.TestCase):
         assert_single_draw_fallback(self, _rome_sim(), agriculture)
 
     def test_han_china_gets_real_diversification_from_being_spread_out(self):
-        # THE ACTUAL BUG Complaints/50 reports: WIRING TWO gave a
+        # THE ACTUAL BUG Complaints/49 reports: WIRING TWO gave a
         # civilisation holding one region record exactly ONE weather draw,
         # no matter how large that region's real land area was - China at
         # 9,597,000 km2 pooled to the same single coin flip as Norse

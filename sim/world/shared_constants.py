@@ -176,7 +176,7 @@ LABOUR_OUTPUT_ELASTICITY = declare(
            "LABOUR_OUTPUT_ELASTICITY) and sim/world/land.py (as "
            "LAND_LABOUR_OUTPUT_ELASTICITY) both import this declaration - "
            "the exact pair that prompted this module's creation, per "
-           "Complaints/46.",
+           "Complaints/45.",
     confidence="C",
     why="The curve shape that makes doubling labour on fixed land yield "
         "less than double the output - the whole mechanism behind "
@@ -210,14 +210,14 @@ ANNUAL_LABOUR_HOURS_PER_FARM_WORKER = declare(
         "population into a civilization-wide labour-hours supply.")
 
 # ============================================================================
-# WEATHER SPATIAL CORRELATION - Complaints/50-one-label-draws-one-coin.md
+# WEATHER SPATIAL CORRELATION - Complaints/49-one-label-draws-one-coin.md
 # ============================================================================
 # How far apart two points on the ground have to be before one year's
 # growing-season weather at one stops predicting the other's. This is the
 # ONE number sim/engine/core.py's per-cell pooled harvest weather (WIRING
 # THREE) turns on: it is what tells Gaul and Hispania (close, correlated)
 # apart from Britannia and Mesopotamia (far, nearly independent), replacing
-# the two assumptions Complaints/50 measured as both wrong in the same
+# the two assumptions Complaints/49 measured as both wrong in the same
 # direction - a region record is one weather system, and two region records
 # draw independently. Declared here, not in sim/world/agriculture.py (which
 # already owns WEATHER_YIELD_STDEV_FRACTION and the clip bounds this same

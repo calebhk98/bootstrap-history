@@ -1,4 +1,4 @@
-"""Complaint 114: the economy makes interest groups. People whose income the founder's doing takes
+"""Complaint 110: the economy makes interest groups. People whose income the founder's doing takes
 organise in proportion to what they lost, press the state, and the state answers by its capacity and
 its purse. Every effect names its group and its cause."""
 from .harness import *

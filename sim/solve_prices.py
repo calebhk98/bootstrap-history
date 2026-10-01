@@ -113,7 +113,7 @@ ledger. Forest timber and every other GROWN or land-limited material get a
 real rent instead of this zero-rent treatment - see RENT ON GROWN AND
 LAND-LIMITED MATERIALS immediately below.
 
-RENT ON GROWN AND LAND-LIMITED MATERIALS (Complaints/49 - "land rent
+RENT ON GROWN AND LAND-LIMITED MATERIALS (Complaints/48 - "land rent
 reaches no crop"). `sim/world/land.py` computes a real, per-civilization
 Ricardian rent on arable land - both margins of it, extensive (better
 land against worse) and intensive (diminishing returns to more labour on
@@ -409,7 +409,7 @@ and chosen by the same cheapest-technique rule as everything else:
                                 margin this file cannot yet quantify. Tag:
                                 GAP, not a heuristic, per CLAUDE.md 3.4.
 
-TEMPERATURE, AND WHY A SINGLE SHARED FLOOR IS ITSELF A BUG (Complaints/44).
+TEMPERATURE, AND WHY A SINGLE SHARED FLOOR IS ITSELF A BUG (Complaints/43).
 A megajoule of heat is not fungible across temperature: one MJ at 200 C
 cannot do what one MJ at 1600 C can, which is the whole reason a bloomery
 cannot melt iron however much charcoal is fed into it. Every
@@ -663,7 +663,7 @@ axe/iron example, and self-referencing seed corn) and
 `sim/tests/test_price_solver_cycles.py` for the pinned tests.
 
 THE SOLVER NEEDS A NOTION OF WHEN, NOT ONLY OF COST. This is the defect
-Complaints/39 records: pricing every technique in `data/production/` on
+Complaints/38 records: pricing every technique in `data/production/` on
 cost alone, in every scenario, gives cost no date - a 100 AD Roman scenario
 prices every one of its three energy carriers off
 `electrical_mj_photovoltaic`, and the DATA is right (a panel really is the

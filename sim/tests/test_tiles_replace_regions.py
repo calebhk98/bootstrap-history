@@ -1,4 +1,4 @@
-"""Complaints/140: land area and mineral deposits read the tiles, not the regions.
+"""Complaints/136: land area and mineral deposits read the tiles, not the regions.
 
 A region is a label over tiles. These tests alter or remove the region-level
 copy and require the answer not to move, so any reader that still goes

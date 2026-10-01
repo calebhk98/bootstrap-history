@@ -15,7 +15,7 @@ from sim.world.labour_market import production_data
 # tonnes), lines that split one declared total across unrelated products, and makers whose
 # entries add less than their staff cost at solved prices, so a declared output would only
 # derive zero revenue (their entries state no labour and no plant), and Solvay soda, whose product is priced
-# at the dearer incumbent route so its derived payback falls under the floor. Complaints/520.
+# at the dearer incumbent route so its derived payback falls under the floor. Complaints/329.
 STILL_UNBOUNDED = {
     "analytical_chemistry", "chm_caustic_soda", "chm_glycerol", "chm_polyethylene", "chm_superphosphate",
     "gunpowder", "mirror_amalgam", "chm_solvay_process",

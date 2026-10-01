@@ -2,7 +2,7 @@
 
 Prices are calculated from recipes, land rent, wages and transport by
 `sim/solve_prices.py`, gated to what a civilization has reached
-(Complaints/39). This module is the engine's one call into the solver. It is
+(Complaints/38). This module is the engine's one call into the solver. It is
 thin: it imports the solver rather than re-implementing it. There is no price
 book; a material nothing can make has no price.
 
@@ -98,14 +98,14 @@ cares can already recover the distinction by re-running
 kind of downstream question.
 
 RENT MUST BE THREADED THROUGH HERE THE SAME WAY `main()` DOES IT (see
-Complaints/43). `sim/solve_prices.py`'s own `main()` computes
+Complaints/42). `sim/solve_prices.py`'s own `main()` computes
 `rent_hours_per_kg_by_ore_material` and `land_rent_hours_per_hectare` once
 per run and threads the result through `compute_resolvable_materials` and
 `solve` as `rent_hours_per_kg_by_material` - that is how `python3 sim/
 solve_prices.py` prints a nonzero `hectare_land`. `solved_prices` below
 calls the same two functions and passes the result through the same
 argument, which is what keeps this module from silently falling into the
-RENT_IS_ZERO behaviour Complaints/43 is about, since that argument
+RENT_IS_ZERO behaviour Complaints/42 is about, since that argument
 defaults to `None` in both functions when omitted.
 
 RENT NEEDS A CIVILIZATION, AND SO DOES THE CACHE KEY.

@@ -1,5 +1,5 @@
-"""Complaint 340: every change to the founder's cash goes through the household's ledger with a
-cause, and the `cash` figure and `money` read their causes from it (Complaint 97)."""
+"""Complaint 292: every change to the founder's cash goes through the household's ledger with a
+cause, and the `cash` figure and `money` read their causes from it (Complaint 95)."""
 import os
 import re
 

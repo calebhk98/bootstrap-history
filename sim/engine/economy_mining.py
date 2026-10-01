@@ -852,7 +852,7 @@ class MiningMixin:
     #
     # KEYED ON AREA (geography.json's own `land.land_area_km2` per home
     # region - see home_land_area_km2() below), NOT ON A COUNT OF REGION
-    # LABELS (len(home_regions)): Complaint 46 names the same failure here
+    # LABELS (len(home_regions)): Complaint 45 names the same failure here
     # that it names for rent - a region is a filing label, not a unit of
     # area, and the labels range 86x in size (americas_north 19.8M km2
     # down to britannia's 230,000 -- data/world/geography.json). Keying
@@ -862,7 +862,7 @@ class MiningMixin:
     # but singular region (9.6M km2, bigger than Rome's whole seven put
     # together) would price out at less than a seventh of Rome's ceiling
     # for holding MORE ground - the map's filing system leaking into the
-    # economics, exactly as Complaint 46 describes for rent.
+    # economics, exactly as Complaint 45 describes for rent.
     #
     # [C], sized against the one real anchor available: resources.json's
     # empire-wide 500,000 t/yr of charcoal implies roughly 667,000 ha under

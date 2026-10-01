@@ -1,4 +1,4 @@
-"""Complaint 101: an `idle` view of directed hours, what they could do, and why the wait."""
+"""Complaint 99: an `idle` view of directed hours, what they could do, and why the wait."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.proto import command_registry

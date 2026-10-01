@@ -1,5 +1,5 @@
 {
-  "_about": "Unit registry (Complaint 290). Each unit converts to its dimension's base unit: base = value * factor + offset. `factor_from` names a context value the engine supplies (hours_per_coin: labour hours one unit of the civilisation's coin is worth). `civilisations` limits a unit to those civilisations' menus. `label_from: civ_currency` takes the name and symbol from the civilisation's currency_words. A mod adds units in data/world/units.json named <mod_id>:<name>. field_rules say which reply fields hold a quantity of a dimension and in which unit the engine writes it; a pattern is a regular expression on the field name.",
+  "_about": "Unit registry (Complaint 285). Each unit converts to its dimension's base unit: base = value * factor + offset. `factor_from` names a context value the engine supplies (hours_per_coin: labour hours one unit of the civilisation's coin is worth). `civilisations` limits a unit to those civilisations' menus. `label_from: civ_currency` takes the name and symbol from the civilisation's currency_words. A mod adds units in data/world/units.json named <mod_id>:<name>. field_rules say which reply fields hold a quantity of a dimension and in which unit the engine writes it; a pattern is a regular expression on the field name.",
   "dimensions": {
     "area": {"base": "hectare"},
     "mass": {"base": "kilogram"},

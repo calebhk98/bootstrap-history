@@ -1,4 +1,4 @@
-"""Complaint 535, part 2: the state's war relief has a per-weapon basis. Each military node the
+"""Complaint 330, part 2: the state's war relief has a per-weapon basis. Each military node the
 government holds removes its own part of the harm, so the founder inventing more weapons never
 lowers the relief and the state copying one more always raises it."""
 from .harness import *  # noqa: F401,F403

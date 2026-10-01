@@ -1,4 +1,4 @@
-"""Complaint 97: a figure registers its components once, and `figures` / `why <figure>`
+"""Complaint 95: a figure registers its components once, and `figures` / `why <figure>`
 show last year, this year and the named causes, read from the engine's own functions."""
 from .harness import *  # noqa: F401,F403
 

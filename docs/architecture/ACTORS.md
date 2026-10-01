@@ -2,7 +2,7 @@
 
 Who can own money, staff, know-how and works, and decide. Code:
 `sim/engine/actors/`. Tests: `sim/tests/test_actors.py`. Tracking:
-`Complaints/107-add-independent-firms-imitation-entrepreneurship.md`.
+`Complaints/103-add-independent-firms-imitation-entrepreneurship.md`.
 
 ## Class layout
 
@@ -99,4 +99,4 @@ records whenever the state object is replaced. Provisional numbers live in
 
 ## Not yet built
 
-See the status line of Complaint 107.
+See the status line of Complaint 103.

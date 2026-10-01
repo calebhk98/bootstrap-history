@@ -1,4 +1,4 @@
-"""Complaint 81: the event stream carries eight severity tiers, worst first."""
+"""Complaint 79: the event stream carries eight severity tiers, worst first."""
 import unittest
 
 from .harness import *  # noqa: F401,F403

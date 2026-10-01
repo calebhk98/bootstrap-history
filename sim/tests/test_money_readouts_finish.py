@@ -1,5 +1,5 @@
 """money_readouts_finish: each preview and the action it previews call one
-function for the amount (Complaints 265, 220, 240, 214, 244, 216)."""
+function for the amount (Complaints 261, 216, 236, 210, 240, 212)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.proto.render_screens_big import render_state
 from sim.engine.proto.render_screens_economy import render_money

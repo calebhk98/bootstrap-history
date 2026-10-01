@@ -198,7 +198,7 @@ class Storage(object):
         `weather_multiplier` defaults to `None`, meaning "draw one from
         `self._random` the way this method always has" (step 2 below). A
         caller that passes a number instead (sim/engine/core.py's
-        `_pooled_farm_weather_multiplier`, Complaints/47-one-weather-draw-
+        `_pooled_farm_weather_multiplier`, Complaints/46-one-weather-draw-
         for-a-continent.md) gets that number used AS this year's weather
         multiplier verbatim, and `self._random`/`draw_weather_multiplier`
         are not touched at all - this is what lets a caller that already
@@ -254,7 +254,7 @@ class Storage(object):
         A CALLER THAT CARRIES `stock_after_kg` ACROSS YEARS MUST ALSO CARRY
         `seed_retained_kg` BACK IN, OR IT WILL DOUBLE-CHARGE SEED EVERY
         SINGLE YEAR. This was invisible for as long as every caller (see
-        Complaints/45-no-granary-so-the-baseline-collapses.md) constructed
+        Complaints/44-no-granary-so-the-baseline-collapses.md) constructed
         a fresh `Storage` at stock_kg=0.0 every year and threw `stock_after_
         kg` away unused - a bug in a number nothing ever reads cannot bite.
         The instant a caller starts persisting `stock_kg`, it does: step 5
@@ -314,7 +314,7 @@ class Storage(object):
         # granary was; combined with a mortality and fertility response that
         # floors at 1.0, that turns every bad year into a real population
         # cost with no good year ever offsetting it - the ratchet
-        # Complaints/45 records. The granary alone does not fix this:
+        # Complaints/44 records. The granary alone does not fix this:
         # banking grain and then forbidding anyone to eat the surplus solves
         # nothing.
         #
@@ -390,7 +390,7 @@ def stock_to_carry_forward_kg(flows: "YearFlows") -> float:
     replacing what the first deduction removed) - a bug invisible for as
     long as nothing persisted `stock_kg` at all, and the specific,
     measured cause of a near-total-extinction result the first attempt at
-    Complaints/45's granary fix produced on perfectly ordinary weather,
+    Complaints/44's granary fix produced on perfectly ordinary weather,
     with no famine, no hazard and no land loss of any kind.
 
     A caller that does NOT intend to persist `Storage` across years (one

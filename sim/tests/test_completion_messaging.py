@@ -13,7 +13,7 @@ def _finish(test_sim, node_id, failing=False):
     return [message for _year, message in test_sim.log[before:]]
 
 
-# --- Complaint 83: failure narrative scales with consequence.
+# --- Complaint 81: failure narrative scales with consequence.
 minor_sim = sim()
 minor_sim.funding_capacity = lambda: 1e12
 minor_lines = _finish(minor_sim, "school_founded", failing=True)
@@ -37,7 +37,7 @@ check("the same loss reads minor off the goal path",
 check("...and major when the failed project is on the goal path",
       severity_sim.failure_severity(on_path, small_loss, means) == "major")
 
-# --- Complaint 86: built is not open.
+# --- Complaint 84: built is not open.
 closed_sim = sim()
 closed_lines = _finish(closed_sim, "school_founded")
 check("a finished concern says it is closed and how to open it",
@@ -49,7 +49,7 @@ check("a piece of knowledge does not claim to be closed",
       not any("STATUS: CLOSED" in line
               for line in _finish(sim(), "ag2_balanced_ration")))
 
-# --- Complaint 131 (completion half): say when today's staff could not open it.
+# --- Complaint 127 (completion half): say when today's staff could not open it.
 short_sim = sim()
 short_sim.venture_staff_free = lambda: (0.0, 0.0)
 short_sim.venture_hands = lambda node_id: (5.0, 5.0)
@@ -62,7 +62,7 @@ check("...and stays quiet when the staff are free",
       not any("could not open it" in line
               for line in _finish(staffed_sim, "school_founded")))
 
-# --- Complaint 85: goal deltas on completion.
+# --- Complaint 83: goal deltas on completion.
 goal_sim = sim()
 goal_sim.goal = "goal_literacy_common"
 goal_sim.civ["literacy_general"] = 0.10
@@ -91,7 +91,7 @@ check("under fog the road line never reveals the total",
       any("goal effect" in line for line in fog_lines)
       and not any(" of " in line for line in fog_lines if "goal effect" in line), fog_lines)
 
-# --- Complaint 82: summary first.
+# --- Complaint 80: summary first.
 wave = [{"id": "a%d" % index, "name": "Thing %d" % index, "year": 200,
          "granted": False, "kind": "technology"} for index in range(12)]
 wave.append({"id": "c1", "name": "Shop", "year": 200, "granted": False, "kind": "concern"})

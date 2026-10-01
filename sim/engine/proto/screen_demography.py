@@ -1,4 +1,4 @@
-"""The `demography` screen (Complaints/96): age cohorts, last year's births
+"""The `demography` screen (Complaints/94): age cohorts, last year's births
 and deaths, disease and food pressure, and the trades, read from the
 population model and from population_report.
 """

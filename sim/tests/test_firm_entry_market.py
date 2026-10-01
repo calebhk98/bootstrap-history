@@ -1,4 +1,4 @@
-"""Complaint 535, part 1: entry is bounded by the market. An entrant expects what it would earn after
+"""Complaint 330, part 1: entry is bounded by the market. An entrant expects what it would earn after
 its own output and that of the entrants already waiting reaches the market, and enters only while
 that covers the capital it ties up at the market's rate; nothing caps the number of firms."""
 from .harness import *  # noqa: F401,F403

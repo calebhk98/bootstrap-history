@@ -16,7 +16,7 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from sim import issue_status  # noqa: E402
+from sim import issue_references, issue_renumber, issue_status  # noqa: E402
 
 
 class IssueTreeCase(unittest.TestCase):
@@ -112,6 +112,45 @@ class CheckTests(IssueTreeCase):
         self.assertEqual(self.problems(), [])
 
 
+class NumberingTests(IssueTreeCase):
+    def test_gaps_and_duplicates_fail_numbering_check(self):
+        self.write("01-a.md", "# A\n\n**Status:** open\n")
+        self.write("closed/03-b.md", "# B\n\n**Status:** closed\n")
+        self.assertEqual(len(issue_status.numbering_problems(self.rows())), 1)
+        self.write("closed/01-c.md", "# C\n\n**Status:** closed\n")
+        self.assertTrue(any("more than one" in found for found in issue_status.numbering_problems(self.rows())))
+
+    def test_dense_numbering_passes_and_next_is_one_above(self):
+        self.write("01-a.md", "# A\n\n**Status:** open\n")
+        self.write("closed/02-b.md", "# B\n\n**Status:** closed\n")
+        self.assertEqual(issue_status.numbering_problems(self.rows()), [])
+        self.assertEqual(issue_status.next_number(self.rows()), 3)
+
+    def test_renumber_map_closes_gaps_in_order(self):
+        self.write("05-a.md", "# A\n\n**Status:** open\n")
+        self.write("closed/09-b.md", "# B\n\n**Status:** closed\n")
+        mapping, duplicates = issue_renumber.build_map(self.rows())
+        self.assertEqual(mapping, {5: 1, 9: 2})
+        self.assertEqual(duplicates, [])
+        self.assertEqual(issue_renumber.issue_renames(self.rows()),
+                         [("Complaints/05-a.md", "Complaints/01-a.md"),
+                          ("Complaints/closed/09-b.md", "Complaints/closed/02-b.md")])
+
+    def test_references_are_rewritten_once_from_the_map(self):
+        mapping = {12: 34, 34: 56, 100: 12}
+        text = "see Complaints/closed/12-x.md, Complaints 34 and 100; Complaint 12; test_complaint_100_y"
+        new_text, count, _, _ = issue_references.rewrite(text, mapping, False)
+        self.assertEqual(new_text, "see Complaints/closed/34-x.md, Complaints 56 and 12; Complaint 34; test_complaint_12_y")
+        self.assertEqual(count, 5)
+
+    def test_bare_numbers_only_change_in_reference_context(self):
+        mapping = {430: 20, 550: 21}
+        text = "Related: `430`.\nabout 550 firms in AD 550\nwhat remains is 430 and 550.\n"
+        new_text, _, _, ambiguous = issue_references.rewrite(text, mapping, True)
+        self.assertEqual(new_text, "Related: `20`.\nabout 550 firms in AD 550\nwhat remains is 20 and 21.\n")
+        self.assertEqual(ambiguous, [])
+
+
 class OutputTests(IssueTreeCase):
     def test_table_lists_number_title_status_folder(self):
         self.write("07-seven.md", "# Seven\n\n**Status:** pinned\n")
@@ -140,6 +179,11 @@ class RepositoryTreeTests(unittest.TestCase):
 
     def test_check_mode_exit_code_matches_the_tree(self):
         self.assertEqual(issue_status.main(["--check"]), 0)
+
+    def test_real_numbers_run_one_to_count(self):
+        rows = issue_status.collect()
+        self.assertEqual(issue_status.numbering_problems(rows), [])
+        self.assertEqual(issue_status.next_number(rows), len(rows) + 1)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """Mine works charged besides breaking: barren rock, haulage, hoisting,
-drainage, timbering, ventilation (Complaints/640)."""
+drainage, timbering, ventilation (Complaints/348)."""
 import unittest
 
 from sim.world import deposits, mine_fire_setting, mine_works
@@ -49,7 +49,7 @@ class MineWorks(unittest.TestCase):
 
     def test_support_work_of_a_deep_mine_is_within_the_source_staffing_split(self):
         # support hours per face hour = (1 - face share) / face share. The
-        # shallow class falls just under the source's low end (Complaints/641).
+        # shallow class falls just under the source's low end (Complaints/349).
         deposit = _probe("deep_vein", "hard")
         support = sum(_terms(deposit).values())
         rock_per_ore = mine_works.rock_broken_tonnes_per_tonne_ore("deep_vein")

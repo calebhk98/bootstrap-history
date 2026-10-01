@@ -1,4 +1,4 @@
-"""Complaints/135 and 136: no engine code names a civilisation, and the game
+"""Complaints/131 and 132: no engine code names a civilisation, and the game
 runs with any civilisation file absent.
 
 Unittest style so importing it does not pull in the engine; the harness

@@ -70,7 +70,7 @@ Check with `ls` before trusting this; directories move.
 | Tests | `sim/tests/`, run through `sim/test_regressions.py` |
 | Engine shape, measured | `sim/ARCHITECTURE.md` |
 | Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |
-| Open problems, bug reports (each has a `**Status:**` line) | `Complaints/` (open), `Complaints/closed/` (done); `python3 sim/issue_status.py` prints the table, `--check` validates it |
+| Open problems, bug reports (each has a `**Status:**` line) | `Complaints/` (open), `Complaints/closed/` (done); `python3 sim/issue_status.py` prints the table, `--check` validates it; a new issue takes its number from `--next`, and if two branches collide, run `--renumber --write` after merging |
 | Playtest and audit reports; standing design decisions | `Complaints/reports/`; `docs/architecture/DESIGN_PRINCIPLES.md` |
 | Mods: loader, contract, backlog | `sim/engine/mods.py`, `mods/README.md`, `mods/TASKS.md` |
 | Playtest setup for agent players | `playtest/` |

@@ -590,7 +590,7 @@ class PolymetallicByproductTests(unittest.TestCase):
         self.assertEqual(byproduct.material_key, "silver_kg")
         self.assertGreater(byproduct.ore_grade_kg_per_tonne, 0.0)
         # Lead in a district with a silver deposit carries that district's
-        # assay (Complaints/337); a lead deposit with no silver deposit in
+        # assay (Complaints/291); a lead deposit with no silver deposit in
         # its district carries none.
         silver_tiles = {deposit.tile for deposit in deposits.load_deposits("silver")}
         for name, deposit in lead_deposits.items():

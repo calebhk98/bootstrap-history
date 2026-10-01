@@ -4,7 +4,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine.proto.typed import parse_typed as _parse_typed
 from sim.engine.proto import command_registry as _registry
 
-# Complaint 91: a player can say which active project gets founder hours first.
+# Complaint 89: a player can say which active project gets founder hours first.
 
 _ids = ["academy_network", "corpus_written", "school_founded"]
 

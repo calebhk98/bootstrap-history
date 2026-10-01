@@ -1,4 +1,4 @@
-"""The `education` screen (Complaints/96): literacy against its ceiling, the
+"""The `education` screen (Complaints/94): literacy against its ceiling, the
 schools that are running, the pools literacy limits and the trainees in the
 pipeline. Every figure is read from the functions the engine already uses.
 """

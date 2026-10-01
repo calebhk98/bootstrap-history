@@ -55,7 +55,7 @@ NUMERAIRE_TRADE = "labourer"
 # invites.
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
-# PHYSICAL CAPABILITY CAPS (Complaints/44 - see TEMPERATURE in this
+# PHYSICAL CAPABILITY CAPS (Complaints/43 - see TEMPERATURE in this
 # module's own docstring for the full defect and the reasoning behind the
 # number below). the tree's own `cap_heat_0700` node -
 # "Sustained 700 C (pottery kiln)... Already available wherever there is
@@ -358,7 +358,7 @@ def techniques_available_to(production_entries, reached_nodes):
       unclassified - the entry carries no `requires_node` at all, so nobody
                      has said when it becomes available. Dropped, because
                      admitting it is precisely how a photovoltaic panel ended
-                     up pricing Roman electricity (Complaints/39), and
+                     up pricing Roman electricity (Complaints/38), and
                      counted, because a silent drop is how that stayed
                      invisible for as long as it did.
 
@@ -791,7 +791,7 @@ def _extraction_rent_cost_hours(outputs, rent_by_kg):
 
 
 def _land_cost_hours(entry, current_prices):
-    # LAND (Complaints/49 - see RENT ON GROWN AND LAND-LIMITED MATERIALS in
+    # LAND (Complaints/48 - see RENT ON GROWN AND LAND-LIMITED MATERIALS in
     # the module docstring). `land_hectare_years` is a BATCH-level quantity,
     # exactly like `inputs` and `labour_hours` above, of hectare-years this
     # whole batch ties up `hectare_land` for - priced through this same
@@ -843,7 +843,7 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
     # against this same batch's basis output) - NOT a per-unit-of-output
     # charge the way `capital` is, so unlike capital_cost_hours none of
     # these terms gets multiplied by batch_output_quantity. PER-CONSUMER
-    # GRADING (Complaints/44, continued - see TEMPERATURE in the module
+    # GRADING (Complaints/43, continued - see TEMPERATURE in the module
     # docstring): the price paid is not always `current_prices[energy_key]`
     # any more - `_capability_graded_price` returns THIS recipe's own
     # graded price when it states its own requirement, and falls back to
@@ -1140,7 +1140,7 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade,
     rent_hours term.
 
     THE ZERO-LAND-RENT REFERENCE PRICE, AND WHY IT STAYS ZERO-RENT EVEN NOW
-    THAT wheat_kg CONSUMES LAND (Complaints/49). Before this round wheat_kg
+    THAT wheat_kg CONSUMES LAND (Complaints/48). Before this round wheat_kg
     truly had no `inputs` at all, so calling `recipe_cost_and_allocation`
     with an empty price dict gave its labour-only price by construction.
     wheat_kg now also states a `land_hectare_years` (see RENT ON GROWN AND
@@ -1148,7 +1148,7 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade,
     None the moment it tries to look up a price for `hectare_land` that this
     empty dict does not have. The fix is to seed exactly that one price at
     0.0 rather than leave it absent - `{"hectare_land": 0.0}` - which
-    reproduces the pre-Complaints/49 answer exactly (0.0 hours/hectare times
+    reproduces the pre-Complaints/48 answer exactly (0.0 hours/hectare times
     any `land_hectare_years` is 0.0, so the land term drops out and only
     labour remains) rather than changing what this reference price MEANS.
     This is deliberately NOT circular: the reference price answers "what
@@ -1306,7 +1306,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
     Returns (prices, iterations_run, final_residual, chosen_recipe_by_material).
 
-    PHYSICAL CAPABILITY CAPS, PER CONSUMER (Complaints/44, continued; see
+    PHYSICAL CAPABILITY CAPS, PER CONSUMER (Complaints/43, continued; see
     CAPABILITY_CAP_FIELDS and TEMPERATURE in the module docstring). Two
     things are computed once, before the very first round, from THIS
     solve's own `production_entries` alone - exactly like
