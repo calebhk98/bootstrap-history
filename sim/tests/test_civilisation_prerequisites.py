@@ -48,20 +48,23 @@ if not os.path.isdir(DATA):                      # running from sim/tests/
 # Every violation as it stands today, keyed (civilisation, held node) with the
 # prerequisites that node needs and the civilisation does not have. Generated
 # by measurement, not by hand.
+# The refractory_fireclay entries are the heat-rung grant (Complaints/127,
+# 336): cap_heat_1100 needs fireclay, which needs the founder's own first
+# workshop node; the four metal-working civilisations hold the first two.
 KNOWN_VIOLATIONS = {
     ("england_1300", "ag2_refrigeration_ice"): ["fud_ice_harvesting_and_cutting"],
-    ("england_1300", "mfg_enamelling"): ["cap_heat_1100"],
     ("england_1300", "mat_paper"): ["rag_paper"],
+    ("england_1300", "refractory_fireclay"): ["workshop_first"],
     ("england_1300", "sc2_institution_textbook"): ["sc2_institution_curriculum", "sc2_institution_journal"],
     ("england_1300", "sea_sternpost_rudder"): ["sea_skeleton_first"],
     ("england_1300", "tex_indigo"): ["mat_natron"],
     ("england_1300", "water_power_scale"): ["crank_conrod"],
-    ("han_china_100ad", "bellows_water_blown"): ["refractory_fireclay", "water_power_scale"],
+    ("han_china_100ad", "bellows_water_blown"): ["water_power_scale"],
     ("han_china_100ad", "blast_furnace"): ["charcoal_industrial"],
-    ("han_china_100ad", "cap_heat_1300"): ["cap_heat_1100"],
     ("han_china_100ad", "fud_heavy_mouldboard_plough_coulter"): ["horse_collar"],
     ("han_china_100ad", "fud_seed_drill"): ["horse_collar", "master_screw"],
     ("han_china_100ad", "mat_paper"): ["rag_paper"],
+    ("han_china_100ad", "refractory_fireclay"): ["workshop_first"],
     ("mexica_1500", "fud_cacao"): ["exp_americas_factory"],
     ("mexica_1500", "fud_chinampa"): ["exp_americas_factory"],
     ("mexica_1500", "fud_maize"): ["exp_americas_factory"],
@@ -70,8 +73,9 @@ KNOWN_VIOLATIONS = {
         "clock_pendulum", "opt_sextant", "sea_magnetic_compass", "world_map"],
     ("norse_900ad", "med_trepanation"): ["med_surgical_kit_good"],
     ("norse_900ad", "med_wound_suturing"): ["med_surgical_kit_good"],
+    ("norse_900ad", "refractory_fireclay"): ["workshop_first"],
     ("rome_100ad", "ag2_refrigeration_ice"): ["fud_ice_harvesting_and_cutting"],
-    ("rome_100ad", "mfg_enamelling"): ["cap_heat_1100"],
+    ("rome_100ad", "refractory_fireclay"): ["workshop_first"],
     ("rome_100ad", "sc2_institution_textbook"): ["sc2_institution_curriculum", "sc2_institution_journal"],
 }
 
