@@ -19,6 +19,9 @@ from .render_screens_economy import (
     render_population, render_ventures,
 )
 from .render_screens_market import render_market
+from .render_screens_world import (
+    render_map, render_education, render_demography, render_divergence,
+)
 from .render_screens_status import (
     render_values, render_final, render_score, render_error, render_stuck,
     render_risk, render_generic, render_log, render_policy, render_rush,
@@ -40,6 +43,8 @@ _RENDERERS = {
     "dashboard": render_capacity, "portfolio": render_portfolio,
     "economy": render_economy, "changes": render_changes,
     "population": render_population,
+    "map": render_map, "education": render_education,
+    "demography": render_demography, "divergence": render_divergence,
     "final": render_final, "finish": render_final, "score": render_score,
     "start": render_start, "begin": render_start, "research": render_start,
     "build": render_start,

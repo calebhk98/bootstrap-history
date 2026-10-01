@@ -25,6 +25,7 @@ _TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
 
 def _fresh_sim(civ="han_china_100ad", fog=False):
     sim = Sim(_NODES, list(_NODES), random.Random(1), civ=simulator.load_civ(civ))
+    sim.done_year = {}
     if fog:
         sim.fog = True
         sim.revealed = set()

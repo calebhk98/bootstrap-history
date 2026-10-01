@@ -641,7 +641,7 @@ def _cmd_changes(sim, nodes, cmd, ended):
 
 
 @command("population", group="society",
-         aliases=("demographics", "demography", "census", "pop"),
+         aliases=("demographics", "census", "pop"),
          summary="the country's numbers and your reach",
          usage=["population"], options={},
          description="The country, the one town your household reaches, and per trade "

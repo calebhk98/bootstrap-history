@@ -38,6 +38,8 @@ from .dispatch_money import (
     _cmd_bounty, _cmd_buy, _cmd_sell, _cmd_money, _cmd_quote, _cmd_close,
     _cmd_withdraw, _cmd_bribe)
 from .dispatch_market import _cmd_market  # noqa: F401
+from .dispatch_screens import (  # noqa: F401
+    _cmd_map, _cmd_education, _cmd_demography, _cmd_divergence)
 from .dispatch_staff_controls import _cmd_keep, _cmd_reserve  # noqa: F401
 from .dispatch_priority import _cmd_priority  # noqa: F401
 from .dispatch_exclusions import _cmd_exclude, _cmd_include  # noqa: F401

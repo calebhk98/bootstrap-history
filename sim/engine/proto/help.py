@@ -181,6 +181,9 @@ def _topic_population(sim):
         "ESTIMATE, not a census."),
         "commands": {
             "population": "no argument needed - the whole picture at once",
+            "demography": "age cohorts, births, deaths, disease and food",
+            "education": "literacy, schools and trainees",
+            "map": "the land you hold, with places, terrain and deposits",
             "move": "move the base to another tile: 'move' lists them, "
                     "'move <tile>' goes. It costs the journey's wages, "
                     "part of your year's hours, your local contracts and "

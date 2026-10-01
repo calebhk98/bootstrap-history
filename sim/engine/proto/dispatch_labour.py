@@ -9,6 +9,7 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
+from sim.world import tile_names
 from .command_registry import command
 from ..data import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state import _staff_fraction_note
@@ -570,10 +571,14 @@ def _cmd_move_base(sim, nodes, cmd, ended):
             if tile == home or people[tile] < 1.0:
                 continue
             days, hours, money = sim.relocation_quote(tile)
-            rows.append({"tile": tile, "people": round(people[tile]),
+            rows.append({"tile": tile, "name": tile_names.tile_name(tile),
+                         "region": tile_names.region_name(tile),
+                         "terrain": tile_names.terrain(tile),
+                         "people": round(people[tile]),
                          "days_on_the_road": round(days), "your_hours_lost": round(hours),
                          "wages_paid_on_the_way": round(money)})
         return {"ok": True, "you_are_based_at": home,
+                "you_are_at_name": tile_names.tile_name(home),
                 "the_town_there": round(sim.home_town_population_estimate()),
                 "tiles": rows,
                 "how": 'move to one: {"cmd":"move_base","to":"<tile>"}'}

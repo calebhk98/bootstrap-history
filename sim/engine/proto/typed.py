@@ -583,6 +583,10 @@ def _parse_population(command, rest, words, nums, want_json):
     return {"cmd": "population"}, None
 
 
+def _parse_map(command, rest, words, nums, want_json):
+    return {"cmd": "map", "full": "full" in [word.lower() for word in words]}, None
+
+
 def _parse_move_base(command, rest, words, nums, want_json):
     # 'move' alone lists the tiles; 'move <tile>' (or 'move to <tile>') goes.
     names = [word for word in rest if word.lower() != "to"]
@@ -842,6 +846,7 @@ _COMMAND_PARSERS = {
     "changes": _parse_changes,
     "bribe": _parse_bribe,
     "population": _parse_population,
+    "map": _parse_map,
     "move_base": _parse_move_base,
     "labour": _parse_labour,
     "hire": _parse_hire_or_fire,
