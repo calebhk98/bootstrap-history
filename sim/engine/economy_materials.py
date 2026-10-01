@@ -684,6 +684,20 @@ class MaterialSupplyMixin:
                     * self.mine_depletion_factor(mat) * yld)
         return 0.0
 
+    def _national_output_tonnes(self, emp_key):
+        """Tonnes a year the whole society produces of `emp_key`, from the
+        resource table where it names one, else the generic estimate."""
+        entry = self.res["empire_output_100ad"].get(emp_key)
+        return entry.get("t_per_yr", 0) if entry is not None else (
+            self._generic_national_output_t_per_yr(emp_key))
+
+    def _society_output_tonnes(self, emp_key):
+        """What the society's own producers can bring to market a year: the
+        national output scaled to the territory held (see _material_market_tonnes
+        for the same scale)."""
+        scale = self.pop_scale if emp_key == "charcoal" else self.mineral_scale(emp_key)
+        return self._national_output_tonnes(emp_key) * scale
+
     def _material_market_tonnes(self, emp_key):
         """Tonnes a year of `emp_key` the empire's market will sell you, at
         your current standing. The MARKET half of resource_throttle()'s
@@ -696,10 +710,7 @@ class MaterialSupplyMixin:
         a reasoned default for everything else, so a material nobody named
         still has a market rather than an actual hard zero.
         """
-        emp = self.res["empire_output_100ad"]
-        entry = emp.get(emp_key)
-        national = entry.get("t_per_yr", 0) if entry is not None else (
-                   self._generic_national_output_t_per_yr(emp_key))
+        national = self._national_output_tonnes(emp_key)
         share = self.MARKET_SHARE.get(emp_key)
         if share is None:
             share = self._generic_market_share(emp_key)
@@ -929,8 +940,9 @@ class MaterialSupplyMixin:
             return None
         emp_key = self._material_tag(material)[0]
         buy = (per_kg / tonnes_per_unit(material) * self.price_index
-               * self.material_price_factor(emp_key))
+               * self.material_price_factor(emp_key) * self.market_price_ratio(emp_key))
         return {"material": material, "stock_key": emp_key, "buy_per_tonne": buy,
+                "market_price_ratio": self.market_price_ratio(emp_key),
                 "sell_per_tonne": buy * self.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
                 "market_available_tonnes_per_year": self._material_market_tonnes(emp_key)}
 
@@ -949,6 +961,7 @@ class MaterialSupplyMixin:
         if not purchase_rule.can_pay(self, cost):
             return 0.0
         household.capital -= cost
+        self.market_note_purchase(quote["stock_key"], tonnes)
         opening = self._material_opening_stock()
         self._material_stock()[quote["stock_key"]] += tonnes
         opening[quote["stock_key"]] = opening.get(quote["stock_key"], 0.0) + tonnes
@@ -994,6 +1007,7 @@ class MaterialSupplyMixin:
         if sold <= 0:
             return 0.0
         money = self.material_sale_proceeds(material, sold, sold_so_far.get(key, 0.0))[0]
+        self.market_note_sale(key, sold)
         opening = self._material_opening_stock()
         self._material_stock()[key] -= sold
         opening[key] = opening.get(key, 0.0) - sold
