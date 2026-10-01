@@ -12,7 +12,7 @@ from sim.world import demography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
-from sim.world import mineral_shares
+from sim.world import regions
 # Weather is drawn per geography.json land_tiles cell (see
 # `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
@@ -557,10 +557,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # below depends only on the civ file and the (static) geography
         # file, so it is computed once.
         self.geo = load_geography()
-        regional_shares = mineral_shares.regional_mineral_shares(self.geo)
-        self._regions = {region_id: dict(value, minerals=regional_shares[region_id])
-                         for region_id, value in (self.geo.get("regions") or {}).items()
-                         if not region_id.startswith("_")}
+        self._regions = regions.region_records(self.geo)
         self._home_centroid = self._compute_home_centroid()
         # node id -> located_materials key. Lets material_cost_factor() find
         # the geography entry for a location-gated tech node (mat_gutta_percha,
@@ -938,14 +935,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         real arable area), not a defect in this pooling mechanism, which
         only ever needed relative shares; left alone here, deliberately.
 
-        Falls back to ONE cell at a region's own centroid, weighted by that
-        region's own `land` block, for any home region NOT found in
-        `land_tiles.region_to_tiles` (should not happen for any of the 21
-        shipped regions - every one appears there - but a future or test
-        civilisation naming an unmapped region should degrade rather than
-        silently drop that region's harvest). If NO cell anywhere ends up
-        with a positive arable-land figure (every candidate region missing
-        both a tile mapping and a `land` block), falls back further to an
+        A home region with no tiles contributes no cell (a region is a label
+        over tiles; with no tiles it has no land). If no cell ends up with a
+        positive arable-land figure, falls back to an
         EQUAL split across whatever cells were found. A civilisation with
         no `home_regions` at all gets an empty list, which
         `_pooled_farm_weather_multiplier` below reads as "fall back to one
@@ -965,7 +957,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         land_tiles = geography.get("land_tiles") or {}
         tiles_by_id = land_tiles.get("tiles") or {}
         region_to_tiles = land_tiles.get("region_to_tiles") or {}
-        regions = geography.get("regions") or {}
         raw_cells = []
         for region in home_regions:
             tile_ids = region_to_tiles.get(region) or []
@@ -979,16 +970,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
                     raw_cells.append(Sim._WeatherCell(
                         cell_id=tile_id, lat=tile["lat"], lon=tile["lon"],
                         weight=arable_km2))
-            else:
-                region_record = regions.get(region)
-                if not region_record:
-                    continue
-                land_block = region_record.get("land") or {}
-                arable_km2 = (land_block.get("land_area_km2", 0.0)
-                              * land_block.get("arable_fraction", 0.0))
-                raw_cells.append(Sim._WeatherCell(
-                    cell_id=region, lat=region_record.get("lat", 0.0),
-                    lon=region_record.get("lon", 0.0), weight=arable_km2))
         if not raw_cells:
             return []
         # STAKEHOLDER ITEM 7: cap cell count independently of how finely

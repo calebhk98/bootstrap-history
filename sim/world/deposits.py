@@ -269,6 +269,7 @@ from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
+from sim.world import tile_lookup
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -648,7 +649,8 @@ ByproductSpec = collections.namedtuple("ByproductSpec", [
 Deposit = collections.namedtuple("Deposit", [
     "name",
     "metal",
-    "tile",                       # key of geography.json's land_tiles
+    "tile",                       # key of geography.json's land_tiles that
+                                  # holds the deposit's lat/lon
     "material_moved",             # "ore" or "gravel"
     "ore_grade_kg_per_tonne",     # kg of CONTAINED METAL per tonne raised
     "depth_class",
@@ -1038,8 +1040,8 @@ def load_deposits(
     """Every named deposit for `metal`, with its extraction-cost inputs and
     its derived `quantity_tonnes_per_year`: the deposit's own
     share_of_empire_output times data/world/resources.json's
-    empire_output_100ad. Each deposit sits on a land tile (its `tile` field,
-    a key of geography.json's land_tiles); nothing here reads the region
+    empire_output_100ad. Each deposit sits on the land tile holding its lat/lon
+    (a key of geography.json's land_tiles); nothing here reads the region
     records.
 
     The data arguments default to loading the files fresh, and are accepted
@@ -1070,7 +1072,7 @@ def load_deposits(
         out.append(Deposit(
             name=entry["name"],
             metal=metal,
-            tile=entry["tile"],
+            tile=tile_lookup.tile_holding(entry["lat"], entry["lon"]),
             material_moved=entry["material_moved"],
             ore_grade_kg_per_tonne=grade,
             depth_class=entry["depth_class"],

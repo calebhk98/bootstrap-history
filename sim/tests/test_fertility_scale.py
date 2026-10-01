@@ -59,11 +59,10 @@ class RegionFertilityIsDerivedTests(unittest.TestCase):
                 self.assertAlmostEqual(lands[region].fertility_quality_multiplier,
                                        weighted / arable, places=9, msg=region)
 
-    def test_region_without_tiles_and_without_a_stored_value_fails_loudly(self):
+    def test_region_without_tiles_has_no_land(self):
         geography = copy.deepcopy(_GEOGRAPHY)
         geography["regions"]["orphan"] = copy.deepcopy(geography["regions"]["italia"])
-        with self.assertRaises(KeyError):
-            land.load_region_lands(geography)
+        self.assertNotIn("orphan", land.load_region_lands(geography))
 
 
 if __name__ == "__main__":
