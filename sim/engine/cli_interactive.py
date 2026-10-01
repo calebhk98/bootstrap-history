@@ -316,7 +316,9 @@ def _play_print_welcome(sim, kit):
     # A kit is a number of labourer-years, so it is stated here in the
     # civilisation's own money at its own opening wage.
     if kit and kit in STARTING_KITS:
-        print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %d %s.'
+        print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %d %s. '
+                    'This money unit is normalised to the labourer wage in this civilisation, '
+                    'not to any historical coin.'
                     % (kit, STARTING_KITS[kit]["labourer_years"], sim.capital,
                        money_word(sim.civ))))
     print()
@@ -1126,8 +1128,8 @@ def _new_game_ask_mortality(cfg):
     print(_wrap("MORTALITY. By default the founder does not age, which measures "
                 "the tree rather than a lifespan lottery. Turned on, you get one "
                 "human life and everything you have not made permanent dies with "
-                "you. The premise of the whole game is that one is the honest "
-                "number. You can turn this on later, mid-game, without "
+                "you. Either way shapes what you can reach and how you must plan. "
+                "You can turn this on later, mid-game, without "
                 "restarting (see the in-game 'options' command) - but not off "
                 "again once it is on, the same as fog.", indent="   "))
     mortal_default = "y" if cfg.get("default_mortal", False) else "n"
