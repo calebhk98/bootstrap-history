@@ -39,10 +39,27 @@ check("menu: the seed question is asked", "Seed" in _out, _out[-1500:])
 check("menu: a typed seed is the game's seed", _seed == 4242, (_seed, _out[-800:]))
 _seed, _out = _seed_after_menu("blank", "")
 check("menu: a blank seed draws a random one", _seed not in (None, 4242), (_seed, _out[-800:]))
-_seed, _out = _seed_after_menu("bad", "abc\n77")
-check("menu: a non-number seed is asked again", _seed == 77, (_seed, _out[-800:]))
+_seed, _out = _seed_after_menu("word", "Rome42")
+check("menu: a word seed is accepted and kept as typed, in lower case",
+      _seed == "rome42", (_seed, _out[-800:]))
+_seed, _out = _seed_after_menu("bad", "two words\n77")
+check("menu: a seed with a space is asked again", _seed == 77, (_seed, _out[-800:]))
 _seed, _out = _seed_after_menu("configured", "", {"default_seed": 9001})
 check("menu: a blank answer takes the seed set in settings", _seed == 9001, (_seed, _out[-800:]))
+
+# ---- a word seed replays the same game from the command line
+_saves_word, _env_word = _env("word-replay")
+def _word_game(name, seed):
+    session = os.path.join(_saves_word, name + ".json")
+    out = _run(["play", "--civ", "rome_100ad", "--seed", seed, "--session", session],
+               "step 3\nstate\nquit\n", _env_word).stdout
+    return out.split("Seed:", 1)[-1]
+_first, _second = _word_game("a", "hello"), _word_game("b", "hello")
+check("--seed takes a word and prints it back", _first.startswith(" hello"), _first[:200])
+check("the same word seed replays the same game", _first == _second.replace("b.json", "a.json"),
+      (_first[:400], _second[:400]))
+check("a different word seed rolls different dice",
+      _word_game("c", "goodbye").split("\n", 1)[-1] != _first.split("\n", 1)[-1])
 
 # ---- 263: `goals` lists what the menu lists, default first, without the stale blurb
 _saves, _env_goals = _env("goals")
