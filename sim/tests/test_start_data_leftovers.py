@@ -51,5 +51,24 @@ class NeedleAndFireclay(unittest.TestCase):
             self.assertFalse(set(nodes["refractory_fireclay"]["pre"]) - held, name)
 
 
+class ZincNodes(unittest.TestCase):
+    def test_industrial_zinc_scales_up_the_retort_technique(self):
+        # Complaints/41: two zinc nodes were alternatives with unrelated prerequisites.
+        # The industry node builds on the technique and needs no steelmaking.
+        nodes = _nodes()
+        self.assertIn("mt2_zinc_by_retort", nodes["zinc_metal"]["pre"])
+        self.assertNotIn("cementation_steel", _closure(nodes, "zinc_metal"))
+
+    def test_citric_and_chromate_recipes_name_their_own_process_nodes(self):
+        # Complaints/41: the recipes pointed at nodes for other processes.
+        nodes = _nodes()
+        with open(os.path.join(ROOT, "data", "production", "50_chemicals.json")) as handle:
+            recipes = json.load(handle)["materials"]
+        for material, node_id in (("citric_acid_kg", "ch2_citric_lime_precipitate"),
+                                  ("chrome_salts_kg", "ch2_chromate_from_chromite")):
+            self.assertIn(node_id, nodes)
+            self.assertEqual(recipes[material]["requires_node"], node_id)
+
+
 if __name__ == "__main__":
     unittest.main()

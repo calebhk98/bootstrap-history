@@ -6975,7 +6975,7 @@
     "note": "CRITICAL PATH, and nobody guesses it. Zinc boils at 907 C, below the temperature at which calamine is reduced, so the metal leaves as vapour and reburns at the furnace mouth. That is precisely why brass gets made by cementation everywhere, without anyone having seen the metal itself. Seal the retort and condense downward, as at Zawar. Without this there is no good voltaic pile, and without a pile there is no electricity. It is also your realistic germanium source, twice over.",
     "ph": 700.0,
     "pre": [
-      "cementation_steel",
+      "mt2_zinc_by_retort",
       "refractory_fireclay"
     ],
     "req_any": [
