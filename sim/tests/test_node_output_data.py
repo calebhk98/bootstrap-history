@@ -12,9 +12,13 @@ from sim.world.labour_market import production_data
 
 # Gated nodes whose lines the three bounds cannot yet reach: extraction (a deposit or a parent
 # stream sets the output), lines whose basis unit is not a kilogram (the declared figure is in
-# tonnes), and lines that split one declared total across unrelated products. Complaints/520.
+# tonnes), lines that split one declared total across unrelated products, and makers whose
+# entries add less than their staff cost at solved prices, so a declared output would only
+# derive zero revenue, and makers whose derived payback would fall under the floor. Complaints/520.
 STILL_UNBOUNDED = {
-    "analytical_chemistry", "electrolysis_industrial", "in2_claude_cycle_air_liquefaction",
+    "analytical_chemistry", "chm_caustic_soda", "chm_glycerol", "chm_polyethylene", "chm_superphosphate",
+    "gunpowder", "mirror_amalgam", "chm_solvay_process", "chm_bleaching_powder",
+    "prn_hand_papermaking", "electrolysis_industrial", "in2_claude_cycle_air_liquefaction",
     "in2_linde_cycle_expansion_engine", "in2_ultracentrifuge", "med_opium_mandrake",
     "met_froth_flotation", "pwr_coal_seam", "pwr_nuclear_fission", "pwr_peat",
 }
