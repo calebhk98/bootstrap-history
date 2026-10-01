@@ -7,3 +7,5 @@ A 150-year Rome run (seed 1) spends about a quarter of its CPU in `Sim.actor_sup
 Why it matters: it is the largest remaining flat cost in a late year, and it grows with firms times materials.
 
 What it would take: a supply table per year, kept by the actor registry and invalidated by the registry's concern version plus the year (ramp) and staffing changes, read per material; the founder's market code then asks the table instead of walking actors. Check with `perf_fingerprint.py check --quick`.
+
+Measured again after complaint 471's shared table (Rome seed 1, two steps from year 250 of a play): `actor_supply` no longer shows among the top costs of a late year; firms are fewer than when this was filed (they expand instead of multiplying). Left open until a profile of a larger firm count shows the walk again.
