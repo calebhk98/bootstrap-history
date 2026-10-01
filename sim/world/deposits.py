@@ -269,7 +269,7 @@ from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from sim.world import tile_lookup
+from sim.world import mine_fire_setting, tile_lookup
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -685,7 +685,9 @@ def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
     else:
         hours_per_tonne_material = (
             _HARDNESS_BREAKING_HOURS[deposit.hardness_class]
-            * _DEPTH_HAULAGE_MULTIPLIER[deposit.depth_class])
+            * _DEPTH_HAULAGE_MULTIPLIER[deposit.depth_class]
+            + mine_fire_setting.fire_setting_labour_hours_per_tonne_rock(
+                deposit.hardness_class))
     return hours_per_tonne_material / deposit.ore_grade_kg_per_tonne
 
 
