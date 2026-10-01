@@ -144,8 +144,10 @@ class FogMixin:
         bits = []
         if known:
             bits.append("missing prerequisites: " + ", ".join(known))
-        bits.append("%d other thing%s you have not heard of yet"
-                    % (hidden, "" if hidden == 1 else "s"))
+        hidden_kinds = self._hidden_prerequisite_kinds([prereq_id for prereq_id in missing if prereq_id not in known])
+        bits.append("%d other thing%s you have not heard of yet%s"
+                    % (hidden, "" if hidden == 1 else "s",
+                       " (%s)" % ", ".join(hidden_kinds) if hidden_kinds else ""))
         msg = "; and ".join(bits) if known else \
             ("this needs %s, and you do not yet know what %s"
              % (bits[-1], "they are" if hidden > 1 else "it is"))
@@ -153,6 +155,29 @@ class FogMixin:
         # whole method exists to apply, so the hint is built from it and a
         # hidden prerequisite is never named by the hint either.
         return msg + self._free_prereq_hint(known)
+
+    # Plain words for a node's kind, so a hidden blocker keeps its identity but shows what sort of thing it is.
+    FOG_KIND_HINTS = {
+        "ENGINEERING": "a technique or device", "SCIENCE": "an idea or body of theory",
+        "INSTITUTION": "an institution or social arrangement", "RESOURCE": "a material or its source",
+        "INFRASTRUCTURE": "a built facility", "CAPABILITY": "a measurement or power capability",
+    }
+    # A hidden prerequisite shows its kind only when this share of its own prerequisites is already done.
+    FOG_HINT_NEARNESS = 0.5
+
+    def _hidden_prerequisite_kinds(self, hidden_ids: List[str]) -> List[str]:
+        """Kind phrases for hidden prerequisites the player has built enough nearby knowledge to place."""
+        done = self.state.projects.done
+        kinds: List[str] = []
+        for node_id in hidden_ids:
+            node = self.nodes.get(node_id) or {}
+            prereqs = node.get("pre") or []
+            near = (sum(1 for prereq_id in prereqs if prereq_id in done) / len(prereqs) >= self.FOG_HINT_NEARNESS
+                    if prereqs else True)
+            phrase = self.FOG_KIND_HINTS.get(node.get("kind"))
+            if near and phrase and phrase not in kinds:
+                kinds.append(phrase)
+        return kinds
 
     # Capability nodes (cap_measure_*, cap_power_*) cost nothing, take no time.
     # A refusal naming one must say it is free and startable now, not just the name.

@@ -1,6 +1,6 @@
 # Persistent shortages should become status conditions, not identical annual messages
 
-**Status:** open
+**Status:** closed - a persistent shortage is one standing CONDITION line on the state and step screens (material, share of plan, deficit in tonnes a year, years lasting, trend; sim/engine/shortage_conditions.py); the full SHORT OF message is logged only when the shortage is new or its throughput moves materially. The remedy text for coal is sized by 239.
 
 Messages such as "buy ~1 more hectare of coppice" repeated year after year with nearly identical wording.
 

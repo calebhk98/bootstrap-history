@@ -3,6 +3,7 @@
 import math, re
 
 from ..data import closure
+from .. import shortage_conditions
 from ..knowledge_warning import knowledge_loss_warning
 from .state_shut_staffing import shut_for_want_of_staff
 from .step_alerts import demographic_emergency
@@ -897,6 +898,9 @@ def _agent_state(sim, nodes, cmd=None):
     emergency = demographic_emergency(sim.state.population.population_change_last_year)
     if emergency:
         out["demographic_emergency"] = emergency
+    conditions = shortage_conditions.condition_rows(sim)
+    if conditions:
+        out["conditions"] = conditions
     return _agent_state_shorten(out, full)
 
 

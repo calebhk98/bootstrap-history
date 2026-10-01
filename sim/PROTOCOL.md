@@ -156,7 +156,14 @@ Two fixes, usable separately or together:
                                                     collapse, worst tier first; the
                                                     staffing closure line (closed,
                                                     reopened, still shut, cause, remedies)
-                                                    stands for closures. The step also
+                                                    stands for closures. A disaster year's
+                                                    log lines come back as one "events"
+                                                    row whose "details" lists them; a
+                                                    lasting shortage is "conditions" on
+                                                    every state and step reply (material,
+                                                    throughput, years, trend), logged in
+                                                    full only when new or materially
+                                                    changed. The step also
                                                     stops early for a concern closed for
                                                     want of staff, a newly blocked
                                                     project, a severe failure or the goal

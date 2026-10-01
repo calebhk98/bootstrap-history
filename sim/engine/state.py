@@ -314,6 +314,7 @@ class EconomyState:
 	shortages: collections.Counter = field(default_factory=collections.Counter)
 	throttle: float = 1.0
 	binding: Optional[str] = None
+	shortage_condition: Optional[Dict[str, Any]] = None
 	forest_ha: float = 0.0
 	nitre_bed_m2: float = 0.0
 	market_pressure: float = 0.0

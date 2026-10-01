@@ -16,6 +16,7 @@ from .score import victory_report
 from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
 from . import step_progress
+from .event_groups import group_disaster_events
 from .step_alerts import step_alerts
 from .step_stops import newly_startable_goal, severe_stop_reason
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
@@ -211,6 +212,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     _STEP_STOP_MARKERS = ("CREDIT EXHAUSTED", "FOUNDER DIES",
                           "CLOSE TO THE LIMIT")
     completed, lost, events = [], [], []
+    disasters = []
     founder_died_this_step = None
     stopped_early = None
     end_year = sim.end_year
@@ -283,6 +285,8 @@ def _cmd_step(sim, nodes, cmd, ended):
             lost.append({"id": node_id, "name": nodes[node_id]["name"], "year": sim.year,
                          "can_be_restored": node_id in getattr(sim, "mothballed", set())})
         _this_year = sim.log[before_log:]
+        if getattr(sim, "disaster_this_year", None):
+            disasters.append(sim.disaster_this_year)
         for year, message in _this_year:
             events.append({"year": year, "message": message})
             if "founder dies" in message.lower():
@@ -334,6 +338,8 @@ def _cmd_step(sim, nodes, cmd, ended):
         stopped_early, sim.state.population.population_change_last_year,
         staffing_line=sim.staffing_closure_summary())
     summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
+    for disaster in disasters:
+        out["events"] = group_disaster_events(out["events"], disaster["name"], disaster["messages"])
     if summary:
         out["summary"] = summary
     problems = step_problems(ran, snapshots, events, stalled_projects(sim))

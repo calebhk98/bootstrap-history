@@ -13,6 +13,7 @@ from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 from .tree_filters import render_state_rows
 from .wave_summary import summary_line
 from .step_problems import problems_lines
+from ..shortage_conditions import condition_line
 from .step_alerts import alert_lines
 from .render_screens_market import why_goods_market_lines
 from ..knowledge_warning import warning_lines
@@ -324,6 +325,13 @@ def _state_knowledge_warning(out):
     return [""] + warning_lines(out.get("knowledge_loss_warning")) if out.get("knowledge_loss_warning") else []
 
 
+def _state_conditions(out):
+    rows = out.get("conditions")
+    if not rows:
+        return []
+    return [""] + ["CONDITION: " + condition_line(row) for row in rows]
+
+
 def _state_at_risk(out):
     lines = []
     at_risk = out.get("at_risk")
@@ -439,6 +447,7 @@ def _state_completed_head_lines(out):
             # in any save or log changes, which a shift of the stamped year
             # itself could not have promised.
             head.append("  DURING %s: %s" % (event.get("year"), event.get("message")))
+            head.extend("      - " + detail for detail in event.get("details") or [])
         if out.get("stopped_early"):
             head.append("  " + out["stopped_early"])
     if out.get("victory"):
@@ -495,7 +504,7 @@ def render_state(out):
     renderers = (
         _state_header, _state_money, _state_founder, _state_running,
         _state_stuck, _state_concerns, _state_employ, _state_standing,
-        _state_knowledge_warning, _state_at_risk, _state_goal,
+        _state_conditions, _state_knowledge_warning, _state_at_risk, _state_goal,
     )
     lines = _render_sections(out, renderers)
     lines = _state_completed_head(out, lines)

@@ -345,9 +345,11 @@ def _play_print_welcome(sim, kit):
     # word to take on faith.
     print(_wrap("These five are a beginning, not the whole of it - there "
                 "are far more commands than this. 'help' lists the rest, "
-                "one topic at a time: %s. Reach for it the moment you "
-                "type a word the game does not know, not only once you "
-                "are stuck." % ", ".join(_protocol.HELP_TOPICS)))
+                "one topic at a time: %s. 'help commands' opens with a short "
+                "beginner index, and 'help sittings' explains playing one "
+                "command per process with the game saved between runs. Reach "
+                "for it the moment you type a word the game does not know, "
+                "not only once you are stuck." % ", ".join(_protocol.HELP_TOPICS)))
     # THE WALKTHROUGH, NOT BURIED: `path <goal>` lays out everything still
     # standing between here and one thing AND which of it you could start
     # today. It has no business being harder to find than the five above,

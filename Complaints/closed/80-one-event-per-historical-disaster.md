@@ -1,6 +1,6 @@
 # One historical disaster should be one expandable event
 
-**Status:** open
+**Status:** closed - a disaster year folds its log lines into one event carrying them under `details` (sim/engine/proto/event_groups.py), printed as a headline with the consequences beneath it.
 
 The 1519 invasion and the 410 Sack of Rome each manifested as several separate log entries: seizure, staff loss, project reset, knowledge loss, value changes, arrears, etc. Reconstructing "what just happened?" required scanning multiple entries.
 
