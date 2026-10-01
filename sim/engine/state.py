@@ -488,6 +488,12 @@ class CapitalMarketRecord:
 	capacity: float = 0.0
 	# actor id -> what it owed at the meeting
 	loans: Dict[str, float] = field(default_factory=dict)
+	# interest borrowers have paid and lenders not yet been paid; and running totals of each side
+	interest_pool: float = 0.0
+	interest_paid_total: float = 0.0
+	interest_received_total: float = 0.0
+	# the part of what lenders received that went to the society's savers (households, not modelled by actor)
+	interest_to_households: float = 0.0
 
 
 @dataclass

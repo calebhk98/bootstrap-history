@@ -81,10 +81,23 @@ class CapitalMarketMixin:
             "state": LENDABLE_RESERVE_SHARE * spare,
         }
 
+    def state_lending(self):
+        """(what the state has out on loan, the yearly rate lenders earn) at the last meeting. Lenders'
+        funds are lent in proportion to what is demanded of the pool, up to all but their reserve, and
+        every source's share of that lending is its share of the pool (labelled heuristic: no matching
+        of particular lenders to particular borrowers)."""
+        record = self._market_record()
+        if record is None or record.supply <= 0.0:
+            return 0.0, self.market_rate()
+        demanded = capital_market.utilisation(record.background + sum(record.loans.values()), record.supply)
+        lent_share = min(1.0 - capital_market.LENDER_RESERVE_SHARE, demanded)
+        return record.supply_by_source.get("state", 0.0) * lent_share, record.rate
+
     def update_capital_market(self):
         """The year's meeting: set the rate from the balance and record what lenders will advance."""
         from .actors import SimWorld
         world = SimWorld(self)
+        self.pay_lenders()
         record = self.capital_market()
         sources = self.market_funds(world)
         supply = sum(sources.values())
@@ -116,6 +129,7 @@ class CapitalMarketMixin:
             "funds_lenders_hold": round(record.supply, 1),
             "lenders_will_still_advance_you": None if room is None else round(room, 1),
             "the_state_owes": round(record.loans.get(gov, 0.0), 1),
+            "the_state_has_lent": round(self.state_lending()[0], 1),
             "means": "the yearly rate on loans in your civilisation, set by the funds its households, "
                      "firms and state save against what everyone borrows; your own rate is this plus "
                      "a premium for how much of your limit you use, less your standing",

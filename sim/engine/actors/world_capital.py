@@ -1,5 +1,5 @@
 """What an actor can see of the loanable-funds market of its civilisation, and what households save."""
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 from sim.constants import declare
 from sim.world import demand
@@ -25,6 +25,14 @@ class CapitalView:
 	def credit_headroom(self, actor_id: str) -> Optional[float]:
 		"""What lenders will still advance an actor beyond what others owe; None before the market has met."""
 		return self._sim.market_credit_room(actor_id)
+
+	def state_lending(self) -> Tuple[float, float]:
+		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
+		return self._sim.state_lending()
+
+	def note_interest_paid(self, amount: float) -> None:
+		"""A borrower's interest joins the pool lenders are paid from."""
+		self._sim.note_interest_paid(amount)
 
 	def household_saving(self) -> float:
 		"""Yearly saving of the society's households: a share of the income above subsistence, with

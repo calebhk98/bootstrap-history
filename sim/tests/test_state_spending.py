@@ -115,18 +115,14 @@ check("the founder's revenue includes only what the treasury paid",
       poor.revenue() <= rich.revenue() and rich.revenue() > 0.0, (poor.revenue(), rich.revenue()))
 
 # ---- a surplus is not hoarded for ever, so a later collapse is felt -----------------------------
-from sim.engine.actors.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
-
 hoard = sim()
 hoard_treasury = hoard.state_treasury()
 hoard_treasury.money = 1.0e18
 one_year(hoard)
-standing_need = sum(hoard_treasury.record.need.values())
-check("reserve beyond a few years of the standing need is spent on what the budget does not name",
-      abs(hoard_treasury.money - RESERVE_CEILING_YEARS_OF_NEED * standing_need) < 1e-6 * standing_need
-      and hoard_treasury.record.outlays.get("discretionary", 0.0) > 0.0,
-      (hoard_treasury.money, standing_need, hoard_treasury.record.outlays))
-check("the purse still equals income less outlays after the sweep",
+check("reserve beyond what the state holds against risk buys works, never an outlay that pays no one",
+      hoard_treasury.record.outlays.get("works", 0.0) > 0.0 and "discretionary" not in hoard_treasury.record.outlays,
+      hoard_treasury.record.outlays)
+check("the purse still equals income less outlays after the works",
       abs(hoard_treasury.money - (1.0e18 + sum(hoard_treasury.record.income.values())
                                   - sum(hoard_treasury.record.outlays.values()))) < 1e-6 * 1.0e18, hoard_treasury.money)
 collapse = sim()

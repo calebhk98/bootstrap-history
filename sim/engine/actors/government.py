@@ -13,12 +13,12 @@ from typing import Any, Dict, List, Tuple
 
 from . import budget, ledger
 from .base import Actor, RecordedActor
+from .government_surplus import SurplusMixin
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
-from .tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
 from .values import invention_gains, weighted_gain
 
 
-class Government(RecordedActor):
+class Government(SurplusMixin, RecordedActor):
 	kind = "government"
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
@@ -95,12 +95,6 @@ class Government(RecordedActor):
 		if grant > 0.0:
 			self.debit(grant, "patronage")
 
-	def spend_surplus(self, lines: List[budget.Line]) -> None:
-		"""Reserve beyond a few years of the standing need is spent on what the budget does not name."""
-		excess = self.money - RESERVE_CEILING_YEARS_OF_NEED * sum(line.money for line in lines)
-		if excess > 0.0:
-			self.debit(excess, "discretionary")
-
 	def employ_standing(self, lines: List[budget.Line], share: float, world: Any) -> None:
 		"""Staff of the lines it paid for, as far as they reach into the founder's labour market."""
 		for line in lines:
@@ -120,7 +114,7 @@ class Government(RecordedActor):
 		lines, share = self.pay_standing_need(world)
 		self.pay_patron(share, world)
 		self.act(world)
-		self.spend_surplus(lines)
+		self.build_works(lines, world)
 		self.employ_standing(lines, share, world)
 		self.seek_shortfall(lines, world)
 		self.press_new_staff(held, world)

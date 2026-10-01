@@ -62,4 +62,5 @@ class Borrower:
 			return 0.0
 		owed = debt * self.borrowing_rate(world)
 		self.debit(owed, "interest")  # type: ignore[attr-defined]
+		world.note_interest_paid(owed)
 		return owed
