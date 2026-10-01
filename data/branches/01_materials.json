@@ -1219,8 +1219,8 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Chromium above about 11% forms a self-healing passive oxide. Chemical plant, cutlery, vacuum systems. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: steel with 11% chromium requires 1500-1600 C melting]",
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: steel with 11% chromium requires 1500-1600 C melting]"
+  "note": "Chromium above about 11% forms a self-healing passive oxide. Chemical plant, cutlery, vacuum systems.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: steel with 11% chromium requires 1500-1600 C melting] [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: steel with 11% chromium requires 1500-1600 C melting]"
  },
  {
   "id": "mat_zinc",
@@ -1372,8 +1372,8 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Hall-Heroult in a molten fluoride bath. Cryolite is Greenlandic and unobtainable, so you must synthesise the bath from your own hydrofluoric acid. Before electricity aluminium is a precious metal; after it, it is roofing. [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: Hall-Heroult bath must be maintained at 950-1000 C]",
-  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: Hall-Heroult bath must be maintained at 950-1000 C]"
+  "note": "Hall-Heroult in a molten fluoride bath. Cryolite is Greenlandic and unobtainable, so you must synthesise the bath from your own hydrofluoric acid. Before electricity aluminium is a precious metal; after it, it is roofing.",
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: Hall-Heroult bath must be maintained at 950-1000 C] [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: Hall-Heroult bath must be maintained at 950-1000 C]"
  },
  {
   "id": "mat_magnesium",
@@ -1855,13 +1855,13 @@
   "sch": 4,
   "art": 8,
   "conf": "B",
-  "note": "Coal tar to benzene to aniline to mauveine and the rest. Historically this single industry funded organic chemistry, created the first industrial research laboratories, and led directly to pharmaceuticals. Enormously profitable and politically harmless. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: coal tar to aniline synthesis involves exothermic reactions needing temperature control]",
+  "note": "Coal tar to benzene to aniline to mauveine and the rest. Historically this single industry funded organic chemistry, created the first industrial research laboratories, and led directly to pharmaceuticals. Enormously profitable and politically harmless.",
   "traits": [
    "commerce",
    "labour_saving",
    "status_threatening"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: coal tar to aniline synthesis involves exothermic reactions needing temperature control]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: coal tar to aniline synthesis involves exothermic reactions needing temperature control] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: coal tar to aniline synthesis involves exothermic reactions needing temperature control]"
  },
  {
   "id": "mat_nitrocellulose",

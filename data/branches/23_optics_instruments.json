@@ -1913,11 +1913,11 @@
   "sch": 1,
   "art": 0,
   "conf": "C",
-  "note": "Cesium or other photoemissive surface in vacuum emits electrons when light strikes. Current amplified by dynamo or triode. Single photon detectable in dark conditions. [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: photoemissive surface in vacuum tube needs high vacuum]",
+  "note": "Cesium or other photoemissive surface in vacuum emits electrons when light strikes. Current amplified by dynamo or triode. Single photon detectable in dark conditions.",
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: photoemissive surface in vacuum tube needs high vacuum] [FIXED after independent audit: a photoemissive surface needs an alkali metal, which was not in the materials.]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: photoemissive surface in vacuum tube needs high vacuum] [FIXED after independent audit: a photoemissive surface needs an alkali metal, which was not in the materials.] [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: photoemissive surface in vacuum tube needs high vacuum]"
  },
  {
   "id": "opt_seismograph",
@@ -1951,11 +1951,11 @@
   "sch": 2,
   "art": 1,
   "conf": "B",
-  "note": "Heavy mass damped by springs or pendulum. Frame sits on ground. Relative motion drives pen against rotating drum. Natural period of 10-20 seconds maximizes sensitivity to distant earthquakes. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: precision mechanical linkage and pen mechanism]",
+  "note": "Heavy mass damped by springs or pendulum. Frame sits on ground. Relative motion drives pen against rotating drum. Natural period of 10-20 seconds maximizes sensitivity to distant earthquakes.",
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: precision mechanical linkage and pen mechanism]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: precision mechanical linkage and pen mechanism] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: precision mechanical linkage and pen mechanism]"
  },
  {
   "id": "opt_gravimeter",
@@ -2160,11 +2160,11 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Cathode ray tube, beam deflected by time-base and signal voltages. Traces waveform directly on screen. Requires 1000+ volt HT supply and precise synchronization. [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: cathode ray tube requires vacuum for electron beam propagation]",
+  "note": "Cathode ray tube, beam deflected by time-base and signal voltages. Traces waveform directly on screen. Requires 1000+ volt HT supply and precise synchronization.",
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: cathode ray tube requires vacuum for electron beam propagation]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: cathode ray tube requires vacuum for electron beam propagation] [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: cathode ray tube requires vacuum for electron beam propagation]"
  },
  {
   "id": "opt_chronograph",

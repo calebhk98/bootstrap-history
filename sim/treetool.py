@@ -984,9 +984,11 @@ def cmd_apply_caps(args):
                 applied += 1
             if got:
                 reasons[node_id] = (got, fix.get("reason", ""))
-                node["note"] = node["note"].rstrip() + (
-                    " [REVIEWED: prerequisite(s) %s added by a reviewer working node by node. "
+                marker = (
+                    "[REVIEWED: prerequisite(s) %s added by a reviewer working node by node. "
                     "Reason: %s]" % (", ".join(got), fix.get("reason", "not given")))
+                node["_internal"] = (node.get("_internal") or "").rstrip() + " " + marker
+                node["_internal"] = node["_internal"].strip()
     print("APPLY REVIEWER-ASSIGNED PREREQUISITES")
     print("   edges applied                    %d" % applied)
     print("   nodes judged to need none        %d" % empty)

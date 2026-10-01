@@ -1376,8 +1376,8 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Coke and steam passed through hot coal produces combustible gas. Used for lighting and early engines. Supply is local and pipeline-dependent; replaced by petrol in vehicles. [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: steam-coke reaction at 900-1000C for coal gas production]",
-  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: steam-coke reaction at 900-1000C for coal gas production]"
+  "note": "Coke and steam passed through hot coal produces combustible gas. Used for lighting and early engines. Supply is local and pipeline-dependent; replaced by petrol in vehicles.",
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: steam-coke reaction at 900-1000C for coal gas production] [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: steam-coke reaction at 900-1000C for coal gas production]"
  },
  {
   "id": "lnd_otto_cycle_four_stroke",

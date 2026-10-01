@@ -1,6 +1,6 @@
 # Player-facing notes carry audit markers and patch history
 
-**Status:** open
+**Status:** closed
 
 **Source:** `reports/TOP_PROBLEMS.md` item 12. The data-file pointer part was fixed; this remainder was not.
 

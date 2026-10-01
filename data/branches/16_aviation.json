@@ -1609,13 +1609,13 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Newton's third law: jet out the back, thrust forward. A compressor forces air in, fuel burns in a combustion chamber, hot gas expands and exits at high velocity. No piston engine, no propeller. Much simpler mechanically than reciprocating engines but requires materials that survive continuous high temperature under pressure. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat]",
+  "note": "Newton's third law: jet out the back, thrust forward. A compressor forces air in, fuel burns in a combustion chamber, hot gas expands and exits at high velocity. No piston engine, no propeller. Much simpler mechanically than reciprocating engines but requires materials that survive continuous high temperature under pressure.",
   "traits": [
    "military",
    "spectacle"
   ],
   "build_yrs": 2.0,
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat]"
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat] [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat]"
  },
  {
   "id": "air_jet_engine_build",

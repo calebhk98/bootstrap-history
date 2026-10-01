@@ -612,8 +612,8 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Wrought iron from bloomery furnace is ductile, tough, and resistant to corrosion. Smith heating and hand-forging creates toughness. Rivets are driven hot; the cooled rivet locks parts together. Roman and medieval smiths knew this; it is not high art, but skilled work. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C]",
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C]"
+  "note": "Wrought iron from bloomery furnace is ductile, tough, and resistant to corrosion. Smith heating and hand-forging creates toughness. Rivets are driven hot; the cooled rivet locks parts together. Roman and medieval smiths knew this; it is not high art, but skilled work.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C] [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C]"
  },
  {
   "id": "civ_bridge_wrought_iron_truss",
@@ -1730,11 +1730,11 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Large flat panes of clear glass. Cast plate glass (poured onto a flat table, then ground and polished) allows sizes to 3-4 metres. Transforms storefronts and windows. Sheet glass (drawn from a bath) is cheaper but smaller. Large panes are fragile but stunning. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy]",
+  "note": "Large flat panes of clear glass. Cast plate glass (poured onto a flat table, then ground and polished) allows sizes to 3-4 metres. Transforms storefronts and windows. Sheet glass (drawn from a bath) is cheaper but smaller. Large panes are fragile but stunning.",
   "traits": [
    "luxury"
   ],
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy]"
  },
  {
   "id": "civ_fireproofing",

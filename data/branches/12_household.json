@@ -1743,12 +1743,12 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Incandescent bulbs (Edison carbon, then tungsten filament) or arc lamps. Grid electricity required. Replaces gas lamps and kerosene. Cost per lumen falls; brightness increases. Urban electrification spreads from 1880s onward. [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent filament requires vacuum to prevent oxidation]",
+  "note": "Incandescent bulbs (Edison carbon, then tungsten filament) or arc lamps. Grid electricity required. Replaces gas lamps and kerosene. Cost per lumen falls; brightness increases. Urban electrification spreads from 1880s onward.",
   "traits": [
    "inexplicable",
    "infrastructure"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent filament requires vacuum to prevent oxidation]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent filament requires vacuum to prevent oxidation] [REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: incandescent filament requires vacuum to prevent oxidation]"
  },
  {
   "id": "hom_electric_fan",
