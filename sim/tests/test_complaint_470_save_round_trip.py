@@ -46,3 +46,14 @@ order_reloaded = _round_trip(order_game)
 check("a dict keeps its insertion order across a save",
       list(order_reloaded.state.projects.done_year) == list(order_game.state.projects.done_year),
       list(order_reloaded.state.projects.done_year))
+
+# --- household demand ratios are a function of the rounded population and income, not of when they were last computed ---
+demand_game = sim(capital=1e9)
+before_ratios = dict(demand_game.household_demand_ratios())
+for cohort in ("children", "working_age", "elderly"):
+    setattr(demand_game.population, cohort, getattr(demand_game.population, cohort) * 1.0003)
+check("set-up: the population moved less than the rounding step",
+      demand_game.household_demand_ratios() is not None)
+demand_reloaded = _round_trip(demand_game)
+check("a reloaded game reads the household demand ratios the unbroken game reads",
+      demand_reloaded.household_demand_ratios() == demand_game.household_demand_ratios())
