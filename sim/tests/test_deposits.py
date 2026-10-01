@@ -35,7 +35,7 @@ def _make_deposit(name, metal="test_metal", material_moved="ore",
                    hardness_class="medium", quantity_tonnes_per_year=100.0,
                    note="", byproducts=()):
     return deposits.Deposit(
-        name=name, metal=metal, region="nowhere",
+        name=name, metal=metal, tile="nowhere",
         material_moved=material_moved,
         ore_grade_kg_per_tonne=ore_grade_kg_per_tonne,
         depth_class=depth_class, hardness_class=hardness_class,
@@ -711,10 +711,17 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         # load_deposits must not pull either in, since data/world/
         # deposits.json names no china or southeast_asia deposit at all
         # and resources.json's empire_output_100ad is Rome's own figure.
-        names = {deposit.region for deposit in deposits.load_deposits("iron")}
-        self.assertNotIn("china", names)
-        names = {deposit.region for deposit in deposits.load_deposits("tin")}
-        self.assertNotIn("southeast_asia", names)
+        with open(os.path.join(_REPO_ROOT, "data", "world", "geography.json")) as handle:
+            land_tiles = json.load(handle)["land_tiles"]
+        region_of_tile = {tile_id: region_id
+                          for region_id, tile_ids in land_tiles["region_to_tiles"].items()
+                          for tile_id in tile_ids}
+        iron_regions = {region_of_tile.get(deposit.tile)
+                        for deposit in deposits.load_deposits("iron")}
+        self.assertNotIn("china", iron_regions)
+        tin_regions = {region_of_tile.get(deposit.tile)
+                       for deposit in deposits.load_deposits("tin")}
+        self.assertNotIn("southeast_asia", tin_regions)
 
 
 class NoPriceDataTests(unittest.TestCase):
@@ -730,7 +737,7 @@ class NoPriceDataTests(unittest.TestCase):
         # would fail on the very sentences documenting this discipline.
         # What actually matters is that the module never OPENS that file
         # or reads its wage/purchase-price tables, which is what this
-        # checks: the only three _FILE constants this module defines, and
+        # checks: the only two _FILE constants this module defines, and
         # the only paths handed to _load_json / open() anywhere in it.
         path = os.path.join(_REPO_ROOT, "sim", "world", "deposits.py")
         with open(path) as handle:
@@ -742,9 +749,9 @@ class NoPriceDataTests(unittest.TestCase):
                 if node.value.endswith(".json"):
                     opened_paths.add(node.value)
         self.assertEqual(
-            opened_paths, {"geography.json", "resources.json", "deposits.json"},
+            opened_paths, {"resources.json", "deposits.json"},
             "sim/world/deposits.py references a JSON filename other than "
-            "the three data files it is meant to read: %s" % opened_paths)
+            "the two data files it is meant to read: %s" % opened_paths)
         self.assertNotIn("purchase_prices_denarii", source)
         self.assertNotIn("wage_rates_denarii_per_hour", source)
 

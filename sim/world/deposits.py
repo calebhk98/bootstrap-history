@@ -280,7 +280,6 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(os.path.dirname(_THIS_DIR))
-GEOGRAPHY_FILE = os.path.join(_ROOT, "data", "world", "geography.json")
 RESOURCES_FILE = os.path.join(_ROOT, "data", "world", "resources.json")
 DEPOSITS_FILE = os.path.join(_ROOT, "data", "world", "deposits.json")
 
@@ -290,15 +289,6 @@ DEPOSITS_FILE = os.path.join(_ROOT, "data", "world", "deposits.json")
 # through declare(): it is a list of names, not a fact with a value that
 # could be wrong.
 METALS = ("iron", "copper", "tin", "lead", "silver", "gold", "mercury")
-
-# geography.json's own regional mineral shares are calibrated so that ONLY
-# these seven "home" regions (reach_from_italia 0 or 1) sum to about 1.0 per
-# metal - see that file's regions._note. A farther region with a nonzero
-# share (China's iron, India's copper) is ADDITIONAL production outside the
-# empire's own output, not a slice of it (geography.json says so explicitly
-# for Malayan tin), so including it here would double-count against
-# resources.json's empire-wide total rather than partition it.
-HOME_REACH_MAXIMUM = 1
 
 
 # ============================================================================
@@ -658,8 +648,7 @@ ByproductSpec = collections.namedtuple("ByproductSpec", [
 Deposit = collections.namedtuple("Deposit", [
     "name",
     "metal",
-    "region",                     # geography.json key, or a free-text label
-                                   # (e.g. "dacia") when no such region exists
+    "tile",                       # key of geography.json's land_tiles
     "material_moved",             # "ore" or "gravel"
     "ore_grade_kg_per_tonne",     # kg of CONTAINED METAL per tonne raised
     "depth_class",
@@ -953,19 +942,6 @@ def _load_json(path: str) -> Any:
         return json.load(handle)
 
 
-def _region_share(
-        geography: Dict[str, Any], region: str, metal: str) -> Optional[float]:
-    """geography.json's own regional mineral share for `metal` at `region`,
-    or None if that region carries no entry for it at all (as opposed to an
-    explicit zero) - used only to tell a genuine gap in geography.json apart
-    from a region that simply produces none of this metal.
-    """
-    entry = geography["regions"].get(region)
-    if entry is None:
-        return None
-    return entry.get("minerals", {}).get(metal)
-
-
 _GRADE_DECLARED: set = set()
 
 
@@ -1036,12 +1012,9 @@ _SHARE_DECLARED: set = set()
 
 
 def _declare_explicit_share(deposit_entry: Dict[str, Any], metal: str) -> float:
-    """share_of_empire_output, for the two metals (gold, mercury)
-    geography.json carries no regional breakdown for at all - see
-    data/world/deposits.json's own _doc. Declared for the same reason the
-    grade is: it is a number this file asserts, not arithmetic on an
-    already-declared one.
-    """
+    """share_of_empire_output: this deposit's slice of the metal's output,
+    the figure the quantity is derived from. Declared because it is a number
+    this file asserts, not arithmetic on an already-declared one."""
     name = "DEPOSIT_SHARE_%s_%s" % (metal.upper(), deposit_entry["name"].upper())
     if name in _SHARE_DECLARED:
         return deposit_entry["share_of_empire_output"]
@@ -1053,32 +1026,28 @@ def _declare_explicit_share(deposit_entry: Dict[str, Any], metal: str) -> float:
         unit="fraction of empire_output_100ad for this metal (dimensionless)",
         source=deposit_entry.get("source"),
         confidence=confidence,
-        why="Stands in for the regional breakdown data/world/geography.json "
-            "carries for iron, copper, tin, lead and silver but not for %s "
-            "- see data/world/deposits.json's own _doc for why gold and "
-            "mercury need their own explicit share instead of a "
-            "geography.json lookup." % metal)
+        why="Stands in for a located production figure per deposit: the "
+            "share of the %s output of the Roman world worked at this "
+            "site, normalised so the deposits of one metal sum to about "
+            "1.0 (see data/world/deposits.json's own _doc)." % metal)
 
 
 def load_deposits(
-        metal: str, geography: Optional[Dict[str, Any]] = None,
-        resources: Optional[Dict[str, Any]] = None,
+        metal: str, resources: Optional[Dict[str, Any]] = None,
         deposits_data: Optional[Dict[str, Any]] = None) -> List["Deposit"]:
     """Every named deposit for `metal`, with its extraction-cost inputs and
-    its derived `quantity_tonnes_per_year`, built from data/world/
-    deposits.json plus (for iron, copper, tin, lead, silver)
-    data/world/geography.json's own regional mineral shares times
-    data/world/resources.json's empire_output_100ad, or (for gold, mercury,
-    which geography.json carries no regional breakdown for) the deposit's
-    own declared share_of_empire_output.
+    its derived `quantity_tonnes_per_year`: the deposit's own
+    share_of_empire_output times data/world/resources.json's
+    empire_output_100ad. Each deposit sits on a land tile (its `tile` field,
+    a key of geography.json's land_tiles); nothing here reads the region
+    records.
 
-    The three data arguments default to loading the files fresh, and are
-    accepted as arguments purely so a caller (or a test) that already has
-    them in hand is not made to re-read three files it just read.
+    The data arguments default to loading the files fresh, and are accepted
+    purely so a caller (or a test) that already has them in hand is not made
+    to re-read them.
     """
     if metal not in METALS:
         raise ValueError("unknown metal %r; must be one of %s" % (metal, METALS))
-    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
     resources = resources if resources is not None else _load_json(RESOURCES_FILE)
     deposits_data = (deposits_data if deposits_data is not None
                       else _load_json(DEPOSITS_FILE))
@@ -1088,28 +1057,7 @@ def load_deposits(
     out = []
     for entry in deposits_data["deposits"].get(metal, []):
         grade = _declare_grade(entry, metal)
-        share: Optional[float]
-        if "share_of_empire_output" in entry:
-            share = _declare_explicit_share(entry, metal)
-        else:
-            region_entry = geography["regions"].get(entry["region"])
-            if region_entry is None:
-                raise KeyError(
-                    "%s: region %r not found in data/world/geography.json, "
-                    "and this entry carries no share_of_empire_output of "
-                    "its own" % (entry["name"], entry["region"]))
-            if region_entry.get("reach_from_italia", 99) > HOME_REACH_MAXIMUM:
-                # geography.json's own shares are normalised so only the
-                # "home" regions sum to ~1.0 per metal (see this module's
-                # HOME_REACH_MAXIMUM); a farther region's share is EXTRA
-                # production, not part of empire_output_100ad's total, so it
-                # is deliberately excluded here rather than double-counted.
-                continue
-            share = _region_share(geography, entry["region"], metal)
-            if share is None:
-                raise KeyError(
-                    "%s: region %r has no %r entry in geography.json's "
-                    "minerals table" % (entry["name"], entry["region"], metal))
+        share = _declare_explicit_share(entry, metal)
         quantity_tonnes_per_year = share * empire_total_tonnes
         byproducts = tuple(
             ByproductSpec(
@@ -1122,7 +1070,7 @@ def load_deposits(
         out.append(Deposit(
             name=entry["name"],
             metal=metal,
-            region=entry["region"],
+            tile=entry["tile"],
             material_moved=entry["material_moved"],
             ore_grade_kg_per_tonne=grade,
             depth_class=entry["depth_class"],

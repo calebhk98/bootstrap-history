@@ -4,7 +4,6 @@ A region is a label over tiles. These tests alter or remove the region-level
 copy and require the answer not to move, so any reader that still goes
 through the region layer fails here.
 """
-import copy
 import json
 import os
 import unittest
@@ -27,46 +26,32 @@ class DepositsReadTilesTests(unittest.TestCase):
             for deposit in deposits.load_deposits(metal):
                 self.assertIn(deposit.tile, tiles, "%s: %s" % (metal, deposit.name))
 
-    def test_deposit_quantities_do_not_need_the_region_records(self):
-        geography = _geography()
-        stripped = copy.deepcopy(geography)
-        stripped["regions"] = {}
+    def test_deposit_quantity_is_its_share_of_the_metal_total(self):
+        resources = deposits._load_json(deposits.RESOURCES_FILE)
+        deposits_data = deposits._load_json(deposits.DEPOSITS_FILE)
         for metal in deposits.METALS:
-            expected = [(d.name, d.quantity_tonnes_per_year)
-                        for d in deposits.load_deposits(metal, geography)]
-            actual = [(d.name, d.quantity_tonnes_per_year)
-                      for d in deposits.load_deposits(metal, stripped)]
-            self.assertEqual(expected, actual, metal)
-
-    def test_a_tile_share_moves_the_deposit_that_sits_on_it(self):
-        geography = _geography()
-        base = {d.name: d.quantity_tonnes_per_year
-                for d in deposits.load_deposits("tin", geography)}
-        doubled = copy.deepcopy(geography)
-        for deposit in deposits.load_deposits("tin", geography):
-            tile_minerals = doubled["land_tiles"]["tiles"][deposit.tile]["minerals"]
-            tile_minerals["tin"] *= 2.0
-        for deposit in deposits.load_deposits("tin", doubled):
-            self.assertAlmostEqual(deposit.quantity_tonnes_per_year,
-                                   2.0 * base[deposit.name], places=9)
+            total = resources["empire_output_100ad"][metal]["t_per_yr"]
+            shares = {entry["name"]: entry["share_of_empire_output"]
+                      for entry in deposits_data["deposits"][metal]}
+            for deposit in deposits.load_deposits(metal):
+                self.assertAlmostEqual(deposit.quantity_tonnes_per_year,
+                                       shares[deposit.name] * total, places=9)
 
 
 class MineralSharesAreNotDuplicatedTests(unittest.TestCase):
 
-    def test_no_region_and_tile_both_carry_the_same_metal(self):
+    def test_a_deposit_share_is_not_also_in_its_region_table(self):
         geography = _geography()
-        tiles = geography["land_tiles"]["tiles"]
-        region_to_tiles = geography["land_tiles"]["region_to_tiles"]
+        region_of_tile = {tile_id: region_id
+                          for region_id, tile_ids in geography["land_tiles"]["region_to_tiles"].items()
+                          for tile_id in tile_ids}
         duplicated = []
-        for region_id, region in geography["regions"].items():
-            if region_id.startswith("_"):
-                continue
-            for metal, share in (region.get("minerals") or {}).items():
-                if not share:
-                    continue
-                for tile_id in region_to_tiles.get(region_id, []):
-                    if metal in (tiles[tile_id].get("minerals") or {}):
-                        duplicated.append((region_id, metal, tile_id))
+        for metal in deposits.METALS:
+            for deposit in deposits.load_deposits(metal):
+                region_id = region_of_tile.get(deposit.tile)
+                listed = (geography["regions"].get(region_id, {}).get("minerals") or {}).get(metal)
+                if listed:
+                    duplicated.append((deposit.name, region_id, metal))
         self.assertEqual(duplicated, [])
 
     def test_regional_totals_still_sum_to_one_over_the_home_regions(self):

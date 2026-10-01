@@ -27,6 +27,7 @@ grouping evidence.
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model
+from sim.world import land
 from . import purchase_rule
 
 
@@ -79,7 +80,7 @@ class MiningMixin:
             total = sum(dep.quantity_tonnes_per_year for dep in pool)
             return [(dep, dep.quantity_tonnes_per_year / total) for dep in pool]
         seam = deposit_model.Deposit(
-            name="generic_" + mat, metal=mat, region="", material_moved="ore",
+            name="generic_" + mat, metal=mat, tile="", material_moved="ore",
             ore_grade_kg_per_tonne=KILOGRAMS_PER_TONNE,
             depth_class=self.GENERIC_MINE_DEPTH_CLASS,
             hardness_class=self.GENERIC_MINE_HARDNESS_CLASS,
@@ -892,21 +893,17 @@ class MiningMixin:
             "independently measured.")
 
     def home_land_area_km2(self):
-        """Total land area, in km2, of this civilization's own home_regions --
-        read from geography.json's per-region `land.land_area_km2`, not
-        counted by how many region labels that ground happens to be filed
-        under (see forest_land_ceiling()'s own comment for why the count
-        was wrong). Falls back to Italia's area, the same fallback
-        _compute_home_centroid() uses for a civ file with no valid
-        home_regions at all, so this never divides by zero or crashes on a
-        malformed civ file."""
-        home = [region_id for region_id in (self.civ.get("home_regions") or []) if region_id in self._regions]
-        area = sum(float((self._regions[region_id].get("land") or {}).get("land_area_km2", 0.0))
-                   for region_id in home)
+        """Total land area, in km2, of the tiles this civilization's
+        home_regions resolve to, not counted by how many region labels that
+        ground is filed under (see forest_land_ceiling()). Falls back to
+        Italia's tiles, as _compute_home_centroid() falls back to Italia,
+        for a civ file with no resolvable home_regions, so this never
+        divides by zero or crashes on a malformed civ file."""
+        area = land.territory_land_area_km2(self.civ.get("home_regions") or [], self.geo)
         if area > 0.0:
             return area
-        fallback = self._regions.get("italia") or next(iter(self._regions.values()), {})
-        return float((fallback.get("land") or {}).get("land_area_km2", 0.0)) or 1.0
+        fallback = "italia" if "italia" in self._regions else next(iter(self._regions), None)
+        return land.territory_land_area_km2([fallback], self.geo) or 1.0
 
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""
