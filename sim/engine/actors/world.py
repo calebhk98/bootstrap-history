@@ -11,13 +11,14 @@ from sim.engine.data import TRADES_ABSENT
 
 from . import supply
 from .world_budget import BudgetView
+from .world_capacity import CapacityView
 from .world_capital import CapitalView
 from .world_disclosure import DisclosureView
 from .world_groups import GroupView
 from .tuning import OBSERVATION_RANGE_KM
 
 
-class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView):
+class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:
@@ -122,10 +123,12 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView):
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
 		return {trade: people for trade, people in staff.items() if people > 0.0}
 
-	def concern_wage_bill(self, node_id: str) -> float:
-		"""Yearly wages of the people running this concern needs, at the going wage."""
-		return sum(people * self.hours_per_person_year * self.wage_per_hour(trade)
-				   for trade, people in self.concern_staff(node_id).items())
+	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
+		"""Yearly wages of the people running this concern needs, at the going wage, for a firm
+		running it at `capacity` times its founding size."""
+		return self.span_factor(capacity) * sum(
+			people * self.hours_per_person_year * self.wage_per_hour(trade)
+			for trade, people in self.concern_staff(node_id).items())
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		"""People of a trade left in the pool for this actor after the founder's staff and
@@ -154,7 +157,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView):
 		category = self.nodes[node_id].get("cat")
 		return category if category in self._sim.GOODS_CATEGORIES else node_id
 
-	def entry_gross(self, node_id: str, rivals: int, entrants: int) -> float:
+	def entry_gross(self, node_id: str, rivals: float, entrants: float) -> float:
 		"""Yearly takings one more operator would have at full ramp once `entrants` operators
 		(itself included) have joined the `rivals` already selling."""
 		sim = self._sim
@@ -184,16 +187,17 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView):
 	def ramp(self, opened_year: int) -> float:
 		return min(1.0, (self.year - opened_year + 1) / self._sim.cfg["revenue_ramp_years"])
 
-	def concern_takings(self, node_id: str, opened_year: int, rivals: int = 0) -> float:
-		"""Yearly takings of a concern an actor runs. A goods category has one market shared
-		by every operator, the founder's and the actors', so each gets its share of the demand;
-		a concern with no market model splits with its rivals."""
+	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
+		"""Yearly takings of a concern an actor runs at `capacity` times its founding size. A goods
+		category has one market shared by every operator, the founder's and the actors', so each unit
+		of capacity gets its share of the demand; a concern with no market model splits with the
+		capacity of its rivals."""
 		sim = self._sim
-		takings = sim.concern_takings(node_id, self.ramp(opened_year))
+		takings = sim.concern_takings(node_id, self.ramp(opened_year)) * capacity
 		category = self.nodes[node_id].get("cat")
 		if category in sim.GOODS_CATEGORIES:
 			return takings * sim.goods_category_factor(category)
-		return takings / (1.0 + rivals)
+		return takings / (capacity + rivals)
 
 	def concerns_making(self, material: str) -> Any:
 		"""The nodes whose concerns put `material` on the market."""
@@ -203,8 +207,8 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView):
 		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,
 											self.ramp(opened_year), staffed)
 
-	def upkeep(self, node_id: str) -> float:
-		return self.nodes[node_id]["up"] * self._sim.price_index
+	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
+		return self.nodes[node_id]["up"] * self._sim.price_index * capacity
 
 	def rng_for(self, *parts: Any) -> random.Random:
 		"""A random stream keyed by its inputs, so actors never disturb the world's own."""

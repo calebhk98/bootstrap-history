@@ -10,3 +10,5 @@ Profile of two Rome 100 AD seed 1 steps at about AD 250 (script: step once to wa
 - `economy_production._compute_revenue_uncached` reruns after every finished project (the cache key includes the done-version), and walks every operating concern.
 
 What it would take: a per-year table of the founder-side bill keyed on the registry's market version plus labour pressure; an incremental clearing; measure with the profile above and `perf_fingerprint.py check --quick`.
+
+Measured after firm capacity scaling (Complaint 550): mean CPU of a Rome seed 1 year over years 141-150 went from 6.9 s to 6.6 s although the firm count fell from about 7600 to about 3100; the cost is not simply proportional to the count (price solves and the founder's own work dominate those years). Measure with a driver that steps the game and records `time.process_time()` per `Sim.step`.

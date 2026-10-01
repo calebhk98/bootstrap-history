@@ -88,3 +88,13 @@ ATTENTION_SPAN = declare(
 	why="How many of the most promising inventions an actor works out a "
 		"copying plan for in a year; stands in for limited attention and "
 		"keeps the yearly evaluation bounded.")
+EXPANSION_RATE = declare(
+	"EXPANSION_RATE", 0.5, kind="temporary_heuristic",
+	unit="share of present capacity per year", source=None, confidence="D",
+	why="The most capacity a firm adds to a concern in a year, however good the return; stands in for "
+		"the time to build plant and to find and train the people.")
+MANAGEMENT_SPAN_EXPONENT = declare(
+	"MANAGEMENT_SPAN_EXPONENT", 0.15, kind="temporary_heuristic",
+	unit="exponent of capacity on the wage bill beyond the people hired", source=None, confidence="D",
+	why="Wages of a concern run at several times its founding size grow faster than its staff: the "
+		"overseers and managers a larger concern needs. Stands in for a model of span of control.")
