@@ -37,7 +37,7 @@ while _SIM_DIR in sys.path:
 from sim.engine.data import *            # noqa: F401,F403
 from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS, GEOFILE, PRICES,
                          RESFILE, STARTING_KITS, STRATS, TECH_EFFECTS,
-                         TRADES_ABSENT, TRADE_FAMILY, TRADE_NOTES, TREE, WAGES,
+                         TRADES_ABSENT, TRADE_FAMILY, TRADE_NOTES, WAGES,
                          closure, critical_path, haversine_km, load, load_civ,
                          load_geography, load_resources, topo_order,
                          trade_family, goal_catalog, goal_lookup, resolve_goal,

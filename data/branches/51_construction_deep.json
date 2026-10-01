@@ -3,6 +3,7 @@
   "id": "cn_quarrying_wedge",
   "name": "Stone quarrying with wedge",
   "cat": "stone",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -34,6 +35,7 @@
   "id": "cn_stone_saw",
   "name": "Stone saw with abrasive",
   "cat": "stone",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -67,6 +69,7 @@
   "id": "cn_gang_saw",
   "name": "Gang saw for stone",
   "cat": "stone",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_stone_saw",
    "cap_power_water"
@@ -101,6 +104,7 @@
   "id": "cn_stone_polish",
   "name": "Stone polishing and smoothing",
   "cat": "stone",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -130,6 +134,7 @@
   "id": "cn_mortar",
   "name": "Lime mortar",
   "cat": "binders",
+  "kind": "RESOURCE",
   "pre": [
    "mat_lime",
    "mil_artillery_piece"
@@ -175,6 +180,7 @@
   "id": "cn_gypsum_plaster",
   "name": "Gypsum plaster finish",
   "cat": "binders",
+  "kind": "RESOURCE",
   "pre": [
    "mat_gypsum"
   ],
@@ -236,6 +242,7 @@
   "id": "cn_terrazzo",
   "name": "Terrazzo floor finish",
   "cat": "finishes",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_mortar",
    "cn_stone_polish"
@@ -268,6 +275,7 @@
   "id": "cn_artificial_stone",
   "name": "Artificial cast stone",
   "cat": "binders",
+  "kind": "RESOURCE",
   "pre": [
    "cn_mortar",
    "cap_tol_1mm"
@@ -302,6 +310,7 @@
   "id": "cn_post_lintel",
   "name": "Post and lintel structure",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -333,6 +342,7 @@
   "id": "cn_true_arch",
   "name": "True arch in stone",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -362,6 +372,7 @@
   "id": "cn_groin_vault",
   "name": "Groin vault in stone",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch"
   ],
@@ -391,6 +402,7 @@
   "id": "cn_ribbed_vault",
   "name": "Ribbed vault in stone",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_groin_vault"
   ],
@@ -420,6 +432,7 @@
   "id": "cn_flying_buttress",
   "name": "Flying buttress in stone",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch"
   ],
@@ -449,6 +462,7 @@
   "id": "cn_timber_truss",
   "name": "Timber roof truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -507,6 +521,7 @@
   "id": "cn_queen_post",
   "name": "Queen post roof truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss",
    "civ_roof_king_post"
@@ -540,6 +555,7 @@
   "id": "cn_lattice_truss",
   "name": "Lattice truss for beams",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss"
   ],
@@ -571,6 +587,7 @@
   "id": "cn_warren_truss",
   "name": "Warren truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_lattice_truss",
    "cap_tol_100um"
@@ -605,6 +622,7 @@
   "id": "cn_pratt_truss",
   "name": "Pratt truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_warren_truss"
   ],
@@ -638,6 +656,7 @@
   "id": "cn_trussed_arch",
   "name": "Trussed arch",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch",
    "cn_timber_truss"
@@ -670,6 +689,7 @@
   "id": "cn_space_frame",
   "name": "Space frame three-dimensional truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_warren_truss",
    "cap_tol_10um"
@@ -704,6 +724,7 @@
   "id": "cn_iron_column",
   "name": "Cast iron column",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "blast_furnace"
   ],
@@ -734,6 +755,7 @@
   "id": "cn_cast_iron_beam",
   "name": "Cast iron beam",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_iron_column"
   ],
@@ -766,6 +788,7 @@
   "id": "cn_wrought_iron_girder",
   "name": "Wrought iron plate girder",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -805,6 +828,7 @@
   "id": "cn_rolled_I_beam",
   "name": "Rolled iron or steel I beam",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel"
   ],
@@ -837,6 +861,7 @@
   "id": "cn_plate_girder",
   "name": "Steel plate girder assembly",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "mfg_hot_riveting"
@@ -880,6 +905,7 @@
   "id": "cn_riveted_connection",
   "name": "Riveted bolted connection",
   "cat": "connections",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -919,6 +945,7 @@
   "id": "cn_bolted_connection",
   "name": "Bolted connection with nut",
   "cat": "connections",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -951,6 +978,7 @@
   "id": "cn_welded_connection",
   "name": "Electric arc welded joint",
   "cat": "connections",
+  "kind": "ENGINEERING",
   "pre": [
    "arc_furnace_ferroalloys",
    "cap_power_electric"
@@ -984,6 +1012,7 @@
   "id": "cn_gusset_plate",
   "name": "Gusset plate reinforcement",
   "cat": "connections",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_riveted_connection"
   ],
@@ -1047,6 +1076,7 @@
   "id": "cn_curtain_wall",
   "name": "Curtain wall non-structural facade",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_steel_frame",
    "mat_glass_soda"
@@ -1083,6 +1113,7 @@
   "id": "cn_cantilever",
   "name": "Cantilever beam or slab",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_rolled_I_beam",
    "cap_tol_100um"
@@ -1115,6 +1146,7 @@
   "id": "cn_suspension_bridge",
   "name": "Suspension bridge system",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_wire_cable_spinning"
   ],
@@ -1147,6 +1179,7 @@
   "id": "cn_wire_cable_spinning",
   "name": "Steel wire rope and spinning",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "mfg_wire_drawing"
@@ -1189,6 +1222,7 @@
   "id": "cn_cable_anchorage",
   "name": "Cable anchorage block",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_wire_cable_spinning"
   ],
@@ -1221,6 +1255,7 @@
   "id": "cn_stiffening_truss",
   "name": "Stiffening truss for deck",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_warren_truss"
   ],
@@ -1253,6 +1288,7 @@
   "id": "cn_box_girder",
   "name": "Box girder or tubular section",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_plate_girder",
    "civ_neutral_axis",
@@ -1287,6 +1323,7 @@
   "id": "cn_arch_bridge_steel",
   "name": "Steel arch bridge",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_rolled_I_beam",
    "civ_arch_roman",
@@ -1322,6 +1359,7 @@
   "id": "cn_bascule_bridge",
   "name": "Bascule drawbridge",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_rolled_I_beam",
    "cap_power_electric"
@@ -1356,6 +1394,7 @@
   "id": "cn_swing_bridge",
   "name": "Swing bridge on central pivot",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_wrought_iron_girder"
   ],
@@ -1388,6 +1427,7 @@
   "id": "cn_pontoon_bridge",
   "name": "Pontoon floating bridge",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -1420,6 +1460,7 @@
   "id": "cn_aqueduct",
   "name": "Masonry aqueduct arch bridge",
   "cat": "infrastructure",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_true_arch"
   ],
@@ -1451,6 +1492,7 @@
   "id": "cn_siphon",
   "name": "Inverted siphon pipe",
   "cat": "infrastructure",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_aqueduct",
    "mat_lead"
@@ -1484,6 +1526,7 @@
   "id": "cn_pile_driving",
   "name": "Pile driving by drop hammer",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human"
   ],
@@ -1516,6 +1559,7 @@
   "id": "cn_screw_pile",
   "name": "Screw pile with helical blade",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -1548,6 +1592,7 @@
   "id": "cn_sheet_piling",
   "name": "Sheet piling wall",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_pile_driving"
   ],
@@ -1580,6 +1625,7 @@
   "id": "cn_caisson",
   "name": "Caisson cofferdam box",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_sheet_piling",
    "civ_cofferdam"
@@ -1610,12 +1656,14 @@
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "A large hollow box sunk into water or soft ground, interior pumped dry, filled with concrete. London Bridge (1831) used caissons. Allows foundation work below water. Risk of leaking, and the deeper you go, the harder to keep dry."
+  "note": "A large hollow box sunk into water or soft ground, interior pumped dry, filled with concrete. London Bridge (1831) used caissons. Allows foundation work below water. Risk of leaking, and the deeper you go, the harder to keep dry.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "cn_pneumatic_caisson",
   "name": "Pneumatic caisson with air pressure",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_caisson",
    "cap_power_steam"
@@ -1683,6 +1731,7 @@
   "id": "cn_diaphragm_wall",
   "name": "Diaphragm wall with slurry",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_sheet_piling",
    "cap_measure_len"
@@ -1717,6 +1766,7 @@
   "id": "cn_underpinning",
   "name": "Underpinning of existing structure",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_caisson"
   ],
@@ -1749,6 +1799,7 @@
   "id": "cn_dewatering",
   "name": "Dewatering system with pumps",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -1781,6 +1832,7 @@
   "id": "cn_soil_compaction",
   "name": "Soil compaction by roller",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human"
   ],
@@ -1812,6 +1864,7 @@
   "id": "cn_retaining_wall",
   "name": "Retaining wall gravity structure",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch"
   ],
@@ -1843,6 +1896,7 @@
   "id": "cn_gravity_dam",
   "name": "Gravity dam masonry structure",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_retaining_wall"
   ],
@@ -1874,6 +1928,7 @@
   "id": "cn_arch_dam",
   "name": "Arch dam curved structure",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch",
    "cn_gravity_dam"
@@ -1907,6 +1962,7 @@
   "id": "cn_earth_dam",
   "name": "Earth dam with clay core",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_soil_compaction"
   ],
@@ -1939,6 +1995,7 @@
   "id": "cn_spillway",
   "name": "Spillway overflow structure",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch",
    "cn_gravity_dam",
@@ -1975,6 +2032,7 @@
   "id": "cn_tunnel_cut_cover",
   "name": "Tunnel by cut and cover",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_cofferdam"
   ],
@@ -2007,6 +2065,7 @@
   "id": "cn_tunnel_shield",
   "name": "Tunnel shield method",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_pneumatic_caisson",
    "civ_tunnel_rock_drill",
@@ -2042,6 +2101,7 @@
   "id": "cn_drill_blast",
   "name": "Drill and blast tunnel",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_tunnel_cut_cover",
    "mat_nitroglycerin"
@@ -2075,6 +2135,7 @@
   "id": "cn_tunnel_lining",
   "name": "Tunnel permanent lining",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_tunnel_shield"
   ],
@@ -2107,6 +2168,7 @@
   "id": "cn_ventilation_shaft",
   "name": "Ventilation shaft and duct",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_tunnel_lining"
   ],
@@ -2139,6 +2201,7 @@
   "id": "cn_crane_treadwheel",
   "name": "Treadwheel crane",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human",
    "mat_wrought_iron"
@@ -2172,6 +2235,7 @@
   "id": "cn_crane_derrick",
   "name": "Derrick crane with guy lines",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss"
   ],
@@ -2205,6 +2269,7 @@
   "id": "cn_crane_tower",
   "name": "Tower crane on fixed base",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_rolled_I_beam",
    "cap_power_electric"
@@ -2239,6 +2304,7 @@
   "id": "cn_block_tackle_hoist",
   "name": "Block and tackle with rope",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human"
   ],
@@ -2271,6 +2337,7 @@
   "id": "cn_scaffolding",
   "name": "Timber scaffolding system",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -2337,6 +2404,7 @@
   "id": "cn_plumbing_stack",
   "name": "Plumbing vertical stack system",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_lead"
   ],
@@ -2378,6 +2446,7 @@
   "id": "cn_trapped_drain",
   "name": "Trap with water seal",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_plumbing_stack"
   ],
@@ -2409,6 +2478,7 @@
   "id": "cn_sewer_system",
   "name": "Sewer gravity drainage network",
   "cat": "infrastructure",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_trapped_drain"
   ],
@@ -2442,6 +2512,7 @@
   "id": "cn_water_main",
   "name": "Water main distribution pipe",
   "cat": "infrastructure",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_plumbing_stack"
   ],
@@ -2474,6 +2545,7 @@
   "id": "cn_damp_proof_course",
   "name": "Damp proof course barrier layer",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bitumen"
   ],
@@ -2512,6 +2584,7 @@
   "id": "cn_cavity_wall",
   "name": "Cavity wall with air space",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_damp_proof_course"
   ],
@@ -2543,6 +2616,7 @@
   "id": "cn_central_heating",
   "name": "Central heating hot water system",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_plumbing_stack",
    "cap_heat_1300",
@@ -2612,6 +2686,7 @@
   "id": "cn_forced_ventilation",
   "name": "Forced ventilation mechanical system",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -2645,6 +2720,7 @@
   "id": "cn_fire_escape",
   "name": "Fire escape stairs and landings",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_rolled_I_beam"
   ],
@@ -2677,6 +2753,7 @@
   "id": "cn_sprinkler",
   "name": "Automatic fire sprinkler",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_water_main",
    "cap_measure_temp"
@@ -2711,6 +2788,7 @@
   "id": "cn_plate_glass_window",
   "name": "Plate glass large pane",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_glass_lead",
    "cap_heat_1600"
@@ -2744,6 +2822,7 @@
   "id": "cn_sash_window",
   "name": "Sash window with cord and weight",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_plate_glass_window"
   ],
@@ -2775,6 +2854,7 @@
   "id": "cn_roof_truss_corrugated",
   "name": "Roof truss with corrugated iron",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss",
    "mat_bulk_steel"
@@ -2809,6 +2889,7 @@
   "id": "cn_asphalt_roofing",
   "name": "Asphalt roll roofing and shingles",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bitumen"
   ],
@@ -2842,6 +2923,7 @@
   "id": "cn_insulation",
   "name": "Building insulation materials",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_temp",
    "prn_wood_pulp"
@@ -2876,6 +2958,7 @@
   "id": "cn_concrete_mixer",
   "name": "Rotary concrete mixer drum",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -2908,6 +2991,7 @@
   "id": "cn_vibratory_compaction",
   "name": "Vibratory compaction of concrete",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric"
   ],
@@ -2940,6 +3024,7 @@
   "id": "cn_formwork_shuttering",
   "name": "Formwork and shuttering system",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss"
   ],
@@ -2972,6 +3057,7 @@
   "id": "cn_slipform",
   "name": "Slipform creeping formwork",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_formwork_shuttering",
    "cap_power_electric"
@@ -3005,6 +3091,7 @@
   "id": "cn_shotcrete",
   "name": "Sprayed concrete shotcrete",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_concrete_mixer",
    "cap_power_steam"
@@ -3038,6 +3125,7 @@
   "id": "cn_expansion_joint",
   "name": "Expansion joint control system",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_temp"
   ],
@@ -3068,6 +3156,7 @@
   "id": "cn_reinforced_concrete",
   "name": "Reinforced concrete slab and beam",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "mat_cement_portland",
@@ -3122,6 +3211,7 @@
   "id": "cn_deformed_rebar",
   "name": "Deformed reinforcing bar",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel"
   ],
@@ -3164,6 +3254,7 @@
   "id": "cn_prestressed_concrete",
   "name": "Prestressed concrete element",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_reinforced_concrete"
   ],
@@ -3198,6 +3289,7 @@
   "id": "cn_post_tensioning",
   "name": "Post tensioning with stressing jacks",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_prestressed_concrete"
   ],
@@ -3230,6 +3322,7 @@
   "id": "cn_precast_panel",
   "name": "Precast concrete panel",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_reinforced_concrete"
   ],
@@ -3262,6 +3355,7 @@
   "id": "cn_portland_cement",
   "name": "Portland cement powder",
   "cat": "binders",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600"
   ],
@@ -3295,6 +3389,7 @@
   "id": "cn_rotary_cement_kiln",
   "name": "Rotary cement kiln",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_portland_cement",
    "cap_power_steam"
@@ -3328,6 +3423,7 @@
   "id": "cn_cement_clinker_grinding",
   "name": "Cement clinker mill grinding",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_portland_cement"
   ],

@@ -3,6 +3,7 @@
   "id": "sea_merchant_ships_large",
   "name": "Large merchant sailing ships",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_square_sail"
   ],
@@ -40,6 +41,7 @@
   "id": "sea_mortise_tenon",
   "name": "Mortise-and-tenon hull construction",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -65,6 +67,7 @@
   "id": "sea_square_sail",
   "name": "Square sail with brails",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -90,6 +93,7 @@
   "id": "sea_spritsail",
   "name": "Spritsail",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -115,6 +119,7 @@
   "id": "sea_lead_sheathing",
   "name": "Lead sheathing against shipworm",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_lead"
   ],
@@ -144,6 +149,7 @@
   "id": "sea_steering_oars",
   "name": "Steering oars",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -169,6 +175,7 @@
   "id": "sea_anchor",
   "name": "Anchor",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -194,6 +201,7 @@
   "id": "sea_sounding_lines",
   "name": "Sounding lines",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -219,6 +227,7 @@
   "id": "sea_coastal_pilotage",
   "name": "Coastal pilotage",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -244,6 +253,7 @@
   "id": "sea_pharos_lighthouse",
   "name": "Pharos lighthouse",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -269,6 +279,7 @@
   "id": "sea_harbours_pozzolana",
   "name": "Artificial harbours in hydraulic concrete",
   "cat": "harbours",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "mat_pozzolana"
   ],
@@ -295,6 +306,7 @@
   "id": "sea_monsoon_route",
   "name": "Monsoon route to India",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -320,6 +332,7 @@
   "id": "sea_sternpost_rudder",
   "name": "Sternpost rudder",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_steering_oars",
    "cap_tol_1mm",
@@ -412,6 +425,7 @@
   "id": "sea_bowsprit",
   "name": "Bowsprit",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_fore_aft_rig",
    "cap_tol_1mm"
@@ -447,6 +461,7 @@
   "id": "sea_jib",
   "name": "Jib sail",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_bowsprit"
   ],
@@ -478,6 +493,7 @@
   "id": "sea_multiple_masts",
   "name": "Multiple masts",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_fore_aft_rig",
    "cap_tol_1mm"
@@ -565,6 +581,7 @@
   "id": "sea_skeleton_first",
   "name": "Skeleton-first hull construction",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_mortise_tenon",
    "cap_tol_1mm"
@@ -601,6 +618,7 @@
   "id": "sea_lodestone",
   "name": "Lodestone knowledge",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 20,
@@ -628,6 +646,7 @@
   "id": "sea_dry_compass_card",
   "name": "Dry compass card",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_lodestone"
   ],
@@ -661,6 +680,7 @@
   "id": "sea_log_line",
   "name": "Log line for speed",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "opt_water_clock"
   ],
@@ -692,6 +712,7 @@
   "id": "sea_traverse_board",
   "name": "Traverse board",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_magnetic_compass"
   ],
@@ -724,6 +745,7 @@
   "id": "sea_cross_staff",
   "name": "Cross-staff for latitude",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -757,6 +779,7 @@
   "id": "sea_backstaff",
   "name": "Backstaff for latitude",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_cross_staff",
    "cap_tol_100um"
@@ -822,6 +845,7 @@
   "id": "sea_magnetic_compass",
   "name": "Magnetic compass",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_dry_compass_card"
   ],
@@ -850,12 +874,14 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "sea_charts_navigation",
   "name": "Navigation charts",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_magnetic_compass"
   ],
@@ -882,12 +908,14 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "sea_mercator_projection",
   "name": "Mercator projection",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_charts_navigation",
    "geometry_analytic"
@@ -921,6 +949,7 @@
   "id": "sea_lead_line_hydro",
   "name": "Lead-line and hydrographic survey",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_sounding_lines",
    "sea_charts_navigation"
@@ -954,6 +983,7 @@
   "id": "sea_drydock",
   "name": "Drydock",
   "cat": "harbours",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "mat_pozzolana",
    "water_power_scale"
@@ -1019,6 +1049,7 @@
   "id": "sea_lunar_distances",
   "name": "Lunar distance method for longitude",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "opt_sextant",
    "sea_astronomical_tables",
@@ -1142,6 +1173,7 @@
   "id": "sea_iron_hull",
   "name": "Iron hull",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "blast_furnace",
    "mat_cast_iron",
@@ -1181,6 +1213,7 @@
   "id": "sea_compartmented_hull",
   "name": "Compartmented hull",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_iron_hull"
   ],
@@ -1272,6 +1305,7 @@
   "id": "sea_steam_turbine",
   "name": "Steam turbine at sea",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_tol_100um",
@@ -1308,6 +1342,7 @@
   "id": "sea_diesel_engine",
   "name": "Diesel engine ship",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_petroleum_refined",
    "cap_tol_10um",
@@ -1375,6 +1410,7 @@
   "id": "sea_submarine",
   "name": "Submarine",
   "cat": "warships",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_iron_hull",
    "sea_compartmented_hull",
@@ -1408,7 +1444,8 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_tol_10um added by a reviewer working node by node. Reason: pressure hull requires slide rest and micrometer precision for structural integrity at depth]"
  },
  {
   "id": "sea_submarine_cable",
@@ -1444,6 +1481,7 @@
   "id": "sea_sonar",
   "name": "Sonar and echo sounding",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "vacuum_tube",
    "sea_electromagnetic_wave_theory",
@@ -1482,7 +1520,8 @@
     }
    }
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_time_ms added by a reviewer working node by node. Reason: echo sounding requires millisecond timing for distance measurement]"
  },
  {
   "id": "sea_lifeboat",
@@ -1517,6 +1556,7 @@
   "id": "sea_fresnel_lens",
   "name": "Lighthouse with Fresnel lens",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_pharos_lighthouse",
    "lens_grinding",
@@ -1554,6 +1594,7 @@
   "id": "sea_buoy",
   "name": "Buoy",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_harbours_pozzolana"
   ],
@@ -1581,7 +1622,8 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "sea_canal_lock",
@@ -1648,6 +1690,7 @@
   "id": "sea_diving_bell",
   "name": "Diving bell",
   "cat": "undersea",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_anchor"
   ],
@@ -1671,12 +1714,14 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "An air-filled bell lowered to the seafloor on a rope; a diver climbs in, breathes the air, works for a few minutes, then is pulled up; depth limited to 40 feet and time to 15 minutes."
+  "note": "An air-filled bell lowered to the seafloor on a rope; a diver climbs in, breathes the air, works for a few minutes, then is pulled up; depth limited to 40 feet and time to 15 minutes.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "sea_diving_suit",
   "name": "Diving suit and air pump",
   "cat": "undersea",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_diving_bell",
    "cap_power_steam"
@@ -1708,6 +1753,7 @@
   "id": "sea_astronomical_tables",
   "name": "Astronomical tables",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "newtonian_mechanics"
   ],
@@ -1733,7 +1779,8 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "sea_boiler_water_tube",
@@ -1770,6 +1817,7 @@
   "id": "sea_fuel_oil_burner",
   "name": "Fuel oil burner",
   "cat": "ships",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_petroleum_refined",
    "cap_heat_1600"
@@ -1799,12 +1847,14 @@
    "commerce",
    "infrastructure"
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "sea_electromagnetic_wave_theory",
   "name": "Electromagnetic wave theory",
   "cat": "navigation",
+  "kind": "ENGINEERING",
   "pre": [
    "em_theory"
   ],
@@ -1831,6 +1881,7 @@
    "infrastructure",
    "spectacle"
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  }
 ]

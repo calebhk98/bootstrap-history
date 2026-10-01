@@ -25,10 +25,11 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 from sim.engine import commodities as C
 from sim import simulator as S
+from sim.engine.tree_source import load_base_tree
 
 
 def load_nodes():
-    tree = json.load(open(os.path.join(ROOT, "data", "tech_tree.json")))
+    tree = load_base_tree()
     return {node["id"]: node for node in tree["nodes"]}
 
 

@@ -55,7 +55,7 @@ ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 # PHYSICAL CAPABILITY CAPS (Complaints/44 - see TEMPERATURE in this
 # module's own docstring for the full defect and the reasoning behind the
-# number below). data/tech_tree.json's own `cap_heat_0700` node -
+# number below). the tree's own `cap_heat_0700` node -
 # "Sustained 700 C (pottery kiln)... Already available wherever there is
 # an updraught pottery kiln, wood fired. Free starting capability. Glazes,
 # bricks, lime, glass working" - carries no prerequisite at all (`pre:

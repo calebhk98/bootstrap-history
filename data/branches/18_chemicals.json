@@ -3,6 +3,7 @@
     "id": "chm_catalyst_concept",
     "name": "Catalysis and catalyst theory",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "analytical_chemistry",
       "thermodynamics_theory",
@@ -45,6 +46,7 @@
     "id": "chm_pressure_vessel",
     "name": "High-pressure autoclave and steam digester",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_heat_1300",
       "cap_tol_100um",
@@ -81,6 +83,7 @@
     "id": "chm_pressure_gauge",
     "name": "Bourdon tube pressure gauge and safety relief valve",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_100um",
       "cap_measure_temp",
@@ -118,6 +121,7 @@
     "id": "chm_contact_sulfuric",
     "name": "Contact process for sulfuric acid using platinum catalyst",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "sulfuric_retort",
       "lead_chamber",
@@ -166,6 +170,7 @@
     "id": "chm_contact_vanadium",
     "name": "Vanadium pentoxide catalyst for contact sulfuric acid",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_contact_sulfuric",
       "analytical_chemistry",
@@ -201,6 +206,7 @@
     "id": "chm_oleum",
     "name": "Oleum (fuming sulfuric acid) production",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_contact_sulfuric",
       "lead_chamber"
@@ -236,6 +242,7 @@
     "id": "chm_solvay_process",
     "name": "Solvay process: ammonia-soda manufacturing",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "potash_soda",
       "soda_leblanc",
@@ -269,12 +276,14 @@
     "traits": [
       "inexplicable",
       "infrastructure"
-    ]
+    ],
+    "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: limestone calcining produces lime; thermal decomposition of NaHCO3 at low temperature]"
   },
   {
     "id": "chm_ammonia_recovery",
     "name": "Ammonia recovery and regeneration in soda plants",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_solvay_process",
       "distillation_alcohol"
@@ -308,6 +317,7 @@
     "id": "chm_deacon_process",
     "name": "Deacon process: oxidation of hydrogen chloride to chlorine",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "hydrochloric_acid",
       "cap_heat_1600",
@@ -343,6 +353,7 @@
     "id": "chm_weldon_process",
     "name": "Weldon process: regeneration of manganese dioxide from manganous chloride",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "hydrochloric_acid",
       "chm_deacon_process"
@@ -384,6 +395,7 @@
     "id": "chm_bleaching_powder",
     "name": "Bleaching powder: mixed calcium hypochlorite",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "soda_leblanc",
       "chm_deacon_process"
@@ -418,6 +430,7 @@
     "id": "chm_chlor_alkali_mercury",
     "name": "Chlor-alkali process: mercury cathode cell",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "electrolysis_industrial",
       "mercury_supply",
@@ -456,6 +469,7 @@
     "id": "chm_chlor_alkali_diaphragm",
     "name": "Chlor-alkali process: asbestos diaphragm cell",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "electrolysis_industrial",
       "cap_measure_elec"
@@ -491,6 +505,7 @@
     "id": "chm_caustic_soda",
     "name": "Caustic soda: concentration and purification",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_chlor_alkali_mercury",
       "potash_soda",
@@ -520,12 +535,14 @@
     "note": "Caustic soda boils above 100 C, so direct heating to dryness would decompose it. Vacuum evaporation keeps temperature below 100 C while removing water. The product is chemically pure but must be handled in glass or lead; iron is attacked immediately and dissolved. [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum evaporation at low temperature to avoid decomposition of caustic soda]",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum evaporation at low temperature to avoid decomposition of caustic soda]"
   },
   {
     "id": "chm_ostwald_ammonia_oxidation",
     "name": "Ostwald process: oxidation of ammonia to nitric acid",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_catalyst_concept",
       "cap_heat_1300",
@@ -570,6 +587,7 @@
     "id": "chm_haber_bosch",
     "name": "Haber-Bosch synthesis of ammonia",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_gas_o2h2",
       "cap_heat_1600",
@@ -609,6 +627,7 @@
     "id": "chm_cyanamide_fixation",
     "name": "Cyanamide process: nitrogen fixation by carbide",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "coal_coke",
       "cap_heat_3000",
@@ -638,12 +657,14 @@
     "traits": [
       "inexplicable",
       "infrastructure"
-    ]
+    ],
+    "_internal": "[FIXED after independent audit: the cyanamide route runs through calcium carbide, which needs the electric arc furnace.]"
   },
   {
     "id": "chm_electric_arc_nitrogen",
     "name": "Electric arc nitrogen fixation: nitrogen oxides from air",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_gas_o2h2",
       "cap_heat_3000"
@@ -677,6 +698,7 @@
     "id": "chm_superphosphate",
     "name": "Superphosphate: acidulation of rock phosphate",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "sulfuric_retort",
       "lead_chamber",
@@ -708,12 +730,14 @@
     "traits": [
       "inexplicable",
       "infrastructure"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_potash_mining",
     "name": "Potash mining and refining",
     "cat": "mineral_extraction",
+    "kind": "ENGINEERING",
     "pre": [
       "mining_concession"
     ],
@@ -739,12 +763,14 @@
     "note": "Potash salts like sylvinite are mined like any mineral ore. The mined rock is then dissolved in water, filtered to remove insoluble matter, and crystallised. Potassium is essential to agriculture: wheat and potatoes are heavy exporters of K2O, depleting soils rapidly without replenishment.",
     "traits": [
       "infrastructure"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_coal_tar_distillation",
     "name": "Coal tar fractionation and distillation",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "destructive_distillation",
       "chm_fractionating_column"
@@ -778,6 +804,7 @@
     "id": "chm_fractionating_column",
     "name": "Fractionating column with bubble caps",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "distillation_alcohol",
       "cap_heat_1100",
@@ -812,6 +839,7 @@
     "id": "chm_benzene",
     "name": "Benzene extraction from coal tar",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation",
       "cap_pure_4N",
@@ -844,6 +872,7 @@
     "id": "chm_aniline",
     "name": "Aniline from benzene via nitrobenzene",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_benzene",
       "chm_oleum",
@@ -872,12 +901,14 @@
     "note": "Oleum nitrates benzene to nitrobenzene in minutes. Reduction with iron powder in dilute acid yields aniline. Aniline is a colourless liquid, bp 184 C, that polymerises in air to a black tar unless kept dry. It is the keystone of synthetic dyes and must be kept under nitrogen or mineral oil.",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[FIXED after independent audit: nitration of benzene needs nitric acid, which was missing. The Bechamp reduction uses iron in dilute acid, not hydrogen, so the industrial_gases prerequisite was not load-bearing and has been removed.]"
   },
   {
     "id": "chm_azo_dyes",
     "name": "Azo dyes: diazotisation and azo coupling",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_aniline",
       "nitric_acid"
@@ -910,6 +941,7 @@
     "id": "chm_alizarin",
     "name": "Alizarin synthesis: oxidation of anthraquinone",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_coal_tar_distillation",
       "electrolysis_industrial"
@@ -942,6 +974,7 @@
     "id": "chm_indigo_synthesis",
     "name": "Indigo synthesis from N-phenylglycine",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_aniline",
       "analytical_chemistry"
@@ -974,6 +1007,7 @@
     "id": "chm_saccharin",
     "name": "Saccharin synthesis",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_benzene",
       "chm_oleum"
@@ -1006,6 +1040,7 @@
     "id": "chm_salicylic_acid",
     "name": "Salicylic acid: hydroxylation of benzenesulfonic acid",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_benzene",
       "chm_oleum",
@@ -1038,6 +1073,7 @@
     "id": "chm_aspirin",
     "name": "Aspirin synthesis from salicylic acid",
     "cat": "pharmaceutical",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_salicylic_acid"
     ],
@@ -1068,6 +1104,7 @@
     "id": "chm_sulfonamides",
     "name": "Sulfonamide antibiotics: sulfanilamide synthesis",
     "cat": "pharmaceutical",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_aniline",
       "chm_salicylic_acid"
@@ -1101,6 +1138,7 @@
     "id": "chm_continuous_batch",
     "name": "Continuous versus batch processing decision",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_measure_time_s"
     ],
@@ -1125,12 +1163,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_corrosion_lead",
     "name": "Corrosion-resistant plant: lead and lead-lined vessels",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "lead_metallurgy",
       "cap_tol_1mm"
@@ -1163,6 +1203,7 @@
     "id": "chm_corrosion_stoneware",
     "name": "Corrosion-resistant vessels: acid-resistant stoneware",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_porcelain"
     ],
@@ -1193,6 +1234,7 @@
     "id": "chm_corrosion_glass_lined",
     "name": "Glass-lined steel vessels",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_glass_soda",
       "mat_bulk_steel",
@@ -1227,6 +1269,7 @@
     "id": "chm_corrosion_stainless",
     "name": "Stainless steel vessels for corrosive service",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_stainless",
       "mat_bulk_steel"
@@ -1259,6 +1302,7 @@
     "id": "chm_filter_press",
     "name": "Filter press: plate-and-frame filtration",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm"
     ],
@@ -1286,12 +1330,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_centrifuge",
     "name": "Industrial centrifuge for separation",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_100um",
       "cap_power_steam"
@@ -1324,6 +1370,7 @@
     "id": "chm_evaporator_surface",
     "name": "Surface evaporator for concentration",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_heat_1100",
       "cap_measure_temp"
@@ -1352,12 +1399,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_crystallisation",
     "name": "Crystallisation and crystal separation",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_measure_temp"
     ],
@@ -1381,12 +1430,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_ion_exchange",
     "name": "Ion exchange resins for water softening and purification",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_bulk_steel",
       "chm_formaldehyde_synthesis"
@@ -1413,12 +1464,14 @@
     "note": "Phenolic or acrylic polymer beads are cross-linked with divinylbenzene and charged with either H+ cations or OH- anions. Water percolated through the column exchanges Ca2+ for H+, softening and acidifying simultaneously. The resin is regenerated with acid or base. Ion exchange is essential for producing ultrapure process water and boiler feedwater.",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_chromatography",
     "name": "Chromatography: column and paper methods",
     "cat": "analytical_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "analytical_chemistry",
       "cap_pure_4N"
@@ -1481,6 +1534,7 @@
     "id": "chm_alkali_waste",
     "name": "Leblanc process waste: calcium carbide and the alkali waste problem",
     "cat": "environmental_chemistry",
+    "kind": "ENGINEERING",
     "pre": [
       "soda_leblanc"
     ],
@@ -1510,6 +1564,7 @@
     "id": "chm_industrial_hygiene",
     "name": "Industrial hygiene and occupational chemical poisoning",
     "cat": "occupational_health",
+    "kind": "INSTITUTION",
     "pre": [
       "germ_theory"
     ],
@@ -1534,12 +1589,14 @@
     "traits": [
       "infrastructure",
       "medical"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_black_powder",
     "name": "Black powder: gunpowder production",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "gunpowder"
     ],
@@ -1567,6 +1624,7 @@
     "id": "chm_guncotton",
     "name": "Guncotton: nitration of cellulose",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "nitric_acid",
       "chm_oleum",
@@ -1595,7 +1653,8 @@
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: nitration at 0 C with deviation to 5 C causing explosion; critical temperature control needed]"
   },
   {
     "id": "chm_nitroglycerin",
@@ -1630,6 +1689,7 @@
     "id": "chm_dynamite",
     "name": "Dynamite: nitroglycerin in diatomaceous earth",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "mat_nitroglycerin"
     ],
@@ -1655,12 +1715,14 @@
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_gelignite",
     "name": "Gelignite: nitroglycerin in colloidal cellulose",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "mat_nitroglycerin",
       "chm_guncotton"
@@ -1687,7 +1749,8 @@
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_smokeless_powder",
@@ -1722,6 +1785,7 @@
     "id": "chm_tnt",
     "name": "TNT: trinitrotoluene synthesis",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "chm_toluene",
       "chm_oleum",
@@ -1749,12 +1813,14 @@
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: exothermic nitration reactions require careful temperature measurement and control]"
   },
   {
     "id": "chm_picric_acid",
     "name": "Picric acid: trinitrophenol synthesis",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "chm_phenol",
       "chm_oleum"
@@ -1788,6 +1854,7 @@
     "id": "chm_blasting_cap",
     "name": "Blasting cap and fulminate detonator",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "chm_fulminate",
       "cap_tol_1mm"
@@ -1822,6 +1889,7 @@
     "id": "chm_fulminate",
     "name": "Mercury fulminate preparation",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "mercury_supply",
       "nitric_acid"
@@ -1849,7 +1917,8 @@
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_celluloid",
@@ -1882,6 +1951,7 @@
     "id": "chm_casein",
     "name": "Casein plastics from milk protein",
     "cat": "plastics",
+    "kind": "RESOURCE",
     "pre": [
       "analytical_chemistry"
     ],
@@ -1913,6 +1983,7 @@
     "id": "chm_bakelite",
     "name": "Bakelite: phenol-formaldehyde plastic",
     "cat": "plastics",
+    "kind": "RESOURCE",
     "pre": [
       "chm_phenol",
       "chm_formaldehyde_synthesis",
@@ -1939,7 +2010,8 @@
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Phenol and formaldehyde condense at 150-180 C in the presence of acid catalyst. The resin is thermoset: once cured, it cannot be remelted. Bakelite is hard, brittle, and heat-resistant. It is used for electrical insulation, radio bodies, and industrial equipment. It was the first fully synthetic plastic and dominated the 1920s."
+    "note": "Phenol and formaldehyde condense at 150-180 C in the presence of acid catalyst. The resin is thermoset: once cured, it cannot be remelted. Bakelite is hard, brittle, and heat-resistant. It is used for electrical insulation, radio bodies, and industrial equipment. It was the first fully synthetic plastic and dominated the 1920s.",
+    "_internal": "[FIXED after independent audit: the note said phenol and formaldehyde condense, but formaldehyde appeared in neither the prerequisites nor the materials.]"
   },
   {
     "id": "chm_pvc_synthesis",
@@ -1973,6 +2045,7 @@
     "id": "chm_polyethylene",
     "name": "Polyethylene synthesis under high pressure",
     "cat": "plastics",
+    "kind": "RESOURCE",
     "pre": [
       "chm_pressure_vessel",
       "cap_gas_o2h2"
@@ -2002,6 +2075,7 @@
     "id": "chm_nylon",
     "name": "Nylon 6,6 synthesis and polymerisation",
     "cat": "plastics",
+    "kind": "RESOURCE",
     "pre": [
       "chm_aniline",
       "analytical_chemistry",
@@ -2037,7 +2111,8 @@
     "traits": [
       "commerce",
       "labour_saving"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: polyamide polymerization requires rough vacuum to remove water and ammonia byproducts]"
   },
   {
     "id": "chm_soap_hard",
@@ -2067,6 +2142,7 @@
     "id": "chm_detergent_synthetic",
     "name": "Synthetic detergent from petroleum sulfonic acid",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_petroleum_refined",
       "soda_leblanc"
@@ -2093,12 +2169,14 @@
     "note": "Synthetic detergents are made by sulfonation of alkenes from cracking petroleum fractions. The sulfonic acid is neutralised with soda ash. Detergent molecules have a long nonpolar hydrocarbon tail that dissolves in grease and a polar sulfonate head that dissolves in water. Synthetic detergents work better in cold water than soap and do not leave scum.",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[FIXED after independent audit: sulfonation needs sulfuric acid and the neutralisation needs soda ash; neither was listed.]"
   },
   {
     "id": "chm_glycerol",
     "name": "Glycerol production and purification",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "soap_hard",
       "cap_pure_4N",
@@ -2125,12 +2203,14 @@
     "note": "Soap manufacture produces a glycerol-rich lye as byproduct. The lye is acidified and glycerol is extracted with ethanol, then distilled under vacuum. Glycerol is a primary feedstock for nitroglycerin and explosives, and also a humectant in textiles and pharmaceuticals. [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum distillation of ethanol-glycerol requires rough vacuum]",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum distillation of ethanol-glycerol requires rough vacuum]"
   },
   {
     "id": "chm_matches",
     "name": "Friction matches: red phosphorus safety match",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_phosphorus_extraction"
     ],
@@ -2157,7 +2237,8 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_photography",
@@ -2193,6 +2274,7 @@
     "id": "chm_refrigerant_ammonia",
     "name": "Ammonia as refrigerant in compression cycles",
     "cat": "thermodynamics",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_haber_bosch",
       "thermodynamics_theory"
@@ -2223,6 +2305,7 @@
     "id": "chm_toluene",
     "name": "Toluene extraction from coal tar",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation",
       "distillation_alcohol"
@@ -2254,6 +2337,7 @@
     "id": "chm_phenol",
     "name": "Phenol extraction from coal tar and synthesis",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation",
       "chm_salicylic_acid"
@@ -2285,6 +2369,7 @@
     "id": "chm_naphthalene",
     "name": "Naphthalene extraction and purification",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation"
     ],
@@ -2310,12 +2395,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_anthracene",
     "name": "Anthracene extraction and oxidation",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation"
     ],
@@ -2341,12 +2428,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_activated_carbon",
     "name": "Activated carbon production and use",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "charcoal_industrial",
       "cap_heat_1100"
@@ -2385,12 +2474,14 @@
           "steam_watt": 1.0
         }
       }
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_water_coagulation",
     "name": "Water treatment by coagulation and settling",
     "cat": "water_chemistry",
+    "kind": "ENGINEERING",
     "pre": [
       "analytical_chemistry"
     ],
@@ -2421,6 +2512,7 @@
     "id": "chm_water_filtration",
     "name": "Sand filtration and multimedia filter beds",
     "cat": "water_chemistry",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_water_coagulation"
     ],
@@ -2451,6 +2543,7 @@
     "id": "chm_water_chlorination",
     "name": "Chlorination of drinking water for disinfection",
     "cat": "water_chemistry",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_deacon_process",
       "chm_bleaching_powder"
@@ -2483,6 +2576,7 @@
     "id": "chm_formaldehyde_synthesis",
     "name": "Formaldehyde oxidation of methanol",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "distillation_alcohol",
       "chm_catalyst_concept",
@@ -2510,12 +2604,14 @@
     "note": "Methanol vapour is oxidised over silver gauze at 600 C. Formaldehyde is produced as an equilibrium mixture with methanol and water; the product is stabilised by dissolving in water as formalin. Formaldehyde is a cross-linking reagent for proteins and cellulose, essential for resins. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: methanol oxidation over silver at 600 C, within pottery kiln range]",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: methanol oxidation over silver at 600 C, within pottery kiln range]"
   },
   {
     "id": "chm_phosphorus_extraction",
     "name": "White phosphorus extraction from bone ash",
     "cat": "mineral_extraction",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_heat_1300"
     ],

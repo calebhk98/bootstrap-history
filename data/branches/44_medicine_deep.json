@@ -3,6 +3,7 @@
   "id": "md2_circulation",
   "name": "Circulation of the blood",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "germ_theory",
    "microscope_compound"
@@ -24,6 +25,7 @@
   "id": "md2_gas_exchange",
   "name": "Lung gas exchange",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_circulation",
    "microscope_compound"
@@ -45,6 +47,7 @@
   "id": "md2_digestion",
   "name": "Digestive process",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "microscope_compound",
    "analytical_chemistry"
@@ -66,6 +69,7 @@
   "id": "md2_nervous_system",
   "name": "Nervous system structure and function",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_cadaver_dissection",
    "microscope_compound"
@@ -87,6 +91,7 @@
   "id": "md2_endocrine_system",
   "name": "Endocrine glands and hormones",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_digestion",
    "md2_nervous_system"
@@ -108,6 +113,7 @@
   "id": "md2_kidney",
   "name": "Kidney filtration",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_circulation",
    "microscope_compound"
@@ -129,6 +135,7 @@
   "id": "md2_immunity",
   "name": "Immune system and antibodies",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "germ_theory",
    "microscope_compound"
@@ -150,6 +157,7 @@
   "id": "md2_cell_theory",
   "name": "Cell as basic unit of life",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "microscope_compound"
   ],
@@ -170,6 +178,7 @@
   "id": "md2_mendelian_inheritance",
   "name": "Mendelian inheritance laws",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_cell_theory"
   ],
@@ -190,6 +199,7 @@
   "id": "md2_chromosome",
   "name": "Chromosome and heredity",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_mendelian_inheritance",
    "microscope_compound"
@@ -211,6 +221,7 @@
   "id": "md2_gene",
   "name": "Gene as unit of inheritance",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_chromosome"
   ],
@@ -231,6 +242,7 @@
   "id": "md2_dna",
   "name": "DNA as hereditary material",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_gene",
    "atomic_theory"
@@ -252,6 +264,7 @@
   "id": "md2_stethoscope",
   "name": "Stethoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -280,6 +293,7 @@
   "id": "md2_percussion",
   "name": "Percussion technique",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -300,6 +314,7 @@
   "id": "md2_auscultation",
   "name": "Systematic auscultation",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_stethoscope"
   ],
@@ -320,6 +335,7 @@
   "id": "md2_clinical_thermometer",
   "name": "Clinical thermometer",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "thermometer",
    "cap_measure_temp",
@@ -351,6 +367,7 @@
   "id": "md2_sphygmomanometer",
   "name": "Sphygmomanometer",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_clinical_thermometer",
    "barometer",
@@ -412,6 +429,7 @@
   "id": "md2_otoscope",
   "name": "Otoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding"
   ],
@@ -439,6 +457,7 @@
   "id": "md2_laryngoscope",
   "name": "Laryngoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "mirror_amalgam"
@@ -469,6 +488,7 @@
   "id": "md2_endoscope",
   "name": "Rigid endoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "md2_light_source"
@@ -499,6 +519,7 @@
   "id": "md2_cystoscope",
   "name": "Cystoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_endoscope"
   ],
@@ -527,6 +548,7 @@
   "id": "md2_xray_plate",
   "name": "X-ray radiography",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "vacuum_pumps"
@@ -565,6 +587,7 @@
   "id": "md2_fluoroscopy",
   "name": "Fluoroscopy imaging",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_xray_plate"
   ],
@@ -603,6 +626,7 @@
   "id": "md2_contrast_media",
   "name": "Contrast media",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_xray_plate",
    "analytical_chemistry"
@@ -627,12 +651,14 @@
   "conf": "B",
   "gov": -1,
   "sus": 3,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "md2_ecg",
   "name": "Electrocardiogram",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "galvanometer",
    "discharge_xray"
@@ -663,6 +689,7 @@
   "id": "md2_eeg",
   "name": "Electroencephalogram",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "vacuum_tube",
    "electromagnet"
@@ -693,6 +720,7 @@
   "id": "md2_basal_metabolic_rate",
   "name": "Basal metabolic rate measurement",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_clinical_thermometer",
    "md2_spirometer"
@@ -722,6 +750,7 @@
   "id": "md2_haemocytometer",
   "name": "Haemocytometer",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "cap_tol_100um"
@@ -751,6 +780,7 @@
   "id": "md2_differential_count",
   "name": "Differential white cell count",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_haemocytometer",
    "md2_staining_methylene"
@@ -772,6 +802,7 @@
   "id": "md2_urinalysis",
   "name": "Urinalysis",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -798,6 +829,7 @@
   "id": "md2_blood_sugar_test",
   "name": "Blood glucose measurement",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -821,6 +853,7 @@
   "id": "md2_wassermann_test",
   "name": "Wassermann test",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "md2_immunity"
@@ -869,6 +902,7 @@
   "id": "md2_biopsy",
   "name": "Tissue biopsy",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "microscope_compound"
@@ -894,6 +928,7 @@
   "id": "md2_frozen_section",
   "name": "Frozen section histology",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_biopsy",
    "mat_ice_artificial"
@@ -920,6 +955,7 @@
   "id": "md2_autoclave",
   "name": "Autoclave sterilizer",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure"
   ],
@@ -949,6 +985,7 @@
   "id": "md2_surgical_glove",
   "name": "Surgical glove",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis",
    "mat_rubber_coagulated"
@@ -977,6 +1014,7 @@
   "id": "md2_surgical_mask",
   "name": "Surgical facemask",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -1003,6 +1041,7 @@
   "id": "md2_surgical_gown",
   "name": "Surgical gown",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -1029,6 +1068,7 @@
   "id": "md2_surgical_drape",
   "name": "Sterile drape",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -1055,6 +1095,7 @@
   "id": "md2_catgut_suture",
   "name": "Catgut suture",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -1081,6 +1122,7 @@
   "id": "md2_synthetic_suture",
   "name": "Synthetic suture",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1108,6 +1150,7 @@
   "id": "md2_haemostat",
   "name": "Surgical haemostat",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -1135,6 +1178,7 @@
   "id": "md2_retractor",
   "name": "Self-retaining retractor",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis",
    "interchangeable_parts"
@@ -1164,6 +1208,7 @@
   "id": "md2_electrocautery",
   "name": "Surgical electrocautery",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "dynamo"
@@ -1189,12 +1234,14 @@
   "conf": "B",
   "gov": 1,
   "sus": 8,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "md2_tourniquet",
   "name": "Surgical tourniquet",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis",
    "mat_rubber_coagulated"
@@ -1223,6 +1270,7 @@
   "id": "md2_blood_transfusion",
   "name": "Blood transfusion",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_blood_typing"
   ],
@@ -1246,6 +1294,7 @@
   "id": "md2_blood_typing",
   "name": "Blood typing and cross-matching",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "microscope_compound"
@@ -1271,6 +1320,7 @@
   "id": "md2_blood_bank",
   "name": "Blood bank and storage",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_blood_typing",
    "mat_ice_artificial"
@@ -1300,6 +1350,7 @@
   "id": "md2_citrate_anticoagulation",
   "name": "Citrate anticoagulation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "md2_blood_typing"
@@ -1324,6 +1375,7 @@
   "id": "md2_iv_saline",
   "name": "Intravenous saline solution",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1350,6 +1402,7 @@
   "id": "md2_anaesthetic_machine",
   "name": "Anaesthetic machine",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "electromagnet"
@@ -1379,6 +1432,7 @@
   "id": "md2_endotracheal_intubation",
   "name": "Endotracheal intubation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_laryngoscope",
    "mat_rubber_coagulated"
@@ -1406,6 +1460,7 @@
   "id": "md2_spinal_anaesthesia",
   "name": "Spinal anaesthesia",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection"
   ],
@@ -1429,6 +1484,7 @@
   "id": "md2_local_anaesthesia",
   "name": "Local infiltration anaesthesia",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "medical"
@@ -1450,6 +1506,7 @@
   "id": "md2_appendicectomy",
   "name": "Appendicectomy",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "sanitation_antisepsis"
@@ -1474,6 +1531,7 @@
   "id": "md2_hernia_repair",
   "name": "Hernia repair",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "sanitation_antisepsis"
@@ -1498,6 +1556,7 @@
   "id": "md2_gastrectomy",
   "name": "Gastrectomy",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "sanitation_antisepsis"
@@ -1522,6 +1581,7 @@
   "id": "md2_caesarean_section",
   "name": "Caesarean section",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection"
   ],
@@ -1545,6 +1605,7 @@
   "id": "md2_orthopaedic_fixation",
   "name": "Orthopaedic internal fixation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_plaster_cast",
    "interchangeable_parts"
@@ -1574,6 +1635,7 @@
   "id": "md2_plaster_cast",
   "name": "Plaster cast immobilization",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_gypsum",
    "med_bone_setting"
@@ -1601,6 +1663,7 @@
   "id": "md2_traction",
   "name": "Skeletal traction",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_wire_drawing",
    "md2_cadaver_dissection"
@@ -1629,6 +1692,7 @@
   "id": "md2_skin_graft",
   "name": "Skin grafting",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "sanitation_antisepsis"
@@ -1653,6 +1717,7 @@
   "id": "md2_cataract_extraction",
   "name": "Cataract extraction",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "md2_cadaver_dissection"
@@ -1678,6 +1743,7 @@
   "id": "md2_thyroidectomy",
   "name": "Thyroidectomy",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection"
   ],
@@ -1701,6 +1767,7 @@
   "id": "md2_digitalis",
   "name": "Digitalis glycosides",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_plant_chemistry"
   ],
@@ -1727,6 +1794,7 @@
   "id": "md2_morphine",
   "name": "Morphine isolation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1783,6 +1851,7 @@
   "id": "md2_salicylate",
   "name": "Salicylate and aspirin",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_plant_chemistry",
    "analytical_chemistry"
@@ -1807,6 +1876,7 @@
   "id": "md2_barbiturates",
   "name": "Barbiturate sedatives",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1830,6 +1900,7 @@
   "id": "md2_insulin",
   "name": "Insulin extraction",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_endocrine_system"
   ],
@@ -1857,6 +1928,7 @@
   "id": "md2_thyroid_extract",
   "name": "Thyroid hormone extract",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_endocrine_system"
   ],
@@ -1880,6 +1952,7 @@
   "id": "md2_adrenaline",
   "name": "Adrenaline isolation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1903,6 +1976,7 @@
   "id": "md2_sulphonamides",
   "name": "Sulphonamide drugs",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_dyes_synthetic",
    "analytical_chemistry"
@@ -1927,6 +2001,7 @@
   "id": "md2_penicillin_production",
   "name": "Penicillin cultivation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_microbiology_culture"
   ],
@@ -1951,6 +2026,7 @@
   "id": "md2_penicillin_fermentation",
   "name": "Deep tank fermentation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_penicillin_production",
    "cap_power_steam"
@@ -1980,6 +2056,7 @@
   "id": "md2_penicillin_freeze_dry",
   "name": "Freeze-drying penicillin",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_penicillin_fermentation",
    "mat_ice_artificial"
@@ -2006,6 +2083,7 @@
   "id": "md2_streptomycin",
   "name": "Streptomycin isolation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_microbiology_culture"
   ],
@@ -2029,6 +2107,7 @@
   "id": "md2_antitoxin",
   "name": "Antitoxin serum therapy",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "germ_theory",
@@ -2056,6 +2135,7 @@
   "id": "md2_vaccine_smallpox",
   "name": "Smallpox vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2089,6 +2169,7 @@
   "id": "md2_vaccine_rabies",
   "name": "Rabies vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2113,6 +2194,7 @@
   "id": "md2_vaccine_typhoid",
   "name": "Typhoid vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "md2_microbiology_culture"
@@ -2147,6 +2229,7 @@
   "id": "md2_vaccine_cholera",
   "name": "Cholera vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "md2_microbiology_culture"
@@ -2171,6 +2254,7 @@
   "id": "md2_vaccine_plague",
   "name": "Plague vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "md2_microbiology_culture"
@@ -2205,6 +2289,7 @@
   "id": "md2_vaccine_diphtheria",
   "name": "Diphtheria toxoid",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2228,6 +2313,7 @@
   "id": "md2_vaccine_tetanus",
   "name": "Tetanus toxoid",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2251,6 +2337,7 @@
   "id": "md2_vaccine_pertussis",
   "name": "Pertussis vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "md2_microbiology_culture"
@@ -2275,6 +2362,7 @@
   "id": "md2_vaccine_yellow_fever",
   "name": "Yellow fever vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2298,6 +2386,7 @@
   "id": "md2_vitamin_a",
   "name": "Vitamin A and deficiency",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2322,6 +2411,7 @@
   "id": "md2_vitamin_b1",
   "name": "Vitamin B1 thiamine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2346,6 +2436,7 @@
   "id": "md2_vitamin_b12",
   "name": "Vitamin B12 cobalamin",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2369,6 +2460,7 @@
   "id": "md2_vitamin_c",
   "name": "Vitamin C ascorbic acid",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2393,6 +2485,7 @@
   "id": "md2_vitamin_d",
   "name": "Vitamin D cholecalciferol",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2417,6 +2510,7 @@
   "id": "md2_iodised_salt",
   "name": "Iodised salt",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_thyroid_extract"
   ],
@@ -2441,6 +2535,7 @@
   "id": "md2_oral_rehydration",
   "name": "Oral rehydration solution",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_digestion"
   ],
@@ -2465,6 +2560,7 @@
   "id": "md2_sand_filtration",
   "name": "Sand filtration",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_aqueduct_roman"
   ],
@@ -2502,6 +2598,7 @@
   "id": "md2_chlorination",
   "name": "Water chlorination",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_sand_filtration"
   ],
@@ -2525,6 +2622,7 @@
   "id": "md2_sewage_separation",
   "name": "Separate sewage collection",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_aqueduct_roman",
    "civ_sewer_roman"
@@ -2553,6 +2651,7 @@
   "id": "md2_activated_sludge",
   "name": "Activated sludge treatment",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_sewage_separation"
   ],
@@ -2579,6 +2678,7 @@
   "id": "md2_milk_pasteurisation",
   "name": "Milk pasteurisation",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "thermometer",
    "cap_power_steam"
@@ -2604,6 +2704,7 @@
   "id": "md2_meat_inspection",
   "name": "Meat inspection",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_cadaver_dissection"
   ],
@@ -2628,6 +2729,7 @@
   "id": "md2_food_adulteration_law",
   "name": "Food purity legislation",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2652,6 +2754,7 @@
   "id": "md2_notifiable_disease",
   "name": "Notifiable disease system",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_vital_registration"
   ],
@@ -2676,6 +2779,7 @@
   "id": "md2_contact_tracing",
   "name": "Contact tracing",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_notifiable_disease"
   ],
@@ -2700,6 +2804,7 @@
   "id": "md2_isolation_hospital",
   "name": "Isolation hospital",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory",
    "sanitation_antisepsis"
@@ -2738,6 +2843,7 @@
   "id": "md2_vector_control",
   "name": "Vector control",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "scientific_method"
   ],
@@ -2761,6 +2867,7 @@
   "id": "md2_mosquito_net",
   "name": "Mosquito bed net",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_vector_control"
   ],
@@ -2787,6 +2894,7 @@
   "id": "md2_pit_latrine",
   "name": "Improved pit latrine",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -2812,6 +2920,7 @@
   "id": "md2_hospital_infection_control",
   "name": "Hospital infection control",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "sanitation_antisepsis",
    "md2_autoclave"
@@ -2836,6 +2945,7 @@
   "id": "md2_maternal_clinic",
   "name": "Maternal health clinic",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory"
   ],
@@ -2859,6 +2969,7 @@
   "id": "md2_child_clinic",
   "name": "Child health clinic",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory"
   ],
@@ -2882,6 +2993,7 @@
   "id": "md2_case_record",
   "name": "Case record keeping",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "scientific_method"
   ],
@@ -2908,6 +3020,7 @@
   "id": "md2_case_series",
   "name": "Case series analysis",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_case_record"
   ],
@@ -2931,6 +3044,7 @@
   "id": "md2_cohort_study",
   "name": "Cohort study",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_case_series",
    "statistics_basic"
@@ -2955,6 +3069,7 @@
   "id": "md2_case_control_study",
   "name": "Case-control study",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_case_series",
    "statistics_basic"
@@ -2979,6 +3094,7 @@
   "id": "md2_randomised_controlled_trial",
   "name": "Randomised controlled trial",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "statistics_basic",
    "md2_blinding"
@@ -3003,6 +3119,7 @@
   "id": "md2_blinding",
   "name": "Blinding in trials",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_placebo"
   ],
@@ -3026,6 +3143,7 @@
   "id": "md2_placebo",
   "name": "Placebo control",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_case_control_study"
   ],
@@ -3049,6 +3167,7 @@
   "id": "md2_medical_statistics",
   "name": "Medical statistics",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "statistics_basic"
   ],
@@ -3094,6 +3213,7 @@
   "id": "md2_vital_registration",
   "name": "Vital registration system",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "citizenship"
   ],
@@ -3118,6 +3238,7 @@
   "id": "md2_nursing_profession",
   "name": "Professional nursing",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -3142,6 +3263,7 @@
   "id": "md2_cadaver_dissection",
   "name": "Cadaver dissection",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "citizenship"
   ],
@@ -3165,6 +3287,7 @@
   "id": "md2_medical_licensing",
   "name": "Medical licensing",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "collegium_licensed"
   ],
@@ -3188,6 +3311,7 @@
   "id": "md2_medical_journal",
   "name": "Medical journal publication",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "corpus_dispersed"
   ],
@@ -3211,6 +3335,7 @@
   "id": "md2_pharmacopoeia",
   "name": "Pharmacopoeia",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "analytical_chemistry",
    "md2_drug_standardisation"
@@ -3236,6 +3361,7 @@
   "id": "md2_drug_standardisation",
   "name": "Drug standardisation",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "analytical_chemistry"
   ],
@@ -3260,6 +3386,7 @@
   "id": "md2_bioassay",
   "name": "Bioassay",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_drug_standardisation"
   ],
@@ -3283,6 +3410,7 @@
   "id": "md2_staining_methylene",
   "name": "Methylene blue staining",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_dyes_synthetic"
   ],
@@ -3306,6 +3434,7 @@
   "id": "md2_spirometer",
   "name": "Spirometer",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "thermometer"
   ],
@@ -3332,6 +3461,7 @@
   "id": "md2_light_source",
   "name": "Surgical light source",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "arc_light_lamp"
   ],
@@ -3360,6 +3490,7 @@
   "id": "md2_microbiology_culture",
   "name": "Microbiology culture technique",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_agar_media"
   ],
@@ -3383,6 +3514,7 @@
   "id": "md2_plant_chemistry",
   "name": "Plant chemistry extraction",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol"
   ],
@@ -3406,6 +3538,7 @@
   "id": "md2_agar_media",
   "name": "Agar culture media",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "med_autoclave",
    "med_sterile_technique",

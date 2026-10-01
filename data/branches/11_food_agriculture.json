@@ -3,6 +3,7 @@
   "id": "fud_three_field_rotation",
   "name": "Three-field crop rotation with fallowing",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -38,6 +39,7 @@
   "id": "fud_selective_breeding_pedigree",
   "name": "Selective breeding with written pedigrees",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -95,6 +97,7 @@
   "id": "fud_nitrogen_fixing_understanding",
   "name": "Recognition of nitrogen-fixing legume crops",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -123,6 +126,7 @@
   "id": "fud_liming_acid_soils",
   "name": "Liming of acidic soils",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -155,6 +159,7 @@
   "id": "fud_bone_meal_fertilizer",
   "name": "Bone meal as phosphate fertilizer",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -186,6 +191,7 @@
   "id": "fud_alfalfa",
   "name": "Alfalfa (lucerne) cultivation",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_nitrogen_fixing_understanding"
   ],
@@ -214,6 +220,7 @@
   "id": "fud_turnips_winter_fodder",
   "name": "Turnips as storable winter animal feed",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -243,6 +250,7 @@
   "id": "fud_clover_winter_fodder",
   "name": "Clover as winter grazing and fodder",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_nitrogen_fixing_understanding"
   ],
@@ -272,6 +280,7 @@
   "id": "fud_hay_making_storage",
   "name": "Hay making and dry storage",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "75_agriculture_food.md",
   "ph": 100,
@@ -294,12 +303,14 @@
   "note": "Cut grass at peak nutrition, dry thoroughly in sun and wind, store in dry barn or haybarn. Timing and weather are critical - rain-soaked hay rots or molts. Enables winter feeding of draft animals when pasture is gone.",
   "traits": [
    "food"
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: hay needs a scythe and a dry barn, both of which any settled agricultural society already has. Crop rotation is unrelated.]"
  },
  {
   "id": "fud_silage_fermentation",
   "name": "Silage production and fermented fodder storage",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_hay_making_storage"
   ],
@@ -326,12 +337,14 @@
   "note": "Pack fresh grass tightly in pits or wooden silos with salt, exclude air, and let anaerobic bacteria ferment it. Preserves nutrition without sun-drying and works in wet climates. Requires understanding of fermentation and airtight storage design.",
   "traits": [
    "food"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_root_cellar_storage",
   "name": "Root cellar and cool storage construction",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -364,6 +377,7 @@
   "id": "fud_heavy_mouldboard_plough_coulter",
   "name": "Heavy mouldboard plough with coulter (regional)",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "cap_tol_1mm"
@@ -398,12 +412,14 @@
     "axis": "toolkit",
     "entry": "HORSE_COLLAR_AND_MOULDBOARD"
    }
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fud_seed_drill",
   "name": "Mechanical seed drill",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "horse_collar",
@@ -502,6 +518,7 @@
   "id": "fud_winnowing_machine",
   "name": "Mechanical winnowing fan",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_threshing_machine",
    "cap_power_human"
@@ -536,6 +553,7 @@
   "id": "fud_mechanical_reaper",
   "name": "Mechanical grain reaper",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "cap_tol_1mm"
@@ -610,6 +628,7 @@
   "id": "fud_guano_import_trade",
   "name": "Guano import and application as fertilizer",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -638,6 +657,7 @@
   "id": "fud_superphosphate_fertilizer",
   "name": "Superphosphate from bones and sulfuric acid",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_bone_meal_fertilizer",
    "sulfuric_retort",
@@ -682,6 +702,7 @@
   "id": "fud_haber_process_synthetic_nitrogen",
   "name": "Haber process for synthetic ammonia and nitrate",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_power_electric",
@@ -718,6 +739,7 @@
   "id": "fud_roller_mill",
   "name": "Roller mill for grain (replacing millstone)",
   "cat": "milling",
+  "kind": "ENGINEERING",
   "pre": [
    "water_power_scale",
    "cap_tol_100um",
@@ -766,6 +788,7 @@
   "id": "fud_roller_milled_white_flour",
   "name": "White flour from roller milling and bran separation",
   "cat": "milling",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_roller_mill"
   ],
@@ -794,6 +817,7 @@
   "id": "fud_yeast_pure_culture",
   "name": "Pure yeast culture isolation and maintenance",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol",
    "cap_measure_temp"
@@ -817,12 +841,14 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Isolate yeast strain from wild fermentation by serial dilution and propagation in sterile medium. Maintain culture in sealed glass vials. Enables reproducible beer and bread fermentation without wild cultures. Looks like alchemy; requires careful technique and documentation. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sterile culture isolation and maintenance requires temperature control of growth medium]"
+  "note": "Isolate yeast strain from wild fermentation by serial dilution and propagation in sterile medium. Maintain culture in sealed glass vials. Enables reproducible beer and bread fermentation without wild cultures. Looks like alchemy; requires careful technique and documentation. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sterile culture isolation and maintenance requires temperature control of growth medium]",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sterile culture isolation and maintenance requires temperature control of growth medium]"
  },
  {
   "id": "fud_brewing_with_hops",
   "name": "Brewing with hops for flavor and preservation",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -848,6 +874,7 @@
   "id": "fud_distillation_spirits",
   "name": "Distillation of spirits and liqueurs",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol"
   ],
@@ -876,6 +903,7 @@
   "id": "fud_vinegar_production",
   "name": "Vinegar production via acetification",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol"
   ],
@@ -903,6 +931,7 @@
   "id": "fud_rice_cultivation",
   "name": "Rice cultivation in paddies",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "crop_rotation"
   ],
@@ -931,6 +960,7 @@
   "id": "fud_sugar_cane_cultivation",
   "name": "Sugar cane cultivation and juice extraction",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "crop_rotation"
   ],
@@ -959,6 +989,7 @@
   "id": "fud_beet_sugar_processing",
   "name": "Sugar beet cultivation and crystallization",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "fud_sugar_cane_cultivation",
    "cap_vac_1torr"
@@ -995,12 +1026,14 @@
      "lead_chamber": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum pan evaporation essential for consistent sugar crystallization]"
  },
  {
   "id": "fud_tea_trade_import",
   "name": "Tea import and trade channels",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "crop_rotation"
   ],
@@ -1029,6 +1062,7 @@
   "id": "fud_coffee_trade_import",
   "name": "Coffee import from Near East and Ethiopia",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "crop_rotation"
   ],
@@ -1051,7 +1085,8 @@
   "note": "Import coffee beans from Arabian and Ethiopian merchants. Roast, grind, and brew with hot water. Later becomes urban necessity in coffeehouses. Currently rare and expensive in the Mediterranean.",
   "traits": [
    "food"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_potato_tier9",
@@ -1120,6 +1155,7 @@
   "id": "fud_canning_appert_method",
   "name": "Canning by Appert's method (heating in sealed glass)",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_bottling_sealed_cork",
    "cap_heat_1100"
@@ -1163,6 +1199,7 @@
   "id": "fud_tin_plate_cans",
   "name": "Tin plate cans for food preservation",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_canning_appert_method",
    "fud_roller_mill"
@@ -1197,6 +1234,7 @@
   "id": "fud_can_opener",
   "name": "Can opener device for tin cans",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_tin_plate_cans"
   ],
@@ -1257,6 +1295,7 @@
   "id": "fud_bottling_sealed_cork",
   "name": "Bottling with cork closure and sealed glass",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -1285,6 +1324,7 @@
   "id": "fud_ice_house_construction",
   "name": "Ice house construction and storage",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_root_cellar_storage"
   ],
@@ -1317,6 +1357,7 @@
   "id": "fud_ice_harvesting_and_cutting",
   "name": "Ice harvesting from frozen lakes and rivers",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_ice_house_construction"
   ],
@@ -1344,6 +1385,7 @@
   "id": "fud_ice_trade_logistics",
   "name": "Trade and logistics of ice transport",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_ice_harvesting_and_cutting"
   ],
@@ -1368,12 +1410,14 @@
   "traits": [
    "commerce",
    "food"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_mechanical_refrigeration",
   "name": "Mechanical refrigeration using compression and evaporation",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_ice_trade_logistics",
    "cap_power_steam",
@@ -1407,6 +1451,7 @@
   "id": "fud_cold_chain_refrigerated_shipping",
   "name": "Cold chain and refrigerated railway shipping",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_mechanical_refrigeration",
    "railway"
@@ -1441,6 +1486,7 @@
   "id": "fud_freezing_with_mechanical_cold",
   "name": "Freezing food with mechanical refrigeration",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_mechanical_refrigeration",
    "fud_ice_house_construction"
@@ -1470,6 +1516,7 @@
   "id": "fud_drying_evaporated_milk",
   "name": "Drying and concentration of evaporated milk",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_pasteurisation",
    "cap_heat_1100"
@@ -1496,12 +1543,14 @@
   "note": "Heat milk gently in copper pan under partial vacuum (reduces boiling point) or in open pan to evaporate water until thick. Can milk solids are concentrated 2-3 fold. Stores several months in sealed tin. Reconstitutes with water or used directly in cooking.",
   "traits": [
    "food"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_fish_curing_and_smoking",
   "name": "Large-scale fish curing and smoking",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "75_agriculture_food.md",
   "ph": 120,
@@ -1531,6 +1580,7 @@
   "id": "fud_whaling_industry",
   "name": "Organized whaling industry for oil and meat",
   "cat": "fishing",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_whaling_gear",
    "sea_coastal_pilotage",
@@ -1553,12 +1603,14 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Organize fleets of whaleboats and processing ships to hunt large whales. Render whale blubber into oil for lamps (the best non-animal oil light). Whale meat is tough but provides protein. Dangerous work; whales fight back. Requires capital and international coordination."
+  "note": "Organize fleets of whaleboats and processing ships to hunt large whales. Render whale blubber into oil for lamps (the best non-animal oil light). Whale meat is tough but provides protein. Dangerous work; whales fight back. Requires capital and international coordination.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_vegetable_oil_extraction",
   "name": "Oil extraction from seeds and olives",
   "cat": "oils",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -1586,6 +1638,7 @@
   "id": "fud_margarine_synthesis",
   "name": "Margarine from refined and hardened vegetable oils",
   "cat": "oils",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_vegetable_oil_extraction",
    "cap_gas_o2h2"
@@ -1617,6 +1670,7 @@
   "id": "fud_enclosure_of_common_land",
   "name": "Enclosure of common land and private farming",
   "cat": "economic",
+  "kind": "INSTITUTION",
   "pre": [
    "crop_rotation"
   ],
@@ -1646,6 +1700,7 @@
   "id": "fud_farm_as_capital_enterprise",
   "name": "Farm as capital enterprise with investment and profit",
   "cat": "economic",
+  "kind": "INSTITUTION",
   "pre": [
    "fud_enclosure_of_common_land"
   ],
@@ -1671,6 +1726,7 @@
   "id": "fud_agricultural_treatises",
   "name": "Written agricultural treatises and knowledge codification",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "crop_rotation"
   ],
@@ -1702,6 +1758,7 @@
   "id": "fud_soil_composition_analysis",
   "name": "Understanding and testing soil composition",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "fud_agricultural_treatises",
    "analytical_chemistry"
@@ -1729,6 +1786,7 @@
   "id": "fud_malt_production",
   "name": "Malt production from barley and other grains",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -1748,12 +1806,14 @@
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "Soak barley, allow it to germinate, then dry in kiln to stop germination. Malting converts starches to fermentable sugars. Malt stores for months and is essential for brewing consistent beer. Requires cool storage to prevent mold."
+  "note": "Soak barley, allow it to germinate, then dry in kiln to stop germination. Malting converts starches to fermentable sugars. Malt stores for months and is essential for brewing consistent beer. Requires cool storage to prevent mold.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_grain_storage_silos",
   "name": "Cylindrical silos for bulk grain storage",
   "cat": "storage",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_arch_roman"
   ],
@@ -1782,12 +1842,14 @@
   "traits": [
    "infrastructure"
   ],
-  "build_yrs": 2
+  "build_yrs": 2,
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_livestock_selective_cattle",
   "name": "Selective breeding of draft and dairy cattle",
   "cat": "livestock",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_selective_breeding_pedigree"
   ],
@@ -1817,6 +1879,7 @@
   "id": "fud_livestock_selective_sheep",
   "name": "Selective breeding of sheep for wool and meat",
   "cat": "livestock",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_selective_breeding_pedigree"
   ],
@@ -1845,6 +1908,7 @@
   "id": "fud_dairy_butter_production",
   "name": "Butter production at scale from dairy cattle",
   "cat": "dairy",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_livestock_selective_cattle"
   ],
@@ -1870,6 +1934,7 @@
   "id": "fud_dairy_cheese_aging",
   "name": "Controlled cheese aging and storage",
   "cat": "dairy",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_livestock_selective_cattle"
   ],
@@ -1895,6 +1960,7 @@
   "id": "fud_sourdough_starter",
   "name": "Sourdough starter culture maintenance",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_yeast_pure_culture"
   ],

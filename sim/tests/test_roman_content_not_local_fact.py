@@ -10,6 +10,7 @@ import os
 import unittest
 
 from sim import civ_start_check as start_check
+from sim.engine.tree_source import load_base_tree
 from sim.engine import data
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -23,8 +24,7 @@ NO_MEDITERRANEAN_CONTACT = ("han_china_100ad", "mexica_1500")
 
 
 def _nodes():
-    with open(os.path.join(ROOT, "data", "tech_tree.json")) as handle:
-        return {node["id"]: node for node in json.load(handle)["nodes"]}
+    return {node["id"]: node for node in load_base_tree()["nodes"]}
 
 
 class RomanContentNotLocalFact(unittest.TestCase):

@@ -122,9 +122,8 @@ else:
 
 
 # CHECK: Player-facing tech node notes contain no Complaints/ or file paths.
-_tech_tree_path = os.path.join(ROOT, "data", "tech_tree.json")
-with open(_tech_tree_path, 'r') as _f:
-    _tech_data = json.load(_f)
+from sim.engine.tree_source import load_base_tree as _load_base_tree
+_tech_data = _load_base_tree()
 
 _bad_nodes = []
 for _node in _tech_data.get("nodes", []):

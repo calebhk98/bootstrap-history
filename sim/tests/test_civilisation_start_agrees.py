@@ -8,6 +8,7 @@ import os
 import unittest
 
 from sim import civ_start_check as start_check
+from sim.engine.tree_source import load_base_tree
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -81,16 +82,12 @@ class StartAgreesWithItselfTests(unittest.TestCase):
         self.assertEqual(start_check.briefing_contradictions(FIXTURE_NODES, civ), {})
 
     def test_shipped_civilisations_hold_nothing_their_briefing_says_is_absent(self):
-        import json
-        with open(os.path.join(ROOT, "data", "tech_tree.json")) as handle:
-            nodes = {node["id"]: node for node in json.load(handle)["nodes"]}
+        nodes = {node["id"]: node for node in load_base_tree()["nodes"]}
         for name, civilisation in start_check.load_civilisations(ROOT).items():
             self.assertEqual(start_check.briefing_contradictions(nodes, civilisation), {}, name)
 
     def test_shipped_civilisations_have_no_free_but_unheld_node(self):
-        import json
-        with open(os.path.join(ROOT, "data", "tech_tree.json")) as handle:
-            nodes = {node["id"]: node for node in json.load(handle)["nodes"]}
+        nodes = {node["id"]: node for node in load_base_tree()["nodes"]}
         for name, civilisation in start_check.load_civilisations(ROOT).items():
             self.assertEqual(start_check.free_unheld(nodes, civilisation), [],
                              "%s can start these for free at arrival without holding them"

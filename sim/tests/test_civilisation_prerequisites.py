@@ -36,6 +36,8 @@ import glob
 import os
 import unittest
 
+from sim.engine.tree_source import load_base_tree
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 DATA = os.path.join(ROOT, "data")
@@ -75,8 +77,7 @@ KNOWN_VIOLATIONS = {
 
 
 def load_tree_nodes():
-    with open(os.path.join(DATA, "tech_tree.json")) as handle:
-        nodes = json.load(handle)["nodes"]
+    nodes = load_base_tree()["nodes"]
     if isinstance(nodes, list):
         nodes = {node["id"]: node for node in nodes}
     return nodes

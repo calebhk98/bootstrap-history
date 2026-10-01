@@ -12,6 +12,7 @@ from unittest import mock
 from sim import treetool
 from sim import build_index
 from sim.engine import data
+from sim.engine.tree_source import load_base_tree
 
 
 TIERLESS_BRANCHES = (
@@ -85,8 +86,7 @@ class TierlessSchemaTests(unittest.TestCase):
         for filename in TIERLESS_BRANCHES:
             with open(os.path.join(treetool.BR, filename)) as source:
                 source_ids.update(node["id"] for node in json.load(source))
-        with open(data.TREE) as source:
-            generated_nodes = json.load(source)["nodes"]
+        generated_nodes = load_base_tree()["nodes"]
         tiered_ids = {node["id"] for node in generated_nodes if "tier" in node}
         self.assertFalse(source_ids & tiered_ids)
 
@@ -113,21 +113,14 @@ class TierlessSchemaTests(unittest.TestCase):
         self.assertNotIn("tier", normalised)
 
     def test_runtime_loads_a_tierless_node(self):
-        with open(data.TREE) as source:
-            tree = json.load(source)
+        tree = load_base_tree()
         node = copy.deepcopy(tree["nodes"][0])
         node.pop("tier", None)
         tree["nodes"] = [node]
 
-        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as temp_file:
-            json.dump(tree, temp_file)
-            path = temp_file.name
-        try:
-            with mock.patch.object(data, "TREE", path):
-                _, _, nodes, _, _ = data.load()
-            self.assertNotIn("tier", nodes[node["id"]])
-        finally:
-            os.unlink(path)
+        with mock.patch.object(data, "load_base_tree", return_value=tree):
+            _, _, nodes, _, _ = data.load()
+        self.assertNotIn("tier", nodes[node["id"]])
 
 
 if __name__ == "__main__":

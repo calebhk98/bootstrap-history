@@ -10,6 +10,7 @@ maintaining it by hand.
 import json, os, re, sys, collections
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sim.engine.data import KNOWLEDGE_DIR
+from sim.engine.tree_source import load_base_tree
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KB   = KNOWLEDGE_DIR
@@ -127,7 +128,7 @@ def _render_header(files, anchors, by_file):
            "",
            "A tech tree that says *microscope requires glass* is useless to someone who does",
            "not already know that one melted bead of glass gives 250x. The tree in",
-           "`../../data/tech_tree.json` says WHAT and IN WHAT ORDER. These modules say HOW, at a",
+           "`../../data/branches/` says WHAT and IN WHAT ORDER. These modules say HOW, at a",
            "level of detail a competent non-specialist can act on: masses, ratios,",
            "temperatures with Roman-observable proxies, vessel materials, how to tell it",
            "worked, how it fails, what it costs, and what it will do to you.",
@@ -257,7 +258,7 @@ def _print_report(files, by_file, prose, bydesign, gap, broken_file, broken_anch
 
 
 def main():
-    tree = json.load(open(os.path.join(ROOT, "data", "tech_tree.json")))
+    tree = load_base_tree()
     nodes = tree["nodes"]
     files = sorted(filename for filename in os.listdir(KB)
                     if filename.endswith(".md") and not filename.startswith("_")

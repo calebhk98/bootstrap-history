@@ -3,6 +3,7 @@
   "id": "civ_arch_roman",
   "name": "Masonry arch",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 60.0,
@@ -30,6 +31,7 @@
   "id": "civ_vault_barrel",
   "name": "Barrel vault",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_arch_roman"
   ],
@@ -56,6 +58,7 @@
   "id": "civ_dome_roman",
   "name": "Roman concrete dome",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_vault_barrel",
    "mat_pozzolana"
@@ -86,6 +89,7 @@
   "id": "civ_aqueduct_roman",
   "name": "Roman aqueduct with inverted siphons",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman"
   ],
@@ -113,6 +117,7 @@
   "id": "civ_road_paved",
   "name": "Paved road with surveying",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_surveying_groma"
   ],
@@ -154,6 +159,7 @@
   "id": "civ_surveying_groma",
   "name": "Groma: Roman X-staff surveying tool",
   "cat": "tools",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 20.0,
@@ -181,6 +187,7 @@
   "id": "civ_chorobates",
   "name": "Chorobates: Roman water levelling rod",
   "cat": "tools",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 25.0,
@@ -208,6 +215,7 @@
   "id": "civ_sewer_roman",
   "name": "Sewer with gravity flow",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman",
    "civ_surveying_groma"
@@ -236,6 +244,7 @@
   "id": "civ_brick_tile",
   "name": "Fired brick and tile",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 40.0,
@@ -260,6 +269,7 @@
   "id": "civ_marble_facing",
   "name": "Marble veneer and ashlar facing",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -281,6 +291,7 @@
   "id": "civ_insula",
   "name": "Insula: Roman apartment block",
   "cat": "buildings",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_brick_tile",
    "civ_arch_roman"
@@ -309,6 +320,7 @@
   "id": "civ_glass_windows",
   "name": "Glass panes for windows",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_glass_soda"
   ],
@@ -335,6 +347,7 @@
   "id": "civ_amphitheatre",
   "name": "Amphitheatre with tiered seating",
   "cat": "buildings",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_arch_roman",
    "civ_vault_barrel"
@@ -382,6 +395,7 @@
   "id": "civ_cofferdam",
   "name": "Cofferdam and underwater concrete",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman",
    "mat_pozzolana",
@@ -416,6 +430,7 @@
   "id": "civ_truss_triangulated",
   "name": "Triangulated truss frame",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_arch_roman",
    "cap_tol_1mm"
@@ -449,6 +464,7 @@
   "id": "civ_roof_king_post",
   "name": "King post roof truss",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_truss_triangulated",
    "cn_timber_truss"
@@ -508,6 +524,7 @@
   "id": "civ_bridge_timber_truss",
   "name": "Timber trussed bridge",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_truss_triangulated",
    "civ_arch_roman"
@@ -542,6 +559,7 @@
   "id": "civ_bridge_cast_iron",
   "name": "Cast iron bridge",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "blast_furnace",
    "civ_arch_roman"
@@ -575,6 +593,7 @@
   "id": "civ_iron_wrought",
   "name": "Wrought iron working and riveting",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "cap_heat_0700"
@@ -593,12 +612,14 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Wrought iron from bloomery furnace is ductile, tough, and resistant to corrosion. Smith heating and hand-forging creates toughness. Rivets are driven hot; the cooled rivet locks parts together. Roman and medieval smiths knew this; it is not high art, but skilled work. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C]"
+  "note": "Wrought iron from bloomery furnace is ductile, tough, and resistant to corrosion. Smith heating and hand-forging creates toughness. Rivets are driven hot; the cooled rivet locks parts together. Roman and medieval smiths knew this; it is not high art, but skilled work. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C]",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C]"
  },
  {
   "id": "civ_bridge_wrought_iron_truss",
   "name": "Wrought iron truss bridge",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_truss_triangulated",
    "civ_iron_wrought",
@@ -634,6 +655,7 @@
   "id": "civ_wire_drawn",
   "name": "Drawn wire and wire rope",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "drawplate_wire",
    "mat_wrought_iron"
@@ -662,6 +684,7 @@
   "id": "civ_bridge_suspension",
   "name": "Suspension bridge with wire cables",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_wire_drawn",
    "cap_measure_len",
@@ -697,6 +720,7 @@
   "id": "civ_statics",
   "name": "Statics and equilibrium of forces",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "geometry_analytic",
    "newtonian_mechanics"
@@ -726,6 +750,7 @@
   "id": "civ_method_joints",
   "name": "Method of joints for truss analysis",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_statics"
   ],
@@ -754,6 +779,7 @@
   "id": "civ_bending_moment",
   "name": "Bending moment and shear diagrams",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_statics",
    "calculus"
@@ -783,6 +809,7 @@
   "id": "civ_neutral_axis",
   "name": "Neutral axis in bending",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_bending_moment"
   ],
@@ -808,6 +835,7 @@
   "id": "civ_euler_buckling",
   "name": "Euler buckling of slender columns",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_statics",
    "calculus",
@@ -838,6 +866,7 @@
   "id": "civ_elasticity_theory",
   "name": "Theory of elasticity",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_neutral_axis",
    "calculus"
@@ -864,6 +893,7 @@
   "id": "civ_factor_safety",
   "name": "Factor of safety concept",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_method_joints",
    "statistics_basic"
@@ -890,6 +920,7 @@
   "id": "civ_materials_testing",
   "name": "Materials testing and calibration",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "balance_analytical",
    "cap_measure_mass_mg"
@@ -917,6 +948,7 @@
   "id": "civ_foundation_piles",
   "name": "Foundation piles and pile driving",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_statics"
   ],
@@ -945,6 +977,7 @@
   "id": "civ_foundation_spread",
   "name": "Spread footing on compacted soil",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_statics"
   ],
@@ -1001,6 +1034,7 @@
   "id": "civ_caisson_compressed_air",
   "name": "Compressed air caisson and decompression",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_caisson",
    "cap_power_steam"
@@ -1033,6 +1067,7 @@
   "id": "civ_soil_mechanics",
   "name": "Soil mechanics and bearing capacity",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_foundation_spread",
    "civ_statics",
@@ -1060,6 +1095,7 @@
   "id": "civ_tunnel_rock_drill",
   "name": "Rock drilling and tunnelling",
   "cat": "excavation",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_statics",
    "cap_measure_len"
@@ -1122,6 +1158,7 @@
   "id": "civ_dam_gravity",
   "name": "Gravity dam in masonry or concrete",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman",
    "civ_statics"
@@ -1149,12 +1186,14 @@
   "note": "A thick wall holding back water by its own weight. Water pressure increases with depth (proportional to depth squared). The base must resist both the vertical load and the horizontal thrust. Most dam failures are not structural (cracking) but hydraulic (seepage, overtopping).",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_dam_arch",
   "name": "Arch dam in concrete",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_dam_gravity",
    "civ_arch_roman"
@@ -1181,12 +1220,14 @@
   "note": "A curved dam transfers water pressure sideways to the canyon walls, not to the base. Thinner and lighter than a gravity dam. Requires rock walls on both sides and calculation of the arch stress. The Hoover Dam (1936) is an arch; it can hold a lake with less concrete than gravity.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_dam_earth_fill",
   "name": "Earth fill dam with compacted layers",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_soil_mechanics"
   ],
@@ -1247,6 +1288,7 @@
   "id": "civ_water_treatment",
   "name": "Water treatment works and coagulation",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_aqueduct_roman",
    "analytical_chemistry"
@@ -1279,6 +1321,7 @@
   "id": "civ_pumping_station",
   "name": "Pumping station and mechanical lift",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "bellows_water_blown",
    "civ_aqueduct_roman"
@@ -1311,6 +1354,7 @@
   "id": "civ_water_tower",
   "name": "Water tower and pressure system",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_pumping_station"
   ],
@@ -1340,6 +1384,7 @@
   "id": "civ_sewer_separate",
   "name": "Pilot separate foul and storm sewer standard",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_sewer_roman"
   ],
@@ -1367,12 +1412,14 @@
    "infrastructure"
   ],
   "build_yrs": 2,
-  "adopt_yrs": 5
+  "adopt_yrs": 5,
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_sewage_treatment",
   "name": "Sewage treatment works and activated sludge",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_sewer_separate",
    "germ_theory"
@@ -1399,12 +1446,14 @@
   "note": "Sewage (biological waste) requires aerobic decomposition. Activated sludge is bacteria and protozoa that eat organic matter when aerated. Germ theory explains why pathogens die in treatment; without it, the mechanism is invisible. Treated effluent is safe to discharge.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_steel_frame",
   "name": "Steel frame building",
   "cat": "buildings",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "civ_method_joints",
@@ -1471,6 +1520,7 @@
   "id": "civ_elevator_otis",
   "name": "Elevator with safety brake (Otis)",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "civ_steel_frame",
@@ -1594,6 +1644,7 @@
   "id": "civ_bridge_cantilever",
   "name": "Cantilever bridge",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "civ_bending_moment"
@@ -1655,6 +1706,7 @@
   "id": "civ_glass_plate",
   "name": "Plate glass for windows and storefronts",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_glass_soda",
    "precision_three_plate",
@@ -1681,12 +1733,14 @@
   "note": "Large flat panes of clear glass. Cast plate glass (poured onto a flat table, then ground and polished) allows sizes to 3-4 metres. Transforms storefronts and windows. Sheet glass (drawn from a bath) is cheaper but smaller. Large panes are fragile but stunning. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy]",
   "traits": [
    "luxury"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy]"
  },
  {
   "id": "civ_fireproofing",
   "name": "Fireproofing and fire-resistant structure",
   "cat": "buildings",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_steel_frame",
    "refractory_fireclay"
@@ -1719,6 +1773,7 @@
   "id": "civ_building_code",
   "name": "Building code and regulatory standards",
   "cat": "institutional",
+  "kind": "INSTITUTION",
   "pre": [
    "civ_factor_safety"
   ],
@@ -1742,12 +1797,14 @@
   "traits": [
    "infrastructure",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_lightning_conductor",
   "name": "Lightning conductor and grounding",
   "cat": "safety",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "mat_copper"
@@ -1770,7 +1827,8 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A copper or iron rod running from the roof to ground rod(s) in moist earth. Captures lightning and shunts it safely into the ground. Franklin (1752) invented this; it saved many buildings. Reduces fire and injury. Requires good earth contact; a dry ground rod does nothing."
+  "note": "A copper or iron rod running from the roof to ground rod(s) in moist earth. Captures lightning and shunts it safely into the ground. Franklin (1752) invented this; it saved many buildings. Reduces fire and injury. Requires good earth contact; a dry ground rod does nothing.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_theodolite",
@@ -1805,6 +1863,7 @@
   "id": "civ_precise_levelling",
   "name": "Precise levelling and level network",
   "cat": "tools",
+  "kind": "ENGINEERING",
   "pre": [
    "telescope",
    "cap_measure_len"
@@ -1836,6 +1895,7 @@
   "id": "civ_town_planning",
   "name": "Town planning and street layout",
   "cat": "institutional",
+  "kind": "INSTITUTION",
   "pre": [
    "civ_surveying_groma"
   ],
@@ -1859,12 +1919,14 @@
   "traits": [
    "infrastructure",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_harbour_dock",
   "name": "Harbour and dock with breakwaters",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_cofferdam",
    "civ_arch_roman"
@@ -1892,12 +1954,14 @@
   "note": "A protected basin with stone or wooden walls. Breakwaters outside reduce waves. Quays allow cargo loading and unloading. Docks with gates can maintain constant water level despite tides. Venice was the model; modern container ports are different in scale only.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_canal_pound_lock",
   "name": "Canal pound lock for level changes",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_gate_sluice"
   ],
@@ -1925,12 +1989,14 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_gate_sluice",
   "name": "Sluice gate for water control",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman"
   ],
@@ -1960,6 +2026,7 @@
   "id": "civ_dredging",
   "name": "Dredging for channel maintenance",
   "cat": "excavation",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_pumping_station",
    "steam_atmospheric",
@@ -1994,6 +2061,7 @@
   "id": "civ_street_paved",
   "name": "Paved street and sidewalk",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_road_paved"
   ],
@@ -2027,6 +2095,7 @@
   "id": "civ_street_lighting",
   "name": "Street lighting with electricity",
   "cat": "urban",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "arc_light_lamp",
    "power_grid"
@@ -2052,6 +2121,7 @@
   "note": "Gas lamps (post-1800) were bright but hot. Arc lamps (post-1850) were bright and stable. Incandescent bulbs (post-1880) were safer. Electric grid power (post-1900) made street lighting universal. Crime dropped; nightlife boomed. The cost was perpetual maintenance of wiring and poles.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  }
 ]
