@@ -11,7 +11,7 @@ see where goods travel.
 import functools
 
 from sim.constants import declare
-from sim.world import freight_cost, sea_freight, trade_routes
+from sim.world import cargo_cost, freight_cost, sea_freight, trade_routes, trader_response
 from sim.world import transport as freight_physics
 
 from .data import haversine_km, load_civ
@@ -69,10 +69,10 @@ class ForeignRoutesMixin:
             "sea": (hull_inputs, freight_cost.CarrierPrices(hull_kg * vehicle_wood),
                     sea_freight.SAILING_DAYS_PER_YEAR, freight_cost.HULL_LOSS_PER_THOUSAND_KM)}
 
-    def _freight_mode_costs(self, imbalance=1.0):
+    def _freight_mode_costs(self, imbalance=1.0, modes=None):
         """{mode: home money per tonne-km}: feed and crew, the carrier's capital at the market
         rate, hull losses, and the return leg (`imbalance` 0 when flows balance, 1 when the
-        carrier comes back empty)."""
+        carrier comes back empty). The same function prices foreign legs and domestic hauls."""
         feed_price = self._material_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
         land_wage = self.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
         sea_wage = self.wage_per_hour(SEA_CREW_WAGE_TRADE)
@@ -80,12 +80,29 @@ class ForeignRoutesMixin:
         return {mode: freight_cost.freight_money_per_tonne_km(
                     inputs, feed_price, sea_wage if mode == "sea" else land_wage, prices, rate,
                     working_days, imbalance, loss)
-                for mode, (inputs, prices, working_days, loss) in self._carrier_models().items()}
+                for mode, (inputs, prices, working_days, loss) in self._carrier_models().items()
+                if modes is None or mode in modes}
 
     def _freight_days_per_km(self):
         """{mode: days of travel per km over level ground}."""
         return {mode: 1.0 / inputs.distance_per_day_km
                 for mode, (inputs, _prices, _days, _loss) in self._carrier_models().items()}
+
+    def land_freight_money_per_tonne_km(self, imbalance=1.0):
+        """Home money per tonne-km for a domestic cart haul: the foreign routes' freight function,
+        with the carrier's capital at the market rate and the empty return. A domestic haul of a
+        material has no flow ledger back, so by default (heuristic, `imbalance` 1) the cart returns
+        empty."""
+        return self._freight_mode_costs(imbalance, ("cart",))["cart"]
+
+    def domestic_cargo_cost_share(self, material, distance_km):
+        """The cargo's own cost over a domestic cart haul as a share of its price: interest at the
+        market rate while it travels, and what is lost to spoilage in that time. No merchant margin
+        (domestic carriers' margins are not modelled)."""
+        years = freight_cost.days_on_leg(distance_km, self._land_freight_physical_inputs()) / 365.0
+        spoilage = cargo_cost.spoilage_share(cargo_cost.spoilage_rates().get(material, 0.0), years)
+        return trader_response.cost_share_of_price(
+            0.0, cargo_cost.lost_share(spoilage), self.market_rate(), years)
 
     def _foreign_flow_imbalance(self, civilization_id):
         """How one-sided last year's trade with a partner was, from its book: 1 when nothing

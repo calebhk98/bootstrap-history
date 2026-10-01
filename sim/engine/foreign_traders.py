@@ -7,7 +7,7 @@ yearly flow moves part of the way to the arbitrage volume (`sim/world/trader_res
 and is limited by the money merchants can finance.
 """
 from sim.constants import declare
-from sim.world import freight_cost, trader_response
+from sim.world import cargo_cost, freight_cost, trader_response
 
 MERCHANT_MARGIN_SHARE = declare(
     "MERCHANT_MARGIN_SHARE", 0.03, kind="temporary_heuristic",
@@ -45,12 +45,29 @@ class ForeignTradersMixin:
         if route is None:
             return 0.0
         sailed_km = sum(leg.distance_km for leg in route.legs if leg.mode == "sea")
-        return min(0.9, freight_cost.HULL_LOSS_PER_THOUSAND_KM * sailed_km / 1000.0)
+        return cargo_cost.sea_loss_share(freight_cost.HULL_LOSS_PER_THOUSAND_KM, sailed_km)
 
-    def _trader_cost_share(self, route):
+    def _cargo_lost_share(self, route, material=None):
+        """Share of a cargo lost on a route: with hulls at sea, and to spoilage over the voyage
+        and the wait (a good that does not spoil, or none named, loses only to the sea)."""
+        spoilage = 0.0
+        if material is not None:
+            spoilage = cargo_cost.spoilage_share(
+                cargo_cost.spoilage_rates().get(material, 0.0), self._trader_cycle_years(route))
+        return cargo_cost.lost_share(self._route_cargo_loss_share(route), spoilage)
+
+    def _trader_cost_share(self, route, material=None):
         return trader_response.cost_share_of_price(
-            MERCHANT_MARGIN_SHARE, self._route_cargo_loss_share(route), self.market_rate(),
+            MERCHANT_MARGIN_SHARE, self._cargo_lost_share(route, material), self.market_rate(),
             self._trader_cycle_years(route))
+
+    def _spoiling_material(self, commodity):
+        """The material of a commodity that spoils fastest, or None when none spoils."""
+        if commodity is None:
+            return None
+        rates = cargo_cost.spoilage_rates()
+        spoiling = [material for material in self._commodity_materials(commodity) if material in rates]
+        return max(spoiling, key=rates.get) if spoiling else None
 
     def merchant_capital_left(self, civilization_id):
         """Home money merchants can still tie up in goods this year."""
@@ -62,13 +79,14 @@ class ForeignTradersMixin:
         used = ledger["merchant_capital_used"] if ledger["lift_year"] == self.state.scenario.year else 0.0
         return max(0.0, capital - used)
 
-    def trader_terms(self, civilization_id, facts, home_price, foreign_price):
-        """`TraderTerms` for a route this year; capital limits in tonnes each way at these prices."""
+    def trader_terms(self, civilization_id, facts, home_price, foreign_price, commodity=None):
+        """`TraderTerms` for a route this year; capital limits in tonnes each way at these prices.
+        A named commodity pays spoilage by its fastest-spoiling material."""
         route = facts["route"]
         cycle = self._trader_cycle_years(route)
         left = self.merchant_capital_left(civilization_id)
         return trader_response.TraderTerms(
-            self._trader_cost_share(route), TRADER_ADJUSTMENT_SHARE,
+            self._trader_cost_share(route, self._spoiling_material(commodity)), TRADER_ADJUSTMENT_SHARE,
             capital_tonnes_in=left / (foreign_price * cycle) if foreign_price > 0.0 else 0.0,
             capital_tonnes_out=left / (home_price * cycle) if home_price > 0.0 else 0.0)
 

@@ -314,20 +314,17 @@ class FreightMixin:
         kilogram than real fodder, so this reads as a conservative
         (upper-bound), not measured, feed cost.
 
-        VEHICLE WEAR/CAPITAL IS NOT INCLUDED. transport.py's own vehicle_
-        wear_fraction_per_tonne_km has no market price to convert it into
-        money - nothing in prices.json prices a cart - so this understates
-        the true cost of the haul. Named here and in the class comment
-        above, not hidden.
+        THE CARRIER'S CAPITAL AND EMPTY RETURN ARE INCLUDED, by the same
+        function foreign routes use (`land_freight_money_per_tonne_km`): oxen
+        and cart at the market rate, their depreciation, and the return trip
+        empty (a labelled heuristic: no domestic flow ledger says what comes
+        back). The cargo's own interest and spoilage enter through
+        material_freight_factor().
         """
         distance_km = self.material_freight_distance_km(material)
         if not distance_km:
             return 0.0
-        inputs = self._land_freight_physical_inputs()
-        feed_price_per_kg = self._material_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
-        driver_wage_per_hour = self.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
-        denarii_per_tonne_km = (inputs.feed_kg_per_tonne_km * feed_price_per_kg
-                                 + inputs.driver_hours_per_tonne_km * driver_wage_per_hour)
+        denarii_per_tonne_km = self.land_freight_money_per_tonne_km()
         denarii_per_tonne = denarii_per_tonne_km * distance_km
         return denarii_per_tonne / KILOGRAMS_PER_TONNE
 
@@ -355,7 +352,9 @@ class FreightMixin:
         freight_per_kg = self.material_freight_cost_per_kg(emp_key)
         if freight_per_kg <= 0:
             return 1.0
-        return 1.0 + freight_per_kg / book_price_per_kg
+        cargo_share = self.domestic_cargo_cost_share(
+            emp_key, self.material_freight_distance_km(emp_key))
+        return 1.0 + freight_per_kg / book_price_per_kg + cargo_share
 
     def material_price_factor(self, emp_key):
         """What buying MORE of this tracked commodity costs beyond the flat
