@@ -8,6 +8,7 @@ from ..figures import figure_snapshot
 from .state import _agent_state
 from .capacity_remedies import capacity_remedies
 from .portfolio_bottlenecks import blocker_kind_of, bottleneck_groups
+from .portfolio_waiting import waiting_to_start
 
 # WHAT EACH TRAIT IN self.value_weights ACTUALLY DOES, in the player's own words. Event
 # text names these fields directly - "corpus_dispersed changes the society:
@@ -604,6 +605,14 @@ def _trade_demand_rows(sim):
     return rows
 
 
+def _add_last_year_hours(sim, rows):
+    """Each row's effective hours in the year before the latest, from the yearly snapshots."""
+    history = getattr(sim, "_dashboard_history", None) or []
+    earlier = history[-2].get("project_hours_effective") if len(history) >= 3 else None
+    for row in rows:
+        row["hours_effective_last_year"] = (earlier or {}).get(row["id"])
+
+
 def _agent_portfolio(sim, nodes, cmd=None):
     """The screen a player who had already won the game asked for four
     separate times in one run: what every active project is actually
@@ -615,6 +624,7 @@ def _agent_portfolio(sim, nodes, cmd=None):
     state_out = _agent_state(sim, nodes)
     active_out = state_out.get("active") or {}
     rows = _portfolio_rows(nodes, active_out)
+    _add_last_year_hours(sim, rows)
     pool_total = state_out.get("founder_hours_available")
     count = len(active_out)
     trade_rows = _trade_demand_rows(sim)
@@ -625,6 +635,7 @@ def _agent_portfolio(sim, nodes, cmd=None):
         "free_hours_going_unused": state_out.get("free_hours_going_unused"),
         "bottlenecks": bottleneck_groups(sim, rows, trade_rows, pool_total,
                                          state_out.get("resource_throttle"), state_out.get("throttle_binding")),
+        "waiting_to_start": waiting_to_start(sim, nodes),
         "projects": rows,
         "trade_hours_demand_vs_supply": trade_rows,
         "note": ("%d active project%s %s sharing this year's %s directed "
@@ -695,6 +706,8 @@ def _dashboard_snapshot(sim):
         "reputation": round(sim.reputation, 1),
         "eminence": round(sim.eminence, 2),
         "figures": figure_snapshot(sim),
+        "project_hours_effective": {node_id: progress.get("hours_effective_this_year", 0.0)
+                                    for node_id, progress in sim.active.items()},
     }
 
 
