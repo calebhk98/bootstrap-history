@@ -645,7 +645,7 @@ class CreditMixin:
                          default=None)
             if best_trade:
                 rate = self.base_annual_wage(best_trade) / self.HOURS_PER_PERSON_YEAR
-                would_earn = (pool * rate * self.price_index * self.wage_index
+                would_earn = (self.labour_market.in_current_money(pool * rate)
                               * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                                            household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
                 # What those same hours are already earning in the practice.

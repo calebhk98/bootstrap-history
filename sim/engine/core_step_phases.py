@@ -183,10 +183,10 @@ class StepPhasesMixin:
             gone = 0.0
             _before_shed = self.staff_snapshot()
             # shed, dearest first, until the wages you are left with fit
-            for trade_id in sorted(self.state.household.employees, key=lambda t: -self.annual_wage(t)):
+            for trade_id in sorted(self.state.household.employees, key=lambda t: -self.labour_market.quote_annual(t)):
                 if short <= 0:
                     break
-                wage = self.annual_wage(trade_id)
+                wage = self.labour_market.quote_annual(trade_id)
                 if wage <= 0:
                     continue
                 # A WHOLE PERSON, ROUNDED UP. `short / wage` is a quantity of
@@ -305,9 +305,9 @@ class StepPhasesMixin:
                 have = self.state.household.employees.get(trade_id, 0.0)
                 want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.state.household.trades_created else 0.0)
                 short = want - have
-                if short > 0.02 and self.state.household.capital > self.annual_wage(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
+                if short > 0.02 and self.state.household.capital > self.labour_market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
                     self.state.household.employees[trade_id] = have + short
-                    self.state.household.debit(short * self.annual_wage(trade_id), "wages advanced for replacement staff")
+                    self.state.household.debit(short * self.labour_market.quote_annual(trade_id), "wages advanced for replacement staff")
             self._resync_pools()
         self.hold_staff_reserve()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:
@@ -671,7 +671,7 @@ class StepPhasesMixin:
             _tr_upkeep = self.upkeep()
             _spare_tr = _tr_rev - _tr_upkeep - self.living_cost(_rev=_tr_rev, _upkeep=_tr_upkeep)
             for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
-                _wages = 2.0 * self.annual_wage(trade_id)
+                _wages = 2.0 * self.labour_market.quote_annual(trade_id)
                 _budget = (max(0.0, _spare_tr) + max(0.0, self.state.household.capital) * 0.10
                            if _score >= 500 else max(0.0, _spare_tr) * 0.5)
                 if _wages > _budget:
@@ -1560,7 +1560,7 @@ class StepPhasesMixin:
             year_hours = max(1.0, self.director_pool())
             practice_lost = self.revenue() * (hours / year_hours) * (
                 1.0 if self.practice_attention() > 0 else 0.0)
-            rate = (self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
+            rate = (self.labour_market.quote_annual(trade) / self.HOURS_PER_PERSON_YEAR
                     * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                                  self.state.household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
             if hours * rate > practice_lost:
@@ -1728,8 +1728,9 @@ class StepPhasesMixin:
         #     you know.
         if self.state.household.bondage_years_left > 0:
             self.state.household.bondage_years_left -= 1
-            paid = self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE *\
-                (self.wage_per_hour("labourer") * self.BONDAGE_WAGE_MARKUP) * self.wage_index * self.price_index
+            paid = self.labour_market.in_current_money(
+                self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE
+                * (self.wage_per_hour("labourer") * self.BONDAGE_WAGE_MARKUP))
             self.state.household.bondage_debt = max(0.0, self.state.household.bondage_debt - paid)
             if self.state.household.bondage_debt <= 0 and self.state.household.bondage_years_left > 0:
                 self.state.household.bondage_years_left = 0     # paid early

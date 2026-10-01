@@ -5,7 +5,7 @@ a file of their own (see labour.py's own docstring for the split).
 
 work_for_wages and wage_bill are the two directions of the same trade: a
 founder selling their own hours at the going rate, and a household paying
-its standing staff that same rate every year. Both read annual_wage, which
+its standing staff that same rate every year. Both ask the labour market (labour_market_api.py), which
 starts from the labour-market schedule (wage_per_hour: subsistence floor,
 training premium, tightness) and applies wage_cost_factors - the food,
 housing and trade-tool multipliers (TRADE_TOOL_BASKETS, HOUSING_PRESSURE_*,
@@ -17,6 +17,7 @@ in it.
 from . import wage_provider
 from . import money_units
 from .data import TRADE_REGISTRY, WAGES
+from .labour_market_api import LabourMarket
 from .labour_wage_ledger import WageLedgerMixin
 from sim.constants import declare
 
@@ -42,6 +43,14 @@ class WagesMixin(WageLedgerMixin):
         why="How much reputation it takes to reach WAGE_REPUTATION_BONUS_"
             "CAP's own ceiling. Tuned to REPUTATION_EASE_SCALE's own order "
             "of magnitude (economy.py), not derived from anything.")
+
+    @property
+    def labour_market(self):
+        """The one labour market every employer asks (labour_market_api.py)."""
+        market = self.__dict__.get("_labour_market")
+        if market is None:
+            market = self.__dict__["_labour_market"] = LabourMarket(self)
+        return market
 
     def work_for_wages(self, trade, hours):
         """Do a job. For money. Like everybody else.
@@ -93,11 +102,11 @@ class WagesMixin(WageLedgerMixin):
                          % (max(0.0, left), hours))
         # Your own labour is worth the trade rate: the SAME rate the game
         # charges you to employ somebody in that trade, which is the point.
-        # It has to be derived from annual_wage(), not a separate hourly
+        # It has to be derived from the labour market quote, not a separate hourly
         # column, or the two disagree and the docstring's "no arbitrage in
         # either direction" claim becomes false.
         household = self.state.household
-        rate = self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
+        rate = self.labour_market.quote_annual(trade) / self.HOURS_PER_PERSON_YEAR
         pay = (hours * rate
                * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                             household.reputation / self.WAGE_REPUTATION_SCALE)))
@@ -166,7 +175,7 @@ class WagesMixin(WageLedgerMixin):
         expensive to keep, so a large staff of the people you actually need is a
         real commitment rather than a number that drifts upward on its own.
 
-        Recently having leaned hard on a trade's local supply (labour_price_factor)
+        Recently having leaned hard on a trade's local supply (labour market price_factor)
         shows up here too, not only in the fee `hire` charged to bring someone
         on: a town that just watched you take on half its smiths pays every
         smith more for a few years, yours included, until the pressure decays
@@ -174,7 +183,7 @@ class WagesMixin(WageLedgerMixin):
         """
         total = 0.0
         for trade, count in self.state.household.employees.items():
-            total += count * self.annual_wage(trade)
+            total += count * self.labour_market.quote_annual(trade)
         return total
 
     # Materials a worker must replace to remain in their trade. These are not
@@ -314,17 +323,9 @@ class WagesMixin(WageLedgerMixin):
             "hands against the working population, or by output per hour that comes from "
             "diffused technology (Complaint 101).")
 
-    def labour_pay_scale(self):
-        """What the hour of labour pays, against the opening schedule, at this economy's output per hour."""
-        return self.output_volume_scale() ** self.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
-
-    def market_wage_per_hour(self, trade):
-        """What an actor hiring this trade pays an hour at this economy's output."""
-        return self.wage_per_hour(trade) * self.labour_pay_scale()
-
     def wage_per_hour(self, trade):
-        """Money one hour of this trade costs before local prices and
-        scarcity: the single wage every consumer reads."""
+        """The opening schedule's money for one hour of this trade, before price level, cost
+        factors and scarcity. Employers do not read it; they ask the labour market."""
         return self.wage_schedule().wage_per_hour(trade)
 
     def base_annual_wage(self, trade):
@@ -340,11 +341,3 @@ class WagesMixin(WageLedgerMixin):
         if not hours:
             return
         self.wage_schedule().step(self._hours_needed_by_trade(), hours)
-
-    def annual_wage(self, trade, include_local_scarcity=True):
-        """Current annual wage, derived from living costs and labour scarcity."""
-        base = self.base_annual_wage(trade)
-        factors = self.wage_cost_factors(trade)
-        local = self.labour_price_factor(trade) if include_local_scarcity else 1.0
-        return (base * factors["weighted"] * self.price_index
-                * self.wage_index * local * self.labour_pay_scale())

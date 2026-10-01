@@ -1,14 +1,12 @@
 """The local labour market: who is out there, how much of them this
-household can reach, and what leaning on a trade recently does to its price.
+household can reach.
 
 Split out of labour.py (see that file's own docstring for why). These are
 methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and moved verbatim.
 
-labour_pressure/_add_labour_pressure/labour_price_factor and its
-after-hiring forecast are "the market responds to demand, and to supply" -
-the same saturating-price idea market_pressure already applies to slaves
-(see labour_bondage.py), extended to ordinary hiring. trade_available,
+What leaning on a trade does to its price lives in labour_market_api.py.
+trade_available,
 found_trade_school and _trade_market_class decide whether a trade can be
 had here AT ALL and which reachable-population class it falls in, which
 market_supply, reachable_trade_population and national_trade_population -
@@ -29,128 +27,11 @@ from sim.constants import declare, REGISTRY
 
 
 class PopulationMixin:
-    """The labour market this household draws on: its depth, its price
-    response to recent hiring, and the population estimates behind both -
+    """The labour market this household draws on: its depth and the
+    population estimates behind it -
     see this module's own docstring for why these subjects sit together.
     """
 
-
-    # ---- the market responds to demand, and to supply ----------------------
-    # FINDINGS_ROUND2 section R: market_pressure already does this for slaves
-    # - buying in bulk bids the price up, it remembers between purchases, and
-    # it decays - and nothing else in the economy had an equivalent. This is
-    # the labour half: the same saturating idea, extended honestly rather than
-    # copied, and self-contained (decayed on READ rather than decremented once
-    # a year in step(), which lives in core.py, so nothing outside this file
-    # has to know this exists). 0.6x a year, the same rate market_pressure
-    # decays at (0.55, near enough) - mostly gone in three years.
-    LABOUR_PRESSURE_DECAY_RATE = declare(
-        "LABOUR_PRESSURE_DECAY_RATE", 0.6, kind="temporary_heuristic",
-        unit="fraction of remembered pressure surviving per year",
-        source=None, confidence="D",
-        why="How fast a burst of recent hiring or commissioning stops "
-            "moving the price of a trade - the same rate this file's own "
-            "comment says market_pressure decays at for slaves (0.55, "
-            "'near enough'), reused for labour rather than fitted "
-            "independently. Mostly gone in three years; a real figure "
-            "would come from how fast a local labour market actually "
-            "recovers from a demand shock, which nothing here measures.")
-
-    def labour_pressure(self, trade):
-        rec = self.household.labour_pressure_records.get(trade)
-        if not rec:
-            return 0.0
-        hours, year = rec
-        age = max(0.0, self.state.scenario.year - year)
-        return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
-
-    def _add_labour_pressure(self, trade, hours):
-        pressures = self.household.labour_pressure_records
-        pressures[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.state.scenario.year)
-
-    LABOUR_PRESSURE_SHARE_CAP = declare(
-        "LABOUR_PRESSURE_SHARE_CAP", 1.5, kind="temporary_heuristic",
-        unit="dimensionless (pressure / market_supply)",
-        source=None, confidence="D",
-        why="Caps how much of the price-pressure curve a single burst of "
-            "hiring can reach, so leaning on a trade harder and harder does "
-            "not send its price to infinity. The curve shape (saturating, "
-            "not linear) is a real claim about markets; where exactly it "
-            "saturates is tuned.")
-    LABOUR_PRICE_PRESSURE_COEFFICIENT = declare(
-        "LABOUR_PRICE_PRESSURE_COEFFICIENT", 0.9, kind="temporary_heuristic",
-        unit="dimensionless", source=None, confidence="D",
-        why="How much a fully-leaned-on trade's price roughly doubles by: "
-            "at share=1.0 this term alone adds 0.9 to the multiplier. "
-            "material_price_factor uses the identical curve for the same "
-            "reason (see this function's own docstring); the coefficient "
-            "itself is tuned to feel like a real but survivable premium, "
-            "not fitted to an observed labour-market price response.")
-
-    def _labour_price_factor_from(self, pressure, supply):
-        """The one curve behind labour_price_factor - split out so a forecast
-        can share it exactly rather than recomputing it (see
-        labour_price_factor_after_hiring)."""
-        supply = max(1.0, supply)
-        share = min(self.LABOUR_PRESSURE_SHARE_CAP, pressure / supply)
-        return 1.0 + self.LABOUR_PRICE_PRESSURE_COEFFICIENT * share * share
-
-    def labour_price_factor(self, trade):
-        """What hiring, commissioning or keeping MORE of this trade costs
-        beyond the wage table, from how hard you have recently leaned on its
-        local supply.
-
-        `market_supply(trade)` is the ceiling: everyone this trade could put
-        to work here, including everyone you already employ. Recent pressure
-        taken as a share of that ceiling is negligible at a fifth of it and
-        roughly doubles the price at the whole of it - the same curve
-        `material_price_factor` uses for the same reason. Because the ceiling
-        itself grows when you teach the trade a bigger workforce, or when an
-        institution or literacy widens it, the SAME recent pressure buys a
-        smaller premium once the supply behind it is bigger: teaching fifty
-        machinists is what makes hiring the fifty-first one cheap again, not
-        merely possible.
-        """
-        return self._labour_price_factor_from(self.labour_pressure(trade),
-                                               self.market_supply(trade))
-
-    def labour_price_factor_after_hiring(self, trade, hire_count=1.0):
-        """What labour_price_factor(trade) becomes the INSTANT you hire n
-        more - not the market as it stands, the hire you are contemplating.
-
-        This is the number `hire` itself effectively charges from the moment
-        the new people are on the books (see wage_bill, which applies the
-        CURRENT labour_price_factor to every head of a trade, not only the
-        newest one): a Norse player was quoted "a year of one: 525" for a
-        scholar, hired one, and the standing wage bill came to 847.92 - 61%
-        more - because that one hire pushed labour_price_factor for scholars
-        from 1.0 to 1.615 against a near-empty local supply. The quote and
-        the bill were never inconsistent; the quote just priced the market
-        as it stood, one command before the player's own action moved it.
-
-        Genuinely simulates the hire rather than re-deriving market_supply's
-        formula a second time (which differs for a taught-only trade): adds
-        n to employees[trade], reads the real market_supply(trade) back, and
-        undoes the change. labour_pressure needs no such trick - it is a
-        running total, not a function of current headcount - so n more
-        hours are simply added to it, exactly as _add_labour_pressure would.
-        """
-        hire_count = max(0.0, hire_count)
-        if hire_count <= 0:
-            return self.labour_price_factor(trade)
-        add_hours = hire_count * self.HOURS_PER_PERSON_YEAR
-        household = self.state.household
-        before = household.employees.get(trade, 0.0)
-        household.employees[trade] = before + hire_count
-        try:
-            supply_after = self.market_supply(trade)
-        finally:
-            if before:
-                household.employees[trade] = before
-            else:
-                household.employees.pop(trade, None)
-        pressure_after = self.labour_pressure(trade) + add_hours
-        return self._labour_price_factor_from(pressure_after, supply_after)
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""

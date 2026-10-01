@@ -200,14 +200,14 @@ def _cmd_labour(sim, nodes, cmd, ended):
         # THE PRICE YOU ACTUALLY PAY, not the table price: leaning on a
         # trade's local supply bids it up, and the premium has to appear
         # here, not only in the bill.
-        _lpf = sim.labour_price_factor(trade)
+        _lpf = sim.labour_market.price_factor(trade)
         entry = {"trade": trade,
-             "a_year_of_one": round(sim.annual_wage(trade), 0),
+             "a_year_of_one": round(sim.labour_market.quote_annual(trade), 0),
              "you_employ": round(sim.employees.get(trade, 0.0), 2)}
         if long:
             entry["wage_foundation"] = {
                 "base_for_skill_and_difficulty": round(sim.base_annual_wage(trade), 2),
-                **{factor_key: round(value, 3) for factor_key, value in sim.wage_cost_factors(trade).items()},
+                **{factor_key: round(value, 3) for factor_key, value in sim.labour_market.cost_factors(trade).items()},
                 "demographic_scarcity": round(sim.wage_index, 3),
                 "local_trade_scarcity": round(_lpf, 3),
                 "society_price_level": round(sim.price_index, 3),
@@ -252,8 +252,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                             "back down" % trade)
         if long:
             entry.update({"kind": trade_family(trade),
-                      "wage_per_hour": round(sim.wage_per_hour(trade) * sim.wage_index
-                                             * sim.price_index, 3),
+                      "wage_per_hour": round(sim.labour_market.in_current_money(sim.wage_per_hour(trade)), 3),
                       # SPLIT, because the total includes your own people
                       # and calling all of it "the market" made hiring look
                       # like it created smiths out of nothing.
@@ -285,17 +284,17 @@ def _cmd_labour(sim, nodes, cmd, ended):
             # THE HIRE YOU ARE CONTEMPLATING, NOT THE MARKET AS IT STANDS.
             # a_year_of_one above is true the instant it is quoted and can
             # be false one command later: hiring is what moves
-            # labour_price_factor, and wage_bill charges the NEW factor
+            # labour market price_factor, and wage_bill charges the NEW factor
             # to every head of the trade you then have, not only the one
             # you added, so the standing wage bill after hiring can be far
             # higher than "a year of one" quoted before the hire. See
-            # labour_price_factor_after_hiring's own docstring for the
+            # labour market price_factor_after's own docstring for the
             # full account; this is that forecast, priced and put on the
             # one screen a player actually reads before committing.
             if sim.trade_available(trade):
-                _lpf_after = sim.labour_price_factor_after_hiring(trade, 1.0)
+                _lpf_after = sim.labour_market.price_factor_after(trade, 1.0)
                 _rate_after = round(
-                    sim.annual_wage(trade, include_local_scarcity=False) * _lpf_after, 0)
+                    sim.labour_market.unscarce_annual(trade) * _lpf_after, 0)
                 # ALWAYS SHOWN, QUIETLY: this is the number the task is
                 # actually about, and it belongs on the screen whether or
                 # not the move is large enough to also earn the banner
@@ -308,7 +307,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                 # a single hire. Flagging that every time would be a
                 # warning nobody reads by the tenth trade. 5% (the same
                 # bound `labour_pressure` itself treats as worth a name,
-                # see labour_price_factor's own note on what "roughly
+                # see labour market price_factor's own note on what "roughly
                 # doubles the price at the whole of it" means) is where a
                 # single hire stops being noise and starts being the
                 # reason your wage bill actually moved - true of a rare,

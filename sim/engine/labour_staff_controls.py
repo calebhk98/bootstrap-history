@@ -68,7 +68,7 @@ class StaffControlsMixin:
         if places <= 0:
             return
         cost = places * self.housing_price_per_place()
-        if cost + count * self.annual_wage(trade) > self.spending_power("buy"):
+        if cost + count * self.labour_market.quote_annual(trade) > self.spending_power("buy"):
             return
         if self.build_worker_housing(places):
             self.state.household.log.append((self.state.scenario.year,

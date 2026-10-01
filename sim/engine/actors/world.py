@@ -106,21 +106,14 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		"""The government actor of the founder's civilisation."""
 		return self._sim.state_treasury()
 
-	def wage_per_hour(self, trade: str) -> float:
-		return self._sim.market_wage_per_hour(trade)
+	@property
+	def labour_market(self) -> Any:
+		"""The one labour market every employer asks: quote, hire, release, read the pressure."""
+		return self._sim.labour_market
 
 	@property
 	def hours_per_person_year(self) -> float:
 		return self._sim.HOURS_PER_PERSON_YEAR
-
-	def hiring_wage_per_hour(self, trade: str) -> float:
-		"""What an hour of this trade costs an actor that hires it now: the wage table
-		times the premium the local market's recent hiring has built up."""
-		return self._sim.market_wage_per_hour(trade) * self._shared(self._sim.labour_price_factor, trade)
-
-	def press_labour(self, trade: str, hours: float) -> None:
-		"""An actor takes on `hours` a year of a trade: the one local market feels it."""
-		self._sim._add_labour_pressure(trade, hours)
 
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
 		"""People of each trade running this concern ties up, by the founder's own rule."""
@@ -136,7 +129,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		"""Yearly wages of the people running this concern needs, at the going wage, for a firm
 		running it at `capacity` times its founding size."""
 		return self.span_factor(capacity) * sum(
-			people * self.hours_per_person_year * self.wage_per_hour(trade)
+			people * self.hours_per_person_year * self.labour_market.quote(trade)
 			for trade, people in self.concern_staff(node_id).items())
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:

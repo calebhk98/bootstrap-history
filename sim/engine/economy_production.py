@@ -330,8 +330,7 @@ class ProductionMixin:
         # makes the workshop you actually staff and pay for more productive,
         # which is how method has always paid. It needs a workshop and it needs
         # people; with neither, it is still worth nothing.
-        return (wage * mark * self.capability_factor()
-                * self.wage_index * self.price_index)
+        return self.labour_market.in_current_money(wage * mark * self.capability_factor())
 
     def capability_factor(self):
         """How much better your methods make the same pair of hands.
