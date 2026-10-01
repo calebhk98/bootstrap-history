@@ -1,6 +1,6 @@
 # Silver still costs about a tenth of the labour its attested wage implies
 
-**Status:** open
+**Status:** closed - the same gap as 641, which carries the remaining work; the Strabo-Polybius cross-check is kept there
 
 After costing ore dressing, roasting, cupellation bellows and hearth attendance, assay-weighted silver per lead and the silver recoveries (143, 288, 337), Rome's solved silver is about 320 labour hours per kg (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`). One denarius (2.7 g) is then below one labour hour and the opening unskilled wage is more than one denarius per hour, so a ten-hour day pays about a dozen denarii against the attested one denarius a day.
 

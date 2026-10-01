@@ -1,6 +1,6 @@
 # Add a real state fiscal/budget model
 
-**Status:** partly - sim/engine/actors/budget.py; revenue, army and officials, deficit rule, labour and goods demand, need-driven levy built; remains: more spending lines (300), patron funding as a treasury payment, public debt (110), state adoption (301)
+**Status:** closed - revenue, army, officials, the budget lines (300), borrowing (110) and the state's adoption (301) are built; what remains is the soldier trade (447) and revenue as a fitted share (448)
 
 **Source:** playtest findings document, LATE-003. **Type:** Major
 roadmap-sized feature recommendation, with an existing code-level admission

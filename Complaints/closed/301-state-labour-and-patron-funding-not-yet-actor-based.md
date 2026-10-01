@@ -1,6 +1,6 @@
 # The state's soldiers are not a trade, and patron funding still ignores the treasury
 
-**Status:** partly - patron funding is now paid from the treasury and soldiers are out of production; a soldier trade is 447; the state's adoption is what the government actor holds (the half-life curve and its constants are gone)
+**Status:** closed - patron funding is paid from the treasury (`Government.pay_patron`) and the state's adoption is what the government holds (test invention_disclosure); the soldier trade is 447
 
 Three things the state budget does not do yet, each measurable.
 

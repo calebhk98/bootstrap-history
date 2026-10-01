@@ -1,6 +1,6 @@
 # Freight omits travel time, empty returns and the carriers' capital
 
-**Status:** partly - foreign route freight now comes from the carrier: travel days per leg from its pace and the leg's difficulty, the empty return when last year's flows with the partner were one-sided, the carrier's capital (timber for vehicles and hulls, the animals' prices) at the society's market rate, and hulls lost at sea (`sim/world/freight_cost.py`, `sim/engine/foreign_routes.py`); still open: interest and spoilage on the cargo's own value, cargo lost at sea, tolls and port dues, authored river reaches, and domestic freight (`economy_freight.py`) which still prices feed and driver only
+**Status:** partly - foreign route freight now comes from the carrier: travel days per leg from its pace and the leg's difficulty, the empty return when last year's flows with the partner were one-sided, the carrier's capital (timber for vehicles and hulls, the animals' prices) at the society's market rate, and hulls lost at sea (`sim/world/freight_cost.py`, `sim/engine/foreign_routes.py`); still open: tolls and port dues, authored river reaches, and domestic freight (`economy_freight.py`) which still prices feed and driver only; the cargo's own time, spoilage and loss at sea are 592
 
 Route freight (`sim/engine/foreign_routes.py`) prices feed, crew rations and
 hours per tonne-km and a port handling charge per sea leg. It leaves out: goods

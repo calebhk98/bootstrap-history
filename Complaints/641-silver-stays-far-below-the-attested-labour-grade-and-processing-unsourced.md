@@ -10,5 +10,7 @@ After 640 the model's silver is about 379 hours per kg against about 1,000-1,700
 - Water inflow per tonne (3 and 0.5 tonnes of water per tonne of ore) has no source; drainage is the largest deep-mine term. Drainage adits are not modelled.
 - Surface working: overburden stripping, lighting (lamp oil), and the miners' upkeep beyond wages (supervisors are not counted in Bettenay either) are not charged.
 - Fire-setting share for medium rock is still none (612).
+- Slag handling and the fuel for roasting the ore are not charged (from 570).
+- Cross-check (from 410): Strabo, quoting Polybius, gives the Carthago Nova mines' yield and workforce; the implied hours per kg sit at the top of the attested range.
 
 Do not move any figure to reach the attested day wage (CLAUDE.md 4.1).

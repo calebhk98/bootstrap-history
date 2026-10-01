@@ -1,6 +1,6 @@
 # Deposit model charges no dead work, timbering, ventilation or sorting
 
-**Status:** partly - barren rock, timbering, ventilation, hauling, drainage now charged (640); grade values and processing hours still unsourced (641)
+**Status:** closed - barren rock, timbering, ventilation, hauling and drainage are charged (640); grade values and processing hours are 641
 
 `ore_grade_kg_per_tonne` in `data/world/deposits.json` is metal per tonne of rock raised, and `sim/world/deposits.py` charges only breaking, a depth multiplier, fire-setting wood and amortised shafts. Not charged, each needing a source before a number moves:
 

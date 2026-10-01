@@ -1,6 +1,6 @@
 # Government and Firm actors run every year but nothing reads their results
 
-**Status:** partly - docs/architecture/ACTORS_NEXT.md; increments 1 (money between actors is a ledger), 2 (firms and the state assessed by one rule), 4 (firm output reaches the market), 5 (the state's demand and labour, except patron funding) and 6 (the need-driven levy) done; and 3 (the state's know-how is its adoption: `state_military_diffusion` reads what the government holds) done; patron funding as a treasury payment is in 301
+**Status:** closed - increments 1-6 of docs/architecture/ACTORS_NEXT.md are built and read by the engine; other countries as actors are 113
 
 `sim/engine/core_step_phases.py:493` calls `self.advance_actors(...)` each year. The code inventory found no reader of their results outside `society_actors.py`: they do not affect the founder's revenue, prices, or any player screen.
 
