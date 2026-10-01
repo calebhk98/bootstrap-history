@@ -203,7 +203,8 @@ check("...and the dearest society's chain really is the dearest",
 _s_ch = sim(civ="norse_900ad")
 from sim.engine.data import closure as _closure
 # The chain is what is BEHIND it, so the node itself is not in the bill.
-_behind = sorted(_closure(NODES, "telescope") - {"telescope"})
+# and what the society already holds is not still to be paid for.
+_behind = sorted(_closure(NODES, "telescope") - {"telescope"} - set(_s_ch.done))
 check("...and it is the sum of what each of those nodes would actually cost",
       abs(_chains["norse_900ad"]
           - sum(_s_ch.project_cost(node_id) for node_id in _behind)) < 0.5,
