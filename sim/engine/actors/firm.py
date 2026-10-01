@@ -7,6 +7,7 @@ the market with every other operator.
 from typing import Any, Callable, List, Optional
 
 from .base import RecordedActor
+from .borrowing import TRACK_RECORD_YEARS
 from .tuning import EXIT_LOSS_YEARS, VALUE_HORIZON_YEARS
 
 
@@ -30,6 +31,12 @@ class Firm(RecordedActor):
 		if node_id == self.record.target:
 			self.concerns.add(node_id)
 			self.record.opened_year[node_id] = world.year
+
+	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
+		"""A licensed concern becomes the firm's own business."""
+		self.learn(chain, world)
+		self.concerns.add(node_id)
+		self.record.opened_year[node_id] = world.year
 
 	def staff_concern(self, node_id: str, world: Any) -> float:
 		"""Take on the people running a concern needs from the shared pool; the share of
@@ -55,11 +62,22 @@ class Firm(RecordedActor):
 			self.credit(takings, "takings")
 			self.debit(upkeep, "upkeep")
 			levy = world.government().collect(self, takings, world)
-			margin = takings - upkeep - levy
+			royalty = world.collect_royalty(self, node_id, takings)
+			margin = takings - upkeep - levy - royalty
 			self.record.last_margin = margin
 			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
 
+	def credit_earning(self, world: Any) -> float:
+		return max(0.0, self.record.last_margin)
+
+	def credit_standing(self, world: Any) -> float:
+		"""A firm is trusted as its record lengthens, and not at all while it runs at a loss."""
+		if self.record.loss_years > 0 or self.record.founded_year is None:
+			return 0.0
+		return min(1.0, max(0.0, world.year - self.record.founded_year) / TRACK_RECORD_YEARS)
+
 	def act(self, world: Any) -> None:
+		self.pay_interest(world)
 		super().act(world)
 		self.operate(world)
 		if self.record.loss_years >= EXIT_LOSS_YEARS:

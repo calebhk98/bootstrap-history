@@ -579,6 +579,8 @@
   ]
  },
  {
+  "annual_output_basis": "A rope-walk worked by a crew of about twelve hands at the six labourer-hours a kilogram that cordage_kg states: twelve times two thousand hours over six is about four tonnes. Declared plant size from the entry's own hours, conf C.",
+  "annual_output_t": 4,
   "id": "tex_rope_walk",
   "name": "Rope walk and cordage",
   "cat": "textiles",
@@ -1100,6 +1102,8 @@
   ]
  },
  {
+  "annual_output_basis": "A tan-yard of about twelve hands at the six hours of labour a kilogram that leather_kg states (four labourer, two artisan): about four tonnes of finished leather a year. Declared plant size from the entry's own hours, conf C.",
+  "annual_output_t": 4,
   "id": "tex_vegetable_tanning",
   "name": "Vegetable tanning of leather",
   "cat": "textiles",

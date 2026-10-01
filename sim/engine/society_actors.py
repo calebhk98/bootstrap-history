@@ -78,4 +78,5 @@ class ActorsMixin:
     def advance_actors(self, year):
         """Give the country's government and every firm their year."""
         self.state_treasury()
+        self.update_capital_market()
         self.actors.advance(SimWorld(self))

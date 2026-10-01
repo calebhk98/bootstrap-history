@@ -512,6 +512,7 @@
   {
     "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [SCALED: this is an INDUSTRY, not a demonstration. At 300 tonnes of product a year it consumes about 900 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 1,200 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1300 added by a reviewer working node by node. Reason: produces liquid cast iron requiring water-blown continuous blast furnace heat]",
     "adopt_yrs": 0.0,
+    "annual_output_basis": "One charcoal-fired stack blown for most of a year at about a tonne of pig iron a day, the order of the early charcoal furnaces whose blowing season water supply limited. Declared plant size, conf C.",
     "annual_output_t": 300,
     "art": 6.0,
     "build_yrs": 5.0,
@@ -784,6 +785,7 @@
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 60 tonnes of product a year it consumes about 120 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 160 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: carbon diffusion into iron bars at sustained ~1000C]",
     "adopt_yrs": 0.0,
+    "annual_output_basis": "Two sealed chests of about four tonnes of bar each, one charge a cycle of a week or so with charging and cooling, about seven charges a year: roughly sixty tonnes of blister steel. Declared plant size, conf C.",
     "annual_output_t": 60,
     "art": 3.0,
     "build_yrs": 2.0,
@@ -1461,7 +1463,6 @@
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 30 tonnes of product a year it consumes about 60 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 80 hectares of forest under permanent management, which you must own before you light it.]",
     "adopt_yrs": 0.0,
-    "annual_output_t": 30,
     "art": 4.0,
     "build_yrs": 5.0,
     "cap_hours": 120971.27504477595,
@@ -2274,6 +2275,7 @@
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 250 tonnes of product a year it consumes about 1,500 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 2,000 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1300 added by a reviewer working node by node. Reason: decarburizing cast iron in puddling furnace at 1300 C requires water-blown blast furnace heat]",
     "adopt_yrs": 0.0,
+    "annual_output_basis": "A forge of two puddling furnaces turning out two to three tonnes of bar a week each over about fifty working weeks. Declared plant size, conf C.",
     "annual_output_t": 250,
     "art": 4.0,
     "build_yrs": 2.0,
@@ -3021,7 +3023,6 @@
   {
     "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [SCALED: this is an INDUSTRY, not a demonstration. At 50 tonnes of product a year it consumes about 125 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 167 hectares of forest under permanent management, which you must own before you light it.]  [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: soda-lime glass melting requires 1000-1100 C furnace]",
     "adopt_yrs": 0.0,
-    "annual_output_t": 50,
     "art": 3.0,
     "build_yrs": 1.5,
     "cap_hours": 60485.63752238797,
@@ -3335,7 +3336,6 @@
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 200 tonnes of product a year it consumes about 400 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 533 hectares of forest under permanent management, which you must own before you light it.]",
     "adopt_yrs": 7.0,
-    "annual_output_t": 200,
     "art": 10.0,
     "build_yrs": 2.3333333333333335,
     "cap_hours": 221780.67091542255,
@@ -3837,7 +3837,6 @@
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 200 tonnes of product a year it consumes about 300 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 400 hectares of forest under permanent management, which you must own before you light it.]",
     "adopt_yrs": 0.0,
-    "annual_output_t": 200,
     "art": 2.0,
     "build_yrs": 1.0,
     "cap_hours": 24194.255008955188,
@@ -6897,7 +6896,6 @@
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 1500 tonnes of product a year it consumes about 18,000 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 24,000 hectares of forest under permanent management, which you must own before you light it.]",
     "adopt_yrs": 12.0,
-    "annual_output_t": 1500,
     "art": 70.0,
     "build_yrs": 3.0,
     "cap_hours": 1008093.9587064662,
@@ -6949,6 +6947,7 @@
   {
     "_internal": "[SCALED: this is an INDUSTRY, not a demonstration. At 20 tonnes of product a year it consumes about 240 tonnes of charcoal annually, derived from the physical ratio in data/world/resources.json rather than guessed. At 0.75 tonnes of charcoal per hectare of coppice per year that is roughly 320 hectares of forest under permanent management, which you must own before you light it.]",
     "adopt_yrs": 0.0,
+    "annual_output_basis": "Twenty retorts, each giving about three kilograms of condensed zinc a day over about three hundred and thirty days of firing: roughly twenty tonnes. Declared plant size, conf C.",
     "annual_output_t": 20,
     "art": 3.0,
     "build_yrs": 3.0,

@@ -10,12 +10,13 @@ from typing import Any, Dict, List, Optional, Set
 from sim.engine.state import ActorRecord
 
 from . import imitation, ledger
+from .borrowing import Borrower
 from .ledger import Purpose
 from .policy import Decision, Option, Policy, ValuePolicy
 from .tuning import ATTENTION_SPAN
 
 
-class Actor:
+class Actor(Borrower):
 	kind = "actor"
 
 	def __init__(self, policy: Optional[Policy] = None) -> None:
@@ -164,6 +165,11 @@ class Actor:
 			else:
 				self.record_failure(node_id)
 		return finished
+
+	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
+		"""Licensed know-how arrives complete: learned, and the actor can make it."""
+		self.learn(chain, world)
+		self.on_copied(node_id, world)
 
 	def learn(self, chain: List[str], world: Any) -> None:
 		self.knowledge.update(chain)

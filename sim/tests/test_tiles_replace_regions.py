@@ -77,10 +77,8 @@ class ForestAreaReadsTilesTests(unittest.TestCase):
                        for tile_id in geography["land_tiles"]["region_to_tiles"][region_id])
         self.assertAlmostEqual(test_sim.home_land_area_km2(), expected, places=6)
 
-    def test_home_land_area_ignores_the_region_record(self):
+    def test_region_records_hold_no_land_figures(self):
         from sim.tests.harness import sim
         test_sim = sim(civ="rome_100ad")
-        before = test_sim.home_land_area_km2()
         for region in test_sim._regions.values():
-            region["land"] = dict(region["land"], land_area_km2=1.0)
-        self.assertEqual(test_sim.home_land_area_km2(), before)
+            self.assertNotIn("land", region)

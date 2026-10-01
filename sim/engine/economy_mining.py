@@ -416,6 +416,17 @@ class MiningMixin:
     # Bessemer/open-hearth bulk steel, the second and further step of the same
     # effect as blast_furnace, further from ore than the last.
 
+    def _running_kept(self, name):
+        """A dict for derived values that depend only on which nodes are built, granted and
+        operating (what `running` reads); it starts empty whenever that changes."""
+        projects = self.state.projects
+        stamp = (getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
+                 len(projects.done), len(projects.granted), len(projects.operating))
+        kept = self.__dict__.get("_running_kept_tables")
+        if kept is None or kept[0] is not projects or kept[1] != stamp or kept[2] is not self.nodes:
+            kept = self.__dict__["_running_kept_tables"] = (projects, stamp, self.nodes, {})
+        return kept[3].setdefault(name, {})
+
     def mining_tech(self, mat):
         """(yield_mult, cost_mult) technology has bought this material's
         mining so far. yield_mult >= 1 raises what a working can pull out
@@ -424,12 +435,18 @@ class MiningMixin:
         file (MARKET_SHARE, goods_reach_factor): a mine at three times the
         book yield is a real historical claim, thirty times is the
         abolished unobtainable category with its sign flipped."""
+        kept = self._running_kept("mining_tech")
+        found = kept.get(mat)
+        if found is not None:
+            return found
         yield_mult, cost_mult = 1.0, 1.0
         for node_id, spec in self._effect_terms("mining_tech"):
             if self.running(node_id) and mat in spec.get("materials", (mat,)):
                 yield_mult *= spec["yield"]
                 cost_mult *= spec["cost"]
-        return min(yield_mult, self.MINING_TECH_YIELD_CEILING), max(self.MINING_TECH_COST_FLOOR, cost_mult)
+        found = kept[mat] = (min(yield_mult, self.MINING_TECH_YIELD_CEILING),
+                                max(self.MINING_TECH_COST_FLOOR, cost_mult))
+        return found
 
     MINING_TECH_YIELD_CEILING = declare(
         "MINING_TECH_YIELD_CEILING", 3.0, kind="temporary_heuristic",

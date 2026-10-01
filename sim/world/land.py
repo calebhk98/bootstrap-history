@@ -47,27 +47,15 @@ should ride on the same territory (you can hold a lot of land and still
 have no coal - `sim/world/deposits.py`'s own regional shares already do
 this for ore; this module does the equivalent for the ground itself).
 
-WHERE THE PHYSICAL FACTS COME FROM, AND WHAT THEY ARE NOT. Every region in
-`data/world/geography.json` now carries a `land` block: `land_area_km2`
-(the region's real, coarse land area), `arable_fraction` (the share of that
-area physically capable of supporting pre-industrial rain-fed or simple-
-irrigation farming - a terrain and climate fact, not a fact about who
-farms it today) and `fertility_quality_multiplier` (a yield multiplier on
-the arable share, 1.0 being `data/production/40_organics.json`'s own
-Roman-Italian wheat_kg baseline - see REFERENCE_WHEAT_YIELD_KG_PER_HECTARE
-below). These are COUNTRY-SCALE APPROXIMATIONS from general, well-attested
-geography (how big the region roughly is; whether the ground is desert,
-rainforest, steppe, floodplain or ordinary temperate farmland) — a stand-in
-for a real per-region soil and land-cover survey this project does not
-have, exactly the kind of heuristic CLAUDE.md SS3.4 asks to be labelled
-rather than hidden. Every one of the 21 real regions is declared confidence
-D except `italia`, confidence C, because Italia's own fertility figure is
-not an estimate at all: it is DEFINED as 1.0, because that is the ground
-`wheat_kg`'s own 577.5 kg/ha net figure already describes. Nothing here is
-tuned so a computed price matches `data/prices.json`'s 250-denarii book
-figure for `hectare_land` - see this module's own `_declare_land_area`,
-`_declare_arable_fraction` and `_declare_fertility` for the discipline
-`sim/world/deposits.py`'s own `_declare_grade` already applies to ore.
+WHERE THE PHYSICAL FACTS COME FROM. Each land tile in
+`data/world/geography.json` carries `land_area_km2`, `arable_fraction` (the
+share physically capable of rain-fed or simple-irrigation farming) and
+`fertility_quality_multiplier` (a yield multiplier on the arable share, 1.0
+being `data/production/40_organics.json`'s own wheat_kg baseline - see
+REFERENCE_WHEAT_YIELD_KG_PER_HECTARE below), generated from climate classes
+by `tools/generate_geography_tiles.py`; a region's figures are sums over
+its tiles. Nothing here is tuned so a computed price matches
+`data/prices.json`'s book figure for `hectare_land`.
 
 THE SAME UNIT `sim/world/agriculture.py` ALREADY USES, ON PURPOSE.
 `sim/world/agriculture.py`'s own `Land(hectares, quality=...)` already
@@ -307,16 +295,9 @@ territory, the same margin, and the same price.
 because `sim/tests/` is owned by other agents in the shared checkout - see
 that file's own docstring) asserts exactly this property.
 
-`load_region_lands` (region-keyed, one parcel per region, straight off
-`geography["regions"]`) STAYS, even though nothing in this module calls it
-any more: `sim/tests/test_land.py`'s own `RegionDataLoadsCleanlyTests` and
-part of `CivilizationTerritoryTests` call it directly to exercise the
-region data on its own terms, and `regions` is still read by
-`sim/world/deposits.py`'s deposit locations, `sim/engine/geography.py`'s
-centroid/name lookups, `sim/engine/economy_freight.py`'s freight distances,
-and `sim/engine/economy_mining.py`'s `forest_land_ceiling` (already fixed
-for the COUNT-of-labels defect by Complaints/46's own per-km2 rewrite, but
-still keyed on `regions` for the land AREA itself).
+`load_region_lands` (region-keyed) is a derived view: each region's area, arable
+land and fertility are sums over the tiles it groups, and no region record
+carries a land block.
 
 A `land_tiles` TILE IS STILL ONE PARCEL AT ONE FERTILITY - the same
 simplification a `regions` record makes, just at a grain roughly a
@@ -379,7 +360,7 @@ WHAT THIS MODULE DELIBERATELY DOES NOT DO.
 import collections
 import json
 import os
-from typing import Any, Dict, List, NotRequired, Optional, TypedDict
+from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
 from sim.world.shared_constants import (
@@ -811,130 +792,35 @@ RegionLand = collections.namedtuple("RegionLand", [
 _KM2_TO_HECTARES = 100.0
 
 
-class LandBlock(TypedDict):
-    """The `land` block data/world/geography.json carries for one region -
-    the known shape `_declare_land_area`, `_declare_arable_fraction` and
-    `_declare_fertility` all read from, named so the dictionary schema is
-    checked rather than assumed at each `land_entry["..."]` lookup."""
-    land_area_km2: float
-    arable_fraction: float
-    fertility_quality_multiplier: NotRequired[float]
-    conf: NotRequired[str]
-    source: NotRequired[Optional[str]]
-
-
 def _load_json(path: str) -> Any:
     with open(path, "r") as handle:
         return json.load(handle)
 
 
-_LAND_DECLARED: set[str] = set()
-
-
-def _declare_land_area(region_key: str, land_entry: LandBlock) -> float:
-    """data/world/geography.json's own land_area_km2 for one region, run
-    through declare() with that entry's own conf/source - the same
-    discipline sim/world/deposits.py's own _declare_grade applies to an
-    ore body's grade.
-    """
-    name = "REGION_LAND_AREA_KM2_%s" % region_key.upper()
-    if name in _LAND_DECLARED:
-        return land_entry["land_area_km2"]
-    _LAND_DECLARED.add(name)
-    confidence = land_entry.get("conf", "D")
-    kind = "engineering_estimate" if confidence in ("A", "B", "C") else "temporary_heuristic"
-    return declare(
-        name, land_entry["land_area_km2"], kind=kind,
-        unit="km2, coarse country-scale approximation",
-        source=land_entry.get("source"), confidence=confidence,
-        why="This region's real land area - a geography fact, never tuned "
-            "to any downstream price - read from data/world/geography.json's "
-            "%r region." % region_key)
-
-
-def _declare_arable_fraction(region_key: str, land_entry: LandBlock) -> float:
-    name = "REGION_ARABLE_FRACTION_%s" % region_key.upper()
-    if name in _LAND_DECLARED:
-        return land_entry["arable_fraction"]
-    _LAND_DECLARED.add(name)
-    confidence = land_entry.get("conf", "D")
-    kind = "engineering_estimate" if confidence in ("A", "B", "C") else "temporary_heuristic"
-    return declare(
-        name, land_entry["arable_fraction"], kind=kind,
-        unit="fraction of land_area_km2 physically workable by pre-"
-             "industrial rain-fed or simple-irrigation farming (dimensionless)",
-        source=land_entry.get("source"), confidence=confidence,
-        why="A terrain/climate fact about this region (how much of it is "
-            "desert, mountain, rainforest or ice versus ordinary plough "
-            "land), never a fact about who farms it today - read from "
-            "data/world/geography.json's %r region." % region_key)
-
-
-def _declare_fertility(region_key: str, land_entry: LandBlock, fertility: float) -> float:
-    name = "REGION_FERTILITY_QUALITY_MULTIPLIER_%s" % region_key.upper()
-    if name in _LAND_DECLARED:
-        return fertility
-    _LAND_DECLARED.add(name)
-    return declare(
-        name, fertility, kind="engineering_estimate",
-        unit="multiplier on REFERENCE_WHEAT_YIELD_KG_PER_HECTARE, 1.0 = "
-             "Italia's own dry-farmed Mediterranean baseline (dimensionless)",
-        source="arable-weighted mean of the region's land_tiles fertility",
-        confidence=land_entry.get("conf", "D"),
-        why="A soil/climate quality fact about this region's arable "
-            "share, derived from its %r land_tiles (one fertility scale, "
-            "anchored at the Mediterranean reference class)." % region_key)
-
-
-def _derived_region_fertility(region_key: str, geography: Dict[str, Any],
-                              land_entry: LandBlock) -> float:
-    """Arable-weighted mean tile fertility of the region. A region with no
-    tiles may carry its own value; with neither, KeyError."""
-    land_tiles = geography.get("land_tiles") or {}
-    tile_ids = (land_tiles.get("region_to_tiles") or {}).get(region_key) or []
-    tiles = land_tiles.get("tiles") or {}
-    arable_total = 0.0
-    weighted_total = 0.0
-    for tile_id in tile_ids:
-        tile = tiles[tile_id]
-        arable_km2 = tile["land_area_km2"] * tile["arable_fraction"]
-        arable_total += arable_km2
-        weighted_total += arable_km2 * tile["fertility_quality_multiplier"]
-    if arable_total > 0.0:
-        return weighted_total / arable_total
-    if "fertility_quality_multiplier" in land_entry:
-        return land_entry["fertility_quality_multiplier"]
-    raise KeyError("region %r has no arable tiles and no stored fertility" % region_key)
-
-
 def load_region_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, RegionLand]:
-    """{region_key: RegionLand}, for every region data/world/geography.json
-    carries a `land` block for. `geography` defaults to loading the file
-    fresh, accepted as an argument purely so a caller that already has it
-    in hand (or a test) is not made to re-read it.
+    """{region_key: RegionLand}: a region's land is the sum over the tiles it
+    groups (`land_tiles.region_to_tiles`); area and arable land add up and
+    fertility is the arable-weighted mean. A region with no tiles has no
+    land. Nothing is read from the region record itself.
     """
     geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    land_tiles = geography.get("land_tiles") or {}
+    tiles = land_tiles.get("tiles") or {}
     out = {}
-    for region_key, region_entry in geography["regions"].items():
-        if region_key.startswith("_"):
+    for region_key, tile_ids in (land_tiles.get("region_to_tiles") or {}).items():
+        if not tile_ids:
             continue
-        land_entry = region_entry.get("land")
-        if land_entry is None:
-            # A region with no land block yet - should not happen once this
-            # task lands (every real region gets one), but a future region
-            # added without one should not crash the whole module.
-            continue
-        land_area_km2 = _declare_land_area(region_key, land_entry)
-        arable_fraction = _declare_arable_fraction(region_key, land_entry)
-        fertility = _declare_fertility(
-            region_key, land_entry, _derived_region_fertility(region_key, geography, land_entry))
-        arable_km2 = land_area_km2 * arable_fraction
-        arable_hectares = arable_km2 * _KM2_TO_HECTARES
+        land_area_km2 = sum(tiles[tile_id]["land_area_km2"] for tile_id in tile_ids)
+        arable_km2 = sum(tiles[tile_id]["land_area_km2"] * tiles[tile_id]["arable_fraction"]
+                         for tile_id in tile_ids)
+        weighted_fertility = sum(
+            tiles[tile_id]["land_area_km2"] * tiles[tile_id]["arable_fraction"]
+            * tiles[tile_id]["fertility_quality_multiplier"] for tile_id in tile_ids)
         out[region_key] = RegionLand(
             region=region_key, land_area_km2=land_area_km2,
-            arable_fraction=arable_fraction,
-            fertility_quality_multiplier=fertility,
-            arable_hectares=arable_hectares)
+            arable_fraction=arable_km2 / land_area_km2 if land_area_km2 else 0.0,
+            fertility_quality_multiplier=(weighted_fertility / arable_km2 if arable_km2 > 0.0 else 0.0),
+            arable_hectares=arable_km2 * _KM2_TO_HECTARES)
     return out
 
 
@@ -953,12 +839,7 @@ def load_tile_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, Reg
     only sorts by fertility and breaks ties by it for determinism), so
     this is not a change to that function, only to what fills the field.
 
-    NOT RUN THROUGH `declare()`, UNLIKE `load_region_lands` ABOVE, AND
-    THAT IS A DELIBERATE DEPARTURE FROM THIS MODULE'S OWN EARLIER
-    DISCIPLINE, NOT AN OVERSIGHT. `_declare_land_area`/`_declare_arable_
-    fraction`/`_declare_fertility` exist so 21 HAND-SET numbers, each
-    worth a human being able to find and question individually, carry
-    their own provenance in `sim/constants.py`'s registry. `land_tiles`
+    NOT RUN THROUGH `declare()`: `land_tiles`
     is 1,139 tiles - not hand-set at all, but generated in bulk by ONE
     stated rule (`tools/generate_geography_tiles.py`: equal-area grid,
     clipped to Natural Earth coastline, `arable_fraction` and `fertility_

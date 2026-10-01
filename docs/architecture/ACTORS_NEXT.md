@@ -111,7 +111,12 @@ Tests: a firm and the founder with equal visible scale are assessed equally;
 a state with no capacity collects nothing from either. Fingerprint: firm
 years only.
 
-### 3. The state's know-how is the state's adoption
+### 3. The state's know-how is the state's adoption (done)
+
+Built: `state_military_diffusion` is the share of the founder's military
+inventions the government actor holds; the half-life constants are retired.
+Still open: that share falls as the founder invents more weapons, so the war
+relief caps need a per-weapon basis (`Complaints/535`).
 
 Reads: the government's knowledge and copies in progress.
 Changes: `state_military_diffusion` and the state's other adoption effects read
@@ -169,8 +174,7 @@ ordinary share (`starting_tax_share` times state capacity) through
 `levy_shares`, and a need-driven levy on top raises the unfunded part of the
 budget, capped at `LEVY_RATE_CEILING`. The army moves toward what the state
 can pay at `ARMY_ADJUSTMENT_RATE`. Still open: the force the state wants
-follows population, not threat (`Complaints/300`); patron funding and the
-state's adoption curve (`Complaints/301`, increment 3).
+follows population, not threat (`Complaints/300`); patron funding (`Complaints/301`).
 
 Reads: a spending model (standing costs, war, garrison from
 `sim/world/military_logistics.py`) against receipts.

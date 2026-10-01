@@ -1,0 +1,5 @@
+# Firms borrow only by running a purse below zero; entry capital and copying budgets still ignore the loanable-funds market
+
+**Status:** open - found while building 110; next increment of 110
+
+`Firm` now pays interest at `borrowing_rate` on a negative purse and has a `credit_ceiling` from its margin and record, but nothing makes it borrow on purpose: `Actor.copy_budget` is money less committed work, and `ActorRegistry.consider_entry` funds a new firm from `ENTREPRENEURIAL_CAPITAL_SHARE` of society output (a labelled heuristic that stands in for exactly the savings and credit model the market is). The founder of a firm should be able to raise the stake from the market at the market rate plus the risk premium, bounded by `market_credit_room`, so that entry slows when funds are scarce or dear and the copy plan's cost of capital (`VALUE_HORIZON_YEARS` stands in for it) falls out of the rate. Banks, deposits, bonds, equity, insurance and crises (the rest of Complaint 110) are still not modelled.
