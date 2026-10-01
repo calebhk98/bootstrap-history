@@ -1,6 +1,6 @@
 # `stuck` says "159 of them you could pay for" while `start` refuses with "you could raise 0"; the refusal does not state the rule or the number needed
 
-**Status:** partly - `stuck`, `start`, the `available` AFFORD column and row marks, and the hire/train/commission refusals share one rule and text; no lever for climbing out of debt beyond the stated pay-down
+**Status:** closed - `stuck`, `start`, `available` and the hire/train/commission refusals share one rule, and the refusal lists the cash-raising commands; selling plant or land is 320
 
 B (109 AD, deep debt): `stuck` reported 159 payable things and recommended the cheapest; every start was refused "you could raise 0". Reproduced in Rome 100 AD, default poor_scholar kit, with `hire smith 3`, `hire scholar 2`, two steps (cash -7,245, credit limit 9,128): `stuck` prints "126 things you could begin, 69 of them you could pay for"; `start horse_collar` answers "REFUSED: cannot afford the materials this project needs bought now: it costs 1,177 denarii and you could raise 0 (cash -7,245, plus credit)".
 
@@ -17,4 +17,6 @@ Found in the final blind playtests of this branch (Rome 100 AD and Mexica 1500 f
 
 **Also fixed:** the `available` AFFORD column and the `*` row marks ask `start_refusal` (rows carry `cannot_pay_now`); `hire`, `train` and `commission` refuse with `purchase_rule.refusal_text`.
 
-**Remains:** there is still no lever for climbing out of the debt trap. `sell` covers goods and materials, not built concerns or land, and `fire` and `buy manumit` shrink the household but the refusal does not offer them as remedies. The refusal states the pay-down that would allow the purchase; missing is a refusal that lists which levers would raise that amount, and a way to sell a built concern.
+**Also fixed:** `purchase_rule.refusal_text` ends with "To raise cash:" and the commands that do it, each with the amount the command itself uses (`sim/engine/cash_remedies.py`): `sell <material>` (`material_sale_offer`, the figure `sell` pays), `mothball <id>` (`venture_real_upkeep`), `close <material>` (`mine_operating_cost_for`) and `fire <trade>` (`annual_wage`). There is no loan command: credit is automatic and already counted in the budget. Test: `sim/tests/test_refusal_cash_remedies.py`.
+
+**Remains (moved to 320):** selling a built concern or land to another actor.

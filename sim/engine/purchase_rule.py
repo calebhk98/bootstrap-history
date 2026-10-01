@@ -7,6 +7,8 @@ against a purchase. Any actor with a household and a credit line uses it.
 """
 import math
 
+from sim.engine import cash_remedies
+
 BUDGET_KIND = "buy"
 # Tolerance for float noise when a cost is exactly the budget.
 _EPSILON = 1e-9
@@ -34,16 +36,24 @@ def afford_means():
     return "cash plus the share of your credit line a lender advances against a purchase"
 
 
+def remedies_text(actor):
+    """The commands that raise cash or cut costs, or an empty string."""
+    lines = cash_remedies.cash_remedies(actor)
+    return (" To raise cash: " + "; ".join(lines) + ".") if lines else ""
+
+
 def refusal_text(actor, what, cost):
-    """Refusal that states the rule, the budget and the amount short."""
+    """Refusal that states the rule, the budget, the amount short and the
+    commands that raise cash."""
     budget = purchase_budget(actor)
     short = max(0.0, cost - budget)
     share = actor.SPENDING_DRAW_SHARE_ORDINARY
     return ("cannot afford %s: it costs %s denarii and you could raise %s, "
             "so you are %s short. The rule: %s (cash %s, %d%% of your credit "
             "line of %s, net of any debt). Earning or paying down %s "
-            "would allow it. Nothing was changed."
+            "would allow it.%s Nothing was changed."
             % (what, "{:,.0f}".format(cost), "{:,.0f}".format(budget),
                "{:,.0f}".format(short), afford_means(),
                "{:,.0f}".format(actor.capital), round(share * 100),
-               "{:,.0f}".format(actor.credit_limit()), "{:,.0f}".format(short)))
+               "{:,.0f}".format(actor.credit_limit()), "{:,.0f}".format(short),
+               remedies_text(actor)))
