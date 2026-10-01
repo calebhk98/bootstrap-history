@@ -129,6 +129,21 @@ The converse rule matters just as much. **Speed does not make you a magician, an
 
 ---
 
+### paid_apprentice_staff - Take paid apprentices and engage a technical staff
+
+**What it is.** The same body of skilled people as `freedman_staff`, reached without owning anyone: hire masters at the market wage, take apprentices on a stipend, keep the trained staff on wages. Its cost is the wages of those hours, not a purchase price, and its calendar is longer because a free apprentice serves a term and can leave.
+
+**Prerequisites.** `workshop_first`.
+
+**Procedure.**
+1. Hire masters of the trades you need and pay them to teach, not only to produce.
+2. Take apprentices on a stipend that covers their keep, with a written term and an agreed wage after it.
+3. Pay trained staff at or above the market rate so they stay, and require each to teach two others.
+
+**Failure modes.** Apprentices who finish their term and leave for a rival; set the post-term wage in advance.
+
+---
+
 ### freedman_staff - Buy, teach, and free a technical staff
 
 **What it is / why you want it.** A permanent body of skilled people who can read your notes, run your processes and teach the next intake. This is the node that converts you from a man who makes things into an institution that makes things.
@@ -198,7 +213,7 @@ And the technical argument is stronger still. Coerced labour does what it is tol
 
 And a warning against the obvious optimisation: **not founding a school is a legal option and the simulator will let you take it.** You can run the whole game as one man in a workshop. You will get perhaps a fifth of the way. Every run that reaches the transistor founds a school, and every run that founds it late finishes late.
 
-**Prerequisites.** `collegium_licensed`, `arithmetic_positional`, `freedman_staff`.
+**Prerequisites.** `collegium_licensed`, `arithmetic_positional`, and a technical staff by either route: `freedman_staff` or `paid_apprentice_staff`.
 
 **Roman-available inputs.** A building with a courtyard, teaching space and workshop space. Papyrus in quantity, which is a real recurring cost. Salaries.
 

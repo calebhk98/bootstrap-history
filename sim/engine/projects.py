@@ -66,6 +66,7 @@ from .allocation_notes import AllocationNotesMixin
 from .projects_venture_quotes import VentureQuotesMixin
 from .projects_hour_queue import HourQueueMixin
 from .projects_starting import StartingMixin
+from .projects_exclusions import ExclusionsMixin
 from .projects_progress import ProgressMixin
 from .projects_completion import CompletionMixin
 from .projects_rebuild import RebuildMixin
@@ -84,6 +85,7 @@ class ProjectsMixin(
         VentureQuotesMixin,
         HourQueueMixin,
         StartingMixin,
+        ExclusionsMixin,
         ProgressMixin,
         CompletionMixin,
         RebuildMixin,

@@ -110,6 +110,13 @@ Two fixes, usable separately or together:
                                                     "this_oversubscribes_a_trade" - it
                                                     still starts, this is a warning)
       {"cmd":"stop","id":"zinc_metal"}             abandon a project; sunk cost is sunk
+      {"cmd":"exclude","what":"freedman_staff"}    never let rush, rush preview, auto_open or
+      {"cmd":"exclude","what":"trait:buys_people"}  auto_commission begin this id; also
+      {"cmd":"exclude","what":"category:<cat>"}     category:<cat> and trait:<trait>. Saved with
+      {"cmd":"include","what":"<entry>|all"}        the game; rush and rush preview list what
+      {"cmd":"exclude"}                             they left out, with the reason, under
+                                                    "excluded". Bare exclude lists the entries.
+                                                    `start` by hand is unaffected.
       {"cmd":"portfolio"}                          every active project: the founder-
                                                     hours it is ACTUALLY getting this
                                                     year and why (its rank in the queue,

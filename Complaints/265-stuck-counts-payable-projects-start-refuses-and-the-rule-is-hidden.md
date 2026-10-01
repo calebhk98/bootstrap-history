@@ -17,4 +17,4 @@ Found in the final blind playtests of this branch (Rome 100 AD and Mexica 1500 f
 
 **Also fixed:** the `available` AFFORD column and the `*` row marks ask `start_refusal` (rows carry `cannot_pay_now`); `hire`, `train` and `commission` refuse with `purchase_rule.refusal_text`.
 
-**Remains:** there is still no lever for climbing out of the debt trap (selling assets, shrinking the household); the refusal states the pay-down that would allow the purchase.
+**Remains:** there is still no lever for climbing out of the debt trap. `sell` covers goods and materials, not built concerns or land, and `fire` and `buy manumit` shrink the household but the refusal does not offer them as remedies. The refusal states the pay-down that would allow the purchase; missing is a refusal that lists which levers would raise that amount, and a way to sell a built concern.

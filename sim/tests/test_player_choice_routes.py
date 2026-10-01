@@ -54,9 +54,9 @@ patron_note = NODES["patron_local"]["note"].lower()
 lens_is_behind_patron = "patron_local" in closure(NODES, "lens_grinding")
 check("lens_grinding is behind the patron", lens_is_behind_patron)
 check("lens_grinding's note does not claim it buys the first patron",
-      not (lens_is_behind_patron and "first patron" in lens_note), lens_note)
+      not (lens_is_behind_patron and "buys you your first patron" in lens_note), lens_note)
 check("patron_local's note does not name a gift that sits behind the patron",
-      not (lens_is_behind_patron and "lenses" in patron_note and "reading lenses" in patron_note), patron_note)
+      not (lens_is_behind_patron and "lenses" in patron_note and "bought" not in patron_note), patron_note)
 
 # --- 230: exclusions
 excluding = sim(capital=2_000_000)

@@ -367,6 +367,8 @@ def render_rush(out):
                          _fmt_num(row.get("cost")), row.get("name")))
         for row in out.get("not_started") or []:
             lines.append("  SKIPPED %s: %s" % (row.get("id"), row.get("why")))
+        for row in out.get("excluded") or []:
+            lines.append("  EXCLUDED %s: %s" % (row.get("id"), row.get("why")))
         if out.get("how_to_confirm"):
             lines.append("")
             lines.append(_wrap(out["how_to_confirm"]))
@@ -378,6 +380,8 @@ def render_rush(out):
                                             row.get("name")))
     for row in out.get("not_started") or []:
         lines.append("  NOT STARTED %s: %s" % (row.get("id"), row.get("why")))
+    for row in out.get("excluded") or []:
+        lines.append("  EXCLUDED %s: %s" % (row.get("id"), row.get("why")))
     if out.get("this_is_an_approximation_not_optimal_play"):
         lines.append("")
         lines.append(_wrap(out["this_is_an_approximation_not_optimal_play"]))
