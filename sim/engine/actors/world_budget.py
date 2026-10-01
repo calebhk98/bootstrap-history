@@ -38,10 +38,16 @@ class BudgetView:
 		quote = self._sim.material_purchase_cost(material, tonnes)
 		return 0.0 if quote is None else quote[0]
 
-	def local_labour_share(self) -> float:
-		"""The share of the nation's labour that the founder's own labour market holds."""
+	def local_staff(self, trade: str, people: float) -> float:
+		"""How many of `people` kept in a trade nationwide come out of the founder's own labour
+		market: the share of the nation's people of that trade they are, applied to the pool the
+		founder can reach. Unskilled labour is the whole working age."""
 		sim = self._sim
-		return min(1.0, sim.home_town_population_estimate() / max(1.0, sim.population.total))
+		nation = sim.population.working_age if trade == "labourer" else sim.national_trade_population(trade)
+		if nation <= 0.0:
+			return 0.0
+		reach = sim.reachable_trade_population(trade) + sim.actor_staff_fte(trade)
+		return min(1.0, people / nation) * reach
 
 	def notice_over(self, scale: float) -> float:
 		return self._sim.notice_over(scale)

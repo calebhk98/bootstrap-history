@@ -115,18 +115,20 @@ one_year(game)
 check("the army's and the officials' staff are held in the government's workforce",
       treasury.workforce.get("labourer", 0.0) > 0.0 and treasury.workforce.get("scribe", 0.0) > 0.0,
       treasury.workforce)
-local = game.home_town_population_estimate() / game.population.total
-check("the state draws on the founder's local pool in proportion to the people it has there",
-      abs(treasury.workforce["labourer"] - game.civ["standing_army"] * local) < 0.02 * treasury.workforce["labourer"],
-      (treasury.workforce, local))
+reach = game.reachable_trade_population("labourer") + game.actor_staff_fte("labourer")
+share_of_nation = game.civ["standing_army"] / game.civ["population"] * game.population.total / game.population.working_age
+check("the state takes the same share of the founder's local pool as of the nation's working people",
+      abs(treasury.workforce["labourer"] - share_of_nation * reach) < 1e-6 * reach,
+      (treasury.workforce, share_of_nation, reach))
 check("what the state employs is no longer on offer to the founder",
       game.actor_staff_fte("scribe") > scribes_before and game.market_supply("labourer") < free_before,
       (game.actor_staff_fte("scribe"), game.market_supply("labourer"), free_before))
 unfunded_game, unfunded_treasury = budget_sim(army=1.0e8, purse=0.0)
 one_year(unfunded_game)
 check("a state that cut its spending employs correspondingly fewer people",
-      unfunded_treasury.workforce["labourer"]
-      < unfunded_game.civ["standing_army"] * local, unfunded_treasury.workforce)
+      unfunded_treasury.workforce["labourer"] < 0.5 * (unfunded_game.reachable_trade_population("labourer")
+                                                      + unfunded_game.actor_staff_fte("labourer")),
+      unfunded_treasury.workforce)
 
 # ---- spending reaches the goods market -------------------------------------------------------
 game, treasury = budget_sim()

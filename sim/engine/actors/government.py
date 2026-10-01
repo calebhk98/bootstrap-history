@@ -73,10 +73,9 @@ class Government(RecordedActor):
 
 	def employ_standing(self, lines: List[budget.Line], share: float, world: Any) -> None:
 		"""Staff of the lines it paid for, as far as they reach into the founder's labour market."""
-		reach = world.local_labour_share()
 		for line in lines:
 			for trade, people in line.labour.items():
-				self.workforce[trade] = self.workforce.get(trade, 0.0) + people * share * reach
+				self.workforce[trade] = self.workforce.get(trade, 0.0) + world.local_staff(trade, people * share)
 
 	def seek_shortfall(self, lines: List[budget.Line], world: Any) -> None:
 		"""Set the rate it takes from the income it can see so that the unfunded need is raised."""
