@@ -69,13 +69,21 @@ def total_capacity(game):
 	return sum(firm.record.capacity.get("zz_grow", 1.0) for firm in game.actors.active_firms())
 
 
+def market_grows(sim_game, times):
+	"""Demand for the good rises `times`-fold while the same hands tend it: a bigger market, not a
+	bigger economy, so what a concern must carry stays put (the economy index scales costs with takings)."""
+	hands = sim_game.venture_hands("zz_grow")
+	sim_game.nodes["zz_grow"]["rev"] *= times
+	sim_game.venture_hands = lambda node_id: hands
+
+
 game = settled()
 firms_before = len(game.actors.active_firms())
 capacity_before = total_capacity(game)
 check("some firm entered before the market grew", firms_before > 0, firms_before)
 
-# the economy grows tenfold: every concern's takings rise with it
-game.state.economy.economy *= 10.0
+# the market grows tenfold: every concern's takings rise with it
+market_grows(game, 10.0)
 next_year(game)
 grown = [firm for firm in game.actors.active_firms() if firm.record.capacity.get("zz_grow", 1.0) > 1.0]
 check("an incumbent in a growing market with a margin above the cost of capital adds capacity", len(grown) > 0,
@@ -114,7 +122,7 @@ dear.market_rate = lambda: 1.0e5
 founder_runs(dear, "zz_grow", opened_ago=10)
 for _ in range(10):
 	next_year(dear)
-dear.state.economy.economy *= 10.0
+market_grows(dear, 10.0)
 for _ in range(5):
 	next_year(dear)
 check("a cost of capital above the added margin stops expansion",
