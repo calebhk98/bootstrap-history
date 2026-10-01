@@ -271,10 +271,14 @@ def _cmd_money(sim, nodes, cmd, ended):
     # is doing to costs needs a line here too, not only inside one
     # project's own `why`. See economy.py's material_market_summary().
     _mat_mkt = sim.material_market_summary()
+    _sources = sim.revenue_sources()
+    _squeeze = sim.market_absorption_by_category(
+        -(_sources.get("_what_the_market_will_not_absorb") or 0.0))
     return {"ok": True,
             "capital": round(sim.capital, 1),
             "revenue": round(sim.revenue(), 1),
-            "where_the_money_comes_from": sim.revenue_sources(),
+            "where_the_money_comes_from": _sources,
+            **({"where_the_market_squeeze_falls": _squeeze} if _squeeze else {}),
             **({"wage_work_this_year": sim.wage_work_this_year()}
                if sim.wage_work_this_year() else {}),
             **({"wage_work_last_year": sim.state.household.wage_work_last_year}

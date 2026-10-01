@@ -1,6 +1,6 @@
 # `hire`, `open` and `commission` spend cash that is neither previewed nor itemised in the reply
 
-**Status:** partly - quote hire/commission/open, itemised replies, the charge in `why`, and commission expiry in help landed (sim/tests/test_spending_previews.py); a wage-bill warning on `train` remains
+**Status:** closed
 
 Three actions commit money the player was not shown first:
 
@@ -31,3 +31,5 @@ Also reported (final playtests, B; `Complaints/reports/final-playtests-triage.md
 
 
 What remains: `train` still gives no warning about the wage bill the trainees add when they join the payroll, and asking for more trainees than the household cap wastes a year without a preview.
+
+**Fixed:** `quote train <trade> <n>` and the `train` reply give the keep paid now, the founder hours and `wage_bill_added_per_year`, from `train_check`, the function `train` charges with; a request past the household room is refused by the same check with the largest whole number allowed (sim/tests/test_money_readouts_finish.py).

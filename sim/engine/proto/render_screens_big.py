@@ -93,6 +93,10 @@ def _state_money(out):
     elif net_plain is not None:
         lines.append("  standing net %s%s den/yr (does not count project spend)"
                  % ("+" if net_plain >= 0 else "", _fmt_num(net_plain)))
+    if (out.get("capital") or 0) < 0 and out.get("sustainable_debt") is not None:
+        lines.append("  you owe %s; sustainable debt at your recurring surplus is %s "
+                     "(`money` explains)"
+                     % (_fmt_num(-out["capital"]), _fmt_num(out["sustainable_debt"])))
     if out.get("in_bondage_for_debt"):
         lines.append("IN DEBT BONDAGE: %s years left owing %s den"
                  % (_fmt_num(out["in_bondage_for_debt"]), _fmt_num(out.get("debt_still_to_work_off"))))
@@ -506,7 +510,7 @@ _RESTS_SHORT = {"almost everything": "ALL", "a great deal": "much",
                 "nothing else; this is worth having for itself": "-"}
 
 
-def _cost_marker(entry, purse):
+def _cost_marker(entry):
     """A row you cannot pay for today gets its cost marked.
 
     "MOST RESTS ON THESE" can head its list with items well beyond an
@@ -514,10 +518,7 @@ def _cost_marker(entry, purse):
     everything rests on - and the reader still needs to know which of
     them they can act on this year.
     """
-    cost = entry.get("cost")
-    if purse is None or not isinstance(cost, (int, float)):
-        return ""
-    return "" if cost <= purse else "*"
+    return "*" if entry.get("cannot_pay_now") else ""
 
 
 def _available_row(entry, width=None, purse=None):
@@ -554,7 +555,7 @@ def _available_row(entry, width=None, purse=None):
                                break_long_words=True) or [""]
     row = _AVAILABLE_ROW_FORMAT % (
         width, (entry.get("id") or ""), name_lines[0],
-        _fmt_num(entry.get("cost")) + _cost_marker(entry, purse),
+        _fmt_num(entry.get("cost")) + _cost_marker(entry),
         _fmt_num(hours), _fmt_num(years), _pct(risk),
         _fmt_range(entry.get("earns_per_year")), _fmt_num(entry.get("costs_per_year_after")),
         _fmt_num(entry.get("net_per_year")) if "net_per_year" in entry else "-",
@@ -676,10 +677,10 @@ def _available_legend_block(out, _purse):
                      "or 'train' first, or the work waits.")
         if any(entry.get("on_road_to_goal") for entry in _shown if isinstance(entry, dict)):
             lines.append("  A > after RESTS means your goal needs it; it says nothing of how far away it is.")
-        if _purse is not None and any(_cost_marker(entry, _purse) for entry in _shown
+        if _purse is not None and any(_cost_marker(entry) for entry in _shown
                                       if isinstance(entry, dict)):
-            lines.append("  A * after COST means you could not raise it today: "
-                     "between cash and credit you can put %s into a project."
+            lines.append("  A * after COST means `start` would refuse it today (`start <id>` "
+                     "says why); between cash and credit you can put %s into a project."
                      % _fmt_num(_purse))
     return lines
 

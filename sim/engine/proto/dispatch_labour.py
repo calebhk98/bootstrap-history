@@ -476,17 +476,26 @@ def _cmd_fire(sim, nodes, cmd, ended):
          summary="teach a trade this society lacks",
          usage=["train <trade> <n>"],
          options={"<trade>": "a trade that does not exist here", "<n>": "how many"},
-         description="Teaches from nothing, out of your own hours.")
+         description="Teaches from nothing, out of your own hours. The trainees join the "
+                     "payroll when they finish and raise the wage bill; `quote train "
+                     "<trade> <n>` shows the keep paid now and that wage bill first.")
 def _cmd_train(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
+    # The wage bill is read before teaching, the same call `quote train` makes.
+    plan, _refusal = sim.train_check(cmd.get("trade"), quantity, cmd.get("from"))
+    wage_bill_added = (sim.trainee_wage_bill(str(cmd.get("trade")).strip().lower(), plan["count"])
+                       if plan else 0.0)
+    capital_before = sim.capital
     trained, msg = sim.train(cmd.get("trade"), quantity, cmd.get("from"))
     if not trained:
         return {"ok": False, "error": msg}
     out = {"ok": True, "training": msg, "capital": round(sim.capital, 1),
+           "paid_now": round(capital_before - sim.capital, 1),
+           "wage_bill_added_per_year": round(wage_bill_added, 1),
            "your_hours_left_this_year": round(
                max(0.0, sim.director_pool() - sim.director_hours_committed()), 1)}
     # TRAIN AND HIRE ARE TWO SEPARATE STEPS, and this message is the one

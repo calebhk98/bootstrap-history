@@ -192,7 +192,7 @@ _s_cal.active[_cal_id] = _cal_st
 _cal_wo = _WO(_s_cal, NODES, _cal_id, _cal_st, 0.0)
 check("a project with 100% of its hours spent and 0 still owed reports "
       "waiting on the calendar, not a stale 'your hours'",
-      _cal_wo == "the calendar", _cal_wo)
+      _cal_wo.startswith("the calendar"), _cal_wo)
 
 # --- BREAK 3: `why`/`state` show only the single current blocker on an
 # active project. A Han playtester fired a specialist whose hired-labour

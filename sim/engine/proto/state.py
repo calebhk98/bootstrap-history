@@ -186,7 +186,10 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
                 "%s is more than you can raise at this moment"
                 % ("{:,.0f}".format(bill), "{:,.0f}".format(per_year)))
     if progress["ph_left"] <= 0:
-        return "the calendar"
+        years_left = max(1, math.ceil(node["yrs"] - progress.get("yrs", 0.0) - 1e-9))
+        return ("the calendar: the work and the money are done, and the least "
+                "time it takes (%g years) has about %d more year%s to run"
+                % (node["yrs"], years_left, "" if years_left == 1 else "s"))
     # MATERIALS. A shortage scales only projects consuming its supply pool -
     # see core.py step() 5 - so a project with
     # founder-hours still to spend and nobody short on trade or money can
@@ -207,7 +210,10 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
                 "this year's %s directed hours; 'portfolio' shows what "
                 "each one is getting and why"
                 % (_rank, _count, "{:,.0f}".format(_total or 0.0)))
-    return "your hours"
+    free_hours = max(0.0, sim.director_pool() - sim.director_hours_committed())
+    return ("your hours: %s of your own hours of work are still to do, and "
+            "you have %s uncommitted this year"
+            % ("{:,.0f}".format(progress["ph_left"]), "{:,.0f}".format(free_hours)))
 
 
 def _goal_progress_count(sim, nodes):
@@ -480,6 +486,8 @@ def _agent_state_spend_and_net(sim):
         # reasoning in its own docstring ("a lender does not cut your
         # line because you took a job this year").
         "net_per_year": round(sim.recurring_net(), 1),
+        # The same figure `money` prints, from the one method both read.
+        "sustainable_debt": round(sim.sustainable_debt(), 1),
     }
 
 

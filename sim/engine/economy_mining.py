@@ -546,6 +546,12 @@ class MiningMixin:
         return (working["capacity"] * self._mine_opex(mat) * self.price_index
                 * self.mining_cost_scale_for(working))
 
+    def mine_operating_cost_new(self, mat, tonnes):
+        """What a freshly commissioned working of `tonnes` will be charged a
+        year, by the same function that charges every standing working."""
+        return self.mine_operating_cost_for(
+            {"material": mat, "capacity": tonnes, "intensity_yrs": 0.0})
+
     def mine_quote(self, mat, t_per_yr):
         """What a mine would cost, BEFORE you commit to it.
 
@@ -554,13 +560,13 @@ class MiningMixin:
         price shown and no way to ask beforehand.
         """
         mat = self._normalize_material_name(mat)
-        cap, opex_per_t = self._mine_capex_opex(mat)
+        cap, _opex_per_t = self._mine_capex_opex(mat)
         if cap is None:
             return None
         tonnes = max(0.0, float(t_per_yr))
         scale = self.mining_cost_scale(mat)
         sink = tonnes * cap * self.price_index * scale
-        opex = tonnes * opex_per_t * self.price_index * scale
+        opex = self.mine_operating_cost_new(mat, tonnes)
         ceiling = self.mine_land_ceiling(mat)
         economy = self.state.economy
         household = self.state.household

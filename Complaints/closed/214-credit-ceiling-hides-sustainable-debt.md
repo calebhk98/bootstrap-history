@@ -1,6 +1,6 @@
 # The formal credit ceiling looks reassuring when the sustainable debt is much smaller
 
-**Status:** partly - `money` and the start forecast now show the sustainable debt and interest as a share of the recurring surplus (sim/tests/test_spending_previews.py); `state` does not, and the 'pay down by how much' refusal text (265) is separate
+**Status:** closed
 
 The project-start warning shows the single-project bill, total outstanding commitments, the expected credit draw and the formal credit ceiling (praised). But with arrears interest near 19 percent a year, a debt far below the ceiling can already exceed the recurring surplus: in 1333 to 1334 the tester had a ceiling of about 216 thousand pence, used about 1 percent of it, and was still about to have interest close to the surplus. They ask for a debt-service forecast that separates "formal credit ceiling" from "sustainable debt at the current recurring surplus" (interest cost against net recurring income, years to clear).
 
@@ -14,3 +14,5 @@ Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md
 
 
 What remains: the `state` screen carries no sustainable-debt line, and the threshold share is a labelled heuristic rather than derived from a lender model.
+
+**Fixed:** `state` carries `sustainable_debt` and prints a line beside the money lines when in arrears, from the same method `money` reads. The share of surplus remains the labelled heuristic `DEBT_SERVICE_SHARE_OF_SURPLUS`.
