@@ -171,15 +171,21 @@ def short_of(unfunded, firms=0, protection=None):
     return game
 
 
+def ordinary(game):
+    """The share of income the society pays the state, as it falls on a visible taxpayer."""
+    return game.civ["starting_tax_share"] * game.state_capacity * game.notice_over(game.household_scale())
+
+
 def charged(game):
-    return sum(game.levy_shares(game.household_scale(), 0.0))
+    """What the state's shortfall adds to the ordinary share."""
+    return sum(game.levy_shares(game.household_scale(), 0.0)) - ordinary(game)
 
 
 content = grown(budget_sim()[0])
 one_year(content)
-check("a state with no unfunded need levies nothing, however visible the household",
-      content.levy_shares(content.household_scale(), 0.0) == (0.0, 0.0),
-      content.levy_shares(content.household_scale(), 0.0))
+check("a state with no unfunded need levies only the ordinary share, however visible the household",
+      abs(sum(content.levy_shares(content.household_scale(), 0.0)) - ordinary(content)) < 1e-12
+      and ordinary(content) > 0.0, content.levy_shares(content.household_scale(), 0.0))
 small, large = short_of(1.0e5), short_of(2.0e5)
 check("the state seeks its shortfall from the income it can see: the rate is shortfall over visible income",
       abs(charged(small) - 0.1 / small.notice_over(small.household_scale())) < 0.02
@@ -191,6 +197,7 @@ check("the same shortfall spread over a second equally visible taxpayer asks hal
       (charged(short_of(1.0e5, firms=1)), charged(small)))
 ruinous = short_of(1.0e12)
 requisition, office = ruinous.levy_shares(ruinous.household_scale(), 0.0)
+requisition -= ordinary(ruinous)
 check("however large the shortfall the levy stops at the ceiling on one taxpayer's income",
       abs(requisition + office - budget.LEVY_RATE_CEILING * ruinous.notice_over(ruinous.household_scale())) < 1e-9,
       (requisition, office))
@@ -229,3 +236,38 @@ with tempfile.TemporaryDirectory() as folder:
 check("need, unfunded need, demand and levy rates round-trip through save and load",
       revived.state.actors.records == before
       and revived.state.actors.records["government:rome_100ad"].unfunded, before.keys())
+
+# ---- the founder pays the ordinary share the society pays ------------------------------------
+ordinary_game = grown(budget_sim()[0])
+ordinary_game.revenue = lambda: INCOME
+one_year(ordinary_game)
+before_capital = ordinary_game.capital
+ordinary_game._state_pressure(ordinary_game.year)
+check("a visible founder in a state with no shortfall still pays the ordinary share of his income",
+      abs((before_capital - ordinary_game.capital) - INCOME * sum(ordinary_game.levy_shares(
+          ordinary_game.household_scale(), ordinary_game.state.household.protection))) < 1e-6 * INCOME
+      and ordinary(ordinary_game) > 0.0, (before_capital - ordinary_game.capital, ordinary(ordinary_game) * INCOME))
+
+# ---- the army follows what the state can pay -------------------------------------------------
+from sim.engine.actors.tuning import ARMY_ADJUSTMENT_RATE
+
+army_game, army_treasury = budget_sim()
+wanted = SimWorld(army_game).army_wanted()
+one_year(army_game)
+check("a state that pays for its army keeps the force it wants", abs(army_treasury.record.army - wanted) < 1e-6 * wanted,
+      (army_treasury.record.army, wanted))
+poor, poor_treasury = budget_sim(purse=0.0)
+poor.civ["standing_army"] = 1.0e8
+sizes = []
+for _year in range(4):
+    one_year(poor)
+    sizes.append(poor_treasury.record.army)
+wanted_poor = SimWorld(poor).army_wanted()
+check("a state that cannot pay for its army shrinks it, by at most the adjustment rate a year",
+      sizes[0] < wanted_poor and all(later <= earlier * (1.0 + 1e-9) for earlier, later in zip(sizes, sizes[1:]))
+      and abs(sizes[0] - wanted_poor * (1.0 - ARMY_ADJUSTMENT_RATE)) < 1e-6 * wanted_poor, (sizes, wanted_poor))
+poor_treasury.money = 1.0e30
+for _year in range(3):
+    one_year(poor)
+check("when it can pay again the army regrows toward the force it wants, at the same bounded rate",
+      sizes[-1] < poor_treasury.record.army <= sizes[-1] * (1.0 + ARMY_ADJUSTMENT_RATE) ** 3 + 1e-6, poor_treasury.record.army)

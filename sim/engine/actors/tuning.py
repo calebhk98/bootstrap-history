@@ -33,6 +33,12 @@ LEVY_RATE_CEILING = declare(
 		"year however large its shortfall; beyond it taxpayers hide, flee or "
 		"stop earning. Stands in for a model of evasion and of what a "
 		"taxpayer does when the claim on him is ruinous.")
+ARMY_ADJUSTMENT_RATE = declare(
+	"ARMY_ADJUSTMENT_RATE", 0.1, kind="temporary_heuristic",
+	unit="share of the standing army per year", source=None, confidence="D",
+	why="The most a state raises or disbands of its standing army in a "
+		"year toward the size it wants and can pay. Stands in for recruiting, "
+		"training and demobilisation as processes.")
 COPY_EFFORT_SHARE = declare(
 	"COPY_EFFORT_SHARE", 0.4, kind="temporary_heuristic",
 	unit="share of the original work", source=None, confidence="D",

@@ -8,9 +8,9 @@ from the labour pool and which goods it buys, so spending is demand. A line's
 line: goods in kind (requisition) or service in office.
 """
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from .tuning import ADMINISTRATIVE_SPAN, LEVY_RATE_CEILING
+from .tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
 
 # What an army wears out, as a material in the tree's own terms.
 EQUIPMENT_MATERIAL = "iron_bar_kg"
@@ -30,8 +30,7 @@ class Line:
 		return self.wages + self.material_cost
 
 
-def army_line(world: Any) -> List[Line]:
-	soldiers = world.army_headcount()
+def army_line(world: Any, soldiers: float) -> List[Line]:
 	if soldiers <= 0.0:
 		return []
 	tonnes = soldiers * world.equipment_kg_per_soldier() / 1000.0
@@ -49,9 +48,20 @@ def administration_line(world: Any) -> List[Line]:
 				 officials * world.pay_per_person_year("scribe"))]
 
 
-def standing_lines(world: Any) -> List[Line]:
-	"""Everything the state keeps up this year, in a fixed order."""
-	return army_line(world) + administration_line(world)
+def standing_lines(world: Any, soldiers: Optional[float] = None) -> List[Line]:
+	"""Everything the state keeps up this year, in a fixed order, for an army of `soldiers`
+	(the force it wants when not given)."""
+	if soldiers is None:
+		soldiers = world.army_wanted()
+	return army_line(world, soldiers) + administration_line(world)
+
+
+def army_next_year(soldiers: float, wanted: float, funded: float) -> float:
+	"""Soldiers kept next year: the force the state wants if it paid for all of this year's, else
+	what the funded share of this year's army buys, reached from the present size at a bounded rate."""
+	target = wanted if funded >= 1.0 else min(wanted, soldiers * funded)
+	step = ARMY_ADJUSTMENT_RATE * soldiers
+	return soldiers + max(-step, min(step, target - soldiers))
 
 
 def funded_share(need: float, available: float) -> float:

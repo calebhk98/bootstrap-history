@@ -13,8 +13,8 @@ class BudgetView:
 	def state_capacity(self) -> float:
 		return self._sim.state_capacity
 
-	def army_headcount(self) -> float:
-		"""Soldiers the state keeps: the opening force's share of the people, held as they change."""
+	def army_wanted(self) -> float:
+		"""Soldiers the state wants: the opening force's share of the people, held as they change."""
 		civ = self._sim.civ
 		opening = float(civ.get("standing_army", 0.0))
 		if opening <= 0.0:

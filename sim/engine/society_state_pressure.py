@@ -986,16 +986,19 @@ class StatePressureMixin:
     def levy_shares(self, scale, protection=0.0):
         """(requisition share, office share) of a year's revenue the state
         assesses on a taxpayer of this visible scale: one rule for the
-        founder's household, a firm or any other actor. The rates at full
-        notice are what the state must raise to cover the need it could not
-        pay (Government.seek_shortfall); a taxpayer pays them in proportion
-        to how far past the notice line he stands. Nothing is taken below the
+        founder's household, a firm or any other actor. A visible taxpayer pays
+        the ordinary rate the society pays (output times tax share times state
+        capacity, as a share of income) plus the rates at full notice that
+        raise the need the state could not pay (Government.seek_shortfall), in
+        proportion to how far past the notice line he stands. Nothing is taken below the
         line; protection bargains requisition down, never the office."""
         over = self.notice_over(scale)
         if over <= 0.0:
             return 0.0, 0.0
         requisition_rate, office_rate = self.state_levy_rates()
-        requisition = requisition_rate * over
+        # the share of income the whole society pays the state, then what the state's shortfall adds
+        ordinary_rate = float(self.civ["starting_tax_share"]) * self.state_capacity
+        requisition = (ordinary_rate + requisition_rate) * over
         if protection > 0:
             requisition *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * protection)
         return max(0.0, requisition), max(0.0, office_rate * over)

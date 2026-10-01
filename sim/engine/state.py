@@ -422,6 +422,8 @@ class ActorRecord:
 	levy_requisition_rate: float = 0.0
 	levy_office_rate: float = 0.0
 	levy_base: float = 0.0
+	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
+	army: float = 0.0
 
 
 @dataclass
