@@ -16,7 +16,10 @@ from sim.engine.state import ActorRecord
 
 
 def budget_sim(civ="rome_100ad", army=None, purse=None):
+    """A game whose lenders advance the state nothing, so a deficit beyond the reserve is cut (borrowing
+    is covered by test_capital_market)."""
     game = sim(civ=civ)
+    game.market_credit_room = lambda actor_id: 0.0
     if army is not None:
         game.civ["standing_army"] = army
     treasury = game.state_treasury()
@@ -164,6 +167,9 @@ def short_of(unfunded, firms=0, protection=None):
         firm = game.actors.add("firm:visible%d" % number, ActorRecord(kind="firm", money=60000000.0,
                                                                       last_margin=INCOME))
     world = SimWorld(game)
+    while sum(line.money for line in budget.standing_lines(world)) < 1.5 * world.state_revenue():
+        game.civ["standing_army"] *= 2.0  # a need above revenue, so the purse that falls short is positive, not a debt
+        world = SimWorld(game)  # soldiers leave production, so revenue is read afresh
     need = sum(line.money for line in budget.standing_lines(world))
     game.state_treasury().money = need - world.state_revenue() - unfunded
     one_year(game)

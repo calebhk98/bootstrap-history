@@ -11,12 +11,13 @@ from sim.engine.data import TRADES_ABSENT
 
 from . import supply
 from .world_budget import BudgetView
+from .world_capital import CapitalView
 from .world_disclosure import DisclosureView
 from .world_groups import GroupView
 from .tuning import OBSERVATION_RANGE_KM
 
 
-class SimWorld(BudgetView, GroupView, DisclosureView):
+class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:

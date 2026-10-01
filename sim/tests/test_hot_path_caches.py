@@ -179,3 +179,109 @@ _registry.actors["firm:005"].advance = _hire_count_and_leave
 _registry.advance(_TonnesWorld([]))
 check("a count taken in the middle of a turn that then undid its hiring is not kept",
       _registry.staff_by_trade()["smith"] == 10 * 1.5 + 2.0, _registry._staff)
+
+
+# --- reading one trade's staff does not recount every actor's every trade.
+class _ItemsCounting(dict):
+    walks = 0
+
+    def items(self):
+        _ItemsCounting.walks += 1
+        return super().items()
+
+
+_registry = _registry_of_firms(30)
+_registry.consider_entry = lambda world: []
+for _actor in _registry.actors.values():
+    _actor.record.workforce = _ItemsCounting(_actor.record.workforce)
+    _actor.advance = lambda world: None
+_registry.refresh_staff()
+_ItemsCounting.walks = 0
+_staffed = [_registry.staff_fte("smith") for _ in range(5)]
+check("one trade's staff is read without walking every actor's whole workforce",
+      _ItemsCounting.walks == 0 and _staffed[0] == 30 * 1.5 and len(set(_staffed)) == 1,
+      (_ItemsCounting.walks, _staffed[0]))
+check("...and a trade nobody employs reads as zero", _registry.staff_fte("scribe") == 0.0)
+check("...and staff_fte leaves out the asked actor's own people",
+      _registry.staff_fte("smith", excluding="firm:004") == 29 * 1.5)
+
+
+def _hire_and_read(world):
+    _registry.actors["firm:004"].workforce["smith"] += 2.0
+    _registry.actors["firm:004"].workforce["scribe"] = 0.25
+    _registry.staff_fte("smith")
+
+
+_registry.actors["firm:004"].advance = _hire_and_read
+_registry.advance(_TonnesWorld([]))
+check("...and the turn of an actor that took on people changes the next count by exactly that",
+      _registry.staff_fte("smith") == 30 * 1.5 + 2.0 and _registry.staff_fte("scribe") == 0.25
+      and _ItemsCounting.walks == 0, (_registry.staff_fte("smith"), _registry.staff_fte("scribe"), _ItemsCounting.walks))
+
+
+# --- the kept per-trade sums equal a fresh left-to-right sum after hires, new firms and a year's turns.
+import random as _random
+
+_dice = _random.Random(7)
+_registry = _registry_of_firms(25)
+_registry.consider_entry = lambda world: []
+_trades = ["smith", "scribe", "mason"]
+
+
+def _fresh_sum(trade):
+    total = 0.0
+    for _identifier in sorted(_registry.actors):
+        total += _registry.actors[_identifier].record.workforce.get(trade, 0.0)
+    return total
+
+
+def _random_turn(world):
+    _chosen = _random.Random(_dice.random())
+    for _ in range(_chosen.randrange(3)):
+        _registry._acting.workforce[_chosen.choice(_trades)] = _chosen.random() * 3.7
+    _registry.staff_fte(_chosen.choice(_trades))
+
+
+for _actor in _registry.actors.values():
+    _actor.advance = _random_turn
+_mismatch = []
+for _year in range(6):
+    _registry.advance(_TonnesWorld([]))
+    for _number in range(3):
+        _added = _Record(kind="firm", concerns=set(), workforce={_dice.choice(_trades): _dice.random() * 2.9})
+        _new_id = "firm:%03d" % _dice.randrange(1000)
+        if _new_id not in _registry.actors:
+            _registry.add(_new_id, _added)
+            _registry.actors[_new_id].advance = _random_turn
+    for _trade in _trades:
+        if _registry.staff_fte(_trade) != _fresh_sum(_trade):
+            _mismatch.append((_year, _trade))
+check("the kept per-trade staff sums equal a fresh sum bit for bit after turns that hired and firms that were added",
+      not _mismatch, _mismatch)
+
+
+# --- counting concerns by category walks the firms once until a concern changes.
+_registry = _registry_of_firms(20)
+for _identifier, _actor in _registry.actors.items():
+    _actor.record.concerns.clear()
+    _actor.record.concerns.add("loom")
+_loom_nodes = {"loom": {"cat": "cloth"}, "forge": {"cat": "metal"}}
+_walked = _count_calls(_registry, "active_firms", lambda: [_registry.concerns_in("cloth", _loom_nodes) for _ in range(50)])
+check("concerns of a category are counted from one walk of the firms", _walked == 1, _walked)
+check("...and the count is right", _registry.concerns_in("cloth", _loom_nodes) == 20 and _registry.concerns_in("metal", _loom_nodes) == 0)
+_registry.actors["firm:003"].record.concerns.add("forge")
+check("...and a firm taking on a concern is counted at once",
+      _registry.concerns_in("metal", _loom_nodes) == 1 and _registry.concerns_in("cloth", _loom_nodes) == 20)
+
+# --- the material stock moves capacity keys to the pool once, not on every read.
+_probe = sim(capital=2000.0)
+_ledger = _probe._material_stock()
+_ledger["scholar_hours"] += 5.0
+_probe._material_stock()
+check("a capacity key written to the stock lands in the pool and leaves the stock",
+      "scholar_hours" not in _probe._material_stock() and _probe.state.economy.capacity_pool.get("scholar_hours", 0.0) >= 5.0)
+
+# --- mining technology is read once per material until what is built or operating changes.
+_probe.mining_tech("iron")
+_asked = _count_calls(_probe, "running", lambda: [_probe.mining_tech("iron") for _ in range(20)])
+check("mining technology of a material is not recomputed while nothing built or operating changes", _asked == 0, _asked)
