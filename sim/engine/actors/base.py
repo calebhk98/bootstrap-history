@@ -84,10 +84,11 @@ class Actor:
 
 	def output_of(self, material: str, world: Any) -> float:
 		"""Tonnes a year of `material` the actor's concerns put on the market."""
+		makers = world.concerns_making(material)
 		return sum(world.concern_output_tonnes(node_id, material,
 											   self.opened_year_of(node_id, world.year),
 											   self.staffed_share(node_id))
-				   for node_id in sorted(self.concerns))
+				   for node_id in sorted(node_id for node_id in self.concerns if node_id in makers))
 
 	def prominence(self) -> float:
 		"""How prominent the actor is as a person; a business has none."""

@@ -2112,8 +2112,11 @@ check("...and a project that needed exactly what it granted can now start",
 # right: it showed the fifteen largest rows and nothing else, so smaller
 # concerns, the workshop's own output, state funding and the market saturation
 # that caps the whole figure were all invisible.
+# 70 years: by then the run has more running earners than the ledger lists
+# singly (the fifteen-row cut this check exists for) and a gap to absorb. A
+# longer run only costs time, since the late years are the slow ones.
 s = sim(civ="rome_100ad", manual=False)
-for _ in range(120):
+for _ in range(70):
     s.step()
 _src = s.revenue_sources()
 check("the ledger's parts add up to the revenue it states",

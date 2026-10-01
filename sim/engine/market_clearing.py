@@ -106,6 +106,7 @@ class MarketClearingMixin:
         if entry is None:
             return None
         flows = self._market_flows() if with_flows else NO_FLOWS
+        prices = self._material_prices()
         signature = (self.population.total, self.state.economy.economy,
                      entry["capacity_tonnes"],
                      entry["stock_tonnes"], flows["bought"].get(commodity),

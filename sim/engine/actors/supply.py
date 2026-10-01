@@ -4,26 +4,38 @@ A concern that declares a physical yearly output (`annual_output_t`) makes the
 materials whose production entries it gates (`requires_node`). The market reads
 the total through `Sim.actor_supply(material)`.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict, FrozenSet, List
 
-# (production table, index): the table is kept so a hit is confirmed with `is`
-_MATERIALS_BY_NODE: List[Any] = [None, None]
+# (production table, nodes by material, materials by node): the table is kept so a hit is confirmed with `is`
+_INDEXES: List[Any] = [None, None, None]
+
+
+def _indexes() -> Any:
+	from sim.world.labour_market import production_data
+	production = production_data()
+	if _INDEXES[0] is not production:
+		made_by = {}
+		for entry in production.values():
+			gate = entry.get("requires_node")
+			if gate:
+				made_by.setdefault(gate, set()).update((entry.get("outputs") or {}))
+		by_node = {gate: sorted(materials) for gate, materials in made_by.items()}
+		by_material: Dict[str, Any] = {}
+		for gate, materials in made_by.items():
+			for material in materials:
+				by_material.setdefault(material, set()).add(gate)
+		_INDEXES[:] = [production, {material: frozenset(gates) for material, gates in by_material.items()}, by_node]
+	return _INDEXES[1], _INDEXES[2]
 
 
 def materials_made_by(node_id: str) -> List[str]:
 	"""Materials whose production entries become available with this node, in id order."""
-	from sim.world.labour_market import production_data
-	production = production_data()
-	index = _MATERIALS_BY_NODE[1] if _MATERIALS_BY_NODE[0] is production else None
-	if index is None:
-		index = {}
-		for entry in production.values():
-			gate = entry.get("requires_node")
-			if gate:
-				index.setdefault(gate, set()).update((entry.get("outputs") or {}))
-		index = {gate: sorted(materials) for gate, materials in index.items()}
-		_MATERIALS_BY_NODE[:] = [production, index]
-	return index.get(node_id, [])
+	return _indexes()[1].get(node_id, [])
+
+
+def nodes_making(material: str) -> FrozenSet[str]:
+	"""Nodes whose production entries make `material`."""
+	return _indexes()[0].get(material, frozenset())
 
 
 def concern_output_tonnes(node: Any, node_id: str, material: str, ramp: float, staffed: float) -> float:
