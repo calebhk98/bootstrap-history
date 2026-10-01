@@ -85,7 +85,9 @@ class StaffingShortfallMixin:
             for resource, amount in held.items():
                 totals[resource] += amount
         net_value = {node_id: self.nodes[node_id]["rev"] - self.nodes[node_id]["up"] for node_id in draws}
-        order = sorted(draws, key=lambda node_id: (net_value[node_id], node_id))
+        # A concern flagged with `keep <id> staffed` is protected: it closes only after every unflagged one.
+        protected = self.state.projects.keep_staffed
+        order = sorted(draws, key=lambda node_id: (node_id in protected, net_value[node_id], node_id))
         chosen = []
         unfixable = set()
         while True:

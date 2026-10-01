@@ -291,6 +291,11 @@ def _in_coin(money: float, document: JSONDict, money_per_labour_hour: float) -> 
     return money / document["money_per_labour_hour"] * money_per_labour_hour
 
 
+def has_luck_component(node: JSONDict) -> bool:
+    """False for a pure concept: science that uses no materials and no hired trades has nothing to go wrong."""
+    return node.get("kind") != "SCIENCE" or bool(node.get("mat")) or bool(node.get("lab"))
+
+
 def load(use_solved_prices: bool = False,
          held_technology_ids: Iterable[str] = (),
          civilization_id: Optional[str] = None
@@ -380,6 +385,8 @@ def load(use_solved_prices: bool = False,
                                  "production path but is unavailable with the selected "
                                  "technologies" % (node["id"], material))
     for node in nodes.values():
+        if not has_luck_component(node):
+            node["risk"] = 0.0
         # TRANSITIONAL: a material the price solver cannot resolve counts as free, so the cost is a lower bound.
         node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
                                       for material, quantity in node["mat"].items()) / rate

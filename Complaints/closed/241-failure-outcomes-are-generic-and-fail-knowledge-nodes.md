@@ -1,6 +1,6 @@
 # A failed project says only "it did not work", and knowledge nodes fail like machines
 
-**Status:** partly
+**Status:** closed
 
 Request. The tester values the failure mechanics (next-attempt risk falls, part of the elapsed calendar is kept, hours must be redone) but finds the cause generic: a failed statistics curriculum and a failed grid
 read alike. They also saw the nitrogen-cycle knowledge node (zero calendar years) fail twice, losing 0.3 million each, and asked what a modern founder who "knows" the cycle is failing to prove or teach. The recap shows a reduced
@@ -12,3 +12,5 @@ What it would take: one sentence per node type of what failed (teaching and adop
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 40, 159, 202). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
 
 Fixed: the failure line now says what failed, one sentence drawn from the node's kind, materials, trades and the state's attitude to its traits (`sim/engine/failure_cause.py`); it labels the retry risk it quotes as the live one, and `state` and `portfolio` show the live risk beside the first-attempt risk, labelled. Remaining: node kinds that cannot fail by luck (a concept the founder already holds) still roll the dice; the sentence says a knowledge-only failure lost nothing physical, but the roll itself is unchanged.
+
+**Also done:** science nodes with no materials and no hired trades load with no chance of failing (`data.has_luck_component`).

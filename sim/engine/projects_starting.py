@@ -14,6 +14,7 @@ a passed (or overridden) legality test leads to.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
+from .blockers import blocker_kind
 from .data import win_condition_describe
 from sim.constants import declare
 
@@ -419,6 +420,7 @@ class StartingMixin:
                 return verdict
         return True, None
 
+    @blocker_kind("goal")
     def _check_win_condition(self, node_id, node, ignore_trade, _memo, _why):
         if node.get("win_condition"):
             # A THRESHOLD GOAL, NOT A PROJECT. This is measured, not built:
@@ -438,6 +440,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("done")
     def _check_already_done(self, node_id, node, ignore_trade, _memo, _why):
         projects = self.state.projects
         if node_id in projects.done:
@@ -460,11 +463,13 @@ class StartingMixin:
             return False, ("already done" if _why else None)
         return None
 
+    @blocker_kind("active")
     def _check_already_active(self, node_id, node, ignore_trade, _memo, _why):
         if node_id in self.state.projects.active:
             return False, ("already active" if _why else None)
         return None
 
+    @blocker_kind("knowledge")
     def _check_needs_first(self, node_id, node, ignore_trade, _memo, _why):
         # NOT DEAR HERE, IMPOSSIBLE HERE. See SocietyMixin.needs_first.
         # needs_first() itself is always called: `_nf` IS the answer, not
@@ -476,6 +481,7 @@ class StartingMixin:
                            % (_why_nf, _nf)) if _why else None)
         return None
 
+    @blocker_kind("unavailable")
     def _check_unobtainable(self, node_id, node, ignore_trade, _memo, _why):
         # A MOTHBALL ENTRY WITHOUT THE KNOWLEDGE IS A STALE ENTRY: it must
         # fall through to the ordinary checks below, not be refused here and
@@ -487,6 +493,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("unavailable")
     def _check_foreign_only(self, node_id, node, ignore_trade, _memo, _why):
         if self._is_foreign_only(node_id):
             return False, (("that is an institution of a different society. %s has "
@@ -495,6 +502,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("knowledge")
     def _check_missing_prereqs(self, node_id, node, ignore_trade, _memo, _why):
         missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in self.state.projects.done]
         if missing:
@@ -519,6 +527,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("supply")
     def _check_substitution(self, node_id, node, ignore_trade, _memo, _why):
         if not self.substitution_quality(node_id)[1]:
             # substitution_quality(node_id) ITSELF is always called, above - it is
@@ -581,6 +590,7 @@ class StartingMixin:
                    for active_id in sorted(projects.active))
         return owed + price <= self.state.household.capital
 
+    @blocker_kind("money")
     def _check_credit_frozen(self, node_id, node, ignore_trade, _memo, _why):
         scenario_year = self.state.scenario.year
         household = self.state.household
@@ -605,6 +615,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("money")
     def _check_arrears(self, node_id, node, ignore_trade, _memo, _why):
         household = self.state.household
         insolvent_years = household.insolvent_years
@@ -627,6 +638,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_people_exist(self, node_id, node, ignore_trade, _memo, _why):
         # Staffing demand against the people who exist, before any per-person
         # hiring advice: no price or school makes up a missing population.
@@ -637,6 +649,7 @@ class StartingMixin:
             return False, (shortfall if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_scholar_staff(self, node_id, node, ignore_trade, _memo, _why):
         # SCHOLARS UNDER CONTRACT COUNT TOO - Complaints/34. This read
         # effective_scholars(), the standing headcount, so scholar hours you
@@ -662,6 +675,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_craft_staff(self, node_id, node, ignore_trade, _memo, _why):
         # CRAFTSMEN YOU HAVE UNDER CONTRACT COUNT TOO. This read self.household.artisans
         # alone, so work you had already paid an outside shop to do could not
@@ -696,6 +710,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_absent_trades(self, node_id, node, ignore_trade, _memo, _why):
         # THE TRADE HAS TO EXIST. A node wanting 450 hours of an engineer cannot
         # be built by smiths, and in 100 AD there is no such person as a private
@@ -710,6 +725,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_none_left_trades(self, node_id, node, ignore_trade, _memo, _why):
         # AND SOMEBODY HAS TO BE LEFT: a trade you taught still counts as
         # existing after the last of them has died or been poached, so a
@@ -732,6 +748,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("politics")
     def _check_social_approval(self, node_id, node, ignore_trade, _memo, _why):
         # SOCIAL APPROVAL GATE. Some things the State does not want built, and no
         # amount of money substitutes for someone powerful being willing to be

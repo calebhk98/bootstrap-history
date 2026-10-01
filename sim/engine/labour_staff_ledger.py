@@ -76,6 +76,18 @@ class StaffLedgerMixin:
                              "warning": "depends on one %s; losing them closes it" % trade})
         return rows
 
+    def workforce_report(self):
+        """Where the payroll is fragile: single-person dependencies, expected yearly losses, reserve and training."""
+        household = self.state.household
+        policy = self.state.founder.policy
+        return {
+            "depends_on_one_person": self.sole_supervisors(),
+            "expected_losses_per_year": round(sum(household.employees.values()) * self.STAFF_ATTRITION_RATE, 2),
+            "reserve": ({"craftsmen": household.reserve_craftsmen, "scholars": household.reserve_scholars}
+                        if policy.get("reserve_staff", False) else None),
+            "in_training": len(household.training),
+        }
+
     def hire_to_cover(self, trade, short, label, partial=False):
         """Hire `short` whole people of `trade` for a stated policy; the count taken on.
 

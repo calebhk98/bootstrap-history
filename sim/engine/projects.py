@@ -72,10 +72,22 @@ from .projects_rebuild import RebuildMixin
 from sim.constants import declare
 
 
-class ProjectsMixin(BlockersMixin, CapabilityMixin, VenturesMixin, StaffingMixin,
-                     StaffingShortfallMixin, StaffingReportMixin, OpenGateMixin,
-                     AllocationNotesMixin, VentureQuotesMixin, HourQueueMixin,
-                     StartingMixin, ProgressMixin, CompletionMixin, RebuildMixin):
+class ProjectsMixin(
+        BlockersMixin,
+        CapabilityMixin,
+        VenturesMixin,
+        StaffingMixin,
+        StaffingShortfallMixin,
+        StaffingReportMixin,
+        OpenGateMixin,
+        AllocationNotesMixin,
+        VentureQuotesMixin,
+        HourQueueMixin,
+        StartingMixin,
+        ProgressMixin,
+        CompletionMixin,
+        RebuildMixin,
+    ):
     """Composition point only: every method below is defined in one of the
     six sibling modules above, not here - what IS defined directly here is
     the handful of constants read from more than one of them (see this

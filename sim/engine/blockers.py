@@ -7,32 +7,31 @@ is the same list. Each entry is {"kind", "text", "ids"}.
 Kinds: knowledge (prerequisites missing), power (a power capability missing),
 supply (a material or vessel group with no option in hand), specialists
 (people or trades missing), money (the bill is past cash and credit),
-politics (the state or a patron), closed (built once but shut), and the
-terminal ones (done, active, goal, unavailable) where nothing is left to fix.
+politics (the state or a patron), closed (built once but shut),
+calendar (a floor of years still to serve, shown by `stuck`), idle (nothing in
+hand) and the terminal ones (done, active, goal, unavailable) where nothing is left to fix.
 """
+
+
+BLOCKER_KINDS = frozenset((
+    "knowledge", "power", "supply", "specialists", "money", "politics", "closed",
+    "goal", "done", "active", "unavailable", "calendar", "idle"))
+
+
+def blocker_kind(kind):
+    """Mark a start check with the kind of blocker it reports."""
+    if kind not in BLOCKER_KINDS:
+        raise ValueError("unknown blocker kind %r" % kind)
+
+    def mark(check):
+        check.blocker_kind = kind
+        return check
+    return mark
 
 
 class BlockersMixin:
 
-    # Keyed by the name of the check in _START_REASON_CHECKS.
-    _BLOCKER_KIND_BY_CHECK = {
-        "_check_win_condition": "goal",
-        "_check_already_done": "done",
-        "_check_already_active": "active",
-        "_check_needs_first": "knowledge",
-        "_check_unobtainable": "unavailable",
-        "_check_foreign_only": "unavailable",
-        "_check_missing_prereqs": "knowledge",
-        "_check_substitution": "supply",
-        "_check_credit_frozen": "money",
-        "_check_arrears": "money",
-        "_check_people_exist": "specialists",
-        "_check_scholar_staff": "specialists",
-        "_check_craft_staff": "specialists",
-        "_check_absent_trades": "specialists",
-        "_check_none_left_trades": "specialists",
-        "_check_social_approval": "politics",
-    }
+    BLOCKER_KINDS = BLOCKER_KINDS
     _TERMINAL_BLOCKER_KINDS = ("goal", "done", "active", "unavailable", "closed")
 
     def _visible_to_player(self, node_id):
@@ -63,8 +62,9 @@ class BlockersMixin:
             entries.append({"kind": "power", "ids": power_ids, "text": self._power_gate_text(power_ids)})
         return entries
 
-    def _classify_check(self, check_name, node_id, node, text):
-        kind = self._BLOCKER_KIND_BY_CHECK.get(check_name, "unavailable")
+    def _classify_check(self, check, node_id, node, text):
+        kind = check.blocker_kind
+        check_name = check.__name__
         if check_name == "_check_missing_prereqs":
             return self._missing_prereq_entries(node_id, node, text)
         ids = []
@@ -91,7 +91,7 @@ class BlockersMixin:
             verdict = check(self, node_id, node, False, None, True)
             if verdict is None or verdict[0]:
                 continue
-            entries = self._classify_check(check.__name__, node_id, node, verdict[1])
+            entries = self._classify_check(check, node_id, node, verdict[1])
             blockers.extend(entries)
             if any(entry["kind"] in self._TERMINAL_BLOCKER_KINDS for entry in entries):
                 return blockers

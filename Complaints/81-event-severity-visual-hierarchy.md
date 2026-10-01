@@ -38,4 +38,6 @@ Also reported (final playtests; `Complaints/reports/final-playtests-triage.md`):
 
 **Done:** every step reply carries `alerts` and the step screen prints an ALERTS block first (deaths, goal reached, credit trouble, sackings, losses, closures, abandoned projects, population collapse, early stops), capped and one line each.
 
-**Remains:** the eight-tier severity styling for the event stream itself, and stopping `step N` early for the extra reasons tester A listed (key employee category gone, a project blocked, a severe failure, a newly unlocked objective).
+**Remains:** the eight-tier styling of the event stream itself (the ALERTS block is now ordered by severity tier, and `step N` stops early for staffing closures, newly blocked projects, severe failures and the goal becoming startable).
+
+**Also done:** ALERTS lines sort by severity tier (`step_alerts.alert_severity`); the staffing closure line replaces the bare closed list; stop reasons live in `sim/engine/proto/step_stops.py`.

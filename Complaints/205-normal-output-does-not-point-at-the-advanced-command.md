@@ -14,4 +14,4 @@ Also reported (Han China 100 AD fog playtest, tester item(s) 33, 46; `Complaints
 
 Also reported (final playtests, B; `Complaints/reports/final-playtests-triage.md`): specialists (glassblowers, engineers, machinists) left almost every year 'to death and better offers', closing concerns, before the player had found `auto_hire` and schools; nothing names those as the remedy (see 233 for the closure side).
 
-**Remains:** other shortages (materials, housing, trades) still carry no command hint beyond the material one already closed; an `allocate` option that caps at the useful work is not built; the immortal-founder scholar warning and the atomic-theory hire-size advice were not found or changed.
+**Remains:** an `allocate` option that caps at the useful work; the immortal-founder scholar warning and the atomic-theory hire-size advice. Starved-project reasons for trades now name `labour`, `hire`, `train`, `portfolio`, `priority` and `allocate`.

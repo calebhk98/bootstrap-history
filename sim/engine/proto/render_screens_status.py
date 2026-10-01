@@ -90,12 +90,15 @@ def render_stuck(out):
         lines.append("  " + reasons)
     else:
         for reason in reasons:
-            lines.append("  %s:" % str(reason.get("what", "")).upper())
+            kind_label = " [%s]" % reason["kind"] if reason.get("kind") else ""
+            lines.append("  %s%s:" % (str(reason.get("what", "")).upper(), kind_label))
             if reason.get("why"):
                 lines.append(_wrap(reason["why"], indent="    "))
             _why_underfunded = reason.get("each_why_underfunded") or {}
             for node_id, value in sorted((reason.get("each_waiting_on") or {}).items()):
-                lines.append(_wrap("%s - waiting on %s" % (node_id, value), indent="    "))
+                project_kind = (reason.get("each_kind") or {}).get(node_id)
+                lines.append(_wrap("%s%s - waiting on %s" % (node_id, " [%s]" % project_kind if project_kind else "", value),
+                                   indent="    "))
                 if _why_underfunded.get(node_id):
                     lines.append(_wrap(_why_underfunded[node_id], indent="      "))
             if reason.get("the_nearest_few"):
