@@ -3,10 +3,10 @@ from .harness import *  # noqa: F401,F403
 
 
 _expected_grants = {
-    "rome_100ad": 228,
-    "han_china_100ad": 115,
-    "norse_900ad": 150,
-    "england_1300": 206,
+    "rome_100ad": 229,
+    "han_china_100ad": 116,
+    "norse_900ad": 151,
+    "england_1300": 207,
     "mexica_1500": 49,
 }
 for _civ, _count in _expected_grants.items():

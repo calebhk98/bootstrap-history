@@ -356,7 +356,8 @@
     "tex_vegetable_tanning",
     "tex_warp_weighted_loom",
     "tex_wool",
-    "tx2_fulling"
+    "tx2_fulling",
+    "tx2_needle_hand"
   ],
   "state_capacity": 0.9,
   "state_pressure": {

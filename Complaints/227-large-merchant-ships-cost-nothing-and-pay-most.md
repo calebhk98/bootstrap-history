@@ -22,3 +22,5 @@ Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal f
 
 
 **Remaining:** Done: the ships node has a timber, labour and capital bill and no free mortise prerequisite. Remaining: a hull is not yet a purchased asset with upkeep and loss, and revenue does not depend on cargo, route or ports; this needs an asset and route model (see 113) and is not started.
+
+**Update:** checked what data alone can do. The node already has its timber, cordage, sailcloth, crew and smith bill, upkeep and a failure risk; there is no harbour node a Han or Roman start holds that it could honestly require, and the revenue figure is a stored node field rather than something cargo and route compute, so changing it by hand would be inventing a number. Nothing edited. Remaining as above: the hull-as-asset and route model.

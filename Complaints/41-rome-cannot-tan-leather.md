@@ -268,3 +268,5 @@ by lime precipitate, chromate from chromite), the duplicate zinc nodes, and
 the sweep for a technology missing from every civilisation.
 
 Update: the Roman heat rung is granted (Complaints/127, closed). Still open: the two tree holes (citric acid by lime precipitate, chromate from chromite), the duplicate zinc nodes (`zinc_metal` and `mt2_zinc_by_retort`), and the sweep for a technology missing from every civilisation.
+
+Update: the two tree holes are filled (`ch2_citric_lime_precipitate`, `ch2_chromate_from_chromite`, each named by its recipe's `requires_node`), and the duplicate zinc pair is now a chain: `zinc_metal` (the scaled industry) builds on `mt2_zinc_by_retort` and no longer requires steelmaking, which zinc distillation does not need. Still open: the sweep for a technology missing from every civilisation is not in the suite and needs a historian.

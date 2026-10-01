@@ -3571,5 +3571,51 @@
   "gov": 0,
   "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
- }
+ },
+ {
+  "id": "ch2_citric_lime_precipitate",
+  "name": "Citric acid from lemon juice by lime precipitate",
+  "cat": "product",
+  "kind": "RESOURCE",
+  "pre": [
+   "sulfuric_retort",
+   "mat_lime"
+  ],
+  "traits": [
+   "commerce"
+  ],
+  "kb": "20_chemistry.md",
+  "ph": 60,
+  "lab": {
+   "chemist": 120
+  },
+  "mat": {},
+  "build_yrs": 0.3,
+  "note": "The route that held until fermentation took over: lime precipitates insoluble calcium citrate from boiled lemon juice, and dilute sulphuric acid frees the citric acid from it, leaving gypsum. Aqueous chemistry at ordinary temperatures; the cost is the fruit and the acid.",
+  "up_hours": 0
+},
+ {
+  "id": "ch2_chromate_from_chromite",
+  "name": "Sodium chromate and dichromate from chromite",
+  "cat": "product",
+  "kind": "RESOURCE",
+  "pre": [
+   "cap_heat_1100",
+   "soda_leblanc",
+   "sulfuric_retort"
+  ],
+  "traits": [
+   "industrial"
+  ],
+  "kb": "20_chemistry.md",
+  "ph": 120,
+  "lab": {
+   "chemist": 200,
+   "furnaceman": 200
+  },
+  "mat": {},
+  "build_yrs": 1,
+  "note": "Chromite is roasted with soda ash in an oxidising flame to soluble sodium chromate, leached, then acidified to dichromate: the early nineteenth century chromate industry, the source of tanning and mordant salts. Different from reducing chromite to the metal, which needs a later, hotter route.",
+  "up_hours": 0
+}
 ]

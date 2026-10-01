@@ -16,3 +16,5 @@ Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md
 
 
 **Remaining:** Done: the artillery piece requires gunpowder; trace italienne and bastion carry material and labour bills; the `guns on the walls` counter now needs the powder works (`gunpowder`) running (`requires_running` on a `hazard_counters` entry), lapsing when it closes. Remaining: powder is a running concern, not a stock, so the engine cannot say a magazine ran dry (`Sim` keeps no inventory); a fortification counts as built once its bill is paid and is never garrisoned or maintained, so the defence is not tied to crew or upkeep.
+
+**Update:** `mil_trace_italienne` and `mil_bastion` now carry a yearly repair bill (`up_hours`, a labelled heuristic of one percent of the construction labour in each node's `_internal`). Still open: powder stock and garrison need engine state; the counters of the geometric fortifications (angled walls, bastioned enclosure) stay free of powder because geometry, not powder, blunts the attack.
