@@ -22,3 +22,7 @@ At the deposits' own grades the work per kg of silver is small: Hispania's rock 
 ## What it would take
 
 Source the Iberian ore assays and check the grade first; then derive drainage per tonne of rock from inflow and head; then a mine-ownership and state-take mechanism (an actor's claim on a deposit) belongs to the state and market work, not to the recipes. Do not move any of the heuristic rates to hit the day wage (CLAUDE.md 4.1).
+
+## Update (silver-and-gold-cost)
+
+Grade was checked first and is not the lever: Laurion lead is reported at about 2 kg of silver per tonne of lead and Rio Tinto jarosite ore at about 0.2 percent silver (Wood et al., Internet Archaeology 56), the same order as the recipe's roughly 3 kg per tonne of lead. Rome's silver is still about 319 labour hours per kg (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`), unchanged; about 120 of it is the galena the deposits' supply curve prices, about 60 charcoal, the rest furnace and dressing labour. What is still not costed is filed as 570.

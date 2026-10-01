@@ -72,3 +72,7 @@ number to hit the day wage.
 - Rome silver breakdown per kg after (319): charcoal about 56, galena (mining, from deposit cost) about 113, furnaceman about 74, dressing, roasting and bellows about 68, smith about 8, capital under 1.
 - Drainage and ventilation are not a missing step: they are inside `HAULAGE_MULTIPLIER_DEEP_VEIN`, underived. Left as is, filed in 410.
 - Rome's opening wage is still about twelve denarii for a ten-hour day against the attested one. The physics at the deposits' grades does not close the gap; 410 lists where it may lie (grade, drainage, mine ownership and the state's take) without tuning.
+
+## Update (silver-and-gold-cost)
+
+Ore grade rechecked against Laurion and Rio Tinto assays and kept; see 410 and 570 for what remains.
