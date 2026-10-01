@@ -17,6 +17,7 @@ from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
 from . import step_progress
 from .event_groups import group_disaster_events
+from .event_severity import tag_events
 from .step_alerts import step_alerts
 from .step_stops import newly_startable_goal, severe_stop_reason
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
@@ -341,6 +342,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
     for disaster in disasters:
         out["events"] = group_disaster_events(out["events"], disaster["name"], disaster["messages"])
+    out["events"] = tag_events(out["events"])
     if summary:
         out["summary"] = summary
     problems = step_problems(ran, snapshots, events, stalled_projects(sim))

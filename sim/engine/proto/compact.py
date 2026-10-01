@@ -71,7 +71,8 @@ def compact_state(out, sim=None, nodes=None):
     if "events" in out:
         compact["completed"] = [row.get("id") for row in out.get("completed") or []]
         compact["lost"] = out.get("lost")
-        compact["events"] = [{"year": row.get("year"), "message": _short(row.get("message"))}
+        compact["events"] = [{"year": row.get("year"), "message": _short(row.get("message")),
+                              **({"severity": row["severity"]} if row.get("severity") else {})}
                              for row in out.get("events") or []]
     return compact
 

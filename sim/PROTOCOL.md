@@ -232,7 +232,10 @@ Two fixes, usable separately or together:
       refused, and the reason says so plainly.
 
       A `step` reply also carries `completed` (each record has `kind`:
-      "technology", "concern" or "granted"), `events`, and, when anything
+      "technology", "concern" or "granted"), `events` (each row has `severity`, one of
+      the eight tiers in `sim/engine/proto/event_severity.py`, run_ending first and
+      informational last; the text rendering lists the worst tiers first and
+      marks them), and, when anything
       completed or failed, `summary`: `completed`, `by_kind`, `failed`,
       `minor_failures` and, when the goal moved, `goal` (`measures` of
       label/before/after and `road_steps_gained`). The text rendering leads

@@ -58,9 +58,10 @@ class StepScreenStyling(unittest.TestCase):
 class StepReplyCarriesSeverity(unittest.TestCase):
 
     def test_every_step_event_has_a_severity_name(self):
+        from sim.engine.protocol import _agent_dispatch
         household = sim(civ="rome_100ad", capital=1e5)
-        household.log.append((household.year, "trade fair held in town"))
-        reply = S._agent_dispatch(household, NODES, {"cmd": "step", "n": 1})
+        household.end_year = household.cfg["start_year"] + 50
+        reply = _agent_dispatch(household, NODES, {"cmd": "step", "years": 3})
         self.assertTrue(reply["events"])
         for event in reply["events"]:
             self.assertIn(event["severity"], event_severity.TIER_NAMES)

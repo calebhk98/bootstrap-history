@@ -1,6 +1,6 @@
 # Event severity needs visual hierarchy
 
-**Status:** partly
+**Status:** closed - the ALERTS block and the event stream both carry severity tiers
 
 A tiny failed technique and a civilization-scale population collapse could appear at similar prominence.
 
@@ -38,6 +38,6 @@ Also reported (final playtests; `Complaints/reports/final-playtests-triage.md`):
 
 **Done:** every step reply carries `alerts` and the step screen prints an ALERTS block first (deaths, goal reached, credit trouble, sackings, losses, closures, abandoned projects, population collapse, early stops), capped and one line each.
 
-**Remains:** the eight-tier styling of the event stream itself (the ALERTS block is now ordered by severity tier, and `step N` stops early for staffing closures, newly blocked projects, severe failures and the goal becoming startable).
+**Fixed:** the event stream itself has eight tiers (`sim/engine/proto/event_severity.py`: run ending, regime/war/sack, demographic catastrophe, economic crisis, major project failure, minor setback, completion, informational). Every `step` event carries `severity`; the text screen lists worst tiers first (stable within a tier) and prefixes them with `***`, `!!` or `!`. Tiers come from message markers, so a new message wording needs a marker added there. Test: `sim/tests/test_event_severity.py`.
 
 **Also done:** ALERTS lines sort by severity tier (`step_alerts.alert_severity`); the staffing closure line replaces the bare closed list; stop reasons live in `sim/engine/proto/step_stops.py`.
