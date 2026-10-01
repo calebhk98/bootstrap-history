@@ -307,6 +307,8 @@
    "rag_paper"
   ],
   "kb": "80_information_printing.md",
+  "annual_output_t": 0.5,
+  "annual_output_basis": "One vat worked by the crew of three that hand papermaking has always had (vatman, coucher, layman) at the thirteen hours a kilogram the entry states: three times two thousand hours over thirteen is about half a tonne of paper a year. Declared plant size from the entry's own hours, conf C.",
   "ph": 80,
   "lab": {
    "artisan": 300

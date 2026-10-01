@@ -789,6 +789,7 @@ from sim.solve_prices_core import (                  # noqa: E402
     capability_required_grades,
     compute_resolvable_materials,
     land_rent_hours_per_hectare,
+    load_starting_interest_rate,
     load_starting_technologies,
     minor_joint_byproducts_are_unanchored,
     recipe_cost_and_allocation,

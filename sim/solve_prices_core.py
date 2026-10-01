@@ -31,6 +31,7 @@ from sim.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
+from sim.world.capital_market import capital_recovery_factor  # noqa: E402  (CAPITAL)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
 # GUESS_HOURS and GROWTH_BOUND_HOURS live in sim/algorithm_parameters.py and
 # are imported back here under their original names, so every existing
@@ -152,7 +153,7 @@ def capability_required_grades(production_entries):
 
 def capability_price_for_requirement(carrier, required_value, production_entries,
                                      current_prices, wage_by_trade,
-                                     rent_hours_per_kg_by_material=None):
+                                     rent_hours_per_kg_by_material=None, interest_rate=0.0):
     """(price, recipe_id) for the CHEAPEST technique that both supplies
     `carrier` and clears `required_value` on the physical dimension
     CAPABILITY_CAP_FIELDS grades it by, costed at this round's own
@@ -202,7 +203,7 @@ def capability_price_for_requirement(carrier, required_value, production_entries
             continue
         result = recipe_cost_and_allocation(
             recipe_id, entry, current_prices, wage_by_trade,
-            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate)
         if result is None:
             continue
         _total_cost, output_prices = result
@@ -307,6 +308,17 @@ def wage_ratios_by_trade(prices_json):
     return {trade: entry["rate"] / unskilled_rate
             for trade, entry in wage_table.items()
             if not trade.startswith("_")}
+
+
+def load_starting_interest_rate(civilization_id):
+    """The yearly rate on loans the civilization starts at (an initial condition, as its starting
+    technologies are): the market rate its plant must earn over depreciation, until a market has met."""
+    path = os.path.join(HERE, os.pardir, "data", "civilizations", "%s.json" % civilization_id)
+    if os.path.exists(path):
+        with open(path) as handle:
+            return float(json.load(handle)["starting_interest_rate"])
+    from sim.engine.data import load_civ        # a civilisation a mod defines is not a file of its own
+    return float(load_civ(civilization_id)["starting_interest_rate"])
 
 
 def load_starting_technologies(civilization_id):
@@ -801,7 +813,9 @@ def _land_cost_hours(entry, current_prices):
     return land_hectare_years * land_price
 
 
-def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade):
+def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade, interest_rate=0.0):
+    # Each plant repays its build bill over its service life with interest at the market rate on what is
+    # unpaid (`capital_recovery_factor`); at a nil rate that is the build bill over the life.
     capital_cost_hours = 0.0
     for capital_good in capital_goods:
         build_materials = capital_good.get("build_materials") or {}
@@ -816,8 +830,8 @@ def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade):
         for trade, hours_per_build in build_labour_hours.items():
             build_cost_hours += hours_per_build * wage_by_trade[trade]
 
-        lifetime_output = capital_good["service_life_years"] * capital_good["annual_output_at_basis"]
-        capital_cost_hours += build_cost_hours / lifetime_output
+        yearly_share = capital_recovery_factor(interest_rate, capital_good["service_life_years"])
+        capital_cost_hours += build_cost_hours * yearly_share / capital_good["annual_output_at_basis"]
     return capital_cost_hours
 
 
@@ -860,7 +874,8 @@ def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                rent_hours_per_kg_by_material=None,
                                capability_band_price_by_carrier=None,
-                               demand_anchor_price_by_material=None):
+                               demand_anchor_price_by_material=None,
+                               interest_rate=0.0):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
@@ -899,8 +914,9 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     simply holds a 100% share.
 
     CAPITAL (see the module docstring): each item in `entry["capital"]` adds
-    (cost of its build_materials + cost of its build_labour_hours) /
-    (service_life_years * annual_output_at_basis) to the cost of ONE UNIT of
+    (cost of its build_materials + cost of its build_labour_hours) * the yearly share that repays it
+    over service_life_years with interest at `interest_rate` (the civilisation's market rate; nil
+    leaves depreciation alone) / annual_output_at_basis to the cost of ONE UNIT of
     this recipe's basis output, priced through this same `current_prices`
     vector rather than looked up - a furnace built partly from the metal it
     makes is exactly the kind of dependency `compute_resolvable_materials`
@@ -937,7 +953,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
         return None
 
     capital_cost_hours = _capital_cost_hours_per_unit(
-        entry.get("capital") or [], current_prices, wage_by_trade)
+        entry.get("capital") or [], current_prices, wage_by_trade, interest_rate)
     if capital_cost_hours is None:
         return None
 
@@ -1178,7 +1194,8 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade,
 
 
 def _capability_band_prices_this_round(required_grades_by_carrier, production_entries,
-                                       prices, wage_by_trade, rent_hours_per_kg_by_material):
+                                       prices, wage_by_trade, rent_hours_per_kg_by_material,
+                                       interest_rate=0.0):
     # PER-CONSUMER GRADING: re-solved every round, from THIS round's
     # own (pre-update) `prices`, exactly like every candidate recipe
     # below is costed against those same prices (Jacobi - see this
@@ -1189,7 +1206,8 @@ def _capability_band_prices_this_round(required_grades_by_carrier, production_en
             required_value: capability_price_for_requirement(
                 carrier, required_value, production_entries, prices,
                 wage_by_trade,
-                rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+                rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
+                interest_rate=interest_rate)
             for required_value in required_values
         }
         for carrier, required_values in required_grades_by_carrier.items()
@@ -1199,13 +1217,13 @@ def _capability_band_prices_this_round(required_grades_by_carrier, production_en
 def _solve_round_candidates(production_entries, recipe_ids_in_order, resolvable_materials,
                             prices, wage_by_trade, rent_hours_per_kg_by_material,
                             band_price_by_carrier, floor_by_carrier,
-                            demand_anchor_price_by_material=None):
+                            demand_anchor_price_by_material=None, interest_rate=0.0):
     def cost(recipe_id, entry, anchors):
         return recipe_cost_and_allocation(
             recipe_id, entry, prices, wage_by_trade,
             rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
             capability_band_price_by_carrier=band_price_by_carrier,
-            demand_anchor_price_by_material=anchors)
+            demand_anchor_price_by_material=anchors, interest_rate=interest_rate)
 
     runnable = [
         recipe_id for recipe_id in recipe_ids_in_order
@@ -1274,7 +1292,7 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
 def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
          damping=DAMPING_FACTOR, max_iterations=MAXIMUM_ITERATIONS,
          tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None,
-         demand_anchors=None):
+         demand_anchors=None, interest_rate=0.0):
     """Damped Jacobi fixed-point iteration over every resolvable material.
 
     Every material updates from the SAME round's starting prices (Jacobi,
@@ -1328,14 +1346,15 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
         band_price_by_carrier = _capability_band_prices_this_round(
             required_grades_by_carrier, production_entries, prices, wage_by_trade,
-            rent_hours_per_kg_by_material)
+            rent_hours_per_kg_by_material, interest_rate)
 
         candidates_by_material = _solve_round_candidates(
             production_entries, recipe_ids_in_order, resolvable_materials, prices,
             wage_by_trade, rent_hours_per_kg_by_material, band_price_by_carrier,
             floor_by_carrier,
             demand_anchor_price_by_material=(
-                demand_anchors.prices(prices) if demand_anchors else None))
+                demand_anchors.prices(prices) if demand_anchors else None),
+            interest_rate=interest_rate)
 
         floor_source = getattr(demand_anchors, "scarcity_floor_prices", None)
         prices, final_residual = _solve_round_update_prices(
@@ -1351,7 +1370,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_material,
                                           prices, wage_by_trade, share_threshold=0.5,
                                           rent_hours_per_kg_by_material=None,
-                                          demand_anchors=None):
+                                          demand_anchors=None, interest_rate=0.0):
     """{material: value_share} for every material whose CONVERGED, CHOSEN
     recipe is a joint-production recipe in which this material holds under
     `share_threshold` of the batch's value.
@@ -1372,7 +1391,7 @@ def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_m
             continue
         result = recipe_cost_and_allocation(
             recipe_id, entry, prices, wage_by_trade,
-            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate)
         if result is None:
             continue
         total_process_cost, _output_prices = result

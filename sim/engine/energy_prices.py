@@ -74,7 +74,7 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
     solved = price_solver.solved_prices(held_technology_ids, prices_json, civilization_id=civilization_id)
     ratios = solve_prices.wage_ratios_by_trade(prices_json)
     key = (solved.gate_nodes_held, solved.civilization_id, tuple(sorted(ratios.items())),
-           prices_json["money_per_labour_hour"])
+           prices_json["money_per_labour_hour"], solved.interest_rate)
     cached = _CACHE.get(key)
     pool = {carrier: goods[carrier] for carrier in ENERGY_CARRIERS if carrier in goods}
     if cached is not None and cached[0] is entries:
@@ -94,7 +94,8 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
         for required in required_values:
             for table, available in tables:
                 found = solve_prices.capability_price_for_requirement(
-                    carrier, required, available, table.prices_in_labour_hours, wage_by_trade)
+                    carrier, required, available, table.prices_in_labour_hours, wage_by_trade,
+                    interest_rate=table.interest_rate)
                 if found is not None:
                     bands[(carrier, required)] = found[0] * money_per_hour
                     hour_bands.setdefault(carrier, {})[required] = found
@@ -107,7 +108,8 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
         if hit is not None and hit[0] is entry:
             return hit[1]
         result = recipe_cost_and_allocation("node-entry", entry, hour_prices, wage_by_trade,
-                                            capability_band_price_by_carrier=hour_bands)
+                                            capability_band_price_by_carrier=hour_bands,
+                                            interest_rate=solved.interest_rate)
         cost = {} if result is None else {
             material: price * money_per_hour for material, price in result[1].items()}
         own[id(entry)] = (entry, cost)

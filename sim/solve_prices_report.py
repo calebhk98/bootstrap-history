@@ -40,6 +40,7 @@ from sim.solve_prices_core import (                 # noqa: E402
     capability_required_grades,
     compute_resolvable_materials,
     land_rent_hours_per_hectare,
+    load_starting_interest_rate,
     load_starting_technologies,
     minor_joint_byproducts_are_unanchored,
     recipe_cost_and_allocation,
@@ -340,7 +341,7 @@ def _next_recursion_targets(inputs, entry, graded_energy_keys, land_hectare_year
 def print_why(material, production_entries, producers_of, resolvable_materials,
               prices, wage_by_trade, chosen_recipe_by_material, indent=0, ancestors=(),
               rent_hours_per_kg_by_material=None, capability_band_price_by_carrier=None,
-              demand_anchor_price_by_material=None):
+              demand_anchor_price_by_material=None, interest_rate=0.0):
     """Recursive cost breakdown for one material: how much of its price is
     which input, which labour, which rent - recursing into every priced
     input in turn, with a cycle guard so a recipe graph that legitimately
@@ -391,7 +392,7 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
         recipe_id, entry, prices, wage_by_trade,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
         capability_band_price_by_carrier=capability_band_price_by_carrier,
-        demand_anchor_price_by_material=demand_anchor_price_by_material)
+        demand_anchor_price_by_material=demand_anchor_price_by_material, interest_rate=interest_rate)
     total_process_cost, output_prices = result
     output_quantity = outputs[material]
     this_output_value_share = (output_prices[material] * output_quantity) / total_process_cost \
@@ -426,7 +427,8 @@ def print_why(material, production_entries, producers_of, resolvable_materials,
                   indent=indent + 1, ancestors=next_ancestors,
                   rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
                   capability_band_price_by_carrier=capability_band_price_by_carrier,
-                  demand_anchor_price_by_material=demand_anchor_price_by_material)
+                  demand_anchor_price_by_material=demand_anchor_price_by_material,
+                  interest_rate=interest_rate)
 
 
 def _apply_era_gate(arguments, production_entries):
@@ -472,7 +474,8 @@ def _apply_era_gate(arguments, production_entries):
 
 def _run_why_report(material, all_referenced_materials, production_entries, producers_of,
                      resolvable_materials, prices, wage_by_trade, chosen_recipe_by_material,
-                     rent_hours_per_kg_by_material, demand_anchor_price_by_material=None):
+                     rent_hours_per_kg_by_material, demand_anchor_price_by_material=None,
+                     interest_rate=0.0):
     if material not in all_referenced_materials:
         print("%r is not a material this tree consumes, nor one "
               "data/production/ produces or references. Typo?" % material)
@@ -480,7 +483,8 @@ def _run_why_report(material, all_referenced_materials, production_entries, prod
     print_why(material, production_entries, producers_of, resolvable_materials,
               prices, wage_by_trade, chosen_recipe_by_material,
               rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-              demand_anchor_price_by_material=demand_anchor_price_by_material)
+              demand_anchor_price_by_material=demand_anchor_price_by_material,
+              interest_rate=interest_rate)
     return 0
 
 
@@ -773,23 +777,24 @@ def main(argv=None):
     unpriceable = sorted(all_referenced_materials - resolvable_materials)
 
     demand_anchors = joint_allocation.build_demand_anchors(arguments.civ)
+    interest_rate = load_starting_interest_rate(arguments.civ or DEFAULT_LAND_CIVILIZATION)
     prices, iterations_run, residual, chosen_recipe_by_material = solve(
         production_entries, producers_of, resolvable_materials, wage_by_trade,
         damping=arguments.damping,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-        demand_anchors=demand_anchors)
+        demand_anchors=demand_anchors, interest_rate=interest_rate)
 
     converged = residual < CONVERGENCE_TOLERANCE
     unanchored_byproducts = minor_joint_byproducts_are_unanchored(
         production_entries, chosen_recipe_by_material, prices, wage_by_trade,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-        demand_anchors=demand_anchors)
+        demand_anchors=demand_anchors, interest_rate=interest_rate)
 
     if arguments.why:
         return _run_why_report(arguments.why, all_referenced_materials, production_entries,
                                 producers_of, resolvable_materials, prices, wage_by_trade,
                                 chosen_recipe_by_material, rent_hours_per_kg_by_material,
-                                demand_anchors.prices(prices) if demand_anchors else None)
+                                demand_anchors.prices(prices) if demand_anchors else None, interest_rate)
 
     # Default: every material's price, in labour-hours.
     return _run_default_report(arguments, rent_hours_per_kg_by_material, converged, iterations_run,
