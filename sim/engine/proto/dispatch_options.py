@@ -37,6 +37,7 @@ def _fogged(sim, nodes, rows):
     """A setting whose value names a technology this founder has not heard of shows no id."""
     for row in rows:
         for field in ("value", "shown_as"):
-            if row.get(field) in nodes and not sim.is_visible(row[field]):
+            value = row.get(field)
+            if isinstance(value, str) and value in nodes and not sim.is_visible(value):
                 row[field] = "(a technology you have not heard of)"
     return rows
