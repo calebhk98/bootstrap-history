@@ -1,6 +1,6 @@
 # An "imperial edict" is a free starting option in England 1300, and taking it silently raises scandal
 
-**Status:** partly - `why` now prints the reputation and scandal that finishing a work adds, from the function completion applies; the rest is under Remains
+**Status:** closed
 
 `med_legal_physician` ("Imperial edict: physicians who follow established methods are not liable for death") is offered in England 1300 at zero cost, zero hours, zero risk, no prerequisites. The tester found it contextually wrong for Edward I's England and took it only because it was free.
 
@@ -14,4 +14,4 @@ What it would take: civilisation-specific wording or a per-civilisation variant 
 
 Found in an England 1300 blind playtest (fog on, poor_scholar kit, 1300 to 1375). Reports: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`, `Complaints/reports/playtest-england-1300-fog-yearly-log.md`; triage: `Complaints/reports/playtest-england-1300-fog-triage.md`.
 
-**Remains:** `why` now prints the reputation and scandal that finishing a work adds, from the function completion applies. The node is also no longer free in England (it needs the Mediterranean crafts first). Still open: the flavour text is Rome-specific ("Imperial edict") for England, which needs per-civilisation wording in data.
+**Remains:** All items fixed. `why` now prints the reputation and scandal that finishing a work adds. The node is no longer free in England. The flavour text is now generic ("Legal protection" instead of "Imperial edict").
