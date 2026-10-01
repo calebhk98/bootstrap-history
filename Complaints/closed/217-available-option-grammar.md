@@ -1,6 +1,6 @@
 # `available` mixes a topic with paging and filter words unpredictably, and `all:true` ignores `limit`
 
-**Status:** open
+**Status:** closed
 
 The documented forms and the forms a player types do not compose. Help advertises
 `available state:blocked tag:<topic>` and `offset`/`limit` paging, but:

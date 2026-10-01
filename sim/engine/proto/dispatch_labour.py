@@ -180,6 +180,10 @@ def _cmd_allocate(sim, nodes, cmd, ended):
                      "labour topic for how trades differ.")
 def _cmd_labour(sim, nodes, cmd, ended):
     one = (cmd.get("trade") or "").strip().lower()
+    # US and UK spellings of a trade name are the same trade
+    for variant in (one.replace("or", "our"), one.replace("our", "or")):
+        if one not in WAGES and variant in WAGES:
+            one = variant
     if one and one not in WAGES:
         return {"ok": False, "error": "no such trade: %s. They are: %s"
                 % (one, ", ".join(sorted(WAGES)))}

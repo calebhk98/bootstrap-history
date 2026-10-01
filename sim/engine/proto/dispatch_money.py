@@ -442,6 +442,12 @@ def _cmd_quote(sim, nodes, cmd, ended):
     if err:
         return {"ok": False, "error": err}
     quote = sim.mine_quote(cmd.get("material"), quantity)
+    if quote is None and cmd.get("material") in nodes:
+        return {"ok": False, "error": "%r is a project, not something to buy. Quote what it costs "
+                "to run with 'quote open %s', or a prize for it with 'quote bounty %s'; "
+                "'why %s' gives its cost. Other quotes: %s." % (
+                    cmd.get("material"), cmd.get("material"), cmd.get("material"),
+                    cmd.get("material"), ", ".join(target_names() + list(SPENDING_QUOTERS)))}
     if quote is None:
         return {"ok": False, "error": "no such material: %r. %s"
                 % (cmd.get("material"), sim.mine_catalog_hint())}
@@ -456,7 +462,12 @@ def _cmd_quote(sim, nodes, cmd, ended):
 def _cmd_close(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    mine_closed, msg = sim.close_mine(cmd.get("material") or cmd.get("what"))
+    target = cmd.get("material") or cmd.get("what")
+    if target in nodes:
+        return {"ok": False, "error": "%r is a project or concern, not a mine: 'close' shuts mines "
+                "(close <material>). To stop a finished concern's upkeep use 'mothball %s'; "
+                "'ventures' lists what you run." % (target, target)}
+    mine_closed, msg = sim.close_mine(target)
     if not mine_closed:
         return {"ok": False, "error": msg}
     return {"ok": True, "closed": msg,

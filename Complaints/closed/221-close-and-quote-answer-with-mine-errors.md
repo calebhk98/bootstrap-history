@@ -1,6 +1,6 @@
 # `close <concern>` and `quote <not a purchase>` answer with the mine parser's error instead of the right command
 
-**Status:** open
+**Status:** closed
 
 `close hom_button` answers "REFUSED: no such material: hom_button. well-known workings: coal, copper, ...". The command that
 shuts a concern is `mothball`; `close` only shuts mines. The same message appears for `quote hire ...` and `quote open ...`.

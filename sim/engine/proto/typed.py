@@ -2,7 +2,7 @@
 
 import json
 
-from . import command_registry
+from . import available_args, command_registry
 from .buy_targets import canonical_target
 from .dispatch import KNOWN_COMMANDS
 from .nodes import NODE_IDS, NODE_IDS_LOWER
@@ -251,6 +251,8 @@ def _parse_ventures(command, rest, words, nums, want_json):
     out = {"cmd": "ventures"}
     if "full" in [str(word).lower() for word in rest]:
         out["full"] = True
+    if "closed" in [str(word).lower() for word in rest]:
+        out["closed"] = True
     low = [word.lower() for word in _absorb_key_colons(rest, (), ("limit", "offset"))]
     i = 0
     while i < len(low):
@@ -358,150 +360,16 @@ def _parse_state(command, rest, words, nums, want_json):
     return {"cmd": "state", "full": want_full, "json": want_json}, None
 
 
-_STATE_WORDS = ("startable", "blocked", "active", "done", "completed")
-
-
-def _available_consume_state_or_tag(out, low, i):
-    """`state X`, `tag X`, `category X`, or a bare state word. Same (new_i,
-    matched) contract as the other _available_consume helpers.
-    """
-    word = low[i]
-    nxt = low[i + 1] if i + 1 < len(low) else None
-    if word in ("state", "tag", "category", "cat") and nxt:
-        out["category" if word == "cat" else word] = nxt
-        return i + 2, True
-    if word in _STATE_WORDS:
-        out["state"] = word
-        return i + 1, True
-    return i, False
-
-
-def _available_consume_find_afford_or_limit(out, low, i):
-    """The first half of the 'available' narrowings that read a following
-    word: find/search/named, afford/under/within, limit. Returns (new_i,
-    True) if one matched - new_i already includes both the inner `i += 1`
-    the original elif body used when it consumed the following word, and the
-    loop's own trailing `i += 1` - or (i, False) if none did, so the caller
-    tries the remaining narrowings at the same, unmoved index. Split from
-    _available_consume_offset_heard_or_sort only to keep each half's
-    complexity low; together the two are one straight split of the original
-    elif chain, tried in its original order. See _parse_available.
-    """
-    word = low[i]
-    nxt = low[i + 1] if i + 1 < len(low) else None
-    if word in ("find", "search", "named") and nxt:
-        out["find"] = nxt
-        return i + 2, True
-    if word in ("afford", "under", "within") and nxt is not None:
-        out["afford"] = _typed_number(nxt) or 0
-        return i + 2, True
-    if word == "limit" and nxt is not None:
-        out["limit"] = int(_typed_number(nxt) or 0)
-        return i + 2, True
-    return i, False
-
-
-def _available_consume_offset_heard_or_sort(out, low, i):
-    """The second half of the 'available' narrowings that read a following
-    word: offset, heard/heard_offset, sort - tried only once
-    _available_consume_find_afford_or_limit has not matched. Same (new_i,
-    matched) contract as that function. See _parse_available.
-    """
-    word = low[i]
-    nxt = low[i + 1] if i + 1 < len(low) else None
-    if word == "offset" and nxt is not None:
-        out["offset"] = int(_typed_number(nxt) or 0)
-        return i + 2, True
-    if word in ("heard", "heard_offset") and nxt is not None:
-        out["heard_offset"] = int(_typed_number(nxt) or 0)
-        return i + 2, True
-    # SORT AND REVERSE, spelled the way a person would type them:
-    # 'available sort risk reverse'. Paging through a long list by hand,
-    # thirty at a time, is exactly the failure a typed synonym for the
-    # JSON 'sort' field exists to stop.
-    if word == "sort" and nxt:
-        out["sort"] = nxt
-        return i + 2, True
-    return i, False
-
-
-def _available_consume_flag_or_subject(out, rest, low, i):
-    """The remaining 'available' narrowings, tried only once
-    _available_consume_find_afford_or_limit and
-    _available_consume_offset_heard_or_sort have not matched: reverse/
-    reversed/desc/descending, a bare number read as 'afford', and the two
-    ways the rest of the line becomes a subject search. Returns (new_i,
-    True) with a stop signal when the whole scan is done - the subject
-    branches consume the rest of the line, the original loop's own `break`
-    - or (new_i, False) to keep scanning. See _parse_available.
-    """
-    word = low[i]
-    nxt = low[i + 1] if i + 1 < len(low) else None
-    if word in ("reverse", "reversed", "desc", "descending"):
-        out["reverse"] = True
-        return i + 1, False
-    if _typed_number(word) is not None:
-        out["afford"] = _typed_number(word)
-        return i + 1, False
-    if word in ("subject", "group", "in") and nxt:
-        out["subject"] = " ".join(rest[i + 1:])
-        return i, True
-    # A bare word is a subject: 'available metallurgy'. Subjects are
-    # several words long ("roads, bridges and canals"), so take the
-    # whole tail rather than one token.
-    out["subject"] = " ".join(rest[i:])
-    return i, True
-
-
 def _parse_available(command, rest, words, nums, want_json):
-    # 'available' alone is the digest. The rest are the same narrowings the
-    # digest itself suggests, spelled the way a person would say them:
-    #   available metallurgy      available find furnace
-    #   available afford 900      available all
-    #   available limit 30 offset 30
-    #   available find furnace sort risk reverse
-    out = {"cmd": "available"}
-    # key:value AND key value, BOTH. This loop read bare words only, so
-    # `available all:true` - the spelling `help commands` itself gives -
-    # fell all the way through to the subject branch at the bottom and was
-    # used as a search string named "all:true", silently matching nothing.
-    # A Han player reported it as a documentation bug and was right; the
-    # same hole swallowed limit:30, find:furnace and every other pair, and
-    # - found later, same shape exactly - `reverse:true`, which fell
-    # through to the same subject branch and was read as a search for the
-    # literal text "reverse:true". See _absorb_key_colons, which now does
-    # this for every caller rather than once per command found missing it.
+    # 'available metallurgy limit 30', 'available find furnace sort risk reverse',
+    # 'available state:blocked tag:transport': see available_args.
     rest = _absorb_key_colons(
         rest,
         flag_keys=("all", "reverse", "reversed", "desc", "descending"),
         value_keys=("find", "search", "named", "afford", "under", "within",
                     "limit", "offset", "heard", "heard_offset", "sort",
-                    "state", "tag", "category", "cat"))
-    low = [word.lower() for word in rest]
-    # THE TOKEN LOOP ITSELF, kept here so the scanning (which token is next,
-    # when to stop) stays in one place; what each token MEANS is delegated to
-    # the three helpers above, tried in a fixed order, as an elif chain
-    # would.
-    i = 0
-    while i < len(low):
-        word = low[i]
-        if word == "all":
-            out["all"] = True
-            i += 1
-            continue
-        i, matched = _available_consume_state_or_tag(out, low, i)
-        if matched:
-            continue
-        i, matched = _available_consume_find_afford_or_limit(out, low, i)
-        if matched:
-            continue
-        i, matched = _available_consume_offset_heard_or_sort(out, low, i)
-        if matched:
-            continue
-        i, stop = _available_consume_flag_or_subject(out, rest, low, i)
-        if stop:
-            break
-    return out, None
+                    "state", "tag", "category", "cat", "subject", "group"))
+    return available_args.parse_available_words([word.lower() for word in rest], _typed_number)
 
 
 def _parse_help(command, rest, words, nums, want_json):

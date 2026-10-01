@@ -351,7 +351,7 @@
   "adopt_yrs": 5,
   "dev_years": 4,
   "dev_people": 2,
-  "note": "Al-Khwarizmi and medieval scholars used words; Vieta brought letters. Teaching replaces arithmetic drill with symbolic manipulation: instead of 'find the number such that when you add 5 and triple it you get 24,' write 3x + 5 = 24 and show x = 19/3. Adoption fast in universities, slow elsewhere."
+  "note": "Al-Khwarizmi and medieval scholars used words; Vieta brought letters. Teaching replaces arithmetic drill with symbolic manipulation: instead of 'find the number such that when you triple it and add 5 you get 24,' write 3x + 5 = 24 and show x = 19/3. Adoption fast in universities, slow elsewhere."
  },
  {
   "id": "sc2_algebra_quadratic",

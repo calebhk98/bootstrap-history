@@ -832,7 +832,7 @@ def win_condition_describe(node_record: JSONDict) -> str:
 # them to money.
 STARTING_KITS: Dict[str, StartingKit] = {
     "destitute":   {"labourer_years": 0.0, "desc": "the clothes you stand in. You must earn your first meal."},
-    "poor_scholar":{"labourer_years": 4.033, "desc": "DEFAULT. A few months' subsistence, a knife, a lens, a codex of notes. About what a working teacher has."},
+    "poor_scholar":{"labourer_years": 4.033, "desc": "DEFAULT. A few years of a labourer's wages in cash, a knife, a lens, a codex of notes. About what a working teacher has."},
     "artisan":     {"labourer_years": 12.10, "desc": "enough to rent a workshop and buy a first set of tools."},
     "merchant":    {"labourer_years": 40.33, "desc": "a modest trading capital. You can fund one real venture."},
     "rich_merchant":{"labourer_years": 201.6, "desc": "wealthy, but well short of the fortune that marks the top of society."},
@@ -845,7 +845,7 @@ STARTING_KITS: Dict[str, StartingKit] = {
     # claim is true of the middle of the range and false at the top of it,
     # which is exactly the kind of statement that should not be made in one
     # sentence about "the whole kit range".
-    "absurd":      {"labourer_years": 10081.0, "desc": "four great fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a vast fortune buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
+    "absurd":      {"labourer_years": 10081.0, "desc": "four great fortunes in unminted gold. Once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a vast fortune buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
 }
 
 DEFAULTS: SimulationDefaults = dict(

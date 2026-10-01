@@ -68,7 +68,13 @@ Two fixes, usable separately or together:
                                                    filters: state is startable (default),
                                                     blocked, active or done; tag is a
                                                     topic, category a node category; find
-                                                    also matches stems and topic words.
+                                                    also matches stems and topic words,
+                                                    never a knowledge-file name; a
+                                                    subject that is not a subject
+                                                    heading is searched as find; limit
+                                                    beats all; a find reply carries
+                                                    "how_matched"; an offset past the
+                                                    end says so in "nothing_matched".
                                                     Non-startable states reply with
                                                     "rows" (id, name, tags, why_not,
                                                     missing); an empty search adds

@@ -46,7 +46,7 @@
         "scale": "lifetime"
       },
       {
-        "blurb": "Cut four-fifths of what plague and famine take, with sanitation, quarantine and the vaccines germ theory makes possible.",
+        "blurb": "Cut most of what plague and famine take, with sanitation, quarantine and the vaccines germ theory makes possible.",
         "name": "Curb epidemic mortality",
         "node": "goal_public_health",
         "scale": "lifetime"
@@ -7021,7 +7021,7 @@
       },
       "mat": {},
       "name": "Symbolic algebra and equation notation",
-      "note": "Al-Khwarizmi and medieval scholars used words; Vieta brought letters. Teaching replaces arithmetic drill with symbolic manipulation: instead of 'find the number such that when you add 5 and triple it you get 24,' write 3x + 5 = 24 and show x = 19/3. Adoption fast in universities, slow elsewhere.",
+      "note": "Al-Khwarizmi and medieval scholars used words; Vieta brought letters. Teaching replaces arithmetic drill with symbolic manipulation: instead of 'find the number such that when you triple it and add 5 you get 24,' write 3x + 5 = 24 and show x = 19/3. Adoption fast in universities, slow elsewhere.",
       "ph": 500.0,
       "pre": [
         "arithmetic_positional"
@@ -47973,7 +47973,7 @@
       "lab": {},
       "mat": {},
       "name": "Epidemics stop deciding who lives",
-      "note": "This is not something you build; it happens on its own once enough of sanitation, quarantine, nursing, vaccination and the rest of what germ theory makes possible is standing at once to have cut four-fifths of what an epidemic or a bad harvest would otherwise take. No single measure does this alone - each one only takes a share of what is left - which is the honest reason this is a threshold and not a single technology.",
+      "note": "This is not something you build; it happens on its own once enough of sanitation, quarantine, nursing, vaccination and the rest of what germ theory makes possible is standing at once to have cut most of what an epidemic or a bad harvest would otherwise take. No single measure does this alone - each one only takes a share of what is left - which is the honest reason this is a threshold and not a single technology.",
       "ph": 0.0,
       "pre": [
         "sanitation_antisepsis",

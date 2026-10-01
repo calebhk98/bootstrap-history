@@ -331,11 +331,16 @@ def _available_params(cmd):
     want_subject = (cmd.get("subject") or cmd.get("group") or "").strip()
     want_subject = want_subject.strip('"\'').lower()
     find = (cmd.get("find") or cmd.get("search") or "").strip().strip('"\'').lower()
-    show_all = bool(cmd.get("all"))
     try:
         limit = int(cmd.get("limit", 0))
     except (TypeError, ValueError):
         limit = 0
+    # an explicit page size wins over "all"
+    show_all = bool(cmd.get("all")) and not limit
+    # a bare word that is not a subject heading is a search word
+    if want_subject and not find and not any(
+            want_subject in heading.lower() for heading in SUBJECTS.values()):
+        find, want_subject = want_subject, ""
     try:
         offset = max(0, int(cmd.get("offset", 0)))
     except (TypeError, ValueError):
@@ -501,6 +506,10 @@ def _list_page(sim, nodes, sel, startable, why_these, fog, show_all, offset, lim
                                     (" " + why_these) if why_these else "")),
            "available": [_startable_row(sim, nodes, node_id, fog, brief=False)
                          for node_id in page]}
+    if not page and sel and offset:
+        out["nothing_matched"] = ("That page is past the end: %d match, so use offset 0 to %d."
+                                  % (len(sel), max(0, len(sel) - 1)))
+        return out, page
     if not page:
         # "1-0 matching 'furnace'" over an empty table is a range that
         # cannot exist, printed where an answer should be. Say the answer
@@ -511,13 +520,14 @@ def _list_page(sim, nodes, sel, startable, why_these, fog, show_all, offset, lim
         # search ignoring ids, when it searches both ids and names, and
         # only among what is startable NOW.
         out["nothing_matched"] = (
-            "Nothing you could begin today matches that. This looks at both "
-            "ids and names, but only among what you could start now."
+            "Nothing you could begin today matches that. A word is looked for in ids, "
+            "names, aliases and each thing's topic, among what you could start now; "
+            "'available find <word>' says so explicitly, 'available <subject>' lists "
+            "a subject, and 'available state:blocked <word>' looks at what you know but "
+            "cannot start yet."
             + (" That does not mean there is no such thing; it means "
-               "nothing in front of you right now answers to it. Try a "
-               "shorter word, or a subject: 'available metallurgy'."
-               if fog else
-               " Try a shorter word, or a subject: 'available metallurgy'."))
+               "nothing in front of you right now answers to it. Try a shorter word."
+               if fog else " Try a shorter word."))
     return out, page
 
 
@@ -533,7 +543,9 @@ def _list_sort_and_paging_hints(out, sel, page, show_all, offset, sort_by, _sort
     out["to_sort_or_page_differently"] = (
         "add a 'sort' of %s (smallest first), and 'reverse' for largest first; 'offset'/'limit' "
         "page the list you could start, 'heard_offset' pages the "
-        "heard-of one below it - all the way to the end."
+        "heard-of one below it - all the way to the end. Options can come in any "
+        "order, e.g. 'available metallurgy sort risk limit 10 offset 10'; 'limit' "
+        "beats 'all'."
         % ", ".join(_SORT_KEY_NAMES))
     if not show_all and offset + len(page) < len(sel):
         out["more"] = ('%d more; ask again with "offset": %d'
@@ -780,6 +792,9 @@ def _agent_available(sim, nodes, cmd=None):
         out["state"] = "startable"
         if tag or category:
             out.update({k: v for k, v in (("tag", tag), ("category", category)) if v})
+        if find:
+            out["how_matched"] = ("each word matched a name, id, alias or the topic "
+                                  "vocabulary of the thing's category")
         if find or keep is not None:
             # Say what the filter skipped, so blocked matches are not invisible.
             out["known_but_blocked_matches"] = tree_filters.blocked_match_count(
