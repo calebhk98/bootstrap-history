@@ -164,10 +164,6 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView):
 			return takings * sim.goods_category_factor_with_entrants(category, entrants)
 		return takings / (rivals + entrants)
 
-	def capital_rate(self) -> float:
-		"""Yearly return capital earns lent out at the market's rate."""
-		return float(self._sim.civ["starting_interest_rate"])
-
 	def concern_margin(self, node_id: str) -> float:
 		"""Yearly profit of the founder's concern once it has ramped up."""
 		return self.concern_gross(node_id) - self.upkeep(node_id)

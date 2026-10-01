@@ -295,7 +295,7 @@ class ActorRegistry:
 		self.world = world
 		founded = []
 		capital_limit = world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE
-		capital_rate = world.capital_rate()
+		capital_rate = world.market_rate()
 		waiting: Dict[str, int] = {}
 		for firm in self.active_firms():
 			target = firm.record.target

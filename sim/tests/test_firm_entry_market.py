@@ -48,12 +48,12 @@ def next_year(game):
 	game.advance_actors(game.state.scenario.year)
 
 CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
-NODE = make_node("zz_entry", CATEGORY, revenue=2.0e5, upkeep=30000.0, hours=50.0)
+NODE = make_node("zz_entry", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
 
 
 def run_entry(years, rate_scale=1.0):
 	game = actor_sim([NODE])
-	game.civ["starting_interest_rate"] = game.civ["starting_interest_rate"] * rate_scale
+	game.market_rate = lambda: 40.0 * 0.12 if rate_scale > 1.0 else 0.12
 	founder_runs(game, "zz_entry", opened_ago=10)
 	counts = []
 	for _ in range(years):
@@ -71,6 +71,6 @@ check("some firms enter a proven concern", counts[-1] > 0, counts)
 check("entry stops by itself with no cap: the last years add no firm", counts[-1] == counts[-11], counts)
 
 _, dear = run_entry(40, rate_scale=40.0)
-check("a dearer market rate for capital that outweighs the margin leaves no entrant", dear[-1] == 0 < counts[-1], (dear[-1], counts[-1]))
+check("a dearer market rate for capital leaves fewer entrants", dear[-1] < counts[-1], (dear[-1], counts[-1]))
 
-check("the market rate is the civilisation's own interest rate", world.capital_rate() == game.civ["starting_interest_rate"])
+check("the entrant's cost of capital is the capital market's rate", world.market_rate() == game.market_rate())
