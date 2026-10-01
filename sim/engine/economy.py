@@ -20,6 +20,7 @@ from .economy_absorption import MarketAbsorptionMixin
 from .projects_cost_tail import ProjectCostTailMixin
 from .economy_production import ProductionMixin
 from .project_materials import ProjectMaterialsMixin
+from .view_share import ViewShareMixin
 
 
 class _InvalidatingSet(set):
@@ -288,7 +289,7 @@ ECONOMY_INDEX_PER_LOCKED_NODE = declare(
 
 
 class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMixin,
-                    MiningMixin, CreditMixin, DebtServiceMixin, CapitalMarketMixin, InterestPoolMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ProjectMaterialsMixin):
+                    MiningMixin, CreditMixin, DebtServiceMixin, CapitalMarketMixin, InterestPoolMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ProjectMaterialsMixin, ViewShareMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
     EconomyMixin's methods are grouped by subject across sibling modules

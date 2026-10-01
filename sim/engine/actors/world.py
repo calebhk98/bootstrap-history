@@ -26,6 +26,15 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		# Answers that hold for the whole of one yearly turn.
 		self._memo: Dict[str, Any] = {}
 
+	def _shared(self, ask: Any, *arguments: Any) -> Any:
+		"""`ask(*arguments)` with this view's table of shared answers open (see engine/view_share.py)."""
+		sim = self._sim
+		opened = sim.open_view_scope(self._memo.setdefault("shared", {}))
+		try:
+			return ask(*arguments)
+		finally:
+			sim.close_view_scope(opened)
+
 	def _once(self, key: str, compute: Any) -> Any:
 		if key not in self._memo:
 			self._memo[key] = compute()
@@ -107,7 +116,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 	def hiring_wage_per_hour(self, trade: str) -> float:
 		"""What an hour of this trade costs an actor that hires it now: the wage table
 		times the premium the local market's recent hiring has built up."""
-		return self._sim.wage_per_hour(trade) * self._sim.labour_price_factor(trade)
+		return self._sim.wage_per_hour(trade) * self._shared(self._sim.labour_price_factor, trade)
 
 	def press_labour(self, trade: str, hours: float) -> None:
 		"""An actor takes on `hours` a year of a trade: the one local market feels it."""
@@ -142,7 +151,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 
 	def copy_cost(self, node_id: str) -> float:
 		"""Money the pioneer's version of this work costs, labour included."""
-		return self._sim.project_cost(node_id)
+		return self._shared(self._sim.project_cost, node_id)
 
 	def copy_risk(self, node_id: str) -> float:
 		return self._sim.effective_risk(node_id)
