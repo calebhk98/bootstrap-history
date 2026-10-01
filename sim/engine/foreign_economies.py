@@ -22,6 +22,7 @@ from sim.world import market, trade_between
 
 from .data import ROOT, calculated_goods_prices, goods_provenance, load_civ, starting_schedule
 from .foreign_capacity import ForeignCapacityMixin
+from .foreign_payments import ForeignPaymentsMixin
 from .foreign_routes import ForeignRoutesMixin
 from .project_materials import tonnes_per_unit
 
@@ -62,7 +63,7 @@ def _foreign_prices_in_own_coin(civilization_id):
         money_per_labour_hour=starting_schedule(civilization_id).money_per_labour_hour)
 
 
-class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin):
+class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPaymentsMixin):
 
     def foreign_economies(self):
         """Economies trading with this society this year, sorted by id."""
@@ -207,6 +208,8 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin):
             if pair is not None:
                 partners.append((facts["freight_per_tonne"], civilization_id, facts, pair))
         flows = []
+        unmet = self.household.__dict__.setdefault("_foreign_unmet_tonnes", {})
+        home_level = self.home_price_level()
         for freight, civilization_id, facts, (home_price, foreign_price) in sorted(
                 partners, key=lambda partner: partner[:2]):
             home_makes = self._foreign_sides(commodity, facts)[0]
@@ -222,17 +225,29 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin):
                 home_conditions = dataclasses.replace(
                     home_conditions, society_capacity_tonnes=0.0, stock_tonnes=0.0,
                     household_demand_at_anchor_tonnes=home_demand)
+            home_price *= home_level
+            foreign_price *= self.partner_price_level(civilization_id)
+            foreign_conditions = self._foreign_conditions(entry, home_conditions)
+            lift_in, lift_out = self.foreign_lift_left_tonnes(civilization_id, facts["route"])
             outcome = trade_between.clear_trading_markets(
-                home_conditions, self._foreign_conditions(entry, home_conditions),
-                home_price, foreign_price, freight)
+                home_conditions, foreign_conditions, home_price, foreign_price, freight,
+                lift_in, lift_out)
+            flow = outcome.flow_tonnes
+            unmet[(commodity, civilization_id)] = 0.0
+            if flow and abs(flow) >= (lift_in if flow > 0.0 else lift_out) * (1.0 - 1e-9):
+                wanted = trade_between.clear_trading_markets(
+                    home_conditions, foreign_conditions, home_price, foreign_price, freight)
+                unmet[(commodity, civilization_id)] = abs(wanted.flow_tonnes) - abs(flow)
             home_conditions = outcome.home_conditions
-            flows.append((civilization_id, outcome.flow_tonnes, outcome.foreign))
+            flows.append((civilization_id, flow, outcome.foreign))
         return home_conditions, flows
 
     def foreign_trade_year_end(self, commodity, home_entry, flows):
         """Close the year abroad: each partner's capacity follows its price,
-        its unsold goods carry on, and the year's flow is recorded."""
+        its unsold goods carry on, the year's flow is paid for in coin and
+        counted against the route's lift, and the flow is recorded."""
         home_entry["trade_tonnes"] = sum(flow for _id, flow, _outcome in flows)
+        unmet = self.household.__dict__.get("_foreign_unmet_tonnes", {})
         for civilization_id, flow, outcome in flows:
             entry = self.state.economy.foreign_market_book[civilization_id][commodity]
             entry["capacity_tonnes"] = market.adjusted_capacity(
@@ -240,6 +255,28 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin):
             entry["stock_tonnes"] = market.stock_after_year(outcome)
             entry["price_ratio"] = outcome.price_ratio
             entry["trade_tonnes"] = -flow
+            facts = self._foreign_economy_facts(civilization_id)
+            if flow:
+                self._pay_for_flow(civilization_id, commodity, flow, home_entry, outcome, facts)
+            shortfall = unmet.get((commodity, civilization_id), 0.0)
+            if flow or shortfall:
+                self._record_lift(civilization_id, facts["route"], flow, shortfall)
+
+    def _pay_for_flow(self, civilization_id, commodity, flow, home_entry, foreign_outcome, facts):
+        """Settle a commodity's flow in coin at the price of the side that ships it."""
+        pair = self._foreign_price_pair(commodity, facts)
+        if pair is None:
+            return
+        home_price, foreign_price = pair
+        if flow > 0.0:
+            value = flow * foreign_price * self.partner_price_level(civilization_id) \
+                * foreign_outcome.price_ratio
+        else:
+            value = -flow * home_price * self.home_price_level() * home_entry.get("price_ratio", 1.0)
+        coin = load_civ(civilization_id)["coin_standard"]
+        coin_price = self._material_prices().get(coin["material"])
+        if coin_price:
+            self._settle_flow(civilization_id, flow, value, coin["kg_per_unit"] * coin_price)
 
     def foreign_route_legs(self, civilization_id):
         """The legs goods travel from a partner's regions to this society's:

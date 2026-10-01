@@ -83,6 +83,14 @@ HULL_SERVICE_LIFE_YEARS = declare(
     why="Hull wear per tonne-km is the hull's whole life spread over the "
         "tonne-km it carries.")
 
+HULL_TIMBER_KG_PER_CARGO_TONNE = declare(
+    "HULL_TIMBER_KG_PER_CARGO_TONNE", 800.0, kind="engineering_estimate",
+    unit="kg of timber per tonne of cargo capacity",
+    source="A wooden merchantman's hull, mast and rigging weighed close to its cargo; "
+           "Casson gives hulls of this class a lightship weight of the order of the cargo.",
+    confidence="D",
+    why="Sets the hull's price (timber at its price) for the carrier's capital charge.")
+
 PORT_HANDLING_HOURS_PER_TONNE = declare(
     "PORT_HANDLING_HOURS_PER_TONNE", 2.0, kind="temporary_heuristic",
     unit="labour-hours per tonne per sea leg (loading plus unloading)",

@@ -192,3 +192,4 @@ class MarketClearingMixin:
             entry["stock_tonnes"] = market.stock_after_year(outcome)
             entry["price_ratio"] = outcome.price_ratio
             entry["society_sales_tonnes"] = outcome.society_sales_tonnes
+        self.foreign_fleet_year_end()
