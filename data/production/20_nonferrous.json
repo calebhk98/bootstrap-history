@@ -82,7 +82,8 @@
    "energy_mj": 0.0,
    "basis": "per tonne of silver recovered by mercury amalgamation of native/argentite ore (the patio process)",
    "yield_basis": "The DIRECT ore route to silver, distinct from the lead_kg entry's galena by-product route - both are real and coexisted (Old World lead-silver smelting vs. New World patio amalgamation from 1554). At the deposits' ~0.08% Ag (0.8 kg/t) and a 75% amalgamation recovery (patio-process recoveries are commonly cited in the 60-80% range, being a slow open-air process), one tonne of silver needs about 1.7 million kg (1,700 t) of rock, which is why silver mining moves such disproportionate ore tonnage relative to output. The patio process mixed crushed ore with mercury, salt and a copper-sulphate catalyst and had labourers or mules tread the paste for weeks; roughly 1 kg of mercury was consumed per kg of silver recovered, a commonly cited historical ratio for this specific process (much higher than the loss rate an enclosed retort would give, because the patio was open to weather and slow). Furnaceman hours cover final amalgam retorting. Labourer hours keep the earlier 1.1 hours per tonne of rock for crushing and treading, scaled to the larger rock tonnage (LABELLED HEURISTIC, conf D).",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "mt2_amalgamation"
   },
   "cassiterite_kg": {
    "outputs": {
@@ -385,7 +386,8 @@
    "energy_mj": 0.0,
    "basis": "per kilogram of metallic sodium, produced by carbothermic reduction of soda ash in a sealed iron retort (Deville process, pre-1886)",
    "yield_basis": "Na2CO3 + 2C -> 2Na + 3CO. Stoichiometric inputs per kg Na are 2.30 kg soda ash and 0.52 kg carbon (from the 106:46 and 24:46 molar mass ratios); this reaction needs extreme heat (~1100-1400 C) in an iron retort that sodium vapour attacks, and realised yield against theory was poor - assumed 35% here, accounting for side reactions, vapour loss before condensation, and retorts failing mid-run, which pushes the effective inputs to 6.58 kg soda ash and 1.49 kg carbon per kg sodium metal. Coal covers the very large sustained heat load of small-batch high-temperature retort operation. The basis is deliberately per KILOGRAM, not per tonne: global sodium (and hence aluminium) output by this route was measured in kilograms to tens of kilograms per year even in the 1860s-70s, nothing like an industrial bulk process. This entry is the physical reason aluminium was ever priced dearer than silver - it needed this reagent, and this reagent was this expensive to make, before the Hall-Heroult cell removed the need for it entirely.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "mat_aluminium"
   },
   "aluminium_sodium_reduction_kg": {
    "outputs": {
@@ -405,7 +407,8 @@
    "energy_mj": 0.0,
    "basis": "per kilogram of aluminium via chemical (sodium) reduction, the only route before 1886",
    "yield_basis": "Deville process net reaction for the reduction step, AlCl3 + 3Na -> Al + 3NaCl, is clean and well attested: stoichiometric sodium is 2.56 kg per kg Al (68.97/26.98); real practice used excess sodium to drive the reaction and cover side losses, taken here at 50% excess = 3.83 kg Na per kg Al. That sodium is itself the outrageously expensive product of the sodium_kg entry above, and this is the compounding that made pre-Hall-Heroult aluminium worth more than silver - not an asserted price, but the arithmetic product of two genuinely hard processes chained together. The alumina-to-aluminium-chloride chlorination step ahead of the sodium reduction (Al2O3 + 3C + 3Cl2 -> 2AlCl3 + 3CO) is NOT modelled in full here - chlorine production belongs to a chemicals family this file does not own - so the alumina requirement (1.89 kg Al2O3 per kg Al stoichiometric, doubled here to 3.78 kg to cover an ESTIMATED 50% combined chlorination-and-reduction yield loss) is then converted back to raw bauxite using the same Bayer ratio as aluminium_kg (bauxite is ~50% Al2O3 at ~95% Bayer recovery), giving 7.96 kg bauxite per kg Al; alumina itself is not tracked as its own material for the same reason given in aluminium_kg (the key is already used elsewhere for a different sourcing). Carbon is the chlorination reactant (Al2O3 + 3C + 3Cl2 -> 2AlCl3 + 3CO, 0.67 kg C per kg Al stoichiometric, doubled by the same yield-loss factor); coal is the large process-heat allowance the chlorination and reduction both need, plus a small Bayer-digestion increment. This is a LABELLED HEURISTIC (conf C) standing in for unmodelled chlorine chemistry, not a derived number; everything else in this entry is. Basis is per KILOGRAM, matching sodium_kg and reflecting that this was a laboratory-to-pilot-scale process (global output rose from ~200 kg/yr in the 1850s to perhaps tens of tonnes/yr by the mid-1880s), nothing like the tonne-scale Hall-Heroult entry it is paired with. Compare directly against aluminium_kg: same final material, two wildly different physical processes, and the ratio between them is what should reproduce the historical price collapse without either number being asserted from it.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "mat_aluminium"
   },
   "cinnabar_kg": {
    "outputs": {
@@ -798,7 +801,8 @@
    "mechanical_mj": 200.0,
    "basis": "per tonne of pure metallic barium via carbothermic pre-reduction and vacuum aluminothermic reduction",
    "yield_basis": "LABELLED HEURISTIC for the overall recovery figure: the real industrial route is a multi-step chain (BaSO4 + 4C -> BaS + 4CO carbothermic reduction, then conversion toward BaO, then 3BaO + 2Al -> 3Ba + Al2O3 aluminothermic reduction under vacuum, since barium is too reactive with air/moisture for simple electrolysis of a molten salt to work cleanly). This entry models the clean, well-attested final aluminothermic stoichiometry (0.131 kg Al per kg Ba theoretical, taken at 20% excess = 0.16 kg) precisely, but folds the earlier carbothermic/conversion steps into a single ASSUMED 70% combined recovery (conf C, explicitly a stand-in for chemistry not modelled step-by-step), giving 2698 kg barite ore and 0.60 tonnes coal (for the carbothermic reduction's own stoichiometric carbon, ~0.35 kg C/kg Ba, plus heat) per tonne of metal. The small mechanical_mj figure is a rough allowance for running the vacuum pump during the final reduction - a pump is shaft work, not combustion heat, hence mechanical rather than thermal (see ENERGY in sim/solve_prices.py's module docstring) - and should be read as the roughest single number in this entry.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "cap_vac_1e3"
   },
   "pollucite_kg": {
    "outputs": {
@@ -829,7 +833,8 @@
    "energy_mj": 0.0,
    "basis": "per gram of metallic caesium",
    "yield_basis": "Cs2O is 94.3% caesium by mass (265.82/281.82); a 20% Cs2O ore is ~18.9% contained caesium. Refining pollucite to metal is a genuinely multi-step chemical process (acid digestion, ion exchange or fractional crystallisation to isolate a caesium salt, then reduction to metal, historically by reaction with calcium metal or by electrolysis) that this entry does not model step by step; an ASSUMED 80% overall recovery (LABELLED HEURISTIC, conf C) is applied instead, giving ~6.6 g of pollucite ore per gram of caesium metal. The chemist-hour figure is large per gram because it is per GRAM - world caesium metal output has always been measured in kilograms per year, reflecting both the ore's rarity and the chemistry's difficulty, and the labour figure is trying to represent that scale honestly rather than pretend caesium is a bulk metal with a small unit cost.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "opt_spectroscopy_emission"
   },
   "phosphor_bronze_g": {
    "outputs": {

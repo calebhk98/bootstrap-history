@@ -276,7 +276,8 @@
    "temperature_needed_c": 1250.0,
    "basis": "per tonne of sintered manganese ferrite (MnFe2O4) soft magnetic ceramic",
    "yield_basis": "STOICHIOMETRY. MnFe2O4 is 230.63 g/mol, 69.2% Fe2O3 and 30.8% MnO by mass: 692 kg Fe2O3 and 308 kg MnO. Iron ore is taken at 50% iron as pig_iron_kg does, 71.5% as Fe2O3, giving 968 kg of ore; real ferrite needs purer oxide, so this understates. Pyrolusite is 80% MnO2 as its own entry says, and MnO2 -> MnO + 1/2 O2 needs 1.2255 kg MnO2 per kg MnO, so 377 kg MnO2 and 471 kg ore. Heat is a floor: sintering at about 1250 C is 0.9 kJ/kg/K, about 1100 MJ, plus 1.54 MJ per kg of MnO2 decomposed, about 580 MJ. Labour is copied from ceramic_kg, another pressed and fired ceramic. No single tree node gates this, so requires_node is left absent.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "cap_heat_1300"
   },
   "bimetallic_kg": {
    "outputs": {
