@@ -89,7 +89,7 @@ calls, I did not find where.
 
 ## Cross-references
 
-`Complaints/07-machinist-hours-false-block.md` - the player names this
+`Complaints/closed/07-machinist-hours-false-block.md` - the player names this
 overlap themselves, correctly. `07`'s own status note already says
 `craft_hands_available()` "closes the general class of bug... The specific
 machinist repro was not independently reproduced this session" (from an
