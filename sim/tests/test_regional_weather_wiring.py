@@ -66,7 +66,7 @@ class RegionWeightsTests(unittest.TestCase):
         # Complaints/50: cells are geography.json's 150,000 km2 land_tiles,
         # which carry their own arable_fraction, so land.py does not feed
         # this mechanism at all - comparing each weight against
-        # land.cultivable_land_for_civilization's per-REGION arable_iugera
+        # land.cultivable_land_for_civilization's per-REGION arable_hectares
         # would assert against a source the code does not read. What the
         # test is FOR survives unchanged: the weighting must be by land,
         # not by counting.

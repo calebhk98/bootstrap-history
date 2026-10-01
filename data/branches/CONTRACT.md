@@ -62,13 +62,13 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 | `ph` | the founder's own hours. Scarce: he has about 72,000 in a lifetime. Most nodes should be 40 to 400; only things needing his personal insight go above 600. |
 | `lab` | hired hours by trade. Allowed trades ONLY: labourer, artisan, master, glassblower, smith, carpenter, miner, scribe, scholar, furnaceman, potter, chemist, machinist |
 | `mat` | materials consumed. Allowed keys are listed in PRICED_MATERIALS below. |
-| `cap` | one-off capital in denarii beyond labour and materials |
-| `up` | annual upkeep in denarii |
+| `cap_hours` | one-off capital in labour hours beyond labour and materials |
+| `up_hours` | annual upkeep in labour hours |
 | `yrs` | **calendar floor**: curing, growing, seasoning, or a generation of economic diffusion. Money cannot buy this down. Be honest; this is what sets the real timeline. |
 | `risk` | 0 to 1, probability an attempt fails outright |
 | `sus` | suspicion delta. Rome executes magicians and much of this looks like magic. |
 | `gov` | State interest, -3 will actively suppress, +3 will fund and demand. **Use negative values.** Labour-displacing machinery, anything breaking elite information control, and anything that looks like a faction all attract hostility. |
-| `rev` | net denarii per year at maturity, 0 if not a product |
+| `rev_hours` | net labour hours per year at maturity, 0 if not a product |
 | `sch` / `art` | trained scholars and artisans required on staff |
 | `conf` | A well attested, B probable, C your estimate |
 | `note` | 1 to 4 sentences. State the non-obvious kernel, the honest limitation, and any anachronism trap. This is the most valuable field; write it like you are explaining to someone who has to actually do it. |

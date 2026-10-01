@@ -163,7 +163,7 @@ def _land_set(civilization_id):
         civilization_id, geography=_GEOGRAPHY, civilizations=_CIVILIZATIONS)
     return frozenset(
         (parcel.land_area_km2, parcel.arable_fraction,
-         parcel.fertility_quality_multiplier, round(parcel.arable_iugera, 6))
+         parcel.fertility_quality_multiplier, round(parcel.arable_hectares, 6))
         for parcel in parcels)
 
 
@@ -175,7 +175,7 @@ class TilePartitionInvarianceTests(unittest.TestCase):
     """
 
     def test_territory_is_the_same_physical_quantities_regardless_of_label_count(self):
-        # The SET of (area, arable_fraction, fertility, arable_iugera)
+        # The SET of (area, arable_fraction, fertility, arable_hectares)
         # tuples held must be identical whether the four tiles are filed
         # as one region, two, or four - this is the property Complaints/
         # 46 and 50 were each separately about, made explicit and testable
@@ -207,10 +207,10 @@ class TilePartitionInvarianceTests(unittest.TestCase):
             self.assertAlmostEqual(
                 one.unmet_demand_kg, other.unmet_demand_kg)
             self.assertAlmostEqual(
-                one.price_kg_grain_equivalent_per_iugerum,
-                other.price_kg_grain_equivalent_per_iugerum)
+                one.price_kg_grain_equivalent_per_hectare,
+                other.price_kg_grain_equivalent_per_hectare)
             self.assertAlmostEqual(
-                one.labour_hours_per_iugerum, other.labour_hours_per_iugerum)
+                one.labour_hours_per_hectare, other.labour_hours_per_hectare)
             # The MARGINAL PARCEL is the same physical tile too, not merely
             # the same fertility - post-migration, `marginal_region` is a
             # tile id, and a tile's own id does not change no matter which
@@ -223,7 +223,7 @@ class TilePartitionInvarianceTests(unittest.TestCase):
         # that there is nothing to distinguish - guard against that.
         one = land.margin_outcome_for_civilization(
             "one_label", geography=_GEOGRAPHY, civilizations=_CIVILIZATIONS)
-        self.assertGreater(one.price_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertGreater(one.price_kg_grain_equivalent_per_hectare, 0.0)
         self.assertGreater(one.quantity_supplied_kg, 0.0)
 
 

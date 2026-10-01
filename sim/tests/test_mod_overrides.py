@@ -11,8 +11,8 @@ import unittest
 from sim.engine.mods import ModError, get_ordered_mods, load_mod_production, load_mod_tree
 
 
-BASE_NODE = {"id": "mat_copper", "name": "Copper", "cat": "material", "note": "", "cap": 100,
-             "pre": ["mat_ore"], "risk": 0.4, "traits": ["metal"], "up": 7, "yrs": 3.0,
+BASE_NODE = {"id": "mat_copper", "name": "Copper", "cat": "material", "note": "", "cap_hours": 100,
+             "pre": ["mat_ore"], "risk": 0.4, "traits": ["metal"], "up_hours": 7, "yrs": 3.0,
              "lab": {"smith": 2}, "mat": {"ore": 1}}
 BASE_TREE = {"nodes": [BASE_NODE, {**BASE_NODE, "id": "mat_ore"}], "meta": {"goals": []}}
 BASE_RECIPE = {"outputs": {"copper": 1}, "inputs": {"ore": 2}, "labour_hours": {"smith": 1}}
@@ -47,10 +47,10 @@ class ModOverrideTests(unittest.TestCase):
                                    get_ordered_mods(str(self.mods_dir)))
 
     def test_override_changes_only_named_fields(self):
-        self.add_mod("test_acme_k3f9", nodes=[{"id": "mat_copper", "override": True, "cap": 222}])
+        self.add_mod("test_acme_k3f9", nodes=[{"id": "mat_copper", "override": True, "cap_hours": 222}])
         node = self.tree()["mat_copper"]
-        self.assertEqual(222, node["cap"])
-        for field in ("pre", "risk", "traits", "up", "yrs", "lab", "mat", "name"):
+        self.assertEqual(222, node["cap_hours"])
+        for field in ("pre", "risk", "traits", "up_hours", "yrs", "lab", "mat", "name"):
             self.assertEqual(BASE_NODE[field], node[field], field)
 
     def test_replaces_patches_only_named_fields(self):
@@ -75,23 +75,23 @@ class ModOverrideTests(unittest.TestCase):
 
     def test_two_mods_overriding_same_node_field_is_an_error(self):
         for mod_id, cap in (("test_acme_k3f9", 1), ("test_zeta_k3f9", 2)):
-            self.add_mod(mod_id, nodes=[{"id": "mat_copper", "override": True, "cap": cap}])
+            self.add_mod(mod_id, nodes=[{"id": "mat_copper", "override": True, "cap_hours": cap}])
         with self.assertRaises(ModError) as caught:
             self.tree()
-        for word in ("test_acme_k3f9", "test_zeta_k3f9", "mat_copper", "cap"):
+        for word in ("test_acme_k3f9", "test_zeta_k3f9", "mat_copper", "cap_hours"):
             self.assertIn(word, str(caught.exception))
 
     def test_two_mods_overriding_different_fields_is_fine(self):
-        self.add_mod("test_acme_k3f9", nodes=[{"id": "mat_copper", "override": True, "cap": 1}])
+        self.add_mod("test_acme_k3f9", nodes=[{"id": "mat_copper", "override": True, "cap_hours": 1}])
         self.add_mod("test_zeta_k3f9", nodes=[{"id": "mat_copper", "override": True, "risk": 0.5}])
         node = self.tree()["mat_copper"]
-        self.assertEqual((1, 0.5), (node["cap"], node["risk"]))
+        self.assertEqual((1, 0.5), (node["cap_hours"], node["risk"]))
 
     def test_dependent_mod_wins_deliberately(self):
-        self.add_mod("test_acme_k3f9", nodes=[{"id": "mat_copper", "override": True, "cap": 1}])
+        self.add_mod("test_acme_k3f9", nodes=[{"id": "mat_copper", "override": True, "cap_hours": 1}])
         self.add_mod("test_zeta_k3f9", dependencies=["test_acme_k3f9"],
-                     nodes=[{"id": "mat_copper", "override": True, "cap": 2}])
-        self.assertEqual(2, self.tree()["mat_copper"]["cap"])
+                     nodes=[{"id": "mat_copper", "override": True, "cap_hours": 2}])
+        self.assertEqual(2, self.tree()["mat_copper"]["cap_hours"])
 
     def test_two_mods_overriding_same_recipe_field_is_an_error(self):
         for mod_id, hours in (("test_acme_k3f9", 1), ("test_zeta_k3f9", 2)):

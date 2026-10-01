@@ -1,8 +1,9 @@
-"""The one place book denarii become a civilisation's money.
+"""Where labour hours become a civilisation's money.
 
-Authored money (tree revenue, upkeep and capital, the book goods table,
-declared money constants) is written in the book's denarii. Money in play is
-each civilisation's own coin. The path between them is always
+Tree capital, upkeep and revenue are authored in labour hours (`cap_hours`,
+`up_hours`, `rev_hours`) and priced here in each civilisation's own coin. The
+book goods table and the remaining declared money constants are still written
+in the book's denarii and take the path
     book denarii -> labour hours -> civilisation money
 and nothing else converts.
 """
@@ -34,16 +35,12 @@ class PricedInLabourHours:
         return hours if sim is None else hours * sim.money_per_labour_hour()
 
 
-# Node fields authored in book denarii.
-NODE_MONEY_FIELDS = ("rev", "up", "cap")
-
-
-def book_to_hours(denarii: float) -> float:
+def _book_to_hours(denarii: float) -> float:
     return denarii / BOOK_LABOURER_WAGE_DENARII_PER_HOUR
 
 
 def book_to_money(denarii: float, money_per_labour_hour: float) -> float:
-    return book_to_hours(denarii) * money_per_labour_hour
+    return _book_to_hours(denarii) * money_per_labour_hour
 
 
 def book_money_factor(money_per_labour_hour: float) -> float:
@@ -51,23 +48,15 @@ def book_money_factor(money_per_labour_hour: float) -> float:
     return book_to_money(1.0, money_per_labour_hour)
 
 
-def stamp_nodes(nodes: Iterable[dict], schedule_wages: Mapping[str, float],
-                money_per_labour_hour: float) -> None:
-    """Fill each node's hour fields once from its authored book figures, then
-    express its money fields and derived costs in the given coin."""
-    for node in nodes:
-        for field in NODE_MONEY_FIELDS:
-            node["_%s_hours" % field] = book_to_hours(node[field])
-    price_nodes(nodes, schedule_wages, money_per_labour_hour)
 
 
 def price_nodes(nodes: Iterable[dict], schedule_wages: Mapping[str, float],
                 money_per_labour_hour: float) -> None:
-    """Express every node money field and derived cost in a coin, in place,
-    from the hour fields `stamp_nodes` wrote."""
+    """Express every node's capital, upkeep, revenue and derived costs in a
+    coin, in place, from its authored hour fields."""
     for node in nodes:
-        for field in NODE_MONEY_FIELDS:
-            node[field] = node["_%s_hours" % field] * money_per_labour_hour
+        for field in ("rev", "up", "cap"):
+            node[field] = node[field + "_hours"] * money_per_labour_hour
         node["_labour_cost"] = sum(schedule_wages[trade] * hours
                                    for trade, hours in node["lab"].items())
         node["_material_cost"] = node["_material_hours"] * money_per_labour_hour
