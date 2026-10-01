@@ -5409,7 +5409,7 @@
     "note": "Nothing hot happens without a vessel that survives it. Excellent ceramics already exist in most of these societies, but without systematic refractory grading. Test candidate clays by firing to failure and record the results; this is your first real experimental programme.",
     "ph": 350.0,
     "pre": [
-      "workshop_first"
+      "cap_heat_0700"
     ],
     "req_any": [],
     "rev_hours": 12097.127504477594,

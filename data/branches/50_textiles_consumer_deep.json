@@ -3277,6 +3277,29 @@
   "up_hours": 0
  },
  {
+  "id": "tx2_needle_hand",
+  "name": "Hand needle: bone, bronze or drawn iron",
+  "cat": "consumer_goods",
+  "kind": "ENGINEERING",
+  "pre": [
+   "cap_tol_1mm"
+  ],
+  "traits": [],
+  "kb": "90_textiles.md",
+  "ph": 20,
+  "lab": {
+   "smith": 20
+  },
+  "mat": {
+   "iron_bar_kg": 0.2
+  },
+  "cap_hours": 0,
+  "build_yrs": 0.05,
+  "adopt_yrs": 0,
+  "note": "Hand-sewing needle: a bone sliver, bronze rod or drawn iron wire, pointed on stone and pierced with a drill or punch. Within millimetre workmanship; the steel and machine needles below need the tenth-millimetre rung.",
+  "up_hours": 0
+},
+ {
   "id": "tx2_needle",
   "name": "Needle: sewing implement",
   "cat": "consumer_goods",

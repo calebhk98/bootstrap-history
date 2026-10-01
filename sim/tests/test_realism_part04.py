@@ -19,8 +19,8 @@ med_obstetric_practice met_ore_crushing_sorting mfg_cold_riveting mfg_flux
 mfg_hot_riveting mfg_painting mfg_soft_solder mt2_earthenware mt2_timbering_safety
 tex_mordanting tr_block_tackle tr_reefing tr_square_rig tx2_alum_tanning tx2_beam
  tx2_bleaching_sun tx2_bottle tx2_comb tx2_currying tx2_doll tx2_dyeing_fibre
- tx2_dyeing_piece tx2_dyeing_yarn tx2_eye_pointed_needle tx2_flax_fibre tx2_heddle
- tx2_hemp_fibre tx2_needle tx2_pin tx2_retting tx2_rope_lay tx2_scouring tx2_selvedge
+ tx2_dyeing_piece tx2_dyeing_yarn tx2_flax_fibre tx2_heddle
+ tx2_hemp_fibre tx2_needle_hand tx2_pin tx2_retting tx2_rope_lay tx2_scouring tx2_selvedge
  tx2_shed tx2_warp_sizing tx2_wool_fibre""".split())
 check("part 04's defensible Norse local practices are explicit grants",
       _NORSE_LOCAL <= _norse.granted, sorted(_NORSE_LOCAL - _norse.granted))

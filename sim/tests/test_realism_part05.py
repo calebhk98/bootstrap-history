@@ -11,11 +11,11 @@ mt2_earthenware mt2_timbering_safety pwr_coal_seam pwr_petroleum_seeps
 sc2_institution_textbook sea_lead_sheathing sea_lodestone tex_indigo
 tex_mordanting tr_block_tackle tr_reefing tr_square_rig tx2_alum_tanning
  tx2_asbestos_cloth tx2_beam tx2_bleaching_sun tx2_bottle tx2_comb tx2_currying
- tx2_doll tx2_dyeing_fibre tx2_dyeing_piece tx2_dyeing_yarn tx2_eye_pointed_needle
- tx2_flax_fibre tx2_heddle tx2_hemp_fibre tx2_needle tx2_pin tx2_retting
+ tx2_doll tx2_dyeing_fibre tx2_dyeing_piece tx2_dyeing_yarn
+ tx2_flax_fibre tx2_heddle tx2_hemp_fibre tx2_needle_hand tx2_pin tx2_retting
  tx2_rope_lay tx2_scouring tx2_selvedge tx2_shed tx2_warp_sizing
  tx2_wool_fibre""".split())
-check("all 52 part 05 practices judged known in England by 1300 are grants",
+check("all 51 part 05 practices judged known in England by 1300 are grants",
       _ENGLISH_KNOWN <= _england.granted, sorted(_ENGLISH_KNOWN - _england.granted))
 check("English paper access still does not imply domestic rag-paper production",
       "mat_paper" in _england.granted and "rag_paper" not in _england.granted,
