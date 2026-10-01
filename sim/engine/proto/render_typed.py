@@ -11,6 +11,7 @@ ARCHITECTURE.md.
 import json, re
 from .. import units_text
 
+from .render_screens_automation import render_automation
 from .util import _fmt_num
 from .render_screens_start import render_start
 from .render_screens_big import render_state, render_step, render_available, render_why
@@ -45,6 +46,7 @@ _RENDERERS = {
     "materials": render_materials,
     "market": render_market, "groups": render_groups,
     "dashboard": render_capacity, "portfolio": render_portfolio,
+    "automation": render_automation, "audit": render_automation,
     "economy": render_economy, "changes": render_changes,
     "population": render_population,
     "map": render_map, "education": render_education,

@@ -197,6 +197,17 @@ def _bottleneck_lines(groups):
     return lines
 
 
+def _waiting_lines(groups):
+    if not groups:
+        return []
+    lines = ["", "  WAITING TO START  (open to you, but the gate refuses them today)"]
+    for group in groups:
+        lines.append("    %-12s %d: %s%s" % (group["kind"], group["count"], ", ".join(group["projects"][:4]),
+                                            " and %d more" % (group["count"] - 4) if group["count"] > 4 else ""))
+        lines.append(_wrap(group["what_it_means"], indent="      "))
+    return lines
+
+
 def render_portfolio(out):
     lines = ["PROJECT PORTFOLIO"]
     rows = out.get("projects") or []
@@ -205,6 +216,7 @@ def render_portfolio(out):
                 "" if out.get("active_project_count") == 1 else "s",
                 _fmt_num(out.get("founder_hours_available_this_year"))))
     lines += _bottleneck_lines(out.get("bottlenecks") or [])
+    lines += _waiting_lines(out.get("waiting_to_start") or [])
     if rows:
         for row in rows:
             _rank = row.get("pool_rank_this_year")
@@ -221,6 +233,8 @@ def render_portfolio(out):
                         _fmt_num(row.get("founder_hours_total")),
                         ("  (priority #%s of %s active)" % (_rank, _count))
                         if _rank and _count else ""))
+            if row.get("hours_effective_last_year") is not None:
+                lines.append("    last year: %s effective" % _fmt_num(row["hours_effective_last_year"]))
             lines.append(_wrap("waiting on: " + str(row.get("waiting_on")), indent="      "))
             if row.get("why_underfunded"):
                 lines.append(_wrap(row["why_underfunded"], indent="      "))

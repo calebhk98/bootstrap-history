@@ -569,6 +569,10 @@ def _parse_changes(command, rest, words, nums, want_json):
     return {"cmd": "changes", "years": (nums[0] if nums else 5)}, None
 
 
+def _parse_automation(command, rest, words, nums, want_json):
+    return {"cmd": "automation", "years": int(nums[0]) if nums else 1}, None
+
+
 def _parse_bribe(command, rest, words, nums, want_json):
     if not nums:
         return None, "bribe needs an amount, e.g. 'bribe 500'."
@@ -785,6 +789,21 @@ def _parse_keep(command, rest, words, nums, want_json):
     return {"cmd": "keep", "id": node_id, "staffed": mode in ("staffed", "on", "true")}, None
 
 
+def _parse_saving(command, rest, words, nums, want_json):
+    if not rest:
+        return {"cmd": "saving"}, None
+    if rest[0].lower() in ("off", "stop", "clear", "none"):
+        return {"cmd": "saving", "off": True}, None
+    node_id = NODE_IDS_LOWER.get(rest[0].lower(), rest[0])
+    out = {"cmd": "saving", "id": node_id}
+    if len(rest) > 1:
+        try:
+            out["target"] = float(rest[1].replace(",", ""))
+        except ValueError:
+            return None, "say 'saving %s 9000' for an amount, or 'saving %s' for its cost." % (node_id, node_id)
+    return out, None
+
+
 def _parse_exclude_or_include(command, rest, words, nums, want_json):
     if not rest:
         return {"cmd": command}, None
@@ -856,6 +875,8 @@ _COMMAND_PARSERS = {
     "policy": _parse_policy,
     "keep": _parse_keep,
     "reserve": _parse_reserve,
+    "saving": _parse_saving,
+    "automation": _parse_automation,
 }
 
 

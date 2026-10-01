@@ -23,7 +23,7 @@ from dataclasses import dataclass
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, PERCENT_SCALE
 from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
-from . import shortage_conditions
+from . import automation_audit, shortage_conditions
 from .invariants import check_labour_market_invariants
 
 
@@ -277,9 +277,19 @@ class StepPhasesMixin:
                 have = self.state.household.employees.get(trade, 0.0)
                 delta = self._stochastic_round(want) - have
                 if delta >= 1.0:
-                    self.hire(trade, int(delta))
+                    _before = self.state.household.capital
+                    _hired, _ = self.hire(trade, int(delta))
+                    if _hired:
+                        automation_audit.record(
+                            self, "auto_hire", "hire", "%d %s" % (int(delta), trade),
+                            "staff target %.1f against %.1f held, with %.1f supervision room"
+                            % (want, have, self.supervision_room()), _before)
                 elif delta <= -1.0:
+                    _before = self.state.household.capital
                     self.fire(trade, int(-delta))
+                    automation_audit.record(
+                        self, "auto_hire", "release", "%d %s" % (int(-delta), trade),
+                        "staff target %.1f is below the %.1f held" % (want, have), _before)
             _grow_to("artisan", max(craft * 0.25, craft - specials))
             if desired_sc > 0:
                 _grow_to("scholar", desired_sc)
@@ -306,8 +316,12 @@ class StepPhasesMixin:
                 want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.state.household.trades_created else 0.0)
                 short = want - have
                 if short > 0.02 and self.state.household.capital > self.labour_market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
+                    _before = self.state.household.capital
                     self.state.household.employees[trade_id] = have + short
                     self.state.household.debit(short * self.labour_market.quote_annual(trade_id), "wages advanced for replacement staff")
+                    automation_audit.record(
+                        self, "auto_hire", "replace", "%.1f %s" % (short, trade_id),
+                        "something draws on the trade and %.1f are held against a target of %.1f" % (have, want), _before)
             self._resync_pools()
         self.hold_staff_reserve()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:
@@ -317,7 +331,13 @@ class StepPhasesMixin:
         # wall, has the money, and has no way to spend it on the wall is
         # the same dead end wearing a different hat.
         if self.state.founder.policy.get("auto_commission", not self.manual):
-            self.auto_commission_for_blocked()
+            _before = self.state.household.capital
+            _commissioned = self.auto_commission_for_blocked()
+            if _commissioned:
+                automation_audit.record(
+                    self, "auto_commission", "commission",
+                    "%.0f hours of %s" % (_commissioned[2], _commissioned[1]),
+                    "%s is blocked only on craftsmen's hands" % _commissioned[0], _before)
         self.state.household.directors_extra += (di_cap - self.state.household.directors_extra) * self.DIRECTORS_EXTRA_APPROACH_RATE - self.state.household.directors_extra * attrition_rate
         self.state.household.artisans = max(0.0, self.state.household.artisans)
         self.state.household.scholars = max(0.0, self.state.household.scholars)
@@ -373,12 +393,24 @@ class StepPhasesMixin:
         # on reclaiming what attrition shut, before anything is judged still
         # short and closed again. See reopen_restaffed_ventures's own
         # docstring for why this is not gated by auto_open.
-        self.reopen_restaffed_ventures(self.state.scenario.year)
+        _before = self.state.household.capital
+        _reopened = self.reopen_restaffed_ventures(self.state.scenario.year)
+        if _reopened:
+            automation_audit.record(
+                self, "reopen (always on, not a policy)", "reopen", ", ".join(_reopened),
+                "a staffing closure, and the people to watch it are free again", _before,
+                ids=list(_reopened))
         self.close_unstaffed_ventures(self.state.scenario.year)
         # Open what plainly pays for itself, before the books are struck: a
         # concern you opened this year is a concern that earns this year.
         if self.state.founder.policy.get("auto_open", not self.manual):
-            self.auto_open_ventures()
+            _before = self.state.household.capital
+            _opened = self.auto_open_ventures()
+            if _opened:
+                automation_audit.record(
+                    self, "auto_open", "open", ", ".join(_opened),
+                    "net-positive concerns already built, within the staff and money available",
+                    _before, ids=list(_opened))
         self.charge_interest(self.state.scenario.year)
         if self.state.founder.policy.get("auto_shed", True):
             self.shed_loss_makers(self.state.scenario.year)
@@ -903,7 +935,15 @@ class StepPhasesMixin:
                     _want_ha = max(0.0, _need_t) / max(self.CHARCOAL_PER_HA, 1e-9)
                     _afford_ha = (_can_raise * 0.35
                                   / (self.FOREST_COST_PER_HA * self.price_index))
+                    _before = self.state.household.capital
+                    _hectares_before = self.state.economy.forest_ha
                     self.buy_forest(min(400.0, _want_ha, _afford_ha))
+                    if self.state.economy.forest_ha > _hectares_before:
+                        automation_audit.record(
+                            self, "auto_forest", "forest",
+                            "%.0f hectares of coppice" % (self.state.economy.forest_ha - _hectares_before),
+                            "charcoal demand exceeds what %.0f hectares yield by %.0f tonnes a year"
+                            % (_hectares_before, max(0.0, _need_t)), _before)
             elif (self.state.economy.binding in self.MINE_OPEX_MATERIALS
                     and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # Size the mine from ALL the material keys that feed this
@@ -930,8 +970,18 @@ class StepPhasesMixin:
                 # commission is not ordered twice.
                 want = max(0.0, short - self.mine_capacity.get(self.state.economy.binding, 0.0)
                            - self.state.economy.mine_pending.get(self.state.economy.binding, 0.0))
-                self.open_mine(self.state.economy.binding, min(want, self.state.household.capital * 0.25
-                                                 / max(1.0, self._mine_capex(self.state.economy.binding))))
+                _before = self.state.household.capital
+                _pending = self.state.economy.mine_pending.get(self.state.economy.binding, 0.0)
+                _ordered = min(want, self.state.household.capital * 0.25
+                               / max(1.0, self._mine_capex(self.state.economy.binding)))
+                self.open_mine(self.state.economy.binding, _ordered)
+                if _ordered > 0:
+                    automation_audit.record(
+                        self, "auto_mine", "mine",
+                        "%.0f t/year of %s ordered" % (_ordered, self.state.economy.binding),
+                        "demand %.0f t/year > active %.0f t/year; pending capacity considered %.0f t/year"
+                        % (short, self.mine_capacity.get(self.state.economy.binding, 0.0), _pending),
+                        _before)
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
                 if self.state.economy.binding in ("iron", "copper", "lead"):
@@ -955,6 +1005,10 @@ class StepPhasesMixin:
                 spend = min(self.state.household.capital * 0.05, self.book_money(2000.0))
                 self.state.household.debit(spend, "nitre beds laid down")
                 self.state.economy.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
+                automation_audit.record(
+                    self, "auto_mine", "nitre", "%d square metres of nitre bed" % (spend / self.NITRE_COST_PER_M2),
+                    "saltpetre is the binding shortage; the yearly spend is capped, not sized to the gap",
+                    self.state.household.capital + spend)
                 self.state.household.log.append((self.state.scenario.year, "laid down %d square metres of nitre bed "
                                      "for %d denarii (auto_mine)"
                                  % (spend / self.NITRE_COST_PER_M2, spend)))
