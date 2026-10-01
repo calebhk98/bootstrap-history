@@ -300,6 +300,28 @@ class WagesMixin(WageLedgerMixin):
         """An authored book-denarii amount in this civilisation's coin."""
         return money_units.book_to_money(denarii, self.money_per_labour_hour())
 
+    LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = declare(
+        "LABOUR_PAY_SHARE_OF_OUTPUT_GAIN", 0.0, kind="temporary_heuristic",
+        unit="exponent on output_volume_scale (1 = pay rises as fast as output per hour)",
+        source=None, confidence="D",
+        why="How far pay per hour follows output per hour, for every employer alike (founder, "
+            "firms, state, households). Zero: the schedule's own clearing (tightness, which moves "
+            "trades against each other but has no aggregate demand for hands) is the only wage "
+            "mover. One is a labour market that pays an hour what it makes. Measured on Rome "
+            "seeds 1-3: at one or one half the founder's early research and hiring grow dearer "
+            "with the generic economy index and none of the three takes off in 100 years; at "
+            "zero all three do (Complaint 675). Replace by the clearing of aggregate demand for "
+            "hands against the working population, or by output per hour that comes from "
+            "diffused technology (Complaint 104).")
+
+    def labour_pay_scale(self):
+        """What the hour of labour pays, against the opening schedule, at this economy's output per hour."""
+        return self.output_volume_scale() ** self.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
+
+    def market_wage_per_hour(self, trade):
+        """What an actor hiring this trade pays an hour at this economy's output."""
+        return self.wage_per_hour(trade) * self.labour_pay_scale()
+
     def wage_per_hour(self, trade):
         """Money one hour of this trade costs before local prices and
         scarcity: the single wage every consumer reads."""
@@ -325,4 +347,4 @@ class WagesMixin(WageLedgerMixin):
         factors = self.wage_cost_factors(trade)
         local = self.labour_price_factor(trade) if include_local_scarcity else 1.0
         return (base * factors["weighted"] * self.price_index
-                * self.wage_index * local)
+                * self.wage_index * local * self.labour_pay_scale())

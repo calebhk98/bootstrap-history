@@ -32,7 +32,7 @@ class GroupView:
 	_sim: Any
 
 	def _annual_labourer_wage(self) -> float:
-		return max(1e-9, self._sim.HOURS_PER_PERSON_YEAR * self._sim.wage_per_hour("labourer"))
+		return max(1e-9, self._sim.HOURS_PER_PERSON_YEAR * self._sim.market_wage_per_hour("labourer"))
 
 	def _commodity_quote(self, commodity: str) -> Any:
 		"""The quote for the first priced material the commodity is made of (its main product)."""
