@@ -499,7 +499,7 @@ class DiffusionMixin:
             cache[node_id] = value
         return value
 
-    def needs_first(self, node_id):
+    def needs_first(self, node_id, about_stock=None):
         """(node, why) this society must have before it can begin `node_id` at all.
 
         cost_multipliers say a domain is DEARER here. Some things are not dear,
@@ -509,10 +509,15 @@ class DiffusionMixin:
 
         Data, like everything else about a civilisation, and always liftable -
         every entry names the node that opens it. See _SCHEMA.md.
+
+        `about_stock` narrows to the gates that rest on held living stock (True) or on
+        knowledge alone (False); left out, either.
         """
         spec = self.civ.get("needs_first") or {}
         for key, ent in spec.items():
             if key.startswith("_") or not isinstance(ent, dict):
+                continue
+            if about_stock is not None and bool(ent.get("material")) != about_stock:
                 continue
             if node_id in (ent.get("ids") or ()):
                 node = ent.get("node")

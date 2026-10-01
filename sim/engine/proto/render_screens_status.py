@@ -240,9 +240,14 @@ def _advice_line(kind, advice, hazard=None, indent="  "):
                               % (step["id"], _fmt_num(step["cost"]),
                                  step.get("because_it_gives_you") or "a hedge")
                               for step in now))
+        for step in now:
+            if step.get("timing"):
+                line += "\n%s    %s: %s" % (indent, step["id"], step["timing"]["in_words"])
     for step in later[:2]:
         line += "\n%s  %s is one of them, waiting on: %s" % (
             indent, step["id"], (step.get("waiting_on") or "").split(". To get")[0])
+        if step.get("timing"):
+            line += "\n%s    %s" % (indent, step["timing"]["in_words"])
     return line
 
 

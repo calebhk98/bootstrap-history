@@ -1,6 +1,6 @@
 # Hazard mitigation should show timing, not only relevance
 
-**Status:** open
+**Status:** closed - the risk screen puts `timing` on every hedge that has a calendar floor: earliest finish year, the year the window opens, and whether it finishes first (`render_risk` prints it under the hedge; `sim/engine/hazard_hedge_timing.py`; test `sim/tests/test_small_screen_items.py`). Hedges that are only prerequisites carry no floor, so no timing.
 
 The risk screen was excellent at translating historical danger into actionable categories without exposing the whole tree. However, it only showed which mitigations were relevant, not whether they could be completed in time to matter.
 

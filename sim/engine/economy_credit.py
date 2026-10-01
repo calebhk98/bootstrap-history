@@ -189,15 +189,30 @@ class CreditMixin:
         docstring for why reusing them is safe: nothing in this whole call
         graph assigns to self anywhere.
         """
+        breakdown = self.funding_breakdown()
+        return (breakdown["cash_on_hand"] + breakdown["credit_available_now"]
+                + breakdown["surplus_allowance_over_years"])
+
+    def funding_breakdown(self):
+        """The parts funding_capacity() adds, kept apart: cash, the drawable half of the credit
+        line, the surplus allowance (the yearly surplus over the planning years), the yearly
+        surplus itself, and what work in hand still owes."""
         rev = self.revenue()
         upkeep_amount = self.upkeep()
         household = self.state.household
         fixed = (upkeep_amount + self.living_cost(_rev=rev, _upkeep=upkeep_amount)
                  + self.mine_operating_cost()
                  + max(0.0, -household.capital) * self.debt_interest_rate())
-        return (max(0.0, household.capital)
-                + self.credit_limit(_rev=rev, _upkeep=upkeep_amount) * self.SPENDING_DRAW_SHARE_ORDINARY
-                + max(0.0, rev - fixed) * self.CREDIT_SURPLUS_YEARS_MULTIPLE)
+        surplus = max(0.0, rev - fixed)
+        return {
+            "cash_on_hand": max(0.0, household.capital),
+            "credit_available_now": (self.credit_limit(_rev=rev, _upkeep=upkeep_amount)
+                                     * self.SPENDING_DRAW_SHARE_ORDINARY),
+            "sustainable_annual_surplus": surplus,
+            "surplus_allowance_over_years": surplus * self.CREDIT_SURPLUS_YEARS_MULTIPLE,
+            "surplus_years_counted": self.CREDIT_SURPLUS_YEARS_MULTIPLE,
+            "already_committed": self.committed_spend(),
+        }
 
     def shed_loss_makers(self, year):
         """In arrears, stop maintaining anything that costs more than it returns.

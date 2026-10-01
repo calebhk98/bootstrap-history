@@ -499,16 +499,16 @@ def _render_sections(out, renderers):
 
 
 def render_state(out):
-    """A position, not a dict: year, money, what is running and what each
-    thing is waiting on, who you employ, what is about to happen to you.
+    """A position, not a dict: year, money, goal and what is about to happen to you first,
+    then what is running and what each thing is waiting on, who you employ, where you stand.
 
     Works on both the short state() and state(full=true), and on step()'s
     reply, which is this same shape with completed/events stitched on front.
     """
     renderers = (
-        _state_header, _state_money, _state_founder, _state_running,
-        _state_stuck, _state_concerns, _state_employ, _state_standing,
-        _state_conditions, _state_knowledge_warning, _state_at_risk, _state_goal,
+        _state_header, _state_money, _state_founder, _state_conditions, _state_goal,
+        _state_at_risk, _state_knowledge_warning, _state_running, _state_stuck,
+        _state_concerns, _state_employ, _state_standing,
     )
     lines = _render_sections(out, renderers)
     lines = _state_completed_head(out, lines)
@@ -1063,6 +1063,24 @@ def _why_benefit(out):
     return lines
 
 
+def _why_living_stock(out):
+    """What you know apart from what you hold: a technique is learned, a herd is possessed."""
+    gates = out.get("living_stock") or []
+    if not gates:
+        return []
+    lines = [""]
+    lines.append("KNOWLEDGE: %s - %s" % (out.get("name") or "this",
+                                          "known" if out.get("done") else "not yet learned"))
+    for gate in gates:
+        route = ("brought by %s, or by trade" % gate["brought_by"] if gate.get("brought_by")
+                 else "by trade, gift or expedition")
+        lines.append(_wrap("HELD: %s %s of %s needed - %s"
+                           % (gate["material"], _fmt_num(gate["held"]), _fmt_num(gate["needed"]),
+                              "enough" if gate["held"] >= gate["needed"] else "not enough: " + route),
+                           indent="  "))
+    return lines
+
+
 def render_why(out):
     """A page about one thing: what it needs, what it costs, what depends
     on it, and whether you could start it today.
@@ -1070,7 +1088,7 @@ def render_why(out):
     return "\n".join(_render_sections(out, (
         _why_header, _why_cost, _why_hours_risk, _why_staff_needed,
         _why_staff_keep_open, _why_labour_materials, _why_upkeep_revenue,
-        why_goods_market_lines, _why_status, _why_benefit, why_standing_lines,
+        why_goods_market_lines, _why_status, _why_living_stock, _why_benefit, why_standing_lines,
         why_hazard_lines, _why_chain, _why_unlocks_downstream,
         _why_trailing,
     )))

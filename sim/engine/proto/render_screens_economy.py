@@ -463,6 +463,25 @@ def _money_credit_lines(out):
     return lines
 
 
+def _money_funding_lines(out):
+    funding = out.get("funding")
+    if not funding:
+        return []
+    return ["",
+            "WHAT YOU CAN COMMIT TO PROJECTS",
+            "  CASH ON HAND:      %s   (spendable today)" % _fmt_num(funding["cash_on_hand"]),
+            "  CREDIT AVAILABLE:  %s   (the part of the credit line the game lets projects draw; borrowed, at interest)"
+            % _fmt_num(funding["credit_available_now"]),
+            "  ANNUAL SURPLUS:    %s/yr   (what the standing income leaves after running costs; not cash yet - "
+            "the game counts %s years of it, %s, towards the total below)"
+            % (_fmt_num(funding["sustainable_annual_surplus"]), _fmt_num(funding["surplus_years_counted"]),
+               _fmt_num(funding["surplus_allowance_over_years"])),
+            "  TOTAL THE GAME THINKS YOU COULD FUND: %s   (only cash and credit are available now)"
+            % _fmt_num(out.get("you_could_actually_fund_up_to")),
+            "  ALREADY COMMITTED: %s   (still owed on work in hand, paid in instalments over the coming years)"
+            % _fmt_num(funding["already_committed"])]
+
+
 def render_money(out):
     lines = ["LEDGER"]
     lines += _money_header_line(out)
@@ -472,6 +491,7 @@ def render_money(out):
     lines += _money_costs_block(out)
     lines += _money_net_lines(out)
     lines += _money_credit_lines(out)
+    lines += _money_funding_lines(out)
     return "\n".join(lines)
 
 

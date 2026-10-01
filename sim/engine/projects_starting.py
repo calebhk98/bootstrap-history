@@ -481,7 +481,17 @@ class StartingMixin:
         # needs_first() itself is always called: `_nf` IS the answer, not
         # just words about it. Only the sentence built from the two strings
         # it hands back is skippable.
-        _nf, _why_nf = self.needs_first(node_id)
+        _nf, _why_nf = self.needs_first(node_id, about_stock=False)
+        if _nf:
+            return False, (("%s. Build %s first and this opens with it"
+                           % (_why_nf, _nf)) if _why else None)
+        return None
+
+    @blocker_kind("supply")
+    def _check_needs_held_herd(self, node_id, node, ignore_trade, _memo, _why):
+        # THE SAME GATE, WHEN WHAT IS MISSING IS LIVING STOCK: knowing the technique is not the
+        # blocker, so it is reported as a supply gap.
+        _nf, _why_nf = self.needs_first(node_id, about_stock=True)
         if _nf:
             return False, (("%s. Build %s first and this opens with it"
                            % (_why_nf, _nf)) if _why else None)
@@ -825,6 +835,7 @@ class StartingMixin:
         _check_already_done,
         _check_already_active,
         _check_needs_first,
+        _check_needs_held_herd,
         _check_unobtainable,
         _check_foreign_only,
         _check_missing_prereqs,
