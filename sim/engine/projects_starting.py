@@ -14,6 +14,7 @@ a passed (or overridden) legality test leads to.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
+from . import purchase_rule
 from .blockers import blocker_kind
 from .data import win_condition_describe
 from sim.constants import declare
@@ -903,10 +904,13 @@ class StartingMixin:
         # applies to the first project too
         if owed + price > ceiling:
             return ("you already owe %s denarii on work in hand; this "
-                    "would take it to %s, and between cash and credit "
-                    "you can raise %s. Finish or stop something first."
+                    "would take it to %s, and between cash and your credit line "
+                    "you can raise %s, so you are %s short. Finish or stop "
+                    "something first, or earn or pay down that amount.%s"
                     % ("{:,.0f}".format(owed), "{:,.0f}".format(owed + price),
-                       "{:,.0f}".format(ceiling)))
+                       "{:,.0f}".format(ceiling),
+                       "{:,.0f}".format(owed + price - ceiling),
+                       purchase_rule.remedies_text(self)))
         return None
 
     def start_project(self, node_id):
