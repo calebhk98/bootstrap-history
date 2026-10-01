@@ -675,6 +675,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
 
         # Reset transient caches
         self._reset_economic_caches()
+        # the demand the last throttle saw is read before the next one, so it is carried
+        held_demand = self.state.economy.material_demand_at_last_throttle
+        self.household._material_demand_cache = None if held_demand is None else collections.Counter(held_demand)
 
     # ---- OUTSIDE-SURFACE PROPERTIES FOR THE EXTRACTED HOUSEHOLD ----------
     # Moved to sim/engine/core_properties.py's ForwardingPropertiesMixin:
