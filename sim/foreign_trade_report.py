@@ -3,7 +3,7 @@
 the route's legs, and a shortage-year price ratio with and without trade.
 
     python3 sim/foreign_trade_report.py --years 100
-    python3 sim/foreign_trade_report.py --years 100 --civilization rome_100ad --partner han_china_100ad
+    python3 sim/foreign_trade_report.py --years 100 --partner <civilisation id> [--civilization <civilisation id>]
 
 Partners are switched on for the run whether or not the data file enables
 them, so the report is how an economy is judged before enabling it.
@@ -69,10 +69,13 @@ def print_shortage(civilization_id, partner_id):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--civilization", default="rome_100ad")
-    parser.add_argument("--partner", default="han_china_100ad")
+    parser.add_argument("--civilization", default=None, help="default: the game's default civilisation")
+    parser.add_argument("--partner", required=True, help="a civilisation id from data/civilizations")
     parser.add_argument("--years", type=int, default=100)
     arguments = parser.parse_args()
+    if arguments.civilization is None:
+        from sim.engine.default_civilisation import default_civilisation_id
+        arguments.civilization = default_civilisation_id()
     game = build(arguments.civilization, arguments.partner)
     print("route to %s:" % arguments.partner)
     for origin, destination, mode, distance_km, cost in game.foreign_route_legs(arguments.partner):
