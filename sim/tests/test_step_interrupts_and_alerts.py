@@ -84,3 +84,12 @@ step_progress.set_after_year(None)
 check("a multi-year step prints one progress line per year; a single year prints none",
       len(progress_stream.getvalue().splitlines()) == 3 and single_stream.getvalue() == "",
       (progress_stream.getvalue(), single_stream.getvalue()))
+
+# ---- the per-year hook belongs to one command: a played command clears it afterwards,
+# so a later step in the same process does not also save into that command's session file
+from sim.engine import cli_interactive as _interactive
+_hook_sim = sim()
+_hook_session = os.path.join(tempfile.mkdtemp(), "hooked.json")
+_interactive._play_run_one_command(_hook_sim, _hook_sim.nodes, {"cmd": "step", "years": 1}, _hook_session)
+check("the per-year save hook is cleared once the played command is done",
+      step_progress._after_year[0] is None, step_progress._after_year[0])
