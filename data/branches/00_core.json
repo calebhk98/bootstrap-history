@@ -1287,7 +1287,7 @@
       }
     },
     "name": "Print and disperse hundreds of copies across three continents",
-    "note": "THE highest expected-value node in the tree, and it is cheap. The lesson of Alexandria is not that books burn, it is that single copies burn. Push copies into every library, temple archive and private collection from Britain to India. This is what carries the programme through 235-284 AD. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. Same objection as the press, multiplied. Hundreds of copies of a technical corpus in private hands is exactly what an anxious regime dislikes. Present it as a gift to the libraries of the Empire and give the first copies to the emperor's own foundations.",
+    "note": "THE highest expected-value node in the tree, and it is cheap. The lesson of Alexandria is not that books burn, it is that single copies burn. Push copies into every library, temple archive and private collection as far as the trade routes reach. This is what carries the programme through the collapse of any one state or patron. CALENDAR FLOOR is set by diffusion, not by construction: the economy needs roughly a generation to train the trades, form the capital and build the suppliers. Money cannot buy this down. Same objection as the press, multiplied. Hundreds of copies of a technical corpus in private hands is exactly what an anxious regime dislikes. Present it as a gift to the libraries of the realm and give the first copies to the ruler's own foundations.",
     "ph": 800.0,
     "pre": [
       "corpus_written",
@@ -4607,7 +4607,7 @@
       ]
     },
     "name": "Imperial patronage",
-    "note": "Approach through the a rationibus or the Praetorian Prefect, not the emperor. The optical telegraph is the demonstration that buys this: an empire's core problem is that a message to the Rhine takes weeks. Unlocks mining concessions, corvee labour and state funding, and puts a target on you.",
+    "note": "Approach through the ruler's finance officer or chief minister, not the ruler. The optical telegraph is the demonstration that buys this: a large state's core problem is that a message to its far frontier takes weeks. Unlocks mining concessions, corvee labour and state funding, and puts a target on you.",
     "ph": 900.0,
     "pre": [
       "patron_senatorial",
@@ -5277,7 +5277,7 @@
       "ablation_candidate": true
     },
     "name": "Rag paper from linen",
-    "note": "Cai Lun's paper is 105 AD in China and will not reach the Mediterranean for centuries. Ret and lime the rags, beat them to pulp with a water-driven stamper, lift on a wire mould, press and size. Cheaper than papyrus, far cheaper than parchment, and it is the substrate of everything in Module 80.",
+    "note": "Cai Lun's paper is dated 105 AD in China and took centuries to spread west of it. Ret and lime the rags, beat them to pulp with a water-driven stamper, lift on a wire mould, press and size. Cheaper than papyrus, far cheaper than parchment, and it is the substrate of everything in Module 80.",
     "ph": 400.0,
     "pre": [
       "water_power_scale",
@@ -5593,7 +5593,7 @@
     },
     "mat": {},
     "name": "Controlled experiment, hypothesis, replication, publication",
-    "note": "The hard part is not stating it, it is displacing Aristotelian authority. Risk is high because the failure mode is cultural, not technical. Multiplier on every research node thereafter. Contradicting Aristotle and Galen in public is a social act before it is an intellectual one, and their defenders hold the chairs, the patronage and the medical guild. Expect organised opposition, not curiosity.  (Needs no standing: writing down zero, or running a controlled experiment, is something a nobody can do. What standing buys is being BELIEVED, which is reputation, not a prerequisite.)",
+    "note": "The hard part is not stating it, it is displacing Aristotelian authority. Risk is high because the failure mode is cultural, not technical. Multiplier on every research node thereafter. Contradicting the received authorities in public (Aristotle and Galen where those are read, the classical commentaries elsewhere) is a social act before it is an intellectual one, and their defenders hold the chairs, the patronage and the medical guild. Expect organised opposition, not curiosity.  (Needs no standing: writing down zero, or running a controlled experiment, is something a nobody can do. What standing buys is being BELIEVED, which is reputation, not a prerequisite.)",
     "ph": 350.0,
     "pre": [],
     "req_any": [],
@@ -5751,7 +5751,7 @@
       "ablation_candidate": true
     },
     "name": "Optical semaphore chain",
-    "note": "Chappe's chain did Paris to Lille, 230 km, in minutes. Rome to the Rhine in a day instead of a month is worth more to an emperor than any weapon. THIS is the demonstration that buys imperial patronage. Requires the telescope to read the arms at distance.",
+    "note": "Chappe's chain did Paris to Lille, 230 km, in minutes. The capital to the far frontier in a day instead of a month is worth more to a ruler than any weapon. THIS is the demonstration that buys imperial patronage. Requires the telescope to read the arms at distance.",
     "ph": 700.0,
     "pre": [
       "patron_senatorial",

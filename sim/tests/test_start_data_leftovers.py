@@ -70,5 +70,17 @@ class ZincNodes(unittest.TestCase):
             self.assertEqual(recipes[material]["requires_node"], node_id)
 
 
+class NotesNotAddressedToRome(unittest.TestCase):
+    def test_notes_do_not_address_one_civilisation_by_name(self):
+        # Complaints/231: generic nodes spoke to a Roman player in the second person.
+        phrases = ("from Britain to India", "to the Rhine", "Rome to the Rhine",
+                   "will not reach the Mediterranean", "a rationibus", "software automation",
+                   "libraries of the Empire")
+        for node in _nodes().values():
+            note = node.get("note") or ""
+            for phrase in phrases:
+                self.assertNotIn(phrase, note, node["id"])
+
+
 if __name__ == "__main__":
     unittest.main()
