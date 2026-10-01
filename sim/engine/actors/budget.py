@@ -1,33 +1,21 @@
 """A state's standing need: what it keeps up and what that costs this year.
 
 Each line is a thing the state maintains, priced from the physical quantity it
-needs: soldiers and officials at the going wage, and the iron an army wears
+needs: soldiers, officials, road menders, masons, courtiers and sailors at the going wage,
+grain for the dole, and the iron an army wears
 out at the price the market quotes. The same lines say which people it takes
 from the labour pool and which goods it buys, so spending is demand. A line's
 `kind` is the claim the state makes on a taxpayer when it cannot pay for the
 line: goods in kind (requisition) or service in office.
 """
-from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
+from . import budget_lines
+from .budget_line import Line
 from .tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
 
 # What an army wears out, as a material in the tree's own terms.
 EQUIPMENT_MATERIAL = "iron_bar_kg"
-
-
-@dataclass
-class Line:
-	name: str
-	kind: str  # "requisition" or "office"
-	labour: Dict[str, float] = field(default_factory=dict)  # trade -> people kept
-	wages: float = 0.0
-	materials: Dict[str, float] = field(default_factory=dict)  # commodity -> tonnes a year
-	material_cost: float = 0.0
-
-	@property
-	def money(self) -> float:
-		return self.wages + self.material_cost
 
 
 def army_line(world: Any, soldiers: float) -> List[Line]:
@@ -40,8 +28,12 @@ def army_line(world: Any, soldiers: float) -> List[Line]:
 				 world.material_cost(EQUIPMENT_MATERIAL, tonnes))]
 
 
+def officials_kept(world: Any) -> float:
+	return world.population_total() * world.state_capacity() / ADMINISTRATIVE_SPAN
+
+
 def administration_line(world: Any) -> List[Line]:
-	officials = world.population_total() * world.state_capacity() / ADMINISTRATIVE_SPAN
+	officials = officials_kept(world)
 	if officials <= 0.0:
 		return []
 	return [Line("administration", "office", {"scribe": officials},
@@ -53,7 +45,9 @@ def standing_lines(world: Any, soldiers: Optional[float] = None) -> List[Line]:
 	(the force it wants when not given)."""
 	if soldiers is None:
 		soldiers = world.army_wanted()
-	return army_line(world, soldiers) + administration_line(world)
+	return (army_line(world, soldiers) + administration_line(world) + budget_lines.roads_line(world)
+			+ budget_lines.public_buildings_line(world) + budget_lines.court_line(world, officials_kept(world))
+			+ budget_lines.dole_line(world) + budget_lines.navy_line(world))
 
 
 def army_next_year(soldiers: float, wanted: float, funded: float) -> float:

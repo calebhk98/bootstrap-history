@@ -68,10 +68,13 @@ class SimWorld(BudgetView):
 		return self._once("weights", self._sim.state_trait_weights)
 
 	def society_output(self) -> float:
-		"""Yearly value of the working population's labour at the unskilled wage."""
+		"""Yearly value of the working population's labour at the unskilled wage: the working
+		people not under arms, scaled by what the economy is making at present."""
 		sim = self._sim
-		return self._once("output", lambda: (
-			sim.population.working_age * sim.HOURS_PER_PERSON_YEAR * sim.wage_per_hour("labourer")))
+		def compute() -> float:
+			producing = max(0.0, sim.population.working_age - self.soldiers_under_arms())
+			return producing * sim.HOURS_PER_PERSON_YEAR * sim.wage_per_hour("labourer") * sim.state.economy.output_factor
+		return self._once("output", compute)
 
 	def state_revenue(self) -> float:
 		sim = self._sim

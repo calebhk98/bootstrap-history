@@ -43,8 +43,8 @@ def grown(game, employees=2000.0, capital=60000000.0, eminence=25.0):
 game, treasury = budget_sim()
 world = SimWorld(game)
 lines = {line.name: line for line in budget.standing_lines(world)}
-check("the state's standing need has an army line and an administration line",
-      set(lines) == {"army", "administration"}, sorted(lines))
+check("the state's standing need has an army line and an administration line among its others",
+      {"army", "administration"} <= set(lines), sorted(lines))
 soldiers = lines["army"].labour.get("labourer", 0.0)
 check("the army is the civilisation's opening standing force, held at the same share of the people",
       abs(soldiers - game.civ["standing_army"]) < 1e-6 * soldiers, (soldiers, game.civ.get("standing_army")))
@@ -60,8 +60,9 @@ check("administration is paid officials, who are scribes",
 bigger, _t = budget_sim()
 for cohort in ("children", "working_age", "elderly"):
     setattr(bigger.population, cohort, getattr(bigger.population, cohort) * 2.0)
-check("a larger population keeps a larger army",
-      budget.standing_lines(SimWorld(bigger))[0].labour["labourer"] > soldiers, soldiers)
+check("a larger population keeps more officials; the garrison follows the frontier, not the head count",
+      budget.standing_lines(SimWorld(bigger))[1].labour["scribe"] > lines["administration"].labour["scribe"]
+      and abs(budget.standing_lines(SimWorld(bigger))[0].labour["labourer"] - soldiers) < 1e-6 * soldiers, soldiers)
 unarmed, _t = budget_sim(army=0.0)
 check("a civilisation that opens with no standing force has no army line",
       "army" not in {line.name for line in budget.standing_lines(SimWorld(unarmed))})
@@ -76,7 +77,7 @@ check("the whole of the state's revenue is booked as income from taxation",
 need = sum(line.money for line in budget.standing_lines(SimWorld(game)))
 check("the state spends its standing need, by purpose",
       outlays.get("army", 0.0) > 0.0 and outlays.get("administration", 0.0) > 0.0
-      and abs(outlays["army"] + outlays["administration"] - need) < 0.02 * need, (outlays, need))
+      and abs(sum(outlays.values()) - need) < 0.02 * need, (outlays, need))
 check("a state in surplus keeps the difference as reserve and the ledger balances",
       abs(treasury.money - (sum(income.values()) - sum(outlays.values()))) < 1e-6 * revenue
       and treasury.money > 0.0, (treasury.money, income, outlays))
@@ -93,7 +94,7 @@ treasury.money = reserve
 one_year(heavy)
 check("a reserve that covers part of the deficit is spent down to nothing, not below",
       abs(treasury.money) < 1e-6 * need, treasury.money)
-spent = sum(treasury.record.outlays.get(name, 0.0) for name in ("army", "administration"))
+spent = sum(treasury.record.outlays.values())
 check("spending is cut to what revenue and reserve afford",
       abs(spent - (revenue + reserve)) < 1e-6 * need, (spent, revenue, reserve))
 check("the cut is recorded as unfunded need, by line",
@@ -117,8 +118,10 @@ check("the army's and the officials' staff are held in the government's workforc
       treasury.workforce)
 reach = game.reachable_trade_population("labourer") + game.actor_staff_fte("labourer")
 share_of_nation = game.civ["standing_army"] / game.civ["population"] * game.population.total / game.population.working_age
+army_share = lines["army"].labour["labourer"] / game.population.working_age
+other_labourers = sum(line.labour.get("labourer", 0.0) for line in budget.standing_lines(SimWorld(game))[1:])
 check("the state takes the same share of the founder's local pool as of the nation's working people",
-      abs(treasury.workforce["labourer"] - share_of_nation * reach) < 1e-6 * reach,
+      abs(treasury.workforce["labourer"] - (army_share + other_labourers / game.population.working_age) * reach) < 1e-6 * reach,
       (treasury.workforce, share_of_nation, reach))
 check("what the state employs is no longer on offer to the founder",
       game.actor_staff_fte("scribe") > scribes_before and game.market_supply("labourer") < free_before,

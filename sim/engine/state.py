@@ -426,6 +426,8 @@ class ActorRecord:
 	levy_base: float = 0.0
 	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
 	army: float = 0.0
+	# what the treasury paid the founder as patron this year
+	patron_grant: float = 0.0
 
 
 @dataclass
