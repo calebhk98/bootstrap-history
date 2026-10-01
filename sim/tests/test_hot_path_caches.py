@@ -78,3 +78,79 @@ _world = _CountingWorld([])
 _ManyConcerns().output_of("steel", _world)
 check("an actor with no concern making the material asks about none",
       _world.asked == [], _world.asked)
+
+
+# --- the registry's supply sum and staffing tally.
+from sim.engine.actors.registry import ActorRegistry as _Registry
+from sim.engine.state import ActorRecord as _Record, ActorsState as _ActorsState
+
+
+class _TonnesWorld:
+    year = 100
+
+    def __init__(self, makers):
+        self.makers, self.asked = frozenset(makers), []
+
+    def concerns_making(self, material):
+        return self.makers
+
+    def concern_output_tonnes(self, node_id, material, opened_year, staffed):
+        self.asked.append(node_id)
+        return 0.5
+
+
+def _registry_of_firms(count):
+    state = _ActorsState()
+    for number in range(count):
+        state.records["firm:%03d" % number] = _Record(
+            kind="firm", concerns={"plain_%03d" % number},
+            workforce={"smith": 1.5})
+    registry = _Registry(state)
+    for number in [n for n in (17, 42) if n < count]:
+        registry.actors["firm:%03d" % number].concerns.add("steelworks")
+    return registry
+
+
+_registry = _registry_of_firms(60)
+_world = _TonnesWorld(["steelworks"])
+_actors_asked = []
+_original_output_of = _Actor.output_of
+
+
+def _counting_output_of(self, material, world):
+    _actors_asked.append(self.actor_id)
+    return _original_output_of(self, material, world)
+
+
+_Actor.output_of = _counting_output_of
+try:
+    _total = _registry.supply("steel", _world)
+finally:
+    _Actor.output_of = _original_output_of
+check("registry supply asks only the actors that hold a concern making the material",
+      _actors_asked == ["firm:017", "firm:042"] and abs(_total - 1.0) < 1e-12,
+      (_actors_asked, _total))
+_registry.actors["firm:042"].record.exited_year = 90
+_world = _TonnesWorld(["steelworks"])
+check("...and an exited firm no longer supplies",
+      abs(_registry.supply("steel", _world) - 0.5) < 1e-12)
+
+_registry = _registry_of_firms(10)
+_registry.consider_entry = lambda world: []
+for _actor in _registry.actors.values():
+    _actor.advance = lambda world: None
+_registry.staff_by_trade()
+_registry.advance(_TonnesWorld([]))
+check("a year in which no actor's staff changed keeps the staffing tally",
+      _registry._staff is not None)
+
+
+def _hire(world):
+    _registry.actors["firm:003"].workforce["smith"] += 1.0
+
+
+_registry.actors["firm:003"].advance = _hire
+_registry.advance(_TonnesWorld([]))
+check("a year in which an actor took people on recounts the staffing",
+      _registry._staff is None or _registry._staff["smith"] == 10 * 1.5 + 1.0,
+      _registry._staff)
