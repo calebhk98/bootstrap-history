@@ -78,7 +78,7 @@ class ForeignEconomiesMixin:
         year = self.state.scenario.year
         own = self.civ.get("id")
         return sorted(record["civilization"] for record in foreign_economy_records()
-                      if record["civilization"] != own
+                      if record.get("enabled", False) and record["civilization"] != own
                       and record["from_year"] <= year <= record["until_year"])
 
     def _foreign_economy_facts(self, civilization_id):

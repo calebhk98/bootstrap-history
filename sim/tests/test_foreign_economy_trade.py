@@ -7,9 +7,21 @@ lift the price abroad, and the founder's sales are part of the same market.
 """
 from .harness import *  # noqa: F401,F403
 
+from sim.engine import foreign_economies as _foreign_module
+
 SILK = "silk_kg"
 HIGH_VALUE_GOOD = "silver_kg"
 PARTNER = "han_china_100ad"
+
+
+_shipped_records = _foreign_module.foreign_economy_records
+
+
+def _enabled_records():
+    return tuple(dict(record, enabled=True) for record in _shipped_records())
+
+
+_foreign_module.foreign_economy_records = _enabled_records
 
 
 def rome():
@@ -114,8 +126,11 @@ check("the foreign book survives a save and a load",
       None)
 
 # --- the data file only names civilisations that exist.
-from sim.engine.foreign_economies import foreign_economy_records
-for _record in foreign_economy_records():
+for _record in _foreign_module.foreign_economy_records():
     check("a foreign economy names a civilisation file that exists: " + _record["civilization"],
           os.path.exists(os.path.join(ROOT, "data", "civilizations",
                                       _record["civilization"] + ".json")), None)
+
+# --- off by default: the shipped data enables nothing.
+check("the shipped data file enables no foreign economy",
+      not any(record.get("enabled") for record in _shipped_records()), None)
