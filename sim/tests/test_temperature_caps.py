@@ -324,11 +324,15 @@ class RealDataAcceptanceTests(unittest.TestCase):
             rent_hours_per_kg_by_material=rent)
         return chosen.get("thermal_mj")
 
-    def test_england_1300_burns_a_real_fuel_not_friction(self):
-        self.assertEqual(self._thermal_choice("england_1300"), "thermal_mj_charcoal")
+    # Coal is priceable once iron_bar_kg is makeable (its shaft capital draws on bar),
+    # so the cheapest real fuel may be either solid fuel; friction must never win.
+    REAL_FUELS = ("thermal_mj_charcoal", "thermal_mj_coal")
 
-    def test_rome_100ad_still_burns_charcoal(self):
-        self.assertEqual(self._thermal_choice("rome_100ad"), "thermal_mj_charcoal")
+    def test_england_1300_burns_a_real_fuel_not_friction(self):
+        self.assertIn(self._thermal_choice("england_1300"), self.REAL_FUELS)
+
+    def test_rome_100ad_burns_a_real_fuel_not_friction(self):
+        self.assertIn(self._thermal_choice("rome_100ad"), self.REAL_FUELS)
 
     def test_thermal_mj_friction_cannot_clear_the_universal_floor(self):
         # The physical fact this whole fix rests on: friction's own stated

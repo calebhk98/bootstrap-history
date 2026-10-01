@@ -4819,14 +4819,15 @@
   "cat": "application",
   "pre": [
    "el2_electroplating_and_electrorefining",
-   "power_grid",
    "analytical_chemistry"
   ],
   "req_any": [
    {
     "group": "current",
     "options": {
-     "power_grid": 1.0
+     "power_grid": 1.0,
+     "el2_dynamo_shunt_wound": 0.95,
+     "el2_rectifier_metal_layer": 0.9
     }
    },
    {

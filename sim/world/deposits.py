@@ -164,16 +164,17 @@ timbering it, building the hoist, or (for Las Medulas) building the aqueduct
 hardness alone, and `shafts_needed` counts how many a district's output
 requires from what one shaft's hoist can raise (surface and hand-worked
 alluvial ground need no shaft, so their fixed cost is zero); `amortized_sinking_cost_labour_hours_per_kg`
-spreads it over the deposit's whole assumed lifetime metal output (the same
-reserve figure `DepositState` already uses); `total_cost_labour_hours_per_kg`
+spreads it over the metal raised during one shaft service life
+(`SHAFT_SERVICE_LIFE_YEARS`: timbering and headworks are rebuilt on that
+timescale, so the horizon belongs to the works and not to the ore body; it is
+deliberately a different knob from `DEPOSIT_ASSUMED_WORKING_LIFE_YEARS`, which
+only sizes the demonstration reserve); `total_cost_labour_hours_per_kg`
 is the two added together, and is what `supply_curve` and
-`find_marginal_deposit` now sort and price by. Because the fixed cost is the
-SAME whichever reserve size it is divided by, a deposit with a huge total
-reserve pays almost nothing per kilogram for its shaft; a deposit with a
-tiny one can be pushed out of the market by its shaft cost alone even if its
-ore is rich - exactly the "uneconomic at low output, economic at high
-output" shape a pure per-tonne cost can never produce on its own, because a
-per-tonne cost does not care how many tonnes there turn out to be.
+`find_marginal_deposit` now sort and price by. Whether the sinking share is
+large enough to reorder a supply curve is measured, not asserted: run the
+script in Complaints/56. A deposit with a tiny output can be pushed out of
+the market by its shaft cost alone even if its ore is rich, which a pure
+per-tonne cost cannot produce.
 
 DECLINING GRADE WITHIN A DEPOSIT - THE INTENSIVE MARGIN, AND THE STAKEHOLDER'S
 SECOND OBSERVATION. Everything above `find_marginal_deposit` already models
@@ -538,6 +539,19 @@ SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD = declare(
     why="The water a shaft meets must be lifted out; the works to do it "
         "grow with the height to lift.")
 
+SHAFT_SERVICE_LIFE_YEARS = declare(
+    "SHAFT_SERVICE_LIFE_YEARS", 30.0, kind="engineering_estimate",
+    unit="years a sunk shaft and its headworks serve before being rebuilt",
+    source="Timber shaft lining, windlass frame and drainage works rot and "
+           "are replaced on a timescale of decades in the documented "
+           "ancient and medieval mining districts.",
+    confidence="D",
+    why="The horizon over which one shaft's build cost is spread. It is a "
+        "property of the works, not of the ore body, so it is separate "
+        "from DEPOSIT_ASSUMED_WORKING_LIFE_YEARS (a stock for the depletion "
+        "demonstration); a shaft that outlasts neither is rebuilt, and each "
+        "rebuild costs the same again.")
+
 HOIST_FRAME_HOURS = declare(
     "HOIST_FRAME_HOURS", 500.0, kind="temporary_heuristic",
     unit="labourer-hours per shaft", source=None, confidence="D",
@@ -784,34 +798,35 @@ def build_cost_labour_hours_per_tonne_year(deposit: "Deposit") -> float:
 
 
 def amortized_sinking_cost_labour_hours_per_kg(
-        deposit: "Deposit", working_life_years: Optional[float] = None) -> float:
+        deposit: "Deposit", shaft_service_life_years: Optional[float] = None) -> float:
     """The whole district's build cost (shafts for its own annual output
-    times the per-shaft cost), spread over its assumed lifetime metal
-    output. Zero where no works are needed.
+    times the per-shaft cost), spread over the metal raised during one
+    shaft service life (SHAFT_SERVICE_LIFE_YEARS), not over the assumed
+    reserve. Zero where no works are needed.
     """
     fixed_hours = build_cost_labour_hours(deposit, deposit.quantity_tonnes_per_year)
     if fixed_hours <= 0.0:
         return 0.0
-    working_life_years = (DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
-                           if working_life_years is None else working_life_years)
-    total_reserve_kg = (deposit.quantity_tonnes_per_year * working_life_years
-                         * KILOGRAMS_PER_TONNE)
-    if total_reserve_kg <= 0.0:
+    shaft_service_life_years = (SHAFT_SERVICE_LIFE_YEARS
+                                if shaft_service_life_years is None
+                                else shaft_service_life_years)
+    output_over_service_life_kg = (deposit.quantity_tonnes_per_year
+                                   * shaft_service_life_years * KILOGRAMS_PER_TONNE)
+    if output_over_service_life_kg <= 0.0:
         return float("inf")
-    return fixed_hours / total_reserve_kg
+    return fixed_hours / output_over_service_life_kg
 
 
-def total_cost_labour_hours_per_kg(
-        deposit: "Deposit", working_life_years: Optional[float] = None) -> float:
+def total_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
     """The deposit's full unit cost: the recurring extraction cost plus its
-    fixed sinking cost amortised over its assumed lifetime output. This is
+    fixed sinking cost amortised over one shaft service life. This is
     what supply_curve and find_marginal_deposit actually sort and price by
     - see the module docstring's SINKING COST section for why a pure
     per-tonne cost cannot, on its own, make a poor deposit uneconomic at
     low demand and economic at high demand.
     """
     return (extraction_cost_labour_hours_per_kg(deposit)
-            + amortized_sinking_cost_labour_hours_per_kg(deposit, working_life_years))
+            + amortized_sinking_cost_labour_hours_per_kg(deposit))
 
 
 # ============================================================================
@@ -1130,31 +1145,25 @@ SupplyCurvePoint = collections.namedtuple("SupplyCurvePoint", [
 ])
 
 
-def supply_curve(
-        deposits: List["Deposit"],
-        working_life_years: Optional[float] = None) -> List["SupplyCurvePoint"]:
+def supply_curve(deposits: List["Deposit"]) -> List["SupplyCurvePoint"]:
     """`deposits`, sorted cheapest-first, each annotated with its own FULL
     unit cost (total_cost_labour_hours_per_kg: recurring extraction plus
     amortised sinking - see the module docstring's SINKING COST section)
     and the running total of quantity available at or below that cost -
     the object Complaints/32 says this project is missing entirely. Ties
     broken by name, so the curve is deterministic regardless of the order
-    `deposits` arrives in. `working_life_years` is forwarded to
-    total_cost_labour_hours_per_kg for every deposit; the default (None)
-    uses DEPOSIT_ASSUMED_WORKING_LIFE_YEARS for all of them, matching
-    DepositState's own default reserve.
+    `deposits` arrives in.
     """
     ordered = sorted(
         deposits,
-        key=lambda d: (total_cost_labour_hours_per_kg(d, working_life_years), d.name))
+        key=lambda d: (total_cost_labour_hours_per_kg(d), d.name))
     points = []
     cumulative = 0.0
     for deposit in ordered:
         cumulative += deposit.quantity_tonnes_per_year
         points.append(SupplyCurvePoint(
             deposit=deposit,
-            own_cost_labour_hours_per_kg=total_cost_labour_hours_per_kg(
-                deposit, working_life_years),
+            own_cost_labour_hours_per_kg=total_cost_labour_hours_per_kg(deposit),
             quantity_tonnes_per_year=deposit.quantity_tonnes_per_year,
             cumulative_quantity_tonnes_per_year=cumulative))
     return points
@@ -1183,8 +1192,8 @@ MarginalOutcome = collections.namedtuple("MarginalOutcome", [
 
 
 def find_marginal_deposit(
-        deposits: List["Deposit"], quantity_demanded_tonnes_per_year: float,
-        working_life_years: Optional[float] = None) -> "MarginalOutcome":
+        deposits: List["Deposit"],
+        quantity_demanded_tonnes_per_year: float) -> "MarginalOutcome":
     """The Ricardian rent calculation this module exists for.
 
     Walks `deposits` cheapest-first, filling `quantity_demanded_tonnes_per_
@@ -1207,13 +1216,13 @@ def find_marginal_deposit(
     "Cost" throughout is supply_curve's own total_cost_labour_hours_per_kg
     (recurring extraction plus amortised sinking cost - see the module
     docstring's SINKING COST section), not the older extraction-only
-    figure; `working_life_years` is forwarded to it unchanged.
+    figure.
     """
     if quantity_demanded_tonnes_per_year < 0:
         raise ValueError("quantity demanded cannot be negative: %r"
                           % (quantity_demanded_tonnes_per_year,))
 
-    points = supply_curve(deposits, working_life_years)
+    points = supply_curve(deposits)
     remaining = quantity_demanded_tonnes_per_year
     allocations = []
     marginal_deposit = None
@@ -1405,8 +1414,7 @@ def simulate_depletion(
                 quantity_tonnes_per_year=state.annual_capacity_tonnes())
             for state in available]
         outcome = find_marginal_deposit(
-            this_year_deposits, quantity_demanded_tonnes_per_year,
-            working_life_years=working_life_years)
+            this_year_deposits, quantity_demanded_tonnes_per_year)
 
         # find_marginal_deposit sorts internally (supply_curve), so
         # outcome.allocations is NOT in `available`'s order - matching by
