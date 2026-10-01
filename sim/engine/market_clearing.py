@@ -105,8 +105,9 @@ class MarketClearingMixin:
         if entry is None:
             return None
         flows = self._market_flows() if with_flows else NO_FLOWS
+        prices = self._material_prices()
         signature = (self.population.total, self.state.economy.economy,
-                     id(self._material_prices()), entry["capacity_tonnes"],
+                     entry["capacity_tonnes"],
                      entry["stock_tonnes"], flows["bought"].get(commodity),
                      flows["drawn"].get(commodity), flows["sold"].get(commodity),
                      self.actor_market_version(), self.state.scenario.year)
@@ -114,11 +115,11 @@ class MarketClearingMixin:
         if cache is None:
             cache = self.household._market_outcome_cache = {}
         cached = cache.get((commodity, with_flows))
-        if cached is not None and cached[0] == signature:
+        if cached is not None and cached[0] == signature and cached[2] is prices:
             return cached[1]
         conditions = self._market_conditions(commodity, entry, with_flows)
         result = (conditions, market.clear_market(conditions))
-        cache[(commodity, with_flows)] = (signature, result)
+        cache[(commodity, with_flows)] = (signature, result, prices)
         return result
 
     # ---- what callers read --------------------------------------------------
