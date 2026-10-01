@@ -1,6 +1,6 @@
 # Trade only covers goods both economies can make; foreign economies stand still
 
-**Status:** open
+**Status:** partly - goods only one side makes now cross when value per tonne pays the freight; foreign technology and population are still frozen
 
 `_foreign_price_pair` in `sim/engine/foreign_economies.py` trades a good only
 when the home society and the partner can both make it with the technologies
@@ -17,3 +17,13 @@ cannot make, priced from the importer's side; foreign technology that advances
 through its own society actors (`docs/architecture/ACTORS_NEXT.md` increment
 7). Tariffs, embargoes, exchange rates between coins other than by metal
 content, and foreign competitors as firm actors remain `Complaints/113`.
+
+## Progress
+
+A good only this society makes flows to a partner whose households want it
+(the partner has demand and no capacity); a good only the partner makes flows
+in against this society's own household demand, with no home capacity. Which
+goods cross is decided by value per tonne against the route's freight, not by
+name. Open: the partner's technology and population stay at its civilisation
+file's opening (`docs/architecture/ACTORS_NEXT.md` increment 7), and tariffs,
+embargoes and exchange rates (`Complaints/113`).

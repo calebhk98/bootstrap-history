@@ -13,26 +13,17 @@ and so part of the trade.
 Prices of both sides are compared in home money: a foreign price in its own
 coin is worth the coin's metal at the home price of that metal.
 """
+import dataclasses
 import functools
 import json
 import os
 
-from sim.constants import declare
 from sim.world import market, trade_between
 
-from .data import (ROOT, calculated_goods_prices, goods_provenance, haversine_km, load_civ,
-                   starting_schedule)
+from .data import ROOT, calculated_goods_prices, goods_provenance, load_civ, starting_schedule
+from .foreign_capacity import ForeignCapacityMixin
+from .foreign_routes import ForeignRoutesMixin
 from .project_materials import tonnes_per_unit
-
-FOREIGN_CAPACITY_PER_HEAD_OF_HOME = declare(
-    "FOREIGN_CAPACITY_PER_HEAD_OF_HOME", 1.0, kind="temporary_heuristic",
-    unit="foreign output per head over the home society's output per head",
-    source=None, confidence="D",
-    why="A foreign economy's capacity for a commodity it can price is the "
-        "home society's, scaled by population: its mines and workshops are "
-        "not yet read from its own regions' geology (Complaints/113). The "
-        "foreign household demand at the opening equals that capacity, so "
-        "its market opens in balance.")
 
 FOREIGN_ECONOMIES_PATH = os.path.join(ROOT, "data", "world", "foreign_economies.json")
 
@@ -71,7 +62,7 @@ def _foreign_prices_in_own_coin(civilization_id):
         money_per_labour_hour=starting_schedule(civilization_id).money_per_labour_hour)
 
 
-class ForeignEconomiesMixin:
+class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin):
 
     def foreign_economies(self):
         """Economies trading with this society this year, sorted by id."""
@@ -89,7 +80,8 @@ class ForeignEconomiesMixin:
         if cache is None:
             cache = self.household._foreign_facts_cache = {}
         cached = cache.get(civilization_id)
-        if cached is not None and cached[0] is prices:
+        known_techs = len(self.state.projects.done)
+        if cached is not None and cached[0] is prices and cached[2] == known_techs:
             return cached[1]
         civilization = load_civ(civilization_id)
         coin = civilization["coin_standard"]
@@ -99,6 +91,7 @@ class ForeignEconomiesMixin:
             home_money_per_coin = coin["kg_per_unit"] * coin_price
             foreign_prices = {material: price * home_money_per_coin for material, price
                               in _foreign_prices_in_own_coin(civilization_id).items()}
+        route = self._foreign_route(civilization)
         facts = {"solved_materials": _foreign_solved_materials(civilization_id),
                  "home_solved_materials": frozenset(
                      material for material, source in goods_provenance(
@@ -106,58 +99,90 @@ class ForeignEconomiesMixin:
                          civilization_id=self.civ.get("id")).items() if source == "solved"),
                  "population": float(civilization.get("population") or 0.0),
                  "prices_in_home_money": foreign_prices,
+                 "route": route,
                  "freight_per_tonne": self._route_freight_per_tonne(civilization)}
-        cache[civilization_id] = (prices, facts)
+        cache[civilization_id] = (prices, facts, known_techs)
         return facts
 
-    def _route_freight_per_tonne(self, civilization):
-        """Home money to haul a tonne from the foreign economy's home regions
-        to this society's: great-circle distance, scaled by the routes'
-        difficulty, at the land freight cost per tonne-km."""
-        regions = [self._regions[region_id] for region_id in civilization.get("home_regions") or []
-                   if region_id in self._regions]
-        if not regions:
-            return float("inf")
-        latitude = sum(region["lat"] for region in regions) / len(regions)
-        longitude = sum(region["lon"] for region in regions) / len(regions)
-        distance_km = haversine_km(*self._home_centroid, latitude, longitude)
-        own = [self._regions[region_id] for region_id in self.civ.get("home_regions") or []
-               if region_id in self._regions]
-        difficulty = [region.get("route_difficulty", 1.0) for region in regions + own]
-        inputs = self._land_freight_physical_inputs()
-        feed_price = self._material_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
-        per_tonne_km = (inputs.feed_kg_per_tonne_km * feed_price
-                        + inputs.driver_hours_per_tonne_km
-                        * self.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE))
-        return per_tonne_km * distance_km * (sum(difficulty) / len(difficulty))
+    def _commodity_materials(self, commodity):
+        """Material keys that count as the commodity: the commodity's own
+        name, the ledger's grouping and every priced material the engine
+        files under it. Remembered until the price table changes."""
+        prices = self._material_prices()
+        cache = getattr(self.household, "_commodity_materials_cache", None)
+        if cache is None or cache[0] is not prices:
+            cache = self.household._commodity_materials_cache = (prices, {})
+        keys = cache[1].get(commodity)
+        if keys is None:
+            members = {material for material in prices
+                       if self._material_tag(material)[0] == commodity}
+            members.update(self._commodity_ledger().commodities.get(
+                commodity, {}).get("material_keys", []))
+            keys = cache[1][commodity] = [commodity] + sorted(members - {commodity})
+        return keys
+
+    def _foreign_trade_key(self, commodity, facts):
+        """(material key, home can make the commodity, partner can make it)
+        for the material of the commodity priced on both sides that may
+        cross a border, preferring one both can make; None when neither side
+        makes any."""
+        home_prices = self._material_prices()
+        foreign_prices = facts["prices_in_home_money"]
+        keys = [key for key in self._commodity_materials(commodity)
+                if key in home_prices and key in foreign_prices
+                and key not in not_traded_materials()]
+        home_makes = [key for key in keys if key in facts["home_solved_materials"]]
+        foreign_makes = [key for key in keys if key in facts["solved_materials"]]
+        both = [key for key in home_makes if key in foreign_makes]
+        if both:
+            return both[0], True, True
+        if home_makes or foreign_makes:
+            return (home_makes or foreign_makes)[0], bool(home_makes), bool(foreign_makes)
+        return None
 
     def _foreign_price_pair(self, commodity, facts):
         """(home, foreign) long-run price per tonne of a commodity in home
-        money, from the first material of it both economies can make and may sell
-        across a border; None when there is none."""
-        home_prices = self._material_prices()
-        foreign_prices = facts["prices_in_home_money"]
-        keys = [commodity] + sorted(self._commodity_ledger().commodities.get(
-            commodity, {}).get("material_keys", []))
-        for key in keys:
-            if (key in home_prices and key in foreign_prices
-                    and key in facts["solved_materials"] and key in facts["home_solved_materials"]
-                    and key not in not_traded_materials()):
-                per_tonne = 1.0 / tonnes_per_unit(key)
-                return home_prices[key] * per_tonne, foreign_prices[key] * per_tonne
-        return None
+        money. A side that cannot make the good takes the other side's price
+        as its cost of supply (freight is added by the route); None when
+        neither side can make it."""
+        found = self._foreign_trade_key(commodity, facts)
+        if found is None:
+            return None
+        key, home_can, foreign_can = found
+        per_tonne = 1.0 / tonnes_per_unit(key)
+        home_price = self._material_prices()[key] * per_tonne
+        foreign_price = facts["prices_in_home_money"][key] * per_tonne
+        return (home_price if home_can else foreign_price,
+                foreign_price if foreign_can else home_price)
 
-    def _foreign_entry(self, civilization_id, commodity, home_entry, facts):
-        """The foreign economy's book entry for a commodity, opened at the
-        home society's reference output scaled by population."""
+    def _output_is_sourced(self, commodity):
+        """Whether the society's output of the commodity comes from a sourced
+        table (resources.json or commodities.json) rather than the generic
+        estimate."""
+        # TEMPORARY HEURISTIC: a generic estimate (often the ceiling) is not a
+        # level to trade against, so a good this society makes crosses a
+        # border only where its output is sourced (Complaints/113).
+        return (commodity in self.res["empire_output_100ad"]
+                or commodity in self._commodity_ledger().commodities)
+
+    def _foreign_sides(self, commodity, facts):
+        """(home can make it, partner can make it)."""
+        found = self._foreign_trade_key(commodity, facts)
+        return (False, False) if found is None else found[1:]
+
+    def _foreign_entry(self, civilization_id, commodity, facts):
+        """The foreign economy's book entry for a commodity, opened from its
+        own society (foreign_capacity.py); None when it neither makes nor
+        wants the good."""
         book = self.state.economy.foreign_market_book.setdefault(civilization_id, {})
         entry = book.get(commodity)
         if entry is None:
-            scale = (FOREIGN_CAPACITY_PER_HEAD_OF_HOME * facts["population"]
-                     / self._opening_population())
-            reference = home_entry["reference_tonnes"] * scale
+            capacity, demand = self.foreign_opening(
+                civilization_id, commodity, facts["solved_materials"])
+            if not demand > 0.0:
+                return None
             entry = book[commodity] = {
-                "reference_tonnes": reference, "capacity_tonnes": reference,
+                "reference_tonnes": demand, "capacity_tonnes": capacity,
                 "stock_tonnes": 0.0, "price_ratio": 1.0, "trade_tonnes": 0.0}
         return entry
 
@@ -173,7 +198,8 @@ class ForeignEconomiesMixin:
     def foreign_trade(self, commodity, home_entry, home_conditions):
         """The home market's conditions after trade with every foreign
         economy, and [(economy id, tonnes imported (negative when exported),
-        the foreign economy's outcome)]. Nearest partner first."""
+        the foreign economy's outcome)]. Nearest partner first. A good this
+        society cannot make has no home capacity once a partner offers it."""
         partners = []
         for civilization_id in self.foreign_economies():
             facts = self._foreign_economy_facts(civilization_id)
@@ -183,7 +209,19 @@ class ForeignEconomiesMixin:
         flows = []
         for freight, civilization_id, facts, (home_price, foreign_price) in sorted(
                 partners, key=lambda partner: partner[:2]):
-            entry = self._foreign_entry(civilization_id, commodity, home_entry, facts)
+            home_makes = self._foreign_sides(commodity, facts)[0]
+            if home_makes and not self._output_is_sourced(commodity):
+                continue
+            entry = self._foreign_entry(civilization_id, commodity, facts)
+            if entry is None:
+                continue
+            if not home_makes:
+                home_demand = self.home_unmade_demand_tonnes(commodity)
+                if not home_demand > 0.0:
+                    continue
+                home_conditions = dataclasses.replace(
+                    home_conditions, society_capacity_tonnes=0.0, stock_tonnes=0.0,
+                    household_demand_at_anchor_tonnes=home_demand)
             outcome = trade_between.clear_trading_markets(
                 home_conditions, self._foreign_conditions(entry, home_conditions),
                 home_price, foreign_price, freight)
@@ -202,6 +240,14 @@ class ForeignEconomiesMixin:
             entry["stock_tonnes"] = market.stock_after_year(outcome)
             entry["price_ratio"] = outcome.price_ratio
             entry["trade_tonnes"] = -flow
+
+    def foreign_route_legs(self, civilization_id):
+        """The legs goods travel from a partner's regions to this society's:
+        [(from region, to region, mode, km, home money per tonne)]."""
+        route = self._foreign_economy_facts(civilization_id)["route"]
+        return [] if route is None else [
+            (leg.origin, leg.destination, leg.mode, leg.distance_km, leg.cost_per_tonne)
+            for leg in route.legs]
 
     def foreign_trade_summary(self):
         """Tonnes imported and exported over every commodity in the last year

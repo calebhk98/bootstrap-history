@@ -1,6 +1,6 @@
 # Add a stronger international economy
 
-**Status:** partly - other economies are market participants: a data-named neighbour has its own solved costs and market, goods cross when the price gap exceeds route freight, the founder's trades included; foreign economies are off by default (`enabled` in `data/world/foreign_economies.json`) until 380-382 make their output credible, and enabling one is a data change; still open: foreign demand for goods only home makes and foreign technology (382), geology-based foreign output (380), sea and caravan freight (381), tariffs, embargoes, exchange rates, foreign competitors as firms
+**Status:** partly - other economies are market participants: a data-named neighbour has its own solved costs and market, goods cross when the price gap exceeds route freight, the founder's trades included; foreign economies are off by default (`enabled` in `data/world/foreign_economies.json`) until the blockers filed as 480-484 are met (measure with `python3 sim/foreign_trade_report.py`), and enabling one is a data change; built: partner output from its own regions and techniques (380), freight over the cheapest route by sea, river, caravan or cart (381), goods only one side makes (382); still open: foreign technology (382), tariffs, embargoes, exchange rates, foreign competitors as firms
 
 **Source:** playtest findings document, LATE-007. **Type:** Feature
 recommendation, roadmap-sized, partially named in the architecture plan.
