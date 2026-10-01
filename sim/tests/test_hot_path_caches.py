@@ -58,6 +58,10 @@ class _CountingWorld:
     def __init__(self, makers):
         self.makers, self.asked = frozenset(makers), []
 
+    def sectors(self):
+        # no interest groups: nothing has lost anything in this stub world
+        return {}
+
     def concerns_making(self, material):
         return self.makers
 
@@ -90,6 +94,10 @@ class _TonnesWorld:
 
     def __init__(self, makers):
         self.makers, self.asked = frozenset(makers), []
+
+    def sectors(self):
+        # no interest groups: nothing has lost anything in this stub world
+        return {}
 
     def concerns_making(self, material):
         return self.makers
