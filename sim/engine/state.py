@@ -431,6 +431,8 @@ class ActorRecord:
 	works: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	failed_copies: Dict[str, int] = field(default_factory=dict)
 	opened_year: Dict[str, int] = field(default_factory=dict)
+	# node id -> how many times the concern's founding size the firm runs it at (absent = one)
+	capacity: Dict[str, float] = field(default_factory=dict)
 	target: Optional[str] = None
 	location: Optional[str] = None
 	exited_year: Optional[int] = None

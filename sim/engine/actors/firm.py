@@ -7,15 +7,18 @@ the market with every other operator.
 from typing import Any, Callable, List, Optional
 
 from .base import RecordedActor
+from .firm_expansion import ExpansionMixin
 from .borrowing import TRACK_RECORD_YEARS
 from .tuning import EXIT_LOSS_YEARS, VALUE_HORIZON_YEARS
 
 
-class Firm(RecordedActor):
+class Firm(ExpansionMixin, RecordedActor):
 	kind = "firm"
 
 	# Set by the registry: how many other operators share a concern's market.
-	rivals_of: Optional[Callable[[str, str], int]] = None
+	rivals_of: Optional[Callable[[str, str], float]] = None
+	# Set by the registry: told when a firm changes the size it runs a concern at.
+	on_capacity_change: Optional[Callable[[], None]] = None
 
 	def imitation_candidates(self, world: Any) -> List[str]:
 		# a firm values only the concern it is aiming at
@@ -42,7 +45,9 @@ class Firm(RecordedActor):
 		"""Take on the people running a concern needs from the shared pool; the share of
 		them found, which is the share of its output that gets made."""
 		found = 1.0
+		capacity = self.capacity_of(node_id)
 		for trade, wanted in sorted(world.concern_staff(node_id).items()):
+			wanted *= capacity
 			free = world.free_fte(trade, self.actor_id)
 			if free is None:
 				continue
@@ -54,12 +59,13 @@ class Firm(RecordedActor):
 
 	def operate(self, world: Any) -> None:
 		for node_id in sorted(self.concerns):
-			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0
+			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
+			capacity = self.capacity_of(node_id)
 			found = self.staff_concern(node_id, world)
 			self.record.staffing[node_id] = found
-			takings = found * world.concern_takings(node_id, self.record.opened_year[node_id], rivals)
-			upkeep = world.upkeep(node_id)
-			wages = found * world.concern_wage_bill(node_id)
+			takings = found * world.concern_takings(node_id, self.record.opened_year[node_id], rivals, capacity)
+			upkeep = world.upkeep(node_id, capacity)
+			wages = found * world.concern_wage_bill(node_id, capacity)
 			self.credit(takings, "takings")
 			self.debit(upkeep, "upkeep")
 			self.debit(wages, "wages")
@@ -84,4 +90,7 @@ class Firm(RecordedActor):
 		self.operate(world)
 		if self.record.loss_years >= EXIT_LOSS_YEARS:
 			self.concerns.clear()
+			self.record.capacity.clear()
 			self.record.exited_year = world.year
+		else:
+			self.expand(world)

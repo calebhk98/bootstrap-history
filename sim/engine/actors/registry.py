@@ -66,6 +66,7 @@ class ActorRegistry:
 		self._bans: Optional[Dict[str, str]] = None
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
+		self._capacity_totals: Optional[Any] = None
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -81,6 +82,7 @@ class ActorRegistry:
 		actor = ACTOR_CLASSES[record.kind](actor_id, record, make_policy(record.policy_kind))
 		if isinstance(actor, Firm):
 			actor.rivals_of = self.rivals_of
+			actor.on_capacity_change = self.note_capacity_change
 			from sim.engine.economy import _InvalidatingSet
 			watch = _ConcernWatch(actor_id, self._holders, self.version)
 			record.concerns = _InvalidatingSet(record.concerns, on_change=watch)
@@ -124,17 +126,32 @@ class ActorRegistry:
 			self._demand = totals
 		return self._demand.get(commodity, 0.0)
 
-	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> int:
-		"""Concerns of goods category `category` that actors operate, counted once per operator."""
+	def note_capacity_change(self) -> None:
+		"""A firm has grown a concern: caches of the market's total supply are stale."""
+		self.version[0] += 1
+
+	def capacity_in(self, node_id: str) -> float:
+		"""Founding sizes of one concern that every active firm runs, summed."""
+		key = (self.version[0], len(self.actors))
+		if self._capacity_totals is None or self._capacity_totals[0] != key:
+			totals: Dict[str, float] = {}
+			for firm in self.active_firms():
+				for held in firm.concerns:
+					totals[held] = totals.get(held, 0.0) + firm.record.capacity.get(held, 1.0)
+			self._capacity_totals = (key, totals)
+		return self._capacity_totals[1].get(node_id, 0.0)
+
+	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> float:
+		"""Founding sizes of concerns of goods category `category` that actors operate, summed over operators."""
 		# one pass counts every category; it is kept while no firm's concerns change (an exiting firm
 		# empties its concerns first, which counts as a change)
 		key = (self.version[0], len(self.actors))
 		if self._category_counts is None or self._category_counts[0] != key:
-			counts: Dict[Any, int] = {}
+			counts: Dict[Any, float] = {}
 			for firm in self.active_firms():
 				for node_id in firm.concerns:
 					node_category = nodes[node_id].get("cat")
-					counts[node_category] = counts.get(node_category, 0) + 1
+					counts[node_category] = counts.get(node_category, 0.0) + firm.record.capacity.get(node_id, 1.0)
 			self._category_counts = (key, counts)
 		return self._category_counts[1].get(category, 0)
 
@@ -256,10 +273,12 @@ class ActorRegistry:
 	def active_firms(self) -> List[Firm]:
 		return [firm for firm in self.of_kind("firm") if firm.record.exited_year is None]  # type: ignore[misc]
 
-	def rivals_of(self, node_id: str, asking_id: str) -> int:
-		"""Other operators sharing the market for a concern, the founder included."""
+	def rivals_of(self, node_id: str, asking_id: str) -> float:
+		"""Founding sizes of the concern that other operators run in its market, the founder's included."""
 		operators = self._holders.get(node_id, ())
-		count = len(operators) - (1 if asking_id in operators else 0)
+		count = self.capacity_in(node_id)
+		if asking_id in operators:
+			count -= self.actors[asking_id].record.capacity.get(node_id, 1.0)
 		founder_operates = self.world is not None and self.world.is_public(node_id)
 		return count + (1 if founder_operates else 0)
 
