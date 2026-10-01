@@ -9,7 +9,7 @@ the live Sim - see render.py and ARCHITECTURE.md.
 
 import textwrap
 
-from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
+from .util import _coin_hoard_line, _factor, _fmt_num, _fmt_range, _pct, _wrap
 from .tree_filters import render_state_rows
 from .wave_summary import summary_line
 from .step_problems import problems_lines
@@ -72,6 +72,7 @@ def _state_money(out):
     net_plain = out.get("net_per_year")
     spend = out.get("project_spend_this_year")
     lines.append("Money: %s den" % _fmt_num(out.get("capital")))
+    lines += _coin_hoard_line(out)
     # BOTH NUMBERS, ALWAYS - NOT ONE HIDING THE OTHER: net_after_project_spend
     # alone is capital in less what you owe, less whatever went into
     # projects THIS YEAR, so starting one expensive thing makes the

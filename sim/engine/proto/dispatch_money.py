@@ -276,6 +276,7 @@ def _cmd_money(sim, nodes, cmd, ended):
         -(_sources.get("_what_the_market_will_not_absorb") or 0.0))
     return {"ok": True,
             "capital": round(sim.capital, 1),
+            "coin_hoard": sim.coin_hoard_report(),
             "cash_book": cash_book.book(sim),
             "revenue": round(sim.revenue(), 1),
             "where_the_money_comes_from": _sources,

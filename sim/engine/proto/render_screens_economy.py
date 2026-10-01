@@ -8,7 +8,7 @@ split: nothing here touches the live Sim - see render.py and ARCHITECTURE.md.
 """
 
 from .. import units_text
-from .util import _factor, _fmt_num, _pct, _wrap
+from .util import _coin_hoard_line, _factor, _fmt_num, _pct, _wrap
 from .capacity_remedies import render_remedies
 
 # render_capacity is split into one function per screen section - resources,
@@ -346,7 +346,9 @@ def render_changes(out):
 # same order as render_capacity above.
 
 def _money_header_line(out):
-    return ["Capital: %s den     Revenue: %s den/yr" % (_fmt_num(out.get("capital")), _fmt_num(out.get("revenue")))]
+    return (["Capital: %s den     Revenue: %s den/yr" % (_fmt_num(out.get("capital")), _fmt_num(out.get("revenue")))]
+            + _coin_hoard_line(out))
+
 
 
 def _money_book_block(out):

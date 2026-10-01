@@ -396,6 +396,7 @@ def _agent_state_headline_money(sim, end_year):
         # A clock you cannot see is not a constraint, it is an ambush.
         "horizon_year": end_year, "years_left": max(0, end_year - sim.year),
         "capital": round(sim.capital, 1), "revenue": round(sim.revenue(), 1),
+        "coin_hoard": sim.coin_hoard_report(),
         "upkeep": round(sim.upkeep(), 1),
         # Capital can fall even with both revenue and upkeep reported as
         # zero if nothing here shows where it went: living costs (food,
