@@ -908,9 +908,9 @@ class MaterialSupplyMixin:
             # that could be rewound by reloading. JSON has no Counter, so
             # promote whatever came back before anything adds to it.
             stock = economy._material_stock_ledger = collections.Counter(stock)
-        for key in list(stock):
-            if key in self.NON_PHYSICAL_CAPACITY_KEYS or key.endswith("_hours"):
-                economy.capacity_pool[key] = economy.capacity_pool.get(key, 0.0) + stock.pop(key)
+        non_physical = self.NON_PHYSICAL_CAPACITY_KEYS
+        for key in [key for key in stock if key in non_physical or key.endswith("_hours")]:
+            economy.capacity_pool[key] = economy.capacity_pool.get(key, 0.0) + stock.pop(key)
         return stock
 
     def _material_opening_stock(self):

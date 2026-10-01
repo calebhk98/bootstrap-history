@@ -1,4 +1,6 @@
 """The set of actors other than the founder's household, and their yearly turn."""
+from bisect import bisect_left
+from itertools import accumulate
 from typing import Any, Dict, List, Optional, Set
 
 from sim.engine.state import ActorRecord, ActorsState
@@ -48,6 +50,12 @@ class ActorRegistry:
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
 		self._staff: Optional[Dict[str, float]] = None
+		# per trade, every actor's staff in id order and the running left-to-right sum of it, kept
+		# current by re-summing from the one actor whose staff changed (see `_staff_total`)
+		self._columns: Dict[str, Any] = {}
+		self._column_position: Dict[str, int] = {}
+		self._changed_actors: Set[str] = set()
+		self._columns_synced = False
 		self._demand: Optional[Dict[str, float]] = None
 		self._acting: Optional[RecordedActor] = None
 		self._staff_basis: Dict[str, float] = {}
@@ -83,9 +91,12 @@ class ActorRegistry:
 			self._not_firms.discard(actor_id)
 		else:
 			self._not_firms.add(actor_id)
+		prior_order = self._ordered_ids
 		self._ordered_ids = None
-		self._staff = None
-		self._demand = None
+		if previous is None and self._columns and prior_order is not None and len(prior_order) == len(self.actors) - 1:
+			self._insert_into_columns(actor_id, prior_order)
+		else:
+			self.refresh_staff()
 		self._bans = None
 		return actor
 
@@ -104,8 +115,10 @@ class ActorRegistry:
 		if self._demand is None:
 			totals: Dict[str, float] = {}
 			for actor in self.actors.values():
-				for name, tonnes in actor.record.demand.items():
-					totals[name] = totals.get(name, 0.0) + tonnes
+				bought = actor.record.demand
+				if bought:
+					for name, tonnes in bought.items():
+						totals[name] = totals.get(name, 0.0) + tonnes
 			self._demand = totals
 		return self._demand.get(commodity, 0.0)
 
@@ -118,6 +131,65 @@ class ActorRegistry:
 		"""Forget the staffing and demand tallies so the next read counts every actor again."""
 		self._staff = None
 		self._demand = None
+		self._columns = {}
+		self._changed_actors = set()
+		self._columns_synced = False
+
+	def _staff_total(self, trade: str) -> float:
+		"""People of one trade across every actor, summed left to right in actor-id order, as
+		`staff_by_trade` sums them, but as of the same moments: the actors' staff as read at the
+		first count after a change, the acting actor's as it stood then."""
+		acting = self._acting
+		if not self._columns_synced:
+			if acting is not None:
+				self._staff_basis = dict(acting.workforce)
+			changed = self._changed_actors
+			if acting is not None:
+				changed = changed | {acting.actor_id}
+			for actor_id in changed:
+				self._resum_actor(actor_id)
+			self._changed_actors = set()
+			self._columns_synced = True
+		column = self._columns.get(trade)
+		if column is None:
+			if self._ordered_ids is None:
+				self._ordered_ids = sorted(self.actors)
+			if len(self._column_position) != len(self._ordered_ids):
+				self._column_position = {actor_id: place for place, actor_id in enumerate(self._ordered_ids)}
+			values = [self.actors[actor_id].record.workforce.get(trade, 0.0) for actor_id in self._ordered_ids]
+			if acting is not None:
+				values[self._column_position[acting.actor_id]] = self._staff_basis.get(trade, 0.0)
+			column = self._columns[trade] = (values, list(accumulate(values, initial=0.0)))
+		return column[1][-1]
+
+	def _insert_into_columns(self, actor_id: str, order: List[str]) -> None:
+		"""Add one new actor to the id order and to every counted trade's column, re-summing
+		from its place; the next count then re-reads the acting actor's staff."""
+		place = bisect_left(order, actor_id)
+		order.insert(place, actor_id)
+		self._ordered_ids = order
+		self._column_position = {identifier: index for index, identifier in enumerate(order)}
+		staff = self.actors[actor_id].record.workforce
+		for trade, (values, running) in self._columns.items():
+			values.insert(place, staff.get(trade, 0.0))
+			running[place + 1:] = list(accumulate(values[place:], initial=running[place]))[1:]
+		self._staff = None
+		self._demand = None
+		self._columns_synced = False
+
+	def _resum_actor(self, actor_id: str) -> None:
+		"""Bring every counted trade's column up to the actor's present staff."""
+		actor = self.actors.get(actor_id)
+		place = self._column_position.get(actor_id)
+		if actor is None or place is None:
+			self._columns = {}
+			return
+		staff = actor.record.workforce
+		for trade, (values, running) in self._columns.items():
+			people = staff.get(trade, 0.0)
+			if people != values[place]:
+				values[place] = people
+				running[place + 1:] = list(accumulate(values[place:], initial=running[place]))[1:]
 
 	def staff_by_trade(self) -> Dict[str, float]:
 		"""People of each trade every recorded actor employs, in full-time equivalents."""
@@ -135,7 +207,7 @@ class ActorRegistry:
 
 	def staff_fte(self, trade: str, excluding: Optional[str] = None) -> float:
 		"""People of one trade the actors employ, leaving out one actor's own staff."""
-		total = self.staff_by_trade().get(trade, 0.0)
+		total = self._staff_total(trade)
 		if excluding is not None and excluding in self.actors:
 			total -= self.actors[excluding].workforce.get(trade, 0.0)
 		return max(0.0, total)
@@ -185,8 +257,13 @@ class ActorRegistry:
 			actor.advance(world)
 			# it stays when the acting actor's staff is what the count saw; the first actor of a
 			# year always recounts, since anything between years is unseen
-			if first or actor.workforce != self._staff_basis:
+			if first:
 				self.refresh_staff()
+			elif actor.workforce != self._staff_basis:
+				self._staff = None
+				self._demand = None
+				self._changed_actors.add(actor.actor_id)
+				self._columns_synced = False
 			first = False
 		self._acting = None
 		self.consider_entry(world)
