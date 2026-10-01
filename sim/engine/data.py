@@ -30,7 +30,7 @@ from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
-from . import money_units, node_revenue, wage_provider
+from . import energy_prices, money_units, node_revenue, wage_provider
 from .default_civilisation import default_civilisation_id
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
@@ -355,7 +355,10 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
         node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
-    node_revenue.apply_revenue(nodes.values(), goods, wages, rate)
+    energy = energy_prices.graded(held_technology_ids, document, goods, civilization_id)
+    node_revenue.apply_revenue(nodes.values(), goods, wages, rate, energy)
+    for node in nodes.values():
+        node["_derived_for"] = civilization_id or default_civilisation_id()
     money_units.price_nodes(nodes.values(), wages, rate)
     return tree, document, nodes, wages, goods
 
@@ -396,6 +399,11 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
 def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
     """The tree with every money field in the civilisation's coin."""
     schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    first = next(iter(nodes.values()), None)
+    if first is not None and civ.get("id") and first.get("_derived_for") != civ["id"]:
+        nodes = node_revenue.for_civilisation(nodes, civ, schedule)
+        money_units.price_nodes(nodes.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
+        return nodes
     return money_units.rebased_nodes(
         nodes, schedule.wages_per_hour(), schedule.money_per_labour_hour)
 

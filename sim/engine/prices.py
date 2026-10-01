@@ -307,6 +307,24 @@ def hours_to_denarii(price_in_labour_hours: float, prices_json: Dict[str, Any]) 
     return price_in_labour_hours * denarii_per_labour_hour(prices_json)
 
 
+def solver_wage_ratios(production_entries: ProductionEntries,
+                       document_ratios: Dict[str, float]) -> Dict[str, float]:
+    """Wage of every trade the entries use, in labour hours an hour: the document's, and for a trade
+    it does not list the same training rule the labour market uses."""
+    wage_by_trade = dict(document_ratios)
+    registry = solver_trade_registry(production_entries)
+    training_years = wage_provider.training_years_by_trade(registry)
+    for trade in registry:
+        wage_by_trade.setdefault(trade, wages.training_premium(
+            training_years[trade], wage_provider.reference_discount_rate()))
+    return wage_by_trade
+
+
+def default_production_entries() -> ProductionEntries:
+    """The committed production catalogue, read once per process."""
+    return _default_production_entries()
+
+
 def _solve_to_json(production_entries: ProductionEntries,
                    gate_nodes_held: FrozenSet[str], civilization_id: str,
                    document_ratios: Dict[str, float],
@@ -322,14 +340,7 @@ def _solve_to_json(production_entries: ProductionEntries,
     for entry_key in admitted_entry_keys:
         available_entries[entry_key] = production_entries[entry_key]
     producers_of = solve_prices.build_producers_index(available_entries)
-    wage_by_trade = dict(document_ratios)
-    # A trade the document does not list is paid by the same training rule
-    # the labour market uses.
-    registry = solver_trade_registry(production_entries)
-    training_years = wage_provider.training_years_by_trade(registry)
-    for trade in registry:
-        wage_by_trade.setdefault(trade, wages.training_premium(
-            training_years[trade], wage_provider.reference_discount_rate()))
+    wage_by_trade = solver_wage_ratios(production_entries, document_ratios)
 
     # RENT. See RENT WAS MISSING FROM THIS FILE in the module docstring:
     # `main()` in sim/solve_prices.py computes exactly these two dicts and

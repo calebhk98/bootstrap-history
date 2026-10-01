@@ -49,9 +49,11 @@ check("a furnace you actually run still carries real upkeep",
       NODES["met_open_hearth_furnace"]["up"])
 # A venture that sells something was never in scope for the audit - revenue
 # is what makes it a going concern in the first place - so blast_furnace,
-# which both sells cast iron and costs money to run, is untouched.
-check("a venture that already sells something keeps its upkeep untouched",
-      abs(NODES["blast_furnace"]["up"] - book_money(7000.0)) < 1e-6 and NODES["blast_furnace"]["rev"] > 0,
+# which both sells cast iron and costs money to run, keeps a running cost. That
+# cost is now derived from its staff and plant (sim/engine/node_upkeep.py),
+# not the authored figure the audit once left alone.
+check("a venture that already sells something keeps its upkeep",
+      NODES["blast_furnace"]["up"] > 0 and NODES["blast_furnace"]["rev"] > 0,
       (NODES["blast_furnace"]["up"], NODES["blast_furnace"]["rev"]))
 
 # --- JOB 2: rubber should be made, not bought. A play tester asked whether

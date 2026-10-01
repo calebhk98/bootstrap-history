@@ -43,6 +43,10 @@ class NodeMoneyAuthoredInHours(unittest.TestCase):
                         # revenue is re-derived against solved costs (sim/engine/node_revenue.py)
                         self.assertEqual(node["_rev_hours_authored"], hours)
                         hours = node["rev_hours"]
+                    if field == "up" and node.get("_upkeep_basis") == "derived":
+                        # upkeep of an output node is derived from its staff and plant (node_upkeep.py)
+                        self.assertEqual(node["_up_hours_authored"], hours)
+                        hours = node["up_hours"]
                     self.assertAlmostEqual(node[field], hours * rate,
                                            delta=1e-9 * (1 + hours * rate))
                     checked += 1
