@@ -29,7 +29,7 @@ import glob
 import json
 import os
 
-COST_FIELDS = ("cap", "ph", "yrs", "build_yrs", "dev_years")
+COST_FIELDS = ("cap_hours", "ph", "yrs", "build_yrs", "dev_years")
 
 
 def is_free(node):

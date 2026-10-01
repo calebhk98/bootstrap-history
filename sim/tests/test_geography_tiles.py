@@ -283,12 +283,12 @@ class LandRentPerformanceTests(unittest.TestCase):
         region_lands = []
         for tile_id, tile in tiles.items():
             arable_km2 = tile["land_area_km2"] * tile["arable_fraction"]
-            arable_iugera = arable_km2 * 100.0 / land.IUGERUM_HECTARES
+            arable_hectares = arable_km2 * 100.0
             region_lands.append(land.RegionLand(
                 region=tile_id, land_area_km2=tile["land_area_km2"],
                 arable_fraction=tile["arable_fraction"],
                 fertility_quality_multiplier=tile["fertility_quality_multiplier"],
-                arable_iugera=arable_iugera))
+                arable_hectares=arable_hectares))
 
         quantity_demanded = land.quantity_demanded_kg_grain_equivalent(65_000_000)
         start = time.perf_counter()

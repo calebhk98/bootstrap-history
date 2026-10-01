@@ -84,7 +84,7 @@ class RemovalTests(ModTestBase):
 
     def test_dangling_req_any_option_is_an_error(self):
         self.add_mod("test_acme_k3f9", nodes=[{"id": "b", "remove": True}, {"id": "c", "remove": True},
-                                    {"id": "a", "override": True, "cap": 1}],
+                                    {"id": "a", "override": True, "cap_hours": 1}],
                      goals=[{"node": "c", "remove": True}])
         with self.assertRaises(ModError) as caught:
             self.tree()
@@ -151,14 +151,14 @@ class RemovalTests(ModTestBase):
 
     def test_remove_versus_override_by_unrelated_mods_names_both(self):
         self.add_mod("test_acme_k3f9", nodes=[{"id": "d", "remove": True}])
-        self.add_mod("test_zeta_k3f9", nodes=[{"id": "d", "override": True, "cap": 3}])
+        self.add_mod("test_zeta_k3f9", nodes=[{"id": "d", "override": True, "cap_hours": 3}])
         with self.assertRaises(ModError) as caught:
             self.tree()
         for word in ("test_acme_k3f9", "test_zeta_k3f9", "d"):
             self.assertIn(word, str(caught.exception))
 
     def test_override_then_remove_by_unrelated_mods_names_both(self):
-        self.add_mod("test_acme_k3f9", nodes=[{"id": "d", "override": True, "cap": 3}])
+        self.add_mod("test_acme_k3f9", nodes=[{"id": "d", "override": True, "cap_hours": 3}])
         self.add_mod("test_zeta_k3f9", nodes=[{"id": "d", "remove": True}])
         with self.assertRaises(ModError) as caught:
             self.tree()
@@ -166,7 +166,7 @@ class RemovalTests(ModTestBase):
             self.assertIn(word, str(caught.exception))
 
     def test_dependent_mod_may_remove_what_dependency_overrode(self):
-        self.add_mod("test_acme_k3f9", nodes=[{"id": "d", "override": True, "cap": 3}])
+        self.add_mod("test_acme_k3f9", nodes=[{"id": "d", "override": True, "cap_hours": 3}])
         self.add_mod("test_zeta_k3f9", dependencies=["test_acme_k3f9"], nodes=[{"id": "d", "remove": True}])
         self.assertNotIn("d", self.tree())
 

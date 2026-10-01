@@ -40,41 +40,50 @@ def _real_geography():
         return json.load(handle)
 
 
-def _make_region(name, arable_iugera, fertility_quality_multiplier):
+def _make_region(name, arable_hectares, fertility_quality_multiplier):
     return land.RegionLand(
-        region=name, land_area_km2=arable_iugera, arable_fraction=1.0,
+        region=name, land_area_km2=arable_hectares, arable_fraction=1.0,
         fertility_quality_multiplier=fertility_quality_multiplier,
-        arable_iugera=arable_iugera)
+        arable_hectares=arable_hectares)
 
 
 class ReferenceYieldTests(unittest.TestCase):
 
     def test_quality_one_reproduces_the_reference_hectare_yield(self):
-        # 1 iugerum at quality 1.0 should be exactly IUGERUM_HECTARES
-        # hectares' worth of REFERENCE_WHEAT_YIELD_KG_PER_HECTARE - the
-        # anchor everything else in this module is stated relative to.
-        expected = (land.REFERENCE_WHEAT_YIELD_KG_PER_HECTARE
-                   * land.IUGERUM_HECTARES)
+        # One hectare at quality 1.0 is exactly
+        # REFERENCE_WHEAT_YIELD_KG_PER_HECTARE - the anchor everything
+        # else in this module is stated relative to.
+        expected = land.REFERENCE_WHEAT_YIELD_KG_PER_HECTARE
         self.assertAlmostEqual(
-            land.reference_yield_kg_per_iugerum(1.0), expected)
+            land.reference_yield_kg_per_hectare(1.0), expected)
 
     def test_yield_scales_linearly_with_fertility(self):
-        base = land.reference_yield_kg_per_iugerum(1.0)
+        base = land.reference_yield_kg_per_hectare(1.0)
         self.assertAlmostEqual(
-            land.reference_yield_kg_per_iugerum(2.0), base * 2.0)
+            land.reference_yield_kg_per_hectare(2.0), base * 2.0)
         self.assertAlmostEqual(
-            land.reference_yield_kg_per_iugerum(0.5), base * 0.5)
+            land.reference_yield_kg_per_hectare(0.5), base * 0.5)
 
     def test_a_caller_supplied_reference_overrides_the_module_default(self):
         # sim/solve_prices.py passes the LIVE wheat_kg yield rather than
         # relying on this module's own duplicate - see the module
         # docstring's WHY THE HOURS CONVERSION LIVES IN sim/solve_prices.py
         # section.
-        default = land.reference_yield_kg_per_iugerum(1.0)
-        overridden = land.reference_yield_kg_per_iugerum(
+        default = land.reference_yield_kg_per_hectare(1.0)
+        overridden = land.reference_yield_kg_per_hectare(
             1.0, kg_per_hectare_at_quality_1=1000.0)
         self.assertNotAlmostEqual(default, overridden)
-        self.assertAlmostEqual(overridden, 1000.0 * land.IUGERUM_HECTARES)
+        self.assertAlmostEqual(overridden, 1000.0)
+
+
+class AreaIsInHectaresTests(unittest.TestCase):
+
+    def test_arable_area_is_the_land_area_times_the_arable_fraction_in_hectares(self):
+        for region_key, region_land in land.load_region_lands().items():
+            expected = (region_land.land_area_km2 * region_land.arable_fraction
+                        * land._KM2_TO_HECTARES)
+            self.assertAlmostEqual(region_land.arable_hectares, expected,
+                                   delta=1e-9 * (1 + expected), msg=region_key)
 
 
 class QuantityDemandedTests(unittest.TestCase):
@@ -106,18 +115,18 @@ class MarginOfCultivationTests(unittest.TestCase):
     def setUp(self):
         # Three regions of falling fertility, each large enough on its own
         # to matter to the margin at the demand levels these tests use.
-        self.best = _make_region("best", arable_iugera=1000.0,
+        self.best = _make_region("best", arable_hectares=1000.0,
                                  fertility_quality_multiplier=1.5)
-        self.middle = _make_region("middle", arable_iugera=1000.0,
+        self.middle = _make_region("middle", arable_hectares=1000.0,
                                    fertility_quality_multiplier=1.0)
-        self.worst = _make_region("worst", arable_iugera=1000.0,
+        self.worst = _make_region("worst", arable_hectares=1000.0,
                                   fertility_quality_multiplier=0.5)
         self.regions = [self.middle, self.worst, self.best]  # deliberately
                                                               # out of order
 
     def _capacity(self, region_land):
-        return (region_land.arable_iugera
-                * land.reference_yield_kg_per_iugerum(
+        return (region_land.arable_hectares
+                * land.reference_yield_kg_per_hectare(
                     region_land.fertility_quality_multiplier))
 
     def test_demand_within_the_best_region_alone_needs_nothing_else(self):
@@ -127,10 +136,10 @@ class MarginOfCultivationTests(unittest.TestCase):
         # Only the best region is used - THE SINGLE-REGION-EQUIVALENT CASE:
         # nothing better than the margin is in use, so rent is zero even
         # though worse land exists elsewhere in the list.
-        self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertEqual(outcome.price_kg_grain_equivalent_per_hectare, 0.0)
         for allocation in outcome.allocations:
             if allocation.region_land.region != "best":
-                self.assertEqual(allocation.arable_iugera_supplied, 0.0)
+                self.assertEqual(allocation.arable_hectares_supplied, 0.0)
 
     def test_demand_reaching_the_middle_region_gives_the_best_region_rent(self):
         demand = self._capacity(self.best) + self._capacity(self.middle) * 0.5
@@ -138,9 +147,9 @@ class MarginOfCultivationTests(unittest.TestCase):
         self.assertEqual(outcome.marginal_region, "middle")
         by_region = {allocation.region_land.region: allocation
                     for allocation in outcome.allocations}
-        self.assertEqual(by_region["middle"].rent_kg_grain_equivalent_per_iugerum, 0.0)
-        self.assertGreater(by_region["best"].rent_kg_grain_equivalent_per_iugerum, 0.0)
-        self.assertEqual(by_region["worst"].arable_iugera_supplied, 0.0)
+        self.assertEqual(by_region["middle"].rent_kg_grain_equivalent_per_hectare, 0.0)
+        self.assertGreater(by_region["best"].rent_kg_grain_equivalent_per_hectare, 0.0)
+        self.assertEqual(by_region["worst"].arable_hectares_supplied, 0.0)
 
     def test_better_land_earns_more_rent_than_land_closer_to_the_margin(self):
         # Push the margin down to worst, so best, middle and worst are all
@@ -153,12 +162,12 @@ class MarginOfCultivationTests(unittest.TestCase):
         by_region = {allocation.region_land.region: allocation
                     for allocation in outcome.allocations}
         self.assertGreater(
-            by_region["best"].rent_kg_grain_equivalent_per_iugerum,
-            by_region["middle"].rent_kg_grain_equivalent_per_iugerum)
+            by_region["best"].rent_kg_grain_equivalent_per_hectare,
+            by_region["middle"].rent_kg_grain_equivalent_per_hectare)
         self.assertGreater(
-            by_region["middle"].rent_kg_grain_equivalent_per_iugerum, 0.0)
+            by_region["middle"].rent_kg_grain_equivalent_per_hectare, 0.0)
         self.assertEqual(
-            by_region["worst"].rent_kg_grain_equivalent_per_iugerum, 0.0)
+            by_region["worst"].rent_kg_grain_equivalent_per_hectare, 0.0)
 
     def test_a_single_homogeneous_region_always_prices_at_zero(self):
         # The degenerate case the module docstring names explicitly: no
@@ -168,7 +177,7 @@ class MarginOfCultivationTests(unittest.TestCase):
         for fraction in (0.1, 0.5, 0.99):
             outcome = land.find_margin_of_cultivation(
                 [self.middle], self._capacity(self.middle) * fraction)
-            self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+            self.assertEqual(outcome.price_kg_grain_equivalent_per_hectare, 0.0)
 
     def test_demand_beyond_every_regions_combined_capacity_is_reported_unmet(self):
         total_capacity = sum(
@@ -180,10 +189,10 @@ class MarginOfCultivationTests(unittest.TestCase):
 
     def test_zero_demand_supplies_and_prices_nothing(self):
         outcome = land.find_margin_of_cultivation(self.regions, 0.0)
-        self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertEqual(outcome.price_kg_grain_equivalent_per_hectare, 0.0)
         self.assertEqual(outcome.quantity_supplied_kg, 0.0)
         for allocation in outcome.allocations:
-            self.assertEqual(allocation.arable_iugera_supplied, 0.0)
+            self.assertEqual(allocation.arable_hectares_supplied, 0.0)
 
     def test_negative_demand_is_rejected(self):
         with self.assertRaises(ValueError):
@@ -191,7 +200,7 @@ class MarginOfCultivationTests(unittest.TestCase):
 
     def test_empty_territory_prices_nothing_rather_than_crashing(self):
         outcome = land.find_margin_of_cultivation([], 100.0)
-        self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertEqual(outcome.price_kg_grain_equivalent_per_hectare, 0.0)
         self.assertIsNone(outcome.marginal_region)
         self.assertGreater(outcome.unmet_demand_kg, 0.0)
 
@@ -220,8 +229,8 @@ class RegionDataLoadsCleanlyTests(unittest.TestCase):
                                                     # grain", loosely
         for region_key, region_land in region_lands.items():
             self.assertGreaterEqual(
-                region_land.arable_iugera, 0.0,
-                "%s: arable_iugera must not be negative" % region_key)
+                region_land.arable_hectares, 0.0,
+                "%s: arable_hectares must not be negative" % region_key)
             self.assertGreater(
                 region_land.fertility_quality_multiplier, 0.0,
                 "%s: fertility_quality_multiplier must be positive "
@@ -243,8 +252,8 @@ class RegionDataLoadsCleanlyTests(unittest.TestCase):
         # either region's exact arable_fraction.
         region_lands = land.load_region_lands()
         self.assertGreater(
-            region_lands["china"].arable_iugera,
-            region_lands["italia"].arable_iugera)
+            region_lands["china"].arable_hectares,
+            region_lands["italia"].arable_hectares)
 
     def test_no_region_land_is_priced_from_a_wished_for_outcome(self):
         # A cheap, structural guard against the CLAUDE.md SS3.1 failure
@@ -310,8 +319,8 @@ class CivilizationTerritoryTests(unittest.TestCase):
         rich_outcome = land.find_margin_of_cultivation(rich_regions, demand)
         poor_outcome = land.find_margin_of_cultivation(poor_region, demand)
         self.assertGreaterEqual(
-            rich_outcome.price_kg_grain_equivalent_per_iugerum,
-            poor_outcome.price_kg_grain_equivalent_per_iugerum)
+            rich_outcome.price_kg_grain_equivalent_per_hectare,
+            poor_outcome.price_kg_grain_equivalent_per_hectare)
 
     def test_conquest_hook_a_civilization_dict_can_be_handed_in_directly(self):
         # See the module docstring's WHAT A LATER CONQUEST MECHANISM WOULD
@@ -334,9 +343,9 @@ class CivilizationTerritoryTests(unittest.TestCase):
         # directly.
         self.assertGreater(len(expanded_lands), len(shrunk_lands))
         total_arable = sum(
-            region_land.arable_iugera for region_land in expanded_lands)
+            region_land.arable_hectares for region_land in expanded_lands)
         shrunk_arable = sum(
-            region_land.arable_iugera for region_land in shrunk_lands)
+            region_land.arable_hectares for region_land in shrunk_lands)
         self.assertGreater(total_arable, shrunk_arable)
 
     def test_unknown_civilization_raises_with_the_real_list(self):
@@ -367,8 +376,8 @@ class CivilizationTerritoryTests(unittest.TestCase):
         rome = land.margin_outcome_for_civilization("rome_100ad")
         norse = land.margin_outcome_for_civilization("norse_900ad")
         self.assertGreater(
-            rome.price_kg_grain_equivalent_per_iugerum,
-            norse.price_kg_grain_equivalent_per_iugerum)
+            rome.price_kg_grain_equivalent_per_hectare,
+            norse.price_kg_grain_equivalent_per_hectare)
 
     def test_a_single_home_region_civilization_no_longer_prices_at_zero(self):
         # Complaints/46: a civilization holding one uniform region has
@@ -394,7 +403,7 @@ class CivilizationTerritoryTests(unittest.TestCase):
         for civilization_id in ("han_china_100ad", "norse_900ad"):
             outcome = land.margin_outcome_for_civilization(civilization_id)
             self.assertGreater(
-                outcome.price_kg_grain_equivalent_per_iugerum, 0.0,
+                outcome.price_kg_grain_equivalent_per_hectare, 0.0,
                 "%s: a single-region civilization should still price its "
                 "land above zero" % civilization_id)
 
@@ -446,110 +455,109 @@ def _solo_civilization(population):
 
 
 class LabourIntensityTests(unittest.TestCase):
-    """labour_hours_applied_per_iugerum - the civilization-wide intensity
+    """labour_hours_applied_per_hectare - the civilization-wide intensity
     figure that feeds the intensive margin, in isolation from any fertility
     or margin-of-cultivation logic.
     """
 
     def test_scales_linearly_with_population(self):
-        one = land.labour_hours_applied_per_iugerum(1_000_000, 500_000.0)
-        two = land.labour_hours_applied_per_iugerum(2_000_000, 500_000.0)
+        one = land.labour_hours_applied_per_hectare(1_000_000, 500_000.0)
+        two = land.labour_hours_applied_per_hectare(2_000_000, 500_000.0)
         self.assertAlmostEqual(two, one * 2.0)
 
     def test_scales_inversely_with_arable_land(self):
-        small_territory = land.labour_hours_applied_per_iugerum(
+        small_territory = land.labour_hours_applied_per_hectare(
             1_000_000, 100_000.0)
-        large_territory = land.labour_hours_applied_per_iugerum(
+        large_territory = land.labour_hours_applied_per_hectare(
             1_000_000, 1_000_000.0)
         self.assertGreater(small_territory, large_territory)
 
     def test_zero_land_returns_zero_rather_than_dividing_by_zero(self):
         self.assertEqual(
-            land.labour_hours_applied_per_iugerum(1_000_000, 0.0), 0.0)
+            land.labour_hours_applied_per_hectare(1_000_000, 0.0), 0.0)
 
     def test_negative_population_is_rejected(self):
         with self.assertRaises(ValueError):
-            land.labour_hours_applied_per_iugerum(-1, 1000.0)
+            land.labour_hours_applied_per_hectare(-1, 1000.0)
 
     def test_negative_land_is_rejected(self):
         with self.assertRaises(ValueError):
-            land.labour_hours_applied_per_iugerum(1000, -1.0)
+            land.labour_hours_applied_per_hectare(1000, -1.0)
 
 
 class YieldAtIntensityTests(unittest.TestCase):
-    """yield_kg_per_iugerum_at_intensity - the Cobb-Douglas curve this
+    """yield_kg_per_hectare_at_intensity - the Cobb-Douglas curve this
     module duplicates from sim/world/agriculture.py's own gross_harvest_kg,
-    on a per-iugerum basis (see land.py's own LABOUR INTENSITY section).
+    on a per-hectare basis (see land.py's own LABOUR INTENSITY section).
     """
 
-    def _reference_hours_per_iugerum(self):
-        return (land.LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE
-               * land.IUGERUM_HECTARES)
+    def _reference_hours_per_hectare(self):
+        return land.LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE
 
     def test_reference_intensity_reproduces_the_flat_reference_yield(self):
         # The calibration promise this whole curve is built around: at
         # exactly the reference intensity, this must equal
-        # reference_yield_kg_per_iugerum exactly, for any fertility.
+        # reference_yield_kg_per_hectare exactly, for any fertility.
         for fertility in (0.5, 1.0, 1.35):
-            expected = land.reference_yield_kg_per_iugerum(fertility)
-            actual = land.yield_kg_per_iugerum_at_intensity(
-                fertility, self._reference_hours_per_iugerum())
+            expected = land.reference_yield_kg_per_hectare(fertility)
+            actual = land.yield_kg_per_hectare_at_intensity(
+                fertility, self._reference_hours_per_hectare())
             self.assertAlmostEqual(actual, expected)
 
     def test_more_labour_raises_yield(self):
-        reference_hours = self._reference_hours_per_iugerum()
-        low = land.yield_kg_per_iugerum_at_intensity(1.0, reference_hours)
-        high = land.yield_kg_per_iugerum_at_intensity(
+        reference_hours = self._reference_hours_per_hectare()
+        low = land.yield_kg_per_hectare_at_intensity(1.0, reference_hours)
+        high = land.yield_kg_per_hectare_at_intensity(
             1.0, reference_hours * 4.0)
         self.assertGreater(high, low)
 
     def test_yield_grows_slower_than_labour_diminishing_returns(self):
         # Quadrupling labour must NOT quadruple output - the whole point
         # of LAND_LABOUR_OUTPUT_ELASTICITY < 1.
-        reference_hours = self._reference_hours_per_iugerum()
-        base = land.yield_kg_per_iugerum_at_intensity(1.0, reference_hours)
-        quadrupled = land.yield_kg_per_iugerum_at_intensity(
+        reference_hours = self._reference_hours_per_hectare()
+        base = land.yield_kg_per_hectare_at_intensity(1.0, reference_hours)
+        quadrupled = land.yield_kg_per_hectare_at_intensity(
             1.0, reference_hours * 4.0)
         self.assertLess(quadrupled, base * 4.0)
         self.assertGreater(quadrupled, base)
 
     def test_zero_labour_yields_nothing(self):
-        self.assertEqual(land.yield_kg_per_iugerum_at_intensity(1.0, 0.0), 0.0)
+        self.assertEqual(land.yield_kg_per_hectare_at_intensity(1.0, 0.0), 0.0)
 
     def test_negative_labour_is_rejected(self):
         with self.assertRaises(ValueError):
-            land.yield_kg_per_iugerum_at_intensity(1.0, -1.0)
+            land.yield_kg_per_hectare_at_intensity(1.0, -1.0)
 
 
 class IntensiveRentTests(unittest.TestCase):
-    """intensive_rent_kg_grain_equivalent_per_iugerum - the Cobb-Douglas
+    """intensive_rent_kg_grain_equivalent_per_hectare - the Cobb-Douglas
     land share Complaints/46 asked for: rent a SINGLE region earns from
     being crowded, with no other, worse region needed anywhere.
     """
 
     def test_crowding_a_single_region_raises_its_rent(self):
-        low_intensity_rent = land.intensive_rent_kg_grain_equivalent_per_iugerum(
+        low_intensity_rent = land.intensive_rent_kg_grain_equivalent_per_hectare(
             1.0, 40.0)
-        high_intensity_rent = land.intensive_rent_kg_grain_equivalent_per_iugerum(
+        high_intensity_rent = land.intensive_rent_kg_grain_equivalent_per_hectare(
             1.0, 400.0)
         self.assertGreater(high_intensity_rent, low_intensity_rent)
 
     def test_better_land_earns_more_even_from_intensive_alone(self):
         # No margin, no comparison region - just fertility, at a FIXED
         # intensity - and the better parcel still earns more.
-        worse = land.intensive_rent_kg_grain_equivalent_per_iugerum(0.5, 100.0)
-        better = land.intensive_rent_kg_grain_equivalent_per_iugerum(1.5, 100.0)
+        worse = land.intensive_rent_kg_grain_equivalent_per_hectare(0.5, 100.0)
+        better = land.intensive_rent_kg_grain_equivalent_per_hectare(1.5, 100.0)
         self.assertGreater(better, worse)
 
     def test_zero_labour_earns_no_intensive_rent(self):
         self.assertEqual(
-            land.intensive_rent_kg_grain_equivalent_per_iugerum(1.0, 0.0), 0.0)
+            land.intensive_rent_kg_grain_equivalent_per_hectare(1.0, 0.0), 0.0)
 
     def test_never_negative(self):
         for fertility in (0.1, 1.0, 3.0):
             for hours in (0.0, 1.0, 1000.0):
                 self.assertGreaterEqual(
-                    land.intensive_rent_kg_grain_equivalent_per_iugerum(
+                    land.intensive_rent_kg_grain_equivalent_per_hectare(
                         fertility, hours),
                     0.0)
 
@@ -571,26 +579,26 @@ class CombinedMarginOutcomeTests(unittest.TestCase):
             "dense", geography=_SOLO_GEOGRAPHY,
             civilizations={"dense": _solo_civilization(10_000_000)})
         self.assertGreater(
-            dense.price_kg_grain_equivalent_per_iugerum,
-            sparse.price_kg_grain_equivalent_per_iugerum)
+            dense.price_kg_grain_equivalent_per_hectare,
+            sparse.price_kg_grain_equivalent_per_hectare)
         # And both are strictly positive once ANY population presses on
         # the land: an extensive-margin-only mechanism prices a single,
         # uniform region at zero no matter how many people depend on it -
         # the exact defect Complaints/46 named.
-        self.assertGreater(sparse.price_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertGreater(sparse.price_kg_grain_equivalent_per_hectare, 0.0)
 
     def test_a_civilization_with_no_population_prices_at_zero(self):
         outcome = land.margin_outcome_for_civilization(
             "empty", geography=_SOLO_GEOGRAPHY,
             civilizations={"empty": _solo_civilization(0)})
-        self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertEqual(outcome.price_kg_grain_equivalent_per_hectare, 0.0)
 
     def test_a_civilization_with_no_home_regions_prices_at_zero_not_crashing(self):
         outcome = land.margin_outcome_for_civilization(
             "landless", geography=_SOLO_GEOGRAPHY,
             civilizations={"landless": {"home_regions": [], "population": 1000}})
-        self.assertEqual(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
-        self.assertEqual(outcome.labour_hours_per_iugerum, 0.0)
+        self.assertEqual(outcome.price_kg_grain_equivalent_per_hectare, 0.0)
+        self.assertEqual(outcome.labour_hours_per_hectare, 0.0)
 
     def test_rome_shows_both_margins_at_once(self):
         # The task's own "both must work together" requirement: a
@@ -612,15 +620,15 @@ class CombinedMarginOutcomeTests(unittest.TestCase):
              if allocation.region_land.region in north_africa_tile_ids),
             key=lambda a: a.fertility_quality_multiplier)
         self.assertGreater(
-            best_north_africa_tile.extensive_rent_kg_grain_equivalent_per_iugerum,
+            best_north_africa_tile.extensive_rent_kg_grain_equivalent_per_hectare,
             0.0)
         self.assertGreater(
-            best_north_africa_tile.intensive_rent_kg_grain_equivalent_per_iugerum,
+            best_north_africa_tile.intensive_rent_kg_grain_equivalent_per_hectare,
             0.0)
         self.assertAlmostEqual(
-            best_north_africa_tile.rent_kg_grain_equivalent_per_iugerum,
-            (best_north_africa_tile.extensive_rent_kg_grain_equivalent_per_iugerum
-             + best_north_africa_tile.intensive_rent_kg_grain_equivalent_per_iugerum))
+            best_north_africa_tile.rent_kg_grain_equivalent_per_hectare,
+            (best_north_africa_tile.extensive_rent_kg_grain_equivalent_per_hectare
+             + best_north_africa_tile.intensive_rent_kg_grain_equivalent_per_hectare))
 
     def test_han_china_no_longer_prices_at_zero(self):
         # The task's own headline check, restated at the civilization
@@ -629,7 +637,7 @@ class CombinedMarginOutcomeTests(unittest.TestCase):
         # zero above for the same claim with the extensive-component
         # breakdown asserted too.
         outcome = land.margin_outcome_for_civilization("han_china_100ad")
-        self.assertGreater(outcome.price_kg_grain_equivalent_per_iugerum, 0.0)
+        self.assertGreater(outcome.price_kg_grain_equivalent_per_hectare, 0.0)
 
     def test_abundant_land_per_head_is_cheaper_than_crowded_land(self):
         # The task's own explicit requirement: a civilization with
@@ -644,11 +652,11 @@ class CombinedMarginOutcomeTests(unittest.TestCase):
         china = land.margin_outcome_for_civilization("han_china_100ad")
         rome = land.margin_outcome_for_civilization("rome_100ad")
         self.assertLess(
-            norse.price_kg_grain_equivalent_per_iugerum,
-            china.price_kg_grain_equivalent_per_iugerum)
+            norse.price_kg_grain_equivalent_per_hectare,
+            china.price_kg_grain_equivalent_per_hectare)
         self.assertLess(
-            norse.price_kg_grain_equivalent_per_iugerum,
-            rome.price_kg_grain_equivalent_per_iugerum)
+            norse.price_kg_grain_equivalent_per_hectare,
+            rome.price_kg_grain_equivalent_per_hectare)
 
     def test_rome_still_outprices_the_norse_with_both_margins_active(self):
         # The pre-existing headline check (CivilizationTerritoryTests.
@@ -659,8 +667,8 @@ class CombinedMarginOutcomeTests(unittest.TestCase):
         rome = land.margin_outcome_for_civilization("rome_100ad")
         norse = land.margin_outcome_for_civilization("norse_900ad")
         self.assertGreater(
-            rome.price_kg_grain_equivalent_per_iugerum,
-            norse.price_kg_grain_equivalent_per_iugerum)
+            rome.price_kg_grain_equivalent_per_hectare,
+            norse.price_kg_grain_equivalent_per_hectare)
 
 
 if __name__ == "__main__":

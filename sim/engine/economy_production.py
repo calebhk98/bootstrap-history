@@ -197,7 +197,7 @@ class ProductionMixin:
             node = self.nodes[node_id]
             if node["rev"]:
                 # AT THIS SOCIETY'S PRICES, like everything else it charges you.
-                # The tree's revenue figures are Rome 100 AD denarii and this
+                # The tree's revenue figures are labour hours and this
                 # was the one flow that never converted them, so a physician's
                 # practice paid exactly 233.5 in Tenochtitlan, in Luoyang and
                 # in Scandinavia while the cost of building anything differed

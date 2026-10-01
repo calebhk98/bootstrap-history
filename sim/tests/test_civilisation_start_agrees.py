@@ -15,7 +15,7 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 
 
 def _node(node_id, pre=(), cap=0.0, mat=None, req_any=None):
-    return {"id": node_id, "pre": list(pre), "cap": cap, "ph": 0.0, "yrs": 0.0,
+    return {"id": node_id, "pre": list(pre), "cap_hours": cap, "ph": 0.0, "yrs": 0.0,
             "lab": {}, "mat": mat or {}, "req_any": req_any or []}
 
 

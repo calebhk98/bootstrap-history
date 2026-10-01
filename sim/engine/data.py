@@ -398,7 +398,7 @@ def load(use_solved_prices: bool = False,
         node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
-    money_units.stamp_nodes(nodes.values(), wages, rate)
+    money_units.price_nodes(nodes.values(), wages, rate)
     return tree, prices, nodes, wages, goods
 
 

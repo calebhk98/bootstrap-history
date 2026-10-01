@@ -108,7 +108,7 @@
  "schema": {
   "art": "minimum trained technical artisans required on staff to attempt",
   "bounty_rule": "A node can be bought as a public prize when its craft category is glass_optics, metallurgy, precision, power, agriculture, information, or instruments, or when the selected civilization has a strong local craft tradition. The test is whether a local artisan could recognise success without understanding the theory. Price is c. 2.5x honest cost, costs the poster no hours of their own, consumes no supervision slot. See 04_ECONOMICS.md section 7.",
-  "cap": "one-off capital in denarii beyond labour and materials (land, buildings, purchased tools)",
+  "cap_hours": "one-off capital in labour hours beyond labour and materials (land, buildings, purchased tools)",
   "cat": "category",
   "conf": "A well attested, B probable, C author's estimate",
   "gov": "State interest, -3 (will actively suppress) to +3 (will fund and demand). NEGATIVE VALUES ARE ENFORCED BY THE SIMULATOR: a node with gov < 0 costs 25% more per point (bribes, delay, relocation to a province, a compliant front man), adds 3 extra suspicion per point, cannot be attempted without at least a local patron, and at gov <= -2 requires senatorial patronage. This is the 'you need social approval for this' mechanic.",
@@ -120,11 +120,11 @@
   "note": "commentary, warnings, and reasoning for the numbers",
   "ph": "YOUR OWN hours. The scarcest resource in the game. c. 2400/yr available.",
   "pre": "list of prerequisite node ids (AND semantics)",
-  "rev": "net revenue in denarii per year at maturity, 0 if not a product",
+  "rev_hours": "net revenue in labour hours per year at maturity, 0 if not a product",
   "risk": "probability a given attempt fails outright and must be retried at 40% of cost",
   "sch": "minimum trained natural philosophers required on staff to attempt",
   "sus": "suspicion delta on completion, see 03_SOCIAL_POLITICS.md",
-  "up": "annual upkeep in denarii once operating",
+  "up_hours": "annual upkeep in labour hours once operating",
   "yrs": "minimum calendar years, a floor that labour cannot buy down (curing, growing, seasoning, maturation)"
  },
  "schema_version": 3,

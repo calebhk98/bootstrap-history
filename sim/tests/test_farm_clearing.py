@@ -46,9 +46,9 @@ class RentReadsTheFarmedAreaTests(unittest.TestCase):
             civ_id, farmed_hectares=territory.arable_hectares * 0.6)
         self.assertGreater(small.margin_fertility_quality_multiplier,
                            large.margin_fertility_quality_multiplier)
-        supplied = sum(a.arable_iugera_supplied for a in large.allocations)
+        supplied = sum(a.arable_hectares_supplied for a in large.allocations)
         self.assertAlmostEqual(
-            supplied * land.IUGERUM_HECTARES, territory.arable_hectares * 0.6,
+            supplied, territory.arable_hectares * 0.6,
             delta=territory.arable_hectares * 0.01)
 
 

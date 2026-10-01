@@ -16,7 +16,7 @@ from sim.world import land
 
 
 def _carrying_capacity(tile_land) -> float:
-    return tile_land.arable_iugera * tile_land.fertility_quality_multiplier
+    return tile_land.arable_hectares * tile_land.fertility_quality_multiplier
 
 
 @functools.lru_cache(maxsize=64)
