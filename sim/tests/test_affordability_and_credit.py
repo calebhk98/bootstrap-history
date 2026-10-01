@@ -174,8 +174,7 @@ check("...but the refusal now says WHICH rule this is: half the credit "
 check("...and WHY: a lender funds work under way (what starting a project "
       "can point to), not a payroll or a one-off fee",
       "lender advances against a purchase" in _msg_h, _msg_h)
-_fee_h = 3.0 * S.ANNUAL_WAGE.get("smith", 375.0) * s_asym.wage_index * s_asym.price_index \
-    * s_asym.labour_price_factor("smith")
+_fee_h = s_asym.hire_fee("smith", 3)
 check("...and still states the plain facts a refusal always has: the exact "
       "cost hire() actually computed",
       "{:,.0f}".format(round(_fee_h)) in _msg_h, (_fee_h, _msg_h))

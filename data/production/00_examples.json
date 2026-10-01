@@ -26,7 +26,8 @@
    },
    "labour_hours": {
     "furnaceman": 120.0,
-    "smith": 40.0
+    "smith": 40.0,
+    "labourer": 1075.0
    },
    "energy_mj": 0.0,
    "capital": [
@@ -47,7 +48,7 @@
     }
    ],
    "basis": "per tonne of fire-refined copper",
-   "yield_basis": "SMELTED, so the yield is grade times recovery. Cyprus and Rio Tinto sulphide ores run 2-4% copper; roast-and-reduction in a shaft furnace recovers on the order of 80% of it, the rest going to slag and flue. One tonne of metal therefore needs 30-60 t of ore, taken here at 50 t. Charcoal is set by the reduction chemistry plus the heat to hold 1200 C through several roasts, about 4 kg per kg of metal, which is why a smelter is sited by a forest rather than by the mine. None of these numbers is derived from the price of copper.",
+   "yield_basis": "SMELTED, so the yield is grade times recovery. Cyprus and Rio Tinto sulphide ores run 2-4% copper; roast-and-reduction in a shaft furnace recovers on the order of 80% of it, the rest going to slag and flue. One tonne of metal therefore needs 30-60 t of ore, taken here at 50 t. Charcoal is set by the reduction chemistry plus the heat to hold 1200 C through several roasts, about 4 kg per kg of metal, which is why a smelter is sited by a forest rather than by the mine. None of these numbers is derived from the price of copper. ORE DRESSING AND ROASTING (Complaints/288): the labourer hours are the work between the pit head and the furnace. The 50 tonnes of ore are cobbed, crushed and washed to a concentrate of about 15% copper (about 7.5 tonnes after a 90% dressing recovery); at about 20 hours per tonne of rock that is 1,000 hours (LABELLED HEURISTIC, conf D: an order-of-magnitude hand cobbing and bucking rate, not a measured Roman throughput; the same rate as lead_kg uses). The concentrate is heap-roasted to drive off sulphur, which burns by itself once lit (the wood to ignite it is inside the charcoal figure above), so roasting is stacking and turning labour, about 10 hours per tonne of concentrate, 75 hours (LABELLED HEURISTIC, conf D). Mining the rock is priced through copper_ore_kg and the deposits' extraction cost.",
    "requires_node": "mat_bronze",
    "conf": "C"
   },
