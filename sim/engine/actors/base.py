@@ -185,6 +185,10 @@ class Actor:
 		"""One year: act, then press the labour market for the people newly taken on."""
 		held = dict(self.workforce)
 		self.act(world)
+		self.press_new_staff(held, world)
+
+	def press_new_staff(self, held: Dict[str, float], world: Any) -> None:
+		"""The labour market feels the people taken on since `held`."""
 		for trade, people in sorted(self.workforce.items()):
 			added = people - held.get(trade, 0.0)
 			if added > 0:

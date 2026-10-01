@@ -33,6 +33,26 @@ class ActorsMixin:
             return 0.0
         return self.actors.supply(material, SimWorld(self))
 
+    def actor_demand(self, commodity):
+        """Tonnes a year of a commodity that governments buy on the market with what they spend."""
+        state = self.state.actors
+        if state is None or not state.records:
+            return 0.0
+        return self.actors.demand(commodity)
+
+    def state_levy_rates(self):
+        """(requisition, office) share of income the state takes at full notice; nothing
+        before the state has budgeted a year."""
+        state = self.state.actors
+        record = None if state is None else state.records.get("government:" + str(self.civ.get("id")))
+        if record is None:
+            return 0.0, 0.0
+        return record.levy_requisition_rate, record.levy_office_rate
+
+    def state_military_ask(self, taxable, scale):
+        """What the state asks of one militarily useful taxpayer in arms this year."""
+        return self.state_treasury().military_ask(taxable, scale, SimWorld(self))
+
     def actor_concerns_in(self, category):
         """How many concerns in a goods category actors run, each sharing the founder's market."""
         state = self.state.actors

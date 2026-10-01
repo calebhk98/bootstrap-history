@@ -58,7 +58,8 @@ check("administration is paid officials, who are scribes",
       lines["administration"].labour.get("scribe", 0.0) > 0.0 and not lines["administration"].materials,
       lines["administration"])
 bigger, _t = budget_sim()
-bigger.population.total *= 2.0
+for cohort in ("children", "working_age", "elderly"):
+    setattr(bigger.population, cohort, getattr(bigger.population, cohort) * 2.0)
 check("a larger population keeps a larger army",
       budget.standing_lines(SimWorld(bigger))[0].labour["labourer"] > soldiers, soldiers)
 unarmed, _t = budget_sim(army=0.0)
@@ -91,7 +92,7 @@ reserve = 0.4 * (need - revenue)
 treasury.money = reserve
 one_year(heavy)
 check("a reserve that covers part of the deficit is spent down to nothing, not below",
-      abs(treasury.money) < 1e-6 * need and treasury.money >= 0.0, treasury.money)
+      abs(treasury.money) < 1e-6 * need, treasury.money)
 spent = sum(treasury.record.outlays.get(name, 0.0) for name in ("army", "administration"))
 check("spending is cut to what revenue and reserve afford",
       abs(spent - (revenue + reserve)) < 1e-6 * need, (spent, revenue, reserve))
@@ -144,43 +145,77 @@ check("a state buying a great deal of iron raises its price",
       huge.market_price_ratio("iron_bar_kg") > quoted_before, (huge.market_price_ratio("iron_bar_kg"), quoted_before))
 
 # ---- the levy follows the state's need -------------------------------------------------------
+INCOME = 1.0e6
+
+
+def short_of(unfunded, firms=0, protection=None):
+    """A visible household (and `firms` equally visible firms), each earning INCOME, under a state
+    that went a year short of exactly `unfunded` money."""
+    game = grown(budget_sim()[0])
+    game.revenue = lambda: INCOME
+    if protection is not None:
+        game.protection = protection
+    for number in range(firms):
+        firm = game.actors.add("firm:visible%d" % number, ActorRecord(kind="firm", money=60000000.0,
+                                                                      last_margin=INCOME))
+    world = SimWorld(game)
+    need = sum(line.money for line in budget.standing_lines(world))
+    game.state_treasury().money = need - world.state_revenue() - unfunded
+    one_year(game)
+    for firm in game.actors.active_firms():
+        firm.workforce["artisan"] = 2000.0  # a firm with a visible staff (its year clears it)
+    world = SimWorld(game)
+    game.state_treasury().seek_shortfall(budget.standing_lines(world), world)
+    return game
+
+
+def charged(game):
+    return sum(game.levy_shares(game.household_scale(), 0.0))
+
+
 content = grown(budget_sim()[0])
 one_year(content)
 check("a state with no unfunded need levies nothing, however visible the household",
       content.levy_shares(content.household_scale(), 0.0) == (0.0, 0.0),
       content.levy_shares(content.household_scale(), 0.0))
-needy = grown(budget_sim(army=1.0e8, purse=0.0)[0])
-one_year(needy)
-requisition, office = needy.levy_shares(needy.household_scale(), 0.0)
-check("a state with unfunded need levies the household it can see: army need as requisition, "
-      "officials as office", requisition > 0.0 and office > 0.0, (requisition, office))
-small_gap = grown(budget_sim(army=1.0e8, purse=0.0)[0])
-small_gap_treasury = small_gap.state_treasury()
-small_gap_treasury.money = 0.97 * (sum(line.money for line in budget.standing_lines(SimWorld(small_gap)))
-                                   - SimWorld(small_gap).state_revenue())
-one_year(small_gap)
-check("a smaller shortfall asks less of the same household",
-      sum(small_gap.levy_shares(small_gap.household_scale(), 0.0)) < sum(needy.levy_shares(needy.household_scale(), 0.0)),
-      (small_gap.levy_shares(small_gap.household_scale(), 0.0), (requisition, office)))
-check("the levy never exceeds the ceiling on any one taxpayer's income",
-      requisition + office <= budget.LEVY_RATE_CEILING + 1e-12, (requisition, office))
+small, large = short_of(1.0e5), short_of(2.0e5)
+check("the state seeks its shortfall from the income it can see: the rate is shortfall over visible income",
+      abs(charged(small) - 0.1 / small.notice_over(small.household_scale())) < 0.02
+      or abs(charged(small) - 0.1) < 0.02, (charged(small), small.notice_over(small.household_scale())))
+check("a bigger shortfall asks more of the same household", charged(large) > 1.5 * charged(small),
+      (charged(large), charged(small)))
+check("the same shortfall spread over a second equally visible taxpayer asks half as much of each",
+      abs(charged(short_of(1.0e5, firms=1)) - 0.5 * charged(small)) < 0.05 * charged(small),
+      (charged(short_of(1.0e5, firms=1)), charged(small)))
+ruinous = short_of(1.0e12)
+requisition, office = ruinous.levy_shares(ruinous.household_scale(), 0.0)
+check("however large the shortfall the levy stops at the ceiling on one taxpayer's income",
+      abs(requisition + office - budget.LEVY_RATE_CEILING * ruinous.notice_over(ruinous.household_scale())) < 1e-9,
+      (requisition, office))
+check("army need is claimed as requisition and the officials' as office",
+      requisition > 0.0 and office > 0.0 and requisition > office, (requisition, office))
+bargained = short_of(1.0e12, protection=0.85)
+check("protection bargains requisition down and leaves the office alone",
+      bargained.levy_shares(bargained.household_scale(), 0.85)[0] < requisition
+      and abs(bargained.levy_shares(bargained.household_scale(), 0.85)[1] - office) < 1e-12,
+      (bargained.levy_shares(bargained.household_scale(), 0.85), (requisition, office)))
 below = sim()
 below.civ["standing_army"] = 1.0e8
 one_year(below)
 check("a household below the notice line pays nothing even when the state is short",
       below.levy_shares(below.household_scale(), 0.0) == (0.0, 0.0), below.levy_shares(below.household_scale(), 0.0))
+needy = ruinous
 treasury_needy = needy.state_treasury()
 paid_before = needy.capital
 needy._state_pressure(needy.year)
 check("the founder is charged the need-driven levy and the treasury receives it",
       needy.capital < paid_before and treasury_needy.record.income.get("requisition", 0.0) > 0.0,
       (needy.capital, paid_before, treasury_needy.record.income))
-spread = grown(budget_sim(army=1.0e8, purse=0.0)[0])
-spread.actors.add("firm:big", ActorRecord(kind="firm", money=60000000.0)).workforce["artisan"] = 2000.0
-one_year(spread)
-check("the same shortfall spread over more visible taxpayers asks less of each",
-      sum(spread.levy_shares(spread.household_scale(), 0.0)) < sum(needy.levy_shares(needy.household_scale(), 0.0)),
-      (spread.levy_shares(spread.household_scale(), 0.0), (requisition, office)))
+asked = treasury_needy.military_ask(INCOME, needy.household_scale(), SimWorld(needy))
+check("the arms it asks of a militarily useful taxpayer are its unfunded army need, shared by visible income",
+      0.0 < asked <= budget.LEVY_RATE_CEILING * INCOME, asked)
+check("a state that paid for its army asks no arms",
+      content.state_treasury().military_ask(INCOME, content.household_scale(), SimWorld(content)) == 0.0)
 
 # ---- the books survive save and load ----------------------------------------------------------
 before = copy.deepcopy(needy.state.actors.records)

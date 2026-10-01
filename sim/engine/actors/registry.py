@@ -79,6 +79,10 @@ class ActorRegistry:
 		return sum(actor.output_of(material, world) for actor in self.actors.values()
 				   if not (actor.kind == "firm" and actor.record.exited_year is not None))
 
+	def demand(self, commodity: str) -> float:
+		"""Tonnes a year of a commodity that every recorded actor buys on the market."""
+		return sum(actor.record.demand.get(commodity, 0.0) for actor in self.actors.values())
+
 	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> int:
 		"""Concerns of goods category `category` that actors operate, counted once per operator."""
 		return sum(1 for firm in self.active_firms() for node_id in firm.concerns

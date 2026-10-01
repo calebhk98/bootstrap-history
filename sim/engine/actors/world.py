@@ -10,10 +10,11 @@ from typing import Any, Dict, List, Optional, Set
 from sim.engine.data import TRADES_ABSENT
 
 from . import supply
+from .world_budget import BudgetView
 from .tuning import OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
 
 
-class SimWorld:
+class SimWorld(BudgetView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:
