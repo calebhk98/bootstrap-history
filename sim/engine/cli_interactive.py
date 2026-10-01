@@ -1216,8 +1216,7 @@ def _new_game_print_horizon_intro(nodes, goal):
     print()
     # THE ONE HONEST THING A MODE MENU CAN SAY HERE: the same number of years
     # is a completely different offer depending which civilisation it is
-    # attached to - see DICE_FREE_FLOOR_YEARS's own comment for the measurement
-    # and data/review/PATH_SEARCH.md for the method. Said to the player
+    # attached to - see data/review/PATH_SEARCH.md for the measurement. Said to the player
     # NOW, about the civilisation they just picked, rather than left for them
     # to discover by overshooting a horizon that was never going to be enough.
     # THE FLOOR OF THE GOAL YOU JUST PICKED, not of a default one: a static
