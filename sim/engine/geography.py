@@ -33,15 +33,12 @@ class MineralShares(TypedDict):
 
 class RegionRecord(TypedDict):
     """One entry of geography.json's `regions` block - the shape every
-    method below reads via `self._regions[region_id]`. `land` is read only
-    by sim/world/land.py (a different file, out of this task's ownership),
-    never by this one, so it stays a plain mapping here rather than
-    importing that module's own `LandBlock` TypedDict for a field this
-    file never opens. `note` is the only key genuinely absent on some
+    method below reads via `self._regions[region_id]`. Land figures are
+    not here: they are sums over the region's tiles (sim/world/land.py).
+    `note` is the only key genuinely absent on some
     regions (17 of 21 in data/world/geography.json); every other key here
     is present on all 21."""
     name: str
-    land: JSONDict
     lat: float
     lon: float
     coastal: bool

@@ -108,14 +108,13 @@ class GeneratedFileShapeTests(unittest.TestCase):
         expected = {"_doc", "regions", "reach_levels", "located_materials", "land_tiles"}
         self.assertEqual(set(self.geography.keys()), expected)
 
-    def test_every_one_of_the_21_hand_written_regions_still_has_its_own_land_block(self):
-        # This script never touches `regions` - if this ever fails, something
-        # else edited geography.json's own region data, not this file.
+    def test_the_21_hand_written_regions_hold_no_land_block(self):
+        # Land lives on the tiles; a region record is only a label.
         real_regions = [region_id for region_id in self.geography["regions"]
                         if not region_id.startswith("_")]
         self.assertEqual(len(real_regions), 21)
         for region_id in real_regions:
-            self.assertIn("land", self.geography["regions"][region_id])
+            self.assertNotIn("land", self.geography["regions"][region_id])
 
 
 class TileStructureTests(unittest.TestCase):

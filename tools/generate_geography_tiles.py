@@ -788,9 +788,6 @@ def main():
             arable, fertility = arable_and_fertility_from_mix(tile["koppen_sample_mix"])
             tile["arable_fraction"] = round(arable, 4)
             tile["fertility_quality_multiplier"] = round(fertility, 4)
-        for record in geography["regions"].values():
-            if isinstance(record, dict):
-                record.get("land", {}).pop("fertility_quality_multiplier", None)
         with open(arguments.out, "w") as handle:
             json.dump(geography, handle, indent=1, sort_keys=False)
         print("rederived tile arable/fertility from koppen_sample_mix")
@@ -810,25 +807,15 @@ def main():
     print("tiles with no old-region match (gaps in the 21-region scheme): %d"
           % section["unmapped_tile_count"])
     print()
-    print("old region -> tile count, tile-summed area vs hand-written area:")
+    print("region -> tile count, tile-summed area, area-weighted fertility:")
     geography_path = arguments.out
-    old_regions = {}
-    if os.path.exists(geography_path):
-        with open(geography_path) as handle:
-            old_regions = json.load(handle).get("regions", {})
     for region_id, tile_ids in sorted(section["region_to_tiles"].items()):
         tile_area = sum(section["tiles"][tid]["land_area_km2"] for tid in tile_ids)
-        old_land = (old_regions.get(region_id) or {}).get("land") or {}
-        old_area = old_land.get("land_area_km2")
-        old_fert = old_land.get("fertility_quality_multiplier")
         tile_fert_avg = sum(
             section["tiles"][tid]["fertility_quality_multiplier"] * section["tiles"][tid]["land_area_km2"]
             for tid in tile_ids) / tile_area if tile_area else 0.0
-        print("  %-20s tiles=%3d  tile_area=%12s  hand_area=%12s  "
-              "tile_fert(area-wtd)=%.3f  hand_fert=%s"
-              % (region_id, len(tile_ids), format(round(tile_area), ","),
-                 format(old_area, ",") if old_area else "-",
-                 tile_fert_avg, old_fert if old_fert is not None else "-"))
+        print("  %-20s tiles=%3d  tile_area=%12s  tile_fert(area-wtd)=%.3f"
+              % (region_id, len(tile_ids), format(round(tile_area), ","), tile_fert_avg))
 
     if arguments.report_only:
         print("\n--report-only: nothing written.")
