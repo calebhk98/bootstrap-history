@@ -1,6 +1,6 @@
 # Staffing closures are reported as gross counts with no cause, and the tools that prevent them (`keep`, `reserve`, `auto_replace_foreman`) are never named
 
-**Status:** partly - the closure and reopening lines name the cause, the net count and the remedies (`keep`, `reserve`, `policy auto_replace_foreman`); `state` carries `staffing_closure_summary` (`Sim.staffing_closure_summary`).
+**Status:** closed
 
 Across 300 years the tester reports the same pattern: a small loss of specialists (two carpenters, three artisans and a smith) produces an annual line closing 10 to 210 concerns; automatic hiring and reopening restore most by the next
 prompt, so the closed count at the prompt and the closed count in the event differ and neither is labelled "net". Public-service concerns (clinics, hospitals, museum, research institute) were left offline while profitable shops reopened,
@@ -21,4 +21,4 @@ Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal f
 
 Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): A asks for a consolidated workforce screen: single-employee dependencies, businesses at immediate risk, reserve specialists, expected annual attrition, training pipeline, and a prominent warning before a multi-year advance with a critical business resting on one person (A's destitute mortal run lost its loom to the departure of its only carpenter). A liked `keep`, `reserve`, the academy and delegation;
 
-**Remains:** departures are still one pooled rate with no split between death and better offers (no separate mechanism exists to split by); there is no protected-service marking that `auto_open` and the closure rule respect; the consolidated workforce screen (single-employee dependencies, expected attrition, pre-advance warning) is not built; the step report does not yet print the summary line itself.
+**Also done:** departures split into death (from the working-age mortality rate) and better offers; a concern flagged with `keep <id> staffed` is closed last by the staffing rule (the protection mark); `labour` carries a `workforce` block (single-person dependencies, expected yearly losses, reserve, training) and a multi-year `step` warns about concerns resting on one person; the step ALERTS block carries the staffing closure line.
