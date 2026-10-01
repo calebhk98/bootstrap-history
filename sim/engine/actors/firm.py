@@ -33,8 +33,9 @@ class Firm(RecordedActor):
 
 	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
 		"""A licensed concern becomes the firm's own business."""
-		self.record.target = node_id
-		super().accept_licence(node_id, chain, world)
+		self.learn(chain, world)
+		self.concerns.add(node_id)
+		self.record.opened_year[node_id] = world.year
 
 	def staff_concern(self, node_id: str, world: Any) -> float:
 		"""Take on the people running a concern needs from the shared pool; the share of
