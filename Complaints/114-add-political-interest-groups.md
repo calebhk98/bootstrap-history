@@ -1,6 +1,6 @@
 # Add political interest groups created by industrialisation
 
-**Status:** partly - interest groups are actors (`group.py`): producers whose sales the founder displaces and employers whose hands his hiring bids up organise by what they lost, press the state, and it answers by capacity and purse (budget line raised through the levy, a start-gate prohibition, blame on the founder); landholders, organised workers, firm owners, clergy and the military remain open (430, 431)
+**Status:** partly - interest groups are actors (`group.py`): producers whose sales the founder displaces and employers whose hands his hiring bids up organise by what they lost, press the state, and it answers by capacity and purse (budget line raised through the levy, a start-gate prohibition, blame on the founder); landholders, organised workers, firm owners, clergy and the military remain open (430, 431, 432)
 
 **Source:** playtest findings document, LATE-008. **Type:** Feature
 recommendation, roadmap-sized, substantially overlapping already-planned
