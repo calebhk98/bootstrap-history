@@ -48,6 +48,19 @@ class SilverChainPhysics(unittest.TestCase):
             * deposit.ore_grade_kg_per_tonne for deposit, weight in _silver_deposits())
         self.assertAlmostEqual(recipe_hours / deposit_hours, 1.0, delta=0.1)
 
+    def test_silver_per_lead_is_what_the_argentiferous_deposits_carry(self):
+        entry = _default_production_entries()["lead_kg"]
+        recipe_silver_per_lead = entry["outputs"]["silver_kg"] / entry["outputs"]["lead_kg"]
+        lead_total = 0.0
+        silver_total = 0.0
+        for deposit in deposits.load_deposits("lead"):
+            joint = deposits.joint_output_quantities_kg(deposit)
+            if "silver_kg" in joint:
+                lead_total += joint["lead_kg"]
+                silver_total += joint["silver_kg"]
+        self.assertGreater(lead_total, 0.0)
+        self.assertAlmostEqual(recipe_silver_per_lead / (silver_total / lead_total), 1.0, delta=0.02)
+
 
 if __name__ == "__main__":
     unittest.main()
