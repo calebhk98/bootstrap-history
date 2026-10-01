@@ -1,6 +1,6 @@
 # Add deeper capital markets
 
-**Status:** open - first increment built (a loanable-funds market per civilisation); banks, bonds, equity, insurance and crises remain; next: 413 (firms raise capital), 412
+**Status:** partly - a loanable-funds market per civilisation is built (rate, premium, credit ceilings, the state borrows, interest shared among lenders); banks, bonds, equity, insurance and crises remain; next: 413 (firms raise capital), 412
 
 **Source:** playtest findings document, LATE-004. **Type:** Major
 roadmap-sized feature recommendation. Genuinely new; not currently named in
