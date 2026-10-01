@@ -5,9 +5,15 @@ from sim.engine.proto import step_progress
 from sim.engine.proto.step_alerts import step_alerts, alert_lines
 from sim.engine.proto import render_screens_big as _render_big
 
+def playable():
+    live_sim = sim()
+    live_sim.end_year = live_sim.cfg["start_year"] + 50
+    return live_sim
+
+
 scratch = tempfile.mkdtemp()
 save_path = os.path.join(scratch, "game.json")
-interrupted_sim = sim()
+interrupted_sim = playable()
 start_year = interrupted_sim.year
 seen_years = []
 
@@ -34,7 +40,7 @@ load_state(reloaded, save_path)
 check("an interrupted multi-year step keeps the completed years on disk",
       reloaded.year == start_year + 2, (reloaded.year, start_year))
 
-quiet = _agent_dispatch(sim(), NODES, {"cmd": "step", "years": 2})
+quiet = _agent_dispatch(playable(), NODES, {"cmd": "step", "years": 2})
 check("a quiet step has an empty alerts list", quiet.get("alerts") == [], quiet.get("alerts"))
 
 events = [{"year": 101, "message": "CREDIT EXHAUSTED: 3 projects stopped"},
@@ -55,7 +61,7 @@ shown = _render_big.render_step(dict(ok=True, completed=[], events=[], lost=[], 
 check("the step screen puts ALERTS first, within the first lines",
       shown.splitlines()[0] == alert_lines(alerts)[0] and "ALERTS" in shown.splitlines()[0], shown[:200])
 
-collapse = sim()
+collapse = playable()
 collapse.state.population.population_change_last_year = -0.5
 state_reply = _agent_dispatch(collapse, NODES, {"cmd": "state"})
 check("a population collapse is a field on the state reply",
@@ -63,6 +69,18 @@ check("a population collapse is a field on the state reply",
 check("the state screen leads with DEMOGRAPHIC EMERGENCY",
       _render_big.render_state(state_reply).splitlines()[0].startswith("DEMOGRAPHIC EMERGENCY"),
       _render_big.render_state(state_reply)[:200])
-calm = _agent_dispatch(sim(), NODES, {"cmd": "state"})
+calm = _agent_dispatch(playable(), NODES, {"cmd": "state"})
 check("no emergency without a collapse", "demographic_emergency" not in calm)
 shutil.rmtree(scratch, ignore_errors=True)
+
+import io
+progress_stream = io.StringIO()
+step_progress.set_after_year(step_progress.commit_and_report(None, progress_stream))
+_agent_dispatch(playable(), NODES, {"cmd": "step", "years": 3})
+single_stream = io.StringIO()
+step_progress.set_after_year(step_progress.commit_and_report(None, single_stream))
+_agent_dispatch(playable(), NODES, {"cmd": "step", "years": 1})
+step_progress.set_after_year(None)
+check("a multi-year step prints one progress line per year; a single year prints none",
+      len(progress_stream.getvalue().splitlines()) == 3 and single_stream.getvalue() == "",
+      (progress_stream.getvalue(), single_stream.getvalue()))

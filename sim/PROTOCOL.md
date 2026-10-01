@@ -133,7 +133,17 @@ Two fixes, usable separately or together:
                                                     do not bank at all between years, so
                                                     an idle year repeated N times is N
                                                     idle years, not one. Non-blocking:
-                                                    the years still run.
+                                                    the years still run. Every reply has
+                                                    "alerts": a short list (empty when
+                                                    quiet) of deaths, sackings, closures,
+                                                    losses, credit trouble and population
+                                                    collapse. With --session each
+                                                    simulated year is saved as it ends and
+                                                    a progress line goes to stderr, so an
+                                                    interrupt keeps the finished years.
+                                                    A population fall past a threshold
+                                                    also adds "demographic_emergency" to
+                                                    every state reply.
       {"cmd":"move_base"}                          list the tiles your nation holds that
                                                     you could move to, with people,
                                                     days on the road and the cost

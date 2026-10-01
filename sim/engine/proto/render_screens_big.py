@@ -13,6 +13,7 @@ from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
 from .tree_filters import render_state_rows
 from .wave_summary import summary_line
 from .step_problems import problems_lines
+from .step_alerts import alert_lines
 from .render_screens_market import why_goods_market_lines
 from ..knowledge_warning import warning_lines
 from .state_shut_staffing import render_shut_for_want_of_staff
@@ -489,6 +490,10 @@ def render_state(out):
     )
     lines = _render_sections(out, renderers)
     lines = _state_completed_head(out, lines)
+    emergency = out.get("demographic_emergency")
+    if emergency:
+        lines = ["DEMOGRAPHIC EMERGENCY: population %+.0f%% in the last year" % (100 * emergency["population_change"]),
+                 "  fewer people to farm, hire and pay taxes; expect wages and food prices to move", ""] + lines
     lines += _state_also(out)
     return "\n".join(lines)
 
@@ -1025,5 +1030,8 @@ def render_step(out):
     # step()'s reply is completed/events stitched onto a full state() reply;
     # render_state already knows how to read completed/events off the front.
     rendered = render_state(out)
+    alerts = alert_lines(out.get("alerts"))
+    if alerts:
+        rendered = "\n".join(alerts) + "\n\n" + rendered
     problems = problems_lines(out.get("problems"))
     return rendered + "\n" + "\n".join(problems) if problems else rendered

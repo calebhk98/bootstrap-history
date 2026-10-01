@@ -5,6 +5,7 @@ import math, re
 from ..data import closure
 from ..knowledge_warning import knowledge_loss_warning
 from .state_shut_staffing import shut_for_want_of_staff
+from .step_alerts import demographic_emergency
 
 def _agent_end_reason(sim):
     """None while the run is live; otherwise why it stopped, for state() and
@@ -873,6 +874,9 @@ def _agent_state(sim, nodes, cmd=None):
     warning = knowledge_loss_warning(sim)
     if warning:
         out["knowledge_loss_warning"] = warning
+    emergency = demographic_emergency(sim.state.population.population_change_last_year)
+    if emergency:
+        out["demographic_emergency"] = emergency
     return _agent_state_shorten(out, full)
 
 

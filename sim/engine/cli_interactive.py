@@ -39,6 +39,7 @@ from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, g
 from .core import Sim
 from . import protocol as _protocol
 from . import settings
+from .proto import step_progress
 from .proto import util as proto_util
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
                        load_state, parse_typed, render_final, render_pretty,
@@ -451,6 +452,7 @@ def _play_run_one_command(sim, nodes, cmd, session):
     # to its output being rendered, which is the interval the player
     # actually waits through.
     _t0 = time.time()
+    step_progress.set_after_year(step_progress.commit_and_report(session, sys.stderr))
     try:
         resp = _agent_dispatch(sim, nodes, cmd)
     except Exception as error:            # never lose a session to a bug

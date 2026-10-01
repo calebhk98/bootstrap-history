@@ -15,6 +15,8 @@ from .saveload import load_state, save_state
 from .score import victory_report
 from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
+from . import step_progress
+from .step_alerts import step_alerts
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
@@ -227,8 +229,11 @@ def _cmd_step(sim, nodes, cmd, ended):
         before_revealed = set(getattr(sim, "revealed", set()))
         before_operating = set(sim.operating)
         _arrival_snapshot = _dashboard_snapshot(sim)
+        population_before = sim.population.total
         sim.step()
         ran += 1
+        population_change = sim.population.total / population_before - 1.0 if population_before > 0 else 0.0
+        sim.state.population.population_change_last_year = round(population_change, 4)
         hist = getattr(sim, "_dashboard_history", None)
         if hist is None:
             hist = sim._dashboard_history = []
@@ -247,6 +252,10 @@ def _cmd_step(sim, nodes, cmd, ended):
             snapshots.append({**_snap, "route_startable": route_startable(sim, route)})
         else:
             snapshots.append(_snap)
+        step_progress.after_year(sim, {"year": sim.year, "capital": _snap["capital"],
+                                       "completed": len(_snap["completed"]),
+                                       "closed": len(_snap["concerns_closed"]), "years_asked": years,
+                                       "population_change": population_change})
         # sorted(), because this is a set difference and a set of strings
         # iterates in an order that depends on PYTHONHASHSEED. Two runs of
         # the same game with the same seed reported the same completions in
@@ -299,6 +308,11 @@ def _cmd_step(sim, nodes, cmd, ended):
                              % (ran, years))
             break
     out = dict(ok=True, completed=completed, lost=lost, events=events)
+    out["alerts"] = step_alerts(
+        events, lost,
+        [nodes[node_id]["name"] for snap in snapshots for node_id in snap.get("concerns_closed", ())],
+        founder_died_this_step, sim.goal_year if goal_year_before is None else None,
+        stopped_early, sim.state.population.population_change_last_year)
     summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
     if summary:
         out["summary"] = summary
