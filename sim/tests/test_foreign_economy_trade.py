@@ -140,6 +140,6 @@ for _record in _foreign_module.foreign_economy_records():
           os.path.exists(os.path.join(ROOT, "data", "civilizations",
                                       _record["civilization"] + ".json")), None)
 
-# --- off by default: the shipped data enables nothing.
-check("the shipped data file enables no foreign economy",
-      not any(record.get("enabled") for record in _shipped_records()), None)
+# --- the shipped partner is on, and does not trade for the civilisation that is itself.
+check("the shipped data file enables a foreign economy",
+      any(record.get("enabled") for record in _shipped_records()), None)
