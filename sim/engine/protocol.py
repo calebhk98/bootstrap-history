@@ -66,7 +66,7 @@ from .proto.typed import (
     TYPED_ALIASES, _typed_number, _absorb_key_colons, parse_typed
 )
 from .proto.dispatch import (
-    KNOWN_COMMANDS, _ID_COMMANDS, _NAME_COMMANDS, _cmd_state, _cmd_available,
+    KNOWN_COMMANDS, id_commands, name_commands, _cmd_state, _cmd_available,
     _cmd_log, _cmd_score, _cmd_why, _cmd_path, _cmd_start, _cmd_stop,
     _cmd_rush, _cmd_bounty, _cmd_buy, _cmd_work, _cmd_allocate, _cmd_risk,
     _cmd_values, _cmd_money, _cmd_stuck, _cmd_mines, _cmd_capacity,

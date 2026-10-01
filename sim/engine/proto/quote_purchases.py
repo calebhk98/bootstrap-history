@@ -20,7 +20,7 @@ def _flat_unit_quote(sim, what, unit_name, unit_price, quantity, note, **extra):
 
 def _quote_farm(sim, cmd, quantity):
     return _flat_unit_quote(
-        sim, "farm", "hectares", sim.FARM_COST_PER_HA * sim.price_index, quantity,
+        sim, "farm", "hectares", sim.farm_price_per_hectare(), quantity,
         "Farmland is bought once and lowers the staple price for everyone you feed.")
 
 
@@ -35,7 +35,7 @@ def _quote_school(sim, cmd, quantity):
     if not trade:
         return {"ok": False, "error": "say which trade, e.g. quote school smith 2"}
     reply = _flat_unit_quote(
-        sim, "school", "seats", sim.TRADE_SCHOOL_COST_PER_SEAT * sim.price_index,
+        sim, "school", "seats", sim.trade_school_price_per_seat(),
         quantity, "Each seat widens the annual supply of that trade locally.",
         trade=trade)
     if not sim.trade_available(trade):

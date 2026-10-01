@@ -1725,7 +1725,8 @@ def main():
                    help="which goal to play toward. See 'goals' for the roster; "
                         "default is the tree's own default. Omit when resuming a "
                         "--session: the save says which goal it is.")
-    subparser.add_argument("--seed", type=int, default=1)
+    subparser.add_argument("--seed", default=1,
+                   help="fix the dice: a number or a word; kept in the save")
     subparser.add_argument("--horizon", type=int, default=500)
     subparser.add_argument("--civ", default=None,
                    help="which civilisation. Omit when resuming a --session: the "

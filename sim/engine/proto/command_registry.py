@@ -1,7 +1,7 @@
 """The command registry: each command declares its own help beside its handler.
 
 `@command(...)` on a handler records the name, group, summary, usage,
-options, description and aliases. The dispatch table, KNOWN_COMMANDS, the
+options, description, aliases and (for the typed parser) argument shape. The dispatch table, KNOWN_COMMANDS, the
 typed alias map and every `help` page are all read from this registry, so a
 command cannot run without also being documented.
 """
@@ -15,15 +15,20 @@ COMMANDS = {}   # name -> entry dict, in registration order
 
 
 def register_command(name, group, summary, usage, description,
-                     options=None, aliases=(), handler=None, fog_hidden=False):
+                     options=None, aliases=(), handler=None, fog_hidden=False,
+                     shape=None):
     """Record one command. `usage` is a list of example forms, `options`
-    maps an argument or option to its meaning."""
+    maps an argument or option to its meaning. `shape` names the typed
+    argument form when it is a plain one (typed.py maps shapes to parsers):
+    "bare" takes none, "tech" names a technology (fog-guarded), "tech_done"
+    names one already done, "file" a file name, "word" one word. A command
+    with its own parser in typed.py leaves it unset."""
     assert name not in COMMANDS, "command %r registered twice" % name
     COMMANDS[name] = {
         "name": name, "group": group, "summary": summary,
         "usage": list(usage), "description": description,
         "options": dict(options or {}), "aliases": list(aliases),
-        "handler": handler, "fog_hidden": fog_hidden,
+        "handler": handler, "fog_hidden": fog_hidden, "shape": shape,
     }
     return COMMANDS[name]
 
@@ -38,6 +43,11 @@ def command(name, **fields):
 
 def unregister(name):
     COMMANDS.pop(name, None)
+
+
+def names_with_shape(*shapes):
+    """Names of the commands declaring any of these argument shapes."""
+    return tuple(name for name, entry in COMMANDS.items() if entry["shape"] in shapes)
 
 
 def handlers():

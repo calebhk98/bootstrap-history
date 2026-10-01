@@ -205,7 +205,7 @@ class PopulationMixin:
             return False, ("the trade must exist before a school can reproduce "
                            "it; teach or discover %s first" % trade)
         seats = float(seats)
-        cost = seats * self.TRADE_SCHOOL_COST_PER_SEAT * self.price_index
+        cost = seats * self.trade_school_price_per_seat()
         household = self.state.household
         if seats <= 0 or cost > household.capital:
             return False, "cannot afford that trade school"
