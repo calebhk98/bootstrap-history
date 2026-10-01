@@ -332,6 +332,8 @@ class EconomyState:
 	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# the year's founder purchases, draws and sales by commodity
 	market_flows: Optional[Dict[str, Any]] = None
+	# foreign economy id -> commodity -> its capacity, stock and price ratio (foreign_economies.py)
+	foreign_market_book: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
 	farm_hectares: Optional[float] = None
 	farm_stock_kg: float = 0.0

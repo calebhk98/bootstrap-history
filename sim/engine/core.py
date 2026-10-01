@@ -38,6 +38,7 @@ from sim.unit_conversions import PERCENT_SCALE
 
 from .economy import EconomyMixin
 from .market_clearing import MarketClearingMixin
+from .foreign_economies import ForeignEconomiesMixin
 from .market_demand import MarketDemandMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
@@ -196,7 +197,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
         "its members - see _cap_pooled_farm_weather_cells.")
 
 
-class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, FogMixin, GeographyMixin, LabourMixin,
+class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin):
     STATE_CAPACITY_DEFAULT = declare(

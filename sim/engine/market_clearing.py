@@ -109,7 +109,8 @@ class MarketClearingMixin:
                      entry["capacity_tonnes"],
                      entry["stock_tonnes"], flows["bought"].get(commodity),
                      flows["drawn"].get(commodity), flows["sold"].get(commodity),
-                     self.actor_market_version(), self.state.scenario.year)
+                     self.actor_market_version(), self.state.scenario.year,
+                     tuple(self.foreign_economies()))
         cache = getattr(self.household, "_market_outcome_cache", None)
         if cache is None:
             cache = self.household._market_outcome_cache = {}
@@ -117,9 +118,13 @@ class MarketClearingMixin:
         cached = cache.get((commodity, with_flows))
         if cached is not None and cached[0] == signature and cached[2] is prices:
             return cached[1]
-        conditions = self._market_conditions(commodity, entry, with_flows)
+        conditions, trade_flows = self.foreign_trade(
+            commodity, entry, self._market_conditions(commodity, entry, with_flows))
         result = (conditions, market.clear_market(conditions))
         cache[(commodity, with_flows)] = (signature, result, prices)
+        self.household._trade_tonnes_cache = getattr(self.household, "_trade_tonnes_cache", {})
+        self.household._trade_tonnes_cache[(commodity, with_flows)] = sum(
+            flow for _id, flow, _outcome in trade_flows)
         return result
 
     # ---- what callers read --------------------------------------------------
@@ -149,14 +154,16 @@ class MarketClearingMixin:
             "reference_capacity_tonnes": entry["reference_tonnes"],
             "stock_tonnes": entry["stock_tonnes"],
             "household_demand_tonnes_at_anchor": conditions.household_demand_at_anchor_tonnes,
-            "founder_purchases_tonnes": closing_conditions.committed_demand_tonnes,
+            "founder_purchases_tonnes": (self._market_flows()["bought"].get(commodity, 0.0)
+                                        + self._market_flows()["drawn"].get(commodity, 0.0)),
             "founder_sales_tonnes": closing_conditions.founder_sales_tonnes,
-            "actor_supply_tonnes": conditions.actor_supply_tonnes,
+            "actor_supply_tonnes": self.actor_supply(commodity),
             "society_sales_tonnes": closing.society_sales_tonnes,
             "displaced_by_founder_tonnes":
                 market.society_sales_displaced_by_founder(closing_conditions),
             "unsold_tonnes": closing.unsold_tonnes,
             "unmet_demand_tonnes": closing.unmet_demand_tonnes,
+            "trade_tonnes": self.household._trade_tonnes_cache[(commodity, True)],
         }
 
     # ---- the turn of the year -----------------------------------------------
@@ -173,8 +180,10 @@ class MarketClearingMixin:
         book = self.state.economy.market_book
         for commodity in sorted(book):
             entry = book[commodity]
-            conditions = self._market_conditions(commodity, entry, True)
+            conditions, trade_flows = self.foreign_trade(
+                commodity, entry, self._market_conditions(commodity, entry, True))
             outcome = market.clear_market(conditions)
+            self.foreign_trade_year_end(commodity, entry, trade_flows)
             entry["capacity_tonnes"] = market.adjusted_capacity(
                 entry["capacity_tonnes"], outcome.price_ratio)
             entry["stock_tonnes"] = market.stock_after_year(outcome)

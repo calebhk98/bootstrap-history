@@ -22,7 +22,7 @@ def without_trade(simulation):
 
 
 def shortage(simulation, commodity, share=0.3):
-    entry = simulation.state.economy.market_book[commodity]
+    entry = simulation._market_entry(commodity)
     entry["capacity_tonnes"] *= share
     return simulation
 
@@ -51,7 +51,11 @@ check("freight over the route is a finite positive cost per tonne",
 
 # --- the opening is in balance with a partner whose costs are close: nothing moves for cheap bulk goods.
 check("a bulk good the route cannot pay for is not traded",
-      s.foreign_trade_summary()["imports_tonnes"] == 0.0, None)
+      s.market_state("iron")["trade_tonnes"] == 0.0, s.market_state("iron")["trade_tonnes"])
+check("a good the partner cannot make with its own technologies is not traded",
+      all(s._foreign_price_pair(good, facts) is None for good in ("xenon_g", "caesium_g")), None)
+check("land does not cross a border",
+      s._foreign_price_pair("hectare_land", facts) is None, None)
 
 # --- imports cap a home shortage.
 traded = cheap_partner(shortage(rome(), SILK), home_price=100.0, foreign_price=10.0)
@@ -73,9 +77,14 @@ exporter = cheap_partner(rome(), home_price=10.0, foreign_price=100.0)
 check("a dearer partner draws exports from the home market",
       exporter.market_state(SILK)["trade_tonnes"] < 0.0,
       exporter.market_state(SILK).get("trade_tonnes"))
+check("...which lifts the home price above its long-run cost",
+      exporter.market_price_ratio(SILK) > 1.0, exporter.market_price_ratio(SILK))
 exporter.step()
-check("...which lifts the price abroad",
-      exporter.state.economy.foreign_market_book[PARTNER][SILK]["price_ratio"] > 1.0, None)
+check("...and the partner's price falls with the goods it receives",
+      exporter.state.economy.foreign_market_book[PARTNER][SILK]["price_ratio"] < 1.0, None)
+traded.step()
+check("what home imports in a shortage lifts the price abroad, which sells it",
+      traded.state.economy.foreign_market_book[PARTNER][SILK]["price_ratio"] > 1.0, None)
 check("...and the year's tonnage is recorded",
       exporter.foreign_trade_summary()["exports_tonnes"] > 0.0, exporter.foreign_trade_summary())
 
@@ -103,3 +112,10 @@ os.remove(_save_path)
 check("the foreign book survives a save and a load",
       s_loaded.state.economy.foreign_market_book == s.state.economy.foreign_market_book,
       None)
+
+# --- the data file only names civilisations that exist.
+from sim.engine.foreign_economies import foreign_economy_records
+for _record in foreign_economy_records():
+    check("a foreign economy names a civilisation file that exists: " + _record["civilization"],
+          os.path.exists(os.path.join(ROOT, "data", "civilizations",
+                                      _record["civilization"] + ".json")), None)

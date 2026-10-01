@@ -20,7 +20,8 @@ import os
 from sim.constants import declare
 from sim.world import market, trade_between
 
-from .data import ROOT, calculated_goods_prices, haversine_km, load_civ, starting_schedule
+from .data import (ROOT, calculated_goods_prices, goods_provenance, haversine_km, load_civ,
+                   starting_schedule)
 from .project_materials import tonnes_per_unit
 
 FOREIGN_CAPACITY_PER_HEAD_OF_HOME = declare(
@@ -41,6 +42,23 @@ def foreign_economy_records():
     """The economies the data file names."""
     with open(FOREIGN_ECONOMIES_PATH, encoding="utf-8") as handle:
         return tuple(json.load(handle)["economies"])
+
+
+@functools.lru_cache(maxsize=None)
+def not_traded_materials():
+    """Materials that cannot cross a border, from the data file."""
+    with open(FOREIGN_ECONOMIES_PATH, encoding="utf-8") as handle:
+        return frozenset(json.load(handle).get("not_traded_materials") or ())
+
+
+@functools.lru_cache(maxsize=None)
+def _foreign_solved_materials(civilization_id):
+    """Materials the economy can make with its own technologies; the rest are
+    priced only as if some technology were held."""
+    civilization = load_civ(civilization_id)
+    provenance = goods_provenance(frozenset(civilization["starting_techs"]),
+                                  civilization_id=civilization_id)
+    return frozenset(material for material, source in provenance.items() if source == "solved")
 
 
 @functools.lru_cache(maxsize=None)
@@ -81,7 +99,12 @@ class ForeignEconomiesMixin:
             home_money_per_coin = coin["kg_per_unit"] * coin_price
             foreign_prices = {material: price * home_money_per_coin for material, price
                               in _foreign_prices_in_own_coin(civilization_id).items()}
-        facts = {"population": float(civilization.get("population") or 0.0),
+        facts = {"solved_materials": _foreign_solved_materials(civilization_id),
+                 "home_solved_materials": frozenset(
+                     material for material, source in goods_provenance(
+                         frozenset(self.state.projects.done),
+                         civilization_id=self.civ.get("id")).items() if source == "solved"),
+                 "population": float(civilization.get("population") or 0.0),
                  "prices_in_home_money": foreign_prices,
                  "freight_per_tonne": self._route_freight_per_tonne(civilization)}
         cache[civilization_id] = (prices, facts)
@@ -110,14 +133,16 @@ class ForeignEconomiesMixin:
 
     def _foreign_price_pair(self, commodity, facts):
         """(home, foreign) long-run price per tonne of a commodity in home
-        money, from the first material of it both economies price; None when
-        there is none."""
+        money, from the first material of it both economies can make and may sell
+        across a border; None when there is none."""
         home_prices = self._material_prices()
         foreign_prices = facts["prices_in_home_money"]
         keys = [commodity] + sorted(self._commodity_ledger().commodities.get(
             commodity, {}).get("material_keys", []))
         for key in keys:
-            if key in home_prices and key in foreign_prices:
+            if (key in home_prices and key in foreign_prices
+                    and key in facts["solved_materials"] and key in facts["home_solved_materials"]
+                    and key not in not_traded_materials()):
                 per_tonne = 1.0 / tonnes_per_unit(key)
                 return home_prices[key] * per_tonne, foreign_prices[key] * per_tonne
         return None
