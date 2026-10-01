@@ -31,6 +31,11 @@ class Firm(RecordedActor):
 			self.concerns.add(node_id)
 			self.record.opened_year[node_id] = world.year
 
+	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
+		"""A licensed concern becomes the firm's own business."""
+		self.record.target = node_id
+		super().accept_licence(node_id, chain, world)
+
 	def staff_concern(self, node_id: str, world: Any) -> float:
 		"""Take on the people running a concern needs from the shared pool; the share of
 		them found, which is the share of its output that gets made."""
@@ -55,7 +60,8 @@ class Firm(RecordedActor):
 			self.credit(takings, "takings")
 			self.debit(upkeep, "upkeep")
 			levy = world.government().collect(self, takings, world)
-			margin = takings - upkeep - levy
+			royalty = world.collect_royalty(self, node_id, takings)
+			margin = takings - upkeep - levy - royalty
 			self.record.last_margin = margin
 			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
 

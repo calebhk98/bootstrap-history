@@ -146,7 +146,7 @@ check("a licensed firm pays the founder its royalty on takings",
       (game.household.capital - capital_before, firm.record.outlays))
 
 # ---- the command ------------------------------------------------------------------------
-replies = proto([{"cmd": "disclose"}, {"cmd": "disclose", "id": "no_such_node", "mode": "publish"},
+replies, _, _ = proto([{"cmd": "disclose"}, {"cmd": "disclose", "id": "no_such_node", "mode": "publish"},
                  {"cmd": "help", "topic": "disclose"}])
 check("the disclose command lists the inventions and says what it takes",
       replies and replies[0].get("ok") and "inventions" in replies[0], replies[:1])
