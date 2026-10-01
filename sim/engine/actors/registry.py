@@ -194,32 +194,41 @@ class ActorRegistry:
 		self._bans = None
 
 	def consider_entry(self, world: Any) -> List[str]:
-		"""Found a firm for each proven concern that a new entrant could profit from."""
+		"""Found a firm for each proven concern whose market still pays an entrant, after its own
+		output and that of entrants already waiting reaches the market, more than the capital
+		it ties up would earn at the market's rate."""
 		self.world = world
 		founded = []
 		capital_limit = world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE
+		capital_rate = world.capital_rate()
 		waiting: Dict[str, int] = {}
 		for firm in self.active_firms():
 			target = firm.record.target
 			if target is not None and target not in firm.concerns:
-				waiting[target] = waiting.get(target, 0) + 1
+				key = world.market_key(target)
+				waiting[key] = waiting.get(key, 0) + 1
 		for node_id in world.proven_concerns():
-			operators = self.rivals_of(node_id, "") + waiting.get(node_id, 0)
-			expected = world.concern_gross(node_id) / (operators + 1.0) - world.upkeep(node_id)
+			key = world.market_key(node_id)
+			rivals = self.rivals_of(node_id, "")
+			expected = world.entry_gross(node_id, rivals, waiting.get(key, 0) + 1) - world.upkeep(node_id)
+			if expected <= 0:
+				continue
 			probe = Firm("probe", ActorRecord(kind="firm"))
 			chain = imitation.missing_chain(node_id, world, probe)
 			if not chain:
 				continue
 			plan = imitation.copy_plan(probe, chain, world)
-			worth = expected * VALUE_HORIZON_YEARS * imitation.copy_chance(chain, world)
+			chance = imitation.copy_chance(chain, world)
+			worth = expected * VALUE_HORIZON_YEARS * chance
 			stake = plan["total"] * ENTRY_STAKE_BUFFER
-			if expected <= 0 or worth <= plan["total"] or stake > capital_limit:
+			if worth <= plan["total"] or expected * chance <= stake * capital_rate or stake > capital_limit:
 				continue
 			firm_id = "firm:%d" % (len(self.state.records) + 1)
 			founded_firm = self.add(firm_id, ActorRecord(
 				kind="firm", name=firm_id, target=node_id,
 				last_margin=expected, founded_year=world.year))
 			founded_firm.credit(stake, "pooled capital")
+			waiting[key] = waiting.get(key, 0) + 1
 			founded.append(firm_id)
 		return founded
 

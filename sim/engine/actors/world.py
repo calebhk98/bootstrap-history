@@ -143,6 +143,25 @@ class SimWorld(BudgetView, GroupView, DisclosureView):
 		sim = self._sim
 		return sim.concern_takings(node_id, 1.0) * sim.goods_market_factor(node_id)
 
+	def market_key(self, node_id: str) -> str:
+		"""What a concern's operators share: a goods category is one market, any other concern its own."""
+		category = self.nodes[node_id].get("cat")
+		return category if category in self._sim.GOODS_CATEGORIES else node_id
+
+	def entry_gross(self, node_id: str, rivals: int, entrants: int) -> float:
+		"""Yearly takings one more operator would have at full ramp once `entrants` operators
+		(itself included) have joined the `rivals` already selling."""
+		sim = self._sim
+		takings = sim.concern_takings(node_id, 1.0)
+		category = self.nodes[node_id].get("cat")
+		if category in sim.GOODS_CATEGORIES:
+			return takings * sim.goods_category_factor_with_entrants(category, entrants)
+		return takings / (rivals + entrants)
+
+	def capital_rate(self) -> float:
+		"""Yearly return capital earns lent out at the market's rate."""
+		return float(self._sim.civ["starting_interest_rate"])
+
 	def concern_margin(self, node_id: str) -> float:
 		"""Yearly profit of the founder's concern once it has ramped up."""
 		return self.concern_gross(node_id) - self.upkeep(node_id)

@@ -772,7 +772,12 @@ class GoodsMixin:
             return None
         if node_id in self.state.projects.operating:
             return self.goods_market_factor(node_id)
-        ratios = self._goods_category_ratios(cat, extra=1)
+        return self.goods_category_factor_with_entrants(cat, 1)
+
+    def goods_category_factor_with_entrants(self, cat, entrants):
+        """One seller's revenue in a goods category relative to day one once `entrants` more
+        sellers share the category's demand: the clearing price falls as supply rises."""
+        ratios = self._goods_category_ratios(cat, extra=entrants)
         if ratios is None:
             return 1.0
         price_ratio, qty_ratio, n_active = ratios
