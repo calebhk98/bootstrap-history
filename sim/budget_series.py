@@ -4,6 +4,7 @@
     python3 sim/budget_series.py rome_100ad 200 1 [rows.jsonl]
     python3 sim/budget_series.py rows.jsonl      summarise rows a cut-off run wrote
 
+Set BUDGET_SERIES_IDLE_FOUNDER=1 to leave the founder idle (a fast run of the state alone).
 Prints, for each decade, the state's revenue, each spending line, surplus or
 deficit, the levy rates it sets, the army it keeps and what it took from the
 founder. Everything is measured from the run, not kept in any document.
@@ -28,7 +29,7 @@ def run(civ_id, years, seed, out_path=None):
 	tree, _prices, nodes, _wages, _goods = S.load()
 	goal = tree["meta"]["goal_node"]
 	_lab, order, _b = S.load_strategy("recommended", nodes, goal)
-	game = S.Sim(nodes, order, random.Random(seed), events=True, manual=False, civ=S.load_civ(civ_id))
+	game = S.Sim(nodes, order, random.Random(seed), events=True, manual=bool(os.environ.get("BUDGET_SERIES_IDLE_FOUNDER")), civ=S.load_civ(civ_id))
 	game.goal, game.done_year = goal, {}
 	treasury = game.state_treasury()
 	rows = []
@@ -80,7 +81,8 @@ def show(rows):
 			" ".join("%.3g" % value for value in per_line)))
 	fired = sum(1 for row in rows if row["requisition_rate"] + row["office_rate"] > 0.0)
 	ceiling = sum(1 for row in rows if row["requisition_rate"] + row["office_rate"] >= 0.2999)
-	print("years %d, levy fired %d, at ceiling %d" % (len(rows), fired, ceiling))
+	short = sum(1 for row in rows if sum(row["unfunded"].values()) > 0.0)
+	print("years %d, state went short %d, levy fired %d, at ceiling %d" % (len(rows), short, fired, ceiling))
 
 
 def main(argv):
