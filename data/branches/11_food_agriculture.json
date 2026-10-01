@@ -1983,5 +1983,34 @@
   "art": 1,
   "conf": "B",
   "note": "Maintain a living culture of wild yeast and lactic acid bacteria in flour and water. Feed it regularly and use it to leaven bread. Improves flavor and digestibility compared to unleavened bread. Requires discipline but produces superior bread."
+ },
+ {
+  "id": "fud_pepper_cultivation",
+  "name": "Black pepper vine gardens",
+  "cat": "crops",
+  "kind": "RESOURCE",
+  "pre": [
+   "sea_monsoon_route"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 60,
+  "lab": {
+   "labourer": 400
+  },
+  "mat": {},
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
+  "yrs": 3.0,
+  "risk": 0.2,
+  "sus": 0,
+  "gov": 1,
+  "rev_hours": 0,
+  "sch": 0,
+  "art": 0,
+  "conf": "C",
+  "note": "Grow Piper nigrum, a climbing vine of the wet tropics, on living supports with the Malabar gardeners' methods. It needs a frost-free humid climate (the production entry names the Koppen classes) and the vines bear only in their third or fourth year. Rome buys the berries but holds neither the vines nor the climate.",
+  "traits": [
+   "food"
+  ]
  }
 ]

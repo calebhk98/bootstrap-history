@@ -523,6 +523,9 @@
     "china"
    ],
    "cost_multiplier": 30,
+   "unlocks": [
+    "tx2_silkworm_native_stock"
+   ],
    "note": "Rome already buys it. The sericulture SECRET is the valuable thing; two monks smuggled silkworm eggs to Byzantium in 552 AD, so it is stealable."
   },
   "shellac": {

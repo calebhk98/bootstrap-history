@@ -144,11 +144,47 @@
   },
   "mat": {},
   "name": "Acquire silkworm eggs and mulberry stock",
-  "note": "Secure live Bombyx mori eggs and suitable mulberry planting stock through the Asian trade route. Imported silk cloth supplies neither organism.",
+  "note": "Secure live Bombyx mori eggs and suitable mulberry planting stock, through the Asian trade route or from where the worm is native. Imported silk cloth supplies neither organism.",
   "ph": 80.0,
-  "pre": [
-   "sea_monsoon_route"
+  "pre": [],
+  "req_any": [
+   {
+    "group": "silkworm_origin",
+    "options": {
+     "sea_monsoon_route": 1.0,
+     "tx2_silkworm_native_stock": 1.0
+    }
+   }
   ],
+  "rev_hours": 0,
+  "risk": 0.2,
+  "sch": 0.0,
+  "sus": 0,
+  "traits": [
+   "infrastructure"
+  ],
+  "up_hours": 403.2375834825865
+ },
+ {
+  "adopt_yrs": 1,
+  "art": 1.0,
+  "build_yrs": 0.5,
+  "cap_hours": 4032.375834825865,
+  "cat": "access",
+  "conf": "C",
+  "dev_people": null,
+  "dev_years": null,
+  "gov": 0,
+  "id": "tx2_silkworm_native_stock",
+  "kb": "90_textiles.md",
+  "lab": {
+   "artisan": 200.0
+  },
+  "mat": {},
+  "name": "Hold native silkworm eggs and mulberry stock",
+  "note": "Keep Bombyx mori eggs and mulberry stock where the worm was domesticated: the same stock as tx2_silkworm_stock without the Asian sea route. Reach is priced by geography.json (located_materials.silk_raw), so it costs nothing where the worm is native and a great deal of travel elsewhere.",
+  "ph": 80.0,
+  "pre": [],
   "req_any": [],
   "rev_hours": 0,
   "risk": 0.2,

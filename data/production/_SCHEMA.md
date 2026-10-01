@@ -34,6 +34,7 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `energy_mj` | The residual: process heat or work needing a technology none of the three energy markets above can supply. Left deliberately uncosted - see ENERGY in `sim/solve_prices.py`'s module docstring for why. Do not reach for this field first; it should be rare. As of this round nothing in this directory uses it - `quartz_tube_kg`, the last entry that did, now draws on `electrical_mj` directly (arc/resistance heating genuinely reaches its 1700-2000 C; see that entry's own yield_basis and TEMPERATURE in the solver's module docstring for why it does not go through the shared `thermal_mj` pool instead). |
 | `extracted_from` | For materials nature supplies: 'ore deposit', 'forest', 'quarry', 'arable land', 'seawater'. These earn a rent set by the worst source still worth working, rather than a cost of production. Omit for manufactured materials. |
 | `land_hectare_years` | Optional. For a material whose real constraint is GROUND rather than a process (a crop, a fleece, a felled tree) - how many hectare-years of `hectare_land` this recipe's WHOLE BATCH ties up, priced against `hectare_land`'s own solved rent exactly like an ordinary `inputs` entry. See LAND below for the unit, the mechanism, and which materials got it. |
+| `grown_in_climate_classes` | Optional. A list of Koppen-Geiger classes in which this crop is grown. A civilisation whose home regions' tiles (`data/world/geography.json`, `land_tiles`) hold none of them does not make it: the good stays priced (as `mature`) but is not `solved` for that civilisation, so a trade partner whose territory has one can offer it (`sim/engine/crop_climate.py`). Absent means it grows anywhere. Whether a civilisation knows the crop is the separate gate `requires_node`. |
 | `basis` | The quantity the whole entry is quoted per. Say it in words. |
 | `disposal_value_hours` | Optional, joint recipes only. {output_material: labour-hours per unit} an output fetches when its demand is already satisfied (a surplus byproduct); default zero. The solver prices such an output at this value and the other outputs carry the rest of the batch. |
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
@@ -189,7 +190,7 @@ quantity, exactly like `labour_hours` or a capital good's `build_materials`
 - stated against the SAME batch `basis` already describes, not against one
 unit of output. For every entry in this file whose `basis` is already "per
 hectare ... per year" (`wheat_kg`, `wool_kg`, `milk_kg`, `olive_oil_kg`,
-`wine_common_kg`, `cotton_kg`, `hemp_fiber_kg`, `linen_kg`, `silk_kg`,
+`wine_common_kg`, `cotton_kg`, `hemp_fiber_kg`, `linen_kg`, `mulberry_leaves_kg`,
 `rose_petals_kg`, `cork_kg`, `oak_bark_kg`, `shellac_kg`, `rubber_kg`), the
 whole batch already IS one hectare-year, so `land_hectare_years` is simply
 that one hectare, so 1 hectare-year, THE SAME CONSTANT for every one of
@@ -226,7 +227,7 @@ WHICH MATERIALS GOT IT, AND WHICH DID NOT. Every material considered:
 
 **Given `land_hectare_years`:** the food and fibre crops (`wheat_kg`,
 `olive_oil_kg`, `wine_common_kg`, `cotton_kg`, `hemp_fiber_kg`, `linen_kg`,
-`silk_kg`, `rose_petals_kg`, `dye_kg`), the pasture products (`wool_kg`,
+`mulberry_leaves_kg`, `pepper_kg`, `cassia_kg`, `rose_petals_kg`, `dye_kg`), the pasture products (`wool_kg`,
 `milk_kg`), the forest products (`timber_m3`, `wood_kg`, `firewood_kg`,
 `cork_kg`, `oak_bark_kg`, `shellac_kg`, `rubber_kg`), and the two draft
 animals (`ox`, `mule`) - every one of them a material whose `extracted_from`

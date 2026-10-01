@@ -357,7 +357,11 @@
     "tex_warp_weighted_loom",
     "tex_wool",
     "tx2_fulling",
-    "tx2_needle_hand"
+    "tx2_needle_hand",
+    "tx2_sericulture",
+    "tx2_silk_fibre",
+    "tx2_silkworm_native_stock",
+    "tx2_silkworm_stock"
   ],
   "state_capacity": 0.9,
   "state_pressure": {

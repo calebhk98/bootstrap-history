@@ -134,19 +134,33 @@
    "conf": "C",
    "requires_node": "tex_drop_spindle"
   },
+  "silk_cocoon_kg": {
+   "outputs": {
+    "silk_cocoon_kg": 100.0
+   },
+   "inputs": {
+    "mulberry_leaves_kg": 1500.0
+   },
+   "labour_hours": {
+    "labourer": 700.0
+   },
+   "basis": "per 100 kg of fresh live cocoons, spun by silkworms reared on mulberry leaf and stifled (killed in steam or dry heat) before the moth emerges",
+   "yield_basis": "REARING, the middle stage of sericulture: leaf in, cocoon out. Silkworms are very poor converters: of the leaf eaten, most is respired or left as frass, and modern rearing manuals put the feed at roughly 10 to 20 kg of fresh leaf per kg of fresh cocoon (about 12 to 15 kg for a good bivoltine race), so 15 kg of leaf per kg of cocoon is taken, 1500 per 100 kg. The cocoon is the raw material of reeling; the pupa inside is a byproduct this entry does not value. Labour is attention rather than field work: the worms are fed several times a day for about four weeks, the litter cleared, the temperature and humidity held, the ripe worms mounted on straw frames and the cocoons gathered and stifled; a few worker-hours per kilogram of cocoons for a household rearing is the order of magnitude in the manuals, and 7 labourer-hours per kg is taken (conf C). The leaf-picking labour is charged in mulberry_leaves_kg, not here. SOURCES: the leaf-to-cocoon feed ratio and rearing labour are from memory of FAO and Indian Central Silk Board sericulture training manuals and of Kuhn, Textile Technology: Spinning and Reeling (Science and Civilisation in China V.9, 1988); NONE OF THESE COULD BE OPENED for this entry, so every figure is an estimate to be checked against them (Complaints/480). Stifling and drying fuel is not charged (small against the labour); a rearing house is not charged as capital.",
+   "conf": "C",
+   "requires_node": "tx2_sericulture"
+  },
   "silk_kg": {
    "outputs": {
     "silk_kg": 100.0
    },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 3000.0,
-    "artisan": 2000.0
+   "inputs": {
+    "silk_cocoon_kg": 700.0
    },
-   "land_hectare_years": 0.99999105,
-   "extracted_from": "arable land",
-   "basis": "per hectare of mulberry orchard per year (with its attached silkworm-rearing and reeling), output as kg of finished silk",
-   "yield_basis": "GROWN, folding the whole sericulture chain into one entry for the same reason as linen_kg: there is no separate tracked key for raw cocoons or reeled thread. The chain, using the traditional Chinese/Japanese ratios this craft is best documented by: an intensively pruned mulberry orchard can put on the order of 20-30 tonnes of leaf per hectare per year; silkworms convert roughly 20 kg of fresh mulberry leaf into 1 kg of fresh cocoons (they are extremely inefficient converters - most of the leaf mass is respired or excreted); reeling then recovers only about a tenth of a cocoon's weight as usable filament, the rest being the dead pupa and the sericin gum that reeling in hot water washes away. Multiplying through: 20,000 kg leaf/ha / 20 (leaf:cocoon) / 10 (cocoon:reeled silk) is on the order of 100 kg of finished silk per hectare per year, taken as the output, with weaving folded in since - like linen_kg - there is no separate 'silk cloth' key. The labour is enormous per unit weight, matching silk's historic value density: rearing worms is round-the-clock attention for weeks (correct temperature, humidity, and feeding several times a day) rather than seasonal field labour, and reeling/weaving is a trained, delicate craft done at a fine gauge no other fibre in this file approaches. LAND (Complaints/49): the batch is the one hectare-year of mulberry orchard the basis states, so land_hectare_years is that hectare in hectare_land's own unit (1 hectare-year - see wheat_kg's own LAND note), charged against hectare_land's solved rent like any other input.",
+   "labour_hours": {
+    "artisan": 12000.0
+   },
+   "basis": "per 100 kg of finished plain-weave silk cloth, reeled from cocoons, thrown into yarn and woven",
+   "yield_basis": "MANUFACTURED from silk_cocoon_kg, folding reeling, throwing and weaving into one entry because the tree tracks no separate key for reeled thread (as linen_kg folds its chain). Reeling: the cocoons are softened in hot water and the continuous filament (1000 to 1500 m per cocoon) is drawn off several cocoons at once; hand reeling recovers about one kg of raw silk from five to six kg of fresh cocoons (the rest is pupa, sericin gum in the reeling bath and floss waste). Throwing (twisting the raw filament into warp and weft) and weaving lose a further share to waste and, if degummed, to the removal of sericin (about a fifth of the raw weight); taken together about 7 kg of fresh cocoons per kg of cloth, 700 per 100 kg (conf C). Labour: hand reeling, throwing and loom weaving of a fine fabric are slow and skilled; about 120 artisan-hours per kg of cloth (50 reeling and throwing, 70 weaving) is the order of magnitude consistent with silk's historic value density, a bolt of Han silk costing days to weeks of a grain wage (conf C, an estimate, not backed out of a price). Land is charged through mulberry_leaves_kg, which the cocoons consume; this entry carries none. SOURCES: reeling yields and labour from memory of Kuhn 1988 (Needham V.9), Hsu, Han Agriculture (1980) and Bray, Agriculture (Needham VI.2, 1984), and of Han bolt prices in the Juyan slips; NONE OF THESE COULD BE OPENED for this entry (Complaints/480).",
    "conf": "C",
    "requires_node": "tx2_sericulture"
   },
@@ -684,6 +698,47 @@
    },
    "basis": "per kg of usable, sorted linen rag",
    "yield_basis": "Rags are not manufactured - they are worn-out linen textiles (old clothing, sailcloth, sheeting) that have already lived a full economic life as cloth, so this entry's real 'production' is COLLECTING and sorting them, not weaving anything new. The 1.3:1 ratio of linen_kg 'consumed' per kg of usable rag reflects that a chunk of what a rag-and-bone dealer collects is too rotten, greasy or dyed to be worth a papermaker's money and gets discarded, not that fresh cloth is being fed into the entry as raw material. Because the input is priced at linen_kg's own finished-cloth cost, this entry's output price already carries the embedded cost of the ORIGINAL weaving - which is realistic: a rag's true opportunity cost is the cloth it once was, and paper mills historically competed with the clothing trade for the same worn-out linen, a real and often-complained-about scarcity (rag shortages are a recurring theme in the history of the paper trade right up to the switch to wood pulp). Labour is picking, sorting by colour/grade and rough-cleaning collected rags.",
+   "conf": "C",
+   "requires_node": null
+  },
+  "pepper_kg": {
+   "outputs": {
+    "pepper_kg": 250.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 2000.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "grown_in_climate_classes": [
+    "Af",
+    "Am",
+    "Aw"
+   ],
+   "basis": "per hectare of black pepper vine garden per year, output as kg of dried black pepper (whole berries)",
+   "yield_basis": "GROWN. Piper nigrum is a climbing vine of the wet tropics: it needs a warm, humid, frost-free climate that the Koppen classes Af, Am and Aw describe (the Malabar coast, where the Roman trade bought it, is Aw and Am), so grown_in_climate_classes names those and a territory holding none of them cannot grow it. Traditional Malabar gardens trained the vines up living trees or stakes at low density without fertiliser; yields of the order of 200 to 400 kg of dried berries per hectare per year are given for traditional gardens in Indian agronomic literature, and 250 is taken (conf C). Labour: training and weeding the vines, then hand-picking the spikes, threshing, scalding and sun-drying the berries; about 250 worker-days (2000 hours) per hectare-year is taken as an order of magnitude (conf C). LAND: the batch is the one hectare-year of the basis, charged at hectare_land's own rent, which is arable land's rent and so a labelled heuristic for a tropical garden. SOURCES: Pliny, Natural History 12.14 (pepper and its price, ancient testimony), Casson, The Periplus Maris Erythraei (1989), and agronomic yields from memory of Indian Institute of Spices Research and Spices Board publications; NONE OF THESE COULD BE OPENED for this entry (Complaints/635).",
+   "conf": "C",
+   "requires_node": "fud_pepper_cultivation"
+  },
+  "cassia_kg": {
+   "outputs": {
+    "cassia_kg": 600.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 1500.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "forest",
+   "grown_in_climate_classes": [
+    "Af",
+    "Am",
+    "Aw",
+    "Cwa"
+   ],
+   "basis": "per hectare of cassia (Chinese cinnamon) plantation per year averaged over its rotation, output as kg of dried bark",
+   "yield_basis": "GROWN. Cinnamomum cassia is a warm-subtropical evergreen of southern China (Guangxi, Guangdong, Yunnan), long known there as a bark spice and drug; it is frost-tender, so the classes taken are the tropical ones and the humid subtropical class with a dry winter (Cwa), which holds the Han southern tiles and none of the Roman ones. Bark is stripped from trees of about six to ten years, so a hectare gives a tonne or so of dried bark in the harvest year and nothing in the years before; averaged over a ten-year rotation 600 kg of dried bark per hectare-year is taken (conf C, estimate). Labour: coppicing, stripping, scraping and shade-drying the bark, plus planting and weeding: about 1500 labourer-hours per hectare-year (conf C). LAND: the batch is the one hectare-year of the basis; forests pay arable land's rent here, the same labelled heuristic as the other forest products. SOURCES: the Shennong Bencao Jing (Han materia medica) names cassia; Pliny, Natural History 12.85-98 on cassia and cinnamon; yields and labour are estimates; NONE OF THESE COULD BE OPENED for this entry (Complaints/635).",
    "conf": "C",
    "requires_node": null
   }
