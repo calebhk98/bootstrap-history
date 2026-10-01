@@ -453,9 +453,9 @@ def _portfolio_constraint(waiting):
         return "materials"
     if waiting.startswith("money") or "pace it can absorb money" in waiting:
         return "money"
-    if waiting == "the calendar":
+    if waiting.startswith("the calendar"):
         return "calendar"
-    if waiting == "your hours" or waiting.startswith("your hours:"):
+    if waiting.startswith("your hours"):
         return "founder_hours"
     return "unclear"
 

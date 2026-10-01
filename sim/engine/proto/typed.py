@@ -777,9 +777,9 @@ def _parse_spending_quote(words, nums):
     what = words[0].lower()
     if len(words) < 2:
         return None, "quote %s needs %s." % (
-            what, "a trade" if what in ("hire", "commission") else "an id")
+            what, "a trade" if what in ("hire", "commission", "train") else "an id")
     out = {"cmd": "quote", "what": what}
-    if what in ("hire", "commission"):
+    if what in ("hire", "commission", "train"):
         out["trade"] = words[1].lower()
         out["hours" if what == "commission" else "n"] = nums[0] if nums else 1
     else:

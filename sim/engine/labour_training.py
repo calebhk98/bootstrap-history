@@ -20,6 +20,7 @@ import math
 
 from .data import (TRADES_ABSENT, TRADE_NOTES, WAGES, closure, trade_family)
 from sim.constants import declare
+from . import purchase_rule
 
 
 class TrainingMixin:
@@ -174,33 +175,11 @@ class TrainingMixin:
         return max(0.0, total - mine), mine
 
     def _cash_in_hand_refusal(self, what, fee):
-        """Refuse a wage, an apprentice's keep, or a job's fee for want of
-        cash - and say WHY it is refused outright rather than borrowed, which
-        `start` would be allowed to do for the identical shortfall.
-
-        This is deliberate, not an oversight: spending_power's own docstring
-        (economy.py) explains it - a lender advances against work already
-        under way, which is what starting a project can point to. A payroll,
-        an apprentice's keep, or a one-off commission fee is money that is
-        simply spent the moment it changes hands, with nothing left to
-        repossess, so none of the three may draw more than half the credit
-        line, where a project may draw the whole of it. The refusal has to
-        say so explicitly, not only show capital, or it reads as arbitrary
-        rather than as the reasoning it actually is. One message for hire,
-        train and commission, so the three cannot drift apart from each
-        other or from this reasoning.
-        """
-        room = self.spending_power("buy")
-        return ("%s costs %s denarii, due now - not on credit past half your "
-                "line. You have %s in hand and could raise about %s more of "
-                "your credit line for this (not all of it: a lender funds "
-                "work already under way, which is what starting a project "
-                "can point to; a wage, an apprentice's keep or a commission "
-                "fee is money simply spent, and nothing stands behind that "
-                "the way a half-built project does). You are %s short."
-                % (what, "{:,.0f}".format(fee), "{:,.0f}".format(self.state.household.capital),
-                   "{:,.0f}".format(max(0.0, room)),
-                   "{:,.0f}".format(max(0.0, fee - room))))
+        """Refusal of a wage, an apprentice's keep or a job's fee for want of
+        money. A wage or fee is spent outright, so it draws on the purchase
+        budget; purchase_rule states that rule, the budget and the shortfall,
+        the same text `start` and `buy` give."""
+        return purchase_rule.refusal_text(self, what, fee)
 
     def hire_fee(self, trade, count):
         """Paid the moment people are taken on: a finder's fee that is also
@@ -476,6 +455,10 @@ class TrainingMixin:
                 "keeping %g %s%s fed while they learn"
                 % (count, trade, "" if count == 1 else "s"), fee)
         return {"count": count, "from": frm, "hours": hours, "fee": fee}, None
+
+    def trainee_wage_bill(self, trade, count):
+        """Yearly wage the people taught will add once they join the staff."""
+        return count * self.annual_wage(trade)
 
     def train(self, trade, count, frm=None):
         """Teach a trade that does not exist here into existence.

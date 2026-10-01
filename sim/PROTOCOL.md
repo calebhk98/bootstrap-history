@@ -60,7 +60,10 @@ Two fixes, usable separately or together:
                                                     floor, prerequisites and its note;
                                                     each row says on_road_to_goal (yes or
                                                     no, never a distance) and
-                                                    is_supply_or_capability
+                                                    is_supply_or_capability; a row `start`
+                                                    would refuse carries cannot_pay_now, and
+                                                    the subjects table's you_could_pay_for
+                                                    counts what `start` accepts
       {"cmd":"available","state":"blocked","tag":"mechanical_power"}
                                                    filters: state is startable (default),
                                                     blocked, active or done; tag is a
@@ -115,9 +118,11 @@ Two fixes, usable separately or together:
       {"cmd":"quote","what":"hire","trade":"smith","n":2}   paid now and due each year after
       {"cmd":"quote","what":"commission","trade":"smith","hours":200}   fee; hours last this year
       {"cmd":"quote","what":"open","id":"fin_restaurant"}   the opening charge, before `open`
+      {"cmd":"quote","what":"train","trade":"machinist","n":2}   keep paid now, your hours, and
+                                                    `wage_bill_added_per_year` once they join
                                                     Each quote returns `paid_now`, the figure the
-                                                    command then charges. hire, commission, open
-                                                    and bounty replies carry `paid_now` too.
+                                                    command then charges. hire, commission, open,
+                                                    train and bounty replies carry `paid_now` too.
       {"cmd":"buy","what":"forest","n":100}        buy 100 ha of coppice woodland
       {"cmd":"buy","what":"mine","material":"iron","n":500}   sink a mine
       {"cmd":"buy","what":"slaves","n":4}          the economic actions the optimizer

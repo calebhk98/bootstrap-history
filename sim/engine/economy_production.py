@@ -393,14 +393,9 @@ class ProductionMixin:
                 * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
                 * economy.output_factor * self.price_index)
 
-    def revenue_sources(self):
-        """Where the money actually comes from, itemised.
-
-        A player who never issues a single start can still get richer
-        every year, from practising medicine - the cover identity the game
-        tells you to adopt - which is otherwise invisible anywhere else in
-        the interface.
-        """
+    def ledger_concern_rows(self):
+        """Yearly takings of every concern and practice that earns, by node
+        id, as the ledger credits them."""
         rows = {}
         projects = self.state.projects
         economy = self.state.economy
@@ -425,6 +420,18 @@ class ProductionMixin:
                 amt = self.venture_real_earnings(node_id)
             if amt > 0.5:
                 rows[node_id] = round(amt, 1)
+        return rows
+
+    def revenue_sources(self):
+        """Where the money actually comes from, itemised.
+
+        A player who never issues a single start can still get richer
+        every year, from practising medicine - the cover identity the game
+        tells you to adopt - which is otherwise invisible anywhere else in
+        the interface.
+        """
+        economy = self.state.economy
+        rows = self.ledger_concern_rows()
         # ALL OF IT, OR SAY WHAT IS MISSING: a ledger that shows only the
         # fifteen largest rows and nothing else does not add up to the
         # revenue it states. Every running earner has to be represented -

@@ -338,6 +338,15 @@ def _money_from_block(out):
         label = raw_key[1:].replace("_", " ") if raw_key.startswith("_") else raw_key
         lines.append("    %-38s %s" % (label, _fmt_num(value)))
     lines.append("    %-38s %s" % ("(these add up to the revenue above; wage work is below)", ""))
+    squeeze = out.get("where_the_market_squeeze_falls")
+    if squeeze:
+        lines.append("  the market will not absorb, by category (nominal -> absorbed, lost):")
+        for row in squeeze:
+            lines.append("    %-24s %12s -> %12s  lost %s" % (
+                row["category"][:24], _fmt_num(row["nominal"]), _fmt_num(row["absorbed"]),
+                _fmt_num(row["lost"])))
+            if row.get("concerns"):
+                lines.append(_wrap("in it: " + ", ".join(row["concerns"]), indent="      "))
     if out.get("still_building_up_custom"):
         lines.append(_wrap("STILL BUILDING UP: " + out["still_building_up_custom"],
                        indent="    "))

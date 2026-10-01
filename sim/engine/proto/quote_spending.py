@@ -1,5 +1,5 @@
 """`quote` for the commands that spend without being a `buy` target: hire,
-commission, open and bounty.
+commission, open, train and bounty.
 
 Each quoter calls the same sim function the command charges with, so the
 figure shown is the figure paid; nothing here does its own arithmetic for
@@ -93,6 +93,25 @@ def _quote_commission(sim, nodes, cmd):
             "note": COMMISSION_NOTE}
 
 
+def _quote_train(sim, nodes, cmd):
+    trade = str(cmd.get("trade") or cmd.get("material") or "").strip().lower()
+    count, err = _qty(cmd, "n", 1)
+    if err:
+        return {"ok": False, "error": err}
+    plan, refusal = sim.train_check(trade, count, cmd.get("from"))
+    if refusal:
+        return {"ok": False, "error": refusal}
+    return {"ok": True, "what": "train", "trade": trade, "people": plan["count"],
+            "paid_now": round(plan["fee"], 1),
+            "your_hours": round(plan["hours"], 1),
+            "wage_bill_added_per_year": round(
+                sim.trainee_wage_bill(trade, plan["count"]), 1),
+            "you_have": round(sim.capital, 1),
+            "note": "Teaching pays their keep now and takes your own hours. "
+                    "When they finish they join the payroll automatically and "
+                    "the wage bill rises by the figure above every year."}
+
+
 COMMISSION_NOTE = ("Commissioned hours are available to your projects this "
                    "year only, and cannot supervise a concern.")
 
@@ -127,6 +146,7 @@ def _quote_open(sim, nodes, cmd):
 SPENDING_QUOTERS = {
     "hire": _quote_hire,
     "commission": _quote_commission,
+    "train": _quote_train,
     "open": _quote_open,
     "bounty": _quote_bounty,
 }

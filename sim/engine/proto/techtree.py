@@ -240,6 +240,15 @@ def _brief(sim, nodes, node_id, fog):
             "downstream_count": len(_downstream_of(node_id, nodes))}
 
 
+def _startable_row(sim, nodes, node_id, fog, brief=True):
+    """One row of a startable list, marked when `start` would refuse it. The
+    mark asks start_refusal, the function `start` and `stuck` use."""
+    entry = (_brief if brief else _full_entry)(sim, nodes, node_id, fog)
+    if sim.start_refusal(node_id) is not None:
+        entry["cannot_pay_now"] = True
+    return entry
+
+
 def _full_entry(sim, nodes, node_id, fog):
     entry = _brief(sim, nodes, node_id, fog)
     node = nodes[node_id]
@@ -489,7 +498,8 @@ def _list_page(sim, nodes, sel, startable, why_these, fog, show_all, offset, lim
                        if not page else
                        "%d-%d%s" % (offset + 1, offset + len(page),
                                     (" " + why_these) if why_these else "")),
-           "available": [_full_entry(sim, nodes, node_id, fog) for node_id in page]}
+           "available": [_startable_row(sim, nodes, node_id, fog, brief=False)
+                         for node_id in page]}
     if not page:
         # "1-0 matching 'furnace'" over an empty table is a range that
         # cannot exist, printed where an answer should be. Say the answer
@@ -567,10 +577,8 @@ def _digest_subject_rows(sim, nodes, startable):
     for node_id in startable:
         group = groups.setdefault(_subject_of(nodes[node_id]), [])
         group.append(node_id)
-    # The AFFORD column is about STARTING work, so it uses the rule `start`
-    # uses. It used the purchase rule, which is why the hint under the table
-    # offered "available afford 1,083" for a player `start` would have let
-    # commit 1,767. See Sim.spending_power.
+    # The AFFORD column counts what `start` would accept, so it asks the
+    # function `start` and `stuck` ask.
     purse = sim.spending_power("start")
     rows = []
     for name, node_ids in sorted(groups.items(), key=lambda kv: -len(kv[1])):
@@ -578,7 +586,8 @@ def _digest_subject_rows(sim, nodes, startable):
         rows.append({"subject": name, "things": len(node_ids),
                      "cheapest": round(costs[0], 1),
                      "dearest": round(costs[-1], 1),
-                     "you_could_pay_for": sum(1 for cost in costs if cost <= purse)})
+                     "you_could_pay_for": sum(1 for node_id in node_ids
+                                              if sim.start_refusal(node_id) is None)})
     return rows, purse
 
 
@@ -666,11 +675,12 @@ def _digest_reply(sim, nodes, startable, fog, DEFAULT_AVAILABLE_LIMIT,
            # renders and that `why` exists to give you properly. The digest's
            # job is to help you choose which `why` to run, and it has a size
            # budget precisely so that it stays a digest.
-           "cheapest_six": [_brief(sim, nodes, node_id, fog) for node_id in cheap],
+           "cheapest_six": [_startable_row(sim, nodes, node_id, fog) for node_id in cheap],
            # _brief, not _full_entry: the table renders only the columns, and a
            # second block of fog summaries pushed the reply past the size a
            # reply is allowed to be. See the wall-of-text check.
-           "most_rests_on_these": [_brief(sim, nodes, node_id, fog) for node_id in leverage],
+           "most_rests_on_these": [_startable_row(sim, nodes, node_id, fog)
+                                   for node_id in leverage],
            "to_see_more": {
                "one subject": '{"cmd":"available","subject":"metallurgy"}',
                "by name": '{"cmd":"available","find":"furnace"}',
