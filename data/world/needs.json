@@ -30,6 +30,8 @@
   "ornament": {
    "surplus_budget_share": 0.06,
    "unit": "kg of bright durable metal equivalent",
+   "satiation_per_capita_per_year": 0.0005,
+   "satiation_basis": "TRANSITIONAL heuristic: ornament metal is durable, so yearly purchase is wear and loss of the stock held, not the budget share; about 25 g held per head and about 2 per cent worn or lost a year. Validation bound used by tests: at most a few grams per head per year. A held-stock model would replace it.",
    "effectiveness_basis": "display value per kg of worked metal; a cultural quantity, equal across the bright metals"
   },
   "warmth_and_light": {

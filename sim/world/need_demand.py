@@ -18,6 +18,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
 from sim.constants import declare
 from sim.world import demand
+from sim.world.need_satiation import apply_satiation
 
 NEED_SUBSTITUTION_ELASTICITY = declare(
     "NEED_SUBSTITUTION_ELASTICITY", 2.0,
@@ -300,6 +301,8 @@ class NeedDemandModel:
             need_units[good.name] += (
                 good.subsistence_quantity_per_capita_per_year * covered_population
                 + good.marginal_budget_share / price_index[good.name] * covered_surplus)
+        apply_satiation(need_units, price_index, self.needs,
+                        sum(income_bin.population for income_bin in self.bins))
         quantities: Dict[str, float] = collections.defaultdict(float)
         for need_id, materials in active.items():
             spending = price_index[need_id] * need_units[need_id]
