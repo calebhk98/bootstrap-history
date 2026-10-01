@@ -7,6 +7,14 @@ right, one was stale by the time this was written (the weather fix it
 describes as pending has since shipped), and the exact region count was off
 by one.
 
+
+**Since this was written:** land rent's extensive margin already reads tiles
+(section 2.2 is stale); deposits now sit on tiles (`data/world/deposits.json`
+gives each a `tile`; section 2.3 and the deposit stage of section 5 are done);
+the forest ceiling sums tile areas; the stage-1 weather cell cap exists. The
+readers still on the region layer are listed in `Complaints/140`'s remains;
+`grep -rln "load_region_lands\|regions" sim/engine sim/world` finds them.
+
 ---
 
 ## 0. Verdict in one paragraph
