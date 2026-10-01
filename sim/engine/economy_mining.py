@@ -31,49 +31,13 @@ from . import purchase_rule
 
 
 class MiningMixin:
-    MINE_OPEX_PER_T_COAL = declare(
-        "MINE_OPEX_PER_T_COAL", 1.5, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_IRON = declare(
-        "MINE_OPEX_PER_T_IRON", 12.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_COPPER = declare(
-        "MINE_OPEX_PER_T_COPPER", 55.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_LEAD = declare(
-        "MINE_OPEX_PER_T_LEAD", 18.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_TIN = declare(
-        "MINE_OPEX_PER_T_TIN", 95.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_SILVER = declare(
-        "MINE_OPEX_PER_T_SILVER", 2200.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_GOLD = declare(
-        "MINE_OPEX_PER_T_GOLD", 42000.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-
     MINE_OPEX_MATERIALS = ("coal", "iron", "copper", "lead", "tin", "silver", "gold")
 
     @property
     def MINE_OPEX_PER_T(self):
-        """Curated running cost per tonne, by material, in this civilisation's coin."""
-        return {material: getattr(self, "MINE_OPEX_PER_T_" + material.upper())
-                for material in self.MINE_OPEX_MATERIALS}
+        """Running cost per tonne extracted, by material, in this civilisation's
+        coin: the deposits' own extraction labour at the miner's wage."""
+        return {material: self._mine_opex(material) for material in self.MINE_OPEX_MATERIALS}
 
     MINE_LEAD_YEARS = declare(
         "MINE_LEAD_YEARS", 3.0, kind="engineering_estimate",
@@ -138,17 +102,15 @@ class MiningMixin:
 
     def _mine_capex_opex(self, mat):
         """(capex per t/yr to sink, opex per t/yr to run) for standing
-        production of `mat`. Capex is derived from the physical works;
-        opex is the curated figure where there is one, else the deposits'
-        own extraction labour. (None, None) for a name nothing prices."""
-        if mat not in self.MINE_OPEX_PER_T:
+        production of `mat`, both from the deposits' physical works at the
+        miner's wage. (None, None) for a name nothing prices."""
+        if mat not in self.MINE_OPEX_MATERIALS:
             price = self._book_price_per_kg(mat)
             if price is None or price <= 0:
                 return None, None
         wage = self.wage_per_hour(self.MINE_TRADE)
         build_hours, running_hours = self._mine_labour_hours_per_tonne(mat)
-        opex = self.MINE_OPEX_PER_T.get(mat, running_hours * wage)
-        return build_hours * wage, opex
+        return build_hours * wage, running_hours * wage
 
     def _mine_capex(self, mat):
         capex, _opex = self._mine_capex_opex(mat)

@@ -465,7 +465,7 @@ class MaterialSupplyMixin:
         materials should not have to guess it needs no suffix, and the
         seven original short names must keep working exactly as before."""
         mat = str(mat or "").strip().lower()
-        if not mat or mat in self.MINE_OPEX_PER_T:
+        if not mat or mat in self.MINE_OPEX_MATERIALS:
             return mat
         prices = self._material_prices()
         if mat in prices or mat in self._commodity_ledger().commodities:

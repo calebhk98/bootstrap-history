@@ -291,21 +291,23 @@ def _nitre_laid(capital):
     household.step()
     return household.nitre_bed_m2 - before
 
+from sim.engine.money_units import BOOK_LABOURER_WAGE_DENARII_PER_HOUR
+_nitre_cost_per_m2 = S.Sim.NITRE_LABOUR_HOURS_PER_M2 * BOOK_LABOURER_WAGE_DENARII_PER_HOUR
 check("the nitre purchase is held to a flat two thousand denarii a year "
       "however rich the household - sizing it to the shortfall instead, "
       "the way the mine branch beside it does, measured worse on every "
       "count and is recorded in core.py as a road not to walk again",
-      _nitre_laid(5_000_000.0) <= 2000.0 / S.Sim.NITRE_COST_PER_M2 + 1e-6,
+      _nitre_laid(5_000_000.0) <= 2000.0 / _nitre_cost_per_m2 + 1e-6,
       _nitre_laid(5_000_000.0))
 check("...and a poor household is held to a twentieth of its capital",
-      _nitre_laid(3_000.0) <= 3_000.0 * 0.05 / S.Sim.NITRE_COST_PER_M2 + 1e-6,
+      _nitre_laid(3_000.0) <= 3_000.0 * 0.05 / _nitre_cost_per_m2 + 1e-6,
       _nitre_laid(3_000.0))
 check("the nitre yield and price the advice quotes are the ones the "
-      "purchase actually uses - 0.0008 t/m2 at 2.0 den/m2, so a tonne a "
+      "purchase actually uses - 0.0008 t/m2 at 40 labour hours/m2, so a tonne a "
       "year of shortfall costs 2,500 denarii of bed",
       abs(S.Sim.NITRE_YIELD_T_PER_M2 - 0.0008) < 1e-12
-      and abs(S.Sim.NITRE_COST_PER_M2 - 2.0) < 1e-12,
-      (S.Sim.NITRE_YIELD_T_PER_M2, S.Sim.NITRE_COST_PER_M2))
+      and abs(S.Sim.NITRE_LABOUR_HOURS_PER_M2 - 40.0) < 1e-12,
+      (S.Sim.NITRE_YIELD_T_PER_M2, _nitre_cost_per_m2))
 check("saltpetre still cannot simply be bought - the beds are the answer, "
       "not a market share",
       S.Sim.MARKET_SHARE["saltpetre"] == 0.0, S.Sim.MARKET_SHARE["saltpetre"])

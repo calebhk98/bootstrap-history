@@ -901,7 +901,7 @@ class StepPhasesMixin:
                     _afford_ha = (_can_raise * 0.35
                                   / (self.FOREST_COST_PER_HA * self.price_index))
                     self.buy_forest(min(400.0, _want_ha, _afford_ha))
-            elif (self.state.economy.binding in self.MINE_OPEX_PER_T
+            elif (self.state.economy.binding in self.MINE_OPEX_MATERIALS
                     and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # Size the mine from ALL the material keys that feed this
                 # bucket, not one of them. The throttle counted iron ore AND

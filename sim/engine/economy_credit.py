@@ -19,6 +19,7 @@ grouping evidence.
 """
 from .data import WAGES
 from sim.constants import declare
+from . import money_units
 
 
 def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0):
@@ -802,23 +803,25 @@ class CreditMixin:
                      + max(0.0, household_state.capital) * self.LIVING_COST_STATUS_PER_CAPITAL)
         return base + household + tax + status + wages
 
-    LIVING_COST_BASE_SUBSISTENCE = declare(
-        "LIVING_COST_BASE_SUBSISTENCE", 120.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at price_index=1", source=None, confidence="D",
+    LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS = declare(
+        "LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS", 2400.0, kind="temporary_heuristic",
+        unit="labour hours per year at price_index=1", source=None, confidence="D",
         why="Bare subsistence cost for one person (food, the plainest "
             "shelter, nothing else) at this society's reference prices. No "
             "attested Roman subsistence-basket figure backs this exact "
             "number; a real figure needs the same physical grounding "
             "sim/world/agriculture.py gives food (CALORIES_PER_PERSON_DAY, "
             "a real crop and price), not a flat denarii figure.")
-    LIVING_COST_HOUSEHOLD_BASE = declare(
-        "LIVING_COST_HOUSEHOLD_BASE", 90.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at price_index=1, one dependant-equivalent",
+    LIVING_COST_BASE_SUBSISTENCE = money_units.PricedInLabourHours("LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS")
+    LIVING_COST_HOUSEHOLD_BASE_LABOUR_HOURS = declare(
+        "LIVING_COST_HOUSEHOLD_BASE_LABOUR_HOURS", 1800.0, kind="temporary_heuristic",
+        unit="labour hours per year at price_index=1, one dependant-equivalent",
         source=None, confidence="D",
         why="Cost of keeping one household dependant beyond bare personal "
             "subsistence - rent, ordinary household goods, the plain cost "
             "of a household rather than a single person camping. Not "
             "sourced to an attested figure.")
+    LIVING_COST_HOUSEHOLD_BASE = money_units.PricedInLabourHours("LIVING_COST_HOUSEHOLD_BASE_LABOUR_HOURS")
     LIVING_COST_FREEDMAN_SHARE = declare(
         "LIVING_COST_FREEDMAN_SHARE", 0.5, kind="temporary_heuristic",
         unit="dimensionless multiple of LIVING_COST_HOUSEHOLD_BASE per freedman",

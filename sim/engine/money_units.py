@@ -18,6 +18,22 @@ BOOK_LABOURER_WAGE_DENARII_PER_HOUR = declare(
         "kits were stated in labourer-years from. It goes when authored money "
         "is derived from labour and materials.")
 
+class PricedInLabourHours:
+    """A cost declared as labour hours, read as money in the reader's coin.
+
+    The hours live in a declared constant on the class; reading the attribute
+    from a `Sim` multiplies them by what one unskilled hour is worth in that
+    civilisation's coin, so no authored money is involved.
+    """
+
+    def __init__(self, hours_name: str):
+        self.hours_name = hours_name
+
+    def __get__(self, sim, owner=None):
+        hours = getattr(owner if sim is None else sim, self.hours_name)
+        return hours if sim is None else hours * sim.money_per_labour_hour()
+
+
 # Node fields authored in book denarii.
 NODE_MONEY_FIELDS = ("rev", "up", "cap")
 
