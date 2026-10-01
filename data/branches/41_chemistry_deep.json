@@ -1968,7 +1968,7 @@
     "group": "reductant",
     "options": {
      "iron_filings": 0.95,
-     "zinc": 0.9
+     "mat_zinc": 0.9
     }
    },
    {
@@ -2601,7 +2601,7 @@
     "group": "reductant",
     "options": {
      "iron_filings": 0.95,
-     "zinc": 0.9
+     "mat_zinc": 0.9
     }
    },
    {
@@ -2769,7 +2769,7 @@
    {
     "group": "plasticiser",
     "options": {
-     "camphor": 0.95,
+     "mat_camphor": 0.95,
      "dibutyl_phthalate": 0.85
     }
    }
@@ -2871,13 +2871,13 @@
    {
     "group": "reactant",
     "options": {
-     "formaldehyde": 0.95
+     "mat_formaldehyde": 0.95
     }
    },
    {
     "group": "catalyst",
     "options": {
-     "ammonia": 0.9,
+     "mat_ammonia": 0.9,
      "acid": 0.85
     }
    }
@@ -2913,7 +2913,7 @@
    {
     "group": "catalyst",
     "options": {
-     "ammonia": 0.9,
+     "mat_ammonia": 0.9,
      "acid": 0.95
     }
    }
