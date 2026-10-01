@@ -48,6 +48,18 @@ def _offerable(conditions):
     return conditions.society_capacity_tonnes + conditions.stock_tonnes
 
 
+def offerable_tonnes(conditions):
+    """The most a market can send in a year: its capacity and stock."""
+    return _offerable(conditions)
+
+
+def arbitrage_flow(home, foreign, home_price, foreign_price, cost_per_tonne, direction,
+                   lift_tonnes=math.inf):
+    """The flow (signed, `direction` +1 into home) at which the gap equals `cost_per_tonne`."""
+    return _solve_flow(home, foreign, home_price, foreign_price, cost_per_tonne, direction,
+                       lift_tonnes)
+
+
 def _price_gap(home, foreign, home_price, foreign_price, flow_tonnes):
     """Home price over foreign price (money per tonne) at a given flow."""
     home_at, foreign_at = with_flow(home, foreign, flow_tonnes)

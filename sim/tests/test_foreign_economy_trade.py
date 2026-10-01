@@ -109,7 +109,8 @@ check("...and the year's tonnage is recorded",
       exporter.foreign_trade_summary()["exports_tonnes"] > 0.0, exporter.foreign_trade_summary())
 
 # --- the founder's sales go through the same market.
-seller = cheap_partner(rome(), home_price=100.0, foreign_price=100.0, freight=1.0)
+# The partner pays more than the merchants' cost over freight, so the glut finds a buyer.
+seller = cheap_partner(rome(), home_price=100.0, foreign_price=140.0, freight=1.0)
 seller._material_stock()[SILK] = seller.market_state(SILK)["capacity_tonnes"] * 0.5
 no_partner = without_trade(rome())
 no_partner._material_stock()[SILK] = seller._material_stock()[SILK]

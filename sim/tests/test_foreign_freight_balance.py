@@ -180,6 +180,9 @@ check("a route's opening lift is its opening carriers' tonnes a year, finite and
 fleet._foreign_ledger(PARTNER, create=True)["lift_tonnes_per_year"] = 5.0
 capped = fleet.market_state(GOOD)["trade_tonnes"]
 check("a small fleet limits the volume traded", abs(capped) <= 5.0 + 1e-6, capped)
+# Merchants adjust part of the way each year, so the flow reaches the fleet's lift over years;
+# start from a year when it already has.
+fleet.state.economy.foreign_market_book[PARTNER][GOOD]["trade_tonnes"] = -5.0
 fleet._step_market()
 ledger = fleet._foreign_ledger(PARTNER)
 check("tonnes the fleet could not lift are recorded as unmet, then the fleet grows from them",
