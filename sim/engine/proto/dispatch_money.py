@@ -346,6 +346,7 @@ def _cmd_money(sim, nodes, cmd, ended):
             # director's own start heuristic uses to avoid over-committing
             # itself.
             "you_could_actually_fund_up_to": round(sim.funding_capacity(), 1),
+            "funding": {name: round(amount, 1) for name, amount in sim.funding_breakdown().items()},
             "sustainable_debt": round(sim.sustainable_debt(), 1),
             "sustainable_debt_means": sim.debt_service_forecast(
                 max(0.0, -sim.capital))["sustainable_debt_means"]}

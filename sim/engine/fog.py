@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 from .actors import Household
 from .data import closure, JSONDict, Nodes
 from .hazard_window import hazards_not_yet_past
+from .hazard_hedge_timing import add_timing_to_steps
 
 # Removes sentences where a node grades itself against the rest of the tree.
 # Matches exact phrases like "pivot", "highest-value", "costs more than any
@@ -288,6 +289,7 @@ class FogMixin:
             for kind in ("staff_loss", "sack_chance", "output_factor", "real_erosion"):
                 if kind in hazard or (kind == "sack_chance" and hazard.get("sack_chance")):
                     row["what_you_can_do"][kind] = self.hazard_advice(kind, hazard)
+            add_timing_to_steps(row["what_you_can_do"], scenario.year, year_start, in_progress)
             if "sack_chance" in hazard:
                 row["sack_chance_after_what_you_have_built"] = round(
                     self.hazard_figure("sack_chance", hazard), 4)
