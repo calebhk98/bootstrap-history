@@ -110,7 +110,9 @@ that - it would just be `prices.json` again, one field over.
 
 `service_life_years` and `annual_output_at_basis` turn a build bill into a
 cost per basis-unit: `(cost of build_materials + cost of build_labour_hours)
-/ (service_life_years * annual_output_at_basis)`. Both are PHYSICAL FACTS
+* capital_recovery_factor(market rate, service_life_years) / annual_output_at_basis`, where the factor is the
+yearly share that repays the bill over the life with interest at the civilisation's market rate (one over
+the life at a nil rate). Life and capacity are PHYSICAL FACTS
 about the thing - how many years before the lining spalls apart or the
 timbering rots, how many tonnes a campaign actually turns out in a year -
 never a financial depreciation convention (there is no straight-line vs.
