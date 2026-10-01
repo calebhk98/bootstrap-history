@@ -622,7 +622,8 @@
   "cat": "capability",
   "kind": "CAPABILITY",
   "pre": [
-   "cap_power_electric"
+   "cap_power_electric",
+   "power_grid"
   ],
   "kb": "",
   "ph": 0,

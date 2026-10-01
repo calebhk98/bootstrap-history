@@ -29,7 +29,9 @@ def _credit_lines(text):
     return kept
 
 
-borrower = sim(capital=2695.0)
+# enough cash for the first start only, so the second and third both draw on credit
+CASH_FOR_ONE_START = 1850.0
+borrower = sim(capital=CASH_FOR_ONE_START)
 first = _run(borrower, "start units_standards")
 second = _run(borrower, "start cn_damp_proof_course")
 third = _run(borrower, "start tr_lateen_sail")
@@ -49,14 +51,14 @@ check("...and prints only a one-line summary of the block on screen",
       len(_credit_lines(third_text)) <= 1 and "past that limit" not in third_text
       and "borrow" in third_text, third_text)
 
-forced = sim(capital=2695.0)
+forced = sim(capital=CASH_FOR_ONE_START)
 _run(forced, "start units_standards")
 _run(forced, "start cn_damp_proof_course")
 again = S._agent_dispatch(forced, NODES, {"cmd": "start", "id": "tr_lateen_sail", "full": True})
 check("'full' asks for the whole block again",
       again.get("ok") and "what_happens_there" in again.get("on_credit", {}), again)
 
-next_year = sim(capital=2695.0)
+next_year = sim(capital=CASH_FOR_ONE_START)
 _run(next_year, "start units_standards")
 _run(next_year, "start cn_damp_proof_course")
 next_year.year += 1

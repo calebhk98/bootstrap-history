@@ -154,12 +154,13 @@ def build_tree():
     nodes = {}
     # which branch file has claimed an id in this run, so a second claim is a collision
     branch_origin = {}
+    known_ids = _all_branch_node_ids()
     for filename in sorted(os.listdir(BR)):
         if not filename.endswith(".json") or filename in (MERGED_DUPLICATE_IDS_FILE, META_FILE):
             continue
         file_added, file_updated = _merge_process_branch_file(
             filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin,
-            built.errs, built.warns, built.losses, built.collisions)
+            built.errs, built.warns, built.losses, built.collisions, known_ids)
         built.added += file_added
         built.updated += file_updated
     if built.collisions:
@@ -202,7 +203,23 @@ def load_branch_meta():
         return json.load(source)
 
 
-def _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns):
+def _all_branch_node_ids():
+    """Every id defined in any branch file, so a repair in one file can see ids
+    that a later file defines."""
+    ids = set()
+    for filename in sorted(os.listdir(BR)):
+        if not filename.endswith(".json") or filename in (MERGED_DUPLICATE_IDS_FILE, META_FILE):
+            continue
+        try:
+            batch = json.load(open(os.path.join(BR, filename)))
+        except Exception:
+            continue
+        if isinstance(batch, list):
+            ids.update(node["id"] for node in batch if isinstance(node, dict) and "id" in node)
+    return ids
+
+
+def _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns, known_ids=frozenset()):
     # Branch authors routinely refer to their OWN nodes without the file's
     # id prefix: a file of ag2_* nodes asks for "coulter" when it means
     # "ag2_coulter". Left alone the prereq resolver below silently drops
@@ -218,10 +235,11 @@ def _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns):
             continue
         fixed = []
         for prereq in node.get("pre", []):
-            if prereq in own or prereq in nodes:
+            if prereq in own or prereq in nodes or prereq in known_ids:
                 fixed.append(prereq)
                 continue
-            cands = {prefix + prereq for prefix in prefixes if prefix + prereq in own}
+            cands = {prefix + prereq for prefix in prefixes
+                     if prefix + prereq in own and prefix + prereq != node.get("id")}
             if len(cands) == 1:
                 resolved_prereq_id = cands.pop()
                 fixed.append(resolved_prereq_id)
@@ -360,7 +378,7 @@ def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, valid_trade
     return status
 
 
-def _merge_process_branch_file(filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions):
+def _merge_process_branch_file(filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions, known_ids=frozenset()):
     """Parse one branches/*.json file, fix its self-referencing prereqs, and ingest
     every node in it. Returns (added, updated) for this file alone."""
     try:
@@ -372,7 +390,7 @@ def _merge_process_branch_file(filename, nodes, alias, dropset, goods, valid_tra
         errs.append("%s: top level is not a list" % filename)
         return 0, 0
 
-    _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns)
+    _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns, known_ids)
 
     added = updated = 0
     for node in batch:
