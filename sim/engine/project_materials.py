@@ -78,7 +78,11 @@ class ProjectMaterialsMixin:
 
     def project_material_bill(self, node_id):
         """Per material: needed, held (stock and own output over the build),
-        missing, and the market cost of the missing part."""
+        missing, and the market cost of the missing part. Callers must not
+        change the returned dict: inside a view's bill scope it is shared."""
+        return self._shared_bill(node_id, lambda: self._compute_material_bill(node_id))
+
+    def _compute_material_bill(self, node_id):
         span = max(1.0, float(self.nodes[node_id].get("build_yrs")
                               or self.nodes[node_id].get("yrs") or 1.0))
         stock_left, own_left, headroom_left = {}, {}, {}

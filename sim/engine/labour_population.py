@@ -456,27 +456,12 @@ class PopulationMixin:
         why="As SCARCE_TRADE_HIRING_SHARE, for the 'uncommon' class "
             "(glassblowers, engravers, masters).")
 
-    def market_supply(self, trade):
-        """Hours a year of this trade the local labour market can actually supply.
-
-        THIS IS ONE TOWN'S MARKET, NOT THE COUNTRY'S - the household this
-        game puts you in charge of draws on one town's labour, the way a
-        real Roman, Han or Norse founder would have. See
-        TOWN_POPULATION_REFERENCE's own comment for why that is a
-        defensible modelling choice and TRADE_DENSITY for how big 'one
-        town's worth' of each trade actually is; national_trade_population
-        answers the country-wide question this number is not trying to.
-        """
-        if not self.trade_available(trade):
-            return 0.0
+    def _hiring_cap_before_actors(self, trade):
+        """Hours a year of a trade the town's people offer, before firms' and governments' staff
+        are taken out of it."""
         base = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
                 * (self.POP_SCALE_FLOOR_SHARE
                    + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
-        household = self.state.household
-        school_hours = ((household.trade_schools or {}).get(trade, 0.0)
-                        * self.HOURS_PER_PERSON_YEAR)
-        if trade in TRADES_ABSENT:
-            return self._taught_trade_people(trade) * self.HOURS_PER_PERSON_YEAR
         cls = self._trade_market_class(trade)
         if cls in ("abundant", "common"):
             # A REAL TOWN'S WORTH, not base's village-sized share of it (see
@@ -500,7 +485,29 @@ class PopulationMixin:
         # train().
         if trade in self.LITERATE_TRADES:
             cap *= self.literacy_factor(trade)
-        # The reachable pool is people, so it cannot exceed those who exist.
+        return cap
+
+    def market_supply(self, trade):
+        """Hours a year of this trade the local labour market can actually supply.
+
+        THIS IS ONE TOWN'S MARKET, NOT THE COUNTRY'S - the household this
+        game puts you in charge of draws on one town's labour, the way a
+        real Roman, Han or Norse founder would have. See
+        TOWN_POPULATION_REFERENCE's own comment for why that is a
+        defensible modelling choice and TRADE_DENSITY for how big 'one
+        town's worth' of each trade actually is; national_trade_population
+        answers the country-wide question this number is not trying to.
+        """
+        if not self.trade_available(trade):
+            return 0.0
+        household = self.state.household
+        school_hours = ((household.trade_schools or {}).get(trade, 0.0)
+                        * self.HOURS_PER_PERSON_YEAR)
+        if trade in TRADES_ABSENT:
+            return self._taught_trade_people(trade) * self.HOURS_PER_PERSON_YEAR
+        cap = self._shared_answer(
+            ("hiring_cap", trade), (self.civ.get("literacy_elite"), self.civ.get("literacy_general")),
+            lambda: self._hiring_cap_before_actors(trade))
         # firms and governments hire from the same pool, so what they employ is not on offer
         cap = max(0.0, cap - self.actor_staff_fte(trade) * self.HOURS_PER_PERSON_YEAR)
         hours = cap + household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR + school_hours
