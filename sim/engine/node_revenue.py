@@ -36,4 +36,6 @@ def apply_revenue(nodes: Iterable[dict], goods: Mapping[str, float],
             continue
         cost_hours = (sum(wages[trade] * hours for trade, hours in node["lab"].items())
                       / money_per_labour_hour + node["_material_hours"] + node["cap_hours"])
+        if cost_hours <= 0.0:
+            continue
         node["rev_hours"] = min(authored, cost_hours / MINIMUM_PAYBACK_YEARS * (1.0 - 1e-9))

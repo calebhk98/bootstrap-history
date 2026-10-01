@@ -217,9 +217,8 @@ check("no node repays its entire cost in under three months", not pumps,
       "%d pumps, e.g. %s" % (len(pumps), pumps[:3]))
 
 # --- naive WEIRD 7 / Han BREAK 5: a project must actually be PAID for
-# cash well under the cost, but cash plus the credit a lender advances covers a start
-s = sim(capital=book_money(1200.0), manual=True)
-ok, why = s.start_project("identity_cover")
+s = sim(capital=book_money(400.0), manual=True)
+ok, why = s.start_project("identity_cover")         # 1,580 den against 400
 for _ in range(6):
     s.step()
 paid = s.active.get("identity_cover", {}).get("spent", 0.0)
