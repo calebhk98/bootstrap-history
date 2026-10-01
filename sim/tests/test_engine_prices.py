@@ -219,7 +219,8 @@ class EngineDefaultIsSolvedTests(unittest.TestCase):
     def test_default_goods_are_the_solved_table(self):
         _tree, document, nodes, _wages, goods = data.load()
         rate = data.starting_schedule().money_per_labour_hour
-        solved, _provenance = engine_prices.priced_goods_table((), document)
+        reference_techs = data.load_civ()["starting_techs"]
+        solved, _provenance = engine_prices.priced_goods_table(reference_techs, document)
         for material, price in solved.items():
             self.assertAlmostEqual(goods[material], price, msg=material)
         self.assertAlmostEqual(document["money_per_labour_hour"], rate)
@@ -252,7 +253,8 @@ class RealDataIntegrationTests(unittest.TestCase):
                            "the solver resolved nothing under Rome's own "
                            "starting technologies - the gate or the wiring "
                            "is broken, not merely incomplete")
-        self.assertEqual(solved_count + gated_count, len(provenance))
+        mature_count = sum(1 for source in provenance.values() if source == "mature")
+        self.assertEqual(solved_count + gated_count + mature_count, len(provenance))
 
     def test_runtime_price_provider_uses_the_calculator_result(self):
         with open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(

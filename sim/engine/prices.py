@@ -21,8 +21,9 @@ and one function does the actual replacement `data.py` wants:
         -> (goods_in_money, provenance)
 
 `goods_in_money` is a plain {material: price} dict in the wage document's
-coin. `provenance` is {material: "solved" | "gated"}: "solved" is priced under
-the held technologies, "gated" only under the mature technology (see
+coin. `provenance` is {material: "solved" | "gated" | "mature"}: "solved" is
+priced under the held technologies, "gated" at a technique not held but with
+held-technique inputs, "mature" only under all technology (see
 priced_goods_table).
 
 CACHE KEY: THE SET OF GATE NODES HELD, PLUS THE CIVILIZATION FOR LAND RENT.
@@ -158,7 +159,7 @@ Prices = Dict[str, float]
 # exactly the two fields every entry shares regardless of process shape.
 ProductionEntries = Dict[str, Any]
 
-# {material: "solved" | "gated"} - see priced_goods_table's
+# {material: "solved" | "gated" | "mature"} - see priced_goods_table's
 # own docstring for what the three strings mean. A plain Dict[str, str]
 # rather than a Literal-keyed TypedDict: the KEYS are material ids, open
 # and data-driven, exactly the case CLAUDE.md's TypedDict guidance carves
@@ -232,7 +233,8 @@ _DEFAULT_PRODUCTION_ENTRIES: Optional[ProductionEntries] = None
 # CIVILIZATION in the module docstring gives: land rent depends on which
 # civilization's own territory is being priced, and two civilizations can
 # hold an identical gate-node set while holding entirely different regions.
-_SOLVE_CACHE: Dict[Tuple[FrozenSet[str], str], Tuple[ProductionEntries, SolvedPrices]] = {}
+_SOLVE_CACHE: Dict[Tuple[Any, ...], Tuple[ProductionEntries, SolvedPrices]] = {}
+_TREE_NODES: Dict[str, Any] = {}
 
 
 def _default_production_entries() -> ProductionEntries:
@@ -307,7 +309,8 @@ def hours_to_denarii(price_in_labour_hours: float, prices_json: Dict[str, Any]) 
 
 def _solve_to_json(production_entries: ProductionEntries,
                    gate_nodes_held: FrozenSet[str], civilization_id: str,
-                   document_ratios: Dict[str, float]) -> Dict[str, Any]:
+                   document_ratios: Dict[str, float],
+                   admitted_entry_keys: FrozenSet[str] = frozenset()) -> Dict[str, Any]:
     """Run the solver for one held-gate set; the result is JSON-able."""
     # `gate_nodes_held` is exactly the right thing to hand
     # `techniques_available_to` as `reached_nodes`: every `requires_node` it
@@ -316,6 +319,8 @@ def _solve_to_json(production_entries: ProductionEntries,
     # gate nodes actually held changes no answer - see CACHE KEY above.
     available_entries, _unreached, _unclassified = \
         solve_prices.techniques_available_to(production_entries, gate_nodes_held)
+    for entry_key in admitted_entry_keys:
+        available_entries[entry_key] = production_entries[entry_key]
     producers_of = solve_prices.build_producers_index(available_entries)
     wage_by_trade = dict(document_ratios)
     # A trade the document does not list is paid by the same training rule
@@ -358,7 +363,8 @@ def _solve_to_json(production_entries: ProductionEntries,
 def solved_prices(held_technology_ids: Iterable[str],
                   prices_json: Dict[str, Any],
                   production_entries: Optional[ProductionEntries] = None,
-                  civilization_id: Optional[str] = None) -> SolvedPrices:
+                  civilization_id: Optional[str] = None,
+                  admitted_entry_keys: FrozenSet[str] = frozenset()) -> SolvedPrices:
     """A `SolvedPrices` for this held-technology set, solving on a cache
     miss and returning the cached vector on a hit. See CACHE KEY in the
     module docstring: the cache is keyed on the intersection of
@@ -386,7 +392,7 @@ def solved_prices(held_technology_ids: Iterable[str],
     document_ratios = solve_prices.wage_ratios_by_trade(prices_json)
     # Wages move with the labour market, so the cache is keyed on them too.
     cache_key = (gate_nodes_held, civilization_id,
-                 tuple(sorted(document_ratios.items())))
+                 tuple(sorted(document_ratios.items())), admitted_entry_keys)
 
     cached = _SOLVE_CACHE.get(cache_key)
     if cached is not None and cached[0] is production_entries:
@@ -394,13 +400,14 @@ def solved_prices(held_technology_ids: Iterable[str],
 
     def compute() -> Dict[str, Any]:
         return _solve_to_json(production_entries, gate_nodes_held,
-                              civilization_id, document_ratios)
+                              civilization_id, document_ratios, admitted_entry_keys)
     if production_entries is _DEFAULT_PRODUCTION_ENTRIES:
         # Only the committed catalogue is persisted; synthetic catalogues are not.
         try:
             key = solve_cache.solve_key({
                 "production": production_entries, "gates": sorted(gate_nodes_held),
-                "civilization": civilization_id, "wage_ratios": document_ratios})
+                "civilization": civilization_id, "wage_ratios": document_ratios,
+                "admitted_entries": sorted(admitted_entry_keys)})
         except OSError:
             key = None  # an input file cannot be read: solve without the cache
         stored = (solve_cache.cached_json(key, compute) if key
@@ -419,6 +426,50 @@ def solved_prices(held_technology_ids: Iterable[str],
     return result
 
 
+def _tree_nodes() -> Dict[str, Any]:
+    """The tech tree by node id, read once per process."""
+    if _TREE_NODES.get("nodes") is None:
+        from .catalog import load_mod_tree_nodes
+        root = os.path.dirname(os.path.dirname(HERE))
+        _TREE_NODES["nodes"] = {node["id"]: node for node in load_mod_tree_nodes(root)}
+    return _TREE_NODES["nodes"]
+
+
+def _unheld_steps_to(node_id: str, held: Set[str]) -> int:
+    """How many technologies not yet held stand between a society and this one, itself included."""
+    from .data import closure
+    nodes = _tree_nodes()
+    if node_id not in nodes:
+        return len(nodes)
+    return len(closure(nodes, node_id) - held)
+
+
+def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable_materials: Set[str],
+                     production_entries: ProductionEntries) -> FrozenSet[str]:
+    """Keys of techniques not held that make only materials the held set cannot make, where the technique
+    is the fewest research steps away for every material it makes.
+
+    Such a technique prices a new material through the techniques held for everything else and cannot
+    undercut one already held; a later, cheaper route to the same material, or a joint process whose
+    co-product a nearer technique already makes, is left out (the material then prices at the nearer one)."""
+    candidates = {}
+    for key, entry in production_entries.items():
+        gate = entry.get("requires_node")
+        outputs = entry.get("outputs") or {}
+        if gate is None or gate in held_gate_nodes or not outputs:
+            continue
+        if any(material in resolvable_materials for material in outputs):
+            continue
+        candidates[key] = (_unheld_steps_to(gate, held), key)
+    nearest: Dict[str, Tuple[int, str]] = {}
+    for key, rank in candidates.items():
+        for material in production_entries[key]["outputs"]:
+            if material not in nearest or rank < nearest[material]:
+                nearest[material] = rank
+    return frozenset(key for key, rank in candidates.items()
+                     if all(nearest[material] == rank for material in production_entries[key]["outputs"]))
+
+
 def priced_goods_table(held_technology_ids: Iterable[str],
                        prices_json: Dict[str, Any],
                        production_entries: Optional[ProductionEntries] = None,
@@ -428,32 +479,39 @@ def priced_goods_table(held_technology_ids: Iterable[str],
     the recipes can make, in the coin of `prices_json`.
 
       "solved" - priced under the technologies this society holds.
-      "gated"  - something makes it, but nothing this society can run yet.
-                 TRANSITIONAL (CLAUDE.md 4.4): it is priced as if every gate
-                 technology were held, standing for an import or a later
-                 supplier at the mature technique's cost, until trade and
-                 availability replace it. A material nothing anywhere makes
-                 is absent, never given an invented price.
+      "gated"  - nothing this society holds makes it, but a technique it does
+                 not hold does; priced at that technique with every other
+                 input priced as this society prices it, so a good and the
+                 inputs its own route buys sit in one price system.
+      "mature" - nothing in reach makes it. TRANSITIONAL (CLAUDE.md 4.4):
+                 priced as if every gate technology were held, standing for
+                 an import or a later supplier at the mature technique's
+                 cost, until trade and availability replace it. A material
+                 nothing anywhere makes is absent, never given an invented
+                 price.
 
     `civilization_id` is passed straight through to `solved_prices` - see RENT
     NEEDS A CIVILIZATION in the module docstring.
     """
     entries = (production_entries if production_entries is not None
                else _default_production_entries())
-    solved = solved_prices(held_technology_ids, prices_json,
-                           production_entries=production_entries,
+    held = frozenset(held_technology_ids)
+    solved = solved_prices(held, prices_json, production_entries=production_entries,
                            civilization_id=civilization_id)
+    in_reach = solved_prices(
+        solved.gate_nodes_held, prices_json, production_entries=production_entries,
+        civilization_id=civilization_id,
+        admitted_entry_keys=entries_in_reach(held, solved.gate_nodes_held, solved.resolvable_materials, entries))
     mature = solved_prices(all_gate_nodes(entries), prices_json,
                            production_entries=production_entries,
                            civilization_id=civilization_id)
     goods_in_money = {}
     provenance = {}
-    for material in mature.resolvable_materials:
-        goods_in_money[material] = hours_to_denarii(
-            mature.prices_in_labour_hours[material], prices_json)
-        provenance[material] = "gated"
-    for material in solved.resolvable_materials:
-        goods_in_money[material] = hours_to_denarii(
-            solved.prices_in_labour_hours[material], prices_json)
-        provenance[material] = "solved"
+    for table, label in ((mature, "mature"), (in_reach, "gated"), (solved, "solved")):
+        for material in table.resolvable_materials:
+            if label != "mature" and material not in table.chosen_recipe_by_material:
+                continue    # no technique in this table delivers it (a heat it cannot reach): the price is a placeholder
+            goods_in_money[material] = hours_to_denarii(
+                table.prices_in_labour_hours[material], prices_json)
+            provenance[material] = label
     return goods_in_money, provenance

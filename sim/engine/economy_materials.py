@@ -284,6 +284,17 @@ class MaterialSupplyMixin:
         self._material_prices_cache = (held, prices, stamp, projects.done)
         return prices
 
+    def material_price_basis(self, material):
+        """"solved" (a technique this society holds), "gated" (a technique it does not hold),
+        "mature" (nothing in reach makes it) or None (not priced by the solver)."""
+        held = frozenset(self.state.projects.done)
+        cached = getattr(self, "_material_basis_cache", None)
+        if cached is None or cached[0] != held:
+            from .data import goods_provenance
+            cached = self._material_basis_cache = (
+                held, goods_provenance(held, civilization_id=self.civ.get("id")))
+        return cached[1].get(material)
+
     def _done_memo(self, name, key, compute):
         """`compute()` remembered per (name, key) while the done set is
         unchanged; for answers that depend only on what is built."""
@@ -370,9 +381,10 @@ class MaterialSupplyMixin:
         if tag in ledger.commodities:
             return ledger.country_output(tag, built=self.state.projects.done)
         price = self._denarii_price_per_kg(tag)
-        if price is None or price <= 0:
+        price_power = None if price is None or price <= 0 else price ** self.GENERIC_OUTPUT_PRICE_EXPONENT
+        if not price_power:     # unpriced, free, or so cheap the power underflows
             return self.GENERIC_OUTPUT_CEILING_T_PER_YR
-        out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / (price ** self.GENERIC_OUTPUT_PRICE_EXPONENT)
+        out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / price_power
         return max(self.GENERIC_OUTPUT_FLOOR_T_PER_YR,
                    min(self.GENERIC_OUTPUT_CEILING_T_PER_YR, out))
 
