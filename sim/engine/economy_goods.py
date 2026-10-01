@@ -552,10 +552,18 @@ class GoodsMixin:
             "vocational training.")
     TRADE_SCHOOL_COST_PER_SEAT = money_units.PricedInLabourHours("TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT")
 
+    def farm_price_per_hectare(self):
+        """What one hectare of farmland costs now (`buy farm`, `quote farm`)."""
+        return self.FARM_COST_PER_HA * self.price_index
+
+    def trade_school_price_per_seat(self):
+        """What one trade-school seat costs now (`buy school`, `quote school`)."""
+        return self.TRADE_SCHOOL_COST_PER_SEAT * self.price_index
+
     def invest_farm(self, hectares):
         """Buy productive farmland that lowers the household staple price."""
         hectares = float(hectares)
-        cost = hectares * self.FARM_COST_PER_HA * self.price_index
+        cost = hectares * self.farm_price_per_hectare()
         household = self.state.household
         if hectares <= 0 or cost > household.capital:
             return 0.0
