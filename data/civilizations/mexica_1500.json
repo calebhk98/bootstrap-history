@@ -21,6 +21,7 @@
     "transport": 2.2
   },
   "currency": "cacao bean and cotton cloth",
+  "currency_words": {"long": "in cacao beans", "short": "beans"},
   "coin_standard": {
     "material": "cotton_fabric_kg",
     "kg_per_unit": 0.4,

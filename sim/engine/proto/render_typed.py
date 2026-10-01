@@ -54,7 +54,7 @@ _RENDERERS = {
 # only when the caller says the reader is typing.
 TYPED_HINTS = False
 # The short form used in the compact lines ("400 den", "net +12 den/yr"). Set
-# alongside TYPED_HINTS by whichever front end is rendering; see MONEY_WORDS.
+# alongside TYPED_HINTS by whichever front end is rendering; see `currency_words` in the civilisation file.
 MONEY_SHORT = "den"
 # Which mine commission milestones to show in rendered text: one of
 # 'commissioned', 'ready', or 'both'. Set by cli.py based on player config.

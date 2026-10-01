@@ -16,6 +16,7 @@
     "textiles": 0.7
   },
   "currency": "sterling penny",
+  "currency_words": {"long": "pence", "short": "pence"},
   "coin_standard": {
     "material": "silver_kg",
     "kg_per_unit": 0.00135,

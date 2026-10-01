@@ -23,6 +23,7 @@ python3 rome/sim/simulator.py civs            # list what is available
 |---|---|
 | `id`, `name`, `year`, `blurb` | identity |
 | `population`, `urban_fraction`, `literacy_elite`, `literacy_general` | demography |
+| `currency_words` | `{"long": ..., "short": ...}`: how the money reads in a sentence ("you have 400 ___") and in compact lines. Absent: the `currency` field is used. |
 | `currency`, `price_index`, `wage_index` | economy scaling. 1.0 is Rome 100 AD, which is the calibration baseline for `prices.json`. |
 | `coin_standard` | **Required.** `{material, kg_per_unit, source}`: what one unit of the civilisation's money stands for physically, e.g. the silver in a denarius. Money is anchored to it: a labour hour is worth the reciprocal of the coin's solved labour hours. The material must be priceable with the civilisation's starting technologies, or loading fails. |
 | `starting_interest_rate`, `starting_tax_share` | **Required.** Yearly rate on arrears, and share of a household's revenue taken by tax and dues, at the civilisation's start date. Initial conditions, held constant for now; a missing or non-numeric value is a load error. Each carries a source and confidence under `_internal`. |

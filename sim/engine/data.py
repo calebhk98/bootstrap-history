@@ -196,41 +196,15 @@ def trade_family(trade: str) -> str:
     return TRADE_FAMILY.get(trade, "craft")
 
 
-# WHAT MONEY IS CALLED WHERE YOU ARE. Every civilisation file has carried a
-# `currency` field since the schema was written and not one line of the engine
-# ever read it, so an English player in 1300 counted denarii, hired against an
-# equestrian census and was quoted for papyrus. The engine's arithmetic is all
-# calibrated to Rome 100 AD through price_index, which is a real and defensible
-# modelling choice; calling the unit a denarius in Tenochtitlan is not.
-#
-# The map is from the `currency` field to the form that reads correctly in a
-# sentence like "you have 400 ___". A civilisation whose currency is not listed
-# falls back to its own field, and then to denarii.
-MONEY_WORDS: Dict[str, str] = {
-    "denarius": "denarii",
-    "sterling penny": "pence",
-    "wu zhu cash": "cash",
-    "hacksilver by weight": "in hacksilver",
-    "cacao bean and cotton cloth": "in cacao beans",
-    "Ptolemaic silver tetradrachm": "tetradrachms",
-}
-
-
-# THE SAME WORD IN BOTH FORMS, except for Rome where "den" is the established
-# abbreviation and appears throughout the notes. Long form and short form must
-# stay in step: if one clause is localised from the payload and the next from
-# the renderer, a sentence can read "needs about 1959 pence, you have 612 den" -
-# the currency drifting between three names inside one message.
-MONEY_SHORT_WORDS: Dict[str, str] = {
-    "denarius": "den", "sterling penny": "pence", "wu zhu cash": "cash",
-    "hacksilver by weight": "hacksilver", "cacao bean and cotton cloth": "beans",
-    "Ptolemaic silver tetradrachm": "tetradr",
-}
+# What money is called where you are comes from the civilisation file's
+# `currency_words` ({"long": "...", "short": "..."}); a file without it falls
+# back to its `currency` field. Long form reads in "you have 400 ___", short
+# form in compact lines; both come from one place so a sentence cannot mix them.
 
 
 def money_word(civ: Optional[JSONDict]) -> str:
-    cur = (civ or {}).get("currency") or "denarius"
-    return MONEY_WORDS.get(cur, cur)
+    civ = civ or {}
+    return (civ.get("currency_words") or {}).get("long") or civ.get("currency") or "denarii"
 
 
 @functools.lru_cache(maxsize=None)
@@ -250,8 +224,8 @@ def kit_capital(kit_id: str, civ: JSONDict) -> float:
 
 def money_short(civ: Optional[JSONDict]) -> str:
     """The abbreviation used in compact lines: "400 den", "net +12 den/yr"."""
-    cur = (civ or {}).get("currency") or "denarius"
-    return MONEY_SHORT_WORDS.get(cur, MONEY_WORDS.get(cur, "den"))
+    civ = civ or {}
+    return (civ.get("currency_words") or {}).get("short") or civ.get("currency") or "den"
 
 
 def load_civ(name: str = "rome_100ad") -> JSONDict:

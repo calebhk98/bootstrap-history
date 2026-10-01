@@ -16,6 +16,7 @@
     "structures": 0.75
   },
   "currency": "denarius",
+  "currency_words": {"long": "denarii", "short": "den"},
   "coin_standard": {
     "material": "silver_kg",
     "kg_per_unit": 0.0027,

@@ -17,6 +17,7 @@
     "printing": 0.6
   },
   "currency": "wu zhu cash",
+  "currency_words": {"long": "cash", "short": "cash"},
   "coin_standard": {
     "material": "bronze_kg",
     "kg_per_unit": 0.003,

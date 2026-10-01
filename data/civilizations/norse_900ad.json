@@ -21,6 +21,7 @@
     "structures": 1.7
   },
   "currency": "hacksilver by weight",
+  "currency_words": {"long": "in hacksilver", "short": "hacksilver"},
   "coin_standard": {
     "material": "silver_kg",
     "kg_per_unit": 0.025,
