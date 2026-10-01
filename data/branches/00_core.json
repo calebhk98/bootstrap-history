@@ -3,7 +3,7 @@
     "adopt_yrs": 10.0,
     "art": 10.0,
     "build_yrs": 3.0,
-    "cap_hours": 907284.5628,
+    "cap_hours": 907284.5628358196,
     "cat": "institution",
     "conf": "C",
     "dev_people": null,
@@ -102,14 +102,14 @@
     "traits": [
       "status_threatening"
     ],
-    "up_hours": 181456.9126,
+    "up_hours": 181456.9125671639,
     "yrs": 10.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 4032.3758,
+    "cap_hours": 4032.375834825865,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -144,7 +144,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 3.0,
-    "cap_hours": 60485.6375,
+    "cap_hours": 60485.63752238797,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -169,14 +169,14 @@
       "nitric_acid"
     ],
     "req_any": [],
-    "rev_hours": 24194.255,
+    "rev_hours": 24194.255008955188,
     "risk": 0.2,
     "sch": 4.0,
     "sus": 2,
     "traits": [
       "inexplicable"
     ],
-    "up_hours": 50404.6979,
+    "up_hours": 50404.69793532331,
     "yrs": 3.0
   },
   {
@@ -184,7 +184,7 @@
     "adopt_yrs": 12.0,
     "art": 60.0,
     "build_yrs": 3.0,
-    "cap_hours": 1209712.7504,
+    "cap_hours": 1209712.7504477594,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -218,14 +218,14 @@
       "power_grid"
     ],
     "req_any": [],
-    "rev_hours": 806475.167,
+    "rev_hours": 806475.166965173,
     "risk": 0.35,
     "sch": 6.0,
     "sus": 3,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 705665.7711,
+    "up_hours": 705665.7710945264,
     "yrs": 12.0
   },
   {
@@ -233,7 +233,7 @@
     "adopt_yrs": 0.0,
     "art": 10.0,
     "build_yrs": 3.0,
-    "cap_hours": 141133.1542,
+    "cap_hours": 141133.15421890526,
     "cat": "electrical",
     "conf": "B",
     "dev_people": null,
@@ -268,7 +268,7 @@
         }
       }
     ],
-    "rev_hours": 181456.9126,
+    "rev_hours": 181456.9125671639,
     "risk": 0.3,
     "sch": 3.0,
     "sus": 10,
@@ -276,14 +276,14 @@
       "inexplicable",
       "infrastructure"
     ],
-    "up_hours": 80647.5167,
+    "up_hours": 80647.5166965173,
     "yrs": 3.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 6048.5638,
+    "cap_hours": 6048.563752238797,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -317,7 +317,7 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 12097.1275,
+    "cap_hours": 12097.127504477594,
     "cat": "foundation",
     "conf": "C",
     "dev_people": null,
@@ -329,7 +329,7 @@
     "lab": {},
     "mat": {},
     "name": "Six months of listening before you act",
-    "note": "OPTIONAL, and no longer a prerequisite for anything. It buys you accurate local prices, the actual law of this province, who is who, and a large reduction in early blunder risk. Skip it if you want to move fast and find out the hard way what things cost. The simulator lets you skip it, because a model that forces the cautious opening is not a model, it is an opinion.",
+    "note": "for anything. It buys you accurate local prices, the actual law of this province, who is who, and a large reduction in early blunder risk. Skip it if you want to move fast and find out the hard way what things cost. The simulator lets you skip it, because a model that forces the cautious opening is not a model, it is an opinion.",
     "ph": 900.0,
     "pre": [],
     "req_any": [],
@@ -341,13 +341,14 @@
       "commerce"
     ],
     "up_hours": 0,
-    "yrs": 0.5
+    "yrs": 0.5,
+    "_internal": "OPTIONAL, and no longer a prerequisite"
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 6048.5638,
+    "cap_hours": 6048.563752238797,
     "cat": "chemistry",
     "conf": "C",
     "dev_people": null,
@@ -383,7 +384,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 44356.1342,
+    "cap_hours": 44356.13418308451,
     "cat": "instruments",
     "conf": "B",
     "dev_people": null,
@@ -411,14 +412,14 @@
       "units_standards"
     ],
     "req_any": [],
-    "rev_hours": 18145.6913,
+    "rev_hours": 18145.691256716393,
     "risk": 0.3,
     "sch": 2.0,
     "sus": 2,
     "traits": [
       "spectacle"
     ],
-    "up_hours": 10080.9396,
+    "up_hours": 10080.939587064662,
     "yrs": 2.0
   },
   {
@@ -426,7 +427,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 6048.5638,
+    "cap_hours": 6048.563752238797,
     "cat": "instruments",
     "conf": "A",
     "dev_people": null,
@@ -450,14 +451,14 @@
       "mercury_supply"
     ],
     "req_any": [],
-    "rev_hours": 6048.5638,
+    "rev_hours": 6048.563752238797,
     "risk": 0.15,
     "sch": 1.0,
     "sus": 6,
     "traits": [
       "spectacle"
     ],
-    "up_hours": 2016.1879,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5
   },
   {
@@ -465,7 +466,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 40323.7583,
+    "cap_hours": 40323.75834825865,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -514,7 +515,7 @@
     "annual_output_t": 300,
     "art": 6.0,
     "build_yrs": 5.0,
-    "cap_hours": 241942.5501,
+    "cap_hours": 241942.5500895519,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -584,14 +585,14 @@
         }
       }
     ],
-    "rev_hours": 443561.3418,
+    "rev_hours": 443561.3418308451,
     "risk": 0.35,
     "sch": 1.0,
     "sus": 3,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 141133.1542,
+    "up_hours": 141133.15421890526,
     "yrs": 5.0
   },
   {
@@ -599,7 +600,7 @@
     "adopt_yrs": 0.0,
     "art": 5.0,
     "build_yrs": 3.0,
-    "cap_hours": 120971.275,
+    "cap_hours": 120971.27504477595,
     "cat": "precision",
     "conf": "A",
     "dev_people": null,
@@ -626,21 +627,21 @@
       "screw_lathe"
     ],
     "req_any": [],
-    "rev_hours": 50404.6979,
+    "rev_hours": 50404.69793532331,
     "risk": 0.3,
     "sch": 1.0,
     "sus": 1,
     "traits": [
       "labour_saving"
     ],
-    "up_hours": 44356.1342,
+    "up_hours": 44356.13418308451,
     "yrs": 3.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 3024.2819,
+    "cap_hours": 3024.2818761193985,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -674,7 +675,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 30242.8188,
+    "cap_hours": 30242.818761193987,
     "cat": "glass_optics",
     "conf": "A",
     "dev_people": null,
@@ -699,7 +700,7 @@
       "lens_grinding"
     ],
     "req_any": [],
-    "rev_hours": 12097.1275,
+    "rev_hours": 12097.127504477594,
     "risk": 0.08,
     "sch": 0.0,
     "sus": 3,
@@ -707,7 +708,7 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 2016.1879,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5
   },
   {
@@ -745,7 +746,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 16129.5033,
+    "cap_hours": 16129.50333930346,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -770,14 +771,14 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 30242.8188,
+    "rev_hours": 30242.818761193987,
     "risk": 0.12,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 8064.7517,
+    "up_hours": 8064.75166965173,
     "yrs": 1.0
   },
   {
@@ -786,7 +787,7 @@
     "annual_output_t": 60,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 60485.6375,
+    "cap_hours": 60485.63752238797,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -823,14 +824,14 @@
         }
       }
     ],
-    "rev_hours": 120971.275,
+    "rev_hours": 120971.27504477595,
     "risk": 0.2,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 36291.3825,
+    "up_hours": 36291.382513432785,
     "yrs": 2.0
   },
   {
@@ -838,7 +839,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 3.0,
-    "cap_hours": 70566.5771,
+    "cap_hours": 70566.57710945263,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -861,21 +862,21 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 24194.255,
+    "rev_hours": 24194.255008955188,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 2,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 44356.1342,
+    "up_hours": 44356.13418308451,
     "yrs": 3.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 3.0,
-    "cap_hours": 120971.275,
+    "cap_hours": 120971.27504477595,
     "cat": "social",
     "conf": "B",
     "dev_people": null,
@@ -968,7 +969,7 @@
     "adopt_yrs": 0,
     "art": 2.0,
     "build_yrs": 4.0,
-    "cap_hours": 60485.6375,
+    "cap_hours": 60485.63752238797,
     "cat": "structures",
     "conf": "B",
     "dev_people": 0,
@@ -1003,7 +1004,7 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 8064.7517,
+    "cap_hours": 8064.75166965173,
     "cat": "precision",
     "conf": "C",
     "dev_people": null,
@@ -1041,7 +1042,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 44356.1342,
+    "cap_hours": 44356.13418308451,
     "cat": "precision",
     "conf": "B",
     "dev_people": null,
@@ -1069,7 +1070,7 @@
       "master_screw"
     ],
     "req_any": [],
-    "rev_hours": 48388.51,
+    "rev_hours": 48388.510017910376,
     "risk": 0.25,
     "sch": 1.0,
     "sus": 3,
@@ -1077,7 +1078,7 @@
       "infrastructure",
       "labour_saving"
     ],
-    "up_hours": 14113.3154,
+    "up_hours": 14113.315421890527,
     "yrs": 2.0
   },
   {
@@ -1085,7 +1086,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 3.0,
-    "cap_hours": 100809.3959,
+    "cap_hours": 100809.39587064662,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -1109,21 +1110,21 @@
       "charcoal_industrial"
     ],
     "req_any": [],
-    "rev_hours": 36291.3825,
+    "rev_hours": 36291.382513432785,
     "risk": 0.25,
     "sch": 1.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 50404.6979,
+    "up_hours": 50404.69793532331,
     "yrs": 3.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 50404.6979,
+    "cap_hours": 50404.69793532331,
     "cat": "institution",
     "conf": "B",
     "dev_people": null,
@@ -1181,7 +1182,7 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 8064.7517,
+    "up_hours": 8064.75166965173,
     "yrs": 1.0
   },
   {
@@ -1189,7 +1190,7 @@
     "adopt_yrs": 0.0,
     "art": 4.0,
     "build_yrs": 2.0,
-    "cap_hours": 50404.6979,
+    "cap_hours": 50404.69793532331,
     "cat": "electrical",
     "conf": "B",
     "dev_people": null,
@@ -1226,7 +1227,7 @@
         }
       }
     ],
-    "rev_hours": 40323.7583,
+    "rev_hours": 40323.75834825865,
     "risk": 0.25,
     "sch": 1.0,
     "sus": 2,
@@ -1234,14 +1235,14 @@
       "inexplicable",
       "infrastructure"
     ],
-    "up_hours": 36291.3825,
+    "up_hours": 36291.382513432785,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 5.0,
     "build_yrs": 8.0,
-    "cap_hours": 120971.275,
+    "cap_hours": 120971.27504477595,
     "cat": "information",
     "conf": "C",
     "dev_people": null,
@@ -1293,7 +1294,7 @@
       "printing_press"
     ],
     "req_any": [],
-    "rev_hours": 18145.6913,
+    "rev_hours": 18145.691256716393,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 3,
@@ -1302,14 +1303,14 @@
       "religious_adjacent",
       "status_threatening"
     ],
-    "up_hours": 50404.6979,
+    "up_hours": 50404.69793532331,
     "yrs": 8.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 10.0,
-    "cap_hours": 30242.8188,
+    "cap_hours": 30242.818761193987,
     "cat": "information",
     "conf": "C",
     "dev_people": null,
@@ -1355,7 +1356,7 @@
     "traits": [
       "information"
     ],
-    "up_hours": 12097.1275,
+    "up_hours": 12097.127504477594,
     "yrs": 10.0
   },
   {
@@ -1363,7 +1364,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 14113.3154,
+    "cap_hours": 14113.315421890527,
     "cat": "power",
     "conf": "B",
     "dev_people": null,
@@ -1387,21 +1388,21 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 12097.1275,
+    "rev_hours": 12097.127504477594,
     "risk": 0.15,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 5040.4698,
+    "up_hours": 5040.469793532331,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 6.0,
-    "cap_hours": 50404.6979,
+    "cap_hours": 50404.69793532331,
     "cat": "agriculture",
     "conf": "B",
     "dev_people": null,
@@ -1446,7 +1447,7 @@
       "statistics_basic"
     ],
     "req_any": [],
-    "rev_hours": 60485.6375,
+    "rev_hours": 60485.63752238797,
     "risk": 0.15,
     "sch": 1.0,
     "sus": 0,
@@ -1454,7 +1455,7 @@
       "food",
       "infrastructure"
     ],
-    "up_hours": 16129.5033,
+    "up_hours": 16129.50333930346,
     "yrs": 6.0
   },
   {
@@ -1463,7 +1464,7 @@
     "annual_output_t": 30,
     "art": 4.0,
     "build_yrs": 5.0,
-    "cap_hours": 120971.275,
+    "cap_hours": 120971.27504477595,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -1517,21 +1518,21 @@
         }
       }
     ],
-    "rev_hours": 221780.6709,
+    "rev_hours": 221780.67091542255,
     "risk": 0.35,
     "sch": 1.0,
     "sus": 2,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 64518.0134,
+    "up_hours": 64518.01335721384,
     "yrs": 5.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 3024.2819,
+    "cap_hours": 3024.2818761193985,
     "cat": "electrical",
     "conf": "B",
     "dev_people": null,
@@ -1573,7 +1574,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 18145.6913,
+    "cap_hours": 18145.691256716393,
     "cat": "electrical",
     "conf": "A",
     "dev_people": null,
@@ -1600,7 +1601,7 @@
       "voltaic_pile"
     ],
     "req_any": [],
-    "rev_hours": 10080.9396,
+    "rev_hours": 10080.939587064662,
     "risk": 0.15,
     "sch": 2.0,
     "sus": 4,
@@ -1608,7 +1609,7 @@
       "inexplicable",
       "infrastructure"
     ],
-    "up_hours": 14113.3154,
+    "up_hours": 14113.315421890527,
     "yrs": 1.0
   },
   {
@@ -1616,7 +1617,7 @@
     "adopt_yrs": 0.0,
     "art": 5.0,
     "build_yrs": 3.0,
-    "cap_hours": 161295.0334,
+    "cap_hours": 161295.0333930346,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -1644,7 +1645,7 @@
       "lab_apparatus"
     ],
     "req_any": [],
-    "rev_hours": 141133.1542,
+    "rev_hours": 141133.15421890526,
     "risk": 0.3,
     "sch": 3.0,
     "sus": 6,
@@ -1652,14 +1653,14 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 90728.4563,
+    "up_hours": 90728.45628358195,
     "yrs": 3.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 12.0,
     "build_yrs": 4.0,
-    "cap_hours": 181456.9126,
+    "cap_hours": 181456.9125671639,
     "cat": "instruments",
     "conf": "B",
     "dev_people": null,
@@ -1687,21 +1688,21 @@
       "vacuum_pumps"
     ],
     "req_any": [],
-    "rev_hours": 16129.5033,
+    "rev_hours": 16129.50333930346,
     "risk": 0.35,
     "sch": 8.0,
     "sus": 2,
     "traits": [
       "spectacle"
     ],
-    "up_hours": 100809.3959,
+    "up_hours": 100809.39587064662,
     "yrs": 4.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 10.0,
     "build_yrs": 4.0,
-    "cap_hours": 161295.0334,
+    "cap_hours": 161295.0333930346,
     "cat": "physics",
     "conf": "B",
     "dev_people": null,
@@ -1735,7 +1736,7 @@
         }
       }
     ],
-    "rev_hours": 60485.6375,
+    "rev_hours": 60485.63752238797,
     "risk": 0.3,
     "sch": 10.0,
     "sus": 18,
@@ -1744,14 +1745,14 @@
       "information",
       "infrastructure"
     ],
-    "up_hours": 100809.3959,
+    "up_hours": 100809.39587064662,
     "yrs": 4.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 28226.6308,
+    "cap_hours": 28226.630843781055,
     "cat": "chemistry",
     "conf": "C",
     "dev_people": null,
@@ -1776,7 +1777,7 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 84679.8925,
+    "rev_hours": 84679.89253134317,
     "risk": 0.15,
     "sch": 0.0,
     "sus": 5,
@@ -1784,14 +1785,14 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 18145.6913,
+    "up_hours": 18145.691256716393,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 7056.6577,
+    "cap_hours": 7056.657710945264,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -1816,14 +1817,14 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 16129.5033,
+    "rev_hours": 16129.50333930346,
     "risk": 0.12,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 3024.2819,
+    "up_hours": 3024.2818761193985,
     "yrs": 0.5
   },
   {
@@ -1831,7 +1832,7 @@
     "adopt_yrs": 7.0,
     "art": 25.0,
     "build_yrs": 2.3333333333333335,
-    "cap_hours": 241942.5501,
+    "cap_hours": 241942.5500895519,
     "cat": "electrical",
     "conf": "B",
     "dev_people": null,
@@ -1892,7 +1893,7 @@
         }
       }
     ],
-    "rev_hours": 241942.5501,
+    "rev_hours": 241942.5500895519,
     "risk": 0.35,
     "sch": 4.0,
     "sus": 8,
@@ -1901,14 +1902,14 @@
       "infrastructure",
       "spectacle"
     ],
-    "up_hours": 120971.275,
+    "up_hours": 120971.27504477595,
     "yrs": 7.0
   },
   {
     "adopt_yrs": 15.0,
     "art": 80.0,
     "build_yrs": 3.0,
-    "cap_hours": 1411331.5422,
+    "cap_hours": 1411331.5421890528,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -1950,7 +1951,7 @@
         }
       }
     ],
-    "rev_hours": 1108903.3546,
+    "rev_hours": 1108903.354577113,
     "risk": 0.35,
     "sch": 8.0,
     "sus": 4,
@@ -1958,14 +1959,14 @@
       "inexplicable",
       "infrastructure"
     ],
-    "up_hours": 806475.167,
+    "up_hours": 806475.166965173,
     "yrs": 15.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 1.0,
-    "cap_hours": 20161.8792,
+    "cap_hours": 20161.879174129324,
     "cat": "electrical",
     "conf": "A",
     "dev_people": null,
@@ -1990,7 +1991,7 @@
       "galvanometer"
     ],
     "req_any": [],
-    "rev_hours": 14113.3154,
+    "rev_hours": 14113.315421890527,
     "risk": 0.15,
     "sch": 2.0,
     "sus": 8,
@@ -1999,7 +2000,7 @@
       "infrastructure",
       "spectacle"
     ],
-    "up_hours": 12097.1275,
+    "up_hours": 12097.127504477594,
     "yrs": 1.0
   },
   {
@@ -2007,7 +2008,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 60485.6375,
+    "cap_hours": 60485.63752238797,
     "cat": "electrical",
     "conf": "A",
     "dev_people": null,
@@ -2043,7 +2044,7 @@
         }
       }
     ],
-    "rev_hours": 110890.3355,
+    "rev_hours": 110890.33545771128,
     "risk": 0.2,
     "sch": 3.0,
     "sus": 6,
@@ -2052,7 +2053,7 @@
       "infrastructure",
       "spectacle"
     ],
-    "up_hours": 44356.1342,
+    "up_hours": 44356.13418308451,
     "yrs": 2.0
   },
   {
@@ -2060,7 +2061,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.5,
-    "cap_hours": 24194.255,
+    "cap_hours": 24194.255008955188,
     "cat": "electrical",
     "conf": "A",
     "dev_people": null,
@@ -2086,7 +2087,7 @@
       "lab_apparatus"
     ],
     "req_any": [],
-    "rev_hours": 12097.1275,
+    "rev_hours": 12097.127504477594,
     "risk": 0.2,
     "sch": 2.0,
     "sus": 15,
@@ -2094,14 +2095,14 @@
       "inexplicable",
       "infrastructure"
     ],
-    "up_hours": 10080.9396,
+    "up_hours": 10080.939587064662,
     "yrs": 1.5
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 3.0,
-    "cap_hours": 8064.7517,
+    "cap_hours": 8064.75166965173,
     "cat": "physics",
     "conf": "C",
     "dev_people": null,
@@ -2136,7 +2137,7 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 161295.0334,
+    "cap_hours": 161295.0333930346,
     "cat": "institution",
     "conf": "B",
     "dev_people": null,
@@ -2217,7 +2218,7 @@
       "school_founded"
     ],
     "req_any": [],
-    "rev_hours": 90728.4563,
+    "rev_hours": 90728.45628358195,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 0,
@@ -2231,7 +2232,7 @@
     "adopt_yrs": 12.0,
     "art": 2.0,
     "build_yrs": 4.0,
-    "cap_hours": 846798.9253,
+    "cap_hours": 846798.9253134317,
     "cat": "expedition",
     "conf": "B",
     "dev_people": 0,
@@ -2276,7 +2277,7 @@
     "annual_output_t": 250,
     "art": 4.0,
     "build_yrs": 2.0,
-    "cap_hours": 100809.3959,
+    "cap_hours": 100809.39587064662,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -2312,21 +2313,21 @@
         }
       }
     ],
-    "rev_hours": 181456.9126,
+    "rev_hours": 181456.9125671639,
     "risk": 0.25,
     "sch": 1.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 70566.5771,
+    "up_hours": 70566.57710945263,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 201618.7917,
+    "cap_hours": 201618.79174129324,
     "cat": "institution",
     "conf": "C",
     "dev_people": null,
@@ -2352,7 +2353,7 @@
       "commerce",
       "buys_people"
     ],
-    "up_hours": 28226.6308,
+    "up_hours": 28226.630843781055,
     "yrs": 2.0,
     "_internal": "[AUDIT: this node currently draws from a flat +8 artisans figure rather than tracking actual market purchases. A person is not a material to be stocked. The node used to model hiring as consuming units of a fictitious good, but this was replaced with a one-time capital outlay for acquiring eight already-skilled people. Future work will link this to the household's actual purchase ledger so it draws down the same market as direct purchases.]",
     "mechanics": {
@@ -2420,7 +2421,7 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 28226.6308,
+    "up_hours": 28226.630843781055,
     "yrs": 3.0,
     "mechanics": {
       "capability": {
@@ -2491,7 +2492,7 @@
     "adopt_yrs": 0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 12097.1275,
+    "cap_hours": 12097.127504477594,
     "cat": "agriculture",
     "conf": "B",
     "dev_people": 0,
@@ -2513,7 +2514,7 @@
       "exp_americas_factory"
     ],
     "req_any": [],
-    "rev_hours": 18145.6913,
+    "rev_hours": 18145.691256716393,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 0,
@@ -2521,7 +2522,7 @@
       "food",
       "infrastructure"
     ],
-    "up_hours": 2419.4255,
+    "up_hours": 2419.425500895519,
     "yrs": 2.0
   },
   {
@@ -2593,7 +2594,7 @@
     "adopt_yrs": 0.0,
     "art": 8.0,
     "build_yrs": 4.0,
-    "cap_hours": 181456.9126,
+    "cap_hours": 181456.9125671639,
     "cat": "glass_optics",
     "conf": "B",
     "dev_people": null,
@@ -2620,7 +2621,7 @@
       "high_temp_furnace"
     ],
     "req_any": [],
-    "rev_hours": 30242.8188,
+    "rev_hours": 30242.818761193987,
     "risk": 0.4,
     "sch": 4.0,
     "sus": 1,
@@ -2628,7 +2629,7 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 100809.3959,
+    "up_hours": 100809.39587064662,
     "yrs": 4.0
   },
   {
@@ -2636,7 +2637,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 4032.3758,
+    "cap_hours": 4032.375834825865,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -2679,7 +2680,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.5,
-    "cap_hours": 24194.255,
+    "cap_hours": 24194.255008955188,
     "cat": "electrical",
     "conf": "A",
     "dev_people": null,
@@ -2706,7 +2707,7 @@
       "geometry_analytic"
     ],
     "req_any": [],
-    "rev_hours": 8064.7517,
+    "rev_hours": 8064.75166965173,
     "risk": 0.2,
     "sch": 3.0,
     "sus": 4,
@@ -2714,7 +2715,7 @@
       "inexplicable",
       "infrastructure"
     ],
-    "up_hours": 10080.9396,
+    "up_hours": 10080.939587064662,
     "yrs": 1.5
   },
   {
@@ -2722,7 +2723,7 @@
     "adopt_yrs": 0.0,
     "art": 12.0,
     "build_yrs": 3.0,
-    "cap_hours": 322590.0668,
+    "cap_hours": 322590.0667860692,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -2773,7 +2774,7 @@
     "adopt_yrs": 5.0,
     "art": 14.0,
     "build_yrs": 1.6666666666666667,
-    "cap_hours": 443561.3418,
+    "cap_hours": 443561.3418308451,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -2814,7 +2815,7 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 2016.1879,
+    "cap_hours": 2016.1879174129324,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -2848,7 +2849,7 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 5040.4698,
+    "cap_hours": 5040.469793532331,
     "cat": "medicine",
     "conf": "C",
     "dev_people": null,
@@ -2895,7 +2896,7 @@
     "adopt_yrs": 5.0,
     "art": 16.0,
     "build_yrs": 1.6666666666666667,
-    "cap_hours": 504046.9794,
+    "cap_hours": 504046.9793532331,
     "cat": "semiconductor",
     "conf": "B",
     "dev_people": null,
@@ -2938,7 +2939,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.5,
-    "cap_hours": 3024.2819,
+    "cap_hours": 3024.2818761193985,
     "cat": "glass_optics",
     "conf": "C",
     "dev_people": null,
@@ -2962,7 +2963,7 @@
       "lens_grinding"
     ],
     "req_any": [],
-    "rev_hours": 4113.0234,
+    "rev_hours": 4113.023351522382,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 6,
@@ -2970,7 +2971,7 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 1008.094,
+    "up_hours": 1008.0939587064662,
     "yrs": 0.5
   },
   {
@@ -2978,7 +2979,7 @@
     "adopt_yrs": 0.0,
     "art": 4.0,
     "build_yrs": 3.0,
-    "cap_hours": 90728.4563,
+    "cap_hours": 90728.45628358195,
     "cat": "glass_optics",
     "conf": "C",
     "dev_people": null,
@@ -3006,7 +3007,7 @@
       "sulfuric_retort"
     ],
     "req_any": [],
-    "rev_hours": 50404.6979,
+    "rev_hours": 50404.69793532331,
     "risk": 0.35,
     "sch": 2.0,
     "sus": 2,
@@ -3014,7 +3015,7 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 50404.6979,
+    "up_hours": 50404.69793532331,
     "yrs": 3.0
   },
   {
@@ -3023,7 +3024,7 @@
     "annual_output_t": 50,
     "art": 3.0,
     "build_yrs": 1.5,
-    "cap_hours": 60485.6375,
+    "cap_hours": 60485.63752238797,
     "cat": "glass_optics",
     "conf": "B",
     "dev_people": null,
@@ -3061,7 +3062,7 @@
         }
       }
     ],
-    "rev_hours": 70566.5771,
+    "rev_hours": 70566.57710945263,
     "risk": 0.2,
     "sch": 0.0,
     "sus": 1,
@@ -3069,7 +3070,7 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 36291.3825,
+    "up_hours": 36291.382513432785,
     "yrs": 1.5
   },
   {
@@ -3077,7 +3078,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 1.5,
-    "cap_hours": 40323.7583,
+    "cap_hours": 40323.75834825865,
     "cat": "glass_optics",
     "conf": "B",
     "dev_people": null,
@@ -3111,7 +3112,7 @@
         }
       }
     ],
-    "rev_hours": 24194.255,
+    "rev_hours": 24194.255008955188,
     "risk": 0.25,
     "sch": 1.0,
     "sus": 3,
@@ -3119,7 +3120,7 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 28226.6308,
+    "up_hours": 28226.630843781055,
     "yrs": 1.5
   },
   {
@@ -3283,7 +3284,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 1.5,
-    "cap_hours": 50404.6979,
+    "cap_hours": 50404.69793532331,
     "cat": "military",
     "conf": "A",
     "dev_people": null,
@@ -3320,7 +3321,7 @@
       "nitre_beds"
     ],
     "req_any": [],
-    "rev_hours": 120971.275,
+    "rev_hours": 120971.27504477595,
     "risk": 0.3,
     "sch": 1.0,
     "sus": 25,
@@ -3328,7 +3329,7 @@
       "inexplicable",
       "military"
     ],
-    "up_hours": 30242.8188,
+    "up_hours": 30242.818761193987,
     "yrs": 1.5
   },
   {
@@ -3337,7 +3338,7 @@
     "annual_output_t": 200,
     "art": 10.0,
     "build_yrs": 2.3333333333333335,
-    "cap_hours": 221780.6709,
+    "cap_hours": 221780.67091542255,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -3377,21 +3378,21 @@
         }
       }
     ],
-    "rev_hours": 141133.1542,
+    "rev_hours": 141133.15421890526,
     "risk": 0.3,
     "sch": 2.0,
     "sus": 2,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 120971.275,
+    "up_hours": 120971.27504477595,
     "yrs": 7.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 1.0,
-    "cap_hours": 8064.7517,
+    "cap_hours": 8064.75166965173,
     "cat": "agriculture",
     "conf": "B",
     "dev_people": null,
@@ -3432,7 +3433,7 @@
         }
       }
     ],
-    "rev_hours": 18145.6913,
+    "rev_hours": 18145.691256716393,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 0,
@@ -3440,7 +3441,7 @@
       "food",
       "infrastructure"
     ],
-    "up_hours": 3024.2819,
+    "up_hours": 3024.2818761193985,
     "yrs": 1.0
   },
   {
@@ -3448,7 +3449,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 60485.6375,
+    "cap_hours": 60485.63752238797,
     "cat": "military",
     "conf": "B",
     "dev_people": null,
@@ -3488,7 +3489,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 28226.6308,
+    "cap_hours": 28226.630843781055,
     "cat": "chemistry",
     "conf": "A",
     "dev_people": null,
@@ -3520,7 +3521,7 @@
         }
       }
     ],
-    "rev_hours": 28226.6308,
+    "rev_hours": 28226.630843781055,
     "risk": 0.25,
     "sch": 2.0,
     "sus": 8,
@@ -3528,14 +3529,14 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 18145.6913,
+    "up_hours": 18145.691256716393,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 2.0,
-    "cap_hours": 40323.7583,
+    "cap_hours": 40323.75834825865,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -3568,7 +3569,7 @@
         }
       }
     ],
-    "rev_hours": 10080.9396,
+    "rev_hours": 10080.939587064662,
     "risk": 0.35,
     "sch": 3.0,
     "sus": 6,
@@ -3576,14 +3577,14 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 28226.6308,
+    "up_hours": 28226.630843781055,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 30242.8188,
+    "cap_hours": 30242.818761193987,
     "cat": "foundation",
     "conf": "C",
     "dev_people": null,
@@ -3629,7 +3630,7 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 4032.3758,
+    "up_hours": 4032.375834825865,
     "yrs": 0.5
   },
   {
@@ -3637,7 +3638,7 @@
     "adopt_yrs": 8.0,
     "art": 30.0,
     "build_yrs": 2.6666666666666665,
-    "cap_hours": 141133.1542,
+    "cap_hours": 141133.15421890526,
     "cat": "precision",
     "conf": "B",
     "dev_people": null,
@@ -3695,7 +3696,7 @@
       "statistics_basic"
     ],
     "req_any": [],
-    "rev_hours": 161295.0334,
+    "rev_hours": 161295.0333930346,
     "risk": 0.3,
     "sch": 2.0,
     "sus": 2,
@@ -3703,7 +3704,7 @@
       "labour_saving",
       "status_threatening"
     ],
-    "up_hours": 80647.5167,
+    "up_hours": 80647.5166965173,
     "yrs": 8.0
   },
   {
@@ -3711,7 +3712,7 @@
     "adopt_yrs": 0.0,
     "art": 30.0,
     "build_yrs": 4.0,
-    "cap_hours": 504046.9794,
+    "cap_hours": 504046.9793532331,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -3737,7 +3738,7 @@
       "single_crystal"
     ],
     "req_any": [],
-    "rev_hours": 604856.3752,
+    "rev_hours": 604856.3752238797,
     "risk": 0.35,
     "sch": 25.0,
     "sus": 1,
@@ -3745,14 +3746,14 @@
       "inexplicable",
       "infrastructure"
     ],
-    "up_hours": 362913.8251,
+    "up_hours": 362913.8251343278,
     "yrs": 4.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 1.5,
-    "cap_hours": 60485.6375,
+    "cap_hours": 60485.63752238797,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -3793,7 +3794,7 @@
     "adopt_yrs": 5.0,
     "art": 5.0,
     "build_yrs": 1.6666666666666667,
-    "cap_hours": 181456.9126,
+    "cap_hours": 181456.9125671639,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -3822,7 +3823,7 @@
       "sulfuric_retort"
     ],
     "req_any": [],
-    "rev_hours": 181456.9126,
+    "rev_hours": 181456.9125671639,
     "risk": 0.35,
     "sch": 3.0,
     "sus": 8,
@@ -3830,7 +3831,7 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 110890.3355,
+    "up_hours": 110890.33545771128,
     "yrs": 5.0
   },
   {
@@ -3839,7 +3840,7 @@
     "annual_output_t": 200,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 24194.255,
+    "cap_hours": 24194.255008955188,
     "cat": "metallurgy",
     "conf": "A",
     "dev_people": null,
@@ -3872,21 +3873,21 @@
         }
       }
     ],
-    "rev_hours": 32259.0067,
+    "rev_hours": 32259.00667860692,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 14113.3154,
+    "up_hours": 14113.315421890527,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 18145.6913,
+    "cap_hours": 18145.691256716393,
     "cat": "glass_optics",
     "conf": "C",
     "dev_people": null,
@@ -3915,7 +3916,7 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 64518.0134,
+    "rev_hours": 64518.01335721384,
     "risk": 0.2,
     "sch": 0.0,
     "sus": 2,
@@ -3923,14 +3924,14 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 8064.7517,
+    "up_hours": 8064.75166965173,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 4.0,
-    "cap_hours": 24194.255,
+    "cap_hours": 24194.255008955188,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -3967,7 +3968,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 30242.8188,
+    "cap_hours": 30242.818761193987,
     "cat": "precision",
     "conf": "B",
     "dev_people": null,
@@ -3993,21 +3994,21 @@
       "precision_three_plate"
     ],
     "req_any": [],
-    "rev_hours": 6048.5638,
+    "rev_hours": 6048.563752238797,
     "risk": 0.35,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "labour_saving"
     ],
-    "up_hours": 8064.7517,
+    "up_hours": 8064.75166965173,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 2419.4255,
+    "cap_hours": 2419.425500895519,
     "cat": "material",
     "conf": "A",
     "dev_people": 0,
@@ -4025,21 +4026,21 @@
     "ph": 40.0,
     "pre": [],
     "req_any": [],
-    "rev_hours": 3024.2819,
+    "rev_hours": 3024.2818761193985,
     "risk": 0.05,
     "sch": 0.0,
     "sus": 0,
     "traits": [
       "commerce"
     ],
-    "up_hours": 403.2376,
+    "up_hours": 403.2375834825865,
     "yrs": 0.5
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 0.5,
-    "cap_hours": 8064.7517,
+    "cap_hours": 8064.75166965173,
     "cat": "material",
     "conf": "A",
     "dev_people": null,
@@ -4104,7 +4105,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 1.0,
-    "cap_hours": 50404.6979,
+    "cap_hours": 50404.69793532331,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -4142,7 +4143,7 @@
     "adopt_yrs": 0,
     "art": 1.0,
     "build_yrs": 1.0,
-    "cap_hours": 14113.3154,
+    "cap_hours": 14113.315421890527,
     "cat": "metallurgy",
     "conf": "A",
     "dev_people": 0,
@@ -4164,7 +4165,7 @@
     "ph": 100.0,
     "pre": [],
     "req_any": [],
-    "rev_hours": 8467.9893,
+    "rev_hours": 8467.989253134316,
     "risk": 0.15,
     "sch": 0.0,
     "sus": 0,
@@ -4172,14 +4173,14 @@
       "infrastructure",
       "military"
     ],
-    "up_hours": 1814.5691,
+    "up_hours": 1814.569125671639,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 36291.3825,
+    "cap_hours": 36291.382513432785,
     "cat": "precision",
     "conf": "B",
     "dev_people": null,
@@ -4203,21 +4204,21 @@
       "precision_three_plate"
     ],
     "req_any": [],
-    "rev_hours": 18145.6913,
+    "rev_hours": 18145.691256716393,
     "risk": 0.25,
     "sch": 1.0,
     "sus": 1,
     "traits": [
       "labour_saving"
     ],
-    "up_hours": 12097.1275,
+    "up_hours": 12097.127504477594,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 3.0,
-    "cap_hours": 50404.6979,
+    "cap_hours": 50404.69793532331,
     "cat": "glass_optics",
     "conf": "B",
     "dev_people": null,
@@ -4244,7 +4245,7 @@
       "telescope"
     ],
     "req_any": [],
-    "rev_hours": 36291.3825,
+    "rev_hours": 36291.382513432785,
     "risk": 0.3,
     "sch": 2.0,
     "sus": 3,
@@ -4252,14 +4253,14 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 16129.5033,
+    "up_hours": 16129.50333930346,
     "yrs": 3.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 302428.1876,
+    "cap_hours": 302428.18761193985,
     "cat": "social",
     "conf": "B",
     "dev_people": null,
@@ -4284,14 +4285,14 @@
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 60485.6375,
+    "up_hours": 60485.63752238797,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.5,
-    "cap_hours": 30242.8188,
+    "cap_hours": 30242.818761193987,
     "cat": "glass_optics",
     "conf": "C",
     "dev_people": null,
@@ -4320,7 +4321,7 @@
       "lens_grinding"
     ],
     "req_any": [],
-    "rev_hours": 100809.3959,
+    "rev_hours": 100809.39587064662,
     "risk": 0.25,
     "sch": 0.0,
     "sus": 3,
@@ -4328,7 +4329,7 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 14113.3154,
+    "up_hours": 14113.315421890527,
     "yrs": 1.5
   },
   {
@@ -4336,7 +4337,7 @@
     "adopt_yrs": 10.0,
     "art": 40.0,
     "build_yrs": 3.0,
-    "cap_hours": 322590.0668,
+    "cap_hours": 322590.0667860692,
     "cat": "electrical",
     "conf": "B",
     "dev_people": null,
@@ -4363,7 +4364,7 @@
       "em_theory"
     ],
     "req_any": [],
-    "rev_hours": 403237.5835,
+    "rev_hours": 403237.5834825865,
     "risk": 0.3,
     "sch": 4.0,
     "sus": 5,
@@ -4372,14 +4373,14 @@
       "infrastructure",
       "spectacle"
     ],
-    "up_hours": 161295.0334,
+    "up_hours": 161295.0333930346,
     "yrs": 10.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 6048.5638,
+    "cap_hours": 6048.563752238797,
     "cat": "physics",
     "conf": "C",
     "dev_people": null,
@@ -4415,7 +4416,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 2.5,
-    "cap_hours": 52420.8859,
+    "cap_hours": 52420.885852736246,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -4449,21 +4450,21 @@
         }
       }
     ],
-    "rev_hours": 28226.6308,
+    "rev_hours": 28226.630843781055,
     "risk": 0.25,
     "sch": 1.0,
     "sus": 2,
     "traits": [
       "inexplicable"
     ],
-    "up_hours": 32259.0067,
+    "up_hours": 32259.00667860692,
     "yrs": 2.5
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.5,
-    "cap_hours": 36291.3825,
+    "cap_hours": 36291.382513432785,
     "cat": "chemistry",
     "conf": "A",
     "dev_people": null,
@@ -4497,7 +4498,7 @@
         }
       }
     ],
-    "rev_hours": 44356.1342,
+    "rev_hours": 44356.13418308451,
     "risk": 0.3,
     "sch": 2.0,
     "sus": 9,
@@ -4505,14 +4506,14 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 24194.255,
+    "up_hours": 24194.255008955188,
     "yrs": 1.5
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 3.0,
-    "cap_hours": 504046.9794,
+    "cap_hours": 504046.9793532331,
     "cat": "social",
     "conf": "C",
     "dev_people": null,
@@ -4613,7 +4614,7 @@
       "semaphore_telegraph"
     ],
     "req_any": [],
-    "rev_hours": 403237.5835,
+    "rev_hours": 403237.5834825865,
     "risk": 0.35,
     "sch": 0.0,
     "sus": 0,
@@ -4627,7 +4628,7 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 24194.255,
+    "cap_hours": 24194.255008955188,
     "cat": "social",
     "conf": "C",
     "dev_people": null,
@@ -4677,14 +4678,14 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 4032.3758,
+    "up_hours": 4032.375834825865,
     "yrs": 0.5
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 241942.5501,
+    "cap_hours": 241942.5500895519,
     "cat": "social",
     "conf": "C",
     "dev_people": null,
@@ -4771,14 +4772,14 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 20161.8792,
+    "up_hours": 20161.879174129324,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 0.1,
-    "cap_hours": 1209.7128,
+    "cap_hours": 1209.7127504477594,
     "cat": "alloys",
     "conf": "B",
     "dev_people": null,
@@ -4817,7 +4818,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 4.0,
-    "cap_hours": 80647.5167,
+    "cap_hours": 80647.5166965173,
     "cat": "instruments",
     "conf": "C",
     "dev_people": null,
@@ -4849,14 +4850,14 @@
       "mat_silver"
     ],
     "req_any": [],
-    "rev_hours": 60485.6375,
+    "rev_hours": 60485.63752238797,
     "risk": 0.35,
     "sch": 3.0,
     "sus": 8,
     "traits": [
       "spectacle"
     ],
-    "up_hours": 40323.7583,
+    "up_hours": 40323.75834825865,
     "yrs": 4.0
   },
   {
@@ -4864,7 +4865,7 @@
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 4.0,
-    "cap_hours": 120971.275,
+    "cap_hours": 120971.27504477595,
     "cat": "medicine",
     "conf": "C",
     "dev_people": null,
@@ -4898,7 +4899,7 @@
       "school_founded"
     ],
     "req_any": [],
-    "rev_hours": 40323.7583,
+    "rev_hours": 40323.75834825865,
     "risk": 0.2,
     "sch": 3.0,
     "sus": 8,
@@ -4907,14 +4908,14 @@
       "medical",
       "spectacle"
     ],
-    "up_hours": 40323.7583,
+    "up_hours": 40323.75834825865,
     "yrs": 4.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 20.0,
     "build_yrs": 4.0,
-    "cap_hours": 403237.5835,
+    "cap_hours": 403237.5834825865,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -4959,7 +4960,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 1.0,
-    "cap_hours": 18145.6913,
+    "cap_hours": 18145.691256716393,
     "cat": "chemistry",
     "conf": "A",
     "dev_people": null,
@@ -4984,21 +4985,21 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 22178.0671,
+    "rev_hours": 22178.067091542256,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "inexplicable"
     ],
-    "up_hours": 14113.3154,
+    "up_hours": 14113.315421890527,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 25.0,
     "art": 200.0,
     "build_yrs": 3.0,
-    "cap_hours": 3024281.8761,
+    "cap_hours": 3024281.8761193985,
     "cat": "electrical",
     "conf": "C",
     "dev_people": null,
@@ -5058,7 +5059,7 @@
       "steam_high_pressure"
     ],
     "req_any": [],
-    "rev_hours": 2419425.5009,
+    "rev_hours": 2419425.500895519,
     "risk": 0.35,
     "sch": 15.0,
     "sus": 4,
@@ -5066,14 +5067,14 @@
       "inexplicable",
       "infrastructure"
     ],
-    "up_hours": 1411331.5422,
+    "up_hours": 1411331.5421890528,
     "yrs": 25.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 18145.6913,
+    "cap_hours": 18145.691256716393,
     "cat": "precision",
     "conf": "A",
     "dev_people": null,
@@ -5099,21 +5100,21 @@
       "units_standards"
     ],
     "req_any": [],
-    "rev_hours": 8064.7517,
+    "rev_hours": 8064.75166965173,
     "risk": 0.2,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "labour_saving"
     ],
-    "up_hours": 6048.5638,
+    "up_hours": 6048.563752238797,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 4.0,
     "build_yrs": 2.0,
-    "cap_hours": 80647.5167,
+    "cap_hours": 80647.5166965173,
     "cat": "information",
     "conf": "C",
     "dev_people": null,
@@ -5162,7 +5163,7 @@
         }
       }
     ],
-    "rev_hours": 68550.3892,
+    "rev_hours": 68550.3891920397,
     "risk": 0.25,
     "sch": 0.0,
     "sus": 3,
@@ -5170,14 +5171,14 @@
       "information",
       "status_threatening"
     ],
-    "up_hours": 30242.8188,
+    "up_hours": 30242.818761193987,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 4.0,
-    "cap_hours": 16129.5033,
+    "cap_hours": 16129.50333930346,
     "cat": "physics",
     "conf": "C",
     "dev_people": null,
@@ -5212,7 +5213,7 @@
     "adopt_yrs": 8.0,
     "art": 20.0,
     "build_yrs": 2.6666666666666665,
-    "cap_hours": 302428.1876,
+    "cap_hours": 302428.18761193985,
     "cat": "electrical",
     "conf": "B",
     "dev_people": null,
@@ -5238,7 +5239,7 @@
       "vacuum_tube"
     ],
     "req_any": [],
-    "rev_hours": 504046.9794,
+    "rev_hours": 504046.9793532331,
     "risk": 0.3,
     "sch": 8.0,
     "sus": 10,
@@ -5246,14 +5247,14 @@
       "inexplicable",
       "infrastructure"
     ],
-    "up_hours": 181456.9126,
+    "up_hours": 181456.9125671639,
     "yrs": 8.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 1.5,
-    "cap_hours": 70566.5771,
+    "cap_hours": 70566.57710945263,
     "cat": "information",
     "conf": "C",
     "dev_people": null,
@@ -5283,21 +5284,21 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 52420.8859,
+    "rev_hours": 52420.885852736246,
     "risk": 0.2,
     "sch": 0.0,
     "sus": 2,
     "traits": [
       "information"
     ],
-    "up_hours": 24194.255,
+    "up_hours": 24194.255008955188,
     "yrs": 1.5
   },
   {
     "adopt_yrs": 20.0,
     "art": 150.0,
     "build_yrs": 3.0,
-    "cap_hours": 1814569.1257,
+    "cap_hours": 1814569.125671639,
     "cat": "transport",
     "conf": "B",
     "dev_people": null,
@@ -5372,7 +5373,7 @@
         }
       }
     ],
-    "rev_hours": 1209712.7504,
+    "rev_hours": 1209712.7504477594,
     "risk": 0.35,
     "sch": 3.0,
     "sus": 4,
@@ -5380,14 +5381,14 @@
       "commerce",
       "infrastructure"
     ],
-    "up_hours": 705665.7711,
+    "up_hours": 705665.7710945264,
     "yrs": 20.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.5,
-    "cap_hours": 32259.0067,
+    "cap_hours": 32259.00667860692,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -5411,21 +5412,21 @@
       "workshop_first"
     ],
     "req_any": [],
-    "rev_hours": 12097.1275,
+    "rev_hours": 12097.127504477594,
     "risk": 0.2,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 14113.3154,
+    "up_hours": 14113.315421890527,
     "yrs": 1.5
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 8064.7517,
+    "cap_hours": 8064.75166965173,
     "cat": "medicine",
     "conf": "C",
     "dev_people": null,
@@ -5461,7 +5462,7 @@
       "distillation_alcohol"
     ],
     "req_any": [],
-    "rev_hours": 28226.6308,
+    "rev_hours": 28226.630843781055,
     "risk": 0.15,
     "sch": 1.0,
     "sus": 4,
@@ -5469,14 +5470,14 @@
       "infrastructure",
       "medical"
     ],
-    "up_hours": 6048.5638,
+    "up_hours": 6048.563752238797,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 4.0,
-    "cap_hours": 161295.0334,
+    "cap_hours": 161295.0333930346,
     "cat": "institution",
     "conf": "C",
     "dev_people": null,
@@ -5564,21 +5565,21 @@
         }
       }
     ],
-    "rev_hours": 16129.5033,
+    "rev_hours": 16129.50333930346,
     "risk": 0.15,
     "sch": 0.0,
     "sus": 4,
     "traits": [
       "status_threatening"
     ],
-    "up_hours": 50404.6979,
+    "up_hours": 50404.69793532331,
     "yrs": 4.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 2.0,
-    "cap_hours": 2016.1879,
+    "cap_hours": 2016.1879174129324,
     "cat": "foundation",
     "conf": "C",
     "dev_people": null,
@@ -5603,14 +5604,14 @@
     "traits": [
       "labour_saving"
     ],
-    "up_hours": 2016.1879,
+    "up_hours": 2016.1879174129324,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 5.0,
     "build_yrs": 3.0,
-    "cap_hours": 100809.3959,
+    "cap_hours": 100809.39587064662,
     "cat": "precision",
     "conf": "B",
     "dev_people": null,
@@ -5640,21 +5641,21 @@
       "water_power_scale"
     ],
     "req_any": [],
-    "rev_hours": 70566.5771,
+    "rev_hours": 70566.57710945263,
     "risk": 0.35,
     "sch": 1.0,
     "sus": 2,
     "traits": [
       "labour_saving"
     ],
-    "up_hours": 36291.3825,
+    "up_hours": 36291.382513432785,
     "yrs": 3.0
   },
   {
     "adopt_yrs": 0,
     "art": 2.0,
     "build_yrs": 1.5,
-    "cap_hours": 44356.1342,
+    "cap_hours": 44356.13418308451,
     "cat": "ships",
     "conf": "A",
     "dev_people": 0,
@@ -5675,7 +5676,7 @@
     "ph": 150.0,
     "pre": [],
     "req_any": [],
-    "rev_hours": 14113.3154,
+    "rev_hours": 14113.315421890527,
     "risk": 0.12,
     "sch": 0.0,
     "sus": 0,
@@ -5684,14 +5685,14 @@
       "military",
       "commerce"
     ],
-    "up_hours": 3629.1383,
+    "up_hours": 3629.138251343278,
     "yrs": 1.5
   },
   {
     "adopt_yrs": 0,
     "art": 1.0,
     "build_yrs": 1.0,
-    "cap_hours": 18145.6913,
+    "cap_hours": 18145.691256716393,
     "cat": "ships",
     "conf": "A",
     "dev_people": 0,
@@ -5713,7 +5714,7 @@
       "sea_square_sail"
     ],
     "req_any": [],
-    "rev_hours": 6048.5638,
+    "rev_hours": 6048.563752238797,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 0,
@@ -5721,14 +5722,14 @@
       "infrastructure",
       "commerce"
     ],
-    "up_hours": 1209.7128,
+    "up_hours": 1209.7127504477594,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 4.0,
     "build_yrs": 3.0,
-    "cap_hours": 362913.8251,
+    "cap_hours": 362913.8251343278,
     "cat": "information",
     "conf": "C",
     "dev_people": null,
@@ -5773,7 +5774,7 @@
     "adopt_yrs": 0.0,
     "art": 10.0,
     "build_yrs": 4.0,
-    "cap_hours": 181456.9126,
+    "cap_hours": 181456.9125671639,
     "cat": "semiconductor",
     "conf": "B",
     "dev_people": null,
@@ -5818,7 +5819,7 @@
     "adopt_yrs": 7.0,
     "art": 40.0,
     "build_yrs": 2.3333333333333335,
-    "cap_hours": 1209712.7504,
+    "cap_hours": 1209712.7504477594,
     "cat": "semiconductor",
     "conf": "B",
     "dev_people": null,
@@ -5853,14 +5854,14 @@
         }
       }
     ],
-    "rev_hours": 806475.167,
+    "rev_hours": 806475.166965173,
     "risk": 0.45,
     "sch": 30.0,
     "sus": 1,
     "traits": [
       "inexplicable"
     ],
-    "up_hours": 806475.167,
+    "up_hours": 806475.166965173,
     "yrs": 7.0
   },
   {
@@ -5868,7 +5869,7 @@
     "adopt_yrs": 5.0,
     "art": 25.0,
     "build_yrs": 1.6666666666666667,
-    "cap_hours": 604856.3752,
+    "cap_hours": 604856.3752238797,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,
@@ -5923,7 +5924,7 @@
     "adopt_yrs": 0.0,
     "art": 1.0,
     "build_yrs": 1.0,
-    "cap_hours": 24194.255,
+    "cap_hours": 24194.255008955188,
     "cat": "chemistry",
     "conf": "C",
     "dev_people": null,
@@ -5961,21 +5962,21 @@
       "potash_soda"
     ],
     "req_any": [],
-    "rev_hours": 36291.3825,
+    "rev_hours": 36291.382513432785,
     "risk": 0.1,
     "sch": 0.0,
     "sus": 2,
     "traits": [
       "inexplicable"
     ],
-    "up_hours": 12097.1275,
+    "up_hours": 12097.127504477594,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 7.0,
     "art": 6.0,
     "build_yrs": 2.3333333333333335,
-    "cap_hours": 221780.6709,
+    "cap_hours": 221780.67091542255,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -6004,7 +6005,7 @@
       "lead_chamber"
     ],
     "req_any": [],
-    "rev_hours": 221780.6709,
+    "rev_hours": 221780.67091542255,
     "risk": 0.3,
     "sch": 3.0,
     "sus": 5,
@@ -6012,7 +6013,7 @@
       "inexplicable",
       "spectacle"
     ],
-    "up_hours": 141133.1542,
+    "up_hours": 141133.15421890526,
     "yrs": 7.0
   },
   {
@@ -6020,7 +6021,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 2.0,
-    "cap_hours": 36291.3825,
+    "cap_hours": 36291.382513432785,
     "cat": "instruments",
     "conf": "B",
     "dev_people": null,
@@ -6047,21 +6048,21 @@
       "telescope"
     ],
     "req_any": [],
-    "rev_hours": 14113.3154,
+    "rev_hours": 14113.315421890527,
     "risk": 0.25,
     "sch": 3.0,
     "sus": 3,
     "traits": [
       "spectacle"
     ],
-    "up_hours": 12097.1275,
+    "up_hours": 12097.127504477594,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 1.0,
-    "cap_hours": 1008.094,
+    "cap_hours": 1008.0939587064662,
     "cat": "mathematics",
     "conf": "C",
     "dev_people": null,
@@ -6096,7 +6097,7 @@
     "adopt_yrs": 7.0,
     "art": 8.0,
     "build_yrs": 2.3333333333333335,
-    "cap_hours": 282266.3084,
+    "cap_hours": 282266.3084378105,
     "cat": "power",
     "conf": "B",
     "dev_people": null,
@@ -6154,7 +6155,7 @@
         }
       }
     ],
-    "rev_hours": 120971.275,
+    "rev_hours": 120971.27504477595,
     "risk": 0.35,
     "sch": 2.0,
     "sus": 4,
@@ -6162,14 +6163,14 @@
       "infrastructure",
       "religious_adjacent"
     ],
-    "up_hours": 141133.1542,
+    "up_hours": 141133.15421890526,
     "yrs": 7.0
   },
   {
     "adopt_yrs": 12.0,
     "art": 50.0,
     "build_yrs": 3.0,
-    "cap_hours": 524208.8585,
+    "cap_hours": 524208.8585273624,
     "cat": "power",
     "conf": "B",
     "dev_people": null,
@@ -6226,14 +6227,14 @@
         }
       }
     ],
-    "rev_hours": 443561.3418,
+    "rev_hours": 443561.3418308451,
     "risk": 0.4,
     "sch": 3.0,
     "sus": 3,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 241942.5501,
+    "up_hours": 241942.5500895519,
     "yrs": 12.0
   },
   {
@@ -6241,7 +6242,7 @@
     "adopt_yrs": 9.0,
     "art": 35.0,
     "build_yrs": 3.0,
-    "cap_hours": 403237.5835,
+    "cap_hours": 403237.5834825865,
     "cat": "power",
     "conf": "B",
     "dev_people": null,
@@ -6286,14 +6287,14 @@
         }
       }
     ],
-    "rev_hours": 282266.3084,
+    "rev_hours": 282266.3084378105,
     "risk": 0.3,
     "sch": 3.0,
     "sus": 3,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 181456.9126,
+    "up_hours": 181456.9125671639,
     "yrs": 9.0
   },
   {
@@ -6301,7 +6302,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 70566.5771,
+    "cap_hours": 70566.57710945263,
     "cat": "chemistry",
     "conf": "B",
     "dev_people": null,
@@ -6339,21 +6340,21 @@
         }
       }
     ],
-    "rev_hours": 30242.8188,
+    "rev_hours": 30242.818761193987,
     "risk": 0.4,
     "sch": 2.0,
     "sus": 10,
     "traits": [
       "inexplicable"
     ],
-    "up_hours": 44356.1342,
+    "up_hours": 44356.13418308451,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 12.0,
     "art": 30.0,
     "build_yrs": 3.0,
-    "cap_hours": 705665.7711,
+    "cap_hours": 705665.7710945264,
     "cat": "electrical",
     "conf": "B",
     "dev_people": null,
@@ -6422,7 +6423,7 @@
         }
       }
     ],
-    "rev_hours": 604856.3752,
+    "rev_hours": 604856.3752238797,
     "risk": 0.3,
     "sch": 3.0,
     "sus": 6,
@@ -6431,14 +6432,14 @@
       "infrastructure",
       "spectacle"
     ],
-    "up_hours": 302428.1876,
+    "up_hours": 302428.18761193985,
     "yrs": 12.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 14113.3154,
+    "cap_hours": 14113.315421890527,
     "cat": "glass_optics",
     "conf": "B",
     "dev_people": null,
@@ -6464,7 +6465,7 @@
       "lens_grinding"
     ],
     "req_any": [],
-    "rev_hours": 40323.7583,
+    "rev_hours": 40323.75834825865,
     "risk": 0.2,
     "sch": 1.0,
     "sus": 5,
@@ -6473,14 +6474,14 @@
       "luxury",
       "spectacle"
     ],
-    "up_hours": 5040.4698,
+    "up_hours": 5040.469793532331,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 3.0,
-    "cap_hours": 12097.1275,
+    "cap_hours": 12097.127504477594,
     "cat": "physics",
     "conf": "C",
     "dev_people": null,
@@ -6515,7 +6516,7 @@
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.5,
-    "cap_hours": 16129.5033,
+    "cap_hours": 16129.50333930346,
     "cat": "instruments",
     "conf": "B",
     "dev_people": null,
@@ -6541,21 +6542,21 @@
       "units_standards"
     ],
     "req_any": [],
-    "rev_hours": 18145.6913,
+    "rev_hours": 18145.691256716393,
     "risk": 0.2,
     "sch": 1.0,
     "sus": 3,
     "traits": [
       "spectacle"
     ],
-    "up_hours": 6048.5638,
+    "up_hours": 6048.563752238797,
     "yrs": 1.5
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 5040.4698,
+    "cap_hours": 5040.469793532331,
     "cat": "foundation",
     "conf": "C",
     "dev_people": null,
@@ -6583,14 +6584,14 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 604.8564,
+    "up_hours": 604.8563752238797,
     "yrs": 0.5
   },
   {
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 50404.6979,
+    "cap_hours": 50404.69793532331,
     "cat": "instruments",
     "conf": "A",
     "dev_people": null,
@@ -6624,14 +6625,14 @@
         }
       }
     ],
-    "rev_hours": 8064.7517,
+    "rev_hours": 8064.75166965173,
     "risk": 0.3,
     "sch": 3.0,
     "sus": 7,
     "traits": [
       "spectacle"
     ],
-    "up_hours": 30242.8188,
+    "up_hours": 30242.818761193987,
     "yrs": 2.0
   },
   {
@@ -6639,7 +6640,7 @@
     "adopt_yrs": 8.0,
     "art": 25.0,
     "build_yrs": 2.6666666666666665,
-    "cap_hours": 282266.3084,
+    "cap_hours": 282266.3084378105,
     "cat": "electrical",
     "conf": "B",
     "dev_people": null,
@@ -6680,7 +6681,7 @@
         }
       }
     ],
-    "rev_hours": 241942.5501,
+    "rev_hours": 241942.5500895519,
     "risk": 0.4,
     "sch": 14.0,
     "sus": 6,
@@ -6689,14 +6690,14 @@
       "infrastructure",
       "spectacle"
     ],
-    "up_hours": 181456.9126,
+    "up_hours": 181456.9125671639,
     "yrs": 8.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 14113.3154,
+    "cap_hours": 14113.315421890527,
     "cat": "electrical",
     "conf": "A",
     "dev_people": null,
@@ -6739,7 +6740,7 @@
     "adopt_yrs": 0.0,
     "art": 3.0,
     "build_yrs": 2.0,
-    "cap_hours": 90728.4563,
+    "cap_hours": 90728.45628358195,
     "cat": "power",
     "conf": "B",
     "dev_people": null,
@@ -6774,21 +6775,21 @@
       "crank_conrod"
     ],
     "req_any": [],
-    "rev_hours": 44356.1342,
+    "rev_hours": 44356.13418308451,
     "risk": 0.15,
     "sch": 0.0,
     "sus": 1,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 18145.6913,
+    "up_hours": 18145.691256716393,
     "yrs": 2.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 2.0,
     "build_yrs": 1.0,
-    "cap_hours": 100809.3959,
+    "cap_hours": 100809.39587064662,
     "cat": "institution",
     "conf": "C",
     "dev_people": null,
@@ -6850,14 +6851,14 @@
     "traits": [
       "commerce"
     ],
-    "up_hours": 18145.6913,
+    "up_hours": 18145.691256716393,
     "yrs": 1.0
   },
   {
     "adopt_yrs": 0.0,
     "art": 0.0,
     "build_yrs": 0.5,
-    "cap_hours": 3024.2819,
+    "cap_hours": 3024.2818761193985,
     "cat": "information",
     "conf": "C",
     "dev_people": null,
@@ -6882,7 +6883,7 @@
       "identity_cover"
     ],
     "req_any": [],
-    "rev_hours": 10080.9396,
+    "rev_hours": 10080.939587064662,
     "risk": 0.05,
     "sch": 0.0,
     "sus": 4,
@@ -6890,7 +6891,7 @@
       "information",
       "infrastructure"
     ],
-    "up_hours": 1008.094,
+    "up_hours": 1008.0939587064662,
     "yrs": 0.5
   },
   {
@@ -6899,7 +6900,7 @@
     "annual_output_t": 1500,
     "art": 70.0,
     "build_yrs": 3.0,
-    "cap_hours": 1008093.9587,
+    "cap_hours": 1008093.9587064662,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -6935,14 +6936,14 @@
         }
       }
     ],
-    "rev_hours": 907284.5628,
+    "rev_hours": 907284.5628358196,
     "risk": 0.3,
     "sch": 5.0,
     "sus": 2,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 604856.3752,
+    "up_hours": 604856.3752238797,
     "yrs": 12.0
   },
   {
@@ -6951,7 +6952,7 @@
     "annual_output_t": 20,
     "art": 3.0,
     "build_yrs": 3.0,
-    "cap_hours": 110890.3355,
+    "cap_hours": 110890.33545771128,
     "cat": "metallurgy",
     "conf": "B",
     "dev_people": null,
@@ -6987,14 +6988,14 @@
         }
       }
     ],
-    "rev_hours": 80647.5167,
+    "rev_hours": 80647.5166965173,
     "risk": 0.4,
     "sch": 1.0,
     "sus": 3,
     "traits": [
       "infrastructure"
     ],
-    "up_hours": 60485.6375,
+    "up_hours": 60485.63752238797,
     "yrs": 3.0
   },
   {
@@ -7002,7 +7003,7 @@
     "adopt_yrs": 6.0,
     "art": 25.0,
     "build_yrs": 2.0,
-    "cap_hours": 705665.7711,
+    "cap_hours": 705665.7710945264,
     "cat": "semiconductor",
     "conf": "A",
     "dev_people": null,

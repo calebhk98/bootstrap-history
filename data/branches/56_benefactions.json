@@ -26,7 +26,7 @@
    "parchment_sheet": 2000
   },
   "cap_hours": 0,
-  "up_hours": 445476.7204,
+  "up_hours": 445476.7203523874,
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -80,7 +80,7 @@
    "paper_kg": 5000
   },
   "cap_hours": 0,
-  "up_hours": 129338.4549,
+  "up_hours": 129338.45490203961,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -138,7 +138,7 @@
    "paper_kg": 2000
   },
   "cap_hours": 0,
-  "up_hours": 769558.7662,
+  "up_hours": 769558.7661973422,
   "build_yrs": 4,
   "adopt_yrs": 3,
   "risk": 0.1,
@@ -199,7 +199,7 @@
    "lead_kg": 3000
   },
   "cap_hours": 0,
-  "up_hours": 623627.0847,
+  "up_hours": 623627.0847349941,
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -257,7 +257,7 @@
    "timber_m3": 1000
   },
   "cap_hours": 0,
-  "up_hours": 196961.3977,
+  "up_hours": 196961.39765206937,
   "build_yrs": 4,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -316,7 +316,7 @@
    "iron_bar_kg": 10000
   },
   "cap_hours": 0,
-  "up_hours": 359849.2195,
+  "up_hours": 359849.2194998602,
   "build_yrs": 5,
   "adopt_yrs": 3,
   "risk": 0.1,
@@ -378,7 +378,7 @@
    "glass_raw_kg": 5000
   },
   "cap_hours": 0,
-  "up_hours": 427835.0761,
+  "up_hours": 427835.07607502426,
   "build_yrs": 3,
   "adopt_yrs": 3,
   "risk": 0.1,
@@ -429,7 +429,7 @@
    "timber_m3": 300
   },
   "cap_hours": 0,
-  "up_hours": 13158569.7955,
+  "up_hours": 13158569.795478808,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
@@ -488,7 +488,7 @@
    "iugerum_land": 400
   },
   "cap_hours": 0,
-  "up_hours": 214663.5276,
+  "up_hours": 214663.5275669549,
   "build_yrs": 4,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -540,7 +540,7 @@
    "parchment_sheet": 500
   },
   "cap_hours": 0,
-  "up_hours": 432230.3657,
+  "up_hours": 432230.36573498446,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
@@ -597,7 +597,7 @@
    "silver_kg": 300
   },
   "cap_hours": 0,
-  "up_hours": 146617.1854,
+  "up_hours": 146617.18535426844,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -649,7 +649,7 @@
    "parchment_sheet": 500
   },
   "cap_hours": 0,
-  "up_hours": 334767.8418,
+  "up_hours": 334767.8418072433,
   "build_yrs": 2,
   "adopt_yrs": 3,
   "risk": 0.1,
@@ -702,7 +702,7 @@
    "wheat_kg": 4000000
   },
   "cap_hours": 0,
-  "up_hours": 21361228.7187,
+  "up_hours": 21361228.71868158,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
@@ -760,7 +760,7 @@
    "silver_kg": 3000
   },
   "cap_hours": 0,
-  "up_hours": 19567668.2711,
+  "up_hours": 19567668.271109384,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
@@ -821,7 +821,7 @@
    "wine_common_kg": 50000
   },
   "cap_hours": 0,
-  "up_hours": 769336.9855,
+  "up_hours": 769336.9855264267,
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.15,

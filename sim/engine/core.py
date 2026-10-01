@@ -432,7 +432,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
         # its own purse and its own knowledge instead of sharing this one.
         #
         # AT THIS SOCIETY'S PRICES, like everything else you will spend it on.
-        # The kits are quoted in Rome 100 AD denarii; since revenue and
+        # The kits are stated in labourer-years; since revenue and
         # living costs convert through `price_index` (see
         # economy.living_cost), leaving the purse flat would mean "four
         # hundred denarii" buys a third more months of bread in Luoyang than
@@ -539,8 +539,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
         # economy/output_factor are the size and health of the whole imperial
         # economy relative to 100 AD, crushed by war and plague, not by any
         # one household's fortunes.
-        self.money_real = 1.0     # purchasing power of a denarius, 1.0 at 100 AD
-        self.economy = 1.0        # size of the imperial economy relative to 100 AD
+        self.money_real = 1.0     # purchasing power of one coin, 1.0 at the start date
+        self.economy = 1.0        # size of the imperial economy relative to the start date
         self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's

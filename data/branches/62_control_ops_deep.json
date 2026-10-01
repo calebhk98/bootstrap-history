@@ -16,7 +16,7 @@
    "scholar": 200
   },
   "mat": {},
-  "cap_hours": 1209.7128,
+  "cap_hours": 1209.7127504477594,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.3,
@@ -46,7 +46,7 @@
    "scholar": 230
   },
   "mat": {},
-  "cap_hours": 806.4752,
+  "cap_hours": 806.475166965173,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.3,
@@ -76,7 +76,7 @@
    "scholar": 230
   },
   "mat": {},
-  "cap_hours": 806.4752,
+  "cap_hours": 806.475166965173,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.3,
@@ -109,7 +109,7 @@
    "scholar": 80
   },
   "mat": {},
-  "cap_hours": 1612.9503,
+  "cap_hours": 1612.950333930346,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.5,
@@ -139,7 +139,7 @@
    "engineer": 200
   },
   "mat": {},
-  "cap_hours": 806.4752,
+  "cap_hours": 806.475166965173,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.4,
@@ -170,7 +170,7 @@
    "engineer": 210
   },
   "mat": {},
-  "cap_hours": 806.4752,
+  "cap_hours": 806.475166965173,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.4,
@@ -202,7 +202,7 @@
    "scholar": 60
   },
   "mat": {},
-  "cap_hours": 1209.7128,
+  "cap_hours": 1209.7127504477594,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 0.4,
@@ -255,14 +255,14 @@
    "leather_kg": 4,
    "bronze_kg": 4
   },
-  "cap_hours": 12097.1275,
-  "up_hours": 1612.9503,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.8,
   "adopt_yrs": 1.5,
   "dev_years": 9,
   "dev_people": 3,
   "risk": 0.16,
-  "rev_hours": 30242.8188,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -289,7 +289,7 @@
    "engineer": 180
   },
   "mat": {},
-  "cap_hours": 403.2376,
+  "cap_hours": 403.2375834825865,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0.3,
@@ -320,7 +320,7 @@
    "scholar": 200
   },
   "mat": {},
-  "cap_hours": 604.8564,
+  "cap_hours": 604.8563752238797,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.6,
@@ -352,7 +352,7 @@
    "engineer": 100
   },
   "mat": {},
-  "cap_hours": 1209.7128,
+  "cap_hours": 1209.7127504477594,
   "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
@@ -381,7 +381,7 @@
    "engineer": 140
   },
   "mat": {},
-  "cap_hours": 201.6188,
+  "cap_hours": 201.61879174129325,
   "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0.3,
@@ -411,7 +411,7 @@
    "engineer": 260
   },
   "mat": {},
-  "cap_hours": 604.8564,
+  "cap_hours": 604.8563752238797,
   "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0.6,

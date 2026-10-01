@@ -16,13 +16,13 @@
    "linen_kg": 8,
    "timber_m3": 0.5
   },
-  "cap_hours": 4032.3758,
-  "up_hours": 403.2376,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 403.2375834825865,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 3024.2819,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -85,7 +85,7 @@
    "iron_bar_kg": 20,
    "brick_1000": 2
   },
-  "cap_hours": 40323.7583,
+  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.08,
@@ -123,7 +123,7 @@
    "glass_raw_kg": 2,
    "mirror_amalgam_kg": 1
   },
-  "cap_hours": 6048.5638,
+  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 0.25,
   "risk": 0.12,
@@ -133,13 +133,13 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A polished mirror reflects sunlight to encode Morse dots and dashes. Works in daylight at range up to 50 km. Lighter and cheaper than optical towers. Cannot work at night or in cloud. The constraint is weather: an overcast day stops all communication, but the apparatus itself is simpler and more portable. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: polished mirror surface requires fine finishing quality]",
+  "note": "A polished mirror reflects sunlight to encode Morse dots and dashes. Works in daylight at range up to 50 km. Lighter and cheaper than optical towers. Cannot work at night or in cloud. The constraint is weather: an overcast day stops all communication, but the apparatus itself is simpler and more portable.",
   "traits": [
    "information",
    "infrastructure",
    "military"
   ],
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: polished mirror surface requires fine finishing quality]"
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: polished mirror surface requires fine finishing quality] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: polished mirror surface requires fine finishing quality]"
  },
  {
   "id": "com_morse_code",
@@ -192,7 +192,7 @@
    "timber_m3": 0.5,
    "charcoal_kg": 5
   },
-  "cap_hours": 10080.9396,
+  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 0.75,
   "risk": 0.1,
@@ -227,7 +227,7 @@
    "brass_kg": 2,
    "timber_m3": 0.3
   },
-  "cap_hours": 8064.7517,
+  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.08,
@@ -262,7 +262,7 @@
    "brass_kg": 3,
    "timber_m3": 0.4
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "yrs": 0.75,
   "risk": 0.12,
@@ -335,7 +335,7 @@
    "brass_kg": 4,
    "timber_m3": 0.5
   },
-  "cap_hours": 24194.255,
+  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -371,7 +371,7 @@
    "brass_kg": 5,
    "timber_m3": 0.6
   },
-  "cap_hours": 36291.3825,
+  "cap_hours": 36291.382513432785,
   "up_hours": 0,
   "yrs": 1.25,
   "risk": 0.2,
@@ -412,7 +412,7 @@
    "lead_kg": 300.0,
    "timber_m3": 3.0
   },
-  "cap_hours": 1008093.9587,
+  "cap_hours": 1008093.9587064662,
   "up_hours": 0,
   "yrs": 3.0,
   "risk": 0.25,
@@ -451,7 +451,7 @@
    "iron_bar_kg": 3.0,
    "timber_m3": 0.3
   },
-  "cap_hours": 46372.3221,
+  "cap_hours": 46372.32210049745,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
@@ -461,13 +461,13 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A coil of wire inserted periodically into a long telegraph or telephone line. Wire acts as a capacitor that stores charge; the coil inductance smooths it out. This compensates for cable distortion and allows signals to travel further before attenuation kills them. A loading coil every 2 km extends range from 50 km to 500 km on a submarine cable. The physics is: inductance and capacitance in series form a filter that attenuates high frequencies (noise) less than the signal distortion. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: coil winding requires file and gauge precision to achieve specified inductance]",
+  "note": "A coil of wire inserted periodically into a long telegraph or telephone line. Wire acts as a capacitor that stores charge; the coil inductance smooths it out. This compensates for cable distortion and allows signals to travel further before attenuation kills them. A loading coil every 2 km extends range from 50 km to 500 km on a submarine cable. The physics is: inductance and capacitance in series form a filter that attenuates high frequencies (noise) less than the signal distortion.",
   "traits": [
    "information",
    "infrastructure",
    "military"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: coil winding requires file and gauge precision to achieve specified inductance]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: coil winding requires file and gauge precision to achieve specified inductance] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: coil winding requires file and gauge precision to achieve specified inductance]"
  },
  {
   "id": "com_telephone_carbon_mic",
@@ -490,7 +490,7 @@
    "brass_kg": 1,
    "mercury_kg": 0.5
   },
-  "cap_hours": 6048.5638,
+  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.12,
@@ -522,7 +522,7 @@
    "brass_kg": 2,
    "timber_m3": 0.2
   },
-  "cap_hours": 5040.4698,
+  "cap_hours": 5040.469793532331,
   "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.08,
@@ -555,13 +555,13 @@
    "timber_m3": 2,
    "copper_kg": 10
   },
-  "cap_hours": 60485.6375,
-  "up_hours": 4032.3758,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "yrs": 1.5,
   "risk": 0.15,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 40323.7583,
+  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -591,7 +591,7 @@
    "iron_bar_kg": 50,
    "lead_kg": 100
   },
-  "cap_hours": 302428.1876,
+  "cap_hours": 302428.18761193985,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.1,
@@ -626,7 +626,7 @@
    "iron_bar_kg": 8,
    "timber_m3": 0.5
   },
-  "cap_hours": 30242.8188,
+  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -662,8 +662,8 @@
    "timber_m3": 3,
    "copper_kg": 20
   },
-  "cap_hours": 161295.0334,
-  "up_hours": 8064.7517,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 8064.75166965173,
   "yrs": 2.0,
   "risk": 0.18,
   "sus": 1,
@@ -695,13 +695,13 @@
    "timber_m3": 0.5,
    "paper_kg": 5
   },
-  "cap_hours": 20161.8792,
-  "up_hours": 1209.7128,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1209.7127504477594,
   "yrs": 0.75,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev_hours": 16129.5033,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -732,7 +732,7 @@
    "copper_kg": 10,
    "carbon_kg": 2
   },
-  "cap_hours": 40323.7583,
+  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -768,7 +768,7 @@
    "copper_kg": 2,
    "timber_m3": 0.3
   },
-  "cap_hours": 3024.2819,
+  "cap_hours": 3024.2818761193985,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.08,
@@ -804,7 +804,7 @@
    "timber_m3": 2,
    "iron_bar_kg": 10
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.08,
@@ -838,8 +838,8 @@
    "brass_kg": 2,
    "iron_bar_kg": 2
   },
-  "cap_hours": 8064.7517,
-  "up_hours": 403.2376,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 403.2375834825865,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
@@ -870,7 +870,7 @@
    "copper_kg": 8,
    "iron_bar_kg": 4
   },
-  "cap_hours": 30242.8188,
+  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.12,
@@ -901,8 +901,8 @@
    "copper_kg": 6,
    "timber_m3": 0.2
   },
-  "cap_hours": 16129.5033,
-  "up_hours": 1008.094,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1008.0939587064662,
   "yrs": 0.75,
   "risk": 0.1,
   "sus": 0,
@@ -932,8 +932,8 @@
    "copper_kg": 5,
    "iron_bar_kg": 3
   },
-  "cap_hours": 16129.5033,
-  "up_hours": 806.4752,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 806.475166965173,
   "yrs": 0.75,
   "risk": 0.1,
   "sus": 0,
@@ -965,8 +965,8 @@
    "iron_bar_kg": 8,
    "timber_m3": 0.4
   },
-  "cap_hours": 50404.6979,
-  "up_hours": 3024.2819,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 3024.2818761193985,
   "yrs": 1.25,
   "risk": 0.15,
   "sus": 0,
@@ -996,8 +996,8 @@
    "copper_kg": 12,
    "iron_bar_kg": 6
   },
-  "cap_hours": 44356.1342,
-  "up_hours": 2621.0443,
+  "cap_hours": 44356.13418308451,
+  "up_hours": 2621.0442926368123,
   "yrs": 1.1,
   "risk": 0.12,
   "sus": 0,
@@ -1024,13 +1024,13 @@
    "scholar": 200
   },
   "mat": {},
-  "cap_hours": 1008093.9587,
-  "up_hours": 100809.3959,
+  "cap_hours": 1008093.9587064662,
+  "up_hours": 100809.39587064662,
   "yrs": 2.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 1008093.9587,
+  "rev_hours": 1008093.9587064662,
   "sch": 2,
   "art": 3,
   "conf": "A",
@@ -1060,8 +1060,8 @@
    "nickel_kg": 1,
    "lead_kg": 2
   },
-  "cap_hours": 40323.7583,
-  "up_hours": 2016.1879,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.12,
   "sus": 0,
@@ -1093,7 +1093,7 @@
    "timber_m3": 1,
    "sulfur_kg": 0.5
   },
-  "cap_hours": 60485.6375,
+  "cap_hours": 60485.63752238797,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.18,
@@ -1103,8 +1103,8 @@
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "A spinning disc with holes arranged in a spiral (Nipkow disc) scans an image line by line. Light from the scene passes through a hole onto a selenium photocell, which modulates current proportional to brightness. This signal is transmitted by radio; a receiver feeds it to a similar spinning disc, with light shining behind it, reconstructing the image on a screen. The whole system is mechanical, unreliable, and limited to about 30 lines of resolution. Electronic television replaced it by 1935. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: Nipkow disc hole pattern must be precise for image resolution]",
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: Nipkow disc hole pattern must be precise for image resolution]"
+  "note": "A spinning disc with holes arranged in a spiral (Nipkow disc) scans an image line by line. Light from the scene passes through a hole onto a selenium photocell, which modulates current proportional to brightness. This signal is transmitted by radio; a receiver feeds it to a similar spinning disc, with light shining behind it, reconstructing the image on a screen. The whole system is mechanical, unreliable, and limited to about 30 lines of resolution. Electronic television replaced it by 1935.",
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: Nipkow disc hole pattern must be precise for image resolution] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: Nipkow disc hole pattern must be precise for image resolution]"
  },
  {
   "id": "com_tv_electronic_camera",
@@ -1127,7 +1127,7 @@
    "silver_kg": 2,
    "clay_kg": 1
   },
-  "cap_hours": 70566.5771,
+  "cap_hours": 70566.57710945263,
   "up_hours": 0,
   "yrs": 1.25,
   "risk": 0.15,
@@ -1137,12 +1137,12 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A vacuum tube where an electron beam scans a photosensitive mosaic (thousands of tiny silver-mica capacitors). Light on each capacitor charges it; the beam discharges each spot sequentially, producing a current proportional to light. This is a camera: it converts an optical image to an electrical signal suitable for transmission. The iconoscope was unreliable (mosaic damage, burn-in), but it launched electronic television and was the standard for decades. [REVIEWED: prerequisite(s) cap_vac_1e6 added by a reviewer working node by node. Reason: iconoscope tube requires very high vacuum to achieve usable photoemission]",
+  "note": "A vacuum tube where an electron beam scans a photosensitive mosaic (thousands of tiny silver-mica capacitors). Light on each capacitor charges it; the beam discharges each spot sequentially, producing a current proportional to light. This is a camera: it converts an optical image to an electrical signal suitable for transmission. The iconoscope was unreliable (mosaic damage, burn-in), but it launched electronic television and was the standard for decades.",
   "traits": [
    "inexplicable",
    "infrastructure"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e6 added by a reviewer working node by node. Reason: iconoscope tube requires very high vacuum to achieve usable photoemission]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e6 added by a reviewer working node by node. Reason: iconoscope tube requires very high vacuum to achieve usable photoemission] [REVIEWED: prerequisite(s) cap_vac_1e6 added by a reviewer working node by node. Reason: iconoscope tube requires very high vacuum to achieve usable photoemission]"
  },
  {
   "id": "com_tv_raster_sync",
@@ -1164,7 +1164,7 @@
    "copper_kg": 10,
    "iron_bar_kg": 5
   },
-  "cap_hours": 36291.3825,
+  "cap_hours": 36291.382513432785,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.12,
@@ -1202,7 +1202,7 @@
    "nickel_kg": 2,
    "lead_kg": 1
   },
-  "cap_hours": 50404.6979,
+  "cap_hours": 50404.69793532331,
   "up_hours": 0,
   "yrs": 1.25,
   "risk": 0.15,
@@ -1244,7 +1244,7 @@
    "copper_kg": 15,
    "brass_kg": 8
   },
-  "cap_hours": 24194.255,
+  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.08,
@@ -1254,9 +1254,9 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "At microwave frequencies (GHz), conventional wires radiate their signal into space (useless). A rectangular copper tube confines the microwave to propagate only in the TM01 mode (specific to the tube dimensions). Loss is low, and the signal is contained. Waveguide is like a plumbing system for microwaves: you assemble it with flanges and bolts, couple to a magnetron at one end and an antenna at the other. This solved the long-standing problem of transmitting high-frequency signals over distance. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: dimensional accuracy critical for microwave mode propagation]",
+  "note": "At microwave frequencies (GHz), conventional wires radiate their signal into space (useless). A rectangular copper tube confines the microwave to propagate only in the TM01 mode (specific to the tube dimensions). Loss is low, and the signal is contained. Waveguide is like a plumbing system for microwaves: you assemble it with flanges and bolts, couple to a magnetron at one end and an antenna at the other. This solved the long-standing problem of transmitting high-frequency signals over distance.",
   "build_yrs": 2.0,
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: dimensional accuracy critical for microwave mode propagation]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: dimensional accuracy critical for microwave mode propagation] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: dimensional accuracy critical for microwave mode propagation]"
  },
  {
   "id": "com_vacuum_tube_tetrode",
@@ -1278,7 +1278,7 @@
    "copper_kg": 2,
    "tungsten_kg": 0.2
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.08,
@@ -1326,7 +1326,7 @@
    "copper_kg": 2.2,
    "tungsten_kg": 0.25
   },
-  "cap_hours": 14113.3154,
+  "cap_hours": 14113.315421890527,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.09,
@@ -1336,7 +1336,7 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "A tetrode with a fifth electrode (suppressor grid, at cathode potential) that prevents secondary electrons from the anode reaching the screen. This was a problem in tetrodes (screen current wasted power). A pentode has higher efficiency and better linearity. It became the standard audio output tube and RF power tube from 1930 onward. Five or more grids became common in specialized tubes (hexode, heptode) for mixing and frequency conversion. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: five closely-spaced electrodes require 0.1 mm precision]",
+  "note": "A tetrode with a fifth electrode (suppressor grid, at cathode potential) that prevents secondary electrons from the anode reaching the screen. This was a problem in tetrodes (screen current wasted power). A pentode has higher efficiency and better linearity. It became the standard audio output tube and RF power tube from 1930 onward. Five or more grids became common in specialized tubes (hexode, heptode) for mixing and frequency conversion.",
   "traits": [
    "inexplicable",
    "infrastructure",
@@ -1351,7 +1351,7 @@
    }
   ],
   "build_yrs": 2.0,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: five closely-spaced electrodes require 0.1 mm precision]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: five closely-spaced electrodes require 0.1 mm precision] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: five closely-spaced electrodes require 0.1 mm precision]"
  },
  {
   "id": "com_coherer",
@@ -1370,8 +1370,8 @@
    "iron_bar_kg": 0.2,
    "copper_kg": 0.5
   },
-  "cap_hours": 2016.1879,
-  "up_hours": 100.8094,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 100.80939587064663,
   "yrs": 0.1,
   "risk": 0.15,
   "sus": 0,
@@ -1400,13 +1400,13 @@
    "brass_kg": 0.1,
    "paper_kg": 0.5
   },
-  "cap_hours": 10080.9396,
-  "up_hours": 403.2376,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 403.2375834825865,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.3758,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1429,13 +1429,13 @@
    "brass_kg": 2,
    "timber_m3": 0.2
   },
-  "cap_hours": 6048.5638,
-  "up_hours": 201.6188,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 201.61879174129325,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 2016.1879,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1463,7 +1463,7 @@
    "iron_bar_kg": 3,
    "timber_m3": 0.3
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 0.75,
   "risk": 0.08,
@@ -1500,13 +1500,13 @@
    "timber_m3": 0.6,
    "steel_noric_kg": 2
   },
-  "cap_hours": 40323.7583,
-  "up_hours": 2016.1879,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "yrs": 1.25,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 10080.9396,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1536,13 +1536,13 @@
    "timber_m3": 0.5,
    "steel_noric_kg": 1.5
   },
-  "cap_hours": 30242.8188,
-  "up_hours": 1612.9503,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 14113.3154,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1571,13 +1571,13 @@
    "timber_m3": 0.6,
    "steel_noric_kg": 2
   },
-  "cap_hours": 36291.3825,
-  "up_hours": 2016.1879,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 2016.1879174129324,
   "yrs": 1.15,
   "risk": 0.12,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 16129.5033,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1604,7 +1604,7 @@
    "timber_m3": 2,
    "steel_noric_kg": 10
   },
-  "cap_hours": 161295.0334,
+  "cap_hours": 161295.0333930346,
   "up_hours": 0,
   "yrs": 3.0,
   "risk": 0.25,
@@ -1639,7 +1639,7 @@
    "timber_m3": 3,
    "steel_noric_kg": 15
   },
-  "cap_hours": 302428.1876,
+  "cap_hours": 302428.18761193985,
   "up_hours": 0,
   "yrs": 4.0,
   "risk": 0.3,
@@ -1679,13 +1679,13 @@
    "paper_kg": 1000.0,
    "timber_m3": 4.0
   },
-  "cap_hours": 56453.2617,
-  "up_hours": 4435.6134,
+  "cap_hours": 56453.26168756211,
+  "up_hours": 4435.613418308451,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 20161.8792,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -1715,13 +1715,13 @@
    "timber_m3": 1.5,
    "copper_kg": 20
   },
-  "cap_hours": 100809.3959,
-  "up_hours": 8064.7517,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 8064.75166965173,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 40323.7583,
+  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -1753,7 +1753,7 @@
    "timber_m3": 0.8,
    "steel_noric_kg": 3
   },
-  "cap_hours": 50404.6979,
+  "cap_hours": 50404.69793532331,
   "up_hours": 0,
   "yrs": 1.25,
   "risk": 0.12,
@@ -1763,13 +1763,13 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Operator types on a keyboard (like a typewriter). Solenoids pull levers that position type wheels for each character, a hammer fires on command, the character prints on paper, and the whole sequence is transmitted as electrical pulses down the telegraph line. The receiving teleprinter receives the same pulses and reproduces each character. No skilled Morse operator needed; anyone who can type can use a teleprinter. Slower than Morse (40 words/minute vs. 100+), but usable by clerical staff. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: character wheel indexing mechanism needs mechanical precision]",
+  "note": "Operator types on a keyboard (like a typewriter). Solenoids pull levers that position type wheels for each character, a hammer fires on command, the character prints on paper, and the whole sequence is transmitted as electrical pulses down the telegraph line. The receiving teleprinter receives the same pulses and reproduces each character. No skilled Morse operator needed; anyone who can type can use a teleprinter. Slower than Morse (40 words/minute vs. 100+), but usable by clerical staff.",
   "traits": [
    "information",
    "military",
    "status_threatening"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: character wheel indexing mechanism needs mechanical precision]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: character wheel indexing mechanism needs mechanical precision] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: character wheel indexing mechanism needs mechanical precision]"
  },
  {
   "id": "com_baudot_code",
@@ -1889,7 +1889,7 @@
    "iron_bar_kg": 6,
    "copper_kg": 4
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.1,
@@ -1925,7 +1925,7 @@
    "iron_bar_kg": 15,
    "copper_kg": 10
   },
-  "cap_hours": 36291.3825,
+  "cap_hours": 36291.382513432785,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.12,
@@ -1960,7 +1960,7 @@
    "iron_bar_kg": 14,
    "copper_kg": 9
   },
-  "cap_hours": 32259.0067,
+  "cap_hours": 32259.00667860692,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.11,
@@ -1996,7 +1996,7 @@
    "iron_bar_kg": 18,
    "copper_kg": 12
   },
-  "cap_hours": 44356.1342,
+  "cap_hours": 44356.13418308451,
   "up_hours": 0,
   "yrs": 1.1,
   "risk": 0.13,
@@ -2035,7 +2035,7 @@
    "copper_kg": 100,
    "timber_m3": 5
   },
-  "cap_hours": 1008093.9587,
+  "cap_hours": 1008093.9587064662,
   "up_hours": 0,
   "yrs": 4.0,
   "risk": 0.25,
@@ -2074,7 +2074,7 @@
    "timber_m3": 8,
    "glass_borosilicate_kg": 80
   },
-  "cap_hours": 2016187.9174,
+  "cap_hours": 2016187.9174129325,
   "up_hours": 0,
   "yrs": 6.0,
   "risk": 0.3,
@@ -2109,7 +2109,7 @@
    "iron_bar_kg": 20,
    "timber_m3": 1
   },
-  "cap_hours": 60485.6375,
+  "cap_hours": 60485.63752238797,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
@@ -2144,7 +2144,7 @@
    "timber_m3": 1.5,
    "paper_kg": 200
   },
-  "cap_hours": 80647.5167,
+  "cap_hours": 80647.5166965173,
   "up_hours": 0,
   "yrs": 1.25,
   "risk": 0.12,
@@ -2181,7 +2181,7 @@
    "brass_kg": 30,
    "timber_m3": 1
   },
-  "cap_hours": 100809.3959,
+  "cap_hours": 100809.39587064662,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.15,
@@ -2191,11 +2191,11 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Toroidal ferrite cores (0.5 mm) arranged in a 2D grid (64x64 cores = 4096 bits). Each core stores 1 bit (magnetized clockwise or counter-clockwise). Access time is 1 microsecond (1000x faster than tape). Each core is addressed by X and Y wires (select row and column), read and write wires complete the circuit. Core memory was the standard for mainframe computers (1960s-1970s) until semiconductor RAM replaced it. Handwiring a core array took weeks. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: 0.5 mm ferrite cores need precise size consistency]",
+  "note": "Toroidal ferrite cores (0.5 mm) arranged in a 2D grid (64x64 cores = 4096 bits). Each core stores 1 bit (magnetized clockwise or counter-clockwise). Access time is 1 microsecond (1000x faster than tape). Each core is addressed by X and Y wires (select row and column), read and write wires complete the circuit. Core memory was the standard for mainframe computers (1960s-1970s) until semiconductor RAM replaced it. Handwiring a core array took weeks.",
   "traits": [
    "information"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: 0.5 mm ferrite cores need precise size consistency]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: 0.5 mm ferrite cores need precise size consistency] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: 0.5 mm ferrite cores need precise size consistency]"
  },
  {
   "id": "com_magnetic_drum_storage",
@@ -2217,7 +2217,7 @@
    "iron_bar_kg": 80,
    "timber_m3": 2
   },
-  "cap_hours": 70566.5771,
+  "cap_hours": 70566.57710945263,
   "up_hours": 0,
   "yrs": 1.1,
   "risk": 0.13,
@@ -2227,11 +2227,11 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A cylinder coated with iron oxide, rotating at 3600 RPM. Read/write heads are stationary, positioned around the drum. Average access time is half a rotation (8 ms). Faster than tape, but requires synchronization with the rotating medium. Used as main memory in early computers (1950s) and later as auxiliary storage. Eventually replaced by moving-head disk drives (faster, fewer mechanical issues). [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotating cylinder storage needs precise cylindrical geometry and head spacing]",
+  "note": "A cylinder coated with iron oxide, rotating at 3600 RPM. Read/write heads are stationary, positioned around the drum. Average access time is half a rotation (8 ms). Faster than tape, but requires synchronization with the rotating medium. Used as main memory in early computers (1950s) and later as auxiliary storage. Eventually replaced by moving-head disk drives (faster, fewer mechanical issues).",
   "traits": [
    "information"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotating cylinder storage needs precise cylindrical geometry and head spacing]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotating cylinder storage needs precise cylindrical geometry and head spacing] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotating cylinder storage needs precise cylindrical geometry and head spacing]"
  },
  {
   "id": "com_semiconductor_diode",
@@ -2253,7 +2253,7 @@
    "indium_g": 2,
    "gold_g": 1
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.1,
@@ -2263,14 +2263,14 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "A junction between p-type (hole-doped) and n-type (electron-doped) semiconductor. Forward bias allows current flow (low resistance), reverse bias blocks it (high resistance). Used as rectifier (AC to DC), detector, and digital switch. Silicon and germanium diodes were reliable by 1952. In logic, diodes replace vacuum tubes: smaller, cooler, longer-lived. The key is that the diode's threshold voltage sets the logic swing (0-5V typical). [REVIEWED: prerequisite(s) cap_pure_6N added by a reviewer working node by node. Reason: reliable germanium and silicon diodes require high-purity semiconductor material]",
+  "note": "A junction between p-type (hole-doped) and n-type (electron-doped) semiconductor. Forward bias allows current flow (low resistance), reverse bias blocks it (high resistance). Used as rectifier (AC to DC), detector, and digital switch. Silicon and germanium diodes were reliable by 1952. In logic, diodes replace vacuum tubes: smaller, cooler, longer-lived. The key is that the diode's threshold voltage sets the logic swing (0-5V typical).",
   "traits": [
    "inexplicable",
    "infrastructure",
    "spectacle"
   ],
   "build_yrs": 2.0,
-  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]  [REVIEWED: prerequisite(s) cap_pure_6N added by a reviewer working node by node. Reason: reliable germanium and silicon diodes require high-purity semiconductor material]"
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]  [REVIEWED: prerequisite(s) cap_pure_6N added by a reviewer working node by node. Reason: reliable germanium and silicon diodes require high-purity semiconductor material] [REVIEWED: prerequisite(s) cap_pure_6N added by a reviewer working node by node. Reason: reliable germanium and silicon diodes require high-purity semiconductor material]"
  },
  {
   "id": "com_led",
@@ -2292,7 +2292,7 @@
    "zinc_kg": 0.05,
    "gold_g": 1
   },
-  "cap_hours": 28226.6308,
+  "cap_hours": 28226.630843781055,
   "up_hours": 0,
   "yrs": 1.2,
   "risk": 0.18,
@@ -2324,7 +2324,7 @@
    "germanium_g": 5,
    "indium_g": 1
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.08,
@@ -2365,7 +2365,7 @@
    "hydrochloric_acid_kg": 10,
    "brass_kg": 1
   },
-  "cap_hours": 302428.1876,
+  "cap_hours": 302428.18761193985,
   "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.2,
@@ -2415,7 +2415,7 @@
    "brass_kg": 6,
    "copper_kg": 4
   },
-  "cap_hours": 1008093.9587,
+  "cap_hours": 1008093.9587064662,
   "up_hours": 0,
   "yrs": 3.0,
   "risk": 0.25,
@@ -2623,7 +2623,7 @@
    "timber_m3": 1,
    "copper_kg": 15
   },
-  "cap_hours": 80647.5167,
+  "cap_hours": 80647.5166965173,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.12,
@@ -2633,12 +2633,12 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "A rotor (circular disk) with internal wiring that implements a substitution. As you type, each rotor rotates one position (like an odometer), changing the substitution. Three to five rotors in sequence give enormous key space (26^N combinations). The Enigma machine (1923 onward) was adopted by German military and was believed unbreakable until codebreakers (Turing, Rejewski) found flaws. The rotor machine was the standard for military encryption until electronics arrived. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotor with internal wiring needs precise electrical contact and alignment]",
+  "note": "A rotor (circular disk) with internal wiring that implements a substitution. As you type, each rotor rotates one position (like an odometer), changing the substitution. Three to five rotors in sequence give enormous key space (26^N combinations). The Enigma machine (1923 onward) was adopted by German military and was believed unbreakable until codebreakers (Turing, Rejewski) found flaws. The rotor machine was the standard for military encryption until electronics arrived.",
   "traits": [
    "infrastructure",
    "labour_saving"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotor with internal wiring needs precise electrical contact and alignment]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotor with internal wiring needs precise electrical contact and alignment] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: rotor with internal wiring needs precise electrical contact and alignment]"
  },
  {
   "id": "com_one_time_pad",
@@ -2659,7 +2659,7 @@
    "parchment_sheet": 200,
    "carbon_kg": 5
   },
-  "cap_hours": 40323.7583,
+  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.08,

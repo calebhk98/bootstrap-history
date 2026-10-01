@@ -56,7 +56,7 @@ def load_trades():
 # Availability is described by prerequisites, capabilities, and costs rather
 # than a universal numeric rank.
 REQUIRED = ["id","name","cat","pre","note"]
-DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap_hours":4032.3758,"up_hours":806.4752,"risk":0.15,"rev_hours":0,
+DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap_hours":4032.375834825865,"up_hours":806.475166965173,"risk":0.15,"rev_hours":0,
             "sch":0,"art":1,"conf":"C","kb":""}
 
 # TRANSITIONAL: capital above this many labour hours counts as physical work.
@@ -75,7 +75,7 @@ def _num(value, default=0.0):
 def normalise_v2(node):
     for field, value in DEFAULTS.items():
         node.setdefault(field, json.loads(json.dumps(value)))
-    for field, default in (("ph",60),("cap_hours",4032.3758),("up_hours",806.4752),("risk",0.15),("rev_hours",0),
+    for field, default in (("ph",60),("cap_hours",4032.375834825865),("up_hours",806.475166965173),("risk",0.15),("rev_hours",0),
                  ("sch",0),("art",1)):
         node[field] = _num(node.get(field), default)
     node["risk"] = min(0.95, max(0.0, node["risk"]))

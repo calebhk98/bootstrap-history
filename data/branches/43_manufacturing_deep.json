@@ -148,7 +148,7 @@
    "mat_tungsten": 8,
    "cobalt_kg": 4
   },
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
   "dev_years": 18,
@@ -193,7 +193,7 @@
    "steel_plate_kg": 2,
    "tool_steel_kg": 6
   },
-  "cap_hours": 10080.9396,
+  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
@@ -424,7 +424,7 @@
    "iron_bar_kg": 80,
    "mat_bronze": 30
   },
-  "cap_hours": 8064.7517,
+  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.5,
@@ -466,7 +466,7 @@
    "iron_bar_kg": 120,
    "mat_bronze": 50
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
@@ -510,7 +510,7 @@
    "steel_plate_kg": 150,
    "mat_bronze": 80
   },
-  "cap_hours": 40323.7583,
+  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "build_yrs": 3,
   "adopt_yrs": 1.5,
@@ -543,7 +543,7 @@
    "steel_plate_kg": 200,
    "mat_bronze": 100
   },
-  "cap_hours": 120971.275,
+  "cap_hours": 120971.27504477595,
   "up_hours": 0,
   "build_yrs": 4,
   "adopt_yrs": 2,
@@ -585,7 +585,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 40
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.5,
@@ -623,7 +623,7 @@
    "iron_bar_kg": 120,
    "mat_bronze": 50
   },
-  "cap_hours": 10080.9396,
+  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.3,
@@ -665,7 +665,7 @@
    "iron_bar_kg": 120,
    "mat_bronze": 60
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.3,
@@ -709,7 +709,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 40
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.2,
@@ -751,7 +751,7 @@
    "iron_bar_kg": 150,
    "mat_bronze": 60
   },
-  "cap_hours": 20161.8792,
+  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.3,
@@ -793,7 +793,7 @@
    "iron_bar_kg": 80,
    "mat_bronze": 30
   },
-  "cap_hours": 8064.7517,
+  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.2,
@@ -836,7 +836,7 @@
    "iron_bar_kg": 120,
    "mat_bronze": 60
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.5,
@@ -878,7 +878,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 50
   },
-  "cap_hours": 14113.3154,
+  "cap_hours": 14113.315421890527,
   "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.3,
@@ -920,7 +920,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 50
   },
-  "cap_hours": 14113.3154,
+  "cap_hours": 14113.315421890527,
   "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.4,
@@ -961,7 +961,7 @@
    "steel_plate_kg": 150,
    "mat_bronze": 80
   },
-  "cap_hours": 24194.255,
+  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "build_yrs": 3,
   "adopt_yrs": 1,
@@ -1002,7 +1002,7 @@
    "iron_bar_kg": 120,
    "mat_bronze": 80
   },
-  "cap_hours": 40323.7583,
+  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.8,
@@ -1044,7 +1044,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 60
   },
-  "cap_hours": 24194.255,
+  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.5,
@@ -1084,7 +1084,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 70
   },
-  "cap_hours": 30242.8188,
+  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
@@ -1126,7 +1126,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 50
   },
-  "cap_hours": 20161.8792,
+  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.4,
@@ -1167,8 +1167,8 @@
    "iron_bar_kg": 80,
    "mat_bronze": 40
   },
-  "cap_hours": 16129.5033,
-  "up_hours": 3024.2819,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
   "dev_years": 10,
@@ -1214,7 +1214,7 @@
    "iron_bar_kg": 80.0,
    "steel_plate_kg": 30.0
   },
-  "cap_hours": 17137.5973,
+  "cap_hours": 17137.597298009925,
   "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
@@ -1255,7 +1255,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 60
   },
-  "cap_hours": 40323.7583,
+  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.8,
@@ -1294,7 +1294,7 @@
    "iron_bar_kg": 90,
    "mat_bronze": 50
   },
-  "cap_hours": 20161.8792,
+  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.5,
@@ -1335,7 +1335,7 @@
    "iron_bar_kg": 80,
    "mat_bronze": 40
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.2,
@@ -1375,7 +1375,7 @@
    "iron_bar_kg": 70,
    "mat_bronze": 35
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
@@ -1405,7 +1405,7 @@
    "mat_leather": 30,
    "mat_wool": 10
   },
-  "cap_hours": 8064.7517,
+  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.3,
@@ -1446,7 +1446,7 @@
    "iron_bar_kg": 80,
    "mat_bronze": 50
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.5,
@@ -1489,7 +1489,7 @@
    "iron_bar_kg": 80,
    "mat_bronze": 30
   },
-  "cap_hours": 10080.9396,
+  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
@@ -1531,7 +1531,7 @@
    "iron_bar_kg": 90,
    "mat_bronze": 40
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
@@ -1573,7 +1573,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 50
   },
-  "cap_hours": 20161.8792,
+  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.2,
@@ -1615,7 +1615,7 @@
    "iron_bar_kg": 100,
    "mat_bronze": 40
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
@@ -1643,8 +1643,8 @@
    "iron_bar_kg": 150,
    "mat_bronze": 100
   },
-  "cap_hours": 100809.3959,
-  "up_hours": 20161.8792,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 20161.879174129324,
   "build_yrs": 2,
   "adopt_yrs": 0.3,
   "dev_years": 10,
@@ -1672,8 +1672,8 @@
    "iron_bar_kg": 120,
    "mat_bronze": 50
   },
-  "cap_hours": 20161.8792,
-  "up_hours": 4032.3758,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "build_yrs": 2,
   "adopt_yrs": 0.1,
   "dev_years": 5,
@@ -1714,7 +1714,7 @@
    "iron_bar_kg": 120,
    "mat_bronze": 60
   },
-  "cap_hours": 24194.255,
+  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.2,
@@ -1755,7 +1755,7 @@
    "iron_bar_kg": 150,
    "mat_bronze": 80
   },
-  "cap_hours": 40323.7583,
+  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.8,
@@ -1797,7 +1797,7 @@
    "iron_bar_kg": 120,
    "mat_bronze": 80
   },
-  "cap_hours": 30242.8188,
+  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.4,
@@ -1840,7 +1840,7 @@
    "iron_bar_kg": 50,
    "mat_wood": 80
   },
-  "cap_hours": 8064.7517,
+  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "build_yrs": 1.2,
   "adopt_yrs": 0.1,
@@ -1871,8 +1871,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 60
   },
-  "cap_hours": 20161.8792,
-  "up_hours": 4032.3758,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
   "dev_years": 9,
@@ -1914,7 +1914,7 @@
    "cast_iron_kg": 280,
    "iron_bar_kg": 80
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "build_yrs": 1.3,
   "adopt_yrs": 0.1,
@@ -1945,8 +1945,8 @@
    "iron_bar_kg": 200,
    "mat_bronze": 120
   },
-  "cap_hours": 60485.6375,
-  "up_hours": 12097.1275,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 12097.127504477594,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 14,
@@ -2698,7 +2698,7 @@
   "note": "Illuminated workpiece cast onto ground glass at 50x magnification. Check holes, threads, edge radius, form. Accuracy is limited by light diffraction. Used for tool inspection and quality audits.",
   "gov": 1,
   "sus": 3,
-  "cap_hours": 40323.7583,
+  "cap_hours": 40323.75834825865,
   "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
@@ -2894,7 +2894,7 @@
   "dev_people": 2,
   "risk": 0.2,
   "note": "A flame from acetylene and oxygen burning at 3000 K melts both the filler rod and the parent metal, joining them. Works on steel, copper, and aluminum. The flame is small and precisely controllable, so you can weld thin sheet or repair castings. Safety requires careful regulator tuning: reverse flow into acetylene generator causes explosion. The acetylene supply infrastructure is the bottleneck.",
-  "cap_hours": 24194.255,
+  "cap_hours": 24194.255008955188,
   "up_hours": 0
  },
  {
@@ -2928,7 +2928,7 @@
   "dev_people": 2,
   "risk": 0.18,
   "note": "Strike an arc between a consumable electrode and the work. The arc melts both the electrode and the parent metal; electrode metal and flux coat the weld pool. Much faster than oxy-acetylene and less sensitive to wind. Requires a DC power supply and reliable electrical grid. The flux coating prevents oxidation and lowers the melting point of the surface oxide, so the weld pools together instead of balling up.",
-  "cap_hours": 28226.6308,
+  "cap_hours": 28226.630843781055,
   "up_hours": 0
  },
  {
@@ -3022,7 +3022,7 @@
   "dev_people": 2,
   "risk": 0.18,
   "note": "Clamp the work between two copper electrodes and pass current through it. Resistance heating melts a small zone where the overlap is, forming a weld nugget. Works only on sheet metal and thin stock. No filler, no gas, fast and clean. The electrodes must be soft copper with high conductivity or they overheat and wear. Spot welding revolutionized automotive body assembly.",
-  "cap_hours": 36291.3825,
+  "cap_hours": 36291.382513432785,
   "up_hours": 0
  },
  {
@@ -3593,8 +3593,8 @@
    "master": 200
   },
   "mat": {},
-  "cap_hours": 100809.3959,
-  "up_hours": 20161.8792,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 20161.879174129324,
   "build_yrs": 1,
   "adopt_yrs": 3,
   "dev_years": 12,

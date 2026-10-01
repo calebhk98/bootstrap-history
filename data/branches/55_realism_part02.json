@@ -3,7 +3,7 @@
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -29,13 +29,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -61,13 +61,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -93,13 +93,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -125,13 +125,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -157,13 +157,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -189,13 +189,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -221,13 +221,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -253,13 +253,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -285,13 +285,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -317,13 +317,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1,
   "build_yrs": 0.5,
-  "cap_hours": 5040.4698,
+  "cap_hours": 5040.469793532331,
   "cat": "material",
   "conf": "C",
   "dev_people": null,
@@ -351,13 +351,13 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376
+  "up_hours": 403.2375834825865
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap_hours": 4032.3758,
+  "cap_hours": 4032.375834825865,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -383,7 +383,7 @@
   "traits": [
    "infrastructure"
   ],
-  "up_hours": 403.2376,
+  "up_hours": 403.2375834825865,
   "yrs": 1.0
  }
 ]

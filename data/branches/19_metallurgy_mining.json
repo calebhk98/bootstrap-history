@@ -14,8 +14,8 @@
    "timber_m3": 1,
    "iron_bar_kg": 5
   },
-  "cap_hours": 1008.094,
-  "up_hours": 201.6188,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 201.61879174129325,
   "yrs": 0.3,
   "risk": 0.05,
   "sus": 0,
@@ -48,13 +48,13 @@
    "lead_kg": 2,
    "charcoal_kg": 1
   },
-  "cap_hours": 2016.1879,
-  "up_hours": 403.2376,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 403.2375834825865,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.3758,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -94,13 +94,13 @@
    "iron_bar_kg": 30,
    "iron_bloom_kg": 20
   },
-  "cap_hours": 10080.9396,
-  "up_hours": 1612.9503,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1612.950333930346,
   "yrs": 1.5,
   "risk": 0.1,
   "sus": 1,
   "gov": 1,
-  "rev_hours": 6048.5638,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -137,13 +137,13 @@
    "iron_bar_kg": 8,
    "sand_quartz_kg": 50
   },
-  "cap_hours": 4032.3758,
-  "up_hours": 806.4752,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 806.475166965173,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 5040.4698,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -171,8 +171,8 @@
    "charcoal_kg": 50,
    "iron_ore_kg": 100
   },
-  "cap_hours": 3024.2819,
-  "up_hours": 1008.094,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 1008.0939587064662,
   "yrs": 0.6,
   "risk": 0.12,
   "sus": 0,
@@ -207,8 +207,8 @@
    "timber_m3": 5,
    "iron_bar_kg": 40
   },
-  "cap_hours": 20161.8792,
-  "up_hours": 4032.3758,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "yrs": 2,
   "risk": 0.15,
   "sus": 0,
@@ -242,8 +242,8 @@
    "iron_bar_kg": 30,
    "timber_m3": 3
   },
-  "cap_hours": 16129.5033,
-  "up_hours": 2419.4255,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 2419.425500895519,
   "yrs": 1.8,
   "risk": 0.12,
   "sus": 0,
@@ -283,13 +283,13 @@
    "sulfur_kg": 100.0,
    "timber_m3": 4.0
   },
-  "cap_hours": 24194.255,
-  "up_hours": 4032.3758,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "yrs": 3,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev_hours": 10080.9396,
+  "rev_hours": 10080.939587064662,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -320,8 +320,8 @@
    "limestone_kg": 20,
    "iron_bar_kg": 40
   },
-  "cap_hours": 40323.7583,
-  "up_hours": 6048.5638,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 6048.563752238797,
   "yrs": 2.5,
   "risk": 0.2,
   "sus": 0,
@@ -330,7 +330,7 @@
   "sch": 1,
   "art": 1,
   "conf": "A",
-  "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C]",
+  "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff.",
   "mechanics": {
    "labour_productivity": {
     "trade": "furnaceman",
@@ -338,7 +338,7 @@
     "order": 6
    }
   },
-  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C] [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C]"
  },
  {
   "id": "met_basic_lining_phosphorus",
@@ -361,7 +361,7 @@
    "dolomite_kg": 50,
    "iron_ore_kg": 50
   },
-  "cap_hours": 30242.8188,
+  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "yrs": 2.8,
   "risk": 0.18,
@@ -396,8 +396,8 @@
    "limestone_kg": 30,
    "iron_bar_kg": 50
   },
-  "cap_hours": 50404.6979,
-  "up_hours": 8064.7517,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 8064.75166965173,
   "yrs": 3,
   "risk": 0.15,
   "sus": 0,
@@ -443,8 +443,8 @@
    "timber_m3": 3,
    "clay_kg": 100
   },
-  "cap_hours": 16129.5033,
-  "up_hours": 3024.2819,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 3024.2818761193985,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
@@ -482,8 +482,8 @@
    "timber_m3": 6,
    "coal_kg": 200
   },
-  "cap_hours": 70566.5771,
-  "up_hours": 10080.9396,
+  "cap_hours": 70566.57710945263,
+  "up_hours": 10080.939587064662,
   "yrs": 3,
   "risk": 0.18,
   "sus": 1,
@@ -515,8 +515,8 @@
    "steel_plate_kg": 100,
    "timber_m3": 5
   },
-  "cap_hours": 56453.2617,
-  "up_hours": 8064.7517,
+  "cap_hours": 56453.26168756211,
+  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.15,
   "sus": 1,
@@ -555,8 +555,8 @@
    "copper_kg": 30,
    "timber_m3": 6
   },
-  "cap_hours": 80647.5167,
-  "up_hours": 12097.1275,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 12097.127504477594,
   "yrs": 3,
   "risk": 0.2,
   "sus": 1,
@@ -587,8 +587,8 @@
    "iron_bar_kg": 80,
    "timber_m3": 5
   },
-  "cap_hours": 64518.0134,
-  "up_hours": 10080.9396,
+  "cap_hours": 64518.01335721384,
+  "up_hours": 10080.939587064662,
   "yrs": 2.8,
   "risk": 0.17,
   "sus": 0,
@@ -619,8 +619,8 @@
    "iron_bar_kg": 100,
    "coal_kg": 150
   },
-  "cap_hours": 60485.6375,
-  "up_hours": 9072.8456,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 9072.845628358196,
   "yrs": 2.5,
   "risk": 0.16,
   "sus": 0,
@@ -655,8 +655,8 @@
    "coal_kg": 100,
    "timber_m3": 4
   },
-  "cap_hours": 44356.1342,
-  "up_hours": 7056.6577,
+  "cap_hours": 44356.13418308451,
+  "up_hours": 7056.657710945264,
   "yrs": 2.2,
   "risk": 0.14,
   "sus": 0,
@@ -691,8 +691,8 @@
    "iron_bar_kg": 100,
    "coal_kg": 150
   },
-  "cap_hours": 76615.1409,
-  "up_hours": 11089.0335,
+  "cap_hours": 76615.14086169143,
+  "up_hours": 11089.033545771128,
   "yrs": 2.9,
   "risk": 0.18,
   "sus": 0,
@@ -723,7 +723,7 @@
    "timber_m3": 2,
    "iron_bar_kg": 20
   },
-  "cap_hours": 10080.9396,
+  "cap_hours": 10080.939587064662,
   "up_hours": 0,
   "yrs": 2,
   "risk": 0.2,
@@ -756,8 +756,8 @@
    "coal_kg": 80,
    "soap_kg": 2
   },
-  "cap_hours": 16129.5033,
-  "up_hours": 3024.2819,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 3024.2818761193985,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
@@ -766,11 +766,11 @@
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Anneal a tube, coat with soap as lubricant, draw it through a die on a water-powered wire draw to reduce diameter and thicken walls uniformly. Much slower than rolling but gives excellent surface finish and precise dimensions. The soaped tube must be perfectly round or it jams in the die. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish]",
+  "note": "Anneal a tube, coat with soap as lubricant, draw it through a die on a water-powered wire draw to reduce diameter and thicken walls uniformly. Much slower than rolling but gives excellent surface finish and precise dimensions. The soaped tube must be perfectly round or it jams in the die.",
   "traits": [
    "infrastructure"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish]"
  },
  {
   "id": "met_trip_hammer",
@@ -792,8 +792,8 @@
    "iron_bar_kg": 60,
    "iron_bloom_kg": 30
   },
-  "cap_hours": 12097.1275,
-  "up_hours": 2419.4255,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 2419.425500895519,
   "yrs": 1.2,
   "risk": 0.1,
   "sus": 0,
@@ -837,8 +837,8 @@
    "iron_bloom_kg": 40.0,
    "timber_m3": 8.0
   },
-  "cap_hours": 20161.8792,
-  "up_hours": 4032.3758,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
@@ -873,8 +873,8 @@
    "steel_plate_kg": 60,
    "coal_kg": 200
   },
-  "cap_hours": 50404.6979,
-  "up_hours": 8064.7517,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.16,
   "sus": 0,
@@ -912,8 +912,8 @@
    "steel_plate_kg": 100.0,
    "timber_m3": 4.0
   },
-  "cap_hours": 100809.3959,
-  "up_hours": 20161.8792,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 20161.879174129324,
   "yrs": 2.8,
   "risk": 0.18,
   "sus": 0,
@@ -922,11 +922,11 @@
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "A pump driven by steam fills a cylinder with oil; the incompressible oil presses a ram with immense steady force. An accumulator (air-charged vessel) smooths pulsation and stores energy. Pascal's law means a small pump can generate large forces through a large piston. The limit is seal quality and pipe strength; if oil leaks you lose pressure instantly. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining]",
+  "note": "A pump driven by steam fills a cylinder with oil; the incompressible oil presses a ram with immense steady force. An accumulator (air-charged vessel) smooths pulsation and stores energy. Pascal's law means a small pump can generate large forces through a large piston. The limit is seal quality and pipe strength; if oil leaks you lose pressure instantly.",
   "traits": [
    "labour_saving"
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining]"
  },
  {
   "id": "met_extrusion_press",
@@ -952,8 +952,8 @@
    "iron_bar_kg": 200.0,
    "steel_plate_kg": 120.0
   },
-  "cap_hours": 60485.6375,
-  "up_hours": 12097.1275,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 12097.127504477594,
   "yrs": 2.5,
   "risk": 0.17,
   "sus": 0,
@@ -993,8 +993,8 @@
    "soap_kg": 3.0,
    "steel_plate_kg": 100.0
   },
-  "cap_hours": 52420.8859,
-  "up_hours": 8467.9893,
+  "cap_hours": 52420.885852736246,
+  "up_hours": 8467.989253134316,
   "yrs": 2.6,
   "risk": 0.16,
   "sus": 0,
@@ -1028,7 +1028,7 @@
    "charcoal_kg": 10,
    "timber_m3": 2
   },
-  "cap_hours": 8064.7517,
+  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -1060,7 +1060,7 @@
    "clay_kg": 150,
    "timber_m3": 3
   },
-  "cap_hours": 14113.3154,
+  "cap_hours": 14113.315421890527,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.12,
@@ -1091,7 +1091,7 @@
    "clay_kg": 200,
    "sand_quartz_kg": 100
   },
-  "cap_hours": 6048.5638,
+  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.08,
@@ -1125,7 +1125,7 @@
    "steel_plate_kg": 80,
    "timber_m3": 2
   },
-  "cap_hours": 44356.1342,
+  "cap_hours": 44356.13418308451,
   "up_hours": 0,
   "yrs": 2.2,
   "risk": 0.15,
@@ -1160,7 +1160,7 @@
    "copper_kg": 20,
    "timber_m3": 2
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "yrs": 1.2,
   "risk": 0.1,
@@ -1199,8 +1199,8 @@
    "charcoal_kg": 100,
    "coal_kg": 80
   },
-  "cap_hours": 48388.51,
-  "up_hours": 8064.7517,
+  "cap_hours": 48388.510017910376,
+  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.2,
   "sus": 0,
@@ -1246,13 +1246,13 @@
    "silver_kg": 2,
    "sulfuric_acid_kg": 10
   },
-  "cap_hours": 8064.7517,
-  "up_hours": 1612.9503,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 1612.950333930346,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 4032.3758,
+  "rev_hours": 4032.375834825865,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1278,13 +1278,13 @@
    "sulfuric_acid_kg": 20,
    "timber_m3": 1
   },
-  "cap_hours": 12097.1275,
-  "up_hours": 2419.4255,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 2419.425500895519,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev_hours": 6048.5638,
+  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1325,7 +1325,7 @@
    "zinc_kg": 20,
    "sulfuric_acid_kg": 5
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.12,
@@ -1371,7 +1371,7 @@
    "tin_kg": 10,
    "sulfuric_acid_kg": 8
   },
-  "cap_hours": 18145.6913,
+  "cap_hours": 18145.691256716393,
   "up_hours": 0,
   "yrs": 1.6,
   "risk": 0.11,
@@ -1381,7 +1381,7 @@
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Electroplate iron sheet with tin or dip into molten tin. Tin is non-toxic and corrosion-resistant, so tinned steel is ideal for food storage. The tin coating must be continuous or rust starts at the pin-holes. Electroplated tin plate is thinner and cheaper than dipped; dipped is thicker but more durable. The difference is in the tin-iron bond strength. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range]",
+  "note": "Electroplate iron sheet with tin or dip into molten tin. Tin is non-toxic and corrosion-resistant, so tinned steel is ideal for food storage. The tin coating must be continuous or rust starts at the pin-holes. Electroplated tin plate is thinner and cheaper than dipped; dipped is thicker but more durable. The difference is in the tin-iron bond strength.",
   "traits": [
    "food",
    "commerce"
@@ -1395,7 +1395,7 @@
     }
    }
   ],
-  "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range]"
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range] [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range]"
  },
  {
   "id": "met_annealing_recrystallization",
@@ -1416,7 +1416,7 @@
    "charcoal_kg": 50,
    "timber_m3": 2
   },
-  "cap_hours": 8064.7517,
+  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.08,
@@ -1450,7 +1450,7 @@
    "tallow_kg": 10,
    "timber_m3": 2
   },
-  "cap_hours": 12097.1275,
+  "cap_hours": 12097.127504477594,
   "up_hours": 0,
   "yrs": 1.4,
   "risk": 0.13,
@@ -1486,7 +1486,7 @@
    "charcoal_kg": 30,
    "timber_m3": 1.5
   },
-  "cap_hours": 6048.5638,
+  "cap_hours": 6048.563752238797,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
@@ -1517,7 +1517,7 @@
    "charcoal_kg": 50,
    "timber_m3": 2
   },
-  "cap_hours": 8064.7517,
+  "cap_hours": 8064.75166965173,
   "up_hours": 0,
   "yrs": 1,
   "risk": 0.09,
@@ -1552,7 +1552,7 @@
    "iron_bar_kg": 50,
    "charcoal_kg": 50
   },
-  "cap_hours": 20161.8792,
+  "cap_hours": 20161.879174129324,
   "up_hours": 0,
   "yrs": 2,
   "risk": 0.15,
@@ -1585,7 +1585,7 @@
    "manganese_kg": 10,
    "iron_bar_kg": 50
   },
-  "cap_hours": 30242.8188,
+  "cap_hours": 30242.818761193987,
   "up_hours": 0,
   "yrs": 2.5,
   "risk": 0.18,
@@ -1638,7 +1638,7 @@
    "ethanol_kg": 5,
    "sulfuric_acid_kg": 3
   },
-  "cap_hours": 16129.5033,
+  "cap_hours": 16129.50333930346,
   "up_hours": 0,
   "yrs": 1.8,
   "risk": 0.12,
@@ -1682,8 +1682,8 @@
    "steel_plate_kg": 30,
    "timber_m3": 3
   },
-  "cap_hours": 36291.3825,
-  "up_hours": 6048.5638,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 6048.563752238797,
   "yrs": 2.2,
   "risk": 0.16,
   "sus": 0,
@@ -1713,7 +1713,7 @@
    "diamond_g": 1,
    "steel_plate_kg": 5
   },
-  "cap_hours": 24194.255,
+  "cap_hours": 24194.255008955188,
   "up_hours": 0,
   "yrs": 1.6,
   "risk": 0.11,
@@ -1746,7 +1746,7 @@
    "iron_bar_kg": 100,
    "coal_kg": 100
   },
-  "cap_hours": 50404.6979,
+  "cap_hours": 50404.69793532331,
   "up_hours": 0,
   "yrs": 3,
   "risk": 0.2,
@@ -1780,7 +1780,7 @@
    "copper_kg": 1,
    "glass_raw_kg": 0.5
   },
-  "cap_hours": 28226.6308,
+  "cap_hours": 28226.630843781055,
   "up_hours": 0,
   "yrs": 2,
   "risk": 0.14,
@@ -1813,8 +1813,8 @@
    "timber_m3": 4,
    "coal_kg": 50
   },
-  "cap_hours": 18145.6913,
-  "up_hours": 3629.1383,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 3629.138251343278,
   "yrs": 1.8,
   "risk": 0.16,
   "sus": 0,
@@ -1849,8 +1849,8 @@
    "copper_kg": 20,
    "lead_kg": 10
   },
-  "cap_hours": 40323.7583,
-  "up_hours": 8064.7517,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.15,
   "sus": 1,
@@ -1891,8 +1891,8 @@
    "steel_plate_kg": 100,
    "coal_kg": 300
   },
-  "cap_hours": 60485.6375,
-  "up_hours": 10080.9396,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 10080.939587064662,
   "yrs": 2.8,
   "risk": 0.18,
   "sus": 1,
@@ -1926,8 +1926,8 @@
    "sulfur_kg": 10,
    "nitre_kg": 50
   },
-  "cap_hours": 12097.1275,
-  "up_hours": 2419.4255,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 2419.425500895519,
   "yrs": 1.4,
   "risk": 0.25,
   "sus": 1,
@@ -1967,8 +1967,8 @@
    "mat_nitroglycerin_kg": 10,
    "kieselguhr_kg": 20
   },
-  "cap_hours": 20161.8792,
-  "up_hours": 4032.3758,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "yrs": 1.8,
   "risk": 0.3,
   "sus": 1,
@@ -2009,8 +2009,8 @@
    "steel_plate_kg": 60,
    "coal_kg": 150
   },
-  "cap_hours": 36291.3825,
-  "up_hours": 7056.6577,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 7056.657710945264,
   "yrs": 2.2,
   "risk": 0.17,
   "sus": 0,
@@ -2044,8 +2044,8 @@
    "iron_bar_kg": 200,
    "coal_kg": 300
   },
-  "cap_hours": 100809.3959,
-  "up_hours": 20161.8792,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 20161.879174129324,
   "yrs": 5,
   "risk": 0.22,
   "sus": 0,
@@ -2081,8 +2081,8 @@
    "flux_kg": 2,
    "iron_bar_kg": 10
   },
-  "cap_hours": 24194.255,
-  "up_hours": 4032.3758,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "yrs": 1.8,
   "risk": 0.14,
   "sus": 0,
@@ -2112,8 +2112,8 @@
    "flux_kg": 2,
    "copper_kg": 5
   },
-  "cap_hours": 28226.6308,
-  "up_hours": 5040.4698,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "yrs": 2,
   "risk": 0.15,
   "sus": 0,
@@ -2142,8 +2142,8 @@
    "copper_kg": 5,
    "coal_kg": 100
   },
-  "cap_hours": 36291.3825,
-  "up_hours": 6048.5638,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 6048.563752238797,
   "yrs": 2.2,
   "risk": 0.16,
   "sus": 0,
@@ -2176,7 +2176,7 @@
    "timber_m3": 2,
    "coal_kg": 100
   },
-  "cap_hours": 32259.0067,
+  "cap_hours": 32259.00667860692,
   "up_hours": 0,
   "yrs": 2.2,
   "risk": 0.18,
@@ -2186,7 +2186,7 @@
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Heat coke and lime to 2000 C in an electric furnace to make calcium carbide, then mix with water and collect the acetylene gas. The carbide reacts violently with water so the generator must be robust and well-designed or it leaks. Acetylene is unstable and cannot be pressurized above 2 atmospheres without risk of explosion, so it must be dissolved in acetone in a porous mass (a carbide lamp cartridge) for transport. [REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide at 2000 C in electric furnace; current prerequisite insufficient]",
+  "note": "Heat coke and lime to 2000 C in an electric furnace to make calcium carbide, then mix with water and collect the acetylene gas. The carbide reacts violently with water so the generator must be robust and well-designed or it leaks. Acetylene is unstable and cannot be pressurized above 2 atmospheres without risk of explosion, so it must be dissolved in acetone in a porous mass (a carbide lamp cartridge) for transport.",
   "traits": [
    "commerce",
    "infrastructure"
@@ -2199,6 +2199,6 @@
     }
    }
   ],
-  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide at 2000 C in electric furnace; current prerequisite insufficient]"
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide at 2000 C in electric furnace; current prerequisite insufficient] [REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide at 2000 C in electric furnace; current prerequisite insufficient]"
  }
 ]
