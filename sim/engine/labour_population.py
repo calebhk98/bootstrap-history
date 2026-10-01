@@ -25,7 +25,7 @@ half of the same question hours_you_can_call_on (labour_training.py)
 answers for craft hours.
 """
 from .data import (TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family)
-from sim.constants import declare
+from sim.constants import declare, REGISTRY
 
 
 class PopulationMixin:
@@ -241,35 +241,40 @@ class PopulationMixin:
             return "common"
         return "uncommon"          # glassblowers, engravers, opticians' forebears
 
+    def _trade_density_source(self, trade):
+        """Which declared constant this trade's population estimate comes from.
+        Returns the constant's name as a string (e.g., "TRADE_DENSITY_SCARCE",
+        "SCHOLAR_ENGAGEMENT_FRACTION", "MERCHANT_DENSITY"). Used by
+        population_report and _density_is_placeholder to look up metadata.
+        """
+        if not self.trade_available(trade):
+            return None
+        if trade == "scholar":
+            return "SCHOLAR_ENGAGEMENT_FRACTION"
+        if trade == "scribe":
+            return "SCRIBE_ENGAGEMENT_FRACTION"
+        if trade == "merchant":
+            return "MERCHANT_DENSITY"
+        if trade in TRADES_ABSENT:
+            # Taught trades have their own density not yet declared
+            return None
+        # Craft trades use TRADE_DENSITY
+        cls = self._trade_market_class(trade)
+        return f"TRADE_DENSITY_{cls.upper()}"
+
     def _density_is_placeholder(self, trade):
         """Whether a trade's population estimate is a placeholder
         (temporary_heuristic) or a cited estimate (engineering_estimate).
-        Used by population_report to mark which trade counts are rough
-        estimates rather than based on historical records (see complaint 176).
+        Looks up the constant name in REGISTRY rather than hard-coding which
+        trades are placeholders, so the answer stays consistent with the
+        declaration itself.
         """
-        cls = self._trade_market_class(trade)
-
-        # TRADE_DENSITY entries that are temporary_heuristic (placeholders)
-        if cls == "uncommon":
-            return True
-        if cls == "scarce":
-            return True
-
-        # Scholar family trades use engagement fractions, not TRADE_DENSITY
-        if cls == "scholar":
-            # SCHOLAR_ENGAGEMENT_FRACTION is temporary_heuristic
-            return True
-
-        # Scribe is literate family but uses SCRIBE_ENGAGEMENT_FRACTION
-        if trade == "scribe":
-            return True
-
-        # Merchant uses MERCHANT_DENSITY which is temporary_heuristic
-        if trade == "merchant":
-            return True
-
-        # Common and abundant are engineering_estimate (not placeholders)
-        return False
+        source_name = self._trade_density_source(trade)
+        if source_name is None:
+            return False
+        if source_name not in REGISTRY:
+            return False
+        return REGISTRY[source_name].get("kind") == "temporary_heuristic"
 
     # HIRING A HANDFUL OF SMITHS MUST NOT MOVE THE STANDING WAGE. A market
     # supply pool sized for a single provincial town, not the whole country,

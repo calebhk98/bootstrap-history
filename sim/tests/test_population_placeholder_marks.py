@@ -96,3 +96,44 @@ has_legend = "* =" in text_output and "placeholder" in text_output.lower()
 check("population: has legend line for asterisk marker",
       has_legend,
       text_output.split('\n')[-15:] if has_legend else text_output[-500:])
+
+# Test 5: Verify is_placeholder consistency with REGISTRY
+# This test imports the engine and checks that is_placeholder matches the
+# kind field of the constant that computes the trade's density, so the
+# answer stays in sync with declarations rather than being hand-copied.
+from ..engine.labour_population import PopulationMixin
+from ..constants import REGISTRY
+from .harness import *
+
+# Create a minimal test sim instance
+test_sim = sim(civ="rome_100ad")
+pop_report = test_sim.population_report()
+trades = pop_report.get("trades", [])
+
+is_placeholder_mismatches = []
+for trade_row in trades:
+    trade = trade_row.get("trade")
+    is_placeholder = trade_row.get("is_placeholder")
+
+    # Get the source constant name
+    source_name = test_sim._trade_density_source(trade)
+
+    if source_name is None:
+        # Taught trades or unavailable trades have no source
+        expected_placeholder = False
+    elif source_name not in REGISTRY:
+        expected_placeholder = False
+    else:
+        expected_placeholder = REGISTRY[source_name].get("kind") == "temporary_heuristic"
+
+    if is_placeholder != expected_placeholder:
+        is_placeholder_mismatches.append({
+            "trade": trade,
+            "source": source_name,
+            "reported_is_placeholder": is_placeholder,
+            "expected_from_registry": expected_placeholder,
+        })
+
+check("population: is_placeholder field matches REGISTRY kind for all trades",
+      len(is_placeholder_mismatches) == 0,
+      is_placeholder_mismatches if is_placeholder_mismatches else "all trades consistent")

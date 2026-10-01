@@ -712,7 +712,7 @@ def render_population(out):
                     ("%.1f%%" % (share * 100)) if share is not None else "-"))
     if has_placeholder:
         lines.append("")
-        lines.append("* = rough placeholder estimate (not based on historical records)")
+        lines.append("* = a rough placeholder figure, not yet a cited estimate")
     if out.get("what_this_means"):
         lines.append("")
         lines.append(_wrap(out["what_this_means"]))
