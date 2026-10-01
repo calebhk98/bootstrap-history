@@ -516,6 +516,9 @@ class DiffusionMixin:
                 continue
             if node_id in (ent.get("ids") or ()):
                 node = ent.get("node")
+                stock = {ent["material"]: ent.get("units", 0.0)} if ent.get("material") else None
+                if stock and self.stock_holds_met(stock):
+                    continue
                 if node and node not in self.state.projects.done:
                     return node, (ent.get("because") or
                                   "this society has no %s" % key)

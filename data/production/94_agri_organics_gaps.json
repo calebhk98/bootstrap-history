@@ -1,6 +1,51 @@
 {
  "_note": "Organic gap materials that branch nodes consume and no other production file makes. Yields are physical (cited in each yield_basis); labour is borrowed from a named neighbouring entry, or left out and said so.",
  "materials": {
+  "silkworm_eggs_kg": {
+   "outputs": {
+    "silkworm_eggs_kg": 5.0
+   },
+   "inputs": {
+    "silk_cocoon_kg": 100.0
+   },
+   "labour_hours": {
+    "artisan": 150.0
+   },
+   "basis": "per 100 kg of fresh cocoons set aside as seed and allowed to hatch, mate and lay, output as kg of eggs",
+   "yield_basis": "SEED REARING, the grainage: cocoons kept for breeding are not stifled, the moths emerge, pair and lay on cloth or paper and the eggs are stored cool until spring. A fresh cocoon weighs about two grams, so 100 kg is about fifty thousand cocoons, half of them female; a female lays several hundred eggs of about half a milligram each, which is on the order of 5 kg of eggs in all (an estimate from those three figures, not checked against a source). The cocoons are not sold as silk, so they enter as a material input at the cocoon entry's own price. LABOUR: the sorting, pairing, laying and egg storage by hand, taken as about 150 artisan-hours (an estimate; none could be sourced). Made only where sericulture is held, so a society without the worm prices it as if it were. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_sericulture"
+  },
+  "ramie_stock_kg": {
+   "outputs": {
+    "ramie_stock_kg": 2000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 400.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare of ramie nursery per year, output as kg of rhizome cuttings for planting out",
+   "yield_basis": "GROWN. Ramie is a perennial that spreads by rhizome and is propagated by dividing it, not by seed; an established stand yields a standing crop of rhizome many times what it takes to plant the same area again. 2000 kg of cuttings per hectare-year is an order-of-magnitude estimate, not checked against a source. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: lifting, dividing and bundling the rhizome by hand, taken as about 400 labourer-hours (an estimate). Made only where ramie is already grown, so the stock cannot be had without a society that holds it. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_ramie_fibre"
+  },
+  "draught_animal_kg": {
+   "outputs": {
+    "draught_animal_kg": 100.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "pasture",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight of working cattle and horses reared to work age",
+   "yield_basis": "GROWN on pasture by a breeding herd: cows and mares calve or foal, the young are reared on grass and hay to work age. Live-weight gain on extensive pasture is on the order of 100 kg per hectare per year (an estimate, not checked against a source). LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: herding, calving and breaking to harness, taken as about 40 labourer-hours (an estimate). The animals' own feed is the pasture, charged as land. Made only where draught power is held, because a society with no animal to breed cannot start a herd by labour. Conf C.",
+   "conf": "C",
+   "requires_node": "cap_power_muscle"
+  },
   "mulberry_leaves_kg": {
    "outputs": {
     "mulberry_leaves_kg": 20000.0
@@ -14,7 +59,7 @@
    "basis": "per hectare of intensively pruned mulberry orchard per year, output as kg of fresh leaf",
    "yield_basis": "GROWN. The 20-30 tonnes of leaf per hectare per year for an intensively pruned orchard is the figure silk_kg's own yield_basis uses; the low end is taken. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: 150 labourer-hours per hectare for the orchard's tillage, pruning and manuring (borrowed from wheat_kg's field labour) plus about 800 for picking: the leaf is stripped by hand, and 20,000 kg at about 25 kg per worker-hour is 800 hours (an order-of-magnitude estimate; not checked against a source, none could be opened). Conf C.",
    "conf": "C",
-   "requires_node": "tx2_silkworm_stock"
+   "requires_node": "tx2_silk_fibre"
   },
   "pyrethrum_flower": {
    "outputs": {

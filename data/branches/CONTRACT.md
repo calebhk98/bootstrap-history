@@ -59,6 +59,8 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 | field | meaning |
 |---|---|
 | `pre` | prerequisite ids, AND semantics. **Include capability rungs.** |
+| `holds` | optional `{material: units}`: living stock the actor must HOLD to begin (silkworm eggs, a breeding herd, planting stock). Having stock is a possession, not research: a node never stands for holding it. Use `holds` on the node that needs the stock, and a production entry for the material so a partner can sell it. |
+| `grants` | optional `{material: units}`: stock a completed venture brings back (an expedition's founding herd), added to the held stock when it completes. |
 | `ph` | the founder's own hours. Scarce: he has about 72,000 in a lifetime. Most nodes should be 40 to 400; only things needing his personal insight go above 600. |
 | `lab` | hired hours by trade. Allowed trades ONLY: labourer, artisan, master, glassblower, smith, carpenter, miner, scribe, scholar, furnaceman, potter, chemist, machinist |
 | `mat` | materials consumed. Allowed keys are listed in PRICED_MATERIALS below. |
