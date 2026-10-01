@@ -3,6 +3,7 @@
   "id": "med_surgical_kit_good",
   "name": "Good surgical instrument kit",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bronze"
   ],
@@ -29,6 +30,7 @@
   "id": "med_cataract_couching",
   "name": "Cataract couching",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good"
   ],
@@ -56,6 +58,7 @@
   "id": "med_trepanation",
   "name": "Trepanation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good"
   ],
@@ -82,6 +85,7 @@
   "id": "med_amputation",
   "name": "Amputation and prosthetics",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good"
   ],
@@ -113,6 +117,7 @@
   "id": "med_wound_suturing",
   "name": "Wound suturing",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good",
    "mat_linen"
@@ -142,6 +147,7 @@
   "id": "med_valetudinaria",
   "name": "Military field hospital (valetudinaria)",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -174,6 +180,7 @@
   "id": "med_opium_mandrake",
   "name": "Opium and mandrake tinctures",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_olive_oil"
   ],
@@ -202,6 +209,7 @@
   "id": "med_herbal_pharmacy",
   "name": "Herbal pharmacy (Dioscorides Materia medica)",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_olive_oil"
   ],
@@ -230,6 +238,7 @@
   "id": "med_bone_setting",
   "name": "Bone setting",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good"
   ],
@@ -260,6 +269,7 @@
   "id": "med_obstetric_practice",
   "name": "Obstetric practice",
   "cat": "obstetrics",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen"
   ],
@@ -288,6 +298,7 @@
   "id": "med_aqueducts_latrines",
   "name": "Aqueducts and public latrines",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "mat_pozzolana"
   ],
@@ -326,6 +337,7 @@
   "id": "med_legal_physician",
   "name": "Legal protection for physicians",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [],
   "kb": "70_medicine_biology.md",
   "ph": 0,
@@ -351,6 +363,7 @@
   "id": "med_ligature_haemostasis",
   "name": "Ligature over cautery for haemostasis",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_amputation",
    "mat_linen"
@@ -382,6 +395,7 @@
   "id": "med_asepsis_antisepsis",
   "name": "Asepsis, antisepsis, and steam sterilization",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory",
    "sanitation_antisepsis",
@@ -412,12 +426,14 @@
   ],
   "mechanics": {
    "disease_burden": true
-  }
+  },
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring]"
  },
  {
   "id": "med_autoclave",
   "name": "Autoclave for steam sterilization",
   "cat": "instruments",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "glass_labware",
@@ -447,12 +463,14 @@
   "traits": [
    "infrastructure",
    "spectacle"
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: the heat rung was redundant with the high pressure steam prerequisite.]"
  },
  {
   "id": "med_surgical_gloves_mask",
   "name": "Surgical barrier masks and hand coverings",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "med_handwashing_semmelweis",
@@ -485,6 +503,7 @@
   "id": "med_handwashing_semmelweis",
   "name": "Handwashing protocol (Semmelweis)",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory",
    "sanitation_antisepsis"
@@ -516,6 +535,7 @@
   "id": "med_ether_anaesthesia",
   "name": "Ether, chloroform, and nitrous oxide anaesthesia",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol",
    "cap_heat_1100"
@@ -569,6 +589,7 @@
   "id": "med_hypodermic_syringe",
   "name": "Hypodermic syringe and hollow needle",
   "cat": "instruments",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "glass_labware"
@@ -602,6 +623,7 @@
   "id": "med_blood_groups",
   "name": "Blood groups and transfusion",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "microscope_compound",
    "germ_theory",
@@ -635,6 +657,7 @@
   "id": "med_saline_resuscitation",
   "name": "Saline and fluid resuscitation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_salt",
    "glass_labware"
@@ -666,6 +689,7 @@
   "id": "med_stethoscope_percussion",
   "name": "Stethoscope and percussion",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory"
   ],
@@ -722,6 +746,7 @@
   "id": "med_sphygmomanometer",
   "name": "Sphygmomanometer (blood pressure cuff)",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len",
    "glass_labware",
@@ -767,6 +792,7 @@
   "id": "med_ophthalmoscope",
   "name": "Ophthalmoscope",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "mirror_amalgam",
@@ -796,12 +822,14 @@
   "traits": [
    "medical",
    "information"
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lens and mirror optics require precision grinding]"
  },
  {
   "id": "med_endoscope",
   "name": "Endoscope",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "glass_labware",
@@ -836,6 +864,7 @@
   "id": "med_xray_imaging",
   "name": "X-ray imaging",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "photography",
@@ -866,6 +895,7 @@
   "id": "med_electrocardiogram",
   "name": "Electrocardiogram (ECG)",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "galvanometer",
    "electromagnet",
@@ -901,6 +931,7 @@
   "id": "med_microscopy_pathology",
   "name": "Microscopy in pathology with histology",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "microscope_compound",
    "germ_theory",
@@ -931,6 +962,7 @@
   "id": "med_gram_stain_culture",
   "name": "Bacterial culture and Gram staining",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory",
    "glass_labware",
@@ -957,12 +989,14 @@
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium]"
+  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium]",
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium]"
  },
  {
   "id": "med_sterile_technique",
   "name": "Sterile technique",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_asepsis_antisepsis",
    "med_autoclave"
@@ -993,6 +1027,7 @@
   "id": "med_vaccination_progression",
   "name": "Vaccination: variolation to attenuated vaccines",
   "cat": "serology",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory"
   ],
@@ -1026,7 +1061,8 @@
      "order": 4
     }
    ]
-  }
+  },
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "med_antitoxin_serum",
@@ -1058,6 +1094,7 @@
   "id": "med_epidemiology_statistics",
   "name": "Epidemiology, statistics, and vital registration",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory",
    "statistics_basic"
@@ -1090,6 +1127,7 @@
   "id": "med_clinical_trials",
   "name": "Case control and randomised controlled trials",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "med_epidemiology_statistics",
    "scientific_method"
@@ -1113,12 +1151,14 @@
   "note": "Case control: backward look at exposure. Fast and cheap. Randomised controlled trial: random assignment to treatment or placebo, prospective, blind. Eliminates bias but takes years.",
   "traits": [
    "medical"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "med_quarantine_sanitation",
   "name": "Quarantine, clean water, and sewage",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "plague_preparedness",
    "germ_theory"
@@ -1164,6 +1204,7 @@
   "id": "med_vector_control",
   "name": "Vector control and drainage for malaria",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory"
   ],
@@ -1198,6 +1239,7 @@
   "id": "med_nutrition_vitamins",
   "name": "Nutrition, deficiency diseases, and vitamins",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory"
   ],
@@ -1228,6 +1270,7 @@
   "id": "med_insulin",
   "name": "Insulin extraction and purification",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1269,6 +1312,7 @@
   "id": "med_aspirin",
   "name": "Aspirin (acetylsalicylic acid)",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "nitric_acid",
    "destructive_distillation"
@@ -1294,12 +1338,14 @@
   "note": "Acetylation of salicylic acid (from willow bark). Safer than salicylate because absorbed slowly. Reduces fever, pain, inflammation. Bayer trademark.",
   "traits": [
    "medical"
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: acetylation needs acetic anhydride, from acetic acid via wood distillation. Nitric acid was wrong and has been removed.]"
  },
  {
   "id": "med_sulfonamides",
   "name": "Sulfonamides (sulfanilamide)",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_dyes_synthetic",
    "analytical_chemistry",
@@ -1326,12 +1372,14 @@
   "note": "First broad-spectrum antibiotic 1935, derived from aniline dyes. Inhibits bacterial folate synthesis. Saves millions from streptococcal and gram-negative infections. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management]",
   "traits": [
    "medical"
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management]"
  },
  {
   "id": "med_penicillin",
   "name": "Penicillin extraction and purification",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "med_gram_stain_culture",
    "analytical_chemistry"
@@ -1364,6 +1412,7 @@
   "id": "med_obstetric_antisepsis",
   "name": "Antiseptic obstetrics and incubator",
   "cat": "obstetrics",
+  "kind": "ENGINEERING",
   "pre": [
    "med_handwashing_semmelweis",
    "med_obstetric_practice"
@@ -1400,6 +1449,7 @@
   "id": "med_dentistry",
   "name": "Dentistry and high-speed drill",
   "cat": "dentistry",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "cap_heat_1100"
@@ -1433,6 +1483,7 @@
   "id": "med_spectacles_refraction",
   "name": "Spectacles and refraction testing",
   "cat": "ophthalmology",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding"
   ],
@@ -1460,6 +1511,7 @@
   "id": "med_hospital_institution",
   "name": "Hospital as an institution with records",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "med_valetudinaria",
    "med_epidemiology_statistics"
@@ -1492,6 +1544,7 @@
   "id": "med_nursing_profession",
   "name": "Nursing as a trained profession",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "med_hospital_institution",
    "germ_theory"
@@ -1531,6 +1584,7 @@
   "id": "med_medical_education",
   "name": "Medical education and cadaver dissection",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "med_hospital_institution"
   ],
@@ -1562,6 +1616,7 @@
   "id": "med_forensic_medicine",
   "name": "Forensic medicine and autopsy",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "med_medical_education",
    "med_legal_physician"

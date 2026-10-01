@@ -3,6 +3,7 @@
   "id": "lnd_paved_road_network",
   "name": "Paved trunk road network",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -28,6 +29,7 @@
   "id": "lnd_cursus_publicus",
   "name": "Cursus publicus courier service",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_paved_road_network",
    "lnd_horse_saddle_basic"
@@ -56,6 +58,7 @@
   "id": "lnd_four_wheel_cart",
   "name": "Four-wheeled cart",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_wheel_spoked",
    "lnd_axle_pivot_front"
@@ -84,6 +87,7 @@
   "id": "lnd_two_wheel_cart",
   "name": "Two-wheeled cart",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_wheel_spoked"
   ],
@@ -111,6 +115,7 @@
   "id": "lnd_wheel_spoked",
   "name": "Spoked wheel",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 40.0,
@@ -141,6 +146,7 @@
   "id": "lnd_axle_pivot_front",
   "name": "Pivoting front axle",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -166,6 +172,7 @@
   "id": "lnd_tyre_iron",
   "name": "Iron tyre (tire)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_wheel_spoked",
    "mat_wrought_iron"
@@ -194,6 +201,7 @@
   "id": "lnd_harness_throat_girth",
   "name": "Harness of throat and girth type",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -219,6 +227,7 @@
   "id": "lnd_mule_transport",
   "name": "Mule transport",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -244,6 +253,7 @@
   "id": "lnd_ox_transport",
   "name": "Ox transport",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -269,6 +279,7 @@
   "id": "lnd_horse_saddle_basic",
   "name": "Horse saddle (basic)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -294,6 +305,7 @@
   "id": "lnd_litter",
   "name": "Litter",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -319,6 +331,7 @@
   "id": "lnd_bridge",
   "name": "Bridge",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -344,6 +357,7 @@
   "id": "lnd_milestone",
   "name": "Milestone",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
@@ -427,6 +441,7 @@
   "id": "lnd_coach",
   "name": "Coach",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_four_wheel_cart",
    "lnd_harness_throat_girth",
@@ -464,6 +479,7 @@
   "id": "lnd_stagecoach",
   "name": "Stagecoach",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_coach",
    "lnd_spring_leaf"
@@ -500,6 +516,7 @@
   "id": "lnd_wheelbarrow",
   "name": "Wheelbarrow",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_wheel_spoked"
   ],
@@ -533,6 +550,7 @@
   "id": "lnd_spring_leaf",
   "name": "Leaf spring",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "cementation_steel",
    "cap_tol_100um"
@@ -566,6 +584,7 @@
   "id": "lnd_macadam",
   "name": "Macadam road surface",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_paved_road_network",
    "cap_measure_len",
@@ -602,6 +621,7 @@
   "id": "lnd_tarmacadam",
   "name": "Tarmacadam road surface",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_macadam",
    "mat_bitumen",
@@ -641,6 +661,7 @@
   "id": "lnd_turnpike",
   "name": "Turnpike",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_macadam"
   ],
@@ -670,6 +691,7 @@
   "id": "lnd_iron_edge_rail",
   "name": "Iron edge rail",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron",
    "cap_tol_1mm",
@@ -706,6 +728,7 @@
   "id": "lnd_flanged_wheel",
   "name": "Flanged wheel",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_wheel_spoked",
    "mat_cast_iron",
@@ -736,7 +759,8 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "lnd_fishplate",
@@ -771,6 +795,7 @@
   "id": "lnd_point_switch",
   "name": "Point and switch",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_iron_edge_rail",
    "cap_tol_100um"
@@ -806,6 +831,7 @@
   "id": "lnd_signal_railway",
   "name": "Railway signal",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_point_switch"
   ],
@@ -842,6 +868,7 @@
   "id": "lnd_block_system",
   "name": "Block system (railway safety)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_signal_railway",
    "telegraph_electric"
@@ -874,6 +901,7 @@
   "id": "lnd_standard_gauge",
   "name": "Standard gauge (railway)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_iron_edge_rail",
    "cap_measure_len"
@@ -905,6 +933,7 @@
   "id": "lnd_steam_locomotive",
   "name": "Steam locomotive",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "lnd_flanged_wheel",
@@ -943,6 +972,7 @@
   "id": "lnd_tender",
   "name": "Tender (coal and water car)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_steam_locomotive",
    "lnd_flanged_wheel"
@@ -973,7 +1003,8 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "lnd_superheater",
@@ -1011,6 +1042,7 @@
   "id": "lnd_air_brake",
   "name": "Air brake (locomotive and train)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_steam_locomotive",
    "cap_tol_100um"
@@ -1047,6 +1079,7 @@
   "id": "lnd_hobby_horse",
   "name": "Hobby horse (pedal-less bicycle)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_wheel_spoked"
   ],
@@ -1080,6 +1113,7 @@
   "id": "lnd_boneshaker",
   "name": "Boneshaker (pedal bicycle)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_hobby_horse",
    "crank_conrod",
@@ -1111,7 +1145,8 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "lnd_penny_farthing",
@@ -1182,6 +1217,7 @@
   "id": "lnd_chain_drive_bicycle",
   "name": "Chain drive (for bicycle)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "cap_tol_100um"
@@ -1211,7 +1247,8 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "lnd_ball_bearing",
@@ -1276,6 +1313,7 @@
   "id": "lnd_gas_engine_atmospheric",
   "name": "Atmospheric gas engine (Lenoir)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_coal_tar_gas",
    "cap_tol_100um",
@@ -1313,6 +1351,7 @@
   "id": "lnd_coal_tar_gas",
   "name": "Coal tar gas (coal gas)",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "coal_coke",
    "destructive_distillation",
@@ -1337,12 +1376,14 @@
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "Coke and steam passed through hot coal produces combustible gas. Used for lighting and early engines. Supply is local and pipeline-dependent; replaced by petrol in vehicles. [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: steam-coke reaction at 900-1000C for coal gas production]"
+  "note": "Coke and steam passed through hot coal produces combustible gas. Used for lighting and early engines. Supply is local and pipeline-dependent; replaced by petrol in vehicles. [REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: steam-coke reaction at 900-1000C for coal gas production]",
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1100 added by a reviewer working node by node. Reason: steam-coke reaction at 900-1000C for coal gas production]"
  },
  {
   "id": "lnd_otto_cycle_four_stroke",
   "name": "Otto cycle four-stroke engine",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_gas_engine_atmospheric",
    "mat_bulk_steel",
@@ -1460,6 +1501,7 @@
   "id": "lnd_magneto",
   "name": "Magneto (ignition system)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_spark_plug",
    "electromagnet",
@@ -1491,12 +1533,14 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "lnd_diesel_cycle",
   "name": "Diesel cycle (compression ignition)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_otto_cycle_four_stroke",
    "mat_bulk_steel",
@@ -1554,6 +1598,7 @@
   "id": "lnd_automobile",
   "name": "Automobile (self-propelled carriage)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_otto_cycle_four_stroke",
    "lnd_gearbox_clutch",
@@ -1595,6 +1640,7 @@
   "id": "lnd_gearbox_clutch",
   "name": "Gearbox and clutch",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_otto_cycle_four_stroke",
    "cap_tol_100um"
@@ -1625,7 +1671,8 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "lnd_differential",
@@ -1663,6 +1710,7 @@
   "id": "lnd_steering_geometry",
   "name": "Steering geometry (Ackermann)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "cap_tol_1mm"
@@ -1690,12 +1738,14 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "lnd_assembly_line",
   "name": "Assembly line and mass production",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "interchangeable_parts",
    "lnd_automobile",
@@ -1730,6 +1780,7 @@
   "id": "lnd_truck",
   "name": "Truck (motor freight vehicle)",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_automobile",
    "lnd_diesel_cycle"
@@ -1862,6 +1913,7 @@
   "id": "lnd_diesel_supply",
   "name": "Diesel supply chain",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_petroleum_refined",
    "lnd_truck"
@@ -1895,6 +1947,7 @@
   "id": "lnd_motor_road_network",
   "name": "Road network for motor vehicles",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_automobile",
    "lnd_tarmacadam"

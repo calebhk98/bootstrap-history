@@ -8,6 +8,7 @@ import os
 import unittest
 
 from sim import civ_start_check as start_check
+from sim.engine.tree_source import load_base_tree
 from sim.engine.catalog import load_production_catalog
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -17,8 +18,7 @@ CIVILISATIONS_THAT_SMELT_IRON = ("rome_100ad", "england_1300", "norse_900ad", "h
 
 
 def _nodes():
-    with open(os.path.join(ROOT, "data", "tech_tree.json"), encoding="utf-8") as handle:
-        return {node["id"]: node for node in json.load(handle)["nodes"]}
+    return {node["id"]: node for node in load_base_tree()["nodes"]}
 
 
 def _civilisations():

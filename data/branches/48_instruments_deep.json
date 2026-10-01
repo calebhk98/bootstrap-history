@@ -3,6 +3,7 @@
   "id": "in2_simple_lens",
   "name": "Simple plano-convex lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding"
   ],
@@ -30,12 +31,14 @@
   "conf": "C",
   "note": "The kernel is that a single spherical surface converges parallel light to a point. Aberrations are severe; useful only for low magnification.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_doublet_lens",
   "name": "Doublet achromatic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens",
    "mat_glass_lead",
@@ -67,12 +70,14 @@
   "conf": "C",
   "note": "Red and blue light have different refractive indices; flint glass bends them oppositely. A concave flint inside a convex crown cancels the dispersion while keeping convergence. Cemented joint must be optically contacted.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_triplet_lens",
   "name": "Triplet apochromatic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_doublet_lens",
    "glass_borosilicate"
@@ -104,12 +109,14 @@
   "conf": "C",
   "note": "Flint-crown-flint sandwich with carefully chosen thicknesses eliminates both primary and secondary chromatic aberration. Air gaps between elements are essential; spacing is critical.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_petzval_portrait_lens",
   "name": "Petzval portrait lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_doublet_lens"
   ],
@@ -139,12 +146,14 @@
   "conf": "C",
   "note": "The kernel is that a convergent group behind the aperture stop naturally focuses field curvature to a curved surface, which is acceptable for portrait work where central sharpness matters. f/3.5 was revolutionary for 1840s photography.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_cooke_triplet_photography",
   "name": "Cooke triplet photographic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_triplet_lens"
   ],
@@ -174,12 +183,14 @@
   "conf": "C",
   "note": "Symmetry means left and right aberrations cancel; the central meniscus acts as field flattener. Astigmatism and coma are small across a wide field. This design persisted unchanged into the 1970s.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_tessar_lens",
   "name": "Tessar compound photographic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_cooke_triplet_photography"
   ],
@@ -209,12 +220,14 @@
   "conf": "C",
   "note": "The rear doublet is cemented; front elements air-spaced. Tessar corrects all primary aberrations (spherical, coma, astigmatism, field curvature) and controls distortion. f/4.5 was standard for hand cameras 1902-1950.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_telephoto_design",
   "name": "Telephoto lens principle",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_doublet_lens"
   ],
@@ -243,12 +256,14 @@
   "conf": "C",
   "note": "The interval between front and rear elements is shorter than focal length; magnification and physical compactness are the point. Rear element separation tunes back working distance.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_wide_angle_lens",
   "name": "Wide angle photographic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_cooke_triplet_photography",
    "cap_tol_100um"
@@ -279,12 +294,14 @@
   "conf": "C",
   "note": "Large field angle means massive distortion if not corrected. Symmetrical designs minimize distortion at the cost of vignetting. Focal length/image diagonal ratio defines angle of view.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_primary_mirror",
   "name": "Telescope primary mirror parabolic",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "mirror_amalgam",
    "master_screw"
@@ -316,12 +333,14 @@
   "conf": "B",
   "note": "The parabola corrects spherical aberration; a sphere would have offaxis focus. Speculums corrode; silvered glass requires maintenance every few years. Precision to 0.1 wavelength required for good focus.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_cassegrain_reflector",
   "name": "Cassegrain reflector telescope",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_primary_mirror"
   ],
@@ -350,12 +369,14 @@
   "conf": "C",
   "note": "Effective focal length can be very large; physical tube is short and stiff. Secondary blockage costs light; useful for high magnification and spectroscopy. Cassegrain and Gregorian differ in secondary curvature (convex vs concave).",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_newtonian_reflector",
   "name": "Newtonian reflector telescope",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_primary_mirror"
   ],
@@ -384,12 +405,14 @@
   "conf": "C",
   "note": "Simple and cheap; no secondary mirror obstruction. Off-axis aberrations manageable up to f/4. The flat (Newtonian diagonal) must be very small (5-15% blockage) and precisely angled.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_schmidt_corrector_plate",
   "name": "Schmidt corrector plate",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "mirror_amalgam"
   ],
@@ -419,12 +442,14 @@
   "conf": "C",
   "note": "A spherical mirror has severe offaxis aberrations. A thin aspheric plate near the center of curvature corrects all of them. Requires precision figuring to waves; small deviations ruin image.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_prism_amici",
   "name": "Prism: Amici roof prism",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -453,12 +478,14 @@
   "conf": "C",
   "note": "The roof angle must be precisely 90 degrees; any error causes the two roof faces to produce a split image. Coating the roof faces was later improvement.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_prism_porro",
   "name": "Prism: Porro prism binocular",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -487,12 +514,14 @@
   "conf": "C",
   "note": "Porro gives longer eyepiece separation than roof; better for binoculars where one prism arm doubles as the barrel. Internal reflections must not degrade contrast.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_beam_splitter",
   "name": "Beam splitter dichroic mirror",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "mirror_amalgam"
   ],
@@ -522,12 +551,14 @@
   "conf": "C",
   "note": "Evaporated metal films or dielectric coatings create partial reflectors. Dichroic effect (color-dependent reflection) requires interference; multilayer coatings achieve sharp wavelength separation.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_polariser_crystal",
   "name": "Polariser: Nicol prism calcite",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -557,12 +588,14 @@
   "conf": "C",
   "note": "Natural birefringence of calcite; extraordinary ray and ordinary ray have different refractive indices. Carving and cementing a prism at the Brewster angle transmits one, reflects the other internally.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_waveplate_mica",
   "name": "Wave plate phase retarder",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_polariser_crystal"
   ],
@@ -591,12 +624,14 @@
   "conf": "C",
   "note": "Quarter wave plate shifts phase by 90 degrees; half wave by 180. Thickness controls retardation. Mica easily cleaves to controlled thickness; later crystals like quartz are more stable.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_interference_filter",
   "name": "Interference filter coated",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_beam_splitter"
   ],
@@ -627,12 +662,14 @@
   "conf": "C",
   "note": "Alternating high and low index layers create destructive interference outside the pass band. Extremely narrow passbands possible; sharp edges. Requires vacuum evaporation and strict thickness control.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_antireflection_coating",
   "name": "Antireflection coating single wavelength",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_beam_splitter"
   ],
@@ -662,12 +699,14 @@
   "conf": "C",
   "note": "A single quarter-wave layer of the right index nearly halves losses at design wavelength; this doubled the effective aperture of telescopes and microscopes. Multicoatings extend bandwidth.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_reticle_crosshair",
   "name": "Reticle: crosshair or graticule",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "glass_clear"
   ],
@@ -699,6 +738,7 @@
   "id": "in2_eyepiece_huygens",
   "name": "Eyepiece: Huygens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -730,6 +770,7 @@
   "id": "in2_eyepiece_kellner",
   "name": "Eyepiece: Kellner",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_doublet_lens"
   ],
@@ -762,6 +803,7 @@
   "id": "in2_eyepiece_ramsden",
   "name": "Eyepiece: Ramsden",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -793,6 +835,7 @@
   "id": "in2_eyepiece_orthoscopic",
   "name": "Eyepiece: Orthoscopic",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_triplet_lens"
   ],
@@ -819,12 +862,14 @@
   "conf": "C",
   "note": "All aberrations well corrected; distortion nearly absent. Best planetary observation eyepiece until the Erfle; good for telescopes of any focal ratio.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_eyepiece_erfle",
   "name": "Eyepiece: Erfle wide field",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_triplet_lens"
   ],
@@ -851,12 +896,14 @@
   "conf": "C",
   "note": "The kernel: five elements can be tuned to flatten field and correct all aberrations across a wide angle. Previous 3-4 element designs limited to 50 degrees.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_condenser_substage",
   "name": "Condenser: sub-stage aperture control",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -888,6 +935,7 @@
   "id": "in2_immersion_objective_oil",
   "name": "Immersion objective: oil lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_condenser_substage",
    "fused_quartz"
@@ -918,12 +966,14 @@
   "conf": "C",
   "note": "Oil (n=1.52) matches glass closely; light bent less at air-glass interface, allowing higher NA. Allows numerical apertures above 1.0, finer resolution. Standard for 1000x magnification.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_phase_contrast_objective",
   "name": "Phase contrast objective and annuli",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_immersion_objective_oil",
    "fused_quartz"
@@ -954,12 +1004,14 @@
   "conf": "C",
   "note": "Transparent samples have tiny amplitude differences that the eye cannot detect; phase differences are huge but invisible. Phase plate retards diffracted light; interference makes phases visible. Revolutionary for biology.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_dark_field_condenser",
   "name": "Dark field condenser: oblique illumination",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_condenser_substage"
   ],
@@ -985,12 +1037,14 @@
   "conf": "C",
   "note": "Unstained samples are nearly invisible in brightfield because they scatter little and absorb little. Dark field cuts direct light; scattered light from particles appears bright on black background.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_ultramicroscope",
   "name": "Ultramicroscope: dark field with slit lamp",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_dark_field_condenser",
    "cap_heat_1600",
@@ -1025,12 +1079,14 @@
   "conf": "C",
   "note": "Colloid particles smaller than visible wavelength scatter light; ultramicroscope can detect particles 10-100 nm, below direct visibility limit. Used to verify kinetic theory of matter.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_microtome_sliding",
   "name": "Microtome: sliding blade",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -1063,6 +1119,7 @@
   "id": "in2_microtome_rotary",
   "name": "Microtome: rotary feed",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -1091,12 +1148,14 @@
   "conf": "C",
   "note": "Screw advance per rotation is fixed and precise; blade remains stationary; hundreds of consecutive micron-thick sections from one specimen. Required for neuroanatomy.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_electron_microscope_column",
   "name": "Electron microscope: column and lens assembly",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "cap_vac_1e3"
@@ -1128,12 +1187,14 @@
   "conf": "B",
   "note": "Electrons have wavelength 1000x smaller than visible light; 2000x higher resolution. Requires high vacuum, high voltage (50-100 kV), and magnetic lenses. Sample preparation and observation technique are complex.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_electron_source_cathode",
   "name": "Electron source: heated cathode",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "mat_tungsten",
@@ -1161,12 +1222,14 @@
   "conf": "C",
   "note": "Filament life determined by evaporation rate; higher temperature gives more current but shorter life. Wehnelt cap focuses emission. Tungsten chosen for high melting point and low evaporation.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_spectrograph_prism",
   "name": "Spectrograph: prism camera",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "spectroscope",
    "photography"
@@ -1201,6 +1264,7 @@
   "id": "in2_spectrograph_grating",
   "name": "Spectrograph: grating camera",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "spectroscope",
    "opt_diffraction_grating"
@@ -1268,6 +1332,7 @@
   "id": "in2_ruling_engine",
   "name": "Ruling engine: precision screw diamond",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw",
    "cap_tol_1um",
@@ -1342,6 +1407,7 @@
   "id": "in2_interferometer_fabry_perot",
   "name": "Interferometer: Fabry-P\u00e9rot etalon",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "mirror_amalgam"
   ],
@@ -1375,6 +1441,7 @@
   "id": "in2_mass_spectrograph",
   "name": "Mass spectrograph: deflection",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "discharge_xray"
@@ -1410,6 +1477,7 @@
   "id": "in2_cyclotron",
   "name": "Cyclotron accelerator: magnet and RF coil",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "cap_heat_1300"
@@ -1445,6 +1513,7 @@
   "id": "in2_van_de_graaff_generator",
   "name": "Van de Graaff static generator",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "electrostatics"
@@ -1480,6 +1549,7 @@
   "id": "in2_cloud_chamber_wilson",
   "name": "Cloud chamber: Wilson expansion chamber",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "glass_labware",
    "sc2_physics_nucleus_discovery"
@@ -1515,6 +1585,7 @@
   "id": "in2_photographic_emulsion",
   "name": "Photographic emulsion detector",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "photography"
   ],
@@ -1547,6 +1618,7 @@
   "id": "in2_xray_diffraction_camera",
   "name": "X-ray diffraction camera: Bragg geometry",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "mirror_amalgam"
@@ -1581,6 +1653,7 @@
   "id": "in2_electron_diffraction_camera",
   "name": "Electron diffraction camera: LEED",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "cap_vac_1e3"
@@ -1611,12 +1684,14 @@
   "conf": "C",
   "note": "Electron wavelength < 1 Angstrom; very small diffraction angles. Phosphor screen detects diffraction pattern. Low-energy electrons (50-500 eV) scatter strongly from top layers.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_ultracentrifuge",
   "name": "Ultracentrifuge: high-speed rotor",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "cap_tol_10um"
@@ -1651,6 +1726,7 @@
   "id": "in2_ph_meter_potentiometer",
   "name": "pH meter: glass electrode potentiometer",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "daniell_cell",
    "vacuum_tube"
@@ -1686,6 +1762,7 @@
   "id": "in2_oscilloscope_crt",
   "name": "Oscilloscope: cathode ray tube display",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "electromagnet"
@@ -1722,6 +1799,7 @@
   "id": "in2_strain_gauge_electric",
   "name": "Strain gauge: bonded resistance wire",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "micrometer_gauges",
    "copper_refining"
@@ -1749,12 +1827,14 @@
   "conf": "C",
   "note": "Temperature compensation via dummy gauge. Bridge circuit nulls initial resistance; strain produces bridge imbalance. Gauge factor (delta-R/R per unit strain) is material-dependent and reproducible.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_strain_gauge_bridge",
   "name": "Strain gauge bridge amplifier",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_strain_gauge_electric",
    "vacuum_tube"
@@ -1788,6 +1868,7 @@
   "id": "in2_wind_tunnel_subsonic",
   "name": "Wind tunnel: subsonic test section",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam",
    "cap_tol_100um"
@@ -1822,6 +1903,7 @@
   "id": "in2_shock_tube",
   "name": "Shock tube: driven and dump sections",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1600"
   ],
@@ -1854,6 +1936,7 @@
   "id": "in2_towing_tank",
   "name": "Towing tank: model boat resistance measurement",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -1886,6 +1969,7 @@
   "id": "in2_vibration_table",
   "name": "Vibration table: shaker with electromagnet",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "cap_power_electric"
@@ -1920,6 +2004,7 @@
   "id": "in2_fatigue_machine",
   "name": "Fatigue test machine: rotating bending",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac"
   ],
@@ -1952,6 +2037,7 @@
   "id": "in2_creep_furnace",
   "name": "Creep furnace: constant load at high temperature",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1600"
   ],
@@ -1985,6 +2071,7 @@
   "id": "in2_high_pressure_cell",
   "name": "High pressure cell: diamond anvil or autoclave",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "cap_heat_1600"
@@ -2017,6 +2104,7 @@
   "id": "in2_cryostat_dewar_flask",
   "name": "Cryostat: dewar flask double-walled",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "fused_quartz"
   ],
@@ -2050,6 +2138,7 @@
   "id": "in2_joule_thomson_valve",
   "name": "Joule-Thomson expansion valve",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300"
   ],
@@ -2082,6 +2171,7 @@
   "id": "in2_linde_cycle_expansion_engine",
   "name": "Linde cycle: expansion engine and recuperator",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_joule_thomson_valve"
   ],
@@ -2114,6 +2204,7 @@
   "id": "in2_claude_cycle_air_liquefaction",
   "name": "Claude cycle: air liquefaction with work extraction",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_linde_cycle_expansion_engine"
   ],
@@ -2146,6 +2237,7 @@
   "id": "in2_adiabatic_demagnetization",
   "name": "Adiabatic demagnetization apparatus",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "in2_cryostat_dewar_flask"
@@ -2178,6 +2270,7 @@
   "id": "in2_chain_surveyor",
   "name": "Measuring chain: steel links",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2207,6 +2300,7 @@
   "id": "in2_tape_measure_steel",
   "name": "Steel measuring tape: wound on reel",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2237,6 +2331,7 @@
   "id": "in2_spirit_level",
   "name": "Spirit level: bubble in tube",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -2267,6 +2362,7 @@
   "id": "in2_theodolite",
   "name": "Theodolite: angle measurement",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spirit_level",
    "micrometer_gauges",
@@ -2310,6 +2406,7 @@
   "id": "in2_tacheometer",
   "name": "Tacheometer: distance and elevation measurement",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_theodolite"
   ],
@@ -2343,6 +2440,7 @@
   "id": "in2_plane_table",
   "name": "Plane table: graphical surveying",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spirit_level",
    "cap_tol_1mm",
@@ -2379,6 +2477,7 @@
   "id": "in2_alidade_ruler",
   "name": "Alidade: sight ruler for plane table",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_plane_table"
   ],
@@ -2409,6 +2508,7 @@
   "id": "in2_triangulation_tripod_station",
   "name": "Triangulation: station marker",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_theodolite"
   ],
@@ -2439,6 +2539,7 @@
   "id": "in2_baseline_measurement_apparatus",
   "name": "Baseline measurement: apparatus and calibration",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_tape_measure_steel",
    "cap_measure_len"
@@ -2472,6 +2573,7 @@
   "id": "in2_geodetic_apparatus",
   "name": "Geodetic survey apparatus complete",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_baseline_measurement_apparatus",
    "in2_theodolite"
@@ -2506,6 +2608,7 @@
   "id": "in2_precise_levelling_rod",
   "name": "Precise levelling: rod and staff",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spirit_level",
    "micrometer_gauges"
@@ -2541,6 +2644,7 @@
   "id": "in2_gravimeter_spring_balance",
   "name": "Gravimeter: spring balance portable",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "micrometer_gauges"
   ],
@@ -2574,6 +2678,7 @@
   "id": "in2_magnetometer_compass",
   "name": "Magnetometer: sensitive compass",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "galvanometer",
@@ -2644,6 +2749,7 @@
   "id": "in2_artificial_horizon_bubble",
   "name": "Artificial horizon: bubble level",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spirit_level"
   ],
@@ -2675,6 +2781,7 @@
   "id": "in2_marine_chronometer",
   "name": "Marine chronometer: spring balance compensation",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "clock_pendulum",
    "master_screw",
@@ -2714,6 +2821,7 @@
   "id": "in2_chronometer_rate_check",
   "name": "Chronometer rate observation",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_marine_chronometer"
   ],
@@ -2744,6 +2852,7 @@
   "id": "in2_sounding_machine_lead_line",
   "name": "Sounding machine: lead line and marks",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2776,6 +2885,7 @@
   "id": "in2_echo_sounder_acoustic",
   "name": "Echo sounder: acoustic depth finder",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "discharge_xray",
@@ -2809,6 +2919,7 @@
   "id": "in2_gyrocompass",
   "name": "Gyrocompass: spinning rotor",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac"
   ],
@@ -2842,6 +2953,7 @@
   "id": "in2_gyro_horizon_artificial",
   "name": "Gyro horizon: attitude indicator",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_gyrocompass"
   ],
@@ -2874,6 +2986,7 @@
   "id": "in2_radio_direction_finder",
   "name": "Radio direction finder: loop antenna",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "radio",
    "electromagnet"
@@ -2907,6 +3020,7 @@
   "id": "in2_aerial_camera_mount",
   "name": "Aerial camera: gyro-stabilized mount",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "photography",
    "in2_gyrocompass"
@@ -2941,6 +3055,7 @@
   "id": "in2_photogrammetry_stereoscope",
   "name": "Photogrammetry: stereoscope and comparator",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_aerial_camera_mount"
   ],
@@ -2973,6 +3088,7 @@
   "id": "in2_photometer_visual_comparison",
   "name": "Photometer: visual brightness comparison",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -3003,6 +3119,7 @@
   "id": "in2_bolometer_thermal_detector",
   "name": "Bolometer: blackened platinum resistance",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "micrometer_gauges",
    "mat_platinum_bulk"
@@ -3036,6 +3153,7 @@
   "id": "in2_photocell_vacuum_photoelectric",
   "name": "Photocell: vacuum photoelectric",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "vacuum_tube"
@@ -3062,12 +3180,14 @@
   "conf": "C",
   "note": "Quantum efficiency 5-10 percent; spectral response depends on cathode material. Cathode sensitivity to residual gas vapor is problem.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_photomultiplier_cascade_amplifier",
   "name": "Photomultiplier: secondary emission cascade",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_photocell_vacuum_photoelectric",
    "vacuum_tube"
@@ -3101,6 +3221,7 @@
   "id": "in2_spectral_radiometer",
   "name": "Spectral radiometer: grating and photocells",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spectrograph_grating",
    "in2_photomultiplier_cascade_amplifier",
@@ -3134,6 +3255,7 @@
   "id": "in2_electroscope_gold_leaf",
   "name": "Electroscope: gold leaf detector",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "electrostatics"
   ],
@@ -3166,6 +3288,7 @@
   "id": "in2_ionisation_chamber",
   "name": "Ionisation chamber: gas filled detector",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_electroscope_gold_leaf"
   ],
@@ -3199,6 +3322,7 @@
   "id": "in2_geiger_counter",
   "name": "Geiger-M\u00fcller counter: proportional region",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_ionisation_chamber"
   ],
@@ -3232,6 +3356,7 @@
   "id": "in2_scintillation_detector",
   "name": "Scintillation detector: crystal and photomultiplier",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_photomultiplier_cascade_amplifier"
   ],
@@ -3264,6 +3389,7 @@
   "id": "in2_travelling_microscope",
   "name": "Travelling microscope for length measurement",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "microscope_compound",
    "micrometer_gauges"
@@ -3329,6 +3455,7 @@
   "id": "in2_analytical_balance",
   "name": "Analytical balance: equal arm",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_mass_mg"
   ],
@@ -3359,6 +3486,7 @@
   "id": "in2_torsion_balance",
   "name": "Torsion balance: vertical fiber suspension",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_analytical_balance",
    "fused_quartz"
@@ -3392,6 +3520,7 @@
   "id": "in2_microbalance_quartz",
   "name": "Microbalance: quartz oscillator frequency shift",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_quartz_resonator_frequency",
    "el2_quartz_crystal"
@@ -3423,6 +3552,7 @@
   "id": "in2_thermocouple",
   "name": "Thermocouple: junction EMF measurement",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "daniell_cell"
   ],
@@ -3454,6 +3584,7 @@
   "id": "in2_resistance_thermometer_RTD",
   "name": "Resistance thermometer: platinum RTD",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining"
   ],
@@ -3485,6 +3616,7 @@
   "id": "in2_gas_thermometry_absolute",
   "name": "Gas thermometry: absolute temperature scale",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "thermometer",
    "cap_measure_len"
@@ -3518,6 +3650,7 @@
   "id": "in2_mercury_barometer",
   "name": "Mercury barometer: column height",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "thermometer"
   ],
@@ -3548,6 +3681,7 @@
   "id": "in2_aneroid_capsule",
   "name": "Aneroid pressure gauge: evacuated bellows",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -3610,6 +3744,7 @@
   "id": "in2_mcleod_vacuum_gauge",
   "name": "McLeod gauge: compression manometer",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_mercury_barometer"
   ],
@@ -3642,6 +3777,7 @@
   "id": "in2_quartz_resonator_frequency",
   "name": "Quartz resonator: piezoelectric oscillator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "fused_quartz",
    "el2_quartz_crystal"
@@ -3673,6 +3809,7 @@
   "id": "in2_orifice_flow_meter",
   "name": "Orifice plate: differential pressure flow measurement",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_mercury_barometer"
   ],
@@ -3703,6 +3840,7 @@
   "id": "in2_venturi_flow_meter",
   "name": "Venturi tube: smooth convergent-divergent flow",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_orifice_flow_meter"
   ],
@@ -3764,6 +3902,7 @@
   "id": "in2_balance_spring_watch",
   "name": "Balance spring: spiral hairspring",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -3795,6 +3934,7 @@
   "id": "in2_tuning_fork_oscillator",
   "name": "Tuning fork: acoustic resonator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100"
   ],

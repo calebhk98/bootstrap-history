@@ -10,6 +10,7 @@ import json
 import os
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Tuple
 
+from .tree_source import load_base_tree
 from .mods import ModError, ModManifest, get_ordered_mods, load_mod_production, load_mod_tree
 from .mods_ids import check_new_id, is_mod_content
 from .mods_base import check_not_removed, claim_fields, claim_removal, deep_merge
@@ -112,10 +113,9 @@ def validate_mod_material_paths(nodes: Iterable[Mapping[str, Any]],
 
 
 def load_mod_tree_nodes(root: str, mods_dir: Optional[str] = None) -> Iterable[Dict[str, Any]]:
-    """Technology nodes of the base tree with enabled mods applied."""
-    with open(os.path.join(root, "data", "tech_tree.json"), encoding="utf-8") as source:
-        base_tree = json.load(source)
-    tree = load_mod_tree(base_tree, get_ordered_mods(mods_dir or os.path.join(root, "mods")),
+    """Technology nodes of the base tree with enabled mods applied. `root` locates the mods
+    directory; the base tree is built from the repository's branch files."""
+    tree = load_mod_tree(load_base_tree(), get_ordered_mods(mods_dir or os.path.join(root, "mods")),
                          copy_base=False)
     return tree["nodes"]
 

@@ -3,6 +3,7 @@
   "id": "air_kite_basic",
   "name": "Kite",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "mat_silk"
@@ -36,6 +37,7 @@
   "id": "air_observation_balloon_tethered",
   "name": "Tethered observation balloon",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "mat_silk",
@@ -97,6 +99,7 @@
   "id": "air_goldbeater_skin",
   "name": "Goldbeater's skin envelope",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered"
   ],
@@ -130,6 +133,7 @@
   "id": "air_varnished_silk_envelope",
   "name": "Varnished silk envelope",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered",
    "mat_shellac"
@@ -164,6 +168,7 @@
   "id": "air_hydrogen_generation_charcoal",
   "name": "Hydrogen from iron and acid",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "mat_charcoal",
@@ -196,12 +201,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_coal_gas_generation",
   "name": "Coal gas for ballooning",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "coal_coke",
    "destructive_distillation"
@@ -231,12 +238,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_balloon_valve",
   "name": "Balloon valve",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered",
    "mat_wrought_iron",
@@ -272,6 +281,7 @@
   "id": "air_balloon_ballast",
   "name": "Ballast and descent control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered"
   ],
@@ -303,6 +313,7 @@
   "id": "air_parachute",
   "name": "Parachute",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered",
    "mat_linen"
@@ -329,12 +340,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_elongated_envelope",
   "name": "Elongated balloon envelope",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_varnished_silk_envelope"
   ],
@@ -361,12 +374,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_dirigible_engine_mount",
   "name": "Mounted engine under balloon",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_elongated_envelope",
    "air_light_petrol_engine"
@@ -402,6 +417,7 @@
   "id": "air_rigid_airship_frame",
   "name": "Rigid airship frame",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_dirigible_engine_mount",
    "mat_aluminium"
@@ -440,6 +456,7 @@
   "id": "air_hydrogen_danger",
   "name": "Hydrogen safety limits",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_coal_gas_generation"
   ],
@@ -466,12 +483,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_aerofoil_section",
   "name": "Cambered aerofoil section",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "scientific_method"
   ],
@@ -497,12 +516,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_cayley_forces",
   "name": "Separation of forces: lift, drag, thrust, control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "newtonian_mechanics"
@@ -529,12 +550,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_wind_tunnel",
   "name": "Wind tunnel for lift and drag measurement",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_cast_iron",
@@ -570,6 +593,7 @@
   "id": "air_glider_simple",
   "name": "Simple glider",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "air_cayley_forces",
@@ -605,6 +629,7 @@
   "id": "air_three_axis_control",
   "name": "Three-axis control: roll, pitch, yaw",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_glider_simple",
    "air_wind_tunnel"
@@ -639,6 +664,7 @@
   "id": "air_wing_warping",
   "name": "Wing warping",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_three_axis_control"
   ],
@@ -667,12 +693,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_aileron",
   "name": "Aileron for roll control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_three_axis_control",
    "cap_tol_1mm"
@@ -704,12 +732,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_rudder_vertical",
   "name": "Rudder for yaw control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_glider_simple"
   ],
@@ -742,6 +772,7 @@
   "id": "air_elevator_pitch",
   "name": "Elevator for pitch control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_glider_simple"
   ],
@@ -774,6 +805,7 @@
   "id": "air_propeller_wing",
   "name": "Propeller as rotating aerofoil",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "air_wind_tunnel"
@@ -804,12 +836,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_light_petrol_engine",
   "name": "Light petrol engine",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_aluminium",
    "cap_tol_100um",
@@ -842,12 +876,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_power_to_weight",
   "name": "Power-to-weight ratio and flight",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_light_petrol_engine",
    "air_cayley_forces"
@@ -874,12 +910,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_powered_aeroplane",
   "name": "Powered aeroplane",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_three_axis_control",
    "air_light_petrol_engine",
@@ -920,6 +958,7 @@
   "id": "air_radial_engine",
   "name": "Radial engine",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_light_petrol_engine",
    "cap_tol_100um"
@@ -951,12 +990,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_rotary_engine",
   "name": "Rotary engine",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_light_petrol_engine",
    "cap_tol_100um",
@@ -989,12 +1030,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_biplane",
   "name": "Biplane structure",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_three_axis_control"
   ],
@@ -1024,12 +1067,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_monoplane_structure",
   "name": "Monoplane cantilever wing",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "cap_tol_100um",
@@ -1071,12 +1116,14 @@
     }
    }
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_stressed_skin_fuselage",
   "name": "Stressed-skin fuselage",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_aluminium",
    "mat_concrete_reinforced"
@@ -1108,12 +1155,14 @@
    "military",
    "spectacle"
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_airspeed_indicator",
   "name": "Airspeed indicator",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_pitot_tube",
    "barometer"
@@ -1143,12 +1192,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_pitot_tube",
   "name": "Pitot tube",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "barometer",
    "cap_tol_100um",
@@ -1179,12 +1230,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [FIXED after independent audit: tier raised to match its barometer dependency.]"
  },
  {
   "id": "air_altimeter",
   "name": "Altimeter (aneroid barometer)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "barometer",
    "cap_tol_1mm"
@@ -1220,6 +1273,7 @@
   "id": "air_compass_magnetic",
   "name": "Compass for navigation",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "mat_silk",
@@ -1254,6 +1308,7 @@
   "id": "air_artificial_horizon",
   "name": "Artificial horizon (gyroscopic)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "mat_bulk_steel",
@@ -1294,6 +1349,7 @@
   "id": "air_flying_boat",
   "name": "Flying boat",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_powered_aeroplane",
    "mat_bulk_steel"
@@ -1330,6 +1386,7 @@
   "id": "air_aerodrome",
   "name": "Aerodrome (landing field)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_powered_aeroplane"
   ],
@@ -1362,6 +1419,7 @@
   "id": "air_aerial_photography",
   "name": "Aerial photography",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_powered_aeroplane",
    "photography"
@@ -1420,6 +1478,7 @@
   "id": "air_aerial_bombing",
   "name": "Aerial bombing",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_powered_aeroplane",
    "mat_nitroglycerin"
@@ -1452,6 +1511,7 @@
   "id": "air_helicopter_rotor",
   "name": "Helicopter rotor system",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "air_light_petrol_engine",
@@ -1488,6 +1548,7 @@
   "id": "air_autogyro",
   "name": "Autogyro (powered rotor-wing)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "air_light_petrol_engine",
@@ -1524,6 +1585,7 @@
   "id": "air_jet_engine_concept",
   "name": "Jet engine principle",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "thermodynamics_theory",
    "newtonian_mechanics",
@@ -1552,12 +1614,14 @@
    "military",
    "spectacle"
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat]"
  },
  {
   "id": "air_jet_engine_build",
   "name": "Jet engine (centrifugal compressor)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_jet_engine_concept",
    "mat_tool_steel_hss",

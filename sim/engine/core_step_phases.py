@@ -517,7 +517,7 @@ class StepPhasesMixin:
         self.advance_society(self.state.scenario.year)
         self.advance_actors(self.state.scenario.year)
         # 2c. THRESHOLD GOALS. A node carrying a `win_condition` (see
-        # data.py's WIN_CONDITION_LABELS and tech_tree.json's own goals
+        # data.py's WIN_CONDITION_LABELS and the tree's own goals
         # using one) is never built - start_reason refuses it outright -
         # it completes itself the moment a live measurement crosses its
         # target. Checked here, right after the literacy/trade growth this

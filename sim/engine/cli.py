@@ -344,6 +344,32 @@ def _check_node_prereqs(node_id, node_record, nodes):
     return errs
 
 
+def _check_node_option_ids(node_id, node_record, nodes, goods):
+    """An option in a `req_any` group is a node, a material, or a free commodity the
+    engine lets a player buy. A bare id that is not a node but becomes one with the
+    node's own id prefix is a misspelt node id, which the engine would silently
+    price as a commodity."""
+    errs = []
+    prefix = node_id.split("_", 1)[0] + "_"
+    for group in node_record.get("req_any") or []:
+        for option_id in group.get("options") or {}:
+            if option_id in nodes or option_id in goods or option_id in (node_record.get("mat") or {}):
+                continue
+            if prefix + option_id in nodes:
+                errs.append("%s: option %s in group %s names no node; did you mean %s?"
+                            % (node_id, option_id, group.get("group", "?"), prefix + option_id))
+    return errs
+
+
+def _loose_option_ids(node_record, nodes, goods):
+    """Option ids that are neither a node nor a material: the engine prices them as
+    purchasable commodities, so each is a candidate for a real node or good."""
+    return {option_id for group in node_record.get("req_any") or []
+            for option_id in group.get("options") or {}
+            if option_id not in nodes and option_id not in goods
+            and option_id not in (node_record.get("mat") or {})}
+
+
 def _check_node_materials(node_id, node_record, goods, producible):
     """A material nothing declares is an error; a declared one the solver cannot price yet is a warning."""
     errs, warns = [], []
@@ -393,8 +419,12 @@ def _validate_nodes(nodes, goods, wages, producible=()):
     per check, so a check that finds nothing just contributes nothing -
     nobody has to remember to guard the call site."""
     errs, warns = [], []
+    known_materials = set(goods) | set(producible)
+    loose_option_ids = set()
     for node_id, node_record in nodes.items():
         errs += _check_node_prereqs(node_id, node_record, nodes)
+        errs += _check_node_option_ids(node_id, node_record, nodes, known_materials)
+        loose_option_ids |= _loose_option_ids(node_record, nodes, known_materials)
         material_errs, material_warns = _check_node_materials(node_id, node_record, goods, producible)
         errs += material_errs
         warns += material_warns
@@ -402,6 +432,10 @@ def _validate_nodes(nodes, goods, wages, producible=()):
         errs += _check_node_risk(node_id, node_record)
         warns += _check_node_confidence(node_id, node_record)
         errs += _check_node_required_fields(node_id, node_record)
+    if loose_option_ids:
+        warns.append("%d distinct req_any option ids are neither a node nor a material and are "
+                     "treated as purchasable commodities (e.g. %s)"
+                     % (len(loose_option_ids), ", ".join(sorted(loose_option_ids)[:5])))
     return errs, warns
 
 
@@ -1298,7 +1332,7 @@ def _print_sweep_footer(any_thin, any_success, axis, strategy):
 
 def cmd_goals(args):
     """List every selectable goal: the transistor and every alternative in
-    data/tech_tree.json meta.goals, with its closure size and dice-free
+    data/branches/_META.json meta.goals, with its closure size and dice-free
     critical-path floor - the same pair of numbers 'validate' prints, on
     their own, for picking a goal rather than auditing the tree. See
     'validate --deep' for whether each one is actually reachable, one CPM

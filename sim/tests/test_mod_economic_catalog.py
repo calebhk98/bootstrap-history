@@ -8,6 +8,7 @@ from sim.engine.catalog import (load_production_catalog, load_trade_registry,
                                 material_namespace,
                                 validate_mod_material_paths)
 from sim.engine.mods import get_ordered_mods, load_mod_tree
+from sim.engine.tree_source import load_base_tree
 from sim.engine import data, prices, wage_provider
 from sim.validate_production import check
 from sim.world import demand, labour_market
@@ -112,8 +113,7 @@ class ModEconomicCatalogTests(unittest.TestCase):
         ids = {mod.id for mod in manifests}
         self.assertIn("sample_egypt_100bc_e7k2", ids)
         self.assertIn("sample_slaveholding_goal_m4q8", ids)
-        base = json.loads((repo / "data/tech_tree.json").read_text())
-        tree = load_mod_tree(base, manifests)
+        tree = load_mod_tree(load_base_tree(), manifests)
         self.assertTrue(any(goal.get("node", "").startswith("sample_slaveholding_goal_m4q8:")
                             for goal in tree["meta"]["goals"]))
 

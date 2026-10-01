@@ -3,6 +3,7 @@
   "id": "exp_provisioning_scurvy",
   "name": "Provisioning a long voyage against scurvy",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -35,6 +36,7 @@
   "id": "exp_openocean_navigation",
   "name": "Open ocean navigation out of sight of land",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "sea_magnetic_compass",
    "opt_sextant",
@@ -78,6 +80,7 @@
   "id": "exp_oceangoing_hull",
   "name": "An ocean-going hull",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "sea_skeleton_first",
    "sea_sternpost_rudder",
@@ -124,6 +127,7 @@
   "id": "exp_trade_route_extend",
   "name": "Extend the existing eastern trade routes",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "patron_local"
   ],
@@ -168,6 +172,7 @@
   "id": "exp_coastal_africa",
   "name": "Coastal voyage down West Africa",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_oceangoing_hull",
    "exp_provisioning_scurvy",
@@ -202,6 +207,7 @@
   "id": "exp_africa_circumnavigation",
   "name": "Round the Cape",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_coastal_africa",
    "exp_openocean_navigation"
@@ -234,6 +240,7 @@
   "id": "exp_atlantic_crossing",
   "name": "Cross the Atlantic",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_oceangoing_hull",
    "exp_openocean_navigation",
@@ -268,6 +275,7 @@
   "id": "exp_americas_factory",
   "name": "A permanent post in the Americas",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_atlantic_crossing",
    "exp_colony_administration"
@@ -304,6 +312,7 @@
   "id": "exp_colony_administration",
   "name": "Colonial administration and a chartered company",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_coastal_africa",
    "fin_joint_stock",
@@ -337,6 +346,7 @@
   "id": "exp_transplant_botany",
   "name": "Transplanting a crop out of its homeland",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_trade_route_extend",
    "crop_rotation",
@@ -371,6 +381,7 @@
   "id": "exp_conquest_resource",
   "name": "Take the source by force",
   "cat": "expedition",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "exp_colony_administration",
    "mil_matchlock",

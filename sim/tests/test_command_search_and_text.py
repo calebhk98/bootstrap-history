@@ -121,8 +121,8 @@ _goals = subprocess.run([sys.executable, _SIMULATOR, "goals"], capture_output=Tr
                         cwd=ROOT).stdout
 check("236.1: the epidemic goal does not call 85 per cent four-fifths",
       "four-fifths" not in _goals, _goals[:600])
-with open(os.path.join(ROOT, "data", "tech_tree.json"), encoding="utf-8") as _handle:
-    _tree_text = _handle.read()
+from sim.engine.tree_source import load_base_tree as _load_base_tree
+_tree_text = json.dumps(_load_base_tree())
 check("236.2: the algebra note's sentence matches its equation",
       "add 5 and triple it" not in _tree_text and "triple it and add 5" in _tree_text)
 _text = _play("han_china_100ad", ["available", "labour laborer", "help commands"])

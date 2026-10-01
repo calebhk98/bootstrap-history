@@ -2168,7 +2168,7 @@ class Sim(MechanicsMixin, EconomyMixin, FogMixin, GeographyMixin, LabourMixin,
     # ---- THRESHOLD GOALS: completed by measurement, not by labour ---------
     # A goal need not be a thing you build. "Raise literacy past a fifth" or
     # "cut most of what epidemics take" are states of the whole
-    # society, not a project with hours and materials - see data/tech_tree.json
+    # society, not a project with hours and materials - see data/branches/
     # meta.goals and its own note on why a threshold is still modelled as a
     # node (so closure()/critical_path()/Sim.run() never need a second idea
     # of what a goal is) rather than as a second mechanism bolted on beside

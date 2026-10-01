@@ -3,6 +3,7 @@
   "id": "ag2_coulter",
   "name": "Coulter",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar"
   ],
@@ -34,6 +35,7 @@
   "id": "ag2_ridging_plough",
   "name": "Ridging plough",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_coulter",
    "horse_collar"
@@ -66,6 +68,7 @@
   "id": "ag2_subsoiler",
   "name": "Subsoiler",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar"
   ],
@@ -97,6 +100,7 @@
   "id": "ag2_harrow",
   "name": "Harrow",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar"
   ],
@@ -129,6 +133,7 @@
   "id": "ag2_roller",
   "name": "Roller",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar"
   ],
@@ -161,6 +166,7 @@
   "id": "ag2_cultivator",
   "name": "Cultivator",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar"
   ],
@@ -192,6 +198,7 @@
   "id": "ag2_horse_hoe",
   "name": "Horse hoe",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "ag2_cultivator",
@@ -261,6 +268,7 @@
   "id": "ag2_reaper",
   "name": "Reaper",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "screw_lathe"
@@ -301,6 +309,7 @@
   "id": "ag2_reaper_binder",
   "name": "Reaper-binder",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_reaper"
   ],
@@ -334,6 +343,7 @@
   "id": "ag2_combine_harvester",
   "name": "Combine harvester",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_reaper_binder",
    "ag2_threshing_machine",
@@ -387,6 +397,7 @@
   "id": "ag2_mower",
   "name": "Mower",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_reaper",
    "horse_collar"
@@ -421,6 +432,7 @@
   "id": "ag2_tedder",
   "name": "Tedder",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar"
   ],
@@ -452,6 +464,7 @@
   "id": "ag2_baler",
   "name": "Baler",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure"
   ],
@@ -495,6 +508,7 @@
   "id": "ag2_threshing_machine",
   "name": "Threshing machine",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "crank_conrod",
@@ -542,6 +556,7 @@
   "id": "ag2_winnower",
   "name": "Winnower",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_threshing_machine"
   ],
@@ -583,6 +598,7 @@
   "id": "ag2_fanning_mill",
   "name": "Fanning mill",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_winnower",
    "ag2_threshing_machine"
@@ -627,6 +643,7 @@
   "id": "ag2_root_cutter",
   "name": "Root cutter",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar"
   ],
@@ -658,6 +675,7 @@
   "id": "ag2_chaff_cutter",
   "name": "Chaff cutter",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving"
@@ -687,6 +705,7 @@
   "id": "ag2_potato_lifter",
   "name": "Potato lifter",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "ag2_ridging_plough"
@@ -719,6 +738,7 @@
   "id": "ag2_tractor_steam",
   "name": "Steam tractor",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure"
   ],
@@ -787,6 +807,7 @@
   "id": "ag2_power_take_off",
   "name": "Power take-off shaft",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_tractor_steam",
    "crank_conrod"
@@ -822,6 +843,7 @@
   "id": "ag2_three_point_linkage",
   "name": "Three-point linkage",
   "cat": "field_machinery",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_tractor_steam",
    "ag2_power_take_off"
@@ -857,6 +879,7 @@
   "id": "ag2_liming",
   "name": "Liming",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -886,6 +909,7 @@
   "id": "ag2_marling",
   "name": "Marling",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -915,6 +939,7 @@
   "id": "ag2_green_manure",
   "name": "Green manure",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -944,6 +969,7 @@
   "id": "ag2_composting",
   "name": "Composting",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -971,6 +997,7 @@
   "id": "ag2_nitrogen_cycle",
   "name": "The nitrogen cycle as knowledge",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "scientific_method"
   ],
@@ -1000,6 +1027,7 @@
   "id": "ag2_rhizobia",
   "name": "Rhizobia and legume nodulation",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_nitrogen_cycle",
    "microscope_compound"
@@ -1030,6 +1058,7 @@
   "id": "ag2_norfolk_course",
   "name": "Norfolk four-course rotation",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -1057,6 +1086,7 @@
   "id": "ag2_bone_meal",
   "name": "Bone meal",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "charcoal_industrial"
   ],
@@ -1121,6 +1151,7 @@
   "id": "ag2_basic_slag",
   "name": "Basic slag",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel"
   ],
@@ -1152,6 +1183,7 @@
   "id": "ag2_potash",
   "name": "Potash",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -1181,6 +1213,7 @@
   "id": "ag2_guano",
   "name": "Guano",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_guano_deposit_access"
   ],
@@ -1211,6 +1244,7 @@
   "id": "ag2_gasworks_ammonia",
   "name": "Ammonium sulphate from gasworks",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "coal_coke",
    "sulfuric_retort"
@@ -1241,6 +1275,7 @@
   "id": "ag2_urea",
   "name": "Urea as fertiliser",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "chm_haber_bosch",
    "ch2_prod_urea"
@@ -1283,6 +1318,7 @@
   "id": "ag2_soil_testing",
   "name": "Soil testing",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1312,6 +1348,7 @@
   "id": "ag2_tile_drainage",
   "name": "Tile drainage",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar"
   ],
@@ -1344,6 +1381,7 @@
   "id": "ag2_gravity_irrigation",
   "name": "Gravity and pump irrigation",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "water_power_scale"
   ],
@@ -1388,6 +1426,7 @@
   "id": "ag2_terracing",
   "name": "Terracing",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure",
@@ -1424,6 +1463,7 @@
   "id": "ag2_contour_ploughing",
   "name": "Contour ploughing",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar"
   ],
@@ -1452,6 +1492,7 @@
   "id": "ag2_erosion_control",
   "name": "Erosion control - wind breaks and mulch",
   "cat": "soil",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -1481,6 +1522,7 @@
   "id": "ag2_record_keeping_breeding",
   "name": "Record-keeping and breeding selection",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "scientific_method"
   ],
@@ -1510,6 +1552,7 @@
   "id": "ag2_controlled_pollination",
   "name": "Controlled pollination",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_record_keeping_breeding",
    "fud_selective_breeding_pedigree"
@@ -1540,6 +1583,7 @@
   "id": "ag2_hybridisation",
   "name": "Hybridisation",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_controlled_pollination"
   ],
@@ -1569,6 +1613,7 @@
   "id": "ag2_hybrid_maize",
   "name": "Hybrid maize",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_hybridisation",
    "ag2_pure_line_selection"
@@ -1599,6 +1644,7 @@
   "id": "ag2_pure_line_selection",
   "name": "Pure line selection",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_record_keeping_breeding"
   ],
@@ -1628,6 +1674,7 @@
   "id": "ag2_seed_trade",
   "name": "The seed trade",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_record_keeping_breeding"
   ],
@@ -1658,6 +1705,7 @@
   "id": "ag2_seed_certification",
   "name": "Seed certification",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_seed_trade",
    "ag2_soil_testing"
@@ -1689,6 +1737,7 @@
   "id": "ag2_grafting",
   "name": "Grafting",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving"
@@ -1716,6 +1765,7 @@
   "id": "ag2_budding",
   "name": "Budding",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_grafting"
   ],
@@ -1745,6 +1795,7 @@
   "id": "ag2_layering",
   "name": "Layering",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving"
@@ -1772,6 +1823,7 @@
   "id": "ag2_rootstocks",
   "name": "Rootstocks as knowledge",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_grafting"
   ],
@@ -1801,6 +1853,7 @@
   "id": "ag2_plant_quarantine",
   "name": "Plant quarantine",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis",
    "scientific_method"
@@ -1832,6 +1885,7 @@
   "id": "ag2_botanic_garden",
   "name": "Botanic garden as instrument of empire",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "information",
@@ -1861,6 +1915,7 @@
   "id": "ag2_wardian_case",
   "name": "The Wardian case",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "glass_clear",
    "glass_labware"
@@ -1894,6 +1949,7 @@
   "id": "ag2_sugar_voyage",
   "name": "Sugar cultivation after voyage",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "exp_trade_route_extend"
   ],
@@ -1922,6 +1978,7 @@
   "id": "ag2_tea_voyage",
   "name": "Tea cultivation after voyage",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_botanic_garden"
   ],
@@ -1951,6 +2008,7 @@
   "id": "ag2_coffee_voyage",
   "name": "Coffee cultivation after voyage",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "exp_trade_route_extend"
   ],
@@ -1980,6 +2038,7 @@
   "id": "ag2_potato_newworld",
   "name": "Potato from the New World",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "exp_atlantic_crossing"
   ],
@@ -2007,6 +2066,7 @@
   "id": "ag2_maize_newworld",
   "name": "Maize from the New World",
   "cat": "plants",
+  "kind": "ENGINEERING",
   "pre": [
    "exp_atlantic_crossing"
   ],
@@ -2034,6 +2094,7 @@
   "id": "ag2_bordeaux_mixture",
   "name": "Bordeaux mixture",
   "cat": "pests",
+  "kind": "ENGINEERING",
   "pre": [
    "sulfuric_retort",
    "mat_copper"
@@ -2068,6 +2129,7 @@
   "id": "ag2_lime_sulphur",
   "name": "Lime sulphur",
   "cat": "pests",
+  "kind": "ENGINEERING",
   "pre": [
    "sulfuric_retort",
    "mat_lime"
@@ -2102,6 +2164,7 @@
   "id": "ag2_lead_arsenate",
   "name": "Lead arsenate",
   "cat": "pests",
+  "kind": "ENGINEERING",
   "pre": [
    "lead_metallurgy"
   ],
@@ -2135,6 +2198,7 @@
   "id": "ag2_nicotine_pesticide",
   "name": "Nicotine as pesticide",
   "cat": "pests",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "food",
@@ -2165,6 +2229,7 @@
   "id": "ag2_pyrethrum",
   "name": "Pyrethrum",
   "cat": "pests",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_pyrethrum_stock"
   ],
@@ -2195,6 +2260,7 @@
   "id": "ag2_ddt",
   "name": "DDT",
   "cat": "pests",
+  "kind": "ENGINEERING",
   "pre": [
    "ch2_rxn_halogenation",
    "chm_benzene",
@@ -2231,6 +2297,7 @@
   "id": "ag2_sprayer",
   "name": "The sprayer",
   "cat": "pests",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_horse_hoe"
   ],
@@ -2274,6 +2341,7 @@
   "id": "ag2_biological_control",
   "name": "Biological control",
   "cat": "pests",
+  "kind": "ENGINEERING",
   "pre": [
    "scientific_method"
   ],
@@ -2304,6 +2372,7 @@
   "id": "ag2_resistant_variety",
   "name": "The resistant variety",
   "cat": "pests",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_record_keeping_breeding"
   ],
@@ -2334,6 +2403,7 @@
   "id": "ag2_herd_book",
   "name": "Herd book",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_record_keeping_breeding"
   ],
@@ -2364,6 +2434,7 @@
   "id": "ag2_progeny_testing",
   "name": "Progeny testing",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_herd_book"
   ],
@@ -2391,6 +2462,7 @@
   "id": "ag2_milking_machine",
   "name": "Milking machine",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [
    "vacuum_pumps",
    "crank_conrod",
@@ -2436,6 +2508,7 @@
   "id": "ag2_cream_separator",
   "name": "Cream separator",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [],
   "req_any": [
    {
@@ -2475,6 +2548,7 @@
   "id": "ag2_artificial_insemination",
   "name": "Artificial insemination in cattle",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_progeny_testing",
    "germ_theory"
@@ -2505,6 +2579,7 @@
   "id": "ag2_silage_silo",
   "name": "Silage and the silo",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving",
@@ -2544,6 +2619,7 @@
   "id": "ag2_balanced_ration",
   "name": "Balanced ration",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2574,6 +2650,7 @@
   "id": "ag2_veterinary_vaccination",
   "name": "Veterinary vaccination",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory"
   ],
@@ -2604,6 +2681,7 @@
   "id": "ag2_tuberculin_test",
   "name": "Cattle tuberculin test",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory",
    "md2_immunity",
@@ -2636,6 +2714,7 @@
   "id": "ag2_sheep_dip",
   "name": "Sheep dip",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_nicotine_pesticide"
   ],
@@ -2668,6 +2747,7 @@
   "id": "ag2_battery_poultry",
   "name": "Battery poultry",
   "cat": "animals",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_balanced_ration"
   ],
@@ -2742,6 +2822,7 @@
   "id": "ag2_purifier",
   "name": "The purifier",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_roller_mill"
   ],
@@ -2773,6 +2854,7 @@
   "id": "ag2_white_flour_loss",
   "name": "White flour and vitamin loss",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_purifier"
   ],
@@ -2803,6 +2885,7 @@
   "id": "ag2_yeast_culture",
   "name": "Yeast culture",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "microscope_compound"
   ],
@@ -2833,6 +2916,7 @@
   "id": "ag2_malting",
   "name": "Malting",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "food"
@@ -2860,6 +2944,7 @@
   "id": "ag2_mashing",
   "name": "Mashing",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_malting"
   ],
@@ -2889,6 +2974,7 @@
   "id": "ag2_hopping",
   "name": "Hopping",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_hop_stock",
    "ag2_malting"
@@ -2921,6 +3007,7 @@
   "id": "ag2_fermentation_control",
   "name": "Fermentation control",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_yeast_culture",
    "thermometer"
@@ -2952,6 +3039,7 @@
   "id": "ag2_hydrometer",
   "name": "The hydrometer",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "information"
@@ -2981,6 +3069,7 @@
   "id": "ag2_pot_still",
   "name": "Pot still distillation",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol"
   ],
@@ -3013,6 +3102,7 @@
   "id": "ag2_column_still",
   "name": "Column still",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_pot_still",
    "crank_conrod"
@@ -3056,6 +3146,7 @@
   "id": "ag2_cheese_families",
   "name": "Cheese families",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "food"
@@ -3081,6 +3172,7 @@
   "id": "ag2_butter",
   "name": "Butter",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_cream_separator"
   ],
@@ -3108,6 +3200,7 @@
   "id": "ag2_condensed_milk",
   "name": "Condensed milk",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_vacuum_pan",
    "ag2_pasteurisation"
@@ -3141,6 +3234,7 @@
   "id": "ag2_evaporated_milk",
   "name": "Evaporated milk",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_vacuum_pan"
   ],
@@ -3171,6 +3265,7 @@
   "id": "ag2_oil_pressing",
   "name": "Oil pressing",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "food"
@@ -3200,6 +3295,7 @@
   "id": "ag2_fat_hydrogenation",
   "name": "Fat hydrogenation",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ch2_rxn_catalytic_hydrogenation",
    "mat_nickel"
@@ -3234,6 +3330,7 @@
   "id": "ag2_sugar_refining",
   "name": "Cane and beet sugar refining",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_vacuum_pan"
   ],
@@ -3263,6 +3360,7 @@
   "id": "ag2_vacuum_pan",
   "name": "Vacuum pan for sugar",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_watt",
    "thermometer"
@@ -3295,6 +3393,7 @@
   "id": "ag2_centrifugal_sugar",
   "name": "The centrifugal machine for sugar",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_sugar_voyage"
   ],
@@ -3326,6 +3425,7 @@
   "id": "ag2_canning",
   "name": "Canning",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_retort"
   ],
@@ -3356,6 +3456,7 @@
   "id": "ag2_retort",
   "name": "The retort",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure"
   ],
@@ -3387,6 +3488,7 @@
   "id": "ag2_double_seam_can",
   "name": "Double seam can",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "met_tin_plate"
   ],
@@ -3418,6 +3520,7 @@
   "id": "ag2_bottling",
   "name": "Bottling",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "glass_clear"
   ],
@@ -3448,6 +3551,7 @@
   "id": "ag2_crown_cork",
   "name": "Crown cork",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "met_tin_plate"
   ],
@@ -3479,6 +3583,7 @@
   "id": "ag2_pasteurisation",
   "name": "Pasteurisation",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "thermometer",
    "steam_high_pressure",
@@ -3514,6 +3619,7 @@
   "id": "ag2_refrigeration_ice",
   "name": "Refrigeration - ice trade",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_ice_harvesting_and_cutting"
   ],
@@ -3542,6 +3648,7 @@
   "id": "ag2_cold_store",
   "name": "Cold store",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_ice_artificial",
    "cn_insulation"
@@ -3587,6 +3694,7 @@
   "id": "ag2_refrigerated_ship",
   "name": "Refrigerated ship",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_cold_store",
    "steam_high_pressure"
@@ -3630,6 +3738,7 @@
   "id": "ag2_nitrite_curing",
   "name": "Nitrite curing",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "food"
@@ -3657,6 +3766,7 @@
   "id": "ag2_food_laboratory",
   "name": "Food laboratory and testing",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -3686,6 +3796,7 @@
   "id": "ag2_adulteration_law",
   "name": "Adulteration law and enforcement",
   "cat": "processing",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_food_laboratory"
   ],

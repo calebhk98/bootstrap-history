@@ -3,6 +3,7 @@
   "id": "gp_carbon_brushes",
   "name": "Carbon and graphite brush contacts",
   "cat": "electrical",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100"
   ],
@@ -37,6 +38,7 @@
   "id": "gp_laminated_core",
   "name": "Laminated iron core",
   "cat": "electrical",
+  "kind": "ENGINEERING",
   "pre": [
    "cementation_steel",
    "cap_tol_100um"
@@ -73,6 +75,7 @@
   "id": "gp_magnet_wire_enamelled",
   "name": "Enamelled magnet wire",
   "cat": "electrical",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining"
   ],
@@ -109,6 +112,7 @@
   "id": "gp_glass_metal_seal",
   "name": "Glass to metal vacuum seal",
   "cat": "electrical",
+  "kind": "ENGINEERING",
   "pre": [
    "glass_clear",
    "cap_tol_100um"
@@ -158,6 +162,7 @@
   "id": "gp_getter",
   "name": "Chemical getter",
   "cat": "electrical",
+  "kind": "ENGINEERING",
   "pre": [
    "el2_induction_heating_inductor_coupling",
    "glass_clear"
@@ -200,6 +205,7 @@
   "id": "gp_exhaust_pinchoff",
   "name": "Exhaust and pinch-off technique",
   "cat": "electrical",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_vac_1e6",
    "cap_heat_2000"
@@ -233,6 +239,7 @@
   "id": "gp_controlled_atmosphere_chamber",
   "name": "Controlled atmosphere furnace chamber",
   "cat": "semiconductor",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_vac_1torr",
    "fused_quartz",
@@ -277,6 +284,7 @@
   "id": "gp_czochralski_puller",
   "name": "Seed-and-pull crystal grower",
   "cat": "semiconductor",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "motor_transformer_ac"
@@ -312,6 +320,7 @@
   "id": "gp_whisker_forming",
   "name": "Point contact whisker forming",
   "cat": "semiconductor",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "daniell_cell",

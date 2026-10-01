@@ -3,6 +3,7 @@
   "id": "met_ore_crushing_sorting",
   "name": "Ore dressing: crushing and hand sorting",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "10_metallurgy.md",
   "ph": 20,
@@ -32,6 +33,7 @@
   "id": "met_fire_assay",
   "name": "Fire assay for ore grade",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "lead_metallurgy"
@@ -75,6 +77,7 @@
   "id": "met_water_ore_stamp",
   "name": "Water-powered ore stamp mill",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water",
    "crank_conrod"
@@ -118,6 +121,7 @@
   "id": "met_jigging_gravity",
   "name": "Jigging and gravity separation",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "met_ore_crushing_sorting",
    "cap_measure_len"
@@ -152,6 +156,7 @@
   "id": "met_roasting_calcining",
   "name": "Roasting and calcining ore",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "charcoal_industrial"
@@ -176,12 +181,14 @@
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Heat ore in an open pile to drive off volatile sulfur and water, and to crack the rock for easier reduction. Many sulfide ores cannot be smelted without roasting first; the roast fumes are toxic. Needs a scholar to understand empirical craft proportion or roasters waste half their ore."
+  "note": "Heat ore in an open pile to drive off volatile sulfur and water, and to crack the rock for easier reduction. Many sulfide ores cannot be smelted without roasting first; the roast fumes are toxic. Needs a scholar to understand empirical craft proportion or roasters waste half their ore.",
+  "_internal": "[FIXED after independent audit: the word stoichiometry is anachronistic for a tier 1 node; Richter is 1792. Ancient roasters worked by craft knowledge.]"
  },
  {
   "id": "met_reverberatory",
   "name": "Reverberatory furnace",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "refractory_fireclay",
@@ -216,6 +223,7 @@
   "id": "met_cupola_furnace",
   "name": "Cupola furnace for iron casting",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "refractory_fireclay",
@@ -247,12 +255,14 @@
   "note": "A small tall furnace that melts scrap and pig iron for casting into sand moulds. Much hotter than an open hearth because the stack draft is strong. The problem is contamination from coke ash unless you use charcoal and then your fuel bill is punishing. Solves small-batch casting need cheaply.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: it was tier 1 while depending on the blast furnace, which is a major independent metallurgical leap.]"
  },
  {
   "id": "met_froth_flotation",
   "name": "Froth flotation ore concentration",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "cap_measure_mass_mg",
@@ -292,6 +302,7 @@
   "id": "met_converter_furnace",
   "name": "Converter furnace for steel",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "met_basic_lining_phosphorus",
@@ -326,12 +337,14 @@
     "bonus": 0.08,
     "order": 6
    }
-  }
+  },
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C]"
  },
  {
   "id": "met_basic_lining_phosphorus",
   "name": "Basic lining and the phosphorus problem",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "analytical_chemistry"
@@ -364,6 +377,7 @@
   "id": "met_open_hearth_furnace",
   "name": "Open hearth furnace and scrap recycling",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "high_temp_furnace",
    "met_reverberatory",
@@ -411,6 +425,7 @@
   "id": "met_continuous_casting",
   "name": "Continuous casting and ingot casting",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "high_temp_furnace",
    "cap_heat_1600"
@@ -447,6 +462,7 @@
   "id": "met_two_high_mill",
   "name": "Two-high rolling mill",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam",
    "cap_heat_1300",
@@ -482,6 +498,7 @@
   "id": "met_three_high_mill",
   "name": "Three-high rolling mill",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "cap_tol_100um",
@@ -521,6 +538,7 @@
   "id": "met_reversing_mill",
   "name": "Reversing rolling mill",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "motor_transformer_ac"
@@ -553,6 +571,7 @@
   "id": "met_section_mill",
   "name": "Section mill for rails and beams",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_three_high_mill",
    "mat_tool_steel_hss"
@@ -584,6 +603,7 @@
   "id": "met_rail_mill",
   "name": "Rail mill production",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "railway"
@@ -619,6 +639,7 @@
   "id": "met_wire_rod_rolling",
   "name": "Wire rod rolling mill",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "cap_power_steam"
@@ -653,6 +674,7 @@
   "id": "met_tube_mill_seamless",
   "name": "Tube mill and seamless tube production",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "met_mannesmann_piercing",
@@ -685,6 +707,7 @@
   "id": "met_mannesmann_piercing",
   "name": "Mannesmann piercing for seamless tube",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "met_two_high_mill",
    "geometry_analytic",
@@ -716,6 +739,7 @@
   "id": "met_drawn_tube",
   "name": "Drawn tube production",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "drawplate_wire",
    "cap_power_water",
@@ -745,12 +769,14 @@
   "note": "Anneal a tube, coat with soap as lubricant, draw it through a die on a water-powered wire draw to reduce diameter and thicken walls uniformly. Much slower than rolling but gives excellent surface finish and precise dimensions. The soaped tube must be perfectly round or it jams in the die. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish]",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish]"
  },
  {
   "id": "met_trip_hammer",
   "name": "Trip hammer and water-driven forge hammer",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water",
    "crank_conrod"
@@ -789,6 +815,7 @@
   "id": "met_drop_hammer",
   "name": "Drop hammer for heavy forging",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water",
    "case_hardening",
@@ -829,6 +856,7 @@
   "id": "met_steam_hammer",
   "name": "Steam hammer for precision forging",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_power_steam",
@@ -861,6 +889,7 @@
   "id": "met_hydraulic_press",
   "name": "Hydraulic press and accumulator",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_power_steam",
@@ -896,12 +925,14 @@
   "note": "A pump driven by steam fills a cylinder with oil; the incompressible oil presses a ram with immense steady force. An accumulator (air-charged vessel) smooths pulsation and stores energy. Pascal's law means a small pump can generate large forces through a large piston. The limit is seal quality and pipe strength; if oil leaks you lose pressure instantly. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining]",
   "traits": [
    "labour_saving"
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining]"
  },
  {
   "id": "met_extrusion_press",
   "name": "Extrusion and the extrusion press",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_hydraulic_press",
    "cap_heat_1300",
@@ -940,6 +971,7 @@
   "id": "met_deep_drawing",
   "name": "Deep drawing and pressing dies",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_hydraulic_press",
    "cap_tol_100um",
@@ -980,6 +1012,7 @@
   "id": "met_green_sand_mold",
   "name": "Green sand molding for casting",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300"
   ],
@@ -1011,6 +1044,7 @@
   "id": "met_dry_sand_mold",
   "name": "Dry sand molding for fine castings",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [
    "met_green_sand_mold",
    "cap_heat_0700"
@@ -1045,6 +1079,7 @@
   "id": "met_investment_casting",
   "name": "Investment casting and lost wax",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "10_metallurgy.md",
   "ph": 100,
@@ -1066,12 +1101,14 @@
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "Carve fine details in wax, embed in clay and sand, fire to melt and drive out the wax, pour molten metal into the cavity. Results in intricate castings with no parting lines. Already established for jewellery wherever fine metalworking exists. For large castings it becomes expensive in wax and labor but the precision is unmatched. The name investment refers to the clay-sand shell that receives the investment."
+  "note": "Carve fine details in wax, embed in clay and sand, fire to melt and drive out the wax, pour molten metal into the cavity. Results in intricate castings with no parting lines. Already established for jewellery wherever fine metalworking exists. For large castings it becomes expensive in wax and labor but the precision is unmatched. The name investment refers to the clay-sand shell that receives the investment.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "met_die_casting",
   "name": "Die casting and hot chamber casting",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [
    "met_hydraulic_press",
    "mat_zinc",
@@ -1107,6 +1144,7 @@
   "id": "met_chill_casting",
   "name": "Chill casting and directional solidification",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [
    "met_green_sand_mold",
    "cap_measure_temp"
@@ -1141,6 +1179,7 @@
   "id": "met_powder_metallurgy",
   "name": "Powder metallurgy and sintering",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "atomic_theory",
    "cap_heat_1600",
@@ -1223,6 +1262,7 @@
   "id": "met_electro_refining",
   "name": "Electro-refining for high-purity copper",
   "cat": "refining",
+  "kind": "ENGINEERING",
   "pre": [
    "electroplating",
    "mat_copper"
@@ -1267,6 +1307,7 @@
   "id": "met_galvanizing",
   "name": "Galvanizing with zinc coating",
   "cat": "surface_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_zinc",
    "zinc_metal",
@@ -1306,12 +1347,14 @@
      "lead_chamber": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: molten zinc is about 450 C, nowhere near a blast furnace. Zinc metal was also listed twice.]"
  },
  {
   "id": "met_tin_plate",
   "name": "Tin plate production",
   "cat": "surface_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "electroplating",
    "mat_tin",
@@ -1351,12 +1394,14 @@
      "lead_chamber": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range]"
  },
  {
   "id": "met_annealing_recrystallization",
   "name": "Annealing and recrystallization",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "cap_measure_temp"
@@ -1387,6 +1432,7 @@
   "id": "met_quenching_media",
   "name": "Quenching media and quench crack prevention",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "case_hardening",
    "cap_measure_temp",
@@ -1418,12 +1464,14 @@
   "traits": [
    "information",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "met_tempering_color",
   "name": "Tempering and temper color chart",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "case_hardening",
    "cap_measure_temp"
@@ -1454,6 +1502,7 @@
   "id": "met_normalizing",
   "name": "Normalizing for uniformity",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "met_annealing_recrystallization",
    "cap_heat_1100"
@@ -1487,6 +1536,7 @@
   "id": "met_phase_diagram_knowledge",
   "name": "Iron-carbon phase diagram as scientific knowledge",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "analytical_chemistry",
    "thermodynamics_theory",
@@ -1518,6 +1568,7 @@
   "id": "met_hardenability_alloys",
   "name": "Hardenability and alloy steel design",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "met_phase_diagram_knowledge",
    "atomic_theory"
@@ -1570,6 +1621,7 @@
   "id": "met_metallography",
   "name": "Metallography: polishing, etching and microscopy",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "microscope_compound",
    "cap_tol_100um",
@@ -1646,6 +1698,7 @@
   "id": "met_hardness_test",
   "name": "Hardness testing and Rockwell scale",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "micrometer_gauges",
    "cap_tol_100um"
@@ -1676,6 +1729,7 @@
   "id": "met_fatigue_testing",
   "name": "Fatigue testing and fracture mechanics",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "mt2_tensile_test",
    "statistics_basic",
@@ -1711,6 +1765,7 @@
   "id": "met_spectroscopic_assay",
   "name": "Spectroscopic assay of metals",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "spectroscope",
    "analytical_chemistry"
@@ -1741,6 +1796,7 @@
   "id": "met_safety_lamps_ventilation",
   "name": "Safety lamps and mine ventilation",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water",
    "cap_heat_0700"
@@ -1776,6 +1832,7 @@
   "id": "met_mine_pumping",
   "name": "Mine pumping systems",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -1818,6 +1875,7 @@
   "id": "met_winding_engine",
   "name": "Winding engine and mine shaft hoisting",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_watt",
    "cap_power_steam"
@@ -1852,6 +1910,7 @@
   "id": "met_black_powder_blasting",
   "name": "Blasting with black powder and dynamite",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "gunpowder",
    "nitre_beds"
@@ -1886,12 +1945,14 @@
     "yield": 1.0,
     "cost": 0.85
    }
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "met_dynamite_blasting",
   "name": "Dynamite and modern explosives",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_nitroglycerin",
    "cap_measure_mass_mg"
@@ -1925,12 +1986,14 @@
     "yield": 1.0,
     "cost": 0.65
    }
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "met_pneumatic_drill",
   "name": "Pneumatic rock drill",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_power_steam"
@@ -1965,6 +2028,7 @@
   "id": "met_deep_shaft_sinking",
   "name": "Deep shaft sinking techniques",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "met_mine_pumping",
    "met_safety_lamps_ventilation"
@@ -2094,6 +2158,7 @@
   "id": "met_acetylene_supply",
   "name": "Acetylene from calcium carbide",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1600",
    "cap_gas_o2h2",
@@ -2133,6 +2198,7 @@
      "chm_alkali_waste": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide at 2000 C in electric furnace; current prerequisite insufficient]"
  }
 ]

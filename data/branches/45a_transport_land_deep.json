@@ -3,6 +3,7 @@
   "id": "tl_horseshoe",
   "name": "Nailed horseshoe",
   "cat": "animal_traction",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "horse_collar"
@@ -78,6 +79,7 @@
   "id": "tl_whippletree",
   "name": "Whippletree and swingletree",
   "cat": "animal_traction",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "mat_wrought_iron"
@@ -123,6 +125,7 @@
   "id": "tl_tandem_harness",
   "name": "Tandem harness for shafts",
   "cat": "animal_traction",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "mat_leather"
@@ -165,6 +168,7 @@
   "id": "tl_stirrup",
   "name": "Stirrup with foot loop",
   "cat": "animal_traction",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "mat_leather",
@@ -204,12 +208,14 @@
      "mat_wrought_iron": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: the horse collar is draught harness and has nothing to do with a mounted rider's balance. The real missing input is a framed saddle.]"
  },
  {
   "id": "tl_spoked_wheel",
   "name": "Improved spoked wheel",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -253,6 +259,7 @@
   "id": "tl_iron_tyre",
   "name": "Iron tyre band",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_spoked_wheel",
    "mat_wrought_iron",
@@ -296,6 +303,7 @@
   "id": "tl_shrink_fit",
   "name": "Shrink-fit tyre assembly",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_iron_tyre",
    "cap_heat_1100"
@@ -358,6 +366,7 @@
   "id": "tl_road_roller",
   "name": "Steam road roller",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "lnd_macadam",
    "steam_high_pressure",
@@ -428,6 +437,7 @@
   "id": "tl_concrete_roadway",
   "name": "Reinforced concrete road",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "mat_concrete_reinforced"
   ],
@@ -460,6 +470,7 @@
   "id": "tl_cambered_drainage",
   "name": "Cambered road and drainage",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -487,6 +498,7 @@
   "id": "tl_kerbing",
   "name": "Kerb and gutter edge",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -516,6 +528,7 @@
   "id": "tl_level_crossing",
   "name": "Level crossing: road and rail",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "railway"
   ],
@@ -547,6 +560,7 @@
   "id": "tl_plain_bearing",
   "name": "Plain journal bearing",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bronze"
   ],
@@ -586,6 +600,7 @@
   "id": "tl_roller_bearing",
   "name": "Roller bearing: cylindrical",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -617,6 +632,7 @@
   "id": "tl_ball_bearing",
   "name": "Ball bearing: spherical",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "cap_heat_1100",
@@ -645,12 +661,14 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Steel balls in a cage roll between races. Reduces friction in wheel hubs and pedal cranks by 90 percent. Makes the bicycle practical and comfortable for long rides."
+  "note": "Steel balls in a cage roll between races. Reduces friction in wheel hubs and pedal cranks by 90 percent. Makes the bicycle practical and comfortable for long rides.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_taper_roller_bearing",
   "name": "Taper roller bearing",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_ball_bearing",
    "cap_tol_10um"
@@ -683,6 +701,7 @@
   "id": "tl_grease_cup",
   "name": "Grease cup with screw plunger",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -722,6 +741,7 @@
   "id": "tl_oil_bath",
   "name": "Oil bath: submerged bearing",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_ball_bearing",
    "mat_olive_oil"
@@ -754,6 +774,7 @@
   "id": "tl_leaf_spring",
   "name": "Leaf spring: stacked flat",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -795,6 +816,7 @@
   "id": "tl_elliptic_spring",
   "name": "Elliptic spring: single curved",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_leaf_spring",
    "cap_heat_1100"
@@ -827,6 +849,7 @@
   "id": "tl_coil_spring",
   "name": "Coil spring: helical wire",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "cap_tol_1mm"
@@ -869,6 +892,7 @@
   "id": "tl_friction_damper",
   "name": "Friction damper: sliding block",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_coil_spring"
   ],
@@ -901,6 +925,7 @@
   "id": "tl_hydraulic_shock",
   "name": "Hydraulic shock absorber",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_coil_spring",
    "cap_tol_10um"
@@ -933,6 +958,7 @@
   "id": "tl_fifth_wheel",
   "name": "Fifth wheel coupling",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "tl_ball_bearing"
@@ -1003,6 +1029,7 @@
   "id": "tl_kingpin",
   "name": "Kingpin and steering arm",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "tl_ball_bearing"
@@ -1043,6 +1070,7 @@
   "id": "tl_brake_shoe",
   "name": "Brake shoe: curved pad",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron",
    "cap_tol_1mm",
@@ -1087,6 +1115,7 @@
   "id": "tl_drum_brake",
   "name": "Drum brake: shoes in cylinder",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_brake_shoe",
    "mat_cast_iron"
@@ -1130,6 +1159,7 @@
   "id": "tl_disc_brake",
   "name": "Disc brake: pad on disk",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel"
@@ -1172,6 +1202,7 @@
   "id": "tl_hydraulic_brake_line",
   "name": "Hydraulic brake line and cylinder",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "mat_bulk_steel"
@@ -1214,6 +1245,7 @@
   "id": "tl_handbrake",
   "name": "Handbrake: lever and cable",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -1256,6 +1288,7 @@
   "id": "tl_differential",
   "name": "Differential: bevel gears",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_wrought_iron",
@@ -1299,12 +1332,14 @@
      "mat_wrought_iron": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_live_axle",
   "name": "Live axle: powered driving",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_differential"
   ],
@@ -1336,6 +1371,7 @@
   "id": "tl_dead_axle",
   "name": "Dead axle: non-driven",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -1375,6 +1411,7 @@
   "id": "tl_universal_joint",
   "name": "Universal joint: Cardan shaft",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_wrought_iron"
@@ -1417,6 +1454,7 @@
   "id": "tl_propshaft",
   "name": "Propshaft: transmission shaft",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_universal_joint",
    "cap_tol_100um"
@@ -1449,6 +1487,7 @@
   "id": "tl_velocipede",
   "name": "Velocipede: pedal-driven wheel",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_spoked_wheel",
    "cap_tol_1mm"
@@ -1482,6 +1521,7 @@
   "id": "tl_penny_farthing",
   "name": "Penny-farthing: large wheel",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_velocipede",
    "cap_tol_100um",
@@ -1515,12 +1555,14 @@
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Huge front wheel, tiny back wheel. Higher wheel passes obstacles; one turn of the crank moves you further. Unstable and dangerous but fast. Rider height makes it impractical for most."
+  "note": "Huge front wheel, tiny back wheel. Higher wheel passes obstacles; one turn of the crank moves you further. Unstable and dangerous but fast. Rider height makes it impractical for most.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_chain_drive",
   "name": "Chain drive: roller chain",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_wrought_iron"
@@ -1563,6 +1605,7 @@
   "id": "tl_safety_bicycle",
   "name": "Safety bicycle: chain-driven",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_chain_drive",
    "tl_ball_bearing",
@@ -1597,12 +1640,14 @@
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Equal-size wheels with chain drive; seat low and central. The chain and the differential-free rear drive are the inventions. Safe, stable, and fast. Modern bicycle geometry."
+  "note": "Equal-size wheels with chain drive; seat low and central. The chain and the differential-free rear drive are the inventions. Safe, stable, and fast. Modern bicycle geometry.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_freewheel",
   "name": "Freewheel: ratchet hub",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_safety_bicycle",
    "cap_tol_100um"
@@ -1635,6 +1680,7 @@
   "id": "tl_derailleur",
   "name": "Derailleur: chain shifter",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_freewheel",
    "cap_tol_10um"
@@ -1667,6 +1713,7 @@
   "id": "tl_hub_gear",
   "name": "Hub gear: internal speeds",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_freewheel",
    "cap_tol_10um"
@@ -1699,6 +1746,7 @@
   "id": "tl_caliper_brake",
   "name": "Caliper brake: side-pull",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_safety_bicycle",
    "cap_tol_100um"
@@ -1731,6 +1779,7 @@
   "id": "tl_carburettor",
   "name": "Carburettor: fuel atomiser",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel",
@@ -1772,12 +1821,14 @@
      "mat_wrought_iron": 0.7
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_throttle",
   "name": "Throttle valve: fuel control",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_carburettor"
   ],
@@ -1809,6 +1860,7 @@
   "id": "tl_magneto_ignition",
   "name": "Magneto ignition: coil armature",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_time_ms",
    "cap_heat_1100"
@@ -1841,6 +1893,7 @@
   "id": "tl_coil_ignition",
   "name": "Coil ignition: battery and breaker",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "cap_measure_time_ms"
@@ -1873,6 +1926,7 @@
   "id": "tl_spark_plug",
   "name": "Spark plug: electrode gap",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "mat_porcelain",
@@ -1914,12 +1968,14 @@
      "mat_platinum_bulk": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_distributor",
   "name": "Distributor: switching contacts",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_spark_plug",
    "cap_tol_100um"
@@ -1952,6 +2008,7 @@
   "id": "tl_electric_starter",
   "name": "Electric starter motor",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric"
   ],
@@ -2013,6 +2070,7 @@
   "id": "tl_radiator",
   "name": "Radiator: water cooler",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_brass",
@@ -2059,6 +2117,7 @@
   "id": "tl_water_pump",
   "name": "Water pump: centrifugal",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_cast_iron"
@@ -2102,6 +2161,7 @@
   "id": "tl_thermostat",
   "name": "Thermostat: temperature valve",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_temp",
    "mat_wrought_iron"
@@ -2144,6 +2204,7 @@
   "id": "tl_fan_belt",
   "name": "Fan belt and pulley drive",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_water_pump",
    "mat_rubber_coagulated",
@@ -2177,6 +2238,7 @@
   "id": "tl_cone_clutch",
   "name": "Cone clutch: friction surface",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_bronze"
@@ -2219,6 +2281,7 @@
   "id": "tl_plate_clutch",
   "name": "Plate clutch: disk friction",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_cast_iron"
@@ -2262,6 +2325,7 @@
   "id": "tl_sliding_gearbox",
   "name": "Sliding gearbox: mesh shift",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_cast_iron"
@@ -2305,6 +2369,7 @@
   "id": "tl_synchromesh",
   "name": "Synchromesh: synchronizer ring",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_sliding_gearbox",
    "cap_tol_10um"
@@ -2337,6 +2402,7 @@
   "id": "tl_epicyclic_gearbox",
   "name": "Epicyclic gearbox: planetary",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_cast_iron"
@@ -2380,6 +2446,7 @@
   "id": "tl_automatic_transmission",
   "name": "Automatic transmission: hydraulic",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_epicyclic_gearbox",
    "cap_tol_10um"
@@ -2412,6 +2479,7 @@
   "id": "tl_fuel_pump",
   "name": "Fuel pump: mechanical",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "cap_tol_100um"
@@ -2444,6 +2512,7 @@
   "id": "tl_oil_pump",
   "name": "Oil pump: pressure lubrication",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "cap_tol_100um"
@@ -2476,6 +2545,7 @@
   "id": "tl_air_filter",
   "name": "Air filter: intake cleaning",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "86_transport_deep.md#tl_carburettor",
@@ -2503,6 +2573,7 @@
   "id": "tl_muffler",
   "name": "Muffler: silencer pipe",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron",
    "mfg_hot_riveting"
@@ -2546,6 +2617,7 @@
   "id": "tl_windscreen_wiper",
   "name": "Windscreen wiper: mechanical",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "mat_rubber_coagulated",
@@ -2579,6 +2651,7 @@
   "id": "tl_headlamp",
   "name": "Headlamp: electric light",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "arc_light_lamp"
@@ -2611,6 +2684,7 @@
   "id": "tl_indicator",
   "name": "Indicator light: direction signal",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric"
   ],
@@ -2642,6 +2716,7 @@
   "id": "tl_omnibus",
   "name": "Omnibus: passenger coach",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "tl_elliptic_spring",
@@ -2680,12 +2755,14 @@
   "sch": 50,
   "art": 4,
   "conf": "B",
-  "note": "Coach carrying multiple paying passengers on a fixed route. Cheaper than hiring a private carriage. Operates on schedule and shares capacity with strangers."
+  "note": "Coach carrying multiple paying passengers on a fixed route. Cheaper than hiring a private carriage. Operates on schedule and shares capacity with strangers.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_horse_tram",
   "name": "Tram: horse-drawn",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_omnibus",
    "railway"
@@ -2721,6 +2798,7 @@
   "id": "tl_steam_tram",
   "name": "Tram: steam-powered",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_horse_tram",
    "steam_high_pressure"
@@ -2756,6 +2834,7 @@
   "id": "tl_electric_tram",
   "name": "Tram: electric powered",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "power_grid",
    "tl_motor_dc"
@@ -2790,6 +2869,7 @@
   "id": "tl_trolleybus",
   "name": "Trolleybus: electric bus",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_electric_tram",
    "tl_omnibus"
@@ -2824,6 +2904,7 @@
   "id": "tl_motor_lorry",
   "name": "Motor lorry: gasoline truck",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_carburettor",
    "tl_coil_ignition",
@@ -2859,6 +2940,7 @@
   "id": "tl_articulated_trailer",
   "name": "Articulated trailer: semi-trailer",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_fifth_wheel",
    "tl_motor_lorry"
@@ -2894,6 +2976,7 @@
   "id": "tl_tractor",
   "name": "Tractor: agricultural motorvehicle",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_carburettor",
    "tl_ball_bearing",
@@ -2934,6 +3017,7 @@
   "id": "tl_caterpillar_track",
   "name": "Caterpillar track: endless belt",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_wrought_iron",
@@ -2986,6 +3070,7 @@
   "id": "tl_half_track",
   "name": "Half-track vehicle",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_caterpillar_track",
    "tl_motor_lorry",
@@ -3022,6 +3107,7 @@
   "id": "tl_motorcycle",
   "name": "Motorcycle: two-wheeled motor",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_safety_bicycle",
    "tl_carburettor"
@@ -3055,6 +3141,7 @@
   "id": "tl_snow_plough",
   "name": "Snow plough: powered blade",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_motor_lorry"
   ],
@@ -3087,6 +3174,7 @@
   "id": "tl_pneumatic_tyre",
   "name": "Pneumatic tyre: air-filled",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_pure_2N",
    "cap_heat_1100",
@@ -3117,12 +3205,14 @@
   "sch": 50,
   "art": 4,
   "conf": "B",
-  "note": "REQUIRES NATURAL RUBBER, reachable only through the West African coastal expedition branch (see mat_natural_rubber, exp_coastal_africa): rubber is not native to the Mediterranean, Scandinavia, North China or England, and the Hevea of the New World is not reachable at all without an Atlantic crossing - but the Landolphia and Funtumia vines of West and Central Africa are real rubber, reachable by coastal sailing, which is the route this node actually uses. Air-filled tube and tyre absorb shocks perfectly. Solid rubber or leather tyre is a poor substitute: rides are harsh and efficiency is lost. This is an honest limitation."
+  "note": "REQUIRES NATURAL RUBBER, reachable only through the West African coastal expedition branch (see mat_natural_rubber, exp_coastal_africa): rubber is not native to the Mediterranean, Scandinavia, North China or England, and the Hevea of the New World is not reachable at all without an Atlantic crossing - but the Landolphia and Funtumia vines of West and Central Africa are real rubber, reachable by coastal sailing, which is the route this node actually uses. Air-filled tube and tyre absorb shocks perfectly. Solid rubber or leather tyre is a poor substitute: rides are harsh and efficiency is lost. This is an honest limitation.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_inner_tube",
   "name": "Inner tube: rubber bladder",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_pneumatic_tyre"
   ],
@@ -3154,6 +3244,7 @@
   "id": "tl_tyre_bead",
   "name": "Tyre bead: rim seat",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_pneumatic_tyre",
    "cap_tol_1mm"
@@ -3186,6 +3277,7 @@
   "id": "tl_tyre_tread",
   "name": "Tyre tread pattern",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_pneumatic_tyre",
    "cap_heat_1100"
@@ -3216,6 +3308,7 @@
   "id": "tl_solid_rubber_tyre",
   "name": "Solid rubber tyre",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_natural_rubber",
    "tl_vulcanized_rubber"
@@ -3248,6 +3341,7 @@
   "id": "tl_motor_dc",
   "name": "DC electric motor",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "electromagnet"
@@ -3281,6 +3375,7 @@
   "id": "tl_wire_spoke_wheel",
   "name": "Wire spoke wheel",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_spoked_wheel",
    "cap_tol_100um"
@@ -3314,6 +3409,7 @@
   "id": "tl_vulcanized_rubber",
   "name": "Vulcanized rubber",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_sulfur",
    "cap_heat_1100",
@@ -3348,6 +3444,7 @@
   "id": "tl_connecting_rod",
   "name": "Connecting rod: piston link",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel"
@@ -3390,6 +3487,7 @@
   "id": "tl_piston_assembly",
   "name": "Piston with rings",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_cast_iron"
@@ -3433,6 +3531,7 @@
   "id": "tl_intake_valve",
   "name": "Intake valve with cam",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel"
@@ -3475,6 +3574,7 @@
   "id": "tl_exhaust_valve",
   "name": "Exhaust valve with spring",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_intake_valve",
    "cap_heat_1300"
@@ -3507,6 +3607,7 @@
   "id": "tl_carbide_lamp",
   "name": "Carbide headlamp",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2"
   ],
@@ -3568,6 +3669,7 @@
   "id": "tl_engine_block",
   "name": "Engine block: cast cylinder",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron",
    "cap_heat_1600"
@@ -3612,6 +3714,7 @@
   "id": "tl_cooling_fan",
   "name": "Cooling fan: mechanical drive",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_radiator"
   ],
@@ -3643,6 +3746,7 @@
   "id": "tl_pressure_relief_valve",
   "name": "Pressure relief valve: oil system",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_oil_pump"
   ],
@@ -3674,6 +3778,7 @@
   "id": "tl_cam_follower",
   "name": "Cam follower and tappet",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel"
@@ -3716,6 +3821,7 @@
   "id": "tl_ignition_timing",
   "name": "Ignition timing advance mechanism",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_magneto_ignition",
    "cap_measure_time_ms"
@@ -3748,6 +3854,7 @@
   "id": "tl_transmission_lubrication",
   "name": "Transmission oil sump and drain",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -3788,6 +3895,7 @@
   "id": "tl_wire_rope_brake",
   "name": "Wire rope brake cable",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -3827,6 +3935,7 @@
   "id": "tl_anti_siphon_valve",
   "name": "Anti-siphon valve in fuel line",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_fuel_pump"
   ],
