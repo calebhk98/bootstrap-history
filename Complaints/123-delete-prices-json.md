@@ -1,6 +1,6 @@
 # Deleting `data/prices.json`
 
-**Status:** open
+**Status:** partly
 
 `data/prices.json` is not a calibration dataset and will not survive the
 migration. Historical observations that are independently worth testing may be
@@ -86,7 +86,10 @@ A book-priced fallback for a gated material is now in the civilisation's unit
 but is still a book figure. The commodity ledger's own base prices
 (`commodities.json`) are still read in book denarii by the ledger.
 
-### 3. Make endogenous material prices the only runtime path
+### 3. Make endogenous material prices the only runtime path (done, with one labelled heuristic)
+
+- [x] `data.load()` returns solved prices only; `sim.engine.prices.priced_goods_table` no longer takes a book table. Every material a recipe makes has a price; ten production entries that had no technology gate (so every gated solve dropped them) now name one, and the iodine entry has labour. `python3 sim/validate_production.py` and `python3 sim/simulator.py validate` report no unpriced material the tree needs.
+- [x] A material only a technology not yet held can make is priced as if every gate technology were held (provenance `gated`). This is a labelled transitional import price (CLAUDE.md 4.4), not a book figure; it goes when trade and availability decide what a civilisation can buy.
 
 `data.load()` defaults to the book goods table and overlays solved prices only
 when requested. Reverse that relationship material by material: a price must
@@ -98,7 +101,7 @@ goods, rent for non-ore extraction, incomplete capital/energy/transport/margin
 costs, and an import/unavailable policy for technology-gated goods. Coverage by
 a recipe is necessary but is not proof that its price is economically complete.
 
-### 4. Remove the independent material-supply read
+### 4. Remove the independent material-supply read (price read done; supply curves remain)
 
 `sim/engine/economy_materials.py` no longer opens the file separately. It now
 asks the shared price calculator for an era- and civilization-specific table,
@@ -131,7 +134,9 @@ built.
 The wage provider no longer reads the file's wage section, so these tools
 get wages without it.
 
-### 6. Remove comparison and test readers
+### 6. Remove comparison and test readers (done)
+
+The calibration classes in `test_deposits.py` and `test_demand.py` no longer compare against the book; `data.load()` returns the wage document in the old price-book slot, and `PRICES` is gone from `sim.engine.data` and `simulator`.
 
 (The standalone price report's `--compare` mode is already removed.) Several demand, deposit,
 civilization, and engine-price tests open the old file. Delete comparisons that
@@ -159,3 +164,14 @@ need the raw object.
 Moving fields into another omnibus JSON file is explicitly not part of this
 plan. Each surviving datum needs a real owning model or a narrowly scoped,
 sourced test fixture.
+
+## Remains
+
+`data/prices.json` is deleted and nothing opens it. Still open before this can close:
+
+- The generic national-output and market-share curves in `sim/engine/economy_materials.py` infer physical supply from price (blocker 4); with solved prices a cheap gated material such as aluminium gets an enormous fitted market. Replace with physical capacity and resource access.
+- Gated materials use the labelled mature-technique price above; trade, import and unavailability policy is not built.
+- `data/world/commodities.json` base prices are still authored book denarii read by the commodity ledger.
+- `BOOK_LABOURER_WAGE_DENARII_PER_HOUR` and node `rev`, `up` and `cap` are still authored book money (see Complaints/287).
+- `photovoltaic_panel_m2` and `electrical_mj_photovoltaic` have no `requires_node` (the only base technology that fits is a mod node), so no gated solve prices them.
+- `rg -n 'prices\.json|\bPRICES\b' sim tools` still finds prose in comments, test docstrings and the test harness's own `PRICES` name for the wage document; data and docs outside `sim` also mention the file.
