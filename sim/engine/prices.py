@@ -174,7 +174,7 @@ REPO_ROOT = os.path.dirname(SIMDIR)                             # repo root
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from sim import joint_allocation, solve_prices              # noqa: E402
+from sim import joint_allocation, solve_prices, solve_prices_reach  # noqa: E402
 from sim.validate_production import load_production             # noqa: E402
 from sim.world import wages                                     # noqa: E402
 from sim.engine import wage_provider                # noqa: E402
@@ -360,7 +360,7 @@ def _solve_to_json(production_entries: ProductionEntries,
         available_entries, producers_of,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
     (prices_in_labour_hours, iterations_run, residual,
-     chosen_recipe_by_material) = solve_prices.solve(
+     chosen_recipe_by_material, resolvable_materials) = solve_prices_reach.solve_priced_materials(
         available_entries, producers_of, resolvable_materials, wage_by_trade,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
         demand_anchors=joint_allocation.build_demand_anchors(civilization_id),

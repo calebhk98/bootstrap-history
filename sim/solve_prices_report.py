@@ -21,6 +21,7 @@ REPO_ROOT = os.path.dirname(HERE)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 from sim import joint_allocation, tool_costs        # noqa: E402
+from sim.solve_prices_reach import solve_priced_materials  # noqa: E402
 from sim.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND, in _print_rent_summary)
 
@@ -778,11 +779,13 @@ def main(argv=None):
 
     demand_anchors = joint_allocation.build_demand_anchors(arguments.civ)
     interest_rate = load_starting_interest_rate(arguments.civ or DEFAULT_LAND_CIVILIZATION)
-    prices, iterations_run, residual, chosen_recipe_by_material = solve(
+    (prices, iterations_run, residual, chosen_recipe_by_material,
+     resolvable_materials) = solve_priced_materials(
         production_entries, producers_of, resolvable_materials, wage_by_trade,
         damping=arguments.damping,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
         demand_anchors=demand_anchors, interest_rate=interest_rate)
+    unpriceable = sorted(all_referenced_materials - resolvable_materials)
 
     converged = residual < CONVERGENCE_TOLERANCE
     unanchored_byproducts = minor_joint_byproducts_are_unanchored(
