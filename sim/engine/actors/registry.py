@@ -57,6 +57,7 @@ class ActorRegistry:
 		self._changed_actors: Set[str] = set()
 		self._columns_synced = False
 		self._demand: Optional[Dict[str, float]] = None
+		self._category_counts: Optional[Any] = None
 		self._acting: Optional[RecordedActor] = None
 		self._staff_basis: Dict[str, float] = {}
 		# insertion position of each actor (the order supply is summed in), and the ids that are not firms
@@ -114,8 +115,9 @@ class ActorRegistry:
 		"""Tonnes a year of a commodity that every recorded actor buys on the market."""
 		if self._demand is None:
 			totals: Dict[str, float] = {}
-			for actor in self.actors.values():
-				bought = actor.record.demand
+			# only actors that are not firms buy on the market (a firm's demand stays empty)
+			for actor_id in sorted(self._not_firms, key=self._position.__getitem__):
+				bought = self.actors[actor_id].record.demand
 				if bought:
 					for name, tonnes in bought.items():
 						totals[name] = totals.get(name, 0.0) + tonnes
@@ -124,8 +126,17 @@ class ActorRegistry:
 
 	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> int:
 		"""Concerns of goods category `category` that actors operate, counted once per operator."""
-		return sum(1 for firm in self.active_firms() for node_id in firm.concerns
-				   if nodes[node_id].get("cat") == category)
+		# one pass counts every category; it is kept while no firm's concerns change (an exiting firm
+		# empties its concerns first, which counts as a change)
+		key = (self.version[0], len(self.actors))
+		if self._category_counts is None or self._category_counts[0] != key:
+			counts: Dict[Any, int] = {}
+			for firm in self.active_firms():
+				for node_id in firm.concerns:
+					node_category = nodes[node_id].get("cat")
+					counts[node_category] = counts.get(node_category, 0) + 1
+			self._category_counts = (key, counts)
+		return self._category_counts[1].get(category, 0)
 
 	def refresh_staff(self) -> None:
 		"""Forget the staffing and demand tallies so the next read counts every actor again."""
@@ -154,13 +165,19 @@ class ActorRegistry:
 		if column is None:
 			if self._ordered_ids is None:
 				self._ordered_ids = sorted(self.actors)
-			if len(self._column_position) != len(self._ordered_ids):
-				self._column_position = {actor_id: place for place, actor_id in enumerate(self._ordered_ids)}
+			self._current_positions()
 			values = [self.actors[actor_id].record.workforce.get(trade, 0.0) for actor_id in self._ordered_ids]
 			if acting is not None:
 				values[self._column_position[acting.actor_id]] = self._staff_basis.get(trade, 0.0)
 			column = self._columns[trade] = (values, list(accumulate(values, initial=0.0)))
 		return column[1][-1]
+
+	def _current_positions(self) -> None:
+		"""Make `_column_position` match the actor-id order."""
+		if self._ordered_ids is None:
+			self._ordered_ids = sorted(self.actors)
+		if len(self._column_position) != len(self._ordered_ids):
+			self._column_position = {actor_id: place for place, actor_id in enumerate(self._ordered_ids)}
 
 	def _insert_into_columns(self, actor_id: str, order: List[str]) -> None:
 		"""Add one new actor to the id order and to every counted trade's column, re-summing
@@ -168,7 +185,7 @@ class ActorRegistry:
 		place = bisect_left(order, actor_id)
 		order.insert(place, actor_id)
 		self._ordered_ids = order
-		self._column_position = {identifier: index for index, identifier in enumerate(order)}
+		self._column_position = {}
 		staff = self.actors[actor_id].record.workforce
 		for trade, (values, running) in self._columns.items():
 			values.insert(place, staff.get(trade, 0.0))
@@ -180,6 +197,7 @@ class ActorRegistry:
 	def _resum_actor(self, actor_id: str) -> None:
 		"""Bring every counted trade's column up to the actor's present staff."""
 		actor = self.actors.get(actor_id)
+		self._current_positions()
 		place = self._column_position.get(actor_id)
 		if actor is None or place is None:
 			self._columns = {}

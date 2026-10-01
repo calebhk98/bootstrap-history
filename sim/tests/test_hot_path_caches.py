@@ -258,3 +258,30 @@ for _year in range(6):
             _mismatch.append((_year, _trade))
 check("the kept per-trade staff sums equal a fresh sum bit for bit after turns that hired and firms that were added",
       not _mismatch, _mismatch)
+
+
+# --- counting concerns by category walks the firms once until a concern changes.
+_registry = _registry_of_firms(20)
+for _identifier, _actor in _registry.actors.items():
+    _actor.record.concerns.clear()
+    _actor.record.concerns.add("loom")
+_loom_nodes = {"loom": {"cat": "cloth"}, "forge": {"cat": "metal"}}
+_walked = _count_calls(_registry, "active_firms", lambda: [_registry.concerns_in("cloth", _loom_nodes) for _ in range(50)])
+check("concerns of a category are counted from one walk of the firms", _walked == 1, _walked)
+check("...and the count is right", _registry.concerns_in("cloth", _loom_nodes) == 20 and _registry.concerns_in("metal", _loom_nodes) == 0)
+_registry.actors["firm:003"].record.concerns.add("forge")
+check("...and a firm taking on a concern is counted at once",
+      _registry.concerns_in("metal", _loom_nodes) == 1 and _registry.concerns_in("cloth", _loom_nodes) == 20)
+
+# --- the material stock moves capacity keys to the pool once, not on every read.
+_probe = sim(capital=2000.0)
+_ledger = _probe._material_stock()
+_ledger["scholar_hours"] += 5.0
+_probe._material_stock()
+check("a capacity key written to the stock lands in the pool and leaves the stock",
+      "scholar_hours" not in _probe._material_stock() and _probe.state.economy.capacity_pool.get("scholar_hours", 0.0) >= 5.0)
+
+# --- mining technology is read once per material until what is built or operating changes.
+_probe.mining_tech("iron")
+_asked = _count_calls(_probe, "running", lambda: [_probe.mining_tech("iron") for _ in range(20)])
+check("mining technology of a material is not recomputed while nothing built or operating changes", _asked == 0, _asked)
