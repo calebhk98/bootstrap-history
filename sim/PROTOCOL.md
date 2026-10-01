@@ -429,3 +429,29 @@ Units, their symbols and conversions are data in the same file; a mod adds
 `sim/engine/units_text.py` (text screens), `sim/engine/cli_units_options.py` (the
 options entry). Text screens show the chosen unit's value and symbol.
 Compound units (price per tonne, yield per hectare) are not converted yet.
+
+
+LOANABLE-FUNDS MARKET (Complaint 110)
+-----------------------------------------------------------------------------
+`money` gains `loanable_funds_market`, the civilisation's capital market as it
+met at the start of the current year (the screen prints it as one line under
+the credit limit):
+
+    {"met": true,                      false (and only `market_rate`, the
+                                       civilisation's starting rate) before the
+                                       first yearly meeting
+     "market_rate": 0.12,              yearly rate on loans in the civilisation
+     "funds_lenders_hold": 1.2e10,     what households, firms, the founder and
+                                       the state hold in loanable form (coin)
+     "lenders_will_still_advance_you": null | number
+                                       what lenders still advance beyond what
+                                       others owe; your credit_limit is never more
+     "the_state_owes": 0.0,            what the government actor has borrowed
+     "means": "..."}
+
+`interest_rate_on_arrears` is now the market rate plus a premium that grows
+with the share of `credit_limit` used, less the founder's standing (which only removes premium; the rate is never below the market rate); it is not a
+fixed number for the game. `credit_limit` falls as the market rate rises and is
+bounded by `lenders_will_still_advance_you`. The state's own debt and interest
+appear in `sim/actor_ledger.py` (outlay purpose `interest`; a negative purse is
+debt) and nowhere in the founder's replies.

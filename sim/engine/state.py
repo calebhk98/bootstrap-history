@@ -471,9 +471,29 @@ class ActorRecord:
 
 
 @dataclass
+class CapitalMarketRecord:
+	"""A civilisation's loanable-funds market as it stood at its last yearly meeting."""
+	# yearly market rate; 0 until the market has met, when the civilisation's starting rate stands
+	rate: float = 0.0
+	# funds demanded per unit held at the first meeting: the balance at which the rate is the starting rate
+	reference_utilisation: float = 0.0
+	# funds lenders hold, by source (households, firms, founder, state), and in all
+	supply_by_source: Dict[str, float] = field(default_factory=dict)
+	supply: float = 0.0
+	# borrowing by the economy the simulation does not model actor by actor
+	background: float = 0.0
+	# what lenders will advance to modelled borrowers in all (before what is already lent)
+	capacity: float = 0.0
+	# actor id -> what it owed at the meeting
+	loans: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
 class ActorsState:
 	"""Every actor other than the founder's household, keyed by actor id."""
 	records: Dict[str, ActorRecord] = field(default_factory=dict)
+	# civilisation id -> its loanable-funds market
+	markets: Dict[str, CapitalMarketRecord] = field(default_factory=dict)
 
 
 @dataclass

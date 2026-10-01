@@ -449,6 +449,11 @@ def _money_credit_lines(out):
                 out.get("of_that_limit_you_have_used") or "none",
                 _pct(out.get("interest_rate_on_arrears")),
                 _fmt_num(out.get("interest_paid_in_total")))]
+    market = out.get("loanable_funds_market") or {}
+    if market.get("met"):
+        lines.append("Market rate: %s     funds lenders hold: %s     still on offer to you: %s     the state owes: %s"
+                     % (_pct(market.get("market_rate")), _fmt_num(market.get("funds_lenders_hold")),
+                        _fmt_num(market.get("lenders_will_still_advance_you")), _fmt_num(market.get("the_state_owes"))))
     if out.get("sustainable_debt") is not None:
         lines.append("Sustainable debt at this surplus: %s   (%s)"
                      % (_fmt_num(out["sustainable_debt"]),

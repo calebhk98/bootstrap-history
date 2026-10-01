@@ -328,6 +328,7 @@ def _cmd_money(sim, nodes, cmd, ended):
                 - getattr(sim, "spend_last_year", 0.0), 1),
             "credit_limit": round(sim.credit_limit(), 1),
             "interest_rate_on_arrears": round(sim.debt_interest_rate(), 4),
+            "loanable_funds_market": sim.capital_market_report(),
             "interest_paid_in_total": round(getattr(sim, "interest_paid", 0.0), 1),
             # HOW CLOSE, not just how far it goes. See warn_near_the_limit.
             "of_that_limit_you_have_used": (
