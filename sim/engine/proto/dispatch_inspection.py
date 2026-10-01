@@ -75,7 +75,7 @@ def _cmd_log(sim, nodes, cmd, ended):
 
 
 
-@command("score", group="overview",
+@command("score", shape="bare", group="overview",
          summary="what you are optimising, any time",
          usage=["score"], options={},
          description="Each ending-score component, raw and weighted. Under fog the "
@@ -97,7 +97,7 @@ def _cmd_finish(sim, nodes, cmd, ended):
     return {"ok": True, **final_report(sim, nodes)}
 
 
-@command("why", group="overview", aliases=("explain", "look", "inspect"),
+@command("why", shape="tech", group="overview", aliases=("explain", "look", "inspect"),
          summary="everything known about one thing",
          usage=["why <id or name>", "why <id> compact", "why <id> full"],
          options={"<id>": "a technology or concern, by id or name",
@@ -154,7 +154,7 @@ def _cmd_why(sim, nodes, cmd, ended):
 
 
 
-@command("path", group="overview", aliases=("route", "plan"), fog_hidden=True,
+@command("path", shape="tech", group="overview", aliases=("route", "plan"), fog_hidden=True,
          summary="the route to one thing",
          usage=["path <id or name>"], options={"<id>": "the goal or any target"},
          description="Everything still standing between here and there, and which "
@@ -263,7 +263,7 @@ def _cmd_path(sim, nodes, cmd, ended):
 
 
 
-@command("materials", group="overview",
+@command("materials", shape="bare", group="overview",
          summary="material stocks, production and demand",
          usage=["materials"], options={},
          description="Stocks on hand, annual production and demand, and current "
@@ -304,7 +304,7 @@ def _cmd_groups(sim, nodes, cmd, ended):
 
 
 
-@command("values", group="society", aliases=("beliefs", "traits", "society"),
+@command("values", shape="bare", group="society", aliases=("beliefs", "traits", "society"),
          summary="what this society believes, as numbers",
          usage=["values"], options={},
          description="The same fields a completion's 'changes the society' line names.")
@@ -546,7 +546,7 @@ def _stuck_startable_and_afford(sim, nodes, _fog):
     return _startable, _afford
 
 
-@command("stuck", group="overview", aliases=("blocked", "help_me", "why_stuck"),
+@command("stuck", shape="bare", group="overview", aliases=("blocked", "help_me", "why_stuck"),
          summary="why you are not getting on",
          usage=["stuck", "stuck compact"], options={"compact": "short reply: a blockers list"},
          description="Gathers every kind of stall in one place: work blocked, no road "
@@ -610,7 +610,7 @@ def _cmd_stuck(sim, nodes, cmd, ended):
 
 
 
-@command("mines", group="overview", aliases=("workings", "mine", "pits"),
+@command("mines", shape="bare", group="overview", aliases=("workings", "mine", "pits"),
          summary="your own workings",
          usage=["mines"], options={},
          description="Each mine you own: output, upkeep and what limits it. Buy with "
@@ -622,7 +622,7 @@ def _cmd_mines(sim, nodes, cmd, ended):
 
 
 
-@command("capacity", group="overview",
+@command("capacity", shape="bare", group="overview",
          aliases=("overview", "industry", "dashboard", "infrastructure", "power"),
          summary="why active projects move at their present pace",
          usage=["capacity"], options={},

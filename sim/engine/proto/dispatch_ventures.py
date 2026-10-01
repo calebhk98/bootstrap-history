@@ -55,7 +55,7 @@ def _shorten_credit_forecast(sim, cmd, out):
     out["credit_forecast_in_full"] = full
 
 
-@command("start", group="projects", aliases=("begin", "research", "build"),
+@command("start", shape="tech", group="projects", aliases=("begin", "research", "build"),
          summary="begin work on something",
          usage=["start <id or name>"], options={"<id>": "a technology or concern"},
          description="If it cannot start, the error says exactly what is missing. A "
@@ -330,7 +330,7 @@ def _cmd_start(sim, nodes, cmd, ended):
 
 
 
-@command("stop", group="projects", aliases=("x", "abandon", "cancel"),
+@command("stop", shape="tech", group="projects", aliases=("x", "abandon", "cancel"),
          summary="abandon a project, losing what you spent",
          usage=["stop <id>"], options={"<id>": "an active project"},
          description="Sunk cost is sunk.")
@@ -557,7 +557,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
 
 
 
-@command("mothball", group="projects",
+@command("mothball", shape="tech", group="projects",
          summary="shut a finished work down",
          usage=["mothball <id>"], options={"<id>": "a finished concern"},
          description="Stops its upkeep; restore reopens it.")
@@ -590,7 +590,7 @@ def _cmd_mothball(sim, nodes, cmd, ended):
 
 
 
-@command("restore", group="projects",
+@command("restore", shape="tech", group="projects",
          summary="reopen a mothballed work",
          usage=["restore <id>"], options={"<id>": "a mothballed concern"},
          description="Undoes mothball.")
@@ -605,7 +605,7 @@ def _cmd_restore(sim, nodes, cmd, ended):
 
 
 
-@command("open", group="projects",
+@command("open", shape="tech_done", group="projects",
          summary="start running something you have worked out how to do",
          usage=["open <id>"], options={"<id>": "a finished concern"},
          description="Until you open it, it earns nothing and costs nothing. Finishing "
