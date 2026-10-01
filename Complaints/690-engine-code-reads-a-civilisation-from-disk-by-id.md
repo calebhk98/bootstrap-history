@@ -1,0 +1,7 @@
+# Engine code reads a civilisation back from disk by its id, so a civilisation built in memory breaks
+
+**Status:** open
+
+Twice in one day a new feature looked up a civilisation's data by id (`load_civ(civilization_id)`) deep inside pricing: the interest rate for the capital charge and the home regions for crop climate. A civilisation that exists only in memory (a mod's derived civilisation, a test's variant, later a player-created country) has no file, so the game stops with "unknown civilization"; and a variant that keeps a file's id but changes a field (home regions, rate) is silently priced with the file's values instead. Both were fixed by passing the value from the caller that holds the civilisation (`sim/engine/prices.py` `interest_rate`, `home_regions`), and `test_farm_land_quality` caught both.
+
+What it would take: a guard test that builds a civilisation in memory with an id no file has and a changed home region, then steps a few years and prices every screen, so the next lookup by id fails loudly in its own test; then audit `grep -rn "load_civ(" sim/engine sim/world` for calls below the `Sim` that should take the civilisation instead of its id. Related: 136 (the game assumes Rome exists), 4.7 of CLAUDE.md.

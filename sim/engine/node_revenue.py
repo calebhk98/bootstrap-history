@@ -122,7 +122,8 @@ def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule
         derivation_calls.append(key)
         interest_rate = float(civ["starting_interest_rate"])
         goods, _provenance = price_solver.priced_goods_table(
-            civ["starting_techs"], document, civilization_id=civilization_id, interest_rate=interest_rate)
+            civ["starting_techs"], document, civilization_id=civilization_id, interest_rate=interest_rate,
+            home_regions=tuple(civ.get("home_regions") or ()))
         energy = energy_prices.graded(civ["starting_techs"], document, goods, civilization_id, interest_rate)
         copies = {node_id: dict(node) for node_id, node in nodes.items()}
         apply_revenue(copies.values(), goods, schedule.wages_per_hour(), rate, energy)

@@ -19,13 +19,18 @@ def _tiles():
 
 
 @functools.lru_cache(maxsize=None)
-def territory_classes(civilization_id):
-    """Koppen classes of the tiles of a civilisation's home regions."""
+def classes_of_regions(home_regions):
+    """Koppen classes of the tiles of these regions (a tuple of region ids)."""
     tiles, region_to_tiles = _tiles()
     return frozenset(tiles[tile_id]["koppen_class"]
-                     for region_id in load_civ(civilization_id).get("home_regions") or []
+                     for region_id in home_regions
                      for tile_id in region_to_tiles.get(region_id, ())
                      if tile_id in tiles)
+
+
+def territory_classes(civilization_id):
+    """Koppen classes of the tiles of a civilisation's home regions, read from its data file."""
+    return classes_of_regions(tuple(load_civ(civilization_id).get("home_regions") or ()))
 
 
 def territory_suits(entry, classes):
@@ -34,6 +39,9 @@ def territory_suits(entry, classes):
     return not wanted or bool(set(wanted) & set(classes))
 
 
-def entry_grows_in(entry, civilization_id):
-    """Whether the civilisation's territory has a climate the entry's crop grows in."""
-    return territory_suits(entry, territory_classes(civilization_id))
+def entry_grows_in(entry, civilization_id, home_regions=None):
+    """Whether the civilisation's territory has a climate the entry's crop grows in; `home_regions`, when
+    the caller holds the civilisation, is used instead of reading its file."""
+    classes = (classes_of_regions(tuple(home_regions)) if home_regions is not None
+               else territory_classes(civilization_id))
+    return territory_suits(entry, classes)

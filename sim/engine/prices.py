@@ -492,19 +492,20 @@ def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable
                      if all(nearest[material] == rank for material in production_entries[key]["outputs"]))
 
 
-def _climate_allows(entry, civilization_id):
+def _climate_allows(entry, civilization_id, home_regions=None):
     """Whether the territory has a climate the entry's crop grows in; entries naming none always do."""
     if not entry or not entry.get("grown_in_climate_classes"):
         return True
     from . import crop_climate
-    return crop_climate.entry_grows_in(entry, civilization_id)
+    return crop_climate.entry_grows_in(entry, civilization_id, home_regions)
 
 
 def priced_goods_table(held_technology_ids: Iterable[str],
                        prices_json: Dict[str, Any],
                        production_entries: Optional[ProductionEntries] = None,
                        civilization_id: Optional[str] = None,
-                       interest_rate: Optional[float] = None
+                       interest_rate: Optional[float] = None,
+                       home_regions: Optional[Iterable[str]] = None
                        ) -> Tuple[Prices, Provenance]:
     """(goods_in_money, provenance) - a calculated price for every material
     the recipes can make, in the coin of `prices_json`.
@@ -522,7 +523,8 @@ def priced_goods_table(held_technology_ids: Iterable[str],
                  price.
 
     `civilization_id` and `interest_rate` are passed straight through to `solved_prices` - see RENT
-    NEEDS A CIVILIZATION in the module docstring.
+    NEEDS A CIVILIZATION in the module docstring. `home_regions`, when the caller holds the
+    civilisation, decides which crops its climate grows without reading its file.
     """
     entries = (production_entries if production_entries is not None
                else _default_production_entries())
@@ -544,7 +546,7 @@ def priced_goods_table(held_technology_ids: Iterable[str],
             if label != "mature" and material not in table.chosen_recipe_by_material:
                 continue    # no technique in this table delivers it (a heat it cannot reach): the price is a placeholder
             if label != "mature" and not _climate_allows(
-                    entries.get(table.chosen_recipe_by_material[material]), territory):
+                    entries.get(table.chosen_recipe_by_material[material]), territory, home_regions):
                 continue    # a crop the territory's climate cannot grow stays priced as if imported
             goods_in_money[material] = hours_to_denarii(
                 table.prices_in_labour_hours[material], prices_json)
