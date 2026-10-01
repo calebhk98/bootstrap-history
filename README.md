@@ -87,14 +87,18 @@ with the `ROME_SAVE_DIR` environment variable or from the menu's Options;
 otherwise it is `.rome-saves` in your home directory. A save belongs to the
 version that wrote it: after updating the game, start a new game.
 
+## Display units
+
+The `options` screen (main menu item 5, and `u` in the in-game `options`) lets you pick the unit each kind of quantity is shown in: area (hectare, square kilometre, acre, your civilisation's own measure), mass, temperature and money (your coin or labour hours). Leaving a kind alone shows it exactly as the game always has. Commands still take the units their help names. The units are data in `data/world/units.json`; see [sim/PROTOCOL.md](sim/PROTOCOL.md) for the JSON side.
+
 ## Mods
 
 A mod is a folder in `mods/` with a `mod.json` inside. To install one, drop
 the folder into `mods/`. To remove it, delete the folder or move it out. There
 is no registry to edit, and mods run no code; they only add data.
 
-A mod can add or change technologies, goals, production recipes, trades and
-civilisations, and can remove existing ones. Things a mod adds are named
+A mod can add or change technologies, goals, production recipes, trades,
+display units and civilisations, and can remove existing ones. Things a mod adds are named
 `<mod id>:<name>` and appear in the game like any other. Mods already installed
 in `mods/` show up in `civs` and `goals`. If two mods clash, or one needs
 another that is missing, the game refuses to load and the message names both.

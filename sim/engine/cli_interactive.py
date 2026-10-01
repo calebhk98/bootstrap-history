@@ -38,7 +38,7 @@ from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, g
                    STARTING_KITS, win_condition_describe)
 from .core import Sim
 from . import protocol as _protocol
-from . import settings
+from . import cli_units_options, settings
 from .proto import step_progress
 from .proto import util as proto_util
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
@@ -234,6 +234,7 @@ def _play_build_sim(args):
     proto_util.HUMAN_AT_KEYBOARD = True
     _protocol.MONEY_SHORT = money_short(sim.civ)
     _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(app_cfg)
+    cli_units_options.apply_saved_preferences(app_cfg)
     return sim, nodes, session, app_cfg, kit, horizon
 
 
@@ -664,6 +665,8 @@ def _ingame_options(sim, session):
             print("   3) move this save to a different file")
         print("   f) turn fuzzy estimates on from now on%s"
               % ("  (already on)" if sim.fuzzy_estimates else ""))
+        print("   u) display units (%s)"
+              % cli_units_options.summary_line(settings.load_config()))
         print("   b) back to the game")
         try:
             typed = input("\n   > ").strip()
@@ -737,6 +740,10 @@ def _ingame_options(sim, session):
                 print("   -- done. Mortality is on from %d AD." % sim.year)
             else:
                 print("   -- unchanged.")
+
+        elif word in ("u", "unit", "units"):
+            cli_units_options.edit_display_units(
+                settings.load_config(), sim.civ.get("id"), input)
 
         elif word in ("f", "fuzzy") and not sim.fuzzy_estimates:
             # One-way like mortality, unlike fog: turning it on only hides
@@ -1459,6 +1466,7 @@ def _options_menu(cfg):
         print("   3) rows per table      : %d" % settings.resolve_rows_per_page(cfg))
         print("   4) welcome/tutorial text on new games : %s"
               % ("on" if cfg.get("show_welcome", True) else "off"))
+        print("   5) display units      : %s" % cli_units_options.summary_line(cfg))
         print("   b) back to the main menu")
         try:
             raw = input("\n   > ").strip().lower()
@@ -1468,6 +1476,9 @@ def _options_menu(cfg):
 
         if word in ("", "b", "back"):
             return cfg
+
+        elif word in ("5", "unit", "units"):
+            cfg = cli_units_options.edit_display_units(cfg, cfg.get("default_civ"), input)
 
         elif word in ("1", "save", "location"):
             cur = settings.resolve_save_dir(cfg, ensure=False)

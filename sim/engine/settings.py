@@ -110,6 +110,7 @@ class Config(TypedDict):
     rows_per_page: int
     show_welcome: bool
     commission_display: str
+    display_units: Dict[str, str]
     default_civ: str
     default_kit: str
     default_fog: bool
@@ -200,6 +201,9 @@ CONFIG_DEFAULTS: Config = {
     "rows_per_page": 30,
     "show_welcome": True,
     "commission_display": "both",  # "commissioned", "ready", or "both"
+    # Unit id per dimension (area, mass, temperature, money) the player wants
+    # shown; a missing dimension means "as the game writes it" (Complaint 290).
+    "display_units": {},
     # REMEMBERED, NOT CONFIGURED - see the module docstring. These four plus
     # the horizon are the New Game wizard's last-used answers, written back
     # by cli.py's _new_game the moment a game actually starts, and are not
@@ -278,6 +282,17 @@ def resolve_commission_display(cfg: Optional[Config] = None) -> str:
     if value in ("commissioned", "ready", "both"):
         return value
     return "both"
+
+
+def resolve_display_units(cfg: Optional[Config] = None) -> Dict[str, str]:
+    """The chosen unit id per dimension; anything that is not a string pair is ignored."""
+    if cfg is None:
+        cfg = load_config()
+    raw = cfg.get("display_units")
+    if not isinstance(raw, dict):
+        return {}
+    return {dimension: unit for dimension, unit in raw.items()
+            if isinstance(dimension, str) and isinstance(unit, str)}
 
 
 def config_path() -> str:

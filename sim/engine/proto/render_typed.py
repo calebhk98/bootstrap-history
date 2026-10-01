@@ -9,6 +9,7 @@ ARCHITECTURE.md.
 """
 
 import json, re
+from .. import units_text
 
 from .util import _fmt_num
 from .render_screens_start import render_start
@@ -179,7 +180,9 @@ def render_pretty(command_name, resp):
         # the game explains what to type - which is most of the places it
         # explains anything. Wrapping the final words is the only way the
         # line lengths can be right.
+        resp = units_text.for_text(resp, renderer is render_generic)
         out = renderer(_typed_deep(resp) if TYPED_HINTS else resp)
+        MONEY_SHORT = units_text.text_label("money", MONEY_SHORT)
         if MONEY_SHORT != "den":
             # "Money: 400 den" must not survive unchanged in a game counted
             # in pence: every "den" in the rendered text has to be swapped

@@ -1,6 +1,6 @@
 # Request: let the player choose display units (area, mass, temperature, money), with one unit layer that mods can extend and a test that proves every screen goes through it
 
-**Status:** open
+**Status:** partly - registry, formatters, per-dimension options, JSON `_display` fields, the covered text screens and the test are in; the remains below are open
 
 Stakeholder request. Screens show quantities in whatever unit each piece of code happened to use: land in iugera or hectares, mass in kg or tonnes, temperatures in Celsius, money in the civilisation's coin. A player should be able to pick preferred units in the options (for example square kilometres, hectares or the civilisation's own land unit; Celsius, Fahrenheit or kelvin; kilograms, pounds or a civilisation's own weight; the civilisation's coin, labour hours, or another currency). The default stays exactly what the game shows now.
 
@@ -28,3 +28,19 @@ It removes a whole class of unit mix-ups (the iugerum and hectare split in `282`
 ## Related
 
 `136` (the game assumes Rome's units), `144` (money in physical units), `207` (what the currency unit means), `282` (production data names land in iugera), `122` (the mod system).
+
+## Done (first increment)
+
+Registry `data/world/units.json` (mods add `<mod_id>:<name>` units the same way they add other world data), `sim/engine/units.py` (one `format_<dimension>`), `sim/engine/units_text.py`, a `display_units` setting and the options entry (main menu 5, in-game `u`). The default shows exactly what the game showed. Test: `sim/tests/test_complaint_290_display_units.py` (fake `blob` unit per dimension, in memory and from a mod).
+
+Covered: every JSON reply (any field the registry's `field_rules` match gets a `_display` sibling); text screens `buy` (farm, forest), `materials`, `state`, `money`.
+
+## Remains
+
+- Text screens whose renderer writes its own labels or numbers are not routed: only the screens above. Others show base values and native labels; the test enumerates what it covers.
+- Prose strings with embedded quantities ("12 ha of coppice woodland", refusal and advice sentences) are not converted; only structured fields are.
+- Compound units (price per tonne, yield per hectare, `BUY/T`) are left in native units.
+- Temperature: the formatter and field rule exist, but no screen shows a temperature yet, so the test uses a synthetic reply.
+- Field rules are name patterns, so a new money field not in the list is not converted; tagging at the point the quantity is produced is still to do.
+- Commands accept native units (hectares, tonnes) whatever is displayed.
+- Civilisation units are listed in the registry with a `civilisations` limit; civ data does not yet reference its own units, and only Rome has any.
