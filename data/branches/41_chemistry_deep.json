@@ -23,7 +23,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "Not dissolution plus evaporation, but controlled cooling: the key is knowing exactly when mother liquor will release only the pure crystal. Impurities stay dissolved or crystallise at different temperatures. Each substance needs a different solvent.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_sublimation",
@@ -50,7 +50,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "A cold finger condenses the vapour. The apparatus must be absolutely sealed and the heating exact. Used for camphor, naphthalene, iodine. Quality difference: crude apparatus gives degradation, proper cooling finger does not.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_reflux",
@@ -77,7 +77,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "The discovery is that you can heat a reaction indefinitely without losing solvent. Allows long reactions at controlled temperature. The cooling finger must be of the right dimensions to balance condensation rate with back-pressure.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_soxhlet",
@@ -115,7 +115,7 @@
   "dev_years": 5,
   "dev_people": 2,
   "note": "The siphon is the invention: gravity triggers emptying at exactly the right moment, so the same solvent portion hits fresh solid repeatedly. Extracts far more than single contact. The glass siphon tube is the critical precision piece.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_steam_distillation",
@@ -141,7 +141,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "Works at boiling point of water, not the boiling point of the oil, so thermally labile compounds survive. The product is an emulsion of oil and water; separation requires decanting or salting out. Standard for essential oils.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_vacuum_distillation",
@@ -170,7 +170,7 @@
   "dev_years": 6,
   "dev_people": 2,
   "note": "A liquid that decomposes at 250 C can be distilled at 100 C under half-bar vacuum. Requires a pump that does not introduce oil vapour, else contamination. The condenser must be cold; ice bath is standard.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_azeotropic_distillation",
@@ -197,7 +197,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "Ethanol and water form an azeotrope at 96 per cent ethanol; cannot be separated by ordinary distillation. Adding benzene shifts the azeotrope and allows anhydrous ethanol to be drawn off. Requires knowing what the azeotrope is for your pair.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_fractional_crystallisation",
@@ -224,7 +224,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "The key is knowing the solubility curve of each substance versus temperature. One compound might dissolve at 20 C but not at 5 C; another the reverse. Cooling in stages, filtering each crop, and recrystallising each fraction purifies both.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_dialysis",
@@ -250,7 +250,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "Used to separate salts from proteins, or colloids from small ions. The driving force is diffusion; it is slow. A bag of parchment filled with solution, immersed in water, leaches out the small ions while keeping the colloid inside.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_electrophoresis",
@@ -279,7 +279,7 @@
   "note": "The gel is gelatin or agar. A steady voltage is applied. Different proteins move at different speeds depending on their net charge and mass. Requires a stable voltage source and knowledge that the gel must be pH-controlled.",
   "gov": 1,
   "sus": 8,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -317,7 +317,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "Paper acts as the stationary phase; the solvent is the mobile phase. Compounds separate by their affinity for each. Spot the mixture at the bottom, suspend in a jar with solvent in the bottom, the liquid wicks up. Each compound travels to a different height.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_column_chromatography",
@@ -363,7 +363,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "The column is a glass tube packed with finely ground adsorbent. Solvent drips down slowly; compounds emerge at different times. The invention is realising that flow rate, particle size, and solvent polarity are the controlling parameters. Carbon or silica work; choice changes the separation.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_gas_chromatography",
@@ -393,7 +393,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "note": "The column is filled with an adsorbent or liquid on an inert support, heated to 200 C or more. The sample vaporises and passes through. Each compound sticks and releases at a different temperature, detected as it emerges. Requires precise temperature control.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_ion_exchange",
@@ -420,7 +420,7 @@
   "dev_years": 6,
   "dev_people": 1,
   "note": "A resin carries fixed negative or positive charges on its skeleton. Mobile counterions in the pores swap with ions in the solution. Allows softening water, concentrating rare ions, or fully deionising. Capacity is finite; resin is regenerated by reversing the swap.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_solvent_extraction",
@@ -455,7 +455,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "Water and ether do not mix. If you dissolve a salt in water and shake it with ether, some salts transfer to the ether layer. The degree of transfer depends on solubility in each solvent. Repeat extraction exhausts the aqueous phase.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_centrifugation",
@@ -483,7 +483,7 @@
   "dev_years": 5,
   "dev_people": 2,
   "note": "A rotating bucket or rotor creates artificial gravity, accelerating sedimentation a thousand-fold. Particles settle in seconds instead of hours. The tube must be strong; high-speed breakage is dangerous. Design of rotor balance is critical.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_lab_freeze_drying",
@@ -512,7 +512,7 @@
   "dev_years": 7,
   "dev_people": 2,
   "note": "The sample is frozen solid, then pressure is reduced to perhaps 10 pascals. Ice sublimes directly to vapour without passing through liquid. Preserves heat-sensitive compounds and yields an airy powder. Requires a condenser to capture the water vapour.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_gravimetric",
@@ -538,7 +538,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "E.g. to find sulphur in coal, burn it to SO2, absorb in base to form sulphate, precipitate as BaSO4, filter, dry and weigh. The mass of BaSO4 multiplied by the ratio of atomic weights gives the original sulphur. Accuracy depends on pure precipitate.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_titrimetry",
@@ -574,7 +574,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "A burette is a long glass tube with a glass stopcock at the bottom, graduated in millilitres. The taper and stopcock must be precise or the burette leaks or sticks. The endpoint must be sharp and visible. Success depends on indicator choice and technique.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_indicator_dyes",
@@ -600,7 +600,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "Methyl orange is red below pH 3.1, yellow above. Methyl red is red below pH 4.4, yellow above. Phenolphthalein is colourless below pH 8.2, pink above. Each substance needs the right indicator; choosing wrong gives an error. The indicator must not react with the analyte.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_redox_titration",
@@ -642,7 +642,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "Permanganate solution is deep purple; at the endpoint a tiny excess gives a pink colour that does not fade. Dichromate must have an indicator. Works for any species that oxidises or reduces. The reaction must go to completion and must be fast.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_complexometric",
@@ -668,7 +668,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "A chelating agent like EDTA binds metal ions very tightly. The metal indicator dye also binds the metal but less tightly, so EDTA displaces it, changing colour. Works for calcium, magnesium, zinc, etc. Requires careful control of pH.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_kjeldahl",
@@ -710,7 +710,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "note": "The sample is heated with conc. H2SO4 and copper sulphate. The high temperature carbonises the sample and oxidises nitrogen to NO, which forms (NH4)2SO4. Ammonia is driven off by distillation with base and collected in acid, then back-titrated. Very robust method.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_combustion",
@@ -747,7 +747,7 @@
   "dev_years": 6,
   "dev_people": 2,
   "note": "A weighed sample is combusted in a hot copper tube with oxygen. Products pass through a drying agent, absorbing water in one bulb, then through base, absorbing CO2 in another. Weighing each gives moles of H and C. Requires a furnace at 800-900 C and precise temperature control.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_flame_photometry",
@@ -775,7 +775,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "note": "Each metal emits light at a characteristic wavelength when heated in a flame. Sodium is orange, potassium is lilac, lithium is red. The intensity depends on concentration. A diffraction grating or prism isolates each wavelength. Highly selective and sensitive.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_colorimetry",
@@ -801,7 +801,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "A coloured compound absorbs light. The more concentrated, the darker the colour. Using a standard solution of known concentration, an unknown can be estimated by colour matching. Or pass light through both and compare intensities. Requires consistent lighting.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_spectrophotometry",
@@ -829,7 +829,7 @@
   "dev_years": 6,
   "dev_people": 2,
   "note": "A prism or grating isolates a narrow band of wavelengths. The solution is placed in a cuvette and light is passed through. The transmitted light is measured by a photoelectric cell or photographic plate. The absorbance at each wavelength reveals the identity and concentration.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_polarography",
@@ -858,7 +858,7 @@
   "dev_years": 7,
   "dev_people": 2,
   "note": "A dropping mercury electrode hangs in the solution. As voltage sweeps from negative to positive, each reducible ion accepts electrons at its characteristic voltage, creating a current pulse. A chart records current versus voltage, showing each ion's reduction potential. Quantitative and selective.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_glass_ph_electrode",
@@ -889,7 +889,7 @@
   "note": "A special glass is formulated; thin membrane prevents error from water penetration while allowing ion exchange at the surface. The voltage across the membrane varies linearly with pH. Requires a reference electrode and a high-impedance amplifier to measure the tiny current.",
   "gov": 1,
   "sus": 8,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -916,7 +916,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "A small AC voltage is applied across two electrodes immersed in the solution. The current depends on the concentration and mobility of ions. Conductivity can titrate; as a precipitate forms, conductivity drops sharply at the endpoint.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_refractometry",
@@ -943,7 +943,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "Light bends at different angles depending on the refractive index of the medium. Dissolved substances change the refractive index. A refractometer measures the critical angle of total internal reflection. The value depends on temperature and concentration of solutes.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_analysis_melting_point",
@@ -969,7 +969,7 @@
   "dev_years": 1,
   "dev_people": 1,
   "note": "A sample is placed in a capillary tube and heated slowly in a bath or over a flame. The temperature is recorded when the solid first liquefies. Pure substances have sharp melting points; impurities lower and broaden the melting point. Used as a purity test.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_process_contact",
@@ -1002,7 +1002,7 @@
   "mat": {
    "steel_plate_kg": 50
   },
-  "cap": 500,
+  "cap_hours": 10080.9396,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 12,
@@ -1040,7 +1040,7 @@
   "mat": {
    "steel_plate_kg": 30
   },
-  "cap": 300,
+  "cap_hours": 6048.5638,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
@@ -1070,7 +1070,7 @@
    "steel_plate_kg": 80,
    "mat_mercury": 5
   },
-  "cap": 600,
+  "cap_hours": 12097.1275,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 10,
@@ -1107,7 +1107,7 @@
   "mat": {
    "steel_plate_kg": 60
   },
-  "cap": 400,
+  "cap_hours": 8064.7517,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 9,
@@ -1143,7 +1143,7 @@
   "mat": {
    "steel_plate_kg": 100
   },
-  "cap": 800,
+  "cap_hours": 16129.5033,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "dev_years": 12,
@@ -1181,7 +1181,7 @@
    "steel_plate_kg": 40,
    "platinum_g": 500.0
   },
-  "cap": 400,
+  "cap_hours": 8064.7517,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
@@ -1209,7 +1209,7 @@
   "mat": {
    "steel_plate_kg": 60
   },
-  "cap": 300,
+  "cap_hours": 6048.5638,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 10,
@@ -1237,7 +1237,7 @@
   "mat": {
    "steel_plate_kg": 35
   },
-  "cap": 250,
+  "cap_hours": 5040.4698,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "dev_years": 8,
@@ -1274,7 +1274,7 @@
   "mat": {
    "steel_plate_kg": 80
   },
-  "cap": 500,
+  "cap_hours": 10080.9396,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 12,
@@ -1311,7 +1311,7 @@
   "mat": {
    "steel_plate_kg": 100
   },
-  "cap": 600,
+  "cap_hours": 12097.1275,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 14,
@@ -1349,7 +1349,7 @@
    "copper_kg": 150.0,
    "steel_plate_kg": 60.0
   },
-  "cap": 350,
+  "cap_hours": 7056.6577,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
@@ -1387,7 +1387,7 @@
   "mat": {
    "steel_plate_kg": 70
   },
-  "cap": 450,
+  "cap_hours": 9072.8456,
   "build_yrs": 1.8,
   "adopt_yrs": 1,
   "dev_years": 10,
@@ -1423,7 +1423,7 @@
   "mat": {
    "steel_plate_kg": 70
   },
-  "cap": 400,
+  "cap_hours": 8064.7517,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 11,
@@ -1461,7 +1461,7 @@
   "mat": {
    "glass_borosilicate_kg": 10
   },
-  "cap": 300,
+  "cap_hours": 6048.5638,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 7,
@@ -1497,7 +1497,7 @@
   "mat": {
    "steel_plate_kg": 50
   },
-  "cap": 250,
+  "cap_hours": 5040.4698,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "dev_years": 8,
@@ -1535,7 +1535,7 @@
   "mat": {
    "steel_plate_kg": 80
   },
-  "cap": 350,
+  "cap_hours": 7056.6577,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 10,
@@ -1573,7 +1573,7 @@
   "mat": {
    "steel_plate_kg": 60
   },
-  "cap": 300,
+  "cap_hours": 6048.5638,
   "build_yrs": 1.8,
   "adopt_yrs": 1,
   "dev_years": 9,
@@ -1620,7 +1620,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "R-COOH + R'-OH <-> R-COO-R' + H2O. Equilibrium is unfavourable; success requires removing water. A condenser refluxes the mixture; water distils off. Conc. H2SO4 acts as both acid catalyst and dehydrating agent. Esters often smell of fruits and are used for flavour.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_saponification",
@@ -1664,7 +1664,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "Fats are triglycerides. Hot NaOH breaks the ester bonds, forming glycerol and sodium salts of fatty acids. The sodium salts precipitate from the aqueous solution as soap. Yield is quantitative. The byproduct glycerol is valuable. An old industry now with exact chemistry.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_nitration",
@@ -1707,7 +1707,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "The nitronium cation NO2+ is generated in-situ and attacks the aromatic ring. Each position can be nitrated; mono, di, tri products are possible. Temperature controls selectivity; hot favours ortho/para, cold favours meta. Strongly exothermic; heat removal is critical.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_sulfonation",
@@ -1742,7 +1742,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "Fuming sulphuric acid contains free SO3. At 80-100 C, SO3 attacks the aromatic ring. Multiple sulfonation can occur. Sulfonated aromatics are water-soluble and useful as intermediates for dyes and detergents. The reaction is reversible; dilution with water drives formation.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_halogenation",
@@ -1785,7 +1785,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "Chlorine and AlCl3 form the active electrophile. Iodine requires activation by an oxidiser like HNO3. Ortho/para selectivity depends on temperature and substituents. Each halogenation can be followed by another at a different position. Used widely for making intermediates.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_friedel_crafts",
@@ -1826,7 +1826,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "AlCl3 activates acyl chlorides to form acylium cations, which attack the aromatic ring. This is how acetophenone and propiophenone are made. Alkylation is similar but uses alkyl halides; requires excess AlCl3 and is harder to control. Acylation is cleaner.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_aldol",
@@ -1868,7 +1868,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "note": "Base deprotonates the alpha carbon, forming an enolate carbanion. It attacks the carbonyl carbon of another molecule. The aldol product has OH and can be dehydrated to an alpha,beta-unsaturated carbonyl. Used to make aromatic aldehydes and complex organic molecules.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_grignard",
@@ -1910,7 +1910,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "note": "RMgX is formed by adding alkyl halide to magnesium in dry ether. The Grignard carbanion attacks carbonyls. Formaldehyde gives primary alcohols, aldehydes give secondary, ketones give tertiary. Esters give ketones. Water quench liberates the alcohol. Requires scrupulous dryness.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_diazotisation",
@@ -1952,7 +1952,7 @@
   "dev_years": 6,
   "dev_people": 2,
   "note": "ArNH2 is treated with nitrous acid (HNO2, generated from NaNO2 and dilute HCl) at 0 C to form ArN2+. This diazonium salt is highly reactive. Coupling with phenol or aniline gives azo compounds, highly coloured. The entire history of synthetic dyes rests on this reaction.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_bechamp_reduction",
@@ -1994,7 +1994,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "ArNO2 is suspended in acetic acid with iron powder. Water is added slowly. The iron is oxidised to Fe2+ and Fe3+, which reduce the nitro group stepwise to ArNH2. Much cheaper than catalytic hydrogenation. The amine salt is basified and extracted. Very robust process.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_catalytic_hydrogenation",
@@ -2037,7 +2037,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "Hydrogen and the organic compound are passed over nickel or palladium powder or pellets at 100-200 C. Alkenes add hydrogen to form alkanes. Alkynes give alkenes first, then alkanes. Aromatic rings require higher temperatures and pressure. Catalyst selectivity allows controlling which double bond reacts first.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_permanganate_oxidation",
@@ -2070,7 +2070,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "Cold dilute permanganate oxidises alkenes to diols and alkynes to dicarbonyls. Hot permanganate oxidises alcohols to carbonyls and carbonylsto carboxylic acids. Aromatic side chains are oxidised to carboxylic acids. The solution decolourises as it reacts; endpoint is visible. Very versatile.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_dichromate_oxidation",
@@ -2104,7 +2104,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "In conc. H2SO4, dichromate oxidises primary alcohols to aldehydes, then to carboxylic acids. Secondary alcohols form ketones. The colour changes from orange to green. Addition of water controls the degree of oxidation. Old, standard method in classical organic chemistry.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_addition_polymerisation",
@@ -2139,7 +2139,7 @@
   "dev_years": 6,
   "dev_people": 2,
   "note": "Ethylene under pressure with a peroxide catalyst at 200 C forms polyethylene. Vinyl chloride forms PVC. Styrene forms polystyrene. The reaction can be free-radical, cationic, or anionic. Temperature and pressure control molecular weight. Molecular weight in the range 5000-100000 is typical.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_condensation_polymerisation",
@@ -2165,7 +2165,7 @@
   "dev_years": 6,
   "dev_people": 2,
   "note": "Ethylene glycol and terephthalic acid form polyethylene terephthalate (PET). Hexamethylene diamine and adipic acid form nylon-66. Each esterification or amidation releases water. High temperature drives equilibrium forward. Molecular weight can exceed 100000.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_rxn_vulcanisation",
@@ -2200,7 +2200,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "Raw rubber is soft and sticky. Heating with sulphur causes the sulphur to react with the double bonds in the polymer chains, forming crosslinks. More sulphur creates more crosslinks, making the rubber harder. Over-vulcanisation embrittles it. Temperature control is critical.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_acetic_acid",
@@ -2242,7 +2242,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "Ethanol is oxidised in two steps: to acetaldehyde, then to acetic acid. Air oxidation requires a catalyst like copper or cobalt at 200 C. Permanganate is faster but requires stoichiometric reagent. Old vinegar fermentation is slow but cheap. Used for making acetates and esters.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_acetone",
@@ -2276,7 +2276,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "Isopropanol is oxidised by permanganate or dichromate to acetone. Cumene (isopropylbenzene) is oxidised to a hydroperoxide, which rearranges to phenol and acetone. Cumene process is cheaper at large scale. Acetone is a polar solvent and ketone intermediate.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_acetylene",
@@ -2335,7 +2335,7 @@
   "dev_years": 7,
   "dev_people": 2,
   "note": "Syngas (CO + 2 H2) over copper-zinc oxide catalyst at 200-250 C and 50-100 atm yields methanol. The reaction is exothermic and reversible; high pressure and lower temperature favour methanol. Unreacted gas is recycled. Used as solvent and fuel.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_ether",
@@ -2376,7 +2376,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "Two ethanol molecules condense via their -OH groups: C2H5OH + C2H5OH -> C2H5-O-C2H5 + H2O. The reaction is an equilibrium; boiling off the ether product drives it forward. Conc. H2SO4 absorbs water, aiding equilibrium. Old synthesis, very simple.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_chloroform",
@@ -2418,7 +2418,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "Acetone is treated with Cl2 and base. Chlorine and base form hypochlorous acid, which chlorinates the methyl group. Haloform reaction cleaves the molecule to chloroform and carboxylate. Or: ethanol with Cl2 over heat gives chloroform. Used as anaesthetic and solvent.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_carbon_tetrachloride",
@@ -2460,7 +2460,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "Methane and Cl2 at 250 C form a mixture of chlorinated products. Sequential chlorination: CH4 -> CH3Cl -> CH2Cl2 -> CHCl3 -> CCl4. Selectivity to CCl4 is poor; product separation is needed. Used as solvent for fats and dry cleaning.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_phenol",
@@ -2502,7 +2502,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "note": "Cumene (isopropylbenzene) is oxidised by air to cumene hydroperoxide, which rearranges in acid to phenol and acetone. Chlorobenzene hydrolyzes with NaOH at 300 C and high pressure. Cumene route is economically better. Phenol is acidic and forms salts with base.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_benzene",
@@ -2585,7 +2585,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "Coal tar contains ortho-, meta-, and para-xylene in roughly equal amounts. Boiling points are close (137-139 C). Separating the isomers requires many distillations or chemical methods. Or: toluene is dimerised over acid to give xylene. The isomers have different properties.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_aniline",
@@ -2627,7 +2627,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "PhNO2 is reduced by Fe/acetic acid. The iron is oxidised to Fe2+ and Fe3+, which reduce the nitro group stepwise. The aniline salt is basified and extracted. Pure aniline is a colourless liquid but oxidises in air to a dark polymer. Used as intermediate for dyes and pharmaceuticals.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_urea",
@@ -2653,7 +2653,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "note": "NH3 and CO2 at 150-200 C and 100-200 atm form ammonium carbamate, which dehydrates to urea at higher temperatures. Water is removed as ammonia and CO2 are recycled. Yield approaches 100 per cent. Urea is used as fertiliser and for making resins.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_formaldehyde",
@@ -2695,7 +2695,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "note": "Methanol vapour and air over a silver catalyst at 600-700 C form formaldehyde. The reaction is exothermic; heat must be removed. Yield is 90 per cent; unreacted methanol is recycled. Formaldehyde is used for making resins, preservatives, and explosives.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_glycerol",
@@ -2720,7 +2720,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "note": "Saponification of fats produces glycerol along with soap. Glycerol is removed by salting out or distillation. Purity is improved by fractional distillation. Also made by reduction of dihydroxyacetone. Used for lubricants, explosives (nitroglycerin), and sweetness.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_prod_citric_acid",
@@ -2754,7 +2754,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "note": "A mold ferments glucose, acetate or itaconate to citric acid. Chemical synthesis is complex. Fermentation is practical but requires careful sterile technique and nutrient control. Citric acid is precipitated as the calcium salt, dissolved in H2SO4 to displace Ca2+, and recovered.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_celluloid",
@@ -2789,7 +2789,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "note": "Nitrocellulose alone is brittle and explosive. Camphor dissolves in it, acting as a plasticiser. The mixture can be molded when warm and hardens on cooling. Used for combs, billiard balls, and early film. Highly flammable.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_viscose",
@@ -2823,7 +2823,7 @@
   "dev_years": 7,
   "dev_people": 2,
   "note": "Cellulose + NaOH forms sodium cellulose. Adding CS2 forms sodium cellulose xanthate, which dissolves in dilute alkali to form viscose. Extruding through a spinneret into acid regenerates cellulose fibre. The fibre is strong and used for rayon textiles.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_cellulose_acetate",
@@ -2856,7 +2856,7 @@
   "dev_years": 6,
   "dev_people": 1,
   "note": "Cellulose + acetic anhydride + H2SO4 catalyst gives cellulose acetate. The product is plastic without needing camphor. Less flammable than celluloid. Can be molded when warm. Used for safety film, spectacle frames, and cigarette filters.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_bakelite",
@@ -2897,7 +2897,7 @@
   "dev_years": 7,
   "dev_people": 2,
   "note": "Phenol and formaldehyde condense under heat and catalyst to form novolac or resole, depending on conditions. The linear polymer is infusible. Adding more formaldehyde and heating crosslinks it into a thermoset. Very hard, good electrical insulator.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_urea_formaldehyde",
@@ -2933,7 +2933,7 @@
   "dev_years": 6,
   "dev_people": 1,
   "note": "Urea + formaldehyde + acid catalyst condense to form a linear polymer, then cross-link on further heating. Harder than bakelite, bleached (white), used for electrical fittings, tableware, adhesives for plywood.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_pvc",
@@ -2969,8 +2969,8 @@
   "dev_years": 6,
   "dev_people": 1,
   "note": "Vinyl chloride is made by acetylene plus HCl or ethylene dichloride cracking. Polymerisation in aqueous emulsion yields PVC plastic. Plasticisers are added to make flexible sheet; unplasticised PVC is rigid and chemical-resistant. PVC is the most widely used plastic on Earth. Thermal decomposition releases hydrogen chloride, making fires extremely dangerous.",
-  "cap": 5000.0,
-  "up": 0.0
+  "cap_hours": 100809.3959,
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_polystyrene",
@@ -3004,7 +3004,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "note": "Styrene (C6H5-CH=CH2) is polymerised at 60-100 C with a peroxide initiator. The polymer is glassy and hard. Can be molded by injection or extrusion. Foamed polystyrene is used as insulation and packaging.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_polyethylene",
@@ -3038,7 +3038,7 @@
   "dev_years": 7,
   "dev_people": 2,
   "note": "Ethylene at 150-300 C and 1000+ atm with peroxide catalyst forms low-density polyethylene (LDPE). A dense structure forms at lower pressure over a Ziegler catalyst. Used for bags, films, insulation. The branching in LDPE makes it flexible; linear HDPE is stiffer.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_pmma",
@@ -3072,7 +3072,7 @@
   "dev_years": 6,
   "dev_people": 1,
   "note": "Methyl methacrylate at 50-100 C with peroxide initiator forms clear polymer. Can be injection molded or cast. Much clearer than polystyrene. Used for aircraft windows, signs, sheets. Good chemical resistance.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_nylon",
@@ -3105,7 +3105,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "note": "H2N(CH2)6NH2 and HOOC(CH2)4COOH at 270 C condense with loss of water, forming a linear polyamide. Extruding the molten polymer through a spinneret forms fibres. Nylon is strong, elastic, and used for textiles, hosiery, bristles. Moisture uptake can be significant.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_polyester",
@@ -3139,7 +3139,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "note": "HOCH2CH2OH and HOOC-C6H4-COOH at 260 C with a tin catalyst condense with loss of water. The linear polyester is extruded and solidified. Fibre has good tenacity and chemical resistance. Films are clear and used for flexible packaging.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_neoprene",
@@ -3173,7 +3173,7 @@
   "dev_years": 7,
   "dev_people": 2,
   "note": "Chloroprene (2-chlorobutadiene) is emulsion polymerised at 40 C. The chlorine substituent enhances oil and flame resistance compared to natural rubber. Vulcanised with sulphur like natural rubber. Used for hoses, seals, weatherstripping.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_buna",
@@ -3208,7 +3208,7 @@
   "dev_years": 7,
   "dev_people": 2,
   "note": "Butadiene and styrene (about 3:1) are emulsion copolymerised at 5 C. The low temperature gives high yield and longer chains. Vulcanised with sulphur. Slightly harder than natural rubber. Used for tires, belts, and footwear.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_polymer_silicone",
@@ -3247,7 +3247,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "note": "Dimethyldichlorosilane hydrolyzes to form siloxane monomers, which condense into a polymer chain. The Si-O backbone is very stable. Varying the alkyl groups and cross-linking gives oils, rubbers, or resins. Excellent thermal stability and water repellency.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "ch2_phys_thermochemistry",
@@ -3276,7 +3276,7 @@
   "note": "Hess's law: the heat change depends only on initial and final states, not the path. A simple calorimeter measures temperature change when a reaction occurs in an insulated container. Knowing specific heats allows computing the enthalpy change. Used to predict unfeasible reactions.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3305,7 +3305,7 @@
   "note": "Rate = k [A]^m [B]^n. The powers m and n are determined experimentally by varying concentrations and measuring initial rates. The rate constant k depends on temperature via the Arrhenius equation. Catalyst lowers activation energy without changing equilibrium.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3334,7 +3334,7 @@
   "note": "At equilibrium, K = [products]/[reactants]. Changing concentration, temperature, or pressure shifts the equilibrium to re-establish K. The position of equilibrium is independent of how much starting material you use. This is Le Chatelier principle.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3361,7 +3361,7 @@
   "note": "Increasing concentration of a product shifts equilibrium to the left. Increasing temperature favours the endothermic direction. Increasing pressure favours the side with fewer moles. Understanding this allows controlling yields in large-scale synthesis.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3388,7 +3388,7 @@
   "note": "F = C - P + 2. At a triple point, all three phases coexist and no variable can be changed without losing a phase. Binary phase diagrams show how composition and temperature determine the phases present. Used for design of distillations and crystallisations.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3417,7 +3417,7 @@
   "note": "Adding 1 mole of solute to 1 kg water raises the boiling point by 0.5 C, lowers the freezing point by 1.9 C, and raises osmotic pressure by 22 atm. This allows determining molecular weights or detecting dissociation of ionic compounds.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3444,7 +3444,7 @@
   "note": "One mole of any gas at STP occupies 22.4 litres. One mole of solute dissolved in 1 litre gives a one-molar solution. The concept allows exact stoichiometric calculations. Without the mole, chemistry would remain a craft without quantitative control.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3473,7 +3473,7 @@
   "note": "Magnesium is more easily oxidised than iron, which is more easily oxidised than copper. A more easily oxidised metal reduces a less easily oxidised metal salt. Used to predict reactions and design electrochemical cells. Potentials are measured versus a standard hydrogen electrode.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3502,7 +3502,7 @@
   "note": "Hydrogen evolution on copper has high overpotential; on platinum it is much lower. This allows electroplating copper onto steel without plating hydrogen gas. Overpotential depends on current density, temperature, and electrode surface.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3530,7 +3530,7 @@
   "note": "E = E0 + (RT/nF) ln Q. At 25 C with log instead of ln: E = E0 + 0.06/n log Q. Used to predict cell voltages under non-standard conditions. When Q = 1, E = E0. When Q > 1, the potential decreases, pushing the reaction backwards.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
@@ -3569,7 +3569,7 @@
   "note": "Aluminium is the anode, an inert metal is the cathode, and dilute H2SO4 is the electrolyte. Applying voltage oxidises the aluminium surface to Al2O3. The oxide layer is porous and can be dyed. Anodised aluminium resists corrosion far better than bare metal.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0,
+  "up_hours": 0,
   "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  }
 ]

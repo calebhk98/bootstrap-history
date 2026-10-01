@@ -6,7 +6,7 @@ import os
 import unittest
 
 from sim.engine import data, money_units
-from sim.tests.test_money_units_one_boundary import ALL_CIVS, build
+from sim.tests.test_money_units_one_boundary import BASE_CIVS, build
 
 BRANCH_DIRECTORY = os.path.join(data.ROOT, "data", "branches")
 AUTHORED_FIELDS = ("cap", "up", "rev")
@@ -15,7 +15,7 @@ AUTHORED_FIELDS = ("cap", "up", "rev")
 def authored_nodes():
     for path in sorted(glob.glob(os.path.join(BRANCH_DIRECTORY, "[0-9]*.json"))):
         with open(path) as handle:
-            yield from json.load(handle)
+            yield from (node for node in json.load(handle) if isinstance(node, dict))
 
 
 class NodeMoneyAuthoredInHours(unittest.TestCase):
@@ -28,8 +28,8 @@ class NodeMoneyAuthoredInHours(unittest.TestCase):
 
     def test_sim_money_is_authored_hours_in_the_civilisations_coin(self):
         authored = {node["id"]: node for node in authored_nodes()}
-        for civ in ALL_CIVS:
-            sim = build(civ)
+        for civ in BASE_CIVS:
+            sim = build(data.load_civ(civ))
             rate = sim.money_per_labour_hour()
             checked = 0
             for node_id, node in sim.nodes.items():

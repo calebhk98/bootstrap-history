@@ -29,8 +29,8 @@ def _node(node_id, **overrides):
         "cat": "test",
         "pre": [],
         "note": "A fixture node for the branch-merge-authority regression tests.",
-        "ph": 60, "lab": {}, "mat": {}, "cap": 200, "up": 40, "risk": 0.15,
-        "rev": 0, "sch": 0, "art": 1, "conf": "C", "kb": "",
+        "ph": 60, "lab": {}, "mat": {}, "cap_hours": 200, "up_hours": 40, "risk": 0.15,
+        "rev_hours": 0, "sch": 0, "art": 1, "conf": "C", "kb": "",
     }
     node.update(overrides)
     return node
@@ -70,8 +70,8 @@ class BranchMergeAuthorityTests(unittest.TestCase):
 
     def test_merge_is_a_fixed_point_with_no_branch_edits(self):
         self._write_branch("10_fixture.json", [
-            _node("fx_alpha", cap=150, ph=50),
-            _node("fx_beta", pre=["fx_alpha"], cap=300),
+            _node("fx_alpha", cap_hours=150, ph=50),
+            _node("fx_beta", pre=["fx_alpha"], cap_hours=300),
         ])
         self.assertEqual(self._merge()[0], 0)
         with open(self.out_path, "rb") as file:
@@ -82,23 +82,23 @@ class BranchMergeAuthorityTests(unittest.TestCase):
 
     def test_merge_applies_one_edited_field_and_nothing_else(self):
         self._write_branch("10_fixture.json", [
-            _node("fx_alpha", cap=150, ph=50),
-            _node("fx_beta", pre=["fx_alpha"], cap=300),
+            _node("fx_alpha", cap_hours=150, ph=50),
+            _node("fx_beta", pre=["fx_alpha"], cap_hours=300),
         ])
         self.assertEqual(self._merge()[0], 0)
         before = {node["id"]: node for node in self._merged()["nodes"]}
 
         self._write_branch("10_fixture.json", [
-            _node("fx_alpha", cap=424242.0, ph=50),
-            _node("fx_beta", pre=["fx_alpha"], cap=300),
+            _node("fx_alpha", cap_hours=424242.0, ph=50),
+            _node("fx_beta", pre=["fx_alpha"], cap_hours=300),
         ])
         self.assertEqual(self._merge()[0], 0)
         after = {node["id"]: node for node in self._merged()["nodes"]}
 
         changed_fields = {field for field in set(before["fx_alpha"]) | set(after["fx_alpha"])
                           if before["fx_alpha"].get(field) != after["fx_alpha"].get(field)}
-        self.assertEqual(changed_fields, {"cap"})
-        self.assertEqual(after["fx_alpha"]["cap"], 424242.0)
+        self.assertEqual(changed_fields, {"cap_hours"})
+        self.assertEqual(after["fx_alpha"]["cap_hours"], 424242.0)
         self.assertEqual(before["fx_beta"], after["fx_beta"])
 
     def test_fields_without_a_schema_default_pass_through_as_written(self):
@@ -123,8 +123,8 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         self.assertEqual([node["id"] for node in self._merged()["nodes"]], ["fx_alpha"])
 
     def test_id_defined_in_two_branch_files_is_a_refused_collision(self):
-        self._write_branch("10_first.json", [_node("fx_shared", cap=150)])
-        self._write_branch("20_second.json", [_node("fx_shared", cap=999)])
+        self._write_branch("10_first.json", [_node("fx_shared", cap_hours=150)])
+        self._write_branch("20_second.json", [_node("fx_shared", cap_hours=999)])
 
         return_code, out = self._merge()
 
@@ -138,7 +138,7 @@ class BranchMergeAuthorityTests(unittest.TestCase):
 
     def test_id_defined_twice_in_the_same_branch_file_is_also_a_collision(self):
         self._write_branch("10_fixture.json", [
-            _node("fx_dup", cap=150), _node("fx_dup", cap=999),
+            _node("fx_dup", cap_hours=150), _node("fx_dup", cap_hours=999),
         ])
 
         return_code, out = self._merge()
@@ -150,10 +150,10 @@ class BranchMergeAuthorityTests(unittest.TestCase):
     def test_retired_id_is_not_a_collision_even_when_two_files_still_define_it(self):
         """An id already retired project-wide is not a collision to referee: neither
         definition is applied and the id stays out of the tree."""
-        self._write_branch("00_survivor.json", [_node("tl_survivor", cap=300)])
+        self._write_branch("00_survivor.json", [_node("tl_survivor", cap_hours=300)])
         self._write_merged_duplicate_ids({"fx_retired": "tl_survivor"})
-        self._write_branch("10_first.json", [_node("fx_retired", cap=222)])
-        self._write_branch("20_second.json", [_node("fx_retired", cap=333)])
+        self._write_branch("10_first.json", [_node("fx_retired", cap_hours=222)])
+        self._write_branch("20_second.json", [_node("fx_retired", cap_hours=333)])
 
         return_code, out = self._merge()
 
@@ -176,7 +176,7 @@ class BranchMergeAuthorityTests(unittest.TestCase):
         self.assertEqual(treetool.load_merged_duplicate_ids(), {})
 
     def test_merge_writes_dedup_mapping_from_source_into_tree_meta(self):
-        self._write_branch("00_survivor.json", [_node("tl_survivor", cap=300)])
+        self._write_branch("00_survivor.json", [_node("tl_survivor", cap_hours=300)])
         self._write_merged_duplicate_ids({"fx_retired": "tl_survivor"})
         self._write_branch("10_fixture.json", [_node("fx_new")])
         return_code, out = self._merge()

@@ -81,8 +81,8 @@ def _json_files(directory: str) -> Iterable[str]:
 
 
 def _node_defaults(node: Dict[str, Any]) -> Dict[str, Any]:
-    defaults = {"ph": 60, "lab": {}, "mat": {}, "cap": 200, "up": 40,
-                "risk": 0.15, "rev": 0, "sch": 0, "art": 1, "conf": "C",
+    defaults = {"ph": 60, "lab": {}, "mat": {}, "cap_hours": 4032.3758,
+                "up_hours": 806.4752, "risk": 0.15, "rev_hours": 0, "sch": 0, "art": 1, "conf": "C",
                 "kb": "", "pre": [], "req_any": [], "traits": [],
                 "build_yrs": 0.0, "adopt_yrs": 0.0, "sus": 0, "gov": 0,
                 "dev_years": None, "dev_people": None}

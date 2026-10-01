@@ -56,8 +56,11 @@ def load_trades():
 # Availability is described by prerequisites, capabilities, and costs rather
 # than a universal numeric rank.
 REQUIRED = ["id","name","cat","pre","note"]
-DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap":200,"up":40,"risk":0.15,"rev":0,
+DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap_hours":4032.3758,"up_hours":806.4752,"risk":0.15,"rev_hours":0,
             "sch":0,"art":1,"conf":"C","kb":""}
+
+# TRANSITIONAL: capital above this many labour hours counts as physical work.
+PHYSICAL_CAPITAL_HOURS = 4032
 
 def _num(value, default=0.0):
     """Branch authors sometimes write a number as a string, or as a range like
@@ -72,7 +75,7 @@ def _num(value, default=0.0):
 def normalise_v2(node):
     for field, value in DEFAULTS.items():
         node.setdefault(field, json.loads(json.dumps(value)))
-    for field, default in (("ph",60),("cap",200),("up",40),("risk",0.15),("rev",0),
+    for field, default in (("ph",60),("cap_hours",4032.3758),("up_hours",806.4752),("risk",0.15),("rev_hours",0),
                  ("sch",0),("art",1)):
         node[field] = _num(node.get(field), default)
     node["risk"] = min(0.95, max(0.0, node["risk"]))
@@ -555,7 +558,7 @@ def _judge_abstract_defects(node):
 def _judge_capability_defects(node, caps, ancestry, text):
     """CAP-NONE plus the per-word capability-rung checks (heat, tolerance, vacuum, purity, power)."""
     defects = []
-    physical = bool(node.get("mat")) or node.get("cap", 0) >= 200
+    physical = bool(node.get("mat")) or node.get("cap_hours", 0) >= PHYSICAL_CAPITAL_HOURS
     if not caps and physical and len(ancestry) >= 3 and node["cat"] not in (
             "social", "institution", "mathematics", "physics", "foundation",
             "information", "capability"):

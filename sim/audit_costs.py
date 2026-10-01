@@ -102,12 +102,13 @@ def _audit_materials_table(nodes, solved_price):
 
 
 def _audit_cost_totals(nodes):
-    """Where the denarii are at solved prices; `cap` is capital beyond labour and materials."""
+    """Where the money is at solved prices; `cap` is capital beyond labour and materials."""
+    from sim.engine import data
     totals = collections.Counter()
     for node in nodes.values():
         totals["labour"] += node["_labour_cost"] or 0.0
         totals["materials"] += node["_material_cost"] or 0.0
-        totals["capital_lump"] += float(node.get("cap") or 0.0)
+        totals["capital_lump"] += float(node.get("cap_hours") or 0.0) * data.MONEY_PER_LABOUR_HOUR
     return totals
 
 
@@ -116,7 +117,7 @@ def _audit_fields_populated(nodes):
         return sum(1 for node in nodes.values()
                    if node.get(field) not in (None, 0, 0.0, "", {}, []))
     return {field: populated(field)
-            for field in ("lab", "mat", "ph", "cap", "rev", "up")}
+            for field in ("lab", "mat", "ph", "cap_hours", "rev_hours", "up_hours")}
 
 
 def audit():

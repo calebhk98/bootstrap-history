@@ -3,7 +3,7 @@
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -22,20 +22,20 @@
    "sea_monsoon_route"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -54,20 +54,20 @@
    "sea_monsoon_route"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -86,20 +86,20 @@
    "sea_monsoon_route"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -118,20 +118,20 @@
    "sea_monsoon_route"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -150,20 +150,20 @@
    "sea_monsoon_route"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -182,20 +182,20 @@
    "sea_coastal_pilotage"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -214,20 +214,20 @@
    "ag2_botanic_garden"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -246,20 +246,20 @@
    "ag2_botanic_garden"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -278,20 +278,20 @@
    "sea_merchant_ships_large"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -310,20 +310,20 @@
    "mat_wrought_iron"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1,
   "build_yrs": 0.5,
-  "cap": 250,
+  "cap_hours": 5040.4698,
   "cat": "material",
   "conf": "C",
   "dev_people": null,
@@ -345,19 +345,19 @@
    "cap_heat_1100"
   ],
   "req_any": [],
-  "rev": 0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20
+  "up_hours": 403.2376
  },
  {
   "adopt_yrs": 1,
   "art": 1.0,
   "build_yrs": 0.5,
-  "cap": 200.0,
+  "cap_hours": 4032.3758,
   "cat": "access",
   "conf": "C",
   "dev_people": null,
@@ -376,14 +376,14 @@
    "horse_collar"
   ],
   "req_any": [],
-  "rev": 0.0,
+  "rev_hours": 0,
   "risk": 0.2,
   "sch": 0.0,
   "sus": 0,
   "traits": [
    "infrastructure"
   ],
-  "up": 20.0,
+  "up_hours": 403.2376,
   "yrs": 1.0
  }
 ]

@@ -70,6 +70,8 @@ def price_nodes(nodes):
     """
     try:
         wages = runtime_wages()
+        from sim.engine import data
+        money_per_labour_hour = data.MONEY_PER_LABOUR_HOUR
         material_price = solved_material_prices(nodes, wages)
     except CostsUnavailable as error:
         for node in nodes.values():
@@ -84,7 +86,7 @@ def price_nodes(nodes):
         node["_labour_cost"] = sum(wages.get(trade, 0.0) * hours for trade, hours in node["lab"].items())
         node["_material_cost"] = sum(material_price.get(material, 0.0) * quantity
                                      for material, quantity in node["mat"].items())
-        node["_total_cost"] = node["_labour_cost"] + node["_material_cost"] + node["cap"]
+        node["_total_cost"] = node["_labour_cost"] + node["_material_cost"] + node["cap_hours"] * money_per_labour_hour
         node["_cost_missing"] = missing
         missing_all.update(missing)
         incomplete += bool(missing)
