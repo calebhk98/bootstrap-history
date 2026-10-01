@@ -8,7 +8,7 @@ from .harness import *  # noqa: F401,F403
 from sim import perf_fingerprint
 from sim.engine.proto.saveload import save_state, load_state
 
-SCENARIO = dict(civ="rome_100ad", seed=1, years=12, events=True, fog=False)
+SCENARIO = dict(civ="rome_100ad", seed=1, years=40, events=True, fog=False)
 unbroken = perf_fingerprint.build(SCENARIO)
 save_path = os.path.join(tempfile.mkdtemp(), "save.json")
 diverging_years = []
