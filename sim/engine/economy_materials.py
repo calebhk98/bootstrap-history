@@ -290,7 +290,7 @@ class MaterialSupplyMixin:
         if cached is None or cached[0] != held:
             from .data import calculated_goods_prices
             prices = calculated_goods_prices(
-                held, civilization_id=self.civ.get("id"),
+                held, civilization_id=self.civ.get("id"), civilization=self.civ,
                 money_per_labour_hour=self.money_per_labour_hour())
         else:
             prices = cached[1]
@@ -305,7 +305,7 @@ class MaterialSupplyMixin:
         if cached is None or cached[0] != held:
             from .data import goods_provenance
             cached = self._material_basis_cache = (
-                held, goods_provenance(held, civilization_id=self.civ.get("id")))
+                held, goods_provenance(held, civilization_id=self.civ.get("id"), civilization=self.civ))
         return cached[1].get(material)
 
     def _done_memo(self, name, key, compute):

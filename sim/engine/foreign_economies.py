@@ -77,7 +77,9 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
 
     def _foreign_economy_facts(self, civilization_id):
         """Population, route and prices of one foreign economy in home money,
-        remembered until the home price table changes."""
+        remembered until the home price table changes. A partner is named by
+        id in the foreign-economies data, so it is looked up by id; the home
+        society is always `self.civ`."""
         prices = self._material_prices()
         cache = getattr(self.household, "_foreign_facts_cache", None)
         if cache is None:
@@ -99,7 +101,8 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
                  "home_solved_materials": frozenset(
                      material for material, source in goods_provenance(
                          frozenset(self.state.projects.done),
-                         civilization_id=self.civ.get("id")).items() if source == "solved"),
+                         civilization_id=self.civ.get("id"),
+                         civilization=self.civ).items() if source == "solved"),
                  "population": float(civilization.get("population") or 0.0),
                  "prices_in_home_money": foreign_prices,
                  "route": route,

@@ -1,5 +1,5 @@
 """The simulation itself: what one year does, and the loop over years."""
-import collections, math, os, random, sys
+import collections, copy, math, os, random, sys
 
 from sim.constants import book_money_names, declare
 from .money_units import book_money_factor
@@ -280,6 +280,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.verbose = verbose
         self.bounty_set = set(bounty_set or ())
         self.civ = civ or load_civ()
+        self.start_civ = copy.deepcopy(self.civ)    # the opening values, kept while self.civ drifts
         self.nodes = nodes_in_civ_money(nodes, self.civ)
         self._localise_book_money_constants()
         # Authoritative live SimulationState hierarchy

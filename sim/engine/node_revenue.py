@@ -116,15 +116,16 @@ def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule
     document = schedule.document()
     rate = schedule.money_per_labour_hour
     key = (civilization_id, frozenset(civ["starting_techs"]),
-           tuple(sorted(solve_prices.wage_ratios_by_trade(document).items())), rate, _what_nodes_state(nodes))
+           tuple(sorted(solve_prices.wage_ratios_by_trade(document).items())), rate, _what_nodes_state(nodes),
+           float(civ["starting_interest_rate"]), price_solver.territory_fingerprint(civ))
     cached = _DERIVED_FOR_CIVILISATION.get(key)
     if cached is None:
         derivation_calls.append(key)
         interest_rate = float(civ["starting_interest_rate"])
         goods, _provenance = price_solver.priced_goods_table(
-            civ["starting_techs"], document, civilization_id=civilization_id, interest_rate=interest_rate,
-            home_regions=tuple(civ.get("home_regions") or ()))
-        energy = energy_prices.graded(civ["starting_techs"], document, goods, civilization_id, interest_rate)
+            civ["starting_techs"], document, civilization_id=civilization_id, civilization=civ)
+        energy = energy_prices.graded(civ["starting_techs"], document, goods, civilization_id, interest_rate,
+                                      civilization=civ)
         copies = {node_id: dict(node) for node_id, node in nodes.items()}
         apply_revenue(copies.values(), goods, schedule.wages_per_hour(), rate, energy)
         cached = {node_id: {field: node[field] for field in DERIVED_FIELDS if field in node}
