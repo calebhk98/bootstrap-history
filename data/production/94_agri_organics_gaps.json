@@ -9,7 +9,7 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_hectare_years": 1.0,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of intensively pruned mulberry orchard per year, output as kg of fresh leaf",
    "yield_basis": "GROWN. The 20-30 tonnes of leaf per hectare per year for an intensively pruned orchard is the figure silk_kg's own yield_basis uses; the low end is taken. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
@@ -24,7 +24,7 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_hectare_years": 1.0,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of pyrethrum (Chrysanthemum cinerariifolium) per year, output as kg of dried flower heads",
    "yield_basis": "GROWN. Established pyrethrum stands are usually quoted at roughly 500-1500 kg of dried flower per hectare per year; the lower-middle of that range is taken for unimproved stock. Pyrethrins are a fraction of a percent to about 1-2 percent of the dried flower, which downstream extraction consumes. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
@@ -39,7 +39,7 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_hectare_years": 1.0,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of hop bine per year, output as kg of dried cones",
    "yield_basis": "GROWN. Traditional hop gardens yielded on the order of 1000-1500 kg of dried cones per hectare per year (about 10-12 hundredweight per acre in older English records); the middle is taken. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
@@ -54,7 +54,7 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_hectare_years": 1.0,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of sugar cane per year, output as kg of raw (muscovado-type) sugar boiled from pressed juice",
    "yield_basis": "GROWN, then pressed and boiled in the field-side works. Hand-and-animal-mill cane of the pre-industrial period runs on the order of 30-40 tonnes of cane per hectare, of which roller crushing and open-kettle boiling recover roughly 5-6 percent as crystallised raw sugar, giving about 2 tonnes per hectare. Boiling heat is supplied by burning the crushed cane (bagasse), which the crop itself provides, so no thermal input is charged. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
@@ -69,7 +69,7 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_hectare_years": 1.0,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of opium poppy per year, output as kg of dried raw opium latex",
    "yield_basis": "GROWN. Hand-lanced poppy capsules give on the order of 10-25 kg of raw opium per hectare in traditional cultivation; 15 kg is taken. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
@@ -84,7 +84,7 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_hectare_years": 1.0,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of tobacco per year, output as kg of nicotine recovered in the extract",
    "yield_basis": "GROWN, then leached. Pre-industrial tobacco yielded roughly 1000 kg of cured leaf per hectare; cured leaf holds about 2 percent nicotine by mass, and leaching or steam distillation recovers about 80 percent, so 1000 x 0.02 x 0.8 = 16 kg of nicotine. Waste stems and dust carry the same alkaloid at lower grade, which this basis does not distinguish. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
@@ -99,7 +99,7 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_hectare_years": 1.0,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of cultivated foxglove (Digitalis purpurea) per year, output as kg of dried leaf",
    "yield_basis": "GROWN. Cultivated foxglove, a biennial harvested for its leaf, is commonly cited at about 1-2 tonnes of dried leaf per hectare per year; the midpoint is taken. Glycoside content is a fraction of a percent of the dried leaf and is left to the consuming node. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
@@ -114,7 +114,7 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_hectare_years": 1.0,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of potatoes per year, output as kg of washed, dried potato starch",
    "yield_basis": "GROWN, then rasped and washed. Pre-industrial potato yields are on the order of 10 tonnes of tubers per hectare; tubers are about 17 percent starch by mass and rasping and washing recovers about 85 percent, so 10000 x 0.17 x 0.85 = 1445 kg. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
