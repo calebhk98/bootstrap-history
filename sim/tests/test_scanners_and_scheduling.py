@@ -300,8 +300,8 @@ check("...and the headline itself uses 'spare', which only reads one way "
 # floor ... means playing better than the unlucky-proof plan". True about the
 # instrument, false as advice: a player reached the same Rome goal's startable
 # point in 334 years under fog, on a second attempt, with the point-contact
-# transistor failing six times. DICE_FREE_FLOOR_YEARS stays in the file as a
-# measurement of one policy, and the menu a player reads stays out of the
+# transistor failing six times. The per-civilisation table was deleted (it named civilisation
+# ids and went stale); the menu a player reads stays out of the
 # business of telling them what is reachable, because critical_path already
 # tells them that for the goal they actually picked.
 from sim.engine import cli as _CLI
@@ -312,11 +312,8 @@ check("no horizon-mode description quotes the dice-free floor or calls any "
       not any(word in _hz_notes for word in
               ("dice-free", "unlucky-proof", "1,019", "1019", "451")),
       _hz_notes)
-check("the floor table itself is still there, still per-civilisation, and "
-      "still the number PATH_SEARCH.md measured",
-      _CLI.DICE_FREE_FLOOR_YEARS.get("rome_100ad") == 1019
-      and _CLI.DICE_FREE_FLOOR_YEARS.get("han_china_100ad") == 451,
-      _CLI.DICE_FREE_FLOOR_YEARS)
+check("the per-civilisation floor table no longer exists in the engine",
+      not hasattr(_CLI, "DICE_FREE_FLOOR_YEARS"))
 
 # RETRY LEARNING HAS TO SURVIVE A SAVE. failed_attempts drives
 # _retry_risk_multiplier and _retry_calendar_retain, and it was not in

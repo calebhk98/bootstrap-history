@@ -758,7 +758,7 @@ def _excess_mortality_multiplier(nutrition_ratio: float, vulnerability: float) -
     DOUBLE-COUNTING BAD YEARS IN THE BASELINE RATE IS NOT WHERE THE MODEL'S
     RESIDUAL POPULATION DRAG COMES FROM (Complaints/45-no-granary-so-the-
     baseline-collapses.md's unshocked-century follow-up: with the granary
-    and the fertility ramp above 1.0 both in place, 100 years of rome_100ad
+    and the fertility ramp above 1.0 both in place, 100 years of the default civilisation
     with events=False still settles around 74 percent of its starting
     population). The concern is real in direction - the
     BASELINE_ANNUAL_MORTALITY_RATE_* / SURVIVAL_TO_WORKING_AGE figures are

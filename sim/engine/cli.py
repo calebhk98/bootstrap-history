@@ -28,6 +28,7 @@ import collections, json, math, os, random
 from collections import defaultdict
 
 from .catalog import load_production_catalog
+from .default_civilisation import default_civilisation_id
 from .data import (ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
                    hard_pre, load, load_civ, resolve_goal,
                    STARTING_KITS, STRATS, topo_order, win_condition_describe)
@@ -137,47 +138,6 @@ def ensure_fixed_hash_seed(seed="0"):
 # had just won the whole game proposed naming a few points on that same line
 # - Challenge/Standard/Relaxed/Endless - rather than asking for four bare
 # numbers with no sense of what any of them mean.
-#
-# THE ONE THING A NAME CANNOT FIX ON ITS OWN: the SAME horizon is a
-# completely different offer depending which civilisation it is attached to.
-# Measured with every stroke of luck removed - no events, no project
-# failures, an immortal founder, the game's own planner doing the ordering -
-# reaching the current goal has taken about 451 years from Han China and
-# about 1,019 from Rome (see data/review/PATH_SEARCH.md section 6 for
-# the method and the full tables). A 500-year Standard is generous for the
-# one and short of reachable for the other, and a menu that offers both
-# civilisations and both horizons with nothing connecting them is offering a
-# choice it has not explained. See _new_game's own use of this table for
-# where that connection actually gets said out loud, to whichever
-# civilisation a player has just picked.
-#
-# THIS IS A MEASUREMENT OF THE PLANNER'S OWN POLICY, NOT A PROPERTY OF THE
-# GAME - say so, if this is ever quoted outside this file. PATH_SEARCH.md
-# section 4 traces Rome's 1,019-year figure to a specific, diagnosed cause
-# (an early credit-exhaustion cycle the automatic optimizer falls into and
-# does not climb back out of for roughly 850 years) and section 4.4 proves,
-# by direct ablation, that no reordering of the strategy file - which is
-# the entire space planner.py/path_search.py can search - changes it. A
-# real, far stronger playthrough (playtest/fixtures/
-# rome_434_goal_startable.json) reaches the SAME goal in 334 years, three
-# times faster, by playing manually rather than by any order this table's
-# own instrument can express. Do not read 1,019 as "Rome cannot be won
-# faster" - only as "this structural instrument, searched honestly,
-# including a move that tries to grow the household's own capacity (see
-# PATH_SEARCH.md section 5), could not find an order that does."
-#
-# NOT RECOMPUTED HERE, EVER. A single dice-free trial takes anywhere from
-# several seconds (a short horizon, as path_search.py's own search rounds
-# run it) to minutes (a full-length one, per PATH_SEARCH.md's own timing
-# notes) - far too slow for a menu a player is sitting in front of, and nor
-# is it this file's place to duplicate planner.py/path_search.py's own
-# measurement. Hand-updated if that document's own numbers change; a
-# civilisation not in this table is simply not given a number, rather than
-# being handed a guess dressed as a fact.
-DICE_FREE_FLOOR_YEARS = {
-    "han_china_100ad": 451,
-    "rome_100ad": 1019,
-}
 
 # NAMED, NOT INVENTED. Every one of these is the SAME knob the engine always
 # had (a plain year count the run ends at) - nothing here scales a cost, a
@@ -186,19 +146,9 @@ DICE_FREE_FLOOR_YEARS = {
 # number because the engine only ever took one. Endless is not a bigger
 # number wearing a disguise - see ENDLESS_HORIZON_YEARS below for exactly
 # what it is and is not.
-# CHALLENGE'S NOTE NO LONGER QUOTES THE DICE-FREE FLOOR, AND MUST NOT. It used
-# to say 400 years was "short of the measured dice-free floor for at least one
-# civilisation ... means playing better than the unlucky-proof plan", pointing
-# at DICE_FREE_FLOOR_YEARS above. Every word of that was true about the
-# instrument and false as advice: a player reading it concludes Rome cannot be
-# won in 400 years, and a player has since reached the same Rome goal's
-# startable point in 334 years (playtest/fixtures/
-# rome_434_goal_startable.json) under fog, on a second attempt, with the
-# point-contact transistor failing six times in a row. 1,019 is not a floor
-# under play, it is one policy's ceiling - see DICE_FREE_FLOOR_YEARS' own
-# comment and PATH_SEARCH.md section 4. The note says what the setting is for
-# instead, and the only per-goal number a player is given in this wizard is
-# critical_path's, computed for the goal they actually picked.
+# The notes do not quote any measured floor or call a setting unreachable: the
+# only per-goal number a player is given in this wizard is critical_path's,
+# computed for the goal they actually picked.
 # (key, label, years-or-None, one-line description)
 HORIZON_MODES = (
     ("challenge", "Challenge", 400,
@@ -1047,7 +997,7 @@ def cmd_compare(args):
                         "start_kit": (getattr(args, "kit", "poor_scholar")
                                       if getattr(args, "kit", "poor_scholar") in STARTING_KITS
                                       else "poor_scholar")},
-                   civ=load_civ(getattr(args, "civ", "rome_100ad")),
+                   civ=load_civ(getattr(args, "civ", None)),
                    bounty_set=bounties).run(goal, args.horizon)
                for i in range(args.mc)]
         _summarise(res, "%s%s" % (label, "  [deterministic]" if deterministic else ""))
@@ -1076,7 +1026,7 @@ def _civ_for_session(args):
                       % (saved, asked))
                 raise SystemExit(1)
             return saved
-    return asked or "rome_100ad"
+    return asked or default_civilisation_id()
 
 
 def _goal_for_session(args, tree, nodes):
@@ -1457,7 +1407,7 @@ def _pick_session_filename(civ_id):
     """
     # CLAIMED, NOT MERELY CHECKED. This tested os.path.exists and returned the
     # name without creating anything, so six games started at once all saw the
-    # same gap and all picked rome_100ad_78.json: five of them overwrote each
+    # same gap and all picked the same file name: five of them overwrote each
     # other, under a banner promising you can resume exactly where you left
     # off. O_EXCL makes the check and the claim one operation.
     #
@@ -1551,7 +1501,7 @@ def main():
                             "rolls, not only the dated hazards this flag silences, "
                             "comes out the same way every time.")
         subparser.add_argument("--no-bounties", action="store_true")
-        subparser.add_argument("--civ", default="rome_100ad",
+        subparser.add_argument("--civ", default=default_civilisation_id(),
                        help="which civilization to play. See data/civilizations/")
         subparser.add_argument("--kit", default="poor_scholar",
                        help="starting wealth: " + ", ".join(STARTING_KITS))
@@ -1599,7 +1549,7 @@ def main():
                                     "sim/planner.py. A developer/optimizer tool, "
                                     "like compare/sweep/sensitivity - never reached from "
                                     "play or agent.")
-    subparser.add_argument("--civ", default="rome_100ad")
+    subparser.add_argument("--civ", default=default_civilisation_id())
     subparser.add_argument("--goal", default=None)
     subparser.add_argument("--out", required=True, metavar="FILE",
                    help="strategy file to write; feed it back in with --strategy")
@@ -1653,7 +1603,7 @@ def main():
                                       "See sim/path_search.py. A developer/"
                                       "optimizer tool, like plan/compare/sweep/"
                                       "sensitivity - never reached from play or agent.")
-    subparser.add_argument("--civ", default="rome_100ad")
+    subparser.add_argument("--civ", default=default_civilisation_id())
     subparser.add_argument("--goal", default=None)
     subparser.add_argument("--out", required=True, metavar="FILE",
                    help="strategy file to write; feed it back in with --strategy")

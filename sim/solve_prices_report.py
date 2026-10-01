@@ -521,7 +521,7 @@ def _print_rent_summary(arguments, rent_hours_per_kg_by_material):
             # now resolves a civilisation's home_regions through
             # geography.json's land_tiles and returns one parcel per 150,000
             # km2 TILE, so this count has not meant regions since that
-            # migration. It printed "rome_100ad (88 region(s) held)" for a
+            # migration. It printed a civilisation id with 88 regions held for a
             # civilisation holding seven regions, which is the same
             # region-label-as-physical-unit confusion Complaints/46 and /50
             # were each about, surviving in a label after the mechanism
@@ -709,8 +709,8 @@ def main(argv=None):
                         help="fixed-point damping factor (default %.1f)" % DAMPING_FACTOR)
     parser.add_argument("--civ", metavar="CIVILIZATION",
                         help="solve using only the techniques this civilization "
-                             "can actually run, from its starting_techs (e.g. "
-                             "rome_100ad). Without this the solve is UNDATED and "
+                             "can actually run, from its starting_techs (any id in "
+                             "data/civilizations). Without this the solve is UNDATED and "
                              "will happily price Roman electricity off a "
                              "photovoltaic panel - see THE SOLVER NOW HAS A "
                              "NOTION OF WHEN, above, and Complaints/39")

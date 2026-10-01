@@ -1,6 +1,15 @@
 # The game assumes Rome exists
 
-**Status:** open
+**Status:** partly - the game starts and steps with the default civilisation's file absent (sim/tests/test_civilisation_independence.py); no code names a civilisation id; the default comes from `default_civ`, falling back to the first civilisation present.
+
+Remains: Roman units are still the engine's units. Measure with
+`grep -rEoi "denari|iuger" sim/engine sim/world --include=*.py | wc -l` and
+`grep -rEoi "roman|\brome\b" sim/engine sim/world --include=*.py | wc -l`.
+Internal money and land are still denarii and iugera, with each civilisation's
+own units not yet confined to the display edge; that is the physical-units
+work (money_units, `Complaints/123`). Prose comments that say "Rome" as a
+calibration baseline also remain. Tests still use Rome as the default
+fixture.
 
 Every civilisation should be one data file that the rest of the game does not
 depend on. Rome is not: deleting `data/civilizations/rome_100ad.json` stops

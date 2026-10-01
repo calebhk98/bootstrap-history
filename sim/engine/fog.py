@@ -96,7 +96,7 @@ class FogMixin:
         sharing one memo down that whole call tree, checking visibility of a
         single deep node re-derived the visibility of common ancestors once per
         path to them, which is exponential in the depth of the tree. A profiler
-        on `can_start('dynamo')` on norse_900ad under fog counted 12,465 nested
+        on `can_start('dynamo')` on a late civilisation under fog counted 12,465 nested
         calls to start_reason from three top-level ones, at 0.45s each; a plain
         `available` call, which checks all ~2,800 nodes this way, did not return
         in 60 seconds. The memo makes one recursive descent O(nodes touched)
@@ -404,11 +404,3 @@ class FogMixin:
                 self._goal_closure = set()
         return node_id in self._goal_closure
 
-    FOREIGN_MARKERS = ("_roman", "_rome", "annona", "insula", "societas",
-                       "collegium", "argentarii", "latifundi",
-                       "cursus", "pharos")  # Rome-specific things: state grain dole, imperial dispatch, etc.
-
-    # Blocks only civ-specific institutions, not generic capabilities. A Roman arch
-    # is a construction technique anyone can learn; annona is a state benefit Rome alone
-    # can grant. Most of this list is empty by design. [temporary_heuristic]
-    FOREIGN_INSTITUTIONS = ()

@@ -9,7 +9,7 @@ ROME 100 AD -> TRANSISTOR : tech-tree simulator, planner and game.
     python3 sim/simulator.py validate
     python3 sim/simulator.py civs                       who you can play
     python3 sim/simulator.py play --manual               free choice, no autopilot
-    python3 sim/simulator.py agent --civ rome_100ad --fog
+    python3 sim/simulator.py agent --civ <civilisation_id> --fog
 
 `agent` speaks one JSON object per line in and one per line out. It explains
 itself: it prints a welcome on first run and answers {"cmd":"help"}. There is

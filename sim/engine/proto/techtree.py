@@ -736,7 +736,7 @@ def _agent_available(sim, nodes, cmd=None):
     # prerequisites is even visible, which asks the same question about
     # THEIR missing prerequisites, and neighbouring nodes in `order` share
     # most of that ancestry. Recomputing it fresh per node, 2,800 times, is
-    # what made a single `available` call under fog on norse_900ad take
+    # what made a single `available` call under fog take
     # upward of a minute; sharing the memo across the sweep makes it once
     # per node actually touched. See is_visible()'s docstring.
     _memo = {}

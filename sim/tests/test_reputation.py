@@ -91,7 +91,7 @@ check("England no longer starts already owning the iron gap its own briefing des
 
 # --- JOB 3b: the cursus publicus (Roman imperial dispatch relay) and the
 # Pharos (one specific Ptolemaic building at Alexandria) are not a generic
-# capability any society might have. FOREIGN_MARKERS in fog.py already
+# capability any society might have. data/institution_societies.json already
 # catches both by name; this pins that Han China - which has no Roman
 # citizenship, no Roman roads and no Alexandria - is never handed either one
 # for free, the way testers kept finding Roman-branded grants in other

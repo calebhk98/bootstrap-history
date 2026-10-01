@@ -761,7 +761,7 @@ class StatePressureMixin:
     # had annona fleets and salt monopolies running before this household's
     # founder was born. Norse (0.15) caps the PRODUCT so low that none of the
     # thresholds below can be crossed at all while the state stays that weak -
-    # "the thing is an assembly, not a state" (norse_900ad.json's own
+    # "the thing is an assembly, not a state" (that civilisation file's own
     # institutions note) - which is the honest answer for a society with no
     # tax office, not a gap in the mechanic. A Norse run that spends centuries
     # building the institutions this civilisation's own opening text predicts
@@ -862,7 +862,7 @@ class StatePressureMixin:
         thresholds nobody in government has a reason to know this household
         exists; above them, the state's own capacity to organise and compel
         (state_capacity) decides how hard that interest bites, exactly the
-        reading Diocletian's own hazard note (rome_100ad.json) gives that
+        reading Diocletian's own hazard note in its civilisation file gives that
         field: his reforms make the state heavier, not the household richer,
         and the patronage shift that hazard already carries is the other
         half of the same fact this mechanic spends on requisition instead.
