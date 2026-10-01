@@ -25,7 +25,7 @@ half of the same question hours_you_can_call_on (labour_training.py)
 answers for craft hours.
 """
 from .data import (TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family)
-from sim.constants import declare
+from sim.constants import declare, REGISTRY
 
 
 class PopulationMixin:
@@ -240,6 +240,41 @@ class PopulationMixin:
                  "sailor", "miner", "furnaceman"):
             return "common"
         return "uncommon"          # glassblowers, engravers, opticians' forebears
+
+    def _trade_density_source(self, trade):
+        """Which declared constant this trade's population estimate comes from.
+        Returns the constant's name as a string (e.g., "TRADE_DENSITY_SCARCE",
+        "SCHOLAR_ENGAGEMENT_FRACTION", "MERCHANT_DENSITY"). Used by
+        population_report and _density_is_placeholder to look up metadata.
+        """
+        if not self.trade_available(trade):
+            return None
+        if trade == "scholar":
+            return "SCHOLAR_ENGAGEMENT_FRACTION"
+        if trade == "scribe":
+            return "SCRIBE_ENGAGEMENT_FRACTION"
+        if trade == "merchant":
+            return "MERCHANT_DENSITY"
+        if trade in TRADES_ABSENT:
+            # Taught trades have their own density not yet declared
+            return None
+        # Craft trades use TRADE_DENSITY
+        cls = self._trade_market_class(trade)
+        return f"TRADE_DENSITY_{cls.upper()}"
+
+    def _density_is_placeholder(self, trade):
+        """Whether a trade's population estimate is a placeholder
+        (temporary_heuristic) or a cited estimate (engineering_estimate).
+        Looks up the constant name in REGISTRY rather than hard-coding which
+        trades are placeholders, so the answer stays consistent with the
+        declaration itself.
+        """
+        source_name = self._trade_density_source(trade)
+        if source_name is None:
+            return False
+        if source_name not in REGISTRY:
+            return False
+        return REGISTRY[source_name].get("kind") == "temporary_heuristic"
 
     # HIRING A HANDFUL OF SMITHS MUST NOT MOVE THE STANDING WAGE. A market
     # supply pool sized for a single provincial town, not the whole country,
@@ -611,6 +646,7 @@ class PopulationMixin:
                 "you_employ": round(have, 2),
                 "share_of_the_reachable_pool_you_employ":
                     round(have / reach, 4) if reach > 1e-9 else None,
+                "is_placeholder": self._density_is_placeholder(trade),
             })
         return {
             "civilisation": self.civ.get("short_name", self.civ.get("name", self.civ.get("id", ""))),
