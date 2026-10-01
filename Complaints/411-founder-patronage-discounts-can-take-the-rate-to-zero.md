@@ -1,0 +1,7 @@
+# Patronage and reputation discounts are absolute rate points, so the founder's rate can reach zero whatever the market rate is
+
+**Status:** open - found while building 110 (first loanable-funds market increment)
+
+`debt_interest_rate` is now the market rate plus an arrears premium, less the founder's discounts: the `debt_rate_discount` effects of institutions and patrons (absolute rate points each) and a reputation term capped at `DEBT_RATE_REPUTATION_DISCOUNT_CAP`. A grown founder collects enough of them that the result is zero for most of a long run, for every civilisation and whatever the market rate is (measure: `python3 sim/actor_ledger.py` does not print it; run any 150-year game and print `debt_interest_rate()` beside `market_rate()` each decade). A borrower whom nobody lends to below the lenders' own cost of funds cannot have a zero rate, and a patron who lends cheaply is a lender who is giving up the market return, which should come out of that patron's purse.
+
+What is missing: discounts expressed as a share of the market rate (or as a patron actor lending from its own funds at its own rate, through the same `Borrower` mechanism in `sim/engine/actors/borrowing.py`), with a floor at the lenders' funding cost (`RATE_FLOOR_SHARE` of the starting rate stands in for it today). Until then, large founders borrow free once the discounts accumulate.

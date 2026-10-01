@@ -1,6 +1,6 @@
 # Add deeper capital markets
 
-**Status:** open - roadmap: after 107
+**Status:** open - first increment built (a loanable-funds market per civilisation); banks, bonds, equity, insurance and crises remain; next: 413 (firms raise capital), 412, 411
 
 **Source:** playtest findings document, LATE-004. **Type:** Major
 roadmap-sized feature recommendation. Genuinely new; not currently named in
@@ -58,3 +58,11 @@ as a follow-on to those two rather than a parallel track.
 `Complaints/107` (LATE-001, independent firms) and `Complaints/109`
 (LATE-003, state fiscal model) are the natural prerequisites in practice,
 even though nothing formally blocks starting this first.
+
+## First increment (built)
+
+Each civilisation has one loanable-funds market (`sim/world/capital_market.py` pure functions, `sim/engine/economy_capital_market.py` the yearly meeting, `CapitalMarketRecord` in the actors state). Supply is what households save (the income above subsistence, spread by the civilisation's inequality), what firms and the founder hold, and part of the state's spare reserve. Demand is what the founder, firms and the state owe plus the borrowing of the economy the simulation does not model actor by actor. The market rate is the civilisation's starting rate (initial condition) scaled by how the balance has moved from its value at the first meeting. Every borrower pays that rate plus a premium for the share of its own ceiling used, less a discount for its standing (`sim/engine/actors/borrowing.py`: firms, the state; the founder through `debt_interest_rate` with the same pure functions). Credit limits are bounded by what lenders still hold beyond everyone else's loans, and the years of earning a lender will carry scale with the starting rate over the market rate. The state borrows to cover a deficit up to its ceiling before it cuts every line by the same share, and pays interest as an outlay (`interest`). Tests: `sim/tests/test_capital_market.py`; the screen is `money` (`loanable_funds_market`, `sim/PROTOCOL.md`).
+
+Every constant that is not derived is declared a `temporary_heuristic` (`RATE_ELASTICITY`, `RATE_FLOOR_SHARE`, `RATE_CEILING_SHARE`, `ARREARS_PREMIUM_AT_CEILING`, `LENDER_RESERVE_SHARE`, `SAVING_SHARE_OF_SURPLUS`, `LENDING_HORIZON_YEARS`, `BACKGROUND_BORROWING_SHARE`, `LENDABLE_RESERVE_SHARE`, `STANDING_DISCOUNT_CAP`, `TRACK_RECORD_YEARS`); `python3 sim/code_health.py` lists them. Measure the series with a 150-year game printing `market_rate()`, `debt_interest_rate()` and `credit_limit()` each decade.
+
+Still open: firms raising capital on purpose (413), the state reserve that dominates supply (412), patron discounts that take the founder's rate to zero (411), and everything in the original finding beyond a pooled loan market: banks and deposits, bonds, equity and joint-stock firms, insurance, investment funds, crises.
