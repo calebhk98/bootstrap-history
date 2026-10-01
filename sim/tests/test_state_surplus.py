@@ -43,14 +43,32 @@ one_year(saver)
 check("a state with a reserve beyond its need is a source of funds on the market",
       saver.capital_market().supply_by_source.get("state", 0.0) > 0.0, saver.capital_market().supply_by_source)
 one_year(saver)
-lent, rate = saver.state_lending()
+lent, _rate = saver.state_lending()
 check("part of what the state supplies is lent, because the market's borrowers want funds",
       0.0 < lent <= saver.capital_market().supply_by_source["state"], (lent, saver.capital_market().supply_by_source))
-check("the state earns interest on what it lends, booked as income",
-      saver_treasury.record.income.get("interest_on_lending", 0.0) > 0.0, saver_treasury.record.income)
-check("the interest is about what it lent at the market rate",
-      abs(saver_treasury.record.income["interest_on_lending"] / 2.0 - lent * rate) < 0.3 * lent * rate,
-      (saver_treasury.record.income["interest_on_lending"], lent, rate))
+# a borrower in the market: firms and the founder owe and pay interest, and the lenders are paid exactly that
+from sim.engine.state import ActorRecord
+borrowed = sim()
+borrowed_treasury = borrowed.state_treasury()
+borrowed_treasury.money = 1.0e12
+for number in range(3):
+    borrowed.actors.add("firm:debtor%d" % number, ActorRecord(kind="firm", money=-5.0e7))
+borrowed.household.capital = -1.0e6  # the founder owes too
+for _year in range(4):
+    one_year(borrowed)
+market = borrowed.capital_market()
+paid = market.interest_paid_total
+check("borrowers paid interest over the years", paid > 0.0, paid)
+check("what lenders received is what borrowers paid, less what waits in the pool for the next meeting",
+      abs(market.interest_received_total + market.interest_pool - paid) < 1e-9 * paid,
+      (market.interest_received_total, market.interest_pool, paid))
+check("the state earned interest on what it lent, no more than borrowers paid",
+      0.0 < borrowed_treasury.record.income.get("interest_on_lending", 0.0) <= paid,
+      (borrowed_treasury.record.income, paid))
+every_receipt = (borrowed_treasury.record.income.get("interest_on_lending", 0.0) + market.interest_to_households
+                 + sum(firm.record.income.get("interest_on_lending", 0.0) for firm in borrowed.actors.active_firms()))
+check("no lender's interest income exceeds what was paid",
+      every_receipt <= paid * (1.0 + 1e-9), (every_receipt, paid))
 bare = sim()
 bare.civ["standing_army"] = 1.0e8  # a need no revenue covers
 bare.state_treasury().money = 0.0

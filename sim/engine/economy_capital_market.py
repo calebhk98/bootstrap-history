@@ -97,6 +97,7 @@ class CapitalMarketMixin:
         """The year's meeting: set the rate from the balance and record what lenders will advance."""
         from .actors import SimWorld
         world = SimWorld(self)
+        self.pay_lenders()
         record = self.capital_market()
         sources = self.market_funds(world)
         supply = sum(sources.values())
@@ -128,6 +129,7 @@ class CapitalMarketMixin:
             "funds_lenders_hold": round(record.supply, 1),
             "lenders_will_still_advance_you": None if room is None else round(room, 1),
             "the_state_owes": round(record.loans.get(gov, 0.0), 1),
+            "the_state_has_lent": round(self.state_lending()[0], 1),
             "means": "the yearly rate on loans in your civilisation, set by the funds its households, "
                      "firms and state save against what everyone borrows; your own rate is this plus "
                      "a premium for how much of your limit you use, less your standing",

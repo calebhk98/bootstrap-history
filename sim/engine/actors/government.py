@@ -70,7 +70,6 @@ class Government(SurplusMixin, RecordedActor):
 		"""Take the year's revenue, pay what the purse covers of the standing need, and book the rest
 		as unfunded. The goods it bought are this year's demand on the market."""
 		self.pay_interest(world)
-		self.earn_interest_on_lending(world)
 		self.credit(world.state_revenue(), "taxation")
 		wanted = world.army_wanted()
 		soldiers = self.record.army if self.record.army > 0.0 else wanted

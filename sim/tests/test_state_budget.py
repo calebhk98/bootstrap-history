@@ -161,7 +161,6 @@ def short_of(unfunded, firms=0, protection=None):
     that went a year short of exactly `unfunded` money."""
     game = grown(budget_sim()[0])
     game.revenue = lambda: INCOME
-    game.state_lending = lambda: (0.0, 0.0)  # no interest on lending, so the shortfall is exactly `unfunded`
     if protection is not None:
         game.protection = protection
     for number in range(firms):

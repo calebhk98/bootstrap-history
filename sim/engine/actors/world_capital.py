@@ -30,6 +30,10 @@ class CapitalView:
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
 		return self._sim.state_lending()
 
+	def note_interest_paid(self, amount: float) -> None:
+		"""A borrower's interest joins the pool lenders are paid from."""
+		self._sim.note_interest_paid(amount)
+
 	def household_saving(self) -> float:
 		"""Yearly saving of the society's households: a share of the income above subsistence, with
 		income spread over the people as the civilisation's inequality says. A labourer's yearly pay keeps
