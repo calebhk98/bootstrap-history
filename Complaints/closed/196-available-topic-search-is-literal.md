@@ -1,6 +1,6 @@
 # `available <topic>` matches words literally: natural topic words return nothing
 
-**Status:** partly
+**Status:** closed
 
 Player words such as `physics`, `science`, `education`, `health`, `furnace`, `literacy`, `sanitation` and `water` return "Nothing you could begin today matches that", even though related items exist (heard-of or blocked) and the game refers to them elsewhere. The tester counted 143 startable items at the start and 231 by 1332, so filtering is the only way through the list, and it depends on guessing the internal vocabulary. Wanted: a thesaurus or related-names search ("physics" surfacing mechanics, waves, energy), or category browsing, without exposing prerequisite chains.
 
