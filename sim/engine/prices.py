@@ -495,7 +495,8 @@ def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable
 def priced_goods_table(held_technology_ids: Iterable[str],
                        prices_json: Dict[str, Any],
                        production_entries: Optional[ProductionEntries] = None,
-                       civilization_id: Optional[str] = None
+                       civilization_id: Optional[str] = None,
+                       interest_rate: Optional[float] = None
                        ) -> Tuple[Prices, Provenance]:
     """(goods_in_money, provenance) - a calculated price for every material
     the recipes can make, in the coin of `prices_json`.
@@ -512,21 +513,21 @@ def priced_goods_table(held_technology_ids: Iterable[str],
                  nothing anywhere makes is absent, never given an invented
                  price.
 
-    `civilization_id` is passed straight through to `solved_prices` - see RENT
+    `civilization_id` and `interest_rate` are passed straight through to `solved_prices` - see RENT
     NEEDS A CIVILIZATION in the module docstring.
     """
     entries = (production_entries if production_entries is not None
                else _default_production_entries())
     held = frozenset(held_technology_ids)
     solved = solved_prices(held, prices_json, production_entries=production_entries,
-                           civilization_id=civilization_id)
+                           civilization_id=civilization_id, interest_rate=interest_rate)
     in_reach = solved_prices(
         solved.gate_nodes_held, prices_json, production_entries=production_entries,
-        civilization_id=civilization_id,
+        civilization_id=civilization_id, interest_rate=interest_rate,
         admitted_entry_keys=entries_in_reach(held, solved.gate_nodes_held, solved.resolvable_materials, entries))
     mature = solved_prices(all_gate_nodes(entries), prices_json,
                            production_entries=production_entries,
-                           civilization_id=civilization_id)
+                           civilization_id=civilization_id, interest_rate=interest_rate)
     goods_in_money = {}
     provenance = {}
     for table, label in ((mature, "mature"), (in_reach, "gated"), (solved, "solved")):

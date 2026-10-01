@@ -67,11 +67,12 @@ def pool_only(goods: Mapping[str, float]) -> EnergyPrices:
 
 
 def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str, float],
-           civilization_id: Optional[str] = None) -> EnergyPrices:
+           civilization_id: Optional[str] = None, interest_rate: Optional[float] = None) -> EnergyPrices:
     """The graded carrier prices of a society holding these technologies, in the coin of `prices_json`."""
     from . import prices as price_solver
     entries = price_solver.default_production_entries()
-    solved = price_solver.solved_prices(held_technology_ids, prices_json, civilization_id=civilization_id)
+    solved = price_solver.solved_prices(held_technology_ids, prices_json, civilization_id=civilization_id,
+                                        interest_rate=interest_rate)
     ratios = solve_prices.wage_ratios_by_trade(prices_json)
     key = (solved.gate_nodes_held, solved.civilization_id, tuple(sorted(ratios.items())),
            prices_json["money_per_labour_hour"], solved.interest_rate)
@@ -80,7 +81,7 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
     if cached is not None and cached[0] is entries:
         return EnergyPrices(pool, cached[1], cached[2])
     mature = price_solver.solved_prices(price_solver.all_gate_nodes(entries), prices_json,
-                                        civilization_id=civilization_id)
+                                        civilization_id=civilization_id, interest_rate=interest_rate)
     wage_by_trade = price_solver.solver_wage_ratios(entries, ratios)
     money_per_hour = prices_json["money_per_labour_hour"]
     hour_prices = {material: price / money_per_hour for material, price in goods.items()}
