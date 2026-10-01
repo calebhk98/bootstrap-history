@@ -186,15 +186,16 @@ one_year(content)
 check("a state with no unfunded need levies only the ordinary share, however visible the household",
       abs(sum(content.levy_shares(content.household_scale(), 0.0)) - ordinary(content)) < 1e-12
       and ordinary(content) > 0.0, content.levy_shares(content.household_scale(), 0.0))
-small, large = short_of(1.0e5), short_of(2.0e5)
+small, large = short_of(1.0e4), short_of(2.0e4)
+record = small.state_treasury().record
 check("the state seeks its shortfall from the income it can see: the rate is shortfall over visible income",
-      abs(charged(small) - 0.1 / small.notice_over(small.household_scale())) < 0.02
-      or abs(charged(small) - 0.1) < 0.02, (charged(small), small.notice_over(small.household_scale())))
+      0.0 < record.levy_base and abs(charged(small) - 1.0e4 / record.levy_base * small.notice_over(small.household_scale())) < 1e-9
+      and 1.0e4 / record.levy_base < budget.LEVY_RATE_CEILING, (charged(small), record.levy_base))
 check("a bigger shortfall asks more of the same household", charged(large) > 1.5 * charged(small),
       (charged(large), charged(small)))
 check("the same shortfall spread over a second equally visible taxpayer asks half as much of each",
-      abs(charged(short_of(1.0e5, firms=1)) - 0.5 * charged(small)) < 0.05 * charged(small),
-      (charged(short_of(1.0e5, firms=1)), charged(small)))
+      abs(charged(short_of(1.0e4, firms=1)) - 0.5 * charged(small)) < 0.05 * charged(small),
+      (charged(short_of(1.0e4, firms=1)), charged(small)))
 ruinous = short_of(1.0e12)
 requisition, office = ruinous.levy_shares(ruinous.household_scale(), 0.0)
 requisition -= ordinary(ruinous)
@@ -242,11 +243,12 @@ ordinary_game = grown(budget_sim()[0])
 ordinary_game.revenue = lambda: INCOME
 one_year(ordinary_game)
 before_capital = ordinary_game.capital
+expected = INCOME * sum(ordinary_game.levy_shares(
+    ordinary_game.household_scale(), ordinary_game.state.household.protection))
 ordinary_game._state_pressure(ordinary_game.year)
 check("a visible founder in a state with no shortfall still pays the ordinary share of his income",
-      abs((before_capital - ordinary_game.capital) - INCOME * sum(ordinary_game.levy_shares(
-          ordinary_game.household_scale(), ordinary_game.state.household.protection))) < 1e-6 * INCOME
-      and ordinary(ordinary_game) > 0.0, (before_capital - ordinary_game.capital, ordinary(ordinary_game) * INCOME))
+      abs((before_capital - ordinary_game.capital) - expected) < 1e-6 * INCOME and ordinary(ordinary_game) > 0.0,
+      (before_capital - ordinary_game.capital, expected))
 
 # ---- the army follows what the state can pay -------------------------------------------------
 from sim.engine.actors.tuning import ARMY_ADJUSTMENT_RATE
