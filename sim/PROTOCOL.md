@@ -122,6 +122,31 @@ Two fixes, usable separately or together:
       {"cmd":"exclude"}                             they left out, with the reason, under
                                                     "excluded". Bare exclude lists the entries.
                                                     `start` by hand is unaffected.
+      {"cmd":"figures"}                            the headline figures that explain their own
+      {"cmd":"figures","id":"<name>"}               change. With an id (cash, income, upkeep,
+      {"cmd":"why","id":"<figure name>"}            recurring_net, population, literacy_general,
+                                                    literacy_elite, price_index, hazard):
+                                                    {name, label, unit, current, previous,
+                                                    previous_year, change, causes:[{cause,
+                                                    previous, current, contribution}], drivers:
+                                                    [{driver, previous, current}], note}.
+                                                    The causes add up to the change; what the
+                                                    named parts leave out is a cause called
+                                                    "not itemised". previous is null until a
+                                                    year has been stepped. Figures register in
+                                                    sim/engine/figures_headline.py.
+      {"cmd":"leverage"}                           {leverage_points:[{lever, why_it_matters,
+                                                    figures}], note}: literacy, labour, finance,
+                                                    institutions, knowledge, materials, each
+                                                    from the engine's own figures. `path` adds
+                                                    the same leverage_points plus
+                                                    years_following_the_chain_alone.
+      {"cmd":"idle"}                               {directed_hours_this_year, committed_hours,
+                                                    idle_hours, delay_kinds:{kind:[ids]},
+                                                    what_the_wait_is, potential_uses:{
+                                                    startable_today, startable_at_no_cash_cost,
+                                                    train_oversubscribed_trades, wage_work}}.
+                                                    Never spends hours.
       {"cmd":"portfolio"}                          every active project: the founder-
                                                     hours it is ACTUALLY getting this
                                                     year and why (its rank in the queue,
@@ -309,7 +334,14 @@ Two fixes, usable separately or together:
                            other active projects, named by rank and total
       `portfolio`'s own `constraint` field on each project is exactly this
       classification, and is built from the same `waiting_on` sentence, not
-      a second guess at it.
+      a second guess at it. Each project also carries `blocker_kind`, that
+      constraint named in the shared blocker kinds of sim/engine/blockers.py
+      (staffing and trade_hours are specialists, materials is supply,
+      founder_hours is hours), and `portfolio` leads with `bottlenecks`:
+      [{kind, count, projects, hours_still_to_work, what_it_means, pools}],
+      one per kind, most fixable first; pools are the engine's demand against
+      supply for that kind (trade hours, directed hours, capital, the binding
+      material).
 
       HAZARD FIGURES. In `risk`, each hazard's `what_you_can_do[kind]` carries
       `mitigations`: one {node, label, status ("in force" or "lapsed"),

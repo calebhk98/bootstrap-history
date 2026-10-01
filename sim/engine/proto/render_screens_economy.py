@@ -173,6 +173,29 @@ def render_materials(out):
     return "\n".join(lines)
 
 
+def _bottleneck_lines(groups):
+    if not groups:
+        return []
+    lines = ["", "  BOTTLENECKS  (what blocks running work, most fixable first)"]
+    for group in groups:
+        lines.append("    %-12s %d project%s, %s hrs still to work: %s"
+                     % (group["kind"], group["count"], "" if group["count"] == 1 else "s",
+                        _fmt_num(group["hours_still_to_work"]), ", ".join(group["projects"][:4])
+                        + (" and %d more" % (group["count"] - 4) if group["count"] > 4 else "")))
+        lines.append(_wrap(group["what_it_means"], indent="      "))
+        for pool in group["pools"]:
+            if "demand_hours_this_year" in pool:
+                lines.append("      %s: %s h demand / %s h supply%s"
+                             % (pool["pool"], _fmt_num(pool["demand_hours_this_year"]),
+                                _fmt_num(pool["supply_hours_this_year"]),
+                                ", affecting %d" % pool["projects_affected"]
+                                if "projects_affected" in pool else ""))
+            elif "demand" in pool:
+                lines.append("      %s: %s to pay / %s you could raise"
+                             % (pool["pool"], _fmt_num(pool["demand"]), _fmt_num(pool["supply"])))
+    return lines
+
+
 def render_portfolio(out):
     lines = ["PROJECT PORTFOLIO"]
     rows = out.get("projects") or []
@@ -180,6 +203,7 @@ def render_portfolio(out):
              % (out.get("active_project_count") or 0,
                 "" if out.get("active_project_count") == 1 else "s",
                 _fmt_num(out.get("founder_hours_available_this_year"))))
+    lines += _bottleneck_lines(out.get("bottlenecks") or [])
     if rows:
         for row in rows:
             _rank = row.get("pool_rank_this_year")

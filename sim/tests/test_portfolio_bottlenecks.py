@@ -9,6 +9,7 @@ def ask(test_sim, **command):
 
 
 crowded = sim(capital=5_000_000.0)
+crowded.end_year = crowded.cfg["start_year"] + crowded.cfg["horizon_years"]
 for node_id in list(crowded.order):
     if len(crowded.active) >= 6:
         break
@@ -31,7 +32,7 @@ check("each project row carries the same kind",
 check("each group says what to do about it", all(group.get("what_it_means") for group in groups), groups)
 
 supply_by_trade = crowded.trade_demand_vs_supply()
-pool_rows = [pool for group in groups for pool in group.get("pools", [])]
+pool_rows = [pool for group in groups for pool in group.get("pools", []) if "trade" in pool]
 check("pools come from the engine's own trade demand and supply",
       all(pool["trade"] in supply_by_trade
           and pool["demand_hours_this_year"] == supply_by_trade[pool["trade"]]["demand_hours_this_year"]

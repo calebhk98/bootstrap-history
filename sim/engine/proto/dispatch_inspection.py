@@ -10,6 +10,9 @@ these live in a separate file).
 """
 
 from .command_registry import command
+from ..figures import FIGURES
+from .dispatch_figures import figure_reply
+from .guidance import LEVERAGE_NOTE, leverage_points
 from ..market_report import goods_market_line
 from ..knowledge_warning import knowledge_loss_warning
 from ..critical_path_remaining import active_years_left, remaining_critical_path_years
@@ -103,6 +106,8 @@ def _cmd_finish(sim, nodes, cmd, ended):
                      "is or is not startable right now.")
 def _cmd_why(sim, nodes, cmd, ended):
     node_id = cmd.get("id")
+    if node_id in FIGURES and node_id not in nodes:
+        return figure_reply(sim, node_id)
     # The goal is the one thing you were told the name of on arrival; see
     # the _goal_why note on the fog guard above for why it is `why` alone.
     if (isinstance(node_id, str) and node_id in nodes and not sim.is_visible(node_id)
@@ -172,7 +177,11 @@ def _cmd_path(sim, nodes, cmd, ended):
     order = topo_order(nodes, need)
     remaining = [node_id for node_id in order if node_id not in sim.done]
     out = {"ok": True, "id": node_id, "name": nodes[node_id]["name"], "done": node_id in sim.done,
-           "remaining_count": len(remaining), "remaining": remaining}
+           "remaining_count": len(remaining), "remaining": remaining,
+           "years_following_the_chain_alone": round(remaining_critical_path_years(
+               nodes, node_id, sim.done, active_years_left(nodes, sim.active)), 1),
+           "years_following_the_chain_alone_means": "the calendar floor of the longest chain, not counting money or hours",
+           "leverage_points": leverage_points(sim), "leverage_note": LEVERAGE_NOTE}
     warning = knowledge_loss_warning(sim)
     if warning:
         out["knowledge_loss_warning"] = warning

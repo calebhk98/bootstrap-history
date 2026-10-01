@@ -15,6 +15,7 @@ def ask(test_sim, **command):
 
 def played_sim():
     test_sim = sim(capital=1_000_000.0)
+    test_sim.end_year = test_sim.cfg["start_year"] + test_sim.cfg["horizon_years"]
     started = next((node_id for node_id in test_sim.order
                     if NODES[node_id]["rev"] > 0 and test_sim.can_start(node_id)), None)
     if started:

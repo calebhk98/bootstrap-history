@@ -812,7 +812,13 @@ def _parse_save_or_load(command, rest, words, nums, want_json):
 # with every other because they all test the same resolved `command` value.
 # A dict lookup finds the one matching branch in one step instead of testing
 # each condition in turn, without changing which branch runs for any input.
+def _parse_figure(command, rest, words, nums, want_json):
+    """`figures` alone lists them; `figures <name>` explains one."""
+    return ({"cmd": command, "id": "_".join(rest)} if rest else {"cmd": command}), None
+
+
 _COMMAND_PARSERS = {
+    "figures": _parse_figure,
     "money": _parse_bare_command,
     "values": _parse_bare_command,
     "materials": _parse_bare_command,

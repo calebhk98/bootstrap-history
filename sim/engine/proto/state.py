@@ -562,7 +562,7 @@ def _agent_state_training_and_hours(sim, active, full):
              "now, not on you or your money. A calendar floor is not "
              "exclusive research time - start something else alongside "
              "it while it runs. 'available' or 'stuck' says what you "
-             "could begin today."
+             "could begin today; 'idle' splits the hours and names the delay."
              % "{:,.0f}".format(max(0.0, sim.director_pool()
                                     - sim.director_hours_committed())))
             if (active
@@ -575,7 +575,7 @@ def _agent_state_training_and_hours(sim, active, full):
             # completely, and hours do not carry.
             else ("%s founder-hours this year are going into nothing at all: "
                   "you have no work in hand. Hours do not carry to next year. "
-                  "'available' or 'stuck' says what you could begin today."
+                  "'available' or 'stuck' says what you could begin today; 'idle' splits the hours and names the delay."
                   % "{:,.0f}".format(max(0.0, sim.director_pool()
                                          - sim.director_hours_committed()))
                   if (not active

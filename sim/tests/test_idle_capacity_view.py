@@ -31,6 +31,8 @@ target = next((node_id for node_id in test_sim.order
                if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 0 and test_sim.can_start(node_id)), None)
 ask(test_sim, cmd="start", id=target)
 test_sim.active[target]["ph_left"] = 0.0
+test_sim.active[target]["cost_left"] = 0.0
+test_sim.active[target]["lab_left"] = {}
 waiting = ask(test_sim, cmd="idle")
 check("when every project is only waiting on the calendar it says the delay is the calendar",
       waiting["delay_kinds"].get("calendar") == [target], waiting.get("delay_kinds"))
