@@ -42,6 +42,20 @@ class LivingStockMixin:
         return living_stock.unheld(
             lambda material: self.material_stock_t(self._stock_key(material)), holds, tonnes_per_unit)
 
+    def stock_gates(self, node_id):
+        """The living stock a node rests on, held beside needed, whichever way the data says it:
+        its own `holds`, or a civilisation's `needs_first` gate on a material."""
+        gates = [{"material": material, "needed": units, "held": round(self.stock_held(material), 3),
+                  "brought_by": None}
+                 for material, units in sorted((self.nodes[node_id].get("holds") or {}).items())]
+        for key, entry in (self.civ.get("needs_first") or {}).items():
+            if (not key.startswith("_") and isinstance(entry, dict) and entry.get("material")
+                    and node_id in (entry.get("ids") or ())):
+                gates.append({"material": entry["material"], "needed": entry.get("units", 0.0),
+                              "held": round(self.stock_held(entry["material"]), 3),
+                              "brought_by": entry.get("node")})
+        return gates
+
     def grant_stock(self, material, units):
         """Add units of a material to the held stock (a gift, a founding herd, an opening holding)."""
         tonnes = float(units) * tonnes_per_unit(material)

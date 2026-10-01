@@ -1,6 +1,6 @@
 # Funding UI should distinguish four different concepts more aggressively
 
-**Status:** open
+**Status:** closed - `money` carries `funding` (cash on hand, credit available now, sustainable annual surplus and its allowance, already committed) and prints them on separate lines; `funding_capacity()` is the sum of the same `funding_breakdown()` parts (test `sim/tests/test_small_screen_items.py`).
 
 Early Rome play repeatedly exposed the difference between these four funding concepts, which are often conflated under a single "funding capacity" headline:
 
