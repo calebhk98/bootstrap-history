@@ -76,3 +76,7 @@ number to hit the day wage.
 ## Update (silver-and-gold-cost)
 
 Ore grade rechecked against Laurion and Rio Tinto assays and kept; see 410 and 570 for what remains.
+
+## Update (mine-labour-per-tonne)
+
+Labour per tonne of rock checked against Kongsberg and Melle figures and fire-setting wood added to hard rock; silver moved from about 319 to about 335 hours per kg and the gap remains. See 610, 611, 612.
