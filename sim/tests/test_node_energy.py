@@ -38,11 +38,23 @@ class GradedEnergy(unittest.TestCase):
         self.assertEqual(prices, sorted(prices))
 
     def test_a_producer_sells_at_the_hottest_band_its_reach_clears(self):
-        reached_1100 = self.energy.sold("thermal_mj", {"temperature_reached_c": 1100.0})
-        cleared = [required for (carrier, required) in self.energy.bands
+        market = energy_prices.EnergyPrices(self.energy.pool, self.energy.bands)
+        reached_1100 = market.sold("thermal_mj", {"temperature_reached_c": 1100.0})
+        cleared = [required for (carrier, required) in market.bands
                    if carrier == "thermal_mj" and required <= 1100.0]
-        self.assertEqual(reached_1100, self.energy.bands[("thermal_mj", max(cleared))])
-        self.assertEqual(self.energy.sold("mechanical_mj", {}), self.goods["mechanical_mj"])
+        self.assertEqual(reached_1100, market.bands[("thermal_mj", max(cleared))])
+        self.assertEqual(market.sold("mechanical_mj", {}), self.goods["mechanical_mj"])
+
+    def test_a_producer_sells_no_dearer_than_its_own_technique_costs(self):
+        cheap = energy_prices.EnergyPrices({"mechanical_mj": 4.0}, {}, lambda entry: {"mechanical_mj": 0.5})
+        dear = energy_prices.EnergyPrices({"mechanical_mj": 4.0}, {}, lambda entry: {"mechanical_mj": 9.0})
+        self.assertEqual(cheap.sold("mechanical_mj", {}), 0.5)
+        self.assertEqual(dear.sold("mechanical_mj", {}), 4.0)
+
+    def test_the_graded_prices_know_what_an_entry_costs_to_run(self):
+        motor = production_data()["mechanical_mj_motor"]
+        own = self.energy.own_cost(motor)["mechanical_mj"]
+        self.assertGreater(own, self.goods["electrical_mj"] * motor["electrical_mj"] / motor["outputs"]["mechanical_mj"] * 0.99)
 
     def test_energy_bought_is_valued_at_the_entrys_graded_price(self):
         checked = 0
@@ -96,7 +108,7 @@ class GradedEnergy(unittest.TestCase):
 
     def test_baskets_carry_the_labour_hours_the_lines_work(self):
         node = next(node for node in self.nodes.values() if node.get("_revenue_basis") == "output")
-        baskets = node_output.output_baskets(node, production_data(), self.goods, self.energy)
+        baskets = node_output.output_baskets(node, production_data(), self.goods, self.energy, self.wages)
         self.assertEqual(baskets.labour_hours, node["_labour_hours_per_year"])
 
 

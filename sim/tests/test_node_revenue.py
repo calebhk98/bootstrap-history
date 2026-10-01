@@ -7,14 +7,14 @@ authored figure, labelled as such."""
 import copy
 import unittest
 
-from sim.engine import data, node_output, node_revenue, node_revenue_market
+from sim.engine import data, energy_prices, node_output, node_revenue, node_revenue_market
 from sim.world.labour_market import production_data
 
 
 class NodeRevenue(unittest.TestCase):
 
     def setUp(self):
-        _tree, _document, self.nodes, self.wages, self.goods = data.load()
+        _tree, self.document, self.nodes, self.wages, self.goods = data.load()
         self.rate = data.starting_schedule().money_per_labour_hour
 
     def derived(self):
@@ -44,7 +44,8 @@ class NodeRevenue(unittest.TestCase):
         changed = copy.deepcopy(self.nodes)
         for node in changed.values():
             node["rev_hours"] = 1e9
-        node_revenue.apply_revenue(changed.values(), self.goods, self.wages, self.rate)
+        energy = energy_prices.graded(data.load_civ()["starting_techs"], self.document, self.goods)
+        node_revenue.apply_revenue(changed.values(), self.goods, self.wages, self.rate, energy)
         for node_id, node in self.derived().items():
             self.assertAlmostEqual(changed[node_id]["rev_hours"], node["rev_hours"],
                                    delta=1e-9 * max(1.0, node["rev_hours"]), msg=node_id)
