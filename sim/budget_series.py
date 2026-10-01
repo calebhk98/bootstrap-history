@@ -34,6 +34,7 @@ def run(civ_id, years, seed, out_path=None):
 	treasury = game.state_treasury()
 	rows = []
 	taken_before = 0.0
+	outlays_before = {}
 	for _ in range(years):
 		if game.dead_reason:
 			break
@@ -51,7 +52,9 @@ def run(civ_id, years, seed, out_path=None):
 			"office_rate": record.levy_office_rate,
 			"founder_levy": taken - taken_before,
 			"founder_income": game.revenue(),
+			"outlays": {name: amount - outlays_before.get(name, 0.0) for name, amount in record.outlays.items()},
 		})
+		outlays_before = dict(record.outlays)
 		taken_before = taken
 		if out_path:
 			with open(out_path, "a") as handle:
@@ -82,6 +85,9 @@ def show(rows):
 	fired = sum(1 for row in rows if row["requisition_rate"] + row["office_rate"] > 0.0)
 	ceiling = sum(1 for row in rows if row["requisition_rate"] + row["office_rate"] >= 0.2999)
 	short = sum(1 for row in rows if sum(row["unfunded"].values()) > 0.0)
+	for name in ("works", "discretionary"):
+		total = sum(row.get("outlays", {}).get(name, 0.0) for row in rows)
+		print("%s outlay over the run: %.4g" % (name, total))
 	print("years %d, state went short %d, levy fired %d, at ceiling %d" % (len(rows), short, fired, ceiling))
 
 

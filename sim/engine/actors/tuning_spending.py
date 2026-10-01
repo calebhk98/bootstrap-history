@@ -65,7 +65,12 @@ MAX_STATE_SHARE_OF_TRADE = declare(
 RESERVE_CEILING_YEARS_OF_NEED = declare(
 	"RESERVE_CEILING_YEARS_OF_NEED", 2.0, kind="temporary_heuristic",
 	unit="years of the standing need", source=None, confidence="D",
-	why="The most reserve a state keeps; what a surplus leaves beyond it goes on things the "
-		"budget does not name (campaigns, building beyond upkeep, gifts, waste). Stands in for "
-		"those lines; without it a state in surplus hoards for ever and no later shortfall "
-		"is ever felt.")
+	why="The reserve a state holds against risk (a lean year, a war); what a surplus leaves beyond it "
+		"buys works. Stands in for a treasury's own judgement of how much risk it carries; without a "
+		"bound a state in surplus hoards for ever and no later shortfall is ever felt.")
+MAX_WORKS_SHARE_OF_WORKING_AGE = declare(
+	"MAX_WORKS_SHARE_OF_WORKING_AGE", 0.1, kind="temporary_heuristic",
+	unit="share of the working-age population", source=None, confidence="D",
+	why="The most of the nation's labour a state can set to building works in a year; beyond it the "
+		"state cannot hire. Stands in for a model of how a state competes with private employers; any "
+		"surplus beyond what that labour costs stays in the reserve.")
