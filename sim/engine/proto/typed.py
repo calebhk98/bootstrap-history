@@ -775,6 +775,12 @@ def _parse_keep(command, rest, words, nums, want_json):
     return {"cmd": "keep", "id": node_id, "staffed": mode in ("staffed", "on", "true")}, None
 
 
+def _parse_exclude_or_include(command, rest, words, nums, want_json):
+    if not rest:
+        return {"cmd": command}, None
+    return {"cmd": command, "what": rest[0]}, None
+
+
 def _parse_reserve(command, rest, words, nums, want_json):
     if not rest:
         return {"cmd": "reserve"}, None
@@ -849,6 +855,8 @@ _COMMAND_PARSERS = {
     "policy": _parse_policy,
     "keep": _parse_keep,
     "reserve": _parse_reserve,
+    "exclude": _parse_exclude_or_include,
+    "include": _parse_exclude_or_include,
     "save": _parse_save_or_load,
     "load": _parse_save_or_load,
 }

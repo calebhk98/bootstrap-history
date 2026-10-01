@@ -39,6 +39,7 @@ from .dispatch_money import (
 from .dispatch_market import _cmd_market  # noqa: F401
 from .dispatch_staff_controls import _cmd_keep, _cmd_reserve  # noqa: F401
 from .dispatch_priority import _cmd_priority  # noqa: F401
+from .dispatch_exclusions import _cmd_exclude, _cmd_include  # noqa: F401
 from .dispatch_labour import (
     _cmd_work, _cmd_allocate, _cmd_labour, _cmd_hire, _cmd_fire, _cmd_train,
     _cmd_commission, _cmd_move_base)

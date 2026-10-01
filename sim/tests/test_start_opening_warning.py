@@ -7,6 +7,7 @@ from .harness import *  # noqa: F401,F403
 short_sim = sim(capital=1_000_000)
 # Complete prerequisites so we can start school_founded
 short_sim.done.update(NODES["school_founded"]["pre"])
+short_sim.done.add("freedman_staff")   # one option of the school's technical_staff group
 short_sim.venture_staff_free = lambda: (0.0, 0.0)
 short_sim.venture_hands = lambda node_id: (5.0, 5.0)
 short_reply = S._agent_dispatch(short_sim, NODES, {"cmd": "start", "id": "school_founded"})

@@ -2349,7 +2349,8 @@
     "sch": 0.0,
     "sus": 0,
     "traits": [
-      "commerce"
+      "commerce",
+      "buys_people"
     ],
     "up": 1400.0,
     "yrs": 2.0,
@@ -2383,6 +2384,73 @@
       "staff_advice": {
         "kind": "artisans",
         "advice": "buy, teach and free a technical staff",
+        "order": 3
+      }
+    }
+  },
+  {
+    "adopt_yrs": 0.0,
+    "art": 0.0,
+    "build_yrs": 3.0,
+    "cap": 0.0,
+    "cat": "institution",
+    "conf": "C",
+    "dev_people": null,
+    "dev_years": null,
+    "gov": 0,
+    "id": "paid_apprentice_staff",
+    "kb": "03_SOCIAL_POLITICS.md#paid_apprentice_staff",
+    "kind": "INSTITUTION",
+    "lab": {
+      "artisan": 6000.0,
+      "master": 2000.0
+    },
+    "mat": {},
+    "name": "Take paid apprentices and engage a technical staff",
+    "note": "The route for a founder who will not buy or bind anyone: masters are hired at the market wage to teach apprentices who are paid a stipend while they learn, and the trained staff are then kept on wages. Nobody is owned, so the costs are the masters' and apprentices' own hours at their wages and a longer calendar, since a free apprentice serves a term of years and can leave. A free, paid worker who stays literate transmits knowledge onward. Grants +8 artisans, the same staff the buy-and-free route yields.",
+    "ph": 900.0,
+    "pre": [
+      "workshop_first"
+    ],
+    "req_any": [],
+    "rev": 0.0,
+    "risk": 0.1,
+    "sch": 0.0,
+    "sus": 0,
+    "traits": [
+      "commerce"
+    ],
+    "up": 1400.0,
+    "yrs": 3.0,
+    "mechanics": {
+      "capability": {
+        "lost_benefit": "Artisan capacity",
+        "scalable": "population"
+      },
+      "ablation_candidate": true,
+      "institution_places": {
+        "flat": 10.0
+      },
+      "room_places": {
+        "flat": 10,
+        "order": 1
+      },
+      "staff_capacity": {
+        "artisans": 10.0,
+        "scales_with_units": true,
+        "must_be_running": true,
+        "order": 1
+      },
+      "hiring_factor": {
+        "factor_per_unit_power": 0.5,
+        "order": 1
+      },
+      "staff_grant": {
+        "artisans": 8
+      },
+      "staff_advice": {
+        "kind": "artisans",
+        "advice": "take paid apprentices and engage a technical staff",
         "order": 3
       }
     }
@@ -3841,7 +3909,7 @@
       "ablation_candidate": true
     },
     "name": "Ground and polished spherical lenses",
-    "note": "Reading spectacles for a literate elite that goes presbyopic at forty and has no remedy. Enormous margin, obvious utility, zero threat. This is your best year-one revenue product and it also buys you your first patron.",
+    "note": "Reading spectacles for a literate elite that goes presbyopic at forty and has no remedy. Enormous margin, obvious utility, zero threat. It needs a workshop, and a workshop needs a patron, so it is not what wins your first patron; once you have both it is your best early revenue product, and it wins the patrons after the first.",
     "ph": 600.0,
     "pre": [
       "workshop_first"
@@ -4596,7 +4664,7 @@
       }
     },
     "name": "Secure a town patron",
-    "note": "Cheapest entry gift is a pair of reading lenses for an ageing magistrate. Halves incoming suspicion.",
+    "note": "Cheapest entry gift before you own a workshop is a pair of reading lenses bought from a local lens-grinder for an ageing magistrate; once you have a workshop you can make them yourself. Halves incoming suspicion.",
     "ph": 400.0,
     "pre": [
       "identity_cover"
@@ -5485,10 +5553,17 @@
     "ph": 2000.0,
     "pre": [
       "arithmetic_positional",
-      "collegium_licensed",
-      "freedman_staff"
+      "collegium_licensed"
     ],
-    "req_any": [],
+    "req_any": [
+      {
+        "group": "technical_staff",
+        "options": {
+          "freedman_staff": 1.0,
+          "paid_apprentice_staff": 1.0
+        }
+      }
+    ],
     "rev": 800.0,
     "risk": 0.15,
     "sch": 0.0,

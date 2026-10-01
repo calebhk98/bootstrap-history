@@ -451,6 +451,7 @@ class StaffingMixin:
         projects = self.state.projects
         cands = sorted((node_id for node_id in sorted(projects.done)
                         if self.is_venture(node_id) and node_id not in projects.operating
+                        and not self.exclusion_reason(node_id)
                         and self.nodes[node_id]["rev"] > self.nodes[node_id]["up"]),
                        key=lambda k: -((self.nodes[k]["rev"] - self.nodes[k]["up"])
                                        / max(1.0, self.venture_capex(k))))
@@ -525,6 +526,7 @@ class StaffingMixin:
                       (node_id for node_id in sorted(projects.done)
                        if node_id in self.CAPABILITY_INSTITUTIONS
                        and node_id not in projects.operating and self.is_venture(node_id)
+                       and not self.exclusion_reason(node_id)
                        and self.nodes[node_id]["rev"] <= self.nodes[node_id]["up"]),
                       key=lambda k: (self.nodes[k]["up"] - self.nodes[k]["rev"],
                                      self.venture_capex(k), k))

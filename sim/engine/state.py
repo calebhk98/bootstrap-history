@@ -280,6 +280,8 @@ class ProjectsState:
 	revealed: Set[str] = field(default_factory=set)
 	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)
 	keep_staffed: Set[str] = field(default_factory=set)
+	# node ids, `category:<cat>` and `trait:<trait>` the automatic starters (rush, auto_open, auto_commission) skip
+	excluded: Set[str] = field(default_factory=set)
 	stalled: int = 0
 	# work id -> {"reason": str, "year": int}; only while the work is mothballed
 	closures: Dict[str, Dict[str, object]] = field(default_factory=dict)

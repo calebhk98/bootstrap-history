@@ -541,6 +541,8 @@ class TrainingMixin:
                 break
             if node_id in projects.done or node_id in projects.active or node_id not in need:
                 continue
+            if self.exclusion_reason(node_id):
+                continue
             node = self.nodes[node_id]
             if any(prereq_id not in projects.done for prereq_id in node["pre"]):
                 continue
