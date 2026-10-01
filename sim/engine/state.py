@@ -283,6 +283,8 @@ class ProjectsState:
 	stalled: int = 0
 	# work id -> {"reason": str, "year": int}; only while the work is mothballed
 	closures: Dict[str, Dict[str, object]] = field(default_factory=dict)
+	# every work ever shut for want of staff; kept after it reopens
+	ever_closed_for_staff: Set[str] = field(default_factory=set)
 	# this year's staffing closures and reopenings: year, closed, reopened, short (resource -> amount)
 	staffing_tally: Dict[str, object] = field(default_factory=dict)
 

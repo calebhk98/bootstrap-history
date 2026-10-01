@@ -112,6 +112,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"revealed": "projects",
 	"stalled": "projects",
 	"closures": "projects",
+	"ever_closed_for_staff": "projects",
 
 	# EconomyState
 	"mines": "economy",

@@ -17,6 +17,7 @@ file of their own.
 from sim.constants import declare
 from .data import closure
 from .failure_cause import failure_cause
+from .permanent_benefit import permanent_parts
 
 FAILED_PREFIX = "FAILED at"
 MINOR_MARK = "(minor)"
@@ -60,6 +61,12 @@ class CompletionMixin:
         why="A failure on the goal's own prerequisite road blocks the goal, "
             "so its loss counts for more when deciding how loudly to say "
             "it. Presentation only.")
+
+    def reputation_gain_of(self, node):
+        """The standing finishing `node` adds; `why` quotes this same figure."""
+        return (self.REPUTATION_GAIN_BASE
+                + self.REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT * max(0.0, self.state_interest(node))
+                + (self.REPUTATION_GAIN_REVENUE_BONUS if node["rev"] > 0 else 0.0))
 
     def goal_closure_ids(self):
         """Every node the current goal needs, cached per goal."""
@@ -259,16 +266,17 @@ class CompletionMixin:
         projects.done_year[node_id] = scenario.year
         # A technology changes the society that built it. Only for work YOU
         # completed: a society is not altered by owning something it always had.
+        # The alarm is read before the work's own effects apply, which is
+        # the figure `why` quotes.
+        alarm = self.alarm_of(node)
         self.apply_tech_effects(node_id)
         self.reveal_from(node_id)
         # Visible, useful, State-approved work builds standing. Obscure laboratory
         # work does not, however important it is, which is a real and annoying fact
         # about how credibility actually accrues.
-        gain = (self.REPUTATION_GAIN_BASE
-                + self.REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT * max(0.0, self.state_interest(node))
-                + (self.REPUTATION_GAIN_REVENUE_BONUS if node["rev"] > 0 else 0.0))
-        household.reputation = min(self.REPUTATION_CEILING, household.reputation + gain)
-        household.scandal += self.alarm_of(node)
+        household.reputation = min(self.REPUTATION_CEILING,
+                                   household.reputation + self.reputation_gain_of(node))
+        household.scandal += alarm
         governance.gov += self.state_interest(node)
         # _grant_staff, NOT a bare += on household.scholars/household.artisans:
         # _resync_pools(), which step() calls unconditionally every year,
@@ -292,10 +300,12 @@ class CompletionMixin:
         if self.is_venture(node_id) and not self.policy.get("auto_open", not self.manual):
             # Built is not open: say what is switched off until it is opened.
             benefit = self.NOT_OPERATING_BENEFIT.get(node_id)
+            held = permanent_parts(node, self._tech_effects.get(node_id) or {})
             household.log.append((scenario.year,
-                "completed: %s. STATUS: CLOSED / NOT OPERATING. %s Open it "
+                "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
                 "('open %s') to begin and to start paying upkeep."
                 % (node["name"],
+                   ("In force already, open or not: %s. " % "; ".join(held)) if held else "",
                    ("Not in effect until open: %s." % benefit) if benefit
                    else "Nothing is earning yet.", node_id)))
             shortfall = self.opening_shortfall(node_id)

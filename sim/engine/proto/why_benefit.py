@@ -1,31 +1,7 @@
 """The BENEFIT block of `why`: what a node gives for good, what only while it
 runs, what running it costs and what shutting it loses, read from the node's
 mechanics and the engine's own lost-benefit table."""
-# Mechanics the engine reads through `has` (built is enough), not `running`.
-_HELD_MECHANICS = {
-    "corpus": "a hedge against losing knowledge in a sack (holds while it is shut)",
-    "disease_burden": "a lower disease burden",
-}
-
-_EFFECT_WORDS = {
-    "literacy_general": "general literacy",
-    "literacy_elite": "elite literacy",
-    "state_capacity": "state capacity",
-    "population": "a lower disease burden, so more people survive",
-}
-
-
-def _permanent_parts(node, effects):
-    parts = []
-    for name, spec in (node.get("mechanics") or {}).items():
-        if name in _HELD_MECHANICS:
-            parts.append(_HELD_MECHANICS[name])
-        elif isinstance(spec, dict) and spec.get("gate") == "has":
-            parts.append(name.replace("_", " "))
-    for field, delta in effects.items():
-        if not field.startswith("_") and isinstance(delta, (int, float)):
-            parts.append(_EFFECT_WORDS.get(field, field.replace("_", " ")))
-    return list(dict.fromkeys(parts))
+from sim.engine.permanent_benefit import permanent_parts
 
 
 def benefit_block(sim, node_id):
@@ -34,7 +10,7 @@ def benefit_block(sim, node_id):
     node = sim.nodes[node_id]
     capability = (node.get("mechanics") or {}).get("capability") or {}
     lost_benefit = capability.get("lost_benefit")
-    permanent = _permanent_parts(node, sim._tech_effects.get(node_id) or {})
+    permanent = permanent_parts(node, sim._tech_effects.get(node_id) or {})
     is_venture = sim.is_venture(node_id)
     if not permanent and not lost_benefit:
         return None

@@ -262,13 +262,22 @@ class FogMixin:
             row["what_you_can_do"] = {}
             for kind in ("staff_loss", "sack_chance", "output_factor", "real_erosion"):
                 if kind in hazard or (kind == "sack_chance" and hazard.get("sack_chance")):
-                    row["what_you_can_do"][kind] = self.hazard_advice(kind)
+                    row["what_you_can_do"][kind] = self.hazard_advice(kind, hazard)
             if "sack_chance" in hazard:
                 row["sack_chance_after_what_you_have_built"] = round(
-                    hazard["sack_chance"] * self.hazard_relief("sack_chance")[0], 4)
+                    self.hazard_figure("sack_chance", hazard), 4)
+            if "output_factor" in hazard:
+                row["output_factor"] = hazard["output_factor"]
+                row["output_factor_after_what_you_have_built"] = round(
+                    self.hazard_figure("output_factor", hazard), 4)
             if "staff_loss" in hazard:
-                row["staff_loss_after_what_you_have_built"] = round(
-                    hazard["staff_loss"] * self.hazard_relief("staff_loss")[0], 4)
+                exposure = self.staff_loss_exposure(hazard["staff_loss"])
+                row["staff_loss_before_what_you_have_built"] = round(exposure["before_defences"], 4)
+                row["staff_loss_after_what_you_have_built"] = round(exposure["loss"], 4)
+                if exposure["national_relief"] > 0.02:
+                    row["national_public_health"] = {
+                        "share_removed": round(exposure["national_relief"], 4),
+                        "from": self.national_public_health_sources()}
                 remaining = max(year_start, scenario.year)
                 waves = max(1, year_end - remaining + 1)
                 per_wave = row["staff_loss_after_what_you_have_built"]
