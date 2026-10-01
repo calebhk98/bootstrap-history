@@ -75,13 +75,15 @@ class MarketDemandMixin:
         """{commodity: demand now over demand at the opening}, from population
         and income at today's prices; recomputed when either moves by a
         tenth of a percent or the price table changes."""
-        economy_index = float(self.state.economy.economy)
-        population = float(self.population.total)
         prices = self._material_prices()
-        key = (round(population / self._opening_population(), 3), round(economy_index, 3))
+        key = (round(float(self.population.total) / self._opening_population(), 3),
+               round(float(self.state.economy.economy), 3))
         cache = getattr(self.household, "_household_demand_cache", None)
         if cache is not None and cache[0] == key and cache[1] is prices:
             return cache[2]
+        # computed from the rounded key, so the answer depends on the key and not on when it was last computed
+        population = key[0] * self._opening_population()
+        economy_index = key[1]
         per_hour = self.money_per_labour_hour()
         prices_in_hours = {material: price / per_hour for material, price in prices.items()
                            if price > 0.0}
