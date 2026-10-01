@@ -65,15 +65,17 @@ check("a fire or a raid says what it took",
 # --- BREAK: a debasement announced itself and moved no price a player could
 # see, because the model is in real terms. Say so, and name the real bite.
 s_db = sim(capital=100000.0, events=True)
-_before_price = s_db.project_cost("horse_collar")
+_before_price = s_db.project_cost_without_materials("horse_collar")
 while s_db.year < 210:
     s_db.step()
 check("debasement does not move a real price quote (the model is real terms)",
       # Population recovery between plague waves moves wage_index a little,
       # so the quote drifts by a residual far below a debasement-sized move
       # (real_erosion is a few percent). Relative, so it survives cost rescaling.
-      abs(s_db.project_cost("horse_collar") - _before_price) / _before_price < 1e-5,
-      (_before_price, s_db.project_cost("horse_collar")))
+      # Materials are left out: their price follows the yearly market, which
+      # moves with the plague's population change, a real effect not debasement.
+      abs(s_db.project_cost_without_materials("horse_collar") - _before_price) / _before_price < 1e-5,
+      (_before_price, s_db.project_cost_without_materials("horse_collar")))
 _dbm = [message for _, message in s_db.log if "coin is worth" in message]
 check("...and the announcement says so, rather than leaving it to be found",
       _dbm and "do not move" in _dbm[0] and "your chest" in _dbm[0],
