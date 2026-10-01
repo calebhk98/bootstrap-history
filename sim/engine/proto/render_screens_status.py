@@ -176,6 +176,12 @@ def render_risk(out):
                         _pct(hazard.get("chance_of_at_least_one_staff_loss_wave", 0)),
                         _pct(hazard.get("expected_cumulative_staff_loss", 0))))
     lines.extend(_confiscation_lines(out.get("confiscation")))
+    for group in out.get("interest_groups") or []:
+        lines.append("")
+        lines.append(_wrap("INTEREST GROUP %s (about %s people, %s a year lost): because %s%s"
+                           % (group["name"], _fmt_num(group["people"]), _fmt_num(group["income_lost_per_year"]),
+                              group["cause"], "; asks to " + "; ".join(group["demands"]) if group["demands"] else ""),
+                          indent="  "))
     return "\n".join(lines)
 
 

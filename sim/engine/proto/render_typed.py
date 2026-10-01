@@ -24,6 +24,7 @@ from .render_screens_world import (
     render_map, render_education, render_demography, render_divergence,
 )
 from .render_figures import render_figures
+from .render_screens_groups import render_groups
 from .render_screens_status import (
     render_values, render_final, render_score, render_error, render_stuck,
     render_risk, render_generic, render_log, render_policy, render_rush,
@@ -42,7 +43,7 @@ _RENDERERS = {
     "values": render_values, "rush": render_rush,
     "capacity": render_capacity, "industry": render_capacity,
     "materials": render_materials,
-    "market": render_market,
+    "market": render_market, "groups": render_groups,
     "dashboard": render_capacity, "portfolio": render_portfolio,
     "economy": render_economy, "changes": render_changes,
     "population": render_population,

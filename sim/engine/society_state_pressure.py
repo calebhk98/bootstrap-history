@@ -1022,6 +1022,7 @@ class StatePressureMixin:
         if self.state.household.protection > 0:
             why.append("bargained down by standing and patronage (protection "
                        "%d%%)" % round(self.state.household.protection * 100))
+        why.extend(self.group_levy_reasons())
         return max(0.0, share), why
 
     REQUISITION_PROTECTION_DISCOUNT = declare(
@@ -1163,8 +1164,9 @@ class StatePressureMixin:
         # this mechanic's own commit message for how late these thresholds
         # are actually crossed), so the common case costs almost nothing
         # rather than one more always-present sentence.
+        groups = self.interest_groups()
         if req_share <= 0.0005 and off_share <= 0.0005 and conf_p <= 0.0 \
-                and not self.military_demand_eligible():
+                and not self.military_demand_eligible() and not groups:
             return None
         out = {"now": round(notice, 3), "noticed_above": self.STATE_NOTICE_THRESHOLD,
                "confiscation_risk_above": self.STATE_NOTICE_THRESHOLD_CONFISCATION}
@@ -1196,6 +1198,8 @@ class StatePressureMixin:
         if conf_p > 0:
             out["confiscation_chance_this_year"] = round(conf_p, 4)
             out["confiscation_reduced_by"] = conf_why
+        if groups:
+            out["interest_groups"] = ["%s: %s" % (group["name"], group["cause"]) for group in groups]
         out["what_helps"] = ("a patron or standing; holdings not all in one "
                              "place; being useful to a state that fights")
         return out
