@@ -1,7 +1,7 @@
 [
  {
   "id": "civ_arch_roman",
-  "name": "Roman masonry arch",
+  "name": "Masonry arch",
   "cat": "structures",
   "pre": [],
   "kb": "85_transport_civil.md",
@@ -111,7 +111,7 @@
  },
  {
   "id": "civ_road_paved",
-  "name": "Roman paved road with surveying",
+  "name": "Paved road with surveying",
   "cat": "transport",
   "pre": [
    "civ_surveying_groma"
@@ -206,7 +206,7 @@
  },
  {
   "id": "civ_sewer_roman",
-  "name": "Roman sewer with gravity flow",
+  "name": "Sewer with gravity flow",
   "cat": "water",
   "pre": [
    "civ_arch_roman",
@@ -234,7 +234,7 @@
  },
  {
   "id": "civ_brick_tile",
-  "name": "Roman fired brick and tile",
+  "name": "Fired brick and tile",
   "cat": "materials",
   "pre": [],
   "kb": "85_transport_civil.md",
