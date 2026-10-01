@@ -1,6 +1,6 @@
 # Electroplating's source-of-current options name ids that are not in the tree
 
-**Status:** partly - misspelt node ids fixed and rejected by validate; `validate` also counts commodity-style options that are the tail of one node id; the per-id content decisions remain
+**Status:** closed - misspelt ids fixed and rejected by validate; every flagged commodity-style option decided (below)
 
 The electroplating node lists `dynamo_shunt_wound` and `rectifier_metal_layer` among its options for a source of current. Neither id exists in the tree; the real nodes are `el2_dynamo_shunt_wound` and `el2_rectifier_metal_layer`. So that option group has fewer real choices than it appears to have, and if `power_grid` is not among them it may have none.
 
@@ -32,3 +32,17 @@ prefix); the one real typo found that way, `telephone_exchange` in
 `el2_load_dispatch_and_scheduling`, now names `if_telephone_exchange`. The
 remaining ones listed (`oil_bath`, `peroxide`, `acetone`) are deliberate
 commodities or need the per-id decision.
+
+## Decisions on the flagged tail-matching ids
+
+Rule used: an option that names a substance which has its own `mat_<name>`
+resource node must name that node (the convention `mat_gypsum`, `mat_cast_iron`
+already follow); a tail match that is only a coincidence of words stays a
+commodity. Test: `sim/tests/test_complaint_276_option_ids_resource_nodes.py`.
+
+- `zinc` (Bechamp reduction, aniline): now `mat_zinc`, the zinc metal resource node.
+- `camphor` (celluloid): now `mat_camphor`, the traded-camphor resource node.
+- Same pattern found by the new test, also changed: `ammonia` (bakelite, urea-formaldehyde) now `mat_ammonia`; `formaldehyde` (bakelite) now `mat_formaldehyde`.
+- `oil_bath` stays a commodity: it is a heat bath for a reaction, while `tl_oil_bath` is a submerged bearing, an unrelated thing that shares the words.
+- `peroxide` stays a commodity: it is a polymerisation initiator, while `tx2_bleaching_peroxide` is a bleaching process.
+- `acetone`, `methanol`, `acetic_acid` stay commodities: the `ch2_prod_*` nodes are the production capability, not the substance; making them real goods is a production-data gap (`python3 sim/validate_production.py --todo`), not a node-id fix.

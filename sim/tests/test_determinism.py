@@ -53,6 +53,18 @@ from .harness import ROOT
 # is on an integer. What makes it SAFE is the entry holding the object too, so
 # the hit can be confirmed with `is` and the object cannot be collected while
 # the entry that might match it is alive.
+def _id_aliases(source):
+    """Line numbers where the builtin `id` is used as a value rather than
+    called (`key = id`, `map(id, xs)`, `sorted(xs, key=id)`, `{id: x}`), which
+    would let an address slip past the call check below."""
+    tree = ast.parse(source)
+    called = {id(node.func) for node in ast.walk(tree)
+              if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    return [node.lineno for node in ast.walk(tree)
+            if isinstance(node, ast.Name) and node.id == "id"
+            and isinstance(node.ctx, ast.Load) and id(node) not in called]
+
+
 def _id_call_report(path):
     """(allowed, suspect) line numbers for id() calls in one file."""
     tree = ast.parse(open(path).read())
@@ -95,6 +107,18 @@ check("no engine code compares or stores a bare id() - an address is not an "
       "identity, and trusting one is what made this simulation "
       "non-deterministic",
       not _suspects, _suspects)
+
+check("the alias check sees `id` passed or stored as a value",
+      [len(_id_aliases(src)) for src in
+       ("key = id\n", "list(map(id, xs))\n", "sorted(xs, key=id)\n", "ok = id(x)\n")]
+      == [1, 1, 1, 0])
+_aliases = []
+for _path in _engine_files:
+    for _line in _id_aliases(open(_path).read()):
+        _aliases.append("%s:%d" % (os.path.relpath(_path, ROOT), _line))
+check("no engine code passes or stores the builtin `id` as a value, which "
+      "would hide an address-as-identity from the call check",
+      not _aliases, _aliases)
 
 check("...and the id()-keyed caches that remain are still there, so the check "
       "above is guarding something rather than passing because nobody uses "
