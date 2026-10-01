@@ -1,23 +1,15 @@
 """The `divergence` screen (Complaints/270): what the founder has changed
 against where the run began, and which dated events came and went.
 
-The game holds start values (the civilisation file) and the dated hazard
+The game holds start values (the civilisation the game began with) and the dated hazard
 list. It holds no baseline run and no per-technology historical date, so the
 screen says what it cannot know instead of guessing.
 """
-from ..data import load_civ
 
 _HAPPENED = "happened"
 _UNDER_WAY = "under way"
 _UPCOMING = "upcoming"
 _BEFORE_RUN = "before the run began"
-
-
-def _start_civ(sim):
-    try:
-        return load_civ(sim.civ.get("id"))
-    except (SystemExit, ValueError, OSError):
-        return None
 
 
 def _pair(start, now, digits=4):
@@ -58,7 +50,7 @@ def _dated_events(sim):
 
 
 def divergence_report(sim):
-    start = _start_civ(sim)
+    start = sim.start_civ
 
     def started(field):
         return None if start is None else start.get(field)

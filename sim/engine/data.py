@@ -219,6 +219,19 @@ def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wa
     return wage_provider.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
 
 
+_HELD_CIVILISATION_SCHEDULES: Dict[str, wage_provider.wages.WageSchedule] = {}
+
+
+def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
+    """The opening wage schedule of a civilisation record the caller holds (it may exist only in
+    memory), remembered by its whole content so a variant is never served another's schedule."""
+    key = json.dumps(civ, sort_keys=True, default=str)
+    schedule = _HELD_CIVILISATION_SCHEDULES.get(key)
+    if schedule is None:
+        schedule = _HELD_CIVILISATION_SCHEDULES[key] = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    return schedule
+
+
 def kit_capital(kit_id: str, civ: JSONDict) -> float:
     """Opening money of a kit for a civilisation: its labourer-years times the
     civilisation's opening annual labourer wage."""
@@ -364,7 +377,8 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
 
 
 def goods_provenance(held_technology_ids: Iterable[str] = (),
-                      civilization_id: Optional[str] = None) -> Dict[str, str]:
+                      civilization_id: Optional[str] = None,
+                      civilization: Optional[JSONDict] = None) -> Dict[str, str]:
     """{material: "solved" | "gated" | "mature"} for every material the solver prices:
     "gated" ones are priced at a technique not held, "mature" ones where nothing
     in reach makes them (see `sim.engine.prices.priced_goods_table`).
@@ -374,22 +388,27 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
     it is the reference civilisation's.
     """
     from . import prices as price_solver
+    schedule = (schedule_of_civilisation(civilization) if civilization is not None
+                else starting_schedule(civilization_id))
     _goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, starting_schedule(civilization_id).document(),
-        civilization_id=civilization_id)
+        held_technology_ids, schedule.document(),
+        civilization_id=civilization_id, civilization=civilization)
     return provenance
 
 
 def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
                             civilization_id: Optional[str] = None,
-                            money_per_labour_hour: Optional[float] = None
+                            money_per_labour_hour: Optional[float] = None,
+                            civilization: Optional[JSONDict] = None
                             ) -> Dict[str, float]:
     """The calculated material-price table for an era, in the civilisation's
     coin or, when `money_per_labour_hour` is given, in that coin."""
     from . import prices as price_solver
-    document = starting_schedule(civilization_id).document()
+    schedule = (schedule_of_civilisation(civilization) if civilization is not None
+                else starting_schedule(civilization_id))
+    document = schedule.document()
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id)
+        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization)
     if money_per_labour_hour is not None:
         goods = {material: _in_coin(price, document, money_per_labour_hour)
                  for material, price in goods.items()}

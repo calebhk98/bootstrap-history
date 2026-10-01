@@ -133,7 +133,7 @@ def _civilisation(civilization_id):
         return json.load(handle)
 
 
-def build_demand_anchors(civilization_id=None, supply_by_material=None):
+def build_demand_anchors(civilization_id=None, supply_by_material=None, civilization=None):
     """NeedDemandAnchors for a civilisation, or None when nothing is anchorable.
 
     Demand comes from the needs data (data/world/needs.json and mods), the
@@ -161,7 +161,7 @@ def build_demand_anchors(civilization_id=None, supply_by_material=None):
     supply_by_material = dict(supply_by_material, **declared)
     if not supply_by_material:
         return None
-    civilisation = _civilisation(civilization_id)
+    civilisation = civilization if civilization is not None else _civilisation(civilization_id)
     bins = demand.income_bins(
         float(civilisation["population"]), MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR)
     technology_demand = need_demand.technology_material_demand(

@@ -134,7 +134,7 @@ default in `sim/engine/data.py`.
 import json
 import os
 import sys
-from typing import Any, Dict, FrozenSet, Iterable, Optional, Set, Tuple
+from typing import Any, Dict, FrozenSet, Iterable, Mapping, Optional, Set, Tuple
 
 # TYPE ALIASES.
 #
@@ -327,11 +327,23 @@ def default_production_entries() -> ProductionEntries:
     return _default_production_entries()
 
 
+def territory_fingerprint(civilization: Optional[Mapping[str, Any]]) -> Optional[Tuple[Any, ...]]:
+    """What of a held civilisation the solve reads beyond its id: its people and its ground."""
+    if civilization is None:
+        return None
+    return (civilization.get("population"), tuple(civilization.get("home_regions") or ()))
+
+
+def _held(civilization: Optional[Mapping[str, Any]]) -> Optional[Dict[str, Any]]:
+    return None if civilization is None else {civilization["id"]: civilization}
+
+
 def _solve_to_json(production_entries: ProductionEntries,
                    gate_nodes_held: FrozenSet[str], civilization_id: str,
                    document_ratios: Dict[str, float],
                    admitted_entry_keys: FrozenSet[str] = frozenset(),
-                   interest_rate: float = 0.0) -> Dict[str, Any]:
+                   interest_rate: float = 0.0,
+                   civilization: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
     """Run the solver for one held-gate set; the result is JSON-able."""
     # `gate_nodes_held` is exactly the right thing to hand
     # `techniques_available_to` as `reached_nodes`: every `requires_node` it
@@ -354,7 +366,8 @@ def _solve_to_json(production_entries: ProductionEntries,
         available_entries, wage_by_trade)
     rent_hours_per_kg_by_material.update(
         solve_prices.land_rent_hours_per_hectare(
-            available_entries, wage_by_trade, civilization_id=civilization_id))
+            available_entries, wage_by_trade, civilization_id=civilization_id,
+            civilizations=_held(civilization)))
 
     resolvable_materials = solve_prices.compute_resolvable_materials(
         available_entries, producers_of,
@@ -363,7 +376,7 @@ def _solve_to_json(production_entries: ProductionEntries,
      chosen_recipe_by_material, resolvable_materials) = solve_prices_reach.solve_priced_materials(
         available_entries, producers_of, resolvable_materials, wage_by_trade,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-        demand_anchors=joint_allocation.build_demand_anchors(civilization_id),
+        demand_anchors=joint_allocation.build_demand_anchors(civilization_id, civilization=civilization),
         interest_rate=interest_rate)
 
     return {
@@ -380,7 +393,8 @@ def solved_prices(held_technology_ids: Iterable[str],
                   production_entries: Optional[ProductionEntries] = None,
                   civilization_id: Optional[str] = None,
                   admitted_entry_keys: FrozenSet[str] = frozenset(),
-                  interest_rate: Optional[float] = None) -> SolvedPrices:
+                  interest_rate: Optional[float] = None,
+                  civilization: Optional[Mapping[str, Any]] = None) -> SolvedPrices:
     """A `SolvedPrices` for this held-technology set, solving on a cache
     miss and returning the cached vector on a hit. See CACHE KEY in the
     module docstring: the cache is keyed on the intersection of
@@ -402,19 +416,28 @@ def solved_prices(held_technology_ids: Iterable[str],
     `interest_rate` is the yearly rate each plant's build bill must earn over its depreciation (the
     market rate); `None` is the civilisation's starting rate, which is the market rate until a market
     has met. It is part of the cache key.
+
+    `civilization`, when the caller holds the civilisation (a record that may exist only in memory),
+    supplies its id, starting rate, population and home regions instead of a file read by id; the
+    territory is part of the cache key, so a variant that keeps a file's id is solved as itself.
     """
     if production_entries is None:
         production_entries = _default_production_entries()
+    if civilization is not None:
+        civilization_id = civilization["id"]
+        if interest_rate is None:
+            interest_rate = float(civilization["starting_interest_rate"])
     civilization_id = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
     if interest_rate is None:
         interest_rate = solve_prices.load_starting_interest_rate(civilization_id)
+    territory = territory_fingerprint(civilization)
 
     gate_nodes_held = frozenset(all_gate_nodes(production_entries)
                                 & set(held_technology_ids))
     document_ratios = solve_prices.wage_ratios_by_trade(prices_json)
     # Wages move with the labour market, so the cache is keyed on them too.
     cache_key = (gate_nodes_held, civilization_id,
-                 tuple(sorted(document_ratios.items())), admitted_entry_keys, interest_rate)
+                 tuple(sorted(document_ratios.items())), admitted_entry_keys, interest_rate, territory)
 
     cached = _SOLVE_CACHE.get(cache_key)
     if cached is not None and cached[0] is production_entries:
@@ -422,14 +445,16 @@ def solved_prices(held_technology_ids: Iterable[str],
 
     def compute() -> Dict[str, Any]:
         return _solve_to_json(production_entries, gate_nodes_held,
-                              civilization_id, document_ratios, admitted_entry_keys, interest_rate)
+                              civilization_id, document_ratios, admitted_entry_keys, interest_rate,
+                              civilization)
     if production_entries is _DEFAULT_PRODUCTION_ENTRIES:
         # Only the committed catalogue is persisted; synthetic catalogues are not.
         try:
             key = solve_cache.solve_key({
                 "production": production_entries, "gates": sorted(gate_nodes_held),
                 "civilization": civilization_id, "wage_ratios": document_ratios,
-                "admitted_entries": sorted(admitted_entry_keys), "interest_rate": interest_rate})
+                "admitted_entries": sorted(admitted_entry_keys), "interest_rate": interest_rate,
+                "territory": territory})
         except OSError:
             key = None  # an input file cannot be read: solve without the cache
         stored = (solve_cache.cached_json(key, compute) if key
@@ -505,7 +530,7 @@ def priced_goods_table(held_technology_ids: Iterable[str],
                        production_entries: Optional[ProductionEntries] = None,
                        civilization_id: Optional[str] = None,
                        interest_rate: Optional[float] = None,
-                       home_regions: Optional[Iterable[str]] = None
+                       civilization: Optional[Mapping[str, Any]] = None
                        ) -> Tuple[Prices, Provenance]:
     """(goods_in_money, provenance) - a calculated price for every material
     the recipes can make, in the coin of `prices_json`.
@@ -523,24 +548,28 @@ def priced_goods_table(held_technology_ids: Iterable[str],
                  price.
 
     `civilization_id` and `interest_rate` are passed straight through to `solved_prices` - see RENT
-    NEEDS A CIVILIZATION in the module docstring. `home_regions`, when the caller holds the
-    civilisation, decides which crops its climate grows without reading its file.
+    NEEDS A CIVILIZATION in the module docstring. `civilization`, when the caller holds
+    it, supplies the rate, territory and home regions (which decide the crops its climate grows)
+    without reading a file by id.
     """
     entries = (production_entries if production_entries is not None
                else _default_production_entries())
     held = frozenset(held_technology_ids)
     solved = solved_prices(held, prices_json, production_entries=production_entries,
-                           civilization_id=civilization_id, interest_rate=interest_rate)
+                           civilization_id=civilization_id, interest_rate=interest_rate,
+                           civilization=civilization)
     in_reach = solved_prices(
         solved.gate_nodes_held, prices_json, production_entries=production_entries,
-        civilization_id=civilization_id, interest_rate=interest_rate,
+        civilization_id=civilization_id, interest_rate=interest_rate, civilization=civilization,
         admitted_entry_keys=entries_in_reach(held, solved.gate_nodes_held, solved.resolvable_materials, entries))
     mature = solved_prices(all_gate_nodes(entries), prices_json,
                            production_entries=production_entries,
-                           civilization_id=civilization_id, interest_rate=interest_rate)
+                           civilization_id=civilization_id, interest_rate=interest_rate,
+                           civilization=civilization)
     goods_in_money = {}
     provenance = {}
     territory = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
+    home_regions = None if civilization is None else tuple(civilization.get("home_regions") or ())
     for table, label in ((mature, "mature"), (in_reach, "gated"), (solved, "solved")):
         for material in table.resolvable_materials:
             if label != "mature" and material not in table.chosen_recipe_by_material:

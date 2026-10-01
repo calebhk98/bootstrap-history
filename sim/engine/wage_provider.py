@@ -100,7 +100,7 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
         solved = price_solver.solved_prices(
             civ["starting_techs"], opening.ratio_document(),
             production_entries=production_entries, civilization_id=civilisation_id,
-            interest_rate=float(civ["starting_interest_rate"]))
+            civilization=civ)
     for role, material in (("staple", FOOD_PRICE_MATERIAL), ("coin", standard["material"])):
         if material not in solved.resolvable_materials:
             raise ValueError(
