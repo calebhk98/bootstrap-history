@@ -156,8 +156,8 @@ check("a node with none of the four diffusible traits never diffuses at "
                   for trait in NODES["workshop_first"]["traits"]),
       NODES["workshop_first"]["traits"])
 
-# --- military is the one category gated on a patron: the state, not the
-# founder's private arsenal, is what the user's cannon example is about.
+# --- military is the one category read from the state's own holdings: the
+# government actor's know-how, not a curve over time (Complaint 301).
 s_nopatron = sim(civ="rome_100ad")
 for k in _MIL_NODES2:
     s_nopatron.done.add(k); s_nopatron.done_year[k] = s_nopatron.year
@@ -168,9 +168,11 @@ for k in _MIL_NODES2:
     s_patron.done.add(k); s_patron.done_year[k] = s_patron.year
 s_patron.year += 200
 check("military technology the founder built never reaches the state's "
-      "hands without a patron to hand it to, however long it has had",
-      s_nopatron.state_military_diffusion() == 0.0, s_nopatron.state_military_diffusion())
-check("...but WITH a patron, and enough time, it genuinely has - the "
+      "hands however long it has had, unless the government holds it",
+      s_nopatron.state_military_diffusion() == 0.0
+      and s_patron.state_military_diffusion() == 0.0, s_patron.state_military_diffusion())
+s_patron.state_treasury().knowledge.update(_MIL_NODES2)
+check("...but once the government actor holds it, it genuinely has - the "
       "user's own 'give the Roman government cannons' scenario",
       s_patron.state_military_diffusion() > 0.5, s_patron.state_military_diffusion())
 
@@ -250,6 +252,7 @@ s_armed_h = sim(civ="rome_100ad")
 run_it(s_armed_h, "patron_imperial")
 for k in _MIL_NODES2:
     s_armed_h.done.add(k); s_armed_h.done_year[k] = s_armed_h.year - 200
+s_armed_h.state_treasury().knowledge.update(_MIL_NODES2)
 _of_bare, _ = s_bare_h.hazard_relief("output_factor")
 _of_armed, _of_why = s_armed_h.hazard_relief("output_factor")
 _sk_bare, _ = s_bare_h.hazard_relief("sack_chance")
@@ -344,6 +347,7 @@ for k in ('crop_rotation', 'sanitation_antisepsis', 'med_quarantine_sanitation',
     s.done.add(k)
     s.done_year[k] = s.year
 s._done_changed()
+s.state_treasury().knowledge.update(('gunpowder', 'mil_artillery_piece'))
 for _ in range(150):
     s.advance_society(s.year)
     s.year += 1
