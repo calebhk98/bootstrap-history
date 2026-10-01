@@ -76,6 +76,16 @@ class GoodsMarket(GoodsOffers):
             bought = self._sim._market_flows()["bought"].setdefault(commodity, {})
             bought[buyer_id] = bought.get(buyer_id, 0.0) + tonnes
 
+    def forget(self, party_id):
+        """A party's entries from earlier years are over: it is about to deal again this year, or has
+        stopped. Its sales and purchases of this year are noted afterwards."""
+        flows = self._sim._market_flows()
+        for kind in ("sold", "bought"):
+            for commodity in list(flows[kind]):
+                flows[kind][commodity].pop(party_id, None)
+                if not flows[kind][commodity]:
+                    del flows[kind][commodity]
+
     def reset_draws(self):
         """Start a fresh count of what running works draw from the market."""
         self._sim._market_flows()["drawn"] = {}

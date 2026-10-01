@@ -253,6 +253,7 @@ class ActorRegistry:
 		first = True
 		for actor_id in sorted(self.actors):
 			actor = self.actors[actor_id]
+			world.market_forget(actor_id)
 			if actor.kind == "firm" and actor.record.exited_year is not None:
 				continue
 			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`

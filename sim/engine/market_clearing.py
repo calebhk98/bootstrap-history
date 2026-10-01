@@ -32,12 +32,19 @@ class MarketClearingMixin:
 
     def _market_flows(self):
         """{"year", "bought": {commodity: {party: tonnes}}, "sold": {commodity: {party: tonnes}},
-        "drawn": {commodity: tonnes}}, restarted when the year turns; written by `goods_market`."""
+        "drawn": {commodity: tonnes}}, written by `goods_market`. When the year turns the founder's
+        flows and draws start again from nothing; every other party's entries stand until it deals
+        again (`GoodsMarket.forget`), as a firm's output and the state's purchases are standing orders."""
         economy = self.state.economy
         year = self.state.scenario.year
         flows = economy.market_flows
         if not flows or flows.get("year") != year:
-            flows = economy.market_flows = {"year": year, "bought": {}, "sold": {}, "drawn": {}}
+            previous = flows or {}
+            flows = economy.market_flows = {"year": year, "drawn": {}}
+            for kind in ("bought", "sold"):
+                standing = {commodity: {party: tonnes for party, tonnes in parties.items() if party != FOUNDER}
+                            for commodity, parties in (previous.get(kind) or {}).items()}
+                flows[kind] = {commodity: parties for commodity, parties in standing.items() if parties}
         return flows
 
     @property

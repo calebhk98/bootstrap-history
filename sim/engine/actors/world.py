@@ -218,6 +218,10 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		"""The materials a concern puts on the market."""
 		return supply.materials_made_by(node_id)
 
+	def market_forget(self, actor_id: str) -> None:
+		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
+		self._sim.goods_market.forget(actor_id)
+
 	def market_sale(self, seller_id: str, material: str, tonnes: float) -> None:
 		"""An actor sells `tonnes` of a material into the one goods market this year."""
 		sim = self._sim

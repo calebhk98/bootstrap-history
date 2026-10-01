@@ -187,9 +187,12 @@ check("actor supply sums every actor's output", abs(game.actor_supply("pig_iron_
       (game.actor_supply("pig_iron_kg"), supply_one))
 one.concerns.clear()
 two.concerns.clear()
-game.state.scenario.year += 1
-one.sell_output(firm_world)
-two.sell_output(firm_world)
+check("a firm's output stands in the book into the next year until it deals again",
+      game.state.scenario.__setattr__("year", game.state.scenario.year + 1) is None
+      and abs(game.actor_supply("pig_iron_kg") - 2.0 * supply_one) < 1e-9)
+for closed in (one, two):
+    firm_world.market_forget(closed.actor_id)
+    closed.sell_output(firm_world)
 check("a closed concern stops supplying", game.actor_supply("pig_iron_kg") == 0.0)
 check("a material nobody makes has no actor supply", game.actor_supply("no_such_material_kg") == 0.0)
 
