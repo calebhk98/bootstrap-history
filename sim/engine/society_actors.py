@@ -17,6 +17,36 @@ class ActorsMixin:
             self._actor_registry = registry
         return registry
 
+    def actor_staff_fte(self, trade):
+        """People of this trade that firms and governments employ: they come out of the
+        same reachable pool the founder hires from."""
+        state = self.state.actors
+        if state is None or not state.records:
+            return 0.0
+        return self.actors.staff_fte(trade)
+
+    def actor_supply(self, material):
+        """Tonnes a year of `material` that firms and governments put on the market,
+        summed over every actor; the founder's own concerns are not included."""
+        state = self.state.actors
+        if state is None or not state.records:
+            return 0.0
+        return self.actors.supply(material, SimWorld(self))
+
+    def actor_concerns_in(self, category):
+        """How many concerns in a goods category actors run, each sharing the founder's market."""
+        state = self.state.actors
+        if state is None or not state.records:
+            return 0
+        return self.actors.concerns_in(category, self.nodes)
+
+    def actor_market_version(self):
+        """Changes whenever the set of concerns actors run does, for caches that read it."""
+        state = self.state.actors
+        if state is None or not state.records:
+            return 0
+        return self.actors.version[0]
+
     def state_treasury(self):
         """The government actor of the founder's civilisation."""
         return self.actors.ensure_government(str(self.civ.get("id")), self.civ.get("name", ""))

@@ -819,13 +819,18 @@ class StatePressureMixin:
         use: the five-hundredth employee does not make you five hundred
         times more noticeable than the first.
         """
-        head = self.headcount()
-        head_s = min(1.0, math.sqrt(max(0.0, head)
+        household = self.state.household
+        return self.visible_scale(self.headcount(), household.capital, household.eminence)
+
+    def visible_scale(self, headcount, wealth, eminence):
+        """household_scale's rule for any taxpayer: what an observer can count
+        of its staff, its wealth and (for a person) its prominence."""
+        head_s = min(1.0, math.sqrt(max(0.0, headcount)
                                     / self.HOUSEHOLD_HEADCOUNT_SATURATES_AT))
-        wealth_s = min(1.0, max(0.0, self.state.household.capital)
+        wealth_s = min(1.0, max(0.0, wealth)
                        / (self.HOUSEHOLD_WEALTH_SATURATES_AT * self.base_annual_wage("labourer")))
         danger = self.cfg["eminence_danger"]
-        emin_s = min(1.0, max(0.0, self.state.household.eminence) / danger)
+        emin_s = min(1.0, max(0.0, eminence) / danger)
         return (self.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_s
                 + self.HOUSEHOLD_SCALE_WEALTH_WEIGHT * wealth_s
                 + self.HOUSEHOLD_SCALE_EMINENCE_WEIGHT * emin_s)
@@ -970,6 +975,24 @@ class StatePressureMixin:
             return 0.0
         return min(1.0, (notice - threshold) / (1.0 - threshold))
 
+    def levy_shares(self, scale, protection=0.0):
+        """(requisition share, office share) of a year's revenue the state
+        assesses on a taxpayer of this visible scale: one rule for the
+        founder's household, a firm or any other actor. Nothing is taken
+        below the notice line; protection bargains requisition down, never
+        the office."""
+        notice = self.state_capacity * scale
+        if notice <= self.STATE_NOTICE_THRESHOLD:
+            return 0.0, 0.0
+        state_pressure_cfg = self.civ.get("state_pressure") or {}
+        over = min(1.0, (notice - self.STATE_NOTICE_THRESHOLD) / (1.0 - self.STATE_NOTICE_THRESHOLD))
+        requisition = float(state_pressure_cfg.get("requisition_base_share",
+                                                    self.REQUISITION_BASE_SHARE_DEFAULT)) * over
+        if protection > 0:
+            requisition *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * protection)
+        office = float(state_pressure_cfg.get("office_base_share", self.OFFICE_BASE_SHARE_DEFAULT)) * over
+        return max(0.0, requisition), max(0.0, office)
+
     def requisition_report(self):
         """(share of this year's revenue, [why it is smaller than listed])
         the state takes as goods at its own price rather than the market's -
@@ -984,13 +1007,9 @@ class StatePressureMixin:
         """
         if self.state_notice() <= self.STATE_NOTICE_THRESHOLD:
             return 0.0, []
-        state_pressure_cfg = self.civ.get("state_pressure") or {}
-        base = float(state_pressure_cfg.get("requisition_base_share",
-                                             self.REQUISITION_BASE_SHARE_DEFAULT))
-        share = base * self._notice_over(self.STATE_NOTICE_THRESHOLD)
+        share = self.levy_shares(self.household_scale(), self.state.household.protection)[0]
         why = []
         if self.state.household.protection > 0:
-            share *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * self.state.household.protection)
             why.append("bargained down by standing and patronage (protection "
                        "%d%%)" % round(self.state.household.protection * 100))
         return max(0.0, share), why
@@ -1030,10 +1049,8 @@ class StatePressureMixin:
         if self.state_notice() <= self.STATE_NOTICE_THRESHOLD:
             return 0.0, None
         state_pressure_cfg = self.civ.get("state_pressure") or {}
-        base = float(state_pressure_cfg.get("office_base_share",
-                                             self.OFFICE_BASE_SHARE_DEFAULT))
-        share = base * self._notice_over(self.STATE_NOTICE_THRESHOLD)
-        return max(0.0, share), state_pressure_cfg.get("office_name", "a civic office")
+        share = self.levy_shares(self.household_scale())[1]
+        return share, state_pressure_cfg.get("office_name", "a civic office")
 
     OFFICE_BASE_SHARE_DEFAULT = declare(
         "OFFICE_BASE_SHARE_DEFAULT", 0.05, kind="temporary_heuristic",

@@ -501,6 +501,8 @@ class PopulationMixin:
         if trade in self.LITERATE_TRADES:
             cap *= self.literacy_factor(trade)
         # The reachable pool is people, so it cannot exceed those who exist.
+        # firms and governments hire from the same pool, so what they employ is not on offer
+        cap = max(0.0, cap - self.actor_staff_fte(trade) * self.HOURS_PER_PERSON_YEAR)
         hours = cap + household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR + school_hours
         return min(hours, self.people_who_exist(trade) * self.HOURS_PER_PERSON_YEAR)
 
