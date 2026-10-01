@@ -170,11 +170,10 @@ check("a cash-short hire is still refused (the asymmetry itself is kept, "
       "not loosened)", _ok_h is False, (_ok_h, _msg_h))
 check("...but the refusal now says WHICH rule this is: half the credit "
       "line, not all of it",
-      "half" in _msg_h and "credit line" in _msg_h, _msg_h)
+      "50%" in _msg_h and "credit line" in _msg_h, _msg_h)
 check("...and WHY: a lender funds work under way (what starting a project "
       "can point to), not a payroll or a one-off fee",
-      "work already under way" in _msg_h
-      and ("payroll" in _msg_h or "wage" in _msg_h), _msg_h)
+      "lender advances against a purchase" in _msg_h, _msg_h)
 _fee_h = 3.0 * S.ANNUAL_WAGE.get("smith", 375.0) * s_asym.wage_index * s_asym.price_index \
     * s_asym.labour_price_factor("smith")
 check("...and still states the plain facts a refusal always has: the exact "
@@ -187,13 +186,13 @@ check("...and still states the plain facts a refusal always has: the exact "
 _ok_t, _msg_t = s_asym.train("machinist", 3, None)
 check("train's cash-short refusal uses the identical reasoning as hire's, "
       "not a second wording for the same rule",
-      _ok_t is False and "half" in _msg_t and "work already under way" in _msg_t,
+      _ok_t is False and "50%" in _msg_t and "lender advances against a purchase" in _msg_t,
       _msg_t)
 s_asym2 = sim(capital=0.0)
 s_asym2.capital = -50000.0
 _ok_c, _msg_c = s_asym2.commission("smith", 3500.0)
 check("commission's cash-short refusal uses the same reasoning too",
-      _ok_c is False and "half" in _msg_c and "work already under way" in _msg_c,
+      _ok_c is False and "50%" in _msg_c and "lender advances against a purchase" in _msg_c,
       _msg_c)
 
 # --- BREAK (verified against the real engine): the arithmetic

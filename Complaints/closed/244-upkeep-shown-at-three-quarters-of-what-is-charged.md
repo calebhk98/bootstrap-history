@@ -1,6 +1,6 @@
 # Upkeep is quoted at 0.75 of the amount the ledger charges (`why`, `open`, `ventures` against `money`)
 
-**Status:** partly - quote and ledger share one upkeep function; the mine quote against the charged figure is not yet re-measured
+**Status:** closed
 
 Replay: build and open buttons, then compare. `open hom_button` says it "costs 1,876 a year to run" and `ventures` shows 1,876, while `money` prints "upkeep of what you built 2,502" for the same single concern (ratio 0.75). Toys: `why` says UPKEEP 3,753, the `open`
 reply's upkeep line and the ledger say 5,004. The tester saw the same in the year they opened (closed science 187,634 in `ventures` against 250,178 in `why`). The "x0.75 prices" factor is applied to the displayed figure and not to the charge.
@@ -18,3 +18,5 @@ Also reported (Han China 100 AD fog playtest, tester item(s) 102; `Complaints/re
 **Fixed:** `venture_real_upkeep` (`sim/engine/projects_venture_quotes.py`) is now the only upkeep figure: the ledger's `upkeep()` sums it and every screen quotes it, at the civilisation's price level and with enrolment scaling. `sim/tests/test_upkeep_quote_matches_ledger.py` checks ledger equals the sum of quotes in a civilisation whose price level is not one.
 
 **Remains:** the mine quote (`mine_quote`) against the charged `mine_operating_cost` was not re-measured; both apply the price level, so the gap reported may come from the per-working cost scale. Check with the coal and iron replay before closing.
+
+**Fixed:** re-measured: with no other workings, `mine_quote` and the charged `mine_operating_cost` agree apart from wage drift over the lead years, in a civilisation whose price level is not one. A real gap remained when older workings were depleted: the quote used the material's average depletion while a new working starts fresh. `mine_quote` now prices running cost through `mine_operating_cost_new`, the function that charges every working.

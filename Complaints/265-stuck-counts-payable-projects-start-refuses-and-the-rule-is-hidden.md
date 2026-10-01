@@ -1,6 +1,6 @@
 # `stuck` says "159 of them you could pay for" while `start` refuses with "you could raise 0"; the refusal does not state the rule or the number needed
 
-**Status:** partly - `stuck` and `start` share one rule and refusals state rule, budget and shortfall; `available` afford column, `hire` and a pay-down lever remain
+**Status:** partly - `stuck`, `start`, the `available` AFFORD column and row marks, and the hire/train/commission refusals share one rule and text; no lever for climbing out of debt beyond the stated pay-down
 
 B (109 AD, deep debt): `stuck` reported 159 payable things and recommended the cheapest; every start was refused "you could raise 0". Reproduced in Rome 100 AD, default poor_scholar kit, with `hire smith 3`, `hire scholar 2`, two steps (cash -7,245, credit limit 9,128): `stuck` prints "126 things you could begin, 69 of them you could pay for"; `start horse_collar` answers "REFUSED: cannot afford the materials this project needs bought now: it costs 1,177 denarii and you could raise 0 (cash -7,245, plus credit)".
 
@@ -15,4 +15,6 @@ Found in the final blind playtests of this branch (Rome 100 AD and Mexica 1500 f
 
 **Fixed:** `_stuck_startable_and_afford` now asks `start_refusal`, the function `start` uses, so every start `stuck` calls payable is accepted (`sim/tests/test_stuck_matches_start.py`). `purchase_rule.refusal_text` states the rule, the cash and the credit share, the amount short, and that earning or paying down that amount allows the start.
 
-**Remains:** the `available` AFFORD column still compares cost with `spending_power("start")`; `hire`, `train` and `commission` keep their own refusal text (already stating the shortfall) rather than `purchase_rule.refusal_text`; there is still no lever for climbing out of the debt trap (selling assets, shrinking the household).
+**Also fixed:** the `available` AFFORD column and the `*` row marks ask `start_refusal` (rows carry `cannot_pay_now`); `hire`, `train` and `commission` refuse with `purchase_rule.refusal_text`.
+
+**Remains:** there is still no lever for climbing out of the debt trap (selling assets, shrinking the household); the refusal states the pay-down that would allow the purchase.
