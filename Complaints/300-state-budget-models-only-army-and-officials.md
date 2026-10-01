@@ -1,6 +1,6 @@
 # The state budget models only an army and officials, so every state is in surplus and the need-driven levy never fires
 
-**Status:** open - found while building 109; next: more standing lines (works, court, dole, navy, war), then re-measure
+**Status:** partly - lines for roads, public buildings, court, dole and navy built; army follows the hazards' threat; surplus no longer hoarded for ever; the levy now fires in collapses but a healthy Rome or Han still runs a large surplus (see 448)
 
 The government's standing need is an army (it wants the civilisation's opening `standing_army` share of the people and keeps what it can fund, changing by at most `ARMY_ADJUSTMENT_RATE` a year; paid at the labourer's wage and equipped by `military_logistics` iron) and a corps of officials (`ADMINISTRATIVE_SPAN`). Its revenue is society output times `starting_tax_share` times state capacity; a visible founder or firm pays the same share of its own income. Measure both over a long run:
 
@@ -11,3 +11,5 @@ Every civilisation runs a large surplus: the reserve grows every year, the state
 The cause is that revenue was fitted to represent all of a state's spending (`starting_tax_share` is read as a share of the whole economy) while the budget names only two of its uses. What is missing is what a state maintains and cannot skip: public works and roads (needs a stock of works to maintain), the court and the dole, a navy, and war (the army's size and equipment tempo should rise with the threat the civilisation's hazards describe, such as `sack_chance`, instead of only following the population and what the state can pay). Each needs a physical basis, not a share of revenue (CLAUDE.md 4.1).
 
 Until then the baseline founder escapes taxation that the real state would have charged. Under a stress run (the same Rome with eight times the army, or Han with twenty times) the mechanism works end to end: reserve drains, spending is cut, the levy rises to the ceiling, the founder is taxed from the notice line.
+
+Built since: `budget_lines.py` (each line from a stock: road length and coast from the tiles in `sim/world/territory.py`, town dwellers, officials), `army_wanted` raised by the civilisation's active `sack_chance` hazards, and a reserve ceiling (`RESERVE_CEILING_YEARS_OF_NEED`) beyond which a surplus is spent on unnamed things. Re-measure with `python3 sim/budget_series.py rome_100ad 200 1` (the strategy-driven run is slow after the founder grows; `BUDGET_SERIES_IDLE_FOUNDER=1` runs the state alone). What is left is in 448.

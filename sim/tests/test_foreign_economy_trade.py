@@ -40,8 +40,14 @@ def shortage(simulation, commodity, share=0.3):
 
 
 def cheap_partner(simulation, home_price=10.0, foreign_price=100.0, freight=1.0):
-    """A partner whose prices and route are stated, to isolate the flow rule."""
+    """A partner whose prices, route and book are stated (it makes every good
+    the home society does, at twice its reference output), to
+    isolate the flow rule from what a partner can make and want."""
     simulation._foreign_price_pair = lambda commodity, facts: (home_price, foreign_price)
+    simulation._foreign_sides = lambda commodity, facts: (True, True)
+    simulation._output_is_sourced = lambda commodity: True
+    simulation.foreign_opening = lambda civilization_id, commodity, solved: (
+        2 * (simulation._market_entry(commodity) or {"reference_tonnes": 0.0})["reference_tonnes"],) * 2
     simulation._route_freight_per_tonne = lambda civilization: freight
     simulation.household._foreign_facts_cache = None
     return simulation

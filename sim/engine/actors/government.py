@@ -1,7 +1,8 @@
 """`Government`: a country's state as an actor.
 
-It keeps a budget. Revenue is what its economy yields; spending is the army
-and officials it keeps (`budget.py`), paid from the purse. A deficit comes out
+It keeps a budget. Revenue is what its economy yields; spending is what it
+keeps up (`budget.py`: army, officials, roads, public buildings, court, dole,
+navy), paid from the purse. A deficit comes out
 of the reserve and then every line is cut by the same share. What it could not
 pay is what it seeks from the taxpayers it can see. What is left of the purse
 funds copying know-how it values by the gains its civilisation's priorities
@@ -12,6 +13,7 @@ from typing import Any, Dict, List, Tuple
 from . import budget, ledger
 from .base import Actor, RecordedActor
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
+from .tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
 from .values import invention_gains, weighted_gain
 
 
@@ -74,6 +76,21 @@ class Government(RecordedActor):
 				self.record.demand[commodity] = self.record.demand.get(commodity, 0.0) + tonnes * share
 		return lines, share
 
+	def pay_patron(self, share: float, world: Any) -> None:
+		"""Fund the founder as patron from what is left of the purse after the standing need.
+		A state that left any of its need unpaid funds nobody."""
+		ask = world.patron_ask() if share >= 1.0 else 0.0
+		grant = min(ask, max(0.0, self.money))
+		self.record.patron_grant = grant
+		if grant > 0.0:
+			self.debit(grant, "patronage")
+
+	def spend_surplus(self, lines: List[budget.Line]) -> None:
+		"""Reserve beyond a few years of the standing need is spent on what the budget does not name."""
+		excess = self.money - RESERVE_CEILING_YEARS_OF_NEED * sum(line.money for line in lines)
+		if excess > 0.0:
+			self.debit(excess, "discretionary")
+
 	def employ_standing(self, lines: List[budget.Line], share: float, world: Any) -> None:
 		"""Staff of the lines it paid for, as far as they reach into the founder's labour market."""
 		for line in lines:
@@ -91,7 +108,9 @@ class Government(RecordedActor):
 	def advance(self, world: Any) -> None:
 		held = dict(self.workforce)
 		lines, share = self.pay_standing_need(world)
+		self.pay_patron(share, world)
 		self.act(world)
+		self.spend_surplus(lines)
 		self.employ_standing(lines, share, world)
 		self.seek_shortfall(lines, world)
 		self.press_new_staff(held, world)

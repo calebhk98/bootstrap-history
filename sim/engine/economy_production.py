@@ -57,13 +57,21 @@ class ProductionMixin:
             "own scale, so this denominator is picked to make the term feel "
             "proportionate rather than derived from anything.")
 
-    def state_funding(self):
+    def patron_funding_ask(self):
+        """What a patron state would give the founder in a year if its treasury could spare it."""
         if not self.running_with_mechanic("state_funding"):
             return 0.0
         return (self.STATE_FUNDING_BASE * self.state.economy.economy * self.state_capacity
                 * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
                 * (1.0 + max(0.0, self.state.governance.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
                 * self.rep_factor())
+
+    def state_funding(self):
+        """What the treasury has paid the founder this year; the government decides it
+        (Government.pay_patron) from its purse after its standing need."""
+        state = self.state.actors
+        record = None if state is None else state.records.get("government:" + str(self.civ.get("id")))
+        return 0.0 if record is None else record.patron_grant
 
     def venture_ramp(self, node_id):
         """How much of its full takings a concern is making, 0..1.
@@ -165,6 +173,7 @@ class ProductionMixin:
             economy.output_factor,
             household.reputation,
             founder.founder_alive,
+            self.state_funding(),
         )
         if getattr(self.household, "_revenue_cache_key", None) == key:
             return self.household._revenue_cache_val
