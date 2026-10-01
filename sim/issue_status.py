@@ -6,6 +6,10 @@
     python3 sim/issue_status.py --check        exit non-zero on a malformed
                                                status line or a wrong folder
     python3 sim/issue_status.py --json         the same rows as JSON
+    python3 sim/issue_status.py --next         the next free number
+    python3 sim/issue_status.py --renumber     report the old -> new map that
+                                               closes gaps and duplicates
+                                               (--write applies it)
 
 Each issue file is `NN-slug.md`, in `Complaints/` (not finished) or
 `Complaints/closed/` (finished). Its first line is the title and the first
@@ -22,6 +26,11 @@ import json
 import os
 import re
 import sys
+
+try:
+    from sim import issue_renumber
+except ImportError:
+    import issue_renumber
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMPLAINTS_DIR = os.path.join(REPO_ROOT, "Complaints")
@@ -97,6 +106,21 @@ def problems(rows):
             for row in rows if row["problem"]]
 
 
+def numbering_problems(rows):
+    """Numbers must be exactly 1..N: report duplicates and gaps."""
+    numbers = [row["number"] for row in rows]
+    found = ["number %d is used by more than one file" % number
+             for number in sorted(set(numbers)) if numbers.count(number) > 1]
+    if sorted(set(numbers)) != list(range(1, len(set(numbers)) + 1)):
+        found.append("numbers are not 1..N without gaps; run `--renumber --write`")
+    return found
+
+
+def next_number(rows):
+    """The next free number: one above the highest in use (the count, when numbering has no gaps)."""
+    return max([row["number"] for row in rows] + [0]) + 1
+
+
 def format_table(rows):
     header = ("#", "title", "status", "folder")
     body = [("%02d" % row["number"], row["title"], row["status"] or "?", row["folder"])
@@ -126,15 +150,31 @@ def main(argv=None):
     parser.add_argument("--status", choices=VALID_STATUSES,
                         help="show only issues with this status")
     parser.add_argument("--json", action="store_true", help="print rows as JSON")
+    parser.add_argument("--next", action="store_true", help="print the next free number")
+    parser.add_argument("--renumber", action="store_true",
+                        help="report how numbers would change to run 1..N, rewriting references")
+    parser.add_argument("--write", action="store_true", help="with --renumber: apply it")
     args = parser.parse_args(argv)
 
     rows = collect()
+    if args.next:
+        print(next_number(rows))
+        return 0
+    if args.renumber:
+        result = issue_renumber.plan(REPO_ROOT, rows)
+        print(issue_renumber.report(result))
+        if args.write:
+            issue_renumber.apply(REPO_ROOT, result)
+            print("written; old -> new map in Complaints/RENUMBERED.md")
+        return 0
     found = problems(rows)
     if args.check:
+        found = found + numbering_problems(rows)
         for problem in found:
             print(problem)
         if not found:
-            print("ok: every issue file has a valid status line in the right folder")
+            print("ok: every issue file has a valid status line in the right folder, numbered 1..%d"
+                  % len(rows))
         return 1 if found else 0
 
     shown = [row for row in rows if not args.status or row["status"] == args.status]

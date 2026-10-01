@@ -584,7 +584,7 @@ MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE = declare(
         "population ate WELL. Consumption was min(demand, stock), so the "
         "nutrition ratio could never exceed 1.0 however full the granary "
         "was, and a good year therefore bought nothing while a bad year "
-        "still cost lives. That one-sidedness is what Complaints/45 is "
+        "still cost lives. That one-sidedness is what Complaints/44 is "
         "about, and the granary only fixed half of it - it banked the grain "
         "and then never let anyone eat it.")
 

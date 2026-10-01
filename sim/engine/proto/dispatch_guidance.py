@@ -1,4 +1,4 @@
-"""`leverage` and `idle`: guidance screens (Complaints/100, 101)."""
+"""`leverage` and `idle`: guidance screens (Complaints/98, 99)."""
 
 from .command_registry import command
 from .economy import _trade_demand_rows

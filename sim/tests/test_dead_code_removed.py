@@ -1,4 +1,4 @@
-"""Complaint 190: names that had no live caller stay deleted.
+"""Complaint 186: names that had no live caller stay deleted.
 
 Each name was checked by grep across sim, data, mods and tools; none is
 reached by getattr, a dispatch table or a mod hook.

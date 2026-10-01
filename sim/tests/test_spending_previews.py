@@ -1,5 +1,5 @@
 """spending_previews: money a player spends or is told about is previewed, and
-the preview calls the same function as the charge (Complaints 220, 222, 240,
+the preview calls the same function as the charge (Complaints 216, 218, 236,
 248, 214)."""
 from .harness import *  # noqa: F401,F403
 

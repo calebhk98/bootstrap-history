@@ -172,7 +172,7 @@ only sizes the demonstration reserve); `total_cost_labour_hours_per_kg`
 is the two added together, and is what `supply_curve` and
 `find_marginal_deposit` now sort and price by. Whether the sinking share is
 large enough to reorder a supply curve is measured, not asserted: run the
-script in Complaints/56. A deposit with a tiny output can be pushed out of
+script in Complaints/54. A deposit with a tiny output can be pushed out of
 the market by its shaft cost alone even if its ore is rich, which a pure
 per-tonne cost cannot produce.
 

@@ -1,4 +1,4 @@
-"""Two economies' markets for one material, linked by freight (Complaints/113).
+"""Two economies' markets for one material, linked by freight (Complaints/109).
 
 Pure tests of sim/world/trade_between.py. Goods move from the cheaper market
 to the dearer one while the price gap exceeds the freight over the route, so

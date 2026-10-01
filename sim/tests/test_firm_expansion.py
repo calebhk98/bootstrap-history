@@ -1,4 +1,4 @@
-"""Complaint 550: a firm in a growing market grows before another firm is needed. An incumbent whose
+"""Complaint 331: a firm in a growing market grows before another firm is needed. An incumbent whose
 added capacity earns more than the capital costs expands, an entrant expects what is left after that,
 and a market that stops growing stops gaining capacity and firms."""
 from .harness import *  # noqa: F401,F403

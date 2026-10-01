@@ -80,7 +80,7 @@ class VariesWithWeatherTests(unittest.TestCase):
         # THE WINDOW IS A CENTURY, NOT FORTY YEARS, and that is the fix
         # rather than the next re-tune of the thresholds below. Weather is
         # now drawn per 150,000 km2 cell and correlated by real distance
-        # (Complaints/50), which makes bad years RARER BUT DEEPER than
+        # (Complaints/49), which makes bad years RARER BUT DEEPER than
         # independent per-region draws could produce - the correct property
         # of a correlated field, and a realistic one, since a severe
         # empire-wide harvest failure is a generational event rather than a
@@ -106,8 +106,8 @@ class VariesWithWeatherTests(unittest.TestCase):
         # effectively-independent weather draws divides the spread by about
         # sqrt(N), so every improvement to how weather is drawn moves this
         # number - one draw for the whole empire, then seven assumed-
-        # independent regions (Complaints/47), now 88 cells correlated by
-        # real distance (Complaints/50, effective N about 8.4). Holding any
+        # independent regions (Complaints/46), now 88 cells correlated by
+        # real distance (Complaints/49, effective N about 8.4). Holding any
         # of those numbers would assert that a civilisation must be badly
         # diversified. What this check is FOR is unchanged and is stated
         # above: catching a constant stand-in, which repeats one value every
@@ -117,7 +117,7 @@ class VariesWithWeatherTests(unittest.TestCase):
         self.assertGreater(statistics.pstdev(ratios), 0.02, ratios)
         self.assertLess(min(ratios), 0.9, ratios)
         # THE 1.0 CEILING IS GONE ON PURPOSE: asserting max(ratios) <= 1.0
-        # here would reintroduce the ratchet Complaints/45 describes. Capping
+        # here would reintroduce the ratchet Complaints/44 describes. Capping
         # consumption at food_demand_kg however full the granary was means a
         # population can never eat WELL, only adequately or badly; combined
         # with a mortality and fertility response that floors at 1.0, every
@@ -194,7 +194,7 @@ class NoFamineWithoutCauseTests(unittest.TestCase):
         # at or above subsistence - that is what growth is - so a ceiling of
         # 1.0 forbids the outcome the demographic milestone exists to
         # produce. Weather is drawn per home region and pooled by land share
-        # (Complaints/47), so ordinary good years reach the mean: measured
+        # (Complaints/46), so ordinary good years reach the mean: measured
         # 1.0042 over this century. The ceiling that actually binds eating is
         # physical, not this number -
         # MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE, 1.75.

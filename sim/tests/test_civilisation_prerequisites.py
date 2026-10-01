@@ -1,7 +1,7 @@
 """A civilisation's starting_techs must not break the tree's own prerequisite
 graph. Some currently do, and this file pins exactly which.
 
-Complaints/42. `data/civilizations/*.json` lists `starting_techs` as a flat
+Complaints/41. `data/civilizations/*.json` lists `starting_techs` as a flat
 set of node ids, and `data/tech_tree.json` gives every node a `pre` list.
 Nothing had ever compared the two, so a civilisation can hold a node while
 lacking the thing that node is built on - england_1300 holds
@@ -26,7 +26,7 @@ green suite pinning a known defect gets acted on; a red one gets ignored.
 
 SCOPE. First level only: a held node's immediate `pre`. It does not check
 closure over the full transitive chain, and it says nothing about whether a
-civilisation SHOULD hold something it does not - that is Complaints/41's
+civilisation SHOULD hold something it does not - that is Complaints/40's
 question and needs a historian, not a graph walk.
 
 Civilisations holding nodes whose prerequisites they lack are pinned by name, failing in both directions.
@@ -114,7 +114,7 @@ class CivilisationPrerequisiteTests(unittest.TestCase):
         self.assertEqual(added, [], (
             "New starting_techs prerequisite violation(s): %s. A civilisation "
             "now holds a node whose own `pre` it does not have. Either give it "
-            "the prerequisite, or correct the node's `pre` - see Complaints/42."
+            "the prerequisite, or correct the node's `pre` - see Complaints/41."
             % ", ".join("%s/%s" % pair for pair in added)))
 
     def test_a_fixed_violation_lowers_the_pin(self):

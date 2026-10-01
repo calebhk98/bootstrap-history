@@ -1,4 +1,4 @@
-"""Tests for CLI small fixes (complaints 159, 160, 161, 172)."""
+"""Tests for CLI small fixes (complaints 155, 156, 157, 168)."""
 import json
 import os
 import subprocess

@@ -1,4 +1,4 @@
-"""Pins the fix for Complaints/49 ("land rent reaches no crop"): two rounds of
+"""Pins the fix for Complaints/48 ("land rent reaches no crop"): two rounds of
 work built a real, per-civilization Ricardian rent on `hectare_land` in
 `sim/world/land.py`, and `sim/solve_prices.py` already turned that into
 `hectare_land`'s own solved price - but nothing in `data/production/` ever
@@ -185,7 +185,7 @@ class LandRentReferencePriceStaysZeroRentTests(unittest.TestCase):
 
 
 class TheFiveCivilizationsSeparateTests(unittest.TestCase):
-    """The headline claim Complaints/49 asks for: land-scarce civilizations
+    """The headline claim Complaints/48 asks for: land-scarce civilizations
     must now pay MORE for a land-limited crop than land-abundant ones, not
     the same book-identical price every civilization paid before this task
     (wheat_kg's price used to be pure labour, so it was IDENTICAL across

@@ -1,8 +1,8 @@
 """THE RE-PARTITIONING INVARIANCE TEST (stakeholder maintainability item 6).
 
-Complaints/46 (`forest_land_ceiling` scaled by `len(home_regions)`, so Han
+Complaints/45 (`forest_land_ceiling` scaled by `len(home_regions)`, so Han
 China at 9,597,000 km2 filed as ONE region reached a seventh of Rome's
-firewood on the SAME ground filed as SEVEN) and Complaints/50 (a region
+firewood on the SAME ground filed as SEVEN) and Complaints/49 (a region
 record was one weather draw, so China flipped one coin where Rome flipped
 seven) are the same defect, stated twice: a hand-drawn `regions` record was
 used as if it were a unit of PHYSICAL QUANTITY, when it is only a LABEL -

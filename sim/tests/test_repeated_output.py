@@ -1,4 +1,4 @@
-"""repeated_output: Complaints/177 and 161 - long explanations shown once,
+"""repeated_output: Complaints/173 and 157 - long explanations shown once,
 completions printed once, one household-wide staffing line, wrapped names,
 and the Options menu handing unread lines back to the game prompt."""
 import subprocess

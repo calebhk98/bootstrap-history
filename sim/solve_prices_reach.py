@@ -1,4 +1,4 @@
-"""Solving to a price vector in which every material has a technique that makes it (Complaints/420)."""
+"""Solving to a price vector in which every material has a technique that makes it (Complaints/309)."""
 
 
 def solve_priced_materials(production_entries, producers_of, resolvable_materials, wage_by_trade, **solve_arguments):

@@ -1,4 +1,4 @@
-"""Complaints/141 and 280: the tech tree is built from the branch files at
+"""Complaints/137 and 276: the tech tree is built from the branch files at
 load time and is never committed; option ids in alternative groups must name
 something real.
 

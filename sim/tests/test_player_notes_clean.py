@@ -1,4 +1,4 @@
-"""Complaint 126: player-facing notes must not contain audit markers or patch history."""
+"""Complaint 122: player-facing notes must not contain audit markers or patch history."""
 from .harness import *  # noqa: F401,F403
 
 # Audit markers and patch history patterns that should never appear in player notes
@@ -23,5 +23,5 @@ for node_id, node in NODES.items():
             _offenders[node_id].append(pattern)
 
 check("no node's player-facing note contains audit markers or patch history "
-      "(complaint 126)",
+      "(complaint 122)",
       _offenders == {}, _offenders)

@@ -1,5 +1,5 @@
-"""Regression tests for complaint 207 (money unit anchoring) and complaint
-236 item 5 (mortality wording). Tests that the money unit is explained in
+"""Regression tests for complaint 203 (money unit anchoring) and complaint
+232 item 5 (mortality wording). Tests that the money unit is explained in
 the start text, and that the mortality question uses neutral wording."""
 from .harness import *
 
@@ -24,7 +24,7 @@ def _run(arguments, text, env, cwd=None):
                           capture_output=True, text=True, timeout=120, env=env, cwd=cwd)
 
 
-# ---- Complaint 207: money unit is anchored to labourer wage
+# ---- Complaint 203: money unit is anchored to labourer wage
 _saves_207, _env_207 = _env("207-money-unit")
 _out_207 = _run(["play", "--civ", "england_1300", "--kit", "poor_scholar",
                  "--fog", "--seed", "1", "--session",
@@ -41,7 +41,7 @@ check("207: help money explains the unit the same way",
 check("207: help money does not claim every price is calculated",
       "calculated from production and demand" not in _help_207, _help_207[-2500:])
 
-# ---- Complaint 236 item 5: mortality wording is neutral, not prescriptive
+# ---- Complaint 232 item 5: mortality wording is neutral, not prescriptive
 _saves_236, _env_236 = _env("236-mortality-text")
 _out_236 = _run(["menu"], "1\n" + "\n" * 5 + "quit\n", _env_236).stdout
 check("236: mortality text does not use 'honest number' (prescriptive wording)",

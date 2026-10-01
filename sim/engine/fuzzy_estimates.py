@@ -1,4 +1,4 @@
-"""Uncertain estimates of what an unfinished node needs (complaint 192).
+"""Uncertain estimates of what an unfinished node needs (complaint 188).
 
 With the option on, screens that quote a node's requirements show a guess
 instead of the truth for: staff needed, staff to keep it open (and its

@@ -1,6 +1,6 @@
-"""failure_and_bounty_money: complaints 251 and 218 (the failure charge is the
-quoted figure, from the bill the player actually bears), 252 (a failed bounty
-is not orphaned) and 253 (selling stock faces the market's limits)."""
+"""failure_and_bounty_money: complaints 247 and 214 (the failure charge is the
+quoted figure, from the bill the player actually bears), 248 (a failed bounty
+is not orphaned) and 249 (selling stock faces the market's limits)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.proto.techtree import _explain_timing_and_risk
 

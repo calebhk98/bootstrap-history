@@ -13,5 +13,5 @@ Price solver (by default project and goods costs still come from `data/prices.js
 
 ## What this changes in my conclusions
 - It models more than I thought: about 2.4x the systems I counted. The farm, weather, demography and disease layers drive the numbers I did see (wages, "population below trend", plague losses) without ever appearing by name.
-- The partly wired price solver may explain complaint 151: project material costs from the old price book disagree with the market prices the materials screen shows.
+- The partly wired price solver may explain complaint 147: project material costs from the old price book disagree with the market prices the materials screen shows.
 - The code agent also reports patterns that conflict with CLAUDE.md: content ids special-cased in the engine (4.7), a save version constant (4.6), and project prices still read from `data/prices.json` (4.5). I verified one instance of each by grep; they are not filed as complaints.

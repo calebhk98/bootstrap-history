@@ -1,4 +1,4 @@
-"""Complaints 300 and 301: a state keeps up more than an army and officials (roads, public buildings,
+"""Complaints 286 and 287: a state keeps up more than an army and officials (roads, public buildings,
 a court, a dole, a navy), each priced from a physical stock; the army it wants follows the threat the
 civilisation's own hazards describe; soldiers are out of production; and patron funding is paid out of
 the treasury."""

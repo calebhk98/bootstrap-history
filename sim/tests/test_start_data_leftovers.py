@@ -1,4 +1,4 @@
-"""Starts agree with themselves: needle and fireclay (Complaints/370)."""
+"""Starts agree with themselves: needle and fireclay (Complaints/297)."""
 import json
 import os
 import unittest
@@ -53,14 +53,14 @@ class NeedleAndFireclay(unittest.TestCase):
 
 class ZincNodes(unittest.TestCase):
     def test_industrial_zinc_scales_up_the_retort_technique(self):
-        # Complaints/41: two zinc nodes were alternatives with unrelated prerequisites.
+        # Complaints/40: two zinc nodes were alternatives with unrelated prerequisites.
         # The industry node builds on the technique and needs no steelmaking.
         nodes = _nodes()
         self.assertIn("mt2_zinc_by_retort", nodes["zinc_metal"]["pre"])
         self.assertNotIn("cementation_steel", _closure(nodes, "zinc_metal"))
 
     def test_citric_and_chromate_recipes_name_their_own_process_nodes(self):
-        # Complaints/41: the recipes pointed at nodes for other processes.
+        # Complaints/40: the recipes pointed at nodes for other processes.
         nodes = _nodes()
         with open(os.path.join(ROOT, "data", "production", "50_chemicals.json")) as handle:
             recipes = json.load(handle)["materials"]
@@ -72,7 +72,7 @@ class ZincNodes(unittest.TestCase):
 
 class NotesNotAddressedToRome(unittest.TestCase):
     def test_notes_do_not_address_one_civilisation_by_name(self):
-        # Complaints/231: generic nodes spoke to a Roman player in the second person.
+        # Complaints/227: generic nodes spoke to a Roman player in the second person.
         phrases = ("from Britain to India", "to the Rhine", "Rome to the Rhine",
                    "will not reach the Mediterranean", "a rationibus", "software automation",
                    "libraries of the Empire")
@@ -84,7 +84,7 @@ class NotesNotAddressedToRome(unittest.TestCase):
 
 class FortificationUpkeep(unittest.TestCase):
     def test_large_masonry_fortifications_cost_upkeep_and_label_the_rate(self):
-        # Complaints/249: a built bastion was never maintained; lime mortar and stone need repair.
+        # Complaints/245: a built bastion was never maintained; lime mortar and stone need repair.
         nodes = _nodes()
         for node_id in ("mil_trace_italienne", "mil_bastion"):
             node = nodes[node_id]

@@ -1,4 +1,4 @@
-"""The 'display units' entry of the options menus (Complaint 290).
+"""The 'display units' entry of the options menus (Complaint 285).
 
 One preference per dimension, saved in the application config like the other
 options. Nothing chosen means every quantity is shown exactly as the game

@@ -1,4 +1,4 @@
-"""A civilisation's starting state must agree with itself (Complaints/128).
+"""A civilisation's starting state must agree with itself (Complaints/124).
 
 sim/civ_start_check.py is the check; `simulator.py validate` prints it per
 civilisation. Here: a deliberately broken fixture proves each class is caught,

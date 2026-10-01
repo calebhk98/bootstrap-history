@@ -187,12 +187,12 @@ def _report_tree_side_question(audit):
     # THE TREE-SIDE QUESTION, WHICH IS STILL OPEN AND IS NOT THE SAME ONE.
     # Knowing that something makes iron does not say WHICH TECHNOLOGY lets you
     # make it, and that is what a recipe has to be gated on - see
-    # Complaints/39 and `requires_node` in data/production/_SCHEMA.md.
+    # Complaints/38 and `requires_node` in data/production/_SCHEMA.md.
     mats = audit["materials"]
     with_producer = [material for material in mats if material["producer"]]
     return ["  Separately: does the TREE name a node for the material? This is",
             "  the suffix-stripping guess, and it is the link `requires_node`",
-            "  now replaces with something explicit (Complaints/39).",
+            "  now replaces with something explicit (Complaints/38).",
             "  ...a node id that plausibly matches the key   %5d  %5.1f%%"
                   % (len(with_producer), 100.0 * len(with_producer) / max(1, len(mats))),
             ""]

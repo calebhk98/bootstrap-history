@@ -1,4 +1,4 @@
-"""WIRING TWO (Complaints/closed/47-one-weather-draw-for-a-continent.md): does the
+"""WIRING TWO (Complaints/closed/46-one-weather-draw-for-a-continent.md): does the
 engine actually draw one weather multiplier PER HOME REGION and pool them
 weighted by cultivable land share, or does the whole territory still share
 a single draw?
@@ -42,7 +42,7 @@ class RegionWeightsTests(unittest.TestCase):
     """
 
     def test_weights_sum_to_one_and_every_cell_sits_in_a_home_region(self):
-        # Complaints/50: cell ids are geography.json's 150,000 km2
+        # Complaints/49: cell ids are geography.json's 150,000 km2
         # land_tiles, not Rome's seven home_regions - asserting the cell ids
         # WERE the home_regions would be precisely the equation that
         # complaint is about, one row in a data file as one weather draw.
@@ -59,11 +59,11 @@ class RegionWeightsTests(unittest.TestCase):
         self.assertGreater(len(cells), len(home_regions),
                            "Rome's territory should break into more cells "
                            "than it has region records, or nothing about "
-                           "Complaints/50 has changed")
+                           "Complaints/49 has changed")
         self.assertAlmostEqual(sum(cell.weight for cell in cells), 1.0, places=9)
 
     def test_weights_are_a_genuine_land_share_not_an_equal_split(self):
-        # Complaints/50: cells are geography.json's 150,000 km2 land_tiles,
+        # Complaints/49: cells are geography.json's 150,000 km2 land_tiles,
         # which carry their own arable_fraction, so land.py does not feed
         # this mechanism at all - comparing each weight against
         # land.cultivable_land_for_civilization's per-REGION arable_hectares
@@ -101,7 +101,7 @@ class PooledWeatherMultiplierTests(unittest.TestCase):
         self.assertAlmostEqual(statistics.mean(draws), 1.0, delta=0.02)
 
     def test_pooling_seven_regions_measurably_reduces_variance(self):
-        # Complaints/47's own measurement: pooling seven independent regions
+        # Complaints/46's own measurement: pooling seven independent regions
         # should take the effective standard deviation from 0.20 (one draw)
         # to roughly 0.076 (seven EQUALLY weighted draws) - Rome's actual
         # weights are unequal (see RegionWeightsTests above), so the real

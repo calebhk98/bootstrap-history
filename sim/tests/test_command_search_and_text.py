@@ -1,4 +1,4 @@
-"""Regression coverage for complaints 196, 197, 210, 217, 221 and 236: finding things
+"""Regression coverage for complaints 192, 193, 206, 213, 217 and 232: finding things
 and reading replies. Searches never reach beyond what a player may see."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.proto.typed import parse_typed

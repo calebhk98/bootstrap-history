@@ -24,7 +24,7 @@ is now. None of this is an approved plan yet.
 | `CODE_ANALYSIS_TOOLING.md` | What checks the code's maintainability (`sim/code_health.py`, pylint, the rename prover), which parts are hand-written and which library sits under each. | Ours |
 
 Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
-`Complaints/123-delete-prices-json.md` is its concrete exit checklist for the
+`Complaints/119-delete-prices-json.md` is its concrete exit checklist for the
 legacy file (it is an issue, so it is tracked with the others);
 `PM_ASSESSMENT.md` is the reasoning that led to it; `STATE_OF_THE_PROJECT.md`
 is where its milestone table is kept current; the two external documents

@@ -380,7 +380,7 @@ class CivilizationTerritoryTests(unittest.TestCase):
             norse.price_kg_grain_equivalent_per_hectare)
 
     def test_a_single_home_region_civilization_no_longer_prices_at_zero(self):
-        # Complaints/46: a civilization holding one uniform region has
+        # Complaints/45: a civilization holding one uniform region has
         # nothing WORSE to earn a differential rent over, regardless of how
         # many people are drawing on it, so an extensive-margin-only
         # mechanism prices it at exactly zero - Han China and the Norse both
@@ -531,7 +531,7 @@ class YieldAtIntensityTests(unittest.TestCase):
 
 class IntensiveRentTests(unittest.TestCase):
     """intensive_rent_kg_grain_equivalent_per_hectare - the Cobb-Douglas
-    land share Complaints/46 asked for: rent a SINGLE region earns from
+    land share Complaints/45 asked for: rent a SINGLE region earns from
     being crowded, with no other, worse region needed anywhere.
     """
 
@@ -584,7 +584,7 @@ class CombinedMarginOutcomeTests(unittest.TestCase):
         # And both are strictly positive once ANY population presses on
         # the land: an extensive-margin-only mechanism prices a single,
         # uniform region at zero no matter how many people depend on it -
-        # the exact defect Complaints/46 named.
+        # the exact defect Complaints/45 named.
         self.assertGreater(sparse.price_kg_grain_equivalent_per_hectare, 0.0)
 
     def test_a_civilization_with_no_population_prices_at_zero(self):

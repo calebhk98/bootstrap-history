@@ -1,6 +1,6 @@
 """multi_year_step_log: `step N` logs and reports every simulated year.
 
-Complaints/163: after `step 2` the log showed nothing for the second year.
+Complaints/159: after `step 2` the log showed nothing for the second year.
 Measured: the multi-year step logs exactly what N single steps log; the
 "population still N% below trend" line is deliberately rate-limited, not
 missing.

@@ -1,7 +1,7 @@
-"""knowledge_loss_and_consequences: complaints 237 (a rebuild keeps what
-survives), 241 (failures say what failed, and which risk is live), 242
-(effect lines carry before and after), 245 (a BENEFIT block in `why`), 247
-(patron death recovery and the scandal trend) and 256 (a visible successor
+"""knowledge_loss_and_consequences: complaints 233 (a rebuild keeps what
+survives), 237 (failures say what failed, and which risk is live), 238
+(effect lines carry before and after), 241 (a BENEFIT block in `why`), 243
+(patron death recovery and the scandal trend) and 252 (a visible successor
 objective)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import closure as _closure_of

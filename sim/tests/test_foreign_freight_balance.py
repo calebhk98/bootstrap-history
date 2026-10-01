@@ -1,5 +1,5 @@
 """Foreign freight is priced from the carrier, and trade is paid in coin and carried by a fleet
-(Complaints/484, 481).
+(Complaints/326, 323).
 
 Freight per tonne-km comes from the carrier's physics: travel time, the empty return where flows
 are one-sided, the carrier's capital at the market rate and losses at sea. Goods cross in coin
@@ -205,7 +205,7 @@ check("the foreign ledger is not empty after a year of trade",
 check("the foreign ledger survives a save and a load",
       loaded.state.economy.foreign_ledger == saved.state.economy.foreign_ledger, None)
 
-# --- merchants add their own cost and a limit of capital to the route's freight (Complaints/591, 592).
+# --- merchants add their own cost and a limit of capital to the route's freight (Complaints/339, 340).
 traders = stubbed_pair(sim(civ="rome_100ad", capital=1e9), 100.0, 10.0)
 traders.foreign_economies = lambda: [PARTNER]
 trader_facts = traders._foreign_economy_facts(PARTNER)

@@ -1,4 +1,4 @@
-"""Complaints 224, 255, 256, 257, 259, 264: founder age and death text, deputies,
+"""Complaints 220, 251, 252, 253, 255, 260: founder age and death text, deputies,
 the ending after a dispersed corpus, achievements announced once, the civilisation
 label after the start, and the victory screen with a finish-and-score command."""
 from .harness import *  # noqa: F401,F403

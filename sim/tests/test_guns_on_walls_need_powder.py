@@ -1,4 +1,4 @@
-"""A defence credited to guns needs the powder works running (Complaints/249).
+"""A defence credited to guns needs the powder works running (Complaints/245).
 
 A node's `hazard_counters` entry may carry `requires_running`: node ids that
 must themselves be running for the counter to count.

@@ -17,7 +17,7 @@ sim/engine/proto/*.py:
   'compact' - a SHORT SUMMARY of the reply on 'state', 'step', 'why' and
               'stuck' (see sim/engine/proto/compact.py): only the fields a
               turn needs, far smaller than 'json' and than the text screen.
-              Implies 'json'. Complaints/173.
+              Implies 'json'. Complaints/169.
 
 The compact agent output mode keeps reason-carrying prose; the mode-off path is byte-identical.
 """

@@ -1,4 +1,4 @@
-"""Roman-only content is not offered to a civilisation as local fact (Complaints/231).
+"""Roman-only content is not offered to a civilisation as local fact (Complaints/227).
 
 Nodes that are Mediterranean artefacts sit behind the civilisation's own
 `needs_first` gate in a civilisation with no contact with the Mediterranean;

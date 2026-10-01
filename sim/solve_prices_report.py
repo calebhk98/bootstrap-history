@@ -96,7 +96,7 @@ def _print_extraction_rent_explanation(pad, material, entry, rent_by_kg):
                   "supply curve (see RENT ON EXTRACTED MATERIALS)."
                   % (pad, entry["extracted_from"], format_hours(material_rent_per_kg)))
         elif entry.get("land_hectare_years"):
-            # GROWN/land-limited (Complaints/49): this material's OWN
+            # GROWN/land-limited (Complaints/48): this material's OWN
             # extracted_from rent term (the ore-style mechanism above) is
             # zero, as it always is for anything that is not one of the six
             # named ores - but that is not the same as "no rent at all" any
@@ -117,11 +117,11 @@ def _print_extraction_rent_explanation(pad, material, entry, rent_by_kg):
 
 
 def _print_rejected_techniques(pad, material, recipe_id, production_entries, producers_of):
-    # Split rejections by REASON (Complaints/44) - see print_why's call site
+    # Split rejections by REASON (Complaints/43) - see print_why's call site
     # for why a capability floor and a price comparison are different findings.
     candidates = sorted(set(producers_of.get(material, [])) - {recipe_id})
     if candidates:
-        # Split rejections by REASON (Complaints/44) - a technique that
+        # Split rejections by REASON (Complaints/43) - a technique that
         # cannot physically reach what this material needs is a different
         # finding from one that merely costs more today, and conflating
         # them is exactly how "thermal_mj_friction should never be chosen"
@@ -528,7 +528,7 @@ def _print_rent_summary(arguments, rent_hours_per_kg_by_material):
             # km2 TILE, so this count has not meant regions since that
             # migration. It printed a civilisation id with 88 regions held for a
             # civilisation holding seven regions, which is the same
-            # region-label-as-physical-unit confusion Complaints/46 and /50
+            # region-label-as-physical-unit confusion Complaints/45 and /50
             # were each about, surviving in a label after the mechanism
             # underneath it had been fixed.
             print("RENT NOW PRICED on land, for %s (%d tile(s) held):"
@@ -718,7 +718,7 @@ def main(argv=None):
                              "data/civilizations). Without this the solve is UNDATED and "
                              "will happily price Roman electricity off a "
                              "photovoltaic panel - see THE SOLVER NOW HAS A "
-                             "NOTION OF WHEN, above, and Complaints/39")
+                             "NOTION OF WHEN, above, and Complaints/38")
     arguments = parser.parse_args(argv)
 
     nodes = tool_costs.load_tree_nodes()

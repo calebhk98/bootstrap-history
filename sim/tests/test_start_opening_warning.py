@@ -1,8 +1,8 @@
-"""start_opening_warning: Complaint 131 - warn at start when free staff are insufficient to open the finished concern."""
+"""start_opening_warning: Complaint 127 - warn at start when free staff are insufficient to open the finished concern."""
 from .harness import *  # noqa: F401,F403
 
 
-# --- Complaint 131: start should warn when a concern cannot be opened with today's staff.
+# --- Complaint 127: start should warn when a concern cannot be opened with today's staff.
 # Concern with insufficient free staff to open.
 short_sim = sim(capital=1_000_000)
 # Complete prerequisites so we can start school_founded

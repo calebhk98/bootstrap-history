@@ -1,4 +1,4 @@
-"""Complaints 107 and 189: firms draw on the same labour pool as the founder,
+"""Complaints 103 and 185: firms draw on the same labour pool as the founder,
 the state assesses every actor by one rule, and firm output reaches the market."""
 import copy
 import random

@@ -1,7 +1,7 @@
 """bounty_save_and_credit_freeze: a posted bounty survives a save and costs no
-founder hours (Complaints/157), the save carries no version stamp
-(Complaints/188), and a credit freeze still allows starts paid from cash
-(Complaints/154)."""
+founder hours (Complaints/153), the save carries no version stamp
+(Complaints/184), and a credit freeze still allows starts paid from cash
+(Complaints/150)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.proto.saveload import save_state, load_state
 

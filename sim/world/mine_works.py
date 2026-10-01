@@ -6,7 +6,7 @@ sim/world/deposits.py (VENTILATION_OPENINGS_PER_WORKING_SHAFT).
 Basis of grade: a deposit's grade is metal per tonne of ORE as stoped and
 presented to dressing (the figures in data/world/deposits.json are described
 as ore grades). Rock broken per tonne of ore is higher by the barren rock
-that comes with it (Complaints/640). Barren rock is broken but stowed
+that comes with it (Complaints/348). Barren rock is broken but stowed
 underground, so only breaking, fire-setting and timbering scale with rock;
 hoisting, carrying and draining scale with ore.
 """
@@ -28,7 +28,7 @@ ORE_SHARE_OF_ROCK_BROKEN_BY_DEPTH = declare(
            "thin discontinuous deposit he calls among the worst). Shallow "
            "veins take the best credible value, deep workings the realistic "
            "one. Surface working takes none: stripping overburden is not "
-           "charged (Complaints/641).",
+           "charged (Complaints/349).",
     confidence="D",
     why="Sets the barren rock a tonne of ore drags with it; a wide rich "
         "vein would do better, a pod-and-pillar working worse.")

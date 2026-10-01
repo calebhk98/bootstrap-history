@@ -1,6 +1,6 @@
 """A good nothing held can make is priced through the techniques the civilisation holds, not a later route.
 
-Complaints/395: steel plate was priced at the mature technique (cheap iron bar from a later route) while the
+Complaints/302: steel plate was priced at the mature technique (cheap iron bar from a later route) while the
 iron bar its own cementation works buys was priced at the civilisation's route, so the concern bought dearer
 than it sold and earned nothing."""
 import json

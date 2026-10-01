@@ -1,4 +1,4 @@
-"""Guidance figures for the goal and idle screens (Complaints/100, 101).
+"""Guidance figures for the goal and idle screens (Complaints/98, 99).
 
 Every figure is read from the engine function that computes it; nothing here
 names a content id, and nothing reads the hidden tree.

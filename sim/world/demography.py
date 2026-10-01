@@ -454,7 +454,7 @@ FERTILITY_SURPLUS_CEILING_MULTIPLIER = declare(
         "above subsistence, mirroring _excess_mortality_multiplier's "
         "ramp down to STARVATION_MORTALITY_CEILING_MULTIPLIER below it. "
         "Checked against the stakeholder's own biological growth-rate "
-        "ceiling (Complaints/45-no-granary-so-the-baseline-collapses.md): "
+        "ceiling (Complaints/44-no-granary-so-the-baseline-collapses.md): "
         "at this model's stationary age structure (roughly 46% "
         "working-age) and ANNUAL_FERTILITY_RATE_PER_WOMAN, a population "
         "fed at this ceiling throughout contributes on the order of 2-3% "
@@ -483,7 +483,7 @@ NUTRITION_YEAR_TO_YEAR_NOISE_STD = declare(
         "docstring for why no sourced biological limit was found to lift "
         "that floor). Fertility no longer floors the same way - "
         "_fertility_multiplier now ramps UP above subsistence, applied "
-        "for Complaints/45-no-granary-so-the-baseline-collapses.md - so "
+        "for Complaints/44-no-granary-so-the-baseline-collapses.md - so "
         "symmetric noise around 1.0 partially cancels on the fertility "
         "side but still pushes AVERAGE excess mortality up whenever "
         "average food supply is exactly at subsistence (Jensen's "
@@ -756,7 +756,7 @@ def _excess_mortality_multiplier(nutrition_ratio: float, vulnerability: float) -
     mortality elasticity below this baseline, it belongs here.
 
     DOUBLE-COUNTING BAD YEARS IN THE BASELINE RATE IS NOT WHERE THE MODEL'S
-    RESIDUAL POPULATION DRAG COMES FROM (Complaints/45-no-granary-so-the-
+    RESIDUAL POPULATION DRAG COMES FROM (Complaints/44-no-granary-so-the-
     baseline-collapses.md's unshocked-century follow-up: with the granary
     and the fertility ramp above 1.0 both in place, 100 years of the default civilisation
     with events=False still settles around 74 percent of its starting
@@ -865,7 +865,7 @@ def _fertility_multiplier(
     own declaration) are real, the straight line between them is invented,
     same status as the mortality side's own straight line.
 
-    RESOLVES Complaints/45-no-granary-so-the-baseline-collapses.md's THIRD
+    RESOLVES Complaints/44-no-granary-so-the-baseline-collapses.md's THIRD
     QUESTION ("should the floor at nutrition_ratio == 1.0 become a real,
     bounded benefit above it"). This exact shape was designed, implemented,
     checked against the stakeholder's own growth-rate ceiling, and then
@@ -883,7 +883,7 @@ def _fertility_multiplier(
     not the ~-0.03%/year it produced with fertility flat at 1.0 above
     subsistence - see that test class's own docstring for the exact figure
     and its comparison to the stakeholder's ~9.06%/year biological ceiling
-    (Complaints/45), which it stays far under.
+    (Complaints/44), which it stays far under.
 
     `_excess_mortality_multiplier` (the floor, not the ceiling side) is
     DELIBERATELY LEFT UNCHANGED - see its own docstring for why: lowering

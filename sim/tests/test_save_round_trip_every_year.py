@@ -1,4 +1,4 @@
-"""Complaint 470, general guard: stepping a game that is saved and loaded at a
+"""Complaint 320, general guard: stepping a game that is saved and loaded at a
 year gives the same year as stepping the unbroken game, at every year of a
 short run. Compares the digest the performance fingerprint uses, so any state
 the next year reads but the save does not carry shows up as a different digest.

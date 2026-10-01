@@ -1,4 +1,4 @@
-"""Complaints 229, 230, 232: routes a player can choose without the one they refuse.
+"""Complaints 225, 226, 228: routes a player can choose without the one they refuse.
 
 229: the school has a paid-labour alternative to buying and freeing people.
 230: a persistent exclusion list honoured by rush, rush preview and the automatic policies.

@@ -1,4 +1,4 @@
-"""Merchants have a cost and a response: a thin gap does not move goods (Complaints/591)."""
+"""Merchants have a cost and a response: a thin gap does not move goods (Complaints/339)."""
 import math
 import unittest
 

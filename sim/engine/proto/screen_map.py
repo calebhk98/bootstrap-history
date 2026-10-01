@@ -1,5 +1,5 @@
 """The `map` screen: the tiles the nation holds and the ones beside them,
-with names, terrain, people and the named deposits on each (Complaints/243).
+with names, terrain, people and the named deposits on each (Complaints/239).
 
 Every figure is the engine's own: people per tile from settlement_tiles, the
 town from home_town_population_estimate, the journey from relocation_quote,

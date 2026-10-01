@@ -196,7 +196,7 @@ s_rt.trades_created.add("machinist")          # taught once, long ago
 s_rt.employees.pop("machinist", None)
 s_rt._resync_pools()
 # A project in hand needs a machinist: auto_hire replaces only trades that
-# something draws on (complaint 171).
+# something draws on (complaint 167).
 s_rt.initialize_project("air_artificial_horizon")
 check("a trade taught and then lost counts as gone, not as available",
       s_rt.trade_available("machinist")

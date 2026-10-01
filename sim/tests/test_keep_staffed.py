@@ -1,4 +1,4 @@
-"""keep_staffed: complaint 130 (name the concerns that must stay staffed through attrition)."""
+"""keep_staffed: complaint 126 (name the concerns that must stay staffed through attrition)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.proto.typed import parse_typed
 

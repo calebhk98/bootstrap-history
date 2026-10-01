@@ -1,4 +1,4 @@
-"""Complaints/420: a material no technique in a solve can make has no price, never the solver's
+"""Complaints/309: a material no technique in a solve can make has no price, never the solver's
 starting guess. Everything the solve calls resolvable has a chosen technique."""
 import unittest
 

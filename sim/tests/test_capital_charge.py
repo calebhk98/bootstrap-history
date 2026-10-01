@@ -1,6 +1,6 @@
 """A long-run price repays the plant at the market rate, so a concern selling at it earns a return.
 
-The solver charges each production entry's plant its build bill over its service life; Complaints/462
+The solver charges each production entry's plant its build bill over its service life; Complaints/319
 found that left a concern priced at cost earning its staff and nothing above. The charge now repays the
 build bill with interest at the civilisation's market rate (`capital_recovery_factor`), so a concern
 selling at the solved price earns its wages plus that return."""

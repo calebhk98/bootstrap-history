@@ -2,7 +2,7 @@
 
 What a mod can do today is in `mods/README.md`. Evidence and the full
 analysis for everything below is in
-`Complaints/122-mod-system-cannot-change-rules-or-remove-content.md`.
+`Complaints/118-mod-system-cannot-change-rules-or-remove-content.md`.
 
 The target: two authors who have never heard of each other can each ship a
 mod, a player installs both, and they either work together or fail loudly

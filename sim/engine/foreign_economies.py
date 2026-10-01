@@ -171,7 +171,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         estimate."""
         # TEMPORARY HEURISTIC: a generic estimate (often the ceiling) is not a
         # level to trade against, so a good this society makes crosses a
-        # border only where its output is sourced (Complaints/113).
+        # border only where its output is sourced (Complaints/109).
         return (commodity in self.res["empire_output_100ad"]
                 or commodity in self._commodity_ledger().commodities)
 

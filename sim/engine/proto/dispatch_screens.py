@@ -1,5 +1,5 @@
 """The overview screens for the map, education, demography and divergence
-(Complaints/243, 96, 270). Each reply is built by its own screen_* module."""
+(Complaints/239, 94, 266). Each reply is built by its own screen_* module."""
 
 from .command_registry import command
 from .screen_demography import demography_report

@@ -1,4 +1,4 @@
-"""Complaints 107, 189, 301: an actor chooses what to do with an invention (keep it secret, license
+"""Complaints 103, 185, 287: an actor chooses what to do with an invention (keep it secret, license
 it, publish it), and the state's military adoption is what the government actually holds."""
 import copy
 import json

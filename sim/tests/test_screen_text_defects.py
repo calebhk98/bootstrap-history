@@ -1,4 +1,4 @@
-"""Screen text that read wrongly or said too little: Complaints/199 (score change line), 204 (sack chance wording), 280 (option ids)."""
+"""Screen text that read wrongly or said too little: Complaints/195 (score change line), 204 (sack chance wording), 280 (option ids)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine import cli
 from sim.engine.proto.render_screens_status import render_risk, render_score

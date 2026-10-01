@@ -50,7 +50,7 @@ FIRE_SET_SHARE_OF_ROCK_BY_HARDNESS = declare(
     unit="fraction of the rock tonnage broken by fire-setting",
     source=None, confidence="D",
     why="Only hard rock is charged wood until a source gives the share for "
-        "ordinary vein rock (Complaints/610).")
+        "ordinary vein rock (Complaints/342).")
 
 
 def fire_setting_labour_hours_per_tonne_rock(hardness_class):

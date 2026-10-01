@@ -310,9 +310,9 @@ class WagesMixin(WageLedgerMixin):
             "mover. One is a labour market that pays an hour what it makes. Measured on Rome "
             "seeds 1-3: at one or one half the founder's early research and hiring grow dearer "
             "with the generic economy index and none of the three takes off in 100 years; at "
-            "zero all three do (Complaint 675). Replace by the clearing of aggregate demand for "
+            "zero all three do (Complaint 354). Replace by the clearing of aggregate demand for "
             "hands against the working population, or by output per hour that comes from "
-            "diffused technology (Complaint 104).")
+            "diffused technology (Complaint 101).")
 
     def labour_pay_scale(self):
         """What the hour of labour pays, against the opening schedule, at this economy's output per hour."""

@@ -1,6 +1,6 @@
-"""Pins the fix for Complaints/44, in two rounds.
+"""Pins the fix for Complaints/43, in two rounds.
 
-ROUND ONE (the original Complaints/44 incident): England 1300's water wheel
+ROUND ONE (the original Complaints/43 incident): England 1300's water wheel
 made mechanical_mj roughly 1,347 times cheaper than human muscle, cheap
 enough that thermal_mj_friction (a warm bearing, ~98% efficient at turning
 shaft work into heat) undercut charcoal for the shared, undifferentiated
@@ -260,7 +260,7 @@ class PerConsumerGradingTests(unittest.TestCase):
 
 
 class SyntheticFrictionScenarioTests(unittest.TestCase):
-    """Reproduces the SHAPE of Complaints/44 with tiny synthetic entries: a
+    """Reproduces the SHAPE of Complaints/43 with tiny synthetic entries: a
     cheap mechanical_mj source (standing in for a water wheel), a friction
     conversion that wins on running cost alone, and a real fuel that costs
     more per MJ but clears the temperature floor. This exercises `solve`
@@ -308,7 +308,7 @@ class RealDataAcceptanceTests(unittest.TestCase):
     """The acceptance tests this task was actually given, against the real
     data/production/70_energy.json and data/civilizations/*.json: England
     1300 must burn a real fuel, not friction, Rome must be unaffected, and
-    both civilisations' gated solves must converge - see Complaints/44's
+    both civilisations' gated solves must converge - see Complaints/43's
     own before/after numbers and this task's own report for the round-two
     numbers (a synthetic hot consumer added to the real England 1300
     economy leaves plaster_kg's real, converged price untouched).
