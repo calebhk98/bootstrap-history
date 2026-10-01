@@ -234,7 +234,7 @@ mineral pigments, salt, flue dust as a smelting byproduct). Also in this
 bucket: `iron_sheet_kg` and `steel_noric_kg` (Noric steel was a real,
 famous Roman-era Alpine export - "ferrum Noricum" - so buying steel without
 personally running a Noric forge is exactly the iron/copper case), land
-itself (`iugerum_land`, bought or rented, not manufactured), and
+itself (`hectare_land`, bought or rented, not manufactured), and
 `slave_skilled` (a market good in every one of these societies' own
 economies, priced with a skill premium - not a manufacturing gap in the
 sense this audit is about).

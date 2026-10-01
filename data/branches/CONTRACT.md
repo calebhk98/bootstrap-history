@@ -85,7 +85,7 @@ mercury_kg sulfur_kg natron_kg lime_kg alum_kg green_vitriol_kg pyrolusite_kg
 calamine_kg galena_kg fluorspar_kg sand_quartz_kg clay_kg glass_raw_kg
 linen_rag_kg papyrus_sheet parchment_sheet silk_kg shellac_kg beeswax_kg
 tallow_kg emery_kg asbestos_kg bitumen_kg timber_m3 brick_1000 ox mule
-slave_unskilled slave_skilled iugerum_land iron_ore_kg copper_ore_kg cinnabar_kg
+slave_unskilled slave_skilled hectare_land iron_ore_kg copper_ore_kg cinnabar_kg
 bauxite_kg manganese_kg wood_ash_kg manure_kg salt_kg blue_vitriol_kg
 boric_acid_kg agate_kg antimony_kg cryolite_kg flue_dust_kg graphite_kg
 quartz_tube_kg bronze_kg zinc_kg iron_sheet_kg steel_plate_kg nickel_kg

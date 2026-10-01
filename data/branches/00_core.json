@@ -853,7 +853,7 @@
     },
     "mat": {
       "firewood_kg": 400000.0,
-      "iugerum_land": 200.0
+      "hectare_land": 50.46
     },
     "name": "Coppiced charcoal at industrial scale",
     "note": "Charcoal supply, not ore, is the real ceiling on pre-coke iron output, and it deforests regions. Coppice rotation of 15-20 years on dedicated land is the answer. Budget the land or your furnace will starve.",
@@ -2150,7 +2150,7 @@
       "scribe": 400.0
     },
     "mat": {
-      "iugerum_land": 600.0
+      "hectare_land": 151.38
     },
     "mechanics": {
       "capability": {
