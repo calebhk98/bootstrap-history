@@ -425,7 +425,7 @@ _menu_env.pop("ROME_SAVE_DIR", None)
 # end for a script and the wrong one for the human the menu exists to greet;
 # `play` speaks typed words over the same dispatcher. So the commands fed
 # here are typed, and what comes back is the rendered view rather than JSON.
-_menu_input = "1\n1\ny\n\n\ny\n\n\nstate\nquit\n"
+_menu_input = "1\n1\ny\n\n\ny\n\n\n\nstate\nquit\n"
 _pm = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                      input=_menu_input, capture_output=True, text=True, timeout=120,
                      cwd=_menu_dir, env=_menu_env)
@@ -456,7 +456,7 @@ check("the menu drops straight into a playable session, no extra prompt",
       _pm.returncode == 0 and "YEAR" in _pm.stdout and "RUNNING" in _pm.stdout,
       _pm.stdout[-300:])
 check("the mortality choice made in the menu reaches the actual game",
-      "and ageing" in _pm.stdout, _pm.stdout[-300:])
+      "aged about" in _pm.stdout, _pm.stdout[-300:])
 if _named and os.path.exists(_named[0]):
     os.remove(_named[0])
     _mp = _named[0] + ".meta.json"
@@ -476,7 +476,7 @@ json.dump({"save_dir": os.path.join(_redir_cfg_dir, "not_this_one")},
           open(_redir_cfg, "w"))
 _redir_env = dict(os.environ, ROME_SAVE_DIR=_redir_dir, ROME_SIM_CONFIG=_redir_cfg)
 _pr = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                     input="1\n1\ny\n\n\nn\n\n\n\nquit\n", capture_output=True, text=True,
+                     input="1\n1\ny\n\n\nn\n\n\n\n\nquit\n", capture_output=True, text=True,
                      timeout=120, cwd=_redir_dir, env=_redir_env)
 check("ROME_SAVE_DIR redirects the menu's save away from the config file's "
       "own save_dir, and away from the default",
@@ -512,7 +512,7 @@ check("...and a LATER invocation - no flag, nothing repeated - shows it back "
 _load_dir = tempfile.mkdtemp()
 _load_cfg = os.path.join(_load_dir, "cfg.json")
 _load_env = dict(os.environ, ROME_SAVE_DIR=_load_dir, ROME_SIM_CONFIG=_load_cfg)
-subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\nn\n\n\nn\n\n\n\nquit\n",
+subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\nn\n\n\nn\n\n\n\n\nquit\n",
                capture_output=True, text=True, timeout=120, cwd=_load_dir, env=_load_env)
 _pl_load = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                           input="2\nb\nq\n", capture_output=True, text=True, timeout=60,
@@ -524,7 +524,7 @@ check("Load a saved game lists the civilisation and year of a save on disk",
       _pl_load.stdout[-1200:])
 check("...and how far along it is (a technology count, since this save has "
       "fog off and so gets a goal-progress fraction instead)",
-      "toward Grown and alloy junction transistors" in _pl_load.stdout,
+      "toward Point-contact transistor" in _pl_load.stdout,
       _pl_load.stdout[-1200:])
 check("...and roughly when it was last written",
       "ago" in _pl_load.stdout or "AD" in _pl_load.stdout, _pl_load.stdout[-1200:])
@@ -541,7 +541,7 @@ check("picking a save from the Load Game list actually resumes it, not a "
 _fogload_dir = tempfile.mkdtemp()
 _fogload_cfg = os.path.join(_fogload_dir, "cfg.json")
 _fogload_env = dict(os.environ, ROME_SAVE_DIR=_fogload_dir, ROME_SIM_CONFIG=_fogload_cfg)
-subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\ny\n\n\nn\n\n\n\nquit\n",
+subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")], input="1\n1\ny\n\n\nn\n\n\n\n\nquit\n",
                capture_output=True, text=True, timeout=120, cwd=_fogload_dir, env=_fogload_env)
 _pl_fogload = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
                              input="2\nb\nq\n", capture_output=True, text=True, timeout=60,
@@ -581,14 +581,14 @@ _ig4 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play
                       input="options\n2\ny\nb\nstate\nquit\n", capture_output=True,
                       text=True, timeout=120, cwd=_ig_dir)
 check("the in-game options command can turn mortality on mid-game",
-      "and ageing" in _ig4.stdout, _ig4.stdout[-1200:])
+      "aged about" in _ig4.stdout, _ig4.stdout[-1200:])
 _ig5 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py"), "play",
                        "--session", _ig_session],
                       input="state\nquit\n", capture_output=True, text=True,
                       timeout=120, cwd=_ig_dir)
 check("...and that survives a resume, the ordinary save mechanism already "
       "carrying it (life_left/founder_alive/cfg.immortal are all "
-      "SAVE_FIELDS)", "and ageing" in _ig5.stdout, _ig5.stdout[-800:])
+      "SAVE_FIELDS)", "aged about" in _ig5.stdout, _ig5.stdout[-800:])
 check("the in-game options menu never offers to change civilisation, kit or "
       "fog - none of those are honest to change mid-game",
       not any(option in _ig1.stdout for option in
@@ -821,7 +821,7 @@ _rem_env = dict(os.environ, ROME_SIM_CONFIG=_rem_cfg, ROME_SAVE_DIR=_rem_saves)
 # is not named would. Both answers have to be in the script or the wizard
 # consumes the horizon as the goal.
 _rem1 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                       input="1\n1\nn\n\nmerchant\ny\n\n5\n321\nquit\n",
+                       input="1\n1\nn\n\nmerchant\ny\n\n5\n321\n\nquit\n",
                        capture_output=True, text=True, timeout=120, env=_rem_env)
 _rem_cfg_read = json.load(open(_rem_cfg)) if os.path.exists(_rem_cfg) else {}
 check("finishing the New Game wizard remembers every answer as next time's "
@@ -839,7 +839,7 @@ check("...and the civilisation picker offers that remembered choice as its "
       "default the next time the wizard is opened",
       "default 1" in _rem2.stdout, _rem2.stdout[-800:])
 _rem3 = subprocess.run([sys.executable, os.path.join(HERE, "simulator.py")],
-                       input="1\n\n\n\n\n\n\n\nstate\nquit\n", capture_output=True,
+                       input="1\n\n\n\n\n\n\n\n\nstate\nquit\n", capture_output=True,
                        text=True, timeout=120, env=_rem_env)
 check("...and accepting every default (blank through all six questions) "
       "actually starts the remembered civilisation, not rome_100ad",
@@ -856,7 +856,7 @@ check("...and the remembered kit (merchant, not poor_scholar) - far more "
       _rem3_capital and int(_rem3_capital.group(1).replace(",", "")) > 1000,
       _rem3.stdout[:2000])
 check("...the remembered mortality (on)",
-      "and ageing" in _rem3.stdout, _rem3.stdout[-900:])
+      "aged about" in _rem3.stdout, _rem3.stdout[-900:])
 check("...and the remembered horizon (321 years)",
       "421" in _rem3.stdout, _rem3.stdout[-900:])
 

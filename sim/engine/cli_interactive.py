@@ -992,7 +992,6 @@ def _new_game_pick_civ(civs, cfg):
             civ = civs[int(raw) - 1]
             break
         print("   -- a number from 1 to %d." % len(civs))
-        print("   -- a number from 1 to %d." % len(civs))
     return civ
 
 
