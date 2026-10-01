@@ -259,3 +259,10 @@ have rather than a graph walk. `Complaints/42`'s test covers the structural
 half; this half still needs a historian.
 
 Update: tanning and fulling are now held by every civilisation that used them (fulling not by mexica_1500, on purpose), and `lead_metallurgy` was handled by Complaints/closed/164. Still open: the Roman start lacks the heat rung its industries imply (Complaints/127), the two tree holes (citric acid, dichromate route) and the duplicate zinc nodes, and the sweep for a technology missing from every civilisation is not in the suite.
+
+Update: pinned by `sim/tests/test_bloomery_bar_and_gates.py` (every
+civilisation holds tanning, every wool one fulling, and Rome can make leather
+and cloth). `python3 sim/solve_prices.py --civ rome_100ad --why leather_kg`
+prices leather and cloth. Still open: the two missing tree nodes (citric acid
+by lime precipitate, chromate from chromite), the duplicate zinc nodes, and
+the sweep for a technology missing from every civilisation.

@@ -1,6 +1,6 @@
 # A shaft that costs nothing to sink
 
-**Status:** partly - the fixed cost now covers every shaft a district needs; the horizon/reserve knob is still shared
+**Status:** partly - the fixed cost covers every shaft a district needs and the amortisation horizon is its own knob; deriving the reserve from ore-body volume remains
 
 `sim/world/deposits.py` has a SINKING COST mechanism, described at length in
 its own module docstring as the thing that makes a poor deposit uneconomic at
@@ -153,3 +153,29 @@ percent of total cost; copper, silver, lead and iron stay a fraction of a
 percent, and tin is zero (alluvial, no shaft). Candidates 2 and 3 above (split
 the amortisation horizon from the reserve; derive the reserve from ore-body
 volume) are still open.
+
+## Split done: the amortisation horizon is its own knob
+
+Candidate 2 above is in. `SHAFT_SERVICE_LIFE_YEARS` (declared in
+`sim/world/deposits.py`, confidence D, an engineering estimate for how long
+timbering and headworks last before a rebuild) is now the horizon over which a
+shaft's build cost is spread. `DEPOSIT_ASSUMED_WORKING_LIFE_YEARS` only sizes
+the demonstration reserve. `working_life_years` is gone from `supply_curve`,
+`find_marginal_deposit` and `total_cost_labour_hours_per_kg`, and stays only
+on the two reserve functions (`init_deposit_states`, `simulate_depletion`)
+where it means a stock. Re-measured with the script above (max sinking share
+of a deposit's total cost, before -> after the split):
+
+    copper 0.14% -> 0.70%   silver 0.28% -> 1.38%   gold 4.26% -> 18.2%
+    iron   0.07% -> 0.33%   lead   0.28% -> 1.38%   tin   0 -> 0
+
+Only the gold alluvial works is large enough to matter. Pinned by
+`sim/tests/test_bloomery_bar_and_gates.py`.
+
+## Remains
+
+Candidate 3: the sinking share is small for most metals because the
+per-shaft hour constants (`SHAFT_*`, all kind temporary_heuristic) and the
+service life are estimates, not figures from a surveyed shaft. A derived
+shaft bill (timber volume from depth and rock, hoist rope and frame from the
+lift) would replace them.

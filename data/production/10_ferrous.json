@@ -140,6 +140,23 @@
    "requires_node": "finery_puddling",
    "conf": "C"
   },
+  "iron_bar_bloomery_kg": {
+   "outputs": {
+    "iron_bar_kg": 1000.0
+   },
+   "inputs": {
+    "iron_bloom_kg": 1150.0,
+    "charcoal_kg": 800.0
+   },
+   "labour_hours": {
+    "smith": 100.0
+   },
+   "energy_mj": 0.0,
+   "basis": "per tonne of wrought-iron bar drawn out from consolidated bloomery bloom, ready for a smith to forge into tools and fittings",
+   "yield_basis": "BLOOMERY BAR, the direct route that needs no blast furnace and no finery: the bloom from iron_bloom_kg is reheated and drawn out under the hammer into bar, folding and forge-welding the sponge into a continuous grain. Mass balance: iron_bloom_kg is about 90% metallic (its own yield_basis), so a tonne of bloom carries roughly 900 kg of iron; drawing it out loses a further few percent of that metal as hammer scale (iron oxidised in the reheats, about 7%), while the bar keeps the thin slag stringers that give wrought iron its grain (a few percent of the bar mass). 900 kg x 0.93 = 837 kg of metal plus about 25 kg of retained slag stringers is about 860 kg of bar per tonne of bloom, so 1.0 / 0.86 = 1.16, rounded to 1150 kg of bloom per tonne of bar. The ore grade, the slag loss in the bloomery and the charcoal that smelting burns are all carried by iron_bloom_kg, so this entry never restates them. Charcoal here is only the smith's reheating fuel: drawing a bloom into bar takes several welding heats, taken at 0.8 t per tonne of bar (against the finery's 2 t, which also has to oxidise the carbon out of cast iron). Smith hours are the hammering and reheating itself, well under the bloom's own 150 smith hours per tonne because the metal is already consolidated into one mass. The route is gated on mat_wrought_iron, the node for iron produced and worked at scale, which every iron-working civilisation here holds and which already gates iron_bloom_kg.",
+   "requires_node": "mat_wrought_iron",
+   "conf": "C"
+  },
   "noric_ore_kg": {
    "outputs": {
     "noric_ore_kg": 1000.0

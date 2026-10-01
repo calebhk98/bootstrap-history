@@ -68,7 +68,11 @@ class ElectropolishingCurrentTests(unittest.TestCase):
         node = _nodes()["el2_electropolishing_etching_surface_finish"]
         group = [entry for entry in node["req_any"] if entry["group"] == "current"][0]
         self.assertIn("power_grid", group["options"])
-        self.assertIn("dynamo_shunt_wound", group["options"])
+        self.assertIn("el2_dynamo_shunt_wound", group["options"])
+        self.assertNotIn("power_grid", node["pre"])
+        nodes = _nodes()
+        for option in group["options"]:
+            self.assertIn(option, nodes)
 
 
 class ShaftAmortisationHorizonTests(unittest.TestCase):
