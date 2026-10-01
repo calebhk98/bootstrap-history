@@ -4,7 +4,7 @@ from .harness import *  # noqa: F401,F403
 
 _expected_grants = {
     "rome_100ad": 228,
-    "han_china_100ad": 113,
+    "han_china_100ad": 115,
     "norse_900ad": 150,
     "england_1300": 206,
     "mexica_1500": 49,

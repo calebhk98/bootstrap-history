@@ -93,6 +93,12 @@ class StartAgreesWithItselfTests(unittest.TestCase):
                              "%s can start these for free at arrival without holding them"
                              % name)
 
+    def test_no_shipped_civilisation_holds_a_node_whose_capability_rung_it_lacks(self):
+        nodes = {node["id"]: node for node in load_base_tree()["nodes"]}
+        for name, civilisation in start_check.load_civilisations(ROOT).items():
+            self.assertEqual(start_check.capability_rung_gaps(nodes, civilisation), {},
+                             "%s holds these without the capability rung they need" % name)
+
 
 if __name__ == "__main__":
     unittest.main()

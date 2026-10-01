@@ -36,6 +36,16 @@ class RomanContentNotLocalFact(unittest.TestCase):
             for node_id in MEDITERRANEAN_ARTEFACTS:
                 self.assertIn(node_id, gated, "%s can start %s" % (name, node_id))
 
+    def test_mediterranean_artefacts_a_civilisation_does_not_hold_are_gated(self):
+        civilisations = start_check.load_civilisations(ROOT)
+        for name in ("england_1300", "norse_900ad"):
+            civilisation = civilisations[name]
+            held = set(civilisation["starting_techs"])
+            gated = start_check.gated_ids(civilisation, held)
+            for node_id in MEDITERRANEAN_ARTEFACTS:
+                self.assertTrue(node_id in held or node_id in gated,
+                                "%s can start %s" % (name, node_id))
+
     def test_generic_technology_is_not_named_for_rome(self):
         nodes = _nodes()
         for node_id in GENERIC_TECHNOLOGY:

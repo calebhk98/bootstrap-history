@@ -1,6 +1,6 @@
 # Rome cannot tan leather or full cloth, and both are wrong
 
-**Status:** partly - starting techs added; missing tree nodes remain
+**Status:** partly - the two missing tree nodes and the duplicate zinc nodes remain
 
 Found by the technique-to-node join (`requires_node`, Complaints/39), within
 an hour of the first two slices landing, and worth recording for the method
@@ -266,3 +266,5 @@ and cloth). `python3 sim/solve_prices.py --civ rome_100ad --why leather_kg`
 prices leather and cloth. Still open: the two missing tree nodes (citric acid
 by lime precipitate, chromate from chromite), the duplicate zinc nodes, and
 the sweep for a technology missing from every civilisation.
+
+Update: the Roman heat rung is granted (Complaints/127, closed). Still open: the two tree holes (citric acid by lime precipitate, chromate from chromite), the duplicate zinc nodes (`zinc_metal` and `mt2_zinc_by_retort`), and the sweep for a technology missing from every civilisation.
