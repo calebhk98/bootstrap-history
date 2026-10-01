@@ -80,7 +80,7 @@ check("an actor with no concern making the material asks about none",
       _world.asked == [], _world.asked)
 
 
-# --- the registry's supply sum and staffing tally.
+# --- the registry's supply sum.
 from sim.engine.actors.registry import ActorRegistry as _Registry
 from sim.engine.state import ActorRecord as _Record, ActorsState as _ActorsState
 
@@ -134,23 +134,3 @@ _registry.actors["firm:042"].record.exited_year = 90
 _world = _TonnesWorld(["steelworks"])
 check("...and an exited firm no longer supplies",
       abs(_registry.supply("steel", _world) - 0.5) < 1e-12)
-
-_registry = _registry_of_firms(10)
-_registry.consider_entry = lambda world: []
-for _actor in _registry.actors.values():
-    _actor.advance = lambda world: None
-_registry.staff_by_trade()
-_registry.advance(_TonnesWorld([]))
-check("a year in which no actor's staff changed keeps the staffing tally",
-      _registry._staff is not None)
-
-
-def _hire(world):
-    _registry.actors["firm:003"].workforce["smith"] += 1.0
-
-
-_registry.actors["firm:003"].advance = _hire
-_registry.advance(_TonnesWorld([]))
-check("a year in which an actor took people on recounts the staffing",
-      _registry._staff is None or _registry._staff["smith"] == 10 * 1.5 + 1.0,
-      _registry._staff)

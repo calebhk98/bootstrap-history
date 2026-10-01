@@ -47,6 +47,9 @@ class ActorRegistry:
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
 		self._staff: Optional[Dict[str, float]] = None
+		# insertion position of each actor (the order supply is summed in), and the ids that are not firms
+		self._position: Dict[str, int] = {}
+		self._not_firms: Set[str] = set()
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
 		for actor_id in sorted(state.records):
@@ -70,13 +73,23 @@ class ActorRegistry:
 			watch.target = record.concerns
 			watch()
 		self.actors[actor_id] = actor
+		self._position.setdefault(actor_id, len(self._position))
+		if isinstance(actor, Firm):
+			self._not_firms.discard(actor_id)
+		else:
+			self._not_firms.add(actor_id)
 		self._ordered_ids = None
 		self._staff = None
 		return actor
 
 	def supply(self, material: str, world: Any) -> float:
 		"""Tonnes a year of a material that every recorded actor's concerns put on the market."""
-		return sum(actor.output_of(material, world) for actor in self.actors.values()
+		# only actors that could make it: firms holding a concern that does, and anything not a firm
+		ids = set(self._not_firms)
+		for node_id in world.concerns_making(material):
+			ids.update(self._holders.get(node_id, ()))
+		return sum(actor.output_of(material, world)
+				   for actor in (self.actors[actor_id] for actor_id in sorted(ids, key=self._position.__getitem__))
 				   if not (actor.kind == "firm" and actor.record.exited_year is not None))
 
 	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> int:
@@ -92,8 +105,10 @@ class ActorRegistry:
 		"""People of each trade every recorded actor employs, in full-time equivalents."""
 		if self._staff is None:
 			totals: Dict[str, float] = {}
-			for actor_id in sorted(self.actors):
-				for trade, people in self.actors[actor_id].workforce.items():
+			if self._ordered_ids is None:
+				self._ordered_ids = sorted(self.actors)
+			for actor_id in self._ordered_ids:
+				for trade, people in self.actors[actor_id].record.workforce.items():
 					totals[trade] = totals.get(trade, 0.0) + people
 			self._staff = totals
 		return self._staff
