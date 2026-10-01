@@ -7,6 +7,7 @@ import unittest
 
 from sim.engine import data, prices
 from sim.engine.mods import ModError
+from sim.engine.tree_source import load_base_tree
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 
@@ -17,8 +18,7 @@ def _labour_only_trade():
         used.update(entry.get("labour_hours") or {})
         for capital in entry.get("capital") or ():
             used.update(capital.get("build_labour_hours") or {})
-    with open(data.TREE) as source:
-        wanted = {trade for node in json.load(source)["nodes"] for trade in node.get("lab") or {}}
+    wanted = {trade for node in load_base_tree()["nodes"] for trade in node.get("lab") or {}}
     return sorted((wanted - used) & set(data._TRADE_REGISTRY))[0]
 
 

@@ -47,7 +47,8 @@ mechanism the founder uses must be usable by any actor.
 Three artefacts share one dataset:
 
 - **Data** (`data/`): the tech tree (authored per domain in `data/branches/`,
-  merged by `sim/treetool.py`), production recipes (`data/production/`),
+  built at load by `sim/engine/tree_source.py`), production recipes
+  (`data/production/`),
   civilisations, world geography, trades.
 - **Knowledge** (under `docs/`): how to physically do each thing the tree
   names. Tree nodes link to it through their `kb` field (`file.md#anchor`).
@@ -191,8 +192,9 @@ rename changed only names, via bytecode). Plan: `docs/architecture/NAMING_PLAN.m
 - **Green tests do not mean unchanged behaviour.** The suite asserts on
   outputs and messages. `sim/perf_fingerprint.py` checks the simulation
   itself (it does not cover the protocol layer).
-- **Tree tools write only when asked.** `treetool.py merge|judge|repair|apply-caps`
-  report by default; `--write` commits the result to data files.
+- **The tree is built, not committed.** `data/tech_tree.json` is generated from
+  `data/branches/` at load and is not in git. `treetool.py` reports; only
+  `judge --write` writes to data files.
 
 ---
 

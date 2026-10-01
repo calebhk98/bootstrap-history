@@ -3,6 +3,7 @@
   "id": "sc2_notation_positional",
   "name": "Place-value notation",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [],
   "traits": [
    "information"
@@ -22,6 +23,7 @@
   "id": "sc2_notation_zero",
   "name": "Zero as a number",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "arithmetic_positional"
   ],
@@ -45,6 +47,7 @@
   "id": "sc2_notation_negative",
   "name": "Negative numbers",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "arithmetic_positional"
   ],
@@ -68,6 +71,7 @@
   "id": "sc2_notation_decimal_fraction",
   "name": "Decimal fractions",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "arithmetic_positional"
   ],
@@ -91,6 +95,7 @@
   "id": "sc2_notation_decimal_point",
   "name": "The decimal point convention",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_notation_decimal_fraction",
    "sc2_notation_positional"
@@ -115,6 +120,7 @@
   "id": "sc2_notation_equals_sign",
   "name": "The equals sign",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "arithmetic_positional"
   ],
@@ -138,6 +144,7 @@
   "id": "sc2_notation_operator_symbols",
   "name": "Operator symbols: +, -, *, /",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "arithmetic_positional"
   ],
@@ -161,6 +168,7 @@
   "id": "sc2_notation_exponents",
   "name": "Exponent notation",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "algebra_symbolic"
   ],
@@ -184,6 +192,7 @@
   "id": "sc2_notation_roots",
   "name": "Root symbols and radical notation",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_notation_exponents",
    "algebra_symbolic"
@@ -208,6 +217,7 @@
   "id": "sc2_notation_scientific",
   "name": "Scientific notation and powers of ten",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_notation_exponents",
    "sc2_notation_decimal_fraction",
@@ -233,6 +243,7 @@
   "id": "sc2_notation_metric_unit",
   "name": "Metric system: standard meters, kilograms, seconds",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "cap_measure_len",
    "cap_measure_mass_mg",
@@ -261,6 +272,7 @@
   "id": "sc2_notation_dimension",
   "name": "Dimensional analysis and unit checking",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_notation_metric_unit",
    "algebra_symbolic"
@@ -285,6 +297,7 @@
   "id": "sc2_notation_significant_figures",
   "name": "Significant figures and precision rules",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "cap_measure_mass_mg",
    "cap_measure_temp"
@@ -310,6 +323,7 @@
   "id": "sc2_notation_error_propagation",
   "name": "Error propagation and uncertainty arithmetic",
   "cat": "notation",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_notation_significant_figures",
    "calculus"
@@ -357,6 +371,7 @@
   "id": "sc2_algebra_quadratic",
   "name": "The quadratic equation and solution formula",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "algebra_symbolic",
    "sc2_notation_exponents",
@@ -382,6 +397,7 @@
   "id": "sc2_algebra_polynomial",
   "name": "Polynomial equations and factoring",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_algebra_quadratic",
    "algebra_symbolic"
@@ -406,6 +422,7 @@
   "id": "sc2_algebra_binomial",
   "name": "Binomial theorem and binomial expansion",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_algebra_polynomial",
    "sc2_notation_exponents",
@@ -431,6 +448,7 @@
   "id": "sc2_algebra_logarithm",
   "name": "Logarithm as inverse exponent: log\u2081\u2080(1000) = 3",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_notation_exponents",
    "logarithms"
@@ -455,6 +473,7 @@
   "id": "sc2_algebra_infinite_series",
   "name": "Infinite series and convergence",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "calculus"
   ],
@@ -478,6 +497,7 @@
   "id": "sc2_calculus_limit",
   "name": "The limit and convergence to a value",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "algebra_symbolic",
    "sc2_algebra_infinite_series"
@@ -502,6 +522,7 @@
   "id": "sc2_calculus_derivative",
   "name": "The derivative as instantaneous rate of change",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "calculus",
    "sc2_calculus_limit"
@@ -526,6 +547,7 @@
   "id": "sc2_calculus_integral",
   "name": "The integral as area under a curve",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_calculus_derivative",
    "sc2_calculus_limit",
@@ -551,6 +573,7 @@
   "id": "sc2_calculus_fundamental_theorem",
   "name": "Fundamental theorem: differentiation and integration are inverses",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_calculus_integral",
    "sc2_calculus_derivative",
@@ -576,6 +599,7 @@
   "id": "sc2_calculus_ode",
   "name": "Ordinary differential equations and solution methods",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "calculus",
    "sc2_calculus_fundamental_theorem"
@@ -600,6 +624,7 @@
   "id": "sc2_calculus_pde",
   "name": "Partial differential equations",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_calculus_ode",
    "sc2_calculus_limit",
@@ -625,6 +650,7 @@
   "id": "sc2_calculus_fourier_series",
   "name": "Fourier series: decomposing periodic functions",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_algebra_infinite_series",
    "sc2_calculus_pde",
@@ -650,6 +676,7 @@
   "id": "sc2_calculus_fourier_transform",
   "name": "Fourier transform and continuous frequency spectrum",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_calculus_fourier_series"
   ],
@@ -673,6 +700,7 @@
   "id": "sc2_algebra_complex_numbers",
   "name": "Complex numbers: a + bi where i\u00b2 = -1",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "algebra_symbolic",
    "sc2_notation_roots"
@@ -697,6 +725,7 @@
   "id": "sc2_algebra_vector",
   "name": "Vectors and vector algebra",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_algebra_complex_numbers",
    "geometry_analytic"
@@ -721,6 +750,7 @@
   "id": "sc2_algebra_matrix",
   "name": "Matrices and matrix multiplication",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_algebra_vector",
    "algebra_symbolic"
@@ -745,6 +775,7 @@
   "id": "sc2_algebra_determinant",
   "name": "Determinants and matrix inversion",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_algebra_matrix",
    "algebra_symbolic"
@@ -769,6 +800,7 @@
   "id": "sc2_algebra_tensor",
   "name": "Tensors and tensor notation",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_algebra_matrix",
    "sc2_algebra_vector",
@@ -794,6 +826,7 @@
   "id": "sc2_algebra_numerical_methods",
   "name": "Numerical methods: Newton-Raphson, bisection, iteration",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "calculus",
    "sc2_calculus_limit"
@@ -818,6 +851,7 @@
   "id": "sc2_algebra_interpolation",
   "name": "Polynomial interpolation and finite differences",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_algebra_polynomial",
    "sc2_algebra_numerical_methods",
@@ -843,6 +877,7 @@
   "id": "sc2_algebra_least_squares",
   "name": "Least squares method and curve fitting",
   "cat": "algebra",
+  "kind": "SCIENCE",
   "pre": [
    "calculus",
    "statistics_basic"
@@ -867,6 +902,7 @@
   "id": "sc2_geometry_coordinate",
   "name": "Coordinate geometry and the Cartesian plane",
   "cat": "geometry",
+  "kind": "SCIENCE",
   "pre": [
    "geometry_analytic",
    "algebra_symbolic"
@@ -891,6 +927,7 @@
   "id": "sc2_geometry_conics",
   "name": "Conic sections: circles, ellipses, parabolas, hyperbolas",
   "cat": "geometry",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_geometry_coordinate",
    "sc2_algebra_polynomial",
@@ -916,6 +953,7 @@
   "id": "sc2_geometry_trigonometry",
   "name": "Trigonometric functions and tables",
   "cat": "geometry",
+  "kind": "SCIENCE",
   "pre": [
    "geometry_analytic",
    "sc2_notation_exponents"
@@ -943,6 +981,7 @@
   "id": "sc2_geometry_spherical_trig",
   "name": "Spherical trigonometry and navigation formulas",
   "cat": "geometry",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_geometry_trigonometry"
   ],
@@ -967,6 +1006,7 @@
   "id": "sc2_geometry_descriptive",
   "name": "Descriptive geometry and engineering drawing",
   "cat": "geometry",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_geometry_spherical_trig",
    "mfg_orthographic",
@@ -995,6 +1035,7 @@
   "id": "sc2_geometry_non_euclidean",
   "name": "Non-Euclidean geometry: hyperbolic and elliptic",
   "cat": "geometry",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_geometry_conics",
    "sc2_geometry_spherical_trig"
@@ -1019,6 +1060,7 @@
   "id": "sc2_geometry_differential",
   "name": "Differential geometry: curves and surfaces",
   "cat": "geometry",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_geometry_non_euclidean",
    "sc2_calculus_pde",
@@ -1045,6 +1087,7 @@
   "id": "sc2_probability_combinatorics",
   "name": "Permutations and combinations",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "algebra_symbolic",
    "sc2_algebra_binomial"
@@ -1069,6 +1112,7 @@
   "id": "sc2_probability_axioms",
   "name": "Probability axioms and conditional probability",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_probability_combinatorics",
    "algebra_symbolic",
@@ -1094,6 +1138,7 @@
   "id": "sc2_probability_normal_distribution",
   "name": "Normal (Gaussian) distribution and the bell curve",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_probability_axioms",
    "sc2_calculus_limit"
@@ -1118,6 +1163,7 @@
   "id": "sc2_probability_central_limit",
   "name": "Central limit theorem",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_probability_normal_distribution",
    "sc2_algebra_infinite_series",
@@ -1143,6 +1189,7 @@
   "id": "sc2_statistics_mean_variance",
   "name": "Mean, variance, and standard deviation",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "statistics_basic"
   ],
@@ -1166,6 +1213,7 @@
   "id": "sc2_statistics_correlation",
   "name": "Correlation and covariance",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_statistics_mean_variance",
    "sc2_statistics_sampling_theory"
@@ -1190,6 +1238,7 @@
   "id": "sc2_statistics_regression",
   "name": "Linear regression and the line of best fit",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_statistics_correlation",
    "sc2_algebra_least_squares"
@@ -1214,6 +1263,7 @@
   "id": "sc2_statistics_t_test",
   "name": "Student's t-test for mean differences",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_probability_normal_distribution",
    "sc2_statistics_significance_test"
@@ -1238,6 +1288,7 @@
   "id": "sc2_statistics_anova",
   "name": "Analysis of variance (ANOVA)",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_statistics_t_test",
    "sc2_statistics_regression",
@@ -1263,6 +1314,7 @@
   "id": "sc2_statistics_sampling_theory",
   "name": "Sampling theory and the standard error",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_probability_central_limit",
    "sc2_probability_normal_distribution"
@@ -1287,6 +1339,7 @@
   "id": "sc2_statistics_confidence_interval",
   "name": "Confidence interval and margin of error",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_statistics_sampling_theory"
   ],
@@ -1310,6 +1363,7 @@
   "id": "sc2_statistics_significance_test",
   "name": "Significance test and p-value",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_statistics_confidence_interval"
   ],
@@ -1333,6 +1387,7 @@
   "id": "sc2_statistics_randomisation",
   "name": "Randomisation and random assignment",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_probability_axioms"
   ],
@@ -1356,6 +1411,7 @@
   "id": "sc2_statistics_blocking",
   "name": "Blocking and stratification in experiments",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_statistics_randomisation"
   ],
@@ -1379,6 +1435,7 @@
   "id": "sc2_statistics_control_group",
   "name": "Control group and negative control",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_statistics_blocking",
    "sc2_statistics_significance_test"
@@ -1403,6 +1460,7 @@
   "id": "sc2_statistics_blinding",
   "name": "Blinding and double-blind experiments",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_statistics_control_group"
   ],
@@ -1426,6 +1484,7 @@
   "id": "sc2_statistics_mortality_table",
   "name": "Mortality table and actuarial science",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "statistics_basic"
   ],
@@ -1449,6 +1508,7 @@
   "id": "sc2_statistics_control_chart",
   "name": "Control chart and statistical process control",
   "cat": "probability",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_statistics_mean_variance",
    "sc2_statistics_significance_test",
@@ -1494,6 +1554,7 @@
   "id": "sc2_physics_kinematics",
   "name": "Kinematics: position, velocity, acceleration",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_calculus_derivative",
    "algebra_symbolic",
@@ -1519,6 +1580,7 @@
   "id": "sc2_physics_newtons_laws",
   "name": "Newton's three laws of motion",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_kinematics",
    "algebra_symbolic",
@@ -1545,6 +1607,7 @@
   "id": "sc2_physics_gravitation",
   "name": "Newton's law of universal gravitation",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_newtons_laws",
    "algebra_symbolic",
@@ -1570,6 +1633,7 @@
   "id": "sc2_physics_momentum",
   "name": "Momentum and impulse",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_newtons_laws",
    "arithmetic_positional",
@@ -1595,6 +1659,7 @@
   "id": "sc2_physics_energy",
   "name": "Kinetic energy and potential energy",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "calculus",
    "sc2_physics_newtons_laws"
@@ -1619,6 +1684,7 @@
   "id": "sc2_physics_work_power",
   "name": "Work, power, and efficiency",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_energy"
   ],
@@ -1643,6 +1709,7 @@
   "id": "sc2_physics_elasticity",
   "name": "Elasticity and Hooke's law",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_newtons_laws"
   ],
@@ -1666,6 +1733,7 @@
   "id": "sc2_physics_fluid_statics",
   "name": "Fluid statics and buoyancy",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "civ_statics"
   ],
@@ -1689,6 +1757,7 @@
   "id": "sc2_physics_hydrodynamics",
   "name": "Hydrodynamics and Bernoulli's equation",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "calculus",
    "sc2_physics_fluid_statics"
@@ -1713,6 +1782,7 @@
   "id": "sc2_physics_viscosity",
   "name": "Viscosity and Newton's law of friction",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_hydrodynamics",
    "sc2_calculus_derivative"
@@ -1737,6 +1807,7 @@
   "id": "sc2_physics_reynolds_number",
   "name": "Reynolds number and flow regime",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_viscosity",
    "sc2_physics_hydrodynamics"
@@ -1761,6 +1832,7 @@
   "id": "sc2_physics_aerodynamic_lift",
   "name": "Aerodynamic lift and wing design",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_hydrodynamics",
    "sc2_physics_reynolds_number"
@@ -1786,6 +1858,7 @@
   "id": "sc2_physics_acoustics",
   "name": "Acoustics and sound propagation",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_hydrodynamics",
    "sc2_physics_wave_motion",
@@ -1813,6 +1886,7 @@
   "id": "sc2_physics_wave_motion",
   "name": "Wave motion and the wave equation",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "calculus",
    "sc2_physics_kinematics"
@@ -1837,6 +1911,7 @@
   "id": "sc2_physics_geometric_optics",
   "name": "Geometric optics and ray tracing",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "telescope",
    "lens_grinding"
@@ -1861,6 +1936,7 @@
   "id": "sc2_physics_diffraction",
   "name": "Diffraction and Fraunhofer patterns",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "lens_grinding",
    "sc2_physics_em_wave"
@@ -1885,6 +1961,7 @@
   "id": "sc2_physics_spectrum",
   "name": "Electromagnetic spectrum",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "em_theory"
   ],
@@ -1908,6 +1985,7 @@
   "id": "sc2_physics_electrostatics",
   "name": "Electrostatics and Coulomb's law",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_newtons_laws",
    "electrostatics"
@@ -1932,6 +2010,7 @@
   "id": "sc2_physics_magnetostatics",
   "name": "Magnetostatics and magnetic field",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "electrostatics"
   ],
@@ -1955,6 +2034,7 @@
   "id": "sc2_physics_maxwell_equations",
   "name": "Maxwell's equations and electromagnetic theory",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_magnetostatics",
    "electrostatics"
@@ -1979,6 +2059,7 @@
   "id": "sc2_physics_em_wave",
   "name": "Electromagnetic wave and radiation",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_maxwell_equations",
    "em_theory",
@@ -2005,6 +2086,7 @@
   "id": "sc2_physics_speed_of_light",
   "name": "Speed of light as fundamental constant",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_em_wave",
    "lens_grinding",
@@ -2030,6 +2112,7 @@
   "id": "sc2_physics_kinetic_theory",
   "name": "Kinetic theory of gases",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_newtons_laws",
    "statistics_basic"
@@ -2054,6 +2137,7 @@
   "id": "sc2_physics_statistical_mechanics",
   "name": "Statistical mechanics and ensemble theory",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_kinetic_theory",
    "thermodynamics_theory"
@@ -2078,6 +2162,7 @@
   "id": "sc2_physics_boltzmann_distribution",
   "name": "Boltzmann distribution and thermal equilibrium",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_statistical_mechanics",
    "thermodynamics_theory"
@@ -2102,6 +2187,7 @@
   "id": "sc2_physics_blackbody_radiation",
   "name": "Blackbody radiation and Planck's law",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_boltzmann_distribution",
    "sc2_physics_spectrum",
@@ -2128,6 +2214,7 @@
   "id": "sc2_physics_quantum_photon",
   "name": "The quantum and photon concept",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_blackbody_radiation"
   ],
@@ -2151,6 +2238,7 @@
   "id": "sc2_physics_photoelectric_effect",
   "name": "Photoelectric effect and stopping potential",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_quantum_photon",
    "sc2_physics_em_wave",
@@ -2179,6 +2267,7 @@
   "id": "sc2_physics_wave_mechanics",
   "name": "Wave mechanics and Schr\u00f6dinger equation",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_calculus_pde",
    "atomic_theory",
@@ -2204,6 +2293,7 @@
   "id": "sc2_physics_uncertainty_principle",
   "name": "Heisenberg uncertainty principle",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_wave_mechanics"
   ],
@@ -2227,6 +2317,7 @@
   "id": "sc2_physics_nucleus_discovery",
   "name": "The nucleus and radioactivity",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_photoelectric_effect",
    "atomic_theory",
@@ -2252,6 +2343,7 @@
   "id": "sc2_physics_neutron_discovery",
   "name": "The neutron",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_nucleus_discovery"
   ],
@@ -2275,6 +2367,7 @@
   "id": "sc2_physics_nuclear_fission",
   "name": "Nuclear fission and chain reaction",
   "cat": "physics",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_physics_neutron_discovery",
    "analytical_chemistry",
@@ -2302,6 +2395,7 @@
   "id": "sc2_method_controlled_experiment",
   "name": "Controlled experiment and causality",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "scientific_method"
   ],
@@ -2325,6 +2419,7 @@
   "id": "sc2_method_hypothesis",
   "name": "Hypothesis and prediction",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_method_controlled_experiment"
   ],
@@ -2348,6 +2443,7 @@
   "id": "sc2_method_replication",
   "name": "Replication and repeatability",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_method_controlled_experiment",
    "sc2_institution_research_group",
@@ -2373,6 +2469,7 @@
   "id": "sc2_method_lab_notebook",
   "name": "Laboratory notebook and data recording",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "scientific_method"
   ],
@@ -2399,6 +2496,7 @@
   "id": "sc2_method_negative_result",
   "name": "Negative result and null finding",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "sc2_method_hypothesis",
    "sc2_method_replication",
@@ -2424,6 +2522,7 @@
   "id": "sc2_method_peer_criticism",
   "name": "Peer criticism and expert review",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "scientific_method"
   ],
@@ -2447,6 +2546,7 @@
   "id": "sc2_institution_learned_society",
   "name": "Learned society and academy",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "academy_network"
   ],
@@ -2471,6 +2571,7 @@
   "id": "sc2_institution_journal",
   "name": "Scientific journal and periodical",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "sc2_institution_learned_society",
    "corpus_dispersed"
@@ -2496,6 +2597,7 @@
   "id": "sc2_institution_referee",
   "name": "Referee and peer review",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "sc2_institution_journal",
    "sc2_method_peer_criticism",
@@ -2522,6 +2624,7 @@
   "id": "sc2_institution_citation",
   "name": "Citation and bibliographic reference",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "sc2_institution_journal",
    "sc2_institution_textbook"
@@ -2545,6 +2648,7 @@
   "id": "sc2_institution_textbook",
   "name": "Textbook and codified knowledge",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "sc2_institution_journal",
    "sc2_institution_curriculum"
@@ -2572,6 +2676,7 @@
   "id": "sc2_institution_curriculum",
   "name": "Curriculum and course sequence",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "school_founded"
   ],
@@ -2595,6 +2700,7 @@
   "id": "sc2_institution_examination",
   "name": "Examination and credentialing",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "sc2_institution_curriculum",
    "school_founded"
@@ -2620,6 +2726,7 @@
   "id": "sc2_institution_doctorate",
   "name": "Doctorate and research degree",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "sc2_institution_examination",
    "fin_university"
@@ -2643,6 +2750,7 @@
   "id": "sc2_institution_research_group",
   "name": "Research group and principal investigator",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "sc2_institution_doctorate",
    "school_founded"
@@ -2666,6 +2774,7 @@
   "id": "sc2_institution_funded_programme",
   "name": "Funded research programme",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "sc2_institution_research_group",
    "fin_contract_law",
@@ -2690,6 +2799,7 @@
   "id": "sc2_institution_patent_disclosure",
   "name": "Patent as disclosure and property right",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "scientific_method",
    "sc2_method_lab_notebook"

@@ -1,0 +1,16 @@
+{
+  "_note": "Name markers that tie an institution to the society that created it. A node whose id or name contains a marker is foreign to every civilisation whose own society differs from the marker's society. A civilisation's society is its optional `society` field, else its own id. `exclusive_markers` additionally block starting the node at all; empty by design, so generic capabilities stay learnable by anyone.",
+  "markers": {
+    "_roman": "rome_100ad",
+    "_rome": "rome_100ad",
+    "annona": "rome_100ad",
+    "insula": "rome_100ad",
+    "societas": "rome_100ad",
+    "collegium": "rome_100ad",
+    "argentarii": "rome_100ad",
+    "latifundi": "rome_100ad",
+    "cursus": "rome_100ad",
+    "pharos": "rome_100ad"
+  },
+  "exclusive_markers": {}
+}

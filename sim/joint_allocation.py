@@ -12,9 +12,10 @@ import os
 import warnings
 
 from sim.constants import declare
+from sim.engine.default_civilisation import default_civilisation_id
 from sim.world import demand, deposits
 
-DEFAULT_CIVILIZATION = "rome_100ad"
+DEFAULT_CIVILIZATION = default_civilisation_id()
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(

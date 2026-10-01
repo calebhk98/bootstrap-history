@@ -1,6 +1,6 @@
 # Add independent firms, imitation and entrepreneurship
 
-**Status:** partly - actor model, government imitation and firm entry built; labour-market competition and player choices remain
+**Status:** partly - actor model, government imitation, firm entry, shared labour pool and shared goods market built; the player's choices (license, publish, keep secret) and the rest below remain
 
 **Source:** playtest findings document, LATE-001. **Type:** Major
 roadmap-sized feature recommendation, not a fix.
@@ -99,3 +99,7 @@ for actor observation, and workers leaving the founder to found firms.
 Update: actors now keep a ledger (`docs/architecture/ACTORS_NEXT.md`, increment 1), so a firm's takings, upkeep, copying and founding capital are booked by purpose and its purse always equals its ledger. Firm takings are still not taken from the founder's market and firm staff are still not drawn from the labour pool (increments 4 and 5).
 
 Also reported (final playtests, A and B; `Complaints/reports/final-playtests-triage.md`): A: independent competitors adopting technologies and affecting prices, industrial growth undermining older businesses, 'independent domestic adoption' of what the founder demonstrates. B: at 302 AD the whole empire had about 18 engineers, chemists, machinists and electricians each, 10 of them on the player's payroll, while the player ran a power grid: 'the revolution stays inside one household'; asks for copycat firms and native trade counts that grow with what you run. Both liked the trades-becoming-native milestone text that already exists.
+
+Update: firms now compete for the founder's labour pool and sell into the founder's goods market (`docs/architecture/ACTORS_NEXT.md`, increments 2 and 4; `sim/tests/test_actor_firms_compete.py`). A firm's staff are the people its concerns need by the founder's own rule (`venture_hands`, `venture_foreman`) plus its copying crews. They are counted in `Sim.actor_staff_fte(trade)`, which `market_supply` and `hire_check` subtract from what the founder can reach, and new hires press the one local market (`_add_labour_pressure`), so the founder's `labour_price_factor` and the actors' own `hiring_wage_per_hour` respond. A firm that cannot find its staff in the pool earns in proportion. Concerns that actors run count as sellers in a goods category (`actor_concerns_in`), so the founder's share falls and a firm's takings are the same shared demand; `Sim.actor_supply(material)` sums the tonnes a year all actors put on the market for the market code to read.
+
+Remains: the player's choices (license, publish, patent, keep secret, spin off) need a command and a royalty flow; staff in trades nobody here practises yet (taught-only trades) are not drawn from a pool; firm entry still values a concern by the founder's gross split by operators rather than the shared market; materials made by a concern with no declared `annual_output_t` have no physical supply; joint-stock companies, fog of war, workers leaving to found firms, other countries.

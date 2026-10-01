@@ -3,6 +3,7 @@
   "id": "tx2_retting",
   "name": "Retting of flax and hemp fibres",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -21,6 +22,7 @@
   "id": "tx2_scutching",
   "name": "Scutching: breaking fibres from woody core",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_retting"
   ],
@@ -45,6 +47,7 @@
   "id": "tx2_hackling",
   "name": "Hackling: combing and grading fibres",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_scutching"
   ],
@@ -69,6 +72,7 @@
   "id": "tx2_cotton_ginning",
   "name": "Cotton gin: separation of seed from fibre",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving"
@@ -93,6 +97,7 @@
   "id": "tx2_carding",
   "name": "Carding: opening and aligning fibres",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "tex_wool"
@@ -121,6 +126,7 @@
   "id": "tx2_combing",
   "name": "Combing: alignment of long fibres",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_hackling",
    "cap_tol_1mm",
@@ -150,6 +156,7 @@
   "id": "tx2_gilling",
   "name": "Gilling: parallel alignment after combing",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_combing"
   ],
@@ -172,6 +179,7 @@
   "id": "tx2_drawing",
   "name": "Drawing: fibre blending and extension",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_carding"
   ],
@@ -196,6 +204,7 @@
   "id": "tx2_roving_frame",
   "name": "Roving frame: fibre attenuation and twist",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_drawing"
   ],
@@ -222,6 +231,7 @@
   "id": "tx2_sliver_preparation",
   "name": "Sliver: card output and sliver can",
   "cat": "textile_production",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_carding"
   ],
@@ -246,6 +256,7 @@
   "id": "tx2_flyer",
   "name": "Flyer: the earliest spinning frame component",
   "cat": "spinning",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_spinning_wheel"
   ],
@@ -270,6 +281,7 @@
   "id": "tx2_bobbin_and_flyer",
   "name": "Bobbin and flyer assembly: early spinning",
   "cat": "spinning",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_flyer"
   ],
@@ -293,6 +305,7 @@
   "id": "tx2_cap_frame",
   "name": "Cap frame spinning",
   "cat": "spinning",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_bobbin_and_flyer"
   ],
@@ -317,6 +330,7 @@
   "id": "tx2_ring_frame",
   "name": "Ring frame: the dominant spinning geometry",
   "cat": "spinning",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_bobbin_and_flyer",
    "cap_tol_100um"
@@ -345,6 +359,7 @@
   "id": "tx2_mule_jenny",
   "name": "Spinning mule: draw-twist-wind",
   "cat": "spinning",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -372,6 +387,7 @@
   "id": "tx2_throstle_frame",
   "name": "Throstle: continuous drawing and twist",
   "cat": "spinning",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_ring_frame"
   ],
@@ -398,6 +414,7 @@
   "id": "tx2_doubling_frame",
   "name": "Doubling frame: twisting multiple yarns",
   "cat": "spinning",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_bobbin_and_flyer"
   ],
@@ -421,6 +438,7 @@
   "id": "tx2_count_standard",
   "name": "Yarn count standardisation",
   "cat": "spinning",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -439,6 +457,7 @@
   "id": "tx2_twist_insertion",
   "name": "Twist insertion control",
   "cat": "spinning",
+  "kind": "ENGINEERING",
   "pre": [
    "units_standards"
   ],
@@ -459,6 +478,7 @@
   "id": "tx2_shed",
   "name": "Shed: warp separation for pick insertion",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -477,6 +497,7 @@
   "id": "tx2_heddle",
   "name": "Heddle: warp thread carrier and riser",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -497,6 +518,7 @@
   "id": "tx2_shaft",
   "name": "Shaft: harness frame assembly",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_heddle"
   ],
@@ -519,6 +541,7 @@
   "id": "tx2_dobby",
   "name": "Dobby head: mechanical shed control",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_shaft",
    "cap_tol_100um"
@@ -547,6 +570,7 @@
   "id": "tx2_jacquard_head",
   "name": "Jacquard head: automatic pattern control",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_dobby",
    "cap_tol_100um"
@@ -576,6 +600,7 @@
   "id": "tx2_jacquard_cards",
   "name": "Jacquard cards: pattern storage and control",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_jacquard_head"
   ],
@@ -600,6 +625,7 @@
   "id": "tx2_shuttle",
   "name": "Shuttle: weft carrier and timing",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_shed"
   ],
@@ -624,6 +650,7 @@
   "id": "tx2_picking_mechanism",
   "name": "Picking: mechanical shuttle propulsion",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_shuttle",
    "cap_tol_100um"
@@ -651,6 +678,7 @@
   "id": "tx2_take_up_motion",
   "name": "Take-up: woven cloth winding",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_picking_mechanism"
   ],
@@ -674,6 +702,7 @@
   "id": "tx2_let_off_motion",
   "name": "Let-off: warp feed control",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_picking_mechanism"
   ],
@@ -697,6 +726,7 @@
   "id": "tx2_temple",
   "name": "Temple: cloth width maintenance",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_picking_mechanism"
   ],
@@ -719,6 +749,7 @@
   "id": "tx2_warp_sizing",
   "name": "Warp sizing: fibre stiffening",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -739,6 +770,7 @@
   "id": "tx2_warping_mill",
   "name": "Warping mill: warp thread length setting",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_beam"
   ],
@@ -762,6 +794,7 @@
   "id": "tx2_beam",
   "name": "Beam: warp holder and tension",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -782,6 +815,7 @@
   "id": "tx2_selvedge",
   "name": "Selvedge: woven cloth edge",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -800,6 +834,7 @@
   "id": "tx2_automatic_loom",
   "name": "Automatic loom: self-threading shuttle",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_dobby",
    "tx2_picking_mechanism",
@@ -828,6 +863,7 @@
   "id": "tx2_automatic_bobbin_changer",
   "name": "Automatic bobbin changer: weft supply",
   "cat": "weaving",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_automatic_loom"
   ],
@@ -853,6 +889,7 @@
   "id": "tx2_stocking_frame",
   "name": "Stocking frame: hosiery machine",
   "cat": "knitting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -880,6 +917,7 @@
   "id": "tx2_circular_knitting",
   "name": "Circular knitting machine: tubular production",
   "cat": "knitting",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_stocking_frame",
    "cap_tol_100um"
@@ -907,6 +945,7 @@
   "id": "tx2_warp_knitting",
   "name": "Warp knitting: sheet production",
   "cat": "knitting",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_stocking_frame",
    "cap_tol_100um"
@@ -934,6 +973,7 @@
   "id": "tx2_latch_needle",
   "name": "Latch needle: self-contained knit mechanism",
   "cat": "knitting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -958,6 +998,7 @@
   "id": "tx2_scouring",
   "name": "Scouring: removal of grease and soil",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -978,6 +1019,7 @@
   "id": "tx2_fulling",
   "name": "Fulling: cloth densification",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving"
@@ -1000,6 +1042,7 @@
   "id": "tx2_milling",
   "name": "Milling: extended fulling",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_fulling"
   ],
@@ -1020,6 +1063,7 @@
   "id": "tx2_raising",
   "name": "Raising: fibre napping",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_fulling"
   ],
@@ -1046,6 +1090,7 @@
   "id": "tx2_cropping",
   "name": "Cropping: nap trimming",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_raising"
   ],
@@ -1072,6 +1117,7 @@
   "id": "tx2_shearing",
   "name": "Shearing: precision cutting",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_cropping"
   ],
@@ -1097,6 +1143,7 @@
   "id": "tx2_calendering",
   "name": "Calendering: surface pressing",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -1123,6 +1170,7 @@
   "id": "tx2_mercerising",
   "name": "Mercerising: caustic treatment",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -1148,6 +1196,7 @@
   "id": "tx2_singeing",
   "name": "Singeing: flame removal of nap",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving"
@@ -1170,6 +1219,7 @@
   "id": "tx2_desizing",
   "name": "Desizing: size removal",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_scouring"
   ],
@@ -1192,6 +1242,7 @@
   "id": "tx2_bleaching_sun",
   "name": "Bleaching by sunlight: oxidative whitening",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1210,6 +1261,7 @@
   "id": "tx2_bleaching_chlorine",
   "name": "Bleaching by chlorine: rapid whitening",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_chlorine"
   ],
@@ -1235,6 +1287,7 @@
   "id": "tx2_bleaching_peroxide",
   "name": "Bleaching by hydrogen peroxide: mild oxidation",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "electrolysis_industrial"
@@ -1261,6 +1314,7 @@
   "id": "tx2_dyeing_fibre",
   "name": "Dyeing in fibre: pre-spin colouration",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1281,6 +1335,7 @@
   "id": "tx2_dyeing_yarn",
   "name": "Dyeing in yarn: skein colouration",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1301,6 +1356,7 @@
   "id": "tx2_dyeing_piece",
   "name": "Dyeing in piece: woven cloth colouration",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1321,6 +1377,7 @@
   "id": "tx2_dyeing_garment",
   "name": "Dyeing in garment: finished good colouration",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_dye_madder"
   ],
@@ -1345,6 +1402,7 @@
   "id": "tx2_printing_block",
   "name": "Block printing: carved design application",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1367,6 +1425,7 @@
   "id": "tx2_printing_roller",
   "name": "Roller printing: engraved cylinder application",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -1389,12 +1448,14 @@
   "note": "Engraved copper roller applies pattern continuously, replaces block printing, enables fine detail and high speed, expensive engraving",
   "gov": -1,
   "sus": 2,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tx2_printing_screen",
   "name": "Screen printing: mesh stencil application",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "photography"
   ],
@@ -1416,12 +1477,14 @@
   "note": "Silk or other mesh with photographic emulsion stencil, squeegee forces dye through, emerges in 1920s for fine art and textile printing",
   "gov": -1,
   "sus": 2,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tx2_resist_dyeing",
   "name": "Resist dyeing: pattern preservation",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_mordanting"
   ],
@@ -1444,6 +1507,7 @@
   "id": "tx2_discharge_printing",
   "name": "Discharge printing: dye removal",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_printing_block"
   ],
@@ -1472,12 +1536,14 @@
     }
    }
   ],
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tx2_waterproofing",
   "name": "Waterproofing: moisture resistance",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving"
@@ -1501,6 +1567,7 @@
   "id": "tx2_flameproofing",
   "name": "Flameproofing: combustion resistance",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_alum"
   ],
@@ -1525,6 +1592,7 @@
   "id": "tx2_mothproofing",
   "name": "Mothproofing: insect resistance",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "chm_benzene"
   ],
@@ -1549,6 +1617,7 @@
   "id": "tx2_permanent_press",
   "name": "Permanent press: wrinkle resistance",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "mat_formaldehyde"
@@ -1575,6 +1644,7 @@
   "id": "tx2_flax_fibre",
   "name": "Flax cultivation and fibre",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1593,6 +1663,7 @@
   "id": "tx2_hemp_fibre",
   "name": "Hemp cultivation and fibre",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1611,6 +1682,7 @@
   "id": "tx2_jute_fibre",
   "name": "Jute cultivation and fibre",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "tx2_jute_seed_stock"
   ],
@@ -1631,6 +1703,7 @@
   "id": "tx2_ramie_fibre",
   "name": "Ramie cultivation and fibre",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "tx2_ramie_plant_stock"
   ],
@@ -1651,6 +1724,7 @@
   "id": "tx2_wool_fibre",
   "name": "Wool: sheep fibre",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -1671,6 +1745,7 @@
   "id": "tx2_worsted",
   "name": "Worsted: combed wool yarn",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "tx2_wool_fibre",
    "tx2_combing"
@@ -1694,6 +1769,7 @@
   "id": "tx2_mohair",
   "name": "Mohair: angora goat fibre",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "tx2_angora_goat_stock"
   ],
@@ -1714,6 +1790,7 @@
   "id": "tx2_cashmere",
   "name": "Cashmere: goat undercoat fibre",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "tx2_cashmere_goat_stock"
   ],
@@ -1734,6 +1811,7 @@
   "id": "tx2_silk_fibre",
   "name": "Silk: cultivated fibre",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "tx2_silkworm_stock"
   ],
@@ -1756,6 +1834,7 @@
   "id": "tx2_sericulture",
   "name": "Sericulture: silk production",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "tx2_silk_fibre"
   ],
@@ -1778,6 +1857,7 @@
   "id": "tx2_wild_silk",
   "name": "Wild silk: non-cultivated production",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "tx2_sericulture"
   ],
@@ -1819,6 +1899,7 @@
   "id": "tx2_rayon_cupro",
   "name": "Rayon by cupro: copper-ammonia process",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "mat_copper",
    "mat_ammonia"
@@ -1867,6 +1948,7 @@
   "id": "tx2_rayon_acetate",
   "name": "Rayon by acetate: cellulose acetate",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "ch2_polymer_cellulose_acetate"
@@ -1893,6 +1975,7 @@
   "id": "tx2_nylon_6_6",
   "name": "Nylon 6,6: polyamide synthesis",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "mat_ammonia"
   ],
@@ -1919,6 +2002,7 @@
   "id": "tx2_polyester",
   "name": "Polyester: terylene synthesis",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600",
    "cap_measure_temp",
@@ -1955,6 +2039,7 @@
   "id": "tx2_acrylic",
   "name": "Acrylic: polyacrylonitrile fibres",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "cap_measure_temp",
@@ -1983,6 +2068,7 @@
   "id": "tx2_glass_fibre",
   "name": "Glass fibre: silica filament",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600"
   ],
@@ -2001,12 +2087,14 @@
   "note": "Fine glass filaments drawn from melt, high strength and temperature resistance, industrial applications in 1930s",
   "gov": 1,
   "sus": 2,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tx2_asbestos_cloth",
   "name": "Asbestos cloth: fire-resistant fabric",
   "cat": "fibres",
+  "kind": "RESOURCE",
   "pre": [
    "mat_asbestos"
   ],
@@ -2031,6 +2119,7 @@
   "id": "tx2_eye_pointed_needle",
   "name": "Eye-pointed needle: self-threading sewing",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2051,6 +2140,7 @@
   "id": "tx2_lockstitch",
   "name": "Lockstitch: two-thread interlocking",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_eye_pointed_needle",
    "cap_tol_1mm"
@@ -2074,6 +2164,7 @@
   "id": "tx2_chain_stitch",
   "name": "Chain stitch: thread-only interlocking",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_eye_pointed_needle"
   ],
@@ -2096,6 +2187,7 @@
   "id": "tx2_overlock_stitch",
   "name": "Overlock: edge-covering stitch",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_chain_stitch",
    "cap_tol_1mm"
@@ -2119,6 +2211,7 @@
   "id": "tx2_buttonhole_machine",
   "name": "Buttonhole machine: eyelet cutting and binding",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_eye_pointed_needle",
    "cap_tol_1mm"
@@ -2146,6 +2239,7 @@
   "id": "tx2_cutting_table",
   "name": "Cutting table: stacked cloth cutting",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2166,6 +2260,7 @@
   "id": "tx2_band_knife",
   "name": "Band knife: reciprocating cloth cutter",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_cutting_table",
    "tx2_cap_power_motor"
@@ -2193,6 +2288,7 @@
   "id": "tx2_pattern_grading",
   "name": "Pattern grading: multi-size scaling",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_pattern_cutting",
    "tx2_sizing_systems"
@@ -2216,6 +2312,7 @@
   "id": "tx2_sizing_systems",
   "name": "Sizing systems: body measurement standardisation",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_pattern_cutting",
    "units_standards"
@@ -2237,6 +2334,7 @@
   "id": "tx2_paper_pattern",
   "name": "Paper pattern: home sewing pattern",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_pattern_grading"
   ],
@@ -2283,6 +2381,7 @@
   "id": "tx2_press_stud",
   "name": "Press stud: snap fastener",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_brass"
   ],
@@ -2309,6 +2408,7 @@
   "id": "tx2_hook_and_eye",
   "name": "Hook and eye: wire fastener",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_wire_drawing"
   ],
@@ -2331,6 +2431,7 @@
   "id": "tx2_elastic",
   "name": "Elastic: rubber thread",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_natural_rubber",
    "mat_rubber_coagulated"
@@ -2357,6 +2458,7 @@
   "id": "tx2_corset",
   "name": "Corset: rigid body support garment",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "tx2_sizing_systems"
@@ -2380,6 +2482,7 @@
   "id": "tx2_brassiere",
   "name": "Brassiere: supportive undergarment",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_elastic"
   ],
@@ -2405,6 +2508,7 @@
   "id": "tx2_ready_to_wear",
   "name": "Ready-to-wear: mass-produced garments",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_sizing_systems",
    "tx2_sewing_machine_industrial"
@@ -2431,6 +2535,7 @@
   "id": "tx2_sewing_machine_domestic",
   "name": "Sewing machine: domestic version",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_lockstitch",
    "tx2_eye_pointed_needle",
@@ -2460,6 +2565,7 @@
   "id": "tx2_sewing_machine_industrial",
   "name": "Sewing machine: industrial version",
   "cat": "sewing",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_lockstitch",
    "cap_power_steam"
@@ -2487,6 +2593,7 @@
   "id": "tx2_rope_lay",
   "name": "Rope laying: strand twisting",
   "cat": "rope_cordage",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2505,6 +2612,7 @@
   "id": "tx2_ropemaking_machine",
   "name": "Ropemaking machine: mechanised twisting",
   "cat": "rope_cordage",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_rope_lay",
    "cap_tol_100um"
@@ -2532,6 +2640,7 @@
   "id": "tx2_cordage_paperboard",
   "name": "Cordage for paperboard production",
   "cat": "rope_cordage",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_rope_lay"
   ],
@@ -2592,6 +2701,7 @@
   "id": "tx2_alum_tanning",
   "name": "Alum tanning: mineral salt curing",
   "cat": "leather",
+  "kind": "RESOURCE",
   "pre": [
    "mat_alum"
   ],
@@ -2614,6 +2724,7 @@
   "id": "tx2_currying",
   "name": "Currying: leather finish dressing",
   "cat": "leather",
+  "kind": "RESOURCE",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2634,6 +2745,7 @@
   "id": "tx2_splitting",
   "name": "Splitting: leather layering",
   "cat": "leather",
+  "kind": "RESOURCE",
   "pre": [
    "mat_leather",
    "tx2_currying"
@@ -2655,6 +2767,7 @@
   "id": "tx2_embossing",
   "name": "Embossing: surface pattern pressing",
   "cat": "leather",
+  "kind": "RESOURCE",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2679,6 +2792,7 @@
   "id": "tx2_lasting_machine",
   "name": "Lasting machine: shoe fitting",
   "cat": "leather",
+  "kind": "RESOURCE",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2705,6 +2819,7 @@
   "id": "tx2_shoemaking_mechanised",
   "name": "Mechanised shoemaking: factory production",
   "cat": "leather",
+  "kind": "RESOURCE",
   "pre": [
    "tx2_lasting_machine"
   ],
@@ -2727,6 +2842,7 @@
   "id": "tx2_rubber_soles",
   "name": "Rubber soles: vulcanised footwear",
   "cat": "leather",
+  "kind": "RESOURCE",
   "pre": [
    "mat_natural_rubber",
    "tl_vulcanized_rubber"
@@ -2754,6 +2870,7 @@
   "id": "tx2_safety_match",
   "name": "Safety match: controlled ignition",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "chm_matches"
   ],
@@ -2781,6 +2898,7 @@
   "id": "tx2_friction_match",
   "name": "Friction match: white phosphorus tip",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "chm_phosphorus_extraction"
   ],
@@ -2826,6 +2944,7 @@
   "id": "tx2_razor_blade",
   "name": "Razor blade: replaceable steel cutting",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2870,6 +2989,7 @@
   "id": "tx2_mass_soap",
   "name": "Mass-produced soap: standardised bars",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "soap_hard"
   ],
@@ -2896,6 +3016,7 @@
   "id": "tx2_shampoo",
   "name": "Shampoo: hair cleansing liquid",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "soap_hard"
   ],
@@ -2921,6 +3042,7 @@
   "id": "tx2_comb",
   "name": "Comb: hair grooming tool",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2941,6 +3063,7 @@
   "id": "tx2_mirror",
   "name": "Mirror: reflective glass surface",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_glass_soda",
    "mat_tin"
@@ -2965,6 +3088,7 @@
   "id": "tx2_button_horn",
   "name": "Button: horn material",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -2985,6 +3109,7 @@
   "id": "tx2_button_bone",
   "name": "Button: bone material",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3005,6 +3130,7 @@
   "id": "tx2_button_shell",
   "name": "Button: shell material",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3025,6 +3151,7 @@
   "id": "tx2_button_plastic",
   "name": "Button: celluloid plastic material",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_celluloid"
   ],
@@ -3049,6 +3176,7 @@
   "id": "tx2_pin",
   "name": "Pin: sewing fastener",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3069,6 +3197,7 @@
   "id": "tx2_needle",
   "name": "Needle: sewing implement",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3089,6 +3218,7 @@
   "id": "tx2_spectacle_frame",
   "name": "Spectacle frame: eye support structure",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "hom_spectacles"
   ],
@@ -3112,6 +3242,7 @@
   "id": "tx2_watch_case",
   "name": "Watch case: portable timepiece housing",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "hom_pocket_watch"
   ],
@@ -3159,6 +3290,7 @@
   "id": "tx2_ballpoint_pen",
   "name": "Ballpoint pen: ball-point writing",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_rubber_coagulated"
@@ -3209,6 +3341,7 @@
   "id": "tx2_eraser",
   "name": "Eraser: rubber pencil mark removal",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_natural_rubber",
    "mat_rubber_coagulated"
@@ -3234,6 +3367,7 @@
   "id": "tx2_paperclip",
   "name": "Paperclip: bent wire fastener",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper",
    "mfg_wire_drawing",
@@ -3258,6 +3392,7 @@
   "id": "tx2_stapler",
   "name": "Stapler: metal wire fastener machine",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -3283,6 +3418,7 @@
   "id": "tx2_drawing_pin",
   "name": "Drawing pin: short fastening point",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper",
    "mfg_wire_drawing"
@@ -3306,6 +3442,7 @@
   "id": "tx2_envelope_gummed",
   "name": "Envelope: paper folded container",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper"
   ],
@@ -3328,6 +3465,7 @@
   "id": "tx2_envelope_flap",
   "name": "Gummed envelope flap: adhesive sealing",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper"
   ],
@@ -3350,6 +3488,7 @@
   "id": "tx2_postcard",
   "name": "Postcard: prepaid correspondence",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper"
   ],
@@ -3374,6 +3513,7 @@
   "id": "tx2_playing_card",
   "name": "Printed playing card: mass-produced game",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "printing_press"
   ],
@@ -3402,6 +3542,7 @@
   "id": "tx2_board_game",
   "name": "Board game: printed game on board",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_playing_card"
   ],
@@ -3447,6 +3588,7 @@
   "id": "tx2_doll",
   "name": "Doll: articulated child plaything",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3468,6 +3610,7 @@
   "id": "tx2_tin_toy",
   "name": "Tin toy: stamped metal plaything",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -3493,6 +3636,7 @@
   "id": "tx2_clockwork_toy",
   "name": "Clockwork toy: spring-driven mechanism",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -3519,6 +3663,7 @@
   "id": "tx2_bicycle_consumer",
   "name": "Bicycle: mass-produced consumer good",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "tl_vulcanized_rubber"
@@ -3547,6 +3692,7 @@
   "id": "tx2_camera_consumer",
   "name": "Camera: mass-produced photographic device",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -3573,6 +3719,7 @@
   "id": "tx2_gramophone",
   "name": "Gramophone: sound recording reproduction",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -3600,6 +3747,7 @@
   "id": "tx2_radio_set",
   "name": "Radio set: wireless receiver entertainment",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "radio"
   ],
@@ -3648,6 +3796,7 @@
   "id": "tx2_tin_can",
   "name": "Tin can: sealed metal container",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "met_tin_plate"
   ],
@@ -3670,6 +3819,7 @@
   "id": "tx2_paper_bag",
   "name": "Paper bag: folded container",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper"
   ],
@@ -3692,6 +3842,7 @@
   "id": "tx2_cardboard_box",
   "name": "Cardboard box: folded laminate container",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper"
   ],
@@ -3714,6 +3865,7 @@
   "id": "tx2_corrugated_box",
   "name": "Corrugated box: fluted paper structure",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper"
   ],
@@ -3739,6 +3891,7 @@
   "id": "tx2_bottle",
   "name": "Bottle: glass container",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3778,6 +3931,7 @@
   "id": "tx2_screw_cap",
   "name": "Screw cap: threaded closure",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "90_textiles.md",
@@ -3798,6 +3952,7 @@
   "id": "tx2_toothpaste_tube",
   "name": "Tube for toothpaste: extrudable container",
   "cat": "consumer_goods",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -3823,6 +3978,7 @@
   "id": "tx2_cap_power_motor",
   "name": "Capability: reliable electric motor",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_power_electric"
   ],

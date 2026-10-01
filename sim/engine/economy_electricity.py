@@ -31,7 +31,7 @@ class ElectricityMixin:
     # THE GAP THIS CLOSES. cap_power_electric, cap_power_grid, cap_power_steam
     # and cap_power_water are capability nodes whose own NAMES narrate a scale
     # ("kW scale", "MW scale", "portable, hundreds of kW", "tens of kW on one
-    # shaft" - see tech_tree.json), and nothing turns that prose into a
+    # shaft" - see data/branches/), and nothing turns that prose into a
     # tracked watt without this. Two consequences follow if it is not
     # tracked: a generation/demand/reserve-margin display cannot be given
     # (the `capacity` command's power section has nothing to show), and -

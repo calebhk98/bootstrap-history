@@ -112,7 +112,7 @@ def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest],
     manifests = list(manifests)
     by_id = {manifest.id: manifest for manifest in manifests}
     claims: Dict[Any, str] = {}
-    origins = {node_id: "data/tech_tree.json" for node_id in nodes}
+    origins = {node_id: "data/branches" for node_id in nodes}
     goals = list(tree.get("meta", {}).get("goals") or [])
     for manifest in manifests:
         for path in _json_files(os.path.join(manifest.directory, "data", "branches")):

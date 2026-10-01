@@ -407,6 +407,8 @@ class ActorRecord:
 	loss_years: int = 0
 	founded_year: Optional[int] = None
 	last_margin: float = 0.0
+	# node id -> share of the concern's staff found in the labour pool last year
+	staffing: Dict[str, float] = field(default_factory=dict)
 	# purpose -> money in and out over the actor's life; money = income - outlays
 	income: Dict[str, float] = field(default_factory=dict)
 	outlays: Dict[str, float] = field(default_factory=dict)

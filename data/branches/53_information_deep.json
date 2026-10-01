@@ -96,6 +96,7 @@
   "id": "if_quill",
   "name": "Quill pen",
   "cat": "writing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -127,6 +128,7 @@
   "id": "if_steel_pen_nib",
   "name": "Steel pen nib",
   "cat": "writing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_blister_steel",
    "cap_tol_100um",
@@ -162,6 +164,7 @@
   "id": "if_fountain_pen",
   "name": "Fountain pen",
   "cat": "writing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_steel_pen_nib",
    "mat_celluloid",
@@ -202,6 +205,7 @@
   "id": "if_pencil_graphite",
   "name": "Graphite pencil",
   "cat": "writing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_graphite_pure"
   ],
@@ -236,6 +240,7 @@
   "id": "if_carbon_paper",
   "name": "Carbon paper",
   "cat": "writing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper",
    "mat_carbon_black"
@@ -270,6 +275,7 @@
   "id": "if_iron_gall_ink",
   "name": "Iron gall ink",
   "cat": "writing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_0700",
    "mat_vitriols"
@@ -303,6 +309,7 @@
   "id": "if_printing_ink",
   "name": "Printing ink, oil-based",
   "cat": "writing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_olive_oil"
@@ -336,6 +343,7 @@
   "id": "if_woodblock_printing",
   "name": "Woodblock printing",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "if_printing_ink"
@@ -370,6 +378,7 @@
   "id": "if_movable_type",
   "name": "Movable type, cast metal",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_punch_and_matrix",
    "if_type_mould"
@@ -404,6 +413,7 @@
   "id": "if_punch_and_matrix",
   "name": "Punch and matrix for type",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -436,6 +446,7 @@
   "id": "if_type_mould",
   "name": "Adjustable type mould",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_brass"
@@ -503,6 +514,7 @@
   "id": "if_composing_stick",
   "name": "Composing stick",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_brass",
@@ -538,6 +550,7 @@
   "id": "if_chase_and_forme",
   "name": "Chase and forme",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -569,6 +582,7 @@
   "id": "if_screw_press",
   "name": "Screw press for printing",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw",
    "cap_tol_1mm",
@@ -603,6 +617,7 @@
   "id": "if_iron_hand_press",
   "name": "Iron hand press",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_screw_press",
    "mat_cast_iron"
@@ -637,6 +652,7 @@
   "id": "if_cylinder_press",
   "name": "Cylinder press",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_iron_hand_press",
    "cap_power_steam",
@@ -676,6 +692,7 @@
   "id": "if_rotary_press",
   "name": "Rotary press",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_cylinder_press",
    "cap_power_steam"
@@ -747,6 +764,7 @@
   "id": "if_electrotype",
   "name": "Electrotype plate",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_movable_type",
    "electroplating",
@@ -778,12 +796,14 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Copper deposits slowly and must be backed by lead to prevent buckling. Thinner than stereotype."
+  "note": "Copper deposits slowly and must be backed by lead to prevent buckling. Thinner than stereotype.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "if_linotype_machine",
   "name": "Linotype machine",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_movable_type",
    "if_composing_stick",
@@ -824,6 +844,7 @@
   "id": "if_lithography",
   "name": "Lithography",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_alum"
@@ -860,6 +881,7 @@
   "id": "if_chromolithography",
   "name": "Chromolithography",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_lithography",
    "mat_dyes_synthetic"
@@ -927,6 +949,7 @@
   "id": "if_halftone_screen",
   "name": "Halftone screen and dot matrix",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "lens_grinding",
@@ -964,6 +987,7 @@
   "id": "if_photoengraving",
   "name": "Photoengraving (relief)",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "photography",
    "if_halftone_screen",
@@ -1008,6 +1032,7 @@
   "id": "if_typewriter",
   "name": "Typewriter",
   "cat": "writing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_steel_pen_nib",
    "cap_tol_100um",
@@ -1046,6 +1071,7 @@
   "id": "if_shift_key_mechanism",
   "name": "Shift key mechanism",
   "cat": "writing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_typewriter",
    "cap_tol_100um"
@@ -1078,6 +1104,7 @@
   "id": "if_stencil_duplicator",
   "name": "Stencil duplicator",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_typewriter",
    "mat_nitrocellulose",
@@ -1113,6 +1140,7 @@
   "id": "if_mimeograph",
   "name": "Mimeograph",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "if_stencil_duplicator",
    "cap_power_steam"
@@ -1149,6 +1177,7 @@
   "id": "if_bookbinding_case",
   "name": "Case binding",
   "cat": "printing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper",
    "mat_leather",
@@ -1217,6 +1246,7 @@
   "id": "if_camera_lucida",
   "name": "Camera lucida",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "mirror_amalgam"
@@ -1249,6 +1279,7 @@
   "id": "if_silver_halide_sensitivity",
   "name": "Silver halide photographic sensitivity",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "mat_silver"
@@ -1281,6 +1312,7 @@
   "id": "if_daguerreotype",
   "name": "Daguerreotype plate",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_silver_halide_sensitivity",
    "mat_copper",
@@ -1319,6 +1351,7 @@
   "id": "if_calotype",
   "name": "Calotype paper negative",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_silver_halide_sensitivity",
    "mat_paper"
@@ -1386,6 +1419,7 @@
   "id": "if_dry_gelatin_plate",
   "name": "Dry gelatin emulsion plate",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_silver_halide_sensitivity",
    "mat_glass_soda",
@@ -1423,6 +1457,7 @@
   "id": "if_celluloid_roll_film",
   "name": "Celluloid roll film",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_dry_gelatin_plate",
    "mat_celluloid",
@@ -1461,6 +1496,7 @@
   "id": "if_panchromatic_emulsion",
   "name": "Panchromatic emulsion",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_dry_gelatin_plate",
    "mat_dyes_synthetic"
@@ -1494,6 +1530,7 @@
   "id": "if_autochrome_plate",
   "name": "Autochrome colour plate",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_dry_gelatin_plate"
   ],
@@ -1527,6 +1564,7 @@
   "id": "if_flash_powder",
   "name": "Flash powder",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "gunpowder",
    "mat_magnesium"
@@ -1560,6 +1598,7 @@
   "id": "if_flashbulb",
   "name": "Flashbulb",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_flash_powder",
    "mat_glass_soda",
@@ -1596,6 +1635,7 @@
   "id": "if_leaf_shutter",
   "name": "Leaf shutter",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "master_screw"
@@ -1628,6 +1668,7 @@
   "id": "if_focal_plane_shutter",
   "name": "Focal plane shutter",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -1660,6 +1701,7 @@
   "id": "if_cine_camera",
   "name": "Cine camera",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_celluloid_roll_film"
   ],
@@ -1726,6 +1768,7 @@
   "id": "if_film_projector",
   "name": "Film projector",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_celluloid_roll_film",
    "lens_grinding"
@@ -1761,6 +1804,7 @@
   "id": "if_phonautograph",
   "name": "Phonautograph",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -1793,6 +1837,7 @@
   "id": "if_tin_foil_phonograph",
   "name": "Tin foil phonograph",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "if_phonautograph",
    "mat_aluminium"
@@ -1826,6 +1871,7 @@
   "id": "if_wax_cylinder",
   "name": "Wax cylinder record",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "if_tin_foil_phonograph",
    "mat_beeswax"
@@ -1859,6 +1905,7 @@
   "id": "if_disc_record",
   "name": "Disc record",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "if_wax_cylinder",
    "mat_shellac",
@@ -1894,6 +1941,7 @@
   "id": "if_acoustic_horn_recording",
   "name": "Acoustic horn recording",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "if_disc_record",
    "cap_tol_1mm"
@@ -1926,6 +1974,7 @@
   "id": "if_gramophone_motor",
   "name": "Gramophone motor and governor",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "if_disc_record"
   ],
@@ -1957,6 +2006,7 @@
   "id": "if_carbon_microphone",
   "name": "Carbon microphone",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "crude_cell",
    "mat_carbon_black"
@@ -1989,6 +2039,7 @@
   "id": "if_moving_coil_loudspeaker",
   "name": "Moving coil loudspeaker",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "mat_paper"
@@ -2022,6 +2073,7 @@
   "id": "if_magnetic_tape",
   "name": "Magnetic tape recording",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "mat_paper",
@@ -2059,6 +2111,7 @@
   "id": "if_recording_bias",
   "name": "AC bias for tape recording",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "if_magnetic_tape",
    "electromagnet"
@@ -2089,6 +2142,7 @@
   "id": "if_disc_cutting_lathe",
   "name": "Disc cutting lathe",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "if_disc_record",
    "cap_power_electric",
@@ -2158,6 +2212,7 @@
   "id": "if_morse_key_and_sounder",
   "name": "Morse key and sounder",
   "cat": "telegraphy",
+  "kind": "ENGINEERING",
   "pre": [
    "telegraph_electric"
   ],
@@ -2190,6 +2245,7 @@
   "id": "if_telegraph_relay",
   "name": "Telegraph relay",
   "cat": "telegraphy",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet"
   ],
@@ -2222,6 +2278,7 @@
   "id": "if_submarine_cable_gutta_percha",
   "name": "Submarine cable with gutta percha",
   "cat": "telegraphy",
+  "kind": "ENGINEERING",
   "pre": [
    "telegraph_electric",
    "mat_gutta_percha"
@@ -2257,6 +2314,7 @@
   "id": "if_cable_repeater",
   "name": "Cable repeater and amplifier",
   "cat": "telegraphy",
+  "kind": "ENGINEERING",
   "pre": [
    "if_telegraph_relay",
    "if_submarine_cable_gutta_percha"
@@ -2290,6 +2348,7 @@
   "id": "if_telephone_transmitter",
   "name": "Telephone transmitter",
   "cat": "telephony",
+  "kind": "ENGINEERING",
   "pre": [
    "if_carbon_microphone"
   ],
@@ -2322,6 +2381,7 @@
   "id": "if_telephone_receiver",
   "name": "Telephone receiver",
   "cat": "telephony",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet"
   ],
@@ -2354,6 +2414,7 @@
   "id": "if_telephone_exchange",
   "name": "Telephone exchange and switchboard",
   "cat": "telephony",
+  "kind": "ENGINEERING",
   "pre": [
    "if_telegraph_relay",
    "if_telephone_transmitter"
@@ -2388,6 +2449,7 @@
   "id": "if_strowger_exchange",
   "name": "Strowger automatic exchange",
   "cat": "telephony",
+  "kind": "ENGINEERING",
   "pre": [
    "if_telephone_exchange",
    "cap_tol_100um",
@@ -2423,7 +2485,8 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "A caller dials pulses on the handset (1=one pulse, 2=two pulses, etc). These pulses drive a stepper motor which rotates a wiper across a grid of contacts, selecting the called party's line. No human operator needed. The 1890 Strowger exchange was a mechanical marvel: 100 stepper units could handle 10,000 lines. Reliability was marginal (mechanical wear, misalignment), but no wage bill. Replaced manual exchanges over 30 years. The real innovation is replacing human labor with electromechanics."
+  "note": "A caller dials pulses on the handset (1=one pulse, 2=two pulses, etc). These pulses drive a stepper motor which rotates a wiper across a grid of contacts, selecting the called party's line. No human operator needed. The 1890 Strowger exchange was a mechanical marvel: 100 stepper units could handle 10,000 lines. Reliability was marginal (mechanical wear, misalignment), but no wage bill. Replaced manual exchanges over 30 years. The real innovation is replacing human labor with electromechanics.",
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: stepper motor and wiper-contact grid require precision mechanical steps]"
  },
  {
   "id": "if_loading_coil",
@@ -2461,6 +2524,7 @@
   "id": "if_spark_transmitter",
   "name": "Spark transmitter",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "el2_tuned_circuit_resonance_tank"
   ],
@@ -2493,6 +2557,7 @@
   "id": "if_coherer",
   "name": "Coherer detector",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "if_spark_transmitter",
    "com_antenna_ground"
@@ -2528,6 +2593,7 @@
   "id": "if_crystal_detector",
   "name": "Crystal detector",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "if_coherer",
    "mat_galena"
@@ -2592,6 +2658,7 @@
   "id": "if_continuous_wave_transmitter",
   "name": "Continuous wave transmitter",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "if_spark_transmitter"
   ],
@@ -2625,6 +2692,7 @@
   "id": "if_triode_oscillator",
   "name": "Triode oscillator",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "vacuum_tube",
    "el2_tuned_circuit_resonance_tank",
@@ -2658,12 +2726,14 @@
   "sch": 3,
   "art": 2,
   "conf": "C",
-  "note": "A triode with feedback can generate any frequency from audio (10 Hz) to microwave (1000 MHz), tuned by the LC circuit. The oscillation amplitude is limited by the triode's power supply and efficiency. Used in radio transmitters, local oscillators for superheterodyne receivers, and audio oscillators for music synthesis. The triode is THE electronic oscillator until solid-state transistors arrive."
+  "note": "A triode with feedback can generate any frequency from audio (10 Hz) to microwave (1000 MHz), tuned by the LC circuit. The oscillation amplitude is limited by the triode's power supply and efficiency. Used in radio transmitters, local oscillators for superheterodyne receivers, and audio oscillators for music synthesis. The triode is THE electronic oscillator until solid-state transistors arrive.",
+  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: vacuum tube oscillator needs high vacuum for electron operation]"
  },
  {
   "id": "if_amplitude_modulation",
   "name": "Amplitude modulation",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "if_triode_oscillator",
    "com_continuous_wave"
@@ -2700,6 +2770,7 @@
   "id": "if_superheterodyne_receiver",
   "name": "Superheterodyne receiver",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "if_triode_oscillator",
    "if_amplitude_modulation",
@@ -2740,6 +2811,7 @@
   "id": "if_frequency_modulation",
   "name": "Frequency modulation",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "if_triode_oscillator",
    "com_continuous_wave"
@@ -2777,6 +2849,7 @@
   "id": "if_antenna_dipole",
   "name": "Dipole antenna",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "el2_tuned_circuit_resonance_tank"
   ],
@@ -2808,6 +2881,7 @@
   "id": "if_radio_direction_finding",
   "name": "Radio direction finding",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "if_superheterodyne_receiver"
   ],
@@ -2876,6 +2950,7 @@
   "id": "if_cathode_ray_tube",
   "name": "Cathode ray tube",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "vacuum_tube",
@@ -2917,12 +2992,14 @@
      "mat_nickel": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_vac_1e3 added by a reviewer working node by node. Reason: evacuated tube for electron beam display requires high vacuum]"
  },
  {
   "id": "if_television_mechanical",
   "name": "Television by mechanical scanning",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "camera_obscura",
    "pwr_selenium_cell"
@@ -2956,6 +3033,7 @@
   "id": "if_iconoscope",
   "name": "Iconoscope camera tube",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "if_cathode_ray_tube",
    "camera_obscura"
@@ -2990,6 +3068,7 @@
   "id": "if_video_scanning_standard",
   "name": "Video scanning standard",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "if_iconoscope",
    "if_cathode_ray_tube"
@@ -3020,6 +3099,7 @@
   "id": "if_facsimile_transmission",
   "name": "Facsimile transmission",
   "cat": "radio",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_selenium_cell",
    "if_amplitude_modulation"
@@ -3053,6 +3133,7 @@
   "id": "if_punched_card",
   "name": "Punched card",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_paper"
@@ -3085,6 +3166,7 @@
   "id": "if_jacquard_chain",
   "name": "Jacquard card chain",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "if_punched_card"
   ],
@@ -3116,6 +3198,7 @@
   "id": "if_hollerith_tabulator",
   "name": "Hollerith tabulator",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "if_punched_card",
    "if_card_sorter"
@@ -3150,6 +3233,7 @@
   "id": "if_card_sorter",
   "name": "Card sorter",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "if_punched_card",
    "electromagnet"
@@ -3184,6 +3268,7 @@
   "id": "if_keypunch",
   "name": "Keypunch machine",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "if_typewriter",
    "if_punched_card"
@@ -3218,6 +3303,7 @@
   "id": "if_adding_machine",
   "name": "Adding machine",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "crank_conrod"
@@ -3251,6 +3337,7 @@
   "id": "if_comptometer",
   "name": "Comptometer",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "if_adding_machine",
    "com_mechanical_calculator",
@@ -3289,6 +3376,7 @@
   "id": "if_cash_register",
   "name": "Cash register",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "if_adding_machine",
    "electromagnet"
@@ -3324,6 +3412,7 @@
   "id": "if_slide_rule",
   "name": "Slide rule",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "logarithms",
    "cap_tol_1mm",
@@ -3355,12 +3444,14 @@
   "sch": 2,
   "art": 1,
   "conf": "C",
-  "note": "Two wooden rules with logarithmic scales, aligned by hand and compared visually. To multiply 5*7, you find 5 on one scale and 7 on the other, align them, and read 35 off the fixed scale. Uses the log identity: log(a*b)=log(a)+log(b). Accuracy is 3 digits, good enough for engineering work. Ubiquitous by 1900, slide rules were the dominant calculation tool until electronic calculators (1970s). Simple, cheap, and fast enough for design iteration."
+  "note": "Two wooden rules with logarithmic scales, aligned by hand and compared visually. To multiply 5*7, you find 5 on one scale and 7 on the other, align them, and read 35 off the fixed scale. Uses the log identity: log(a*b)=log(a)+log(b). Accuracy is 3 digits, good enough for engineering work. Ubiquitous by 1900, slide rules were the dominant calculation tool until electronic calculators (1970s). Simple, cheap, and fast enough for design iteration.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: logarithmic scale marking needs precise layout for readable accuracy]"
  },
  {
   "id": "if_index_card_system",
   "name": "Index card and filing system",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_paper",
    "cap_tol_1mm"
@@ -3394,6 +3485,7 @@
   "id": "if_dewey_classification",
   "name": "Dewey decimal classification",
   "cat": "data_handling",
+  "kind": "ENGINEERING",
   "pre": [
    "if_index_card_system"
   ],

@@ -1,4 +1,4 @@
-"""`treetool.py merge --dry-run` must not lose anything a branch author wrote.
+"""`treetool.py merge` must not lose anything a branch author wrote.
 
 Complaints/54. The merge refuses to write while any event would drop a
 requirement. Unknown trades, unresolvable prerequisites and dependency cycles

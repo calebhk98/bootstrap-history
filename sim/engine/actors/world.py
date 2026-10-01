@@ -7,6 +7,9 @@ import hashlib
 import random
 from typing import Any, Dict, List, Optional, Set
 
+from sim.engine.data import TRADES_ABSENT
+
+from . import supply
 from .tuning import OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
 
 
@@ -74,12 +77,53 @@ class SimWorld:
 		return self._once("revenue", lambda: (
 			self.society_output() * float(sim.civ["starting_tax_share"]) * sim.state_capacity))
 
+	def visible_scale_of(self, actor: Any) -> float:
+		"""How large and visible any actor looks to the state: its staff, its wealth and its prominence."""
+		return self._sim.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence())
+
+	def levy_shares(self, scale: float, protection: float = 0.0) -> Any:
+		"""(requisition, office) shares of income the state assesses at this visible scale."""
+		return self._sim.levy_shares(scale, protection)
+
+	def government(self) -> Any:
+		"""The government actor of the founder's civilisation."""
+		return self._sim.state_treasury()
+
 	def wage_per_hour(self, trade: str) -> float:
 		return self._sim.wage_per_hour(trade)
 
 	@property
 	def hours_per_person_year(self) -> float:
 		return self._sim.HOURS_PER_PERSON_YEAR
+
+	def hiring_wage_per_hour(self, trade: str) -> float:
+		"""What an hour of this trade costs an actor that hires it now: the wage table
+		times the premium the local market's recent hiring has built up."""
+		return self._sim.wage_per_hour(trade) * self._sim.labour_price_factor(trade)
+
+	def press_labour(self, trade: str, hours: float) -> None:
+		"""An actor takes on `hours` a year of a trade: the one local market feels it."""
+		self._sim._add_labour_pressure(trade, hours)
+
+	def concern_staff(self, node_id: str) -> Dict[str, float]:
+		"""People of each trade running this concern ties up, by the founder's own rule."""
+		sim = self._sim
+		scholars, craftsmen = sim.venture_hands(node_id)
+		foreman_trade, foreman_fte = sim.venture_foreman(node_id)
+		staff = {"scholar": scholars, "artisan": craftsmen}
+		if foreman_trade:
+			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
+		return {trade: people for trade, people in staff.items() if people > 0.0}
+
+	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
+		"""People of a trade left in the pool for this actor after the founder's staff and
+		everyone else's. None for a trade nobody here practises yet, which has no pool."""
+		sim = self._sim
+		if not sim.trade_available(trade) or trade in TRADES_ABSENT:
+			return None
+		exist = sim.people_who_exist(trade)
+		founder = sim.state.household.employees.get(trade, 0.0)
+		return max(0.0, exist - founder - sim.actors.staff_fte(trade, excluding=actor_id))
 
 	def copy_cost(self, node_id: str) -> float:
 		"""Money the pioneer's version of this work costs, labour included."""
@@ -110,10 +154,23 @@ class SimWorld:
 				proven.append(node_id)
 		return proven
 
-	def concern_takings(self, node_id: str, opened_year: int) -> float:
+	def ramp(self, opened_year: int) -> float:
+		return min(1.0, (self.year - opened_year + 1) / self._sim.cfg["revenue_ramp_years"])
+
+	def concern_takings(self, node_id: str, opened_year: int, rivals: int = 0) -> float:
+		"""Yearly takings of a concern an actor runs. A goods category has one market shared
+		by every operator, the founder's and the actors', so each gets its share of the demand;
+		a concern with no market model splits with its rivals."""
 		sim = self._sim
-		ramp = min(1.0, (self.year - opened_year + 1) / sim.cfg["revenue_ramp_years"])
-		return sim.concern_takings(node_id, ramp)
+		takings = sim.concern_takings(node_id, self.ramp(opened_year))
+		category = self.nodes[node_id].get("cat")
+		if category in sim.GOODS_CATEGORIES:
+			return takings * sim.goods_category_factor(category)
+		return takings / (1.0 + rivals)
+
+	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
+		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,
+											self.ramp(opened_year), staffed)
 
 	def upkeep(self, node_id: str) -> float:
 		return self.nodes[node_id]["up"] * self._sim.price_index

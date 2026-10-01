@@ -2,7 +2,7 @@
 """actor_ledger.py: where each non-founder actor's money came from and went.
 
     python3 sim/actor_ledger.py                        Rome, 100 years, seed 1
-    python3 sim/actor_ledger.py han_china_100ad 200 3  civilisation, years, seed
+    python3 sim/actor_ledger.py <civilisation_id> 200 3  civilisation, years, seed
 
 Prints the government's and the firms' income and outlays by purpose, and each
 purpose's share of the total. The numbers are measured from the run, not kept
@@ -17,6 +17,7 @@ if REPO_ROOT not in sys.path:
 	sys.path.insert(0, REPO_ROOT)
 
 from sim import simulator as S  # noqa: E402
+from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 
 
 def totals(records):
@@ -39,7 +40,7 @@ def show(title, records):
 
 
 def main(argv):
-	civ_id = argv[1] if len(argv) > 1 else "rome_100ad"
+	civ_id = argv[1] if len(argv) > 1 else default_civilisation_id()
 	years = int(argv[2]) if len(argv) > 2 else 100
 	seed = int(argv[3]) if len(argv) > 3 else 1
 	tree, _prices, nodes, _wages, _goods = S.load()

@@ -3,6 +3,7 @@
   "id": "prn_papyrus_sheets",
   "name": "Papyrus sheets",
   "cat": "media_base",
+  "kind": "RESOURCE",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -28,6 +29,7 @@
   "id": "prn_parchment_sheets",
   "name": "Parchment sheets",
   "cat": "media_base",
+  "kind": "RESOURCE",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -53,6 +55,7 @@
   "id": "prn_wax_tablets",
   "name": "Wax tablets",
   "cat": "media_base",
+  "kind": "RESOURCE",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -78,6 +81,7 @@
   "id": "prn_codex_bound",
   "name": "Codex binding",
   "cat": "media_base",
+  "kind": "RESOURCE",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -103,6 +107,7 @@
   "id": "prn_scribal_copying",
   "name": "Scribal copying",
   "cat": "scripting",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -124,6 +129,7 @@
   "id": "prn_carbon_ink",
   "name": "Carbon ink",
   "cat": "ink",
+  "kind": "RESOURCE",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -145,6 +151,7 @@
   "id": "prn_seals_stamps",
   "name": "Seals and stamps",
   "cat": "marking",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -166,6 +173,7 @@
   "id": "prn_mosaic_fresco",
   "name": "Mosaic and fresco",
   "cat": "visual",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -187,6 +195,7 @@
   "id": "prn_sculpture",
   "name": "Sculpture",
   "cat": "visual",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -208,6 +217,7 @@
   "id": "prn_theatre_pantomime",
   "name": "Theatre and pantomime",
   "cat": "visual",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 0,
@@ -229,6 +239,7 @@
   "id": "prn_woodblock_carving",
   "name": "Woodblock carving",
   "cat": "relief",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "80_information_printing.md",
   "ph": 120,
@@ -258,6 +269,7 @@
   "id": "prn_relief_printing",
   "name": "Relief printing",
   "cat": "relief",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_woodblock_carving",
    "prn_carbon_ink"
@@ -290,6 +302,7 @@
   "id": "prn_hand_papermaking",
   "name": "Hand papermaking",
   "cat": "paper",
+  "kind": "ENGINEERING",
   "pre": [
    "rag_paper"
   ],
@@ -318,6 +331,7 @@
   "id": "prn_pulp_stamper",
   "name": "Water-driven pulp stamper",
   "cat": "paper",
+  "kind": "ENGINEERING",
   "pre": [
    "rag_paper",
    "cap_power_water"
@@ -348,6 +362,7 @@
   "id": "prn_sizing_surface",
   "name": "Surface sizing",
   "cat": "paper",
+  "kind": "ENGINEERING",
   "pre": [
    "rag_paper",
    "mat_alum"
@@ -377,6 +392,7 @@
   "id": "prn_wire_mould_deckle",
   "name": "Wire mould and deckle",
   "cat": "paper",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_brass",
@@ -409,6 +425,7 @@
   "id": "prn_fourdrinier_machine",
   "name": "Fourdrinier papermaking machine",
   "cat": "paper",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam",
    "cap_tol_100um"
@@ -443,6 +460,7 @@
   "id": "prn_wood_pulp",
   "name": "Wood pulp from timber",
   "cat": "paper",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100"
   ],
@@ -502,6 +520,7 @@
   "id": "prn_type_punch",
   "name": "Type punch",
   "cat": "type",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -531,6 +550,7 @@
   "id": "prn_type_matrix",
   "name": "Type matrix",
   "cat": "type",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_type_punch",
    "mat_brass"
@@ -559,6 +579,7 @@
   "id": "prn_hand_mould_adjustable",
   "name": "Adjustable hand mould",
   "cat": "type",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_type_matrix",
    "cap_tol_1mm"
@@ -591,6 +612,7 @@
   "id": "prn_type_metal_alloy",
   "name": "Type metal alloy",
   "cat": "type",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_hand_mould_adjustable",
    "mat_lead",
@@ -621,7 +643,8 @@
   "note": "Lead and tin melt at low temp. Antimony is key: it expands on cooling, forcing alloy into matrix cavity edge.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "prn_composing_stick",
@@ -655,6 +678,7 @@
   "id": "prn_platen_press",
   "name": "Platen press",
   "cat": "press",
+  "kind": "ENGINEERING",
   "pre": [
    "if_printing_ink",
    "cap_tol_1mm"
@@ -746,6 +770,7 @@
   "id": "prn_stereotype_plate",
   "name": "Stereotype plate",
   "cat": "reproduction",
+  "kind": "ENGINEERING",
   "pre": [
    "if_composing_stick",
    "cap_heat_1100",
@@ -840,6 +865,7 @@
   "id": "prn_monotype_machine",
   "name": "Monotype machine",
   "cat": "composition",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_type_metal_alloy",
    "cap_power_electric"
@@ -872,6 +898,7 @@
   "id": "prn_intaglio_engraving",
   "name": "Intaglio engraving",
   "cat": "intaglio",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_copper"
@@ -904,6 +931,7 @@
   "id": "prn_etching_technique",
   "name": "Etching with acid",
   "cat": "intaglio",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_intaglio_engraving",
    "nitric_acid"
@@ -968,6 +996,7 @@
   "id": "prn_offset_lithography",
   "name": "Offset lithography",
   "cat": "lithography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_lithography",
    "cap_power_steam"
@@ -1030,6 +1059,7 @@
   "id": "prn_four_colour_separation",
   "name": "Four-colour separation",
   "cat": "colour",
+  "kind": "ENGINEERING",
   "pre": [
    "if_halftone_screen"
   ],
@@ -1059,6 +1089,7 @@
   "id": "prn_newspaper_institution",
   "name": "Newspaper institution",
   "cat": "publishing",
+  "kind": "INSTITUTION",
   "pre": [
    "printing_press",
    "corpus_dispersed"
@@ -1179,6 +1210,7 @@
   "id": "prn_calotype_process",
   "name": "Calotype negative-positive",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "photography",
    "camera_obscura"
@@ -1212,6 +1244,7 @@
   "id": "prn_wet_collodion_plate",
   "name": "Wet collodion plate",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_calotype_process",
    "mat_nitrocellulose",
@@ -1305,6 +1338,7 @@
   "id": "prn_enlarger",
   "name": "Optical enlarger",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_celluloid_roll_film",
    "lens_grinding"
@@ -1337,6 +1371,7 @@
   "id": "prn_colour_photography",
   "name": "Colour photography",
   "cat": "photography",
+  "kind": "ENGINEERING",
   "pre": [
    "if_celluloid_roll_film"
   ],
@@ -1367,6 +1402,7 @@
   "id": "prn_magic_lantern",
   "name": "Magic lantern projection",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding"
   ],
@@ -1398,6 +1434,7 @@
   "id": "prn_intermittent_motion",
   "name": "Intermittent film movement",
   "cat": "cinema",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "cap_tol_100um",
@@ -1430,6 +1467,7 @@
   "id": "prn_cinema_shutter",
   "name": "Cinema shutter",
   "cat": "cinema",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_intermittent_motion"
   ],
@@ -1460,6 +1498,7 @@
   "id": "prn_cinema_projection",
   "name": "Cinema projection",
   "cat": "cinema",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_cinema_shutter",
    "arc_light_lamp"
@@ -1492,6 +1531,7 @@
   "id": "prn_film_studio",
   "name": "Film studio and stage",
   "cat": "cinema",
+  "kind": "ENGINEERING",
   "pre": [
    "prn_cinema_projection",
    "arc_light_lamp"
@@ -1525,6 +1565,7 @@
   "id": "prn_nitrate_film_safety",
   "name": "Nitrate film storage safety",
   "cat": "cinema",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_nitrocellulose"
   ],
@@ -1550,6 +1591,7 @@
   "id": "prn_phonograph_cylinder",
   "name": "Phonograph with cylinder",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam",
    "cap_tol_100um"
@@ -1611,6 +1653,7 @@
   "id": "prn_loudspeaker",
   "name": "Loudspeaker",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet"
   ],
@@ -1643,6 +1686,7 @@
   "id": "prn_electrical_recording",
   "name": "Electrical recording and amplification",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "if_disc_record",
    "electromagnet"
@@ -1670,7 +1714,8 @@
    "inexplicable",
    "infrastructure",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "prn_magnetic_tape_recording",
@@ -1704,6 +1749,7 @@
   "id": "prn_radio_broadcasting",
   "name": "Radio broadcasting as medium",
   "cat": "sound",
+  "kind": "ENGINEERING",
   "pre": [
    "radio"
   ],
@@ -1729,6 +1775,7 @@
   "id": "prn_library_archive",
   "name": "Library and archive",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [],
   "kb": "89_remaining_arts.md#prn_library_archive",
   "ph": 0,
@@ -1753,6 +1800,7 @@
   "id": "prn_cataloguing_system",
   "name": "Cataloguing and classification",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "corpus_written"
   ],
@@ -1784,6 +1832,7 @@
   "id": "prn_index_concordance",
   "name": "Index and concordance",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "corpus_written"
   ],
@@ -1815,6 +1864,7 @@
   "id": "prn_copyright_economics",
   "name": "Copyright and publishing economics",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "printing_press",
    "corpus_dispersed"

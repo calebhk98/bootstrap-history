@@ -3,6 +3,7 @@
   "id": "tr_wooden_waggonway",
   "name": "Wooden waggonway",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_muscle"
   ],
@@ -98,6 +99,7 @@
   "id": "tr_rail_rolling",
   "name": "Rail rolling in mill",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "boring_mill",
@@ -131,6 +133,7 @@
   "id": "tr_bullhead_rail",
   "name": "Bullhead rail",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_rail_rolling",
    "cap_tol_100um"
@@ -162,6 +165,7 @@
   "id": "tr_flatbottom_rail",
   "name": "Flat bottom rail",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_rail_rolling",
    "cap_tol_100um"
@@ -193,6 +197,7 @@
   "id": "tr_rail_welding",
   "name": "Rail welding",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_rail_rolling",
    "cap_heat_3000",
@@ -226,6 +231,7 @@
   "id": "tr_fishplate",
   "name": "Fishplate for rail joining",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_1mm",
@@ -262,6 +268,7 @@
   "id": "tr_sleeper_ballast",
   "name": "Sleeper and ballast foundation",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_wooden_waggonway"
   ],
@@ -294,6 +301,7 @@
   "id": "tr_chair_key",
   "name": "Chair and key for bullhead rail",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "blast_furnace",
    "tr_sleeper_ballast"
@@ -325,6 +333,7 @@
   "id": "tr_points_frog",
   "name": "Points and frog",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_iron_edge_rail",
    "cap_tol_100um",
@@ -359,6 +368,7 @@
   "id": "tr_turntable",
   "name": "Locomotive turntable",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_1mm"
@@ -392,6 +402,7 @@
   "id": "tr_sprung_buffer",
   "name": "Sprung coupling buffer",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "case_hardening"
@@ -425,6 +436,7 @@
   "id": "tr_screw_coupling",
   "name": "Screw coupling",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_1mm"
@@ -456,6 +468,7 @@
   "id": "tr_knuckle_coupler",
   "name": "Automatic knuckle coupler",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_sprung_buffer",
    "cap_tol_100um",
@@ -490,6 +503,7 @@
   "id": "tr_vacuum_brake",
   "name": "Vacuum brake",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "cap_tol_100um",
@@ -524,6 +538,7 @@
   "id": "tr_westinghouse_brake",
   "name": "Westinghouse air brake",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam",
    "cap_tol_100um",
@@ -558,6 +573,7 @@
   "id": "tr_bogie_truck",
   "name": "Bogie truck with leading wheels",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "finery_puddling",
@@ -592,6 +608,7 @@
   "id": "tr_leading_truck",
   "name": "Leading truck for guiding",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "finery_puddling"
@@ -625,6 +642,7 @@
   "id": "tr_locomotive_boiler",
   "name": "Locomotive boiler with multitubular flues",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "cap_tol_100um",
@@ -667,6 +685,7 @@
   "id": "tr_blastpipe",
   "name": "Blastpipe for draught",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler"
   ],
@@ -697,6 +716,7 @@
   "id": "tr_superheater",
   "name": "Superheater",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler",
    "cap_heat_1300",
@@ -740,6 +760,7 @@
   "id": "tr_injector_feedwater",
   "name": "Injector feedwater pump",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler",
    "cap_tol_100um"
@@ -773,6 +794,7 @@
   "id": "tr_slide_valve",
   "name": "Slide valve for steam distribution",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_100um"
@@ -805,6 +827,7 @@
   "id": "tr_piston_valve",
   "name": "Piston valve",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_slide_valve",
    "cap_tol_100um",
@@ -838,6 +861,7 @@
   "id": "tr_stephenson_linkmotion",
   "name": "Stephenson link motion",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "cap_tol_1mm"
@@ -871,6 +895,7 @@
   "id": "tr_walschaerts_valve",
   "name": "Walschaerts valve gear",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "cap_tol_100um"
@@ -904,6 +929,7 @@
   "id": "tr_compound_expansion",
   "name": "Compound expansion engine",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler",
    "cap_tol_100um",
@@ -945,6 +971,7 @@
   "id": "tr_articulated_locomotive",
   "name": "Articulated locomotive",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_compound_expansion",
    "tr_bogie_truck",
@@ -980,6 +1007,7 @@
   "id": "tr_electric_locomotive",
   "name": "Electric locomotive with trolley pole",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "tr_third_rail",
@@ -1014,6 +1042,7 @@
   "id": "tr_third_rail",
   "name": "Third rail power conductor",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining",
    "cap_tol_100um"
@@ -1044,6 +1073,7 @@
   "id": "tr_catenary_overhead",
   "name": "Overhead catenary for power",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining",
    "cap_tol_100um",
@@ -1076,6 +1106,7 @@
   "id": "tr_pantograph",
   "name": "Pantograph current collector",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_catenary_overhead",
    "cap_tol_100um"
@@ -1109,6 +1140,7 @@
   "id": "tr_diesel_electric",
   "name": "Diesel electric transmission",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "lnd_diesel_cycle",
@@ -1145,6 +1177,7 @@
   "id": "tr_semaphore_signal",
   "name": "Semaphore station and sight line",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_surveying_groma"
   ],
@@ -1178,6 +1211,7 @@
   "id": "tr_block_signalling",
   "name": "Block signalling system",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_semaphore_signal"
   ],
@@ -1207,6 +1241,7 @@
   "id": "tr_track_circuit",
   "name": "Track circuit for detection",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "cap_tol_100um"
@@ -1241,6 +1276,7 @@
   "id": "tr_interlocking_signal",
   "name": "Interlocking for signal control",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_track_circuit",
    "electromagnet"
@@ -1275,6 +1311,7 @@
   "id": "tr_automatic_train_stop",
   "name": "Automatic train stop",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_track_circuit",
    "cap_heat_1100",
@@ -1307,6 +1344,7 @@
   "id": "tr_sleeping_car",
   "name": "Sleeping car for passengers",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_standard_gauge"
   ],
@@ -1339,6 +1377,7 @@
   "id": "tr_refrigerated_wagon",
   "name": "Refrigerated wagon",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_ice_artificial"
   ],
@@ -1371,6 +1410,7 @@
   "id": "tr_hopper_wagon",
   "name": "Hopper wagon for bulk minerals",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron",
    "tr_sleeper_ballast",
@@ -1416,6 +1456,7 @@
   "id": "tr_tank_wagon",
   "name": "Tank wagon for liquids",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_riveted_plating",
    "cap_tol_100um"
@@ -1447,6 +1488,7 @@
   "id": "tr_marshalling_hump",
   "name": "Marshalling hump yard",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_knuckle_coupler",
    "tr_track_circuit"
@@ -1478,6 +1520,7 @@
   "id": "tr_clinker_planking",
   "name": "Clinker planking hull construction",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_mortise_tenon"
   ],
@@ -1511,6 +1554,7 @@
   "id": "tr_carvel_planking",
   "name": "Carvel planking hull construction",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "sea_mortise_tenon"
@@ -1545,6 +1589,7 @@
   "id": "tr_frame_first_construction",
   "name": "Frame-first hull construction",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -1601,6 +1646,7 @@
   "id": "tr_lateen_sail",
   "name": "Lateen sail",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_square_sail"
   ],
@@ -1630,6 +1676,7 @@
   "id": "tr_square_rig",
   "name": "Square rig sails",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -1657,6 +1704,7 @@
   "id": "tr_fore_aft_rig",
   "name": "Fore-and-aft rig",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_lateen_sail"
   ],
@@ -1691,6 +1739,7 @@
   "id": "tr_jib",
   "name": "Jib triangular foresail",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_fore_aft_rig"
   ],
@@ -1720,6 +1769,7 @@
   "id": "tr_staysail",
   "name": "Staysail",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_fore_aft_rig"
   ],
@@ -1749,6 +1799,7 @@
   "id": "tr_reefing",
   "name": "Reefing sails",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving",
@@ -1777,6 +1828,7 @@
   "id": "tr_capstan",
   "name": "Capstan for hauling",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_power_human"
@@ -1810,6 +1862,7 @@
   "id": "tr_windlass",
   "name": "Windlass for anchor hauling",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_power_human"
@@ -1843,6 +1896,7 @@
   "id": "tr_block_tackle",
   "name": "Block and tackle pulley",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving",
@@ -1873,6 +1927,7 @@
   "id": "tr_chain_cable",
   "name": "Chain cable",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_heat_1100"
@@ -1903,6 +1958,7 @@
   "id": "tr_stockless_anchor",
   "name": "Stockless anchor",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "case_hardening"
@@ -1934,6 +1990,7 @@
   "id": "tr_copper_sheathing",
   "name": "Copper sheathing for wooden hulls",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining",
    "cap_tol_1mm",
@@ -1965,12 +2022,14 @@
   "conf": "C",
   "note": "Copper is expensive but prevents marine growth (barnacles, weed) that increases drag. Needs copper nails for fastening; iron nails corrode and weaken the sheathing. The kernel is that copper is sacrificial: it oxidizes and protects the wood. Replacement is expensive but hull speed is preserved.",
   "cap": 3000.0,
-  "up": 300.0
+  "up": 300.0,
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: sheet thickness uniformity important for corrosion resistance]"
  },
  {
   "id": "tr_caulking_oakum",
   "name": "Caulking with oakum",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving",
@@ -2001,6 +2060,7 @@
   "id": "tr_bilge_pump",
   "name": "Shipboard bilge-pump adaptation",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human",
    "pwr_force_pump",
@@ -2035,6 +2095,7 @@
   "id": "tr_watertight_bulkhead",
   "name": "Watertight bulkhead",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -2062,6 +2123,7 @@
   "id": "tr_double_bottom",
   "name": "Double bottom hull structure",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_riveted_plating",
    "cap_tol_100um"
@@ -2124,6 +2186,7 @@
   "id": "tr_steel_hull",
   "name": "Steel hull construction",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "tr_riveted_plating",
@@ -2159,6 +2222,7 @@
   "id": "tr_riveted_plating",
   "name": "Riveted hull plating",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_heat_1100"
@@ -2190,6 +2254,7 @@
   "id": "tr_welded_hull",
   "name": "Welded hull seams",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_riveted_plating",
    "arc_furnace_ferroalloys",
@@ -2223,6 +2288,7 @@
   "id": "tr_screw_propeller",
   "name": "Screw propeller",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "boring_mill",
    "cap_tol_100um",
@@ -2263,6 +2329,7 @@
   "id": "tr_paddle_wheel",
   "name": "Paddle wheel for propulsion",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "case_hardening",
@@ -2301,6 +2368,7 @@
   "id": "tr_variable_pitch_propeller",
   "name": "Variable pitch propeller",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_screw_propeller",
    "cap_tol_10um"
@@ -2334,6 +2402,7 @@
   "id": "tr_stern_tube",
   "name": "Stern tube and stuffing box",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "boring_mill",
    "cap_tol_100um"
@@ -2366,6 +2435,7 @@
   "id": "tr_marine_engine",
   "name": "Marine steam engine",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_tol_100um",
@@ -2400,6 +2470,7 @@
   "id": "tr_triple_expansion",
   "name": "Triple expansion marine engine",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_marine_engine",
    "cap_tol_100um"
@@ -2465,6 +2536,7 @@
   "id": "tr_marine_turbine",
   "name": "Marine steam turbine",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_watt",
    "cap_tol_10um"
@@ -2498,6 +2570,7 @@
   "id": "tr_reduction_gearing",
   "name": "Reduction gearing for propeller",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_screw_propeller",
    "cap_tol_10um"
@@ -2530,6 +2603,7 @@
   "id": "tr_marine_diesel",
   "name": "Marine diesel engine",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_diesel_cycle",
    "cap_tol_100um",
@@ -2564,6 +2638,7 @@
   "id": "tr_ballast_tank",
   "name": "Ballast tank system",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_riveted_plating",
    "cap_tol_100um"
@@ -2594,6 +2669,7 @@
   "id": "tr_submarine_hull",
   "name": "Submarine pressure hull",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "cap_tol_100um"
@@ -2626,6 +2702,7 @@
   "id": "tr_periscope",
   "name": "Periscope",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "cap_tol_100um",
@@ -2653,12 +2730,14 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Periscope tube has lenses at top and bottom, mirror or prism in center. Light path bends 90 degrees at each end. The kernel is that mirror quality determines image brightness; tarnished mirrors make the image dim and hard to use in darkness."
+  "note": "Periscope tube has lenses at top and bottom, mirror or prism in center. Light path bends 90 degrees at each end. The kernel is that mirror quality determines image brightness; tarnished mirrors make the image dim and hard to use in darkness.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tr_lifeboat",
   "name": "Lifeboat and davit system",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "sea_iron_hull"
@@ -2696,6 +2775,7 @@
   "id": "tr_ship_telegraph",
   "name": "Ship telegraph signal system",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet"
   ],
@@ -2727,6 +2807,7 @@
   "id": "tr_gyrocompass_repeater",
   "name": "Gyrocompass repeater",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_gyrocompass",
    "cap_tol_10um"
@@ -2760,6 +2841,7 @@
   "id": "tr_log_sounding",
   "name": "Log and sounding instruments",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2823,6 +2905,7 @@
   "id": "tr_dry_dock",
   "name": "Dry dock facility",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_canal_lock",
    "civ_pumping_station"
@@ -2853,6 +2936,7 @@
   "id": "tr_slipway_launch",
   "name": "Slipway for ship launch",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -2881,6 +2965,7 @@
   "id": "tr_canal_lock",
   "name": "Canal lock for water level control",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "mat_pozzolana",
@@ -2920,6 +3005,7 @@
   "id": "tr_canal_lift",
   "name": "Canal lift water elevator",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_canal_lock",
    "civ_pumping_station",
@@ -2952,6 +3038,7 @@
   "id": "tr_dredger",
   "name": "Dredger for channel deepening",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_screw_propeller",
    "cap_power_steam"
@@ -2985,6 +3072,7 @@
   "id": "tr_tug",
   "name": "Tug boat for towing",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_screw_propeller",
    "finery_puddling"
@@ -3049,6 +3137,7 @@
   "id": "tr_axle_bearing_box",
   "name": "Axle bearing journal box",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_100um"
@@ -3080,6 +3169,7 @@
   "id": "tr_smoke_box",
   "name": "Smoke box and char arrester",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler"
   ],
@@ -3109,6 +3199,7 @@
   "id": "tr_grade_crossing",
   "name": "Grade crossing and safety gates",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_semaphore_signal"
   ],
@@ -3140,6 +3231,7 @@
   "id": "tr_rail_gauge_standardization",
   "name": "Standard rail gauge",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_sleeper_ballast",
    "cap_measure_len"
@@ -3166,6 +3258,7 @@
   "id": "tr_sextant_navigation",
   "name": "Sextant for celestial navigation",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "cap_measure_len",
@@ -3236,6 +3329,7 @@
   "id": "tr_mast_stepping",
   "name": "Mast stepping and rigging",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -3265,6 +3359,7 @@
   "id": "tr_fore_and_aft_rigging",
   "name": "Fore-and-aft rigging system",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_fore_aft_rig"
   ],
@@ -3295,6 +3390,7 @@
   "id": "tr_keelson",
   "name": "Keelson internal keel",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_frame_first_construction"
   ],
@@ -3324,6 +3420,7 @@
   "id": "tr_hull_sheathing_wood",
   "name": "Internal hull sheathing and ceiling",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -3380,6 +3477,7 @@
   "id": "tr_rigging_block_lashing",
   "name": "Block rigging and rope lashing",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving"

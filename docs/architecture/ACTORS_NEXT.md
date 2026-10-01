@@ -91,7 +91,13 @@ consumer.
 Retires: nothing yet. It is the precondition for 2 to 5, because a state
 whose purse is not fed by real flows cannot be given real spending.
 
-### 2. Firms and the state are taxed and assessed by the same rule
+### 2. Firms and the state are taxed and assessed by the same rule (done)
+
+Built: `society_state_pressure` assesses any actor through `visible_scale` and
+splits the levy with `levy_shares`; the founder's `household_scale` and the
+requisition and office reports use them. Firms are still too small to cross
+the notice line, so in practice their levy is zero; measure with a long run
+before assuming otherwise.
 
 Reads: an actor's visible wealth and staff (the same `household_scale` idea,
 computed for any actor from what an observer can see), the civilisation's
@@ -119,7 +125,17 @@ it should be caused by a budget model, not an arbitrary constant).
 Tests: fewer funded copies, less relief; the existing craftsmen-wording
 checks on state military diffusion are rewritten to the mechanism.
 
-### 4. Firm output reaches the market
+### 4. Firm output reaches the market (done)
+
+Built: `Sim.actor_supply(material)` sums every firm's and government's
+concerns in tonnes a year, scaled by ramp and staffing, excluding the
+founder's; `actor_concerns_in(category)` and `actor_market_version()` key the
+goods-category cache. Firms also hire from the same reachable trade pool as
+the founder (`actor_staff_fte` is subtracted in `market_supply` and
+`hire_check`), except taught-only trades. Still open: a node that makes
+several materials splits its output equally among them (an unlabelled
+heuristic), and a firm's entry value still uses the founder's gross split by
+operators.
 
 Reads: every actor's concerns as supply into a goods category.
 Changes: the founder's goods market factor counts firm supply. A firm's takings

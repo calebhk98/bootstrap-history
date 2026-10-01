@@ -78,6 +78,7 @@ if _REPO_ROOT not in sys.path:
 from sim.engine.data import (STRATS, closure, downstream_count, hard_pre, load, load_civ,
                              topo_order, resolve_goal)
 from sim.engine.core import Sim
+from sim.engine.default_civilisation import default_civilisation_id
 from sim.engine.mechanics import staff_capacity_sources
 from sim.engine.cli import load_strategy
 
@@ -513,7 +514,7 @@ def write_strategy(path, label, rationale, order):
     return path
 
 
-def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
+def plan(civ=default_civilisation_id(), goal=None, seed_strategy=None, side_branches=12,
          side_branch_every=8, refine_rounds=0, trial_count=12, horizon=700, seed=1,
          log=print):
     """The whole pipeline: load the tree, build a throwaway Sim for `civ`
@@ -591,7 +592,7 @@ def plan(civ="rome_100ad", goal=None, seed_strategy=None, side_branches=12,
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--civ", default="rome_100ad")
+    parser.add_argument("--civ", default=default_civilisation_id())
     parser.add_argument("--goal", default=None)
     parser.add_argument("--out", required=True, help="strategy file to write")
     parser.add_argument("--seed-strategy", default=None,

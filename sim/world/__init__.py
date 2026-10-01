@@ -8,8 +8,7 @@ own before anything in `engine/` is asked to depend on it.
 
 WHY A SEPARATE PACKAGE RATHER THAN A NEW FILE IN `engine/`. Two reasons, one
 procedural and one architectural. Procedurally: this package imports nothing
-from `sim/engine/`, `data/branches/`, `data/production/` or
-`data/tech_tree.json`, so it cannot be broken by edits to those paths, nor
+from `sim/engine/`, `data/branches/` or `data/production/`, so it cannot be broken by edits to those paths, nor
 break their tests, however much work proceeds on them in parallel.
 Architecturally: `docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md`
 (Milestone 4) and `docs/architecture/CURRENT_CODE_ARCHITECTURE_REVIEW.md`

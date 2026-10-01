@@ -3,6 +3,7 @@
   "id": "mfg_chip_formation",
   "name": "Chip formation",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -29,6 +30,7 @@
   "id": "mfg_rake_clearance",
   "name": "Rake and clearance angles",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_chip_formation"
   ],
@@ -60,6 +62,7 @@
   "id": "mfg_carbon_steel_tool",
   "name": "Carbon steel cutting tools",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "crucible_steel",
    "mfg_rake_clearance"
@@ -86,6 +89,7 @@
   "id": "mfg_mushet_steel",
   "name": "Mushet steel tooling",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "crucible_steel",
    "mfg_carbon_steel_tool"
@@ -123,6 +127,7 @@
   "id": "mfg_hss_development",
   "name": "High speed steel research",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_mushet_steel",
    "cap_heat_1600",
@@ -171,6 +176,7 @@
   "id": "mfg_hss_production",
   "name": "High speed steel tools",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_hss_development"
   ],
@@ -200,6 +206,7 @@
   "id": "mfg_stellite_tool",
   "name": "Stellite tools",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_chromium",
    "mfg_mushet_steel"
@@ -239,6 +246,7 @@
   "id": "mfg_brazed_tip",
   "name": "Brazed tool tip",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_carbon_steel_tool",
    "mfg_brazing"
@@ -265,6 +273,7 @@
   "id": "mfg_cemented_carbide",
   "name": "Cemented carbide",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_tungsten",
    "electrolysis_industrial"
@@ -294,6 +303,7 @@
   "id": "mfg_indexable_insert",
   "name": "Indexable insert",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cemented_carbide",
    "interchangeable_parts"
@@ -323,6 +333,7 @@
   "id": "mfg_cutting_speed",
   "name": "Cutting speed and feed",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_rake_clearance",
    "cap_measure_time_ms"
@@ -347,6 +358,7 @@
   "id": "mfg_cutting_fluid",
   "name": "Cutting fluid",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_olive_oil"
   ],
@@ -381,6 +393,7 @@
   "id": "mfg_engine_lathe",
   "name": "Engine lathe",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "screw_lathe",
    "cap_tol_10um",
@@ -424,6 +437,7 @@
   "id": "mfg_turret_lathe",
   "name": "Turret lathe",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "mfg_indexing_head"
@@ -465,6 +479,7 @@
   "id": "mfg_automatic_screw",
   "name": "Automatic screw machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_turret_lathe",
    "mfg_cam_lobe",
@@ -508,6 +523,7 @@
   "id": "mfg_multi_spindle",
   "name": "Multi-spindle automatic",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_automatic_screw",
    "cap_power_steam"
@@ -540,6 +556,7 @@
   "id": "mfg_vertical_jig_borer",
   "name": "Vertical jig borer",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "boring_mill",
@@ -581,6 +598,7 @@
   "id": "mfg_horizontal_jig_borer",
   "name": "Horizontal jig borer",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_vertical_jig_borer"
   ],
@@ -618,6 +636,7 @@
   "id": "mfg_radial_drill",
   "name": "Radial drill",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_power_steam"
@@ -659,6 +678,7 @@
   "id": "mfg_shaper",
   "name": "Shaper",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "precision_three_plate",
@@ -702,6 +722,7 @@
   "id": "mfg_planer",
   "name": "Planer",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_shaper",
    "cap_tol_10um"
@@ -743,6 +764,7 @@
   "id": "mfg_slotter",
   "name": "Slotter",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_shaper"
   ],
@@ -784,6 +806,7 @@
   "id": "mfg_universal_mill",
   "name": "Universal milling machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "mfg_indexing_head",
@@ -826,6 +849,7 @@
   "id": "mfg_horizontal_mill",
   "name": "Horizontal milling machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_tol_10um"
@@ -867,6 +891,7 @@
   "id": "mfg_vertical_mill",
   "name": "Vertical milling machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_tol_10um"
@@ -908,6 +933,7 @@
   "id": "mfg_profile_mill",
   "name": "Profile milling machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_universal_mill",
    "mfg_optical_comparator"
@@ -948,6 +974,7 @@
   "id": "mfg_gear_hobber",
   "name": "Gear hobbing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_universal_mill",
    "cap_tol_10um"
@@ -988,6 +1015,7 @@
   "id": "mfg_gear_shaper",
   "name": "Gear shaper",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_shaper",
    "cap_tol_10um"
@@ -1029,6 +1057,7 @@
   "id": "mfg_gear_grinder",
   "name": "Gear grinding machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cylindrical_grinder",
    "cap_tol_10um",
@@ -1068,6 +1097,7 @@
   "id": "mfg_broaching_machine",
   "name": "Broaching machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_power_steam"
@@ -1150,6 +1180,7 @@
   "id": "mfg_cylindrical_grinder",
   "name": "Cylindrical grinder",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_tol_1um",
@@ -1196,6 +1227,7 @@
   "id": "mfg_centreless_grinder",
   "name": "Centreless grinder",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cylindrical_grinder",
    "cap_tol_1um"
@@ -1236,6 +1268,7 @@
   "id": "mfg_internal_grinder",
   "name": "Internal grinder",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cylindrical_grinder",
    "cap_tol_1um"
@@ -1274,6 +1307,7 @@
   "id": "mfg_tool_grinder",
   "name": "Tool and cutter grinder",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "prc_surface_grinder",
    "cap_tol_10um"
@@ -1314,6 +1348,7 @@
   "id": "mfg_honing",
   "name": "Honing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cylindrical_grinder"
   ],
@@ -1353,6 +1388,7 @@
   "id": "mfg_lapping",
   "name": "Lapping machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1um",
    "cap_measure_light"
@@ -1382,6 +1418,7 @@
   "id": "mfg_superfinishing",
   "name": "Superfinishing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_honing",
    "cap_tol_100nm"
@@ -1422,6 +1459,7 @@
   "id": "mfg_sawing_machine",
   "name": "Sawing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "cap_power_human"
@@ -1464,6 +1502,7 @@
   "id": "mfg_shearing_machine",
   "name": "Shearing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel"
   ],
@@ -1505,6 +1544,7 @@
   "id": "mfg_punch_press",
   "name": "Punch press",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -1546,6 +1586,7 @@
   "id": "mfg_press_brake",
   "name": "Press brake",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -1644,6 +1685,7 @@
   "id": "mfg_forging_press",
   "name": "Forging press",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -1685,6 +1727,7 @@
   "id": "mfg_upsetter",
   "name": "Upsetter",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_forging_press",
    "mfg_automatic_screw"
@@ -1725,6 +1768,7 @@
   "id": "mfg_roll_former",
   "name": "Roll former",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_forging_press",
    "cap_power_steam"
@@ -1766,6 +1810,7 @@
   "id": "mfg_spinning_lathe",
   "name": "Spinning lathe",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "mat_wrought_iron"
@@ -1839,6 +1884,7 @@
   "id": "mfg_wire_drawing",
   "name": "Wire drawing bench",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "drawplate_wire",
    "mat_wrought_iron",
@@ -1912,6 +1958,7 @@
   "id": "mfg_collet",
   "name": "Collet chuck",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "precision_three_plate",
    "cap_tol_10um"
@@ -1938,6 +1985,7 @@
   "id": "mfg_three_jaw_chuck",
   "name": "Three-jaw chuck",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -1966,6 +2014,7 @@
   "id": "mfg_four_jaw_chuck",
   "name": "Four-jaw chuck",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -1992,6 +2041,7 @@
   "id": "mfg_magnetic_chuck",
   "name": "Magnetic chuck",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet"
   ],
@@ -2019,6 +2069,7 @@
   "id": "mfg_mandrel",
   "name": "Mandrel",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um"
   ],
@@ -2044,6 +2095,7 @@
   "id": "mfg_arbor",
   "name": "Arbor",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um"
   ],
@@ -2069,6 +2121,7 @@
   "id": "mfg_indexing_head",
   "name": "Indexing head",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_dividing_engine",
    "cap_tol_10um"
@@ -2097,6 +2150,7 @@
   "id": "mfg_rotary_table",
   "name": "Rotary table",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_indexing_head",
    "cap_tol_10um"
@@ -2127,6 +2181,7 @@
   "id": "mfg_die_set",
   "name": "Die set",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2153,6 +2208,7 @@
   "id": "mfg_progressive_die",
   "name": "Progressive die",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_die_set"
   ],
@@ -2182,6 +2238,7 @@
   "id": "mfg_compound_die",
   "name": "Compound die",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_die_set"
   ],
@@ -2211,6 +2268,7 @@
   "id": "mfg_mould",
   "name": "Green-sand flask pattern and mould",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "met_green_sand_mold"
   ],
@@ -2244,6 +2302,7 @@
   "id": "mfg_core_box",
   "name": "Core box",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2270,6 +2329,7 @@
   "id": "mfg_pattern",
   "name": "Pattern and shrinkage allowance",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "crucible_steel"
@@ -2297,6 +2357,7 @@
   "id": "mfg_go_gauge",
   "name": "Go/no-go gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2324,6 +2385,7 @@
   "id": "mfg_plug_gauge",
   "name": "Plug gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2351,6 +2413,7 @@
   "id": "mfg_ring_gauge",
   "name": "Ring gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2378,6 +2441,7 @@
   "id": "mfg_snap_gauge",
   "name": "Snap gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2405,6 +2469,7 @@
   "id": "mfg_thread_gauge",
   "name": "Thread gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2432,6 +2497,7 @@
   "id": "mfg_height_gauge",
   "name": "Height gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2461,6 +2527,7 @@
   "id": "mfg_sine_bar",
   "name": "Sine bar",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len",
    "cap_tol_10um",
@@ -2493,6 +2560,7 @@
   "id": "mfg_dial_indicator",
   "name": "Dial indicator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len",
    "cap_tol_10um",
@@ -2529,6 +2597,7 @@
   "id": "mfg_comparator",
   "name": "Comparator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_dial_indicator",
    "cap_tol_1um"
@@ -2559,6 +2628,7 @@
   "id": "mfg_air_gauge",
   "name": "Air gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len",
    "cap_power_steam"
@@ -2598,6 +2668,7 @@
   "id": "mfg_optical_comparator",
   "name": "Optical comparator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "cap_measure_light",
@@ -2628,12 +2699,14 @@
   "gov": 1,
   "sus": 3,
   "cap": 2000.0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mfg_tolerance_limit",
   "name": "Tolerance and limit system",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "interchangeable_parts"
@@ -2660,6 +2733,7 @@
   "id": "mfg_control_chart",
   "name": "Control chart",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_tolerance_limit",
    "statistics_basic"
@@ -2687,6 +2761,7 @@
   "id": "mfg_sampling_plan",
   "name": "Sampling inspection",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "statistics_basic"
   ],
@@ -2712,6 +2787,7 @@
   "id": "mfg_hot_riveting",
   "name": "Hot riveting",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -2736,6 +2812,7 @@
   "id": "mfg_cold_riveting",
   "name": "Cold riveting",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -2760,6 +2837,7 @@
   "id": "mfg_forge_weld",
   "name": "Forge welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_wrought_iron"
@@ -2786,6 +2864,7 @@
   "id": "mfg_oxy_acetylene",
   "name": "Oxy-acetylene welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_heat_2000",
@@ -2822,6 +2901,7 @@
   "id": "mfg_arc_weld_bare",
   "name": "Arc welding with bare electrode",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_2000",
    "cap_heat_3000",
@@ -2855,6 +2935,7 @@
   "id": "mfg_arc_weld_coated",
   "name": "Arc welding with coated electrode",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_arc_weld_bare",
    "mfg_flux"
@@ -2883,6 +2964,7 @@
   "id": "mfg_submerged_arc",
   "name": "Submerged arc welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_arc_weld_coated",
    "cap_power_electric"
@@ -2913,6 +2995,7 @@
   "id": "mfg_resistance_spot",
   "name": "Resistance spot welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "cap_measure_time_ms",
@@ -2946,6 +3029,7 @@
   "id": "mfg_resistance_seam",
   "name": "Resistance seam welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_resistance_spot",
    "cap_power_electric"
@@ -2975,6 +3059,7 @@
   "id": "mfg_flash_butt",
   "name": "Flash butt welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_resistance_spot",
    "cap_power_electric"
@@ -3001,6 +3086,7 @@
   "id": "mfg_brazing",
   "name": "Brazing",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_brass"
@@ -3027,6 +3113,7 @@
   "id": "mfg_silver_solder",
   "name": "Silver soldering",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_silver",
@@ -3054,6 +3141,7 @@
   "id": "mfg_soft_solder",
   "name": "Soft soldering",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_0700",
    "mat_lead"
@@ -3081,6 +3169,7 @@
   "id": "mfg_flux",
   "name": "Flux",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [],
   "req_any": [
    {
@@ -3113,6 +3202,7 @@
   "id": "mfg_adhesive_bond",
   "name": "Adhesive bonding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bitumen"
   ],
@@ -3147,6 +3237,7 @@
   "id": "mfg_pickling",
   "name": "Pickling",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "hydrochloric_acid"
   ],
@@ -3171,6 +3262,7 @@
   "id": "mfg_shot_blasting",
   "name": "Shot blasting",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -3197,6 +3289,7 @@
   "id": "mfg_sand_blasting",
   "name": "Sand blasting",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -3233,6 +3326,7 @@
   "id": "mfg_tumbling",
   "name": "Tumbling",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -3260,6 +3354,7 @@
   "id": "mfg_buffing",
   "name": "Buffing and polishing",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_tumbling"
   ],
@@ -3310,6 +3405,7 @@
   "id": "mfg_anodising",
   "name": "Anodising",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_aluminium",
    "electrolysis_industrial"
@@ -3346,6 +3442,7 @@
   "id": "mfg_galvanising",
   "name": "Galvanising",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_zinc",
    "cap_heat_0700"
@@ -3371,6 +3468,7 @@
   "id": "mfg_painting",
   "name": "Painting",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "req_any": [
    {
@@ -3403,6 +3501,7 @@
   "id": "mfg_enamelling",
   "name": "Enamelling",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_glass_soda",
@@ -3429,6 +3528,7 @@
   "id": "mfg_phosphating",
   "name": "Phosphating",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "chm_superphosphate"
   ],
@@ -3453,6 +3553,7 @@
   "id": "mfg_japanning",
   "name": "Japanning",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_0700",
    "mat_shellac"
@@ -3505,6 +3606,7 @@
   "id": "mfg_work_study",
   "name": "Work study",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_time_study"
   ],
@@ -3530,6 +3632,7 @@
   "id": "mfg_time_study",
   "name": "Time study",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "cap_measure_time_ms"
   ],
@@ -3554,6 +3657,7 @@
   "id": "mfg_standard_hour",
   "name": "Standard hour",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_time_study"
   ],
@@ -3579,6 +3683,7 @@
   "id": "mfg_piece_rate",
   "name": "Piece rate payment",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_standard_hour"
   ],
@@ -3603,6 +3708,7 @@
   "id": "mfg_production_schedule",
   "name": "Production schedule",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law"
   ],
@@ -3628,6 +3734,7 @@
   "id": "mfg_bill_materials",
   "name": "Bill of materials",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_drawing_office"
   ],
@@ -3653,6 +3760,7 @@
   "id": "mfg_inventory_mgmt",
   "name": "Inventory and reorder point",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_production_schedule"
   ],
@@ -3678,6 +3786,7 @@
   "id": "mfg_drawing_office",
   "name": "Drawing office",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_orthographic",
    "prc_straightedge",
@@ -3706,6 +3815,7 @@
   "id": "mfg_orthographic",
   "name": "Orthographic projection and drawing conventions",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "geometry_analytic"
   ],
@@ -3730,6 +3840,7 @@
   "id": "mfg_dimensioning",
   "name": "Dimensioning and tolerancing conventions",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_tolerance_limit",
    "cap_measure_len",
@@ -3757,6 +3868,7 @@
   "id": "mfg_blueprint",
   "name": "Blueprint process",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "photography"
   ],
@@ -3783,6 +3895,7 @@
   "id": "mfg_change_order",
   "name": "Change order",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_drawing_office"
   ],
@@ -3807,6 +3920,7 @@
   "id": "mfg_tool_room",
   "name": "Tool room",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_die_set"
   ],
@@ -3831,6 +3945,7 @@
   "id": "mfg_maintenance",
   "name": "Maintenance department",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "workshop_first"
   ],
@@ -3856,6 +3971,7 @@
   "id": "mfg_quality_dept",
   "name": "Quality department",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_control_chart"
   ],
@@ -3882,6 +3998,7 @@
   "id": "mfg_dividing_engine",
   "name": "Dividing engine",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "screw_lathe",
    "cap_tol_10um"
@@ -3911,6 +4028,7 @@
   "id": "mfg_cam_lobe",
   "name": "Cam lobe profile cutting",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_profile_mill",
    "cap_measure_light"
@@ -3937,6 +4055,7 @@
   "id": "mfg_escapement_lever",
   "name": "Escapement lever mechanism",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_indexing_head",
    "cap_tol_10um"

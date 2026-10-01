@@ -129,6 +129,8 @@ if _REPO_ROOT not in sys.path:
 
 from sim.engine.data import TRADES_ABSENT, closure, load, load_civ, resolve_goal
 from sim.engine.core import Sim
+
+from sim.engine.default_civilisation import default_civilisation_id
 from sim.engine.cli import DetRNG, ensure_fixed_hash_seed
 
 from sim import planner as _planner
@@ -373,7 +375,7 @@ def grow_supply(nodes, goal, need, baseline_sim, cur_order, cur_extras, civ, hor
 # The search itself: diagnose, relax, re-simulate, keep what improves
 # ----------------------------------------------------------------------------
 
-def search(civ="rome_100ad", goal=None, side_branches=12, side_branch_every=8,
+def search(civ=default_civilisation_id(), goal=None, side_branches=12, side_branch_every=8,
            rounds=6, horizon=500, backlog_ratio=6.0, seed_order=None,
            grow_supply_moves=True, log=print):
     """Plan by CPM, then repeatedly diagnose the binding constraint against a
@@ -495,7 +497,7 @@ def search(civ="rome_100ad", goal=None, side_branches=12, side_branch_every=8,
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--civ", default="rome_100ad")
+    parser.add_argument("--civ", default=default_civilisation_id())
     parser.add_argument("--goal", default=None)
     parser.add_argument("--out", required=True, help="strategy file to write")
     parser.add_argument("--side-branches", type=int, default=12)
@@ -525,7 +527,7 @@ def main():
         print("  - " + line)
 
 
-def plan_and_write(civ="rome_100ad", goal=None, out=None, side_branches=12,
+def plan_and_write(civ=default_civilisation_id(), goal=None, out=None, side_branches=12,
                     side_branch_every=8, rounds=6, horizon=500,
                     backlog_ratio=6.0, seed_strategy=None,
                     no_grow_supply=False, log=print):

@@ -26,6 +26,7 @@ conventions apply here exactly as they do everywhere else in the
 engine, regardless of which file a method lives in.
 """
 from sim.constants import declare
+from . import money_units
 from sim.unit_conversions import PERCENT_SCALE
 
 
@@ -350,7 +351,7 @@ class GoodsMixin:
         # self.year (step), _operating_ver (add/discard), opened_year (open_venture).
         scenario = self.state.scenario
         projects = self.state.projects
-        key = (scenario.year, getattr(projects, "_operating_ver", 0))
+        key = (scenario.year, getattr(projects, "_operating_ver", 0), self.actor_market_version())
         cache = getattr(self.household, "_goods_cat_state_cache", None)
         if cache is None or cache[0] != key:
             cache = (key, {})
@@ -367,10 +368,12 @@ class GoodsMixin:
             if started is None:
                 started = projects.done_year.get(node_id, scenario.year)
             ages.append(max(0.0, scenario.year - started))
-        if not ages:
+        # firms and governments selling into the category share the same demand
+        sellers = len(ages) + self.actor_concerns_in(cat)
+        if not sellers:
             bucket[cat] = None
             return None
-        result = (len(ages), max(ages), cfg)
+        result = (sellers, max(ages, default=0.0), cfg)
         bucket[cat] = result
         return result
 
@@ -436,6 +439,7 @@ class GoodsMixin:
             getattr(economy, "economy", 1.0),
             getattr(projects, "_operating_ver", 0),
             getattr(projects, "_done_ver", 0),
+            self.actor_market_version(),
         )
         cache = getattr(self.household, "_goods_category_ratios_cache", None)
         if cache is None or cache[0] != shared_key:
@@ -524,26 +528,29 @@ class GoodsMixin:
             "from seed rate, fold return and labour instead of asserting "
             "one.")
 
-    FARM_COST_PER_HA = declare(
-        "FARM_COST_PER_HA", 75.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/hectare", source=None, confidence="D",
+    FARM_LABOUR_HOURS_PER_HA = declare(
+        "FARM_LABOUR_HOURS_PER_HA", 1500.0, kind="temporary_heuristic",
+        unit="labour hours per hectare", source=None, confidence="D",
         why="Purchase price of one hectare of productive farmland for the "
             "household's own staple supply. Not tied to FOREST_COST_PER_HA "
             "or to any attested land price; an independent, invented "
             "figure for a different land use.")
-    HOUSING_COST_PER_PLACE = declare(
-        "HOUSING_COST_PER_PLACE", 600.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/place", source=None, confidence="D",
+    FARM_COST_PER_HA = money_units.PricedInLabourHours("FARM_LABOUR_HOURS_PER_HA")
+    HOUSING_LABOUR_HOURS_PER_PLACE = declare(
+        "HOUSING_LABOUR_HOURS_PER_PLACE", 12000.0, kind="temporary_heuristic",
+        unit="labour hours per place", source=None, confidence="D",
         why="Cost to build one place of durable worker housing. Not "
             "sourced to any attested construction cost; an invented figure "
             "sized to make the lever meaningful without being free.")
-    TRADE_SCHOOL_COST_PER_SEAT = declare(
-        "TRADE_SCHOOL_COST_PER_SEAT", 1200.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/seat", source=None, confidence="D",
+    HOUSING_COST_PER_PLACE = money_units.PricedInLabourHours("HOUSING_LABOUR_HOURS_PER_PLACE")
+    TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT = declare(
+        "TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT", 24000.0, kind="temporary_heuristic",
+        unit="labour hours per seat", source=None, confidence="D",
         why="Cost to found one seat of a named trade school (see "
             "labour.py's consumer of this figure, outside this file's "
             "scope). Not sourced to any attested cost of pre-industrial "
             "vocational training.")
+    TRADE_SCHOOL_COST_PER_SEAT = money_units.PricedInLabourHours("TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT")
 
     def invest_farm(self, hectares):
         """Buy productive farmland that lowers the household staple price."""
@@ -625,6 +632,7 @@ class GoodsMixin:
             getattr(projects, "_operating_ver", 0),
             getattr(projects, "_done_ver", 0),
             getattr(economy, "farm_hectares", 0.0) or 0.0,
+            self.actor_market_version(),
         )
         cache = getattr(self.household, "_income_factor_cache", None)
         if cache is not None and cache[0] == shared_key:
@@ -694,6 +702,14 @@ class GoodsMixin:
         cat = self.nodes[node_id].get("cat")
         if not cat or cat not in self.GOODS_CATEGORIES:
             return 1.0
+        return self.goods_category_factor(cat)
+
+    def goods_category_factor(self, cat):
+        """What one seller's revenue in a goods category has become relative to
+        the day-one figure, once the whole category's supply (the founder's
+        concerns and every actor's) is shared out: price times quantity over
+        the number of sellers, lifted or dampened by the income effect."""
+        projects = self.state.projects
         scenario = self.state.scenario
         economy = self.state.economy
 
@@ -708,6 +724,7 @@ class GoodsMixin:
             getattr(projects, "_operating_ver", 0),
             getattr(projects, "_done_ver", 0),
             getattr(economy, "farm_hectares", 0.0) or 0.0,
+            self.actor_market_version(),
         )
         cache = getattr(self.household, "_goods_mkt_op_factor_cache", None)
         if cache is None or cache[0] != shared_key:

@@ -437,6 +437,9 @@ class Household(Actor):
 		if self._state.governance is not None:
 			setattr(self._state.governance, "_inst_units_ver", int(value))
 
+	def opened_year_of(self, node_id: str, default: int) -> int:
+		return (self._state.projects.opened_year or {}).get(node_id, default)
+
 	def __getattr__(self, name: str) -> Any:
 		if name.startswith("_state"):
 			raise AttributeError(name)

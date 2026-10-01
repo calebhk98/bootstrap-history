@@ -3,6 +3,7 @@
   "id": "ch2_lab_recrystallisation",
   "name": "Recrystallisation",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "thermometer"
@@ -28,6 +29,7 @@
   "id": "ch2_lab_sublimation",
   "name": "Sublimation apparatus",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "cap_heat_1100"
@@ -54,6 +56,7 @@
   "id": "ch2_lab_reflux",
   "name": "Reflux condenser",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "distillation_alcohol"
@@ -80,6 +83,7 @@
   "id": "ch2_lab_soxhlet",
   "name": "Soxhlet extractor",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "ch2_lab_reflux",
@@ -117,6 +121,7 @@
   "id": "ch2_lab_steam_distillation",
   "name": "Steam distillation",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "steam_atmospheric"
@@ -142,6 +147,7 @@
   "id": "ch2_lab_vacuum_distillation",
   "name": "Vacuum distillation",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "vacuum_pumps",
@@ -170,6 +176,7 @@
   "id": "ch2_lab_azeotropic_distillation",
   "name": "Azeotropic distillation",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "distillation_alcohol",
@@ -196,6 +203,7 @@
   "id": "ch2_lab_fractional_crystallisation",
   "name": "Fractional crystallisation",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "thermometer",
@@ -222,6 +230,7 @@
   "id": "ch2_lab_dialysis",
   "name": "Dialysis through parchment",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "mat_parchment"
@@ -247,6 +256,7 @@
   "id": "ch2_lab_electrophoresis",
   "name": "Electrophoresis in gelatin",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "daniell_cell",
@@ -269,12 +279,14 @@
   "note": "The gel is gelatin or agar. A steady voltage is applied. Different proteins move at different speeds depending on their net charge and mass. Requires a stable voltage source and knowledge that the gel must be pH-controlled.",
   "gov": 1,
   "sus": 8,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_lab_paper_chromatography",
   "name": "Paper chromatography",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "mat_paper"
@@ -311,6 +323,7 @@
   "id": "ch2_lab_column_chromatography",
   "name": "Column chromatography",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "cap_tol_1mm"
@@ -356,6 +369,7 @@
   "id": "ch2_lab_gas_chromatography",
   "name": "Gas chromatography",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "cap_gas_o2h2",
@@ -385,6 +399,7 @@
   "id": "ch2_lab_ion_exchange",
   "name": "Ion exchange resin",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "potash_soda",
@@ -411,6 +426,7 @@
   "id": "ch2_lab_solvent_extraction",
   "name": "Liquid-liquid extraction",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus"
   ],
@@ -445,6 +461,7 @@
   "id": "ch2_lab_centrifugation",
   "name": "Centrifuge",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "cap_power_steam"
@@ -472,6 +489,7 @@
   "id": "ch2_lab_freeze_drying",
   "name": "Freeze-drying apparatus",
   "cat": "lab_technique",
+  "kind": "ENGINEERING",
   "pre": [
    "lab_apparatus",
    "vacuum_pumps",
@@ -500,6 +518,7 @@
   "id": "ch2_analysis_gravimetric",
   "name": "Gravimetric analysis",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "balance_analytical"
@@ -525,6 +544,7 @@
   "id": "ch2_analysis_titrimetry",
   "name": "Titrimetry and burettes",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "glass_labware"
@@ -560,6 +580,7 @@
   "id": "ch2_analysis_indicator_dyes",
   "name": "Acid-base indicators",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "chm_coal_tar_distillation"
@@ -585,6 +606,7 @@
   "id": "ch2_analysis_redox_titration",
   "name": "Redox titration",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "atomic_theory"
@@ -626,6 +648,7 @@
   "id": "ch2_analysis_complexometric",
   "name": "Complexometric titration",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "atomic_theory"
@@ -651,6 +674,7 @@
   "id": "ch2_analysis_kjeldahl",
   "name": "Kjeldahl nitrogen method",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "nitric_acid"
@@ -692,6 +716,7 @@
   "id": "ch2_analysis_combustion",
   "name": "Combustion analysis of organics",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "cap_gas_o2h2"
@@ -728,6 +753,7 @@
   "id": "ch2_analysis_flame_photometry",
   "name": "Flame photometry",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "spectroscope",
@@ -755,6 +781,7 @@
   "id": "ch2_analysis_colorimetry",
   "name": "Colorimetry",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "glass_clear"
@@ -780,6 +807,7 @@
   "id": "ch2_analysis_spectrophotometry",
   "name": "Spectrophotometry",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "spectroscope"
@@ -807,6 +835,7 @@
   "id": "ch2_analysis_polarography",
   "name": "Polarography",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "vacuum_tube",
@@ -835,6 +864,7 @@
   "id": "ch2_analysis_glass_ph_electrode",
   "name": "Glass pH electrode",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "glass_borosilicate",
@@ -859,12 +889,14 @@
   "note": "A special glass is formulated; thin membrane prevents error from water penetration while allowing ion exchange at the surface. The voltage across the membrane varies linearly with pH. Requires a reference electrode and a high-impedance amplifier to measure the tiny current.",
   "gov": 1,
   "sus": 8,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_analysis_conductometry",
   "name": "Conductometry",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "electromagnet"
@@ -890,6 +922,7 @@
   "id": "ch2_analysis_refractometry",
   "name": "Refractometry",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "lens_grinding"
@@ -916,6 +949,7 @@
   "id": "ch2_analysis_melting_point",
   "name": "Melting point determination",
   "cat": "analysis",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "thermometer"
@@ -941,6 +975,7 @@
   "id": "ch2_process_contact",
   "name": "Contact process for H2SO4",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "nitric_acid",
    "cap_gas_o2h2",
@@ -978,6 +1013,7 @@
   "id": "ch2_process_deacon",
   "name": "Deacon process for Cl2",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "nitric_acid",
    "cap_gas_o2h2",
@@ -1015,6 +1051,7 @@
   "id": "ch2_process_castner_kellner",
   "name": "Castner-Kellner process",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "electrolysis_industrial",
    "potash_soda"
@@ -1044,6 +1081,7 @@
   "id": "ch2_process_bayer",
   "name": "Bayer process for alumina",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "potash_soda",
    "cap_gas_o2h2"
@@ -1080,6 +1118,7 @@
   "id": "ch2_process_frasch",
   "name": "Frasch process for sulphur",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_gas_o2h2"
@@ -1115,6 +1154,7 @@
   "id": "ch2_process_ostwald",
   "name": "Ostwald process for HNO3",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_heat_1100"
@@ -1152,6 +1192,7 @@
   "id": "ch2_process_birkeland_eyde",
   "name": "Birkeland-Eyde process for NOx",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "chm_electric_arc_nitrogen"
@@ -1179,6 +1220,7 @@
   "id": "ch2_process_cyanamide",
   "name": "Cyanamide process",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_heat_1300"
@@ -1206,6 +1248,7 @@
   "id": "ch2_process_fischer_tropsch",
   "name": "Fischer-Tropsch synthesis",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_heat_1100"
@@ -1242,6 +1285,7 @@
   "id": "ch2_process_bergius",
   "name": "Bergius coal liquefaction",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_heat_1300"
@@ -1278,6 +1322,7 @@
   "id": "ch2_process_thermal_cracking",
   "name": "Thermal cracking of oil",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "en_oil_refining_distillation"
@@ -1315,6 +1360,7 @@
   "id": "ch2_process_catalytic_cracking",
   "name": "Catalytic cracking of oil",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "ch2_process_thermal_cracking",
@@ -1352,6 +1398,7 @@
   "id": "ch2_process_reforming",
   "name": "Reforming of naphtha",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100"
   ],
@@ -1387,6 +1434,7 @@
   "id": "ch2_process_alkylation",
   "name": "Alkylation of aromatic hydrocarbons",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_0700",
    "ch2_rxn_friedel_crafts",
@@ -1424,6 +1472,7 @@
   "id": "ch2_process_claus",
   "name": "Claus process for sulphur recovery",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "potash_soda",
    "cap_heat_1100"
@@ -1459,6 +1508,7 @@
   "id": "ch2_process_kraft_pulping",
   "name": "Kraft pulping of wood",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "potash_soda",
    "cap_heat_1300"
@@ -1496,6 +1546,7 @@
   "id": "ch2_process_sulfite_pulping",
   "name": "Sulphite pulping of wood",
   "cat": "industrial_process",
+  "kind": "ENGINEERING",
   "pre": [
    "sulfuric_retort",
    "cap_heat_1100"
@@ -1533,6 +1584,7 @@
   "id": "ch2_rxn_esterification",
   "name": "Esterification reaction",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "nitric_acid"
@@ -1574,6 +1626,7 @@
   "id": "ch2_rxn_saponification",
   "name": "Saponification and soap making",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "potash_soda"
@@ -1617,6 +1670,7 @@
   "id": "ch2_rxn_nitration",
   "name": "Nitration reactions",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "nitric_acid"
@@ -1659,6 +1713,7 @@
   "id": "ch2_rxn_sulfonation",
   "name": "Sulfonation reactions",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "chm_contact_sulfuric"
@@ -1693,6 +1748,7 @@
   "id": "ch2_rxn_halogenation",
   "name": "Halogenation of aromatics",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "cap_heat_0700"
@@ -1735,6 +1791,7 @@
   "id": "ch2_rxn_friedel_crafts",
   "name": "Friedel-Crafts acylation and alkylation",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "cap_heat_0700"
@@ -1775,6 +1832,7 @@
   "id": "ch2_rxn_aldol",
   "name": "Aldol condensation",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "potash_soda"
@@ -1816,6 +1874,7 @@
   "id": "ch2_rxn_grignard",
   "name": "Grignard reaction",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "cap_heat_0700"
@@ -1857,6 +1916,7 @@
   "id": "ch2_rxn_diazotisation",
   "name": "Diazotisation and coupling",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "nitric_acid"
@@ -1898,6 +1958,7 @@
   "id": "ch2_rxn_bechamp_reduction",
   "name": "Bechamp reduction of nitro compounds",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "cap_heat_0700"
@@ -1939,6 +2000,7 @@
   "id": "ch2_rxn_catalytic_hydrogenation",
   "name": "Catalytic hydrogenation",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "cap_gas_o2h2"
@@ -1981,6 +2043,7 @@
   "id": "ch2_rxn_permanganate_oxidation",
   "name": "Permanganate oxidation",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -2013,6 +2076,7 @@
   "id": "ch2_rxn_dichromate_oxidation",
   "name": "Dichromate oxidation",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "chm_contact_sulfuric"
@@ -2046,6 +2110,7 @@
   "id": "ch2_rxn_addition_polymerisation",
   "name": "Addition polymerisation",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "cap_heat_1100"
@@ -2080,6 +2145,7 @@
   "id": "ch2_rxn_condensation_polymerisation",
   "name": "Condensation polymerisation",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "cap_heat_1300"
@@ -2105,6 +2171,7 @@
   "id": "ch2_rxn_vulcanisation",
   "name": "Vulcanisation of rubber",
   "cat": "organic_reaction",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "mat_natural_rubber"
@@ -2139,6 +2206,7 @@
   "id": "ch2_prod_acetic_acid",
   "name": "Acetic acid production",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "distillation_alcohol"
   ],
@@ -2180,6 +2248,7 @@
   "id": "ch2_prod_acetone",
   "name": "Acetone production",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -2237,6 +2306,7 @@
   "id": "ch2_prod_methanol",
   "name": "Methanol synthesis",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "cap_gas_o2h2",
    "cap_heat_1300"
@@ -2271,6 +2341,7 @@
   "id": "ch2_prod_ether",
   "name": "Diethyl ether synthesis",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "distillation_alcohol"
   ],
@@ -2311,6 +2382,7 @@
   "id": "ch2_prod_chloroform",
   "name": "Chloroform synthesis",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "mat_chlorine"
@@ -2352,6 +2424,7 @@
   "id": "ch2_prod_carbon_tetrachloride",
   "name": "Carbon tetrachloride synthesis",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "mat_chlorine"
@@ -2393,6 +2466,7 @@
   "id": "ch2_prod_phenol",
   "name": "Phenol production",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "cap_gas_o2h2"
@@ -2482,6 +2556,7 @@
   "id": "ch2_prod_xylene",
   "name": "Xylene from coal tar and synthesis",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "chm_coal_tar_distillation",
    "distillation_alcohol"
@@ -2516,6 +2591,7 @@
   "id": "ch2_prod_aniline",
   "name": "Aniline synthesis from nitrobenzene",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "ch2_rxn_bechamp_reduction"
@@ -2557,6 +2633,7 @@
   "id": "ch2_prod_urea",
   "name": "Urea synthesis from ammonia",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "cap_gas_o2h2"
@@ -2582,6 +2659,7 @@
   "id": "ch2_prod_formaldehyde",
   "name": "Formaldehyde synthesis",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "cap_gas_o2h2"
@@ -2623,6 +2701,7 @@
   "id": "ch2_prod_glycerol",
   "name": "Glycerol as soap byproduct and synthetic",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "ch2_rxn_saponification"
   ],
@@ -2647,6 +2726,7 @@
   "id": "ch2_prod_citric_acid",
   "name": "Citric acid synthesis and fermentation",
   "cat": "product",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -2680,6 +2760,7 @@
   "id": "ch2_polymer_celluloid",
   "name": "Celluloid from nitrocellulose",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "nitric_acid",
    "lab_apparatus"
@@ -2714,6 +2795,7 @@
   "id": "ch2_polymer_viscose",
   "name": "Viscose from cellulose",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "potash_soda"
@@ -2747,6 +2829,7 @@
   "id": "ch2_polymer_cellulose_acetate",
   "name": "Cellulose acetate plastic",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -2779,6 +2862,7 @@
   "id": "ch2_polymer_bakelite",
   "name": "Bakelite thermosetting resin",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "ch2_prod_phenol"
@@ -2819,6 +2903,7 @@
   "id": "ch2_polymer_urea_formaldehyde",
   "name": "Urea-formaldehyde resin",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "ch2_prod_urea",
@@ -2854,6 +2939,7 @@
   "id": "ch2_polymer_pvc",
   "name": "Polyvinyl chloride (PVC)",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "electrolysis_industrial"
@@ -2890,6 +2976,7 @@
   "id": "ch2_polymer_polystyrene",
   "name": "Polystyrene",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -2923,6 +3010,7 @@
   "id": "ch2_polymer_polyethylene",
   "name": "Polyethylene",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "cap_gas_o2h2"
@@ -2956,6 +3044,7 @@
   "id": "ch2_polymer_pmma",
   "name": "Polymethyl methacrylate (PMMA)",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -2989,6 +3078,7 @@
   "id": "ch2_polymer_nylon",
   "name": "Nylon-66 polyamide fibre",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -3021,6 +3111,7 @@
   "id": "ch2_polymer_polyester",
   "name": "Polyethylene terephthalate (PET) polyester",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -3054,6 +3145,7 @@
   "id": "ch2_polymer_neoprene",
   "name": "Neoprene synthetic rubber",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -3087,6 +3179,7 @@
   "id": "ch2_polymer_buna",
   "name": "Buna synthetic rubber",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus",
    "ch2_polymer_polystyrene"
@@ -3121,6 +3214,7 @@
   "id": "ch2_polymer_silicone",
   "name": "Silicone polymers",
   "cat": "polymer",
+  "kind": "RESOURCE",
   "pre": [
    "lab_apparatus"
   ],
@@ -3159,6 +3253,7 @@
   "id": "ch2_phys_thermochemistry",
   "name": "Thermochemistry and Hess's law",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "thermometer",
@@ -3181,12 +3276,14 @@
   "note": "Hess's law: the heat change depends only on initial and final states, not the path. A simple calorimeter measures temperature change when a reaction occurs in an insulated container. Knowing specific heats allows computing the enthalpy change. Used to predict unfeasible reactions.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_kinetics",
   "name": "Chemical kinetics and rate laws",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "cap_measure_time_ms"
@@ -3208,12 +3305,14 @@
   "note": "Rate = k [A]^m [B]^n. The powers m and n are determined experimentally by varying concentrations and measuring initial rates. The rate constant k depends on temperature via the Arrhenius equation. Catalyst lowers activation energy without changing equilibrium.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_equilibrium",
   "name": "Equilibrium and equilibrium constant",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "atomic_theory"
@@ -3235,12 +3334,14 @@
   "note": "At equilibrium, K = [products]/[reactants]. Changing concentration, temperature, or pressure shifts the equilibrium to re-establish K. The position of equilibrium is independent of how much starting material you use. This is Le Chatelier principle.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_le_chatelier",
   "name": "Le Chatelier's principle",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "ch2_phys_equilibrium"
@@ -3260,12 +3361,14 @@
   "note": "Increasing concentration of a product shifts equilibrium to the left. Increasing temperature favours the endothermic direction. Increasing pressure favours the side with fewer moles. Understanding this allows controlling yields in large-scale synthesis.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_phase_rule",
   "name": "Phase rule and phase diagrams",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "thermometer"
@@ -3285,12 +3388,14 @@
   "note": "F = C - P + 2. At a triple point, all three phases coexist and no variable can be changed without losing a phase. Binary phase diagrams show how composition and temperature determine the phases present. Used for design of distillations and crystallisations.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_colligative",
   "name": "Colligative properties",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "thermometer"
@@ -3312,12 +3417,14 @@
   "note": "Adding 1 mole of solute to 1 kg water raises the boiling point by 0.5 C, lowers the freezing point by 1.9 C, and raises osmotic pressure by 22 atm. This allows determining molecular weights or detecting dissociation of ionic compounds.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_mole",
   "name": "The mole and Avogadro constant",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "balance_analytical",
    "atomic_theory"
@@ -3337,12 +3444,14 @@
   "note": "One mole of any gas at STP occupies 22.4 litres. One mole of solute dissolved in 1 litre gives a one-molar solution. The concept allows exact stoichiometric calculations. Without the mole, chemistry would remain a craft without quantitative control.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_electrochemical_series",
   "name": "Electrochemical series",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "daniell_cell"
@@ -3364,12 +3473,14 @@
   "note": "Magnesium is more easily oxidised than iron, which is more easily oxidised than copper. A more easily oxidised metal reduces a less easily oxidised metal salt. Used to predict reactions and design electrochemical cells. Potentials are measured versus a standard hydrogen electrode.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_overpotential",
   "name": "Overpotential and electrode kinetics",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "ch2_phys_electrochemical_series"
@@ -3391,12 +3502,14 @@
   "note": "Hydrogen evolution on copper has high overpotential; on platinum it is much lower. This allows electroplating copper onto steel without plating hydrogen gas. Overpotential depends on current density, temperature, and electrode surface.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_nernst_equation",
   "name": "Nernst equation for electrode potential",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "ch2_phys_electrochemical_series",
@@ -3417,12 +3530,14 @@
   "note": "E = E0 + (RT/nF) ln Q. At 25 C with log instead of ln: E = E0 + 0.06/n log Q. Used to predict cell voltages under non-standard conditions. When Q = 1, E = E0. When Q > 1, the potential decreases, pushing the reaction backwards.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "ch2_phys_anodising",
   "name": "Anodising and anodic oxidation",
   "cat": "physical_chemistry",
+  "kind": "SCIENCE",
   "pre": [
    "lab_apparatus",
    "electrolysis_industrial"
@@ -3454,6 +3569,7 @@
   "note": "Aluminium is the anode, an inert metal is the cathode, and dilute H2SO4 is the electrolyte. Applying voltage oxidises the aluminium surface to Al2O3. The oxide layer is porous and can be dyed. Anodised aluminium resists corrosion far better than bare metal.",
   "sus": 6,
   "gov": 0,
-  "up": 0.0
+  "up": 0.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  }
 ]

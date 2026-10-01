@@ -22,6 +22,7 @@ python3 rome/sim/simulator.py civs            # list what is available
 | field | meaning |
 |---|---|
 | `id`, `name`, `year`, `blurb` | identity |
+| `society` | Optional. Which society's institutions are native here, matched against `data/institution_societies.json`; absent means the civilisation's own `id`. A node carrying another society's marker is foreign. |
 | `population`, `urban_fraction`, `literacy_elite`, `literacy_general` | demography |
 | `currency_words` | `{"long": ..., "short": ...}`: how the money reads in a sentence ("you have 400 ___") and in compact lines. Absent: the `currency` field is used. |
 | `currency`, `price_index`, `wage_index` | economy scaling. 1.0 is Rome 100 AD, which is the calibration baseline for `prices.json`. |

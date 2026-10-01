@@ -10,7 +10,7 @@ ROME 100 AD -> TRANSISTOR : tech-tree simulator, planner and game.
     python3 sim/simulator.py validate
     python3 sim/simulator.py civs                       who you can play
     python3 sim/simulator.py play --manual               free choice, no autopilot
-    python3 sim/simulator.py agent --civ rome_100ad --fog
+    python3 sim/simulator.py agent --civ <civilisation_id> --fog
 
 `agent` speaks one JSON object per line in and one per line out. It explains
 itself: it prints a welcome on first run and answers {"cmd":"help"}. There is
@@ -26,15 +26,17 @@ import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from .mods import get_ordered_mods, load_mod_tree
+from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from . import money_units, wage_provider
+from .default_civilisation import default_civilisation_id
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
-# dictionary read straight from a JSON file (tech_tree.json, prices.json,
+# dictionary read straight from a JSON file (branches, prices.json,
 # geography.json, resources.json, a civilization file) with no schema
 # object anywhere in the codebase to check it against, so `Dict[str, Any]`
 # is the true type, not a placeholder for one this pass ran out of time to
@@ -42,7 +44,7 @@ from .catalog import (load_mod_tree_nodes, load_production_catalog,
 # particular is not given a `TypedDict` despite CLAUDE.md SS7 naming a core
 # set of its fields (lab, mat, cap, rev, up, ph, sch, art, sus, gov, conf,
 # pre, yrs, kb) - those are the fields every node shares, but the full key
-# set actually present (35 distinct keys across data/tech_tree.json, some
+# set actually present (35 distinct keys across data/branches/, some
 # only on nodes of one particular `kind`) is wider and genuinely
 # kind-dependent, which is exactly the "open and data-driven" case the
 # task's own instructions say stays a plain mapping.
@@ -103,7 +105,6 @@ class SimulationDefaults(TypedDict):
 HERE = os.path.dirname(os.path.abspath(__file__))          # sim/engine
 SIMDIR = os.path.dirname(HERE)                             # sim
 ROOT = os.path.dirname(SIMDIR)                             # rome
-TREE = os.path.join(ROOT, "data", "tech_tree.json")
 PRICES = os.path.join(ROOT, "data", "prices.json")
 STRATS = os.path.join(SIMDIR, "strategies")   # sim/strategies, beside simulator.py
 MODDIR = os.path.join(ROOT, "mods")
@@ -234,10 +235,11 @@ def money_short(civ: Optional[JSONDict]) -> str:
     return (civ.get("currency_words") or {}).get("short") or civ.get("currency") or "den"
 
 
-def load_civ(name: str = "rome_100ad") -> JSONDict:
+def load_civ(name: Optional[str] = None) -> JSONDict:
     """A civilization is DATA, not code. Swapping Rome for Han China, Viking
     Norway, Mexica Tenochtitlan or somewhere invented is a different file, not a
     different simulator. See data/civilizations/_SCHEMA.md."""
+    name = name or default_civilisation_id()
     path = os.path.join(CIVDIR, name + ".json")
     base_civ = json.load(open(path)) if os.path.exists(path) else None
     civ = apply_mod_civilization(name, base_civ, get_ordered_mods(MODDIR))
@@ -246,7 +248,7 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
         # civilizations, so the listing below excludes them - the same
         # convention cli.py applies everywhere it lists this directory. An
         # unfiltered listing would answer a typo with "available:
-        # _TECH_EFFECTS, england_1300, ...", naming a file nobody can play.
+        # _TECH_EFFECTS, ...", naming a file nobody can play.
         have = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                       if filename.endswith(".json") and not filename.startswith("_"))
         for manifest in get_ordered_mods(MODDIR):
@@ -342,8 +344,7 @@ def load(use_solved_prices: bool = False,
     """
     manifests = get_ordered_mods(MODDIR)
     check_all_civilizations(CIVDIR, manifests)
-    with open(TREE) as source:
-        tree = load_mod_tree(json.load(source), manifests, copy_base=False)
+    tree = load_mod_tree(load_base_tree(), manifests, copy_base=False)
     with open(PRICES) as source:
         prices = json.load(source)
     nodes = {node["id"]: node for node in tree["nodes"]}
@@ -711,7 +712,7 @@ def critical_path(nodes: Nodes, goal: str) -> Tuple[float, List[str]]:
 
 
 # ----------------------------------------------------------------------------
-# Goals: DATA, not code. One registry, `meta.goals` in tech_tree.json, that
+# Goals: DATA, not code. One registry, `meta.goals` in data/branches/_META.json, that
 # `validate`, `path`, `plan`, the menu's new-game wizard and every command
 # below that takes `--goal` all read - so there is exactly one list of what
 # a player or a measurement can aim at, not one opinion per command.
@@ -729,7 +730,7 @@ def critical_path(nodes: Nodes, goal: str) -> Tuple[float, List[str]]:
 # ----------------------------------------------------------------------------
 
 def goal_catalog(tree: JSONDict, nodes: Optional[Nodes] = None) -> List[JSONDict]:
-    """The roster of selectable goals, in the order tech_tree.json lists
+    """The roster of selectable goals, in the order _META.json lists
     them. Pass `nodes` to check every entry actually names a real node - a
     cheap check worth making once, in `validate`, rather than trusting the
     data file silently."""
@@ -737,7 +738,7 @@ def goal_catalog(tree: JSONDict, nodes: Optional[Nodes] = None) -> List[JSONDict
     if nodes is not None:
         bad = [goal_entry["node"] for goal_entry in goals if goal_entry.get("node") not in nodes]
         if bad:
-            raise SystemExit("tech_tree.json meta.goals names nodes that do "
+            raise SystemExit("meta.goals in data/branches/_META.json names nodes that do "
                              "not exist: %s" % ", ".join(bad))
     return goals
 

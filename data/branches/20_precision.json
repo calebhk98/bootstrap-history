@@ -3,6 +3,7 @@
     "id": "prc_treadle_lathe_flywheel",
     "name": "Treadle lathe with flywheel",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "crank_conrod",
       "cap_tol_1mm",
@@ -37,6 +38,7 @@
     "id": "prc_mandrel_chuck",
     "name": "Mandrel and self-centering chuck",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm",
       "mat_wrought_iron"
@@ -70,6 +72,7 @@
     "id": "prc_lathe_faceplate",
     "name": "Lathe faceplate and driving plates",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm",
       "crank_conrod",
@@ -97,12 +100,14 @@
     "note": "Cast-iron plate bolts to spindle nose; work bolts to plate. Hand-scraped face ensures coplanarity to 1mm. Without it, work runout is uncontrolled. Enables chucking of large irregular work.",
     "traits": [
       "labour_saving"
-    ]
+    ],
+    "_internal": "[FIXED after independent audit: it listed no lathe at all. Corrected to the treadle lathe with a flywheel, which is the right tier 1 parent; an automated first pass had wrongly attached the tier 2 turret lathe.]"
   },
   {
     "id": "prc_tailstock_deadcentre",
     "name": "Tailstock and dead centre",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm",
       "mat_wrought_iron"
@@ -136,6 +141,7 @@
     "id": "prc_slide_rest_simple",
     "name": "Simple slide rest on lathe bed",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "master_screw",
       "cap_tol_1mm",
@@ -170,6 +176,7 @@
     "id": "prc_compound_slide_rest",
     "name": "Compound slide rest with two lead screws",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_slide_rest_simple",
       "master_screw",
@@ -204,6 +211,7 @@
     "id": "prc_back_gear",
     "name": "Back-gear reduction drive",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "crank_conrod",
       "prc_treadle_lathe_flywheel"
@@ -237,6 +245,7 @@
     "id": "prc_change_gears_quadrant",
     "name": "Change gears and quadrant for automatic feed",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_slide_rest_simple",
       "master_screw",
@@ -271,6 +280,7 @@
     "id": "prc_capstan_turret_lathe",
     "name": "Capstan and turret lathe",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_slide_rest_simple",
       "interchangeable_parts",
@@ -315,6 +325,7 @@
     "id": "prc_automatic_screw_machine",
     "name": "Automatic screw machine with cams and limit stops",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_capstan_turret_lathe",
       "interchangeable_parts",
@@ -353,6 +364,7 @@
     "id": "prc_planer_machine",
     "name": "Planing machine (bed and tool)",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm",
       "cap_power_water",
@@ -390,6 +402,7 @@
     "id": "prc_shaper_machine",
     "name": "Shaper machine with quick-return mechanism",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_planer_machine",
       "cap_tol_100um",
@@ -426,6 +439,7 @@
     "id": "prc_slotter_machine",
     "name": "Slotter machine for keyways and slots",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_shaper_machine",
       "cap_tol_100um"
@@ -460,6 +474,7 @@
     "id": "prc_milling_machine",
     "name": "Milling machine with rotating cutter",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_slide_rest_simple",
       "cap_tol_100um",
@@ -498,6 +513,7 @@
     "id": "prc_fly_cutter",
     "name": "Fly cutter for large flat faces",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_milling_machine",
       "cap_tol_100um",
@@ -531,6 +547,7 @@
     "id": "prc_universal_milling_machine",
     "name": "Universal milling machine with tilting head and swivel table",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_milling_machine",
       "cap_tol_100um",
@@ -569,6 +586,7 @@
     "id": "prc_dividing_head",
     "name": "Dividing head for indexing and spiral milling",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_milling_machine",
       "master_screw",
@@ -604,6 +622,7 @@
     "id": "prc_surface_grinder",
     "name": "Surface grinder with reciprocating electromagnet",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_10um",
       "cap_heat_1600",
@@ -687,6 +706,7 @@
     "id": "prc_tool_cutter_grinder",
     "name": "Tool and cutter grinder for milling tool angles",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_surface_grinder",
       "cap_tol_10um",
@@ -721,6 +741,7 @@
     "id": "prc_jig_boring_machine",
     "name": "Jig boring machine with precision spindle",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_milling_machine",
       "cap_tol_10um",
@@ -758,6 +779,7 @@
     "id": "prc_honing_machine",
     "name": "Honing machine for cylinder bores",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_10um",
       "cap_power_electric",
@@ -786,12 +808,14 @@
     "note": "Multiple small honing stones in rotating mandrel cut on expansion, removing 0.002 to 0.005 inch (50-125 micron) from bore. Produces 0.5 micron finish and 0.01mm roundness. Critical for engine cylinders and hydraulic actuators.",
     "traits": [
       "labour_saving"
-    ]
+    ],
+    "_internal": "[FIXED after independent audit: honing works to a micron; the 0.01 mm rung understated it.]"
   },
   {
     "id": "prc_lapping_plate",
     "name": "Lapping with cast-iron plate and abrasive compound",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "precision_three_plate",
       "cap_tol_10um"
@@ -835,6 +859,7 @@
     "id": "prc_drill_press",
     "name": "Drill press with feed screw and depth stop",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_treadle_lathe_flywheel",
       "master_screw",
@@ -870,6 +895,7 @@
     "id": "prc_twist_drill",
     "name": "Twist drill with helical flute",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm",
       "screw_lathe"
@@ -902,6 +928,7 @@
     "id": "prc_tap_die",
     "name": "Taps and dies with thread standards",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "screw_lathe",
       "master_screw",
@@ -937,6 +964,7 @@
     "id": "prc_reamer_hand_flute",
     "name": "Reamer with multiple flutes",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_100um",
       "prc_twist_drill"
@@ -969,6 +997,7 @@
     "id": "prc_broach_machine",
     "name": "Broach tool and broaching machine",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_slotter_machine",
       "cap_tol_100um",
@@ -1004,6 +1033,7 @@
     "id": "prc_arbor_press",
     "name": "Arbor press for bearing and gear installation",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm",
       "prc_mandrel_chuck"
@@ -1037,6 +1067,7 @@
     "id": "prc_scraped_surface_plate",
     "name": "Hand-scraped surface plate and why it beats grinding",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "precision_three_plate",
       "cap_tol_100um",
@@ -1070,6 +1101,7 @@
     "id": "prc_straightedge",
     "name": "Straightedge and reference straightness",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm",
       "units_standards"
@@ -1099,6 +1131,7 @@
     "id": "prc_square_reference",
     "name": "Reference square derived from plane",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm",
       "precision_three_plate"
@@ -1129,6 +1162,7 @@
     "id": "prc_cylindrical_square",
     "name": "Cylindrical square for checking bores",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_100um",
       "mfg_cylindrical_grinder"
@@ -1190,6 +1224,7 @@
     "id": "prc_vernier_caliper",
     "name": "Vernier caliper with 0.05mm resolution",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_100um",
       "master_screw",
@@ -1224,6 +1259,7 @@
     "id": "prc_depth_gauge",
     "name": "Depth gauge with vernier for holes and recesses",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_vernier_caliper",
       "cap_tol_100um"
@@ -1288,6 +1324,7 @@
     "id": "prc_comparator_optical",
     "name": "Optical comparator for part profiling",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_10um",
       "lens_grinding",
@@ -1324,6 +1361,7 @@
     "id": "prc_gauge_blocks_johansson",
     "name": "Gauge blocks and wringing with 0.5 micron accuracy",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_10um",
       "cap_measure_light",
@@ -1367,6 +1405,7 @@
     "id": "prc_go_nogo_gauge",
     "name": "Go-no-go gauges for production sorting",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "interchangeable_parts",
       "cap_tol_100um",
@@ -1400,6 +1439,7 @@
     "id": "prc_optical_flat",
     "name": "Optical flat and Newton's rings for flatness",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1um",
       "lens_grinding",
@@ -1434,6 +1474,7 @@
     "id": "prc_autocollimator",
     "name": "Autocollimator for angle and parallelism measurement",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_10um",
       "lens_grinding",
@@ -1467,6 +1508,7 @@
     "id": "prc_toolmaker_microscope",
     "name": "Toolmaker's microscope with precision stage",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_10um",
       "microscope_compound",
@@ -1503,6 +1545,7 @@
     "id": "prc_profile_projector",
     "name": "Profile projector for large-scale part checking",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_10um",
       "lens_grinding",
@@ -1535,6 +1578,7 @@
     "id": "prc_three_wire_thread_measure",
     "name": "Three-wire method for screw thread pitch diameter",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_vernier_caliper",
       "cap_tol_100um",
@@ -1569,6 +1613,7 @@
     "id": "prc_roundness_measurement",
     "name": "Roundness measurement without perfect reference",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_10um",
       "mfg_dial_indicator"
@@ -1599,6 +1644,7 @@
     "id": "prc_metrology_room_20c",
     "name": "Climate-controlled metrology room at 20 Celsius",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_measure_temp",
       "cap_tol_10um"
@@ -1634,6 +1680,7 @@
     "id": "prc_standard_meter_wavelength",
     "name": "Standard metre and wavelength of light standard",
     "cat": "metrology",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_measure_light",
       "units_standards",
@@ -1677,6 +1724,7 @@
     "id": "prc_ball_roller_bearing",
     "name": "Ball and roller bearing with precision grinding",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_surface_grinder",
       "mfg_cylindrical_grinder",
@@ -1712,6 +1760,7 @@
     "id": "prc_ballscrew",
     "name": "Ballscrew with recirculating balls and 0.01mm backlash",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "master_screw",
       "prc_ball_roller_bearing",
@@ -1747,6 +1796,7 @@
     "id": "prc_lead_screw_error_cam",
     "name": "Lead screw error correction cam and follower",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "master_screw",
       "cap_tol_100um",
@@ -1775,12 +1825,14 @@
     "note": "Grinding a lead screw leaves periodic runout (0.05mm). Measuring runout and grinding a cam follower that compensates enables 0.01mm lead accuracy. Follower attached to tool post cancels runout. Expensive, rarely done. Enables perfect pitch on long lead screws.",
     "traits": [
       "labour_saving"
-    ]
+    ],
+    "_internal": "[FIXED after independent audit: it was tier 2 while depending on a tier 3 measuring instrument.]"
   },
   {
     "id": "prc_jig_and_fixture",
     "name": "Jig and fixture for interchangeable manufacture",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "interchangeable_parts",
       "cap_tol_100um",
@@ -1817,6 +1869,7 @@
     "id": "prc_toolroom_institution",
     "name": "Toolroom as institution and knowledge centre",
     "cat": "organization",
+    "kind": "INSTITUTION",
     "pre": [
       "prc_jig_and_fixture",
       "interchangeable_parts",
@@ -1854,6 +1907,7 @@
     "id": "prc_apprentice_system",
     "name": "Apprentice system and skill transfer in toolmaking",
     "cat": "organization",
+    "kind": "INSTITUTION",
     "pre": [
       "interchangeable_parts",
       "patron_local"
@@ -1882,6 +1936,7 @@
     "id": "prc_tool_steel_hss_carbide",
     "name": "Tool steel, high speed steel, carbide and cutting speed gains",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "cementation_steel",
       "crucible_steel",
@@ -1918,6 +1973,7 @@
     "id": "prc_coolant_cutting_fluid",
     "name": "Coolant and cutting fluid for speed and finish",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_100um"
     ],
@@ -1951,6 +2007,7 @@
     "id": "prc_machine_frame_cast_iron",
     "name": "Machine frame and cast iron for damping vibration",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_cast_iron",
       "cap_tol_1mm",
@@ -1985,6 +2042,7 @@
     "id": "prc_vibration_and_chatter",
     "name": "Chatter and self-excited vibration in machine tools",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_machine_frame_cast_iron",
       "thermodynamics_theory"
@@ -2016,6 +2074,7 @@
     "id": "prc_pantograph_copying",
     "name": "Pantograph and copying mechanism for die sinking",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "crank_conrod",
       "cap_tol_1mm"
@@ -2050,6 +2109,7 @@
     "id": "prc_tracer_lathe",
     "name": "Tracer lathe with hydraulic copying",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_treadle_lathe_flywheel",
       "cap_power_steam",
@@ -2086,6 +2146,7 @@
     "id": "prc_die_sinker",
     "name": "Die sinker and electrode erosion",
     "cat": "machine_tools",
+    "kind": "ENGINEERING",
     "pre": [
       "prc_pantograph_copying",
       "cap_power_electric"

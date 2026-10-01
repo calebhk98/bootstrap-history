@@ -18,6 +18,7 @@ of Sim; they are a mixin only so that they can live in a file of their own
 import collections
 
 from sim.constants import declare
+from . import money_units
 
 
 class VenturesMixin:
@@ -60,9 +61,9 @@ class VenturesMixin:
             "ratio.")
     # Floor on supervision: a zero-build concern still needs staff watching.
     # One pair of hands per this much revenue.
-    VENTURE_HANDS_PER_REVENUE = declare(
-        "VENTURE_HANDS_PER_REVENUE", 1500.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year of revenue per pair of hands", source=None,
+    VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS = declare(
+        "VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS", 30000.0, kind="temporary_heuristic",
+        unit="labour hours per year of revenue per pair of hands", source=None,
         confidence="D",
         why="A floor under venture_supervision's own build-crew share: "
             "even a concern that took nobody to build (a bottling shed, a "
@@ -73,6 +74,7 @@ class VenturesMixin:
             "cannot run itself for nothing (see the Han break-test this "
             "constant's own comment describes); not a measured "
             "supervisor-to-revenue ratio for any real enterprise.")
+    VENTURE_HANDS_PER_REVENUE = money_units.PricedInLabourHours("VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS")
 
     def venture_hands(self, node_id):
         """(scholars, craftsmen) of your own that running this ties up."""

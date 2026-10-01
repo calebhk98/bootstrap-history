@@ -28,6 +28,7 @@ REPO_ROOT = os.path.dirname(HERE)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 from sim.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
+from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
@@ -55,7 +56,7 @@ ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 # PHYSICAL CAPABILITY CAPS (Complaints/44 - see TEMPERATURE in this
 # module's own docstring for the full defect and the reasoning behind the
-# number below). data/tech_tree.json's own `cap_heat_0700` node -
+# number below). the tree's own `cap_heat_0700` node -
 # "Sustained 700 C (pottery kiln)... Already available wherever there is
 # an updraught pottery kiln, wood fired. Free starting capability. Glazes,
 # bricks, lime, glass working" - carries no prerequisite at all (`pre:
@@ -967,7 +968,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
 # consumes their ore, so there is only one candidate for them. Iron has
 # two - pig_iron_kg (blast furnace) and iron_bloom_kg (direct bloomery) -
 # at different ore-to-metal ratios, and which of them an era can even RUN
-# differs: `--civ rome_100ad` gates pig_iron_kg out entirely (blast_furnace
+# differs: the default civilisation gates pig_iron_kg out entirely (blast_furnace
 # is not a Roman technology) while leaving iron_bloom_kg available, so a
 # single fixed recipe id here would silently leave iron at zero rent for
 # every Roman-era gated solve - exactly the scenario this task's own VERIFY
@@ -1095,7 +1096,7 @@ def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
 # has no per-civilization breakdown either), even though land's OWN
 # mechanism, unlike ore's, is genuinely per-civilization the moment --civ
 # names one.
-DEFAULT_LAND_CIVILIZATION = "rome_100ad"
+DEFAULT_LAND_CIVILIZATION = default_civilisation_id()
 
 
 def land_rent_hours_per_iugerum(production_entries, wage_by_trade,

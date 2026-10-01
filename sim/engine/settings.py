@@ -76,7 +76,7 @@ save location" list is "language", and it is not here: this codebase has no
 internationalisation to switch on. _localise_words/_localise_money in
 protocol.py swap the NAME of the currency per civilisation (denarii,
 hacksilver, beans, pence) - flavour, not translation - and the many
-thousands of words of node notes (data/tech_tree.json) and the
+thousands of words of node notes (data/branches/) and the
 docs/knowledge/ corpus exist in English only. A menu entry offering
 "language" with nothing behind it would be worse than no entry: a setting
 that silently does nothing. Real language support would mean translating

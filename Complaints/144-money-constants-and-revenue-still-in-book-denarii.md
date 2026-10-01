@@ -1,6 +1,6 @@
 # Money constants and technology revenue are still in book denarii
 
-**Status:** partly - authored book denarii convert once at a single boundary (sim/engine/money_units.py); authored `rev` per node and the loosened pump guard remain
+**Status:** partly - authored book denarii convert once at a single boundary (sim/engine/money_units.py); physical constants now in labour hours; authored `rev`/`up`/`cap` per node, money-valued constants and the loosened pump guard remain
 
 Money is now anchored to each civilisation's coin, and costs are labour-hours
 inside the engine, but some numbers are still written in the old book
@@ -45,3 +45,26 @@ Find them with `grep -rn "denari" sim/engine --include=*.py` and the
   `rev` (still open).
 - [ ] Inline money amounts in the auto policies were converted with
   `Sim.book_money`; any new money literal must go through it too.
+
+## Progress: physical constants (second increment)
+
+- [x] Constants that are labour or mass are declared in labour hours
+  (`FARM_LABOUR_HOURS_PER_HA`, `FOREST_LABOUR_HOURS_PER_HA`,
+  `HOUSING_LABOUR_HOURS_PER_PLACE`, `TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT`,
+  `NITRE_LABOUR_HOURS_PER_M2`, the two living-cost bases, the institution
+  upkeep per head, the venture hands ratio) and priced in the civilisation's
+  coin on read (`money_units.PricedInLabourHours`). Values were rounded in the
+  move, a drift of about one percent.
+- [x] The seven curated `MINE_OPEX_PER_T_*` figures are removed; opex comes
+  from the deposits' extraction labour. Count of `book_money` constants:
+  `python3 -c "import sys;sys.path.insert(0,'.');import sim.engine.core;from sim.constants import book_money_names;print(len(book_money_names()))"`
+  (before this increment: more than twice as many).
+
+## Remains
+
+- Authored node `rev`, `up`, `cap` stay in book denarii (separate increment,
+  with deriving revenue from output).
+- The remaining `book_money` constants are amounts of money, not physical
+  quantities: revenue and funding scales, credit lines, bribes, arrears and
+  insolvency floors, the eminence threshold, the slave base price.
+- The pump payback guard is still at its loosened threshold.

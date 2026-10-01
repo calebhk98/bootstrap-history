@@ -3,6 +3,7 @@
   "id": "cap_heat_0700",
   "name": "Sustained 700 C (pottery kiln)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [],
   "kb": "",
   "ph": 0,
@@ -24,6 +25,7 @@
   "id": "cap_heat_1100",
   "name": "Sustained 1100 C (hand-blown charcoal)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_heat_0700",
    "refractory_fireclay"
@@ -48,6 +50,7 @@
   "id": "cap_heat_1300",
   "name": "Sustained 1300 C (water-blown continuous blast)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_heat_1100",
    "bellows_water_blown"
@@ -72,6 +75,7 @@
   "id": "cap_heat_1600",
   "name": "Sustained 1600 C (regenerative preheat)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_heat_1300",
    "cap_measure_temp_hi"
@@ -96,6 +100,7 @@
   "id": "cap_heat_2000",
   "name": "2000 C localised (oxy-hydrogen blowpipe)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_heat_1600",
    "cap_gas_o2h2"
@@ -120,6 +125,7 @@
   "id": "cap_heat_3000",
   "name": "3000 C+ (electric arc / resistance)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_heat_2000",
    "cap_power_grid"
@@ -144,6 +150,7 @@
   "id": "cap_tol_1mm",
   "name": "Tolerance 1 mm (skilled hand craft)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [],
   "kb": "",
   "ph": 0,
@@ -165,6 +172,7 @@
   "id": "cap_tol_100um",
   "name": "Tolerance 0.1 mm (file, scraper, gauge)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_tol_1mm",
    "precision_three_plate"
@@ -189,6 +197,7 @@
   "id": "cap_tol_10um",
   "name": "Tolerance 0.01 mm (slide rest, lead screw, micrometer)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_tol_100um",
    "micrometer_gauges",
@@ -214,6 +223,7 @@
   "id": "cap_tol_1um",
   "name": "Tolerance 1 micron (lapping, grinding, optical flats)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_tol_10um"
   ],
@@ -237,6 +247,7 @@
   "id": "cap_tol_100nm",
   "name": "Tolerance 0.1 micron (interferometric)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_tol_1um",
    "cap_measure_light"
@@ -261,6 +272,7 @@
   "id": "cap_vac_1torr",
   "name": "Rough vacuum, about 1 torr (piston pump)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_tol_100um",
    "mat_leather"
@@ -285,6 +297,7 @@
   "id": "cap_vac_1e3",
   "name": "High vacuum, about 1e-3 torr (Sprengel mercury drop)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_vac_1torr",
    "mercury_supply",
@@ -310,6 +323,7 @@
   "id": "cap_vac_1e6",
   "name": "Very high vacuum, 1e-6 torr (diffusion pump plus getters)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_vac_1e3",
    "cap_power_electric",
@@ -335,6 +349,7 @@
   "id": "cap_vac_1e9",
   "name": "Ultra high vacuum, 1e-9 torr (bakeable metal systems)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_vac_1e6",
    "mat_stainless",
@@ -360,6 +375,7 @@
   "id": "cap_pure_2N",
   "name": "Purity 99% (careful classical refining)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "balance_analytical"
   ],
@@ -383,6 +399,7 @@
   "id": "cap_pure_4N",
   "name": "Purity 99.99% (electrorefining, fractional crystallisation)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_pure_2N",
    "electroplating",
@@ -408,6 +425,7 @@
   "id": "cap_pure_6N",
   "name": "Purity 99.9999% (fractional distillation of volatile compounds)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_pure_4N",
    "glass_borosilicate",
@@ -433,6 +451,7 @@
   "id": "cap_pure_9N",
   "name": "Purity 1 part in 1e9 (zone refining)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_pure_6N",
    "cap_heat_1600",
@@ -460,6 +479,7 @@
   "id": "cap_power_muscle",
   "name": "Draught-animal muscle power",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_power_human"
   ],
@@ -492,6 +512,7 @@
   "id": "cap_power_water",
   "name": "Water power, tens of kW on one shaft",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "water_power_scale",
    "cap_power_human"
@@ -526,6 +547,7 @@
   "id": "cap_power_steam",
   "name": "Steam power, portable, hundreds of kW",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_power_water",
    "steam_high_pressure"
@@ -560,6 +582,7 @@
   "id": "cap_power_electric",
   "name": "Local electric power, kW scale",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "dynamo",
    "cap_power_water"
@@ -597,9 +620,9 @@
   "id": "cap_power_grid",
   "name": "Grid electric power, MW scale",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
-   "cap_power_electric",
-   "power_grid"
+   "cap_power_electric"
   ],
   "kb": "",
   "ph": 0,
@@ -633,6 +656,7 @@
   "id": "cap_measure_len",
   "name": "Reproducible length standard",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "units_standards"
   ],
@@ -656,6 +680,7 @@
   "id": "cap_measure_mass_mg",
   "name": "Mass to 1 milligram",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "balance_analytical"
   ],
@@ -679,6 +704,7 @@
   "id": "cap_measure_temp",
   "name": "Temperature to a few degrees (liquid in glass)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "thermometer"
   ],
@@ -702,6 +728,7 @@
   "id": "cap_measure_temp_hi",
   "name": "High temperature (clay contraction and colour pyrometry)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_measure_temp",
    "cap_heat_1300"
@@ -726,6 +753,7 @@
   "id": "cap_measure_time_s",
   "name": "Time to the second (pendulum)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "clock_pendulum"
   ],
@@ -749,6 +777,7 @@
   "id": "cap_measure_time_ms",
   "name": "Time to the millisecond (chronograph, tuning fork)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "cap_measure_time_s",
    "cap_tol_10um"
@@ -773,6 +802,7 @@
   "id": "cap_measure_elec",
   "name": "Absolute electrical units",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "galvanometer"
   ],
@@ -796,6 +826,7 @@
   "id": "cap_measure_light",
   "name": "Interferometric length (wavelengths of light)",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "prc_optical_flat",
    "spectroscope"
@@ -820,6 +851,7 @@
   "id": "cap_gas_o2h2",
   "name": "Oxygen and hydrogen in quantity",
   "cat": "capability",
+  "kind": "CAPABILITY",
   "pre": [
    "analytical_chemistry",
    "sulfuric_retort"

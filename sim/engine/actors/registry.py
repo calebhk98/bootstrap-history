@@ -18,14 +18,17 @@ class _ConcernWatch:
 	current whenever its concern set changes. Holds only plain data, so a
 	state holding watched sets still copies."""
 
-	def __init__(self, firm_id: str, holders: Dict[str, Set[str]]) -> None:
+	def __init__(self, firm_id: str, holders: Dict[str, Set[str]], version: List[int]) -> None:
 		self.firm_id = firm_id
 		self.holders = holders
+		self.version = version
 		self.known: Set[str] = set()
 		self.target: Any = None
 
 	def __call__(self) -> None:
 		current = set(self.target)
+		if current != self.known:
+			self.version[0] += 1
 		for node_id in self.known - current:
 			self.holders[node_id].discard(self.firm_id)
 		for node_id in current - self.known:
@@ -43,6 +46,9 @@ class ActorRegistry:
 		# which firms hold each concern (kept current by _ConcernWatch), and the ids in order
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
+		self._staff: Optional[Dict[str, float]] = None
+		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
+		self.version: List[int] = [0]
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -59,13 +65,45 @@ class ActorRegistry:
 		if isinstance(actor, Firm):
 			actor.rivals_of = self.rivals_of
 			from sim.engine.economy import _InvalidatingSet
-			watch = _ConcernWatch(actor_id, self._holders)
+			watch = _ConcernWatch(actor_id, self._holders, self.version)
 			record.concerns = _InvalidatingSet(record.concerns, on_change=watch)
 			watch.target = record.concerns
 			watch()
 		self.actors[actor_id] = actor
 		self._ordered_ids = None
+		self._staff = None
 		return actor
+
+	def supply(self, material: str, world: Any) -> float:
+		"""Tonnes a year of a material that every recorded actor's concerns put on the market."""
+		return sum(actor.output_of(material, world) for actor in self.actors.values()
+				   if not (actor.kind == "firm" and actor.record.exited_year is not None))
+
+	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> int:
+		"""Concerns of goods category `category` that actors operate, counted once per operator."""
+		return sum(1 for firm in self.active_firms() for node_id in firm.concerns
+				   if nodes[node_id].get("cat") == category)
+
+	def refresh_staff(self) -> None:
+		"""Forget the staffing tally so the next read counts every actor's workforce again."""
+		self._staff = None
+
+	def staff_by_trade(self) -> Dict[str, float]:
+		"""People of each trade every recorded actor employs, in full-time equivalents."""
+		if self._staff is None:
+			totals: Dict[str, float] = {}
+			for actor_id in sorted(self.actors):
+				for trade, people in self.actors[actor_id].workforce.items():
+					totals[trade] = totals.get(trade, 0.0) + people
+			self._staff = totals
+		return self._staff
+
+	def staff_fte(self, trade: str, excluding: Optional[str] = None) -> float:
+		"""People of one trade the actors employ, leaving out one actor's own staff."""
+		total = self.staff_by_trade().get(trade, 0.0)
+		if excluding is not None and excluding in self.actors:
+			total -= self.actors[excluding].workforce.get(trade, 0.0)
+		return max(0.0, total)
 
 	def add(self, actor_id: str, record: ActorRecord) -> RecordedActor:
 		self.state.records[actor_id] = record
@@ -107,6 +145,7 @@ class ActorRegistry:
 			if actor.kind == "firm" and actor.record.exited_year is not None:
 				continue
 			actor.advance(world)
+			self.refresh_staff()
 		self.consider_entry(world)
 
 	def consider_entry(self, world: Any) -> List[str]:

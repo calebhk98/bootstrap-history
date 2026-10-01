@@ -72,6 +72,7 @@
   "id": "pwr_animal_treadmill",
   "name": "Animal-driven treadmill",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_muscle"
   ],
@@ -98,6 +99,7 @@
   "id": "pwr_ship_sail",
   "name": "Sails on ships",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -125,6 +127,7 @@
   "id": "pwr_force_pump",
   "name": "Force pump",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human"
   ],
@@ -152,6 +155,7 @@
   "id": "pwr_screw_press_power",
   "name": "Screw press",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human"
   ],
@@ -178,6 +182,7 @@
   "id": "pwr_norse_waterwheel",
   "name": "Horizontal waterwheel (Norse)",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "water_power_scale"
   ],
@@ -240,6 +245,7 @@
   "id": "pwr_smeaton_efficiency",
   "name": "Efficiency measurement of waterwheels",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "water_power_scale",
    "cap_measure_len",
@@ -274,6 +280,7 @@
   "id": "pwr_millpond",
   "name": "Millpond and storage",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "water_power_scale"
   ],
@@ -306,6 +313,7 @@
   "id": "pwr_leat_and_weir",
   "name": "Leat and weir",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "water_power_scale"
   ],
@@ -338,6 +346,7 @@
   "id": "pwr_peat",
   "name": "Peat extraction and burning",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "40_power_precision.md",
   "ph": 100,
@@ -366,6 +375,7 @@
   "id": "pwr_oil_shale",
   "name": "Oil shale and bitumen deposits",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "40_power_precision.md",
   "ph": 80,
@@ -392,6 +402,7 @@
   "id": "pwr_water_turbine_fourneyron",
   "name": "Water turbine (Fourneyron)",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "water_power_scale",
    "cap_tol_100um",
@@ -584,6 +595,7 @@
   "id": "pwr_trompe",
   "name": "Trompe (water-driven air blast)",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "water_power_scale"
   ],
@@ -610,7 +622,8 @@
   "note": "Falling water entrains air in a angled tube, compressing it as the water drops. The compressed air separates from the water at the bottom, no valves, no moving parts. Ingenious; useful for furnace blast in a mine or forge where you cannot afford bellows labour.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_tide_mill",
@@ -648,6 +661,7 @@
   "id": "pwr_coal_seam",
   "name": "Coal seam and mining",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -679,6 +693,7 @@
   "id": "pwr_coking",
   "name": "Coking: coal to coke",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_coal_seam",
    "cap_heat_1100"
@@ -705,12 +720,14 @@
   "note": "Heating coal without air produces coke (carbon) and coal tar. Coke is almost pure carbon: hotter burning, less ash and sulfur than coal. Essential for iron smelting at scale in a blast furnace.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_coal_gas",
   "name": "Coal gas and gasworks",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_coking",
    "cap_heat_1100"
@@ -745,6 +762,7 @@
   "id": "pwr_gas_main",
   "name": "Gas main and gas network",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_coal_gas",
    "cap_tol_1mm"
@@ -778,6 +796,7 @@
   "id": "pwr_gas_meter",
   "name": "Gas meter",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_gas_main",
    "cap_tol_100um"
@@ -811,6 +830,7 @@
   "id": "pwr_petroleum_seeps",
   "name": "Petroleum seeps and collection",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "40_power_precision.md",
   "ph": 100,
@@ -833,12 +853,14 @@
   "note": "Oil seeps from rock faces and pools in low ground. Early collection by bucket and pit. No pressure, no depth, just ambient flow. Pitch, naphtha, light oil; use depends on locality.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_cable_tool_drilling",
   "name": "Cable tool drilling (percussion drilling)",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_petroleum_seeps",
    "cap_power_steam",
@@ -869,12 +891,14 @@
   "traits": [
    "infrastructure",
    "labour_saving"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_rotary_drilling",
   "name": "Rotary drilling",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_cable_tool_drilling",
    "cap_tol_100um"
@@ -908,12 +932,14 @@
     "yield": 1.0,
     "cost": 0.8
    }
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_oil_refinery",
   "name": "Oil refinery and distillation",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_cable_tool_drilling",
    "distillation_alcohol",
@@ -978,6 +1004,7 @@
   "id": "pwr_fuel_oil",
   "name": "Fuel oil (heavy fraction)",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_oil_refinery",
    "en_oil_refining_distillation"
@@ -1002,12 +1029,14 @@
   "note": "Heavy oil from the still bottom: too thick to burn in lamps, but a boiler fuel for ships and stationary engines. Higher energy density than coal by weight; viscous, needing heating to flow and atomization to burn.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_pipeline",
   "name": "Oil pipeline",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_fuel_oil",
    "cap_tol_100um"
@@ -1075,6 +1104,7 @@
   "id": "pwr_condenser",
   "name": "Condenser and vacuum",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_watt",
    "barometer"
@@ -1103,7 +1133,8 @@
   "note": "A chamber cooled by circulating water, condensing exhaust steam into liquid. This creates a vacuum, pulling the piston back harder, doubling engine power. The cooling water must be copious and clean; copper tubing survives longer than iron.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_boiler_haystack",
@@ -1294,6 +1325,7 @@
   "id": "pwr_feedwater_heating",
   "name": "Feedwater heater and economiser",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_condenser",
    "cap_tol_1mm"
@@ -1321,7 +1353,8 @@
   "note": "Hot exhaust gas preheats incoming cold water in an economiser; hot condensate is also reused. This cuts fuel consumption significantly. Requires careful design to avoid scale and tube plugging.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_safety_valve",
@@ -1357,6 +1390,7 @@
   "id": "pwr_indicator_diagram",
   "name": "Indicator diagram (Watt's instrument)",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_watt",
    "cap_measure_len"
@@ -1390,6 +1424,7 @@
   "id": "pwr_flywheel_governor",
   "name": "Flywheel and governor",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -1485,6 +1520,7 @@
   "id": "pwr_thermoelectric_couple",
   "name": "Thermoelectric couple (Seebeck effect)",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining",
    "mat_zinc",
@@ -1516,12 +1552,14 @@
    "inexplicable",
    "infrastructure",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_thermopile",
   "name": "Thermopile as a current source",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_thermoelectric_couple",
    "cap_heat_1100"
@@ -1550,12 +1588,14 @@
   "note": "A stack of thermoelectric couples, all hot ends at a furnace, all cold ends at water, producing a steady voltage without zinc consumption. Early telegraph relays and electroplating work used thermopiles before batteries became cheap.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_selenium_photovoltaic",
   "name": "Selenium photovoltaic effect",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_selenium_metal",
    "cap_heat_1300"
@@ -1584,12 +1624,14 @@
   "note": "Selenium exposed to light generates a voltage. The effect is real but tiny; a palm-sized cell produces microamps. Photo-electric light meters were the first practical use. The efficiency is under 1 percent.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_selenium_cell",
   "name": "Selenium photovoltaic cell",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "pwr_selenium_photovoltaic",
    "cap_tol_100um"
@@ -1619,7 +1661,8 @@
   "traits": [
    "infrastructure"
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_lead_acid_battery",
@@ -1753,6 +1796,7 @@
   "id": "pwr_high_voltage_transmission",
   "name": "High voltage transmission",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "cap_tol_100um"
@@ -1826,6 +1870,7 @@
   "id": "pwr_three_phase_ac",
   "name": "Three-phase AC and polyphase",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "dynamo",
    "motor_transformer_ac"
@@ -1891,6 +1936,7 @@
   "id": "pwr_load_factor_economics",
   "name": "Load factor and grid economics",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "en_substation",
    "statistics_basic"
@@ -1923,6 +1969,7 @@
   "id": "pwr_electric_motor_industry",
   "name": "Electric motor and end of line shafting",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "en_substation"
@@ -1958,6 +2005,7 @@
   "id": "pwr_fuel_cell",
   "name": "Fuel cell (hydrogen-oxygen)",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_measure_elec"
@@ -2001,12 +2049,14 @@
      "lead_chamber": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_selenium_metal",
   "name": "Selenium metal extraction",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining",
    "cap_heat_1300",
@@ -2045,12 +2095,14 @@
      "lead_chamber": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "pwr_nuclear_fission",
   "name": "Nuclear fission and power",
   "cat": "power",
+  "kind": "ENGINEERING",
   "pre": [
    "atomic_theory",
    "cap_measure_temp_hi",

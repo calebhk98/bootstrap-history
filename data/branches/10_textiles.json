@@ -3,6 +3,7 @@
   "id": "tex_wool",
   "name": "Wool fiber",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -49,6 +50,7 @@
   "id": "tex_cotton_trade",
   "name": "Cotton by trade",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -74,6 +76,7 @@
   "id": "tex_silk_trade",
   "name": "Silk by trade",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -99,6 +102,7 @@
   "id": "tex_drop_spindle",
   "name": "Drop spindle",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -145,6 +149,7 @@
   "id": "tex_felting",
   "name": "Felting",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -170,6 +175,7 @@
   "id": "tex_warp_weighted_loom",
   "name": "Warp-weighted loom",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -195,6 +201,7 @@
   "id": "tex_two_beam_loom",
   "name": "Two-beam loom",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -220,6 +227,7 @@
   "id": "tex_sailcloth",
   "name": "Sailcloth",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -245,6 +253,7 @@
   "id": "tex_dye_madder",
   "name": "Dyeing with madder root",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -270,6 +279,7 @@
   "id": "tex_dye_woad",
   "name": "Dyeing with woad",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -295,6 +305,7 @@
   "id": "tex_dye_murex",
   "name": "Murex purple dyeing",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "90_textiles.md",
   "ph": 0,
@@ -378,6 +389,7 @@
   "id": "tex_spinning_wheel",
   "name": "Spinning wheel with flyer",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_drop_spindle",
    "crank_conrod",
@@ -421,6 +433,7 @@
   "id": "tex_horizontal_loom",
   "name": "Horizontal loom",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_two_beam_loom",
    "cap_tol_1mm",
@@ -457,6 +470,7 @@
   "id": "tex_treadle_loom",
   "name": "Treadle loom",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_horizontal_loom",
    "crank_conrod",
@@ -499,6 +513,7 @@
   "id": "tex_mordanting",
   "name": "Mordanting dyes with alum",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_dye_madder",
    "mat_alum"
@@ -532,6 +547,7 @@
   "id": "tex_indigo",
   "name": "Indigo dyeing",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_dye_woad",
    "mat_natron"
@@ -566,6 +582,7 @@
   "id": "tex_rope_walk",
   "name": "Rope walk and cordage",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "cap_measure_len"
@@ -600,6 +617,7 @@
   "id": "tex_canvas",
   "name": "Canvas cloth",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "tex_horizontal_loom"
@@ -632,6 +650,7 @@
   "id": "tex_fitted_garment",
   "name": "Fitted garment tailoring",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "cap_measure_len"
@@ -665,6 +684,7 @@
   "id": "tex_shoddy",
   "name": "Shoddy and recycled wool",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_wool",
    "tx2_carding"
@@ -697,6 +717,7 @@
   "id": "tex_hand_ginning",
   "name": "Hand ginning cotton",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_cotton_trade"
   ],
@@ -726,6 +747,7 @@
   "id": "tex_flying_shuttle",
   "name": "Flying shuttle",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_treadle_loom",
    "crank_conrod",
@@ -770,6 +792,7 @@
   "id": "tex_spinning_jenny",
   "name": "Spinning jenny",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_spinning_wheel",
    "crank_conrod",
@@ -807,6 +830,7 @@
   "id": "tex_water_frame",
   "name": "Water frame spinner",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_spinning_wheel",
    "cap_power_water",
@@ -847,6 +871,7 @@
   "id": "tex_power_loom",
   "name": "Power loom",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_treadle_loom",
    "cap_power_water",
@@ -889,6 +914,7 @@
   "id": "tex_knitting_frame",
   "name": "Knitting frame",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "crank_conrod",
@@ -927,6 +953,7 @@
   "id": "tex_sewing_machine",
   "name": "Sewing machine with lockstitch",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "crank_conrod",
@@ -965,6 +992,7 @@
   "id": "tex_buttons_buttonholes",
   "name": "Buttons and buttonholes",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_fitted_garment",
    "cap_tol_1mm"
@@ -993,12 +1021,14 @@
    "commerce",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_hosiery",
   "name": "Hosiery production",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_knitting_frame",
    "tex_wool",
@@ -1028,12 +1058,14 @@
    "commerce",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_cotton_gin",
   "name": "Cotton gin with saw",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "crank_conrod",
@@ -1071,6 +1103,7 @@
   "id": "tex_vegetable_tanning",
   "name": "Vegetable tanning of leather",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_leather"
   ],
@@ -1100,12 +1133,14 @@
    "commerce",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_fulling_water",
   "name": "Water-powered fulling mill",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_fulling",
    "cap_power_water",
@@ -1145,6 +1180,7 @@
   "id": "tex_field_bleaching",
   "name": "Field bleaching with sun",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "tex_sailcloth"
@@ -1172,12 +1208,14 @@
    "commerce",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_calico_printing",
   "name": "Calico printing with blocks",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_cotton_trade",
    "tex_canvas",
@@ -1210,12 +1248,14 @@
    "information",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_pattern_cutting",
   "name": "Standard pattern cutting and sizing",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_fitted_garment",
    "cap_measure_len",
@@ -1246,12 +1286,14 @@
    "commerce",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_tape_measure",
   "name": "Tape measure standardization",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -1279,12 +1321,14 @@
    "commerce",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_wool_combing_machinery",
   "name": "Wool combing machinery",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tx2_combing",
    "cap_power_water",
@@ -1325,6 +1369,7 @@
   "id": "tex_textile_factory",
   "name": "Textile mill and factory system",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_water_frame",
    "tex_power_loom",
@@ -1366,6 +1411,7 @@
   "id": "tex_spinning_mule",
   "name": "Spinning mule (jenny plus frame)",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_spinning_jenny",
    "tex_water_frame",
@@ -1441,6 +1487,7 @@
   "id": "tex_roller_printing",
   "name": "Roller printing of cloth",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_calico_printing",
    "cap_tol_100um",
@@ -1481,6 +1528,7 @@
   "id": "tex_mercerisation",
   "name": "Mercerisation of cotton",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_cotton_trade",
    "potash_soda"
@@ -1510,12 +1558,14 @@
    "commerce",
    "labour_saving",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_chlorine_bleaching",
   "name": "Chlorine bleaching of cloth",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "tex_field_bleaching",
    "mat_chlorine",
@@ -1557,7 +1607,8 @@
      "lead_chamber": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_synthetic_dyes",
@@ -1592,6 +1643,7 @@
   "id": "tex_rayon_nitro",
   "name": "Rayon from nitrocellulose",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_nitrocellulose",
    "mat_chlorine",
@@ -1628,6 +1680,7 @@
   "id": "tex_rayon_viscose",
   "name": "Rayon from viscose",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_natron",
    "potash_soda",
@@ -1682,6 +1735,7 @@
   "id": "tex_chrome_tanning",
   "name": "Chrome tanning of leather",
   "cat": "textiles",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_chromium",
    "mat_leather",
@@ -1715,7 +1769,8 @@
    "labour_saving",
    "status_threatening"
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tex_nylon",

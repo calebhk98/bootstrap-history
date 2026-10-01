@@ -61,6 +61,7 @@ import math
 from .data import haversine_km
 from . import commodities as _commod
 from sim.constants import declare
+from . import money_units
 from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -553,9 +554,9 @@ class FreightMixin:
     # heap of dung, straw and ash turned for two years; it is cheap to lay and
     # slow to yield, which is exactly why nobody builds one until they are
     # already short.
-    NITRE_COST_PER_M2 = declare(
-        "NITRE_COST_PER_M2", 2.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/square metre", source=
+    NITRE_LABOUR_HOURS_PER_M2 = declare(
+        "NITRE_LABOUR_HOURS_PER_M2", 40.0, kind="temporary_heuristic",
+        unit="labour hours per square metre", source=
         "The figure step() used before this was given a proper `quote` "
         "path (spend / 2.0), carried forward unchanged so buying a bed the "
         "new way costs exactly what the old automatic policy always paid.",
@@ -563,6 +564,7 @@ class FreightMixin:
         why="Cost to lay one square metre of nitre bed. Not sourced to any "
             "attested saltpetre-works price; a carried-forward implementation "
             "constant.")
+    NITRE_COST_PER_M2 = money_units.PricedInLabourHours("NITRE_LABOUR_HOURS_PER_M2")
     NITRE_YIELD_T_PER_M2 = declare(
         "NITRE_YIELD_T_PER_M2", 0.0008, kind="temporary_heuristic",
         unit="tonnes saltpetre/square metre/year", source=None,
@@ -665,7 +667,7 @@ class FreightMixin:
                    "{:,.0f}".format(square_meters * self.NITRE_COST_PER_M2
                                    * self.price_index))),
                 "commands": ["buy nitre %d" % square_meters]}
-        if binding in self.MINE_OPEX_PER_T:
+        if binding in self.MINE_OPEX_MATERIALS:
             sinking = [tranche for tranche in (self.state.economy.mine_tranches or []) if tranche[0] == binding]
             sinking_tonnes = sum(tranche[1] for tranche in sinking)
             if sinking_tonnes > 0.0:

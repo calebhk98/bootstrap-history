@@ -157,11 +157,11 @@ def _cell_morton_code(lat_degrees, lon_degrees, bits=16):
 # file does not compute today. That mechanism does not exist yet, so per
 # CLAUDE.md section 3.4 this is labelled as what it is: a round number
 # chosen to sit just above the largest cell count this project ships
-# today - rome_100ad resolves to 88 land_tiles cells across its 7 home
+# today - the largest resolves to 88 land_tiles cells across its 7 home
 # regions (sim/tests/test_growing_season_weather_correlation.py's own
 # test_romes_seven_regions_resolve_to_88_land_tiles_cells), the largest
-# of the five shipped civilisations (han_china_100ad 69, mexica_1500 32,
-# norse_900ad 14, england_1300 13) - so every civilisation this project
+# of the shipped civilisations (the others are smaller; measure them
+# with the test named above) - so every civilisation this project
 # ships today keeps its EXACT current cell count and weather draw
 # unchanged (100 >= 88), while a future finer `land_tiles` grid, or a
 # civilisation with a larger territory than Rome's, is bounded rather
@@ -172,9 +172,8 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
     kind="temporary_heuristic",
     unit="count (pooled growing-season weather cells per civilisation, an "
          "upper bound independent of land_tiles resolution)",
-    source="Not a measured or published figure. Anchored to rome_100ad's "
-           "own measured cell count today (88, the largest of the five "
-           "shipped civilisations - see the comment above this "
+    source="Not a measured or published figure. Anchored to the largest shipped "
+           "civilisation's measured cell count today (88 - see the comment above this "
            "declaration for the exact figures and the test that pins "
            "them) plus headroom, not derived from a formula relating cell "
            "count to GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM.",
@@ -1143,7 +1142,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
         regardless of how many `land_tiles` cells this civilisation's
         home_regions actually map to (stakeholder item 7 - see that
         constant's own declaration). The largest civ this project ships
-        (rome_100ad, 7 home regions) resolves to 88 cells, under the
+        (7 home regions) resolves to 88 cells, under the
         cap - under 700,000 elementary operations, not a measurable cost
         against everything else `Sim.__init__` already does.
         """
@@ -2172,7 +2171,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, MarketDemandMixin, 
     # ---- THRESHOLD GOALS: completed by measurement, not by labour ---------
     # A goal need not be a thing you build. "Raise literacy past a fifth" or
     # "cut most of what epidemics take" are states of the whole
-    # society, not a project with hours and materials - see data/tech_tree.json
+    # society, not a project with hours and materials - see data/branches/
     # meta.goals and its own note on why a threshold is still modelled as a
     # node (so closure()/critical_path()/Sim.run() never need a second idea
     # of what a goal is) rather than as a second mechanism bolted on beside

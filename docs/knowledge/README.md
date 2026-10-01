@@ -4,7 +4,7 @@
 
 A tech tree that says *microscope requires glass* is useless to someone who does
 not already know that one melted bead of glass gives 250x. The tree in
-`../../data/tech_tree.json` says WHAT and IN WHAT ORDER. These modules say HOW, at a
+`../../data/branches/` says WHAT and IN WHAT ORDER. These modules say HOW, at a
 level of detail a competent non-specialist can act on: masses, ratios,
 temperatures with Roman-observable proxies, vessel materials, how to tell it
 worked, how it fails, what it costs, and what it will do to you.

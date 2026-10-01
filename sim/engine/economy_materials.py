@@ -1,6 +1,6 @@
 """Raw-material supply: the nine hand-named commodities, and the generic
 mechanism that covers the other ~150 (159 distinct material keys in
-data/tech_tree.json today minus the 9 named ones; see the
+the tech tree today minus the 9 named ones; see the
 GENERALISING BEYOND THE 9 HAND-NAMED COMMODITIES comment below for the
 precise 146-of-159 count against the 13 MATERIAL_CHECKS keys).
 
@@ -163,7 +163,7 @@ class MaterialSupplyMixin:
     # hand. The tree has since dropped to 159 distinct material keys, all
     # 13 MATERIAL_CHECKS keys still among them, so the live count today is
     # 146 of 159 (still about 92%) - counted by intersecting MATERIAL_CHECKS
-    # against every `mat` key in data/tech_tree.json; COMMODITY_DYNAMISM.md's
+    # against every `mat` key in data/branches/; COMMODITY_DYNAMISM.md's
     # own audit script is not committed to the repo (same status as
     # NAMING_PLAN.md's scanner), so this is measured, not scriptable here.
     # Its own worked case was aluminium: "no mine, no supply lever of any
@@ -465,7 +465,7 @@ class MaterialSupplyMixin:
         materials should not have to guess it needs no suffix, and the
         seven original short names must keep working exactly as before."""
         mat = str(mat or "").strip().lower()
-        if not mat or mat in self.MINE_OPEX_PER_T:
+        if not mat or mat in self.MINE_OPEX_MATERIALS:
             return mat
         prices = self._material_prices()
         if mat in prices or mat in self._commodity_ledger().commodities:

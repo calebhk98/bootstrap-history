@@ -3,6 +3,7 @@
   "id": "mt2_nickel_extraction",
   "name": "Nickel metal from laterite or pentlandite",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600",
    "cap_pure_2N"
@@ -36,12 +37,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_cobalt_extraction",
   "name": "Cobalt metal from smaltite and erythrite",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "analytical_chemistry"
@@ -75,12 +78,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_manganese_extraction",
   "name": "Manganese metal from pyrolusite",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600",
    "electrolysis_industrial"
@@ -116,12 +121,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_chromium_extraction",
   "name": "Chromium from chromite ore",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600",
    "mat_aluminium"
@@ -155,12 +162,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_tungsten_extraction",
   "name": "Tungsten from wolframite and scheelite",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600",
    "analytical_chemistry"
@@ -194,12 +203,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_molybdenum_extraction",
   "name": "Molybdenum from molybdenite",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "cap_gas_o2h2"
@@ -233,12 +244,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_vanadium_extraction",
   "name": "Vanadium from carnotite and vanadinite",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "analytical_chemistry"
@@ -273,12 +286,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_titanium_extraction",
   "name": "Titanium from rutile and ilmenite",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600",
    "mat_aluminium"
@@ -312,12 +327,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_magnesium_extraction",
   "name": "Magnesium metal from seawater and mineral salts",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "electrolysis_industrial",
    "cap_pure_2N"
@@ -350,12 +367,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_rare_earths_separation",
   "name": "Rare earth elements as a group from monazite",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "analytical_chemistry",
    "hydrochloric_acid"
@@ -387,12 +406,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_platinum_group_metals",
   "name": "Platinum group metals from alluvial and ore sources",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_pure_2N",
    "mat_mercury"
@@ -426,12 +447,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_uranium_thorium_extraction",
   "name": "Uranium and thorium from pitchblende and monazite",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "analytical_chemistry",
    "cap_pure_2N"
@@ -464,12 +487,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_zinc_by_retort",
   "name": "Zinc metal by retort distillation from calamine",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1100",
    "mat_charcoal"
@@ -502,12 +527,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_zinc_by_electrolysis",
   "name": "Zinc metal by electrolytic refining of zinc sulfate",
   "cat": "metals",
+  "kind": "RESOURCE",
   "pre": [
    "electrolysis_industrial",
    "cap_pure_2N"
@@ -540,12 +567,14 @@
   "gov": 1,
   "sus": 8,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_copper_reverberatory",
   "name": "Copper smelting in reverberatory furnace",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "bellows_water_blown"
@@ -572,6 +601,7 @@
   "id": "mt2_copper_converter",
   "name": "Copper converter: blowing air through molten matte",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "bellows_water_blown"
@@ -598,6 +628,7 @@
   "id": "mt2_copper_electrowinning",
   "name": "Copper metal by electrowinning from leached ore",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "electrolysis_industrial",
    "cap_pure_2N"
@@ -620,12 +651,14 @@
   "note": "Leach copper ore in sulfuric acid or use converter blister copper in spent electrolyte; electrowinning deposits ultra-pure copper cathode. Impurities settle as anode slime (source of gold, silver, selenium). Energy-intensive but produces superior purity. Porphyry copper ores (low grade, high volume) demand this technology.",
   "gov": 1,
   "sus": 8,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_parkes_process",
   "name": "Parkes process: removing silver from lead by zinc",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_zinc"
@@ -653,6 +686,7 @@
   "id": "mt2_electrorefining",
   "name": "Electrorefining: purifying crude metal via anode dissolution",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "electrolysis_industrial",
    "cap_pure_2N"
@@ -673,12 +707,14 @@
   "note": "Crude metal as anode dissolves selectively; pure metal plates on cathode. Impurities less noble than the metal sink as anode slime; impurities more noble do not dissolve. Copper, nickel, lead all purify this way. Wollaston and others developed it; became essential by 1900.",
   "gov": 1,
   "sus": 8,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_basic_converter",
   "name": "Basic Bessemer converter for steel from iron-ore matte",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "blast_furnace",
    "cap_heat_1300"
@@ -706,6 +742,7 @@
   "id": "mt2_induction_furnace",
   "name": "Induction furnace for high-quality alloy steel",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "cap_heat_1600"
@@ -731,6 +768,7 @@
   "id": "mt2_sintering_process",
   "name": "Sintering: fusing powder ore by heating without melting",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100"
   ],
@@ -754,6 +792,7 @@
   "id": "mt2_pelletising",
   "name": "Pelletising: forming ore fines into uniform balls",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "cap_heat_1100",
@@ -806,6 +845,7 @@
   "id": "mt2_cyanidation",
   "name": "Cyanidation: leaching gold and silver with CN solution",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "cap_pure_2N"
@@ -840,6 +880,7 @@
   "id": "mt2_amalgamation",
   "name": "Gold amalgamation with mercury",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_mercury"
   ],
@@ -865,6 +906,7 @@
   "id": "mt2_leaching_chemical",
   "name": "Chemical leaching: dissolving ore in sulfuric or nitric acid",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "hydrochloric_acid",
    "sulfuric_retort"
@@ -887,12 +929,14 @@
   "note": "Heap or vat leaching dissolves ore in acid solution (CuSO4 for copper, FeSO4 for others). Solid residue filtered; solution concentrated and metal recovered by displacement or electrolysis. Industrial scale for copper, nickel from laterite by 1920.",
   "sus": 6,
   "gov": 0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_precipitation_recovery",
   "name": "Precipitation: recovering metal from solution by chemical reduction",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -916,6 +960,7 @@
   "id": "mt2_vacuum_melting",
   "name": "Vacuum melting: reducing oxygen and gas content in alloys",
   "cat": "processes",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_vac_1torr",
    "cap_heat_1600"
@@ -964,6 +1009,7 @@
   "id": "mt2_austenitizing",
   "name": "Austenite formation by heating iron-carbon above critical temperature",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "cementation_steel",
    "cap_heat_1100"
@@ -989,6 +1035,7 @@
   "id": "mt2_quenching_water",
   "name": "Water quenching: rapid cooling of austenite to form martensite",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "case_hardening",
    "cap_heat_1100"
@@ -1016,6 +1063,7 @@
   "id": "mt2_quenching_oil",
   "name": "Oil quenching: slower cooling than water, fewer cracks",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "case_hardening",
    "distillation_alcohol"
@@ -1043,6 +1091,7 @@
   "id": "mt2_quenching_brine",
   "name": "Brine quenching: salt water for intermediate cooling rate",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "case_hardening",
    "mat_salt"
@@ -1071,6 +1120,7 @@
   "id": "mt2_tempering",
   "name": "Tempering: controlled reheating to reduce brittleness of martensite",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "mt2_quenching_water"
   ],
@@ -1095,6 +1145,7 @@
   "id": "mt2_carburising",
   "name": "Carburising: enriching surface carbon content by heating in carbon-rich medium",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "cementation_steel",
    "cap_heat_1100"
@@ -1122,6 +1173,7 @@
   "id": "mt2_nitriding",
   "name": "Nitriding: hardening surface by heating in ammonia or nitrogen",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "cap_gas_o2h2"
@@ -1147,6 +1199,7 @@
   "id": "mt2_induction_hardening",
   "name": "Induction hardening: localized heating by eddy currents for rapid quenching",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "mt2_quenching_water"
@@ -1173,6 +1226,7 @@
   "id": "mt2_age_hardening_aluminum",
   "name": "Age hardening: precipitation hardening in aluminum-copper alloys",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_aluminium",
    "cap_measure_temp"
@@ -1198,6 +1252,7 @@
   "id": "mt2_annealing",
   "name": "Annealing: controlled heating and slow cooling to soften and relieve stress",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100"
   ],
@@ -1222,6 +1277,7 @@
   "id": "mt2_normalising",
   "name": "Normalising: cooling from above critical point in still air for uniform structure",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "cap_measure_temp"
@@ -1247,6 +1303,7 @@
   "id": "mt2_grain_size_control",
   "name": "Grain size control: understanding how grain size affects mechanical properties",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "case_hardening",
    "microscope_compound"
@@ -1273,6 +1330,7 @@
   "id": "mt2_work_hardening",
   "name": "Work hardening: increasing hardness by plastic deformation at low temperature",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -1297,6 +1355,7 @@
   "id": "mt2_recrystallisation",
   "name": "Recrystallisation: formation of new strain-free grains during annealing",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "mt2_annealing",
    "microscope_compound"
@@ -1322,6 +1381,7 @@
   "id": "mt2_tensile_test",
   "name": "Tensile testing: measuring yield, ultimate strength, and elongation",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "cap_measure_mass_mg",
@@ -1357,6 +1417,7 @@
   "id": "mt2_charpy_impact_test",
   "name": "Charpy impact test: measuring toughness by pendulum impact",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "cap_measure_temp"
@@ -1382,6 +1443,7 @@
   "id": "mt2_izod_impact_test",
   "name": "Izod impact test: vertical notched-bar impact measurement",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -1406,6 +1468,7 @@
   "id": "mt2_brinell_hardness",
   "name": "Brinell hardness test: measuring hardness by indentation size",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "cap_measure_mass_mg"
@@ -1433,6 +1496,7 @@
   "id": "mt2_rockwell_hardness",
   "name": "Rockwell hardness test: rapid hardness by indentation depth",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um"
   ],
@@ -1457,6 +1521,7 @@
   "id": "mt2_vickers_hardness",
   "name": "Vickers hardness test: pyramid indentation for micro-hardness",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "microscope_compound"
@@ -1505,6 +1570,7 @@
   "id": "mt2_creep_testing",
   "name": "Creep testing: measuring time-dependent deformation at elevated temperature",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "mt2_tensile_test",
    "cap_measure_temp_hi"
@@ -1530,6 +1596,7 @@
   "id": "mt2_metallography_etching",
   "name": "Metallography: etching polished sections to reveal microstructure",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "microscope_compound",
    "cap_pure_2N"
@@ -1554,12 +1621,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_xray_diffraction",
   "name": "X-ray diffraction: determining crystal structure and lattice parameters",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "cap_measure_len"
@@ -1585,6 +1654,7 @@
   "id": "mt2_radiography_industrial",
   "name": "Industrial radiography: X-ray and gamma-ray inspection for internal flaws",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray"
   ],
@@ -1609,6 +1679,7 @@
   "id": "mt2_magnetic_particle_inspection",
   "name": "Magnetic particle inspection: revealing surface and near-surface defects",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "cap_measure_temp"
@@ -1636,6 +1707,7 @@
   "id": "mt2_dye_penetrant_inspection",
   "name": "Dye penetrant inspection: revealing surface cracks in all materials",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -1662,6 +1734,7 @@
   "id": "mt2_ultrasonic_testing",
   "name": "Ultrasonic testing: detecting internal flaws by sound reflection",
   "cat": "testing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_time_ms",
    "cap_measure_len"
@@ -1687,6 +1760,7 @@
   "id": "mt2_gunmetal_alloy",
   "name": "Gunmetal: copper-tin-zinc alloy for cannons and bearings",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_copper",
    "mat_tin",
@@ -1718,6 +1792,7 @@
   "id": "mt2_bell_metal",
   "name": "Bell metal: high-tin bronze for resonance",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_bronze",
    "cap_heat_1100"
@@ -1742,7 +1817,8 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_speculum_metal",
@@ -1776,6 +1852,7 @@
   "id": "mt2_pewter_alloy",
   "name": "Pewter: tin-lead-copper for tableware and drinking vessels",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_tin",
    "mat_lead",
@@ -1807,6 +1884,7 @@
   "id": "mt2_solder_lead_tin",
   "name": "Eutectic lead-tin solder composition control",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_lead",
    "mat_tin",
@@ -1838,6 +1916,7 @@
   "id": "mt2_babbitt_metal",
   "name": "Babbitt: tin-antimony-copper bearing alloy for journal bearings",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_tin",
    "electrolysis_industrial"
@@ -1864,12 +1943,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_type_metal",
   "name": "Type metal: lead-tin-antimony for printing type castings",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_lead",
    "mat_tin",
@@ -1898,12 +1979,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_britannia_metal",
   "name": "Britannia metal: tin-copper-antimony, tin-spoon alloy",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_tin",
    "electrolysis_industrial"
@@ -1930,12 +2013,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_german_silver",
   "name": "German silver (nickel silver): copper-nickel-zinc without silver",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_copper",
    "mat_nickel",
@@ -1967,6 +2052,7 @@
   "id": "mt2_monel_metal",
   "name": "Monel: nickel-copper alloy for corrosion resistance",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_nickel",
    "mat_copper"
@@ -1991,12 +2077,14 @@
   "gov": 2,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_invar_nickel_steel",
   "name": "Invar: nickel-iron for low thermal expansion",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_nickel",
    "mat_wrought_iron"
@@ -2026,6 +2114,7 @@
   "id": "mt2_elinvar_alloy",
   "name": "Elinvar: nickel-steel for elastic constant independence from temperature",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_nickel"
   ],
@@ -2064,6 +2153,7 @@
   "id": "mt2_nichrome_alloy",
   "name": "Nichrome: nickel-chromium for high-temperature resistance",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_nickel",
    "mat_chromium"
@@ -2092,6 +2182,7 @@
   "id": "mt2_constantan_alloy",
   "name": "Constantan: copper-nickel thermocouple wire with stable EMF",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_copper",
    "mat_nickel"
@@ -2121,6 +2212,7 @@
   "id": "mt2_manganin_resistance",
   "name": "Manganin: copper-manganese-nickel for precision resistors",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_copper",
    "mat_manganese",
@@ -2151,6 +2243,7 @@
   "id": "mt2_stellite_cobalt_alloy",
   "name": "Stellite: cobalt-chromium-tungsten hard alloy for cutting tools",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_chromium",
    "mat_tungsten"
@@ -2180,6 +2273,7 @@
   "id": "mt2_high_speed_steel",
   "name": "High speed steel (HSS): tungsten-molybdenum-vanadium tool steel",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_tungsten",
    "cementation_steel"
@@ -2217,6 +2311,7 @@
   "id": "mt2_stainless_ferritic",
   "name": "Stainless steel, ferritic: chromium steel with delta ferrite structure",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_chromium"
   ],
@@ -2244,6 +2339,7 @@
   "id": "mt2_stainless_austenitic",
   "name": "Stainless steel, austenitic: nickel-chromium with FCC structure",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_chromium",
    "mat_nickel",
@@ -2275,6 +2371,7 @@
   "id": "mt2_stainless_martensitic",
   "name": "Stainless steel, martensitic: high-carbon chromium, hardenable",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_chromium",
    "case_hardening"
@@ -2303,6 +2400,7 @@
   "id": "mt2_silicon_steel_transformer",
   "name": "Silicon steel for transformer cores: reduced iron loss at 50-60 Hz",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "motor_transformer_ac",
    "mat_bulk_steel"
@@ -2331,6 +2429,7 @@
   "id": "mt2_hadfield_manganese_steel",
   "name": "Hadfield manganese steel: work-hardening steel for severe impact",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_manganese",
    "mat_bulk_steel"
@@ -2359,6 +2458,7 @@
   "id": "mt2_spring_steel",
   "name": "Spring steel: high-carbon, carefully tempered for elastic return",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "cementation_steel",
    "mt2_tempering"
@@ -2388,6 +2488,7 @@
   "id": "mt2_grey_cast_iron",
   "name": "Grey cast iron: graphite-rich iron for castings",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "blast_furnace",
    "cap_heat_1100"
@@ -2415,6 +2516,7 @@
   "id": "mt2_white_cast_iron",
   "name": "White cast iron: hard but brittle, iron carbide dominant",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "blast_furnace",
    "cap_heat_1300"
@@ -2442,6 +2544,7 @@
   "id": "mt2_malleable_cast_iron",
   "name": "Malleable cast iron: annealed white iron, ductile",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mt2_white_cast_iron"
   ],
@@ -2468,6 +2571,7 @@
   "id": "mt2_ductile_cast_iron",
   "name": "Ductile (nodular) cast iron: spheroidal graphite for strength and ductility",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "blast_furnace",
    "analytical_chemistry"
@@ -2496,6 +2600,7 @@
   "id": "mt2_duralumin_alloy",
   "name": "Duralumin: aluminum-copper, age-hardened aircraft alloy",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mt2_age_hardening_aluminum"
   ],
@@ -2524,6 +2629,7 @@
   "id": "mt2_aluminum_alloy_series",
   "name": "Aluminum alloy series: systematic development of wrought alloys",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_aluminium",
    "analytical_chemistry"
@@ -2551,6 +2657,7 @@
   "id": "mt2_magnesium_alloys",
   "name": "Magnesium alloys: weight reduction with controlled corrosion",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "mat_magnesium"
   ],
@@ -2577,6 +2684,7 @@
   "id": "mt2_titanium_alloys",
   "name": "Titanium alloys: high-strength-to-weight for aerospace",
   "cat": "alloys",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600",
    "mt2_titanium_extraction"
@@ -2604,6 +2712,7 @@
   "id": "mt2_earthenware",
   "name": "Earthenware: low-fired, porous ceramic for everyday use",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_0700"
   ],
@@ -2631,6 +2740,7 @@
   "id": "mt2_stoneware",
   "name": "Stoneware: higher-fired, vitrified ceramic for strength",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1100"
   ],
@@ -2658,6 +2768,7 @@
   "id": "mt2_bone_china",
   "name": "Bone china: high-firing ceramic with calcined bone",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "mat_porcelain"
@@ -2686,6 +2797,7 @@
   "id": "mt2_silica_brick_refractory",
   "name": "Silica brick: high-silica refractory for blast furnaces",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300"
   ],
@@ -2712,6 +2824,7 @@
   "id": "mt2_magnesite_refractory",
   "name": "Magnesite brick: magnesia refractory for basic furnaces",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "mat_magnesium"
@@ -2739,6 +2852,7 @@
   "id": "mt2_chromite_refractory",
   "name": "Chromite brick: chromium-iron refractory for extreme duty",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "mat_chromium"
@@ -2766,6 +2880,7 @@
   "id": "mt2_alumina_ceramic",
   "name": "Alumina: high-purity aluminum oxide ceramic",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "mat_aluminium",
    "cap_heat_1300"
@@ -2793,6 +2908,7 @@
   "id": "mt2_carborundum_ceramic",
   "name": "Carborundum (silicon carbide): ultra-hard ceramic for abrasives",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "arc_furnace_ferroalloys",
    "mat_charcoal"
@@ -2821,6 +2937,7 @@
   "id": "mt2_cement_varieties",
   "name": "Cement varieties: Portland and alternatives for construction",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "mat_lime",
    "cap_heat_1300"
@@ -2848,6 +2965,7 @@
   "id": "mt2_lead_glass_flint",
   "name": "Lead glass (flint glass): high-refractive-index optical glass",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "mat_glass_lead",
    "cap_heat_1300"
@@ -2873,12 +2991,14 @@
   "gov": 1,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_optical_glass_development",
   "name": "Optical glass: ultra-pure glasses for telescopes and cameras",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "cap_pure_2N"
@@ -2904,12 +3024,14 @@
   "gov": 1,
   "sus": 3,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_glass_fibre_insulation",
   "name": "Glass fiber: fine filaments for insulation and reinforcement",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "cap_tol_1mm"
@@ -2933,12 +3055,14 @@
   "gov": 1,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_tempered_glass_safety",
   "name": "Tempered glass: heat-treated for safety and strength",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1300",
    "cap_heat_0700",
@@ -2962,12 +3086,14 @@
   "gov": 1,
   "sus": 2,
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_laminated_glass_safety",
   "name": "Laminated glass: bonded layers for shatter resistance",
   "cat": "ceramics",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1100"
   ],
@@ -2999,12 +3125,14 @@
    }
   ],
   "up": 0.0,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_shaft_sinking_mining",
   "name": "Shaft sinking: deep vertical access to ore bodies",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -3024,12 +3152,14 @@
   "note": "Hand drilling and blasting to create deep shafts; pumping and ventilation essential. Competing with water ingress and gases. Cornish deep tin mines (1500+ m) demonstrated feasibility. Steam pumps replaced horse gins. Safety lamp for methane.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_drifting_horizontal",
   "name": "Drifting: horizontal tunneling along ore seams",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -3049,12 +3179,14 @@
   "note": "Following ore body laterally. Less energy than shaft sinking. Ventilation and slope critical to drain water. Rock drill advent (1870s) accelerated. Timber support and bolt pattern evolved with experience.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_stoping_ore_extraction",
   "name": "Stoping: extracting ore in upward progression from access drifts",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -3074,12 +3206,14 @@
   "note": "Removing ore in a planned sequence to minimize collapse and maximize recovery. Timber support (stulls) holds back rock. Different stoping methods: room-and-pillar, long-wall. Safety depends on control and roof support. Ancient mines used simple open stoping; modern methods evolved 1800s+.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_timbering_safety",
   "name": "Timbering: wooden support structures for mine stability",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human"
   ],
@@ -3105,6 +3239,7 @@
   "id": "mt2_safety_lamp_mining",
   "name": "Safety lamp: detecting and excluding methane and carbon monoxide",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_temp"
   ],
@@ -3125,12 +3260,14 @@
   "note": "Davy lamp (1815): candle in fine mesh gauze; methane burns in mesh without igniting air. Flame height/color indicates gas concentration. Later lamps used chemical reactions to detect CO. Saved thousands of lives; essential before electrical lighting.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_ventilation_mining",
   "name": "Ventilation: managing air flow for safety and drainage",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water",
    "bellows_water_blown"
@@ -3152,12 +3289,14 @@
   "note": "Furnaces draw hot air up main shaft; cool air returns through working levels. Removes methane, heat, dust. Deep mines need forced ventilation (fans). Cornish and German mining engineering advanced this. Natural convection limited to ~500m depth.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_rock_drill_pneumatic",
   "name": "Pneumatic rock drill: compressed air powered percussion",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_power_water"
@@ -3178,12 +3317,14 @@
   "note": "Sim\u00e9on and Sommeiller (1860s) developed air drill for Alpine tunnels. Hand hammers then competed. Air compressor (steam-driven or water-turbine) provides 6-10 bar. Speeds tunneling 10x. Mine development accelerated post-1870s.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_jackhammer_portable",
   "name": "Jackhammer: portable pneumatic pick for ore breaking",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "mt2_rock_drill_pneumatic"
   ],
@@ -3203,12 +3344,14 @@
   "note": "Lighter and more portable than mounted drill. One or two workers operate. Air hose supply from central compressor. Reduces fatigue and increases productivity 5-10x compared to hand picks. Post-1900 adoption widespread.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_shot_firer_blasting",
   "name": "Shot firer: controlled blasting of ore with powder and detonators",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "gunpowder",
    "cap_measure_time_ms"
@@ -3230,12 +3373,14 @@
   "note": "Drilling holes, charging with black powder (then dynamite), calculating delays between charges to direct rock breakage. Safety fuse and later electric detonators enable sequenced blast. Craft and experience critical; accidents fatal. Replaced hand picking 1800s+.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_hydraulic_mining",
   "name": "Hydraulic mining: washing ore and overburden with water pressure",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -3256,12 +3401,14 @@
   "note": "High-pressure water from elevated reservoirs erodes gold placer deposits (California, 1870s). Nozzles direct flow. Sluices recover gold. Environmentally destructive (sediment); banned in sensitive areas by 1880s. Efficient but limited to near-surface, unconsolidated deposits.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_dredging_mining",
   "name": "Dredging: mechanical extraction of ore from sediment and water",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -3281,12 +3428,14 @@
   "note": "Bucket dredges or suction dredges excavate placer deposits. Onboard sluice separates ore. Alluvial tin, gold, diamonds recovered. Post-1890s adoption for marine and riverine deposits. Capital-intensive but high volume. Environmental impact later recognized.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_opencast_mining",
   "name": "Open-cast mining: large surface excavation removing overburden",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -3306,12 +3455,14 @@
   "note": "Steam shovels and draglines remove waste rock to expose ore. Capital investment high but recovery complete. Porphyry copper deposits require open-cast (low grade, huge volume). Post-1920 extension of hydraulic mining concepts. Reclamation not considered pre-1950.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_crusher_grinding",
   "name": "Crusher: jaw and cone crushers for initial ore size reduction",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -3331,12 +3482,14 @@
   "note": "Jaw crusher uses reciprocating plate; cone crusher rolls against conical surface. Reduces 30cm ore to 5cm. Blake jaw crusher (1858) standard. Powered by steam belt drives. Multiple stages and careful gradation optimize later flotation. Capacity tens of tons/day per unit.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_ball_mill_grinding",
   "name": "Ball mill: cylindrical mill with steel balls for fine grinding",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam",
    "cap_tol_1mm"
@@ -3357,12 +3510,14 @@
   "note": "Rotating cylinder half-full of steel balls; ore enters one end, grinds as balls tumble, exits other end. Produces fine (-200 mesh) powder for flotation or leaching. Scale from lab to 50+ ton/hr industrial. Post-1890 adoption; became bottleneck, then standard.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_classifier_size_separation",
   "name": "Classifier: hydraulic or mechanical separation by particle size",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -3382,12 +3537,14 @@
   "note": "Spiral or cone classifier uses settling rate in water to sort particles. Fine material overflows; coarse returns to mill. Recirculating load optimization improves efficiency. Spline (cone) classifier most common. Automatic return control (no human adjustment needed once set).",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mt2_thickener_clarifier",
   "name": "Thickener: settling and concentration of ore slurry",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -3404,6 +3561,7 @@
   "note": "Large shallow tanks allow slurry to settle; overflow water recycled, underflow (slurry) to next process. Cones aid drainage. Flocculant chemicals accelerate settling. Critical for flotation (thickened feed) and counter-current washing. Scale: 50+ meters diameter for large operations.",
   "gov": 2,
   "sus": 1,
-  "kb": "10_metallurgy.md"
+  "kb": "10_metallurgy.md",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  }
 ]
