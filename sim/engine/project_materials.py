@@ -163,7 +163,7 @@ class ProjectMaterialsMixin:
         """Labour and capital, with every factor except the material ones."""
         node = self.nodes[node_id]
         return ((node["_total_cost"] - node["_material_cost"]) * self.cost_money_factor()
-                * self.civ_cost_factor(node_id))
+                * self.civ_cost_factor(node_id) * self.rebuild_work_factor(node_id))
 
     def bounty_price(self, node_id):
         """A prize for the whole project: the multiplier times what this

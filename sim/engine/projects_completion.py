@@ -16,6 +16,7 @@ file of their own.
 """
 from sim.constants import declare
 from .data import closure
+from .failure_cause import failure_cause
 
 FAILED_PREFIX = "FAILED at"
 MINOR_MARK = "(minor)"
@@ -182,7 +183,8 @@ class CompletionMixin:
             # A bounty's claimant redoes the work: the poster's prize holds and
             # no hours or money fall on the poster.
             projects.active[node_id]["ph_left"] = (
-                0.0 if claimed else node["ph"] * self.FAILURE_RESET_SHARE)
+                0.0 if claimed else
+                node["ph"] * self.rebuild_work_factor(node_id) * self.FAILURE_RESET_SHARE)
             # THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not
             # reset the multi-year diffusion clock to zero, restarting the
             # whole process from nothing. Even ONE failed attempt already
@@ -214,7 +216,7 @@ class CompletionMixin:
             if _severity == "minor":
                 household.log.append((scenario.year,
                     "%s %s %s: lost %s denarii, %d%% of the hours to redo; "
-                    "attempt %d, next attempt's chance of failing %d%%."
+                    "attempt %d, next attempt's live chance of failing %d%%."
                     % (FAILED_PREFIX, node["name"], MINOR_MARK,
                        "{:,.0f}".format(max(0.0, _lost)),
                        round(self.FAILURE_RESET_SHARE * 100),
@@ -222,14 +224,17 @@ class CompletionMixin:
                        round(_next_risk * 100))))
                 return
             household.log.append((scenario.year,
-                             FAILED_PREFIX + " %s: it did not work. %d%% of the hours "
+                             FAILED_PREFIX + " %s: it did not work. What failed: %s. "
+                             "%d%% of the hours "
                              "are to do again (%s of your own) and %s is gone. "
                              "Attempt %d. What went wrong is now understood well "
-                             "enough that the next attempt's chance of failing "
-                             "this way is %d%%, down from the %d%% this attempt "
+                             "enough that the next attempt's live chance of failing "
+                             "(the figure `risk`, `why` and `portfolio` now quote) "
+                             "is %d%%, down from the %d%% this attempt "
                              "just faced, and %.1f of the %.1f years already "
                              "spent count toward next time's wait."
-                             % (node["name"], round(self.FAILURE_RESET_SHARE * 100),
+                             % (node["name"], failure_cause(self, node_id),
+                                round(self.FAILURE_RESET_SHARE * 100),
                                 "{:,.0f}".format(node["ph"] * self.FAILURE_RESET_SHARE),
                                 "{:,.0f}".format(max(0.0, _lost)),
                                 projects.failed_attempts[node_id] + 1,

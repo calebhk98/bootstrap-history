@@ -30,15 +30,19 @@ class StartingMixin:
         if cost_left is None:
             bill = self.settle_project_materials(node_id)
             cost_left = bill
+        rebuild_factor = self.rebuild_work_factor(node_id)
         record = dict(
-            ph_left=float(node["ph"] if ph_left is None else ph_left),
+            ph_left=float(node["ph"] * rebuild_factor if ph_left is None else ph_left),
             yrs=0.0, spent=float(spent),
             cost_left=float(cost_left),
             status="ACTIVE")
+        if rebuild_factor < 1.0:
+            record["rebuild_factor"] = rebuild_factor
         if bill is not None:
             record["bill"] = float(bill)
         if include_labor:
-            record["lab_left"] = dict(node["lab"])
+            record["lab_left"] = {trade: hours * rebuild_factor
+                                  for trade, hours in node["lab"].items()}
         self.state.projects.active[node_id] = record
         return record
 

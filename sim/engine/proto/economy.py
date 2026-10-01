@@ -512,7 +512,9 @@ def _portfolio_rows(nodes, active_out):
             "calendar_years_left": round(
                 max(0.0, float(node["yrs"]) - float(entry.get("years_in_progress") or 0.0)), 1),
             "still_to_pay": entry.get("still_to_pay"),
-            "chance_of_failure": node.get("risk") or None,
+            "chance_of_failure": entry.get("chance_of_failure_now") or None,
+            "chance_of_failure_before_any_attempt": entry.get("chance_of_failure_before_any_attempt"),
+            "chance_of_failure_is": "the live figure, after any failed attempts",
         }
         if "will_be_abandoned_in_years" in entry:
             row["will_be_abandoned_in_years"] = entry["will_be_abandoned_in_years"]

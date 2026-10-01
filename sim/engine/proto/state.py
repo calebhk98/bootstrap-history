@@ -5,6 +5,7 @@ import math, re
 from ..data import closure
 from ..knowledge_warning import knowledge_loss_warning
 from .state_shut_staffing import shut_for_want_of_staff
+from .state_succession import succession_block
 
 def _agent_end_reason(sim):
     """None while the run is live; otherwise why it stopped, for state() and
@@ -360,6 +361,10 @@ def _agent_state_active_projects(sim, nodes):
                      # See `allocate` and core.py step()'s own comment on
                      # hour_allocations.
                      "hours_directed_this_year": progress.get("hours_directed_this_year"),
+                     # THE LIVE RISK: what the dice use now, after any failed
+                     # attempts, beside the first-attempt figure.
+                     "chance_of_failure_now": sim.effective_risk(node_id),
+                     "chance_of_failure_before_any_attempt": node["risk"] or None,
                      "bountied": node_id in sim.bountied}
     return active
 
@@ -598,6 +603,7 @@ def _agent_state_founder(sim):
         "founder_died_in": (_founder_death_info(sim) or {}).get("year"),
         "scholars": round(sim.scholars, 2), "artisans": round(sim.artisans, 2),
         "directors_extra": round(sim.directors_extra, 2),
+        "succession": succession_block(sim),
     }
 
 

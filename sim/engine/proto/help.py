@@ -262,8 +262,10 @@ def _topic_automatic(sim):
     return {"what happens on its own": (
         "Some things the engine will do for you if you let it: grow the "
         "staff, teach trades, sink mines, buy woodland, shut down what you "
-        "cannot pay for, pay off a scandal. Every one is a switch you "
-        "control, and every one can be done by hand instead."),
+        "cannot pay for, pay off a scandal, court a dead patron's heir. "
+        "Every one is a switch you control, and every one can be done by "
+        "hand instead (hiring, training, 'bribe <amount>' for scandal and "
+        "for courting an heir, and so on)."),
         "see them": '{"cmd":"policy"}',
         "change one": '{"cmd":"policy","set":{"auto_hire":true}}'}
 

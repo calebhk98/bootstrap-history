@@ -1009,6 +1009,22 @@ def _why_trailing(out):
     return lines
 
 
+def _why_benefit(out):
+    lines = []
+    benefit = out.get("benefit")
+    if benefit:
+        lines.append("")
+        lines.append("BENEFIT")
+        lines.append(_wrap("  permanent: %s" % benefit["permanent"]))
+        lines.append(_wrap("  while open: %s" % benefit["while_open"]))
+        lines.append(_wrap("  cost of opening: %s" % benefit["cost_of_opening"]))
+        lines.append(_wrap("  if shut: %s" % benefit["if_shut"]))
+    if out.get("rebuild"):
+        lines.append("")
+        lines.append(_wrap("REBUILD: %s" % out["rebuild"]))
+    return lines
+
+
 def render_why(out):
     """A page about one thing: what it needs, what it costs, what depends
     on it, and whether you could start it today.
@@ -1016,7 +1032,7 @@ def render_why(out):
     return "\n".join(_render_sections(out, (
         _why_header, _why_cost, _why_hours_risk, _why_staff_needed,
         _why_staff_keep_open, _why_labour_materials, _why_upkeep_revenue,
-        why_goods_market_lines, _why_status, _why_chain, _why_unlocks_downstream,
+        why_goods_market_lines, _why_status, _why_benefit, _why_chain, _why_unlocks_downstream,
         _why_trailing,
     )))
 

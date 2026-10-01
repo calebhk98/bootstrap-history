@@ -65,12 +65,13 @@ from .projects_hour_queue import HourQueueMixin
 from .projects_starting import StartingMixin
 from .projects_progress import ProgressMixin
 from .projects_completion import CompletionMixin
+from .projects_rebuild import RebuildMixin
 from sim.constants import declare
 
 
 class ProjectsMixin(BlockersMixin, CapabilityMixin, VenturesMixin, StaffingMixin,
                      StaffingShortfallMixin, VentureQuotesMixin, HourQueueMixin,
-                     StartingMixin, ProgressMixin, CompletionMixin):
+                     StartingMixin, ProgressMixin, CompletionMixin, RebuildMixin):
     """Composition point only: every method below is defined in one of the
     six sibling modules above, not here - what IS defined directly here is
     the handful of constants read from more than one of them (see this

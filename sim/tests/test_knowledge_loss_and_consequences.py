@@ -7,6 +7,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine.data import closure as _closure_of
 from sim.engine.proto.techtree import _node_explain
 from sim.engine.proto.state import _agent_state_founder
+from sim.engine.proto.economy import _agent_portfolio
 
 
 def _forgotten_sim(node_id, forgotten=True):
@@ -108,7 +109,7 @@ check("241: the failure line says the retry risk it quotes is the live one",
 _active_sim = sim(capital=1e10)
 _active_sim.failed_attempts[_engineering] = 2
 _active_sim.initialize_project(_engineering)
-_portfolio = S._agent_portfolio(_active_sim, NODES)["projects"][0]
+_portfolio = _agent_portfolio(_active_sim, NODES)["projects"][0]
 check("241: portfolio shows the live risk, labelled, beside the first-attempt risk",
       abs(_portfolio["chance_of_failure"] - _active_sim.effective_risk(_engineering)) < 1e-9
       and _portfolio["chance_of_failure_before_any_attempt"] == NODES[_engineering]["risk"]
