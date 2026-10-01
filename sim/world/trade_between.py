@@ -61,6 +61,14 @@ def _solve_flow(home, foreign, home_price, foreign_price, freight, direction):
     limit = _offerable(foreign if direction > 0 else home)
     if limit <= 0.0:
         return 0.0
+    # Even at the importer's ceiling against the exporter's floor the gap
+    # may not cover the route: no clearing needed to know nothing moves.
+    importer_price, exporter_price = ((home_price, foreign_price) if direction > 0
+                                      else (foreign_price, home_price))
+    most_gap = (importer_price * (home if direction > 0 else foreign).ceiling_ratio
+                - exporter_price * (foreign if direction > 0 else home).floor_ratio)
+    if most_gap <= freight:
+        return 0.0
 
     def margin(flow):
         return direction * _price_gap(home, foreign, home_price, foreign_price,
