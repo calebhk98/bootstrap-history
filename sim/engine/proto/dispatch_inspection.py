@@ -290,6 +290,7 @@ def _stuck_work_in_hand(sim, nodes):
     if not sim.active:
         return None
     _waits = {}
+    _kinds = {}
     _why_underfunded = {}
     for node_id, progress in sorted(sim.active.items()):
         bill = progress.get("cost_left")
@@ -305,9 +306,15 @@ def _stuck_work_in_hand(sim, nodes):
         # above.
         if progress.get("why_underfunded"):
             _why_underfunded[node_id] = progress["why_underfunded"]
-    return {"what": "work in hand",
+            _kinds[node_id] = "money"
+        elif progress.get("ph_left", 0.0) <= 0 and progress.get("yrs", 0.0) < sim.calendar_floor(node_id):
+            _kinds[node_id] = "calendar"
+        else:
+            _kinds[node_id] = "active"
+    return {"what": "work in hand", "kind": "active",
             "how_many": len(sim.active),
             "each_waiting_on": _waits,
+            "each_kind": _kinds,
             **({"each_why_underfunded": _why_underfunded}
                if _why_underfunded else {})}
 
@@ -343,7 +350,7 @@ def _stuck_road_to_goal(sim, nodes, _fog):
         if _road and not _road_open:
             _near = route_blockers(sim, nodes, _road, 5)
             return ({
-                "what": "the road to the goal",
+                "what": "the road to the goal", "kind": _near[0]["kind"] or "knowledge",
                 "why": "%d of its nodes are still to build and NONE of them "
                        "is startable today. The nearest is %s: %s"
                        % (len(_road), _near[0]["id"], _near[0]["why"]),
@@ -372,7 +379,7 @@ def _stuck_started_nothing(sim, _startable, _afford):
         return None
     _cheap = (min(_afford or _startable, key=lambda k: sim.project_cost(k))
               if (_afford or _startable) else None)
-    return {"what": "you have started nothing",
+    return {"what": "you have started nothing", "kind": "idle",
             "why": ("no project is in hand, so no year of yours "
                     "is being spent on one. %s"
                     % ("'start %s' would begin the cheapest "
@@ -413,7 +420,7 @@ def _stuck_shut_ventures(sim, nodes):
     if _really_openable:
         _best = max(_really_openable,
                    key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
-        return {"what": "things you built and never opened",
+        return {"what": "things you built and never opened", "kind": "closed",
                 "why": "%d finished concern(s) are shut and "
                        "earning nothing. The best you could "
                        "actually open right now is %s, which "
@@ -432,7 +439,7 @@ def _stuck_shut_ventures(sim, nodes):
                 "and what anyone will advance you can raise %s"
                 % ("{:,.0f}".format(_capex_now(_best)),
                    "{:,.0f}".format(sim.spending_power("buy"))))
-    return {"what": "things you built and cannot open yet",
+    return {"what": "things you built and cannot open yet", "kind": "closed",
             "why": "%d finished concern(s) are shut and "
                    "earning nothing, and none of them can "
                    "be opened right now. The best is %s, "
@@ -448,12 +455,12 @@ def _stuck_shut_ventures(sim, nodes):
 
 def _stuck_nothing_or_money(sim, _startable, _afford):
     if not _startable:
-        return {"what": "nothing you could begin",
+        return {"what": "nothing you could begin", "kind": "unavailable",
                 "why": "everything in front of you is either built, "
                        "already running, or waiting on something. "
                        "'available' says which."}
     if not _afford:
-        return {"what": "money",
+        return {"what": "money", "kind": "money",
                 "why": "%d things are startable and the cheapest of "
                        "them costs %s, against the %s you could "
                        "raise"
@@ -466,7 +473,7 @@ def _stuck_nothing_or_money(sim, _startable, _afford):
 
 def _stuck_raw_material(sim):
     if sim.binding and sim.resource_throttle() < 0.95:
-        return {"what": "a raw material",
+        return {"what": "a raw material", "kind": "supply",
                 "why": "%s: work is running at %d%% of plan. %s"
                        % (sim.binding, sim.resource_throttle() * 100,
                           sim.shortage_remedy(sim.binding))}
@@ -476,7 +483,7 @@ def _stuck_raw_material(sim):
 def _stuck_room_for_people(sim):
     _room = sim.household_room()
     if _room < 1.0:
-        return {"what": "room for people",
+        return {"what": "room for people", "kind": "specialists",
                 "why": "you can take %.2f more people. %s"
                        % (max(0.0, _room), sim._room_advice())}
     return None
@@ -484,7 +491,7 @@ def _stuck_room_for_people(sim):
 
 def _stuck_arrears(sim):
     if sim.capital < 0:
-        return {"what": "arrears",
+        return {"what": "arrears", "kind": "money",
                 "why": "you owe %s of the %s anyone will advance "
                        "you, and the interest is %s a year"
                        % ("{:,.0f}".format(-sim.capital),
@@ -496,7 +503,7 @@ def _stuck_arrears(sim):
 
 def _stuck_credit_freeze(sim):
     if sim.year < sim.credit_frozen_until:
-        return {"what": "a credit freeze",
+        return {"what": "a credit freeze", "kind": "money",
                 "why": "nobody will fund new work until %d"
                        % int(sim.credit_frozen_until)}
     return None

@@ -17,6 +17,7 @@ from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
 from . import step_progress
 from .step_alerts import step_alerts
+from .step_stops import newly_startable_goal, severe_stop_reason
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
@@ -142,6 +143,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     # warning and that field can never disagree about what "idle" means.
     # Non-blocking: it says so and proceeds, it does not refuse the step.
     multi_year_hours_warning = None
+    lone_dependencies = sim.sole_supervisors() if years > 1 else []
     if years > 1:
         _pre_state = _agent_state(sim, nodes)
         _idle_note = _pre_state.get("free_hours_going_unused")
@@ -229,6 +231,8 @@ def _cmd_step(sim, nodes, cmd, ended):
         before_revealed = set(getattr(sim, "revealed", set()))
         before_operating = set(sim.operating)
         _arrival_snapshot = _dashboard_snapshot(sim)
+        stalled_before = set(stalled_projects(sim))
+        goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
         population_before = sim.population.total
         sim.step()
         ran += 1
@@ -307,12 +311,28 @@ def _cmd_step(sim, nodes, cmd, ended):
                              "time passes. Step again when you are ready."
                              % (ran, years))
             break
+        severe_reason = severe_stop_reason(
+            [{"message": message} for _, message in _this_year],
+            [nodes[node_id]["name"] for node_id in _snap["concerns_closed"]
+             if sim.staff_closure_age(node_id) is not None],
+            sorted(set(stalled_projects(sim)) - stalled_before),
+            [name for name in [newly_startable_goal(sim, goal_was_startable)] if name])
+        if ran < years and severe_reason:
+            stopped_early = ("stopped after %d of the %d years you asked for: %s. "
+                             "Step again when you have had a look." % (ran, years, severe_reason))
+            break
     out = dict(ok=True, completed=completed, lost=lost, events=events)
+    if years > 1 and lone_dependencies:
+        out["multi_year_staffing_warning"] = (
+            "before stepping %d years: %s each rest on one person; a single departure closes them. "
+            "'keep <id> staffed' or 'policy auto_replace_foreman on' protects them."
+            % (years, ", ".join(row["concern"] for row in lone_dependencies[:3])))
     out["alerts"] = step_alerts(
         events, lost,
         [nodes[node_id]["name"] for snap in snapshots for node_id in snap.get("concerns_closed", ())],
         founder_died_this_step, sim.goal_year if goal_year_before is None else None,
-        stopped_early, sim.state.population.population_change_last_year)
+        stopped_early, sim.state.population.population_change_last_year,
+        staffing_line=sim.staffing_closure_summary())
     summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
     if summary:
         out["summary"] = summary

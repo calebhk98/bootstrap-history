@@ -18,9 +18,11 @@ that this file does not attempt - do not assume a phase here can be moved
 into a domain file without first working out its self.* footprint.
 """
 import math
+import random
 from dataclasses import dataclass
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, PERCENT_SCALE
+from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
 from .invariants import check_labour_market_invariants
 
 
@@ -118,9 +120,18 @@ class StepPhasesMixin:
         # to say why cannot tell attrition from a bug - it looks exactly
         # like staff vanishing.
         if _lost:
-            self.state.household.log.append((self.state.scenario.year, "you lose %s to death and to better offers"
-                             % ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
-                                         for trade_id, count in sorted(_lost.items()))))
+            # Deaths follow the working-age mortality rate; the rest of the yearly loss is turnover to better offers.
+            death_share = min(1.0, BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE / max(attrition_rate, 1e-9))
+            died = {}
+            for trade_id, count in _lost.items():
+                labeller = random.Random("staff-loss-%s-%s" % (self.state.scenario.year, trade_id))
+                died[trade_id] = sum(1 for _ in range(count) if labeller.random() < death_share)
+            poached = {trade_id: count - died[trade_id] for trade_id, count in _lost.items()}
+            for cause, counts in (("death", died), ("better offers", poached)):
+                people = ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
+                                   for trade_id, count in sorted(counts.items()) if count)
+                if people:
+                    self.state.household.log.append((self.state.scenario.year, "you lose %s to %s" % (people, cause)))
         # Rehire a specialist foreman an open concern just lost, before the
         # staffing rule closes the concern.
         if self.state.founder.policy.get("auto_replace_foreman", False):

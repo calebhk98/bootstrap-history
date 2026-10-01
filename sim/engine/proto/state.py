@@ -96,6 +96,9 @@ def _staff_fraction_note(sim):
             "wage and output of one artisan plus a third of another's.")
 
 
+_STAFFING_HINT = "'labour' shows who can be hired; 'hire <trade> 1' or 'train <trade>' adds one"
+
+
 def _waiting_on(sim, nodes, node_id, progress, bill):
     """What is ACTUALLY holding this project up, checked against today."""
     node = nodes[node_id]
@@ -151,15 +154,18 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     if staffing_short and booked_short:
         return ("nobody to do the work: " + "; ".join(sorted(staffing_short)[:3])
                 + ". Also short, but only because your own other work has it "
-                  "booked: " + "; ".join(sorted(booked_short)[:3]))
+                  "booked: " + "; ".join(sorted(booked_short)[:3])
+                + ". " + _STAFFING_HINT)
     if staffing_short:
-        return "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3])
+        return "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3]) + ". " + _STAFFING_HINT
     if booked_short:
         # A DIFFERENT SENTENCE FOR A DIFFERENT REMEDY. The society CAN field
         # this trade; it is your own other active work that has it booked.
         # Teaching or hiring more does nothing here - 'portfolio' (the
         # aggregate demand-vs-supply view) or stopping something else does.
-        return "trade hours already booked: " + "; ".join(sorted(booked_short)[:3])
+        return ("trade hours already booked: " + "; ".join(sorted(booked_short)[:3])
+                + ". 'portfolio' shows the competing demand; 'priority <id> first' or "
+                  "'allocate <id> <hours>' decides who gets the hours")
     if progress["ph_left"] <= 0 and bill > 0.5:
         # MONEY YOU HAVE IS NOT MONEY YOU ARE SHORT OF: step() pays at most
         # one year's instalment - the cost divided by the node's calendar

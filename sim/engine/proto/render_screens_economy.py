@@ -619,6 +619,20 @@ def _labour_household_block(out):
     return lines
 
 
+def _labour_workforce_block(out):
+    workforce = out.get("workforce")
+    if not workforce:
+        return []
+    lines = ["", "WORKFORCE RISK: about %s people leave or die a year; %s in training; reserve %s"
+             % (_fmt_num(workforce["expected_losses_per_year"]), workforce["in_training"],
+                "%s craftsmen, %s scholars" % (workforce["reserve"]["craftsmen"], workforce["reserve"]["scholars"])
+                if workforce.get("reserve") else "off ('reserve craftsmen <n>' with 'policy reserve_staff on')")]
+    for row in workforce.get("depends_on_one_person") or []:
+        lines.append(_wrap("  %s %s: 'keep <id> staffed' or 'policy auto_replace_foreman on' protects it"
+                           % (row["concern"], row["warning"]), indent="  "))
+    return lines
+
+
 def _labour_hire_block(out):
     lines = ["", "YOU COULD HIRE: " + (", ".join(out.get("you_could_hire_here") or []) or "nobody new")]
     if out.get("only_the_ones_you_taught"):
@@ -655,6 +669,7 @@ def _render_labour_overview(out):
     lines = ["LABOUR"]
     lines += _labour_staff_block(out)
     lines += _labour_household_block(out)
+    lines += _labour_workforce_block(out)
     lines += _labour_hire_block(out)
     lines += _labour_training_block(out)
     lines += _labour_totals_block(out)

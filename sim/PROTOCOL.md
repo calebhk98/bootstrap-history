@@ -88,7 +88,12 @@ Two fixes, usable separately or together:
                                                     compact adds blocked_kinds and puts
                                                     the supply options in blocked_by.
                                                     The heard-of rows of `available`, and
-                                                    the rows of path and stuck, carry kind.
+                                                    the rows of path and stuck, carry kind (stuck
+                                                    also uses calendar and idle; each_kind
+                                                    labels each project in hand). `labour`
+                                                    carries "workforce": single-person
+                                                    dependencies, expected yearly losses,
+                                                    reserve and training.
       {"cmd":"path","id":"zinc_metal"}             everything still undone on the way
                                                     to this node, in dependency order
       {"cmd":"start","id":"zinc_metal"}            begin a project (error explains
@@ -142,7 +147,17 @@ Two fixes, usable separately or together:
                                                     "alerts": a short list (empty when
                                                     quiet) of deaths, sackings, closures,
                                                     losses, credit trouble and population
-                                                    collapse. With --session each
+                                                    collapse, worst tier first; the
+                                                    staffing closure line (closed,
+                                                    reopened, still shut, cause, remedies)
+                                                    stands for closures. The step also
+                                                    stops early for a concern closed for
+                                                    want of staff, a newly blocked
+                                                    project, a severe failure or the goal
+                                                    becoming startable ("stopped_early").
+                                                    With years>1 and a concern resting
+                                                    on one person, "multi_year_staffing_warning"
+                                                    names it. With --session each
                                                     simulated year is saved as it ends and
                                                     a progress line goes to stderr, so an
                                                     interrupt keeps the finished years.

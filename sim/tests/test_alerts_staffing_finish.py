@@ -42,3 +42,26 @@ check("a concern closed for want of staff stops the step",
       "staff" in (severe_stop_reason([], ["Smithy"], [], []) or ""))
 check("a newly blocked project stops the step",
       "blocked" in (severe_stop_reason([], [], ["Loom"], []) or ""))
+
+# --- 235: the lettered-trades label says each trade has its own ceiling
+from sim.engine.protocol import _agent_dispatch
+from sim.engine.proto.render_screens_economy import render_labour
+labour_reply = _agent_dispatch(sim(), NODES, {"cmd": "labour"})
+label = labour_reply.get("and_how_many_of_the_lettered_trades_this_society_supplies", "")
+check("the labour ceiling label is per trade, not one shared total",
+      "own ceiling" in label and "scholar" in label and "in total" not in label, label)
+
+# --- 233: departures are split by cause; the workforce block exists
+staffed = sim(capital=10000000.0, events=False)
+run_it(staffed, "workshop_first", "school_founded", "freedman_staff")
+staffed.hire("scholar", 8)
+for _ in range(40):
+    staffed.step()
+loss_lines = [message for _, message in staffed.log if message.startswith("you lose ")]
+check("departures are labelled death or better offers, never pooled",
+      loss_lines and all(line.endswith(" to death") or line.endswith(" to better offers") for line in loss_lines)
+      and not any("death and" in line for line in loss_lines), loss_lines[:3])
+workforce = labour_reply.get("workforce") or {}
+check("labour carries a workforce block",
+      {"depends_on_one_person", "expected_losses_per_year", "in_training"} <= set(workforce), workforce)
+check("the workforce screen is rendered", "WORKFORCE RISK" in render_labour(labour_reply))

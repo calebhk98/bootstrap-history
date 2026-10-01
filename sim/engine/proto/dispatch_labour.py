@@ -357,16 +357,16 @@ def _cmd_labour(sim, nodes, cmd, ended):
             # carry their keep, and this sentence has to say so
             # consistently with the `hire` refusal, which already does.
             "and_how_many_of_the_lettered_trades_this_society_supplies": (
-                "%s: right now your household can hold at most %.1f of them "
-                "in total, hired and taught together. That is your reach "
-                "into the labour market, not a fact about how many people "
-                "here can read. It RISES: a school, an academy and an "
-                "imperial patron train and pay scholars on their own "
-                "budget and lift this ceiling with them, which is the large "
-                "effect; printing, paper and libraries widen literacy "
-                "itself, which is the smaller one."
-                % (", ".join(sorted(sim.LITERATE_TRADES)),
-                   sim.literate_capacity("scholar"))),
+                "each lettered trade has its own ceiling on people hired and "
+                "taught together, not one shared total: %s. These are your "
+                "reach into the labour market, not a fact about how many "
+                "people here can read. Scholars rise with a school, an "
+                "academy and an imperial patron, which train and pay them on "
+                "their own budget; the other trades rise with printing, "
+                "paper and libraries, which widen literacy itself."
+                % ", ".join("%s %.1f" % (trade, sim.literate_capacity(trade))
+                            for trade in sorted(sim.LITERATE_TRADES))),
+            "workforce": sim.workforce_report(),
             "slaves": sim.slaves, "freedmen": sim.freedmen,
             "annual_wage_bill": round(sim.wage_bill(), 1),
             "craftsmen_on_your_staff": round(sim.artisans, 2),
