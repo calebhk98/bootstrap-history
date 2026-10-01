@@ -1,11 +1,11 @@
 """Pins the fix for Complaints/49 ("land rent reaches no crop"): two rounds of
-work built a real, per-civilization Ricardian rent on `iugerum_land` in
+work built a real, per-civilization Ricardian rent on `hectare_land` in
 `sim/world/land.py`, and `sim/solve_prices.py` already turned that into
-`iugerum_land`'s own solved price - but nothing in `data/production/` ever
-consumed `iugerum_land`. `wheat_kg` had `inputs={}`, and so did every other
+`hectare_land`'s own solved price - but nothing in `data/production/` ever
+consumed `hectare_land`. `wheat_kg` had `inputs={}`, and so did every other
 material whose own prose said it came "from arable land", "from pasture" or
 "from forest". The rent was computed and then discarded; no loaf of bread was
-ever dearer for it. `land_iugera_years` (see LAND in
+ever dearer for it. `land_hectare_years` (see LAND in
 `data/production/_SCHEMA.md`) and the corresponding `land_cost_hours` term in
 `recipe_cost_and_allocation` are the fix.
 
@@ -19,7 +19,7 @@ separate their crop prices); the rest build tiny synthetic entries so the
 mechanism itself is pinned independent of any future edit to those data
 files.
 
-Land-limited materials state land_iugera_years and the solver charges rent for it.
+Land-limited materials state land_hectare_years and the solver charges rent for it.
 """
 import unittest
 
@@ -28,25 +28,25 @@ from sim.tests.price_solver_helpers import solver_context
 
 
 class LandCostIsZeroByDefaultTests(unittest.TestCase):
-    """Backward compatibility: an entry with no `land_iugera_years` at all -
+    """Backward compatibility: an entry with no `land_hectare_years` at all -
     every recipe in data/production/ before this task, and any future one
     that is not land-limited - must see exactly the old answer (no land
     term), not a crash and not a surprise nonzero charge.
     """
 
-    def test_no_land_iugera_years_means_no_land_cost(self):
+    def test_no_land_hectare_years_means_no_land_cost(self):
         entry = {"outputs": {"thing_kg": 1000.0}, "inputs": {},
                 "labour_hours": {"labourer": 10.0}}
         total_cost, _prices = solve_prices.recipe_cost_and_allocation(
             "thing_kg", entry, {}, {"labourer": 1.0})
         self.assertEqual(total_cost, 10.0)
 
-    def test_land_iugera_years_of_zero_means_no_land_cost(self):
+    def test_land_hectare_years_of_zero_means_no_land_cost(self):
         entry = {"outputs": {"thing_kg": 1000.0}, "inputs": {},
-                "labour_hours": {"labourer": 10.0}, "land_iugera_years": 0.0}
-        # Even with NO price at all for iugerum_land in current_prices, a
-        # stated-but-zero land_iugera_years must not return None - the
-        # `if land_iugera_years:` guard in recipe_cost_and_allocation exists
+                "labour_hours": {"labourer": 10.0}, "land_hectare_years": 0.0}
+        # Even with NO price at all for hectare_land in current_prices, a
+        # stated-but-zero land_hectare_years must not return None - the
+        # `if land_hectare_years:` guard in recipe_cost_and_allocation exists
         # exactly for this, mirroring rent's own "0.0 rent" convention.
         total_cost, _prices = solve_prices.recipe_cost_and_allocation(
             "thing_kg", entry, {}, {"labourer": 1.0})
@@ -54,11 +54,11 @@ class LandCostIsZeroByDefaultTests(unittest.TestCase):
 
     def test_an_entry_with_land_but_no_land_price_available_is_unresolvable(self):
         # A land-consuming recipe costed against a price vector that has
-        # no entry for iugerum_land at all must return None (the same
+        # no entry for hectare_land at all must return None (the same
         # "missing input" answer an ordinary `inputs` entry gets), not
         # silently treat the missing price as zero.
         entry = {"outputs": {"crop_kg": 500.0}, "inputs": {},
-                "labour_hours": {"labourer": 10.0}, "land_iugera_years": 4.0}
+                "labour_hours": {"labourer": 10.0}, "land_hectare_years": 4.0}
         result = solve_prices.recipe_cost_and_allocation(
             "crop_kg", entry, {}, {"labourer": 1.0})
         self.assertIsNone(result)
@@ -69,24 +69,24 @@ class LandCostIsAddedCorrectlyTests(unittest.TestCase):
     tables - see the module's own top docstring.
     """
 
-    def test_land_cost_is_land_iugera_years_times_iugerum_lands_price(self):
+    def test_land_cost_is_land_hectare_years_times_hectare_lands_price(self):
         entry = {"outputs": {"crop_kg": 500.0}, "inputs": {},
-                "labour_hours": {"labourer": 10.0}, "land_iugera_years": 4.0}
+                "labour_hours": {"labourer": 10.0}, "land_hectare_years": 4.0}
         total_cost, output_prices = solve_prices.recipe_cost_and_allocation(
-            "crop_kg", entry, {"iugerum_land": 2.5}, {"labourer": 1.0})
-        # 10 h labour + 4 iugera-yrs * 2.5 h/iugerum-yr = 20 h for the batch.
+            "crop_kg", entry, {"hectare_land": 2.5}, {"labourer": 1.0})
+        # 10 h labour + 4 hectare-yrs * 2.5 h/hectare-yr = 20 h for the batch.
         self.assertEqual(total_cost, 10.0 + 4.0 * 2.5)
         self.assertAlmostEqual(output_prices["crop_kg"], total_cost / 500.0)
 
     def test_land_cost_is_a_batch_level_quantity_like_labour_hours(self):
-        # Doubling the batch's own outputs (same land_iugera_years, same
+        # Doubling the batch's own outputs (same land_hectare_years, same
         # labour_hours - a bigger harvest off the SAME stated land and
         # labour) must not double the land cost; it is quoted against this
         # recipe's own `basis`, exactly like labour_hours already is.
         entry = {"outputs": {"crop_kg": 1000.0}, "inputs": {},
-                "labour_hours": {"labourer": 10.0}, "land_iugera_years": 4.0}
+                "labour_hours": {"labourer": 10.0}, "land_hectare_years": 4.0}
         total_cost, _prices = solve_prices.recipe_cost_and_allocation(
-            "crop_kg", entry, {"iugerum_land": 2.5}, {"labourer": 1.0})
+            "crop_kg", entry, {"hectare_land": 2.5}, {"labourer": 1.0})
         self.assertEqual(total_cost, 10.0 + 4.0 * 2.5)
 
     def test_land_cost_is_independent_of_ore_rent(self):
@@ -95,9 +95,9 @@ class LandCostIsAddedCorrectlyTests(unittest.TestCase):
         # recipe_cost_and_allocation must not assume the two are mutually
         # exclusive).
         entry = {"outputs": {"odd_kg": 100.0}, "inputs": {},
-                "labour_hours": {"labourer": 5.0}, "land_iugera_years": 1.0}
+                "labour_hours": {"labourer": 5.0}, "land_hectare_years": 1.0}
         total_cost, _prices = solve_prices.recipe_cost_and_allocation(
-            "odd_kg", entry, {"iugerum_land": 3.0}, {"labourer": 1.0},
+            "odd_kg", entry, {"hectare_land": 3.0}, {"labourer": 1.0},
             rent_hours_per_kg_by_material={"odd_kg": 0.1})
         # 5 h labour + 1.0 * 3.0 land + 0.1 h/kg * 100 kg rent = 18 h.
         self.assertEqual(total_cost, 5.0 + 3.0 + 10.0)
@@ -105,66 +105,66 @@ class LandCostIsAddedCorrectlyTests(unittest.TestCase):
 
 class DependencyAndAnchorTests(unittest.TestCase):
     """`_dependency_materials` and `_has_external_anchor` both have to see
-    `iugerum_land` as a real dependency whenever `land_iugera_years` is
+    `hectare_land` as a real dependency whenever `land_hectare_years` is
     nonzero, or the resolvability/cycle-productiveness passes would treat a
     land-consuming recipe as needing nothing at all.
     """
 
-    def test_dependency_materials_includes_iugerum_land_when_stated(self):
-        entry = {"inputs": {"seed_kg": 1.0}, "land_iugera_years": 4.0}
+    def test_dependency_materials_includes_hectare_land_when_stated(self):
+        entry = {"inputs": {"seed_kg": 1.0}, "land_hectare_years": 4.0}
         self.assertEqual(solve_prices._dependency_materials(entry),
-                        {"seed_kg", "iugerum_land"})
+                        {"seed_kg", "hectare_land"})
 
-    def test_dependency_materials_omits_iugerum_land_when_absent_or_zero(self):
+    def test_dependency_materials_omits_hectare_land_when_absent_or_zero(self):
         self.assertEqual(solve_prices._dependency_materials({"inputs": {}}), set())
         self.assertEqual(
-            solve_prices._dependency_materials({"inputs": {}, "land_iugera_years": 0.0}),
+            solve_prices._dependency_materials({"inputs": {}, "land_hectare_years": 0.0}),
             set())
 
     def test_has_external_anchor_true_when_land_is_resolved(self):
-        entry = {"land_iugera_years": 4.0}
-        self.assertTrue(solve_prices._has_external_anchor(entry, {"iugerum_land"}))
+        entry = {"land_hectare_years": 4.0}
+        self.assertTrue(solve_prices._has_external_anchor(entry, {"hectare_land"}))
 
     def test_has_external_anchor_false_when_land_is_not_yet_resolved(self):
-        entry = {"land_iugera_years": 4.0}
+        entry = {"land_hectare_years": 4.0}
         self.assertFalse(solve_prices._has_external_anchor(entry, set()))
 
 
 class LandRentReferencePriceStaysZeroRentTests(unittest.TestCase):
-    """`land_rent_hours_per_iugerum` converts sim/world/land.py's physical
+    """`land_rent_hours_per_hectare` converts sim/world/land.py's physical
     rent into hours using wheat_kg's own ZERO-LAND-RENT reference price -
     this must stay true now that wheat_kg itself states a
-    `land_iugera_years`, or the whole mechanism would be circular (land's
+    `land_hectare_years`, or the whole mechanism would be circular (land's
     price depending on a wheat price that itself depends on land's price).
     """
 
-    def test_reference_price_ignores_wheats_own_land_iugera_years(self):
-        # A synthetic wheat_kg with a land_iugera_years large enough that,
+    def test_reference_price_ignores_wheats_own_land_hectare_years(self):
+        # A synthetic wheat_kg with a land_hectare_years large enough that,
         # if it were NOT zeroed out for this one reference calculation,
         # would swamp the labour-only answer.
         wheat_entry = {"outputs": {"wheat_kg": 500.0}, "inputs": {},
                        "labour_hours": {"labourer": 100.0},
-                       "land_iugera_years": 1000.0}
+                       "land_hectare_years": 1000.0}
         entries = {"wheat_kg": wheat_entry}
-        rent = solve_prices.land_rent_hours_per_iugerum(
+        rent = solve_prices.land_rent_hours_per_hectare(
             entries, {"labourer": 1.0}, civilization_id="rome_100ad")
         # This only asserts the function runs and returns SOMETHING (real
         # sim/world/land.py data behind civilization_id="rome_100ad") -
         # the real guard is the next test, which checks the VALUE does not
-        # move when land_iugera_years changes.
+        # move when land_hectare_years changes.
         self.assertIsInstance(rent, dict)
 
-    def test_reference_price_is_unaffected_by_the_size_of_land_iugera_years(self):
+    def test_reference_price_is_unaffected_by_the_size_of_land_hectare_years(self):
         wage_by_trade = {"labourer": 1.0}
-        small = solve_prices.land_rent_hours_per_iugerum(
+        small = solve_prices.land_rent_hours_per_hectare(
             {"wheat_kg": {"outputs": {"wheat_kg": 500.0}, "inputs": {},
                          "labour_hours": {"labourer": 100.0},
-                         "land_iugera_years": 1.0}},
+                         "land_hectare_years": 1.0}},
             wage_by_trade, civilization_id="rome_100ad")
-        large = solve_prices.land_rent_hours_per_iugerum(
+        large = solve_prices.land_rent_hours_per_hectare(
             {"wheat_kg": {"outputs": {"wheat_kg": 500.0}, "inputs": {},
                          "labour_hours": {"labourer": 100.0},
-                         "land_iugera_years": 1e6}},
+                         "land_hectare_years": 1e6}},
             wage_by_trade, civilization_id="rome_100ad")
         self.assertEqual(small, large)
 
@@ -173,15 +173,15 @@ class LandRentReferencePriceStaysZeroRentTests(unittest.TestCase):
         # sim/world/land.py - no pinned number (both are owned elsewhere
         # and can change), only the structural property that Rome's own
         # multi-region territory still earns a positive rent now that
-        # wheat_kg itself consumes iugerum_land.
+        # wheat_kg itself consumes hectare_land.
         production_entries, duplicates = solve_prices.load_production()
         self.assertEqual(duplicates, [])
-        self.assertIn("land_iugera_years", production_entries["wheat_kg"])
+        self.assertIn("land_hectare_years", production_entries["wheat_kg"])
         wage_by_trade = {"labourer": 1.0}
-        rent = solve_prices.land_rent_hours_per_iugerum(
+        rent = solve_prices.land_rent_hours_per_hectare(
             production_entries, wage_by_trade, civilization_id="rome_100ad")
-        self.assertIn("iugerum_land", rent)
-        self.assertGreater(rent["iugerum_land"], 0.0)
+        self.assertIn("hectare_land", rent)
+        self.assertGreater(rent["hectare_land"], 0.0)
 
 
 class TheFiveCivilizationsSeparateTests(unittest.TestCase):
@@ -204,14 +204,14 @@ class TheFiveCivilizationsSeparateTests(unittest.TestCase):
     def _solved_wheat_price(self, civilization_id):
         available, wage_by_trade, producers_of, rent = solver_context(
             civilization_id)
-        rent.update(solve_prices.land_rent_hours_per_iugerum(
+        rent.update(solve_prices.land_rent_hours_per_hectare(
             available, wage_by_trade, civilization_id=civilization_id))
         resolvable = solve_prices.compute_resolvable_materials(
             available, producers_of, rent_hours_per_kg_by_material=rent)
         prices, _iters, _residual, _chosen = solve_prices.solve(
             available, producers_of, resolvable, wage_by_trade,
             rent_hours_per_kg_by_material=rent)
-        return prices["wheat_kg"], rent.get("iugerum_land", 0.0)
+        return prices["wheat_kg"], rent.get("hectare_land", 0.0)
 
     def test_wheat_price_is_no_longer_identical_across_civilizations(self):
         prices = {civ: self._solved_wheat_price(civ)[0]
@@ -237,7 +237,7 @@ class TheFiveCivilizationsSeparateTests(unittest.TestCase):
 
 class WhichMaterialsCarryLandTests(unittest.TestCase):
     """Pins the considered list in data/production/_SCHEMA.md's own LAND
-    section: every material given `land_iugera_years`, and a sample of the
+    section: every material given `land_hectare_years`, and a sample of the
     ones deliberately left without it, with the reasons this task recorded.
     """
 
@@ -256,8 +256,8 @@ class WhichMaterialsCarryLandTests(unittest.TestCase):
         for material in expected:
             entry = self.production_entries.get(material)
             self.assertIsNotNone(entry, material)
-            self.assertTrue(entry.get("land_iugera_years"),
-                            "%s should carry a positive land_iugera_years" % material)
+            self.assertTrue(entry.get("land_hectare_years"),
+                            "%s should carry a positive land_hectare_years" % material)
 
     def test_livestock_byproducts_and_the_two_not_land_limited_entries_do_not(self):
         # hide_kg and kin: their own yield_basis declines to charge the
@@ -269,8 +269,8 @@ class WhichMaterialsCarryLandTests(unittest.TestCase):
         for material in excluded:
             entry = self.production_entries.get(material)
             self.assertIsNotNone(entry, material)
-            self.assertFalse(entry.get("land_iugera_years"),
-                            "%s should not carry land_iugera_years" % material)
+            self.assertFalse(entry.get("land_hectare_years"),
+                            "%s should not carry land_hectare_years" % material)
 
 
 class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
@@ -288,7 +288,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
     def test_land_never_lowers_a_price_relative_to_the_old_zero_land_answer(self):
         # A monotonicity check on the real data: adding a nonnegative land
         # cost term must never make anything cheaper. Runs the solve twice
-        # - once with land wired in, once with every land_iugera_years
+        # - once with land wired in, once with every land_hectare_years
         # stripped out - and compares every resolvable material's price.
         #
         # EXCEPT for minor joint byproducts with no independent price
@@ -307,7 +307,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         production_entries, _duplicates = solve_prices.load_production()
         stripped_entries = {
             recipe_id: {key: value for key, value in entry.items()
-                       if key != "land_iugera_years"}
+                       if key != "land_hectare_years"}
             for recipe_id, entry in production_entries.items()}
         from sim import simulator
         _tree, prices_json, _nodes, _wages, _goods = simulator.load()
@@ -316,7 +316,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         producers_of = solve_prices.build_producers_index(production_entries)
         rent = solve_prices.rent_hours_per_kg_by_ore_material(
             production_entries, wage_by_trade)
-        rent.update(solve_prices.land_rent_hours_per_iugerum(
+        rent.update(solve_prices.land_rent_hours_per_hectare(
             production_entries, wage_by_trade))
         resolvable_with_land = solve_prices.compute_resolvable_materials(
             production_entries, producers_of, rent_hours_per_kg_by_material=rent)
@@ -330,7 +330,7 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
         producers_of_stripped = solve_prices.build_producers_index(stripped_entries)
         rent_stripped = solve_prices.rent_hours_per_kg_by_ore_material(
             stripped_entries, wage_by_trade)
-        rent_stripped.update(solve_prices.land_rent_hours_per_iugerum(
+        rent_stripped.update(solve_prices.land_rent_hours_per_hectare(
             stripped_entries, wage_by_trade))
         resolvable_without_land = solve_prices.compute_resolvable_materials(
             stripped_entries, producers_of_stripped,
@@ -351,6 +351,27 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
                   if prices_with_land[material] < prices_without_land[material] * (1 - 1e-6)}
         self.assertEqual(lowered, {},
                          "adding a nonnegative land cost term made something CHEAPER")
+
+
+class NoRomanAreaUnitInDataTests(unittest.TestCase):
+    """Production data and the solver speak hectares; no iugerum edge."""
+
+    def test_production_data_names_no_iugerum(self):
+        import glob, os
+        root = os.path.join(os.path.dirname(__file__), "..", "..", "data", "production")
+        for path in glob.glob(os.path.join(root, "*.json")):
+            with open(path) as handle:
+                text = handle.read()
+            self.assertNotIn("iugera", text, path)
+
+    def test_a_hectare_year_crop_states_one_hectare_year(self):
+        production_entries, _duplicates = solve_prices.load_production()
+        self.assertAlmostEqual(
+            production_entries["wheat_kg"]["land_hectare_years"], 1.0, places=3)
+
+    def test_solver_has_no_iugerum_conversion(self):
+        from sim.world import land
+        self.assertFalse(hasattr(land, "IUGERUM_HECTARES"))
 
 
 if __name__ == "__main__":

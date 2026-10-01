@@ -34,7 +34,7 @@ class WageFloorFollowsSolvedFoodTests(unittest.TestCase):
         civ = data.load_civ("rome_100ad")
         normal = _schedule(civ)
         entries = _entries()
-        entries["wheat_kg"]["land_iugera_years"] *= 3.0
+        entries["wheat_kg"]["land_hectare_years"] *= 3.0
         worse = _schedule(civ, entries)
         self.assertGreater(worse.subsistence_hours_per_hour,
                            normal.subsistence_hours_per_hour)
@@ -62,7 +62,7 @@ class WageFloorFollowsSolvedFoodTests(unittest.TestCase):
     def test_a_floor_above_the_market_wage_lifts_the_labourer_wage(self):
         civ = data.load_civ("rome_100ad")
         entries = _entries()
-        entries["wheat_kg"]["land_iugera_years"] *= 400.0
+        entries["wheat_kg"]["land_hectare_years"] *= 400.0
         schedule = _schedule(civ, entries)
         self.assertGreater(schedule.subsistence_hours_per_hour, 1.0)
         self.assertAlmostEqual(schedule.wage_per_hour("labourer"), schedule.floor_per_hour)

@@ -1,6 +1,6 @@
 """Checks the fix this round made to `sim/engine/prices.py`: `solved_prices`
 now actually calls `solve_prices.rent_hours_per_kg_by_ore_material` and
-`solve_prices.land_rent_hours_per_iugerum`, which it did not before - see
+`solve_prices.land_rent_hours_per_hectare`, which it did not before - see
 RENT WAS MISSING FROM THIS FILE in that module's own docstring, and
 Complaints/43's own update sections for the finding this closes (the switch
 would have made land free the moment it was flipped, even though
@@ -10,7 +10,7 @@ Three things pinned here, because getting any of them wrong silently
 reintroduces the bug or introduces a new one of the same shape:
 
   - `solved_prices` (and `priced_goods_table`, and `sim.engine.data.load`/
-    `goods_provenance` above it) actually price `iugerum_land` above zero
+    `goods_provenance` above it) actually price `hectare_land` above zero
     once a civilization holds any territory - the CLI already proved this
     is possible; this file proves the ENGINE'S OWN wiring does it too, not
     only the standalone tool sitting next to it.
@@ -56,7 +56,7 @@ class RentIsWiredInTests(unittest.TestCase):
         with open(os.path.join(ROOT, "data", "prices.json")) as source:
             self.prices_json = json.load(source)
 
-    def test_iugerum_land_is_no_longer_zero_for_rome(self):
+    def test_hectare_land_is_no_longer_zero_for_rome(self):
         # UPDATE (stakeholder maintainability item 6, the two map
         # systems): this number is measured from Rome's 88 real
         # `land_tiles` (data/world/geography.json), which is what
@@ -91,11 +91,11 @@ class RentIsWiredInTests(unittest.TestCase):
         result = engine_prices.solved_prices(
             _starting_techs("rome_100ad"), self.prices_json,
             civilization_id="rome_100ad")
-        self.assertIn("iugerum_land", result.prices_in_labour_hours)
+        self.assertIn("hectare_land", result.prices_in_labour_hours)
         # Moves with tile fertility (arable-weighted, Complaints/134); re-read
         # with `python3 sim/solve_prices.py --civ rome_100ad` when tile data moves.
         self.assertAlmostEqual(
-            result.prices_in_labour_hours["iugerum_land"], 36.7475, places=2)
+            result.prices_in_labour_hours["hectare_land"], 145.65, places=2)
 
     def test_omitting_civilization_id_defaults_to_rome(self):
         with_default = engine_prices.solved_prices(
@@ -130,11 +130,11 @@ class LandRentIsPerCivilizationTests(unittest.TestCase):
         han = engine_prices.solved_prices(
             _starting_techs("han_china_100ad"), self.prices_json,
             civilization_id="han_china_100ad")
-        self.assertIn("iugerum_land", rome.prices_in_labour_hours)
-        self.assertIn("iugerum_land", han.prices_in_labour_hours)
+        self.assertIn("hectare_land", rome.prices_in_labour_hours)
+        self.assertIn("hectare_land", han.prices_in_labour_hours)
         self.assertNotAlmostEqual(
-            rome.prices_in_labour_hours["iugerum_land"],
-            han.prices_in_labour_hours["iugerum_land"], places=2)
+            rome.prices_in_labour_hours["hectare_land"],
+            han.prices_in_labour_hours["hectare_land"], places=2)
 
     def test_same_gate_nodes_different_civilization_id_is_a_cache_miss(self):
         # Fabricate the hazard directly rather than hoping two real
@@ -149,8 +149,8 @@ class LandRentIsPerCivilizationTests(unittest.TestCase):
             held, self.prices_json, civilization_id="han_china_100ad")
         self.assertIsNot(rome, han)
         self.assertNotAlmostEqual(
-            rome.prices_in_labour_hours["iugerum_land"],
-            han.prices_in_labour_hours["iugerum_land"], places=2)
+            rome.prices_in_labour_hours["hectare_land"],
+            han.prices_in_labour_hours["hectare_land"], places=2)
 
     def test_result_records_which_civilization_it_was_solved_for(self):
         result = engine_prices.solved_prices(
@@ -167,18 +167,18 @@ class GoodsProvenanceCivilizationTests(unittest.TestCase):
         engine_prices.reset_caches_for_tests()
         self.addCleanup(engine_prices.reset_caches_for_tests)
 
-    def test_goods_provenance_prices_iugerum_land_as_solved(self):
+    def test_goods_provenance_prices_hectare_land_as_solved(self):
         provenance = data.goods_provenance(
             _starting_techs("rome_100ad"), civilization_id="rome_100ad")
-        self.assertEqual(provenance.get("iugerum_land"), "solved")
+        self.assertEqual(provenance.get("hectare_land"), "solved")
 
     def test_load_with_use_solved_prices_produces_a_nonzero_land_price(self):
         _tree, prices_json, _nodes, _wages, goods = data.load(
             use_solved_prices=True,
             held_technology_ids=_starting_techs("rome_100ad"),
             civilization_id="rome_100ad")
-        self.assertIn("iugerum_land", goods)
-        self.assertGreater(goods["iugerum_land"], 0.0)
+        self.assertIn("hectare_land", goods)
+        self.assertGreater(goods["hectare_land"], 0.0)
 
 
 if __name__ == "__main__":
