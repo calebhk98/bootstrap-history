@@ -51,8 +51,8 @@ check("arrears beyond the ceiling add no more than the ceiling does",
 check("what lenders hold less what is already lent is what is left to lend, never negative",
       capital_market.headroom(100.0, 30.0) == 70.0 and capital_market.headroom(100.0, 130.0) == 0.0)
 check("the debt a given earning can carry falls as the rate rises",
-      capital_market.serviceable_debt(100.0, 0.05) > capital_market.serviceable_debt(100.0, 0.10) > 0.0
-      and capital_market.serviceable_debt(100.0, 0.0) == 0.0)
+      capital_market.serviceable_debt(100.0, 0.05, 0.5) > capital_market.serviceable_debt(100.0, 0.10, 0.5) > 0.0
+      and capital_market.serviceable_debt(100.0, 0.0, 0.5) == 0.0)
 
 # ---- a fresh game: the market is at the civilisation's starting rate -------------------------
 for civ_id in ("rome_100ad", "han_china_100ad"):
@@ -79,8 +79,9 @@ check("lenders hold more than they lend: capacity is below supply",
 # ---- the state's reserve is supply, borrowing is demand -----------------------------------------
 base = market_sim()
 one_year(base)
-reserve_rich = market_sim(purse=1.0e13)
+reserve_rich = market_sim()
 one_year(reserve_rich)
+reserve_rich.state_treasury().money = 1.0e13
 one_year(base)
 one_year(reserve_rich)
 check("a state reserve adds to the funds lenders hold", reserve_rich.capital_market().supply_by_source.get("state", 0.0) > 0.0

@@ -65,8 +65,8 @@ def army_next_year(soldiers: float, wanted: float, funded: float) -> float:
 
 
 def funded_share(need: float, available: float) -> float:
-	"""Share of the need that can be paid: all of it while the purse covers it,
-	otherwise every line is cut by the same share and nothing is borrowed."""
+	"""Share of the need that can be paid: all of it while the purse (reserve plus what the state may
+	still borrow) covers it, otherwise every line is cut by the same share."""
 	if need <= 0.0 or available >= need:
 		return 1.0
 	return max(0.0, available) / need

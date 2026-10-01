@@ -11,10 +11,11 @@ from sim.engine.data import TRADES_ABSENT
 
 from . import supply
 from .world_budget import BudgetView
+from .world_capital import CapitalView
 from .tuning import OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
 
 
-class SimWorld(BudgetView):
+class SimWorld(BudgetView, CapitalView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:

@@ -10,12 +10,13 @@ from typing import Any, Dict, List, Optional, Set
 from sim.engine.state import ActorRecord
 
 from . import imitation, ledger
+from .borrowing import Borrower
 from .ledger import Purpose
 from .policy import Decision, Option, Policy, ValuePolicy
 from .tuning import ATTENTION_SPAN
 
 
-class Actor:
+class Actor(Borrower):
 	kind = "actor"
 
 	def __init__(self, policy: Optional[Policy] = None) -> None:

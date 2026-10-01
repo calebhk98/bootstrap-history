@@ -2,7 +2,8 @@
 
 It keeps a budget. Revenue is what its economy yields; spending is the army
 and officials it keeps (`budget.py`), paid from the purse. A deficit comes out
-of the reserve and then every line is cut by the same share. What it could not
+of the reserve, then is borrowed up to its credit ceiling, and only then is every
+line cut by the same share. What it could not
 pay is what it seeks from the taxpayers it can see. What is left of the purse
 funds copying know-how it values by the gains its civilisation's priorities
 weight (military, infrastructure, prestige, ...), through its policy.
@@ -22,6 +23,14 @@ class Government(RecordedActor):
 		gains = invention_gains(world.nodes[node_id])
 		gain = weighted_gain(gains, world.state_weights())
 		return max(0.0, gain) * world.state_revenue() * GOVERNMENT_WORTH_SHARE_PER_GAIN
+
+	# ---- what it borrows against -------------------------------------------
+	def credit_earning(self, world: Any) -> float:
+		return world.state_revenue()
+
+	def credit_standing(self, world: Any) -> float:
+		"""Lenders trust a state as far as it can assess and collect."""
+		return world.state_capacity()
 
 	# ---- what it takes -------------------------------------------------------
 	def levy_rates(self) -> Tuple[float, float]:
@@ -58,11 +67,12 @@ class Government(RecordedActor):
 	def pay_standing_need(self, world: Any) -> Tuple[List[budget.Line], float]:
 		"""Take the year's revenue, pay what the purse covers of the standing need, and book the rest
 		as unfunded. The goods it bought are this year's demand on the market."""
+		self.pay_interest(world)
 		self.credit(world.state_revenue(), "taxation")
 		wanted = world.army_wanted()
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		lines = budget.standing_lines(world, soldiers)
-		share = budget.funded_share(sum(line.money for line in lines), self.money)
+		share = budget.funded_share(sum(line.money for line in lines), self.money + self.credit_ceiling(world))
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = {line.name: line.money for line in lines}
 		self.record.unfunded = {line.name: line.money * (1.0 - share) for line in lines}

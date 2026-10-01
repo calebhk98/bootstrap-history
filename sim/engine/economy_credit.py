@@ -20,11 +20,16 @@ grouping evidence.
 from .data import WAGES
 from sim.constants import declare
 from . import money_units
+from sim.world import capital_market
 
 
-def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0):
-    """Pure canonical calculation for the nominal borrowing ceiling."""
-    return max(min(raw_credit, serviceable), running_cost_floor) * price_index
+def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0, market_cap=None):
+    """Pure canonical calculation for the nominal borrowing ceiling. `market_cap` is what lenders can
+    still advance (in the same units as the other figures); None before the market has met."""
+    limit = min(raw_credit, serviceable)
+    if market_cap is not None:
+        limit = min(limit, market_cap)
+    return max(limit, running_cost_floor) * price_index
 
 
 def calculate_affordability(capital, credit_ceiling, credit_share, preserve_debt=False):
@@ -124,8 +129,18 @@ class CreditMixin:
         # Bounded by what can be serviced: no lender advances more than income
         # can carry, even with a grand patron. Five years of turnover stops a
         # patron-name from creating an unpayable debt trap. [temporary_heuristic]
-        serviceable = floor + max(0.0, earning) * self.CREDIT_SURPLUS_YEARS_MULTIPLE
-        return calculate_credit_ceiling(base, floor, serviceable, self.price_index)
+        # The years of earning a lender will carry are the civilisation's opening figure scaled by how
+        # the market rate has moved from its starting rate: money twice as dear carries half the debt.
+        # [temporary_heuristic: CREDIT_SURPLUS_YEARS_MULTIPLE is the figure at the starting rate]
+        market_rate = self.market_rate()
+        years = self.CREDIT_SURPLUS_YEARS_MULTIPLE
+        if market_rate > 0:
+            years *= self.civ["starting_interest_rate"] / market_rate
+        serviceable = floor + max(0.0, earning) * years
+        # And never more than lenders still hold beyond what everyone else owes them.
+        room = self.market_credit_room(capital_market.FOUNDER_LOAN)
+        return calculate_credit_ceiling(base, floor, serviceable, self.price_index,
+                                        None if room is None else room / self.price_index)
 
     def committed_spend(self):
         """What is still owed, in total, across every project in hand at once.
@@ -266,17 +281,20 @@ class CreditMixin:
     def debt_interest_rate(self):
         """What arrears cost you a year.
 
-        Starts from the civilisation's own base rate. A man with no standing
+        Starts from the civilisation's loanable-funds market rate (its own starting rate until the
+        market has met), plus a premium for the share of his credit limit he has used. A man with no standing
         borrows from whoever will have him and pays for it. Standing is what makes money cheap, which
         is the same rule as everything else in this model: patronage is the
         currency underneath the currency.
         """
-        rate = self.civ["starting_interest_rate"]     # the civ's own starting rate
-        for _node_id, discount in self.effect_values("debt_rate_discount"):
-            rate -= discount
-        rate -= min(self.DEBT_RATE_REPUTATION_DISCOUNT_CAP,
-                    max(0.0, self.state.household.reputation) / self.DEBT_RATE_REPUTATION_SCALE)
-        return max(0.0, rate)
+        discount = sum(discount for _node_id, discount in self.effect_values("debt_rate_discount"))
+        discount += min(self.DEBT_RATE_REPUTATION_DISCOUNT_CAP,
+                        max(0.0, self.state.household.reputation) / self.DEBT_RATE_REPUTATION_SCALE)
+        used = 0.0
+        if self.state.household.capital < 0:
+            limit = self.credit_limit()
+            used = -self.state.household.capital / limit if limit > 0 else 1.0
+        return capital_market.borrower_rate(self.market_rate(), discount, used)
 
     def charge_interest(self, year):
         """Arrears accrue. They did not before, which made debt free money."""
