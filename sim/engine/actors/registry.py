@@ -18,14 +18,17 @@ class _ConcernWatch:
 	current whenever its concern set changes. Holds only plain data, so a
 	state holding watched sets still copies."""
 
-	def __init__(self, firm_id: str, holders: Dict[str, Set[str]]) -> None:
+	def __init__(self, firm_id: str, holders: Dict[str, Set[str]], version: List[int]) -> None:
 		self.firm_id = firm_id
 		self.holders = holders
+		self.version = version
 		self.known: Set[str] = set()
 		self.target: Any = None
 
 	def __call__(self) -> None:
 		current = set(self.target)
+		if current != self.known:
+			self.version[0] += 1
 		for node_id in self.known - current:
 			self.holders[node_id].discard(self.firm_id)
 		for node_id in current - self.known:
@@ -44,6 +47,8 @@ class ActorRegistry:
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
 		self._staff: Optional[Dict[str, float]] = None
+		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
+		self.version: List[int] = [0]
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -60,7 +65,7 @@ class ActorRegistry:
 		if isinstance(actor, Firm):
 			actor.rivals_of = self.rivals_of
 			from sim.engine.economy import _InvalidatingSet
-			watch = _ConcernWatch(actor_id, self._holders)
+			watch = _ConcernWatch(actor_id, self._holders, self.version)
 			record.concerns = _InvalidatingSet(record.concerns, on_change=watch)
 			watch.target = record.concerns
 			watch()
@@ -68,6 +73,16 @@ class ActorRegistry:
 		self._ordered_ids = None
 		self._staff = None
 		return actor
+
+	def supply(self, material: str, world: Any) -> float:
+		"""Tonnes a year of a material that every recorded actor's concerns put on the market."""
+		return sum(actor.output_of(material, world) for actor in self.actors.values()
+				   if not (actor.kind == "firm" and actor.record.exited_year is not None))
+
+	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> int:
+		"""Concerns of goods category `category` that actors operate, counted once per operator."""
+		return sum(1 for firm in self.active_firms() for node_id in firm.concerns
+				   if nodes[node_id].get("cat") == category)
 
 	def refresh_staff(self) -> None:
 		"""Forget the staffing tally so the next read counts every actor's workforce again."""

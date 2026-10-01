@@ -74,6 +74,21 @@ class Actor:
 	def location(self) -> Optional[str]:
 		return None
 
+	def opened_year_of(self, node_id: str, default: int) -> int:
+		"""When the actor began running a concern."""
+		return default
+
+	def staffed_share(self, node_id: str) -> float:
+		"""Share of a concern's staff the actor has found."""
+		return 1.0
+
+	def output_of(self, material: str, world: Any) -> float:
+		"""Tonnes a year of `material` the actor's concerns put on the market."""
+		return sum(world.concern_output_tonnes(node_id, material,
+											   self.opened_year_of(node_id, world.year),
+											   self.staffed_share(node_id))
+				   for node_id in sorted(self.concerns))
+
 	def prominence(self) -> float:
 		"""How prominent the actor is as a person; a business has none."""
 		return 0.0
@@ -210,6 +225,12 @@ class RecordedActor(Actor):
 
 	def location(self) -> Optional[str]:
 		return self.record.location
+
+	def opened_year_of(self, node_id: str, default: int) -> int:
+		return self.record.opened_year.get(node_id, default)
+
+	def staffed_share(self, node_id: str) -> float:
+		return self.record.staffing.get(node_id, 1.0)
 
 	def note_income(self, purpose: Purpose, amount: float) -> None:
 		for label, part in ledger.parts(purpose, amount).items():

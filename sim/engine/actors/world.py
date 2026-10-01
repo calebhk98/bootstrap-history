@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from sim.engine.data import TRADES_ABSENT
 
+from . import supply
 from .tuning import OBSERVATION_RANGE_KM, PROOF_YEARS, SECRET_EXPOSURE
 
 
@@ -153,10 +154,23 @@ class SimWorld:
 				proven.append(node_id)
 		return proven
 
-	def concern_takings(self, node_id: str, opened_year: int) -> float:
+	def ramp(self, opened_year: int) -> float:
+		return min(1.0, (self.year - opened_year + 1) / self._sim.cfg["revenue_ramp_years"])
+
+	def concern_takings(self, node_id: str, opened_year: int, rivals: int = 0) -> float:
+		"""Yearly takings of a concern an actor runs. A goods category has one market shared
+		by every operator, the founder's and the actors', so each gets its share of the demand;
+		a concern with no market model splits with its rivals."""
 		sim = self._sim
-		ramp = min(1.0, (self.year - opened_year + 1) / sim.cfg["revenue_ramp_years"])
-		return sim.concern_takings(node_id, ramp)
+		takings = sim.concern_takings(node_id, self.ramp(opened_year))
+		category = self.nodes[node_id].get("cat")
+		if category in sim.GOODS_CATEGORIES:
+			return takings * sim.goods_category_factor(category)
+		return takings / (1.0 + rivals)
+
+	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
+		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,
+											self.ramp(opened_year), staffed)
 
 	def upkeep(self, node_id: str) -> float:
 		return self.nodes[node_id]["up"] * self._sim.price_index

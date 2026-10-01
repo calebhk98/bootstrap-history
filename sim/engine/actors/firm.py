@@ -49,7 +49,8 @@ class Firm(RecordedActor):
 		for node_id in sorted(self.concerns):
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0
 			found = self.staff_concern(node_id, world)
-			takings = found * world.concern_takings(node_id, self.record.opened_year[node_id]) / (1.0 + rivals)
+			self.record.staffing[node_id] = found
+			takings = found * world.concern_takings(node_id, self.record.opened_year[node_id], rivals)
 			upkeep = world.upkeep(node_id)
 			self.credit(takings, "takings")
 			self.debit(upkeep, "upkeep")
