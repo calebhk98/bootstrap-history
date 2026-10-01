@@ -350,6 +350,7 @@
     "what_this_models": "You are one household, not the Triple Alliance. Five million people live under this order and a full quarter of them in a town - about 1,250,000 town dwellers, more urbanised than Rome itself - but every trade you can hire is sized to the ONE town your household actually works in: the order of 15,000 people, not Tenochtitlan's quarter of a million. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the Alliance's true numbers."
   },
   "population": 5000000,
+  "standing_army": 20000,
   "price_index": 0.8,
   "starting_techs": [
     "cap_heat_0700",
@@ -407,10 +408,8 @@
     "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
     "requisition_name": "the tribute of the calpixque",
     "requisition_note": "The tlatoani's tribute collectors, the calpixque, assessed tribute in kind on a fixed schedule recorded in documents like the Codex Mendoza - cacao, featherwork, cloth, metal - and a calpulli producing more than its neighbours simply had a larger quota fixed on it, not a lighter one.",
-    "requisition_base_share": 0.22,
     "office_name": "a cuauhpilli commission",
     "office_note": "Commoners who distinguished themselves, especially in war, could be raised to the cuauhpilli, a service nobility that came with land and duties at once - an honour that was also a standing claim on the man's time and output for the state that raised him.",
-    "office_base_share": 0.05,
     "military_name": "the tlatoani's armouries",
     "military_note": "A producer of obsidian-edged weapons or featherwork armour at any scale was already supplying the macehualtin levies and the pochteca's own guarded caravans; the Triple Alliance's wars were frequent enough that such a workshop was never overlooked for long.",
     "confiscation_name": "forfeiture to the tlatoani",
@@ -580,6 +579,10 @@
     },
     "starting_tax_share": {
       "source": "Commoner tribute in goods and labour recorded in the Codex Mendoza and Matricula de Tributos; the share falling on a trading household is an estimate.",
+      "confidence": "D"
+    },
+    "standing_army": {
+      "source": "The warrior orders and the palace guard, the men who fought as a profession; the rest of an army was levied from the calpulli for the campaign (Hassig, Aztec Warfare). An approximate opening headcount.",
       "confidence": "D"
     }
   }

@@ -181,6 +181,7 @@
     "what_this_models": "You are one household, not all of Viking-age Scandinavia. There are perhaps a million and a half people in the whole region and barely one in thirty lives anywhere worth calling a town - about 45,000 people in all - so the single market your household actually reaches is smaller again: the order of 14,000. A trade this thin is not a bug in the game; it is Scandinavia. Type 'population' once you are playing to see the numbers for yourself."
   },
   "population": 1500000,
+  "standing_army": 2000,
   "price_index": 1.4,
   "starting_techs": [
     "ag2_composting",
@@ -339,10 +340,8 @@
     "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it. With state_capacity this low, state_notice() (society.py) almost never crosses even the lowest threshold here - correctly: 'the thing is an assembly, not a state' (this file's own institutions.note). Were this society to spend centuries building the kings, bishops, written law and towns its own opening.what_is_coming already promises, state_capacity rises (the same _TECH_EFFECTS.json deltas every civilisation reads) and this mechanic starts to bite on its own, which is the honest way for that promise to come true.",
     "requisition_name": "what is owed at the thing",
     "requisition_note": "There is no tax office in Viking-age Scandinavia. What a household owes is assessed and announced at the thing, the assembly of free men, as a levy toward a specific expedition, a hosting obligation (veizla) to a chieftain's retinue, or a fine set by the law-speaker. It is real, and it is also the weakest version of this pressure in the whole file, because there is barely a state to enforce it.",
-    "requisition_base_share": 0.09,
     "office_name": "standing watch for the leidang",
     "office_note": "A levy muster could call a household's own ship and crew to a king's or jarl's service; refusing a summons a chieftain could actually enforce cost standing at the next thing, not a fine collected by any office.",
-    "office_base_share": 0.03,
     "military_name": "a chieftain's muster",
     "military_note": "A household that can arm men well is a household a chieftain wants in his own following, not a rival's; good iron gets noticed long before any king could requisition it by law.",
     "confiscation_name": "outlawry and the seizure of the estate",
@@ -400,6 +399,10 @@
     },
     "starting_tax_share": {
       "source": "Levies were tribute, thing dues, and ship-levy service to a chieftain or king, not a steady share of revenue. A low share reflects weak state reach; an estimate.",
+      "confidence": "D"
+    },
+    "standing_army": {
+      "source": "The retinues (hirdmen) of the kings and great chieftains; the leidang fleet was mustered for a season, not kept (Sawyer, Kings and Vikings). An approximate opening headcount of men kept in a ruler's pay.",
       "confidence": "D"
     }
   },

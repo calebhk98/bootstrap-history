@@ -239,6 +239,7 @@
     "what_this_models": "You are one household, not the Han bureaucracy. Fifty-eight million people live under this administration and roughly one in ten of them in a town at all - about 5,800,000 town dwellers - but every trade you can hire is sized to the ONE town your household actually reaches: the order of 46,000 people, not the empire. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the empire's true numbers."
   },
   "population": 58000000,
+  "standing_army": 200000,
   "price_index": 0.75,
   "starting_techs": [
     "bellows_water_blown",
@@ -360,10 +361,8 @@
     "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
     "requisition_name": "the salt and iron monopolies",
     "requisition_note": "Salt and iron were state monopolies since Emperor Wu's reign - the Discourses on Salt and Iron (81 BC) record the court debate over exactly this policy - and the corvee could be called on a household's own hands as readily as on its goods. An ironworks or a saltern good enough to notice is, in Han law, a business the state already claims a right to run.",
-    "requisition_base_share": 0.2,
     "office_name": "a commandery post",
     "office_note": "An examined man of property could be named to a commandery office he had not sought, answerable afterward for the district's own tax quota out of his own estate if the harvest or the rolls came up short - a liability the examination system handed out along with the prestige.",
-    "office_base_share": 0.05,
     "military_name": "the imperial workshops",
     "military_note": "The Han already ran imperial armouries turning out crossbow locks to interchangeable tolerance; a household that can do the same is a supplier the state expects to hear from, not a curiosity it leaves alone.",
     "confiscation_name": "clan and property seizure",
@@ -421,6 +420,10 @@
     },
     "starting_tax_share": {
       "source": "Land tax at a thirtieth of harvest, plus poll tax, a merchant surcharge, and corvee commuted to cash and the salt and iron regime. Merchants were taxed above farmers; the combined share on trading revenue is an estimate.",
+      "confidence": "D"
+    },
+    "standing_army": {
+      "source": "The Eastern Han standing army: border garrisons and the capital troops, a few hundred thousand at most, far below the Former Han's conscript levies (Bielenstein, The Bureaucracy of Han Times). An approximate opening headcount.",
       "confidence": "D"
     }
   },

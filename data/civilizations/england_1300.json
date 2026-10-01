@@ -305,6 +305,7 @@
     "what_this_models": "You are one household, not the English crown. Four and a half million people live in this kingdom and roughly one in eight in a chartered town - about 540,000 town dwellers - but every trade you can hire is sized to the ONE town your household actually works in: the order of 15,000 people. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the kingdom's true numbers."
   },
   "population": 4500000,
+  "standing_army": 3000,
   "price_index": 1.1,
   "starting_techs": [
     "ag2_composting",
@@ -519,10 +520,8 @@
     "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
     "requisition_name": "purveyance",
     "requisition_note": "Purveyance let the Crown take goods and transport for the royal household at a fixed, below-market price, enforced by royal officers with the power of distraint; it was a standing grievance from Magna Carta's clause 28 onward, and a household with a visible surplus was exactly who the purveyor called on first.",
-    "requisition_base_share": 0.13,
     "office_name": "the shrievalty",
     "office_note": "Sheriffs and other unpaid county offices were pressed onto men of the right income, who then answered with their own estate for any shortfall in what the office owed the Exchequer - a burden substantial enough that wealthy men regularly paid fines specifically to be excused it.",
-    "office_base_share": 0.05,
     "military_name": "the Crown's monopoly patents on arms",
     "military_note": "Letters patent (in force here by 1331) let the Crown grant, and just as easily claim, exclusive rights over a trade it judged militarily useful; a founder casting a working gun attracts exactly that kind of royal interest.",
     "confiscation_name": "attainder",
@@ -581,6 +580,10 @@
     "starting_tax_share": {
       "source": "Lay subsidies at a tenth of moveables in towns and a fifteenth in the country, plus customs and manorial dues. Granted irregularly, so the yearly share is an estimate.",
       "confidence": "C"
+    },
+    "standing_army": {
+      "source": "Paid garrisons of the royal castles and the household troops; armies for a campaign were raised by commissions of array and indentures, not kept (Prestwich, Armies and Warfare in the Middle Ages). An approximate opening headcount of the force the Crown kept in pay in peace.",
+      "confidence": "D"
     }
   },
   "needs_first": {
