@@ -180,3 +180,33 @@ class OptionIdsNameRealThings(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LaterFilePrerequisites(unittest.TestCase):
+    """The prefix repair must see ids defined in branch files that sort later:
+    `cap_power_grid` asks for `power_grid`, defined in a later file, and must not
+    be rewired onto itself."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.built = {node["id"]: node for node in treetool.build_tree().tree["nodes"]}
+        branch_directory = os.path.join(os.path.dirname(HERE), "..", "data", "branches")
+        cls.authored = {}
+        for filename in sorted(os.listdir(branch_directory)):
+            if not filename.endswith(".json"):
+                continue
+            batch = json.load(open(os.path.join(branch_directory, filename)))
+            if isinstance(batch, list):
+                for node in batch:
+                    if isinstance(node, dict) and "id" in node:
+                        cls.authored[node["id"]] = node
+
+    def test_prerequisite_defined_in_a_later_file_survives(self):
+        self.assertIn("power_grid", self.built["cap_power_grid"]["pre"])
+
+    def test_no_authored_prerequisite_naming_a_real_node_is_dropped(self):
+        dropped = [(node_id, prerequisite) for node_id, node in self.authored.items()
+                   if node_id in self.built
+                   for prerequisite in node.get("pre", [])
+                   if prerequisite in self.authored and prerequisite not in self.built[node_id]["pre"]]
+        self.assertEqual(dropped, [])
