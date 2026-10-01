@@ -8,10 +8,10 @@ was found to put in it yet.
 
 ## What this does
 
-Complaints/35 asked for a seventh kind so "no mechanism exists yet" and "a
+Complaints/reports/playthrough-review-han-china-100-to-400ad.md asked for a seventh kind so "no mechanism exists yet" and "a
 historical outcome was copied in" stop sorting identically in the burndown.
 This adds it - `hardcoded_outcome` - and reclassifies the two
-entries Complaints/35 named, both in `sim/engine/economy.py`:
+entries Complaints/reports/playthrough-review-han-china-100-to-400ad.md named, both in `sim/engine/economy.py`:
 
 - `DEBT_BASE_RATE` (0.12) - the Roman legal ceiling on ordinary loans
   (*centesimae usurae*), used as the baseline arrears rate and reused
@@ -28,7 +28,7 @@ unchanged - the new section is printed after it, not instead of it.
 
 ## The audit
 
-Complaints/35 was explicit that finding the rest is "a review job, not a
+Complaints/reports/playthrough-review-han-china-100-to-400ad.md was explicit that finding the rest is "a review job, not a
 regex." This read every `declare()` call in the repository as it stood
 during this task, not just grepped for keywords, though keyword searches
 (attested/historical/documented/edict/wage/price/tax/revenue/population/

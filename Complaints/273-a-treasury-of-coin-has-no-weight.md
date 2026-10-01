@@ -2,7 +2,7 @@
 
 **Status:** open
 
-Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md` (the review filed as 35), item 5 (physical weight of bronze coinage).
+Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 5 (physical weight of bronze coinage).
 
 ## What is wrong
 

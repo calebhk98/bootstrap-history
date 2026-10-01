@@ -2,7 +2,7 @@
 
 **Status:** open
 
-Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md` (the review filed as 35), item 3 (instantaneous hiring pools).
+Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 3 (instantaneous hiring pools).
 
 ## What is wrong
 

@@ -2,7 +2,7 @@
 
 **Status:** open
 
-Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md` (the review filed as 35), item 6 (the tacit supply chain and the purity trap).
+Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 6 (the tacit supply chain and the purity trap).
 
 ## What is wrong
 

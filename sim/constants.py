@@ -65,7 +65,7 @@ THE KINDS, and the two that matter for different reasons
                              simulation is supposed to compute - a price, a
                              wage, an interest rate, a tax rate - copied in
                              from the historical record instead. CLAUDE.md
-                             SS3.1 forbids this outright. See Complaints/35.
+                             SS3.1 forbids this outright. See Complaints/reports/playthrough-review-han-china-100-to-400ad.md.
 
 `temporary_heuristic` is the project's progress bar: every one of them is a
 promise to replace it, and it will always have a tail, because "no mechanism
@@ -73,7 +73,7 @@ exists yet" is a permanent feature of an unfinished migration, not a bug.
 `hardcoded_outcome` is a DIFFERENT progress bar with a different
 target: `--burndown` expects it to reach EXACTLY ZERO, because unlike an
 un-derived heuristic, a live SS3.1 violation is not something this project
-tolerates having a tail of. Complaints/35 records why treating these two
+tolerates having a tail of. Complaints/reports/playthrough-review-han-china-100-to-400ad.md records why treating these two
 kinds as one bucket hid the second, much smaller and much more urgent one.
 
     python3 sim/constants.py --burndown       prints the live count
@@ -358,7 +358,7 @@ def main(argv=None):
                  100.0 * result["share"]))
         print()
         # SEPARATE FROM temporary_heuristic, ON PURPOSE, AND REPORTED LOUDLY.
-        # See Complaints/35: treating the two as one bucket meant a queue
+        # See Complaints/reports/playthrough-review-han-china-100-to-400ad.md: treating the two as one bucket meant a queue
         # where "invent a better elasticity eventually" and "a SS3.1
         # violation is live in the shipping model" sorted identically, which
         # is not measurable in the way that matters. Unlike temporary_heuristic

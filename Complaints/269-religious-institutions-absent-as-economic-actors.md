@@ -2,7 +2,7 @@
 
 **Status:** open
 
-Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md` (the review filed as 35), item 2 (religious upheaval).
+Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 2 (religious upheaval).
 
 ## What is wrong
 

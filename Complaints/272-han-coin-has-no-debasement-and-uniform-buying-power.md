@@ -2,7 +2,7 @@
 
 **Status:** open
 
-Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md` (the review filed as 35), item 4 (currency debasement).
+Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 4 (currency debasement).
 
 ## What is wrong
 

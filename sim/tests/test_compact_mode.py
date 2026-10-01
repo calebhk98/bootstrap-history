@@ -1,4 +1,4 @@
-"""The agent-oriented compact mode: Complaints/35 section 1.
+"""The agent-oriented compact mode: Complaints/reports/playthrough-review-han-china-100-to-400ad.md section 1.
 
 A player of this game who is itself an AI agent asked for "an explicit
 agent-oriented compact mode that can return highly structured state without

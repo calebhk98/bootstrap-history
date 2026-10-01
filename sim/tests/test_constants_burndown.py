@@ -1,7 +1,7 @@
 """Guards the two bugs that made `python3 sim/constants.py --burndown` print
 "0 numbers declared" while 32 numbers were declared, and (in
 `HardcodedHistoricalOutcomeTests`) the separate `hardcoded_outcome`
-kind Complaints/35 asked for.
+kind Complaints/reports/playthrough-review-han-china-100-to-400ad.md asked for.
 
 Milestone 1 in docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md is
 "provenance and a burndown". The mechanism was built and then the scoreboard
@@ -197,7 +197,7 @@ class CanonicalPackageRootTests(unittest.TestCase):
 
 
 class HardcodedHistoricalOutcomeTests(unittest.TestCase):
-    """Complaints/35: `temporary_heuristic` conflated two unlike things -
+    """Complaints/reports/playthrough-review-han-china-100-to-400ad.md: `temporary_heuristic` conflated two unlike things -
     honest scaffolding CLAUDE.md SS3.1 allows ("no mechanism exists yet"),
     and a hardcoded historical outcome SS3.1 forbids outright ("this IS the
     answer, copied from the record"). `hardcoded_outcome` is the
