@@ -75,6 +75,10 @@ check("197: find still matches by name",
 check("197: 'available find electricity' does not list a node by its filing cabinet",
       "com_signal_flags" not in [row["id"] for row in _replies[3].get("available", [])],
       _replies[3].get("available"))
+_electricity_replies = proto([{"cmd": "available", "subject": "electricity"}], civ="england_1300", kit="poor_scholar", fog=True)[0][-1]
+check("197: 'available electricity' does not list Signal flags",
+      "com_signal_flags" not in [row["id"] for row in _electricity_replies.get("available", [])],
+      [row["id"] for row in _electricity_replies.get("available", [])])
 
 # ---- 196: a topic word that is not a subject heading is searched as a word ---------
 check("196: a bare topic word returns what find returns",
@@ -85,6 +89,14 @@ _text = _play("england_1300", ["available physics"])
 check("196: an empty search teaches 'find' and the topic tags",
       "available find" in _text and "tag" in _text.lower().split("nothing you could begin")[-1],
       _text[-1500:])
+_physics_replies = proto([{"cmd": "available", "subject": "physics"}], civ="england_1300", kit="poor_scholar", fog=True)[0][-1]
+check("196: 'available physics' returns at least one result",
+      _physics_replies.get("ok") is not False and len(_physics_replies.get("available", [])) > 0,
+      _physics_replies.get("available", []))
+_furnace_replies = proto([{"cmd": "available", "subject": "furnace"}], civ="england_1300", kit="poor_scholar", fog=True)[0][-1]
+check("196: 'available furnace' returns at least one result",
+      _furnace_replies.get("ok") is not False and len(_furnace_replies.get("available", [])) > 0,
+      _furnace_replies.get("available", []))
 
 # ---- 221: close and quote name the right command ------------------------------------
 _text = _play("han_china_100ad", ["start hom_button", "step", "open hom_button",
