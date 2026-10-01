@@ -122,6 +122,11 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView):
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
 		return {trade: people for trade, people in staff.items() if people > 0.0}
 
+	def concern_wage_bill(self, node_id: str) -> float:
+		"""Yearly wages of the people running this concern needs, at the going wage."""
+		return sum(people * self.hours_per_person_year * self.wage_per_hour(trade)
+				   for trade, people in self.concern_staff(node_id).items())
+
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		"""People of a trade left in the pool for this actor after the founder's staff and
 		everyone else's. None for a trade nobody here practises yet, which has no pool."""
@@ -143,6 +148,21 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView):
 		"""Yearly takings of the founder's concern once it has ramped up."""
 		sim = self._sim
 		return sim.concern_takings(node_id, 1.0) * sim.goods_market_factor(node_id)
+
+	def market_key(self, node_id: str) -> str:
+		"""What a concern's operators share: a goods category is one market, any other concern its own."""
+		category = self.nodes[node_id].get("cat")
+		return category if category in self._sim.GOODS_CATEGORIES else node_id
+
+	def entry_gross(self, node_id: str, rivals: int, entrants: int) -> float:
+		"""Yearly takings one more operator would have at full ramp once `entrants` operators
+		(itself included) have joined the `rivals` already selling."""
+		sim = self._sim
+		takings = sim.concern_takings(node_id, 1.0)
+		category = self.nodes[node_id].get("cat")
+		if category in sim.GOODS_CATEGORIES:
+			return takings * sim.goods_category_factor_with_entrants(category, entrants)
+		return takings / (rivals + entrants)
 
 	def concern_margin(self, node_id: str) -> float:
 		"""Yearly profit of the founder's concern once it has ramped up."""

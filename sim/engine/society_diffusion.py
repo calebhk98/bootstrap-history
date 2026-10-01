@@ -399,35 +399,38 @@ class DiffusionMixin:
     # Give a government cannons and it is a different claim that it is not
     # being sacked by tribes: the STATE's own armies, not the founder's
     # private arsenal, and sack_chance as well as output_factor.
-    # state_military_diffusion() (above) is that number: the share of the
-    # founder's military work the government actor holds, because it
-    # copied it from its own budget or was licensed it.
-    STATE_MIL_RELIEF_CAP_OUTPUT = declare(
-        "STATE_MIL_RELIEF_CAP_OUTPUT", 0.25, kind="temporary_heuristic",
-        unit="dimensionless (fraction of output-shock harm removed at "
-             "full diffusion)", source=None, confidence="D",
-        why="Ceiling on how much the state's own armed forces (once the "
-            "founder's military work has diffused to them) soften an "
-            "output-crushing war - smaller than STATE_MIL_RELIEF_CAP_SACK "
-            "because output shocks have other causes besides invasion. "
-            "Tuned, not measured.")
-    STATE_MIL_RELIEF_CAP_SACK = declare(
-        "STATE_MIL_RELIEF_CAP_SACK", 0.35, kind="temporary_heuristic",
-        unit="dimensionless (fraction of sack-chance harm removed at full "
-             "diffusion)", source=None, confidence="D",
-        why="Ceiling on how much the state's own armed forces soften "
-            "sack_chance specifically - 'give the Roman government "
-            "cannons and it is not being sacked by tribes' (see the "
-            "section comment above). Tuned, not measured.")
+    # Each of the founder's military inventions the government holds (it copied it from its own
+    # budget or was licensed it) removes its own share of the harm, one after another on what is
+    # left, as hazard_relief combines every defence. The share of the founder's tree the state holds
+    # (state_military_diffusion) is reported but is not the basis: inventing more weapons never
+    # lowers the relief.
+    STATE_MIL_RELIEF_PER_WEAPON_OUTPUT = declare(
+        "STATE_MIL_RELIEF_PER_WEAPON_OUTPUT", 0.04, kind="temporary_heuristic",
+        unit="dimensionless (share of the remaining output-shock harm one held "
+             "weapon removes)", source=None, confidence="D",
+        why="What the state's armies gain from one more of the founder's weapons "
+            "against an output-crushing war; smaller than the sack figure because "
+            "output shocks have other causes besides invasion. Tuned, not measured.")
+    STATE_MIL_RELIEF_PER_WEAPON_SACK = declare(
+        "STATE_MIL_RELIEF_PER_WEAPON_SACK", 0.06, kind="temporary_heuristic",
+        unit="dimensionless (share of the remaining sack-chance harm one held "
+             "weapon removes)", source=None, confidence="D",
+        why="What the state's armies gain from one more of the founder's weapons "
+            "against being sacked by tribes. Tuned, not measured.")
 
-    def _state_military_diffusion_relief(self, cap):
-        diffused = self.state_military_diffusion()
-        if diffused <= 0.0:
+    def state_military_weapons_held(self):
+        """How many of the founder's military inventions the government holds."""
+        held = self.state_treasury().knowledge
+        projects = self.state.projects
+        return sum(1 for node_id in self._diffusible_ids("military")
+                   if node_id in projects.done and node_id not in projects.granted and node_id in held)
+
+    def _state_military_diffusion_relief(self, per_weapon):
+        weapons = self.state_military_weapons_held()
+        if weapons <= 0:
             return 1.0, None
-        share = cap * diffused
-        return (1.0 - share), ("the state's own armies now carry some of "
-                               "what you worked out (%d%% of it has "
-                               "reached them)" % round(diffused * 100))
+        return ((1.0 - per_weapon) ** weapons,
+                "the state's own armies now carry %d of the weapons you worked out" % weapons)
 
     def world_diffusion_report(self):
         """None while nothing the founder has built is spreading into the

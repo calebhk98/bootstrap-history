@@ -64,12 +64,12 @@ class HazardReliefMixin:
             if reason:
                 entries.append({"node": None, "label": reason, "factor": war_relief})
             state_relief, state_reason = self._state_military_diffusion_relief(
-                self.STATE_MIL_RELIEF_CAP_OUTPUT)
+                self.STATE_MIL_RELIEF_PER_WEAPON_OUTPUT)
             if state_reason:
                 entries.append({"node": None, "label": state_reason, "factor": state_relief})
         elif kind == "sack_chance":
             state_relief, state_reason = self._state_military_diffusion_relief(
-                self.STATE_MIL_RELIEF_CAP_SACK)
+                self.STATE_MIL_RELIEF_PER_WEAPON_SACK)
             if state_reason:
                 entries.append({"node": None, "label": state_reason, "factor": state_relief})
         return entries
