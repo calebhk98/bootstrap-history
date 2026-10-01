@@ -78,7 +78,10 @@ mortal founder and the victory ending, content leaking between
 civilisations, text that disagreed with the applied figure, unpreviewed
 spending, blocker readouts, lost multi-year steps, staffing closures,
 hazard and score screens, report noise) are in. The stakeholder holds the
-next playtest until the open count is well down. What is left, in order:
+next playtest until most open and partly fixed issues are done and roadmap
+items 1 to 5 below are built; items 6 to 9 and the mod system may wait. The
+roadmap is the long pole, so it runs first and the defects below fill the
+agents it leaves free. What is left, in order:
 
 1. **Defects and data errors**: `279` (coal as a smelting fuel before
    coke), `280` (option ids that name no node), `126` (audit markers in
@@ -92,7 +95,7 @@ next playtest until the open count is well down. What is left, in order:
    `81`, `99`, `102`.
 4. **Scale tools and requests**: `75`, `76`, `93`, `124`, `180`, `194`,
    `211` to `213`, `215`, `271`, `273` to `278`.
-5. **The roadmap** below, starting with civilisation independence.
+5. **The roadmap** below, items 1 to 5 required before the next playtest.
 
 `python3 sim/issue_status.py --status open` and `--status partly` list what
 is still to do.
