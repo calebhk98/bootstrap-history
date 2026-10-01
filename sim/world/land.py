@@ -1164,6 +1164,18 @@ def territory_farmland(home_regions: List[str],
         ladder=ladder)
 
 
+def territory_land_area_km2(home_regions: List[str],
+                            geography: Optional[Dict[str, Any]] = None) -> float:
+    """Total land area, km2, of the tiles the named regions resolve to.
+    Zero when none of them has tiles."""
+    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
+    land_tiles = geography.get("land_tiles") or {}
+    tiles = land_tiles.get("tiles") or {}
+    return sum(float(tiles[tile_id].get("land_area_km2", 0.0))
+               for tile_id in _tile_ids_for_home_regions(home_regions, land_tiles)
+               if tile_id in tiles)
+
+
 def ladder_quality(ladder: List[Any], hectares: float) -> float:
     """Mean fertility of the best `hectares` of a best-first ladder: the
     quality of a farm that has cleared the best ground first."""

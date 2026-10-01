@@ -10,7 +10,7 @@ from sim.world import deposits
 def _deposit(grade=10.0, depth_class="shallow_vein", hardness="medium",
              quantity=100.0, name="probe"):
     return deposits.Deposit(
-        name=name, metal="probe_metal", region="nowhere", material_moved="ore",
+        name=name, metal="probe_metal", tile="nowhere", material_moved="ore",
         ore_grade_kg_per_tonne=grade, depth_class=depth_class,
         hardness_class=hardness, quantity_tonnes_per_year=quantity, note="")
 
