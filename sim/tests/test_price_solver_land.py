@@ -221,7 +221,7 @@ class TheFiveCivilizationsSeparateTests(unittest.TestCase):
                            "price - land rent is not reaching the crop")
 
     def test_wheat_price_ranks_with_land_rent_not_against_it(self):
-        # A civilization that pays MORE rent per iugerum must pay AT LEAST
+        # A civilization that pays MORE rent per hectare must pay AT LEAST
         # as much for wheat as one that pays less - the whole point of
         # wiring land into the crop's cost. Uses each civilization's OWN
         # solved rent (not a pinned number) so this stays true even if
@@ -354,9 +354,9 @@ class WiringDoesNotBreakTheSolveTests(unittest.TestCase):
 
 
 class NoRomanAreaUnitInDataTests(unittest.TestCase):
-    """Production data and the solver speak hectares; no iugerum edge."""
+    """Production data and the solver speak hectares; no Roman-area edge."""
 
-    def test_production_data_names_no_iugerum(self):
+    def test_production_data_names_no_roman_area(self):
         import glob, os
         root = os.path.join(os.path.dirname(__file__), "..", "..", "data", "production")
         for path in glob.glob(os.path.join(root, "*.json")):
@@ -369,7 +369,7 @@ class NoRomanAreaUnitInDataTests(unittest.TestCase):
         self.assertAlmostEqual(
             production_entries["wheat_kg"]["land_hectare_years"], 1.0, places=3)
 
-    def test_solver_has_no_iugerum_conversion(self):
+    def test_solver_has_no_roman_area_conversion(self):
         from sim.world import land
         self.assertFalse(hasattr(land, "IUGERUM_HECTARES"))
 

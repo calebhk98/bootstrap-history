@@ -335,7 +335,7 @@ def load(use_solved_prices: bool = False,
     without having to first flip the engine's own behaviour.
 
     `civilization_id` matters only when `use_solved_prices` is True: it
-    decides whose held territory `iugerum_land` prices against (see
+    decides whose held territory `hectare_land` prices against (see
     `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION). It defaults to
     `None`, which `sim.engine.prices.priced_goods_table` resolves to Rome -
     the same default the standalone `sim/solve_prices.py --civ`-less run

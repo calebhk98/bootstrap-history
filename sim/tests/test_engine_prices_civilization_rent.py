@@ -64,7 +64,7 @@ class RentIsWiredInTests(unittest.TestCase):
         # docstring, UPDATE (stakeholder maintainability item 6...)
         # section), not the seven hand-drawn `regions` records. The
         # tile-grain figure is lower than the old region-grain one (55.779
-        # hours/iugerum, Complaints/43's own CLI
+        # hours/hectare, Complaints/43's own CLI
         # measurement from `python3 sim/solve_prices.py --civ rome_100ad`)
         # for two measured, physically sensible reasons, not because
         # anything here broke:
@@ -80,7 +80,7 @@ class RentIsWiredInTests(unittest.TestCase):
         #      about 13% LARGER (measured directly against sim/world/
         #      land.py's own cultivable_land_for_civilization, region-grain
         #      vs tile-grain), which thins the intensive margin's own
-        #      labour-per-iugerum figure and so its own rent contribution.
+        #      labour-per-hectare figure and so its own rent contribution.
         # Both effects push the price DOWN, which is what happened: this
         # task's own report has the full before/after account, including
         # the same measurement for Han China. This is exactly the kind of

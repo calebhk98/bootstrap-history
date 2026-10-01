@@ -390,10 +390,10 @@
    "conf": "C",
    "p": 1.6
   },
-  "iugerum_land": {
+  "hectare_land": {
    "conf": "B",
-   "note": "0.25 hectare",
-   "p": 250.0
+   "note": "1 hectare",
+   "p": 990.9
   },
   "kieselguhr_kg": {
    "conf": "C",

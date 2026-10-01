@@ -1,6 +1,6 @@
 """Ricardian rent on ARABLE LAND: why a field is not priced like a mine.
 
-WHAT THIS IS FOR. Complaints/43 measured `iugerum_land` solving to exactly
+WHAT THIS IS FOR. Complaints/43 measured `hectare_land` solving to exactly
 0.0 in `sim/solve_prices.py`: land has no cost of production (its own
 `data/production/40_organics.json` entry says so directly - "essentially no
 labour... a rent set by the worst hectare still worth taking"), and nothing
@@ -65,7 +65,7 @@ D except `italia`, confidence C, because Italia's own fertility figure is
 not an estimate at all: it is DEFINED as 1.0, because that is the ground
 `wheat_kg`'s own 577.5 kg/ha net figure already describes. Nothing here is
 tuned so a computed price matches `data/prices.json`'s 250-denarii book
-figure for `iugerum_land` - see this module's own `_declare_land_area`,
+figure for `hectare_land` - see this module's own `_declare_land_area`,
 `_declare_arable_fraction` and `_declare_fertility` for the discipline
 `sim/world/deposits.py`'s own `_declare_grade` already applies to ore.
 
@@ -152,7 +152,7 @@ single reported price ends up EXACTLY the marginal deposit's own cost (see
 extracting ore genuinely costs labour even at the margin, so "price equals
 marginal cost" is a real, nonzero number. Land's cost of "production" is
 genuinely near zero EVEN AT THE MARGIN (marking a boundary costs a scribe
-minutes, per `iugerum_land`'s own `yield_basis`), so copying ore's algebra
+minutes, per `hectare_land`'s own `yield_basis`), so copying ore's algebra
 literally would reproduce Complaints/43's own zero. What land actually has
 that a kilogram of homogeneous ore does not is a MARKET made of parcels of
 DIFFERENT quality trading at DIFFERENT rents simultaneously - a chernozem
@@ -242,7 +242,7 @@ civilization's own list of held regions somewhere a save can round-trip
 list of region-key strings is about as simple a field as that mechanism
 ever has to carry). It does NOT need to touch this module, `sim/solve_
 prices.py`'s land-rent wiring, or `data/world/geography.json` at all:
-call `cultivable_land_for_civilization` (or `land_rent_hours_per_iugerum`
+call `cultivable_land_for_civilization` (or `land_rent_hours_per_hectare`
 in `sim/solve_prices.py`) again with the updated list and every number
 downstream - endowment, margin, rent, price - updates with no further
 change, because "the regions a civilization holds" was never anything
@@ -371,7 +371,7 @@ WHAT THIS MODULE DELIBERATELY DOES NOT DO.
   - No feedback from land rent into wheat_kg's own price, or into any
     other `extracted_from: "arable land"` material's price (wheat, wool,
     linen, olive oil - see `data/production/40_organics.json`'s own
-    `_note`). `iugerum_land` is not consumed as an `inputs` entry by any
+    `_note`). `hectare_land` is not consumed as an `inputs` entry by any
     of them today, so there is no structural link for rent to travel
     along even if this module wanted to send it - see `sim/solve_prices.py`
     for where that wiring, if it existed, would need to attach.
@@ -416,19 +416,6 @@ CIVILIZATIONS_DIR = os.path.join(_ROOT, "data", "civilizations")
 # ============================================================================
 # THE REFERENCE YIELD - what a decent (quality 1.0) hectare produces
 # ============================================================================
-
-IUGERUM_HECTARES = declare(
-    "IUGERUM_HECTARES", 0.2523,
-    kind="physical_constant",
-    unit="hectares/iugerum",
-    source="The Roman iugerum (240 x 120 Roman feet) - the same conversion "
-           "data/production/40_organics.json's own iugerum_land entry "
-           "already states.",
-    confidence="B",
-    why="Every area this module works in is in hectares. The production "
-        "data still names its land material and land use in iugera "
-        "(`iugerum_land`, `land_iugera_years`), so the price solver "
-        "multiplies by this at that one edge.")
 
 REFERENCE_WHEAT_YIELD_KG_PER_HECTARE = declare(
     "REFERENCE_WHEAT_YIELD_KG_PER_HECTARE", 577.5,
