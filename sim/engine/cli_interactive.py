@@ -433,6 +433,27 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
     return False, session, False, None
 
 
+def _manual_save_note(resp, session):
+    """After a typed `save` succeeds: freeze the saved file as a checkpoint so
+    resuming it forks a new session instead of overwriting it, and return the
+    text saying where it landed and how to move it. Empty when the command was
+    not a successful save, or when it wrote the live session file itself."""
+    saved = resp.get("saved") if resp.get("ok") else None
+    if not saved or not session or os.path.abspath(saved) == os.path.abspath(session):
+        return ""
+    landed = os.path.abspath(saved)
+    meta = dict(settings.load_session_meta(session))
+    meta["checkpoint"] = True
+    settings.save_session_meta(saved, meta)
+    return _wrap(
+        "Saved a snapshot at %s. The live game (still autosaved after every "
+        "command) is the separate file %s. Resuming the snapshot starts a new "
+        "live file and leaves the snapshot as it is. To move it to another "
+        "machine or container, copy that file (and %s next to it) there and "
+        "run: python3 sim/simulator.py play --session <the copy>"
+        % (landed, os.path.abspath(session), os.path.basename(settings._meta_path(saved))))
+
+
 def _play_run_one_command(sim, nodes, cmd, session):
     """Run one already-parsed command through the dispatcher: dispatch it,
     autosave, and print its rendering. The printing has to happen here,
@@ -485,6 +506,10 @@ def _play_run_one_command(sim, nodes, cmd, session):
         # Only when it is worth knowing. A tenth of a second on every line
         # is noise that would bury the one command that took nine seconds.
         print(_text + ("\n   (took %.1fs)" % _took if _took >= 0.5 else ""))
+        if cmd.get("cmd") == "save" and not cmd.get("json"):
+            note = _manual_save_note(resp, session)
+            if note:
+                print(note)
         print()
     except BrokenPipeError:
         # Somebody closed the pipe. The game is saved; leave quietly.

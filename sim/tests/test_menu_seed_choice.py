@@ -67,7 +67,8 @@ check("208: it says the live session file is separate",
       "live" in _after_save and _live in _after_save, _out[-700:])
 check("208: it says how to copy the save to another machine",
       "--session" in _after_save and "copy" in _after_save, _out[-700:])
+_snapshot_before = open(_snapshot).read()
 _resume = _run(["play", "--session", _snapshot], "step 1\nquit\n", _env_export, _workdir).stdout
 check("208: resuming a manually saved file does not overwrite it",
-      "stays exactly as it is" in _resume and json.load(open(_snapshot)).get("year") == 100,
+      "stays exactly as it is" in _resume and open(_snapshot).read() == _snapshot_before,
       _resume[-500:])
