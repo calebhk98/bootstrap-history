@@ -131,6 +131,16 @@ def clearing_price_ratio(conditions: MarketConditions) -> float:
     """The price over long-run cost at which demand equals the supply on
     offer, held between the floor and the ceiling."""
     low, high = conditions.floor_ratio, conditions.ceiling_ratio
+    if (conditions.committed_demand_tonnes == 0.0 and conditions.actor_supply_tonnes == 0.0
+            and conditions.founder_sales_tonnes == 0.0 and conditions.stock_tonnes == 0.0
+            and conditions.society_capacity_tonnes > 0.0
+            and conditions.household_demand_at_anchor_tonnes > 0.0):
+        # Only households and society producers: demand = supply has a closed form.
+        exponent = 1.0 / (conditions.demand_price_elasticity
+                          + conditions.supply_price_elasticity)
+        ratio = (conditions.household_demand_at_anchor_tonnes
+                 / conditions.society_capacity_tonnes) ** exponent
+        return min(high, max(low, ratio))
     if _demand_at(conditions, low) <= _supply_at(conditions, low):
         return low
     if _demand_at(conditions, high) >= _supply_at(conditions, high):

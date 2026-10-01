@@ -71,7 +71,8 @@ class ProjectMaterialsMixin:
         if unit_price is None:
             return None
         emp_key, tag = self._material_tag(material)
-        per_tonne = unit_price / tonnes_per_unit(material) * self.price_index
+        per_tonne = (unit_price / tonnes_per_unit(material) * self.price_index
+                     * self.market_price_ratio(emp_key))
         factor = self._price_factor_across_purchase(emp_key, tag, already, max(0.0, tonnes))
         return per_tonne * factor * max(0.0, tonnes), per_tonne * factor
 
@@ -186,6 +187,7 @@ class ProjectMaterialsMixin:
             money = row["price_per_tonne"] * tonnes * factor
             emp_key = self._material_tag(row["material"])[0]
             household.capital -= money
+            self.market_note_purchase(emp_key, tonnes)
             stock[emp_key] += tonnes
             opening[emp_key] = opening.get(emp_key, 0.0) + tonnes
             paid += money

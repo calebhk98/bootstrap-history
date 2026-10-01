@@ -89,7 +89,8 @@ check("...and a glut's price recovers toward long-run cost as they do",
 # --- a firm's output is one call: stub it and watch the price.
 s = sim(civ="rome_100ad", capital=1e9)
 base_ratio = s.market_price_ratio(MATERIAL)
-s.actor_supply = lambda material: s.market_state(MATERIAL)["capacity_tonnes"] * 0.2
+_firm_output = s.market_state(MATERIAL)["capacity_tonnes"] * 0.2
+s.actor_supply = lambda material: _firm_output
 check("actor supply (once firms produce) lowers the price through the same clearing",
       s.market_price_ratio(MATERIAL) < base_ratio, (base_ratio, s.market_price_ratio(MATERIAL)))
 

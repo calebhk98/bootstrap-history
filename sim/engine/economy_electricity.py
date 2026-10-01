@@ -474,6 +474,7 @@ class ElectricityMixin:
             if fraction < worst:
                 worst, who = fraction, "electricity"
         all_tags = set(industrial) | set(lab) | self._own_production_tags()
+        self.market_reset_draws()
         for emp_key, tag in sorted(all_tags):
             ind_need = industrial.get((emp_key, tag), 0.0)
             lab_need = lab.get((emp_key, tag), 0.0)
@@ -511,6 +512,7 @@ class ElectricityMixin:
             # (DOCS_VS_ENGINE.md #3). Capped at own_and_stock, never at the
             # larger `have`, for exactly the reason in the comment above.
             stock[emp_key] = max(0.0, own_and_stock - lab_drawn - consumed_ind)
+            self.market_note_draw(emp_key, lab_drawn + consumed_ind - own_and_stock)
         economy.throttle, economy.binding = worst, who
         # Stored AFTER mutation, against stock as this call actually left
         # it - so an immediate repeat call's sig (computed from that same,
