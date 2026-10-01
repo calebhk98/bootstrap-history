@@ -5,6 +5,7 @@ file of their own.
 """
 import math
 from sim.constants import declare
+from . import money_units
 
 from .economy_goods import GoodsMixin
 from .economy_materials import MaterialSupplyMixin
@@ -553,10 +554,11 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
     # ~1 iugerum of woodland per 0.25 ha. Named so that `quote forest` and the
     # purchase itself cannot drift apart: a player must be able to ask the
     # price of coppice before spending capital on it, not only after.
-    FOREST_COST_PER_HA = declare(
-        "FOREST_COST_PER_HA", 250.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/hectare", source=None, confidence="D",
+    FOREST_LABOUR_HOURS_PER_HA = declare(
+        "FOREST_LABOUR_HOURS_PER_HA", 5000.0, kind="temporary_heuristic",
+        unit="labour hours per hectare", source=None, confidence="D",
         why="Purchase price of a hectare of coppice woodland. No attested "
             "Roman land-price figure backs this; it exists mainly so "
             "`quote forest` and the purchase itself agree on a real price "
             "at all, per the comment above.")
+    FOREST_COST_PER_HA = money_units.PricedInLabourHours("FOREST_LABOUR_HOURS_PER_HA")

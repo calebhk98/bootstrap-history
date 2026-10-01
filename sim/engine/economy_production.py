@@ -21,6 +21,7 @@ grouping evidence, and for why this lives in a separate file.
 """
 from .data import trade_family
 from sim.constants import declare
+from . import money_units
 
 
 class ProductionMixin:
@@ -707,9 +708,9 @@ class ProductionMixin:
     # with three people in it is not billed as though every
     # branch were already fully staffed.
     # People one unit supports: each institution's `institution_places` mechanic.
-    INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD = declare(
-        "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD", 250.0,
-        kind="temporary_heuristic", book_money=True, unit="denarii of upkeep per head",
+    INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD = declare(
+        "INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD", 250.0,
+        kind="temporary_heuristic", unit="labour hours of upkeep per head",
         source=None, confidence="D",
         why="For an institution not in INSTITUTION_PLACES, how many "
             "denarii of upkeep one person's worth of capacity is assumed "
@@ -718,6 +719,7 @@ class ProductionMixin:
             "wage a head' per the comment this replaces - the right ORDER "
             "of magnitude for a building whose cost is its people, not a "
             "specific attested wage.")
+    INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD = money_units.PricedInLabourHours("INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD")
 
     def institution_places(self, node_id):
         """Roughly how many people ONE UNIT of this establishment is built to
