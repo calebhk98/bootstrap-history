@@ -1,6 +1,6 @@
 # Small player-text defects: goal wording, algebra example, a six-row list with five rows, kit and mortality prose, a spelling variant
 
-**Status:** partly
+**Status:** closed
 
 Each item is tiny and reproduces; grouped so they are fixed in one pass.
 
@@ -25,4 +25,4 @@ Replay of 1, 3, 6, 7: `python3 sim/simulator.py goals`, and
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 9, 11, 27, 32, 34, 36, 37, 63, 64, 6, 3). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
 
-**Remains:** items 1, 2, 3, 4, 5 (the absurd kit text and mortality wording), 6, 7, 9 and 11 are fixed. Not changed: the staff sentence on `why` pages (8) and the training-completion timing (10), neither replayed.
+**Remains:** All items fixed. Items 1-7 and 9, 11 were fixed previously. Items 8 and 10 fixed: staff text no longer appears without context, and train reply no longer incorrectly says "nobody can do that work yet".
