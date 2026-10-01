@@ -36,7 +36,7 @@ class ViewShareMixin:
                  getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
                  len(projects.done), len(projects.operating),
                  economy.forest_ha, economy.nitre_bed_m2, self.population.total,
-                 economy.economy, len(self.household.mines)))
+                 economy.economy, len(economy.mines)))
 
     def _shared_answer(self, key, inputs, compute):
         """`compute()` reused while the world stamp holds and `inputs` (what the answer reads that
