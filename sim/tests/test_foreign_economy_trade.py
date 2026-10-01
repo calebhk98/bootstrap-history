@@ -49,6 +49,8 @@ def cheap_partner(simulation, home_price=10.0, foreign_price=100.0, freight=1.0)
     simulation.foreign_opening = lambda civilization_id, commodity, solved: (
         2 * (simulation._market_entry(commodity) or {"reference_tonnes": 0.0})["reference_tonnes"],) * 2
     simulation._route_freight_per_tonne = lambda civilization: freight
+    # the flow rule is isolated from the fleet: carriers lift whatever the gap pays for
+    simulation.foreign_lift_left_tonnes = lambda civilization_id, route: (float("inf"),) * 2
     simulation.household._foreign_facts_cache = None
     return simulation
 

@@ -55,10 +55,11 @@ def _price_gap(home, foreign, home_price, foreign_price, flow_tonnes):
             - clear_market(foreign_at).price_ratio * foreign_price)
 
 
-def _solve_flow(home, foreign, home_price, foreign_price, freight, direction):
+def _solve_flow(home, foreign, home_price, foreign_price, freight, direction,
+                lift_tonnes=math.inf):
     """Largest flow (in `direction`, +1 into home, -1 out of it) whose price
-    gap still exceeds freight; signed."""
-    limit = _offerable(foreign if direction > 0 else home)
+    gap still exceeds freight and that the carriers can lift; signed."""
+    limit = min(_offerable(foreign if direction > 0 else home), lift_tonnes)
     if limit <= 0.0:
         return 0.0
     # Even at the importer's ceiling against the exporter's floor the gap
@@ -89,16 +90,18 @@ def _solve_flow(home, foreign, home_price, foreign_price, freight, direction):
 
 
 def clear_trading_markets(home, foreign, home_price_per_tonne, foreign_price_per_tonne,
-                          freight_per_tonne):
+                          freight_per_tonne, lift_into_home_tonnes=math.inf,
+                          lift_out_of_home_tonnes=math.inf):
     """Clear two markets joined by a route that costs `freight_per_tonne`;
     prices are long-run costs in one money per tonne. A good one side cannot
-    price is not traded."""
+    price is not traded. Carriers lift at most the stated tonnes each way."""
     flow = 0.0
     if (home_price_per_tonne > 0.0 and foreign_price_per_tonne > 0.0
             and math.isfinite(freight_per_tonne)):
         for direction in (1.0, -1.0):
             flow = _solve_flow(home, foreign, home_price_per_tonne, foreign_price_per_tonne,
-                               freight_per_tonne, direction)
+                               freight_per_tonne, direction,
+                               lift_into_home_tonnes if direction > 0 else lift_out_of_home_tonnes)
             if flow != 0.0:
                 break
     home_after, foreign_after = with_flow(home, foreign, flow)

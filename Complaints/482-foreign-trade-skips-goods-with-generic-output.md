@@ -1,6 +1,6 @@
 # Foreign trade skips goods whose output is only a generic estimate
 
-**Status:** open
+**Status:** open - not started; the fleet and payments work (481, 484) did not need it, and it is the first thing to do before enabling partners (591)
 
 `_output_is_sourced` in `sim/engine/foreign_economies.py` (labelled a temporary
 heuristic) lets a good this society makes cross a border only when
