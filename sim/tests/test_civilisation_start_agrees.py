@@ -60,6 +60,34 @@ class StartAgreesWithItselfTests(unittest.TestCase):
         self.assertEqual(
             start_check.unmakeable_materials(FIXTURE_NODES, civ, FIXTURE_PRODUCTION), {})
 
+    def test_held_capability_rung_without_the_rung_below_is_reported(self):
+        nodes = {"rung_low": _node("rung_low"),
+                 "rung_high": _node("rung_high", pre=["rung_low"]),
+                 "tool": _node("tool", pre=["rung_high"])}
+        for node in nodes.values():
+            node["cat"] = "capability" if node["id"].startswith("rung") else "tool"
+        civ = {"starting_techs": ["rung_high", "tool"]}
+        self.assertEqual(start_check.capability_rung_gaps(nodes, civ),
+                         {"rung_high": ["rung_low"], "tool": ["rung_low"]})
+        civ = {"starting_techs": ["rung_low", "rung_high", "tool"]}
+        self.assertEqual(start_check.capability_rung_gaps(nodes, civ), {})
+
+    def test_held_node_the_briefing_says_is_absent_is_reported(self):
+        civ = {"starting_techs": ["known_idea"],
+               "briefing_absent": [{"claim": "no ideas here", "nodes": ["known_idea", "priced"]}]}
+        self.assertEqual(start_check.briefing_contradictions(FIXTURE_NODES, civ),
+                         {"no ideas here": ["known_idea"]})
+        civ["starting_techs"] = []
+        self.assertEqual(start_check.briefing_contradictions(FIXTURE_NODES, civ), {})
+
+    def test_shipped_civilisations_hold_no_capability_rung_gap_or_briefing_contradiction(self):
+        import json
+        with open(os.path.join(ROOT, "data", "tech_tree.json")) as handle:
+            nodes = {node["id"]: node for node in json.load(handle)["nodes"]}
+        for name, civilisation in start_check.load_civilisations(ROOT).items():
+            self.assertEqual(start_check.capability_rung_gaps(nodes, civilisation), {}, name)
+            self.assertEqual(start_check.briefing_contradictions(nodes, civilisation), {}, name)
+
     def test_shipped_civilisations_have_no_free_but_unheld_node(self):
         import json
         with open(os.path.join(ROOT, "data", "tech_tree.json")) as handle:
