@@ -21,6 +21,7 @@ that they can live in a file of their own. Behaviour is unchanged and
 verified byte-identical.
 """
 from sim.constants import declare
+from .institution_societies import belongs_to_other_society
 
 
 class DiffusionMixin:
@@ -497,12 +498,8 @@ class DiffusionMixin:
     # summary, and nothing at all about where any of it leads.
 
     def _is_foreign_institution(self, node_id):
-        # CACHED FOREVER, not per-year, and ONLY for civs that actually pay
-        # for the string search below. Rome's own answer is unconditionally
-        # False without looking at k at all - that branch was already as
-        # cheap as a Python method call can be, and touching a cache dict for
-        # it would only add overhead. Everyone else's answer depends only on
-        # this civilization's id (fixed at construction) and this node's own
+        # CACHED FOREVER, not per-year: the answer depends only on this
+        # civilization's society (fixed at construction) and this node's own
         # key and name (fixed tree data) - nothing that changes over a run.
         # The 4a auto-grant loop in step() called this for every node in
         # `order` (2,831 of them) every single year, most of them already
@@ -511,29 +508,25 @@ class DiffusionMixin:
         # of times over. See `_done_changed` for the convention this
         # deliberately does NOT need: there is no invalidation here because
         # nothing it reads can change after the Sim is built.
-        if self.civ.get("id") == "rome_100ad":
-            return False
         cache = self.__dict__.setdefault("_foreign_institution_cache", {})
         value = cache.get(node_id)
         if value is None:
             hay = (node_id + " " + self.nodes[node_id].get("name", "")).lower()
-            value = any(marker in hay for marker in self.FOREIGN_MARKERS)
+            value = belongs_to_other_society(hay, self.civ, "markers")
             cache[node_id] = value
         return value
 
     def _is_foreign_only(self, node_id):
         """A legal or civic institution of a society that is not this one."""
         # CACHED FOREVER, for the same reason as _is_foreign_institution just
-        # above, and with the same Rome fast path kept outside the cache.
+        # above.
         # start_reason() calls this on every not-yet-done node it is asked
         # about, every year, for as long as that node stays unbuilt.
-        if self.civ.get("id") == "rome_100ad":
-            return False
         cache = self.__dict__.setdefault("_foreign_only_cache", {})
         value = cache.get(node_id)
         if value is None:
             hay = (node_id + " " + self.nodes[node_id].get("name", "")).lower()
-            value = any(marker in hay for marker in self.FOREIGN_INSTITUTIONS)
+            value = belongs_to_other_society(hay, self.civ, "exclusive_markers")
             cache[node_id] = value
         return value
 
