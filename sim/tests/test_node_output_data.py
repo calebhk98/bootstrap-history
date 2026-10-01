@@ -14,11 +14,12 @@ from sim.world.labour_market import production_data
 # stream sets the output), lines whose basis unit is not a kilogram (the declared figure is in
 # tonnes), lines that split one declared total across unrelated products, and makers whose
 # entries add less than their staff cost at solved prices, so a declared output would only
-# derive zero revenue, and makers whose derived payback would fall under the floor. Complaints/520.
+# derive zero revenue (their entries state no labour and no plant), and Solvay soda, whose product is priced
+# at the dearer incumbent route so its derived payback falls under the floor. Complaints/520.
 STILL_UNBOUNDED = {
     "analytical_chemistry", "chm_caustic_soda", "chm_glycerol", "chm_polyethylene", "chm_superphosphate",
-    "gunpowder", "mirror_amalgam", "chm_solvay_process", "chm_bleaching_powder",
-    "prn_hand_papermaking", "electrolysis_industrial", "in2_claude_cycle_air_liquefaction",
+    "gunpowder", "mirror_amalgam", "chm_solvay_process",
+    "electrolysis_industrial", "in2_claude_cycle_air_liquefaction",
     "in2_linde_cycle_expansion_engine", "in2_ultracentrifuge", "med_opium_mandrake",
     "met_froth_flotation", "pwr_coal_seam", "pwr_nuclear_fission", "pwr_peat",
 }

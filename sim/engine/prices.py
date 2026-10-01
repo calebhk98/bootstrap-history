@@ -199,13 +199,14 @@ class SolvedPrices(object):
     """
     __slots__ = ("prices_in_labour_hours", "resolvable_materials",
                 "chosen_recipe_by_material", "converged", "iterations_run",
-                "gate_nodes_held", "civilization_id")
+                "gate_nodes_held", "civilization_id", "interest_rate")
 
     def __init__(self, prices_in_labour_hours: Prices,
                 resolvable_materials: Set[str],
                 chosen_recipe_by_material: Dict[str, Any],
                 converged: bool, iterations_run: int,
-                gate_nodes_held: FrozenSet[str], civilization_id: str) -> None:
+                gate_nodes_held: FrozenSet[str], civilization_id: str,
+                interest_rate: float = 0.0) -> None:
         self.prices_in_labour_hours = prices_in_labour_hours
         self.resolvable_materials = resolvable_materials
         self.chosen_recipe_by_material = chosen_recipe_by_material
@@ -213,6 +214,7 @@ class SolvedPrices(object):
         self.iterations_run = iterations_run
         self.gate_nodes_held = gate_nodes_held
         self.civilization_id = civilization_id
+        self.interest_rate = interest_rate
 
 
 # `data/production/` is committed data: it does not change while a game is
@@ -328,7 +330,8 @@ def default_production_entries() -> ProductionEntries:
 def _solve_to_json(production_entries: ProductionEntries,
                    gate_nodes_held: FrozenSet[str], civilization_id: str,
                    document_ratios: Dict[str, float],
-                   admitted_entry_keys: FrozenSet[str] = frozenset()) -> Dict[str, Any]:
+                   admitted_entry_keys: FrozenSet[str] = frozenset(),
+                   interest_rate: float = 0.0) -> Dict[str, Any]:
     """Run the solver for one held-gate set; the result is JSON-able."""
     # `gate_nodes_held` is exactly the right thing to hand
     # `techniques_available_to` as `reached_nodes`: every `requires_node` it
@@ -360,7 +363,8 @@ def _solve_to_json(production_entries: ProductionEntries,
      chosen_recipe_by_material) = solve_prices.solve(
         available_entries, producers_of, resolvable_materials, wage_by_trade,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
-        demand_anchors=joint_allocation.build_demand_anchors(civilization_id))
+        demand_anchors=joint_allocation.build_demand_anchors(civilization_id),
+        interest_rate=interest_rate)
 
     return {
         "prices_in_labour_hours": prices_in_labour_hours,
@@ -375,7 +379,8 @@ def solved_prices(held_technology_ids: Iterable[str],
                   prices_json: Dict[str, Any],
                   production_entries: Optional[ProductionEntries] = None,
                   civilization_id: Optional[str] = None,
-                  admitted_entry_keys: FrozenSet[str] = frozenset()) -> SolvedPrices:
+                  admitted_entry_keys: FrozenSet[str] = frozenset(),
+                  interest_rate: Optional[float] = None) -> SolvedPrices:
     """A `SolvedPrices` for this held-technology set, solving on a cache
     miss and returning the cached vector on a hit. See CACHE KEY in the
     module docstring: the cache is keyed on the intersection of
@@ -393,17 +398,23 @@ def solved_prices(held_technology_ids: Iterable[str],
     from `held_technology_ids` on purpose, so a caller cannot get this
     right by accident and cannot get it wrong without a value showing up
     somewhere to say so.
+
+    `interest_rate` is the yearly rate each plant's build bill must earn over its depreciation (the
+    market rate); `None` is the civilisation's starting rate, which is the market rate until a market
+    has met. It is part of the cache key.
     """
     if production_entries is None:
         production_entries = _default_production_entries()
     civilization_id = civilization_id or solve_prices.DEFAULT_LAND_CIVILIZATION
+    if interest_rate is None:
+        interest_rate = solve_prices.load_starting_interest_rate(civilization_id)
 
     gate_nodes_held = frozenset(all_gate_nodes(production_entries)
                                 & set(held_technology_ids))
     document_ratios = solve_prices.wage_ratios_by_trade(prices_json)
     # Wages move with the labour market, so the cache is keyed on them too.
     cache_key = (gate_nodes_held, civilization_id,
-                 tuple(sorted(document_ratios.items())), admitted_entry_keys)
+                 tuple(sorted(document_ratios.items())), admitted_entry_keys, interest_rate)
 
     cached = _SOLVE_CACHE.get(cache_key)
     if cached is not None and cached[0] is production_entries:
@@ -411,14 +422,14 @@ def solved_prices(held_technology_ids: Iterable[str],
 
     def compute() -> Dict[str, Any]:
         return _solve_to_json(production_entries, gate_nodes_held,
-                              civilization_id, document_ratios, admitted_entry_keys)
+                              civilization_id, document_ratios, admitted_entry_keys, interest_rate)
     if production_entries is _DEFAULT_PRODUCTION_ENTRIES:
         # Only the committed catalogue is persisted; synthetic catalogues are not.
         try:
             key = solve_cache.solve_key({
                 "production": production_entries, "gates": sorted(gate_nodes_held),
                 "civilization": civilization_id, "wage_ratios": document_ratios,
-                "admitted_entries": sorted(admitted_entry_keys)})
+                "admitted_entries": sorted(admitted_entry_keys), "interest_rate": interest_rate})
         except OSError:
             key = None  # an input file cannot be read: solve without the cache
         stored = (solve_cache.cached_json(key, compute) if key
@@ -432,7 +443,7 @@ def solved_prices(held_technology_ids: Iterable[str],
         converged=stored["converged"],
         iterations_run=stored["iterations_run"],
         gate_nodes_held=gate_nodes_held,
-        civilization_id=civilization_id)
+        civilization_id=civilization_id, interest_rate=interest_rate)
     _SOLVE_CACHE[cache_key] = (production_entries, result)
     return result
 

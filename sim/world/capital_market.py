@@ -52,6 +52,16 @@ def rate_for_balance(starting_rate: float, current_utilisation: float, reference
     return starting_rate * max(RATE_FLOOR_SHARE, min(RATE_CEILING_SHARE, scaled))
 
 
+def capital_recovery_factor(rate: float, life_years: float) -> float:
+    """The yearly share of a plant's cost that repays it over its life with interest at `rate` on what is
+    still unpaid: one over the life when the rate is nil, the rate when the life is endless."""
+    if life_years <= 0.0:
+        raise ValueError("a plant needs a positive life")
+    if rate <= 0.0:
+        return 1.0 / life_years
+    return rate / (1.0 - (1.0 + rate) ** -life_years)
+
+
 def borrower_rate(market_rate: float, standing_discount: float, share_of_ceiling_used: float) -> float:
     """What one borrower pays: never less than the market rate (what the market itself pays savers), plus
     the part of the arrears premium that its standing does not remove. A discount only removes premium."""
