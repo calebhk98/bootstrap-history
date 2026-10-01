@@ -44,7 +44,7 @@ Measure with these; none of their output is copied here.
 | 2 | the synthetic world | Not started and not needed: domain models were built standalone under `sim/world/` and wired in afterwards. |
 | 3 | actors | `Actor` base with `Household`, `Government` and `Firm` in `sim/engine/actors/` (see `ACTORS.md`). Governments and firms imitate founder inventions; firms do not yet compete for labour or inputs (`Complaints/107`). |
 | 4 | food and people | Wired: agriculture and demography run through the engine's yearly demographic step, with a persistent granary and weather pooling. See `WIRING_MILESTONE_4.md`. |
-| 5 | the wage and the price solve | Wages come from the labour market (subsistence floor, training premium, tightness), and money is anchored to each civilisation's coin metal; neither reads the book file. Material prices still start from the book with the solver filling gaps; the exit checklist is `Complaints/123`. |
+| 5 | the wage and the price solve | Wages come from the labour market (subsistence floor, training premium, tightness), and money is anchored to each civilisation's coin metal; neither reads the book file. Every material price is solved; the book file is deleted. Authored node revenue is not yet derived from output everywhere (`Complaints/287`). |
 | 5b | when a technique exists (era gate) | Built; every technique states what it needs and when, and the solver refuses techniques that cannot reach a needed temperature. Coverage: `validate_production.py`. |
 | 6+ | transport, settlements, state finance, war | Transport is wired into freight cost. Military logistics is wired into state pressure. Settlements, state finance and war have no dedicated module (`Complaints/109`, `Complaints/111`). |
 
@@ -56,9 +56,9 @@ Measure with these; none of their output is copied here.
 - **Closed demand loop.** What the founder or a firm produces does not reach
   the society's supply, so workers in that trade do not move away
   (`Complaints/106`).
-- **Book material prices.** The solver fills only what the book lacks; some
-  new materials cannot be priced yet (`python3 sim/simulator.py validate`
-  warns about them) (`Complaints/123`).
+- **Node revenue.** Prices are all solved, but most nodes' revenue is still
+  authored and capped against solved cost rather than derived from what they
+  produce (`Complaints/287`, `Complaints/123`'s remains).
 - **Civilisation units.** Engine code no longer names a civilisation, but
   internal money and land are still the book's Roman units
   (`Complaints/136`, `Complaints/144`).

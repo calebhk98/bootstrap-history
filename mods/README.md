@@ -118,11 +118,9 @@ patch with `"hidden": true` keeps the civilisation out of the new-game menu and
 Production is loaded once as a dependency-ordered catalogue and that same
 catalogue is used by validation, the price solver, demand, and the labour
 market. Materials are discovered from recipe keys, inputs, outputs, capital
-build materials, and technology requirements; adding one does **not** require
-an entry in `data/prices.json`. A technology may therefore consume a mod
+build materials, and technology requirements. A technology may therefore consume a mod
 material when a production path produces it. Resolvable paths are costed in
-labour-hours and added to the runtime goods table even when the old price book
-has never heard of them. A missing path is an authoring error; a path gated by
+labour-hours and added to the runtime goods table. A missing path is an authoring error; a path gated by
 technology is reported as unavailable rather than assigned an invented price.
 
 New professions belong in `data/world/trades.json` (or the family shorthand)
@@ -133,10 +131,8 @@ wage-provider seam. These are compatibility inputs scheduled for replacement,
 not calibration targets. Labour allocation itself remains dynamic.
 
 World geography/resources, hazards, UI, and arbitrary new mechanics are not
-mod extension points yet. `data/prices.json` is scheduled for deletion but is
-still read for the temporary labour-hour/denarius conversion, legacy wage
-inputs, and goods whose production economics are incomplete. It is no longer
-the material namespace or a mod authoring interface.
+mod extension points yet. There is no price table: every price comes from
+production data, so a mod prices a good by giving it a production path.
 
 The three installed sample mods use only this public data contract. They add a
 slave-ownership goal, Ptolemaic Egypt in 100 BC, and a photovoltaic technology

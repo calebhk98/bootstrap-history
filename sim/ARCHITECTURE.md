@@ -105,16 +105,12 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
     engine/prices.py    the price SOLVER (`docs/architecture/
                         ENDOGENOUS_COSTS_AND_DOMAINS.md` Part 2): reads
                         `data/production/` and computes a price for a
-                        material from physical recipe data where one is
-                        derivable, falling back to `data/prices.json`'s book
-                        figure otherwise. Called from `data.py` only, behind
-                        `use_solved_prices` (default `False` - every existing
-                        call site still calls `load()` with the old
-                        behaviour). Not imported by `economy.py` or any
-                        economy sub-mixin - "economy.py, which actually
-                        spends a price on something, is another agent's file
-                        this round," per this file's own docstring. Not a
-                        mixin: a standalone module `data.py` calls into.
+                        material from physical recipe data. Every price in
+                        play is solved; there is no price table to fall back
+                        on. `data.py`'s `load()` calls it; the yearly market
+                        (`sim/world/market.py`, `market_clearing.py`) moves
+                        prices around the solved long-run cost. Not a mixin:
+                        a standalone module `data.py` calls into.
     engine/commodities.py  commodities as first-class things - iron, wool,
                         coffee, copper, gold and the rest - with their own
                         price/national-output machinery, read from
@@ -899,26 +895,9 @@ is `StepPhasesMixin`'s 19 methods in "The method count" above.
                            settings, cli read it through data.
 
                            python3 -c "from sim.engine.tree_source import load_base_tree; print(len(load_base_tree()['nodes']))"
-    data/prices.json       the book prices data.py always loads as a
-                           fallback. Read directly by data.py; consulted
-                           (not yet spent by economy.py - see below) by
-                           `sim/engine/prices.py`'s solver.
     data/production/       physical recipe data (yields, stoichiometry,
                            ore grades) `sim/engine/prices.py` reads to
-                           compute a price instead of looking one up, when
-                           `data.py`'s `load(use_solved_prices=True)` or
-                           `goods_provenance()` is asked for it.
-                           `use_solved_prices` defaults to `False`, and
-                           `economy.py` and its sub-mixins - the code that
-                           actually SPENDS a price on something - do not
-                           call either function, so the running engine's
-                           behaviour is unchanged by this file existing;
-                           it is wired into `data.py` as a measurable,
-                           opt-in burndown of `prices.json`, not yet into
-                           what a game actually charges. See
-                           `sim/engine/prices.py`'s own docstring and
-                           `docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md`
-                           Part 2.
+                           compute every price; there is no book table.
 
                            python3 sim/audit_costs.py --materials
     data/civilizations/    five playable civs. data.py, cli.py.

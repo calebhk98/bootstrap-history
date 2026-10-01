@@ -113,8 +113,8 @@ maintenance. Dragons are agents with calorie needs. None get a bespoke branch.
 are allowed while the deeper mechanism does not exist; unlabelled ones are
 not. Tag them so the migration queue is measurable.
 
-**4.5 Prices are calculated, not looked up.** `data/prices.json` is the old
-way and is being deleted; do not add new readers of it. A production yield is
+**4.5 Prices are calculated, not looked up.** There is no price table (the
+old `data/prices.json` is deleted); do not add one back. A production yield is
 a physical fact (ore grade times recovery, stoichiometry, latent heat), never
 derived from a sale price or tuned so a computed price matches the book.
 
