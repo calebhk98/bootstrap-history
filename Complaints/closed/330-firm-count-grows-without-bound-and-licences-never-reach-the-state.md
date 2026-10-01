@@ -1,6 +1,6 @@
 # Firms multiply into the thousands over a Rome run (pre-existing), and the state's share of the founder's military work thins out
 
-**Status:** partly - part 2 done: the state's war relief is per weapon (`STATE_MIL_RELIEF_PER_WEAPON_OUTPUT`, `STATE_MIL_RELIEF_PER_WEAPON_SACK`; each of the founder's military nodes the government holds removes its share of what is left), and inventing more weapons never lowers it (`test_state_weapon_relief`). Part 1: entry is now bounded by the market (the entrant expects its takings after its own output and the waiting entrants' reach the shared market, less upkeep and the staff's wages, and must beat the market rate on its stake; firms pay the wages they ignored) but the count still climbs late in a Rome run because markets grow far faster than a concern's fixed size and wage; see Complaint 331.
+**Status:** closed - merged into 345: the entry-bound and per-weapon military relief (both built) and the 'thousands of firms' measurement
 
 Two measurements from the disclosure work (`disclose`, `python3 sim/simulator.py agent`), taken with a driver that makes the same choice for every invention and prints a row per decade (firms, firm concerns, inventions the government holds, founder capital).
 

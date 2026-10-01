@@ -1,6 +1,6 @@
 # The founder's takeoff is the economy index raising takings while costs stand still; with pay following output it stalls
 
-**Status:** open - found making what a firm carries follow the economy (Complaints 345, 341). Measure with `_fp`-style drivers: Rome seeds 1-3, recommended strategy, `Sim.state.economy.economy`, `Sim.labour_pay_scale()`, founder capital and `Sim.actors.active_firms()` per decade; `LABOUR_PAY_SHARE_OF_OUTPUT_GAIN` is the knob.
+**Status:** closed - merged into 341: the takeoff diagnosis, the pay-follows-output stall measurements and the replacement (aggregate demand for hands)
 
 `Sim.market_wage_per_hour` is the wage table times `labour_pay_scale()`, one figure for founder, firms, state and households. Findings:
 
