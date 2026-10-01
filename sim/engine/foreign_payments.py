@@ -7,6 +7,8 @@ lowers the home price level in traded prices, which makes imports dearer and exp
 lifts only what its carriers can: the fleet grows from what trade could not be carried, up to what
 yards can build, and its capital is paid for through the freight rate (`foreign_routes.py`).
 """
+import functools
+
 from sim.constants import declare
 from sim.world import balance_of_payments, freight_cost, sea_freight
 from sim.world.wages import HOURS_PER_WORKER_YEAR
@@ -31,11 +33,20 @@ def _lift_years_per_tonne(inputs, working_days, days_on_leg):
     return 2.0 * days_on_leg / (inputs.cargo_tonnes * working_days)
 
 
+@functools.lru_cache(maxsize=None)
+def _partner_opening_units(civilization_id):
+    from .data import starting_schedule
+    civilization = load_civ(civilization_id)
+    workers = float(civilization.get("population") or 0.0) / people_fed_per_worker()
+    return balance_of_payments.opening_stock_units(
+        workers, starting_schedule(civilization_id).money_per_labour_hour * HOURS_PER_WORKER_YEAR)
+
+
 class ForeignPaymentsMixin:
 
     LEDGER_FIELDS = ("goods_in_value", "goods_out_value", "home_coin_units", "partner_coin_units",
                      "lift_tonnes_per_year", "lift_used_in", "lift_used_out", "lift_unmet",
-                     "lift_year", "fleet_capital")
+                     "lift_year", "fleet_capital", "merchant_capital_used")
 
     def _foreign_ledger(self, civilization_id, create=False):
         """The partner's ledger; an empty one when nothing has been recorded and `create` is false."""
@@ -66,11 +77,7 @@ class ForeignPaymentsMixin:
         return balance_of_payments.price_level(self.home_coin_stock_units(), opening)
 
     def _partner_coin_opening_units(self, civilization_id):
-        from .data import starting_schedule
-        civilization = load_civ(civilization_id)
-        workers = float(civilization.get("population") or 0.0) / people_fed_per_worker()
-        return balance_of_payments.opening_stock_units(
-            workers, starting_schedule(civilization_id).money_per_labour_hour * HOURS_PER_WORKER_YEAR)
+        return _partner_opening_units(civilization_id)
 
     def partner_price_level(self, civilization_id):
         ledger = self._foreign_ledger(civilization_id)
@@ -149,16 +156,18 @@ class ForeignPaymentsMixin:
         return (max(0.0, capacity - ledger["lift_used_in"]),
                 max(0.0, capacity - ledger["lift_used_out"]))
 
-    def _record_lift(self, civilization_id, route, flow_tonnes, unmet_tonnes):
+    def _record_lift(self, civilization_id, route, flow_tonnes, unmet_tonnes, capital_tied=0.0):
         ledger = self._foreign_ledger(civilization_id, create=True)
         year = self.state.scenario.year
         if ledger["lift_year"] != year:
             ledger["lift_year"] = year
             ledger["lift_used_in"] = ledger["lift_used_out"] = ledger["lift_unmet"] = 0.0
+            ledger["merchant_capital_used"] = 0.0
         if ledger["lift_tonnes_per_year"] <= 0.0:
             ledger["lift_tonnes_per_year"] = self.foreign_lift_capacity_tonnes(civilization_id, route)
         ledger["lift_used_in" if flow_tonnes > 0.0 else "lift_used_out"] += abs(flow_tonnes)
         ledger["lift_unmet"] += unmet_tonnes
+        ledger["merchant_capital_used"] += capital_tied
 
     def foreign_fleet_year_end(self):
         """Grow each route's fleet by what could not be carried this year (within what yards can

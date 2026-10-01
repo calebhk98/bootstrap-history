@@ -39,7 +39,7 @@ def _household_model():
         needs = need_data.load_needs(_REPO_ROOT)
         bins = demand.income_bins(1.0, MEAN_INCOME_HOURS_PER_CAPITA)
         model = _MODEL_CACHE[mods] = need_demand.NeedDemandModel(
-            needs, demand.production_data(), bins)
+            needs, demand.production_data(), bins, satiate=True)
     return model
 
 

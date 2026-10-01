@@ -180,6 +180,9 @@ check("a route's opening lift is its opening carriers' tonnes a year, finite and
 fleet._foreign_ledger(PARTNER, create=True)["lift_tonnes_per_year"] = 5.0
 capped = fleet.market_state(GOOD)["trade_tonnes"]
 check("a small fleet limits the volume traded", abs(capped) <= 5.0 + 1e-6, capped)
+# Merchants adjust part of the way each year, so the flow reaches the fleet's lift over years;
+# start from a year when it already has.
+fleet.state.economy.foreign_market_book[PARTNER][GOOD]["trade_tonnes"] = -5.0
 fleet._step_market()
 ledger = fleet._foreign_ledger(PARTNER)
 check("tonnes the fleet could not lift are recorded as unmet, then the fleet grows from them",
@@ -201,3 +204,18 @@ check("the foreign ledger is not empty after a year of trade",
       bool(saved.state.economy.foreign_ledger.get(PARTNER)), saved.state.economy.foreign_ledger)
 check("the foreign ledger survives a save and a load",
       loaded.state.economy.foreign_ledger == saved.state.economy.foreign_ledger, None)
+
+# --- merchants add their own cost and a limit of capital to the route's freight (Complaints/591, 592).
+traders = stubbed_pair(sim(civ="rome_100ad", capital=1e9), 100.0, 10.0)
+traders.foreign_economies = lambda: [PARTNER]
+trader_facts = traders._foreign_economy_facts(PARTNER)
+trader_terms = traders.trader_terms(PARTNER, trader_facts, 100.0, 10.0)
+check("merchants' cost over freight is a positive share of the price",
+      0.0 < trader_terms.cost_share_of_price < 1.0, trader_terms.cost_share_of_price)
+check("merchants finance a finite tonnage a year, more where the goods are cheaper",
+      0.0 < trader_terms.capital_tonnes_out < trader_terms.capital_tonnes_in < float("inf"),
+      trader_terms)
+traders._foreign_ledger(PARTNER, create=True).update(
+    {"lift_year": traders.state.scenario.year, "merchant_capital_used": 1e30})
+check("capital already tied up this year leaves none for more trade",
+      traders.merchant_capital_left(PARTNER) == 0.0, None)
