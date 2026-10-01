@@ -42,7 +42,7 @@ check("the rate stays inside its floor and ceiling however extreme the balance",
       and capital_market.rate_for_balance(START, 1.0e-9, 0.5) >= START * capital_market.RATE_FLOOR_SHARE * (1 - 1e-12))
 check("a borrower with no arrears and no standing pays exactly the market rate",
       abs(capital_market.borrower_rate(START, 0.0, 0.0) - START) < 1e-12)
-check("a borrower's standing removes premium: at the same arrears he pays less",
+check("a borrower's standing removes premium: at the same arrears the borrower pays less",
       capital_market.borrower_rate(START, 0.02, 1.0) < capital_market.borrower_rate(START, 0.0, 1.0))
 check("no discount or standing takes any rate below the market rate, what the market pays savers",
       all(capital_market.borrower_rate(START, discount, used) >= START - 1e-15
@@ -121,7 +121,7 @@ saver = market_sim()
 one_year(saver)
 saver.reputation = 1.0e9
 saver.capital = 1.0
-check("however great the founder's standing, his rate is not below the market rate",
+check("however great the founder's standing, the founder's rate is not below the market rate",
       saver.debt_interest_rate() >= saver.market_rate() - 1e-12, (saver.debt_interest_rate(), saver.market_rate()))
 wealth = market_sim()
 one_year(wealth)
@@ -130,7 +130,7 @@ wealth.state_treasury().money = 1.0e14
 one_year(wealth)
 check("society's savings growing raise the funds on offer and lower the market rate",
       wealth.market_rate() < wealth.civ["starting_interest_rate"], wealth.market_rate())
-check("a founder's limit does not grow because society's savings grow while his own standing is unchanged",
+check("a founder's limit does not grow because society's savings grow while the founder's own standing is unchanged",
       wealth.credit_limit() <= limit_before * (1.0 + 1e-9), (wealth.credit_limit(), limit_before))
 
 # ---- the founder's rate: the market rate, his standing, his arrears -------------------------------
