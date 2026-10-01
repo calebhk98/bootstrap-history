@@ -19,9 +19,9 @@ def _env(name, config=None):
     return saves, env
 
 
-def _run(arguments, text, env):
+def _run(arguments, text, env, cwd=None):
     return subprocess.run([sys.executable, _SIMULATOR] + arguments, input=text,
-                          capture_output=True, text=True, timeout=120, env=env)
+                          capture_output=True, text=True, timeout=120, env=env, cwd=cwd)
 
 
 def _seed_after_menu(name, seed_answer, config=None):
@@ -51,3 +51,23 @@ check("goals: the default goal is the first row",
       len(_goals.splitlines()) > 2 and "<- DEFAULT" in _goals.splitlines()[2], _goals[:600])
 check("goals: no blurb calls the junction transistor the original goal",
       "original goal" not in _goals.lower(), _goals[:1200])
+
+# ---- 208: a typed save says where it landed, stays frozen on resume, says how to move it
+_saves, _env_export = _env("export")
+_live = os.path.join(_saves, "g.json")
+_workdir = os.path.join(_scratch, "work")
+os.makedirs(_workdir, exist_ok=True)
+_snapshot = os.path.join(_workdir, "snap.json")
+_out = _run(["play", "--civ", "rome_100ad", "--seed", "1", "--session", _live],
+            "save snap.json\nquit\n", _env_export, _workdir).stdout
+check("208: a typed relative save says the full path it landed at",
+      _snapshot in _out, _out[-700:])
+_after_save = _out.split("saved:")[-1]
+check("208: it says the live session file is separate",
+      "live" in _after_save and _live in _after_save, _out[-700:])
+check("208: it says how to copy the save to another machine",
+      "--session" in _after_save and "copy" in _after_save, _out[-700:])
+_resume = _run(["play", "--session", _snapshot], "step 1\nquit\n", _env_export, _workdir).stdout
+check("208: resuming a manually saved file does not overwrite it",
+      "stays exactly as it is" in _resume and json.load(open(_snapshot)).get("year") == 100,
+      _resume[-500:])
