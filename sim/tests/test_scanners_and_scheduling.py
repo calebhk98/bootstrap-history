@@ -1373,9 +1373,10 @@ check("none of the 13 new nodes was inserted as a prerequisite of anything "
               for i, node in NODES.items() for new_id in _ctl_new_ids
               if i not in _ctl_new_ids),
       "a pre-existing node references a new one")
-check("...and the goal's required closure is still exactly 160 nodes, "
+# 163 since zinc comes by retort from calamine and charcoal, not by way of steelmaking
+check("...and the goal's required closure is still exactly 163 nodes, "
       "unchanged by adding a whole optional side-branch of theory",
-      len(S.closure(NODES, GOAL)) == 160, len(S.closure(NODES, GOAL)))
+      len(S.closure(NODES, GOAL)) == 163, len(S.closure(NODES, GOAL)))
 
 # failure_kind is a property of the NODE, in the tree data, not a list kept
 # in the engine - this is what CONTROL_RELIEF_CAPABILITY in projects.py
