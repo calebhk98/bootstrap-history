@@ -50,27 +50,42 @@ after = s.market_price_ratio(MATERIAL)
 check("a windfall of stock lowers the price at once, with no production change",
       after < before - 0.05, (before, after))
 
-# --- the founder's trades reach the market.
+# --- the founder's trades reach the market: counted through the year, they
+# clear with it when it closes. The quote within the year keeps its own
+# marginal curves, so the posted price does not jump on one's own order.
 s = sim(civ="rome_100ad", capital=1e9)
-base_ratio = s.market_price_ratio(MATERIAL)
-tonnes = s.market_state(MATERIAL)["capacity_tonnes"] * 0.05
+base_state = s.market_state(MATERIAL)
+tonnes = base_state["capacity_tonnes"] * 0.05
 s.market_note_purchase(MATERIAL, tonnes)
-check("what the founder buys adds demand: the year's price rises",
-      s.market_price_ratio(MATERIAL) > base_ratio, (base_ratio, s.market_price_ratio(MATERIAL)))
+bought_state = s.market_state(MATERIAL)
+check("what the founder buys adds demand: the year, closed now, would price higher",
+      bought_state["price_ratio_if_year_closed_now"] > base_state["price_ratio_if_year_closed_now"],
+      (base_state["price_ratio_if_year_closed_now"], bought_state["price_ratio_if_year_closed_now"]))
+check("...while the posted price within the year does not move on one's own order",
+      bought_state["price_ratio"] == base_state["price_ratio"], bought_state["price_ratio"])
 
 s = sim(civ="rome_100ad", capital=1e9)
+s_control = sim(civ="rome_100ad", capital=1e9)
 state_before = s.market_state(MATERIAL)
 s._material_stock()[MATERIAL] = state_before["capacity_tonnes"] * 0.02
 sold = s.sell_material_stock(MATERIAL, s._material_stock()[MATERIAL])
 state_after = s.market_state(MATERIAL)
 check("the founder can sell iron into this market", sold > 0, sold)
-check("what the founder sells reaches supply: the price falls",
-      state_after["price_ratio"] < state_before["price_ratio"],
-      (state_before["price_ratio"], state_after["price_ratio"]))
+check("what the founder sells reaches supply: the year, closed now, would price lower",
+      state_after["price_ratio_if_year_closed_now"] < state_before["price_ratio_if_year_closed_now"],
+      (state_before["price_ratio_if_year_closed_now"], state_after["price_ratio_if_year_closed_now"]))
 check("...and the society's own producers lose the sales the founder took",
       state_after["society_sales_tonnes"] < state_before["society_sales_tonnes"]
       and state_after["displaced_by_founder_tonnes"] > 0,
       (state_before["society_sales_tonnes"], state_after["society_sales_tonnes"]))
+s.step()
+s_control.step()
+check("a year on, the sale has left the society's producers with less capacity than "
+      "an identical society whose founder sold nothing",
+      s.market_state(MATERIAL)["capacity_tonnes"]
+      < s_control.market_state(MATERIAL)["capacity_tonnes"],
+      (s.market_state(MATERIAL)["capacity_tonnes"],
+       s_control.market_state(MATERIAL)["capacity_tonnes"]))
 
 # --- a year passes: capacity follows the price, and the price returns toward cost.
 s = sim(civ="rome_100ad", capital=1e9)

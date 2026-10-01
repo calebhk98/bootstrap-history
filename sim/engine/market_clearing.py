@@ -1,20 +1,26 @@
 """The society's yearly market for materials, as the engine sees it.
 
 Each commodity has a book entry: the society's producing capacity, stock held
-over, and the capacity it started with. The year's price ratio (spot price
-over the long-run cost the solver gives) comes from `sim/world/market.py`,
-clearing that capacity, the actors' output, stock and what the founder has
-sold this year against household demand (population and income, see
-market_demand.py) and what the founder has bought or drawn. Quotes and
-purchase bills multiply their long-run price by this ratio; the long-run
-price itself is untouched and stays the anchor.
+over, and the capacity it started with. The year's posted price ratio (spot
+price over the long-run cost the solver gives) comes from `sim/world/market.py`,
+clearing that capacity, the actors' output and stock against household demand
+(population and income, see market_demand.py). Quotes and purchase bills
+multiply their long-run price by this ratio; the long-run price itself is
+untouched and stays the anchor.
 
 The founder's own workings enter as a net: output the founder uses himself
 never reaches the market, so only what he buys, draws beyond his stock, and
-sells does. Selling adds supply and takes sales from the society's producers.
-At the turn of the year capacity follows the price and unsold goods carry on.
+sells does. Those flows are counted through the year and enter the clearing
+when the year closes: selling adds supply and takes sales from the society's
+producers, buying adds demand, and capacity follows the resulting price while
+unsold goods carry on, so next year's posted price carries them. Within the
+year the founder's own orders keep the marginal price curves that already
+move a bill as it is filled (material_price_factor), which is why the posted
+price leaves them out. `market_state` shows the year's clearing so far.
 """
 from sim.world import market
+
+NO_FLOWS = {"bought": {}, "drawn": {}, "sold": {}}
 
 
 class MarketClearingMixin:
@@ -83,8 +89,8 @@ class MarketClearingMixin:
         if entry is not None and tonnes > 0:
             entry["stock_tonnes"] += tonnes
 
-    def _market_conditions(self, commodity, entry):
-        flows = self._market_flows()
+    def _market_conditions(self, commodity, entry, with_flows):
+        flows = self._market_flows() if with_flows else NO_FLOWS
         record = self._commodity_ledger().commodities.get(commodity) or {}
         return market.MarketConditions(
             household_demand_at_anchor_tonnes=(
@@ -98,34 +104,36 @@ class MarketClearingMixin:
             floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),
             ceiling_ratio=float(record.get("price_ceiling_factor", market.DEFAULT_CEILING_RATIO)))
 
-    def _market_outcome(self, commodity):
-        """(conditions, outcome) for this year so far, or None; cached until
-        something it depends on changes."""
+    def _market_outcome(self, commodity, with_flows=False):
+        """(conditions, outcome) of the clearing, or None for a commodity
+        nothing produces. Without `with_flows` it is the posted price (the
+        founder's trades this year left out); with them, the year as it would
+        close now. Cached until something it depends on changes."""
         entry = self._market_entry(commodity)
         if entry is None:
             return None
-        economy = self.state.economy
-        flows = self._market_flows()
-        signature = (self.population.total, economy.economy, id(self._material_prices()),
-                     entry["capacity_tonnes"], entry["stock_tonnes"],
-                     flows["bought"].get(commodity), flows["drawn"].get(commodity),
-                     flows["sold"].get(commodity), flows["year"], self.actor_supply(commodity))
+        flows = self._market_flows() if with_flows else NO_FLOWS
+        signature = (self.population.total, self.state.economy.economy,
+                     id(self._material_prices()), entry["capacity_tonnes"],
+                     entry["stock_tonnes"], flows["bought"].get(commodity),
+                     flows["drawn"].get(commodity), flows["sold"].get(commodity),
+                     self.actor_supply(commodity))
         cache = getattr(self.household, "_market_outcome_cache", None)
         if cache is None:
             cache = self.household._market_outcome_cache = {}
-        cached = cache.get(commodity)
+        cached = cache.get((commodity, with_flows))
         if cached is not None and cached[0] == signature:
             return cached[1]
-        conditions = self._market_conditions(commodity, entry)
+        conditions = self._market_conditions(commodity, entry, with_flows)
         result = (conditions, market.clear_market(conditions))
-        cache[commodity] = (signature, result)
+        cache[(commodity, with_flows)] = (signature, result)
         return result
 
     # ---- what callers read --------------------------------------------------
 
     def market_price_ratio(self, material):
-        """This year's spot price over the long-run cost for a material;
-        one where no society market exists for it."""
+        """This year's posted spot price over the long-run cost for a
+        material; one where no society market exists for it."""
         result = self._market_outcome(self._material_tag(material)[0])
         return 1.0 if result is None else result[1].price_ratio
 
@@ -137,23 +145,25 @@ class MarketClearingMixin:
             return None
         conditions, outcome = result
         entry = self._market_entry(commodity)
+        closing_conditions, closing = self._market_outcome(commodity, with_flows=True)
         return {
             "material": commodity,
             "price_ratio": outcome.price_ratio,
+            "price_ratio_if_year_closed_now": closing.price_ratio,
             "floor_ratio": conditions.floor_ratio,
             "ceiling_ratio": conditions.ceiling_ratio,
             "capacity_tonnes": entry["capacity_tonnes"],
             "reference_capacity_tonnes": entry["reference_tonnes"],
             "stock_tonnes": entry["stock_tonnes"],
             "household_demand_tonnes_at_anchor": conditions.household_demand_at_anchor_tonnes,
-            "founder_purchases_tonnes": conditions.committed_demand_tonnes,
-            "founder_sales_tonnes": conditions.founder_sales_tonnes,
+            "founder_purchases_tonnes": closing_conditions.committed_demand_tonnes,
+            "founder_sales_tonnes": closing_conditions.founder_sales_tonnes,
             "actor_supply_tonnes": conditions.actor_supply_tonnes,
-            "society_sales_tonnes": outcome.society_sales_tonnes,
+            "society_sales_tonnes": closing.society_sales_tonnes,
             "displaced_by_founder_tonnes":
-                market.society_sales_displaced_by_founder(conditions),
-            "unsold_tonnes": outcome.unsold_tonnes,
-            "unmet_demand_tonnes": outcome.unmet_demand_tonnes,
+                market.society_sales_displaced_by_founder(closing_conditions),
+            "unsold_tonnes": closing.unsold_tonnes,
+            "unmet_demand_tonnes": closing.unmet_demand_tonnes,
         }
 
     # ---- the turn of the year -----------------------------------------------
@@ -170,7 +180,7 @@ class MarketClearingMixin:
         book = self.state.economy.market_book
         for commodity in sorted(book):
             entry = book[commodity]
-            conditions = self._market_conditions(commodity, entry)
+            conditions = self._market_conditions(commodity, entry, True)
             outcome = market.clear_market(conditions)
             entry["capacity_tonnes"] = market.adjusted_capacity(
                 entry["capacity_tonnes"], outcome.price_ratio)
