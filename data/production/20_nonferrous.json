@@ -83,7 +83,7 @@
    "basis": "per tonne of silver recovered by mercury amalgamation of native/argentite ore (the patio process)",
    "yield_basis": "The DIRECT ore route to silver, distinct from the lead_kg entry's galena by-product route - both are real and coexisted (Old World lead-silver smelting vs. New World patio amalgamation from 1554). At the deposits' ~0.08% Ag (0.8 kg/t) and a 75% amalgamation recovery (patio-process recoveries are commonly cited in the 60-80% range, being a slow open-air process), one tonne of silver needs about 1.7 million kg (1,700 t) of rock, which is why silver mining moves such disproportionate ore tonnage relative to output. The patio process mixed crushed ore with mercury, salt and a copper-sulphate catalyst and had labourers or mules tread the paste for weeks; roughly 1 kg of mercury was consumed per kg of silver recovered, a commonly cited historical ratio for this specific process (much higher than the loss rate an enclosed retort would give, because the patio was open to weather and slow). Furnaceman hours cover final amalgam retorting. Labourer hours keep the earlier 1.1 hours per tonne of rock for crushing and treading, scaled to the larger rock tonnage (LABELLED HEURISTIC, conf D).",
    "conf": "C",
-   "requires_node": "mt2_amalgamation"
+   "requires_node": "mercury_supply"
   },
   "cassiterite_kg": {
    "outputs": {
