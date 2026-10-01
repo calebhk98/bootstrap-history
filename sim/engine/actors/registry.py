@@ -56,13 +56,9 @@ class ActorRegistry:
 		self._column_position: Dict[str, int] = {}
 		self._changed_actors: Set[str] = set()
 		self._columns_synced = False
-		self._demand: Optional[Dict[str, float]] = None
 		self._category_counts: Optional[Any] = None
 		self._acting: Optional[RecordedActor] = None
 		self._staff_basis: Dict[str, float] = {}
-		# insertion position of each actor (the order supply is summed in), and the ids that are not firms
-		self._position: Dict[str, int] = {}
-		self._not_firms: Set[str] = set()
 		self._bans: Optional[Dict[str, str]] = None
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
@@ -89,11 +85,6 @@ class ActorRegistry:
 			watch.target = record.concerns
 			watch()
 		self.actors[actor_id] = actor
-		self._position.setdefault(actor_id, len(self._position))
-		if isinstance(actor, Firm):
-			self._not_firms.discard(actor_id)
-		else:
-			self._not_firms.add(actor_id)
 		prior_order = self._ordered_ids
 		self._ordered_ids = None
 		if previous is None and self._columns and prior_order is not None and len(prior_order) == len(self.actors) - 1:
@@ -102,29 +93,6 @@ class ActorRegistry:
 			self.refresh_staff()
 		self._bans = None
 		return actor
-
-	def supply(self, material: str, world: Any) -> float:
-		"""Tonnes a year of a material that every recorded actor's concerns put on the market."""
-		# only actors that could make it: firms holding a concern that does, and anything not a firm
-		ids = set(self._not_firms)
-		for node_id in world.concerns_making(material):
-			ids.update(self._holders.get(node_id, ()))
-		return sum(actor.output_of(material, world)
-				   for actor in (self.actors[actor_id] for actor_id in sorted(ids, key=self._position.__getitem__))
-				   if not (actor.kind == "firm" and actor.record.exited_year is not None))
-
-	def demand(self, commodity: str) -> float:
-		"""Tonnes a year of a commodity that every recorded actor buys on the market."""
-		if self._demand is None:
-			totals: Dict[str, float] = {}
-			# only actors that are not firms buy on the market (a firm's demand stays empty)
-			for actor_id in sorted(self._not_firms, key=self._position.__getitem__):
-				bought = self.actors[actor_id].record.demand
-				if bought:
-					for name, tonnes in bought.items():
-						totals[name] = totals.get(name, 0.0) + tonnes
-			self._demand = totals
-		return self._demand.get(commodity, 0.0)
 
 	def note_capacity_change(self) -> None:
 		"""A firm has grown a concern: caches of the market's total supply are stale."""
@@ -158,7 +126,6 @@ class ActorRegistry:
 	def refresh_staff(self) -> None:
 		"""Forget the staffing and demand tallies so the next read counts every actor again."""
 		self._staff = None
-		self._demand = None
 		self._columns = {}
 		self._changed_actors = set()
 		self._columns_synced = False
@@ -208,7 +175,6 @@ class ActorRegistry:
 			values.insert(place, staff.get(trade, 0.0))
 			running[place + 1:] = list(accumulate(values[place:], initial=running[place]))[1:]
 		self._staff = None
-		self._demand = None
 		self._columns_synced = False
 
 	def _resum_actor(self, actor_id: str) -> None:
@@ -287,18 +253,19 @@ class ActorRegistry:
 		first = True
 		for actor_id in sorted(self.actors):
 			actor = self.actors[actor_id]
+			world.market_forget(actor_id)
 			if actor.kind == "firm" and actor.record.exited_year is not None:
 				continue
 			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`
 			self._acting, self._staff_basis = actor, dict(actor.workforce)
 			actor.advance(world)
+			actor.sell_output(world)
 			# it stays when the acting actor's staff is what the count saw; the first actor of a
 			# year always recounts, since anything between years is unseen
 			if first:
 				self.refresh_staff()
 			elif actor.workforce != self._staff_basis:
 				self._staff = None
-				self._demand = None
 				self._changed_actors.add(actor.actor_id)
 				self._columns_synced = False
 			first = False

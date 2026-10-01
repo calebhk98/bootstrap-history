@@ -351,10 +351,9 @@ class EconomyState:
 	money_real: float = 1.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
 	_material_stock_opening: Optional[Dict[str, Any]] = None
-	_material_sold_this_year: Optional[Dict[str, Any]] = None
 	# commodity -> society capacity, stock and last price ratio (market_clearing.py)
 	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
-	# the year's founder purchases, draws and sales by commodity
+	# the year's purchases and sales by commodity and party, and the founder's draws (goods_market_api.py)
 	market_flows: Optional[Dict[str, Any]] = None
 	# foreign economy id -> commodity -> its capacity, stock and price ratio (foreign_economies.py)
 	foreign_market_book: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
@@ -448,8 +447,6 @@ class ActorRecord:
 	# a state's standing need by line last year, and the part it could not pay
 	need: Dict[str, float] = field(default_factory=dict)
 	unfunded: Dict[str, float] = field(default_factory=dict)
-	# tonnes a year of each commodity the actor buys on the market
-	demand: Dict[str, float] = field(default_factory=dict)
 	# what the state seeks of the people it can see: share of income at full notice by kind of
 	# claim, and the visible income those shares are spread over
 	levy_requisition_rate: float = 0.0

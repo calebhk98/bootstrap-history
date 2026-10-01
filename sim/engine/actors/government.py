@@ -78,12 +78,11 @@ class Government(SurplusMixin, RecordedActor):
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = {line.name: line.money for line in lines}
 		self.record.unfunded = {line.name: line.money * (1.0 - share) for line in lines}
-		self.record.demand = {}
 		for line in lines:
 			if share > 0.0:
 				self.debit(line.money * share, line.name)
 			for commodity, tonnes in line.materials.items():
-				self.record.demand[commodity] = self.record.demand.get(commodity, 0.0) + tonnes * share
+				world.market_purchase(self.actor_id, commodity, tonnes * share)
 		return lines, share
 
 	def pay_patron(self, share: float, world: Any) -> None:

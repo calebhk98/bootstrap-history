@@ -1,5 +1,8 @@
 """How much more or less households want of each commodity than at the opening.
 
+Households are priced only for goods something offers (`GoodsMarket.household_prices`): a good
+nothing offers has no price, so the need it served draws no spending on it.
+
 The household demand model in sim/world/need_demand.py turns population and
 income into units wanted per year, through needs, goods and the recipes that
 make them. Its absolute quantities do not match the resource tables (it
@@ -75,7 +78,7 @@ class MarketDemandMixin:
         """{commodity: demand now over demand at the opening}, from population
         and income at today's prices; recomputed when either moves by a
         tenth of a percent or the price table changes."""
-        prices = self._material_prices()
+        prices = self.goods_market.household_prices()
         key = (round(float(self.population.total) / self._opening_population(), 3),
                round(float(self.state.economy.economy), 3))
         cache = getattr(self.household, "_household_demand_cache", None)

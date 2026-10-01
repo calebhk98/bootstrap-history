@@ -23,7 +23,7 @@ class RefusalListsRemedies(unittest.TestCase):
     def test_stock_sale_remedy_quotes_what_sell_pays(self):
         household = _indebted_household()
         household._material_stock()["iron"] = 40.0
-        _, tonnes, money = household.material_sale_offer("iron", 40.0)
+        _, tonnes, money = household.goods_market.quote_sell("iron", 40.0)
         self.assertGreater(money, 0)
         text = _refusal(household)
         self.assertIn("sell iron", text)

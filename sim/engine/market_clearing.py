@@ -8,19 +8,22 @@ clearing that capacity, the actors' output and stock against household demand
 multiply their long-run price by this ratio; the long-run price itself is
 untouched and stays the anchor.
 
-The founder's own workings enter as a net: output the founder uses himself
-never reaches the market, so only what he buys, draws beyond his stock, and
-sells does. Those flows are counted through the year and enter the clearing
-when the year closes: selling adds supply and takes sales from the society's
-producers, buying adds demand, and capacity follows the resulting price while
-unsold goods carry on, so next year's posted price carries them. Within the
-year the founder's own orders keep the marginal price curves that already
-move a bill as it is filled (material_price_factor), which is why the posted
-price leaves them out. `market_state` shows the year's clearing so far.
+Everyone who buys or sells goes through `Sim.goods_market` (goods_market_api.py),
+which writes the year's flows by party. The founder's own workings enter as a
+net: output the founder uses himself never reaches the market, so only what he
+buys, draws beyond his stock, and sells does. What a firm or the state buys or
+sells is the same kind of entry. Flows are counted through the year and enter
+the clearing when it closes: selling adds supply and takes sales from the
+society's producers, buying adds demand, and capacity follows the resulting
+price while unsold goods carry on, so next year's posted price carries them.
+Within the year the founder's own orders keep the marginal price curves that
+already move a bill as it is filled (material_price_factor), which is why the
+posted price leaves out the founder's flows and counts everyone else's.
+`market_state` shows the year's clearing so far.
 """
 from sim.world import market
 
-NO_FLOWS = {"bought": {}, "drawn": {}, "sold": {}}
+from .goods_market_api import FOUNDER, GoodsMarket
 
 
 class MarketClearingMixin:
@@ -28,45 +31,40 @@ class MarketClearingMixin:
     # ---- the year's flows ---------------------------------------------------
 
     def _market_flows(self):
+        """{"year", "bought": {commodity: {party: tonnes}}, "sold": {commodity: {party: tonnes}},
+        "drawn": {commodity: tonnes}}, written by `goods_market`. When the year turns the founder's
+        flows and draws start again from nothing; every other party's entries stand until it deals
+        again (`GoodsMarket.forget`), as a firm's output and the state's purchases are standing orders."""
         economy = self.state.economy
         year = self.state.scenario.year
         flows = economy.market_flows
         if not flows or flows.get("year") != year:
-            flows = economy.market_flows = {"year": year, "bought": {}, "sold": {}, "drawn": {}}
+            previous = flows or {}
+            flows = economy.market_flows = {"year": year, "drawn": {}}
+            for kind in ("bought", "sold"):
+                standing = {commodity: {party: tonnes for party, tonnes in parties.items() if party != FOUNDER}
+                            for commodity, parties in (previous.get(kind) or {}).items()}
+                flows[kind] = {commodity: parties for commodity, parties in standing.items() if parties}
         return flows
 
-    def market_note_purchase(self, commodity, tonnes):
-        """The founder bought `tonnes` of a commodity at the market this year."""
-        if tonnes > 0:
-            bought = self._market_flows()["bought"]
-            bought[commodity] = bought.get(commodity, 0.0) + tonnes
-
-    def market_note_sale(self, commodity, tonnes):
-        """The founder sold `tonnes` of a commodity into the market this year."""
-        if tonnes > 0:
-            sold = self._market_flows()["sold"]
-            sold[commodity] = sold.get(commodity, 0.0) + tonnes
-
-    def market_reset_draws(self):
-        """Start a fresh count of what running works draw from the market."""
-        self._market_flows()["drawn"] = {}
-
-    def market_note_draw(self, commodity, tonnes):
-        """Running works used `tonnes` the founder neither held nor made."""
-        if tonnes > 0:
-            drawn = self._market_flows()["drawn"]
-            drawn[commodity] = drawn.get(commodity, 0.0) + tonnes
+    @property
+    def goods_market(self):
+        """The one goods market every buyer and seller asks."""
+        market_api = self.__dict__.get("_goods_market")
+        if market_api is None:
+            market_api = self._goods_market = GoodsMarket(self)
+        return market_api
 
     # ---- the book -----------------------------------------------------------
 
     def _market_entry(self, commodity):
         """The commodity's book entry, opened at the society's present output
-        on first use; None for a commodity nothing produces."""
+        on first use; None for a commodity nothing produces or nothing offers."""
         book = self.state.economy.market_book
         entry = book.get(commodity)
         if entry is None:
             output = self._society_output_tonnes(commodity)
-            if not output > 0.0:
+            if not output > 0.0 or self.goods_market.commodity_is_unsourced(commodity):
                 return None
             entry = book[commodity] = {
                 "reference_tonnes": output, "capacity_tonnes": output,
@@ -74,25 +72,30 @@ class MarketClearingMixin:
                 "society_sales_tonnes": output}
         return entry
 
-    def market_add_stock(self, material, tonnes):
-        """Goods appear in the society's hands (a windfall, a confiscation
-        sold on): they join this year's supply."""
-        entry = self._market_entry(self._material_tag(material)[0])
-        if entry is not None and tonnes > 0:
-            entry["stock_tonnes"] += tonnes
+    def _market_flow_figures(self, commodity, with_flows):
+        """(committed demand, founder sales, actors' supply, actors' demand) from this year's flows.
+        The founder's own orders count only `with_flows`; every other party's always do."""
+        market_api = self.goods_market
+        committed = founder_sales = 0.0
+        if with_flows:
+            committed = (market_api.bought_tonnes(commodity, FOUNDER)
+                         + market_api.drawn_tonnes(commodity))
+            founder_sales = market_api.sold_tonnes(commodity, FOUNDER)
+        return (committed, founder_sales, market_api.others_sold_tonnes(commodity),
+                market_api.others_bought_tonnes(commodity))
 
     def _market_conditions(self, commodity, entry, with_flows):
-        flows = self._market_flows() if with_flows else NO_FLOWS
+        committed, founder_sales, actor_supply, actor_demand = self._market_flow_figures(
+            commodity, with_flows)
         record = self._commodity_ledger().commodities.get(commodity) or {}
         return market.MarketConditions(
             household_demand_at_anchor_tonnes=(
                 entry["reference_tonnes"] * self.household_demand_ratio(commodity)),
-            committed_demand_tonnes=(flows["bought"].get(commodity, 0.0)
-                                     + flows["drawn"].get(commodity, 0.0)),
+            committed_demand_tonnes=committed,
             society_capacity_tonnes=entry["capacity_tonnes"],
-            actor_supply_tonnes=self.actor_supply(commodity),
-            actor_demand_tonnes=self.actor_demand(commodity),
-            founder_sales_tonnes=flows["sold"].get(commodity, 0.0),
+            actor_supply_tonnes=actor_supply,
+            actor_demand_tonnes=actor_demand,
+            founder_sales_tonnes=founder_sales,
             stock_tonnes=entry["stock_tonnes"],
             floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),
             ceiling_ratio=float(record.get("price_ceiling_factor", market.DEFAULT_CEILING_RATIO)))
@@ -105,13 +108,10 @@ class MarketClearingMixin:
         entry = self._market_entry(commodity)
         if entry is None:
             return None
-        flows = self._market_flows() if with_flows else NO_FLOWS
-        prices = self._material_prices()
         signature = (self.population.total, self.state.economy.economy,
-                     entry["capacity_tonnes"],
-                     entry["stock_tonnes"], flows["bought"].get(commodity),
-                     flows["drawn"].get(commodity), flows["sold"].get(commodity),
-                     self.actor_market_version(), self.actor_demand(commodity), self.state.scenario.year,
+                     entry["capacity_tonnes"], entry["stock_tonnes"],
+                     self._market_flow_figures(commodity, with_flows),
+                     self.actor_market_version(), self.state.scenario.year,
                      tuple(self.foreign_economies()))
         cache = getattr(self.household, "_market_outcome_cache", None)
         if cache is None:
@@ -156,8 +156,8 @@ class MarketClearingMixin:
             "reference_capacity_tonnes": entry["reference_tonnes"],
             "stock_tonnes": entry["stock_tonnes"],
             "household_demand_tonnes_at_anchor": conditions.household_demand_at_anchor_tonnes,
-            "founder_purchases_tonnes": (self._market_flows()["bought"].get(commodity, 0.0)
-                                        + self._market_flows()["drawn"].get(commodity, 0.0)),
+            "founder_purchases_tonnes": (self.goods_market.bought_tonnes(commodity, FOUNDER)
+                                        + self.goods_market.drawn_tonnes(commodity)),
             "founder_sales_tonnes": closing_conditions.founder_sales_tonnes,
             "actor_supply_tonnes": conditions.actor_supply_tonnes,
             "actor_demand_tonnes": conditions.actor_demand_tonnes,

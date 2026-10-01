@@ -65,16 +65,9 @@ class ProjectMaterialsMixin:
         return max(worst_other, own_factor) * self.material_freight_factor(emp_key)
 
     def material_purchase_cost(self, material, tonnes, already=0.0):
-        """(money, mean money per tonne) to buy `tonnes` of a material now,
-        the price rising as the order is filled. None when it has no price."""
-        unit_price = self._material_price_per_kg(material)
-        if unit_price is None:
-            return None
-        emp_key, tag = self._material_tag(material)
-        per_tonne = (unit_price / tonnes_per_unit(material) * self.price_index
-                     * self.market_price_ratio(emp_key))
-        factor = self._price_factor_across_purchase(emp_key, tag, already, max(0.0, tonnes))
-        return per_tonne * factor * max(0.0, tonnes), per_tonne * factor
+        """(money, mean money per tonne) to buy `tonnes` of a material now, the price rising as
+        the order is filled. None when it has no price (see GoodsMarket.quote_buy)."""
+        return self.goods_market.quote_buy(material, tonnes, already)
 
     def project_material_bill(self, node_id):
         """Per material: needed, held (stock and own output over the build),
@@ -180,22 +173,16 @@ class ProjectMaterialsMixin:
         """Pay for what the market can deliver now of the missing materials
         and bank it as stock. Returns the money paid."""
         factor = self.opposition_factor(node_id) * self.material_cost_factor(node_id)
-        household = self.state.household
-        opening = self._material_opening_stock()
-        stock = self._material_stock()
+        market = self.goods_market
         paid = 0.0
         for row in self.project_material_bill(node_id)["rows"]:
             tonnes = row["deliverable_now_tonnes"]
             if tonnes <= 0 or not row["priced"]:
                 continue
             money = row["price_per_tonne"] * tonnes * factor
-            emp_key = self._material_tag(row["material"])[0]
-            household.debit(money, "materials bought for projects")
-            self.market_note_purchase(emp_key, tonnes)
-            stock[emp_key] += tonnes
-            opening[emp_key] = opening.get(emp_key, 0.0) + tonnes
+            market.settle_purchase(market.founder, self._material_tag(row["material"])[0], tonnes, money,
+                                   "materials bought for projects")
             paid += money
-        household._stock_throttle_sig = None
         return paid
 
     def project_material_upfront_refusal(self, node_id):

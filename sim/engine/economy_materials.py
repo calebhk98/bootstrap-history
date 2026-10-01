@@ -49,9 +49,7 @@ import collections
 
 from . import commodities as _commod
 from sim.constants import declare
-from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from .project_materials import tonnes_per_unit
 
 
 
@@ -967,95 +965,15 @@ class MaterialSupplyMixin:
 
     def material_trade_quote(self, material):
         """Current buy/sell quote for one tonne of a material commodity."""
-        material = str(material or "").strip().lower()
-        per_kg = self._material_price_per_kg(material)
-        if per_kg is None:
-            return None
-        emp_key = self._material_tag(material)[0]
-        buy = (per_kg / tonnes_per_unit(material) * self.price_index
-               * self.material_price_factor(emp_key) * self.market_price_ratio(emp_key))
-        return {"material": material, "stock_key": emp_key, "buy_per_tonne": buy,
-                "market_price_ratio": self.market_price_ratio(emp_key),
-                "sell_per_tonne": buy * self.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
-                "market_available_tonnes_per_year": self._material_market_tonnes(emp_key)}
+        return self.goods_market.quote(material)
 
     def buy_material_stock(self, material, tonnes):
-        """Buy a material at the market: the price climbs as the order is
-        filled, and the order is cut to what the market sells in a year."""
-        quote = self.material_trade_quote(material)
-        tonnes = float(tonnes)
-        if not quote or tonnes <= 0:
-            return 0.0
-        tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
-        if tonnes <= 0:
-            return 0.0
-        cost = self.material_purchase_cost(quote["material"], tonnes)[0]
-        household = self.state.household
-        if not purchase_rule.can_pay(self, cost):
-            return 0.0
-        household.debit(cost, "materials bought")
-        self.market_note_purchase(quote["stock_key"], tonnes)
-        opening = self._material_opening_stock()
-        self._material_stock()[quote["stock_key"]] += tonnes
-        opening[quote["stock_key"]] = opening.get(quote["stock_key"], 0.0) + tonnes
-        household._stock_throttle_sig = None
-        return tonnes
-
-    def _material_sold_tonnes_this_year(self):
-        """{stock key: tonnes sold to the market so far this year}."""
-        economy = self.state.economy
-        year = self.state.scenario.year
-        record = economy._material_sold_this_year
-        if not record or record.get("year") != year:
-            record = economy._material_sold_this_year = {"year": year, "tonnes": {}}
-        return record["tonnes"]
-
-    def material_sale_proceeds(self, material, tonnes, already=0.0):
-        """(money, mean money per tonne) for selling `tonnes` more of a
-        material after `already` tonnes sold this year. Sales are the buy
-        side mirrored, marked TEMPORARY HEURISTIC: the sell price is the
-        quoted one divided by the same demand-pressure factor buying climbs
-        (sold tonnes load the market like bought ones), so a bigger sale
-        fetches a lower mean price."""
-        quote = self.material_trade_quote(material)
-        if not quote or tonnes <= 0:
-            return 0.0, 0.0
-        emp_key, tag = self._material_tag(quote["material"])
-        baseline = self._price_factor_across_purchase(emp_key, tag, 0.0, 0.0)
-        across = self._price_factor_across_purchase(emp_key, tag, already, tonnes)
-        mean_price = quote["sell_per_tonne"] * baseline / max(across, baseline)
-        return mean_price * tonnes, mean_price
-
-    def material_sale_offer(self, material, tonnes):
-        """(stock key, tonnes the market takes now, money for them): the one
-        figure `sell` pays and refusals quote as a way to raise cash."""
-        quote = self.material_trade_quote(material)
-        tonnes = float(tonnes)
-        if not quote or tonnes <= 0:
-            return None, 0.0, 0.0
-        key = quote["stock_key"]
-        sold_so_far = self._material_sold_tonnes_this_year()
-        absorbs = max(0.0, quote["market_available_tonnes_per_year"] - sold_so_far.get(key, 0.0))
-        sold = min(tonnes, self.material_stock_t(key), absorbs)
-        if sold <= 0:
-            return key, 0.0, 0.0
-        return key, sold, self.material_sale_proceeds(material, sold, sold_so_far.get(key, 0.0))[0]
+        """The founder buys a material at the market (see GoodsMarket.buy)."""
+        return self.goods_market.buy(self.goods_market.founder, material, tonnes)
 
     def sell_material_stock(self, material, tonnes):
-        """Sell stock at the market: the order is cut to what the market
-        absorbs in a year, and the price falls as the year's sales add up."""
-        key, sold, money = self.material_sale_offer(material, tonnes)
-        if sold <= 0:
-            return 0.0
-        sold_so_far = self._material_sold_tonnes_this_year()
-        self.market_note_sale(key, sold)
-        opening = self._material_opening_stock()
-        self._material_stock()[key] -= sold
-        opening[key] = opening.get(key, 0.0) - sold
-        sold_so_far[key] = sold_so_far.get(key, 0.0) + sold
-        self.state.household.credit(money, "materials sold")
-        self.state.household._stock_throttle_sig = None
-        return sold
+        """The founder sells stock at the market (see GoodsMarket.sell)."""
+        return self.goods_market.sell(self.goods_market.founder, material, tonnes)
 
     def materials_report(self):
         """Stocks, annual flows, demand, and current trade values."""

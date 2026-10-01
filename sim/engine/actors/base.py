@@ -95,6 +95,11 @@ class Actor(Borrower):
 											   self.staffed_share(node_id) * self.capacity_of(node_id))
 				   for node_id in sorted(node_id for node_id in self.concerns if node_id in makers))
 
+	def sell_output(self, world: Any) -> None:
+		"""Put what the actor's concerns make this year into the one goods market."""
+		for material in sorted({made for node_id in self.concerns for made in world.materials_made_by(node_id)}):
+			world.market_sale(self.actor_id, material, self.output_of(material, world))
+
 	def prominence(self) -> float:
 		"""How prominent the actor is as a person; a business has none."""
 		return 0.0
