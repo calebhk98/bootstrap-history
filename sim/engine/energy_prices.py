@@ -11,6 +11,7 @@ from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 
 from sim import solve_prices
 from sim.solve_prices_core import CAPABILITY_CAP_FIELDS, capability_required_grades, recipe_cost_and_allocation
+from sim.engine.identity_cache import IdentityCache
 
 ENERGY_CARRIERS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
@@ -105,18 +106,18 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
                     hour_bands.setdefault(carrier, {})[required] = found
                     break
     # Keyed by address; the entry itself is kept and confirmed with `is`, so a recycled address cannot match.
-    own: Dict[int, Tuple[Mapping[str, Any], Mapping[str, float]]] = {}
+    own = IdentityCache()
 
     def own_cost(entry: Mapping[str, Any]) -> Mapping[str, float]:
-        hit = own.get(id(entry))
-        if hit is not None and hit[0] is entry:
-            return hit[1]
+        hit = own.get(entry)
+        if hit is not None:
+            return hit
         result = recipe_cost_and_allocation("node-entry", entry, hour_prices, wage_by_trade,
                                             capability_band_price_by_carrier=hour_bands,
                                             interest_rate=solved.interest_rate)
         cost = {} if result is None else {
             material: price * money_per_hour for material, price in result[1].items()}
-        own[id(entry)] = (entry, cost)
+        own.put(entry, cost)
         return cost
 
     _CACHE[key] = (entries, bands, own_cost)

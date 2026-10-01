@@ -25,6 +25,7 @@ sys.setrecursionlimit(20000)
 import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
+from .identity_cache import IdentityCache
 from .mods import get_ordered_mods, load_mod_tree
 from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
@@ -440,7 +441,7 @@ def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, J
 # integers, computed once per tree and cached. Ordinary set unions would be
 # 2,831 sets of up to 2,831 ids; an int OR is the same operation with the
 # machine doing the work.
-_DESC_CACHE: Dict[int, Tuple[Nodes, Dict[str, int], Dict[str, int]]] = {}
+_DESC_CACHE = IdentityCache()  # nodes -> (masks, index)
 
 
 def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
@@ -461,9 +462,9 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
     # against it, so its address cannot be recycled into a false hit while the
     # entry lives. sim/engine/proto/nodes.py makes the same argument at length
     # for the same shape of cache.
-    hit = _DESC_CACHE.get(id(nodes))
-    if hit is not None and hit[0] is nodes:
-        return hit[1], hit[2]
+    hit = _DESC_CACHE.get(nodes)
+    if hit is not None:
+        return hit
     index: Dict[str, int] = {node_id: i for i, node_id in enumerate(sorted(nodes))}
     kids: Dict[str, List[str]] = {node_id: [] for node_id in nodes}
     for node_id in nodes:
@@ -493,7 +494,7 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
             for child_id in kids[node_id]:
                 if child_id not in masks:
                     stack.append((child_id, False))
-    _DESC_CACHE[id(nodes)] = (nodes, masks, index)
+    _DESC_CACHE.put(nodes, (masks, index))
     return masks, index
 
 
