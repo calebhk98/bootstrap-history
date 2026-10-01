@@ -73,11 +73,11 @@ check("a civilisation that opens with no standing force has no army line",
 # ---- revenue is the economy's yield, spending is the standing need ----------------------------
 game, treasury = budget_sim()
 revenue = SimWorld(game).state_revenue()
+need = sum(line.money for line in budget.standing_lines(SimWorld(game)))
 one_year(game)
 income, outlays = treasury.record.income, treasury.record.outlays
 check("the whole of the state's revenue is booked as income from taxation",
       abs(income.get("taxation", 0.0) - revenue) < 1e-6 * revenue, (income, revenue))
-need = sum(line.money for line in budget.standing_lines(SimWorld(game)))
 check("the state spends its standing need, by purpose",
       outlays.get("army", 0.0) > 0.0 and outlays.get("administration", 0.0) > 0.0
       and abs(sum(outlays.values()) - need) < 0.02 * need, (outlays, need))
