@@ -67,7 +67,7 @@ class ProjectMaterialsMixin:
     def material_purchase_cost(self, material, tonnes, already=0.0):
         """(money, mean money per tonne) to buy `tonnes` of a material now,
         the price rising as the order is filled. None when it has no price."""
-        unit_price = self._book_price_per_kg(material)
+        unit_price = self._material_price_per_kg(material)
         if unit_price is None:
             return None
         emp_key, tag = self._material_tag(material)

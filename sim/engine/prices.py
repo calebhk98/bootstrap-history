@@ -1,17 +1,13 @@
-"""Ask the price solver for a price, with the book as fallback.
+"""Ask the price solver for a price.
 
-`data/prices.json` is a list of numbers the game trusts because nothing else
-computes them - "91.8% the author's own estimates," in the price solver's own
-words. `sim/solve_prices.py` can now compute a real number for most of them,
-gated to what a civilization has actually reached (Complaints/39), but it is
-still standalone: nothing in `sim/engine/` calls it. This module is that
-call. It is deliberately thin - it does not re-implement the solver, it
-imports it - and it is deliberately the ONLY new surface this round touches
-beyond `sim/engine/data.py`, per this change's own scope: economy.py, which
-actually spends a price on something, is another agent's file this round.
+Prices are calculated from recipes, land rent, wages and transport by
+`sim/solve_prices.py`, gated to what a civilization has reached
+(Complaints/39). This module is the engine's one call into the solver. It is
+thin: it imports the solver rather than re-implementing it. There is no price
+book; a material nothing can make has no price.
 
-THE WAGE ARGUMENT (`prices_json` below) is a wage document in the book's
-shape, built by `sim.world.wages.WageSchedule.document()`, so the solver and
+THE WAGE ARGUMENT (`prices_json` below) is a wage document in the
+shape the solver reads, built by `sim.world.wages.WageSchedule.document()`, so the solver and
 payroll read one wage vector. Its labourer rate is the money value of one
 labour hour.
 
@@ -21,17 +17,13 @@ THE INTERFACE. One function matters to a caller:
 
 and one function does the actual replacement `data.py` wants:
 
-    priced_goods_table(held_technology_ids, book_goods_denarii, prices_json)
-        -> (goods_denarii, provenance)
+    priced_goods_table(held_technology_ids, prices_json)
+        -> (goods_in_money, provenance)
 
-`goods_denarii` is a plain {material: price} dict in the SAME units and over
-the SAME keys as `prices.json`'s own goods table, so a caller that already
-consumes that table (which is all of `sim/engine/economy.py`, untouched this
-round) would not have to change to use it. `provenance` is {material:
-"solved" | "book"} for every material the book prices - the measurable
-burndown the stakeholder asked for: as more of `data/production/` gets
-`requires_node` labels and more materials resolve, the "book" count in that
-dict falls, and that count is the whole point of this file existing.
+`goods_in_money` is a plain {material: price} dict in the wage document's
+coin. `provenance` is {material: "solved" | "gated"}: "solved" is priced under
+the held technologies, "gated" only under the mature technology (see
+priced_goods_table).
 
 CACHE KEY: THE SET OF GATE NODES HELD, PLUS THE CIVILIZATION FOR LAND RENT.
 See RENT NEEDS A CIVILIZATION below for why a bare gate-node set stopped
@@ -94,24 +86,11 @@ civilisation's coin (the coin material's solved labour hours per kg times the
 coin's mass), so a price in money is its labour hours times that rate.
 `denarii_per_labour_hour` is the one place the rate is read.
 
-THIS MODULE DOES NOT DECIDE WHICH MATERIALS GET REPLACED - THAT SWITCH
-LIVES IN `data.py`, AND IS OFF BY DEFAULT. `priced_goods_table` overlays a
-solved price wherever `solve_prices` finds one AND the material is already a
-key in the book (this round does not add new materials to the goods table,
-only replaces the value under an existing key - a bigger wiring change than
-"ask the solver first, fall back to the book"); everything else keeps its
-book price, unchanged, and is marked "book" in the provenance dict rather
-than silently agreeing with the book by accident. Nothing in this module is
-called anywhere by default - see `sim/engine/data.py`'s `load()`, whose
-`use_solved_prices` argument defaults to False specifically so this file's
-existence changes no behaviour until something opts in.
-
 WHAT THIS DOES NOT HANDLE, LEFT FOR THE NEXT STEP. `solve_prices.py` itself
 flags MINOR JOINT BYPRODUCTS (silver from lead smelting and the like) as
 mass-split artifacts rather than independent prices - see that module's own
 docstring. This file still reports them as "solved" rather than a third
-category, because inventing a three-way provenance split is a bigger design
-decision than this round's brief ("solved, or book") asks for; a caller that
+category, because a third provenance state is a design decision of its own; a caller that
 cares can already recover the distinction by re-running
 `solve_prices.minor_joint_byproducts_are_unanchored` against the same
 `SolvedPrices.chosen_recipe_by_material`, which is exposed for exactly that
@@ -179,7 +158,7 @@ Prices = Dict[str, float]
 # exactly the two fields every entry shares regardless of process shape.
 ProductionEntries = Dict[str, Any]
 
-# {material: "solved" | "gated" | "no_recipe"} - see priced_goods_table's
+# {material: "solved" | "gated"} - see priced_goods_table's
 # own docstring for what the three strings mean. A plain Dict[str, str]
 # rather than a Literal-keyed TypedDict: the KEYS are material ids, open
 # and data-driven, exactly the case CLAUDE.md's TypedDict guidance carves
@@ -197,7 +176,7 @@ if REPO_ROOT not in sys.path:
 from sim import joint_allocation, solve_prices              # noqa: E402
 from sim.validate_production import load_production             # noqa: E402
 from sim.world import wages                                     # noqa: E402
-from sim.engine import money_units, wage_provider                # noqa: E402
+from sim.engine import wage_provider                # noqa: E402
 from sim.engine import solve_cache                              # noqa: E402
 
 
@@ -209,8 +188,8 @@ class SolvedPrices(object):
     unit (see LABOUR-HOURS TO DENARII in the module docstring) so a caller
     that wants the solver's own numeraire, not a converted one, still can.
     `resolvable_materials` is which materials have ANY path to a price under
-    this held-technology set - the set `priced_goods_table` overlays onto
-    the book, and everything outside it is where the book fallback matters.
+    this held-technology set - the set `priced_goods_table` prices
+    directly; everything outside it is priced as "gated" or not at all.
     `civilization_id` is the civilization `land_rent_hours_per_iugerum` was
     solved against (see RENT NEEDS A CIVILIZATION in the module docstring) -
     kept on the result so a caller inspecting a cache hit can see which
@@ -441,67 +420,40 @@ def solved_prices(held_technology_ids: Iterable[str],
 
 
 def priced_goods_table(held_technology_ids: Iterable[str],
-                       book_goods_denarii: Prices,
                        prices_json: Dict[str, Any],
                        production_entries: Optional[ProductionEntries] = None,
                        civilization_id: Optional[str] = None
                        ) -> Tuple[Prices, Provenance]:
-    """(goods_denarii, provenance) - the book's own goods table with a
-    solved price substituted wherever the solver can produce one for a
-    material this held-technology set already prices in the book, and
-    provenance is the burndown THE GOAL asks to make measurable, and it has
-    THREE states rather than two, because a straight solved/book split
-    measures the wrong thing:
+    """(goods_in_money, provenance) - a calculated price for every material
+    the recipes can make, in the coin of `prices_json`.
 
-      "solved"     - a computed price replaced the book's.
-      "gated"      - something DOES make this material, and nothing this
-                     era can run. Not a gap. A Roman cannot smelt aluminium
-                     and no amount of authoring will change that.
-      "no_recipe"  - nothing anywhere makes it. The real gap, and the only
-                     one of the three that authoring can close.
+      "solved" - priced under the technologies this society holds.
+      "gated"  - something makes it, but nothing this society can run yet.
+                 TRANSITIONAL (CLAUDE.md 4.4): it is priced as if every gate
+                 technology were held, standing for an import or a later
+                 supplier at the mature technique's cost, until trade and
+                 availability replace it. A material nothing anywhere makes
+                 is absent, never given an invented price.
 
-    The distinction matters because an undifferentiated solved/book count
-    for the default civilisation reads as 85 missing recipes, when sixty-eight of those
-    have recipes and are correctly gated out by era, leaving a real gap of
-    nine - and five of THOSE want deleting rather than filling (two are
-    people rather than materials, two are dead keys nothing consumes any
-    more, one is a stale duplicate). Quoting the undifferentiated number
-    overstates the remaining work by roughly an order of magnitude.
-
-    A caveat this function cannot fix, recorded where the next reader will
-    meet it: a "gated" material still falls back to the BOOK price, which
-    is its own modelling question. If Rome cannot make aluminium, the
-    honest answer is probably that Rome cannot have it at any price, or
-    that it arrives at an import price - not that it costs what a modern
-    author guessed. That is a decision about trade and availability, not
-    about this table.
-
-    Resolvable materials absent from the book are deliberately added here;
-    minor joint byproducts retain the solver's existing treatment.
-    `civilization_id` is passed straight through to
-    `solved_prices` - see RENT NEEDS A CIVILIZATION in the module docstring
-    for why land rent needs it and what happens if it is left out.
+    `civilization_id` is passed straight through to `solved_prices` - see RENT
+    NEEDS A CIVILIZATION in the module docstring.
     """
+    entries = (production_entries if production_entries is not None
+               else _default_production_entries())
     solved = solved_prices(held_technology_ids, prices_json,
                            production_entries=production_entries,
                            civilization_id=civilization_id)
-
-    # Everything any recipe anywhere can make, ignoring era entirely. This
-    # is what separates "nothing makes it" from "nothing HERE makes it".
-    all_entries = (production_entries if production_entries is not None
-                   else _default_production_entries())
-    makeable_by_someone = set(all_entries)
-    for entry in all_entries.values():
-        makeable_by_someone.update((entry.get("outputs") or {}))
-
-    goods_denarii = money_units.convert_book_table(
-        book_goods_denarii, prices_json["money_per_labour_hour"])
+    mature = solved_prices(all_gate_nodes(entries), prices_json,
+                           production_entries=production_entries,
+                           civilization_id=civilization_id)
+    goods_in_money = {}
     provenance = {}
-    for material in book_goods_denarii:
-        provenance[material] = ("gated" if material in makeable_by_someone
-                                else "no_recipe")
+    for material in mature.resolvable_materials:
+        goods_in_money[material] = hours_to_denarii(
+            mature.prices_in_labour_hours[material], prices_json)
+        provenance[material] = "gated"
     for material in solved.resolvable_materials:
-        goods_denarii[material] = hours_to_denarii(
+        goods_in_money[material] = hours_to_denarii(
             solved.prices_in_labour_hours[material], prices_json)
         provenance[material] = "solved"
-    return goods_denarii, provenance
+    return goods_in_money, provenance

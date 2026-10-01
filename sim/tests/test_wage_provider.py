@@ -156,17 +156,7 @@ class EngineWageTests(unittest.TestCase):
 
 
 _RUNNER = """
-import builtins, io, json, random, sys
-real_open = builtins.open
-def guarded_open(path, *args, **kwargs):
-    handle = real_open(path, *args, **kwargs)
-    if str(path).endswith("prices.json") and "b" not in (args[0] if args else kwargs.get("mode", "r")):
-        document = json.load(handle)
-        handle.close()
-        document.pop("wage_rates_denarii_per_hour", None)
-        return io.StringIO(json.dumps(document))
-    return handle
-builtins.open = guarded_open
+import json, random
 from sim import simulator as S
 tree, prices, nodes, wages, goods = S.load()
 _lab, order, _b = S.load_strategy("recommended", nodes, tree["meta"]["goal_node"])
@@ -178,7 +168,7 @@ print(json.dumps({"labourer": engine.wage_per_hour("labourer"),
 
 class NoBookWagesTests(unittest.TestCase):
 
-    def test_engine_runs_with_the_wage_section_unavailable(self):
+    def test_engine_runs_with_no_wage_book_on_disk(self):
         result = subprocess.run([sys.executable, "-c", _RUNNER], capture_output=True, text=True,
                                 timeout=600, cwd=ROOT)
         self.assertEqual(result.returncode, 0, result.stderr[-800:])

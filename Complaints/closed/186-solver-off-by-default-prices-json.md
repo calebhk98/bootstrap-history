@@ -1,6 +1,6 @@
 # Project and goods prices still come from `data/prices.json`; the price solver is off by default
 
-**Status:** open
+**Status:** closed
 
 `sim/engine/data.py:320` `def load(use_solved_prices: bool = False, ...)`; the docstring says it "remains off by default for legacy content". No non-test caller passes `use_solved_prices=True` (`grep -rnE "use_solved_prices\s*=\s*True" sim --include=*.py | grep -v tests` is empty). So play and the CLI price nodes from `data/prices.json` (`data.py:107`), with the solver filling only materials the book lacks.
 
@@ -15,3 +15,7 @@ Related: `Complaints/123` (the exit checklist for making solved prices the defau
 Stakeholder decision: yes; delete `data/prices.json` as soon as possible. Sequence with 151 (projects price materials from the market) and the exit checklist in 123.
 
 Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): `python3 sim/simulator.py validate` passes with one warning, reproduced: `el2_inductor_ferrite_core: material ferrite_kg has a production entry but no solved price (cost is a lower bound)`.
+
+## Resolution
+
+`data.load()` has no `use_solved_prices` switch: goods are solved prices, in the civilisation's coin, with technology-gated materials priced at the mature technique (labelled transitional, Complaints/123). `data/prices.json` is deleted and no code reads it. The `el2_inductor_ferrite_core` warning is gone because `ferrite_kg` and nine other production entries gained a technology gate. Project material costs and the `materials` screen read the same calculated table (Complaints/151). Regression: `sim/tests/test_price_book_deleted.py`.

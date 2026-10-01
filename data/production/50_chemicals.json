@@ -429,7 +429,8 @@
    "energy_mj": 0.0,
    "basis": "per tonne of citric acid recovered from lemon juice by the lime-precipitation process",
    "yield_basis": "New intermediate this file needs for sodium_citrate_kg. The pre-fermentation (pre-1919) industrial route: lemon juice, typically 5-8% citric acid by mass (taken at 6%), is treated with lime to precipitate insoluble calcium citrate (2 C6H8O7 + 3 Ca(OH)2 -> Ca3(C6H5O7)2 + 6 H2O), which is then decomposed with sulphuric acid to release free citric acid and gypsum (Ca3(C6H5O7)2 + 3 H2SO4 -> 2 C6H8O7 + 3 CaSO4) - stoichiometrically 0.579 kg Ca(OH)2 (0.438 kg as lime_kg) and 0.766 kg pure H2SO4 (1.178 kg at 65% strength) per kg of acid recovered, at close to full stoichiometric efficiency since this is straightforward aqueous chemistry. LABELLED HEURISTIC (rule 3.4): growing and juicing the lemons is folded into this entry's labour figure rather than priced as its own land-limited crop the way olive_oil_kg is - a real simplification, accepted here because this material serves only one low-priority downstream node (sodium_citrate_kg).",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "sulfuric_retort"
   },
   "sodium_carbonate_kg": {
    "outputs": {
@@ -507,7 +508,8 @@
    "energy_mj": 0.0,
    "basis": "per tonne of sodium dichromate (Na2Cr2O7), the tanning/dyeing/mordanting chemical this generic key most plausibly represents",
    "yield_basis": "Two balanced stages: an oxidising roast of chromite ore with soda ash and air, 4 FeCr2O4 + 8 Na2CO3 + 7 O2 -> 8 Na2CrO4 + 2 Fe2O3 + 8 CO2 (895.36 g reactants against 1967.3 g - the extra mass is the oxygen absorbed, correctly balanced), followed by acidification of the chromate to dichromate, 2 Na2CrO4 + H2SO4 -> Na2Cr2O7 + Na2SO4 + H2O (422.03 g both sides). Chaining these gives 1.237 kg sodium chromate and hence, via the roast, 0.855 kg of pure FeCr2O4 and 0.809 kg soda ash per kg of dichromate, plus 0.374 kg pure H2SO4 (0.576 kg at 65% strength) for acidification; an 80% overall multi-stage efficiency (chrome chemical manufacture was a genuinely difficult, low-yield, hazardous 19th-century industry) gives the soda-ash and acid figures above. INCOMPLETE BY DESIGN (rule 3.4): this entry does NOT charge for the chromite ore itself (roughly 1.9-2.4 kg of dressed ~45%-grade ore per kg of product) because chromite is not defined as its own tracked material here the way calamine_kg or galena_kg were for other ores in 20_nonferrous.json - a properly complete entry would add that. Charcoal is a rough estimate for the prolonged, high-temperature oxidising roast, which historically was very fuel-hungry; it is not derived from a measured efficiency. This is, along with ammonia_kg, the least confident entry in this file.",
-   "conf": "C"
+   "conf": "C",
+   "requires_node": "mt2_chromium_extraction"
   },
   "mineral_pigment_kg": {
    "outputs": {

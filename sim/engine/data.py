@@ -30,13 +30,13 @@ from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
-from . import money_units, wage_provider
+from . import money_units, node_revenue, wage_provider
 from .default_civilisation import default_civilisation_id
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
-# dictionary read straight from a JSON file (branches, prices.json,
+# dictionary read straight from a JSON file (branches,
 # geography.json, resources.json, a civilization file) with no schema
 # object anywhere in the codebase to check it against, so `Dict[str, Any]`
 # is the true type, not a placeholder for one this pass ran out of time to
@@ -105,7 +105,6 @@ class SimulationDefaults(TypedDict):
 HERE = os.path.dirname(os.path.abspath(__file__))          # sim/engine
 SIMDIR = os.path.dirname(HERE)                             # sim
 ROOT = os.path.dirname(SIMDIR)                             # rome
-PRICES = os.path.join(ROOT, "data", "prices.json")
 STRATS = os.path.join(SIMDIR, "strategies")   # sim/strategies, beside simulator.py
 MODDIR = os.path.join(ROOT, "mods")
 KNOWLEDGE_DIR = os.path.join(ROOT, "docs", "knowledge")   # the how-to library the tree's kb links point into
@@ -167,9 +166,7 @@ _TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR
 TRADE_REGISTRY = _TRADE_REGISTRY
 
 # Trade identity, availability, and explanatory text belong to the trade
-# registry, not to the legacy table that temporarily supplies their wages.
-# Keeping them here made deleting prices.json impossible even after wages move
-# to the labour market, and inferred availability from English prose.
+# registry.
 def _load_trade_notes() -> Dict[str, str]:
     """Compatibility loader backed by the canonical trade registry."""
     return {trade_id: trade.note for trade_id, trade in _TRADE_REGISTRY.items()}
@@ -304,79 +301,33 @@ def has_luck_component(node: JSONDict) -> bool:
     return node.get("kind") != "SCIENCE" or bool(node.get("mat")) or bool(node.get("lab"))
 
 
-def load(use_solved_prices: bool = False,
-         held_technology_ids: Iterable[str] = (),
+def load(held_technology_ids: Iterable[str] = (),
          civilization_id: Optional[str] = None
          ) -> Tuple[JSONDict, JSONDict, Nodes, Dict[str, float], Dict[str, float]]:
-    """Load the tree and `prices.json`, and derive each node's cost.
+    """Load the tree and derive each node's cost from calculated prices.
 
-    `use_solved_prices` remains off by default for legacy content. If a loaded
-    technology names a material absent from the old goods table, however, the
-    solver runs automatically: this is what lets a self-contained mod add a
-    material without patching `prices.json`. The import stays lazy so an
-    unchanged base-only load retains its historical path and startup cost.
+    Returns (tree, wage document, nodes, wages per hour, goods). The wage
+    document is the opening schedule in the shape the price solver reads.
+    `goods` is the solver's price for every material the recipes can make
+    under `held_technology_ids`, in the civilisation's coin; a material only a
+    technology not yet held can make is priced as if it were held (see
+    `sim.engine.prices.priced_goods_table`). A material nothing makes is absent.
 
-    Passing `use_solved_prices=True` asks `sim.engine.prices` to solve a
-    price for every material it can under `held_technology_ids` (an
-    iterable of tech-tree node ids - typically a civilization's completed
-    node set) and substitutes those into `goods` in place of the book
-    figure, falling back to the book for anything the solver cannot yet
-    price. The RETURN SHAPE is unchanged either way - still the same
-    five-tuple every caller already unpacks - so this is a pure substitution
-    of where `goods`'s numbers came from, not a new thing callers have to
-    learn to read. Node costs (`_labour_cost`, `_material_cost`, `_total_cost`,
-    `_hired_hours`) are then derived from `goods` exactly as before, so a
-    solved material's price flows through to node cost the same way a book
-    one always has.
-
-    Use `goods_provenance()` below to see WHICH materials came from which
-    source, independent of whether this switch is on - that report is the
-    measurable burndown of `data/prices.json`, and it should be checkable
-    without having to first flip the engine's own behaviour.
-
-    `civilization_id` matters only when `use_solved_prices` is True: it
-    decides whose held territory `iugerum_land` prices against (see
-    `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION). It defaults to
-    `None`, which `sim.engine.prices.priced_goods_table` resolves to Rome -
-    the same default the standalone `sim/solve_prices.py --civ`-less run
-    uses - so a caller pricing a NON-ROME civilization's goods table must
-    pass its id here explicitly, or its land is silently priced as Rome's.
+    `civilization_id` decides whose coin and whose held territory prices are
+    stated against (see `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION);
+    the default is the reference civilisation.
     """
     manifests = get_ordered_mods(MODDIR)
     check_all_civilizations(CIVDIR, manifests)
     tree = load_mod_tree(load_base_tree(), manifests, copy_base=False)
-    with open(PRICES) as source:
-        prices = json.load(source)
     nodes = {node["id"]: node for node in tree["nodes"]}
     schedule = starting_schedule(civilization_id)
     wages = schedule.wages_per_hour()
     rate = schedule.money_per_labour_hour
-    book_goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
-                  if not key.startswith("_")}
-    goods = money_units.convert_book_table(book_goods, rate)
-    required_materials = {material for node in nodes.values()
-                          for material in (node.get("mat") or {})}
-    if use_solved_prices:
-        from . import prices as price_solver
-        goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, book_goods, schedule.document(),
-            civilization_id=civilization_id)
-    elif not required_materials.issubset(goods):
-        # Book prices stay; the solver only fills materials the book lacks.
-        from . import prices as price_solver
-        reference_document = _STARTING_SCHEDULE.document()
-        solved_goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, book_goods, reference_document,
-            civilization_id=civilization_id)
-        goods.update({material: _in_coin(solved_goods[material], reference_document, rate)
-                      for material in required_materials - set(goods) if material in solved_goods})
-        unresolved = required_materials - set(goods)
-        if unresolved:
-            # TRANSITIONAL: price era-gated materials as if every technology were held.
-            era_free_goods, _provenance = price_solver.priced_goods_table(
-                list(nodes), book_goods, reference_document, civilization_id=civilization_id)
-            goods.update({material: _in_coin(era_free_goods[material], reference_document, rate)
-                          for material in unresolved if material in era_free_goods})
+    document = schedule.document()
+    from . import prices as price_solver
+    goods, _provenance = price_solver.priced_goods_table(
+        held_technology_ids, document, civilization_id=civilization_id)
     production = load_production_catalog(ROOT, MODDIR)
     load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
@@ -398,42 +349,24 @@ def load(use_solved_prices: bool = False,
         node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
+    node_revenue.apply_revenue(nodes.values(), goods, wages, rate)
     money_units.price_nodes(nodes.values(), wages, rate)
-    return tree, prices, nodes, wages, goods
-
-
-def _book_prices() -> Tuple[Dict[str, Any], Dict[str, float]]:
-    """Load the legacy price document and its public material-price table."""
-    with open(PRICES) as source:
-        prices = json.load(source)
-    goods = {
-        key: value["p"]
-        for key, value in prices["purchase_prices_denarii"].items()
-        if not key.startswith("_")
-    }
-    return prices, goods
+    return tree, document, nodes, wages, goods
 
 
 def goods_provenance(held_technology_ids: Iterable[str] = (),
                       civilization_id: Optional[str] = None) -> Dict[str, str]:
-    """{material: "solved" | "gated" | "no_recipe"} for every material
-    `prices.json` prices, from `sim.engine.prices.priced_goods_table` - the
-    burndown that measures "prices.json slowly deleted" one entry at a time
-    (see that module's docstring). This always asks the solver, regardless
-    of `load()`'s own `use_solved_prices` switch: the point is to be able to
-    measure the split BEFORE deciding to turn the engine's own prices over
-    to it, not only after.
+    """{material: "solved" | "gated"} for every material the solver prices:
+    "gated" ones are priced as if the technology were held (see
+    `sim.engine.prices.priced_goods_table`).
 
     `civilization_id` should be the SAME civilization `held_technology_ids`
-    came from - see `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION for
-    why land rent needs to know this and cannot infer it from
-    `held_technology_ids` alone. Left at `None` it prices land as Rome's,
-    which is silently wrong for any other civilization's report.
+    came from: land rent is solved against its territory, and left at `None`
+    it is the reference civilisation's.
     """
-    prices, goods = _book_prices()
     from . import prices as price_solver
     _goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, goods, starting_schedule(civilization_id).document(),
+        held_technology_ids, starting_schedule(civilization_id).document(),
         civilization_id=civilization_id)
     return provenance
 
@@ -442,23 +375,13 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
                             civilization_id: Optional[str] = None,
                             money_per_labour_hour: Optional[float] = None
                             ) -> Dict[str, float]:
-    """Return the calculator-backed material-price table for an era.
-
-    This is the migration boundary for runtime systems that used to open
-    ``data/prices.json`` independently.  The old table is still supplied to
-    :func:`sim.engine.prices.priced_goods_table` because unsolved and gated
-    materials do not yet have an endogenous value, but every material the
-    calculator *can* resolve is replaced here.  Keeping that remaining
-    fallback in one provider makes it visible and lets consumers migrate now,
-    rather than each retaining a private reader until the final deletion.
-    """
-    prices, book_goods = _book_prices()
+    """The calculated material-price table for an era, in the civilisation's
+    coin or, when `money_per_labour_hour` is given, in that coin."""
     from . import prices as price_solver
     document = starting_schedule(civilization_id).document()
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, book_goods, document, civilization_id=civilization_id)
+        held_technology_ids, document, civilization_id=civilization_id)
     if money_per_labour_hour is not None:
-        # The caller's coin differs from the civilisation file's: rescale.
         goods = {material: _in_coin(price, document, money_per_labour_hour)
                  for material, price in goods.items()}
     return goods

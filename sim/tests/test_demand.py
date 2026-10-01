@@ -7,13 +7,11 @@ demand.py's own STANDALONE section), so importing sim/tests/harness.py
 would pull in the whole engine for no reason. sim/tests/__main__.py's
 _run_topic already runs both styles identically.
 
-CalibrationAgainstHistoricalTargetsTests is the one class that reads
-data/prices.json - the CALIBRATION TARGETS demand.py's own docstring
-promises are read only by tests, never by the module's own functions (see
-sim/world/agriculture.py's and sim/world/deposits.py's own precedent for
-the same discipline). It reports the disagreement; it never asserts a
-tolerance tight enough to tempt anyone into retuning a marginal budget
-share or the Gini coefficient to close it.
+CalibrationAgainstHistoricalTargetsTests reports the historical targets
+demand.py's own docstring names, read only by tests, never by the module's
+own functions. It reports the disagreement; it never asserts a tolerance
+tight enough to tempt anyone into retuning a marginal budget share or the
+Gini coefficient to close it.
 
 sim/world/demand.py standalone: household budgets, Stone-Geary demand and derived producer demand (unittest-style).
 """
@@ -400,9 +398,8 @@ class StandaloneImportTests(unittest.TestCase):
 
 
 class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
-    """The only class in this file that reads data/prices.json - both
-    CALIBRATION TARGETS demand.py's own docstring names, read here to
-    REPORT the disagreement and never fed back into demand.py's marginal
+    """The CALIBRATION TARGETS demand.py's own docstring names, read here
+    to REPORT the disagreement and never fed back into demand.py's marginal
     budget shares or Gini coefficient to close it. See demand.py's own __main__
     block for the same computation with printed intermediate steps.
     """
@@ -411,10 +408,8 @@ class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
         # Instance-level setUp, not setUpClass - sim/tests/__main__.py's
         # _run_topic flattens a unittest suite and never drives
         # _handleClassSetUp (see sim/tests/test_deposits.py's own
-        # CalibrationAgainstBookPricesTests for the same note). Cheap
+        # CalibrationReportTests for the same note). Cheap
         # enough to redo per test.
-        with open(os.path.join(_REPO_ROOT, "data", "prices.json")) as handle:
-            self.book_prices = json.load(handle)
         with open(os.path.join(_REPO_ROOT, "data", "world", "resources.json")) as handle:
             self.resources = json.load(handle)
         self.population = 55_000_000.0
@@ -450,30 +445,16 @@ class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
 
     def test_report_silver_to_lead_ratio(self):
         silver_price = self._silver_price()
-        book_prices = self.book_prices["purchase_prices_denarii"]
-        book_silver = book_prices["silver_kg"]["p"]
-        book_lead = book_prices["lead_kg"]["p"]
         print("\nCalibrationAgainstHistoricalTargetsTests: derived "
               "silver:lead ratio = %.1fx (task's own stated historical "
-              "target ~%.0fx; data/prices.json's own book ratio = %.1fx, "
-              "which is not quite the same measurement - silver_kg's book "
-              "price is DEFINITIONAL, 1 denarius = ~3.15g fine silver by "
-              "fiat, not an observed market price)"
+              "target ~%.0fx)"
               % (silver_price / self.lead_price,
-                 demand.SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL,
-                 book_silver / book_lead))
-        print("  derived silver price: %.2f h/kg vs book-implied %.2f h/kg "
-              "(book/wage: %.2f den/kg / %.4f den/h)"
-              % (silver_price, book_silver / self._labourer_wage(),
-                 book_silver, self._labourer_wage()))
-        print("  derived lead price (recursive labour content only, no "
-              "rent/capital): %.4f h/kg vs book-implied %.2f h/kg"
-              % (self.lead_price, book_lead / self._labourer_wage()))
+                 demand.SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL))
+        print("  derived silver price: %.2f h/kg; derived lead price "
+              "(recursive labour content only, no rent/capital): %.4f h/kg"
+              % (silver_price, self.lead_price))
         self.assertGreater(silver_price, 0.0)
         self.assertGreater(silver_price, self.lead_price)
-
-    def _labourer_wage(self):
-        return self.book_prices["wage_rates_denarii_per_hour"]["labourer"]["rate"]
 
 
 _GREEK_LETTER_NAMES = (
