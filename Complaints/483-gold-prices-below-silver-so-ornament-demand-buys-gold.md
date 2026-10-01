@@ -1,6 +1,6 @@
 # Gold solves cheaper than silver, so households' ornament budget buys gold
 
-**Status:** partly - gold_kg's placer labour was a thousand times too low (a per-tonne entry holding a per-kilogram figure), so gold solved at about 40 labour hours per kg against silver's 319; with it corrected gold solves at about 13,400, above silver, so the ornament budget no longer picks gold. Still open: a deposit-based or supply-limited gold price (571)
+**Status:** partly - the ornament need declares `satiation_per_capita_per_year` (a labelled heuristic: durable metal is worn and lost, not bought up to the budget share), so households' bright metal is a fraction of a gram per head a year instead of tens of grams, and the spending it frees goes to the other needs (`sim/world/need_satiation.py`); gold's own labour fix is kept; still open: a deposit-based or supply-limited gold price (571) and a held-stock model of ornament in place of the heuristic limit
 
 The ornament need in `data/world/needs.json` treats the bright metals as
 equivalent per kilogram, so households put the whole ornament budget on the

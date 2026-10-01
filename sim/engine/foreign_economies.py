@@ -117,8 +117,12 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
             cache = self.household._commodity_materials_cache = (prices, {})
         keys = cache[1].get(commodity)
         if keys is None:
-            members = {material for material in prices
-                       if self._material_tag(material)[0] == commodity}
+            if "members" not in cache[1]:
+                grouped = {}
+                for material in prices:
+                    grouped.setdefault(self._material_tag(material)[0], set()).add(material)
+                cache[1]["members"] = grouped
+            members = set(cache[1]["members"].get(commodity, ()))
             members.update(self._commodity_ledger().commodities.get(
                 commodity, {}).get("material_keys", []))
             keys = cache[1][commodity] = [commodity] + sorted(members - {commodity})
