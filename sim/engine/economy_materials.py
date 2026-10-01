@@ -54,6 +54,19 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from .project_materials import tonnes_per_unit
 
 
+
+class _StockLedger(collections.Counter):
+    """The material stock Counter; it notes when a capacity key (hours, patronage) may have been
+    written into it, so the move of those into the capacity pool is not redone on every read."""
+
+    unswept = True
+
+    def __setitem__(self, key, value):
+        if key not in self:
+            self.unswept = True
+        super().__setitem__(key, value)
+
+
 class MaterialSupplyMixin:
 
     # ---- raw material supply ------------------------------------------------
@@ -730,8 +743,11 @@ class MaterialSupplyMixin:
         # has the fiscus itself as a supplier, and the metalla were largely
         # imperial property. Charcoal is exempt because no amount of standing
         # makes a bulky crumbling fuel travel further than it can travel.
+        kept = self._running_kept("market_tonnes")
         if emp_key != "charcoal":
-            favour = self.effect_best("market_standing")
+            if "favour" not in kept:
+                kept["favour"] = self.effect_best("market_standing")
+            favour = kept["favour"]
             if favour is not None:
                 share *= favour[1]["factor"]
             share = min(share, self.MARKET_STANDING_SHARE_CEILING)
@@ -748,9 +764,14 @@ class MaterialSupplyMixin:
         market = national * share * scale
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
         # This is the single most useful thing in the geography file.
-        for node_id in self.nodes_with_mechanic("supplies_material_by_sea_route"):
-            if emp_key in self.mechanic(node_id, "supplies_material_by_sea_route")["materials"] and self.running(node_id):
-                market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
+        routes = kept.get(emp_key)
+        if routes is None:
+            routes = kept[emp_key] = sum(
+                1 for node_id in self.nodes_with_mechanic("supplies_material_by_sea_route")
+                if emp_key in self.mechanic(node_id, "supplies_material_by_sea_route")["materials"]
+                and self.running(node_id))
+        for _route in range(routes):
+            market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
         return market
 
     MARKET_STANDING_SHARE_CEILING = declare(
@@ -899,18 +920,20 @@ class MaterialSupplyMixin:
         economy = self.state.economy
         stock = getattr(economy, "_material_stock_ledger", None)
         if stock is None:
-            stock = economy._material_stock_ledger = collections.Counter()
-        elif not isinstance(stock, collections.Counter):
+            stock = economy._material_stock_ledger = _StockLedger()
+        elif not isinstance(stock, _StockLedger):
             # A RESUMED SAVE HANDS THIS BACK AS A PLAIN DICT. It is in
             # SAVE_FIELDS so that a reloaded game is the same game - without it
             # a resume silently restarted at zero stock and played differently
             # from the run that was saved, the same class of fault as a fog
             # that could be rewound by reloading. JSON has no Counter, so
             # promote whatever came back before anything adds to it.
-            stock = economy._material_stock_ledger = collections.Counter(stock)
-        for key in list(stock):
-            if key in self.NON_PHYSICAL_CAPACITY_KEYS or key.endswith("_hours"):
+            stock = economy._material_stock_ledger = _StockLedger(stock)
+        if stock.unswept:
+            non_physical = self.NON_PHYSICAL_CAPACITY_KEYS
+            for key in [key for key in stock if key in non_physical or key.endswith("_hours")]:
                 economy.capacity_pool[key] = economy.capacity_pool.get(key, 0.0) + stock.pop(key)
+            stock.unswept = False
         return stock
 
     def _material_opening_stock(self):
