@@ -1,6 +1,6 @@
 # Silver is too cheap to produce
 
-**Status:** partly - the lead recipe's silver yield now follows the argentiferous deposits and silver is far cheaper as the note below predicted; the remaining gap to the attested wage is in what is not yet costed, and the opening wage is now well above it
+**Status:** partly - ore dressing, roasting, cupel bellows and hearth attendance are now costed and the silver recoveries applied; silver is still far cheaper than the attested day wage implies, see 410
 
 Money is anchored to each civilisation's coin metal at its solved production
 cost. For Rome the solved cost of silver makes the opening labourer wage about
@@ -63,3 +63,12 @@ number to hit the day wage.
 - [x] The lead recipe yields about 3.33 kg of silver per tonne of lead (it was 0.46), which is what `data/world/deposits.json` carries (the argentiferous deposit's 0.5 kg per tonne of rock over 150 kg of lead per tonne of rock) and is the right order against the empire totals in `data/world/resources.json`. `sim/tests/test_silver_chain_physics.py` pins the agreement.
 - Solved silver, labour hours per kg (`python3 sim/solve_prices.py --civ <civ> --why silver_kg`; here read through `engine.prices.solved_prices`): Rome 1449 before, 237 after; Han 1456 before, 235 after; England 413 before, 157 after; Norse 202 before, 112 after. Lead per kg also falls (Rome 0.150 to 0.025 hours). Mexica has no silver price.
 - Money is anchored to the coin metal, so for Rome one denarius is now worth about a sixth of what it was in labour hours and the opening wage is correspondingly higher in coin terms than the attested day wage. The first-order reason is the joint-cost split (silver bears most of a batch whatever its physical effort) together with uncosted ore dressing; those are where to look, see 337. Tests that fixed absolute coin amounts now state them in labour hours (`test_affordability_and_credit`, `test_complaint_177_credit_forecast_once`).
+
+## Progress: dressing, roasting and cupellation costed (fifth increment)
+
+- [x] `lead_kg` gains labourer hours for dressing the rock to concentrate (about 8.5 tonnes of rock per tonne of lead from the deposits' grades), roasting and cupellation bellows air (from 2 Pb + O2 -> 2 PbO and a blast excess), and furnaceman hours for the attended cupel; `copper_kg` gains dressing and roasting. The rates are labelled conf D in each `yield_basis`; the tests pin floors (`sim/tests/test_silver_chain_physics.py`).
+- [x] The 0.90 and 0.92 silver recoveries stated in the recipe's text are now applied (see 337).
+- Solved silver, labour hours per kg (`python3 sim/solve_prices.py --civ <civ> --why silver_kg`): Rome 224 before, 319 after; Han 233 to 333; England 156 to 205; Norse 112 to 135. One Rome denarius went from about 0.61 to about 0.86 labour hours.
+- Rome silver breakdown per kg after (319): charcoal about 56, galena (mining, from deposit cost) about 113, furnaceman about 74, dressing, roasting and bellows about 68, smith about 8, capital under 1.
+- Drainage and ventilation are not a missing step: they are inside `HAULAGE_MULTIPLIER_DEEP_VEIN`, underived. Left as is, filed in 410.
+- Rome's opening wage is still about twelve denarii for a ten-hour day against the attested one. The physics at the deposits' grades does not close the gap; 410 lists where it may lie (grade, drainage, mine ownership and the state's take) without tuning.
