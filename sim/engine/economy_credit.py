@@ -129,13 +129,13 @@ class CreditMixin:
         # Bounded by what can be serviced: no lender advances more than income
         # can carry, even with a grand patron. Five years of turnover stops a
         # patron-name from creating an unpayable debt trap. [temporary_heuristic]
-        # The years of earning a lender will carry are the civilisation's opening figure scaled by how
-        # the market rate has moved from its starting rate: money twice as dear carries half the debt.
-        # [temporary_heuristic: CREDIT_SURPLUS_YEARS_MULTIPLE is the figure at the starting rate]
+        # The years of earning a lender will carry are the opening figure, less when money has grown
+        # dearer than at the start; cheaper money from society's saving does not enlarge what THIS
+        # borrower can carry. [temporary_heuristic: CREDIT_SURPLUS_YEARS_MULTIPLE is the figure at the starting rate]
         market_rate = self.market_rate()
         years = self.CREDIT_SURPLUS_YEARS_MULTIPLE
         if market_rate > 0:
-            years *= self.civ["starting_interest_rate"] / market_rate
+            years *= min(1.0, self.civ["starting_interest_rate"] / market_rate)
         serviceable = floor + max(0.0, earning) * years
         # And never more than lenders still hold beyond what everyone else owes them.
         room = self.market_credit_room(capital_market.FOUNDER_LOAN)

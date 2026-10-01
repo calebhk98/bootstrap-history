@@ -43,7 +43,7 @@ class Borrower:
 		"""The most this actor may owe in all: what its earning can carry at the market rate, and no
 		more than lenders hold after the others' loans."""
 		carried = capital_market.serviceable_debt(
-			self.credit_earning(world), world.market_rate(), DebtServiceMixin.DEBT_SERVICE_SHARE_OF_SURPLUS)
+			self.credit_earning(world), max(world.market_rate(), world.starting_rate()), DebtServiceMixin.DEBT_SERVICE_SHARE_OF_SURPLUS)
 		room = world.credit_headroom(self.identity())  # type: ignore[attr-defined]
 		return carried if room is None else min(carried, room)
 

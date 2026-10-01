@@ -42,8 +42,11 @@ check("the rate stays inside its floor and ceiling however extreme the balance",
       and capital_market.rate_for_balance(START, 1.0e-9, 0.5) >= START * capital_market.RATE_FLOOR_SHARE * (1 - 1e-12))
 check("a borrower with no arrears and no standing pays exactly the market rate",
       abs(capital_market.borrower_rate(START, 0.0, 0.0) - START) < 1e-12)
-check("a borrower's standing makes money cheaper",
-      capital_market.borrower_rate(START, 0.02, 0.0) < START)
+check("a borrower's standing removes premium: at the same arrears he pays less",
+      capital_market.borrower_rate(START, 0.02, 1.0) < capital_market.borrower_rate(START, 0.0, 1.0))
+check("no discount or standing takes any rate below the market rate, what the market pays savers",
+      all(capital_market.borrower_rate(START, discount, used) >= START - 1e-15
+          for discount in (0.0, 0.03, 0.5, 10.0) for used in (0.0, 0.3, 1.0, 5.0)))
 check("a borrower's arrears make money dearer, more the closer to its ceiling",
       START < capital_market.borrower_rate(START, 0.0, 0.5) < capital_market.borrower_rate(START, 0.0, 1.0))
 check("arrears beyond the ceiling add no more than the ceiling does",
@@ -114,6 +117,22 @@ dearer.capital_market().rate = 2.0 * dearer.market_rate()
 check("at a higher market rate the same earnings carry less debt: the limit falls",
       dearer.credit_limit() < limit_roomy, (dearer.credit_limit(), limit_roomy))
 
+saver = market_sim()
+one_year(saver)
+saver.reputation = 1.0e9
+saver.capital = 1.0
+check("however great the founder's standing, his rate is not below the market rate",
+      saver.debt_interest_rate() >= saver.market_rate() - 1e-12, (saver.debt_interest_rate(), saver.market_rate()))
+wealth = market_sim()
+one_year(wealth)
+limit_before = wealth.credit_limit()
+wealth.state_treasury().money = 1.0e14
+one_year(wealth)
+check("society's savings growing raise the funds on offer and lower the market rate",
+      wealth.market_rate() < wealth.civ["starting_interest_rate"], wealth.market_rate())
+check("a founder's limit does not grow because society's savings grow while his own standing is unchanged",
+      wealth.credit_limit() <= limit_before * (1.0 + 1e-9), (wealth.credit_limit(), limit_before))
+
 # ---- the founder's rate: the market rate, his standing, his arrears -------------------------------
 standing = market_sim()
 one_year(standing)
@@ -140,7 +159,9 @@ check("a firm's ceiling is what its earnings can carry at the rate, within what 
       0.0 < first.credit_ceiling(world) <= shared.capital_market().capacity, first.credit_ceiling(world))
 unproven = shared.actors.add("firm:c", ActorRecord(kind="firm", money=0.0, last_margin=1.0e6, founded_year=shared.year))
 proven = shared.actors.add("firm:d", ActorRecord(kind="firm", money=0.0, last_margin=1.0e6, founded_year=shared.year - 30))
-check("a firm with a longer record borrows more cheaply", proven.borrowing_rate(world) < unproven.borrowing_rate(world),
+for firm in (unproven, proven):
+    firm.money = -0.5 * firm.credit_ceiling(world)
+check("a firm with a longer record, in the same arrears, pays less premium", proven.borrowing_rate(world) < unproven.borrowing_rate(world),
       (proven.borrowing_rate(world), unproven.borrowing_rate(world)))
 check("the state borrows through the same method", hasattr(shared.state_treasury(), "borrowing_rate")
       and shared.state_treasury().borrowing_rate(world) > 0.0)

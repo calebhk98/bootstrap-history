@@ -19,6 +19,9 @@ class CapitalView:
 	def market_rate(self) -> float:
 		return self._sim.market_rate()
 
+	def starting_rate(self) -> float:
+		return float(self._sim.civ["starting_interest_rate"])
+
 	def credit_headroom(self, actor_id: str) -> Optional[float]:
 		"""What lenders will still advance an actor beyond what others owe; None before the market has met."""
 		return self._sim.market_credit_room(actor_id)

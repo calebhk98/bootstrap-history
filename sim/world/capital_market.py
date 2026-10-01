@@ -53,11 +53,11 @@ def rate_for_balance(starting_rate: float, current_utilisation: float, reference
 
 
 def borrower_rate(market_rate: float, standing_discount: float, share_of_ceiling_used: float) -> float:
-    """What one borrower pays: the market rate, plus a premium that grows with the share of its own
-    credit ceiling it has used, less a discount for its visible standing. Never negative."""
+    """What one borrower pays: never less than the market rate (what the market itself pays savers), plus
+    the part of the arrears premium that its standing does not remove. A discount only removes premium."""
     used = max(0.0, min(1.0, share_of_ceiling_used))
     premium = market_rate * ARREARS_PREMIUM_AT_CEILING * used
-    return max(0.0, market_rate + premium - standing_discount)
+    return market_rate + max(0.0, premium - max(0.0, standing_discount))
 
 
 def headroom(capacity: float, lent: float) -> float:
