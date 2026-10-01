@@ -59,11 +59,10 @@ Measure with these; none of their output is copied here.
 - **Book material prices.** The solver fills only what the book lacks; some
   new materials cannot be priced yet (`python3 sim/simulator.py validate`
   warns about them) (`Complaints/123`).
-- **Civilisation independence.** Engine code names civilisation ids and
-  assumes Rome exists (`Complaints/135`, `Complaints/136`).
-- **Two maps and a committed tree.** Regions and tiles coexist
-  (`Complaints/140`); `data/tech_tree.json` duplicates the branches
-  (`Complaints/141`).
+- **Civilisation units.** Engine code no longer names a civilisation, but
+  internal money and land are still the book's Roman units
+  (`Complaints/136`, `Complaints/144`).
+- **Two maps.** Regions and tiles coexist (`Complaints/140`).
 
 ## Playtest defects come before the roadmap
 
@@ -87,9 +86,8 @@ agents it leaves free. What is left, in order:
    coke), `280` (option ids that name no node), `126` (audit markers in
    player notes), `68`, and the remains of `41`, `56`, `127`, `151`, `198`,
    `199`, `204`, `205`, `227`, `231`, `236`, `249`, `265`.
-2. **Duplicated structures that cost every merge**: generate the tree from
-   its branches (`141`); every branch that touches data now regenerates
-   `data/tech_tree.json` and merges can leave it stale.
+2. **Duplicated structures**: replace the region layer with the tile map
+   (`140`).
 3. **Screens the player lacks**: `71`, `88`, `90`, `94`, `95`, `96`, `97`,
    `100`, `101`, `132`, `178`, `243`, `270`, `272`, and the remains of
    `81`, `99`, `102`.

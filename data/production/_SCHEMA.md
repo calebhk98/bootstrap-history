@@ -55,7 +55,7 @@ Three states, and the difference between them is the whole point:
 |---|---|
 | field absent | Nobody has classified this entry. It competes in an ungated solve and is DROPPED from a gated one. `validate_production.py` counts these so the gap is a number rather than a silence. |
 | `null` | Available to anyone, anywhere, with no technology whatever: gathering firewood, quarrying stone, digging clay, growing wheat. A deliberate statement. |
-| a node id | Available once that node is reached. The id is checked against `data/tech_tree.json`; a typo silently means "never available", so it is verified rather than trusted. |
+| a node id | Available once that node is reached. The id is checked against the tree built from `data/branches/`; a typo silently means "never available", so it is verified rather than trusted. |
 
 Pick the node that is the REAL gate, not the earliest node the process
 touches. Electrolytic zinc needs electrolysis, so its gate is whatever node
