@@ -1,6 +1,6 @@
 # The "no concern ever closed for want of staff" achievement is awarded after dozens of staffing closures
 
-**Status:** open
+**Status:** closed
 
 At the end of the run `score` marked "no concern ever closed for want of staff" as achieved although the tester's
 reports show closures of 10 to 95 concerns in many years.

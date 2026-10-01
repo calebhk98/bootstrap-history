@@ -28,13 +28,14 @@ inherit from:
 No method appears in more than one of the four; see each module's own
 docstring for exactly which methods it holds and why they sit together.
 """
+from .hazard_relief import HazardReliefMixin
 from .society_hazards import HazardsMixin
 from .society_state_pressure import StatePressureMixin
 from .society_adoption import AdoptionMixin
 from .society_diffusion import DiffusionMixin
 
 
-class SocietyMixin(HazardsMixin, StatePressureMixin, AdoptionMixin, DiffusionMixin):
+class SocietyMixin(HazardReliefMixin, HazardsMixin, StatePressureMixin, AdoptionMixin, DiffusionMixin):
     """Composition point only: every method below is defined in one of the
     four sibling modules above, not here. This class exists so that
     sim/engine/core.py's `class Sim(..., SocietyMixin, ...)` keeps working

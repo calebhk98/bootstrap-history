@@ -18,6 +18,7 @@ from .step_alerts import alert_lines
 from .render_screens_market import why_goods_market_lines
 from ..knowledge_warning import warning_lines
 from .state_shut_staffing import render_shut_for_want_of_staff
+from .hazard_words import why_hazard_lines, why_standing_lines
 # DISPLAY_WIDTH is NOT imported here: cli.py patches engine.protocol.DISPLAY_WIDTH
 # directly at runtime, so every reader of it in this file goes through the
 # protocol module itself, live, rather than a plain name bound once at import
@@ -1066,7 +1067,8 @@ def render_why(out):
     return "\n".join(_render_sections(out, (
         _why_header, _why_cost, _why_hours_risk, _why_staff_needed,
         _why_staff_keep_open, _why_labour_materials, _why_upkeep_revenue,
-        why_goods_market_lines, _why_status, _why_benefit, _why_chain, _why_unlocks_downstream,
+        why_goods_market_lines, _why_status, _why_benefit, why_standing_lines,
+        why_hazard_lines, _why_chain, _why_unlocks_downstream,
         _why_trailing,
     )))
 

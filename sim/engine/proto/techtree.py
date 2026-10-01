@@ -1503,4 +1503,9 @@ def _node_explain(sim, nodes, node_id):
     rebuild = sim.rebuild_explanation(node_id)
     if rebuild:
         out["rebuild"] = rebuild
+    out["standing_effect"] = {"scandal": round(sim.alarm_of(node), 2),
+                              "reputation": round(sim.reputation_gain_of(node), 2)}
+    hazard_effect = sim.hazard_effect_preview(node_id)
+    if hazard_effect:
+        out["hazard_effect"] = hazard_effect
     return out

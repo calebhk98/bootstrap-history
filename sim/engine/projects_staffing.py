@@ -36,6 +36,8 @@ class StaffingMixin:
         projects.operating.discard(node_id)
         projects.mothballed.add(node_id)
         projects.closures[node_id] = {"reason": reason, "year": self.state.scenario.year if year is None else year}
+        if reason == self.CLOSED_FOR_STAFF:
+            projects.ever_closed_for_staff.add(node_id)
 
     def closure_of(self, node_id):
         """The closure record of a currently shut work, else None."""

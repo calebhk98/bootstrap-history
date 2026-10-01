@@ -1,6 +1,6 @@
 # Hazard relief is not attributed: national public health, each mitigation's share, and why one lapsed
 
-**Status:** open
+**Status:** closed
 
 Three faces of one gap, all from the plague and famine screens:
 

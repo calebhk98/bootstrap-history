@@ -1,6 +1,6 @@
 # Plague and famine event: "2,336 gone with the trade that stopped" has no unit
 
-**Status:** open
+**Status:** closed
 
 The household hit line for a staff-loss hazard reads "staff -8%, 2,336 gone with the trade that stopped". The number is cash lost (`lose_capital`), but it prints as a bare figure beside a percentage, so it reads as people, labour-hours or money. The tester spent a note on it.
 

@@ -15,6 +15,7 @@ table of startable-today nodes, the one place here that reaches into the
 from .score import _score_lines
 from ..knowledge_warning import warning_lines
 from .util import _factor, _fmt_num, _pct, _wrap
+from .hazard_words import advice_header
 from .render_screens_big import _available_row, available_header
 
 def render_values(out):
@@ -164,11 +165,7 @@ def render_risk(out):
         if hazard.get("note"):
             lines.append(_wrap(hazard["note"], indent="  "))
         for kind, advice in (hazard.get("what_you_can_do") or {}).items():
-            lines.append(_advice_line(kind, advice))
-        for kind in ("sack_chance", "staff_loss"):
-            after = hazard.get("%s_after_what_you_have_built" % kind)
-            if after is not None:
-                lines.append("  %s after what you have built: %s" % (kind.replace("_", " "), _pct(after)))
+            lines.append(_advice_line(kind, advice, hazard))
         if hazard.get("staff_loss") is not None:
             lines.append("  staff loss is a separate %s chance EVERY year, not a "
                      "total for the epidemic: %d checks remain; that is about "
@@ -195,18 +192,30 @@ def _confiscation_lines(confiscation):
     return lines
 
 
-def _advice_line(kind, advice, indent="  "):
+def _advice_line(kind, advice, hazard=None, indent="  "):
     """One hazard's exposure, in a sentence rather than a bare dict repr -
     playing this through a real run, {'you_currently_take': 1.0, 'because_of':
     [], 'what_would_help': '...'} printed as literal Python was the single
     worst line in the whole rendering.
+
+    The figure is said in the unit it is in (a share of your staff, output
+    against normal), then each defence with what it takes off.
     """
     if not isinstance(advice, dict):
         return "%s%s: %s" % (indent, kind.replace("_", " "), advice)
-    take = advice.get("you_currently_take")
     because = advice.get("because_of") or []
-    line = "%s%s: you take %s of it" % (indent, kind.replace("_", " "), _pct(take))
-    if because:
+    line = advice_header(kind, advice, hazard or {}, indent)
+    mitigations = advice.get("mitigations") or []
+    if mitigations:
+        line += "\n%s  what you have built:" % indent
+        for mitigation in mitigations:
+            effect = ("takes off %.1f points" % (mitigation["points"] * 100)
+                      if mitigation.get("points") is not None
+                      else "removes %s of the harm" % _pct(mitigation["removes_share"]))
+            if mitigation.get("status") == "lapsed":
+                effect += ", residual only; '%s' brings back the full effect" % mitigation["how"]
+            line += "\n%s    - %s: %s" % (indent, mitigation["label"], effect)
+    elif because:
         line += " (softened by %s)" % ", ".join(because)
     help_ = advice.get("what_would_help")
     if help_:
