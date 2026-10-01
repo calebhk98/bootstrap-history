@@ -1,6 +1,6 @@
 # Nodes with production entries state no plant, staff hours or output to bound them
 
-**Status:** open
+**Status:** partly
 
 `sim/engine/node_output.py` bounds a node's yearly output by the plant its entries state (`annual_output_at_basis` on `capital`), by the hours its staff (`sch` + `art`) supply over the entries' `labour_hours`, and by a declared `annual_output_t`. A gated node with none of the three has no output to derive and stays on its authored revenue under the payback floor. Measure: `python3 -c` over `data.load()` and `node_output.entries_gated_by` listing nodes with `_revenue_basis == "authored"` whose id gates entries. They are mostly chemical and process nodes (the `chm_*` family, gunpowder, hand papermaking, the rope walk, vegetable tanning, electrolysis, mirror amalgam, uranium and plutonium plants): the entries state the batch but nobody says how many batches a plant of that kind runs in a year.
 

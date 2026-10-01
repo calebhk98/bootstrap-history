@@ -1895,6 +1895,8 @@
       "nitric_acid"
     ],
     "kb": "20_chemistry.md",
+    "annual_output_t": 10,
+    "annual_output_basis": "Batches of the order of ten kilograms (the quantity that can be nitrated and precipitated safely in one vessel), about three a day over three hundred days, giving nine tonnes, taken as ten. Declared plant size, conf C.",
     "ph": 80,
     "lab": {
       "chemist": 150
@@ -2343,6 +2345,8 @@
       "chm_salicylic_acid"
     ],
     "kb": "20_chemistry.md",
+    "annual_output_t": 500,
+    "annual_output_basis": "One tar-distillery fractionating the tar of a large gasworks or coke-oven battery; phenols are a few tenths of a percent of the tar, giving the order of five hundred tonnes of phenol a year. Declared plant size, conf C.",
     "ph": 120,
     "lab": {
       "chemist": 150
@@ -2616,6 +2620,8 @@
       "cap_heat_1300"
     ],
     "kb": "20_chemistry.md",
+    "annual_output_t": 50,
+    "annual_output_basis": "A match-industry works with one or two retorts reducing bone-ash phosphate, about one tonne of phosphorus a week over fifty weeks. Declared plant size, conf C.",
     "ph": 120,
     "lab": {
       "furnaceman": 150
