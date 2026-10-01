@@ -57,3 +57,5 @@ late-game constraint rather than nerfing something that already works).
 `docs/architecture/DESIGN_PRINCIPLES.md` (ECON-003, extreme wealth is not a bug) makes the parallel
 argument for wealth specifically. `Complaints/107` through `Complaints/114`
 (the LATE- findings) are the concrete mechanisms this principle argues for.
+
+**Also measured (market branch, Rome seed 1):** the same seed, differing only in posted material prices between 0.9 and 1.2 of long-run cost, ends one run at about -44 thousand with 279 technologies in 190 AD and the other at about 8.3 million with 377. Tiny differences decide which revenue concerns open, and income then compounds. The outcome is too sensitive to be a plausible draw (CLAUDE.md 4.2); an ensemble of seeds per change is the measuring tool, not one run.
