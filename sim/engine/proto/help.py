@@ -208,6 +208,10 @@ def _topic_money(sim):
             "about fifteen thousand a year doing nothing, which is why "
             "money sitting still is money going backwards."),
         "what you can buy": '{"cmd":"help","topic":"economy"}',
+        "the money unit": "The money unit is normalised to the opening labourer wage in "
+                          "this civilisation, not to any historical coin. Prices in the "
+                          "game are calculated from production and demand, not fitted to "
+                          "historical values.",
         "debt": "You may spend past what you have, as far as somebody will "
                 "lend you and no further. Arrears cost interest."}
 

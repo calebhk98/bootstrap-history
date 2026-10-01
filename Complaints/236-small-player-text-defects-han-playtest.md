@@ -25,4 +25,4 @@ Replay of 1, 3, 6, 7: `python3 sim/simulator.py goals`, and
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 9, 11, 27, 32, 34, 36, 37, 63, 64, 6, 3). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
 
-**Remains:** items 1, 2, 3, 4, 5 (the absurd kit text), 6, 7, 9 and 11 are fixed (goal wording and the algebra note are data text edits to the exact sentences only). Not changed: the mortality question wording in the new-game menu (item 5, menu is owned elsewhere), the staff sentence on `why` pages (8) and the training-completion timing (10), neither replayed.
+**Remains:** items 1, 2, 3, 4, 5 (the absurd kit text and mortality wording), 6, 7, 9 and 11 are fixed. Not changed: the staff sentence on `why` pages (8) and the training-completion timing (10), neither replayed.
