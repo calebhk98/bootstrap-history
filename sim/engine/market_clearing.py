@@ -25,14 +25,6 @@ NO_FLOWS = {"bought": {}, "drawn": {}, "sold": {}}
 
 class MarketClearingMixin:
 
-    def actor_supply(self, material):
-        """Tonnes a year every actor other than the society's own producers
-        and the founder brings to market for `material`: firms, states,
-        other players. One call, summed over all actors; zero until actors
-        produce goods."""
-        # TEMPORARY HEURISTIC: no actor produces material goods yet.
-        return 0.0
-
     # ---- the year's flows ---------------------------------------------------
 
     def _market_flows(self):
@@ -117,7 +109,7 @@ class MarketClearingMixin:
                      id(self._material_prices()), entry["capacity_tonnes"],
                      entry["stock_tonnes"], flows["bought"].get(commodity),
                      flows["drawn"].get(commodity), flows["sold"].get(commodity),
-                     self.actor_supply(commodity))
+                     self.actor_market_version(), self.state.scenario.year)
         cache = getattr(self.household, "_market_outcome_cache", None)
         if cache is None:
             cache = self.household._market_outcome_cache = {}

@@ -106,6 +106,7 @@ s = sim(civ="rome_100ad", capital=1e9)
 base_ratio = s.market_price_ratio(MATERIAL)
 _firm_output = s.market_state(MATERIAL)["capacity_tonnes"] * 0.2
 s.actor_supply = lambda material: _firm_output
+s.actor_market_version = lambda: 1
 check("actor supply (once firms produce) lowers the price through the same clearing",
       s.market_price_ratio(MATERIAL) < base_ratio, (base_ratio, s.market_price_ratio(MATERIAL)))
 
