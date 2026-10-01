@@ -19,10 +19,11 @@ def commit_and_report(session, stream):
     from .saveload import save_state
 
     def commit(sim, summary):
-        if session:
-            save_state(sim, session)
+        # a one-year step is saved once by the caller after the command
         if summary.get("years_asked", 1) < 2:
             return
+        if session:
+            save_state(sim, session)
         try:
             stream.write("  year %s: %s den, %d completed, %d closed, population %+.1f%%\n"
                          % (summary["year"], format(summary["capital"], ",.0f"), summary["completed"],

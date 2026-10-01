@@ -497,6 +497,8 @@ def _play_run_one_command(sim, nodes, cmd, session):
                 "error": "internal error handling that command: %s: %s. "
                          "The game is intact; try something else."
                          % (type(error).__name__, error)}
+    finally:
+        step_progress.set_after_year(None)  # the hook saves to this command's session only
     # SAVE FIRST, THEN SPEAK. The state change is already committed by the
     # time we get here, so writing it must not be contingent on the output
     # succeeding: a closed stdout pipe killing the process on the first
