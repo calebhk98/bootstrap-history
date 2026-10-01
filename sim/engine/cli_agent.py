@@ -51,10 +51,13 @@ def cmd_agent(args):
     # no matter what was asked for.
     cfg = {"start_kit": args.kit, "horizon_years": args.horizon,
            "immortal": not getattr(args, "mortal", False)}
+    from .cli_interactive import normal_seed
+    seed = normal_seed(args.seed)
     sim = Sim(nodes, order,
-            DetRNG(args.seed) if getattr(args, "deterministic", False) else random.Random(args.seed),
+            DetRNG(seed) if getattr(args, "deterministic", False) else random.Random(seed),
             events=not args.no_events,
             cfg=cfg, civ=load_civ(_civ_for_session(args)), bounty_set=set(), manual=True)
+    sim.seed = seed
     sim.goal = goal
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + args.horizon
