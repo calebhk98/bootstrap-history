@@ -48,12 +48,12 @@ class LabourMarket:
             "price response.")
 
     TOWN_SPARE_HOUSING_SHARE = declare(
-        "TOWN_SPARE_HOUSING_SHARE", 0.002, kind="temporary_heuristic",
+        "TOWN_SPARE_HOUSING_SHARE", 0.02, kind="temporary_heuristic",
         unit="fraction of the home town's people (dwellings open to hired hands)",
         source=None, confidence="D",
         why="How much housing a town has free for incoming hired labour, as a share of its own "
             "population; the housing term of a wage starts to bite when the people every employer "
-            "has taken on fill this. Tuned so a town of tens of thousands absorbs a household's "
+            "has taken on fill this. Tuned so a town of tens of thousands absorbs its firms and a household's "
             "staff without a premium and a mass hiring by many employers does not; a real figure "
             "would come from a dwelling stock and its vacancy, which nothing here models.")
 
