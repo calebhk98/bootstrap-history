@@ -168,6 +168,10 @@ class SimWorld:
 			return takings * sim.goods_category_factor(category)
 		return takings / (1.0 + rivals)
 
+	def concerns_making(self, material: str) -> Any:
+		"""The nodes whose concerns put `material` on the market."""
+		return supply.nodes_making(material)
+
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
 		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,
 											self.ramp(opened_year), staffed)
