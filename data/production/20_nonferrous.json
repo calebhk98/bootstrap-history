@@ -60,11 +60,11 @@
    },
    "inputs": {},
    "labour_hours": {
-    "miner": 60.5
+    "miner": 72.9
    },
    "extracted_from": "ore deposit",
-   "basis": "per tonne of silver-bearing rock raised, ~0.08% Ag by mass (the output-weighted grade of the silver deposits in data/world/deposits.json)",
-   "yield_basis": "DERIVED FROM THE DEPOSITS: grade is the output-weighted silver grade of data/world/deposits.json (about 0.8 kg of silver per tonne of rock) and labour per tonne is the output-weighted rock-breaking and haulage hours of sim/world/deposits.py for those deposits (extraction_cost_labour_hours_per_kg times grade); the hours include the wood for fire-setting hard rock (Bettenay 2022, Metalla 26.2, Table 1 and the wood-sourcing section; sim/world/mine_fire_setting.py); an earlier 5 kg per tonne grade and 25 hours per tonne were not the deposits' own. EXTRACTED, a second and historically dominant route to silver that has nothing to do with lead: the New World silver of Potosi and Zacatecas (from 1545) was mined as silver ore in its own right, not as a lead by-product. 0.5% Ag (5 kg/tonne) reflects a genuinely rich, workable historical silver district; modern remaining ore is usually far leaner (0.01-0.03%) because the rich near-surface ore was worked out first - same caveat as copper_ore_kg's grade note. Labour is high because these are deep hard-rock veins worked without the easy visual sorting galena allows.",
+   "basis": "per tonne of silver-bearing ore presented (barren rock broken with it is charged inside the hours), ~0.08% Ag by mass (the output-weighted grade of the silver deposits in data/world/deposits.json)",
+   "yield_basis": "DERIVED FROM THE DEPOSITS: grade is the output-weighted silver grade of data/world/deposits.json (about 0.8 kg of silver per tonne of rock) and labour per tonne of ore is the output-weighted hours of sim/world/deposits.py for those deposits (extraction_cost_labour_hours_per_kg times grade): breaking and fire-setting all rock broken including barren rock, hoisting, carrying, draining and timbering (sim/world/mine_works.py; Complaints/640); the hours include the wood for fire-setting hard rock (Bettenay 2022, Metalla 26.2, Table 1 and the wood-sourcing section; sim/world/mine_fire_setting.py); an earlier 5 kg per tonne grade and 25 hours per tonne were not the deposits' own. EXTRACTED, a second and historically dominant route to silver that has nothing to do with lead: the New World silver of Potosi and Zacatecas (from 1545) was mined as silver ore in its own right, not as a lead by-product. 0.5% Ag (5 kg/tonne) reflects a genuinely rich, workable historical silver district; modern remaining ore is usually far leaner (0.01-0.03%) because the rich near-surface ore was worked out first - same caveat as copper_ore_kg's grade note. Labour is high because these are deep hard-rock veins worked without the easy visual sorting galena allows.",
    "requires_node": null,
    "conf": "C"
   },

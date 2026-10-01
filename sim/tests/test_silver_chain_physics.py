@@ -58,7 +58,7 @@ class SilverChainPhysics(unittest.TestCase):
         self.assertGreater(implied_recovery, 0.6)
         self.assertLess(implied_recovery, 0.9)
 
-    def test_silver_ore_labour_is_the_deposits_labour_per_tonne_of_rock(self):
+    def test_silver_ore_labour_is_the_deposits_labour_per_tonne_of_ore(self):
         entry = _default_production_entries()["silver_ore_kg"]
         recipe_hours = sum(entry["labour_hours"].values())
         deposit_hours = sum(

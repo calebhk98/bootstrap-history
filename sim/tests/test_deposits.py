@@ -154,9 +154,9 @@ class MarginalDepositRentTests(unittest.TestCase):
     """
 
     def setUp(self):
-        # hours_per_tonne_material fixed at BREAKING_HOURS_PER_TONNE_MEDIUM
-        # (surface, medium) for all three, so cost = MEDIUM / grade exactly.
-        medium = deposits.BREAKING_HOURS_PER_TONNE_MEDIUM
+        # hours per tonne of ore fixed by (surface, medium) for all three, so cost = MEDIUM / grade exactly.
+        medium = deposits.vein_hours_per_tonne_ore(
+            _make_deposit("probe", depth_class="surface", hardness_class="medium"))
         self.cheap = _make_deposit("cheap", depth_class="surface",
                                     hardness_class="medium",
                                     ore_grade_kg_per_tonne=medium / 1.0,   # cost 1.0

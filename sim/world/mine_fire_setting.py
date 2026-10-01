@@ -7,15 +7,16 @@ claim is the price solver's business, not a deposit's.
 from sim.constants import declare
 
 MINING_SHIFT_HOURS = declare(
-    "MINING_SHIFT_HOURS", 8.0, kind="temporary_heuristic",
+    "MINING_SHIFT_HOURS", 7.0, kind="engineering_estimate",
     unit="labourer-hours per miner-day",
-    source="Converts the man-days quoted by Timberlake 1990 (via Bettenay "
-           "2022, Metalla 26.2, Table 2) and the forest worker-days of "
-           "Bettenay's section on wood sourcing into hours. The shift "
-           "length itself was not found in a source opened for this task.",
-    confidence="D",
-    why="Underground shifts were shorter than a field day; replace with a "
-        "sourced shift length.")
+    source="Agricola, De re metallica (Hoover translation), Book II: the "
+           "twenty-four hours are divided into three shifts of seven hours, "
+           "with three hours between them for entering and leaving. "
+           "Sixteenth-century Saxony, not Rome.",
+    confidence="C",
+    why="Converts the man-days quoted by Timberlake 1990 (via Bettenay "
+        "2022, Metalla 26.2, Table 2) and the forest worker-days of "
+        "Bettenay's section on wood sourcing into hours.")
 
 FIRE_SET_ROCK_TONNES_PER_TONNE_OF_WOOD = declare(
     "FIRE_SET_ROCK_TONNES_PER_TONNE_OF_WOOD", 0.6, kind="engineering_estimate",
