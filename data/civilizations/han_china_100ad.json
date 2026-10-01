@@ -17,6 +17,21 @@
     "printing": 0.6
   },
   "currency": "wu zhu cash",
+  "currency_words": {
+    "long": "cash",
+    "short": "cash"
+  },
+  "briefing_absent": [
+    {
+      "claim": "Glass: the Han have almost none and the optical branch must be started from sand and a furnace",
+      "nodes": [
+        "mat_glass_soda",
+        "civ_glass_windows",
+        "opt_dioptra",
+        "glass_clear"
+      ]
+    }
+  ],
   "coin_standard": {
     "material": "bronze_kg",
     "kg_per_unit": 0.003,
@@ -414,15 +429,23 @@
       "node": "kt_mediterranean_crafts",
       "because": "this society does not know the Mediterranean public-works, surveying and stage crafts; learn them first, by engaging craftsmen and copying the works",
       "ids": [
+        "civ_aqueduct_roman",
+        "civ_chorobates",
+        "civ_dome_roman",
         "civ_glass_windows",
+        "civ_insula",
         "civ_marble_facing",
+        "civ_surveying_groma",
+        "hom_cosmetics_roman",
         "hom_hypocaust",
         "hom_lead_plumbing",
         "hom_perfume_enfleurage",
         "hom_public_bath",
         "lnd_cursus_publicus",
         "mat_glass_soda",
+        "mat_papyrus",
         "med_legal_physician",
+        "med_valetudinaria",
         "opt_dioptra",
         "opt_groma",
         "prn_mosaic_fresco",

@@ -17886,7 +17886,7 @@
         "mason": 120.0
       },
       "mat": {},
-      "name": "Roman masonry arch",
+      "name": "Masonry arch",
       "note": "The wedge-shaped stone voussoir locked under compression. Rome perfected this; the arch remains the fundamental load-bearing form through the Middle Ages and beyond. Spans cannot be thrown long without collapse or immense depth, but the principle is unbreakable.",
       "ph": 60.0,
       "pre": [],
@@ -17958,7 +17958,7 @@
         "potter": 80.0
       },
       "mat": {},
-      "name": "Roman fired brick and tile",
+      "name": "Fired brick and tile",
       "note": "Fired clay in standard sizes, facings for concrete, tiles for roofs. Uniform sizing was a Roman innovation; mass production of standard parts. The tiles lock together with ribs and survive centuries of weather.",
       "ph": 40.0,
       "pre": [],
@@ -19441,7 +19441,7 @@
         "mason": 100.0
       },
       "mat": {},
-      "name": "Roman paved road with surveying",
+      "name": "Paved road with surveying",
       "note": "Multilayered stone and gravel bed, crowned for drainage, aligned by groma (X-staff with plumb bobs). Roman roads lasted centuries. The technique is durable and maintainable; paving without surveying is wasteful.",
       "ph": 150.0,
       "pre": [
@@ -19573,7 +19573,7 @@
         "mason": 300.0
       },
       "mat": {},
-      "name": "Roman sewer with gravity flow",
+      "name": "Sewer with gravity flow",
       "note": "The Cloaca Maxima in Rome still functions after 2400 years. Gravity-fed, arched, with gradient for scouring. Medieval towns often rebuilt sewers on Roman alignment; the Romans had solved the problem.",
       "ph": 220.0,
       "pre": [
@@ -80320,7 +80320,10 @@
             "kind": "sack_chance",
             "share": 0.3,
             "label": "guns on the walls",
-            "order": 5
+            "order": 5,
+            "requires_running": [
+              "gunpowder"
+            ]
           }
         ]
       }

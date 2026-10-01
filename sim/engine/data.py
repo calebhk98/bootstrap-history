@@ -196,41 +196,15 @@ def trade_family(trade: str) -> str:
     return TRADE_FAMILY.get(trade, "craft")
 
 
-# WHAT MONEY IS CALLED WHERE YOU ARE. Every civilisation file has carried a
-# `currency` field since the schema was written and not one line of the engine
-# ever read it, so an English player in 1300 counted denarii, hired against an
-# equestrian census and was quoted for papyrus. The engine's arithmetic is all
-# calibrated to Rome 100 AD through price_index, which is a real and defensible
-# modelling choice; calling the unit a denarius in Tenochtitlan is not.
-#
-# The map is from the `currency` field to the form that reads correctly in a
-# sentence like "you have 400 ___". A civilisation whose currency is not listed
-# falls back to its own field, and then to denarii.
-MONEY_WORDS: Dict[str, str] = {
-    "denarius": "denarii",
-    "sterling penny": "pence",
-    "wu zhu cash": "cash",
-    "hacksilver by weight": "in hacksilver",
-    "cacao bean and cotton cloth": "in cacao beans",
-    "Ptolemaic silver tetradrachm": "tetradrachms",
-}
-
-
-# THE SAME WORD IN BOTH FORMS, except for Rome where "den" is the established
-# abbreviation and appears throughout the notes. Long form and short form must
-# stay in step: if one clause is localised from the payload and the next from
-# the renderer, a sentence can read "needs about 1959 pence, you have 612 den" -
-# the currency drifting between three names inside one message.
-MONEY_SHORT_WORDS: Dict[str, str] = {
-    "denarius": "den", "sterling penny": "pence", "wu zhu cash": "cash",
-    "hacksilver by weight": "hacksilver", "cacao bean and cotton cloth": "beans",
-    "Ptolemaic silver tetradrachm": "tetradr",
-}
+# What money is called where you are comes from the civilisation file's
+# `currency_words` ({"long": "...", "short": "..."}); a file without it falls
+# back to its `currency` field. Long form reads in "you have 400 ___", short
+# form in compact lines; both come from one place so a sentence cannot mix them.
 
 
 def money_word(civ: Optional[JSONDict]) -> str:
-    cur = (civ or {}).get("currency") or "denarius"
-    return MONEY_WORDS.get(cur, cur)
+    civ = civ or {}
+    return (civ.get("currency_words") or {}).get("long") or civ.get("currency") or "denarii"
 
 
 @functools.lru_cache(maxsize=None)
@@ -250,8 +224,8 @@ def kit_capital(kit_id: str, civ: JSONDict) -> float:
 
 def money_short(civ: Optional[JSONDict]) -> str:
     """The abbreviation used in compact lines: "400 den", "net +12 den/yr"."""
-    cur = (civ or {}).get("currency") or "denarius"
-    return MONEY_SHORT_WORDS.get(cur, MONEY_WORDS.get(cur, "den"))
+    civ = civ or {}
+    return (civ.get("currency_words") or {}).get("short") or civ.get("currency") or "den"
 
 
 def load_civ(name: str = "rome_100ad") -> JSONDict:
@@ -854,8 +828,8 @@ STARTING_KITS: Dict[str, StartingKit] = {
     "poor_scholar":{"labourer_years": 4.033, "desc": "DEFAULT. A few months' subsistence, a knife, a lens, a codex of notes. About what a working teacher has."},
     "artisan":     {"labourer_years": 12.10, "desc": "enough to rent a workshop and buy a first set of tools."},
     "merchant":    {"labourer_years": 40.33, "desc": "a modest trading capital. You can fund one real venture."},
-    "rich_merchant":{"labourer_years": 201.6, "desc": "wealthy but well under the equestrian census of 100,000."},
-    "equestrian":  {"labourer_years": 1008.0, "desc": "the equestrian census exactly. Conspicuous."},
+    "rich_merchant":{"labourer_years": 201.6, "desc": "wealthy, but well short of the fortune that marks the top of society."},
+    "equestrian":  {"labourer_years": 1008.0, "desc": "the fortune that marks the top rank of the local elite, exactly. Conspicuous."},
     # "the medians sit inside the noise band" is not true of the whole kit
     # range: measured on the finish, not just the opening - Rome, 8 runs a
     # kit, one seed - the median year the transistor is reached runs 476
@@ -864,7 +838,7 @@ STARTING_KITS: Dict[str, StartingKit] = {
     # claim is true of the middle of the range and false at the top of it,
     # which is exactly the kind of statement that should not be made in one
     # sentence about "the whole kit range".
-    "absurd":      {"labourer_years": 10081.0, "desc": "four senatorial fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a million denarii buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
+    "absurd":      {"labourer_years": 10081.0, "desc": "four great fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a vast fortune buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
 }
 
 DEFAULTS: SimulationDefaults = dict(

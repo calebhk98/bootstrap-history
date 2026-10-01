@@ -43,6 +43,14 @@ class HazardsMixin:
             return 1.0
         return self.KNOWLEDGE_RESIDUE_AFTER_CLOSURE
 
+    def _counter_requirements(self, node, kind, label):
+        """Node ids a counter needs running as well (`requires_running` on its
+        `hazard_counters` entry), e.g. guns on the walls need the powder works."""
+        for counter in (self.nodes[node].get("mechanics") or {}).get("hazard_counters", ()):
+            if counter["kind"] == kind and counter["label"] == label:
+                return counter.get("requires_running") or ()
+        return ()
+
     def apply_staff_survival(self, survival_share):
         """Each person on the books survives a shock with probability
         `survival_share`, rolled one by one so headcounts stay whole."""
@@ -78,6 +86,11 @@ class HazardsMixin:
                 strength = 1.0 if self.mine_capacity.get("silver", 0.0) > 0.01 else 0.0
             else:
                 strength = self._counter_strength(node)
+                lapsed_node = node
+                for needed in self._counter_requirements(node, kind, label):
+                    needed_strength = self._counter_strength(needed)
+                    if needed_strength < strength:
+                        strength, lapsed_node = needed_strength, needed
                 if beyond_national and strength > 0.0:
                     adopted_nationally = self.civ_diffusion(node)
             closed = 0.0 < strength < 1.0
@@ -85,7 +98,7 @@ class HazardsMixin:
             if strength > 0.0:
                 mult *= (1.0 - share * strength)
                 if closed:
-                    label = "%s (lapsed: %s is closed)" % (label, self.nodes[node]["name"])
+                    label = "%s (lapsed: %s is closed)" % (label, self.nodes[lapsed_node]["name"])
                 if adopted_nationally > 0.0:
                     label = "%s (partly adopted nationally)" % label
                 why.append(label)

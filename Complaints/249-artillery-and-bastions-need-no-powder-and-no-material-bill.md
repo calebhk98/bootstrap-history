@@ -15,4 +15,4 @@ Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal f
 Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md`): in the Mexica runs the sack chance reached 66% a year at best however much was built; walls, powder and rifles 'barely mattered'. Consistent with the defence being credited without the materials (this complaint) and with a fixed dice stream (254).
 
 
-**Remaining:** Done: the artillery piece now requires gunpowder; trace italienne and bastion carry material and labour bills. Remaining: the defence benefit is not yet tied to powder supply and to a built fortification.
+**Remaining:** Done: the artillery piece requires gunpowder; trace italienne and bastion carry material and labour bills; the `guns on the walls` counter now needs the powder works (`gunpowder`) running (`requires_running` on a `hazard_counters` entry), lapsing when it closes. Remaining: powder is a running concern, not a stock, so the engine cannot say a magazine ran dry (`Sim` keeps no inventory); a fortification counts as built once its bill is paid and is never garrisoned or maintained, so the defence is not tied to crew or upkeep.

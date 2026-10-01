@@ -16,6 +16,7 @@
     "structures": 0.75
   },
   "currency": "Ptolemaic silver tetradrachm",
+  "currency_words": {"long": "tetradrachms", "short": "tetradr"},
   "coin_standard": {
     "material": "silver_kg",
     "kg_per_unit": 0.012,
