@@ -80320,7 +80320,10 @@
             "kind": "sack_chance",
             "share": 0.3,
             "label": "guns on the walls",
-            "order": 5
+            "order": 5,
+            "requires_running": [
+              "gunpowder"
+            ]
           }
         ]
       }
