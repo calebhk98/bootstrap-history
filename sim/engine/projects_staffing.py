@@ -18,6 +18,10 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 from sim.constants import declare
 
 
+def _trim(amount):
+    return ("%.2f" % amount).rstrip("0").rstrip(".")
+
+
 class StaffingMixin:
 
     # Why a work is shut; the only two writers are close_work and clear_closure.
@@ -81,17 +85,22 @@ class StaffingMixin:
         """
         household = self.state.household
         closed = self.concerns_to_close_for_staffing()
+        shortfalls = self._staffing_shortfalls(self.staffing_held_totals()) if closed else {}
         for node_id in closed:
             self.close_work(node_id, self.CLOSED_FOR_STAFF, year)
         if closed:
-            household.log.append((year, "nobody left to keep an eye on %d concern%s, so "
-                                 "%s closed. You still know how; reopen with "
+            self.record_staffing_closures(len(closed), shortfalls)
+            household.log.append((year, "nobody left to keep an eye on %d concern%s (short of %s), so "
+                                 "%s closed; %d now shut for want of staff after this "
+                                 "year's reopenings. You still know how; reopen with "
                                  "'open' once you have the people. The premises "
                                  "and the stock stand for a few years yet, so "
-                                 "reopening soon costs a tenth of what opening did"
+                                 "reopening soon costs a tenth of what opening did. %s"
                              % (len(closed), "" if len(closed) == 1 else "s",
+                                self.staffing_shortfall_words(shortfalls),
                                 ", ".join(sorted(closed)[:4])
-                                + (" and others" if len(closed) > 4 else ""))))
+                                + (" and others" if len(closed) > 4 else ""),
+                                self.staffing_shut_count(), self.STAFFING_REMEDIES)))
         return closed
 
     def reopen_restaffed_ventures(self, year):
@@ -136,13 +145,15 @@ class StaffingMixin:
             if did_open:
                 reopened.append(node_id)
         if reopened:
+            self.record_staffing_reopenings(len(reopened))
             household.log.append((year, "you have the people again: %s reopen%s on "
                                  "their own, now that somebody is free to "
-                                 "watch %s"
+                                 "watch %s; %d still shut for want of staff"
                              % (", ".join(sorted(reopened)[:4])
                                 + (" and others" if len(reopened) > 4 else ""),
                                 "" if len(reopened) == 1 else "s",
-                                "it" if len(reopened) == 1 else "them")))
+                                "it" if len(reopened) == 1 else "them",
+                                self.staffing_shut_count())))
         return reopened
 
     # ---- A WARNING BEFORE THE DOOR SHUTS, NOT AN AUTOMATION THAT OPENS IT --
@@ -301,8 +312,15 @@ class StaffingMixin:
                 headline = ("%s has %s spare %s before it closes"
                             % (name, ("%.1f" % room).rstrip("0").rstrip("."),
                                word))
+            held, in_use = ((self.effective_scholars(), sch_used) if word == "scholars"
+                            else (household.artisans + own, art_used))
+            explained = ("spare %s = %s held (you included) + %s allowed before a closure - "
+                         "%s in use by running concerns, all in full-time equivalents; a "
+                         "concern ties up a share of a person's year, so spare is not a headcount"
+                         % (word, _trim(held), _trim(SLACK), _trim(in_use)))
             out.append({"id": node_id, "name": name, "within": round(max(0.0, room), 1),
-                       "of": word, "headline": headline,
+                       "of": word, "headline": headline, "held": round(held, 2),
+                       "in_use": round(in_use, 2), "allowance": SLACK, "explained": explained,
                        "recurring_income_at_risk": round(net, 1),
                        "one_loss_closes_it": one_loss_closes,
                        "fix": fix})

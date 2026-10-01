@@ -231,28 +231,9 @@ class VenturesMixin:
             return False, "you are already running that"
         scalable = node_id in self.SCALABLE_INSTITUTIONS
         fee, unit_count = self.opening_fee(node_id, units)
-        sch_free, art_free = self.venture_staff_free()
-        need_sch, need_art = self.venture_hands(node_id)
-        need_sch, need_art = need_sch * unit_count, need_art * unit_count
-        foreman_trade, foreman_fte = self.venture_foreman(node_id)
-        foreman_fte *= unit_count
-        # Use tolerance to avoid false contradictions in error messages.
-        if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
-            return False, ("nobody free to keep an eye on it: it needs %.2f "
-                           "scholars and %.2f craftsmen to supervise, and you "
-                           "have %.2f and %.2f not already watching something "
-                           "else. Hire, teach, or close something."
-                           % (need_sch, need_art, sch_free, art_free))
-        if (foreman_trade and foreman_fte
-                > self.venture_foreman_free(foreman_trade) + 0.01):
-            return False, ("no qualified foreman is free: this concern needs "
-                           "%.2f %s FTE to supervise its specialist work, and "
-                           "you have %.2f free. Hire a %s or close another "
-                           "concern using one. Generic artisans cannot "
-                           "substitute for this trade."
-                           % (foreman_fte, foreman_trade,
-                              self.venture_foreman_free(foreman_trade),
-                              foreman_trade))
+        refusal = self.staffing_open_refusal(node_id, unit_count)
+        if refusal:
+            return False, refusal
         projects = self.state.projects
         household = self.state.household
         scenario = self.state.scenario

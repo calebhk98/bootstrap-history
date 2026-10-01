@@ -98,17 +98,26 @@ def unused_lines_about(test_sim, start, name):
 	        if "DIRECTED HOURS UNUSED" in message and name in message]
 
 
-log_start = len(starve_sim.log)
-starve_sim.step()
-check("the same shortfall is not repeated the next year",
-      not unused_lines_about(starve_sim, log_start, second_name),
-      unused_lines_about(starve_sim, log_start, second_name))
-starve_sim.hour_allocations[second_id] = 900.0
-log_start = len(starve_sim.log)
-starve_sim.step()
+repeat_sim = sim(capital=1e7)
+repeat_sim.active[second_id] = dict(ph_left=1000.0, yrs=0.0, spent=0.0, cost_left=0.0, lab_left={})
+repeat_sim.hour_allocations[second_id] = 1000.0
+pace_reason = "its own pace this year - at most 300 hours could not use the rest"
+for year_number in range(3):
+	log_start = len(repeat_sim.log)
+	repeat_sim.report_unused_directed_hours([(second_id, 700.0, pace_reason.replace("300", str(300 - year_number)))])
+	said = len(unused_lines_about(repeat_sim, log_start, second_name))
+	check("year %d: a shortfall that falls short the same way is reported once, not yearly" % year_number,
+	      said == (1 if year_number == 0 else 0), said)
+repeat_sim.hour_allocations[second_id] = 600.0
+log_start = len(repeat_sim.log)
+repeat_sim.report_unused_directed_hours([(second_id, 300.0, pace_reason)])
 check("a changed standing order is reported afresh",
-      unused_lines_about(starve_sim, log_start, second_name),
-      new_messages(starve_sim, log_start))
+      len(unused_lines_about(repeat_sim, log_start, second_name)) == 1, new_messages(repeat_sim, log_start))
+repeat_sim.report_unused_directed_hours([])
+log_start = len(repeat_sim.log)
+repeat_sim.report_unused_directed_hours([(second_id, 300.0, pace_reason)])
+check("a shortfall that recovered and returned is reported afresh",
+      len(unused_lines_about(repeat_sim, log_start, second_name)) == 1, new_messages(repeat_sim, log_start))
 check("the first report says it will not repeat and how to lower the order",
       "once" in starved_lines[0] or "not repeat" in starved_lines[0], starved_lines)
 

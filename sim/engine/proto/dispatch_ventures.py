@@ -14,12 +14,18 @@ from .explain_once import already_explained
 import os
 import tempfile
 
-from ..data import downstream_count
+from ..data import TRADE_FAMILY, downstream_count
 from ..purchase_rule import purchase_budget
 from .nodes import _did_you_mean
 from .saveload import load_state, save_state
 from .util import _flag
 from .ventures import _VENTURE_SUPERVISION_NOTE
+
+
+def _scholar_family_names():
+    """The scholar-family trades from the trade table, as a plural list."""
+    names = sorted(trade + "s" for trade, family in TRADE_FAMILY.items() if family == "scholar")
+    return ", ".join(names[:-1]) + " and " + names[-1]
 
 
 _CREDIT_PROSE = {"on_credit": ("nothing_is_borrowed_yet", "what_happens_there"),
@@ -741,9 +747,13 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            # which of the two columns a trade lands in.
            "these_are_not_interchangeable": (
                "Most concerns want CRAFTSMEN to keep an eye on them. "
-               "Engineers, chemists and machinists are scholars here, and "
-               "a scholar cannot watch a workshop. 'labour <trade>' says "
-               "which of the two a trade is."),
+               "The scholar-family trades (%s) are not craftsmen, and a "
+               "scholar cannot watch a workshop; every other trade counts "
+               "as craft. 'labour <trade>' says which family a trade is. "
+               "On the prompt, sch counts you and the scholars you employ "
+               "(not the other scholar-family trades) and art counts you "
+               "and every craft trade you employ."
+               % _scholar_family_names()),
            # "needs", "held_in_all" and "people_free_to_run_something_new"
            # above are venture_hands()/venture_staff_free()'s own numbers
            # - a continuous SHARE of a person's year, never a headcount -
