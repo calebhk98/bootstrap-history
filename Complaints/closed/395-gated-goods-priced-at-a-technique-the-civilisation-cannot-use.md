@@ -1,9 +1,15 @@
 # A gated good is priced at a technique the civilisation cannot use, so its own route looks unprofitable
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_prices_at_reachable_techniques.py
 
 Since every price became solved (`Complaints/123`), a material whose production entries are gated on technology is priced at its mature technique, labelled transitional. With node revenue derived from output (`Complaints/287`), that price reaches what a concern earns. `cementation_steel` now earns nothing: at solved prices its inputs cost more than the steel plate it sells. The likely cause is that steel plate is priced at a later, cheaper steelmaking route that the civilisation does not hold, so the route it does hold looks uneconomic. Found while fixing `sim/tests/test_labour_productivity.py`, whose fixture had relied on this concern earning enough to hire craftsmen.
 
 Why it matters: a price the player cannot act on decides which concerns pay. A Roman cementation works should be priced against what Romans could make steel by, not against a technique centuries away. It also undermines every derived-revenue node whose output is a gated good.
 
 What it would take: price each material for a civilisation at the cheapest technique that civilisation holds or can reach this year (the era gate already exists for the solver; the market's per-civilisation solve should use it), with the mature-technique price only where nothing in reach makes the good, and then say so on screen. Measure with `python3 sim/simulator.py why cementation_steel` and the node revenue table before and after. Related: `Complaints/39` (the solver prices with all of technology available), `Complaints/287`, `Complaints/351`.
+
+## Resolution
+
+The cause was a mixed price system: the gated good came from the mature solve (a later route, cheap iron bar) while the inputs its own route buys came from the civilisation's solve, so the route bought dearer than it sold. `priced_goods_table` now has three provenances. "solved": a technique the civilisation holds. "gated": nothing held makes it, so it is priced at the technique fewest research steps away (`entries_in_reach`), with every other input priced as the civilisation prices it, and a later, cheaper route to the same material or a joint process whose co-product a nearer technique makes is left out. "mature": nothing in reach makes it; the old fallback, now named and shown on the `market` screen as "priced at a technique you do not have". A material a table's techniques never deliver (a heat nothing in reach reaches) is not priced by that table; the solver's placeholder price is not a price. `data.load()` with no argument holds the reference civilisation's starting technologies, so derived node revenue sits in one price system. Node output revenue now values the energy a node buys at the pool price (it ignored it, which the expensive reach-priced electricity exposed). Cost: one extra solve per distinct held gate set, cached on the gates and the admitted techniques; measure with `python3 sim/perf_fingerprint.py check --quick`.
+
+Not done, filed: `Complaints/420`, `Complaints/421`.

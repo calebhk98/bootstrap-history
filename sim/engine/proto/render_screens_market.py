@@ -17,13 +17,15 @@ def render_market(out):
     lines += ["", "MATERIAL PRICES  (%s-%s of %s; own = you supply it)"
               % (materials.get("offset", 0) + 1, materials.get("offset", 0) + len(rows),
                  materials.get("total")),
-              "  %-26s %10s %10s %14s  %s" % ("MATERIAL", "BUY/T", "SELL/T", "MARKET T/YR", "OWN")]
+              "  %-26s %10s %10s %14s  %-4s %s" % ("MATERIAL", "BUY/T", "SELL/T", "MARKET T/YR", "OWN", "NOTE")]
     for row in rows:
-        lines.append("  %-26s %10s %10s %14s  %s"
-                     % (row["material"], _fmt_num(row["buy_per_tonne"]),
-                        _fmt_num(row["sell_per_tonne"]),
-                        _fmt_num(row["market_available_tonnes_per_year"]),
-                        "own" if row["own_supply"] else ""))
+        lines.append(("  %-26s %10s %10s %14s  %-4s %s"
+                      % (row["material"], _fmt_num(row["buy_per_tonne"]),
+                         _fmt_num(row["sell_per_tonne"]),
+                         _fmt_num(row["market_available_tonnes_per_year"]),
+                         "own" if row["own_supply"] else "",
+                         "priced at a technique you do not have"
+                         if row.get("price_basis") in ("gated", "mature") else "")).rstrip())
     if materials.get("offset", 0) + len(rows) < materials.get("total", 0):
         lines.append("  more: market offset %d" % (materials["offset"] + len(rows)))
     lines += ["", "WAGES  (a year of one person; 'labour <trade>' for detail)",

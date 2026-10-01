@@ -42,6 +42,14 @@ check("materials table covers every priceable material, not only tracked ones (p
 check("each material row carries the quote's buy price and an own-supply flag",
       all("buy_per_tonne" in row and isinstance(row["own_supply"], bool) for row in _rows),
       _rows[:2])
+_everything = S._agent_dispatch(_loom_sim, NODES, {"cmd": "market", "limit": 1000}).get("materials", {}).get("rows", [])
+_bases = {row["material"]: row.get("price_basis") for row in _everything}
+check("each material row says which technique its price is at, and the text names one the society lacks",
+      set(_bases.values()) <= {"solved", "gated", "mature", None} and "gated" in _bases.values()
+      and "priced at a technique you do not have" in _render_pretty(
+          "market", {"ok": True, "goods": [], "materials": {"rows": [dict(_everything[0], price_basis="gated")], "total": 1},
+                     "wages": []}),
+      _bases.get("steel_plate_kg"))
 _quote_ref = _loom_sim.material_trade_quote(_rows[0]["material"])
 check("...and the price is the one `quote material` uses",
       abs(_rows[0]["buy_per_tonne"] - _quote_ref["buy_per_tonne"]) < 0.01, _rows[0])

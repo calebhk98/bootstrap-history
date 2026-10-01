@@ -1,6 +1,6 @@
 # The price solver prices everything with all of human technology available
 
-**Status:** partly - era gating built; production coverage and labelling incomplete
+**Status:** partly - era gating built and a good nothing held makes is priced at the nearest technique (Complaints/395); production coverage incomplete, a mature fallback remains for some materials, node revenue is not per civilisation
 
 **Type:** Structural, and it affects every number the solver has ever printed
 **Priority:** High. Not urgent - nothing is broken today - but it silently bounds what the whole tool means.
@@ -170,3 +170,7 @@ from a civilization's `starting_techs`, both initial conditions, and a
 century written next to a technique would be a hardcoded outcome under
 CLAUDE.md section 3.1. The `--civ` flag reads `starting_techs` and nothing
 else for exactly that reason.
+
+## Update: priced at what a civilisation can reach
+
+A material nothing held makes is no longer priced at the mature technique when something in reach makes it: it is priced at the nearest technique in the tree with the civilisation's own techniques for everything else (`Complaints/395`, `sim/engine/prices.py` `entries_in_reach`). What remains: materials nothing in reach delivers still fall back to the mature technique, labelled "mature" (count per civilisation with `data.goods_provenance`); derived node revenue is priced once at the reference civilisation (`Complaints/421`); the solver leaves placeholder prices on materials no technique delivers (`Complaints/420`).
