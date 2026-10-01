@@ -810,7 +810,7 @@ class CapacityMixin:
                      "status_threatening": STATE_WEIGHT_STATUS_THREATENING,
                      "weapon_democratising": STATE_WEIGHT_WEAPON_DEMOCRATISING}
 
-    def _staff_advice(self, kind):
+    def _staff_advice(self, kind, deficit=None):
         """Name the remedy, not just the shortfall - and only remedies you could
         actually have heard of.
 
@@ -819,10 +819,15 @@ class CapacityMixin:
         same second is a contradiction, not help. Hiring is always
         sayable, because the labour market is in front of you; a named
         institution is not, until it is.
+
+        `deficit` is how many more people the caller is short; the hire
+        advice is sized to it.
         """
         bits = []
         for node, why in self.STAFF_SOURCES.get(kind, []):
-            if node in ("BUY", "HIRE"):
+            if node == "HIRE" and deficit:
+                bits.append(self.staff_hire_advice(kind, math.ceil(deficit - 1e-9)))
+            elif node in ("BUY", "HIRE"):
                 bits.append(why)
             # CLOSED IS NOT MISSING. market_supply() only applies a source's
             # multiplier via running(node), so a school built and then shut

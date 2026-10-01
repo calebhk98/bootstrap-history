@@ -723,6 +723,8 @@ def _parse_allocate(command, rest, words, nums, want_json):
                           "to clear.")
         return out, None
     out = {"cmd": "allocate", "id": target}
+    if any(word.lower() == "useful" for word in words[1:]):
+        out["useful"] = True
     if _clear:
         out["hours"] = 0
     elif nums:

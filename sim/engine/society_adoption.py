@@ -25,17 +25,23 @@ class AdoptionMixin:
     # institution costing thousands, leaving a player stuck with one scholar
     # for centuries, guessing among institution nodes in the hope one of
     # them helps.
+    def staff_hire_advice(self, kind, count=None):
+        """The hire command for `kind`, sized to `count` people when the
+        shortfall is known, else a typical order."""
+        if kind == "scholars":
+            return ("{\"cmd\":\"hire\",\"trade\":\"scholar\",\"n\":%d} "
+                    "hires literate men by the year; see {\"cmd\":\"labour\"}"
+                    % (count or 2))
+        return ("{\"cmd\":\"hire\",\"trade\":\"smith\",\"n\":%d} or any "
+                "trade in {\"cmd\":\"labour\"}; or "
+                "{\"cmd\":\"commission\",\"trade\":\"smith\",\"hours\":400} "
+                "to buy one job instead of employing anybody" % (count or 3))
+
     @property
     def STAFF_SOURCES(self):
         """{"scholars"|"artisans": [(node or HIRE/BUY, advice)]}: HIRE first, the nodes
         declaring `staff_advice` in their order, then BUY."""
-        hire = {
-            "scholars": ("HIRE", "{\"cmd\":\"hire\",\"trade\":\"scholar\",\"n\":2} "
-                                 "hires literate men by the year; see {\"cmd\":\"labour\"}"),
-            "artisans": ("HIRE", "{\"cmd\":\"hire\",\"trade\":\"smith\",\"n\":3} or any "
-                                 "trade in {\"cmd\":\"labour\"}; or "
-                                 "{\"cmd\":\"commission\",\"trade\":\"smith\",\"hours\":400} "
-                                 "to buy one job instead of employing anybody")}
+        hire = {kind: ("HIRE", self.staff_hire_advice(kind)) for kind in ("scholars", "artisans")}
         buy = ("BUY", "{\"cmd\":\"buy\",\"what\":\"slaves\",\"n\":N} then "
                       "manumit, though they are untrained for three years")
         sources = {kind: [entry] for kind, entry in hire.items()}

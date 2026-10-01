@@ -1,6 +1,6 @@
 # Starved or stuck situations do not name the advanced command that fixes them (first case: `allocate`)
 
-**Status:** partly - a starved project's reason names `priority` and the allocation notice names `allocate`.
+**Status:** closed - starved, stuck and closing situations name the command that fixes them, `allocate` can be capped at the useful work, and workforce advice is sized to the real deficit
 
 Starting the written corpus took all the founder-hours, so several small active projects got none. `portfolio` showed it, but neither `state` nor the starvation message suggested `allocate`. The tester found `allocate` only by reading `help commands` and calls it excellent once found. More generally they found the advanced layer (`materials`, `capacity`, `portfolio`, `bounty`, `commission`, `rush`, `mothball`) well layered but hard to discover: when a portfolio starves for founder-hours, materials, housing or a specialist trade, the normal output should point at the command that solves or diagnoses it. The "DIRECTED HOURS UNUSED" messages do mention `allocate` (for hours wasted), but the starved-project reason in `sim/engine/core_step_phases.py` ("hours before this one's turn came") carries no pointer.
 
@@ -14,4 +14,4 @@ Also reported (Han China 100 AD fog playtest, tester item(s) 33, 46; `Complaints
 
 Also reported (final playtests, B; `Complaints/reports/final-playtests-triage.md`): specialists (glassblowers, engineers, machinists) left almost every year 'to death and better offers', closing concerns, before the player had found `auto_hire` and schools; nothing names those as the remedy (see 233 for the closure side).
 
-**Remains:** an `allocate` option that caps at the useful work; the immortal-founder scholar warning and the atomic-theory hire-size advice. Starved-project reasons for trades now name `labour`, `hire`, `train`, `portfolio`, `priority` and `allocate`.
+**Fixed:** `allocate <id> <hours> useful` (JSON `"useful": true`) caps the order at `project_useful_hours`, the pace and work left times the throttle `step` applies, and the reply says what it was capped from. The scholar and craftsmen closure warning is not raised when an immortal founder's own share means losing every hired person could not close the concern (`staffing_closure_warnings`). Staffing refusals size the hire advice to the real deficit (`_staff_advice(kind, deficit)`, `staff_hire_advice`), so one scholar short says `"n":1`. Test: `sim/tests/test_workforce_advice_and_allocate_cap.py`; `test_staffing_closures_explained.py` now sets a mortal founder where it asserts the warning's arithmetic.

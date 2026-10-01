@@ -993,20 +993,28 @@ class MaterialSupplyMixin:
         mean_price = quote["sell_per_tonne"] * baseline / max(across, baseline)
         return mean_price * tonnes, mean_price
 
-    def sell_material_stock(self, material, tonnes):
-        """Sell stock at the market: the order is cut to what the market
-        absorbs in a year, and the price falls as the year's sales add up."""
+    def material_sale_offer(self, material, tonnes):
+        """(stock key, tonnes the market takes now, money for them): the one
+        figure `sell` pays and refusals quote as a way to raise cash."""
         quote = self.material_trade_quote(material)
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:
-            return 0.0
+            return None, 0.0, 0.0
         key = quote["stock_key"]
         sold_so_far = self._material_sold_tonnes_this_year()
         absorbs = max(0.0, quote["market_available_tonnes_per_year"] - sold_so_far.get(key, 0.0))
         sold = min(tonnes, self.material_stock_t(key), absorbs)
         if sold <= 0:
+            return key, 0.0, 0.0
+        return key, sold, self.material_sale_proceeds(material, sold, sold_so_far.get(key, 0.0))[0]
+
+    def sell_material_stock(self, material, tonnes):
+        """Sell stock at the market: the order is cut to what the market
+        absorbs in a year, and the price falls as the year's sales add up."""
+        key, sold, money = self.material_sale_offer(material, tonnes)
+        if sold <= 0:
             return 0.0
-        money = self.material_sale_proceeds(material, sold, sold_so_far.get(key, 0.0))[0]
+        sold_so_far = self._material_sold_tonnes_this_year()
         self.market_note_sale(key, sold)
         opening = self._material_opening_stock()
         self._material_stock()[key] -= sold

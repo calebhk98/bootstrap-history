@@ -135,20 +135,18 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
         supply = sim.hours_you_can_call_on(trade)
         total_demand = portfolio_demand.get(trade, {}).get(
             "demand_hours_this_year", need)
-        if supply < need or total_demand > supply + 1e-6:
-            # The society's CAPACITY is the durable fact and the one a player
-            # can act on; what is left after this year's bookings is noise that
-            # changes every step. Say the first, and only mention the second
-            # when it is what is actually binding.
-            if supply < need:
-                staffing_short.append(
-                    "%s (wants %.0f hours a year; this society can "
-                    "field %.0f at most)" % (trade, need, max(0.0, supply)))
-            elif total_demand > supply + 1e-6:
-                booked_short.append(
-                    "%s (wants %.0f hours a year; the %ss here can "
-                    "supply %.0f but your other work has them booked)"
-                    % (trade, need, trade, max(0.0, supply)))
+        # The society's capacity is the durable fact a player can act on;
+        # this year's bookings only matter when they are what binds.
+        kind = sim.trade_shortage_kind(trade, need, total_demand)
+        if kind == "staffing":
+            staffing_short.append(
+                "%s (wants %.0f hours a year; this society can "
+                "field %.0f at most)" % (trade, need, max(0.0, supply)))
+        elif kind == "booked":
+            booked_short.append(
+                "%s (wants %.0f hours a year; the %ss here can "
+                "supply %.0f but your other work has them booked)"
+                % (trade, need, trade, max(0.0, supply)))
     # BOTH, WHEN BOTH ARE TRUE, NOT JUST THE FIRST ONE FOUND: this loop
     # already knows every trade this project is short on, so returning the
     # moment staffing_short has anything in it would silently drop

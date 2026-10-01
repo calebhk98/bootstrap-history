@@ -1,6 +1,6 @@
 # A project can report its trade hours booked elsewhere with nobody else drawing on them
 
-**Status:** open
+**Status:** closed - the step log called a trade the society could not field at that pace "already booked"; it now says "nobody to do the work" unless other work books it
 
 ## What the player saw
 
@@ -128,3 +128,5 @@ Testable directly once reproduced: after any step in which a project logs
 trade and assert it also shows `oversubscribed: true` for that year.
 
 Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md`): Mexica run 1, 1511 to 1515: the portfolio showed the written corpus at '600 offered, 0 effective, of 6,000 hrs total to go' while money still paid in and completion was projected; B had the same '0 offered, 0 effective' on an orphan bounty (252).
+
+**Fixed:** reproduced with one project alone (`logarithms` in Rome 100 AD): scribe supply below the project's own yearly pace set `short_of_trade`, and the step log printed "trade hours already booked" with nobody else drawing. `lab_year_draw` now records which short trades the society cannot field at all (`short_of_trade_staffing`), `trade_shortage_kind` (`projects_progress.py`) is the one rule both the step log (`trade_shortfall_note`) and `state`'s `waiting_on` use, and only trades other work books are called booked. Test: `sim/tests/test_trade_shortage_kind.py`. The portfolio's "0 effective of N offered" orphan-bounty reading is a separate display matter and not reproduced.
