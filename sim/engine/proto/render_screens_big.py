@@ -124,6 +124,11 @@ def _staffing_warning_sentences(warnings):
         sentences.append("%s and %s: the household has %s spare %s before these close"
                          % (", ".join(names[:-1]), names[-1],
                             ("%.1f" % within).rstrip("0").rstrip("."), word))
+    explained = {}
+    for warning in warnings or []:
+        if isinstance(warning, dict) and warning.get("explained"):
+            explained.setdefault(warning.get("of"), warning["explained"])
+    sentences.extend(explained.values())
     return sentences
 
 

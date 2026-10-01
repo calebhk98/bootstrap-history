@@ -399,7 +399,6 @@ def _stuck_shut_ventures(sim, nodes):
     # little free staff capacity for open_venture to actually succeed.
     # The recommendation has to check that it would work, not just that
     # it would pay.
-    _sch_free, _art_free = sim.venture_staff_free()
     _shut_for_staff = getattr(sim, "shut_for_staff", {})
     def _capex_now(_node_id):
         _fee = sim.venture_capex(_node_id)
@@ -408,9 +407,7 @@ def _stuck_shut_ventures(sim, nodes):
             _fee *= 0.1
         return _fee
     def _openable(_node_id):
-        _need_sch, _need_art = sim.venture_hands(_node_id)
-        return (_need_sch <= _sch_free + 0.01
-                and _need_art <= _art_free + 0.01
+        return (sim.staffing_open_refusal(_node_id, sim.opening_fee(_node_id)[1]) is None
                 and _capex_now(_node_id) <= sim.spending_power("buy"))
     _really_openable = [node_id for node_id in _shut if _openable(node_id)]
     if _really_openable:
@@ -427,14 +424,9 @@ def _stuck_shut_ventures(sim, nodes):
                           "{:,.0f}".format(sim.venture_real_upkeep(_best)),
                           _best)}
     _best = max(_shut, key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
-    _need_sch, _need_art = sim.venture_hands(_best)
-    if _need_sch > _sch_free + 0.01 or _need_art > _art_free + 0.01:
-        _why = ("it needs the full-time equivalent of %.2f "
-                "scholars and %.2f craftsmen to supervise it "
-                "(a continuous share of their year, not a "
-                "headcount), and you have %.2f and %.2f not "
-                "already watching something else"
-                % (_need_sch, _need_art, _sch_free, _art_free))
+    _staff_refusal = sim.staffing_open_refusal(_best, sim.opening_fee(_best)[1], with_advice=False)
+    if _staff_refusal:
+        _why = _staff_refusal.rstrip(".")
     else:
         _why = ("opening it costs %s denarii, and between cash "
                 "and what anyone will advance you can raise %s"

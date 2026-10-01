@@ -1,6 +1,6 @@
 # Starved or stuck situations do not name the advanced command that fixes them (first case: `allocate`)
 
-**Status:** open
+**Status:** partly - a starved project's reason names `priority` and the allocation notice names `allocate`.
 
 Starting the written corpus took all the founder-hours, so several small active projects got none. `portfolio` showed it, but neither `state` nor the starvation message suggested `allocate`. The tester found `allocate` only by reading `help commands` and calls it excellent once found. More generally they found the advanced layer (`materials`, `capacity`, `portfolio`, `bounty`, `commission`, `rush`, `mothball`) well layered but hard to discover: when a portfolio starves for founder-hours, materials, housing or a specialist trade, the normal output should point at the command that solves or diagnoses it. The "DIRECTED HOURS UNUSED" messages do mention `allocate` (for hours wasted), but the starved-project reason in `sim/engine/core_step_phases.py` ("hours before this one's turn came") carries no pointer.
 
@@ -13,3 +13,5 @@ Also reported (Han China 100 AD fog playtest, tester item(s) 77, 85, 97, 203; `C
 Also reported (Han China 100 AD fog playtest, tester item(s) 33, 46; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): workforce advice also names the wrong size or the wrong person: the atomic-theory message said two scholars were needed and suggested `hire scholar 2` when one more reached two, and `state` repeatedly warned "no spare scholars, hire two" for an immortal founder who is the only scholar (the founder cannot leave; the warning should say the capacity is guaranteed and ask for the actual deficit).
 
 Also reported (final playtests, B; `Complaints/reports/final-playtests-triage.md`): specialists (glassblowers, engineers, machinists) left almost every year 'to death and better offers', closing concerns, before the player had found `auto_hire` and schools; nothing names those as the remedy (see 233 for the closure side).
+
+**Remains:** other shortages (materials, housing, trades) still carry no command hint beyond the material one already closed; an `allocate` option that caps at the useful work is not built; the immortal-founder scholar warning and the atomic-theory hire-size advice were not found or changed.

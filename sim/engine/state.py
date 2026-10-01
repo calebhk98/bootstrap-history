@@ -205,6 +205,8 @@ class HouseholdState:
 	relocation_hours_this_year: float = 0.0
 	base_tile: Optional[str] = None
 	hour_allocations: Dict[str, float] = field(default_factory=dict)
+	# standing order id -> [hours ordered, shortfall kind] last reported as unused, so repeats stay quiet
+	unused_hours_reported: Dict[str, List[Any]] = field(default_factory=dict)
 	work_trade: Optional[str] = None
 	last_taught: Dict[str, int] = field(default_factory=dict)
 	training: List[List[Any]] = field(default_factory=list)
@@ -281,6 +283,8 @@ class ProjectsState:
 	stalled: int = 0
 	# work id -> {"reason": str, "year": int}; only while the work is mothballed
 	closures: Dict[str, Dict[str, object]] = field(default_factory=dict)
+	# this year's staffing closures and reopenings: year, closed, reopened, short (resource -> amount)
+	staffing_tally: Dict[str, object] = field(default_factory=dict)
 
 	def active_keys_sorted(self) -> List[str]:
 		"""Return active project ids in the canonical resolution order.

@@ -60,6 +60,9 @@ from .projects_capability import CapabilityMixin
 from .projects_ventures import VenturesMixin
 from .projects_staffing import StaffingMixin
 from .projects_staffing_shortfall import StaffingShortfallMixin
+from .projects_staffing_report import StaffingReportMixin
+from .projects_open_gate import OpenGateMixin
+from .allocation_notes import AllocationNotesMixin
 from .projects_venture_quotes import VentureQuotesMixin
 from .projects_hour_queue import HourQueueMixin
 from .projects_starting import StartingMixin
@@ -70,7 +73,8 @@ from sim.constants import declare
 
 
 class ProjectsMixin(BlockersMixin, CapabilityMixin, VenturesMixin, StaffingMixin,
-                     StaffingShortfallMixin, VentureQuotesMixin, HourQueueMixin,
+                     StaffingShortfallMixin, StaffingReportMixin, OpenGateMixin,
+                     AllocationNotesMixin, VentureQuotesMixin, HourQueueMixin,
                      StartingMixin, ProgressMixin, CompletionMixin, RebuildMixin):
     """Composition point only: every method below is defined in one of the
     six sibling modules above, not here - what IS defined directly here is

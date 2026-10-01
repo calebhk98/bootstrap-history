@@ -703,7 +703,10 @@ class StepPhasesMixin:
                 # same unfairness either way: the founder-hours it asked for
                 # either went unsold or went somewhere the player never
                 # chose.
-                if _wd - (_already + _got) > 1.0:
+                _work_reason = ("room" if _room < _want else "market")
+                if _wd - (_already + _got) <= 1.0:
+                    self.clear_unused_hours_report("work")
+                elif self.unused_hours_is_news("work", [round(_wd), _work_reason]):
                     self.state.household.log.append((self.state.scenario.year, "DIRECTED HOURS UNUSED: your standing "
                                          "order to sell %s hours a year as a "
                                          "%s only managed %s this year - %s. "
@@ -1150,7 +1153,8 @@ class StepPhasesMixin:
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                     "your other standing allocations and active "
                     "work already claimed the rest of this year's "
-                    "%s hours before this one's turn came"
+                    "%s hours before this one's turn came ('priority "
+                    "<id> first' moves a project up the queue)"
                     % "{:,.0f}".format(_pool_total_this_year)))
         return remaining, per, spent_hours, _dir_hours
 
@@ -1493,15 +1497,7 @@ class StepPhasesMixin:
         # purpose rather than leaving the split to priority order. Sorted
         # by id for a deterministic order across runs with the same seed -
         # several projects can be cut short in the same year.
-        if _directed_hours_unused:
-            for _node_id, _hr, _why in sorted(_directed_hours_unused):
-                self.state.household.log.append((self.state.scenario.year, "DIRECTED HOURS UNUSED: you allocated hours "
-                                     "to %s this year that it could not use - "
-                                     "%s of them went begging because %s. "
-                                     "'portfolio' shows the rest; 'allocate' "
-                                     "changes or clears the standing order"
-                                 % (self.nodes[_node_id]["name"],
-                                    "{:,.0f}".format(_hr), _why)))
+        self.report_unused_directed_hours(_directed_hours_unused)
 
         # Snapshot BEFORE 5b spends more of `remaining` on wage work: otherwise
         # offered_to_projects below double-counts wage hours as though they had

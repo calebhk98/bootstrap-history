@@ -1,6 +1,6 @@
 # `stuck` names a concern as the best one to open that `open` then refuses for want of a specialist foreman
 
-**Status:** open
+**Status:** closed
 
 After building Toys and dolls with no carpenter on the payroll, `stuck` says "The best you could actually open
 right now is hom_toys_dolls, which would earn 281,451 a year against 3,753 of upkeep: 'open hom_toys_dolls'".
