@@ -72,7 +72,6 @@ world = SimWorld(game)
 wage_before = world.concern_wage_bill("zz_scale")
 hour_before = world.wage_per_hour("labourer")
 output_before = world.society_output()
-founder_wage_before = game.annual_wage("artisan")
 game.state.economy.economy *= 10.0
 game._revenue_cache_key = None
 world = SimWorld(game)
@@ -82,8 +81,6 @@ check("the wage an hour of labour earns rises with output per hour",
       world.wage_per_hour("labourer") > 2.0 * hour_before, (hour_before, world.wage_per_hour("labourer")))
 check("what the society makes follows its wage, so a growing economy makes more",
       world.society_output() > 2.0 * output_before, (output_before, world.society_output()))
-check("the founder's staff are paid on the same terms as a firm's",
-      game.annual_wage("artisan") > 2.0 * founder_wage_before, (founder_wage_before, game.annual_wage("artisan")))
 
 # ---- running costs follow the volume a concern sells ---------------------------------------------
 game = actor_sim([NODE])

@@ -342,4 +342,4 @@ class WagesMixin(WageLedgerMixin):
         factors = self.wage_cost_factors(trade)
         local = self.labour_price_factor(trade) if include_local_scarcity else 1.0
         return (base * factors["weighted"] * self.price_index
-                * self.wage_index * local * self.labour_pay_scale())
+                * self.wage_index * local)
