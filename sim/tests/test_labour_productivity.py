@@ -428,14 +428,29 @@ check("the semiconductor-grade graphite crucibles on the road to the goal "
       "bought off the market",
       not _graphite_bad, _graphite_bad)
 
+def _concern_needing_craftsmen_to_supervise():
+    """A concern that earns, needs no scholars, and holds more craftsmen than the founder
+    and the closure slack can cover alone (more than its build crew shown as staff_needed), so losing every hired craftsman shuts it."""
+    probe = sim()
+    for candidate_id in sorted(NODES):
+        node = NODES[candidate_id]
+        if node["rev"] > 0 and node["sch"] == 0 and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
+            scholars, craftsmen = probe.venture_hands(candidate_id)
+            if scholars == 0 and max(node["art"], probe.FOUNDER_IS_WORTH + probe.STAFFING_CLOSURE_SLACK) < craftsmen <= 5.5 and probe.venture_foreman(candidate_id)[0] is None:
+                return candidate_id
+    raise AssertionError("no concern needs craftsmen to supervise")
+
+
+_SUPERVISED = _concern_needing_craftsmen_to_supervise()
+
 # --- three players: `why` quoted the BUILD crew as the staff requirement,
 # and `open` actually enforces ongoing SUPERVISION (venture_hands), a
 # different and sometimes larger number never shown before the money was
 # spent. `why` must now show both, from the same function `open` checks.
-r, _, _ = proto([{"cmd": "why", "id": "cementation_steel"}])
+r, _, _ = proto([{"cmd": "why", "id": _SUPERVISED}])
 _why_open = r[0]["staff_to_keep_it_open"]
 _s = sim()
-_expect_sch, _expect_art = _s.venture_hands("cementation_steel")
+_expect_sch, _expect_art = _s.venture_hands(_SUPERVISED)
 check("`why`'s supervision figure is computed by the same function `open` "
       "enforces (venture_hands), not a second estimate of it",
       abs(_why_open["scholars"] - round(_expect_sch, 2)) < 0.01
@@ -462,13 +477,13 @@ check("a pure-knowledge node (no revenue, no upkeep) carries no "
 # `open`, for ever. "Most of the mid and late game was a repetitive
 # hire-then-reopen treadmill rather than fresh decisions."
 s = sim(capital=50000.0)
-_node_id = "cementation_steel"
+_node_id = _SUPERVISED
 s.done.add(_node_id)
 s._done_changed()
 s.employees["artisan"] = 6.0
 s._resync_pools()
 ok, _ = s.open_venture(_node_id)
-check("set-up: cementation_steel opens with six craftsmen on staff", ok)
+check("set-up: the supervised concern opens with six craftsmen on staff", ok)
 s.employees["artisan"] = 0.0
 s._resync_pools()
 closed = s.close_unstaffed_ventures(s.year)
@@ -491,7 +506,7 @@ check("...and it comes back on its own once restaffed, with no 'open' typed",
 # charge bug: an unexplained number and a wrong number look identical to a
 # player who cannot see the arithmetic behind either.
 s_rg = sim(capital=1_000_000.0)
-_kg = "cementation_steel"
+_kg = _node_id
 # restore_work, unlike open_venture, checks that every prerequisite is
 # still done - so, unlike the plain open/close fixture above, this one
 # needs the whole ancestry marked done too.
