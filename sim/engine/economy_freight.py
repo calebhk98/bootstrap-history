@@ -324,7 +324,7 @@ class FreightMixin:
         if not distance_km:
             return 0.0
         inputs = self._land_freight_physical_inputs()
-        feed_price_per_kg = self._book_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
+        feed_price_per_kg = self._material_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
         driver_wage_per_hour = self.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
         denarii_per_tonne_km = (inputs.feed_kg_per_tonne_km * feed_price_per_kg
                                  + inputs.driver_hours_per_tonne_km * driver_wage_per_hour)
@@ -349,7 +349,7 @@ class FreightMixin:
         than silently double- or under-counting when several of these
         multiply together in project_cost().
         """
-        book_price_per_kg = self._book_price_per_kg(emp_key)
+        book_price_per_kg = self._material_price_per_kg(emp_key)
         if not book_price_per_kg or book_price_per_kg <= 0:
             return 1.0
         freight_per_kg = self.material_freight_cost_per_kg(emp_key)

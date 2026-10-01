@@ -36,7 +36,7 @@ from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
-# dictionary read straight from a JSON file (branches, prices.json,
+# dictionary read straight from a JSON file (branches,
 # geography.json, resources.json, a civilization file) with no schema
 # object anywhere in the codebase to check it against, so `Dict[str, Any]`
 # is the true type, not a placeholder for one this pass ran out of time to
@@ -166,9 +166,7 @@ _TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR
 TRADE_REGISTRY = _TRADE_REGISTRY
 
 # Trade identity, availability, and explanatory text belong to the trade
-# registry, not to the legacy table that temporarily supplies their wages.
-# Keeping them here made deleting prices.json impossible even after wages move
-# to the labour market, and inferred availability from English prose.
+# registry.
 def _load_trade_notes() -> Dict[str, str]:
     """Compatibility loader backed by the canonical trade registry."""
     return {trade_id: trade.note for trade_id, trade in _TRADE_REGISTRY.items()}

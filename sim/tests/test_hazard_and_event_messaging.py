@@ -71,8 +71,9 @@ while s_db.year < 210:
 check("debasement does not move a real price quote (the model is real terms)",
       # Population recovery between plague waves moves wage_index a little,
       # so the quote drifts by a residual far below a debasement-sized move
-      # (real_erosion is a few percent). Relative, so it survives cost rescaling.
-      abs(s_db.project_cost("horse_collar") - _before_price) / _before_price < 1e-5,
+      # (real_erosion is a few percent); solved material prices also move a
+      # little as technologies complete. Relative, so it survives cost rescaling.
+      abs(s_db.project_cost("horse_collar") - _before_price) / _before_price < 5e-3,
       (_before_price, s_db.project_cost("horse_collar")))
 _dbm = [message for _, message in s_db.log if "coin is worth" in message]
 check("...and the announcement says so, rather than leaving it to be found",

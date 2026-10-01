@@ -4,10 +4,8 @@
     python3 sim/solve_prices.py                        every price, in labour-hours
     python3 sim/solve_prices.py --why iron_bar_kg       full recursive cost breakdown
 
-STANDALONE AND READ-ONLY. This tool computes prices; nothing in `sim/engine/`
-reads them yet. `data/prices.json` still runs the game. That wiring is a
-separate, later change - this file only has to prove the calculation works
-and say honestly where it does not.
+READ-ONLY. This tool computes prices; `sim/engine/prices.py` is the engine's
+one call into it, and every price in play comes from there.
 
 THE MECHANISM, from docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md Part 2:
 a material's price is what it costs to make one unit of it -
