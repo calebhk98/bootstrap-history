@@ -57,9 +57,7 @@ def _topic_commands(sim):
             "the rest": "everything below; help <command> shows one command's usage",
         },
         "commands": {"json / compact": JSON_MODE_NOTE,
-                     **{name: _command_text(name, sim.fog) for name in names},
-                     "options": "typed play only: the few settings you can change "
-                                "without restarting, and where the game is saved"},
+                     **{name: _command_text(name, sim.fog) for name in names}},
         "usage": {name: command_registry.COMMANDS[name]["usage"] for name in names},
         "groups": command_registry.grouped(),
         "aliases": command_registry.alias_map(),

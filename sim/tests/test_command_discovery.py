@@ -73,3 +73,23 @@ try:
 finally:
     for _throwaway in _registered:
         _registry.unregister(_throwaway)
+
+# --- the help pages' hand text names only commands that exist, and the
+# command index shows each command's registered text (no hand override)
+from sim.engine.proto import help as _help
+_help_sim = sim()
+_index = _help._topic_commands(_help_sim)
+_hand_overrides = [name for name in _registry.COMMANDS
+                   if _index["commands"].get(name) != _help._command_text(name, _help_sim.fog)]
+check("the command index shows every command's registered text", not _hand_overrides, _hand_overrides)
+_known_words = set(_registry.COMMANDS) | set(_registry.alias_map())
+_unknown_start = [key for key in _index["start here"]
+                  if key != "the rest" and key.split()[0] not in _known_words]
+check("every 'start here' entry names a registered command", not _unknown_start, _unknown_start)
+_front = _help._front_page(_help_sim, False)
+_front_unknown = sorted({found for found in re.findall(r'"cmd":"(\w+)"', json.dumps(_front).replace('\\"', '"'))
+                         if found not in _known_words})
+check("the front page names only registered commands", not _front_unknown, _front_unknown)
+_front_five = [key.split()[0] for key in _front.get("the five you need first", {})]
+check("the front page's five commands are registered",
+      all(word in _known_words for word in _front_five), _front_five)

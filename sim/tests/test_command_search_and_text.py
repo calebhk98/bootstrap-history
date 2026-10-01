@@ -132,7 +132,7 @@ _labour = proto([{"cmd": "labour", "trade": "laborer"}], civ="han_china_100ad", 
 check("236.6: 'labour laborer' is accepted as 'labour labourer'",
       _labour.get("ok") is not False, _labour)
 check("236.7: help commands lists options",
-      "options: typed play only" in _text, _text[-1500:])
+      "options: the saved settings" in _text, _text[-1500:])
 from sim.engine.data import STARTING_KITS as _KITS
 check("236.4: the poor_scholar kit does not claim a few months",
       "months" not in _KITS["poor_scholar"]["desc"], _KITS["poor_scholar"]["desc"])
