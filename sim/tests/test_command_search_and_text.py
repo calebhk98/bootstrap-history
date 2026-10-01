@@ -85,7 +85,7 @@ check("196: a bare topic word returns what find returns",
       [row["id"] for row in _replies[6].get("available", [])]
       == [row["id"] for row in _replies[7].get("available", [])]
       and _replies[6].get("count", 0) > 0, (_replies[6].get("showing"), _replies[7].get("count")))
-_text = _play("england_1300", ["available physics"])
+_text = _play("england_1300", ["available science"])
 check("196: an empty search teaches 'find' and the topic tags",
       "available find" in _text and "tag" in _text.lower().split("nothing you could begin")[-1],
       _text[-1500:])
