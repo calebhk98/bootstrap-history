@@ -9,11 +9,31 @@ are given no price for it, so the need it served draws no spending on it.
 """
 import math
 
+from sim.world import trader_response
+
+from .foreign_traders import MERCHANT_MARGIN_SHARE
+
 HOME_SELLER = "home"
+# Decimals the rates a landed price reads are held to, so the price is a function of them and not of
+# the moment it was first asked (a rate drifts through a year; households' demand is not that fine).
+RATE_DECIMALS = 3
+LEVEL_DECIMALS = 4
 
 
 class GoodsOffers:
     """Mixin of `GoodsMarket`: reads of who sells what."""
+
+    def merchants_cost_share(self, route):
+        """Merchants' costs over freight as a share of the price at the origin: margin, loss and
+        interest, the same terms the traders' flows are cleared with, at the market rate held to a
+        few decimals."""
+        sim = self._sim
+        return trader_response.cost_share_of_price(
+            MERCHANT_MARGIN_SHARE, sim._route_cargo_loss_share(route),
+            round(sim.market_rate(), RATE_DECIMALS), sim._trader_cycle_years(route))
+
+    def partner_price_level(self, civilization_id):
+        return round(self._sim.partner_price_level(civilization_id), LEVEL_DECIMALS)
 
     def landed_price(self, material, civilization_id):
         """Money per unit of a material delivered from a trading partner: its cost to the partner,
@@ -29,8 +49,8 @@ class GoodsOffers:
         partner_price = facts["prices_in_home_money"].get(material)
         if not partner_price:
             return None
-        cost = partner_price * sim.partner_price_level(civilization_id)
-        return (cost * (1.0 + sim._trader_cost_share(facts["route"]))
+        cost = partner_price * self.partner_price_level(civilization_id)
+        return (cost * (1.0 + self.merchants_cost_share(facts["route"]))
                 + facts["freight_per_tonne"] * tonnes_per_unit(material))
 
     def _cheapest_partner(self, material):
@@ -64,10 +84,14 @@ class GoodsOffers:
     def household_prices(self):
         """{material: money per unit} households are asked to pay: the solver's price where the
         home society makes it, the landed price where only a partner offers it, nothing where no
-        one does. Remembered while the price table, the partners and the technologies are the same."""
+        one does. Remembered while what the landed prices read is the same, and the same object
+        while the prices themselves are, since caches downstream compare it by identity."""
         sim = self._sim
         prices = sim._material_prices()
-        key = (tuple(sim.foreign_economies()), len(sim.state.projects.done))
+        partners = tuple(sim.foreign_economies())
+        key = (partners, len(sim.state.projects.done), sim.state.scenario.year,
+               round(sim.market_rate(), RATE_DECIMALS),
+               tuple(self.partner_price_level(partner) for partner in partners))
         cache = getattr(sim.household, "_household_prices_cache", None)
         if cache is not None and cache[0] is prices and cache[1] == key:
             return cache[2]

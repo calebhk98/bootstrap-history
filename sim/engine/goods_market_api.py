@@ -96,24 +96,40 @@ class GoodsMarket(GoodsOffers):
 
     # ---- reads ------------------------------------------------------------------------
 
+    @staticmethod
+    def _total(parties, party_id=None, others=False):
+        """Tonnes one party has, or every party's, or every party but the founder's; summed in party
+        order so that a save and load cannot change the last digit."""
+        if party_id is not None:
+            return parties.get(party_id, 0.0)
+        return sum(tonnes for party, tonnes in sorted(parties.items()) if not (others and party == FOUNDER))
+
     def sold_tonnes(self, commodity, seller_id=None):
         """Tonnes sold this year: by one seller, or by all of them."""
-        sold = self._sim._market_flows()["sold"].get(commodity, {})
-        return sold.get(seller_id, 0.0) if seller_id is not None else sum(sold.values())
+        return self._total(self._sim._market_flows()["sold"].get(commodity, {}), seller_id)
 
     def bought_tonnes(self, commodity, buyer_id=None):
-        bought = self._sim._market_flows()["bought"].get(commodity, {})
-        return bought.get(buyer_id, 0.0) if buyer_id is not None else sum(bought.values())
+        return self._total(self._sim._market_flows()["bought"].get(commodity, {}), buyer_id)
 
     def drawn_tonnes(self, commodity):
         return self._sim._market_flows()["drawn"].get(commodity, 0.0)
 
     def others_sold_tonnes(self, commodity):
         """What every seller but the founder put on the market this year."""
-        return self.sold_tonnes(commodity) - self.sold_tonnes(commodity, FOUNDER)
+        return self._total(self._sim._market_flows()["sold"].get(commodity, {}), others=True)
 
     def others_bought_tonnes(self, commodity):
-        return self.bought_tonnes(commodity) - self.bought_tonnes(commodity, FOUNDER)
+        return self._total(self._sim._market_flows()["bought"].get(commodity, {}), others=True)
+
+    def others_stamp(self):
+        """What every party but the founder has sold and bought this year, comparable for equality,
+        for caches whose answers read the posted price."""
+        flows = self._sim._market_flows()
+        return tuple(
+            tuple(sorted((commodity, tuple(sorted((party, tonnes) for party, tonnes in parties.items()
+                                                  if party != FOUNDER)))
+                         for commodity, parties in flows[kind].items()))
+            for kind in ("sold", "bought"))
 
     def commodities_sold_by(self, seller_id):
         """Commodities this seller has sold into the market this year."""
