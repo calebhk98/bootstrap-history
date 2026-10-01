@@ -8,12 +8,14 @@ describes as pending has since shipped), and the exact region count was off
 by one.
 
 
-**Since this was written:** land rent's extensive margin already reads tiles
-(section 2.2 is stale); deposits now sit on tiles (`data/world/deposits.json`
-gives each a `tile`; section 2.3 and the deposit stage of section 5 are done);
-the forest ceiling sums tile areas; the stage-1 weather cell cap exists. The
-readers still on the region layer are listed in `Complaints/140`'s remains;
-`grep -rln "load_region_lands\|regions" sim/engine sim/world` finds them.
+**Since this was written:** land rent's extensive margin reads tiles (section
+2.2 is stale); deposits carry a latitude and longitude and the holding tile is
+found at load (`data/world/deposits.json`; section 2.3 and the deposit stage of
+section 5 are done); the forest ceiling sums tile areas; the stage-1 weather
+cell cap exists. The region layer is now a derived view (`sim/world/regions.py`):
+region land is a sum over tiles and region records hold no land. Reach and
+freight still read each region's hand-set anchor point (`Complaints/500`);
+the other remains are in `Complaints/140`.
 
 ---
 

@@ -62,7 +62,9 @@ Measure with these; none of their output is copied here.
 - **Civilisation units.** Engine code no longer names a civilisation, but
   internal money and land are still the book's Roman units
   (`Complaints/136`, `Complaints/144`).
-- **Two maps.** Regions and tiles coexist (`Complaints/140`).
+- **Regions as a view of tiles.** Region land is summed from tiles, but
+  reach and freight still read each region's hand-set anchor point
+  (`Complaints/140`, `500`).
 
 ## Playtest defects come before the roadmap
 
