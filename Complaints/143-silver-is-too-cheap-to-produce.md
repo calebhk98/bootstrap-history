@@ -55,3 +55,5 @@ number to hit the day wage.
   output is several times larger). Making it consistent would make silver
   cheaper still, so it was left, and needs the deposit byproduct data
   reconciled first.
+
+**Also:** the lead recipe's silver yield per tonne of lead is far leaner than the deposit data implies, and was left inconsistent because matching it would make silver cheaper still. That is choosing data by the price it produces (CLAUDE.md 4.1). Make the recipe agree with the deposits whichever way the price moves; if silver then comes out even cheaper, the remaining gap is in what is not yet costed (ore dressing, the joint-cost split), and that is where to look.
