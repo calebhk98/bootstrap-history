@@ -26,16 +26,18 @@ from . import money_units
 
 class ProductionMixin:
 
-    STATE_FUNDING_BASE = declare(
-        "STATE_FUNDING_BASE", 2500.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at economy=1, state_capacity=1, pop_scale=1",
+    STATE_FUNDING_BASE_LABOUR_HOURS = declare(
+        "STATE_FUNDING_BASE_LABOUR_HOURS", 50400.0, kind="temporary_heuristic",
+        unit="labour hours/year at economy=1, state_capacity=1, pop_scale=1",
         source=None, confidence="D",
-        why="What an imperial patron is worth in direct funding at a "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "What an imperial patron is worth in direct funding at a "
             "reference civilisation size and state capacity. No fiscal "
             "record backs this figure; a real answer needs a state budget "
             "model - tax revenue, the fiscus's own spending priorities - "
             "that this engine does not have, per CLAUDE.md 3.1's ban on "
             "asserting a state revenue outright.")
+    STATE_FUNDING_BASE = money_units.PricedInLabourHours("STATE_FUNDING_BASE_LABOUR_HOURS")
     STATE_FUNDING_POP_SCALE_EXPONENT = declare(
         "STATE_FUNDING_POP_SCALE_EXPONENT", 0.4, kind="temporary_heuristic",
         unit="dimensionless exponent on pop_scale", source=None,
@@ -250,11 +252,12 @@ class ProductionMixin:
             "sub-linear SHAPE reflects real diminishing returns to a single "
             "aggregate multiplier; the specific 0.75 exponent is tuned "
             "against playtests, not fitted to any output data.")
-    REVENUE_CEILING_PER_POP_SCALE = declare(
-        "REVENUE_CEILING_PER_POP_SCALE", 900000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at pop_scale=1, economy=1", source=None,
+    REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE = declare(
+        "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE", 18100000.0, kind="temporary_heuristic",
+        unit="labour hours/year at pop_scale=1, economy=1", source=None,
         confidence="D",
-        why="The saturating ceiling on how much revenue a single founder's "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "The saturating ceiling on how much revenue a single founder's "
             "ventures can pull out of one civilisation's whole market - "
             "invented specifically to stop a run compounding into billions "
             "against an empire whose own annual product is not separately "
@@ -262,6 +265,7 @@ class ProductionMixin:
             "three billion denarii). A real ceiling needs an actual GDP "
             "figure for the civilisation to compare against, which this "
             "engine does not compute.")
+    REVENUE_CEILING_PER_POP_SCALE = money_units.PricedInLabourHours("REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE")
 
     SLAVE_LABOUR_PRODUCTIVITY_SHARE = declare(
         "SLAVE_LABOUR_PRODUCTIVITY_SHARE", 0.7, kind="temporary_heuristic",
@@ -375,17 +379,18 @@ class ProductionMixin:
             "worker would be implausible; 2x (a doubling) is a tuned "
             "ceiling, not derived from any output-per-technology "
             "measurement.")
-    CAPABILITY_FACTOR_HALF_SATURATION_REV = declare(
-        "CAPABILITY_FACTOR_HALF_SATURATION_REV", 40000.0,
-        kind="temporary_heuristic", book_money=True, unit="denarii of tier-weighted revenue "
-        "at half of CAPABILITY_FACTOR_CEILING_BONUS", source=None,
+    CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS = declare(
+        "CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS", 806000.0,
+        kind="temporary_heuristic", unit="labour hours of tier-weighted revenue at half of CAPABILITY_FACTOR_CEILING_BONUS", source=None,
         confidence="D",
-        why="How much accumulated tier-weighted method it takes to reach "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "How much accumulated tier-weighted method it takes to reach "
             "half the maximum capability bonus - the saturating curve's "
             "own scale. Tuned against playtests (see the comment this "
             "replaces: '40,000 of tier-weighted method roughly doubles "
             "what a workshop makes'), not fitted to any measured "
             "productivity data.")
+    CAPABILITY_FACTOR_HALF_SATURATION_REV = money_units.PricedInLabourHours("CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS")
 
     def concern_takings(self, node_id, ramp):
         """Yearly takings of one concern at a given ramp, before market saturation."""

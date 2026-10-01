@@ -30,7 +30,9 @@ def _credit_lines(text):
 
 
 # enough cash for the first start only, so the second and third both draw on credit
-CASH_FOR_ONE_START = 1850.0
+# stated in labour hours so it does not move with what the coin metal costs
+LABOUR_HOURS_FOR_ONE_START = 6900.0
+CASH_FOR_ONE_START = LABOUR_HOURS_FOR_ONE_START * sim().money_per_labour_hour()
 borrower = sim(capital=CASH_FOR_ONE_START)
 first = _run(borrower, "start units_standards")
 second = _run(borrower, "start cn_damp_proof_course")

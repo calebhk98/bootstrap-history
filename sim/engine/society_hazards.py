@@ -18,6 +18,7 @@ byte-for-byte if draw order is preserved. These are methods of Sim; they
 are a mixin only so that they can live in a file of their own.
 """
 from sim.constants import declare
+from . import money_units
 from .data import (closure, critical_path, money_word)
 from .hazard_window import hazards_not_yet_past
 
@@ -870,12 +871,14 @@ class HazardsMixin:
         why="Fraction of protection kept when a patron dies - losing most "
             "of your cover until a new patron relationship is established. "
             "Tuned, not measured.")
-    PATRON_DEATH_COURTING_GIFT = declare(
-        "PATRON_DEATH_COURTING_GIFT", 800.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii at price_index=1.0", source=None, confidence="D",
-        why="Cost of courting a dead patron's heir afresh, at this "
+    PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS = declare(
+        "PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS", 16100.0, kind="temporary_heuristic",
+        unit="labour hours at price_index=1.0", source=None, confidence="D",
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "Cost of courting a dead patron's heir afresh, at this "
             "society's own price level. Invented figure, not sourced to "
             "any attested gift-giving custom.")
+    PATRON_DEATH_COURTING_GIFT = money_units.PricedInLabourHours("PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS")
     PATRON_DEATH_RECOVERY_NOTE = (
         ". The dip lasts until the next year-end recount of protection, when "
         "the patron's office passes to his heir and the offices and standing "

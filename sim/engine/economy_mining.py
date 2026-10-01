@@ -25,6 +25,7 @@ other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
 from sim.constants import declare
+from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model
 from sim.world import land
@@ -235,14 +236,16 @@ class MiningMixin:
             "for forest_land_ceiling() below. Tuned, not derived from any "
             "attested relationship between income and organisational "
             "capacity.")
-    REVENUE_SCALE_DENARII = declare(
-        "REVENUE_SCALE_DENARII", 60000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year of revenue for +100% ceiling", source=None,
+    REVENUE_SCALE_LABOUR_HOURS = declare(
+        "REVENUE_SCALE_LABOUR_HOURS", 1210000.0, kind="temporary_heuristic",
+        unit="labour hours/year of revenue for +100% ceiling", source=None,
         confidence="D",
-        why="How much annual revenue it takes to double a standing "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "How much annual revenue it takes to double a standing "
             "ceiling via REVENUE_SCALE_CAP_MULTIPLE, reused identically in "
             "forest_land_ceiling() below. Tuned, not derived from any "
             "attested income-to-capacity relationship.")
+    REVENUE_SCALE_DENARII = money_units.PricedInLabourHours("REVENUE_SCALE_LABOUR_HOURS")
 
     # ---- DEPLETION: the easy seam runs out ---------------------------
     #

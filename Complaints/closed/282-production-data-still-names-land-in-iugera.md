@@ -1,6 +1,6 @@
 # Production data still names land in iugera
 
-**Status:** open
+**Status:** closed - production data, the tree's land-consuming nodes and the solver all use `hectare_land` and `land_hectare_years`; the iugerum conversion is gone; tests test_price_solver_land.py
 
 The land model works in hectares (`sim/world/land.py`), but the production
 data and the price solver still use the Roman unit: the material
@@ -22,3 +22,7 @@ Rename the material to a hectare material and the field to
 `IUGERUM_HECTARES` from the solver. This touches `data/production/`, the
 solver and its report, and `sim/tests/test_price_solver_land.py`; it was left
 because the price-book removal work owns those files.
+
+## Done
+
+The material is `hectare_land`, the recipe field `land_hectare_years` (each old value multiplied once by 0.2523, kept to eight decimals), and the tree nodes that consume land carry hectares. `IUGERUM_HECTARES` is removed from `sim/world/land.py`; `land_rent_hours_per_hectare` in the solver no longer converts. `data/prices.json` carries one book line for the renamed material, left for the price-book removal work.

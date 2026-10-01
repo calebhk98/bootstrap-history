@@ -1,6 +1,6 @@
 # Money constants and technology revenue are still in book denarii
 
-**Status:** partly - node `cap`/`up`/`rev` are now authored in labour hours (`cap_hours`, `up_hours`, `rev_hours`) and priced in each civilisation's coin at load; the sixteen money-valued constants (still `book_money=True`), deriving revenue from output, and the loosened pump guard remain
+**Status:** partly - seven more money constants are labour hours now; nine remain in book denarii and are documented as genuine money amounts (eight) or still to document (the eminence threshold); revenue is still authored, not derived; the pump guard is still loosened
 
 Money is now anchored to each civilisation's coin, and costs are labour-hours
 inside the engine, but some numbers are still written in the old book
@@ -79,3 +79,9 @@ Find them with `grep -rn "denari" sim/engine --include=*.py` and the
   `python3 -c "import sys;sys.path.insert(0,'.');import sim.engine.core;from sim.constants import book_money_names;print(len(book_money_names()))"`.
 - A node's `rev_hours` is still authored, not derived from what it produces.
 - The pump payback guard is still at its loosened threshold.
+
+## Progress: the last sixteen (fourth increment)
+
+- [x] Re-declared in labour hours (priced in the coin on read, values rounded to three figures): the slave base price, the credit line per hectare of forest, the revenue scale for the mining ceiling, the revenue ceiling per population scale, the capability-factor half-saturation, the imperial funding base and the patron-death courting gift. They scale with what labour costs, not with the coin. Sixteen `book_money` constants before, nine after (`python3 -c "import sys;sys.path.insert(0,'.');import sim.engine.core;from sim.constants import book_money_names;print(len(book_money_names()))"`).
+- [x] Eight of the nine now say in their `why` why they are money amounts: debt floors (arrears and insolvency) are nominal sums of the coin the debt was contracted in, the bribe prices are negotiated coin payments, the credit line per reputation point is a nominal advance, and the bribery capital threshold is a threshold on coin held.
+- [ ] `EMINENCE_WEALTH_VISIBLE_THRESHOLD` (in `sim/engine/society_state_pressure.py`, owned by the state-budget work at the time) still needs the same decision: it reads as a wealth threshold, which is a stock of labour-valued goods, so it probably belongs in labour hours.

@@ -1,6 +1,6 @@
 # Capability names are stored in the capital field of some nodes
 
-**Status:** open
+**Status:** closed - 115 capability names moved into `pre` (84 added, 31 were already there), the stray `cap` strings removed; start kits that hold those nodes without the rungs are in 336
 
 About a hundred nodes in `data/branches/50_textiles_consumer_deep.json` and
 neighbouring files carry a capability name (for example `"cap_tol_1mm"`) under
@@ -21,3 +21,7 @@ For each node decide the real capital (from its labour, materials and
 equipment) and the real capability prerequisite, move the latter into `pre`,
 delete the `cap` string and set `cap_hours` honestly. Owned by the data-fix
 work on `data/branches`.
+
+## Done
+
+Every `cap` string named a capability rung (`cap_tol_1mm`, `cap_tol_100um`, `cap_heat_0700`, `cap_heat_1100`, `cap_heat_1300`, `cap_heat_1600`, `cap_vac_1torr`, `cap_power_electric`), the kind `data/branches/CONTRACT.md` says belongs in `pre`. The capital those names had produced by accident (up to tens of thousands of labour hours for a spinning-frame part) is gone: the nodes' own labour and materials are their cost, as for the 46 siblings in the same file. Test: `sim/tests/test_node_capital_field_is_a_number.py`.

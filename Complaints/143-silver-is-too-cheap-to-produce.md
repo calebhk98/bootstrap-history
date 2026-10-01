@@ -1,6 +1,6 @@
 # Silver is too cheap to produce
 
-**Status:** partly - the silver chain now agrees with the deposits and counts both lead reductions; the opening Rome wage is still well under the attested day wage and the remaining gap is not a recipe error
+**Status:** partly - the lead recipe's silver yield now follows the argentiferous deposits and silver is far cheaper as the note below predicted; the remaining gap to the attested wage is in what is not yet costed, and the opening wage is now well above it
 
 Money is anchored to each civilisation's coin metal at its solved production
 cost. For Rome the solved cost of silver makes the opening labourer wage about
@@ -57,3 +57,9 @@ number to hit the day wage.
   reconciled first.
 
 **Also:** the lead recipe's silver yield per tonne of lead is far leaner than the deposit data implies, and was left inconsistent because matching it would make silver cheaper still. That is choosing data by the price it produces (CLAUDE.md 4.1). Make the recipe agree with the deposits whichever way the price moves; if silver then comes out even cheaper, the remaining gap is in what is not yet costed (ore dressing, the joint-cost split), and that is where to look.
+
+## Progress: the lead recipe agrees with the deposits (fourth increment)
+
+- [x] The lead recipe yields about 3.33 kg of silver per tonne of lead (it was 0.46), which is what `data/world/deposits.json` carries (the argentiferous deposit's 0.5 kg per tonne of rock over 150 kg of lead per tonne of rock) and is the right order against the empire totals in `data/world/resources.json`. `sim/tests/test_silver_chain_physics.py` pins the agreement.
+- Solved silver, labour hours per kg (`python3 sim/solve_prices.py --civ <civ> --why silver_kg`; here read through `engine.prices.solved_prices`): Rome 1449 before, 237 after; Han 1456 before, 235 after; England 413 before, 157 after; Norse 202 before, 112 after. Lead per kg also falls (Rome 0.150 to 0.025 hours). Mexica has no silver price.
+- Money is anchored to the coin metal, so for Rome one denarius is now worth about a sixth of what it was in labour hours and the opening wage is correspondingly higher in coin terms than the attested day wage. The first-order reason is the joint-cost split (silver bears most of a batch whatever its physical effort) together with uncosted ore dressing; those are where to look, see 337. Tests that fixed absolute coin amounts now state them in labour hours (`test_affordability_and_credit`, `test_complaint_177_credit_forecast_once`).

@@ -179,7 +179,7 @@ class CoinMassRescalesEveryFigure(unittest.TestCase):
             "revenue": lambda sim: sim.revenue(),
             "wheat": lambda sim: sim._material_prices()["wheat_kg"],
             "forest per hectare": lambda sim: sim.FOREST_COST_PER_HA,
-            "slave base price": lambda sim: sim.SLAVE_BASE_PRICE_DENARII,
+            "slave base price": lambda sim: sim.SLAVE_BASE_PRICE,
             "node upkeep": lambda sim: sim.nodes[node_id]["up"],
             "node capital": lambda sim: sim.nodes[node_id]["cap"],
         }

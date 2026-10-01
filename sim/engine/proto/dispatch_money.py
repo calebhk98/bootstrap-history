@@ -404,7 +404,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
         if err_s:
             return {"ok": False, "error": err_s}
         budget = purchase_rule.purchase_budget(sim)
-        per_person_base = sim.SLAVE_BASE_PRICE_DENARII * sim.price_index
+        per_person_base = sim.SLAVE_BASE_PRICE * sim.price_index
         lower, upper = 0.0, budget / max(per_person_base, 1e-9)
         affordable = 0.0
         for _ in range(20):

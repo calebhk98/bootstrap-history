@@ -545,7 +545,9 @@ check("...and a household that can afford the show still pays for it",
 # and mines and NOT the interest it was already paying, so a household bleeding
 # 552 a year decided it had five years of headroom against money that did not
 # exist.
-s_bd = sim(capital=-20000.0, manual=False)
+# 20000 coin was about 74,600 labour hours of debt; stated in hours so the
+# test does not move with what the coin metal costs.
+s_bd = sim(capital=-74600.0 * sim().money_per_labour_hour(), manual=False)
 s_bd.insolvent_years = 20
 _before = len(s_bd.active)
 s_bd.step()
