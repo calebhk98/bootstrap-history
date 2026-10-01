@@ -99,15 +99,19 @@ def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str,
                     bands[(carrier, required)] = found[0] * money_per_hour
                     hour_bands.setdefault(carrier, {})[required] = found
                     break
-    own: Dict[int, Mapping[str, float]] = {}
+    # Keyed by address; the entry itself is kept and confirmed with `is`, so a recycled address cannot match.
+    own: Dict[int, Tuple[Mapping[str, Any], Mapping[str, float]]] = {}
 
     def own_cost(entry: Mapping[str, Any]) -> Mapping[str, float]:
-        if id(entry) not in own:
-            result = recipe_cost_and_allocation("node-entry", entry, hour_prices, wage_by_trade,
-                                                capability_band_price_by_carrier=hour_bands)
-            own[id(entry)] = {} if result is None else {
-                material: price * money_per_hour for material, price in result[1].items()}
-        return own[id(entry)]
+        hit = own.get(id(entry))
+        if hit is not None and hit[0] is entry:
+            return hit[1]
+        result = recipe_cost_and_allocation("node-entry", entry, hour_prices, wage_by_trade,
+                                            capability_band_price_by_carrier=hour_bands)
+        cost = {} if result is None else {
+            material: price * money_per_hour for material, price in result[1].items()}
+        own[id(entry)] = (entry, cost)
+        return cost
 
     _CACHE[key] = (entries, bands, own_cost)
     return EnergyPrices(pool, bands, own_cost)
