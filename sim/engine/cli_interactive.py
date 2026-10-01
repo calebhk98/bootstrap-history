@@ -434,6 +434,27 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
     return False, session, False, None
 
 
+def _manual_save_note(resp, session):
+    """After a typed `save` succeeds: freeze the saved file as a checkpoint so
+    resuming it forks a new session instead of overwriting it, and return the
+    text saying where it landed and how to move it. Empty when the command was
+    not a successful save, or when it wrote the live session file itself."""
+    saved = resp.get("saved") if resp.get("ok") else None
+    if not saved or not session or os.path.abspath(saved) == os.path.abspath(session):
+        return ""
+    landed = os.path.abspath(saved)
+    meta = dict(settings.load_session_meta(session))
+    meta["checkpoint"] = True
+    settings.save_session_meta(saved, meta)
+    return _wrap(
+        "Saved a snapshot at %s. The live game (still autosaved after every "
+        "command) is the separate file %s. Resuming the snapshot starts a new "
+        "live file and leaves the snapshot as it is. To move it to another "
+        "machine or container, copy that file (and %s next to it) there and "
+        "run: python3 sim/simulator.py play --session <the copy>"
+        % (landed, os.path.abspath(session), os.path.basename(settings._meta_path(saved))))
+
+
 def _play_run_one_command(sim, nodes, cmd, session):
     """Run one already-parsed command through the dispatcher: dispatch it,
     autosave, and print its rendering. The printing has to happen here,
@@ -487,6 +508,10 @@ def _play_run_one_command(sim, nodes, cmd, session):
         # Only when it is worth knowing. A tenth of a second on every line
         # is noise that would bury the one command that took nine seconds.
         print(_text + ("\n   (took %.1fs)" % _took if _took >= 0.5 else ""))
+        if cmd.get("cmd") == "save" and not cmd.get("json"):
+            note = _manual_save_note(resp, session)
+            if note:
+                print(note)
         print()
     except BrokenPipeError:
         # Somebody closed the pipe. The game is saved; leave quietly.
@@ -870,6 +895,10 @@ def _new_game(civs, cfg):
     horizon = _new_game_ask_horizon(cfg)
     if horizon is None:
         return None
+    print()
+    seed = _new_game_ask_seed(cfg)
+    if seed is False:
+        return None
 
     # REMEMBERED FOR NEXT TIME, SILENTLY - not a settings screen's job: a
     # player who favours one civilisation and kit should not have to retype
@@ -918,7 +947,7 @@ def _new_game(civs, cfg):
     args = Args()
     args.strategy = "recommended"
     args.goal = goal
-    args.seed = None
+    args.seed = seed
     args.horizon = horizon
     args.civ = civ["id"]
     args.kit = kit
@@ -964,7 +993,6 @@ def _new_game_pick_civ(civs, cfg):
         if raw.isdigit() and 1 <= int(raw) <= len(civs):
             civ = civs[int(raw) - 1]
             break
-        print("   -- a number from 1 to %d." % len(civs))
         print("   -- a number from 1 to %d." % len(civs))
     return civ
 
@@ -1028,6 +1056,30 @@ def _new_game_ask_fuzzy(cfg):
     fuzzy_default = "y" if cfg.get("default_fuzzy_estimates", False) else "n"
     return _ask("\n   Fuzzy estimates? [%s] " % ("Y/n" if fuzzy_default == "y" else "y/N"),
                 ["y", "n"], fuzzy_default)
+
+
+def _new_game_ask_seed(cfg):
+    """The seed question. Returns the typed whole number, None for a random
+    draw (blank, unless settings hold a default seed), or False if the player
+    backed out."""
+    configured = cfg.get("default_seed")
+    if not isinstance(configured, int) or isinstance(configured, bool):
+        configured = None
+    shown = "default %d" % configured if configured is not None else "random"
+    while True:
+        try:
+            raw = input("   Seed (blank for a random one) [%s]: " % shown).strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return False
+        if not raw:
+            return configured
+        if raw in ("q", "quit", "exit"):
+            return False
+        try:
+            return int(raw)
+        except ValueError:
+            print("   -- a whole number, or blank for a random seed.")
 
 
 def _new_game_ask_kit(cfg):

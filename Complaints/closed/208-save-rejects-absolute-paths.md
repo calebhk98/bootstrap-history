@@ -1,6 +1,6 @@
 # `save` refuses absolute paths
 
-**Status:** partly - see the paragraph at the end
+**Status:** closed
 
 `save /tmp/x.json` is refused: "a save file must be a relative path, not an absolute one. Try save mygame.json". The tester assumed it was deliberate but found it an extra step when exporting a save to a chosen place.
 
@@ -16,4 +16,4 @@ Also reported (Han China 100 AD fog playtest, tester item(s) 2, 111, 181, 198; `
 
 Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md`): asks for clear manual export and import instructions for saves so a run can be moved between containers.
 
-**Remaining:** a typed `save` in `play` now accepts absolute paths (the JSON protocol still refuses them). Still open: a relative manual `save` does not say where it landed or that the live session file is separate, resuming a named checkpoint with `--session` overwrites it, and there are no export/import instructions for moving a save between containers.
+**Resolution:** a typed `save` in `play` accepts absolute paths (the JSON protocol still refuses them), prints the full path it wrote, says the live session file is a separate file that keeps autosaving, and marks the snapshot as a checkpoint so resuming it with `--session` forks a new live file instead of overwriting it. The same message and the README say how to move a save between machines or containers (copy the file and its `.meta.json`, then `play --session <copy>`). Tests: `sim/tests/test_menu_seed_choice.py`, `sim/tests/test_menu_seed_and_saves.py`.

@@ -28,7 +28,7 @@ import collections, json, math, os, random
 from collections import defaultdict
 
 from .catalog import load_production_catalog
-from .data import (ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
+from .data import (ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
                    hard_pre, load, load_civ, resolve_goal,
                    STARTING_KITS, STRATS, topo_order, win_condition_describe)
 
@@ -1351,12 +1351,7 @@ def cmd_goals(args):
     """
     tree, prices, nodes, wages, goods = load()
     default_goal = resolve_goal(tree, nodes, None)
-    catalog = goal_catalog(tree, nodes)
-
-    # Ensure the default goal appears in the catalog even if not in meta.goals
-    catalog_nodes = set(goal["node"] for goal in catalog)
-    if default_goal not in catalog_nodes and default_goal in nodes:
-        catalog.insert(0, {"node": default_goal, "name": nodes[default_goal].get("name", default_goal)})
+    catalog = selectable_goals(tree, nodes)
 
     print("%-34s %9s %10s  %-11s %s" % ("name", "closure", "floor(yr)", "scale", "node"))
     print("-" * 100)

@@ -28,7 +28,7 @@ with a workaround.
 
 import json, os
 
-from .data import civilization_ids, closure, load, load_civ
+from .data import CIVDIR, civilization_ids, closure, load, load_civ
 from . import settings
 from .protocol import load_state, save_state
 
@@ -197,10 +197,12 @@ def _ingame_load(cfg, sim, session, args):
 
 
 def _load_civ_list():
-    """Every playable civilisation, base and mod, earliest first: the same
-    roster `civs` prints."""
+    """Every playable civilisation, base and mod: the same roster `civs`
+    prints. Base civilisations come first, earliest first, then mod ones, so
+    installing a mod never renumbers the base choices."""
     civs = [load_civ(civ_id) for civ_id in civilization_ids()]
-    civs.sort(key=lambda c: c.get("year", 0))
+    civs.sort(key=lambda c: (not os.path.exists(os.path.join(CIVDIR, c["id"] + ".json")),
+                             c.get("year", 0)))
     return civs
 
 

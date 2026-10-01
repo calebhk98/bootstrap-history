@@ -46,7 +46,7 @@ python3 sim/simulator.py play --civ england_1300 --kit merchant --goal <goal> --
   tighten as you start and finish it. The new-game menu asks about it next to fog,
   and the in-game `options` screen can turn it on later.
 - `--mortal` lets the founder die of old age; by default you are immortal.
-- `--seed N` fixes the dice, so a game can be replayed. Without it each new game draws a fresh seed, prints it at the start and keeps it in the save.
+- `--seed N` fixes the dice, so a game can be replayed. Without it each new game draws a fresh seed, prints it at the start and keeps it in the save. The menu asks for a seed too: blank draws one, a number uses it, and `default_seed` in the settings file supplies the blank answer.
 
 ## Playing
 
@@ -81,7 +81,7 @@ python3 sim/simulator.py play --civ rome_100ad --session mygame.json    # start 
 echo "step 5" | python3 sim/simulator.py play --session mygame.json     # carry on from it
 ```
 
-Inside a game, `save <file>` and `load <file>` do the same by hand, and the
+Inside a game, `save <file>` and `load <file>` do the same by hand. A typed `save` says the full path it wrote; that snapshot is separate from the live game file, and resuming it starts a new live file rather than overwriting it. To move a save to another machine or container, copy the file (and the `.meta.json` beside it) and run `play --session <the copy>`. The
 menu's "Load a saved game" lists saves in your save folder. Set the folder
 with the `ROME_SAVE_DIR` environment variable or from the menu's Options;
 otherwise it is `.rome-saves` in your home directory. A save belongs to the

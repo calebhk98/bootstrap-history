@@ -1,6 +1,6 @@
 # The new-game menu offers the junction transistor as "the original goal" and omits the point-contact transistor and the mod civilisation; `play` and `civs` disagree
 
-**Status:** partly - see the paragraph at the end
+**Status:** closed
 
 Closed 160 marked the default goal in the `goals` command. The menu still disagrees (reproduced: `printf '1\n2\n\n\n\n\n\n\n\n\n\n\n' | python3 sim/simulator.py menu`):
 
@@ -16,4 +16,4 @@ What it would take: one source for "the default goal" used by `play`, `goals`, t
 
 Found in the final blind playtests of this branch (Rome 100 AD and Mexica 1500 fog runs; A inconsistency 4; B bugs 9, 10). Reports: `Complaints/reports/playtest-rome-fog-fuzzy-demo.md`, `Complaints/reports/playtest-rome-fog-demo-65pct.md`; triage: `Complaints/reports/final-playtests-triage.md`.
 
-**Remaining:** the menu goal list now leads with the goal `play` aims at by default and offers every civilisation `civs` lists, including mod ones. The blurb of the junction-transistor goal in the tech tree data still says "The original goal"; that text lives in the data files and needs a data edit. `cmd_goals` in cli.py keeps its own copy of the default-first ordering rather than calling `selectable_goals` in `sim/engine/data.py`.
+**Resolution:** the menu goal list leads with the goal `play` aims at and offers every civilisation `civs` lists, including mod ones. `cmd_goals` now takes its list from `selectable_goals` in `sim/engine/data.py`, the same source as the menu, and the junction-transistor blurb in the tech tree data no longer calls it the original goal. The menu's seed is now the player's choice (254). Tests: `sim/tests/test_menu_seed_choice.py`, `sim/tests/test_menu_seed_and_saves.py`.
