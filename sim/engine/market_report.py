@@ -52,6 +52,7 @@ def material_rows(sim, offset, limit):
         rows.append({"material": material,
                      "buy_per_tonne": round(quote["buy_per_tonne"], 2),
                      "sell_per_tonne": round(quote["sell_per_tonne"], 2),
+                     "price_over_long_run_cost": round(quote["market_price_ratio"], 3),
                      "market_available_tonnes_per_year":
                          round(quote["market_available_tonnes_per_year"], 2),
                      "own_supply": material in own})

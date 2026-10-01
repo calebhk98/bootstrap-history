@@ -942,6 +942,7 @@ class MaterialSupplyMixin:
         buy = (per_kg / tonnes_per_unit(material) * self.price_index
                * self.material_price_factor(emp_key) * self.market_price_ratio(emp_key))
         return {"material": material, "stock_key": emp_key, "buy_per_tonne": buy,
+                "market_price_ratio": self.market_price_ratio(emp_key),
                 "sell_per_tonne": buy * self.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
                 "market_available_tonnes_per_year": self._material_market_tonnes(emp_key)}
 

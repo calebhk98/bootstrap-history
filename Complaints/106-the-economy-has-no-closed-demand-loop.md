@@ -1,6 +1,6 @@
 # The live economy lacks a closed population/income/demand loop
 
-**Status:** open - roadmap: approved, next after automatic demand
+**Status:** partly - household demand from population and income now sets the yearly material price, and what the founder sells displaces the society's producers; firms' output, the labour market and final goods remain
 
 **Source:** playtest findings document, ECON-004. **Type:** Architecture
 finding with substantial existing groundwork; do not read this as "build a
@@ -101,3 +101,20 @@ mechanism already exists in code: it touches `sim/engine/labour.py`,
 (comparable in scope to the Milestone 4 agriculture/demography wiring the
 architecture document describes). Treat this as a roadmap entry that already
 has a design and a sequencing plan, not a fix-sized task.
+
+## What landed, and what remains
+
+Landed (first increment): `sim/world/need_demand.py` is wired into the engine
+through `sim/engine/market_demand.py`; household demand for each material
+follows population and the economy index, and clears each year against the
+society's capacity, stock, actors' supply and the founder's trades
+(`sim/engine/market_clearing.py`). Founder sales reach supply and take sales,
+then capacity, from the society's own producers; its purchases add demand.
+Capacity follows the price, so the loop closes through the producers.
+
+Remains: income is the economy index, not what households earn from wages and
+the founder's payroll (`sim/world/labour_market.py` is still unwired); only
+materials clear, not finished goods or the founder's venture revenue; firm
+and state output enter through `actor_supply`, a stub that returns zero until
+actors produce goods; demand elasticity and capacity adjustment are labelled
+heuristics.

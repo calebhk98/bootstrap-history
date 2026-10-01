@@ -56,34 +56,45 @@ class MarketDemandMixin:
     def _opening_population(self):
         return float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
 
+    def _opening_demand_by_commodity(self, prices, prices_in_hours):
+        """Opening households' demand per commodity at these prices, kept
+        while the price table is the same object."""
+        cache = getattr(self.household, "_household_opening_cache", None)
+        if cache is not None and cache[0] is prices:
+            return cache[1]
+        opening = household_demand_by_material(
+            prices_in_hours, self._opening_population(), MEAN_INCOME_HOURS_PER_CAPITA)
+        by_commodity = {}
+        for material in sorted(opening):
+            commodity = self._material_tag(material)[0]
+            by_commodity[commodity] = by_commodity.get(commodity, 0.0) + opening[material]
+        self.household._household_opening_cache = (prices, by_commodity)
+        return by_commodity
+
     def household_demand_ratios(self):
         """{commodity: demand now over demand at the opening}, from population
-        and income at today's prices; cached until either moves."""
+        and income at today's prices; recomputed when either moves by a
+        tenth of a percent or the price table changes."""
         economy_index = float(self.state.economy.economy)
         population = float(self.population.total)
         prices = self._material_prices()
+        key = (round(population / self._opening_population(), 3), round(economy_index, 3))
         cache = getattr(self.household, "_household_demand_cache", None)
-        if (cache is not None and cache[0] == (population, economy_index)
-                and cache[1] is prices):
+        if cache is not None and cache[0] == key and cache[1] is prices:
             return cache[2]
         per_hour = self.money_per_labour_hour()
         prices_in_hours = {material: price / per_hour for material, price in prices.items()
                            if price > 0.0}
+        opening_by_commodity = self._opening_demand_by_commodity(prices, prices_in_hours)
         now = household_demand_by_material(
             prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA * economy_index)
-        opening = household_demand_by_material(
-            prices_in_hours, self._opening_population(), MEAN_INCOME_HOURS_PER_CAPITA)
-        now_by_commodity, opening_by_commodity = {}, {}
-        for material in sorted(opening):
+        now_by_commodity = {}
+        for material in sorted(now):
             commodity = self._material_tag(material)[0]
-            opening_by_commodity[commodity] = (
-                opening_by_commodity.get(commodity, 0.0) + opening[material])
-            now_by_commodity[commodity] = (
-                now_by_commodity.get(commodity, 0.0) + now.get(material, 0.0))
-        ratios = {commodity: now_by_commodity[commodity] / total
+            now_by_commodity[commodity] = now_by_commodity.get(commodity, 0.0) + now[material]
+        ratios = {commodity: now_by_commodity.get(commodity, 0.0) / total
                   for commodity, total in opening_by_commodity.items() if total > 0.0}
-        self.household._household_demand_cache = (
-            (population, economy_index), prices, ratios)
+        self.household._household_demand_cache = (key, prices, ratios)
         return ratios
 
     def economy_size_ratio(self):

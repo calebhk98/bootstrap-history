@@ -1,6 +1,6 @@
 # Prices use long-run cost, not the current market
 
-**Status:** open
+**Status:** partly - a yearly material market now moves each price around its long-run cost (sim/world/market.py, sim/engine/market_clearing.py); coin revaluation, build-decision amortisation and the goods market remain
 
 ## What is wrong
 
@@ -40,3 +40,23 @@ afterwards. See `docs/architecture/ECONOMY_MODEL_SURVEY.md`.
   the market price.
 - Revalue each civilisation's money from its coin material's market price
   each period, so metal gluts cause inflation and shortages deflation.
+
+## What landed, and what remains
+
+Landed: each commodity has a yearly clearing of society capacity, actors'
+output (one call, `actor_supply`), carried stock and the founder's sales
+against household demand (population and income, through
+`sim/world/need_demand.py`) and the founder's purchases. The quote and every
+purchase bill multiply the solver's long-run cost by that year's ratio, which
+can fall below one down to a running-cost floor (sunk capital is not in it)
+and rise to a ceiling. A stock windfall lowers the price at once; capacity
+that does not exist yet plays no part. `python3 sim/audit_costs.py` still
+measures where the long-run anchor comes from; `market_state(material)` on a
+live game shows the year's clearing.
+
+Remains: the floor and ceiling are heuristics (a split of each recipe's cost
+into running and capital parts would give the floor); the coin metal's
+revaluation (inflation from a metal glut) is not wired; amortisation is still
+in the solver's cost rather than confined to decisions to build; the goods
+market and wages do not use this clearing; a material's own deposits and a
+mine's output feed supply only through what the founder sells.
