@@ -70,26 +70,25 @@ class GroupView:
 		return sectors
 
 	def squeezed_employers(self) -> List[Sector]:
-		"""Employers of each trade whose price the hiring of the founder and the firms has
-		pushed above the wage table: the premium their existing hands now cost."""
+		"""Employers of each trade whose price the hiring of the founder and the firms has pushed
+		above the wage table. With a fixed budget they can no longer afford the share of the town's
+		hands that the premium prices out, and the hands the founder and the firms keep are hands
+		they cannot hire; the value lost is those hands at the going wage."""
 		sim = self._sim
-		hours_per_person = sim.HOURS_PER_PERSON_YEAR
 		sectors = []
 		for trade in sorted(sim.household.labour_pressure_records):
 			factor = sim.labour_price_factor(trade)
 			if factor <= 1.0 + 1e-9:
 				continue
-			hands = (sim.market_supply(trade) / hours_per_person
-					 - sim.state.household.employees.get(trade, 0.0) - sim.actor_staff_fte(trade))
-			if hands <= 0.0:
-				continue
+			pool = sim.market_supply(trade) / sim.HOURS_PER_PERSON_YEAR
+			priced_out = pool * (1.0 - 1.0 / factor)
 			wage = sim.annual_wage(trade, include_local_scarcity=False)
 			sectors.append(Sector(
 				"squeezed_employers", trade, "employers of %s in the founder's town" % trade,
-				"hiring by you and the firms has raised the going price of %s by %d%%"
-				% (trade, round((factor - 1.0) * 100)),
-				hands * wage * (factor - 1.0), hands * wage * factor,
-				hands * wage * (factor - 1.0) / self._annual_labourer_wage(), sim.local_market_share()))
+				"hiring by you and the firms has raised the going price of %s by %d%% and priced out about %s hands"
+				% (trade, round((factor - 1.0) * 100), "{:,.0f}".format(priced_out)),
+				priced_out * wage, pool * wage * factor, priced_out * wage / self._annual_labourer_wage(),
+				sim.local_market_share()))
 		return sectors
 
 	def sectors(self) -> Dict[str, Sector]:
