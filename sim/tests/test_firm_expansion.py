@@ -108,7 +108,7 @@ after = SimWorld(fresh).entry_gross("zz_grow", fresh.actors.rivals_of("zz_grow",
 check("an entrant expects less once an incumbent has expanded", after < before, (before, after))
 
 # no growth, no further expansion or entry
-steady = settled(years=60)
+steady = settled(years=80)
 snapshot = (len(steady.actors.active_firms()), round(total_capacity(steady), 6))
 for _ in range(10):
 	next_year(steady)

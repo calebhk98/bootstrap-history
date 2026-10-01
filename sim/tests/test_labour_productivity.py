@@ -27,9 +27,9 @@ try:
     big.hire("smith", 50)            # TEN TIMES as many smiths
     big.year += 10                   # same decay, same settling time
     cost_small = (S.ANNUAL_WAGE["smith"] * small.wage_index * small.price_index
-                  * small.labour_price_factor("smith"))
+                  * small.labour_market.price_factor("smith"))
     cost_big = (S.ANNUAL_WAGE["smith"] * big.wage_index * big.price_index
-                * big.labour_price_factor("smith"))
+                * big.labour_market.price_factor("smith"))
     check("once the market has settled, a smith costs the SAME base wage "
           "whether the trade has 5 people in it or 50 - training ten times "
           "as many smiths does not cut the price below the wage table, it "

@@ -401,7 +401,7 @@ check("...and it is still capital plus half the line when there is no hole "
       abs(_sp_solvent.spending_power("buy") - 505.0) < 1e-9,
       _sp_solvent.spending_power("buy"))
 _fph_bug = WAGES["smith"] * 1.6 * s_bug.wage_index * s_bug.price_index \
-    * s_bug.labour_price_factor("smith")
+    * s_bug.labour_market.price_factor("smith")
 s_bug_u = sim(capital=0.0)
 s_bug_u.capital = -500.0
 s_bug_u.credit_limit = lambda: 210.0
@@ -461,7 +461,7 @@ check("the affordability figure the quote screen shows while in debt "
       abs(_quoted - s_sym.spending_power("buy")) < 0.05,
       (_quoted, s_sym.spending_power("buy")))
 _pph_sym = S.ANNUAL_WAGE.get("smith", 375.0) * s_sym.wage_index * s_sym.price_index \
-    * s_sym.labour_price_factor("smith")
+    * s_sym.labour_market.price_factor("smith")
 _n_under_sym = max(1, int(_quoted // _pph_sym))
 _n_over_sym = _n_under_sym + 2
 s_sym_u = sim(capital=0.0)

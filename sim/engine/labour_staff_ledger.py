@@ -59,7 +59,7 @@ class StaffLedgerMixin:
             if trade in GENERIC_TRADES or trade in drawn or count < 0.5:
                 continue
             rows.append({"trade": trade, "count": round(count, 1),
-                         "wage_bill_per_year": round(count * self.annual_wage(trade), 1),
+                         "wage_bill_per_year": round(count * self.labour_market.quote_annual(trade), 1),
                          "taught_by_you": trade in self.state.household.trades_created})
         return rows
 

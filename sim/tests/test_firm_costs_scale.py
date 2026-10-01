@@ -71,17 +71,17 @@ game.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = 1.0
 next_year(game)
 world = SimWorld(game)
 wage_before = world.concern_wage_bill("zz_scale")
-hour_before = world.wage_per_hour("labourer")
-founder_before = game.annual_wage("artisan")
+hour_before = world.labour_market.quote("labourer")
+founder_before = game.labour_market.quote_annual("artisan")
 game.state.economy.economy *= 10.0
 game._revenue_cache_key = None
 world = SimWorld(game)
 check("when pay follows output a concern's wage bill grows with the economy",
       world.concern_wage_bill("zz_scale") > 2.0 * wage_before, (wage_before, world.concern_wage_bill("zz_scale")))
 check("the wage an hour of labour earns rises with output per hour",
-      world.wage_per_hour("labourer") > 2.0 * hour_before, (hour_before, world.wage_per_hour("labourer")))
+      world.labour_market.quote("labourer") > 2.0 * hour_before, (hour_before, world.labour_market.quote("labourer")))
 check("the founder pays the same rise a firm does: one wage for every employer",
-      abs(game.annual_wage("artisan") / founder_before - world.wage_per_hour("labourer") / hour_before) < 1e-6)
+      abs(game.labour_market.quote_annual("artisan") / founder_before - world.labour_market.quote("labourer") / hour_before) < 1e-6)
 check("what the society makes follows the economy's output per hour",
       world.society_output() > 2.0 * SimWorld(actor_sim([NODE])).society_output())
 

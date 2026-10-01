@@ -28,7 +28,7 @@ def cash_remedies(actor):
             found.append((saving, "close %s (stops %s a year of mine costs)" % (
                 material, "{:,.0f}".format(saving))))
     for trade, count in sorted(actor.state.household.employees.items()):
-        wage = actor.annual_wage(trade)
+        wage = actor.labour_market.quote_annual(trade)
         if count > 0 and wage > 0.5:
             found.append((wage, "fire %s (stops %s a year per person)" % (
                 trade, "{:,.0f}".format(wage))))

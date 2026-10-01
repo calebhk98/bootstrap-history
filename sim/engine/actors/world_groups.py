@@ -32,7 +32,7 @@ class GroupView:
 	_sim: Any
 
 	def _annual_labourer_wage(self) -> float:
-		return max(1e-9, self._sim.HOURS_PER_PERSON_YEAR * self._sim.market_wage_per_hour("labourer"))
+		return max(1e-9, self.pay_per_person_year("labourer"))
 
 	def _commodity_quote(self, commodity: str) -> Any:
 		"""The quote for the first priced material the commodity is made of (its main product)."""
@@ -76,13 +76,13 @@ class GroupView:
 		they cannot hire; the value lost is those hands at the going wage."""
 		sim = self._sim
 		sectors = []
-		for trade in sorted(sim.household.labour_pressure_records):
-			factor = sim.labour_price_factor(trade)
+		for trade in sim.labour_market.pressured_trades():
+			factor = sim.labour_market.price_factor(trade)
 			if factor <= 1.0 + 1e-9:
 				continue
 			pool = sim.market_supply(trade) / sim.HOURS_PER_PERSON_YEAR
 			priced_out = pool * (1.0 - 1.0 / factor)
-			wage = sim.annual_wage(trade, include_local_scarcity=False)
+			wage = sim.labour_market.unscarce_annual(trade)
 			sectors.append(Sector(
 				"squeezed_employers", trade, "employers of %s in the founder's town" % trade,
 				"hiring by you and the firms has raised the going price of %s by %d%% and priced out about %s hands"

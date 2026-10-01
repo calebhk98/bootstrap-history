@@ -607,7 +607,7 @@ class CapacityMixin:
                     * self.rep_factor()
                     + max(0.0, self.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
-        afford = budget / (self.staff_wage_reference() * self.price_index * self.wage_index)
+        afford = budget / self.labour_market.in_current_money(self.staff_wage_reference())
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
         # this institutional ceiling (see step(), section 1). It must be
         # folded into the SAME denominator this ceiling is scaled against,

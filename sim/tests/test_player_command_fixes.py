@@ -72,7 +72,7 @@ check("unbounded rush still only previews and renders as one",
 # --- 156: buy school <trade> <n> works, as do `trade school` and `trade_school`
 school_sim = sim(capital=1_000_000)
 school_sim.trades_created.add("chemist")
-school_sim._add_labour_pressure("chemist", 100)
+school_sim.labour_market.press("chemist", 100)
 for text in ("buy school chemist 1", "buy trade school chemist 1", "buy trade_school chemist 1"):
     reply = _run(school_sim, text)
     check("%r founds a school" % text, reply.get("ok") and reply["trade"] == "chemist", reply)
