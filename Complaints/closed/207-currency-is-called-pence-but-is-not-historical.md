@@ -1,6 +1,6 @@
 # The currency is called pence, but wages and prices are not English pence
 
-**Status:** open
+**Status:** closed
 
 The tester noted that the money scale does not match the record: about 44 thousand pence (roughly 184 pounds at 240 pence to the pound) in 1320, while one carpenter costs about 9,400 pence a year (roughly 39 pounds), against surviving accounts showing paid workers at a few pence a day. The kit text says "4.0 labourer-years of wages, which here is 17030 pence", so a labourer costs roughly four thousand pence a year in the model. They accept that the unit behaves as a normalised gameplay currency and ask only that the game say so, to avoid false precision.
 
