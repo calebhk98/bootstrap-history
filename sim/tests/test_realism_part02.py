@@ -6,7 +6,7 @@ _ROMAN = set("""tx2_warp_sizing med_bone_setting tx2_heddle tx2_wool_fibre tx2_b
 _rome = sim(civ="rome_100ad")
 check("part 02's 77 Roman technologies are explicit opening grants",
       _ROMAN <= _rome.granted, sorted(_ROMAN - _rome.granted))
-_ROME_ONLY = _ROMAN - {"mat_obsidian_blade"}  # Independently inherited by the Mexica.
+_ROME_ONLY = _ROMAN - {"mat_obsidian_blade", "tx2_needle_hand"}  # Inherited independently by the Mexica (bone needles).
 check("part 02's Rome-only grants are not ambient Mexica knowledge",
       not (_ROME_ONLY & sim(civ="mexica_1500").granted),
       sorted(_ROME_ONLY & sim(civ="mexica_1500").granted))

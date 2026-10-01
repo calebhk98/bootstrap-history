@@ -3290,7 +3290,7 @@
    "smith": 20
   },
   "mat": {
-   "iron_bar_kg": 0.2
+   "bone_kg": 0.2
   },
   "cap_hours": 0,
   "build_yrs": 0.05,

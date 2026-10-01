@@ -401,7 +401,8 @@
     "tex_drop_spindle",
     "tex_felting",
     "tex_vegetable_tanning",
-    "tex_wool"
+    "tex_wool",
+    "tx2_needle_hand"
   ],
   "state_capacity": 0.8,
   "state_pressure": {
