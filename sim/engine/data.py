@@ -30,7 +30,7 @@ from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
-from . import money_units, wage_provider
+from . import money_units, node_revenue, wage_provider
 from .default_civilisation import default_civilisation_id
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
@@ -349,6 +349,7 @@ def load(held_technology_ids: Iterable[str] = (),
         node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
+    node_revenue.apply_revenue(nodes.values(), goods, wages, rate)
     money_units.price_nodes(nodes.values(), wages, rate)
     return tree, document, nodes, wages, goods
 

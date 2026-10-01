@@ -39,6 +39,10 @@ class NodeMoneyAuthoredInHours(unittest.TestCase):
                     hours = authored[node_id].get(field + "_hours")
                     if hours is None:
                         continue
+                    if field == "rev":
+                        # revenue is re-derived against solved costs (sim/engine/node_revenue.py)
+                        self.assertEqual(node["_rev_hours_authored"], hours)
+                        hours = node["rev_hours"]
                     self.assertAlmostEqual(node[field], hours * rate,
                                            delta=1e-9 * (1 + hours * rate))
                     checked += 1
