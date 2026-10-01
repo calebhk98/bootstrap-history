@@ -273,7 +273,7 @@ class BondageMixin:
         if not purchase_rule.can_pay(self, price):
             household._last_buy_refusal = purchase_rule.refusal_text(self, "%d slaves" % n_people, price)
             return 0
-        household.capital -= price
+        household.debit(price, "slaves bought")
         household.slaves += n_people
         economy.market_pressure = economy.market_pressure + n_people
         # Untrained on arrival. They become productive through household.training.

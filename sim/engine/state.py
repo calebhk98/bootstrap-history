@@ -12,6 +12,7 @@ from typing import (
 	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
 )
 
+from sim.engine import cash_book
 from sim.engine.economy import _InvalidatingDict
 
 
@@ -190,6 +191,11 @@ class HouseholdState:
 	last_withdrawal: Optional[int] = None
 	last_settlement: int = -999
 	spend_last_year: Optional[float] = None
+	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
+	# and the last few closed years
+	cash_flow: Dict[str, float] = field(default_factory=dict)
+	cash_mark: Optional[float] = None
+	cash_periods: List[Dict[str, Any]] = field(default_factory=list)
 
 	# Workforce and human capital
 	scholars: float = 0.0
@@ -231,19 +237,34 @@ class HouseholdState:
 	last_military_demand: int = -999
 	_said_confiscation_band: int = -1
 
-	def cost_capital(self, amount: float) -> None:
-		"""Deduct an amount of capital for household expenditure and track total spend."""
-		cost = float(amount)
-		self.capital -= cost
-		self.total_spend += cost
-
-	def costCapital(self, amount: float) -> None:
-		"""Alias for cost_capital following camelCase convention."""
-		self.cost_capital(amount)
-
-	def add_capital(self, amount: float) -> None:
-		"""Credit capital into household purse."""
+	def credit(self, amount: float, purpose: Any) -> None:
+		"""Money in, entered in the cash book under its cause."""
 		self.capital += float(amount)
+		cash_book.record(self, 1.0, float(amount), purpose)
+
+	def debit(self, amount: float, purpose: Any) -> None:
+		"""Money out, entered in the cash book under its cause."""
+		self.capital -= float(amount)
+		cash_book.record(self, -1.0, float(amount), purpose)
+
+	def reset_cash(self, new_capital: float, purpose: Any) -> None:
+		"""Set the purse to an exact figure (a settlement), entering the difference under its cause."""
+		difference = new_capital - self.capital
+		self.capital = new_capital
+		cash_book.record(self, 1.0, difference, purpose)
+
+	def cost_capital(self, amount: float, purpose: Any = "expenditure") -> None:
+		"""Pay out of the purse and track total spend."""
+		self.debit(amount, purpose)
+		self.total_spend += float(amount)
+
+	def costCapital(self, amount: float, purpose: Any = "expenditure") -> None:
+		"""Alias for cost_capital following camelCase convention."""
+		self.cost_capital(amount, purpose)
+
+	def add_capital(self, amount: float, purpose: Any = "receipts") -> None:
+		"""Credit capital into household purse."""
+		self.credit(amount, purpose)
 
 	def add_reputation(self, delta: float) -> None:
 		"""Increase household reputation standing."""

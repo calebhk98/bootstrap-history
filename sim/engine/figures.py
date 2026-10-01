@@ -6,6 +6,8 @@ but value optional:
   components  named parts of the value; the change in each is its cause
   flows       named amounts that fed the change directly (for a stock)
   drivers     named inputs that are not additive, shown beside the causes
+A figure that keeps a book of its own movements passes `since(sim, year)`, which
+returns the movements by cause since the snapshot of `year`; they replace `flows`.
 `figure_snapshot` records every figure once a year; `explain_figure` sets the
 live value against the latest earlier record. Whatever the named parts leave
 out is reported as its own cause, so the causes always add up to the change.
@@ -17,11 +19,11 @@ UNEXPLAINED_CAUSE = "not itemised (commands, hazards and one-off payments)"
 DEFAULT_DIGITS = 1
 
 
-def figure(name, label, unit="", digits=DEFAULT_DIGITS):
+def figure(name, label, unit="", digits=DEFAULT_DIGITS, since=None):
     """Decorator: register `compute(sim)` as the figure `name`."""
     def register(compute):
         FIGURES[name] = {"name": name, "label": label, "unit": unit,
-                         "digits": digits, "compute": compute}
+                         "digits": digits, "compute": compute, "since": since}
         return compute
     return register
 
@@ -83,6 +85,9 @@ def explain_figure(sim, name, history):
     out = {"ok": True, "name": name, "label": entry["label"], "unit": entry["unit"],
            "current": now["value"], "previous": None if before is None else before["value"],
            "previous_year": None if before is None else earlier[-1]["year"]}
+    if entry["since"]:
+        now["flows"] = {cause: _round(part, digits)
+                        for cause, part in entry["since"](sim, out["previous_year"]).items()}
     if before is None or now["value"] is None or before["value"] is None:
         out["change"] = None
         out["causes"] = _component_causes(now["components"], None) + [
@@ -98,7 +103,8 @@ def explain_figure(sim, name, history):
                for cause, part in now["flows"].items()]
     explained = sum(cause["contribution"] or 0.0 for cause in causes)
     leftover = round(change - explained, digits)
-    if abs(leftover) >= 10 ** -digits:
+    rounding = len(causes) * 10 ** -digits / 2   # each named part was rounded on its own
+    if abs(leftover) > rounding:
         causes.append({"cause": UNEXPLAINED_CAUSE, "previous": None, "current": None,
                        "contribution": leftover})
     for cause in causes:

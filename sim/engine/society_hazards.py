@@ -387,7 +387,7 @@ class HazardsMixin:
             row.pop("in_progress", None)
         return rows
 
-    def lose_capital(self, fraction):
+    def lose_capital(self, fraction, cause="losses"):
         """Destroy a fraction of what you HAVE. Never a fraction of what you owe.
 
         Multiplying `self.state.household.capital` by a fraction directly is
@@ -406,7 +406,7 @@ class HazardsMixin:
         if household.capital <= 0:
             return 0.0
         lost = household.capital * max(0.0, min(1.0, fraction))
-        household.capital -= lost
+        household.debit(lost, cause)
         return lost
 
     def _resolve_hazard_condition(self, hazard, year, hazard_start):
@@ -580,7 +580,7 @@ class HazardsMixin:
             household.directors_extra *= (1 - loss)
             self.log_staff_reduction(hazard.get("name", "a plague"), _staff_before)
             # Cash goes with the trade that stopped.
-            cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE)
+            cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE, "plague losses")
             self._apply_population_mortality_shock(raw)
             # Refresh population and wage screens now, not at year end.
             self._refresh_demographic_indexes(year)
@@ -659,7 +659,7 @@ class HazardsMixin:
         _people0 = (household.artisans + household.scholars
                     + sum(household.employees.values()))
         _act0 = len(projects.active)
-        self.lose_capital(self.SACK_CAPITAL_LOSS)
+        self.lose_capital(self.SACK_CAPITAL_LOSS, "sack and plunder")
         _staff_before = self.staff_snapshot()
         self.apply_staff_survival(self.SACK_STAFF_RETENTION)
         self.log_staff_reduction("the sack of a site", _staff_before)
@@ -796,7 +796,7 @@ class HazardsMixin:
             economy.money_real *= (1 - hazard["real_erosion"])
             bite = hazard["real_erosion"] * self.REAL_EROSION_CASH_LOSS_SHARE * relief
             had = max(0.0, household.capital)
-            self.lose_capital(bite)
+            self.lose_capital(bite, "debasement and real erosion")
             lost = had - max(0.0, household.capital)
             if not scenario._said_debasement or year - scenario._said_debasement >= 15:
                 scenario._said_debasement = year
@@ -932,7 +932,7 @@ class HazardsMixin:
             gift = self.PATRON_DEATH_COURTING_GIFT * self.price_index
             courted = self.policy.get("auto_court_heir", not self.manual)
             if courted:
-                household.capital -= gift
+                household.debit(gift, "courting a patron's heir")
             if courted:
                 msg = ("your patron dies; auto_court_heir courts his heir "
                        "afresh for %s denarii. Protection falls from %d%% to "
@@ -947,13 +947,13 @@ class HazardsMixin:
             household.log.append((year, msg + self.PATRON_DEATH_RECOVERY_NOTE))
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
-            self.lose_capital(self.FIRE_CAPITAL_LOSS)
+            self.lose_capital(self.FIRE_CAPITAL_LOSS, "fire")
             household.log.append((year, "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
                                 self._loss_words(had))))
         if rng.random() < self.BANDITRY_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
-            self.lose_capital(self.BANDITRY_CAPITAL_LOSS)
+            self.lose_capital(self.BANDITRY_CAPITAL_LOSS, "banditry")
             household.log.append((year, "banditry or a frontier war disrupts supply: "
                                  "it cost you %s" % self._loss_words(had)))
 

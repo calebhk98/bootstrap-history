@@ -291,7 +291,7 @@ class TrainingMixin:
         if refusal:
             return False, refusal
         household = self.state.household
-        household.capital -= fee
+        household.debit(fee, "hiring fee and first year's wages")
         # CARRIED FORWARD, so the next step does not bill the same year twice.
         # See step() 2, where it is netted off living_cost.
         household.wages_prepaid = (household.wages_prepaid or 0.0) + fee
@@ -478,7 +478,7 @@ class TrainingMixin:
         count, frm, hours, fee = plan["count"], plan["from"], plan["hours"], plan["fee"]
         household = self.state.household
         current_year = self.state.scenario.year
-        household.capital -= fee
+        household.debit(fee, "training fees")
         household.teaching_hours_this_year = (household.teaching_hours_this_year or 0.0) + hours
         household.trades_created.add(trade)
         household.training.append([0.0, current_year + self.TEACHING_MATURATION_YEARS, trade, float(count)])
@@ -652,7 +652,7 @@ class TrainingMixin:
         if refusal:
             return False, refusal
         household = self.state.household
-        household.capital -= fee
+        household.debit(fee, "commissioned craftsmen")
         household.contract_hours[trade] = household.contract_hours.get(trade, 0.0) + hours
         household.commissioned[trade] = household.commissioned.get(trade, 0.0) + hours
         self._add_labour_pressure(trade, hours)

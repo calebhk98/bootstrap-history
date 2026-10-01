@@ -1304,7 +1304,7 @@ class StatePressureMixin:
                                     "off yet")))
             if self.events and self.rng.random() < probability:
                 had = max(0.0, self.state.household.capital)
-                self.lose_capital(self.CONFISCATION_CAPITAL_LOSS)
+                self.lose_capital(self.CONFISCATION_CAPITAL_LOSS, "confiscation by the state")
                 lost = had - max(0.0, self.state.household.capital)
                 # lose_capital already took it from the purse; the treasury receives it
                 self.state_treasury().credit(lost, "confiscation")

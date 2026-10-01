@@ -14,7 +14,7 @@ from .util import _qty
 from .buy_targets import canonical_target, target_names, usage_lines
 from .quote_purchases import FLAT_QUOTERS
 from .quote_spending import SPENDING_QUOTERS, bounty_refusal
-from .. import purchase_rule
+from .. import cash_book, purchase_rule
 
 
 @command("bounty", group="projects",
@@ -276,6 +276,7 @@ def _cmd_money(sim, nodes, cmd, ended):
         -(_sources.get("_what_the_market_will_not_absorb") or 0.0))
     return {"ok": True,
             "capital": round(sim.capital, 1),
+            "cash_book": cash_book.book(sim),
             "revenue": round(sim.revenue(), 1),
             "where_the_money_comes_from": _sources,
             **({"where_the_market_squeeze_falls": _squeeze} if _squeeze else {}),

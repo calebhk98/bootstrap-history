@@ -24,7 +24,7 @@ class ProjectCostTailMixin:
         if tail > self.COST_TAIL_SETTLE_SHARE * self.project_cost(node_id):
             return 0.0
         household = self.state.household
-        household.capital -= tail
+        household.debit(tail, "project payments")
         household.total_spend += tail
         project_state["spent"] += tail
         project_state["cost_left"] = 0.0

@@ -349,6 +349,17 @@ def _money_header_line(out):
     return ["Capital: %s den     Revenue: %s den/yr" % (_fmt_num(out.get("capital")), _fmt_num(out.get("revenue")))]
 
 
+def _money_book_block(out):
+    book = out.get("cash_book") or {}
+    if not book.get("causes"):
+        return []
+    lines = ["Cash since the last year closed (opening %s, now %s):"
+             % (_fmt_num(book.get("opening")), _fmt_num(book.get("closing")))]
+    for cause, amount in sorted(book["causes"].items(), key=lambda item: -abs(item[1])):
+        lines.append("  %-44s %s" % (cause, _fmt_num(amount)))
+    return lines
+
+
 def _money_from_block(out):
     src = out.get("where_the_money_comes_from") or {}
     lines = []
@@ -450,6 +461,7 @@ def _money_credit_lines(out):
 def render_money(out):
     lines = ["LEDGER"]
     lines += _money_header_line(out)
+    lines += _money_book_block(out)
     lines += _money_from_block(out)
     lines += _money_wage_work_lines(out)
     lines += _money_costs_block(out)
