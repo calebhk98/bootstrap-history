@@ -13,6 +13,7 @@ from .command_registry import command
 from ..figures import FIGURES
 from .dispatch_figures import figure_reply
 from .guidance import LEVERAGE_NOTE, leverage_points
+from .saving_plan import saving_reason
 from ..market_report import goods_market_line
 from ..knowledge_warning import knowledge_loss_warning
 from ..critical_path_remaining import active_years_left, remaining_critical_path_years
@@ -397,7 +398,7 @@ def _stuck_road_to_goal(sim, nodes, _fog):
     return (None, _goal_routing_off_under_fog)
 
 
-def _stuck_started_nothing(sim, _startable, _afford):
+def _stuck_started_nothing(sim, _startable, _afford, saving=False):
     # STARTING NOTHING IS THE COMMONEST WAY TO GET NOWHERE, and this
     # command - whose whole job is "why you are not getting on" - must not
     # report "you have work in hand, money to pay for it and people to do
@@ -405,7 +406,10 @@ def _stuck_started_nothing(sim, _startable, _afford):
     if sim.active:
         return None
     _cheap = (min(_afford or _startable, key=lambda k: sim.project_cost(k))
-              if (_afford or _startable) else None)
+              if (_afford or _startable) and not saving else None)
+    if saving:
+        return {"what": "you have started nothing", "kind": "idle",
+                "why": "no project is in hand, which is what the savings plan below intends."}
     return {"what": "you have started nothing", "kind": "idle",
             "why": ("no project is in hand, so no year of yours "
                     "is being spent on one. %s"
@@ -573,10 +577,12 @@ def _cmd_stuck(sim, nodes, cmd, ended):
     # goal, having started nothing, shut ventures, nothing startable or
     # unaffordable, a binding raw material, no room for people, arrears, a
     # credit freeze.
+    _saving = saving_reason(sim)
     _checks = (
         _stuck_work_in_hand(sim, nodes),
         _goal_reason,
-        _stuck_started_nothing(sim, _startable, _afford),
+        _stuck_started_nothing(sim, _startable, _afford, saving=bool(_saving)),
+        _saving,
         _stuck_shut_ventures(sim, nodes),
         _stuck_nothing_or_money(sim, _startable, _afford),
         _stuck_raw_material(sim),
@@ -594,7 +600,7 @@ def _cmd_stuck(sim, nodes, cmd, ended):
                "people to do them" % len(sim.active)),
            "and_the_cheapest_thing_you_could_start_now": (
                min(_startable, key=lambda k: sim.project_cost(k))
-               if _startable else None)}
+               if _startable and not _saving else None)}
     if _stall:
         out["and_you_are_in_a_hole"] = _stall
     if _goal_routing_off_under_fog:
