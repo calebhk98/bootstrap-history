@@ -184,6 +184,19 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False):
     return test_sim
 
 
+def concern_needing_craftsmen_to_supervise():
+    """A concern that earns, needs no scholars, and holds more craftsmen than the founder
+    and the closure slack can cover alone (more than its build crew shown as staff_needed), so losing every hired craftsman shuts it."""
+    probe = sim()
+    for candidate_id in sorted(NODES):
+        node = NODES[candidate_id]
+        if node["rev"] > 0 and node["sch"] == 0 and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
+            scholars, craftsmen = probe.venture_hands(candidate_id)
+            if scholars == 0 and max(node["art"], probe.FOUNDER_IS_WORTH + probe.STAFFING_CLOSURE_SLACK) < craftsmen <= 5.5 and probe.venture_foreman(candidate_id)[0] is None:
+                return candidate_id
+    raise AssertionError("no concern needs craftsmen to supervise")
+
+
 def state_seeking(game, requisition=0.16, office=0.06):
     """Put the state in need: the rates it takes at full notice from the income it can see, as a
     year's shortfall would leave them. Returns the game."""

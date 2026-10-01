@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine.data import TRADE_FAMILY
 from sim.engine.proto.render_screens_big import _staffing_warning_sentences
 
-CLOSING_NODE = "cementation_steel"
+CLOSING_NODE = concern_needing_craftsmen_to_supervise()
 
 
 def staffed_sim():

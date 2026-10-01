@@ -1,7 +1,7 @@
 """closure_reasons: a closed work records why and since when, and only its own cause clears it."""
 from .harness import *  # noqa: F401,F403
 
-NODE_ID = "cementation_steel"
+NODE_ID = concern_needing_craftsmen_to_supervise()
 
 
 def staffed_sim():
