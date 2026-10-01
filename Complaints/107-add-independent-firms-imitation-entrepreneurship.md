@@ -1,6 +1,6 @@
 # Add independent firms, imitation and entrepreneurship
 
-**Status:** partly - actor model, government imitation, firm entry, shared labour pool and shared goods market built; the per-invention choice (keep secret, license, publish; the `disclose` command) built; selling patents, joint-stock companies and spin-off firms remain
+**Status:** partly - actor model, government imitation, firm entry (market-bounded: an entrant expects its share after the entrants' own supply reaches the market and must beat the market rate; Complaint 535, 550), shared labour pool and shared goods market built; the per-invention choice (keep secret, license, publish; the `disclose` command) built; selling patents, joint-stock companies and spin-off firms remain
 
 **Source:** playtest findings document, LATE-001. **Type:** Major
 roadmap-sized feature recommendation, not a fix.
