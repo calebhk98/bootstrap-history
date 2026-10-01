@@ -1,6 +1,6 @@
 # Standing `allocate` orders go stale and nag "DIRECTED HOURS UNUSED" every year
 
-**Status:** open
+**Status:** closed
 
 When a project's annual pace drops (less left to do, a calendar floor, a material shortage) an old fixed allocation keeps producing "DIRECTED HOURS UNUSED: you allocated hours to X this year that it could not use" year after year. The tester asked for either an automatic release of hours a project cannot use, or a clearer one-time reminder to clear completed or over-allocated standing orders.
 

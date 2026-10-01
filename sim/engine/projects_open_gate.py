@@ -3,7 +3,7 @@
 
 class OpenGateMixin:
 
-    def staffing_open_refusal(self, node_id, unit_count=1.0):
+    def staffing_open_refusal(self, node_id, unit_count=1.0, with_advice=True):
         """Why the people to run this concern are not free now, else None.
 
         `open` refuses with this text and `stuck` recommends only what
@@ -16,10 +16,11 @@ class OpenGateMixin:
         foreman_fte *= unit_count
         if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
             return ("nobody free to keep an eye on it: it needs %.2f "
-                    "scholars and %.2f craftsmen to supervise, and you "
-                    "have %.2f and %.2f not already watching something "
-                    "else. Hire, teach, or close something."
-                    % (need_sch, need_art, sch_free, art_free))
+                    "scholars and %.2f craftsmen to supervise (a continuous "
+                    "share of their year, not a headcount), and you have "
+                    "%.2f and %.2f not already watching something else.%s"
+                    % (need_sch, need_art, sch_free, art_free,
+                       " Hire, teach, or close something." if with_advice else ""))
         if foreman_trade and foreman_fte > self.venture_foreman_free(foreman_trade) + 0.01:
             return ("no qualified foreman is free: this concern needs "
                     "%.2f %s FTE to supervise its specialist work, and "

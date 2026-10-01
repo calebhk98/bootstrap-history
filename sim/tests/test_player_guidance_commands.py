@@ -339,6 +339,7 @@ for _p in S.closure(NODES, "lens_grinding"):
 s_can.done.add("lens_grinding")
 s_can._done_changed()
 s_can.artisans = 10.0
+s_can.employees[s_can.venture_foreman("lens_grinding")[0] or "artisan"] = 4.0
 _stuck_can = S._agent_dispatch(s_can, NODES, {"cmd": "stuck"})
 _can_reason = next((reason for reason in _stuck_can["what_is_holding_you_up"]
                    if isinstance(reason, dict)

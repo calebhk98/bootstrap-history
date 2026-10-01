@@ -1,6 +1,6 @@
 # `ventures` says machinists are scholars and cannot watch a workshop; `labour` says a machinist is craft
 
-**Status:** open
+**Status:** closed
 
 In a new Han game, `ventures` prints "Engineers, chemists and machinists are scholars here, and a scholar cannot watch a workshop. 'labour <trade>' says which of the two a trade is."
 `labour machinist` answers "TRADE: machinist (craft)"; `labour engineer` and `labour chemist` answer "(scholar)". After the tester trained two machinists the craft count rose, as `labour` said, and

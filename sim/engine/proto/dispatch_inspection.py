@@ -424,9 +424,9 @@ def _stuck_shut_ventures(sim, nodes):
                           "{:,.0f}".format(sim.venture_real_upkeep(_best)),
                           _best)}
     _best = max(_shut, key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
-    _staff_refusal = sim.staffing_open_refusal(_best, sim.opening_fee(_best)[1])
+    _staff_refusal = sim.staffing_open_refusal(_best, sim.opening_fee(_best)[1], with_advice=False)
     if _staff_refusal:
-        _why = _staff_refusal
+        _why = _staff_refusal.rstrip(".")
     else:
         _why = ("opening it costs %s denarii, and between cash "
                 "and what anyone will advance you can raise %s"
