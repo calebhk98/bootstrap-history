@@ -202,6 +202,12 @@ def trade_family(trade: str) -> str:
 # form in compact lines; both come from one place so a sentence cannot mix them.
 
 
+def money_unit_note(civ: Optional[JSONDict]) -> str:
+    """What the money amounts mean, for the start text and `help money`."""
+    return ("Amounts are in %s, but the wage behind them comes from the game's labour "
+            "market, so they will not match surviving price records." % money_word(civ))
+
+
 def money_word(civ: Optional[JSONDict]) -> str:
     civ = civ or {}
     return (civ.get("currency_words") or {}).get("long") or civ.get("currency") or "denarii"

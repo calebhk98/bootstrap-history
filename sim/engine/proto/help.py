@@ -8,6 +8,7 @@ command_registry.py); topics register with @help_topic below.
 
 import json
 
+from ..data import money_unit_note
 from ..core import Sim
 from . import command_registry
 
@@ -208,10 +209,7 @@ def _topic_money(sim):
             "about fifteen thousand a year doing nothing, which is why "
             "money sitting still is money going backwards."),
         "what you can buy": '{"cmd":"help","topic":"economy"}',
-        "the money unit": "The money unit is normalised to the opening labourer wage in "
-                          "this civilisation, not to any historical coin. Prices in the "
-                          "game are calculated from production and demand, not fitted to "
-                          "historical values.",
+        "the money unit": money_unit_note(sim.civ),
         "debt": "You may spend past what you have, as far as somebody will "
                 "lend you and no further. Arrears cost interest."}
 

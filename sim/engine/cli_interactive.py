@@ -34,7 +34,7 @@ save/load module import back from this one.
 import json, os, random, re, sys, time
 
 from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
-                   load, load_civ, load_geography, money_short, money_word,
+                   load, load_civ, load_geography, money_short, money_unit_note, money_word,
                    STARTING_KITS, win_condition_describe)
 from .core import Sim
 from . import protocol as _protocol
@@ -316,11 +316,9 @@ def _play_print_welcome(sim, kit):
     # A kit is a number of labourer-years, so it is stated here in the
     # civilisation's own money at its own opening wage.
     if kit and kit in STARTING_KITS:
-        print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %d %s. '
-                    'This money unit is normalised to the labourer wage in this civilisation, '
-                    'not to any historical coin.'
+        print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %d %s. %s'
                     % (kit, STARTING_KITS[kit]["labourer_years"], sim.capital,
-                       money_word(sim.civ))))
+                       money_word(sim.civ), money_unit_note(sim.civ))))
     print()
     # `open` BELONGS IN THE OPENING. Finishing a project earns you
     # nothing until you open its doors, auto_open ships off for a player
