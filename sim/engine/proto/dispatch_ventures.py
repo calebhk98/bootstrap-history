@@ -883,7 +883,8 @@ def _cmd_policy(sim, nodes, cmd, ended):
                                    "no standing obligation either way",
                 "auto_bribe": "pay your way out of a scandal before it kills you",
                 "auto_court_heir": "spend 800 denarii (price-adjusted) when a "
-                                   "patron dies to court the successor. Off by "
+                                   "patron dies to court the successor. By hand: "
+                                   "'bribe <amount>'. Off by "
                                    "default in manual play; on unattended",
                 "auto_shed": "let go of WORKS that cost more than they return "
                              "(this is about buildings and practices, not people)",

@@ -8,6 +8,7 @@ from ..fog import strip_self_play_advice
 from . import available_economics, tree_filters
 from .nodes import _downstream_of, _unlocked_by
 from .state import _waiting_on
+from .why_benefit import benefit_block
 from .ventures import _VENTURE_SUPERVISION_NOTE
 # DEFAULT_AVAILABLE_LIMIT is NOT imported here: cli.py patches
 # engine.protocol.DEFAULT_AVAILABLE_LIMIT directly at runtime, so
@@ -1471,4 +1472,10 @@ def _node_explain(sim, nodes, node_id):
     out.update(_explain_status(sim, nodes, node_id, node))
     out.update(_explain_active_wait(sim, nodes, node_id))
     out.update(_explain_labour_notes(sim, node))
+    benefit = benefit_block(sim, node_id)
+    if benefit:
+        out["benefit"] = benefit
+    rebuild = sim.rebuild_explanation(node_id)
+    if rebuild:
+        out["rebuild"] = rebuild
     return out

@@ -407,13 +407,13 @@ class ProgressMixin:
         if node["yrs"] >= self.DIFFUSION_LIMITED_YEARS_THRESHOLD:   # diffusion-limited nodes, not physical curing
             floor = max(self.CALENDAR_FLOOR_MIN_YEARS,
                         node["yrs"] / (1.0 + self.state.household.reputation / self.CALENDAR_FLOOR_REPUTATION_SCALE))
-        return floor
+        return floor * self.rebuild_work_factor(node_id)
 
     def payment_schedule_years(self, node_id):
         """Years the bill takes to pay in full: it is paid in equal yearly
         instalments over the node's nominal years, which reputation never
         shortens."""
-        return max(1.0, self.nodes[node_id]["yrs"])
+        return max(1.0, self.nodes[node_id]["yrs"] * self.rebuild_work_factor(node_id))
 
     def earliest_completion_years(self, node_id):
         """The soonest the project can finish, with no failure: the longer of

@@ -103,7 +103,8 @@ class AdoptionMixin:
                 self.value_weights[field] = max(
                     self.VALUE_WEIGHT_FLOOR,
                     min(self.VALUE_WEIGHT_CEILING, before + delta))
-                changed.append(field)
+                changed.append("%s %.2f -> %.2f" % (
+                    field, before, self.value_weights[field]))
             elif field in ("literacy_general", "literacy_elite", "state_capacity"):
                 before = float(self.civ.get(field, 0.0))
                 ceiling = {"literacy_elite": self.literacy_ceiling_elite,
@@ -112,14 +113,26 @@ class AdoptionMixin:
                 self.civ[field] = max(0.0, min(max(ceiling, before), before + delta))
                 if field == "state_capacity":
                     self.state_capacity = self.civ[field]
-                changed.append(field)
+                changed.append("%s %.1f%% -> %.1f%% (%+.1f points, one step)" % (
+                    field, before * 100, self.civ[field] * 100,
+                    (self.civ[field] - before) * 100))
             elif field == "population":
                 # Only the disease technologies carry this weight; the
                 # disease burden reads it live from the tree.
-                changed.append(field)
+                burden = self._disease_burden()
+                total_weight = sum(self._tech_effects[tech_id].get("population", 0.0)
+                                   for tech_id in self.DISEASE_BURDEN_TECH_IDS)
+                burden_before = (min(1.0, burden + delta / total_weight)
+                                 if total_weight > 0 and self.has(node_id)
+                                 and node_id in self.DISEASE_BURDEN_TECH_IDS else burden)
+                changed.append("population (disease burden %.2f -> %.2f of the "
+                               "pre-industrial level, which slows deaths and "
+                               "raises survival from the next year)"
+                               % (burden_before, burden))
         if changed:
-            self.state.household.log.append((self.state.scenario.year, "%s changes the society: %s"
-                             % (self.nodes[node_id]["name"], ", ".join(sorted(changed)))))
+            self.state.household.log.append((self.state.scenario.year,
+                "%s changes the society, the whole of it at once rather than one "
+                "site: %s" % (self.nodes[node_id]["name"], "; ".join(sorted(changed)))))
 
     # ---- EDUCATING A WHOLE SOCIETY, NOT JUST A HOUSEHOLD -------------------
     # A school teaches a little more every year it stays open. What limits

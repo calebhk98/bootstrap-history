@@ -912,6 +912,11 @@ class HazardsMixin:
         why="Cost of courting a dead patron's heir afresh, at this "
             "society's own price level. Invented figure, not sourced to "
             "any attested gift-giving custom.")
+    PATRON_DEATH_RECOVERY_NOTE = (
+        ". The dip lasts until the next year-end recount of protection, when "
+        "the patron's office passes to his heir and the offices and standing "
+        "you hold count again; the scandal is a one-off, not a yearly trend. "
+        "By hand, 'bribe <amount>' courts the heir and buys scandal down.")
     FIRE_ANNUAL_CHANCE = declare(
         "FIRE_ANNUAL_CHANCE", 0.03, kind="temporary_heuristic",
         unit="dimensionless (yearly probability)", source=None,
@@ -952,6 +957,9 @@ class HazardsMixin:
                 and (last_patron_death is None or year - last_patron_death > self.PATRON_DEATH_COOLDOWN_YEARS)):
             founder.last_patron_death = year
             household.scandal += self.PATRON_DEATH_SCANDAL
+            # A one-off jump is not a trend: the year's starting mark moves with it.
+            if household.scandal_last_year is not None:
+                household.scandal_last_year += self.PATRON_DEATH_SCANDAL
             was = household.protection
             household.protection *= self.PATRON_DEATH_PROTECTION_RETENTION
             gift = self.PATRON_DEATH_COURTING_GIFT * self.price_index
@@ -969,7 +977,7 @@ class HazardsMixin:
                        "auto_court_heir is off; protection falls from %d%% "
                        "to %d%% and scandal rises by %d"
                        % (was * 100, household.protection * 100, self.PATRON_DEATH_SCANDAL))
-            household.log.append((year, msg))
+            household.log.append((year, msg + self.PATRON_DEATH_RECOVERY_NOTE))
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
             self.lose_capital(self.FIRE_CAPITAL_LOSS)
