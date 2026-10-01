@@ -201,7 +201,12 @@ class NeedDemandModel:
     def __init__(self, need_data: Mapping[str, Any], production: Mapping[str, Any],
                  bins: Sequence[Any], technology_demand: Optional[Mapping[str, float]] = None,
                  substitution_elasticity: Optional[float] = None,
-                 derived_price_elasticity: Optional[float] = None):
+                 derived_price_elasticity: Optional[float] = None,
+                 satiate: bool = False):
+        # `satiate` limits a need that declares a per-head limit to it. The price solver leaves it
+        # off (a limit would make the clearing price of a glutted metal collapse); the quantities
+        # households actually buy turn it on.
+        self.satiate = satiate
         self.needs = dict(need_data["needs"])
         self.production = production
         self.bins = list(bins)
@@ -301,8 +306,9 @@ class NeedDemandModel:
             need_units[good.name] += (
                 good.subsistence_quantity_per_capita_per_year * covered_population
                 + good.marginal_budget_share / price_index[good.name] * covered_surplus)
-        apply_satiation(need_units, price_index, self.needs,
-                        sum(income_bin.population for income_bin in self.bins))
+        if self.satiate:
+            apply_satiation(need_units, price_index, self.needs,
+                            sum(income_bin.population for income_bin in self.bins))
         quantities: Dict[str, float] = collections.defaultdict(float)
         for need_id, materials in active.items():
             spending = price_index[need_id] * need_units[need_id]

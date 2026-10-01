@@ -29,7 +29,7 @@ def needs(satiation):
 
 def demand_at(silver_price, satiation):
     model = need_demand.NeedDemandModel(
-        needs(satiation), PRODUCTION, demand.income_bins(POPULATION, MEAN_INCOME))
+        needs(satiation), PRODUCTION, demand.income_bins(POPULATION, MEAN_INCOME), satiate=True)
     prices = {"wheat_kg": 0.5, "tool_kg": 5.0, "silver_kg": silver_price}
     return model.final_demand(prices), prices
 
