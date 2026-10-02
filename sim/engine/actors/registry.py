@@ -272,6 +272,9 @@ class ActorRegistry:
 		self._acting = None
 		self.consider_entry(world)
 		self.consider_groups(world)
+		# entry and group formation change staff after the last count; whatever reads before the next
+		# year's first actor (the founder's own turn) sees what is there, as a reloaded game does
+		self.refresh_staff()
 		self._bans = None
 
 	def consider_entry(self, world: Any) -> List[str]:
