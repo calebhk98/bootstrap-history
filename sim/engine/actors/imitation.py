@@ -85,7 +85,7 @@ def work_year(actor: Any, node_id: str, work: Dict[str, Any], world: Any) -> boo
 	want = min(step, 1.0 - work["progress"])
 	cost = want * (work["money"] + work["labour_cost"])
 	if cost > 0:
-		affordable = min(1.0, max(0.0, actor.money) / cost)
+		affordable = min(1.0, actor.spendable(world) / cost)
 	else:
 		affordable = 1.0
 	done = want * affordable

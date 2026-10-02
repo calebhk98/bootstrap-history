@@ -14,6 +14,7 @@ from .tuning import EXIT_LOSS_YEARS, VALUE_HORIZON_YEARS
 
 class Firm(ExpansionMixin, RecordedActor):
 	kind = "firm"
+	borrows_for_copies = True
 
 	# Set by the registry: how many other operators share a concern's market.
 	rivals_of: Optional[Callable[[str, str], float]] = None

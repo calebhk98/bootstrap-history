@@ -109,10 +109,10 @@ class Actor(Borrower):
 		return 0.0
 
 	def copy_budget(self, world: Any) -> float:
-		"""Money it will commit to new copies this year."""
+		"""Money it will commit to new copies this year: its purse and what it may still borrow."""
 		committed = sum((1.0 - work["progress"]) * (work["money"] + work["labour_cost"])
 						for work in self.works.values())
-		return max(0.0, self.money - committed)
+		return max(0.0, self.spendable(world) - committed)
 
 	# ---- imitation --------------------------------------------------------
 	def imitation_candidates(self, world: Any) -> List[str]:

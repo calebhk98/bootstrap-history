@@ -295,7 +295,7 @@ class ActorRegistry:
 						 - world.upkeep(node_id) - world.concern_wage_bill(node_id))
 			if expected <= 0:
 				continue
-			probe = Firm("probe", ActorRecord(kind="firm"))
+			probe = Firm("probe", ActorRecord(kind="firm", last_margin=expected, founded_year=world.year))
 			chain = imitation.missing_chain(node_id, world, probe)
 			if not chain:
 				continue
@@ -303,13 +303,18 @@ class ActorRegistry:
 			chance = imitation.copy_chance(chain, world)
 			worth = expected * VALUE_HORIZON_YEARS * chance
 			stake = plan["total"] * ENTRY_STAKE_BUFFER
-			if worth <= plan["total"] or expected * chance <= stake * capital_rate or stake > capital_limit:
+			pooled = min(stake, capital_limit)
+			borrowed = stake - pooled  # the rest of the stake is raised as credit, on what the entrant expects to earn
+			if borrowed > probe.spare_credit(world):
+				continue
+			capital_cost = pooled * capital_rate + (borrowed * probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
+			if worth <= plan["total"] or expected * chance <= capital_cost:
 				continue
 			firm_id = "firm:%d" % (len(self.state.records) + 1)
 			founded_firm = self.add(firm_id, ActorRecord(
 				kind="firm", name=firm_id, target=node_id,
 				last_margin=expected, founded_year=world.year))
-			founded_firm.credit(stake, "pooled capital")
+			founded_firm.credit(pooled, "pooled capital")
 			waiting[key] = waiting.get(key, 0) + 1
 			founded.append(firm_id)
 		return founded

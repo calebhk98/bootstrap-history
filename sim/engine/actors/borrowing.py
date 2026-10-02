@@ -47,6 +47,24 @@ class Borrower:
 		room = world.credit_headroom(self.identity())  # type: ignore[attr-defined]
 		return carried if room is None else min(carried, room)
 
+	def spare_credit(self, world: Any) -> float:
+		"""What the actor may still borrow: its ceiling less what it already owes."""
+		return max(0.0, self.credit_ceiling(world) - self.debt())
+
+	# Whether the actor pays for copies on credit; a firm does, a state and a household keep to their purse.
+	borrows_for_copies = False
+
+	def spendable(self, world: Any) -> float:
+		"""The purse above zero, and what may still be borrowed if the actor borrows for copies."""
+		purse = max(0.0, self.money)  # type: ignore[attr-defined]
+		return purse + self.spare_credit(world) if self.borrows_for_copies else purse
+
+	def rate_on_loan(self, world: Any, amount: float) -> float:
+		"""The rate on `amount` borrowed on top of what the actor owes, by the share of the ceiling it then uses."""
+		ceiling = self.credit_ceiling(world)
+		used = (self.debt() + amount) / ceiling if ceiling > 0.0 else 1.0
+		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
+
 	def borrowing_rate(self, world: Any) -> float:
 		debt = self.debt()
 		used = 0.0
