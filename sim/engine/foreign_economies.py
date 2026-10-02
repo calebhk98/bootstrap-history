@@ -104,7 +104,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
             return cached[1]
         civilization = load_civ(civilization_id)
         coin = civilization["coin_standard"]
-        coin_price = prices.get(coin["material"])
+        coin_price = self._coin_metal_price(coin["material"])
         foreign_prices = {}
         if coin_price:
             home_money_per_coin = coin["kg_per_unit"] * coin_price
@@ -232,7 +232,6 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
                 partners.append((facts["freight_per_tonne"], civilization_id, facts, pair))
         flows = []
         unmet = self.household.__dict__.setdefault("_foreign_unmet_tonnes", {})
-        home_level = self.home_price_level()
         for freight, civilization_id, facts, (home_price, foreign_price) in sorted(
                 partners, key=lambda partner: partner[:2]):
             home_makes = self._foreign_sides(commodity, facts)[0]
@@ -251,7 +250,6 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
                 home_conditions = dataclasses.replace(
                     home_conditions, society_capacity_tonnes=0.0, stock_tonnes=0.0,
                     household_demand_at_anchor_tonnes=home_demand)
-            home_price *= home_level
             foreign_price *= self.partner_price_level(civilization_id)
             foreign_conditions = self._foreign_conditions(entry, home_conditions)
             lift_in, lift_out = self.foreign_lift_left_tonnes(civilization_id, facts["route"])
@@ -310,7 +308,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         if flow > 0.0:
             return flow * foreign_price * self.partner_price_level(civilization_id) \
                 * foreign_outcome.price_ratio
-        return -flow * home_price * self.home_price_level() * home_entry.get("price_ratio", 1.0)
+        return -flow * home_price * home_entry.get("price_ratio", 1.0)
 
     def _pay_for_flow(self, civilization_id, commodity, flow, home_entry, foreign_outcome, facts):
         """Settle a commodity's flow in coin at the price of the side that ships it."""
@@ -318,7 +316,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         if value is None:
             return
         coin = load_civ(civilization_id)["coin_standard"]
-        coin_price = self._material_prices().get(coin["material"])
+        coin_price = self._coin_metal_price(coin["material"])
         if coin_price:
             self._settle_flow(civilization_id, flow, value, coin["kg_per_unit"] * coin_price)
 

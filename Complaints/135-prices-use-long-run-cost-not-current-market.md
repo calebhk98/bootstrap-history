@@ -1,6 +1,6 @@
 # Prices use long-run cost, not the current market
 
-**Status:** partly - a yearly material market now moves each price around its long-run cost (sim/world/market.py, sim/engine/market_clearing.py); coin revaluation, build-decision amortisation and the goods market remain
+**Status:** partly - a yearly material market moves each price around its cost (sim/world/market.py, sim/engine/market_clearing.py), the market now clears producers' offers each at its own cost (Complaint 375) and one coin stock revalues every price (Complaint 338); build-decision amortisation remains
 
 ## What is wrong
 
@@ -62,3 +62,7 @@ market and wages do not use this clearing; a material's own deposits and a
 mine's output feed supply only through what the founder sells.
 
 Related: 102, 326, 338, 359, 364.
+
+## Update (Complaint 375)
+
+The price a good clears at is no longer one solved long-run cost for the society: each producer offers at the cost of the entry it runs and the market clears the offers against demand. The solver gives the incumbents' cost, the cost of one entry for a producer, and a baseline for a good nobody yet makes. A mine's amortised cost still enters through the solver's cost of the entry; a producer that has sunk its capital selling below the full cost (the floor) is the existing floor ratio, not yet each producer's own running cost.

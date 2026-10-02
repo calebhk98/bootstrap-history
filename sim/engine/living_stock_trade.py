@@ -64,7 +64,7 @@ class LivingStockTradeMixin:
         self.goods_market.settle_import(
             buyer, self._stock_key(quote["material"]), quote["tonnes"], quote["cost"], "stock bought abroad")
         coin = load_civ(quote["partner"])["coin_standard"]
-        coin_price = self._material_prices().get(coin["material"])
+        coin_price = self._coin_metal_price(coin["material"])
         if coin_price:
             self._settle_flow(quote["partner"], quote["tonnes"], quote["cost"],
                               coin["kg_per_unit"] * coin_price)

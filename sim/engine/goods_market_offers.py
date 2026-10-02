@@ -2,8 +2,8 @@
 
 A good is offered by a modelled seller or it cannot be had. The sellers are the home society (a
 technique it holds, or one within reach of what it holds) and a trading partner (priced at what it
-costs the partner, the freight and the merchants' terms). A good neither offers is priced by the
-solver only "as if every technology were held" (`sim/engine/prices.py`, provenance "mature"); the
+costs the partner, the freight and the merchants' terms). A good neither offers is priced only "as if
+every technology were held" (provenance "mature"); the
 founder's own quote and the cost of a project that needs it still read that figure, but households
 are given no price for it, so the need it served draws no spending on it.
 

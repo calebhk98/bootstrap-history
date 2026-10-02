@@ -65,16 +65,28 @@ class ForeignPaymentsMixin:
         workers = self._opening_population() / people_fed_per_worker()
         return balance_of_payments.opening_stock_units(workers, wage_per_year)
 
+    def _home_opening_coin_units(self):
+        """Coin the society opened with, at the opening's money (not today's price level)."""
+        opening = self.__dict__.get("_opening_coin_value")
+        if opening is None:
+            opening = self._opening_coin_value = self._opening_coin_units(
+                self._opening_wage_schedule().opening_money_per_labour_hour * HOURS_PER_WORKER_YEAR)
+        return opening
+
     def home_coin_stock_units(self):
         """Coin this society holds: its opening stock plus what trade has brought in."""
-        opening = self._opening_coin_units(self.money_per_labour_hour() * HOURS_PER_WORKER_YEAR)
-        return opening + sum(ledger["home_coin_units"]
-                             for ledger in self.state.economy.foreign_ledger.values())
+        return self._home_opening_coin_units() + sum(
+            ledger["home_coin_units"] for ledger in self.state.economy.foreign_ledger.values())
 
     def home_price_level(self):
-        """Traded-price level of this society against its opening one."""
-        opening = self._opening_coin_units(self.money_per_labour_hour() * HOURS_PER_WORKER_YEAR)
-        return balance_of_payments.price_level(self.home_coin_stock_units(), opening)
+        """Price level of this society against its opening one: its coin stock against the opening's, the
+        level of every good and wage in the home money, traded or not."""
+        held = self.__dict__.get("_price_level_held")
+        if held is not None:
+            return held
+        opening = self.__dict__.get("_opening_coin_value") or self._home_opening_coin_units()
+        stock = opening + sum(ledger["home_coin_units"] for ledger in self.state.economy.foreign_ledger.values())
+        return balance_of_payments.price_level(stock, opening)
 
     def _partner_coin_opening_units(self, civilization_id):
         return _partner_opening_units(civilization_id)

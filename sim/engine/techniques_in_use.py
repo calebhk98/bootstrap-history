@@ -1,26 +1,32 @@
-"""The techniques some producer in the society actually runs, which is what the goods' prices follow.
+"""The techniques some producer in the society actually runs.
 
 A technology that is held (researched, copied) but run by no producer changes no cost and no supply, so it
 changes no price. The set is the techniques the society started with, the nodes the founder operates, and
-the nodes any firm's concerns run. The price solver is asked about this set, not about everything held.
+the nodes any firm's concerns run. It decides which entries a concern may run (concern_volume.py) and the
+baseline for a good no incumbent makes (incumbent_prices.py); it does not set a price: each producer offers at
+the cost of its own entry (producer_costs.py) and the market clears the offers.
 
-TEMPORARY HEURISTIC (CLAUDE.md 4.4): a technique counts for every producer of the good as soon as one
-producer runs it (copying inside a line of business is instant); a per-producer technique, with cost from
-what that producer runs and supply from what it makes, would replace the solved long-run price as the anchor.
+TEMPORARY HEURISTIC (CLAUDE.md 4.4): a technique counts for every concern in the line of business as soon as
+one producer runs it (copying inside a line of business is instant); a producer-by-producer set would replace it.
 """
 
 
 class TechniquesInUseMixin:
 
-    def price_epoch(self):
-        """Changes whenever the techniques in use might: for caches whose answers read prices."""
+    def techniques_epoch(self):
+        """Changes whenever the techniques in use might."""
         projects = self.state.projects
         return (getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
                 self.actor_market_version())
 
+    def price_epoch(self):
+        """Changes whenever the techniques in use might, or the price level does: for caches whose
+        answers read prices."""
+        return self.techniques_epoch() + (self.home_price_level(),)
+
     def techniques_in_use(self):
         """Nodes whose production entries some producer runs now."""
-        epoch = self.price_epoch()
+        epoch = self.techniques_epoch()
         cached = getattr(self, "_techniques_in_use_cache", None)
         projects = self.state.projects
         if (cached is not None and cached[0] == epoch and cached[2] is projects.done
@@ -31,5 +37,7 @@ class TechniquesInUseMixin:
             for firm in self.actors.active_firms():
                 in_use.update(firm.concerns)
         in_use = frozenset(in_use)
+        if cached is not None and cached[1] == in_use:
+            in_use = cached[1]      # the same set stays the same object, so what is keyed on it holds
         self._techniques_in_use_cache = (epoch, in_use, projects.done, projects.operating)
         return in_use

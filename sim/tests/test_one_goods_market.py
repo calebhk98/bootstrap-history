@@ -80,9 +80,12 @@ check("...and the market counts it as the actors' supply",
       furnace_game.market_state(FURNACE_MATERIAL)["actor_supply_tonnes"] > 0.0
       and abs(furnace_game.actor_supply(FURNACE_MATERIAL) - sold_by_firm) < 1e-9,
       (furnace_game.market_state(FURNACE_MATERIAL)["actor_supply_tonnes"], sold_by_firm))
-check("...so the firm's output lowers the price the market posts",
-      furnace_game.market_price_ratio(FURNACE_MATERIAL) < no_firm.market_price_ratio(FURNACE_MATERIAL),
+check("...so the firm's output, offered at what it costs the firm, does not raise the price the market posts",
+      furnace_game.market_price_ratio(FURNACE_MATERIAL) <= no_firm.market_price_ratio(FURNACE_MATERIAL) + 1e-6,
       (furnace_game.market_price_ratio(FURNACE_MATERIAL), no_firm.market_price_ratio(FURNACE_MATERIAL)))
+check("...and the market sells at least as much of it",
+      furnace_game._market_outcome(furnace_game._material_tag(FURNACE_MATERIAL)[0])[1].quantity_traded_tonnes
+      >= no_firm._market_outcome(no_firm._material_tag(FURNACE_MATERIAL)[0])[1].quantity_traded_tonnes * (1.0 - 1e-6))
 furnace_world = SimWorld(furnace_game)
 furnace_node = furnace_game.nodes["blast_furnace"]
 check("the furnace is not a goods-category concern, so its takings carry only the output market factor",

@@ -1,6 +1,6 @@
-"""Complaints 369, 370: a concern's volume follows the production entries its society holds, its takings
-follow the price its goods clear at, wider adoption lowers that price, household income follows productivity
-and the wage, and a good offered after the opening becomes demand when a need it serves exists."""
+"""Complaints 369, 370, 375: a concern's volume follows the production entries its society holds, its takings
+follow the price its goods clear at, wider adoption lowers that price, household income follows the wage and
+output per head, and a good offered after the opening becomes demand when a need it serves exists."""
 from .harness import *  # noqa: F401,F403
 
 import copy
@@ -45,17 +45,6 @@ def staff_bound_node(game):
     raise AssertionError("no staff-bound node")
 
 
-def clearing_net(game, node_id):
-    """Net sales of the concern's baskets at the price the goods market clears at, in money."""
-    baskets = game.concern_baskets_now(node_id)
-    prices = game._material_prices()
-
-    def clears(material):
-        return prices[material] * game.market_price_ratio(material)
-    return (sum(quantity * clears(material) for material, quantity in baskets.outputs.items())
-            - sum(quantity * clears(material) for material, quantity in baskets.purchases.items()))
-
-
 def takings(game, node_id):
     return game.concern_takings(node_id, 1.0) * game.node_output_market_factor(game.nodes[node_id])
 
@@ -91,13 +80,13 @@ try:
               for material in SimWorld(game).materials_made_by(node_id))
           >= SimWorld(twin).concern_output_tonnes(node_id, next(iter(game.concern_baskets_now(node_id).outputs)),
                                                   game.state.scenario.year, 1.0))
-    expected = clearing_net(game, node_id) / clearing_net(twin, node_id)
     got = takings(game, node_id) / takings(twin, node_id)
-    check("a concern's takings are its volume times the price the goods market clears at",
-          abs(got - expected) <= 1e-9 * max(1.0, abs(expected)), (got, expected))
-    cheaper = [material for material in game.concern_baskets_now(node_id).outputs
-               if game._material_prices()[material] < twin._material_prices()[material]]
-    check("...and the technique has cheapened what it makes", bool(cheaper))
+    check("a concern's takings rise with its volume, at the price the market clears at",
+          got > 1.5 * game.node_output_market_factor(game.nodes[node_id]) / twin.node_output_market_factor(
+              twin.nodes[node_id]), got)
+    check("...and the technique run by one producer leaves the incumbents' cost of every good they make alone",
+          all(game._material_prices()[material] == price for material, price in twin._material_prices().items()
+              if twin.material_price_basis(material) == "solved"))
 finally:
     price_solver.reset_caches_for_tests()
 
@@ -130,9 +119,14 @@ try:
     check("household real income does not rise with a technique nobody runs",
           abs(game.household_real_income_ratio() - 1.0) < 1e-9)
     run(game, unused)
-    check("household real income rises with productivity", game.household_real_income_ratio() > 1.0001,
-          game.household_real_income_ratio())
-    check("...and households buy more of what got cheaper", game.household_demand_ratio("fat_kg") > demand_before)
+    check("household real income does not rise because one producer runs a cheaper entry: the incumbents' "
+          "cost is not repriced", abs(game.household_real_income_ratio() - 1.0) < 1e-9)
+    commodity = game._material_tag("fat_kg")[0]
+    traded_before = game._market_outcome(commodity)[1].quantity_traded_tonnes
+    game.goods_market.note_sale("cheap_firm", commodity, game._market_entry(commodity)["reference_tonnes"] * 0.5,
+                                game.entry_cost_ratio("_cheaper_fat", "fat_kg"))
+    check("...but the market sells more of what that producer makes cheaper",
+          game._market_outcome(commodity)[1].quantity_traded_tonnes > traded_before)
     income_before = game.household_income_hours_per_capita()
     demand_before = game.household_demand_ratio("fat_kg")
     game._apply_population_mortality_shock(0.3)

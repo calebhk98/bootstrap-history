@@ -120,3 +120,5 @@ actors produce goods; demand elasticity and capacity adjustment are labelled
 heuristics.
 
 Related: 135, 359, 364.
+
+Update (Complaint 375): the clearing is now per producer (each offer at its own cost, a producer above the clearing price sells nothing), which is the supply half of a demand loop; households' income still is not closed on what producers pay.

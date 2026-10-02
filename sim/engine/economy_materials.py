@@ -32,9 +32,8 @@ apply here exactly as they do everywhere else in the engine, regardless
 of which file a method lives in.
 
 THE CACHES. _commodity_ledger() and _material_commodity_map() cache their
-immutable catalogues on MaterialSupplyMixin. _material_prices() is different:
-it caches calculator output on each Sim, keyed by completed technologies,
-because completing a production gate can change the computed price vector.
+immutable catalogues on MaterialSupplyMixin. _material_prices() (incumbent_prices.py) is
+different: it caches calculator output on each Sim.
 
 TRAP: the literal class name in that getattr/setattr MUST match whatever
 class actually holds the two shared catalogue methods. If they are ever moved
@@ -266,35 +265,6 @@ class MaterialSupplyMixin:
                     cached[material_key] = commodity_id
             MaterialSupplyMixin._material_commod_map_cache = cached
         return cached
-
-    def _material_prices(self):
-        """Calculator-backed prices for the techniques some producer runs (techniques_in_use.py): a
-        technology that is held but run by no one changes no cost, so no price.
-
-        The cache belongs to this simulation and is keyed by the techniques in use because a producer
-        starting to run a production gate can make another recipe solvable.  ``data.calculated_goods_prices``
-        still has a documented legacy fallback for materials the calculator cannot yet resolve."""
-        in_use = self.techniques_in_use()
-        cached = getattr(self, "_material_prices_cache", None)
-        if cached is not None and cached[0] == in_use:
-            return cached[1]
-        from .data import calculated_goods_prices
-        prices = calculated_goods_prices(
-            in_use, civilization_id=self.civ.get("id"), civilization=self.civ,
-            money_per_labour_hour=self.money_per_labour_hour())
-        self._material_prices_cache = (in_use, prices)
-        return prices
-
-    def material_price_basis(self, material):
-        """"solved" (a technique a producer here runs), "gated" (one nobody runs yet), "mature" (nothing
-        in reach makes it) or None (not priced by the solver)."""
-        held = self.techniques_in_use()
-        cached = getattr(self, "_material_basis_cache", None)
-        if cached is None or cached[0] != held:
-            from .data import goods_provenance
-            cached = self._material_basis_cache = (
-                held, goods_provenance(held, civilization_id=self.civ.get("id"), civilization=self.civ))
-        return cached[1].get(material)
 
     def _done_memo(self, name, key, compute):
         """`compute()` remembered per (name, key) while the done set and the techniques in use are

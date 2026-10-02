@@ -2,11 +2,11 @@
 
 Each commodity has a book entry: the society's producing capacity, stock held
 over, and the capacity it started with. The year's posted price ratio (spot
-price over the long-run cost the solver gives) comes from `sim/world/market.py`,
-clearing that capacity, the actors' output and stock against household demand
+price over the incumbents' cost, incumbent_prices.py) comes from `sim/world/market.py`,
+clearing that capacity, the stock, the producers' offers (each at its own cost, from
+the entry it runs; producer_costs.py) and the actors' output against household demand
 (population and income, see market_demand.py). Quotes and purchase bills
-multiply their long-run price by this ratio; the long-run price itself is
-untouched and stays the anchor.
+multiply the incumbents' price by this ratio.
 
 Everyone who buys or sells goes through `Sim.goods_market` (goods_market_api.py),
 which writes the year's flows by party. The founder's own workings enter as a
@@ -41,7 +41,7 @@ class MarketClearingMixin:
         if not flows or flows.get("year") != year:
             previous = flows or {}
             flows = economy.market_flows = {"year": year, "drawn": {}}
-            for kind in ("bought", "sold"):
+            for kind in ("bought", "sold", "reservation"):
                 standing = {commodity: {party: tonnes for party, tonnes in parties.items() if party != FOUNDER}
                             for commodity, parties in (previous.get(kind) or {}).items()}
                 flows[kind] = {commodity: parties for commodity, parties in standing.items() if parties}
@@ -73,19 +73,22 @@ class MarketClearingMixin:
         return entry
 
     def _market_flow_figures(self, commodity, with_flows):
-        """(committed demand, founder sales, actors' supply, actors' demand) from this year's flows.
-        The founder's own orders count only `with_flows`; every other party's always do."""
+        """(committed demand, founder sales, supply of sellers who take any price, actors' demand, offers
+        of producers who name their cost) from this year's flows and the concerns running. The founder's
+        own orders count only `with_flows`; every other party's always do."""
         market_api = self.goods_market
         committed = founder_sales = 0.0
         if with_flows:
             committed = (market_api.bought_tonnes(commodity, FOUNDER)
                          + market_api.drawn_tonnes(commodity))
             founder_sales = market_api.sold_tonnes(commodity, FOUNDER)
-        return (committed, founder_sales, market_api.others_sold_tonnes(commodity),
-                market_api.others_bought_tonnes(commodity))
+        offers = market_api.others_offers(commodity)
+        price_takers = market_api.others_sold_tonnes(commodity) - sum(offer.tonnes for offer in offers)
+        return (committed, founder_sales, max(0.0, price_takers), market_api.others_bought_tonnes(commodity),
+                offers + self.founder_concern_offers(commodity))
 
     def _market_conditions(self, commodity, entry, with_flows):
-        committed, founder_sales, actor_supply, actor_demand = self._market_flow_figures(
+        committed, founder_sales, actor_supply, actor_demand, offers = self._market_flow_figures(
             commodity, with_flows)
         record = self._commodity_ledger().commodities.get(commodity) or {}
         return market.MarketConditions(
@@ -94,7 +97,7 @@ class MarketClearingMixin:
             committed_demand_tonnes=committed,
             society_capacity_tonnes=entry["capacity_tonnes"],
             actor_supply_tonnes=actor_supply,
-            actor_demand_tonnes=actor_demand,
+            actor_demand_tonnes=actor_demand, offers=offers,
             founder_sales_tonnes=founder_sales,
             stock_tonnes=entry["stock_tonnes"],
             floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),
@@ -159,7 +162,8 @@ class MarketClearingMixin:
             "founder_purchases_tonnes": (self.goods_market.bought_tonnes(commodity, FOUNDER)
                                         + self.goods_market.drawn_tonnes(commodity)),
             "founder_sales_tonnes": closing_conditions.founder_sales_tonnes,
-            "actor_supply_tonnes": conditions.actor_supply_tonnes,
+            "actor_supply_tonnes": conditions.actor_supply_tonnes + sum(
+                offer.tonnes for offer in self.goods_market.others_offers(commodity)),
             "actor_demand_tonnes": conditions.actor_demand_tonnes,
             "society_sales_tonnes": closing.society_sales_tonnes,
             "displaced_by_founder_tonnes":
@@ -178,8 +182,18 @@ class MarketClearingMixin:
             self._market_entry(self._material_tag(material)[0])
 
     def _step_market(self):
-        """Close the year: capacity follows the price, unsold goods carry on."""
+        """Close the year: capacity follows the price, unsold goods carry on. Every commodity clears at the
+        price level the year opened with; the coin the year's trade moves counts from the next year."""
         self._open_market_book()
+        self._price_level_held = self.home_price_level()
+        try:
+            self._close_commodities()
+        finally:
+            self._price_level_held = None
+        self.foreign_fleet_year_end()
+        self._close_real_output()
+
+    def _close_commodities(self):
         book = self.state.economy.market_book
         for commodity in sorted(book):
             entry = book[commodity]
@@ -196,5 +210,3 @@ class MarketClearingMixin:
             entry["traded_tonnes"] = outcome.quantity_traded_tonnes
             wanted = outcome.quantity_traded_tonnes + outcome.unmet_demand_tonnes
             entry["cleared_share"] = outcome.quantity_traded_tonnes / wanted if wanted > 0.0 else 1.0
-        self.foreign_fleet_year_end()
-        self._close_real_output()
