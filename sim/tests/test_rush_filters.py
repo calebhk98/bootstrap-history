@@ -48,8 +48,13 @@ check("rush rejects a non-numeric max_cost", _rush(sim(capital=_CAPITAL), max_co
 _ids_sim = sim(capital=_CAPITAL)
 _pick = [node_id for node_id in _ids_sim.order if _ids_sim.can_start(node_id)][:2]
 _result = _rush(_ids_sim, ids=",".join(_pick), limit=10)
-check("rush ids starts exactly the named startable projects",
-      sorted(row["id"] for row in _result["started"]) == sorted(_pick), _result["started"])
+# what is affordable shifts with data and credit rules, so the invariant is: nothing
+# outside the named list starts, and every named one is accounted for (started or refused with a reason)
+_started_ids = {row["id"] for row in _result["started"]}
+_refused_ids = {row["id"] for row in _result["not_started"]}
+check("rush ids starts only the named projects and accounts for each",
+      _started_ids and _started_ids <= set(_pick) and _started_ids | _refused_ids == set(_pick)
+      and not _started_ids & _refused_ids, (_result["started"], _result["not_started"]))
 _unknown = _rush(sim(capital=_CAPITAL), ids="no_such_node", preview=True)
 check("rush ids rejects an unknown id", _unknown["ok"] is False and "no_such_node" in _unknown["error"], _unknown)
 

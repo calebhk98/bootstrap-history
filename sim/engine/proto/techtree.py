@@ -625,6 +625,14 @@ def _digest_leverage_and_cheap(sim, nodes, startable):
     return leverage, cheap
 
 
+def _digest_row(sim, nodes, node_id, fog):
+    """A startable row for the digest: the paged list (`limit`, `all`) keeps the
+    calendar-floor detail the digest table never shows."""
+    row = _startable_row(sim, nodes, node_id, fog)
+    row.pop("nominal_calendar_floor_before_reputation", None)
+    return row
+
+
 def _digest_stack_caution(sim, leverage):
     """SAID ONCE, THE FIRST TIME THIS LIST IS EVEN LOOKED AT - not on every
     `available`, which would bury it in noise by the tenth call. "MOST
@@ -688,11 +696,11 @@ def _digest_reply(sim, nodes, startable, fog, DEFAULT_AVAILABLE_LIMIT,
            # renders and that `why` exists to give you properly. The digest's
            # job is to help you choose which `why` to run, and it has a size
            # budget precisely so that it stays a digest.
-           "cheapest_six": [_startable_row(sim, nodes, node_id, fog) for node_id in cheap],
+           "cheapest_six": [_digest_row(sim, nodes, node_id, fog) for node_id in cheap],
            # _brief, not _full_entry: the table renders only the columns, and a
            # second block of fog summaries pushed the reply past the size a
            # reply is allowed to be. See the wall-of-text check.
-           "most_rests_on_these": [_startable_row(sim, nodes, node_id, fog)
+           "most_rests_on_these": [_digest_row(sim, nodes, node_id, fog)
                                    for node_id in leverage],
            "to_see_more": {
                "one subject": '{"cmd":"available","subject":"metallurgy"}',
