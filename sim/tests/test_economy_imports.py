@@ -1,5 +1,5 @@
 """The economy package stays standalone: it imports sim.world, sim.constants and itself, never sim.engine,
-and only sim/engine/economy_port.py imports it from the engine."""
+and only the port (sim/engine/economy_port*.py) imports it from the engine."""
 import ast
 import os
 import unittest
@@ -7,7 +7,7 @@ import unittest
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ECONOMY_DIR = os.path.join(ROOT, "sim", "economy")
 ENGINE_DIR = os.path.join(ROOT, "sim", "engine")
-ALLOWED_ENGINE_IMPORTERS = {"economy_port.py"}
+ALLOWED_ENGINE_IMPORTERS = {"economy_port.py", "economy_port_setup.py"}
 
 
 def imported_modules(path):

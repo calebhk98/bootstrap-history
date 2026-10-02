@@ -44,7 +44,7 @@ def quantity_at(bid: Bid, price: float) -> float:
     """What the buyer wants at a price: floor plus a price-sensitive part, capped by what it can pay.
     At a price of zero or below the budget cap cannot be taken and the schedule's uncapped limit
     (floor plus flexible) is returned."""
-    if bid.budget <= 0.0:
+    if bid.budget <= 0.0 or price > bid.maximum_price:
         return 0.0
     if price <= 0.0:
         return bid.floor_quantity + bid.flexible_quantity

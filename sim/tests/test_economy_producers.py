@@ -55,19 +55,21 @@ def farm_view(grain_price, **changes):
 
 
 class PlanTests(unittest.TestCase):
-    def test_idles_below_variable_cost_and_resumes_when_the_price_rises(self):
+    def test_fewer_workplaces_work_below_variable_cost_and_more_as_the_price_rises(self):
+        far_below = producers.plan(farmer(), FARM, farm_view(0.1), 1000.0)  # revenue 1 against cost 7
+        self.assertLess(far_below.runs, 1e-6)
         low = producers.plan(farmer(), FARM, farm_view(0.6), 1000.0)         # revenue 6 < cost 7
-        self.assertEqual(low.runs, 0.0)
-        self.assertEqual((low.bids, low.labour_bids), ((), ()))
+        self.assertLess(low.runs, 5.0)
         high = producers.plan(farmer(), FARM, farm_view(0.8), 1000.0)
-        self.assertEqual(high.runs, 10.0)
+        self.assertGreater(high.runs, low.runs)
+        self.assertLess(high.runs, 10.0)
 
     def test_orders_follow_the_plan_and_budgets_stay_within_cash(self):
         plan = producers.plan(farmer(), FARM, farm_view(2.0), 100.0)         # 7 a run: cash allows 14, cap 10
-        self.assertEqual(plan.runs, 10.0)
-        self.assertEqual(plan.bids[0].floor_quantity, 20.0)
-        self.assertEqual(plan.labour_bids[0].hours, 50.0)
-        self.assertAlmostEqual(plan.labour_bids[0].maximum_wage, (20.0 - 2.0) / 5.0)
+        self.assertAlmostEqual(plan.runs, 10.0, places=2)                    # nearly every workplace pays
+        self.assertAlmostEqual(plan.bids[0].floor_quantity, 2.0 * plan.runs)
+        self.assertAlmostEqual(plan.labour_bids[0].hours, 5.0 * plan.runs)
+        self.assertGreaterEqual(plan.labour_bids[0].maximum_wage, (20.0 - 2.0) / 5.0 - 1e-9)
         spent = sum(bid.budget for bid in plan.bids) + plan.runs * 5.0
         self.assertLessEqual(spent, 100.0 + 1e-9)
 
@@ -81,12 +83,14 @@ class PlanTests(unittest.TestCase):
 
     def test_cobweb_output_follows_last_years_price_not_this_years(self):
         expecting_high = farmer(expected_prices={"grain": 2.0})
-        self.assertEqual(producers.plan(expecting_high, FARM, farm_view(0.1), 1000.0).runs, 10.0)
+        self.assertGreater(producers.plan(expecting_high, FARM, farm_view(0.1), 1000.0).runs, 9.9)
         expecting_low = farmer(expected_prices={"grain": 0.1})
-        self.assertEqual(producers.plan(expecting_low, FARM, farm_view(5.0), 1000.0).runs, 0.0)
+        self.assertLess(producers.plan(expecting_low, FARM, farm_view(5.0), 1000.0).runs, 1e-6)
 
-    def test_a_poor_harvest_yield_lowers_the_revenue_a_run_counts_on(self):
-        self.assertEqual(producers.plan(farmer(yield_factor=0.5), FARM, farm_view(1.0), 1000.0).runs, 0.0)
+    def test_a_poor_harvest_yield_lowers_the_revenue_a_run_counts_on_and_the_runs(self):
+        poor = producers.plan(farmer(yield_factor=0.5), FARM, farm_view(1.0), 1000.0).runs
+        good = producers.plan(farmer(), FARM, farm_view(1.0), 1000.0).runs
+        self.assertLess(poor, good / 2.0)
 
     def test_no_input_price_means_no_plan(self):
         view = View({"grain": 5.0}, {"hand": 1.0})

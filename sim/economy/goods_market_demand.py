@@ -6,7 +6,8 @@ from typing import List, Sequence
 
 from .types import Bid
 
-_SCHEDULE_FIELDS = attrgetter("floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget")
+_SCHEDULE_FIELDS = attrgetter("floor_quantity", "flexible_quantity", "reference_price", "elasticity", "budget",
+                              "maximum_price")
 _CONSTANT = (1.0, 0.0)    # the schedule of a buyer whose want does not move with price
 
 
@@ -19,7 +20,9 @@ class DemandSchedule:
         self.group_rows: List[list] = []
         self.rows: List[tuple] = []
         self.group_sums: List[tuple] = []
-        for floor, flexible, reference, elasticity, budget in map(_SCHEDULE_FIELDS, bids):
+        self.maximums: List[float] = []      # each bid's maximum price, in the order of the bids
+        for floor, flexible, reference, elasticity, budget, maximum in map(_SCHEDULE_FIELDS, bids):
+            self.maximums.append(maximum)
             if budget <= 0.0:
                 floor, flexible, budget, key = 0.0, 0.0, 0.0, _CONSTANT
             elif flexible > 0.0 and reference > 0.0:
@@ -35,6 +38,8 @@ class DemandSchedule:
             self.rows.append(row)
             if budget > 0.0:
                 self.group_rows[group].append(row)
+
+        self.price_capped = any(maximum < math.inf for maximum in self.maximums)
 
     def distinct_schedules(self) -> int:
         return len(self.group_terms)
@@ -58,6 +63,8 @@ class DemandSchedule:
 
     def total_at(self, price: float) -> float:
         """Total quantity wanted at a positive price."""
+        if self.price_capped:
+            return math.fsum(self.each_at(price))
         total = 0.0
         for factor, rows in zip(self._flexible_factors(price), self.group_rows):
             total += sum([min(floor + flexible * factor, budget / price) for floor, flexible, budget, _group in rows])
@@ -66,4 +73,7 @@ class DemandSchedule:
     def each_at(self, price: float) -> List[float]:
         """Each bid's quantity at a positive price, in the order of the bids."""
         factors = self._flexible_factors(price)
-        return [min(floor + flexible * factors[group], budget / price) for floor, flexible, budget, group in self.rows]
+        quantities = [min(floor + flexible * factors[group], budget / price) for floor, flexible, budget, group in self.rows]
+        if self.price_capped:
+            quantities = [0.0 if price > maximum else quantity for quantity, maximum in zip(quantities, self.maximums)]
+        return quantities

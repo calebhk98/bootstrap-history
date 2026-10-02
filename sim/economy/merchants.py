@@ -136,15 +136,25 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
     rows = []
     for good in sorted(set(specs) & set(area_map.goods())):
         areas = area_map.areas(good)
+        if len(areas) < 2:
+            continue
         prices = {area.area_id: expected_price(merchant, view, good, area.area_id) for area in areas}
+        dearest_first = sorted((area for area in areas if prices[area.area_id]),
+                               key=lambda area: (-prices[area.area_id], area.area_id))
+        keep = 1.0 - min(1.0, max(0.0, specs[good].spoilage_per_year))
         for source in areas:
             price_here = prices[source.area_id]
             if not price_here or price_here <= 0.0:
                 continue
             best = None
-            for destination in areas:
+            floor_cost = price_here * (1.0 + max(0.0, interest_rate) + MERCHANT_MARGIN_SHARE)
+            for destination in dearest_first:
                 price_there = prices[destination.area_id]
-                if destination.area_id == source.area_id or not price_there:
+                # carriage only adds cost, so no cheaper destination can beat this bound
+                bound = price_there * keep - floor_cost
+                if bound <= 0.0 or (best is not None and bound <= best[0]):
+                    break
+                if destination.area_id == source.area_id:
                     continue
                 per_tonne = carriage.cost_per_tonne(source.anchor_tile, destination.anchor_tile)
                 if math.isinf(per_tonne):

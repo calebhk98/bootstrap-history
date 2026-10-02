@@ -117,6 +117,8 @@ class Bid:
                              budget / price)
     The floor is what the buyer needs whatever the price (subsistence, a recipe's fixed input);
     the budget caps it, so a buyer who cannot pay goes without and the shortfall is recorded.
+    Above `maximum_price` the buyer takes nothing: a producer will not pay more for an input than
+    the run it goes into is worth.
     """
     buyer: AgentId
     good: GoodId
@@ -128,6 +130,7 @@ class Bid:
     elasticity: float
     budget: float
     priority: int = 0                # lower clears first when rationed at the same price (need tiers)
+    maximum_price: float = float("inf")   # above it the buyer takes nothing (what the good is worth to it)
 
 
 @dataclass(frozen=True)

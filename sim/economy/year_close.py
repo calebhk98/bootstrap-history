@@ -1,9 +1,10 @@
 """The year's end: carriage, money taxes, the mint, every agent's close, spoilage, and what the
 markets remember for next year."""
+import dataclasses
 import math
 from typing import Dict, Tuple
 
-from . import currency, households, inventory, merchants, metal_stock, producers_close, taxes
+from . import currency, households, inventory, merchants, metal_stock, producers, producers_close, taxes
 from .market_memory import market_key
 from .setup import labour_area
 from .taxes_bases import YearFacts
@@ -40,28 +41,6 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     ledger.note_postings(transfers)
 
 
-def mint(setup, record, area_map) -> None:
-    """Holders bring metal to the mint when it is worth less than coin, and melt coin when it is worth
-    more, a share of the gap a year (currency.arbitrage)."""
-    spec = record.currency
-    metal = spec.backing_good
-    if not metal or spec.backing_per_unit <= 0.0 or metal not in area_map.goods():
-        return
-    money = spec.currency_id
-    by_tile: Dict[str, Dict[str, float]] = {}
-    for agent in record.book.holders_of(metal):
-        for tile, quantity in record.book.holdings(agent)["goods"].get(metal, {}).items():
-            if quantity > 0.0:
-                by_tile.setdefault(tile, {})[agent] = quantity
-    for tile, holdings in sorted(by_tile.items()):
-        price = record.memory.prices.get(market_key(metal, area_map.area_of(metal, tile)))
-        if not price:
-            continue
-        cash = {agent: record.book.balance(agent, money) for agent in holdings}
-        transfers, moves = currency.arbitrage(spec, price, holdings, cash, tile)
-        record.book.post(transfers, moves)
-
-
 def wear_and_spoilage(setup, record) -> None:
     book = record.book
     holdings: Dict[Tuple[str, str, str], float] = {}
@@ -91,10 +70,11 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
         if closed.loan_request is not None:
             record.loan_requests.append(closed.loan_request)
+            record.expansion_runs[producer_id] = closed.expansion_runs
         if closed.exited:
             del record.producers[producer_id]
         else:
-            record.producers[producer_id] = closed.producer
+            record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
     prices = {}
     volumes = {}
     for result in ledger.clearings:
@@ -114,6 +94,16 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         record.book.move_many(moves)
         record.cohorts[cohort_id] = closed
     record.property_income = property_income
+
+
+def _with_sales(producer, recipe, ledger: YearLedger):
+    """Expected sales move toward what it sold this year, in runs of its main output."""
+    good = producers.main_output(recipe)
+    sold = ledger.sold.get((producer.agent_id, good), 0.0) / recipe.outputs[good]
+    if producer.expected_sales <= 0.0:
+        return dataclasses.replace(producer, expected_sales=sold)
+    share = producers.EXPECTATION_ADJUSTMENT_SHARE
+    return dataclasses.replace(producer, expected_sales=producer.expected_sales + share * (sold - producer.expected_sales))
 
 
 def national_prices(record) -> Dict[str, float]:

@@ -196,6 +196,7 @@ def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -
                 agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
                 recipe_id=recipe_id, tile=tile,
                 capacity_runs=count * weight / total * (1.0 + OPENING_SPARE_CAPACITY_SHARE),
+                expected_sales=count * weight / total,
                 yield_factor=setup.yield_factor_by_recipe_tile.get(recipe_tile_key(recipe_id, tile), 1.0))
 
 

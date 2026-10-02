@@ -83,7 +83,11 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     rows = []
     for need in priced:
         need_id = need.spec.need_id
-        for good, price, _effect, share in need.goods:
+        cost_per_unit = sorted((price / effect, good) for good, price, effect, _share in need.goods)
+        for good, price, effect, share in need.goods:
+            # nobody pays more per need unit for a good than the cheapest other good of the need costs
+            others = [cost for cost, other in cost_per_unit if other != good]
+            ceiling = others[0] * effect if others else math.inf
             per_unit = need.price_index * share / price
             floor_quantity = floors[need_id] * per_unit
             flexible_quantity = max(0.0, totals[need_id] - floors[need_id]) * per_unit
@@ -91,9 +95,9 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                                    view.stock(cohort.agent_id, good, cohort.tile), specs)
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 rows.append((need.spec.subsistence_per_person > 0.0, good, price,
-                             floor_quantity * ratio, flexible_quantity * ratio))
-    floor_spend = math.fsum(price * floor for _tier, _good, price, floor, _flex in rows)
-    flexible_spend = math.fsum(price * flex for _tier, _good, price, _floor, flex in rows)
+                             floor_quantity * ratio, flexible_quantity * ratio, max(ceiling, price)))
+    floor_spend = math.fsum(row[2] * row[3] for row in rows)
+    flexible_spend = math.fsum(row[2] * row[4] for row in rows)
     floor_wanted = floor_spend * (1.0 + FLOOR_BUDGET_PRICE_MARGIN)
     usable = cash * (1.0 - BUDGET_SAFETY_SHARE)
     floor_scale = min(1.0, usable / floor_wanted) if floor_wanted > 0.0 else 0.0
@@ -101,14 +105,15 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     bids = []
     budget_total = 0.0
-    for has_floor, good, price, floor, flex in sorted(rows, key=lambda row: row[1]):
+    for has_floor, good, price, floor, flex, ceiling in sorted(rows, key=lambda row: row[1]):
         budget = (floor * price * (1.0 + FLOOR_BUDGET_PRICE_MARGIN) * floor_scale
                   + flex * price * flexible_scale)
         if budget <= 0.0:
             continue
         budget_total += budget
         bids.append(Bid(cohort.agent_id, good, view.area_of(good, cohort.tile), cohort.tile,
-                        floor, flex, price, 1.0, budget, 0 if has_floor else 1))
+                        floor, flex, price, basket.substitution, budget, 0 if has_floor else 1,
+                        maximum_price=ceiling))
     funds = ()
     savings = cash - budget_total - target
     if savings > 0.0:

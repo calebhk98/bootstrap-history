@@ -15,6 +15,7 @@ and in the choice to expand or enter. Land and deposits are not inputs: the prod
 and capacity carry the site, so rent shows up as profit. Nothing here names a good, trade or place.
 View lookups: goods by `view.area_of(good, tile)`, labour by `view.area_of(trade, tile)`.
 """
+import math
 from dataclasses import dataclass, field, replace
 from typing import Dict, List, Mapping, Optional, Tuple
 
@@ -31,6 +32,14 @@ EXPECTATION_ADJUSTMENT_SHARE = declare(
     why="A producer expects next year's price from its own past, moving part of the way to what it "
         "last saw; a share of one is the naive cobweb. Real producers use forward prices, stocks and "
         "reports that the economy does not model. The share is a placeholder for that information.")
+COST_SPREAD_WITHIN_PRODUCER = declare(
+    "COST_SPREAD_WITHIN_PRODUCER", 0.3, kind="temporary_heuristic",
+    unit="standard deviation of the log of unit cost across the workplaces one producer stands for",
+    source=None, confidence="D",
+    why="One producer agent stands for every workplace running its recipe in its market area; their "
+        "sites, skills and tools differ, so as the price rises past the average cost more of them find "
+        "it worth working and output rises smoothly instead of jumping from none to all. The spread "
+        "could come from the spread of land fertility and deposit grade across the area's tiles.")
 STORAGE_COST_PER_UNIT = declare(
     "STORAGE_COST_PER_UNIT", 0.0, kind="temporary_heuristic",
     unit="money per unit of good per year", source=None, confidence="D",
@@ -49,6 +58,7 @@ class Producer:
     expected_prices: Mapping[GoodId, float] = field(default_factory=dict)   # outputs, adaptive
     years_of_loss: int = 0
     cash_target: float = 0.0                # cash it keeps; the rest is paid out as dividends
+    expected_sales: float = 0.0             # runs' worth of output it expects to sell a year; 0 unknown
 
 
 @dataclass(frozen=True)
@@ -118,17 +128,69 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     labour_cost = unit_cost.labour_cost_per_run(recipe, wages)
     variable = input_cost + labour_cost
     margin = revenue - variable
-    if producer.capacity_runs <= 0.0 or not margin >= 0.0 or revenue <= 0.0:
+    if producer.capacity_runs <= 0.0 or revenue <= 0.0 or not math.isfinite(variable):
         return Plan(0.0, expected_margin_per_run=margin)
     held_value = sum(min(view.stock(producer.agent_id, good, producer.tile), quantity * producer.capacity_runs)
                      * inputs[good] for good, quantity in recipe.inputs.items())
     affordable = (max(cash, 0.0) + held_value) / variable if variable > 0.0 else producer.capacity_runs
-    runs = max(0.0, min(producer.capacity_runs, affordable))
-    if runs <= 0.0:
+    runs = max(0.0, min(producer.capacity_runs * share_working(revenue, variable), affordable,
+                        runs_for_stock(producer, recipe, view)))
+    ratio = working_cost_ratio(revenue, variable)
+    if runs <= 0.0 or ratio <= 0.0:
         return Plan(0.0, expected_margin_per_run=margin)
-    labour_bids = _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages)
-    bids = _input_bids(producer, recipe, view, runs, inputs, max(cash, 0.0) - runs * labour_cost)
+    # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
+    labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost, wages)
+    bids = _input_bids(producer, recipe, view, runs, inputs, max(cash, 0.0) - runs * labour_cost,
+                       revenue / ratio - variable)
     return Plan(runs, tuple(labour_bids), tuple(bids), margin)
+
+
+def share_working(revenue_per_run: float, variable_cost_per_run: float) -> float:
+    """Share of the producer's workplaces whose own cost the expected revenue covers: the workplaces'
+    costs spread log-normally (COST_SPREAD_WITHIN_PRODUCER) with the producer's cost as their mean."""
+    if variable_cost_per_run <= 0.0:
+        return 1.0
+    if revenue_per_run <= 0.0:
+        return 0.0
+    return _normal_below(_standard_score(revenue_per_run, variable_cost_per_run))
+
+
+def _standard_score(revenue_per_run: float, mean_cost_per_run: float) -> float:
+    """How many spreads the revenue sits above the median workplace's cost (the mean is the average)."""
+    spread = COST_SPREAD_WITHIN_PRODUCER
+    return (math.log(revenue_per_run / mean_cost_per_run) + spread * spread / 2.0) / spread
+
+
+def _normal_below(score: float) -> float:
+    return 0.5 * (1.0 + math.erf(score / math.sqrt(2.0)))
+
+
+def working_cost_ratio(revenue_per_run: float, variable_cost_per_run: float) -> float:
+    """The average cost of the workplaces that work, against the producer's average cost: below one,
+    since only those whose cost the revenue covers work."""
+    if variable_cost_per_run <= 0.0 or revenue_per_run <= 0.0:
+        return 1.0
+    score = _standard_score(revenue_per_run, variable_cost_per_run)
+    working = _normal_below(score)
+    if working <= 0.0:
+        return 1.0
+    return _normal_below(score - COST_SPREAD_WITHIN_PRODUCER) / working
+
+
+def main_output(recipe: Recipe) -> GoodId:
+    return max(sorted(recipe.outputs), key=lambda good: recipe.outputs[good])
+
+
+def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView) -> float:
+    """Runs that bring stock to its target over expected sales: a producer sitting on unsold output
+    makes less. Unlimited while it has no record of sales."""
+    if producer.expected_sales <= 0.0:
+        return math.inf
+    good = main_output(recipe)
+    per_run = recipe.outputs[good]
+    held = view.stock(producer.agent_id, good, producer.tile) / per_run
+    target = inventory.target_stock(producer.expected_sales)
+    return max(0.0, producer.expected_sales + target - held)
 
 
 def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> List[LabourBid]:
@@ -144,9 +206,10 @@ def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> Li
     return bids
 
 
-def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs) -> List[Bid]:
+def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_per_run) -> List[Bid]:
     """Inputs for the planned runs, net of what is held: a floor, not price-sensitive. The budget is
-    the cash left after wages, split by cost share, so the bids never add up to more than the cash."""
+    the cash left after wages, split by cost share, so the bids never add up to more than the cash.
+    No input is bought above the price at which the run would just cover its variable cost."""
     needs = {}
     for good, per_run in sorted(recipe.inputs.items()):
         short = runs * per_run - view.stock(producer.agent_id, good, producer.tile)
@@ -156,8 +219,10 @@ def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs) -> List
     bids = []
     for good, quantity in needs.items():
         share = quantity * prices[good] / total_cost if total_cost > 0.0 else 0.0
+        worth = prices[good] + max(0.0, margin_per_run) / recipe.inputs[good]
         bids.append(Bid(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile,
-                        quantity, 0.0, prices[good], 0.0, max(0.0, budget_for_inputs) * share))
+                        quantity, 0.0, prices[good], 0.0, max(0.0, budget_for_inputs) * share,
+                        maximum_price=worth))
     return bids
 
 
@@ -177,7 +242,8 @@ def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, flo
     if limit <= 0.0:
         return 0.0, moves
     for good, per_run in sorted(recipe.inputs.items()):
-        moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, limit * per_run, "input"))
+        used = min(limit * per_run, inputs_held.get(good, 0.0))   # never more than held, to the last bit
+        moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
     achieved = limit * producer.yield_factor
     for good, per_run in sorted(recipe.outputs.items()):
         if achieved * per_run > 0.0:
