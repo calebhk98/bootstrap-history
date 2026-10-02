@@ -71,6 +71,8 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 | `sus` | suspicion delta. Rome executes magicians and much of this looks like magic. |
 | `gov` | State interest, -3 will actively suppress, +3 will fund and demand. **Use negative values.** Labour-displacing machinery, anything breaking elite information control, and anything that looks like a faction all attract hostility. |
 | `rev_hours` | net labour hours per year at maturity, 0 if not a product |
+| `output_unbounded_reason` | optional. Required on a node that gates a production entry and keeps an authored `rev_hours` because no plant, staff or `annual_output_t` bounds its output; says why. `validate` reads it. |
+| `unheld_reason` | optional. Required on a node that a production entry requires, that no civilisation holds at the start, and whose prerequisites are all held somewhere; says why nobody starts with it. `validate` reads it. |
 | `sch` / `art` | trained scholars and artisans required on staff |
 | `conf` | A well attested, B probable, C your estimate |
 | `note` | 1 to 4 sentences. State the non-obvious kernel, the honest limitation, and any anachronism trap. This is the most valuable field; write it like you are explaining to someone who has to actually do it. |

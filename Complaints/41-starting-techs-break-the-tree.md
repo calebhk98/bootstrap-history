@@ -1,13 +1,8 @@
 # Every civilisation holds a technology whose prerequisites it lacks
 
-**Status:** pinned - a regression test holds the known-violation count on purpose
+**Status:** open - the test that pinned the known violations was removed; `python3 sim/simulator.py validate` reports held-without-prereq per civilisation
 
-**Audit (2026-09-18): PINNED, not fixed - by design,
-and that is the correct state.** `sim/tests/test_civilisation_prerequisites.py`
-still holds the count at exactly the 17 violations named below; the file
-deliberately declines to referee which side (tree or civilisation file) is
-wrong for each one. Not the same as OPEN or RESOLVED. See
-`docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit note:** the test that pinned the violation count was removed because a pinned count goes stale. The measurement is `python3 sim/simulator.py validate` (held-without-prereq column); fixing means giving the civilisation the prerequisite or correcting the node's `pre`.
 
 Found by the technique-to-node join, and cheap to find once anything pointed
 at the tree at all: `starting_techs` has never been checked against the

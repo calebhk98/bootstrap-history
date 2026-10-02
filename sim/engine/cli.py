@@ -28,6 +28,7 @@ import collections, json, math, os, random
 from collections import defaultdict
 
 from .catalog import load_production_catalog
+from . import validate_output_bounds, validate_unheld_gates
 from .default_civilisation import default_civilisation_id
 from .data import (ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
                    hard_pre, load, load_civ, resolve_goal,
@@ -559,6 +560,9 @@ def cmd_validate(args):
         producible.update((entry.get("outputs") or {}).keys())
     errs, warns = _validate_nodes(nodes, goods, wages, producible)
     errs += _validate_topo_order(nodes)
+    errs += validate_output_bounds.check_output_bounds(nodes, production)
+    from sim import civ_start_check
+    errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs
 

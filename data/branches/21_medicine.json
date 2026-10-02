@@ -197,6 +197,7 @@
   "sus": 1,
   "gov": 0,
   "rev_hours": 4.032375834825865,
+  "output_unbounded_reason": "one declared total would be split across unrelated products, so no single output bounds it",
   "sch": 1,
   "art": 0,
   "conf": "A",
