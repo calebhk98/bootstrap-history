@@ -1542,6 +1542,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # this method has run once) costs nothing correctness-sensitive.
         self._last_farm_year = farm_year
         self.state.economy.farm_last_shortfall_kg = farm_year.food_shortfall_kg
+        self.state.economy.farm_last_harvest_kg = farm_year.gross_harvest_kg
         self.state.economy.farm_last_marginal_product = (
             farm_year.marginal_product_last_hour_kg_per_hour)
         self.update_wages()

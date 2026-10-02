@@ -15,10 +15,11 @@ from .world_capacity import CapacityView
 from .world_capital import CapitalView
 from .world_disclosure import DisclosureView
 from .world_groups import GroupView
+from .world_revenue import RevenueView
 from .tuning import OBSERVATION_RANGE_KM
 
 
-class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView):
+class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, CapacityView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:
@@ -87,11 +88,6 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		def compute() -> float:
 			return sim.real_output_hours() * sim.money_per_labour_hour() * sim.state.economy.output_factor
 		return self._once("output", compute)
-
-	def state_revenue(self) -> float:
-		sim = self._sim
-		return self._once("revenue", lambda: (
-			self.society_output() * float(sim.civ["starting_tax_share"]) * sim.state_capacity))
 
 	def visible_scale_of(self, actor: Any) -> float:
 		"""How large and visible any actor looks to the state: its staff, its wealth and its prominence."""

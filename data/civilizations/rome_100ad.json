@@ -548,6 +548,45 @@
   "year": 100,
   "starting_interest_rate": 0.12,
   "starting_tax_share": 0.06,
+  "state_revenue": [
+    {
+      "form": "land_tax",
+      "basis": "harvest",
+      "rate": 0.1,
+      "paid_in": "wheat_kg",
+      "_internal": {
+        "source": "A tenth of the crop, taken in grain: the decuma of Sicily under the Lex Hieronica (Cicero, Verrines 2.3) and the provincial tribute in grain; Egypt took more. Rome's provincial land tax is not known as one rate; a tenth is the attested modal share.",
+        "confidence": "C"
+      }
+    },
+    {
+      "form": "poll_tax",
+      "basis": "adult_labour_years",
+      "rate": 0.04,
+      "_internal": {
+        "source": "Provincial poll tax (tributum capitis), for instance the Egyptian laographia of some twenty drachmae a man against a wage of about a drachma a day. Italy and citizens were exempt, which this empire-wide share ignores.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "import_duty",
+      "basis": "imports_value",
+      "rate": 0.025,
+      "_internal": {
+        "source": "Portoria: the quadragesima (2.5 per cent) on goods crossing customs districts in Gaul, Asia, Illyricum and Africa (de Laet, Portorium, 1949; Hopkins, JRS 70, 1980).",
+        "confidence": "B"
+      }
+    },
+    {
+      "form": "export_duty",
+      "basis": "exports_value",
+      "rate": 0.025,
+      "_internal": {
+        "source": "Portoria at 2.5 per cent, charged on goods leaving a customs district as on those entering (de Laet, Portorium, 1949).",
+        "confidence": "B"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "Centesimae usurae, 1% a month, was the legal ceiling on ordinary loans; the respectable-lending rate, with maritime and unsecured lending far higher.",

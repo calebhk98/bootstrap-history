@@ -426,6 +426,45 @@
   },
   "starting_interest_rate": 0.2,
   "starting_tax_share": 0.08,
+  "state_revenue": [
+    {
+      "form": "land_tax",
+      "basis": "harvest",
+      "rate": 0.0333,
+      "paid_in": "wheat_kg",
+      "_internal": {
+        "source": "Field rent of one thirtieth of the yield, fixed under Emperor Jing (Hanshu, Shihuo zhi), paid in grain.",
+        "confidence": "B"
+      }
+    },
+    {
+      "form": "poll_tax",
+      "basis": "adult_labour_years",
+      "rate": 0.03,
+      "_internal": {
+        "source": "The suanfu: 120 cash a year on each person of fifteen to fifty-six (Hanshu 1; chinaknowledge.de, suanfu). The share is that sum against an unskilled worker's yearly pay, which is itself an estimate of a few thousand cash.",
+        "confidence": "C"
+      }
+    },
+    {
+      "form": "import_duty",
+      "basis": "imports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): pass and market dues are attested under the Han but no rate is; a placeholder at a few per cent.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "export_duty",
+      "basis": "exports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): pass and market dues are attested under the Han but no rate is; a placeholder at a few per cent.",
+        "confidence": "D"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "Shiji ch.129 puts a lending return near a fifth a year; Han memorials (Chao Cuo) describe peasant debt doubling within a year, so the spread is wide. Eastern Han specifics are thin.",

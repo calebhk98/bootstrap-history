@@ -118,7 +118,7 @@ class PopulationMixin:
         if trade_family(trade) == "scholar":
             return "scholar"
         if trade in ("labourer", "artisan", "carpenter", "mason", "potter", "smith",
-                 "sailor", "miner", "furnaceman"):
+                 "sailor", "miner", "furnaceman", "soldier"):
             return "common"
         return "uncommon"          # glassblowers, engravers, opticians' forebears
 
@@ -488,6 +488,9 @@ class PopulationMixin:
         # The age-cohort model's running headcount is the actual population.
         pop = self.population.total
         urban = pop * float(self.civ.get("urban_fraction", 0.0))
+        if trade == "soldier":
+            # any of the working age may be called up
+            return self.population.working_age
         if trade == "scholar":
             return pop * float(self.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
         if trade == "scribe":

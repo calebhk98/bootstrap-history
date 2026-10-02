@@ -394,6 +394,36 @@
   },
   "starting_interest_rate": 0.2,
   "starting_tax_share": 0.04,
+  "state_revenue": [
+    {
+      "form": "tribute_in_grain",
+      "basis": "harvest",
+      "rate": 0.04,
+      "paid_in": "wheat_kg",
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): the king's due from farmers in feasting and tribute (veizla, skatt) taken in kind; the share carries over the civilisation's former fitted tax share and has no source of its own.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "market_toll",
+      "basis": "imports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): tolls at trading towns (Hedeby, Kaupang) are attested; their rate is not.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "market_toll_out",
+      "basis": "exports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): tolls at trading towns (Hedeby, Kaupang) are attested; their rate is not.",
+        "confidence": "D"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "No Norse lending record survives for this date. Set from the neighbouring Carolingian and Anglo-Saxon world, where credit was informal and short-term rates high. Weak evidence.",

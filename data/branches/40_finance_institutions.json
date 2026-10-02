@@ -862,7 +862,12 @@
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "State borrows money instead of raising taxes or debasing currency. A state that can borrow can survive temporary deficits and invest in long-term projects without waiting for revenue. A state that cannot borrow must tax harder or debase, both politically costly."
+  "note": "State borrows money instead of raising taxes or debasing currency. A state that can borrow can survive temporary deficits and invest in long-term projects without waiting for revenue. A state that cannot borrow must tax harder or debase, both politically costly.",
+  "mechanics": {
+   "state_credit": {
+    "source": "A government that can commit its successors to repay and has investors to lend is the precondition (docs/knowledge/96_finance.md, public_debt); early states met a deficit by cutting, debasing or selling office, and funded debt arrives with the Italian city states (Venice's Monte Vecchio, 1167)."
+   }
+  }
  },
  {
   "id": "fin_central_bank",

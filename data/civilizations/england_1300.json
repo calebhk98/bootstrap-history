@@ -574,6 +574,35 @@
   },
   "starting_interest_rate": 0.2,
   "starting_tax_share": 0.1,
+  "state_revenue": [
+    {
+      "form": "lay_subsidy",
+      "basis": "coin_stock",
+      "rate": 0.017,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): the lay subsidy was a fifteenth or tenth of movable goods, voted in some years and not others; one year in four at a fifteenth averages to about this share of a year. Coin stands in for movables, the only wealth the simulation holds as a stock.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "wool_custom",
+      "basis": "exports_value",
+      "rate": 0.06,
+      "_internal": {
+        "source": "The great custom of 1275: 6s 8d on a sack of wool, about a twentieth to a sixth of its price (Ormrod, English State Fiscal Policy; Lloyd, English Wool Trade).",
+        "confidence": "C"
+      }
+    },
+    {
+      "form": "import_custom",
+      "basis": "imports_value",
+      "rate": 0.03,
+      "_internal": {
+        "source": "Carta mercatoria of 1303: an additional 3d in the pound (1.25 per cent) on aliens' imports, plus prisage on wine; the figure is of that order.",
+        "confidence": "C"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "Canon law forbade Christian usury; Jewish lenders (expelled 1290) charged up to the statutory two pence a pound a week, and Italian merchant-bankers disguised interest at lower effective rates. An estimate between these.",

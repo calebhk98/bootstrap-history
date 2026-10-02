@@ -370,6 +370,11 @@ class EconomyState:
 	farm_stock_kg: float = 0.0
 	farm_cleared_hectares: Optional[float] = None
 	farm_last_shortfall_kg: Optional[float] = None
+	# gross harvest of the last year the farm closed, in kilograms of grain (0 before the first)
+	farm_last_harvest_kg: float = 0.0
+	# year -> value of goods this society imported ("in") and exported ("out") that year, in its money;
+	# the state's customs read the last completed year (foreign_payments.py)
+	foreign_trade_by_year: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	farm_last_marginal_product: Optional[float] = None
 	society_labour_hours: Dict[str, float] = field(default_factory=dict)
 	farm_hours_needed: Optional[float] = None
@@ -462,6 +467,12 @@ class ActorRecord:
 	levy_base: float = 0.0
 	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
 	army: float = 0.0
+	# a state's revenue last year by form, in money's worth, and the part of it taken in kind
+	revenue_by_form: Dict[str, float] = field(default_factory=dict)
+	revenue_in_kind: Dict[str, float] = field(default_factory=dict)
+	# material -> tonnes the state took in kind last year, and tonnes it holds in store now
+	in_kind_received: Dict[str, float] = field(default_factory=dict)
+	stores: Dict[str, float] = field(default_factory=dict)
 	# an interest group's kind (what hurt it), subject (the commodity or trade), what caused the
 	# hurt in words, people it speaks for, the income it lost (net of what the state made good),
 	# the share of the state's attention it commands, and what it asks of the state

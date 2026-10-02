@@ -95,10 +95,22 @@ class ForeignPaymentsMixin:
                 "partner_price_level": self.partner_price_level(civilization_id),
                 "fleet_lift_tonnes_per_year": ledger["lift_tonnes_per_year"]}
 
+    TRADE_YEARS_KEPT = 3
+
+    def _note_trade_value(self, flow_tonnes, value):
+        """Add a flow's value to this year's imports or exports; only the last few years are kept."""
+        by_year = self.state.economy.foreign_trade_by_year
+        year = self.state.scenario.year
+        entry = by_year.setdefault(str(year), {"in": 0.0, "out": 0.0})
+        entry["in" if flow_tonnes > 0.0 else "out"] += value
+        for old in [key for key in by_year if int(key) <= year - self.TRADE_YEARS_KEPT]:
+            del by_year[old]
+
     def _settle_flow(self, civilization_id, flow_tonnes, value, home_money_per_partner_coin):
         """Pay for one commodity's flow in coin: this society pays for imports and is paid for
         exports, never more than the payer holds. `value` is in home money."""
         ledger = self._foreign_ledger(civilization_id, create=True)
+        self._note_trade_value(flow_tonnes, value)
         if flow_tonnes > 0.0:
             ledger["goods_in_value"] += value
             paid = balance_of_payments.coin_paid(value, self.home_coin_stock_units())

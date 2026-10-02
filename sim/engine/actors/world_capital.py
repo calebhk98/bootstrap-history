@@ -26,6 +26,11 @@ class CapitalView:
 		"""What lenders will still advance an actor beyond what others owe; None before the market has met."""
 		return self._sim.market_credit_room(actor_id)
 
+	def state_may_borrow(self, state: Any) -> bool:
+		"""Whether a state holds a technology that declares the `state_credit` mechanic, in its own
+		knowledge or in what its society already knows."""
+		return any(state.knows(node_id, self) for node_id in self._sim.nodes_with_mechanic("state_credit"))
+
 	def state_lending(self) -> Tuple[float, float]:
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
 		return self._sim.state_lending()
