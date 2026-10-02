@@ -20,3 +20,5 @@ Re-measured 2026-10-02 after the goods market with firm sales (Rome seed 1, auto
 Related: 304.
 
 Owner decision (2026-10-02): before caching anything, find out whether it is impossible to speed up or whether the code uses poor algorithms, wasteful or repeated calculations. Expected to be largely resolved by the per-producer economic system.
+
+Review (2026-10-02): with a rich founder a year is not cheap (2.5 to 3.6 s); the costs are repeated and algorithmic work, not missing caches. See `Complaints/reports/caching-and-algorithms-review.md` for the ranked changes.
