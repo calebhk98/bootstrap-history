@@ -26,3 +26,5 @@ instead of a per-head yearly limit, goods that differ by origin so a partial gap
 moves part of a market, and sourced output for more goods (`Complaints/324`).
 
 Related: 109, 300, 338, 347, 350, 351, 353.
+
+Owner decision (2026-10-02): should be looked at: merchants' terms should be derived from merchants' actual costs.

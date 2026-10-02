@@ -1,0 +1,9 @@
+# Firm founders do not need personal capital, and copying a technique is not equally hard for every technique
+
+**Status:** open
+
+Raised by the owner (2026-10-02). Earlier Rome runs reached hundreds to thousands of firms. Firms enter from a pool of society's capital (`ENTREPRENEURIAL_CAPITAL_SHARE` of output, `sim/engine/actors/registry.py` `consider_entry`) plus borrowing, not from particular people who have the money. A labourer cannot found a balloon works; a founder needs savings or a lender willing to back them, and only a few households in an ancient economy had that.
+
+Copying is also not equally easy. A visible, simple device (a wheelbarrow, a hot-air balloon) can be copied by looking at it; a process whose essence is hidden (black powder's proportions and corning, steel's heat treatment, glass recipes) cannot be reverse-engineered from the product. Today copy difficulty comes from the count of trades and materials a node needs (`copy_difficulty`, `sim/engine/society_disclosure.py`).
+
+What it would take: firm founders drawn from households that hold capital (the society's income and wealth distribution in data), each with its own savings and a lender's limit, so entry is bounded by who can actually fund it; and per-technique copy difficulty declared in data (how much of the know-how is visible in the product versus tacit or secret), with a stated basis, replacing the count of trades and materials. Related: 103, 330, 331, 345, 308.

@@ -18,3 +18,5 @@ Done: `sim/engine/view_share.py` keeps a table of answers for the view an actors
 Re-measured 2026-10-02 after the goods market with firm sales (Rome seed 1, automation, years 50/100/150/200/250): well under a second of CPU per year, a flat profile. `solved_prices`, `_compute_revenue_uncached`, `final_demand` and `venture_foremen_used` each take about one percent or less of two mid or two late years, because the economy now stays at a few dozen firms in this run. The remains listed above are not fixed, only not costly at that size; no cache was added, since nothing measurable would be saved and the result could not be proved identical. Reopen the work with a profile of a run with thousands of firms.
 
 Related: 304.
+
+Owner decision (2026-10-02): before caching anything, find out whether it is impossible to speed up or whether the code uses poor algorithms, wasteful or repeated calculations. Expected to be largely resolved by the per-producer economic system.

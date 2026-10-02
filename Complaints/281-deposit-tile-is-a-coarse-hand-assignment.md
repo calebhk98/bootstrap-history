@@ -17,3 +17,5 @@ Give deposits a latitude and longitude and resolve the tile by containment, once
 Done: `lat`/`lon` on every deposit, resolved by nearest tile centre (`sim/world/tile_lookup.py`). Remaining: enter a surveyed position per named mine. Each move changes a region's metal total, and with it `mineral_scale`, so Noricum (the Austrian tile belongs to no region) needs its region mapping settled first.
 
 Related: 328.
+
+Owner decision (2026-10-02): ignore for now. The tile centre is fine as long as mines and other geographical features stay in their own data file, so a mod or a better map can place them later.

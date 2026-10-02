@@ -18,3 +18,5 @@ The capital charge did not repair the zero-revenue makers: none of caustic soda,
 Restored with a declared output and a basis taken from the entry's own hours: bleaching powder (about three hundred tonnes) and hand papermaking (one vat, about half a tonne). Both earn their staff's wages, since neither entry states a plant.
 
 Related: 140, 295, 317, 335, 337.
+
+Owner decision (2026-10-02): market prices have a floor at the cost to make the good: a producer will not sell below its cost. A high price means fewer buyers, not less demand. Profit can depend on elasticity: a seller may sell at a higher price to fewer buyers.
