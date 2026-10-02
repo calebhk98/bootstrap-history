@@ -1,6 +1,6 @@
 # Rome cannot tan leather or full cloth, and both are wrong
 
-**Status:** partly - the two missing tree nodes and the duplicate zinc nodes remain
+**Status:** closed - tanning and fulling held, both tree holes filled, zinc nodes chained, and the start-gap sweep is in the suite
 
 Found by the technique-to-node join (`requires_node`, Complaints/38), within
 an hour of the first two slices landing, and worth recording for the method
@@ -270,3 +270,5 @@ the sweep for a technology missing from every civilisation.
 Update: the Roman heat rung is granted (Complaints/123, closed). Still open: the two tree holes (citric acid by lime precipitate, chromate from chromite), the duplicate zinc nodes (`zinc_metal` and `mt2_zinc_by_retort`), and the sweep for a technology missing from every civilisation.
 
 Update: the two tree holes are filled (`ch2_citric_lime_precipitate`, `ch2_chromate_from_chromite`, each named by its recipe's `requires_node`), and the duplicate zinc pair is now a chain: `zinc_metal` (the scaled industry) builds on `mt2_zinc_by_retort` and no longer requires steelmaking, which zinc distillation does not need. Still open: the sweep for a technology missing from every civilisation is not in the suite and needs a historian.
+
+Update (closed): the sweep is `sim/tests/test_unheld_recipe_gates.py` (`python3 sim/test_regressions.py --only unheld_recipe_gates`). It takes the recipe gates that no civilisation holds and whose own prerequisites somebody does hold, and fails on any that is not reviewed, or reviewed and now held. The frontier held one clear gap: `pwr_peat` (no prerequisites) is now held by `norse_900ad` (Orkneyinga saga names Torf-Einarr, about 900, as the man who taught Orkney to cut peat for fuel) and `england_1300` (turbaries are recorded in Domesday Book). The rest are left unheld with a reason each in the test: hopping, pyrethrum, phosphorus extraction, the finery and puddling, pepper growing (traded, not grown), metallic antimony, cryolite, porcelain, and the three regional goat and jute fibres. Antimony and porcelain need a historian and are marked so. Not touched: `distillation_alcohol` for `england_1300` has two unheld rungs under it (`glass_labware`, `workshop_first`), so it is not on the one-step frontier; a rope-walk needs `cap_measure_len`, which nobody holds. `python3 sim/perf_fingerprint.py check --quick` diverges only for `england_1300` from year 0, because that civilisation now starts holding a node.
