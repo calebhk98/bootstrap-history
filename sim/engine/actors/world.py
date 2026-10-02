@@ -90,7 +90,7 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 			# people are drawn off to arms, so the share of working people not under arms scales them
 			working = sim.population.working_age
 			producing = max(0.0, working - self.soldiers_under_arms()) / working if working > 0.0 else 1.0
-			return sim.real_output_hours() * producing * sim.money_per_labour_hour() * sim.state.economy.output_factor
+			return sim.economy.output_value() * producing
 		return self._once("output", compute)
 
 	def visible_scale_of(self, actor: Any) -> float:
@@ -108,7 +108,7 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 	@property
 	def labour_market(self) -> Any:
 		"""The one labour market every employer asks: quote, hire, release, read the pressure."""
-		return self._sim.labour_market
+		return self._sim.economy.labour
 
 	@property
 	def hours_per_person_year(self) -> float:
@@ -143,16 +143,14 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 
 	def copy_cost(self, node_id: str) -> float:
 		"""Money the pioneer's version of this work costs, labour included."""
-		return self._shared(self._sim.project_cost, node_id)
+		return self._shared(self._sim.economy.project_cost, node_id)
 
 	def copy_risk(self, node_id: str) -> float:
 		return self._sim.effective_risk(node_id)
 
 	def concern_gross(self, node_id: str) -> float:
 		"""Yearly takings of the founder's concern once it has ramped up."""
-		sim = self._sim
-		return (sim.concern_takings(node_id, 1.0) * sim.goods_market_factor(node_id)
-				* sim.node_output_market_factor(self.nodes[node_id]))
+		return self._sim.economy.concern_gross(node_id)
 
 	def market_key(self, node_id: str) -> str:
 		"""What a concern's operators share: a goods category is one market, any other concern its own."""
@@ -212,18 +210,19 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 
 	def market_forget(self, actor_id: str) -> None:
 		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
-		self._sim.goods_market.forget(actor_id)
+		self._sim.economy.goods.forget(actor_id)
+
+	def runs_agent_economy(self) -> bool:
+		return self._sim.economy.runs_agent_economy()
 
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		"""An actor sells `tonnes` of a material into the one goods market this year. One whose concerns
 		made it, [(node id, tonnes)], will not sell below what they cost it to make."""
-		sim = self._sim
-		reservation = sim.concerns_reservation_ratio(from_concerns, material) if from_concerns else None
-		sim.goods_market.note_sale(seller_id, sim._material_tag(material)[0], tonnes, reservation)
+		self._sim.economy.offer_sale(seller_id, material, tonnes, from_concerns)
 
 	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float) -> None:
 		"""An actor buys `tonnes` of a commodity at the one goods market this year."""
-		self._sim.goods_market.note_purchase(buyer_id, commodity, tonnes)
+		self._sim.economy.goods.note_purchase(buyer_id, commodity, tonnes)
 
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
 		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,
@@ -231,7 +230,7 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 											* self._sim.concern_volume_ratio(node_id))
 
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
-		return self.nodes[node_id]["up"] * self._sim.price_index * capacity
+		return self._sim.economy.concern_upkeep(node_id, capacity)
 
 	def rng_for(self, *parts: Any) -> random.Random:
 		"""A random stream keyed by its inputs, so actors never disturb the world's own."""

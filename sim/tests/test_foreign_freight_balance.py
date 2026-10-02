@@ -7,6 +7,10 @@ metal, a persistent deficit drains the coin stock and lowers the traded price le
 lifts only what its carriers can.
 """
 from .harness import *  # noqa: F401,F403
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+
 
 from sim.engine.data import load_civ
 from sim.world import balance_of_payments, freight_cost, sea_freight, trade_between, trade_routes, transport

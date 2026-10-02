@@ -1,6 +1,6 @@
 # Prices use long-run cost, not the current market
 
-**Status:** partly - a yearly material market moves each price around its cost (sim/world/market.py, sim/engine/market_clearing.py), the market now clears producers' offers each at its own cost (Complaint 375) and one coin stock revalues every price (Complaint 338); build-decision amortisation remains
+**Status:** partly - on the agent economy (the default) every price is the year's market clearing, not a long-run cost; build-decision amortisation in the engine's project costs remains
 
 ## What is wrong
 

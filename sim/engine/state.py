@@ -351,6 +351,7 @@ class EconomyState:
 	shortage_condition: Optional[Dict[str, Any]] = None
 	forest_ha: float = 0.0
 	nitre_bed_m2: float = 0.0
+	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
 	market_pressure: float = 0.0
 	output_factor: float = 1.0
 	# real output per person over the opening's, measured when the market closes (real_output.py)
@@ -413,6 +414,7 @@ class ScenarioState:
 	"""Simulation scenario configuration and timeline."""
 	year: int = 100
 	goal_year: Optional[int] = None
+	weather_salt: int = 0     # this game's own weather history, drawn from its dice (Complaint 384)
 	_said_debasement: Optional[int] = None
 	_said_output: Optional[Dict[str, int]] = None
 	_said_scandal: int = 0

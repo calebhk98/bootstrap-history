@@ -1,6 +1,6 @@
 # Goods prices follow a solved long-run cost of the techniques in use, not each producer's cost and supply
 
-**Status:** partly - the market now clears producers' offers, each at the cost of the entry that producer runs, against demand, and the society-wide solved cost is no longer the market price; household prices, the founder's own sales and which entry a producer holds still read society-wide figures (list at the end)
+**Status:** closed - on the agent economy (the default) each producer offers at its own cost and reservation, households pay market prices, and the founder's concerns sell at their own cost at the economy's live prices (sim/economy/producers*.py, economy_port_year._concern_reservation)
 
 The owner's principle: a market price comes from what is in the market, supply against demand. A producer's cost comes from the technique that producer runs. Supply comes from producers who actually produce. The market knows nothing of the tech tree. A technology that is invented but unused changes no price.
 

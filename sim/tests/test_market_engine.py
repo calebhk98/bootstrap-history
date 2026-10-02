@@ -8,6 +8,10 @@ stock windfalls and the founder's own trades, and that the society's
 capacity follows the price.
 """
 from .harness import *  # noqa: F401,F403
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+
 
 from sim.engine.goods_market_api import FOUNDER
 

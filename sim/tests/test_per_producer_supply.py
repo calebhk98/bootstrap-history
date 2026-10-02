@@ -4,6 +4,10 @@ against demand, a technique nobody runs changes nothing, and one coin stock move
 The pure clearing and the structural test (the market knows nothing of the tech tree) are in
 test_producer_market.py; these run the engine."""
 from .harness import *  # noqa: F401,F403
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+
 
 import copy
 

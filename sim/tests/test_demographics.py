@@ -106,7 +106,7 @@ check("'population' is in KNOWN_COMMANDS and survives the fog/pointer "
 # --- the hire refusal says WHOSE market this is, at the moment a player
 # actually feels a price premium bite (not only in the literate-wall text,
 # which already said this before this fix existed).
-s_fr = sim(capital=50.0)
+s_fr = sim(capital=50.0, agent_economy=False)
 s_fr.labour_market.press("millwright", 10 * s_fr.HOURS_PER_PERSON_YEAR)
 ok_fr, msg_fr = s_fr.hire("millwright", 3)
 check("a cash refusal driven by a real price premium says this is one "

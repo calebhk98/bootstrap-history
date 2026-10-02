@@ -18,6 +18,7 @@
   "currency": "Ptolemaic silver tetradrachm",
   "currency_words": {"long": "tetradrachms", "short": "tetradr"},
   "coin_standard": {
+    "regime": "struck_coin",
     "material": "silver_kg",
     "kg_per_unit": 0.012,
     "source": "Ptolemaic silver tetradrachm: about 13.7 g (a Ptolemy X example weighs 13.67 g) at roughly 0.9 fineness, about 12 g of silver (Wikipedia, Ptolemaic coinage; wildwinds, Ptolemy X; Kelsey Museum blog on Ptolemaic currency). Confidence low on fineness."

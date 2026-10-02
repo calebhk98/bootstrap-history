@@ -166,6 +166,9 @@ class LabourMarket:
 
     def _annual(self, trade, scarcity):
         sim = self._sim
+        wage = sim.economy.agent_wage_per_hour(trade)
+        if wage is not None:
+            return wage * sim.HOURS_PER_PERSON_YEAR * scarcity
         base = sim.base_annual_wage(trade)
         factors = sim.wage_cost_factors(trade)
         return (base * factors["weighted"] * sim.price_index

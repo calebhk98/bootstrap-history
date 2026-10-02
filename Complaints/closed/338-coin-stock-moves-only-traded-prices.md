@@ -1,6 +1,6 @@
 # A drained or swollen coin stock moves only traded prices
 
-**Status:** partly - one coin stock now moves every good's price and every wage in the home money, traded or not (`Sim.home_price_level`, applied through `money_per_labour_hour`); velocity and real output are still fixed, the debt rate does not follow the stock, and authored money amounts are not revalued (Complaint 381)
+**Status:** closed - on the agent economy (the default) the coin stock is held by agents whose cash targets make velocity an outcome, output is what producers sell, and the interest rate clears savings against borrowing; authored money amounts are Complaint 381
 
 Foreign trade now moves coin metal between economies (`Complaints/323`), and a
 stock above or below its opening level scales the prices used to compare the

@@ -11,7 +11,7 @@ from sim.engine.proto.saveload import load_state, save_state
 
 def grievance_game(civ="rome_100ad", share=0.6, capacity=None, purse=1.0e12):
     """A game whose founder has sold `share` of the opening iron market this year."""
-    game = sim(civ=civ)
+    game = sim(civ=civ, agent_economy=False)   # the displaced-sales market is the engine's own
     if capacity is not None:
         game.state_capacity = capacity
     game._open_market_book()

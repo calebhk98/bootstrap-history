@@ -1,5 +1,5 @@
 {
- "_internal": "TRANSITIONAL: surplus_budget_share is a labelled heuristic weight per need (normalised over the needs that have a priced good). A good's effectiveness is per unit of its own production unit, in the need's unit. Mods add needs (ids namespaced by mod id) and add or extend goods; a production entry may also carry `satisfies` and `supply_per_year` for its dominant output. `supply_per_year` states a limited supply with no deposit model behind it, and floors the price at what that supply clears.",
+ "_internal": "`subsistence_from_climate` names the floor per person sim/world/climate_needs.py calculates for each tile from its climate. TRANSITIONAL: surplus_budget_share is a labelled heuristic weight per need (normalised over the needs that have a priced good). A good's effectiveness is per unit of its own production unit, in the need's unit. Mods add needs (ids namespaced by mod id) and add or extend goods; a production entry may also carry `satisfies` and `supply_per_year` for its dominant output. `supply_per_year` states a limited supply with no deposit model behind it, and floors the price at what that supply clears.",
  "needs": {
   "food": {
    "surplus_budget_share": 0.30,
@@ -8,11 +8,13 @@
    "effectiveness_basis": "food energy per kg relative to wheat grain"
   },
   "shelter": {
+   "subsistence_from_climate": "shelter_m3",
    "surplus_budget_share": 0.12,
    "unit": "cubic metres of wall or frame",
    "effectiveness_basis": "volume of structure one unit builds"
   },
   "clothing": {
+   "subsistence_from_climate": "clothing_kg",
    "surplus_budget_share": 0.13,
    "unit": "kg of cloth equivalent",
    "effectiveness_basis": "cover and warmth per kg relative to plain woven cloth"
@@ -42,6 +44,7 @@
    "effectiveness_basis": "flavouring strength per kg relative to black pepper; taken equal across the spices until a source gives them separately"
   },
   "warmth_and_light": {
+   "subsistence_from_climate": "warmth_mj",
    "surplus_budget_share": 0.15,
    "unit": "megajoules of fuel heat",
    "effectiveness_basis": "heating value per kg"
@@ -53,6 +56,7 @@
   "olive_oil_kg": {"satisfies": {"food": 2.7}},
   "fat_kg": {"satisfies": {"food": 2.4}},
   "mat_sugar": {"satisfies": {"food": 1.2}},
+  "cacao_kg": {"satisfies": {"food": 1.6}},
   "starch_kg": {"satisfies": {"food": 1.05}},
   "wine_common_kg": {"satisfies": {"food": 0.2}},
 

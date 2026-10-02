@@ -1,5 +1,9 @@
 """Food, housing, trade schools, demographics, and durable material stock."""
 from .harness import *
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+
 from sim.engine.proto.render import render_pretty
 from sim.engine.proto.typed import parse_typed
 

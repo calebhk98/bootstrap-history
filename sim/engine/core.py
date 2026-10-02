@@ -62,6 +62,7 @@ from .society_disclosure import DisclosureMixin
 from .interest_groups import InterestGroupsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
+from .economy_port import EconomyPortMixin, switch_requested
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from .actors import Household
@@ -215,7 +216,7 @@ YEARLY_RECORD_LIMIT = 300
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin, LivingStockMixin, CoinHoardMixin,
-          LivingStockTradeMixin, LivingStockYearlyMixin):
+          LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -314,6 +315,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             actors=ActorsState(),
             _civ=self.civ.get("id"),
         )
+        if switch_requested(self.cfg):
+            self.state.economy.agent_economy["on"] = True
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
         # perf_fingerprint - and both round-trip through saveload's `_fog`
@@ -625,6 +628,11 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # particular, never infer Roman materials or institutions for another
         # civilization from those fields.
         self._reconnect_state_hooks()
+        if self.economy.runs_agent_economy():
+            # opened now, not by the first question a screen or a cost asks: while it opens the engine's
+            # own figures answer, and nothing computed from them may stay cached afterwards
+            self.economy.open_agent()
+            self._done_changed()
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
@@ -848,8 +856,10 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
 
     def _farm_year_weather_seed(self, year, region=None):
         """A deterministic seed for one year's harvest weather draw, a pure
-        function of this civilisation's id, an optional region, and the
-        calendar year - NOT one long-lived `random.Random` advanced
+        function of this civilisation's id, an optional region, the
+        calendar year and the game's weather salt (drawn once from the
+        game's dice and kept in the save, so each seed has its own weather
+        history: Complaint 384) - NOT one long-lived `random.Random` advanced
         sequentially year over year.
 
         WHY THIS STAYS A PURE FUNCTION OF (CIVILISATION ID, REGION, YEAR)
@@ -888,8 +898,11 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         region_component = 0 if region is None else sum(
             (index + 1) * ord(character) for index, character
             in enumerate(str(region)))
+        scenario = self.state.scenario
+        if not scenario.weather_salt:
+            scenario.weather_salt = self.rng.getrandbits(30) + 1   # the game's dice, so each seed has its own weather
         return (civ_component * 1000003 + region_component * 7919
-                + int(year) * 97) % (2 ** 32)
+                + int(year) * 97 + scenario.weather_salt * 104729) % (2 ** 32)
 
     _WeatherCell = collections.namedtuple(
         "_WeatherCell", ("cell_id", "lat", "lon", "weight"))

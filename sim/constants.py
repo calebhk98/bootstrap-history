@@ -329,7 +329,27 @@ def _import_declaring_modules():
                    "sim.world.ore_dressing",
                    "sim.world.land",
                    "sim.world.demand",
-                   "sim.world.labour_market"):
+                   "sim.world.labour_market",
+                   "sim.world.climate_needs",
+                   "sim.world.climate_temperatures",
+                   "sim.economy.credit",
+                   "sim.economy.currency",
+                   "sim.economy.foreign",
+                   "sim.economy.goods_market",
+                   "sim.economy.households_cohort",
+                   "sim.economy.households_orders",
+                   "sim.economy.inventory",
+                   "sim.economy.labour",
+                   "sim.economy.market_areas",
+                   "sim.economy.market_memory",
+                   "sim.economy.merchants",
+                   "sim.economy.metal_stock",
+                   "sim.economy.opening",
+                   "sim.economy.producers",
+                   "sim.economy.producers_close",
+                   "sim.economy.tile_costs",
+                   "sim.economy.year_labour",
+                   "sim.engine.economy_port_year"):
         try:
             __import__(module)
         except Exception as exc:                      # noqa: BLE001

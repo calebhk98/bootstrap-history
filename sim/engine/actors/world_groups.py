@@ -39,9 +39,9 @@ class GroupView:
 	def _commodity_quote(self, commodity: str) -> Any:
 		"""The quote for the first priced material the commodity is made of (its main product)."""
 		sim = self._sim
-		made_of = [material for material, group in sim._material_commodity_map().items() if group == commodity]
+		made_of = sim.economy.materials_in(commodity)
 		for material in made_of + [commodity]:
-			quote = sim.material_trade_quote(material)
+			quote = sim.economy.trade_quote(material)
 			if quote is not None:
 				return quote
 		return None
@@ -52,7 +52,7 @@ class GroupView:
 		sim = self._sim
 		wage = self._annual_labourer_wage()
 		sectors = []
-		for commodity in sim.goods_market.commodities_sold_by(FOUNDER):
+		for commodity in sim.economy.goods.commodities_sold_by(FOUNDER):
 			state = sim.market_state(commodity)
 			quote = self._commodity_quote(commodity)
 			if state is None or quote is None:
@@ -76,13 +76,13 @@ class GroupView:
 		they cannot hire; the value lost is those hands at the going wage."""
 		sim = self._sim
 		sectors = []
-		for trade in sim.labour_market.pressured_trades():
-			factor = sim.labour_market.price_factor(trade)
+		for trade in sim.economy.labour.pressured_trades():
+			factor = sim.economy.labour.price_factor(trade)
 			if factor <= 1.0 + 1e-9:
 				continue
 			pool = sim.market_supply(trade) / sim.HOURS_PER_PERSON_YEAR
 			priced_out = pool * (1.0 - 1.0 / factor)
-			wage = sim.labour_market.unscarce_annual(trade)
+			wage = sim.economy.labour.unscarce_annual(trade)
 			sectors.append(Sector(
 				"squeezed_employers", trade, "employers of %s in the founder's town" % trade,
 				"hiring by you and the firms has raised the going price of %s by %d%% and priced out about %s hands"

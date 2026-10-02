@@ -1,5 +1,9 @@
 """Endogenous wage foundations: food, housing, tools, skill, and scarcity."""
 from .harness import *
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+
 from sim.engine.data import ANNUAL_WAGE
 
 

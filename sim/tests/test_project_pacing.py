@@ -63,6 +63,8 @@ s_dl = sim(capital=20000000.0)
 for _p in NODES["logarithms"]["pre"]:
     s_dl.done.add(_p)
 s_dl.scholars = s_dl.artisans = 50.0
+for _cohort in ("children", "working_age", "elderly"):    # fewer people, so the trade is short of the project
+    setattr(s_dl.population, _cohort, getattr(s_dl.population, _cohort) * 0.8)
 s_dl._done_changed()
 check("a project needing more of a trade than exists is startable",
       s_dl.start_project("logarithms")[0], s_dl.start_reason("logarithms"))

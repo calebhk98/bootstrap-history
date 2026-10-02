@@ -123,8 +123,11 @@ class SimMarketFactor(unittest.TestCase):
                             civ=simulator.load_civ("rome_100ad"))
         derived = next(node for node in nodes.values() if node.get("_revenue_basis") == "output")
         authored = next(node for node in nodes.values() if node.get("_revenue_basis") == "authored")
+        # an output node's factor comes from the market (zero when its purchases cost more than its output
+        # sells for); an authored node's is exactly one
         self.assertEqual(sim.node_output_market_factor(authored), 1.0)
-        self.assertGreater(sim.node_output_market_factor(derived), 0.0)
+        factor = sim.node_output_market_factor(derived)
+        self.assertTrue(0.0 <= factor < float("inf"), factor)
 
 
 if __name__ == "__main__":

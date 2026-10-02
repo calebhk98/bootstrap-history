@@ -45,7 +45,11 @@ class CapitalMarketMixin:
         return markets[civ_id]
 
     def market_rate(self):
-        """The yearly market rate: the civilisation's starting rate until the market has met."""
+        """The yearly market rate: the civilisation's starting rate until the market has met; on the
+        agent economy, its credit market's rate."""
+        rate = self.economy.agent_rate()
+        if rate is not None:
+            return rate
         record = self._market_record()
         if record is None or record.supply <= 0.0:
             return float(self.civ["starting_interest_rate"])

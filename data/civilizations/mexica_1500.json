@@ -50,9 +50,10 @@
     }
   ],
   "coin_standard": {
-    "material": "cotton_fabric_kg",
-    "kg_per_unit": 0.4,
-    "source": "TEMPORARY HEURISTIC. The quachtli (cotton mantle) had no attested mass; the mass here is an unattested estimate. Attested relations: about 100 cacao beans per quachtli (65 to 100 for common grades, Florentine Codex), and about 20 quachtli a year's subsistence. Cotton fabric stands in as the material because cacao is not in the production catalogue; replace with cacao when it is. Confidence low."
+    "regime": "commodity",
+    "material": "cacao_kg",
+    "kg_per_unit": 0.001,
+    "source": "The cacao bean was counted money: about a gram a dry bean (agronomic figure, confidence low), so the unit here is one bean, a thousand to the kilogram. Beans were counted in sacks of 24,000 and about 100 beans bought a quachtli, a cotton cloak that also passed as money (Florentine Codex, book 8 and 10; Berdan, The Aztecs of Central Mexico, 1982). Only the cacao is modelled as money: the economy has one money, so the cloak is an ordinary good (cotton_fabric_kg) priced in beans. Cacao is a good in the production catalogue (cacao_kg) grown in the wet lowlands, so the stock of money rises with the beans the mint buys. Confidence low."
   },
   "debt_bondage": true,
   "fire_quarter": "reed and adobe quarter by the canal",
