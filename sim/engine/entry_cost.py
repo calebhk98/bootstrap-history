@@ -31,22 +31,29 @@ def _context(production: Mapping[str, Any], gates: FrozenSet[str], civilization:
     return wage_by_trade, rent
 
 
-def unit_cost_hours(entry_key: str, material: str, prices_in_hours: Mapping[str, float],
-                    wage_document: Mapping[str, Any], civilization: Mapping[str, Any],
-                    held: FrozenSet[str], production: Optional[Mapping[str, Any]] = None
-                    ) -> Optional[float]:
-    """Labour hours one unit of `material` costs when made by this entry with every input bought at
-    `prices_in_hours`; None where the entry does not make it or an input has no price."""
-    production = production if production is not None else price_solver.default_production_entries()
-    entry = production.get(entry_key)
-    if entry is None or material not in (entry.get("outputs") or {}):
-        return None
-    gates = frozenset(price_solver.all_gate_nodes(production) & held)
-    wage_by_trade, rent = _context(production, gates, civilization,
-                                   solve_prices.wage_ratios_by_trade(wage_document))
-    anchors = joint_allocation.build_demand_anchors(civilization["id"], civilization=civilization)
-    result = solve_prices_core.recipe_cost_and_allocation(
-        entry_key, entry, prices_in_hours, wage_by_trade, rent_hours_per_kg_by_material=rent,
-        demand_anchor_price_by_material=anchors.prices(prices_in_hours) if anchors else None,
-        interest_rate=float(civilization["starting_interest_rate"]))
-    return None if result is None else result[1].get(material)
+class CostBook:
+    """The wages, rent and demand anchors one price table is costed against, worked out once."""
+
+    def __init__(self, prices_in_hours: Mapping[str, float], wage_document: Mapping[str, Any],
+                 civilization: Mapping[str, Any], held: FrozenSet[str],
+                 production: Optional[Mapping[str, Any]] = None) -> None:
+        self.production = production if production is not None else price_solver.default_production_entries()
+        self.prices = prices_in_hours
+        self.civilization = civilization
+        gates = frozenset(price_solver.all_gate_nodes(self.production) & held)
+        self.wages, self.rent = _context(self.production, gates, civilization,
+                                         solve_prices.wage_ratios_by_trade(wage_document))
+        anchors = joint_allocation.build_demand_anchors(civilization["id"], civilization=civilization)
+        self.anchors = anchors.prices(prices_in_hours) if anchors else None
+        self.interest = float(civilization["starting_interest_rate"])
+
+    def unit_cost_hours(self, entry_key: str, material: str) -> Optional[float]:
+        """Labour hours one unit of `material` costs when made by this entry with every input bought at
+        the table's prices; None where the entry does not make it or an input has no price."""
+        entry = self.production.get(entry_key)
+        if entry is None or material not in (entry.get("outputs") or {}):
+            return None
+        result = solve_prices_core.recipe_cost_and_allocation(
+            entry_key, entry, self.prices, self.wages, rent_hours_per_kg_by_material=self.rent,
+            demand_anchor_price_by_material=self.anchors, interest_rate=self.interest)
+        return None if result is None else result[1].get(material)

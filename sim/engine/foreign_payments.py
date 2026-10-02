@@ -67,12 +67,11 @@ class ForeignPaymentsMixin:
 
     def _home_opening_coin_units(self):
         """Coin the society opened with, at the opening's money (not today's price level)."""
-        schedule = self._opening_wage_schedule()
-        cached = getattr(self, "_opening_coin_cache", None)
-        if cached is None or cached[0] is not schedule:
-            cached = self._opening_coin_cache = (schedule, self._opening_coin_units(
-                schedule.opening_money_per_labour_hour * HOURS_PER_WORKER_YEAR))
-        return cached[1]
+        opening = self.__dict__.get("_opening_coin_value")
+        if opening is None:
+            opening = self._opening_coin_value = self._opening_coin_units(
+                self._opening_wage_schedule().opening_money_per_labour_hour * HOURS_PER_WORKER_YEAR)
+        return opening
 
     def home_coin_stock_units(self):
         """Coin this society holds: its opening stock plus what trade has brought in."""
@@ -82,8 +81,12 @@ class ForeignPaymentsMixin:
     def home_price_level(self):
         """Price level of this society against its opening one: its coin stock against the opening's, the
         level of every good and wage in the home money, traded or not."""
-        opening = self._home_opening_coin_units()
-        return balance_of_payments.price_level(self.home_coin_stock_units(), opening)
+        held = self.__dict__.get("_price_level_held")
+        if held is not None:
+            return held
+        opening = self.__dict__.get("_opening_coin_value") or self._home_opening_coin_units()
+        stock = opening + sum(ledger["home_coin_units"] for ledger in self.state.economy.foreign_ledger.values())
+        return balance_of_payments.price_level(stock, opening)
 
     def _partner_coin_opening_units(self, civilization_id):
         return _partner_opening_units(civilization_id)

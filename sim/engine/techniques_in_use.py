@@ -12,16 +12,20 @@ what that producer runs and supply from what it makes, would replace the solved 
 
 class TechniquesInUseMixin:
 
+    def techniques_epoch(self):
+        """Changes whenever the techniques in use might."""
+        projects = self.state.projects
+        return (getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
+                self.actor_market_version())
+
     def price_epoch(self):
         """Changes whenever the techniques in use might, or the price level does: for caches whose
         answers read prices."""
-        projects = self.state.projects
-        return (getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
-                self.actor_market_version(), self.home_price_level())
+        return self.techniques_epoch() + (self.home_price_level(),)
 
     def techniques_in_use(self):
         """Nodes whose production entries some producer runs now."""
-        epoch = self.price_epoch()
+        epoch = self.techniques_epoch()
         cached = getattr(self, "_techniques_in_use_cache", None)
         projects = self.state.projects
         if (cached is not None and cached[0] == epoch and cached[2] is projects.done
@@ -32,5 +36,7 @@ class TechniquesInUseMixin:
             for firm in self.actors.active_firms():
                 in_use.update(firm.concerns)
         in_use = frozenset(in_use)
+        if cached is not None and cached[1] == in_use:
+            in_use = cached[1]      # the same set stays the same object, so what is keyed on it holds
         self._techniques_in_use_cache = (epoch, in_use, projects.done, projects.operating)
         return in_use

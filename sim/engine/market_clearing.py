@@ -182,8 +182,18 @@ class MarketClearingMixin:
             self._market_entry(self._material_tag(material)[0])
 
     def _step_market(self):
-        """Close the year: capacity follows the price, unsold goods carry on."""
+        """Close the year: capacity follows the price, unsold goods carry on. Every commodity clears at the
+        price level the year opened with; the coin the year's trade moves counts from the next year."""
         self._open_market_book()
+        self._price_level_held = self.home_price_level()
+        try:
+            self._close_commodities()
+        finally:
+            self._price_level_held = None
+        self.foreign_fleet_year_end()
+        self._close_real_output()
+
+    def _close_commodities(self):
         book = self.state.economy.market_book
         for commodity in sorted(book):
             entry = book[commodity]
@@ -200,5 +210,3 @@ class MarketClearingMixin:
             entry["traded_tonnes"] = outcome.quantity_traded_tonnes
             wanted = outcome.quantity_traded_tonnes + outcome.unmet_demand_tonnes
             entry["cleared_share"] = outcome.quantity_traded_tonnes / wanted if wanted > 0.0 else 1.0
-        self.foreign_fleet_year_end()
-        self._close_real_output()

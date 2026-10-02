@@ -67,24 +67,26 @@ class ProducerCostsMixin:
                 return chosen[material]
         return None
 
-    def _cost_hours(self, entry_key, material, hours):
-        return entry_cost.unit_cost_hours(entry_key, material, hours, self._opening_wage_document(),
-                                          self.civ, self.techniques_in_use())
+    def _cost_book(self):
+        """What entries are costed against: the incumbents' prices, remembered while that table stands."""
+        hours = self._price_tables()[0]
+        cache = getattr(self, "_cost_book_cache", None)
+        if cache is None or cache[0] is not hours:
+            cache = self._cost_book_cache = (hours, entry_cost.CostBook(
+                hours, self._opening_wage_document(), self.civ, self.techniques_in_use()), {})
+        return cache
 
     def entry_cost_ratio(self, entry_key, material):
         """A unit of `material` made by this entry over the same made by the incumbents' entry, both at the
         prices the incumbents face; one where either cannot be costed."""
-        hours = self._price_tables()[0]
-        cache = getattr(self, "_cost_ratio_cache", None)
-        if cache is None or cache[0] is not hours:
-            cache = self._cost_ratio_cache = (hours, {})
+        _hours, book, ratios = self._cost_book()
         key = (entry_key, material)
-        if key not in cache[1]:
+        if key not in ratios:
             reference_key = self._reference_entry(material)
-            own = self._cost_hours(entry_key, material, hours)
-            reference = self._cost_hours(reference_key, material, hours) if reference_key else None
-            cache[1][key] = own / reference if own is not None and reference else 1.0
-        return cache[1][key]
+            own = book.unit_cost_hours(entry_key, material)
+            reference = book.unit_cost_hours(reference_key, material) if reference_key else None
+            ratios[key] = own / reference if own is not None and reference else 1.0
+        return ratios[key]
 
     def concern_cost_ratio(self, node_id, material):
         """The cost ratio of the cheapest entry a concern on this node holds that makes `material`."""

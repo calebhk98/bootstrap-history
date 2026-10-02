@@ -50,7 +50,7 @@ SHORT_RUN_SUPPLY_PRICE_ELASTICITY = declare(
         "deposit costs in sim/world/deposits.py would give a per-material "
         "curve.")
 
-CLEARING_BISECTION_STEPS = 40
+CLEARING_BISECTION_STEPS = 34
 
 DEFAULT_FLOOR_RATIO = declare(
     "DEFAULT_FLOOR_RATIO", 0.4, kind="temporary_heuristic",
