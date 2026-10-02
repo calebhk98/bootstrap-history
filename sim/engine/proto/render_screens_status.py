@@ -386,6 +386,14 @@ def render_rush(out):
             lines.append("  filters: " + ", ".join("%s=%s" % pair for pair in sorted(out["filters"].items())))
         if "total_founder_hours" in out:
             lines.append("  founder hours owed: %s" % _fmt_num(out["total_founder_hours"]))
+        for row in out.get("trade_bottlenecks") or []:
+            lines.append("  BOTTLENECK %s: wants %s hours a year, society can supply %s"
+                         % (row["trade"], _fmt_num(row["demand_hours_this_year"]),
+                            _fmt_num(row["supply_hours_this_year"])))
+        if out.get("risk_exposure"):
+            lines.append("  risk: about %s of these would be expected to fail; riskiest %s"
+                         % (_fmt_num(out["risk_exposure"]["expected_failures"]),
+                            out["risk_exposure"]["riskiest"]))
         for row in out.get("would_start") or []:
             lines.append("  WOULD START %s (%s): %s" % (row.get("id"),
                          _fmt_num(row.get("cost")), row.get("name")))

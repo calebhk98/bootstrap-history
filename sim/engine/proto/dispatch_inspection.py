@@ -14,7 +14,7 @@ from ..figures import FIGURES
 from .dispatch_figures import figure_reply
 from .guidance import LEVERAGE_NOTE, leverage_points
 from .saving_plan import saving_reason
-from ..market_report import goods_market_line
+from ..market_report import goods_market_line, opening_effect
 from ..knowledge_warning import knowledge_loss_warning
 from ..critical_path_remaining import active_years_left, remaining_critical_path_years
 from ..data import closure, topo_order
@@ -151,6 +151,8 @@ def _cmd_why(sim, nodes, cmd, ended):
             nodes, node_id, sim.done, active_years_left(nodes, sim.active)), 1))
     if goods_market_line(sim, node_id):
         explained["goods_market_line"] = goods_market_line(sim, node_id)
+    if opening_effect(sim, node_id):
+        explained["opening_effect"] = opening_effect(sim, node_id)
     return dict(ok=True, **explained)
 
 

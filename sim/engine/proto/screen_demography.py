@@ -2,13 +2,14 @@
 and deaths, disease and food pressure, and the trades, read from the
 population model and from population_report.
 """
+from .demography_history import recent_shocks, recovery
 from ..hazard_window import hazards_not_yet_past
 
 
 def _last_year(sim):
     flows = sim._last_demographic_step
     if flows is None:
-        return None
+        return _last_year_from_record(sim)
     start = flows.start_total
     return {
         "births": round(flows.births), "deaths": round(flows.deaths),
@@ -20,6 +21,15 @@ def _last_year(sim):
         "deaths_per_thousand": round(1000 * flows.deaths / start, 1) if start else None,
         "nutrition_ratio": round(flows.nutrition_ratio, 4),
     }
+
+
+def _last_year_from_record(sim):
+    record = sim.state.population.yearly_record
+    if not record:
+        return None
+    last = record[-1]
+    return {"births": last["births"], "deaths": last["deaths"],
+            "nutrition_ratio": last["nutrition_ratio"], "year": last["year"]}
 
 
 def _hazards_costing_people(sim):
@@ -46,10 +56,13 @@ def demography_report(sim):
         "last_year": _last_year(sim),
         "disease_burden": round(sim._disease_burden(), 4),
         "epidemics_under_way": _hazards_costing_people(sim),
+        "recent_shocks": recent_shocks(sim.state.population.yearly_record),
+        "recovery": recovery(sim.state.population.yearly_record, total, sim.year),
         "wage_index": round(sim.wage_index, 4),
         "trades": sim.population_report()["trades"],
         "not_held": ["the model has three age cohorts, not single years of age",
-                     "no recovery timeline: nothing here projects the population forward",
-                     "last year's births and deaths exist only for a year simulated "
-                     "in this session; a freshly loaded save shows none until the next step"],
+                     "the recovery figure extrapolates recent growth; it does not model "
+                     "food, disease or war ahead",
+                     "the yearly record keeps only the most recent years of totals, "
+                     "births and deaths, not the age cohorts"],
     }

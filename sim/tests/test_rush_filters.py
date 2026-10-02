@@ -43,3 +43,24 @@ check("rush preview totals the founder hours",
 
 # bad value
 check("rush rejects a non-numeric max_cost", _rush(sim(capital=_CAPITAL), max_cost="lots")["ok"] is False)
+
+# explicit id list
+_ids_sim = sim(capital=_CAPITAL)
+_pick = [node_id for node_id in _ids_sim.order if _ids_sim.can_start(node_id)][:2]
+_result = _rush(_ids_sim, ids=",".join(_pick), limit=10)
+check("rush ids starts exactly the named startable projects",
+      sorted(row["id"] for row in _result["started"]) == sorted(_pick), _result["started"])
+_unknown = _rush(sim(capital=_CAPITAL), ids="no_such_node", preview=True)
+check("rush ids rejects an unknown id", _unknown["ok"] is False and "no_such_node" in _unknown["error"], _unknown)
+
+# preview shows bottlenecks and risk
+_preview = _rush(sim(capital=_CAPITAL), preview=True, limit=30)
+check("rush preview carries risk exposure",
+      "risk_exposure" in _preview and "expected_failures" in _preview["risk_exposure"], _preview.get("risk_exposure"))
+_expected = sum(NODES[row["id"]]["risk"] for row in _preview["would_start"])
+check("...as the sum of the started projects' own risk",
+      abs(_preview["risk_exposure"]["expected_failures"] - _expected) < 0.01, _preview["risk_exposure"])
+check("rush preview lists trade bottlenecks as a list of trades with demand and supply",
+      isinstance(_preview.get("trade_bottlenecks"), list)
+      and all({"trade", "demand_hours_this_year", "supply_hours_this_year"} <= set(row)
+              for row in _preview["trade_bottlenecks"]), _preview.get("trade_bottlenecks"))
