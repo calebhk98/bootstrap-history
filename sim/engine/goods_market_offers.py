@@ -25,12 +25,13 @@ LEVEL_DECIMALS = 4
 class GoodsOffers:
     """Mixin of `GoodsMarket`: reads of who sells what."""
 
-    def merchants_cost_share(self, route):
-        """Merchants' costs over freight as a share of the price at the origin: margin, loss and
-        interest, the terms the traders' flows are cleared with, at the market rate to a few decimals."""
+    def merchants_cost_share(self, route, material=None):
+        """Merchants' costs over freight as a share of the price at the origin: margin, loss
+        (at sea, and spoilage of a named material) and interest, the terms the traders' flows are
+        cleared with, at the market rate to a few decimals."""
         sim = self._sim
         return trader_response.cost_share_of_price(
-            MERCHANT_MARGIN_SHARE, sim._route_cargo_loss_share(route),
+            MERCHANT_MARGIN_SHARE, sim._cargo_lost_share(route, material),
             round(sim.market_rate(), RATE_DECIMALS), sim._trader_cycle_years(route))
 
     def partner_price_level(self, civilization_id):
@@ -55,7 +56,7 @@ class GoodsOffers:
         if not partner_price:
             return None
         cost = partner_price * self.partner_price_level(civilization_id)
-        return (cost * (1.0 + self.merchants_cost_share(route))
+        return (cost * (1.0 + self.merchants_cost_share(route, material))
                 + route.cost_per_tonne * tonnes_per_unit(material))
 
     def _worked_out_offers(self):

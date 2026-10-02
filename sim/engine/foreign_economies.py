@@ -254,7 +254,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
             foreign_price *= self.partner_price_level(civilization_id)
             foreign_conditions = self._foreign_conditions(entry, home_conditions)
             lift_in, lift_out = self.foreign_lift_left_tonnes(civilization_id, facts["route"])
-            terms = self.trader_terms(civilization_id, facts, home_price, foreign_price)
+            terms = self.trader_terms(civilization_id, facts, home_price, foreign_price, commodity)
             previous = -entry["trade_tonnes"]
             outcome = trader_response.clear_with_traders(
                 home_conditions, foreign_conditions, home_price, foreign_price, freight, terms,

@@ -1,0 +1,12 @@
+{
+ "_doc": "Share-lost rate of a good while it travels or waits, as a continuous decay rate per year (the share lost over t years is 1 - exp(-rate * t)). Goods not listed do not spoil. Rates are labelled estimates, confidence C or D; a storage and handling model per good would derive them.",
+ "rates_per_year": {
+  "wheat_kg": {"rate": 0.08, "confidence": "C", "source": "Granary loss to pests, rot and rodents, 5-15 per cent a year (the same figure as GRAIN_SPOILAGE_RATE_PER_YEAR in sim/world/agriculture.py)."},
+  "milk_kg": {"rate": 300.0, "confidence": "D", "source": "Unpreserved milk sours within a day or two without refrigeration; a rate that loses most of it in a day."},
+  "hide_kg": {"rate": 3.0, "confidence": "D", "source": "Raw hides putrefy within weeks unless salted or tanned; taken as most lost over a few months."},
+  "olive_oil_kg": {"rate": 0.15, "confidence": "D", "source": "Oil turns rancid over a year or two in amphorae; a modest yearly loss."},
+  "wine_common_kg": {"rate": 0.2, "confidence": "D", "source": "Ordinary wine turns to vinegar within a year or two unless it is a strong, resinated wine."},
+  "silk_cocoon_kg": {"rate": 20.0, "confidence": "D", "source": "Cocoons must be stifled and reeled within weeks or the moth emerges and cuts the thread."},
+  "silkworm_eggs_kg": {"rate": 2.0, "confidence": "D", "source": "Eggs hatch with the warmth of spring unless kept cold; held for months at most."}
+ }
+}

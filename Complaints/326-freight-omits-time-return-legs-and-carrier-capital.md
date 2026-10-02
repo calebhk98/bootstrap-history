@@ -1,6 +1,6 @@
 # Freight omits travel time, empty returns and the carriers' capital
 
-**Status:** partly - foreign route freight now comes from the carrier: travel days per leg from its pace and the leg's difficulty, the empty return when last year's flows with the partner were one-sided, the carrier's capital (timber for vehicles and hulls, the animals' prices) at the society's market rate, and hulls lost at sea (`sim/world/freight_cost.py`, `sim/engine/foreign_routes.py`); still open: tolls and port dues, authored river reaches, and domestic freight (`economy_freight.py`) which still prices feed and driver only; the cargo's own time, spoilage and loss at sea are 340
+**Status:** partly - freight from the carrier is one function (`freight_money_per_tonne_km` in `sim/world/freight_cost.py`) for foreign legs and domestic hauls: travel days from the carrier's pace, the empty return, the carrier's capital at the society's market rate, hulls lost at sea; domestic freight (`economy_freight.py`, through `land_freight_money_per_tonne_km`) now carries the capital and the empty return too (a labelled heuristic: no domestic flow ledger, so the cart returns empty); still open: tolls and port dues, authored river reaches
 
 Route freight (`sim/engine/foreign_routes.py`) prices feed, crew rations and
 hours per tonne-km and a port handling charge per sea leg. It leaves out: goods
@@ -17,8 +17,8 @@ tonne; none carries a duration.
 
 ## What it would take (remaining)
 
-A duration per leg from each mode's speed, an interest and spoilage charge on
-the cargo's value, carrier prices from the tree's ship and cart nodes, and
-authored river reaches.
+Tolls and port dues per leg, and authored river reaches. The cargo's own
+charges are `Complaints/340`; the domestic return leg wants a flow ledger so it
+need not assume the cart returns empty.
 
 Related: 135, 323, 338.
