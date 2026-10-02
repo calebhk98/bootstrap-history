@@ -1,6 +1,6 @@
 # The price of silver and gold follows the yearly cost of mining, not the stock of metal in circulation and the demand for money
 
-**Status:** partly - on the agent economy (`cfg["agent_economy"]`, docs/architecture/ECONOMY_AGENTS.md) the mint buys metal at its price and coin is melted when metal is worth more, so the price of goods in coin follows the coin stock; closes when that economy becomes the default
+**Status:** closed - the agent economy is the default (docs/architecture/ECONOMY_AGENTS.md): the mint buys metal at its price and holds a real stock, coin is melted when metal is worth more, and mined metal raises the coin stock and prices (sim/tests/test_economy_money_regimes.py, test_economy_mint.py)
 
 Measured: the solver prices silver at its marginal deposit's production cost (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`, about 378 hours per kg), and the coin is pinned to that, so every nominal wage inherits it. A pre-industrial empire held a stock of silver many times its yearly output (Patterson 1972, about 10,000 t in the mid-2nd century against about 200 t a year; cited, not opened), so the price reflects money demand over the stock, hoarding, plate and ornament, with production cost as the long-run floor. There is no metal stock, no losses or hoarding and no minting demand.
 
