@@ -113,9 +113,17 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         spent = ledger.money_out.get(cohort_id, 0.0)
         closed, moves = households.close_year(cohort, received, view, setup.specs, setup.basket_for(cohort.tile),
                                                    income, spent)
-        record.book.move_many(moves)
+        record.book.move_many(held_only(moves, record.book))
         record.cohorts[cohort_id] = closed
     record.property_income = property_income
+
+
+def held_only(moves, book):
+    """The moves with each giver's quantity cut to what it holds: settlement can deliver a rounding hair
+    less than a fill, and an agent consumes what it has, not what its fills say."""
+    return [move if is_edge(move.giver) else
+            dataclasses.replace(move, quantity=min(move.quantity, max(0.0, book.stock(move.giver, move.good, move.tile))))
+            for move in moves]
 
 
 def _with_sales(producer, recipe, ledger: YearLedger):
@@ -132,11 +140,13 @@ def _with_sales(producer, recipe, ledger: YearLedger):
 
 
 def national_prices(record) -> Dict[str, float]:
-    """Each good's price over its areas, weighted by what traded there."""
+    """Each good's price over its areas, weighted by what each usually trades (this year's volume
+    before any is remembered)."""
+    weights = record.memory.volume_weights or record.volumes
     totals: Dict[str, Tuple[float, float, float]] = {}
     for key, price in record.memory.prices.items():
         good = key.split("|", 1)[0]
-        volume = record.volumes.get(key, 0.0)
+        volume = weights.get(key, 0.0)
         value, quantity, plain = totals.get(good, (0.0, 0.0, 0.0))
         totals[good] = (value + price * volume, quantity + volume, plain or price)
     return {good: (value / quantity if quantity > 0.0 else plain)

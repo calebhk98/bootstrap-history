@@ -138,7 +138,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     order = input_depth_order(setup.recipes)
     listed = set(order)
     order += sorted({good for good, _area in order_book} - listed)
-    done = set()
+    done, cleared = set(), set()
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     for good in order:
         for producer_id in by_output.get(good, ()):
@@ -162,6 +162,10 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
             record.volumes[key] = result.quantity
+            record.memory.note_volume(key, result.quantity)
+            cleared.add(key)
+    for key in sorted(set(record.memory.volume_weights) - cleared):
+        record.memory.note_volume(key, 0.0)
 
 
 def _unsold_signal(bids, offers):

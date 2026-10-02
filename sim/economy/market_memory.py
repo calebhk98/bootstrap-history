@@ -20,6 +20,13 @@ OPENING_EXPECTED_INFLATION = declare(
     why="At the opening nobody has seen prices move, so the expectation agents start from is no "
         "change; adaptive expectations then follow what the price level does.")
 
+VOLUME_WEIGHT_SPEED = declare(
+    "VOLUME_WEIGHT_SPEED", 0.3, kind="temporary_heuristic",
+    unit="share of the gap to this year's volume closed in a year", source=None, confidence="D",
+    why="A national price weights each market area by what it usually trades, so trade that moves "
+        "between areas from year to year does not swing it. How long 'usually' is has no measured "
+        "basis; a fixed-basket index with weights from earlier years is the same idea.")
+
 
 def market_key(first: str, area: AreaId) -> str:
     """One string key per (good or trade, area), so the memory saves as plain JSON."""
@@ -36,6 +43,12 @@ class MarketMemory:
     price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
+    volume_weights: Dict[str, float] = field(default_factory=dict)      # market_key(good, area), smoothed
+
+    def note_volume(self, key: str, quantity: float) -> None:
+        """Move a market's usual volume toward what it traded this year."""
+        old = self.volume_weights.get(key)
+        self.volume_weights[key] = quantity if old is None else old + VOLUME_WEIGHT_SPEED * (quantity - old)
 
     def note_price_level(self, currency: CurrencyId, level: float) -> None:
         """Record this year's price level and move the expectation of inflation after it."""
