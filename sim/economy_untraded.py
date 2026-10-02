@@ -13,7 +13,8 @@ any year's market cleared, and for those that never did the reason, from the ord
   sellers_only     offers but never a bid
   ask_above_bids   both, and every seller's reservation was above every buyer's ceiling
   other            both, yet nothing cleared
-Also: the share of the price index's basket value held by goods that have not cleared in the last year.
+shown_at_opening counts goods the game still shows at their opening price (stale: shown a cost or last
+price, not a market's).
 """
 import argparse
 import math
@@ -99,8 +100,11 @@ def report(civ_id, seed, years, listing):
     reasons = {good: reason(good, log, setup, record) for good in goods}
     untraded = [good for good in goods if reasons[good]]
     counts = {name: sum(1 for good in untraded if reasons[good] == name) for name in REASONS}
-    print("%-16s goods %3d  traded %3d  never_cleared %3d  frozen_at_opening %3d  " % (
-        civ_id, len(goods), len(goods) - len(untraded), len(untraded), len(frozen))
+    from sim.economy.notional import shown_prices
+    shown, stale = shown_prices(setup, record)
+    shown_frozen = [good for good in frozen if math.isclose(shown[good], setup.opening_prices[good], rel_tol=1e-12)]
+    print("%-16s goods %3d  traded %3d  never_cleared %3d  frozen_at_opening %3d  shown_at_opening %3d  stale %3d  " % (
+        civ_id, len(goods), len(goods) - len(untraded), len(untraded), len(frozen), len(shown_frozen), len(stale))
         + "  ".join("%s %d" % (name, count) for name, count in counts.items() if count))
     if listing:
         for good in untraded:
