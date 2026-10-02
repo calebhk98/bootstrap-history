@@ -66,11 +66,11 @@ class BudgetView:
 		return self.labour_market.quote_annual(trade)  # type: ignore[attr-defined]
 
 	def commodity_of(self, material: str) -> str:
-		return self._sim._material_tag(material)[0]
+		return self._sim.economy.commodity_of(material)
 
 	def material_cost(self, material: str, tonnes: float) -> float:
 		"""Money to buy this many tonnes of a material at the price the market quotes."""
-		quote = self._sim.material_purchase_cost(material, tonnes)
+		quote = self._sim.economy.purchase_cost(material, tonnes)
 		return 0.0 if quote is None else quote[0]
 
 	def local_staff(self, trade: str, people: float) -> float:

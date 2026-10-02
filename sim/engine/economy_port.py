@@ -34,6 +34,26 @@ class EconomyPort:
         """Every priced material's money price per unit of the material (a read-only table)."""
         return self._sim._material_prices()
 
+    def commodity_of(self, material):
+        """The market a material trades in (several material keys can share one)."""
+        return self._sim._material_tag(material)[0]
+
+    def materials_in(self, commodity):
+        """The material keys that trade in one market, sorted."""
+        return sorted(material for material, group in self._sim._material_commodity_map().items()
+                      if group == commodity)
+
+    def trade_quote(self, material):
+        """The market's quote for a material (buy and sell terms), or None if it has no price."""
+        return self._sim.material_trade_quote(material)
+
+    def offer_sale(self, seller_id, material, tonnes, from_concerns=None):
+        """An actor puts `tonnes` on the market this year; one whose own concerns made it, given as
+        [(node id, tonnes)], will not sell below what they cost it to make."""
+        sim = self._sim
+        reservation = sim.concerns_reservation_ratio(from_concerns, material) if from_concerns else None
+        sim.goods_market.note_sale(seller_id, self.commodity_of(material), tonnes, reservation)
+
     def purchase_cost(self, material, tonnes, already=0.0):
         """(money, mean money per tonne) to buy `tonnes` more, given `already` bought this year;
         None when the material has no price."""
@@ -64,6 +84,11 @@ class EconomyPort:
         """Units of money this society holds."""
         return self._sim.home_coin_stock_units()
 
+    def coin_stock_value(self):
+        """Money's worth of the metal in the coin this society holds, from its coin standard."""
+        coin = self._sim.civ["coin_standard"]
+        return self.coin_stock_units() * coin["kg_per_unit"] * self.material_prices().get(coin["material"], 0.0)
+
     # ---- credit -------------------------------------------------------------------------------
     def base_rate(self):
         """The yearly lending rate in the civilisation's loanable-funds market."""
@@ -81,6 +106,21 @@ class EconomyPort:
     def concern_takings(self, node_id, ramp):
         """Yearly takings of one concern at a given ramp, before the market's price is applied."""
         return self._sim.concern_takings(node_id, ramp)
+
+    def output_value(self):
+        """Money's worth of the society's yearly output at today's prices."""
+        sim = self._sim
+        return sim.real_output_hours() * sim.money_per_labour_hour() * sim.state.economy.output_factor
+
+    def concern_gross(self, node_id):
+        """Yearly takings of a concern once ramped up, with the market's price for its goods applied."""
+        sim = self._sim
+        return (sim.concern_takings(node_id, 1.0) * sim.goods_market_factor(node_id)
+                * sim.node_output_market_factor(sim.nodes[node_id]))
+
+    def concern_upkeep(self, node_id, capacity=1.0):
+        """Yearly upkeep of a concern at a given capacity."""
+        return self._sim.nodes[node_id]["up"] * self.cost_scale() * capacity
 
     def project_cost(self, node_id):
         """What a project costs to carry out now."""

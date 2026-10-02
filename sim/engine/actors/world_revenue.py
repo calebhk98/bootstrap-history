@@ -42,6 +42,4 @@ class RevenueView:
 
 	def coin_stock_value(self) -> float:
 		"""Money's worth of the coin this society holds, from its coin standard."""
-		sim = self._sim
-		coin = sim.civ["coin_standard"]
-		return sim.home_coin_stock_units() * coin["kg_per_unit"] * sim._material_prices().get(coin["material"], 0.0)
+		return self._sim.economy.coin_stock_value()

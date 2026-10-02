@@ -17,14 +17,14 @@ class CapitalView:
 	_sim: Any
 
 	def market_rate(self) -> float:
-		return self._sim.market_rate()
+		return self._sim.economy.base_rate()
 
 	def starting_rate(self) -> float:
 		return float(self._sim.civ["starting_interest_rate"])
 
 	def credit_headroom(self, actor_id: str) -> Optional[float]:
 		"""What lenders will still advance an actor beyond what others owe; None before the market has met."""
-		return self._sim.market_credit_room(actor_id)
+		return self._sim.economy.credit_room(actor_id)
 
 	def state_may_borrow(self, state: Any) -> bool:
 		"""Whether a state holds a technology that declares the `state_credit` mechanic, in its own
@@ -37,7 +37,7 @@ class CapitalView:
 
 	def note_interest_paid(self, amount: float) -> None:
 		"""A borrower's interest joins the pool lenders are paid from."""
-		self._sim.note_interest_paid(amount)
+		self._sim.economy.report_interest_paid(amount)
 
 	def household_saving(self) -> float:
 		"""Yearly saving of the society's households: a share of the income above subsistence, with
