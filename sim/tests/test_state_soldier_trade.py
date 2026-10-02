@@ -34,6 +34,8 @@ small, large = with_army(0.002), with_army(0.2)
 wage_small, wage_large = (g.labour_market.quote_annual("soldier") for g in (small, large))
 check("before the state hires, the soldier wage does not depend on the army it will raise",
       abs(wage_small - wage_large) < 1e-9 * wage_small, (wage_small, wage_large))
+for funded in (small, large):
+    funded.state_treasury().money = 1.0e15  # both states pay in full, so the levy size is the only difference
 one_year(small)
 one_year(large)
 check("soldiers hired by the state raise the soldier wage", small.labour_market.quote_annual("soldier") > wage_small,
