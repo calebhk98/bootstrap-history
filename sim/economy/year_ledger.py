@@ -90,8 +90,9 @@ class YearLedger:
         for fill in result.fills:
             quantity = fill.quantity
             if settled:
-                money = paid_by.get(fill.agent, 0.0) if fill.side == "buy" else paid_to.get(fill.agent, 0.0)
-                quantity = min(quantity, money / result.wage)
+                paid = paid_by if fill.side == "buy" else paid_to
+                quantity = min(quantity, paid.get(fill.agent, 0.0) / result.wage)
+                paid[fill.agent] = paid.get(fill.agent, 0.0) - quantity * result.wage
             if fill.side == "buy":
                 trades = self.hours_hired.setdefault(fill.agent, {})
                 trades[result.trade] = trades.get(result.trade, 0.0) + quantity
