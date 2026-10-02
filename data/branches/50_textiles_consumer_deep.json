@@ -1719,6 +1719,7 @@
  {
   "id": "tx2_jute_fibre",
   "name": "Jute cultivation and fibre",
+  "unheld_reason": "Bengal jute is outside the modelled start regions",
   "cat": "fibres",
   "kind": "RESOURCE",
   "pre": [],
@@ -1804,6 +1805,7 @@
  {
   "id": "tx2_mohair",
   "name": "Mohair: angora goat fibre",
+  "unheld_reason": "Anatolian angora goat fibre is outside the modelled start regions",
   "cat": "fibres",
   "kind": "RESOURCE",
   "pre": [],
@@ -1824,6 +1826,7 @@
  {
   "id": "tx2_cashmere",
   "name": "Cashmere: goat undercoat fibre",
+  "unheld_reason": "Kashmir goat fibre is outside the modelled start regions",
   "cat": "fibres",
   "kind": "RESOURCE",
   "pre": [],
