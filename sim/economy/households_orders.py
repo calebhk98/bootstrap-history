@@ -17,6 +17,7 @@ from sim.constants import declare
 from sim.world.need_satiation import apply_satiation
 
 from . import currency
+from .credit_view import claims_of
 from .households_basket import Basket, PricedNeed, need_prices, satiation_limit
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
@@ -78,8 +79,10 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     reference_spending = cohort.last_year_spending or income_this_year
     target = cohort.cash_target or currency.cash_balance_target(
         reference_spending, view.interest_rate(area_currency), cohort.expected_inflation)
+    # what it has lent counts toward the wealth it spends from, so a loss to default cuts its spending
+    claims = claims_of(view, cohort.agent_id, area_currency)
     spending = max(0.0, min(cash, income_this_year
-                            + currency.spending_adjustment(cash, target, income_this_year)))
+                            + currency.spending_adjustment(cash + claims, target, income_this_year)))
     floor_cost = math.fsum(need.price_index * need.spec.subsistence_per_person * cohort.people
                            for need in priced)
     floors, totals = _need_units(priced, basket, cohort.people, spending - floor_cost)

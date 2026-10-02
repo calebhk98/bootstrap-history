@@ -8,13 +8,15 @@ The year (`economy.Economy.step`), one civilisation's economy:
     1. view      a read-only `MarketView` of last year's prices, wages, rates and this year's holdings
     2. labour    households offer hours, producers and other employers bid for them; `labour.clear`
                  per (trade, area); wages are paid (settlement)
-    3. credit    `credit.service` collects interest and principal and books defaults; then
-                 `credit.clear` matches new loan requests with funds
+    3. credit    `credit.clear` matches loan requests (producers' from last close, households' and
+                 merchants' from now) with savings, so the money reaches borrowers before they order
     4. goods     every agent posts bids and offers planned on the view; markets clear one good at a
                  time in input-depth order, so a good clears after the goods it is made from: before
                  a good clears, its producers `produce` from the inputs and hours they obtained and
                  offer the output; cycles in the recipe graph draw their inputs from stock
-    5. money     `currency.arbitrage` mints or melts at the mint's terms; wear and loss
+    5. money     `credit.service` collects interest and principal from the year's sales, ahead of
+                 carriage, taxes and dividends, and books defaults (a lender's loss, in credit_claims);
+                 `currency.arbitrage` mints or melts at the mint's terms; wear and loss
     6. close     each agent closes its year (consumes, records unmet need, updates expectations,
                  idles or exits); `inventory.carry` applies spoilage to every held stock
 

@@ -26,6 +26,7 @@ from sim.constants import declare
 
 from . import inventory
 from .accounts import DeliveredMove
+from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
 from .protocols import AgentOrders, MarketView
 from .tile_costs import CarriageTable
@@ -108,7 +109,7 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
     offers = [offer for offer in _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate)
               if (offer.good, offer.tile) not in merchant.routes]
     bids: List[Bid] = []
-    remaining = max(0.0, cash)
+    remaining = max(0.0, cash) * (1.0 - BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
     for _rank, good, source, destination, price_here, outlay, room, ceiling in candidates:
         if remaining <= 0.0:
             break
