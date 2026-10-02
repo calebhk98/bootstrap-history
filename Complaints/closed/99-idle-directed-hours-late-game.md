@@ -1,6 +1,6 @@
 # Idle directed hours need better late-game handling
 
-**Status:** partly - `idle` shows directed, committed and idle hours, the kind of delay and what could use the hours, and `state` points at it; still open: a sized training and development-program suggestion and a pre-step warning that names the delay kind
+**Status:** closed - pinned by sim/tests/test_idle_capacity_view.py, sim/tests/test_parallelism_note.py and sim/tests/test_idle_sized_suggestions.py
 
 In the Rome run, thousands of directed hours per year were often unused while waiting for calendar floors on long projects. A mature optimized civilization can apparently reach vastly larger pools of idle capacity.
 
@@ -43,3 +43,6 @@ Likely in `sim/engine/proto/state.py` where the `free_hours_going_unused` field 
 Also reported (Han China 100 AD fog playtest, tester item(s) 218, 223; `Complaints/reports/playtest-han-china-100ad-fog-triage.md`): at 400 AD about 11,700 directed founder-hours sat idle each year because every project was calendar- or payment-bound; the tester wanted that capacity pointed at something (more parallel starts, teaching, public services) and deliberately started optional research to use it. Reproduces: untested (late game).
 
 Also reported (final playtests, A and B; `Complaints/reports/final-playtests-triage.md`): both Rome testers had long stretches of unused directed hours while waiting on calendar floors (B: the 24-year power grid), both said the gates themselves are fine and want the wait explained and a way to spend the hours.
+
+
+Done: `idle` sizes a teaching suggestion per oversubscribed trade (people short, founder-hours to teach them, the command) and the cheapest startable development program (cash cost, years, directed hours per year); a multi-year `step` over idle hours names the kind of delay the running projects wait on.

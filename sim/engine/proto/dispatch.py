@@ -19,6 +19,7 @@ from .score import victory_report
 from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
 from . import step_progress
+from .guidance import delay_kinds, delay_phrase
 from .event_groups import group_disaster_events
 from .event_severity import tag_events
 from .step_alerts import step_alerts
@@ -169,10 +170,11 @@ def _cmd_step(sim, nodes, cmd, ended):
                     "into the next one - so 'step %d' spends this "
                     "year's slack exactly as idle as it is right now, "
                     "%d more times over, unless you start something "
-                    "first. Proceeding anyway."
+                    "first. Running projects wait on: %s. Proceeding anyway."
                     % (years, "{:,.0f}".format(
                            _pre_state.get("founder_hours_available") or 0.0),
-                       nodes[_could_start]["name"], years, years))
+                       nodes[_could_start]["name"], years, years,
+                       delay_phrase(delay_kinds(sim, nodes))))
     # LOST, not only completed: a game whose only score is what you have
     # built has to report subtraction at least as loudly as addition, so
     # anything that drops out of `done` during a multi-year step has to be
