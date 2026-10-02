@@ -14,9 +14,11 @@ from sim.economy.types import EDGE_LEGACY, GoodsMove, Offer, Transfer
 from sim.economy.record import EconomyRecord
 from sim.economy.year_close import national_prices
 
+from . import solve_cache
 from .economy_port_setup import build_setup, opening_values
 
 SWITCH_ENVIRONMENT = "ROME_AGENT_ECONOMY"
+SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
 SPIN_UP_TOLERANCE = declare(
     "SPIN_UP_TOLERANCE", 0.02, kind="temporary_heuristic",
     unit="largest yearly relative change of the price level and the main prices", source=None, confidence="D",
@@ -60,11 +62,21 @@ class AgentEconomy:
                 self._economy = Economy(setup, EconomyRecord.from_record(self.stored["record"]))
             else:
                 opening = opening_values(self._sim)
-                self._economy = Economy(build_setup(self._sim, opening))
+                setup = build_setup(self._sim, opening)
+                record = solve_cache.cached_json(
+                    solve_cache.solve_key({"agent_economy_spin_up": opening}),
+                    lambda: self._spun_up(setup), cache_dir=SPIN_UP_CACHE_DIRECTORY)
+                self._economy = Economy(setup, EconomyRecord.from_record(record))
                 self.stored["opening"] = opening
-                self._spin_up()
                 self._save()
         return self._economy
+
+    def _spun_up(self, setup):
+        """The record after the hidden years; the same opening always gives the same one, so it is cached
+        on disk with the price solver's results (keyed on the data files and the source)."""
+        self._economy = Economy(setup)
+        self._spin_up()
+        return self._economy.record.to_record()
 
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
