@@ -19,7 +19,7 @@ from ..purchase_rule import purchase_budget
 from .nodes import _did_you_mean
 from .saveload import load_state, save_state
 from .util import _flag
-from .rush_filters import parse_rush_filters, passes_rush_filters
+from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
 
@@ -414,6 +414,8 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
             "total_annual_draw": result["total_annual_draw"],
             "total_founder_hours": result["total_founder_hours"],
             "filters": result["filters"],
+            "trade_bottlenecks": result["trade_bottlenecks"],
+            "risk_exposure": result["risk_exposure"],
             "count_not_started": result["count_not_started"],
             "not_started": result["not_started"],
             "excluded": result.get("excluded", []),
@@ -425,7 +427,8 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
          usage=["rush", "rush limit:5", "rush preview", "rush max_total_cost:<n>",
                 "rush category:textiles max_cost:500 preview"],
          # excluded things are left out; see the 'exclude' command
-         options={"category": "only this subject (the node's category)",
+         options={"ids": "only these ids, comma separated",
+                  "category": "only this subject (the node's category)",
                   "max_cost": "skip projects dearer than this each",
                   "max_hours": "skip projects needing more founder hours than this each",
                   "limit": "cap the count", "max_total_cost": "cap total money",
@@ -454,7 +457,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
     caps, cap_error = _rush_caps(cmd)
     if cap_error:
         return {"ok": False, "error": cap_error}
-    filters, filter_error = parse_rush_filters(cmd)
+    filters, filter_error = parse_rush_filters(cmd, nodes)
     if filter_error:
         return {"ok": False, "error": filter_error}
     capped = any(value is not None for value in caps.values()) or bool(filters)
@@ -540,7 +543,9 @@ def _cmd_rush(sim, nodes, cmd, ended):
                             "annual_draw": round(annual_draw, 1)})
         else:
             not_started.append({"id": node_id, "why": why})
+    bottlenecks, risk_exposure = rush_exposure(sim, nodes, started)
     return {"ok": True, "started": started, "count_started": len(started),
+            "trade_bottlenecks": bottlenecks, "risk_exposure": risk_exposure,
             "total_cost": round(total_cost, 1),
             "total_annual_draw": round(total_draw, 1),
             "total_founder_hours": round(_owed, 1),
