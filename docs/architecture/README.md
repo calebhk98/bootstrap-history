@@ -21,6 +21,7 @@ is now. None of this is an approved plan yet.
 | `DEMAND_AT_SCALE.md` | Whether `sim/world/demand.py`'s household-demand model holds outside Roman Egypt, against the stakeholder's own critique. | Ours |
 | `MAP_AND_WEATHER.md` | Why the map and the weather model are two disconnected systems, and what it would take to join them. | Ours |
 | `ECONOMY_MODEL_SURVEY.md` | How other models and games price goods, set wages, split joint products and create starting conditions, with what to borrow for each of our modules. | Ours, from external sources |
+| `ECONOMY_AGENTS.md` | The agent economy being built in `sim/economy/`: agents with money and goods, markets clearing within the year, money as a stock, tile market areas, and the port that keeps it apart from the engine. | Ours |
 | `CODE_ANALYSIS_TOOLING.md` | What checks the code's maintainability (`sim/code_health.py`, pylint, the rename prover), which parts are hand-written and which library sits under each. | Ours |
 
 Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
