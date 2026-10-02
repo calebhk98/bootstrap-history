@@ -1,6 +1,6 @@
 # The live economy lacks a closed population/income/demand loop
 
-**Status:** partly - household demand from population and income now sets the yearly material price, and what the founder sells displaces the society's producers; firms' output, the labour market and final goods remain
+**Status:** closed - the agent economy is the default (docs/architecture/ECONOMY_AGENTS.md): households earn wages, rent and profit, spend on needs, save and lend; producers hire, buy inputs and sell; the state taxes and spends; every flow is booked, so demand, output and income form one loop (sim/tests/test_agent_economy_wiring.py, test_economy_*.py)
 
 **Source:** playtest findings document, ECON-004. **Type:** Architecture
 finding with substantial existing groundwork; do not read this as "build a

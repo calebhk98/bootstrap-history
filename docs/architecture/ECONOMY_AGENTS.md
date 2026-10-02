@@ -1,14 +1,15 @@
 # The agent economy
 
-Status: being built on branch `economy-dynamic-markets`. Measure the old model's static-price share with
-`python3 sim/market_trace.py rome_100ad 30`; this design exists because nearly every good there stays
-within a few percent of its opening cost.
+Status: the game's economy by default. A game opts out with `cfg["agent_economy"] = False`;
+`ROME_AGENT_ECONOMY=0` (off) or `=1` (on) overrides either way (`switch_requested`,
+`sim/engine/economy_port_year.py`). Tests of the old economy's own mechanisms opt out explicitly.
+`python3 sim/economy_validate.py --years 40 --seeds 1,2,3` measures it against plausible ranges.
 
 ## What it is
 
 `sim/economy/` is a standalone package: agents that hold money and goods, markets that clear their
 orders, and the money they pay with. It imports `sim.world` and `sim.constants`, never `sim.engine`.
-The engine reaches it only through `sim/engine/economy_port.py`; the tech tree, the founder, projects
+The engine reaches it only through `sim/engine/economy_port*.py`; the tech tree, the founder, projects
 and screens ask the port questions (a price, a wage, a rate, what a concern takes) and post
 transactions. `sim/tests/test_economy_imports.py` holds both rules.
 
@@ -62,11 +63,46 @@ or leave only through named edge accounts (`types.EDGE_*`). Engine postings that
 payer or payee are booked against `edge:legacy`, whose volume is measured and should fall to zero.
 Complaint 382 lists them.
 
-**Start.** A hidden spin-up runs the economy from the opening population, land, techniques and the
-solver's costs until prices settle, cached per civilisation and seed.
+**Money takes each society's own form.** A civilisation's coin standard names its regime: struck coin
+(a mint buys metal at parity less its charge and strikes it; the charge is the issuer's seigniorage),
+weighed metal (money is the metal by weight, no issuer), or a commodity (cacao beans). The mint holds
+a real metal stock, sells only what it holds and strikes only what it buys (`mint.py`), so mined metal
+raises the money stock and, with a lag while it sits with savers, prices.
 
-**Other countries** trade as external sellers and buyers booked against `edge:external`; the types
-allow them to become full economies, and later players.
+**The state spends what it raises.** Its revenue buys hours and goods in the same markets as everyone
+(`state_budget.py`); a deficit is covered by its policy's order of borrowing, issuing (fiat) or
+debasing (struck coin) (`state_finance.py`, `state_policy.py`). Printing to cover a deficit that grows
+with prices runs away.
+
+**Households save and lend.** Beyond their cash buffer they keep savings worth years of their income
+above subsistence, more when the real rate is high (`households_orders.savings_target`); what they hold
+beyond buffer and spending is offered to borrowers. Loans are claims in the lender's wealth
+(`credit_claims.py`): a default is the lender's loss and cuts its spending. Producers borrow for plant,
+merchants for cargo their cash cannot buy, households for a shortfall with income ahead.
+
+**Demand brings makers.** Where buyers wanted more of a good than was sold, beyond what its makers'
+idle capacity could have added, a recipe the society knows that pays at the price bid starts or grows
+the tile's producer of it (`entry.py`, `entry_year.py`), its owner staking cash and borrowing plant
+only up to that stake. Owners refill paying producers that ran out of working cash; a producer with no
+capacity, plant coming or debt closes. A good with no known recipe gets no maker.
+
+**Prices that have not traded are not market prices.** Each market remembers how long ago it cleared;
+the price index counts only goods traded recently, and the game shows an untraded good at its cost
+of making at live prices, or flags it stale (`notional.py`; `python3 sim/economy_untraded.py`). A
+year's trade moves a remembered price in proportion to its volume against the market's usual volume, so
+a sliver of trade at a freak price does not become the price everyone plans from.
+
+**Start.** A hidden spin-up runs the economy from the opening population, land, techniques and the
+solver's costs until prices and the interest rate settle, cached on disk per civilisation (keyed on
+the data and source).
+
+**Other countries** trade as external sellers and buyers booked against `edge:external`, at the
+partners' prices. The year's trade settles in the partners' coin ledgers (`foreign_payments`), so a
+partner paying out coin sees its prices fall, and it spends at most a share of the coin it holds
+(price-specie flow). The types allow partners to become full economies, and later players.
+
+**The founder's concerns sell in the same markets**, offered at their output's cost at the economy's
+own prices and wages; the takings return to the engine's purse through `edge:legacy` (Complaint 382).
 
 ## Heuristics
 
