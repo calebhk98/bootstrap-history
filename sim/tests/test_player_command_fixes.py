@@ -37,10 +37,13 @@ for target in buy_targets.target_names():
 quotable = {"forest": "quote forest 10", "nitre": "quote nitre 100", "farm": "quote farm 20",
             "housing": "quote housing 5", "school": "quote school smith 2",
             "material": "quote material iron 10", "mine": "quote mine coal 100",
-            "slaves": "quote slaves 2", "manumit": "quote manumit 1"}
+            "slaves": "quote slaves 2", "manumit": "quote manumit 1",
+            "living_stock": "quote living_stock ramie_stock_kg 100"}
 check("the quote test names every buy target", set(quotable) == set(buy_targets.target_names()))
 for target, text in quotable.items():
-    reply = _run(sim(capital=1_000_000), text)
+    # stock is only for sale by a partner economy, so it is quoted from Rome (which buys from Han China)
+    reply = _run(sim(capital=1_000_000, civ="rome_100ad") if target == "living_stock"
+                 else sim(capital=1_000_000), text)
     check("quote works for buy target %s" % target, reply.get("ok"), (text, reply))
 farm_reply = _run(rich, "quote farm 20")
 check("quote farm prices what buy farm charges",
