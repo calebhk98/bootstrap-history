@@ -44,6 +44,18 @@ class MarketMemory:
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
     volume_weights: Dict[str, float] = field(default_factory=dict)      # market_key(good, area), smoothed
+    trade_age: Dict[str, int] = field(default_factory=dict)     # market_key(good, area); absent: never cleared
+
+    def years_since_trade(self, key: str) -> Optional[int]:
+        return self.trade_age.get(key)
+
+    def note_trading(self, traded_keys) -> None:
+        """A year ends: the markets that cleared are current, the rest are a year older. A market that
+        has never cleared has no age; its remembered price is an opening estimate, not a market's."""
+        for key in list(self.trade_age):
+            self.trade_age[key] += 1
+        for key in traded_keys:
+            self.trade_age[key] = 0
 
     def note_volume(self, key: str, quantity: float) -> None:
         """Move a market's usual volume toward what it traded this year."""

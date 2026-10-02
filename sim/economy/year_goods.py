@@ -138,7 +138,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     order = input_depth_order(setup.recipes)
     listed = set(order)
     order += sorted({good for good, _area in order_book} - listed)
-    done, cleared = set(), set()
+    done, cleared, traded = set(), set(), set()
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     for good in order:
         for producer_id in by_output.get(good, ()):
@@ -168,8 +168,11 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             record.volumes[key] = result.quantity
             record.memory.note_volume(key, result.quantity)
             cleared.add(key)
+            if result.quantity > 0.0:
+                traded.add(key)
     for key in sorted(set(record.memory.volume_weights) - cleared):
         record.memory.note_volume(key, 0.0)
+    record.memory.note_trading(traded)
 
 
 def remembered_price(old, cleared, quantity, usual_volume):

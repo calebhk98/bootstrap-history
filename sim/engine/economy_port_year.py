@@ -13,7 +13,8 @@ from sim.economy.protocols import AgentOrders, YearInputs
 from sim.economy.foreign import external_orders
 from sim.economy.types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
 from sim.economy.record import EconomyRecord
-from sim.economy.year_close import national_prices, rebase_price_level
+from sim.economy.notional import shown_prices
+from sim.economy.year_close import rebase_price_level
 from sim.economy.year_labour import trade_premium
 
 from . import solve_cache
@@ -52,6 +53,7 @@ class AgentEconomy:
         self._sim = sim
         self._economy = None
         self._answers = None
+        self._stale = set()
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
 
     @property
@@ -222,7 +224,9 @@ class AgentEconomy:
 
     # ---- what the seams read ------------------------------------------------------------------
     def answers(self):
-        """(prices by good, mean wage per hour by trade, rate), for this year; built once a year."""
+        """(prices by good, mean wage per hour by trade, rate), for this year; built once a year. A good
+        whose markets have not cleared lately shows what it costs to make at today's prices and wages, or
+        its last price when nothing makes it; `stale_goods()` names those."""
         if self._answers is None or self._built_from is not self.stored:
             record = self.economy().record
             wages = {}
@@ -230,10 +234,16 @@ class AgentEconomy:
                 trade = key.split("|", 1)[0]
                 wages.setdefault(trade, []).append(wage)
             coin = self._economy.setup.coin_per_unit
-            self._answers = ({good: price * coin for good, price in national_prices(record).items()},
+            prices, self._stale = shown_prices(self._economy.setup, record)
+            self._answers = ({good: price * coin for good, price in prices.items()},
                              {trade: sum(rows) / len(rows) * coin for trade, rows in wages.items()},
                              record.memory.rates.get(self._economy.setup.currency_id))
         return self._answers
+
+    def stale_goods(self):
+        """Goods whose shown price is not a market's: not cleared within notional.RECENT_TRADE_YEARS."""
+        self.answers()
+        return set(self._stale)
 
     def price_ratio(self, materials, old_prices):
         """The new price over the engine's own cost, for the first of `materials` both price; None if none."""

@@ -7,6 +7,8 @@ from typing import Dict, Tuple
 from . import currency, households, inventory, merchants, metal_stock, producers, producers_close, taxes
 from .households_cohort import renewed
 from .market_memory import market_key
+from .national_prices import national_prices
+from .notional import recently_traded_goods
 from .setup import labour_area
 from .taxes_bases import YearFacts
 from .types import is_edge
@@ -146,23 +148,14 @@ def _with_sales(producer, recipe, ledger: YearLedger):
                                last_runs=worked)
 
 
-def national_prices(record) -> Dict[str, float]:
-    """Each good's price over its areas, weighted by what each usually trades (this year's volume
-    before any is remembered)."""
-    weights = record.memory.volume_weights or record.volumes
-    totals: Dict[str, Tuple[float, float, float]] = {}
-    for key, price in record.memory.prices.items():
-        good = key.split("|", 1)[0]
-        volume = weights.get(key, 0.0)
-        value, quantity, plain = totals.get(good, (0.0, 0.0, 0.0))
-        totals[good] = (value + price * volume, quantity + volume, plain or price)
-    return {good: (value / quantity if quantity > 0.0 else plain)
-            for good, (value, quantity, plain) in sorted(totals.items())}
-
-
 def remember_price_level(setup, record) -> float:
-    level = currency.price_level(national_prices(record), record.index_base_prices or setup.opening_prices,
-                                 record.opening_basket)
+    """The fixed basket's cost at today's prices over its cost at the base prices, over the goods that
+    traded recently (notional.RECENT_TRADE_YEARS): a good that has not cleared holds only an estimate,
+    and an estimate frozen at its base price would damp measured inflation. The basket's quantities
+    stay those of the opening; which goods are priced follows trade."""
+    recent = recently_traded_goods(record.memory)
+    prices = {good: price for good, price in national_prices(record).items() if good in recent}
+    level = currency.price_level(prices, record.index_base_prices or setup.opening_prices, record.opening_basket)
     record.memory.note_price_level(setup.currency_id, level)
     return level
 

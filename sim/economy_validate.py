@@ -29,7 +29,7 @@ METALS = ("iron_bar_kg", "copper_kg", "lead_kg", "bronze_kg", "tin_kg")
 STATIC_BAND = 0.05
 
 
-def play(civ_id, seed, years):
+def new_game(civ_id, seed):
     sys.argv = sys.argv[:1]
     from sim import simulator
     tree, _prices, nodes, _wages, _goods = simulator.load()
@@ -38,6 +38,11 @@ def play(civ_id, seed, years):
     game = simulator.Sim(nodes, order, random.Random(seed), events=True, manual=False,
                          civ=simulator.load_civ(civ_id), cfg={"agent_economy": True})
     game.goal, game.done_year = goal, {}
+    return game
+
+
+def play(civ_id, seed, years):
+    game = new_game(civ_id, seed)
     rows = []
     for _year in range(years):
         if game.dead_reason:
