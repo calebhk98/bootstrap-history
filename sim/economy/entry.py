@@ -10,7 +10,7 @@ deposit, a climate) is not modelled here; the recipes are already only those the
 """
 import math
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
@@ -92,9 +92,13 @@ def gap_beyond_spare(unmet: float, spare_output: float) -> float:
 
 
 def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
-                unmet: Mapping[Tuple[GoodId, AreaId], UnmetDemand]) -> List[EntryPlan]:
+                unmet: Mapping[Tuple[GoodId, AreaId], UnmetDemand],
+                rent_by_tile: Optional[Mapping[TileId, float]] = None,
+                land_per_run: Optional[Mapping[str, float]] = None) -> List[EntryPlan]:
     """At most one new maker per market with unmet demand: the known recipe making the good with the
-    best return on capital at last year's prices, if that return beats the interest rate."""
+    best return on capital at last year's prices, if that return beats the interest rate. Rent per
+    hectare last year on the tile, times the land a run takes, is part of a run's cost."""
+    rent_by_tile, land_per_run = rent_by_tile or {}, land_per_run or {}
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(recipes):
         for good in recipes[recipe_id].outputs:
@@ -106,7 +110,8 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
             continue
         best = None
         for recipe_id in makers.get(demand.good, ()):
-            yearly_return = _return_at(recipes[recipe_id], recipe_id, demand.anchor_tile, view)
+            rent = rent_by_tile.get(demand.anchor_tile, 0.0) * land_per_run.get(recipe_id, 0.0)
+            yearly_return = _return_at(recipes[recipe_id], recipe_id, demand.anchor_tile, view, rent)
             currency = view.currency_of(demand.area)
             if yearly_return > view.interest_rate(currency) and (best is None or yearly_return > best[0]):
                 best = (yearly_return, recipe_id)
@@ -119,8 +124,8 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
     return plans
 
 
-def _return_at(recipe: Recipe, recipe_id: str, tile: TileId, view: MarketView) -> float:
+def _return_at(recipe: Recipe, recipe_id: str, tile: TileId, view: MarketView, rent: float = 0.0) -> float:
     probe = Producer("probe", "probe", recipe_id, tile, 1.0)
     outputs = expected_output_prices(probe, recipe, view) or {}
     return unit_cost.return_on_capital(recipe, outputs, live_input_prices(probe, recipe, view),
-                                       live_wages(probe, recipe, view))
+                                       live_wages(probe, recipe, view), rent)

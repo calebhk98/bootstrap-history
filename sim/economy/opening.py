@@ -11,7 +11,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, households, mint, unit_cost
+from . import currency, goods_market, households, mint, ownership, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -203,7 +203,7 @@ def _place_producers(setup, record, area_map, final_by_tile, incumbents, runs) -
 
 
 def _richest_class(record, tile) -> int:
-    return max((cohort.income_class for cohort in record.cohorts.values() if cohort.tile == tile), default=0)
+    return ownership.richest_class(record.cohorts.values(), tile) or 0
 
 
 def _open_workforce(setup, record) -> None:

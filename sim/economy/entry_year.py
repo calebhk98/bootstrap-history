@@ -7,7 +7,7 @@ import math
 from dataclasses import replace
 from typing import Dict, Tuple
 
-from . import households, unit_cost
+from . import ownership, unit_cost
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
                     producers_to_close, restake)
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
@@ -28,7 +28,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
             unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
     money = setup.currency_id
     started = 0
-    for plan in entry_plans(setup.recipes, view, unmet):
+    for plan in entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run):
         recipe = setup.recipes[plan.recipe_id]
         key = recipe_tile_key(plan.recipe_id, plan.tile)
         producer_id = "producer:" + key
@@ -36,7 +36,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         # each producer stands for the tile's workshops of one recipe: newcomers join its capacity
         producer = record.producers.get(producer_id)
         if producer is None:
-            owner = _richest_cohort(record, plan.tile)
+            owner = ownership.owner_cohort(record, plan.tile)
             if owner is None:
                 continue
             producer = Producer(agent_id=producer_id, owner=owner, recipe_id=plan.recipe_id, tile=plan.tile,
@@ -78,7 +78,8 @@ def restake_owners(setup, record, view) -> None:
         recipe = setup.recipes[producer.recipe_id]
         pays = unit_cost.return_on_capital(recipe, expected_output_prices(producer, recipe, view) or {},
                                            live_input_prices(producer, recipe, view),
-                                           live_wages(producer, recipe, view)) > rate
+                                           live_wages(producer, recipe, view),
+                                           producer.land_rent_per_run) > rate
         if producer.owner not in budget:
             budget[producer.owner] = ENTRANT_OWNER_STAKE_SHARE * max(0.0, record.book.balance(producer.owner, money))
         amount = min(restake(shortfall, record.book.balance(producer.owner, money), pays), budget[producer.owner])
@@ -105,13 +106,6 @@ def close_idle_producers(setup, record) -> int:
             record.book.move_many(moves)
         del record.producers[producer_id]
     return len(closing)
-
-
-def _richest_cohort(record, tile):
-    cohorts = [cohort for cohort in record.cohorts.values() if cohort.tile == tile]
-    if not cohorts:
-        return None
-    return households.cohort_id(tile, max(cohort.income_class for cohort in cohorts))
 
 
 def _spare_output(setup, record, view) -> Dict[Tuple[str, str], float]:

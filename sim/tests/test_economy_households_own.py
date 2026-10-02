@@ -4,13 +4,28 @@ import unittest
 from sim.economy.households_cohort import Cohort
 from sim.economy import households_own
 from sim.economy.households_own import hours_for_own_plan, next_own_plan, withhold_hours
-from sim.economy.types import LabourOffer
+from sim.economy.types import LabourOffer, Recipe
 
 OPTIONS = {"food": [(2.0, "grow_grain", "grain", 1.0)]}     # two hours a need unit at fertility one
 
 
 def cohort(plan=None):
     return Cohort("household:t:0", "t", 0, 100.0, 50.0, 0.3, own_plan_by_need=dict(plan or {}))
+
+
+class PlotHectaresTests(unittest.TestCase):
+    RECIPES = {"grow_grain": Recipe("grow_grain", {"grain": 10.0}, {}, {"hand": 4.0})}
+    LAND = {"grow_grain": 2.0}
+
+    def test_hectares_follow_the_hours_the_plan_needs(self):
+        # ten need units at two hours each is twenty hours: five runs of four hours, two hectares a run
+        self.assertAlmostEqual(households_own.plot_hectares({"food": 10.0}, OPTIONS, self.RECIPES, self.LAND, 1.0), 10.0)
+
+    def test_poorer_soil_takes_more_land_for_the_same_food(self):
+        self.assertAlmostEqual(households_own.plot_hectares({"food": 10.0}, OPTIONS, self.RECIPES, self.LAND, 0.5), 20.0)
+
+    def test_a_need_it_cannot_grow_takes_no_land(self):
+        self.assertEqual(households_own.plot_hectares({"tools": 10.0}, OPTIONS, self.RECIPES, self.LAND, 1.0), 0.0)
 
 
 class OwnPlanTests(unittest.TestCase):
