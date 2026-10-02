@@ -81,12 +81,11 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		return self._once("weights", self._sim.state_trait_weights)
 
 	def society_output(self) -> float:
-		"""Yearly value of the working population's labour at the unskilled wage and the economy's output per hour:
-		the working people not under arms, scaled by what the economy is making at present."""
+		"""Yearly value of what the society's market sells: quantities this year at the opening's prices
+		(real_output.py), in this civilisation's money."""
 		sim = self._sim
 		def compute() -> float:
-			producing = max(0.0, sim.population.working_age - self.soldiers_under_arms())
-			return producing * sim.HOURS_PER_PERSON_YEAR * sim.wage_per_hour("labourer") * sim.output_volume_scale() * sim.state.economy.output_factor
+			return sim.real_output_hours() * sim.money_per_labour_hour() * sim.state.economy.output_factor
 		return self._once("output", compute)
 
 	def state_revenue(self) -> float:
@@ -229,7 +228,7 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 											self.ramp(opened_year), staffed)
 
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
-		return self.nodes[node_id]["up"] * self._sim.price_index * self._sim.concern_running_scale(node_id) * capacity
+		return self.nodes[node_id]["up"] * self._sim.price_index * capacity
 
 	def rng_for(self, *parts: Any) -> random.Random:
 		"""A random stream keyed by its inputs, so actors never disturb the world's own."""

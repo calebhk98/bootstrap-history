@@ -352,7 +352,8 @@ class EconomyState:
 	nitre_bed_m2: float = 0.0
 	market_pressure: float = 0.0
 	output_factor: float = 1.0
-	economy: float = 1.0
+	# real output per person over the opening's, measured when the market closes (real_output.py)
+	output_per_head: float = 1.0
 	money_real: float = 1.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
 	_material_stock_opening: Optional[Dict[str, Any]] = None

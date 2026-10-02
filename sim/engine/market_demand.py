@@ -59,56 +59,39 @@ class MarketDemandMixin:
     def _opening_population(self):
         return float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
 
-    def _opening_demand_by_commodity(self, prices, prices_in_hours):
-        """Opening households' demand per commodity at these prices, kept
-        while the price table is the same object."""
-        cache = getattr(self.household, "_household_opening_cache", None)
-        if cache is not None and cache[0] is prices:
-            return cache[1]
-        opening = household_demand_by_material(
-            prices_in_hours, self._opening_population(), MEAN_INCOME_HOURS_PER_CAPITA)
-        by_commodity = {}
-        for material in sorted(opening):
-            commodity = self._material_tag(material)[0]
-            by_commodity[commodity] = by_commodity.get(commodity, 0.0) + opening[material]
-        self.household._household_opening_cache = (prices, by_commodity)
-        return by_commodity
-
     def household_demand_ratios(self):
-        """{commodity: demand now over demand at the opening}, from population
-        and income at today's prices; recomputed when either moves by a
+        """{commodity: demand now over demand at the opening}, from population and today's prices
+        against the opening basket (real_output.py); recomputed when the population moves by a
         tenth of a percent or the price table changes."""
         prices = self.goods_market.household_prices()
-        key = (round(float(self.population.total) / self._opening_population(), 3),
-               round(float(self.state.economy.economy), 3))
+        key = round(float(self.population.total) / self._opening_population(), 3)
         cache = getattr(self.household, "_household_demand_cache", None)
         if cache is not None and cache[0] == key and cache[1] is prices:
             return cache[2]
         # computed from the rounded key, so the answer depends on the key and not on when it was last computed
-        population = key[0] * self._opening_population()
-        economy_index = key[1]
+        basket = self.base_basket()
         per_hour = self.money_per_labour_hour()
-        prices_in_hours = {material: price / per_hour for material, price in prices.items()
-                           if price > 0.0}
-        opening_by_commodity = self._opening_demand_by_commodity(prices, prices_in_hours)
+        # only goods households were offered at the opening: a good that appears later has no
+        # opening price to value it at, and one only a partner offered is not the home market's
+        prices_in_hours = {material: prices[material] / per_hour for material in basket["prices"]
+                           if prices.get(material, 0.0) > 0.0}
         now = household_demand_by_material(
-            prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA * economy_index)
-        now_by_commodity = {}
-        for material in sorted(now):
-            commodity = self._material_tag(material)[0]
-            now_by_commodity[commodity] = now_by_commodity.get(commodity, 0.0) + now[material]
-        ratios = {commodity: now_by_commodity.get(commodity, 0.0) / total
-                  for commodity, total in opening_by_commodity.items() if total > 0.0}
+            prices_in_hours, key * self._opening_population(), MEAN_INCOME_HOURS_PER_CAPITA)
+        opening_by_commodity, now_by_commodity = {}, {}
+        for material, units in basket["units"].items():
+            commodity = basket["commodity"][material]
+            opening_by_commodity[commodity] = opening_by_commodity.get(commodity, 0.0) + units
+            now_by_commodity[commodity] = now_by_commodity.get(commodity, 0.0) + now.get(material, 0.0)
+        ratios = {commodity: now_by_commodity[commodity] / total
+                  for commodity, total in sorted(opening_by_commodity.items()) if total > 0.0}
         self.household._household_demand_cache = (key, prices, ratios)
         return ratios
 
     def economy_size_ratio(self):
-        """Population times income over the opening's: what demand follows
-        for a commodity the household model does not reach."""
-        # TEMPORARY HEURISTIC: unreached commodities scale one-for-one with
-        # total household income.
-        return (float(self.population.total) * float(self.state.economy.economy)
-                / self._opening_population())
+        """Population over the opening's: what demand follows for a commodity the household model
+        does not reach."""
+        # TEMPORARY HEURISTIC: unreached commodities scale one-for-one with population.
+        return float(self.population.total) / self._opening_population()
 
     def household_demand_ratio(self, commodity):
         ratios = self.household_demand_ratios()

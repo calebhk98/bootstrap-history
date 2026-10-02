@@ -545,14 +545,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.economy, "binding", value)
 
 	@property
-	def economy(self):
-		return getattr(self.state.economy, "economy")
-
-	@economy.setter
-	def economy(self, value):
-		setattr(self.state.economy, "economy", value)
-
-	@property
 	def farm_hectares(self):
 		sub = getattr(self.state, "economy", None)
 		if sub is None:

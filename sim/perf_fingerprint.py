@@ -45,7 +45,7 @@ BASELINE_FIELDS = (
     "mine_tranches", "market_pressure", "slaves", "freedmen",
     "manumitted_total", "goal_year", "dead_reason", "insolvent_years",
     "bribes_ytd", "living_cost_paid", "mine_cost_paid", "spend_last_year",
-    "output_factor", "economy", "throttle", "binding", "bountied",
+    "output_factor", "output_per_head", "throttle", "binding", "bountied",
     "stalled", "life_left", "founder_alive", "revealed", "last_settlement",
     "employees", "trades_created", "policy", "mothballed", "operating",
     "forgotten", "opened_year", "last_taught", "paid_towards",

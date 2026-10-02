@@ -90,7 +90,8 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
 
     def _foreign_economy_facts(self, civilization_id):
         """Population, route and prices of one foreign economy in home money,
-        remembered until the home price table changes. A partner is named by
+        remembered until the home price table changes or the year turns (freight follows last year's
+        flows, the market rate and wages). A partner is named by
         id in the foreign-economies data, so it is looked up by id; the home
         society is always `self.civ`."""
         prices = self._material_prices()
@@ -98,7 +99,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         if cache is None:
             cache = self.household._foreign_facts_cache = {}
         cached = cache.get(civilization_id)
-        known_techs = len(self.state.projects.done)
+        known_techs = (len(self.state.projects.done), self.state.scenario.year)
         if cached is not None and cached[0] is prices and cached[2] == known_techs:
             return cached[1]
         civilization = load_civ(civilization_id)

@@ -124,7 +124,7 @@ class LabourMarket:
 
     def pay_scale(self):
         """What an hour pays against the opening schedule, at this economy's output per hour."""
-        return self._sim.output_volume_scale() ** self._sim.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
+        return self._sim.real_output_per_head() ** self._sim.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
 
     def town_housing_room(self):
         """People the home town can house beyond those already there: the spare share of its

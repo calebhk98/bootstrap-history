@@ -422,7 +422,7 @@ class ElectricityMixin:
         # calls is the quadratic blowup this codebase already had to fix once
         # for done_in_order() (see its own comment). Good for one step(): a
         # query between steps reads the demand as of the last one, which is
-        # already true of price_index, self.economy and self.household.throttle itself.
+        # already true of price_index, output_per_head and self.household.throttle itself.
         self.household._material_demand_cache = self.annual_material_demand()
         industrial, lab = self._throttle_demand_split(self.household._material_demand_cache)
         stock = self._material_stock()

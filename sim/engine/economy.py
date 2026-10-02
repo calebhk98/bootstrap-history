@@ -266,26 +266,6 @@ REPUTATION_EASE_SCALE = declare(
         "source; a real figure needs a model of what reputation actually "
         "buys (lower prices, faster favours, less friction) instead of one "
         "shared multiplier standing in for all of them at once.")
-ECONOMY_INDEX_PER_DIFFUSED_NODE = declare(
-    "ECONOMY_INDEX_PER_DIFFUSED_NODE", 0.055,
-    kind="temporary_heuristic", unit="fraction of output per diffused technology",
-    source=None, confidence="D",
-    why="How much each technology that has spread beyond your own workshop "
-        "(corpus_dispersed) raises output economy-wide, standing in for the "
-        "real mechanism - diffusion of a specific technology through a "
-        "specific population over time - that nothing in this project "
-        "computes yet; ENDOGENOUS_COSTS_AND_DOMAINS.md Part 2 gets closer "
-        "to a real production-cost price than this flat index does, but "
-        "does not model diffusion speed either.")
-ECONOMY_INDEX_PER_LOCKED_NODE = declare(
-    "ECONOMY_INDEX_PER_LOCKED_NODE", 0.030,
-    kind="temporary_heuristic", unit="fraction of output per undispersed technology",
-    source=None, confidence="D",
-    why="Same mechanism as ECONOMY_INDEX_PER_DIFFUSED_NODE, at roughly "
-        "half strength, for a technology that exists only in your own "
-        "workshop and has not been copied out - knowledge locked in one "
-        "place should spread its economic benefit more slowly, not not at "
-        "all. Both figures are tuned, not measured.")
 
 
 class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMixin,
@@ -326,7 +306,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
 
     What is defined directly on EconomyMixin, below, is what did not
     fit cleanly into any one of those subjects: standing/reputation
-    (standing_floor/rep_factor/economy_index), the generic cost of a
+    (standing_floor/rep_factor), the generic cost of a
     project (cost_money_factor/opposition_factor/project_cost), the
     `done`/`operating` set-identity and ordering plumbing every
     sub-mixin reads through self
@@ -363,22 +343,6 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
     def rep_factor(self):
         """How much easier reputation makes everything. 1.0 at zero reputation."""
         return 1.0 + self.state.household.reputation / REPUTATION_EASE_SCALE
-
-    def economy_index(self):
-        """Diffused technology enriches the whole Empire, not only your workshop.
-
-        Britain's industrialisation paid for itself. So does yours: each heavy
-        technology that spreads raises output everywhere, which raises what the
-        State and the market can pay you. Without this term the model says an
-        industrial revolution is unaffordable, which is false, and the reason it
-        is false is that the revolution funds itself.
-        """
-        projects = self.state.projects
-        diffused = len(projects.done - projects.granted)
-        index = 1.0 + ECONOMY_INDEX_PER_DIFFUSED_NODE * diffused
-        if not self.dispersed_corpus_running():
-            index = 1.0 + ECONOMY_INDEX_PER_LOCKED_NODE * diffused      # knowledge locked in one workshop spreads slowly
-        return index
 
     def cost_money_factor(self):
         """What a denarius of QUOTED cost means, for spending purposes.

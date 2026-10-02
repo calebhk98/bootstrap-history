@@ -358,7 +358,6 @@ class StepPhasesMixin:
 
     def _step_money(self):
         # 2. money
-        self.economy = self.economy_index()
         living_cost = self.living_cost()
         # THE YEAR YOU PAID FOR IN ADVANCE IS NOT BILLED AGAIN: `hire` takes
         # a finder's fee and the first year's wages up front, and

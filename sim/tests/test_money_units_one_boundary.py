@@ -47,9 +47,8 @@ def labourer_annual_wage(sim):
 
 def takings_per_wage(sim, node_id):
     """One concern's yearly takings in labourer-years, with the civilisation's
-    price level and economy factors divided out."""
-    factors = (sim.price_index * (sim.state.economy.economy
-               ** sim.ECONOMY_OUTPUT_SCALING_EXPONENT) * sim.state.economy.output_factor)
+    price level and output factor divided out."""
+    factors = sim.price_index * sim.state.economy.output_factor
     return sim.concern_takings(node_id, 1.0) / factors / labourer_annual_wage(sim)
 
 

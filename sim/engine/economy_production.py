@@ -28,7 +28,7 @@ class ProductionMixin:
 
     STATE_FUNDING_BASE_LABOUR_HOURS = declare(
         "STATE_FUNDING_BASE_LABOUR_HOURS", 50400.0, kind="temporary_heuristic",
-        unit="labour hours/year at economy=1, state_capacity=1, pop_scale=1",
+        unit="labour hours/year at output_per_head=1, state_capacity=1, pop_scale=1",
         source=None, confidence="D",
         why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
             "What an imperial patron is worth in direct funding at a "
@@ -61,7 +61,7 @@ class ProductionMixin:
         """What a patron state would give the founder in a year if its treasury could spare it."""
         if not self.running_with_mechanic("state_funding"):
             return 0.0
-        return (self.STATE_FUNDING_BASE * self.state.economy.economy * self.state_capacity
+        return (self.STATE_FUNDING_BASE * self.real_output_per_head() * self.state_capacity
                 * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
                 * (1.0 + max(0.0, self.state.governance.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
                 * self.rep_factor())
@@ -135,7 +135,7 @@ class ProductionMixin:
         Dependencies:
           - self.year: changes annually in sim.step()
           - self.pop_scale: changes annually in sim.step()
-          - self.economy: changes with state events
+          - economy.output_per_head: measured when the year's market closes
           - self.household._operating_ver: changes whenever self.household.operating is mutated
           - self.household._done_ver: changes whenever self.household.done or granted is mutated
           - self.household._workforce_ver: changes whenever self.household.employees is mutated
@@ -160,7 +160,7 @@ class ProductionMixin:
         key = (
             scenario.year,
             self.pop_scale,
-            getattr(economy, "economy", 1.0),
+            economy.output_per_head,
             getattr(projects, "_operating_ver", 0),
             getattr(projects, "_done_ver", 0),
             getattr(household, "_workforce_ver", 0),
@@ -244,26 +244,15 @@ class ProductionMixin:
         # workshop_first matters and why it is cheap.
         total_revenue += self.workshop_output()
         economy = self.state.economy
-        gross = total_revenue * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
+        gross = total_revenue
         ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
-            * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.price_index
+            * self.real_output_per_head() * self.price_index
         gross = gross / (1.0 + gross / max(1.0, ceiling))
         return (gross + self.state_funding()) * economy.output_factor
 
-    ECONOMY_OUTPUT_SCALING_EXPONENT = declare(
-        "ECONOMY_OUTPUT_SCALING_EXPONENT", 0.75, kind="temporary_heuristic",
-        unit="dimensionless exponent on self.economy", source=None,
-        confidence="D",
-        why="How sub-linearly overall output grows with the `economy` "
-            "index (economy_index(), itself already a temporary_heuristic "
-            "curve - see ECONOMY_INDEX_PER_DIFFUSED_NODE above), used "
-            "everywhere gross revenue is scaled by it in this file. The "
-            "sub-linear SHAPE reflects real diminishing returns to a single "
-            "aggregate multiplier; the specific 0.75 exponent is tuned "
-            "against playtests, not fitted to any output data.")
     REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE = declare(
         "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE", 18100000.0, kind="temporary_heuristic",
-        unit="labour hours/year at pop_scale=1, economy=1", source=None,
+        unit="labour hours/year at pop_scale=1, output_per_head=1", source=None,
         confidence="D",
         why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
             "The saturating ceiling on how much revenue a single founder's "
@@ -407,20 +396,10 @@ class ProductionMixin:
             return 1.0
         return node_revenue_market.market_factor(node, self._material_prices(), self.market_price_ratio)
 
-    def output_volume_scale(self):
-        """How many times more a concern sells than its authored volume, at this economy."""
-        return self.state.economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT
-
-    def concern_running_scale(self, node_id):
-        """What a concern's running costs are multiplied by: the volume it sells, since inputs
-        are bought per unit sold. One for a node that sells nothing."""
-        return self.output_volume_scale() if self.nodes[node_id]["rev"] > 0 else 1.0
-
     def concern_takings(self, node_id, ramp):
         """Yearly takings of one concern at a given ramp, before market saturation."""
         economy = self.state.economy
-        return (self.nodes[node_id]["rev"] * ramp * self.output_volume_scale()
-                * economy.output_factor * self.price_index)
+        return self.nodes[node_id]["rev"] * ramp * economy.output_factor * self.price_index
 
     def ledger_concern_rows(self):
         """Yearly takings of every concern and practice that earns, by node
@@ -472,7 +451,7 @@ class ProductionMixin:
         rest = sum(value for _node_id, value in ranked[15:])
         if rest > 0.5:
             out["_and_%d_smaller_concerns" % len(ranked[15:])] = round(rest, 1)
-        workshop_total = self.workshop_output() * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * economy.output_factor
+        workshop_total = self.workshop_output() * economy.output_factor
         if workshop_total > 0.5:
             out["_what_your_own_workshop_sells"] = round(workshop_total, 1)
         if self.state_funding() > 0.5:
@@ -550,8 +529,7 @@ class ProductionMixin:
         # ONLY WHAT THE LEDGER ACTUALLY SHOWS. Naming rows that were dropped
         # for being under half a denarius invites the reader to look for them.
         economy = self.state.economy
-        scale = (self.PRACTICE_SHARE * self.practice_attention()
-                 * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * economy.output_factor)
+        scale = self.PRACTICE_SHARE * self.practice_attention() * economy.output_factor
         prac = sorted(node_id for node_id in self._practice_set()
                       if self.nodes[node_id]["rev"] * scale > 0.5)
         if not prac:
