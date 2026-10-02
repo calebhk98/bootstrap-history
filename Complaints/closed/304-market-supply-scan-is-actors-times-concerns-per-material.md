@@ -1,6 +1,6 @@
 # Each market clearing sums every actor's concerns once per material
 
-**Status:** open
+**Status:** closed - the per-material actor walk no longer appears in a profile of Rome seed 1 (no `actor_supply` entry in the top costs of two mid or two late years, `_fp/` driver: step, `cProfile` of two `Sim.step` calls)
 
 A 150-year Rome run (seed 1) spends about a quarter of its CPU in `Sim.actor_supply`: `_market_conditions` runs tens of thousands of times a run (hundreds a year), and each call walks every actor and every concern the actor runs, building a fresh `SimWorld` view and re-reading the production index. Skipping concerns that do not make the material (complaint 141) removed the per-concern lookups but the per-actor, per-material walk remains. Han China 100 AD seed 1 is several times slower than the other fingerprint scenarios over 100 years; `python3 sim/perf_fingerprint.py record --quick x.json` prints the per-scenario CPU.
 
@@ -13,3 +13,5 @@ Measured again after complaint 321's shared table (Rome seed 1, two steps from y
 Related: 181.
 
 Owner decision (2026-10-02): important for speed.
+
+Closed 2026-10-02 after the one-goods-market change: a Rome seed 1 year with automation costs a fraction of a second at years 50 to 250, and the supply walk is not among the costs. Reopen with a profile that shows it at a larger firm count.
