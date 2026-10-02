@@ -50,11 +50,15 @@ class MarketMemory:
 class YearView:
     """`protocols.MarketView` over the memory, the book and the area map, for one year's planning."""
 
-    def __init__(self, memory: MarketMemory, book: Book, area_map) -> None:
+    def __init__(self, memory: MarketMemory, book: Book, area_map, currency: CurrencyId,
+                 labour_area_of=None) -> None:
         self.year = memory.year + 1
         self._memory = memory
         self._book = book
         self._area_map = area_map
+        self._currency = currency
+        self._labour_area_of = labour_area_of
+        self._goods = set(area_map.goods())
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         return self._memory.prices.get(market_key(good, area))
@@ -65,11 +69,14 @@ class YearView:
     def interest_rate(self, currency: CurrencyId) -> float:
         return self._memory.rates.get(currency, 0.0)
 
-    def area_of(self, good: GoodId, tile: TileId) -> AreaId:
-        return self._area_map.area_of(good, tile)
+    def area_of(self, good_or_trade: str, tile: TileId) -> AreaId:
+        """A good's market area on this tile; a trade's labour area when the key is not a good."""
+        if good_or_trade in self._goods:
+            return self._area_map.area_of(good_or_trade, tile)
+        return self._labour_area_of(tile)
 
     def currency_of(self, area: AreaId) -> CurrencyId:
-        return self._memory.currency_of_area[area]
+        return self._memory.currency_of_area.get(area, self._currency)
 
     def price_level(self, currency: CurrencyId) -> float:
         return self._memory.price_levels.get(currency, 1.0)
