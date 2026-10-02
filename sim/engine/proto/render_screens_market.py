@@ -51,4 +51,12 @@ def render_market(out):
 
 def why_goods_market_lines(out):
     """The `why` section naming a concern's goods market."""
-    return [out["goods_market_line"]] if out.get("goods_market_line") else []
+    lines = [out["goods_market_line"]] if out.get("goods_market_line") else []
+    effect = out.get("opening_effect")
+    if effect:
+        lines.append("Opening it: earns about %s a year at maturity; your existing concerns in %s "
+                     "change by %s a year; net %s. (%s)"
+                     % (_fmt_num(effect["new_concern_earns_per_year"]), effect["category"],
+                        _fmt_num(effect["existing_concerns_change_per_year"]),
+                        _fmt_num(effect["net_change_per_year"]), effect["basis"]))
+    return lines

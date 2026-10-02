@@ -106,3 +106,26 @@ def goods_market_line(sim, node_id):
             "about %d%% of its quoted figure there. 'market' shows every category."
             % (category, len(rivals), "" if len(rivals) == 1 else "s", verb,
                round(factor * 100)))
+
+
+def opening_effect(sim, node_id):
+    """What opening an unopened goods concern would do to revenue: its own take,
+    and what the concerns of yours already selling in the category would lose."""
+    category = sim.nodes[node_id].get("cat")
+    if (category not in sim.GOODS_CATEGORIES or not sim.nodes[node_id].get("rev")
+            or node_id in sim.state.projects.operating):
+        return None
+    factor_new = sim.goods_category_factor_with_entrants(category, 1)
+    rivals = [other for other in sorted(sim.state.projects.operating)
+              if sim.nodes[other].get("cat") == category]
+    factor_now = sim.goods_category_factor(category) if rivals else factor_new
+    changes = [{"id": other, "change_per_year": round(
+        sim.nodes[other]["rev"] * sim.venture_ramp(other) * sim.price_index * (factor_new - factor_now), 1)}
+        for other in rivals]
+    existing = sum(row["change_per_year"] for row in changes)
+    own = round(sim.nodes[node_id]["rev"] * sim.price_index * factor_new, 1)
+    return {"category": category, "new_concern_earns_per_year": own,
+            "existing_concerns_change_per_year": round(existing, 1),
+            "net_change_per_year": round(own + existing, 1),
+            "existing_concerns": changes,
+            "basis": "at maturity, before upkeep; the same market curve 'market' shows"}

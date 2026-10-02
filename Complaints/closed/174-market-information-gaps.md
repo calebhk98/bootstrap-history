@@ -1,6 +1,6 @@
 # Market information: what a player cannot see, and how many commands it takes
 
-**Status:** partly - `market` shows saturation per category, every priceable material and all wages; `why` names the goods category. `market` also lists demand for every goods category (sale price and quantity against opening, share a new concern would earn). Remaining: `economy full` adds nothing beyond `economy` (economy files owned by another batch); why-opening-moved-revenue previews
+**Status:** closed - `market` shows goods demand, materials and wages; `quote material`, `why` (category plus opening effect on revenue) and `economy full` (goods demand) cover the rest
 
 - Sale price of what concerns sell, and demand for it: no command.
 - Material price: `materials` lists only materials already tracked (charcoal and firewood appeared only after I bought some); no `quote material`.

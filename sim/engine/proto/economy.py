@@ -1,6 +1,7 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
 from ..data import WAGES, trade_family
+from ..market_report import goods_demand
 from .. import figures_headline  # noqa: F401  (registers the headline figures)
 from .. import cash_book
 from ..figures import figure_snapshot
@@ -767,6 +768,7 @@ def _agent_economy(sim, cmd=None):
             seen.add(material_key)
             rows.append({"material": material_key,
                         "price_factor_over_book": round(sim.material_price_factor(material_key), 3)})
+        out["goods_demand"] = goods_demand(sim)
         out["tracked_material_prices"] = sorted(rows, key=lambda r: -r["price_factor_over_book"])
         # THE SAME FORMULA `labour`'s own row() uses for "a_year_of_one", not
         # a second version of a wage this file already prints elsewhere.

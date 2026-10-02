@@ -1,6 +1,6 @@
 # Add batch start / filtered multi-select
 
-**Status:** partly - `rush` filters by `category`, per-project `max_cost` and `max_hours`, previews count, total cost, yearly draw and founder hours; the preview still omits trade bottlenecks and risk exposure
+**Status:** closed - rush filters (category, ids, max_cost, max_hours), preview with founder hours, trade bottlenecks and risk exposure
 
 Several points in the Mexica run had dozens or hundreds of already-visible, legal projects: approximately 69 free/zero-hour techniques, approximately 180 visible projects below 500 currency, later 100+ projects in affordable tiers. Starting each individually is clerical work.
 
