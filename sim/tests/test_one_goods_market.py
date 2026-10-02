@@ -93,7 +93,7 @@ check("the furnace is not a goods-category concern, so its takings carry only th
 expected_takings = (furnace_game.concern_takings("blast_furnace", furnace_world.ramp(year - 10))
                     * furnace_game.node_output_market_factor(furnace_node))
 check("a firm's takings carry the same output market factor the founder's do",
-      abs(furnace_world.concern_takings("blast_furnace", year - 10) - expected_takings) < 1e-6 * expected_takings,
+      abs(furnace_world.concern_takings("blast_furnace", year - 10) - expected_takings) <= 1e-6 * abs(expected_takings),
       (furnace_world.concern_takings("blast_furnace", year - 10), expected_takings))
 
 # --- a good nobody offers has no household price and draws no spending -------------------------
