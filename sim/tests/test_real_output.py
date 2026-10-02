@@ -52,7 +52,7 @@ check("...and does not raise real output",
 check("...nor output per head", control.real_output_per_head() == twin.real_output_per_head(),
       (control.real_output_per_head(), twin.real_output_per_head()))
 
-# --- a technique that halves a good's labour lowers its price and raises what is sold.
+# --- a technique that halves a good's labour, run by a producer that sells, lowers the price and raises what is sold.
 original = price_solver._default_production_entries()
 patched = dict(original)
 source_key = next(key for key, entry in original.items() if GOOD in (entry.get("outputs") or {}))
@@ -74,14 +74,18 @@ try:
     check("a technique that is held but run by no producer changes no price",
           game.goods_market.household_prices()[GOOD] == price_before)
     run(game, plain)
-    price_after = game.goods_market.household_prices()[GOOD]
-    check("a technique that halves a good's labour lowers that good's price",
-          price_after < 0.75 * price_before, (price_before, price_after))
+    check("a technique one producer runs does not reprice the incumbents' cost of the good",
+          game.goods_market.household_prices()[GOOD] == price_before)
+    commodity = game._material_tag(GOOD)[0]
+    cost = game.entry_cost_ratio(GOOD + "_with_the_technique", GOOD)
+    check("...but a producer making it by that entry makes it for less", cost < 0.75, cost)
+    posted_before = game.market_price_ratio(GOOD)
+    game.goods_market.note_sale("cheap_firm", commodity, 0.5 * game._market_entry(commodity)["reference_tonnes"], cost)
+    check("a producer that makes the good by that entry and sells it lowers the price the market posts",
+          game.market_price_ratio(GOOD) < 0.95 * posted_before, (posted_before, game.market_price_ratio(GOOD)))
     check("...and no good that does not use it changes price",
           all(game.goods_market.household_prices()[material] == price
               for material, price in other_before.items()), other_before)
-    check("households want more of the cheaper good",
-          game.household_demand_ratio(GOOD) > 1.05, game.household_demand_ratio(GOOD))
     close_years(game, 6)
     close_years(twin, 6)
     sold_after = game.state.economy.market_book[GOOD]["traded_tonnes"]

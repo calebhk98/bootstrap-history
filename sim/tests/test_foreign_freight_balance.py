@@ -134,7 +134,9 @@ check("an export brings coin back in",
 
 
 def stubbed_pair(simulation, home_price, foreign_price, freight=1.0):
-    simulation._foreign_price_pair = lambda commodity, facts: (home_price, foreign_price)
+    # the home price is in home money, which already follows the home coin stock
+    simulation._foreign_price_pair = lambda commodity, facts: (
+        home_price * simulation.home_price_level(), foreign_price)
     simulation._foreign_sides = lambda commodity, facts: (True, True)
     simulation._route_freight_per_tonne = lambda civilization, imbalance=None: freight
     simulation._output_is_sourced = lambda commodity: True

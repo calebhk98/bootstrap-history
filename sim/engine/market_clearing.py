@@ -162,7 +162,8 @@ class MarketClearingMixin:
             "founder_purchases_tonnes": (self.goods_market.bought_tonnes(commodity, FOUNDER)
                                         + self.goods_market.drawn_tonnes(commodity)),
             "founder_sales_tonnes": closing_conditions.founder_sales_tonnes,
-            "actor_supply_tonnes": conditions.actor_supply_tonnes,
+            "actor_supply_tonnes": conditions.actor_supply_tonnes + sum(
+                offer.tonnes for offer in self.goods_market.others_offers(commodity)),
             "actor_demand_tonnes": conditions.actor_demand_tonnes,
             "society_sales_tonnes": closing.society_sales_tonnes,
             "displaced_by_founder_tonnes":

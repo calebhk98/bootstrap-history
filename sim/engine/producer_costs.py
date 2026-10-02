@@ -9,21 +9,45 @@ TEMPORARY HEURISTIC (CLAUDE.md 4.4): the entries a concern holds are its node's 
 some producer runs that make the same products (concern_volume.py); a producer-by-producer technique set
 would replace it. Inputs are priced at the incumbents' cost, not at what each buyer was charged.
 """
+from typing import Any, Dict, FrozenSet, List
+
 from sim.world.producer_market import Offer
 
-from . import concern_volume, entry_cost
+from . import entry_cost
 from . import prices as price_solver
 from .project_materials import tonnes_per_unit
 
 
-# (production table, {id of an entry: its key}); the table is kept so a hit is confirmed with `is`
-_ENTRY_KEYS = [None, None]
+# (production table, {gate node: keys of the entries it gates}, {outputs: keys of entries making them}); the
+# table is kept so a hit is confirmed with `is`
+_INDEX: List[Any] = [None, None, None]
 
 
-def _key_of(production, entry):
-    if _ENTRY_KEYS[0] is not production:
-        _ENTRY_KEYS[:] = [production, {id(candidate): key for key, candidate in production.items()}]
-    return _ENTRY_KEYS[1][id(entry)]
+def _indexes(production):
+    if _INDEX[0] is not production:
+        by_gate: Dict[str, List[str]] = {}
+        by_outputs: Dict[FrozenSet[str], List[str]] = {}
+        for key in sorted(production):
+            entry = production[key]
+            if entry.get("requires_node"):
+                by_gate.setdefault(entry["requires_node"], []).append(key)
+            if entry.get("outputs"):
+                by_outputs.setdefault(frozenset(entry["outputs"]), []).append(key)
+        _INDEX[:] = [production, by_gate, by_outputs]
+    return _INDEX[1], _INDEX[2]
+
+
+def entry_keys_held_for(node_id, production, held):
+    """Keys of the node's own entries and of every entry a held node gates that makes one of its lines."""
+    by_gate, by_outputs = _indexes(production)
+    own = by_gate.get(node_id, [])
+    keys = list(own)
+    for line in sorted({frozenset(production[key]["outputs"]) for key in own if production[key].get("outputs")},
+                       key=sorted):
+        for key in by_outputs.get(line, []):
+            if production[key].get("requires_node") in held and key not in own:
+                keys.append(key)
+    return keys
 
 
 class ProducerCostsMixin:
@@ -66,9 +90,9 @@ class ProducerCostsMixin:
         """The cost ratio of the cheapest entry a concern on this node holds that makes `material`."""
         production = price_solver.default_production_entries()
         held = self.techniques_in_use()
-        ratios = [self.entry_cost_ratio(_key_of(production, entry), material)
-                  for entry in concern_volume.entries_held_for(node_id, production, held)
-                  if material in (entry.get("outputs") or {})]
+        ratios = [self.entry_cost_ratio(key, material)
+                  for key in entry_keys_held_for(node_id, production, held)
+                  if material in (production[key].get("outputs") or {})]
         return min(ratios) if ratios else 1.0
 
     def concerns_reservation_ratio(self, node_tonnes, material):
