@@ -4,7 +4,8 @@
     python3 sim/economy_trace.py <civilisation> 30
     python3 sim/economy_trace.py <civilisation> 20 --goods wheat_kg,silver_kg,iron_bar_kg
 
-`wage/h` is the unskilled wage and `wheat/h` what an hour of it buys in kg of wheat.
+Money is counted in the economy's unit, an opening hour of unskilled work. `wage/h` is the unskilled wage and
+`wheat/h` what an hour of it buys in kg of wheat.
 The engine supplies the opening (tiles, people, recipes in use, opening prices and wages); after that
 only the economy runs, with population and yields held at the opening.
 """

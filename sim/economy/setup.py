@@ -56,6 +56,7 @@ class EconomySetup:
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
+    coin_per_unit: float = 1.0          # the economy counts money in this many coins (the port converts)
 
     def basket_for(self, tile: TileId):
         """The needs of people living on a tile: the common basket with that tile's floors."""

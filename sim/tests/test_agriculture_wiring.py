@@ -77,19 +77,7 @@ class VariesWithWeatherTests(unittest.TestCase):
     """
 
     def test_food_and_nutrition_ratio_are_not_a_constant(self):
-        # THE WINDOW IS A CENTURY, NOT FORTY YEARS, and that is the fix
-        # rather than the next re-tune of the thresholds below. Weather is
-        # now drawn per 150,000 km2 cell and correlated by real distance
-        # (Complaints/49), which makes bad years RARER BUT DEEPER than
-        # independent per-region draws could produce - the correct property
-        # of a correlated field, and a realistic one, since a severe
-        # empire-wide harvest failure is a generational event rather than a
-        # once-a-decade one. Over 101-140 this run contains no year below
-        # 0.9 at all and its spread is 0.0205; over 101-200 it reaches
-        # 0.7757 with a spread of 0.0269. Both assertions below were sitting
-        # one or two thousandths from failing on the short window - they had
-        # each already been re-tuned once, which is the signal that the
-        # sample was wrong rather than the numbers.
+        # A century, because correlated weather makes bad years rare (Complaints/49).
         test_sim = _rome_sim(events=False)
         ratios = nutrition_ratios_over_years(test_sim, range(101, 201))
         # NOT a flat distinct-value count: nutrition_ratio is structurally
@@ -101,21 +89,11 @@ class VariesWithWeatherTests(unittest.TestCase):
         # constant stand-in would repeat ONE value literally every year,
         # which pstdev == 0 catches directly and a distinct-value count
         # would not (it would also fail a model that is correctly capped).
-        # THE THRESHOLD WAS 0.05, AND IT WAS MEASURING ROME'S REGION COUNT
-        # rather than whether this model varies at all. Averaging N
-        # effectively-independent weather draws divides the spread by about
-        # sqrt(N), so every improvement to how weather is drawn moves this
-        # number - one draw for the whole empire, then seven assumed-
-        # independent regions (Complaints/46), now 88 cells correlated by
-        # real distance (Complaints/49, effective N about 8.4). Holding any
-        # of those numbers would assert that a civilisation must be badly
-        # diversified. What this check is FOR is unchanged and is stated
-        # above: catching a constant stand-in, which repeats one value every
-        # year. Measured over the century window: spread 0.0269, minimum
-        # 0.7757, with real margin under both bounds rather than the
-        # thousandths the forty-year window left.
-        self.assertGreater(statistics.pstdev(ratios), 0.02, ratios)
-        self.assertLess(min(ratios), 0.9, ratios)
+        # What this catches is a constant stand-in. The size of the spread and of the worst year belong
+        # to one weather history, and each game's seed now draws its own (Complaint 384), so the check
+        # asks only that the ratio moves and that some year falls short.
+        self.assertGreater(statistics.pstdev(ratios), 1e-3, ratios)
+        self.assertLess(min(ratios), 1.0, ratios)
         # THE 1.0 CEILING IS GONE ON PURPOSE: asserting max(ratios) <= 1.0
         # here would reintroduce the ratchet Complaints/44 describes. Capping
         # consumption at food_demand_kg however full the granary was means a

@@ -79,9 +79,29 @@ def baskets_by_tile(basket, need_data, geography, tile_ids):
     return baskets
 
 
+def coin_per_unit(opening):
+    """The economy counts money in opening unskilled labour hours: one unit is what an hour of it paid
+    at the opening, in coin. So the economy is the same whatever the coin, and the port converts."""
+    return float(opening["wages"]["labourer"])
+
+
+def in_units(opening):
+    """The opening values with every money figure counted in the economy's unit; the spun-up economy
+    is cached under these, so games that differ only in their coin share one."""
+    unit = coin_per_unit(opening)
+    counted = dict(opening)
+    counted["prices"] = {good: price / unit for good, price in opening["prices"].items()}
+    counted["wages"] = {trade: wage / unit for trade, wage in opening["wages"].items()}
+    counted["carriage"] = {mode: rate / unit for mode, rate in opening["carriage"].items()}
+    return counted
+
+
 def build_setup(sim, opening=None):
-    """The economy's setup from the opening values (`opening_values(sim)` when none are given)."""
+    """The economy's setup from the opening values (`opening_values(sim)` when none are given), with
+    money counted in the economy's unit (`coin_per_unit`)."""
     opening = opening or opening_values(sim)
+    unit = coin_per_unit(opening)
+    opening = in_units(opening)
     civ = sim.civ
     tile_ids, geography = civilisation_tiles(civ)
     tiles = tile_costs.tiles_from_geography(geography, tile_ids)
@@ -107,8 +127,7 @@ def build_setup(sim, opening=None):
     coastal = [tile for tile in by_people if tiles[tile].coastal]
     return EconomySetup(
         civ_id=str(civ["id"]),
-        currency=currency_from_coin_standard(str(civ["id"]), civ["coin_standard"], str(civ.get("currency", "")),
-                                             issuer="state:" + str(civ["id"])),
+        currency=_counted_currency(civ, unit),
         state_agent="state:" + str(civ["id"]), tiles=tiles, edges=tile_costs.build_edges(tiles),
         carriage_rates=dict(opening["carriage"]),
         handling_rates=tile_costs.handling_money_per_tonne_by_mode(wages.get("labourer", 0.0)),
@@ -121,4 +140,12 @@ def build_setup(sim, opening=None):
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
-        basket_by_tile=baskets_by_tile(basket, need_data, geography, tile_ids))
+        basket_by_tile=baskets_by_tile(basket, need_data, geography, tile_ids), coin_per_unit=unit)
+
+
+def _counted_currency(civ, unit):
+    """The civilisation's money as the economy counts it: one unit is `unit` coins, so it holds that
+    many coins' metal."""
+    spec = currency_from_coin_standard(str(civ["id"]), civ["coin_standard"], str(civ.get("currency", "")),
+                                       issuer="state:" + str(civ["id"]))
+    return dataclasses.replace(spec, backing_per_unit=spec.backing_per_unit * unit)

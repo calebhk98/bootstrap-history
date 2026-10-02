@@ -17,7 +17,7 @@ from sim.economy.year_close import national_prices
 from sim.economy.year_labour import trade_premium
 
 from . import solve_cache
-from .economy_port_setup import build_setup, opening_values
+from .economy_port_setup import build_setup, in_units, opening_values
 
 SWITCH_ENVIRONMENT = "ROME_AGENT_ECONOMY"
 SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
@@ -72,7 +72,7 @@ class AgentEconomy:
                 opening = opening_values(self._sim)
                 setup = build_setup(self._sim, opening)
                 record = solve_cache.cached_json(
-                    solve_cache.solve_key({"agent_economy_spin_up": opening}),
+                    solve_cache.solve_key({"agent_economy_spin_up": in_units(opening), "civ": self._sim.civ["id"]}),
                     lambda: self._spun_up(setup), cache_dir=SPIN_UP_CACHE_DIRECTORY)
                 self._economy = Economy(setup, EconomyRecord.from_record(record))
                 self.stored["opening"] = opening
@@ -120,7 +120,8 @@ class AgentEconomy:
                 if quantity <= 0.0 or material not in area_map.goods():
                     continue
                 moves.append(GoodsMove(EDGE_LEGACY, FOUNDER_AGENT, material, tile, quantity, "concern output"))
-                cost = sim.concern_cost_ratio(node_id, material) * old_prices.get(material, 0.0)
+                cost = (sim.concern_cost_ratio(node_id, material) * old_prices.get(material, 0.0)
+                        / economy.setup.coin_per_unit)
                 offers.append(Offer(FOUNDER_AGENT, material, area_map.area_of(material, tile), tile, quantity, cost))
         book.move_many(moves)
         return {FOUNDER_AGENT: AgentOrders(offers=tuple(offers))} if offers else {}
@@ -159,6 +160,9 @@ class AgentEconomy:
                     if net > export_prices.get(good, 0.0):
                         export_prices[good] = net
             available[good] = wanted[good] = market * FOREIGN_TRADE_SHARE
+        coin = economy.setup.coin_per_unit
+        landed = {good: price / coin for good, price in landed.items()}
+        export_prices = {good: price / coin for good, price in export_prices.items()}
         return {EDGE_EXTERNAL: external_orders(landed, export_prices, available, wanted,
                                                economy.area_map.area_of, economy.setup.port_tile)}
 
@@ -174,7 +178,7 @@ class AgentEconomy:
                    for good, tiles in book.holdings(FOUNDER_AGENT)["goods"].items()
                    for tile, quantity in tiles.items() if quantity > 0.0]
         book.move_many(returns)
-        self.stored["founder_takings"] = proceeds
+        self.stored["founder_takings"] = proceeds * self._economy.setup.coin_per_unit
 
     def _inputs(self, engine_orders) -> YearInputs:
         sim = self._sim
@@ -222,8 +226,9 @@ class AgentEconomy:
             for key, wage in record.memory.wages.items():
                 trade = key.split("|", 1)[0]
                 wages.setdefault(trade, []).append(wage)
-            self._answers = (national_prices(record),
-                             {trade: sum(rows) / len(rows) for trade, rows in wages.items()},
+            coin = self._economy.setup.coin_per_unit
+            self._answers = ({good: price * coin for good, price in national_prices(record).items()},
+                             {trade: sum(rows) / len(rows) * coin for trade, rows in wages.items()},
                              record.memory.rates.get(self._economy.setup.currency_id))
         return self._answers
 
