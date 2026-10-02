@@ -7,7 +7,7 @@ _expected_grants = {
     "han_china_100ad": 119,
     "norse_900ad": 151,
     "england_1300": 207,
-    "mexica_1500": 49,
+    "mexica_1500": 50,  # 301: the hand needle (bone) is held at the start
 }
 for _civ, _count in _expected_grants.items():
     _start = sim(civ=_civ)
