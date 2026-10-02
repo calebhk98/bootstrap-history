@@ -28,8 +28,8 @@ check("clear drops every entry", _cache.get(_first) is None and len(_cache) == 0
 
 # no engine module keys a dictionary on an address except through the cache class
 _outside = []
-_engine_root = os.path.join(ROOT, "sim", "engine")
-for _dirpath, _dirnames, _filenames in os.walk(_engine_root):
+from .source_dirs import engine_side_dirs
+for _dirpath, _dirnames, _filenames in (_entry for _directory in engine_side_dirs() for _entry in os.walk(_directory)):
     _dirnames[:] = [name for name in _dirnames if name != "__pycache__"]
     for _filename in sorted(_filenames):
         if not _filename.endswith(".py") or _filename == "identity_cache.py":

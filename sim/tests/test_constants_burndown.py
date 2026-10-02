@@ -143,14 +143,15 @@ class BurndownActuallyCountsTests(unittest.TestCase):
         # source scan: there is no registry to read before a module is
         # imported, so this first half stays a directory walk for
         # "declare(" - a genuine source property, not a stand-in for one.
-        world_directory = os.path.join(_REPOSITORY_ROOT, "sim", "world")
         declaring = set()
-        for entry in sorted(os.listdir(world_directory)):
-            if not entry.endswith(".py") or entry == "__init__.py":
-                continue
-            with open(os.path.join(world_directory, entry)) as handle:
-                if "declare(" in handle.read():
-                    declaring.add("sim.world." + entry[:-3])
+        for package in ("world", "geography", "labour"):
+            directory = os.path.join(_REPOSITORY_ROOT, "sim", package)
+            for entry in sorted(os.listdir(directory)):
+                if not entry.endswith(".py") or entry == "__init__.py":
+                    continue
+                with open(os.path.join(directory, entry)) as handle:
+                    if "declare(" in handle.read():
+                        declaring.add("sim.%s.%s" % (package, entry[:-3]))
 
         script = (
             "import sys, json; sys.path.insert(0, %r)\n"

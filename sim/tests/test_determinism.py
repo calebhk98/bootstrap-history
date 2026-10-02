@@ -89,7 +89,8 @@ def _id_call_report(path):
 
 
 _engine_files = []
-for _dirpath, _dirnames, _filenames in os.walk(os.path.join(ROOT, "sim", "engine")):
+from .source_dirs import engine_side_dirs
+for _dirpath, _dirnames, _filenames in (_entry for _directory in engine_side_dirs() for _entry in os.walk(_directory)):
     _dirnames[:] = [dirname for dirname in _dirnames if dirname != "__pycache__"]
     for _filename in sorted(_filenames):
         if _filename.endswith(".py"):

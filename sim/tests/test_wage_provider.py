@@ -12,6 +12,7 @@ from sim.engine import catalog, data, prices as engine_prices
 from sim.labour import wage_provider
 from sim.solve_prices_core import wage_ratios_by_trade
 from sim.labour import wages
+from .source_dirs import engine_and_world_dirs
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -181,10 +182,10 @@ class NoBookWagesTests(unittest.TestCase):
         # The solver reads wages through a document in the book's shape, so
         # its builder and reader name the key; the loader must not.
         offenders = []
-        for directory in ("sim/engine", "sim/world"):
-            for name in sorted(os.listdir(os.path.join(ROOT, directory))):
+        for directory in engine_and_world_dirs():
+            for name in sorted(os.listdir(directory)):
                 if name.endswith(".py"):
-                    with open(os.path.join(ROOT, directory, name), encoding="utf-8") as source:
+                    with open(os.path.join(directory, name), encoding="utf-8") as source:
                         if "wage_rates_denarii_per_hour" in source.read():
                             offenders.append(name)
         self.assertLessEqual(set(offenders), {"prices.py", "wages.py"})

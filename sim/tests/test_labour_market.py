@@ -921,7 +921,7 @@ class StandaloneImportTests(unittest.TestCase):
     """
 
     def _top_level_imports(self):
-        path = os.path.join(_REPO_ROOT, "sim", "world", "labour_market.py")
+        path = os.path.join(_REPO_ROOT, "sim", "labour", "labour_market.py")
         with open(path) as handle:
             tree = ast.parse(handle.read(), filename=path)
         imported = set()
@@ -949,7 +949,7 @@ class StandaloneImportTests(unittest.TestCase):
                 "directly at module level")
 
     def test_the_only_other_sim_world_import_is_inside_the_main_guard(self):
-        path = os.path.join(_REPO_ROOT, "sim", "world", "labour_market.py")
+        path = os.path.join(_REPO_ROOT, "sim", "labour", "labour_market.py")
         with open(path) as handle:
             tree = ast.parse(handle.read(), filename=path)
         top_level_kinds = {type(node) for node in tree.body}

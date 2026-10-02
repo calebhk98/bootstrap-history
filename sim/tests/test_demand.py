@@ -683,9 +683,9 @@ class NoLoneLetterMathsNotationTests(unittest.TestCase):
         self.assertEqual(hits, [])
 
     def test_no_offending_notation_in_any_shipped_sim_world_module(self):
-        world_dir = os.path.join(_REPO_ROOT, "sim", "world")
         offenders = []
-        for path in sorted(glob.glob(os.path.join(world_dir, "*.py"))):
+        for path in sorted(path for name in ("world", "geography", "labour")
+                           for path in glob.glob(os.path.join(_REPO_ROOT, "sim", name, "*.py"))):
             # STRICT EVERYWHERE, WITH NO PER-FILE EXEMPTION: agriculture.py
             # and transport.py each once carried one pre-existing algebra
             # block a rename task had no mandate to touch, but both are now

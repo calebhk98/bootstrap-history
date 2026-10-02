@@ -355,10 +355,10 @@ check("...and the markers were moved rather than destroyed, so the "
           if "FIXED after independent audit" in (node.get("_internal") or "")))
 check("nothing in the engine reads _internal, which is what makes it safe "
       "to keep developer notes there",
-      not any("_internal" in open(os.path.join(HERE, "engine", filename)).read()
-              for filename in ("core.py", "economy.py", "projects.py", "labour.py",
-                         "society.py", "protocol.py", "cli.py", "fog.py",
-                         "data.py")),
+      not any("_internal" in open(os.path.join(HERE, filename)).read()
+              for filename in ("engine/core.py", "engine/economy.py", "engine/projects.py", "labour/labour.py",
+                         "engine/society.py", "ui/protocol.py", "ui/cli.py", "engine/fog.py",
+                         "engine/data.py")),
       "engine files mentioning _internal")
 
 # --- THE SAME HOLE IN A SECOND COMMAND. `available`'s parser read bare words

@@ -8,6 +8,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.agents import SimWorld
 from sim.ui.proto.quote_spending import _quote_hire
+from .source_dirs import engine_side_dirs
 
 TRADE = "artisan"
 
@@ -119,9 +120,8 @@ def wage_arithmetic_outside_the_market(source_by_name):
 
 
 def engine_sources():
-    engine_dir = os.path.join(ROOT, "sim", "engine")
     sources = {}
-    for folder, _dirs, files in os.walk(engine_dir):
+    for folder, _dirs, files in (entry for directory in engine_side_dirs() for entry in os.walk(directory)):
         for file_name in files:
             if file_name.endswith(".py"):
                 path = os.path.join(folder, file_name)

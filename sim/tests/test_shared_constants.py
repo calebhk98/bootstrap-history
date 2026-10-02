@@ -284,7 +284,7 @@ class UndeclaredLiteralDuplicateTests(unittest.TestCase):
     """
 
     _LABOUR_MARKET_PATH = os.path.join(
-        _REPOSITORY_ROOT, "sim", "world", "labour_market.py")
+        _REPOSITORY_ROOT, "sim", "labour", "labour_market.py")
     _SHARED_NAME = "REFERENCE_LABOUR_HOURS_PER_HECTARE"
 
     def _parsed_labour_market(self):

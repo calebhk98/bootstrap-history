@@ -7,9 +7,11 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine import cash_book
 
-ENGINE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "engine")
+from .source_dirs import SIM_DIR, engine_side_dirs
+
 # The only places allowed to write the purse itself: the ledger's own methods and the opening balance.
-PURSE_WRITERS = {"state.py", "core_properties.py", os.path.join("actors", "household.py")}
+PURSE_WRITERS = {os.path.join("engine", "state.py"), os.path.join("engine", "core_properties.py"),
+                 os.path.join("agents", "household.py")}
 DIRECT_WRITE = re.compile(r"\.capital\s*[-+*/]?=(?!=)")
 
 
@@ -19,10 +21,10 @@ def ask(test_sim, **command):
 
 # --- no code path writes the purse around the ledger -------------------------------------------
 offenders = []
-for folder, _dirs, files in os.walk(ENGINE_DIR):
+for folder, _dirs, files in (entry for directory in engine_side_dirs() for entry in os.walk(directory)):
     for name in files:
         path = os.path.join(folder, name)
-        relative = os.path.relpath(path, ENGINE_DIR)
+        relative = os.path.relpath(path, SIM_DIR)
         if not name.endswith(".py") or relative in PURSE_WRITERS:
             continue
         with open(path, encoding="utf-8") as source:

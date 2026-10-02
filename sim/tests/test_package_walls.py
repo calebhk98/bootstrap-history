@@ -12,6 +12,8 @@ import ast
 import os
 import unittest
 
+from .source_dirs import engine_side_dirs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SIM_DIR = os.path.join(ROOT, "sim")
 TESTS_DIR = os.path.join(SIM_DIR, "tests")
@@ -105,6 +107,17 @@ class PackageWallTests(unittest.TestCase):
                     if module.startswith(prefix) and not any(module == a or module.startswith(a + ".")
                                                              for a in allowed - {"sim.%s" % package}):
                         self.fail("%s imports %s; use sim.%s.api" % (os.path.relpath(path, ROOT), module, package))
+
+    def test_packages_split_from_the_engine_reach_the_economy_only_through_its_port(self):
+        """test_economy_imports.py lets only sim/engine/economy_port*.py import sim.economy, but it
+        scans sim/engine/ alone; these packages were part of it."""
+        for directory in engine_side_dirs():
+            if os.path.basename(directory) == "engine":
+                continue
+            for path in python_files(directory):
+                for module in imported_modules(path, parse(path)):
+                    self.assertFalse(module == "sim.economy" or module.startswith("sim.economy."),
+                                     "%s imports %s" % (os.path.relpath(path, ROOT), module))
 
     def test_outside_code_reads_no_private_name_of_a_package(self):
         packages = list(walled_packages())
