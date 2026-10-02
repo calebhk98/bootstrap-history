@@ -1,6 +1,6 @@
 # Add batch start / filtered multi-select
 
-**Status:** partly - `rush` previews count, total cost and yearly draw and takes limit, max_total_cost, max_annual_draw and reserve_cash; there is still no filter by subject, cost or hours, and the preview omits founder hours and trade bottlenecks
+**Status:** partly - `rush` filters by `category`, per-project `max_cost` and `max_hours`, previews count, total cost, yearly draw and founder hours; the preview still omits trade bottlenecks and risk exposure
 
 Several points in the Mexica run had dozens or hundreds of already-visible, legal projects: approximately 69 free/zero-hour techniques, approximately 180 visible projects below 500 currency, later 100+ projects in affordable tiers. Starting each individually is clerical work.
 
@@ -41,3 +41,5 @@ Design recommendation
 Related to UX-006 (mature play needs development-program abstraction), UX-008 (project-start boilerplate), and UX-031 (idle directed hours handling).
 
 Update: `rush preview` and `rush limit:N max_total_cost:N max_annual_draw:N reserve_cash:N` (sim/engine/proto/dispatch_ventures.py) give the confirmed, capped bulk start with a preview. What remains is choosing the set by filter (subject, cost, hours) and showing founder hours, specialist bottlenecks and risk exposure in the preview.
+
+Update: `rush category:<subject> max_cost:N max_hours:N` (sim/engine/proto/rush_filters.py) choose the set; the preview totals founder hours and echoes the filters. Remains: specialist bottlenecks and risk exposure in the preview; selecting an explicit list of ids.
