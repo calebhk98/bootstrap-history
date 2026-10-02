@@ -67,7 +67,7 @@ check("a genuinely instantaneous capability completes when it is started",
 
 # The credit forecast used to put the percentage itself in a field labelled
 # "interest per year".  Pin both dimensions and their units independently.
-s = sim(civ="england_1300", capital=1300.0)
+s = sim(civ="england_1300", capital=30000.0)    # short of the bill, within the credit line
 out = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "identity_cover"})
 credit = out.get("on_credit", {})
 check("credit forecasts label the percentage as a rate",

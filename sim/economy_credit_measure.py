@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Loans against the money stock, and the base rate, over a run of the agent economy.
 
-    python3 sim/economy_credit_measure.py --years 20 --civs england_1300,rome_100ad --seed 1
+    python3 sim/economy_credit_measure.py --years 20 --civs <civilisation>,<civilisation> --seed 1
 
 Columns: claims (principal plus arrears) as a share of the money stock at the end and at the
 highest point, the median and highest base rate, the mean share of people short of food, and
@@ -49,11 +49,14 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--years", type=int, default=20)
     parser.add_argument("--seed", type=int, default=1)
-    parser.add_argument("--civs", default="england_1300,rome_100ad")
+    parser.add_argument("--civs", default="", help="comma-separated; every civilisation when empty")
     arguments = parser.parse_args(argv)
     print("%-14s %9s %9s %9s %9s %8s  %s" % ("civilisation", "loans/$", "max", "rate med", "rate max", "hungry",
                                              "borrower kinds"))
-    for civ in arguments.civs.split(","):
+    from sim.engine import data
+    civs = [civ for civ in arguments.civs.split(",") if civ] or sorted(
+        name[:-5] for name in os.listdir(data.CIVDIR) if name.endswith(".json") and not name.startswith("_"))
+    for civ in civs:
         rows = measure(civ, arguments.seed, arguments.years)
         kinds = sorted(set().union(*[row[3] for row in rows]))
         print("%-14s %9.5f %9.5f %9.3f %9.3f %8.3f  %s" % (

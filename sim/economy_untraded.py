@@ -25,7 +25,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-DEFAULT_CIVILISATIONS = ("england_1300", "rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500")
+
+
+def every_civilisation():
+    from sim.engine import data
+    return sorted(name[:-5] for name in os.listdir(data.CIVDIR) if name.endswith(".json") and not name.startswith("_"))
 REASONS = ("no_recipe", "no_producer", "not_ordered", "buyers_only", "sellers_only", "ask_above_bids", "other")
 
 
@@ -115,10 +119,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--years", type=int, default=15)
     parser.add_argument("--seed", type=int, default=1)
-    parser.add_argument("--civs", default=",".join(DEFAULT_CIVILISATIONS))
+    parser.add_argument("--civs", default="", help="comma-separated; every civilisation when empty")
     parser.add_argument("--list", action="store_true", help="name every good that never cleared")
     arguments = parser.parse_args(argv)
-    for civ in [civ for civ in arguments.civs.split(",") if civ]:
+    for civ in [civ for civ in arguments.civs.split(",") if civ] or every_civilisation():
         report(civ, arguments.seed, arguments.years, arguments.list)
     return 0
 

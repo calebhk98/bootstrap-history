@@ -403,7 +403,7 @@ check("...and still says what it leaves shut, the case the original "
 # household has, silently, at up to twelve per cent. Borrowing to build is a
 # real move and stays allowed; not being told was the bug.
 _cr = sim(civ="england_1300")
-_cr.capital = 1300.0
+_cr.capital = 30000.0           # short of the project's bill, within the credit line
 _cr_out = S._agent_dispatch(_cr, NODES, {"cmd": "start", "id": "identity_cover"})
 check("starting a project you cannot cover in cash says you would be "
       "borrowing, what it costs a year, and how much room is left",
@@ -444,11 +444,14 @@ check("a project you can pay for outright says nothing about credit",
 # attempt" and nothing else; a failure takes a flat 40% of the money and puts
 # 40% of the hours back on the slate. An England player read the single digit
 # as a small thing and lost 35,433 pence off a 141,824-pence project.
-_fw = S._agent_dispatch(sim(civ="england_1300"), NODES,
-                        {"cmd": "why", "id": "lead_metallurgy"})
+# The sum is 40% of the money bill at risk: the total less the materials bought up front, which stay in
+# stock (Sim.failure_bill), so it is never more than 40% of the total.
+_fw_sim = sim(civ="england_1300")
+_fw = S._agent_dispatch(_fw_sim, NODES, {"cmd": "why", "id": "lead_metallurgy"})
 check("why says what a failure costs, not only how likely one is",
       _fw.get("failure_costs", 0) > 0
-      and abs(_fw["failure_costs"] - _fw["cost"]["total"] * 0.4) < 1.0,
+      and abs(_fw["failure_costs"] - _fw_sim.failure_bill("lead_metallurgy") * 0.4) < 1.0
+      and _fw["failure_costs"] <= _fw["cost"]["total"] * 0.4 + 1.0,
       (_fw.get("failure_costs"), (_fw.get("cost") or {}).get("total")))
 check("...and a work that cannot fail is not given an imaginary danger",
       S._agent_dispatch(sim(civ="england_1300"), NODES,
