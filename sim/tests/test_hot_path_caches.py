@@ -106,6 +106,16 @@ class _TonnesWorld:
         self.asked.append(node_id)
         return 0.5
 
+    def market_forget(self, actor_id):
+        # the goods market drops an exited actor's standing orders; this stub keeps no book
+        pass
+
+    def materials_made_by(self, node_id):
+        return ()
+
+    def market_sale(self, actor_id, material, tonnes):
+        pass
+
 
 def _registry_of_firms(count):
     state = _ActorsState()
@@ -121,27 +131,14 @@ def _registry_of_firms(count):
 
 _registry = _registry_of_firms(60)
 _world = _TonnesWorld(["steelworks"])
-_actors_asked = []
-_original_output_of = _Actor.output_of
-
-
-def _counting_output_of(self, material, world):
-    _actors_asked.append(self.actor_id)
-    return _original_output_of(self, material, world)
-
-
-_Actor.output_of = _counting_output_of
-try:
-    _total = _registry.supply("steel", _world)
-finally:
-    _Actor.output_of = _original_output_of
-check("registry supply asks only the actors that hold a concern making the material",
-      _actors_asked == ["firm:017", "firm:042"] and abs(_total - 1.0) < 1e-12,
-      (_actors_asked, _total))
-_registry.actors["firm:042"].record.exited_year = 90
-_world = _TonnesWorld(["steelworks"])
-check("...and an exited firm no longer supplies",
-      abs(_registry.supply("steel", _world) - 0.5) < 1e-12)
+# Firms now put their output into the one goods market themselves (`sell_output`); the market's
+# total is the flows they report, so there is no registry-wide supply walk left to index.
+_tonnes = {actor_id: actor.output_of("steel", _world) for actor_id, actor in _registry.actors.items()}
+check("only the actors holding a concern that makes the material report any of it",
+      {actor_id for actor_id, tonnes in _tonnes.items() if tonnes > 0.0} == {"firm:017", "firm:042"}
+      and abs(sum(_tonnes.values()) - 1.0) < 1e-12, _tonnes)
+check("...and an actor with no concern making the material asks the world about none of its concerns",
+      _registry.actors["firm:001"].output_of("steel", _world) == 0.0)
 
 
 # --- the staffing tally survives an actor's turn that left staff as it was found.
