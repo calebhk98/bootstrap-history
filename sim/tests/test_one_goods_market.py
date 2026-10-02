@@ -112,7 +112,8 @@ check("a partner offers cassia", market.offered_by("cassia_kg") == "han_china_10
 facts = rome._foreign_economy_facts("han_china_100ad")
 route = rome._foreign_route(S.load_civ("han_china_100ad"))
 landed = (facts["prices_in_home_money"]["cassia_kg"] * market.partner_price_level("han_china_100ad")
-          * (1.0 + market.merchants_cost_share(route))
-          + route.cost_per_tonne * tonnes_per_unit("cassia_kg"))
+          * (1.0 + market.merchants_cost_share(route, None, "han_china_100ad"))
+          + (route.cost_per_tonne + rome._agent_cost_per_tonne("han_china_100ad", route))
+          * tonnes_per_unit("cassia_kg"))
 check("...and households pay what it costs the partner plus freight plus merchants' terms",
       abs(prices["cassia_kg"] - landed) < 1e-9 * landed, (prices["cassia_kg"], landed))

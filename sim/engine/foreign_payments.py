@@ -46,7 +46,7 @@ class ForeignPaymentsMixin:
 
     LEDGER_FIELDS = ("goods_in_value", "goods_out_value", "home_coin_units", "partner_coin_units",
                      "lift_tonnes_per_year", "lift_used_in", "lift_used_out", "lift_unmet",
-                     "lift_year", "fleet_capital", "merchant_capital_used")
+                     "lift_year", "fleet_capital", "merchant_capital_used", "merchant_retained")
 
     def _foreign_ledger(self, civilization_id, create=False):
         """The partner's ledger; an empty one when nothing has been recorded and `create` is false."""
