@@ -26,6 +26,7 @@ class YearLedger:
     clearings: List[ClearingResult] = field(default_factory=list)
     labour_results: List[LabourResult] = field(default_factory=list)
     unpaid: Dict[AgentId, float] = field(default_factory=dict)
+    plant_spend: Dict[AgentId, float] = field(default_factory=dict)    # paid for plant goods, a build not a running cost
     unmet_demand: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): quantity
 
     def note_postings(self, postings: Iterable[object], purpose_kind: str = "") -> None:
@@ -42,6 +43,16 @@ class YearLedger:
                 goods[posting.good] = goods.get(posting.good, 0.0) + posting.quantity
                 key = (posting.giver, posting.good)
                 self.sold[key] = self.sold.get(key, 0.0) + posting.quantity
+
+    def note_plant_purchases(self, moves: Iterable[object], price: float, plant_goods: Dict[AgentId, Iterable[GoodId]]) -> None:
+        """Money producers paid this clearing for goods their own plant is built from."""
+        for move in moves:
+            if isinstance(move, GoodsMove) and move.good in plant_goods.get(move.receiver, ()):
+                self.plant_spend[move.receiver] = self.plant_spend.get(move.receiver, 0.0) + move.quantity * price
+
+    def running_costs(self, agent: AgentId) -> float:
+        """Money the agent paid out this year other than for building plant."""
+        return max(0.0, self.money_out.get(agent, 0.0) - self.plant_spend.get(agent, 0.0))
 
     def note_clearing(self, result: ClearingResult) -> None:
         self.clearings.append(result)

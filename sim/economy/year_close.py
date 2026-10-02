@@ -78,7 +78,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
         revenue = ledger.sales_in.get(producer_id, 0.0)
-        costs = ledger.money_out.get(producer_id, 0.0)
+        costs = ledger.running_costs(producer_id)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view)
         if closed.exited:
             # a run of losses mothballs the plant rather than scrapping it: it keeps its cash and wears
