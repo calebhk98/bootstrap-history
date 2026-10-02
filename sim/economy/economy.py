@@ -88,6 +88,8 @@ class Economy:
             for bid in plan.bids:
                 order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
         plant_runs = self._lend(funds, view, order_book)
+        for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
+            plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
         clear_goods(setup, record, view, self.area_map, order_book, plans, ledger)
         dispatch_merchants(setup, record, self.carriage, ledger)
         money_taxes(setup, record, view, ledger)
@@ -186,18 +188,47 @@ class Economy:
                 continue
             funded_runs = runs * min(1.0, loan.principal / asked[loan.borrower])
             plant_runs[loan.borrower] = plant_runs.get(loan.borrower, 0.0) + funded_runs
-            recipe = setup.recipes[producer.recipe_id]
-            for good, per_run in sorted(recipe.plant_goods.items()):
-                price = view.price(good, view.area_of(good, producer.tile)) if good in self.area_map.goods() else None
-                if not price:
-                    continue
-                area = view.area_of(good, producer.tile)
-                # no dearer than the price at which the new plant would earn just the loan's rate
-                order_book.setdefault((good, area), ([], []))[0].append(
-                    Bid(producer.agent_id, good, area, producer.tile, per_run * funded_runs, 0.0, price, 0.0,
-                        loan.principal, maximum_price=price * max(1.0, worth.get(loan.borrower, 1.0))))
+            # no dearer than the price at which the new plant would earn just the loan's rate
+            self._bid_for_plant(producer, funded_runs, loan.principal, worth.get(loan.borrower, 1.0), view, order_book)
         record.expansion_runs = {}
         return plant_runs
+
+    def _rebuild_worn_plant(self, view, order_book) -> Dict[str, float]:
+        """Producers that covered their costs bid, from their own cash, for the plant goods that rebuild
+        what wore out last year, no dearer than the price at which the plant still earns the live rate."""
+        record, setup = self.record, self.setup
+        money = setup.currency_id
+        rate = max(view.interest_rate(money), 1e-9)
+        rebuilt: Dict[str, float] = {}
+        worn, record.worn_runs = record.worn_runs, {}
+        for producer_id, runs in sorted(worn.items()):
+            producer = record.producers.get(producer_id)
+            if producer is None or runs <= 0.0:
+                continue
+            recipe = setup.recipes[producer.recipe_id]
+            inputs = producers.live_input_prices(producer, recipe, view)
+            wages = producers.live_wages(producer, recipe, view)
+            earning = unit_cost.return_on_capital(recipe, producers.expected_output_prices(producer, recipe, view),
+                                                  inputs, wages)
+            cash = record.book.balance(producer_id, money)
+            if not earning > rate or cash <= 0.0:
+                continue
+            self._bid_for_plant(producer, runs, cash, earning / rate, view, order_book)
+            rebuilt[producer_id] = runs
+        return rebuilt
+
+    def _bid_for_plant(self, producer, runs, budget, worth_ratio, view, order_book) -> None:
+        recipe = self.setup.recipes[producer.recipe_id]
+        for good, per_run in sorted(recipe.plant_goods.items()):
+            if good not in self.area_map.goods():
+                continue
+            area = view.area_of(good, producer.tile)
+            price = view.price(good, area)
+            if not price:
+                continue
+            order_book.setdefault((good, area), ([], []))[0].append(
+                Bid(producer.agent_id, good, area, producer.tile, per_run * runs, 0.0, price, 0.0,
+                    budget, maximum_price=price * max(1.0, worth_ratio)))
 
     def _build_plant(self, plant_runs: Dict[str, float]) -> None:
         """Plant goods a producer received are built in; capacity grows by the share that arrived."""

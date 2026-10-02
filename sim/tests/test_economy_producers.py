@@ -198,7 +198,8 @@ class CloseYearTests(unittest.TestCase):
         request = result.loan_request
         self.assertIsNotNone(request)
         self.assertGreater(request.maximum_rate, rich.rate)
-        self.assertGreater(result.expansion_runs, 1.0)
+        # growth only: plant that wore out is rebuilt from the producer's own cash, not borrowed for
+        self.assertAlmostEqual(result.expansion_runs, producers_close.EXPANSION_SHARE_PER_YEAR * farmer().capacity_runs)
         self.assertAlmostEqual(request.amount, result.expansion_runs * 10.0)
 
     def test_expected_prices_move_toward_the_latest_price(self):

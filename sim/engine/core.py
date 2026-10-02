@@ -628,6 +628,11 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # particular, never infer Roman materials or institutions for another
         # civilization from those fields.
         self._reconnect_state_hooks()
+        if self.economy.runs_agent_economy():
+            # opened now, not by the first question a screen or a cost asks: while it opens the engine's
+            # own figures answer, and nothing computed from them may stay cached afterwards
+            self.economy.open_agent()
+            self._done_changed()
 
     def _reconnect_state_hooks(self):
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""

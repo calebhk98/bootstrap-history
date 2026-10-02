@@ -103,8 +103,9 @@ def _dividend(producer: Producer, currency: str, amount: float) -> Tuple[Transfe
 
 
 def _expansion(producer, recipe, view, currency, rate, wear, inputs, wages):
-    """A loan to rebuild what wore out and grow, when a run of new capacity would earn more than the
-    live rate. Only a recipe with plant needs one; without plant the site and the owner bound it."""
+    """A loan to grow, when a run of new capacity would earn more than the live rate. Plant that wore
+    out is rebuilt from the producer's own cash (the economy's year does it). Only a recipe with
+    plant needs one; without plant the site and the owner bound it."""
     value = unit_cost.plant_value_per_run(recipe, inputs, wages)
     if recipe.plant_life_years <= 0.0 or value <= 0.0 or not math.isfinite(value):
         return None, 0.0
@@ -112,7 +113,7 @@ def _expansion(producer, recipe, view, currency, rate, wear, inputs, wages):
         recipe, expected_output_prices(producer, recipe, view) or {}, inputs, wages)
     if yearly_return <= rate:
         return None, 0.0
-    runs = wear + EXPANSION_SHARE_PER_YEAR * producer.capacity_runs
+    runs = EXPANSION_SHARE_PER_YEAR * producer.capacity_runs
     amount = runs * value
     return LoanRequest(producer.agent_id, currency, amount, yearly_return, recipe.plant_life_years,
                        amount, "expand"), runs

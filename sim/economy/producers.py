@@ -32,6 +32,13 @@ EXPECTATION_ADJUSTMENT_SHARE = declare(
     why="A producer expects next year's price from its own past, moving part of the way to what it "
         "last saw; a share of one is the naive cobweb. Real producers use forward prices, stocks and "
         "reports that the economy does not model. The share is a placeholder for that information.")
+REGRESSIVE_EXPECTATION_WEIGHT = declare(
+    "REGRESSIVE_EXPECTATION_WEIGHT", 0.3, kind="temporary_heuristic",
+    unit="share of the gap to the break-even price closed in a producer's expectation each year",
+    source=None, confidence="D",
+    why="Producers who expect only last year's price chase every swing, and a chain of them feeding each "
+        "other swings wider every year (the divergent cobweb). Producers also know that prices far from "
+        "cost do not last; regressive expectations (Nerlove 1958) weigh that in. The weight is unmeasured.")
 COST_SPREAD_WITHIN_PRODUCER = declare(
     "COST_SPREAD_WITHIN_PRODUCER", 0.3, kind="temporary_heuristic",
     unit="standard deviation of the log of unit cost across the workplaces one producer stands for",
@@ -40,6 +47,14 @@ COST_SPREAD_WITHIN_PRODUCER = declare(
         "sites, skills and tools differ, so as the price rises past the average cost more of them find "
         "it worth working and output rises smoothly instead of jumping from none to all. The spread "
         "could come from the spread of land fertility and deposit grade across the area's tiles.")
+OUTPUT_CHANGE_SHARE_PER_YEAR = declare(
+    "OUTPUT_CHANGE_SHARE_PER_YEAR", 0.25, kind="temporary_heuristic",
+    unit="share of capacity a producer's yearly runs can rise or fall by", source=None, confidence="D",
+    why="A workshop cannot double or halve its work in a year: hands are hired, trained and let go, "
+        "and stocks of inputs built or run down, over seasons. Without a limit a producer that sees "
+        "last year's price swings its whole output, and a chain of such producers feeding each other "
+        "amplifies the swing every year instead of settling. A model of hiring and training would "
+        "derive the speed per trade.")
 STORAGE_COST_PER_UNIT = declare(
     "STORAGE_COST_PER_UNIT", 0.0, kind="temporary_heuristic",
     unit="money per unit of good per year", source=None, confidence="D",
@@ -59,6 +74,7 @@ class Producer:
     years_of_loss: int = 0
     cash_target: float = 0.0                # cash it keeps; the rest is paid out as dividends
     expected_sales: float = 0.0             # runs' worth of output it expects to sell a year; 0 unknown
+    last_runs: float = -1.0                 # runs it worked last year; below zero before its first year
 
 
 @dataclass(frozen=True)
@@ -105,16 +121,38 @@ def live_wages(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[str
 
 
 def next_expectations(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
-    """Expected prices moved toward the latest clearing prices; a good with no price keeps its old one."""
+    """Expected prices moved toward the latest clearing prices, and part of the way back toward what a
+    run costs to make (REGRESSIVE_EXPECTATION_WEIGHT): a producer knows a price far above cost brings
+    more output and one far below drives makers out. A good with no price keeps its old one."""
     updated = dict(producer.expected_prices)
+    latest_prices = {}
     for good in recipe.outputs:
         latest = view.price(good, view.area_of(good, producer.tile))
         if latest is None:
             continue
+        latest_prices[good] = latest
         previous = updated.get(good)
         updated[good] = latest if previous is None else (
             previous + EXPECTATION_ADJUSTMENT_SHARE * (latest - previous))
+    break_even = _break_even_scale(producer, recipe, view, updated)
+    if break_even is not None:
+        for good in latest_prices:
+            updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
     return updated
+
+
+def _break_even_scale(producer, recipe, view, prices) -> Optional[float]:
+    """What the output prices would have to be multiplied by for a run to just repay its variable cost
+    and its plant at the live rate; None when it cannot be worked out."""
+    inputs = live_input_prices(producer, recipe, view)
+    wages = live_wages(producer, recipe, view)
+    revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
+    rate = view.interest_rate(view.currency_of(view.area_of(sorted(recipe.outputs)[0], producer.tile)))
+    cost = unit_cost.variable_cost_per_run(recipe, inputs, wages) + unit_cost.capital_charge_per_run(
+        recipe, inputs, wages, rate)
+    if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):
+        return None
+    return cost / revenue
 
 
 def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> Plan:
@@ -135,6 +173,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     affordable = (max(cash, 0.0) + held_value) / variable if variable > 0.0 else producer.capacity_runs
     runs = max(0.0, min(producer.capacity_runs * share_working(revenue, variable), affordable,
                         runs_for_stock(producer, recipe, view)))
+    runs = within_a_years_change(producer, runs)
     ratio = working_cost_ratio(revenue, variable)
     if runs <= 0.0 or ratio <= 0.0:
         return Plan(0.0, expected_margin_per_run=margin)
@@ -143,6 +182,15 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     bids = _input_bids(producer, recipe, view, runs, inputs, max(cash, 0.0) - runs * labour_cost,
                        revenue / ratio - variable)
     return Plan(runs, tuple(labour_bids), tuple(bids), margin)
+
+
+def within_a_years_change(producer: Producer, runs: float) -> float:
+    """Runs no further from last year's than hiring, training and laying off allow in a year
+    (OUTPUT_CHANGE_SHARE_PER_YEAR of capacity); a producer in its first year starts where it likes."""
+    if producer.last_runs < 0.0:
+        return runs
+    step = OUTPUT_CHANGE_SHARE_PER_YEAR * producer.capacity_runs
+    return max(producer.last_runs - step, min(producer.last_runs + step, runs))
 
 
 def share_working(revenue_per_run: float, variable_cost_per_run: float) -> float:
@@ -182,15 +230,18 @@ def main_output(recipe: Recipe) -> GoodId:
 
 
 def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView) -> float:
-    """Runs that bring stock to its target over expected sales: a producer sitting on unsold output
-    makes less. Unlimited while it has no record of sales."""
+    """Runs a producer holding more than its target stock limits itself to: what it expects to sell less
+    the excess, so unsold output is worked off. Below its target, the price decides alone (a cap tied to
+    past sales would follow output down, since nothing sells that is not made). Unlimited while it has
+    no record of sales."""
     if producer.expected_sales <= 0.0:
         return math.inf
     good = main_output(recipe)
-    per_run = recipe.outputs[good]
-    held = view.stock(producer.agent_id, good, producer.tile) / per_run
+    held = view.stock(producer.agent_id, good, producer.tile) / recipe.outputs[good]
     target = inventory.target_stock(producer.expected_sales)
-    return max(0.0, producer.expected_sales + target - held)
+    if held <= target:
+        return math.inf
+    return max(0.0, producer.expected_sales - (held - target))
 
 
 def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> List[LabourBid]:

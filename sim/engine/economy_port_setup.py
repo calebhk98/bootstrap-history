@@ -90,10 +90,16 @@ def in_units(opening):
     is cached under these, so games that differ only in their coin share one."""
     unit = coin_per_unit(opening)
     counted = dict(opening)
-    counted["prices"] = {good: price / unit for good, price in opening["prices"].items()}
-    counted["wages"] = {trade: wage / unit for trade, wage in opening["wages"].items()}
-    counted["carriage"] = {mode: rate / unit for mode, rate in opening["carriage"].items()}
+    counted["prices"] = {good: _counted(price / unit) for good, price in opening["prices"].items()}
+    counted["wages"] = {trade: _counted(wage / unit) for trade, wage in opening["wages"].items()}
+    counted["carriage"] = {mode: _counted(rate / unit) for mode, rate in opening["carriage"].items()}
     return counted
+
+
+def _counted(value):
+    """A money figure in the economy's unit, to twelve significant digits: dividing by a different
+    coin leaves the last digits different, and the economy amplifies any difference over the years."""
+    return float("%.12g" % value)
 
 
 def build_setup(sim, opening=None):

@@ -74,6 +74,9 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
                 expected_prices=closed.producer.expected_prices), recipe, ledger)
             continue
         record.book.transfer_many(closed.transfers)
+        worn = producer.capacity_runs - closed.producer.capacity_runs
+        if worn > 0.0 and revenue > costs:
+            record.worn_runs[producer_id] = worn    # a producer covering its costs rebuilds what wore out
         for transfer in closed.transfers:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
         if closed.loan_request is not None:
@@ -107,11 +110,14 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
 def _with_sales(producer, recipe, ledger: YearLedger):
     """Expected sales move toward what it sold this year, in runs of its main output."""
     good = producers.main_output(recipe)
-    sold = ledger.sold.get((producer.agent_id, good), 0.0) / recipe.outputs[good]
+    per_run = recipe.outputs[good]
+    sold = ledger.sold.get((producer.agent_id, good), 0.0) / per_run
+    worked = ledger.output.get((producer.agent_id, good), 0.0) / (per_run * producer.yield_factor or per_run)
     if producer.expected_sales <= 0.0:
-        return dataclasses.replace(producer, expected_sales=sold)
+        return dataclasses.replace(producer, expected_sales=sold, last_runs=worked)
     share = producers.EXPECTATION_ADJUSTMENT_SHARE
-    return dataclasses.replace(producer, expected_sales=producer.expected_sales + share * (sold - producer.expected_sales))
+    return dataclasses.replace(producer, expected_sales=producer.expected_sales + share * (sold - producer.expected_sales),
+                               last_runs=worked)
 
 
 def national_prices(record) -> Dict[str, float]:
