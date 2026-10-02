@@ -120,10 +120,11 @@ check("real output is the sum of quantities sold times opening prices",
 check("...and the lines it is made of add up to it",
       abs(sum(quantity * price for _material, quantity, price in game.real_output_lines())
           - game.real_output_hours()) <= 1e-9 * total)
-check("society output is that, in this civilisation's money",
-      abs(SimWorld(game).society_output() - total * game.money_per_labour_hour()
-          * game.state.economy.output_factor) <= 1e-9 * total * game.money_per_labour_hour(),
-      (SimWorld(game).society_output(), total * game.money_per_labour_hour()))
+_world = SimWorld(game)
+_producing = max(0.0, game.population.working_age - _world.soldiers_under_arms()) / game.population.working_age
+_expected = total * _producing * game.money_per_labour_hour() * game.state.economy.output_factor
+check("society output is that, less the share of working people under arms, in this civilisation's money",
+      abs(_world.society_output() - _expected) <= 1e-9 * _expected, (_world.society_output(), _expected))
 check("no field of the economy still counts technologies",
       not hasattr(game.state.economy, "economy") and not hasattr(game, "economy_index")
       and not hasattr(game, "output_volume_scale"))
