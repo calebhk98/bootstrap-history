@@ -232,6 +232,12 @@ class GoodsMarket(GoodsOffers):
         self.note_purchase(buyer.party_id, key, tonnes)
         buyer.take_delivery(key, tonnes)
 
+    def settle_import(self, buyer, key, tonnes, money, purpose):
+        """A purchase from a foreign seller: the buyer pays and the goods arrive. It is not counted in
+        the home book, since the tonnes never came out of the home supply."""
+        buyer.pay(money, purpose)
+        buyer.take_delivery(key, tonnes)
+
     def buy(self, buyer, material, tonnes):
         """Buy a material for a party: the order is cut to what the market sells in a year, and
         the price climbs as it is filled. Returns the tonnes bought."""

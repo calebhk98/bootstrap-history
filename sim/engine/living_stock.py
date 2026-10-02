@@ -3,8 +3,9 @@
 A node's `holds` ({material: units}) is a start gate beside `pre`: the stock must be in
 the ledger now, however it came there. A civilisation's `opening_stock` is what it held at its
 date; a node's `grants` is the stock a completed venture brings back; a partner that makes the
-material and does not refuse sells it at its price plus the route's freight and the merchants'
-cost. Which materials are stock is data; nothing here names one.
+material and does not refuse sells it (living_stock_trade.py), and held stock breeds and dies by
+the rates in data/world/living_stock.json (living_stock_yearly.py). Which materials are stock is
+data; nothing here names one.
 """
 from sim.world import living_stock
 
@@ -58,12 +59,7 @@ class LivingStockMixin:
 
     def grant_stock(self, material, units):
         """Add units of a material to the held stock (a gift, a founding herd, an opening holding)."""
-        tonnes = float(units) * tonnes_per_unit(material)
-        key = self._stock_key(material)
-        self._material_stock()[key] += tonnes
-        opening = self._material_opening_stock()
-        opening[key] = opening.get(key, 0.0) + tonnes
-        self.state.household._stock_throttle_sig = None
+        self.change_stock(material, units)
 
     def grant_opening_stock(self):
         """Credit what the civilisation held at its date."""
@@ -86,24 +82,3 @@ class LivingStockMixin:
             return None
         per_tonne = price / tonnes_per_unit(material) * self.partner_price_level(civilization_id)
         return per_tonne * (1.0 + self._trader_cost_share(facts["route"])) + facts["freight_per_tonne"]
-
-    def buy_stock_from_partner(self, material, units, civilization_id):
-        """Buy units of a material from a partner economy; returns the units bought (0 when the
-        partner refuses, cannot make it, or the buyer cannot pay)."""
-        from . import purchase_rule
-        from .data import load_civ
-        quote = self.partner_quote_per_tonne(material, civilization_id)
-        units = float(units)
-        if quote is None or units <= 0.0:
-            return 0.0
-        tonnes = units * tonnes_per_unit(material)
-        cost = quote * tonnes
-        if not purchase_rule.can_pay(self, cost):
-            return 0.0
-        self.state.household.debit(cost, "stock bought abroad")
-        coin = load_civ(civilization_id)["coin_standard"]
-        coin_price = self._material_prices().get(coin["material"])
-        if coin_price:
-            self._settle_flow(civilization_id, tonnes, cost, coin["kg_per_unit"] * coin_price)
-        self.grant_stock(material, units)
-        return units

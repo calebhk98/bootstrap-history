@@ -153,6 +153,9 @@ def _row(sim, nodes, node_id, state):
         row["why_not"] = sim.start_reason(node_id)[1]
         row["missing"] = shown
         row["hidden_missing"] = len(missing) - len(shown)
+    stock = sim.stock_needed_by(node_id)
+    if stock:
+        row["living_stock"] = stock
     return row
 
 
@@ -250,12 +253,25 @@ def state_reply(sim, nodes, state, find, want_subject, keep, known, startable, p
     return out
 
 
+def stock_line(row):
+    """What living stock a row's node needs held, beside what is held."""
+    return "HELD: " + "; ".join(
+        "%s %s of %s needed" % (gate["material"], _held_figure(gate["held"]), _held_figure(gate["needed"]))
+        for gate in row["living_stock"])
+
+
+def _held_figure(units):
+    return ("%.3f" % units).rstrip("0").rstrip(".")
+
+
 def render_state_rows(out):
     """Plain-text table for a state list."""
     lines = ["RESEARCH, state %s: %s" % (out["state"], out.get("count")), out.get("showing", "")]
     for row in out.get("rows", []):
         lines.append("  %-34s %-22s %s" % (row["id"], ",".join(row["tags"]) or row["cat"],
                                            row.get("why_not") or row["name"]))
+        if row.get("living_stock"):
+            lines.append("      " + stock_line(row))
     if out.get("blocked_note"):
         lines += ["", out["blocked_note"]]
     if out.get("nothing_matched"):

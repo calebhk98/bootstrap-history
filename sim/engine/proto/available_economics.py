@@ -44,5 +44,6 @@ def row_fields(sim, node_id, node):
     """
     fields = {"net_per_year": round(net_per_year(sim, node_id), 1),
               "payback_years": payback_years(sim, node_id, sim.project_cost(node_id)),
-              "specialist_foreman": specialist_foreman(sim, node_id)}
+              "specialist_foreman": specialist_foreman(sim, node_id),
+              "living_stock": sim.stock_needed_by(node_id) or None}
     return {key: value for key, value in fields.items() if value is not None}

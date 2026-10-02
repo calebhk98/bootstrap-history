@@ -1,6 +1,6 @@
 # Living stock (silkworms, breeding animals, seed stock, rubber, spices) is modelled as research instead of something held
 
-**Status:** partly - silkworm eggs, ramie stock and draught animals are held stock; the rest of the stock nodes remain
+**Status:** partly - silkworm eggs, ramie stock, draught animals, cashmere and angora goats, jute seed, hop rhizome and pyrethrum stock are held stock; pepper, rubber, dairy cattle, tea, coffee and sugar remain
 
 Silk needs silkworm eggs, not knowledge; today a research node stands for holding them (`tx2_silkworm_native_stock`, and the route-or-native `req_any`). The same pattern applies to draught and dairy animals, crop seed stock, rubber trees, spice plants. Having the stock is a possession at a place; knowing how to keep it alive or improve it is research that needs the stock.
 
@@ -22,13 +22,23 @@ What it would take: living stock as a material held at a location (the tree's `r
   came; `exp_import_draught_animals` stays an expedition and grants the founding herd.
 - Production entries for the three materials are in `data/production/94_agri_organics_gaps.json`.
 
+- Cashmere and angora goats, jute seed, hop rhizome and pyrethrum stock: `tx2_cashmere`, `tx2_mohair`,
+  `tx2_jute_fibre`, `ag2_hopping` and `ag2_pyrethrum` hold the stock instead of resting on an acquisition node.
+  The acquisition nodes stay as ventures that grant the stock (`tx2_cashmere_goat_stock`, `tx2_angora_goat_stock`,
+  `tx2_jute_seed_stock`, `ag2_hop_stock`, `ag2_pyrethrum_stock`), so trade or a gift opens the consumers too. Each has a
+  production entry in `data/production/94_agri_organics_gaps.json` and a rate in `data/world/living_stock.json`.
+  No civilisation opens holding any of them: none of the five starting civilisations is documented as holding these at
+  its date, and `opening_stock` is for what a civilisation held (initial conditions), so none was invented.
+- Held stock breeds and dies and a command buys it from a partner: Complaints/366.
+
 ## What remains
 
-Still research nodes that stand for holding stock: `tx2_cashmere_goat_stock`, `tx2_angora_goat_stock`,
-`tx2_jute_seed_stock` (each behind `sea_monsoon_route`), `ag2_hop_stock`, `ag2_pyrethrum_stock`
-(behind `ag2_botanic_garden`), the pepper vines in `fud_pepper_cultivation`, `mat_natural_rubber`
-(behind `exp_coastal_africa`), dairy cattle in `fud_livestock_selective_cattle`, and the tea, coffee
-and sugar cane voyages. Each needs a stock material, a production entry gated on a node some partner
-holds, and `opening_stock` for the civilisation that held it. Draught animals are not yet in the
-opening stock of the Old World civilisations (nothing there reads them). Held stock does not breed or
-die and no command buys it: Complaints/366.
+Still research nodes or voyages that stand for holding stock, left because each is not a clean stock-acquisition
+node: the pepper vines in `fud_pepper_cultivation` (the crop node itself, behind `sea_monsoon_route`),
+`mat_natural_rubber` (a located material behind `exp_coastal_africa`'s route; rubber is a harvested latex, not a
+stock held and bred), dairy cattle in `fud_livestock_selective_cattle` (a breeding-practice node, not an acquisition;
+it would hold draught or dairy herds only once dairy herds are a stock material), and the tea, coffee and sugar
+voyages (`ag2_tea_voyage`, `ag2_coffee_voyage`, `ag2_sugar_voyage`: a venture that is also the knowledge of growing
+the crop). Each needs a stock material, a production entry gated on a node some partner holds, and `opening_stock`
+for the civilisation that held it. Draught animals are still not in the opening stock of the Old World
+civilisations (nothing there reads them).

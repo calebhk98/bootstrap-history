@@ -1,6 +1,6 @@
 # Knowledge of animal traction should be visually separate from actual animal availability
 
-**Status:** partly - `why` carries `living_stock` (material, held, needed, brought_by) and prints a `KNOWLEDGE:` line apart from a `HELD:` line; a `needs_first` gate on a material is now a supply blocker, not a knowledge one (`stock_gates` in `sim/engine/living_stock.py`; test `sim/tests/test_small_screen_items.py`). Remains: `available` and `state` still list the technique without the held-stock line.
+**Status:** closed - `why` carries `living_stock` (material, held, needed, brought_by) and prints a `KNOWLEDGE:` line apart from a `HELD:` line; `available` rows and the blocked/startable lists carry the stock a node needs beside what is held, and `state` lists the living stock held (`stock_needed_by`, `held_living_stock` in `sim/engine/living_stock_yearly.py`; tests `sim/tests/test_small_screen_items.py`, `sim/tests/test_living_stock_trade.py`)
 
 Mexica could complete knowledge and capability relating to draught-animal muscle power while carts and treadmills remained blocked because no local draught animals existed in that civilization.
 
