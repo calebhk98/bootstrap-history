@@ -30,7 +30,10 @@ class DepositsReadTilesTests(unittest.TestCase):
         resources = deposits._load_json(deposits.RESOURCES_FILE)
         deposits_data = deposits._load_json(deposits.DEPOSITS_FILE)
         for metal in deposits.METALS:
-            total = resources["empire_output_100ad"][metal]["t_per_yr"]
+            # the metal's own deposits split what is left after other metals' byproduct
+            # recovery (silver riding with lead), so one ounce is counted once
+            total = deposits.empire_output_net_of_byproducts_tonnes_per_year(
+                metal, resources, deposits_data)
             shares = {entry["name"]: entry["share_of_empire_output"]
                       for entry in deposits_data["deposits"][metal]}
             for deposit in deposits.load_deposits(metal):
