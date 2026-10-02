@@ -1,6 +1,6 @@
 # The state's soldiers are not a trade, and patron funding still ignores the treasury
 
-**Status:** partly - patron funding is paid from the treasury (`Government.pay_patron`) and the state's adoption is what the government holds (test invention_disclosure); the soldier trade is 314; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
+**Status:** partly - item 1 (soldiers a trade) and item 2 (patron funding from the treasury) are built; item 3 (the state's adoption is a half-life curve) is untouched
 
 Three things the state budget does not do yet, each measurable.
 
@@ -11,3 +11,5 @@ Three things the state budget does not do yet, each measurable.
 Check 3 with `grep -rn "state_military_diffusion" sim --include=*.py`.
 
 Done: item 2. `Sim.state_funding` is what the treasury paid (`Government.pay_patron`, from the purse after the standing need, nothing when any need went unpaid); the old formula survives as `patron_funding_ask`, a labelled heuristic for what a patron would give. Item 1 in part: `society_output` excludes soldiers under arms, so a larger army lowers revenue; the trade itself and the wage are 314. Item 3 is untouched.
+
+Update: item 1 is built (314): the army is booked in the `soldier` trade, drawn from the working age through the one labour market. What is left is item 3 only: `grep -rn "state_military_diffusion" sim --include=*.py`.
