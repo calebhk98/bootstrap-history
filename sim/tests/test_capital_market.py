@@ -6,6 +6,10 @@ import os
 import tempfile
 
 from .harness import *  # noqa: F401,F403
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+
 
 from sim.engine.actors import SimWorld
 from sim.engine.actors import budget

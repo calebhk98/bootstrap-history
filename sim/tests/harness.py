@@ -176,8 +176,12 @@ def book_money(denarii, civ="rome_100ad"):
         denarii, S.starting_schedule(civ).money_per_labour_hour)
 
 
-def sim(civ="rome_100ad", capital=None, manual=True, events=False):
-    config = {"start_capital": capital} if capital is not None else None
+def sim(civ="rome_100ad", capital=None, manual=True, events=False, agent_economy=None):
+    """A game on the default economy; `agent_economy=False` opts out to the engine's own yearly market."""
+    config = {"start_capital": capital} if capital is not None else {}
+    if agent_economy is not None:
+        config["agent_economy"] = agent_economy
+    config = config or None
     test_sim = S.Sim(NODES, ORDER, random.Random(1), events=events, manual=manual,
               civ=S.load_civ(civ), cfg=config)
     test_sim.goal, test_sim.done_year = GOAL, {}
@@ -369,7 +373,7 @@ def _mk_loom_sim(n_looms, age_years):
                   if node.get("cat") == "textiles" and node.get("rev"))
     assert len(candidates) >= n_looms, "not enough textiles venture nodes in the tree"
     chosen = candidates[:n_looms]
-    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0)
+    loom_sim = sim(civ="rome_100ad", capital=5_000_000.0, agent_economy=False)
     loom_sim.artisans = loom_sim.scholars = 100.0 * n_looms
     # These fixtures exercise goods-market arithmetic, not labour scarcity.
     # Supply every qualified trade so each selected historical concern can

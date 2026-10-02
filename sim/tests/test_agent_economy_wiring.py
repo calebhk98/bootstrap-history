@@ -2,7 +2,10 @@
 come from it and move, money is conserved, the state's tax grain no longer swamps the wheat market
 (Complaint 383), a saved game resumes the same economy, and every civilisation plays on it."""
 from .harness import *  # noqa: F401,F403
+import os
+
 from sim import perf_fingerprint
+from sim.engine.economy_port_year import SWITCH_ENVIRONMENT, switch_requested
 from sim.engine.proto.saveload import save_state, load_state
 
 
@@ -19,9 +22,26 @@ opened = rome.economy.agent.economy().record
 check("after the hidden spin-up households expect stable prices, so the rebased index is not read as inflation",
       all(cohort.expected_inflation == 0.0 and cohort.last_price_level == 1.0 for cohort in opened.cohorts.values()),
       sorted({(cohort.expected_inflation, cohort.last_price_level) for cohort in opened.cohorts.values()})[:3])
-off = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=1, events=True, fog=False))
-check("a game not asked for it keeps the engine's own economy", off.economy.agent is None
+default = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=1, events=True, fog=False))
+check("a game that says nothing runs on the agent economy", default.economy.agent is not None
+      and default.state.economy.agent_economy.get("on"))
+off = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"),
+            cfg={"agent_economy": False})
+check("a game that opts out keeps the engine's own economy", off.economy.agent is None
       and not off.state.economy.agent_economy)
+
+saved_switch = os.environ.pop(SWITCH_ENVIRONMENT, None)
+try:
+    check("the switch is on with no config", switch_requested({}) and switch_requested({"agent_economy": True}))
+    check("only an explicit False opts out", not switch_requested({"agent_economy": False}))
+    os.environ[SWITCH_ENVIRONMENT] = "1"
+    check("the environment forces it on over an opt-out", switch_requested({"agent_economy": False}))
+    os.environ[SWITCH_ENVIRONMENT] = "0"
+    check("the environment forces it off over the default", not switch_requested({}))
+finally:
+    os.environ.pop(SWITCH_ENVIRONMENT, None)
+    if saved_switch is not None:
+        os.environ[SWITCH_ENVIRONMENT] = saved_switch
 
 prices, wages = [], []
 for _year in range(4):

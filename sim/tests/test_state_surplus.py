@@ -2,6 +2,10 @@
 holds against risk is lent through the loanable-funds market (the state as a saver, earning interest) and
 spent on works, a named purchase that hires people; no outlay of the state goes to nobody."""
 from .harness import *  # noqa: F401,F403
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+
 
 from sim.engine.actors.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
 
