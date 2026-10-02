@@ -35,7 +35,7 @@ large-scale absolute-count message and found only household-scale figures
 training completions), never a national-scale count.
 
 **The only place a large absolute trade/population count is surfaced to the
-player at all is `population_report()`** - `sim/engine/labour_population.py:563-637`,
+player at all is `population_report()`** - `sim/labour/labour_population.py:563-637`,
 the function behind the `population` command, confirmed as the sole
 production call site of `reachable_trade_population()`/
 `national_trade_population()`/`home_town_population_estimate()`:

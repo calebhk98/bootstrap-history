@@ -1,5 +1,5 @@
 """Yearly allocation of a society's working hours between farm work and the
-rest of the economy, through sim.world.labour_market.
+rest of the economy, through sim.labour.labour_market.
 
 Sim mixin. The state is an hours-by-trade dict on the economy state, so any
 actor that owns one can be stepped with the same functions.
@@ -7,8 +7,8 @@ actor that owns one can be stepped with the same functions.
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
-from sim.world import labour_market
-from sim.world import workforce_spinup
+from sim.labour import labour_market
+from sim.labour import workforce_spinup
 
 # Farm labour is the generic unskilled trade as data/production books it;
 # every other trade's starting hours come from the workforce spin-up.

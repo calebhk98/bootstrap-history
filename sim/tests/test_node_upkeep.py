@@ -8,7 +8,7 @@ import copy
 import unittest
 
 from sim.engine import data, energy_prices, node_revenue, node_upkeep
-from sim.world.labour_market import production_data
+from sim.labour.labour_market import production_data
 
 
 class NodeUpkeep(unittest.TestCase):

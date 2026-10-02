@@ -120,11 +120,11 @@ total every count below is built from.
 | `_founder_death_aged` | lazy via getattr (sim/engine/proto/state.py:279) | yes | 2 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | founder's age at death, cached for --session resume |
 | `_founder_death_cache` | lazy via getattr (sim/engine/proto/state.py:282) | no | 1 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | fallback: founder's death year/age recovered by scanning the log |
 | `_founder_death_year` | lazy via getattr (sim/engine/proto/state.py:281) | yes | 2 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | year the founder died, cached for --session resume |
-| `_goal_closure` | lazy via getattr (sim/engine/labour.py:1850) | no | 4 | 11 | INTERNAL (keyed off household (via the chosen goal)) | prerequisite closure of self.goal, cached |
+| `_goal_closure` | lazy via getattr (sim/labour/labour.py:1850) | no | 4 | 11 | INTERNAL (keyed off household (via the chosen goal)) | prerequisite closure of self.goal, cached |
 | `_goal_critical_floor` | lazy via getattr (sim/engine/proto/score.py:94) | no | 1 | 2 | INTERNAL (keyed off household (via the chosen goal)) | cached critical-path floor for self.goal |
 | `_goods_cat_state_cache` | lazy via getattr (sim/engine/economy.py:1249) | no | 1 | 2 | INTERNAL (keyed off household) | cache keyed on (year, _operating_ver) |
 | `_home_centroid` | `__init__` (sim/engine/core.py:304) | no | 2 | 2 | INTERNAL (keyed off world/scenario) | this civilisation's home coordinate, fixed for the run |
-| `_labour_pressure` | lazy via getattr (sim/engine/labour.py:253) | no | 1 | 3 | INTERNAL (keyed off household) | per-trade record of how hard THIS household has recently bid up a trade's wage |
+| `_labour_pressure` | lazy via getattr (sim/labour/labour.py:253) | no | 1 | 3 | INTERNAL (keyed off household) | per-trade record of how hard THIS household has recently bid up a trade's wage |
 | `_last_buy_refusal` | lazy via getattr (sim/engine/proto/dispatch.py:817) | no | 2 | 4 | INTERNAL (keyed off household (this household's last buy attempt)) | reason the last `buy slaves` call refused, for the next error message |
 | `_last_subst_gap` | lazy via getattr (sim/engine/projects.py:1657) | no | 1 | 3 | INTERNAL (keyed off household (this household's own project explanation)) | cached substitution-gap explanation for `why` |
 | `_literacy_said` | `__init__` (sim/engine/core.py:249) | no | 2 | 3 | INTERNAL (keyed off world (civ literacy)) | last year a literacy-census note fired |
@@ -200,7 +200,7 @@ total every count below is built from.
 | `goal_year` | `__init__` (sim/engine/core.py:256) | yes | 6 | 24 | HOUSEHOLD | the year THIS household reached its goal |
 | `gov` | `__init__` (sim/engine/core.py:253) | yes | 3 | 3 | HOUSEHOLD | standing/political capital with the state, accrued via state_interest() from institutions the household runs |
 | `granted` | `__init__` (sim/engine/core.py:94) | yes | 10 | 36 | HOUSEHOLD | starting techs this civilisation already had for free (AMBIGUOUS - see summary: this is a civ fact mirrored per-Sim, not really per-actor) |
-| `granted_staff` | lazy via getattr (sim/engine/labour.py:1979) | yes | 1 | 3 | HOUSEHOLD | staff granted outright by an institution (kept separate from scholars/artisans totals) |
+| `granted_staff` | lazy via getattr (sim/labour/labour.py:1979) | yes | 1 | 3 | HOUSEHOLD | staff granted outright by an institution (kept separate from scholars/artisans totals) |
 | `hour_allocations` | `__init__` (sim/engine/core.py:139) | yes | 3 | 12 | HOUSEHOLD | the household's standing per-project hour directives |
 | `hours_this_year` | lazy via getattr (sim/engine/proto/state.py:612) | yes | 2 | 2 | HOUSEHOLD | last year's founder-hours accounting -- **FLAG: 'founder-hours' - needs a generalised 'owner labour hours' framing for a non-person owner** |
 | `insolvent_years` | lazy via getattr (sim/engine/core.py:882) | yes | 4 | 16 | HOUSEHOLD | consecutive years the household has run at a loss |
@@ -254,7 +254,7 @@ total every count below is built from.
 | `total_spend` | `__init__` (sim/engine/core.py:266) | yes | 2 | 3 | HOUSEHOLD | lifetime spend |
 | `trade_hours_used` | `__init__` (sim/engine/core.py:145) | yes | 3 | 7 | HOUSEHOLD | hours consumed by the household's projects this year, by trade |
 | `trade_introduced_year` | `__init__` (sim/engine/core.py:117) | yes | 2 | 3 | HOUSEHOLD | when the household first taught a trade (companion to trades_created) |
-| `trade_schools` | lazy via getattr (sim/engine/labour.py:1060) | yes | 2 | 5 | HOUSEHOLD | owned trade-school capacity |
+| `trade_schools` | lazy via getattr (sim/labour/labour.py:1060) | yes | 2 | 5 | HOUSEHOLD | owned trade-school capacity |
 | `trades_created` | `__init__` (sim/engine/core.py:109) | yes | 5 | 11 | HOUSEHOLD | trades the household has taught into existence (AMBIGUOUS - see summary: becomes a society-wide fact once taught) |
 | `trades_endemic` | `__init__` (sim/engine/core.py:118) | yes | 3 | 4 | HOUSEHOLD | which taught trades the society has since supplied on its own (companion to trades_created) |
 | `training` | `__init__` (sim/engine/core.py:93) | yes | 4 | 15 | HOUSEHOLD | [artisan_capacity, year_matures] pairs the household has queued |
@@ -262,7 +262,7 @@ total every count below is built from.
 | `w` | `__init__` (sim/engine/core.py:51) | no | 5 | 23 | SCENARIO | alias for civ['values'], the scoring/weights table |
 | `wage_hours_this_year` | lazy via getattr (sim/engine/core.py:1185) | yes | 5 | 13 | HOUSEHOLD | hours the household has sold as wages this year (prevents double-selling) |
 | `wage_index` | `__init__` (sim/engine/core.py:56) | no | 6 | 16 | WORLD | this civilisation's wage level, moved by demography/scarcity, applies to every hire in the world, not just the household |
-| `wages_earned` | lazy via getattr (sim/engine/labour.py:907) | yes | 1 | 2 | HOUSEHOLD | wages the household earned selling its own hours |
+| `wages_earned` | lazy via getattr (sim/labour/labour.py:907) | yes | 1 | 2 | HOUSEHOLD | wages the household earned selling its own hours |
 | `wages_paid` | `__init__` (sim/engine/core.py:120) | yes | 1 | 1 | HOUSEHOLD | wages paid out this year |
 | `wages_prepaid` | `__init__` (sim/engine/core.py:151) | yes | 4 | 10 | HOUSEHOLD | first-year wages already advanced by `hire` |
 | `work_trade` | `__init__` (sim/engine/core.py:144) | yes | 2 | 8 | HOUSEHOLD | which trade the household's 'work' allocation sells hours as |

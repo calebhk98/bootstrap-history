@@ -8,7 +8,7 @@ rather than falling back to an authored revenue figure."""
 import unittest
 
 from sim.engine import data, node_output, validate_output_bounds
-from sim.world.labour_market import production_data
+from sim.labour.labour_market import production_data
 
 class NodeOutputData(unittest.TestCase):
 

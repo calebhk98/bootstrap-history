@@ -101,7 +101,7 @@ check("population: has legend line for asterisk marker",
 # This test imports the engine and checks that is_placeholder matches the
 # kind field of the constant that computes the trade's density, so the
 # answer stays in sync with declarations rather than being hand-copied.
-from ..engine.labour_population import PopulationMixin
+from sim.labour.labour_population import PopulationMixin
 from ..constants import REGISTRY
 from .harness import *
 

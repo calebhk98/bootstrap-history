@@ -24,7 +24,7 @@ onto a whole person without biasing which way growth heads.
 """
 import math
 
-from .data import TRADES_ABSENT, WAGES, closure
+from sim.engine.data import TRADES_ABSENT, WAGES, closure
 from sim.constants import declare
 from .wage_provider import reference_civilisation
 

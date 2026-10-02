@@ -119,7 +119,7 @@ check("every trade named in LABOUR_PRODUCTIVITY_SOURCES is a real trade in "
 # country's literacy rates improve? What if we make 5,000 schools and
 # tractors and food production... can I create a 90%+ literate population?"
 # See SocietyMixin.advance_society (society.py).
-from sim.engine.labour_allocation import FARM_TRADE as _FARM_TRADE
+from sim.labour.labour_allocation import FARM_TRADE as _FARM_TRADE
 
 s_noschool = sim(capital=2000000.0, manual=False)
 _gen0 = s_noschool.civ["literacy_general"]

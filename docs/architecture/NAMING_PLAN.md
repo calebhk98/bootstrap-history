@@ -66,7 +66,7 @@ Full per-name and per-file counts are reproducible with the scanner at
 138  sim/engine/proto/techtree.py
 122  sim/engine/core.py
 119  sim/engine/data.py
-103  sim/engine/labour.py
+103  sim/labour/labour.py
  92  sim/planner.py
  88  sim/tests/test_labour_productivity.py
  86  sim/engine/proto/economy.py
@@ -255,7 +255,7 @@ confirming it (done).
 **`e` — 131 bindings, 18 files. Verdict: two well-established idioms, not
 really "VARIES" in the risky sense.**
 - `sim/engine/economy.py:166` — `e = 1.0 + 0.055 * diffused` (a diffusion
-  exponent; the same shape recurs at `sim/engine/labour.py:2077`,
+  exponent; the same shape recurs at `sim/labour/labour.py:2077`,
   `e = 1.85`).
 - `sim/treetool.py:113` — `except Exception as e:` — the universal Python
   exception-variable convention.
@@ -264,7 +264,7 @@ same exemption as `i`) and renaming only the exponent uses.
 
 **`w` — 131 bindings, 17 files. Verdict: VARIES, includes a persistent
 attribute.**
-- `sim/engine/labour.py:855` — `w = WAGES.get(trade)`: a wage rate.
+- `sim/labour/labour.py:855` — `w = WAGES.get(trade)`: a wage rate.
 - `sim/engine/society.py:16,27` — `w = self.w`: **`self.w` is itself a short
   object attribute** (the society weights table), not just a local — a
   rename here touches an attribute name, not only a local variable.
@@ -349,7 +349,7 @@ Lower risk than most of this list simply because it never touches engine code.
 **`ok` — 42 bindings, 15 files. Verdict: mostly CONSISTENT (a boolean), one
 outlier, and arguably a defensible exemption.**
 - `sim/engine/core.py:1157` — `ok, _msg = self.train(t, 2)`.
-- `sim/engine/labour.py:1883` — `ok, _why = self.commission(best, hours); if ok: return (k, best, hours)`.
+- `sim/labour/labour.py:1883` — `ok, _why = self.commission(best, hours); if ok: return (k, best, hours)`.
 Both follow the repo's own `(ok, message)` return-tuple convention used
 throughout `core.py`/`labour.py`/`dispatch.py`. The outlier:
 `sim/engine/cli.py:529` — `ok = [r for r in results if r.goal_year]` — here
@@ -364,7 +364,7 @@ plan, not a technical one.
   *discarded* prices dict from a 5-tuple unpack (note `_w`=wages and
   `_g`=goods are discarded the same way in the same line — three different
   domain objects sharing the underscore-prefix throwaway convention).
-- `sim/engine/labour.py:955` — `_p, _l = round(pay), round(lost)`: a rounded
+- `sim/labour/labour.py:955` — `_p, _l = round(pay), round(lost)`: a rounded
   pay amount.
 - `sim/engine/proto/dispatch.py:279` — `for _t, _p in s.trade_draw_plan(k, None).items()`:
   an hours-committed value per trade.

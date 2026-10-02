@@ -18,9 +18,9 @@ worth, without hiring anyone new.
 """
 import math
 
-from .data import (TRADES_ABSENT, TRADE_NOTES, WAGES, closure, trade_family)
+from sim.engine.data import (TRADES_ABSENT, TRADE_NOTES, WAGES, closure, trade_family)
 from sim.constants import declare
-from . import purchase_rule
+from sim.engine import purchase_rule
 
 
 class TrainingMixin:

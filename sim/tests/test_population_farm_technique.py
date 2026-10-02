@@ -7,7 +7,7 @@ import unittest
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine import labour_allocation
+from sim.labour import labour_allocation
 from sim.world import agriculture
 
 _REPOSITORY_SIM_DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

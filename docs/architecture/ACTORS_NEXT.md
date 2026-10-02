@@ -160,7 +160,7 @@ covers only those two lines, so every state runs a surplus (`Complaints/286`).
 
 Reads: the state's outlays by purpose from 1.
 Changes: what the state spends on wages and goods is demand: staff hired by
-any actor are drawn from the labour pool (`sim/world/labour_market.py`), and
+any actor are drawn from the labour pool (`sim/labour/labour_market.py`), and
 the state's purchases enter the goods market. Patron funding to the founder
 becomes a payment from the treasury to the founder, replacing
 `state_funding` and its labelled constants.

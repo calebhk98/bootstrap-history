@@ -10,7 +10,7 @@ from typing import Dict, List, Sequence, Tuple
 
 from sim.constants import declare
 
-from sim.world.wages import CAREER_YEARS
+from sim.labour.wages import CAREER_YEARS
 
 from . import households, labour, settlement
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE

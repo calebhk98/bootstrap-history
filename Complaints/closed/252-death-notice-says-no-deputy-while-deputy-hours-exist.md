@@ -4,7 +4,7 @@
 
 Run 2 (C): "You trained no deputy... nobody to direct anything" at death, yet the next year showed 244 to 370 deputy hours, and "THE PROGRAMME IS DISSOLVING ... no deputy" repeated yearly while those deputies went on to finish `corpus_dispersed`.
 
-Cause: deputies are a continuous level `household.directors_extra`, worked in hours as `directors_extra * director_hours_per_year` (`director_pool`, `sim/engine/labour_capacity.py`, 1800 hours per deputy). The death notice and the dissolution test (`sim/engine/core_step_phases.py`, `_step_founder_mortality`: `directors_extra >= 0.5`; also `sim/engine/proto/dispatch_labour.py`) treat anything under 0.5 as "no deputy", so 244 to 370 hours (0.14 to 0.2 of a deputy) is real work that is denied in the text and does not stop the twelve-year clock. `state` shows the hours and no deputy count in words.
+Cause: deputies are a continuous level `household.directors_extra`, worked in hours as `directors_extra * director_hours_per_year` (`director_pool`, `sim/labour/labour_capacity.py`, 1800 hours per deputy). The death notice and the dissolution test (`sim/engine/core_step_phases.py`, `_step_founder_mortality`: `directors_extra >= 0.5`; also `sim/engine/proto/dispatch_labour.py`) treat anything under 0.5 as "no deputy", so 244 to 370 hours (0.14 to 0.2 of a deputy) is real work that is denied in the text and does not stop the twelve-year clock. `state` shows the hours and no deputy count in words.
 
 Why it matters: the player cannot tell whether a succession exists, and the message tells them there is nothing to try. The tester also asks for succession to be a named visible goal (a deputy count in `state`, "train a successor").
 

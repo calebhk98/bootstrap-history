@@ -8,7 +8,7 @@ import unittest
 
 from .harness import *  # noqa: F401,F403
 from sim.world import agriculture
-from sim.engine import labour_allocation
+from sim.labour import labour_allocation
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 with open(os.path.join(_ROOT, "data", "world", "geography.json"), encoding="utf-8") as _handle:

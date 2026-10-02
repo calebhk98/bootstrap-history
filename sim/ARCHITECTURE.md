@@ -117,22 +117,22 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
                         `data/world/commodities.json`. Imported by
                         `economy_materials.py` and `economy_freight.py`.
 
-    engine/labour.py    49-line composition point:
+    sim/labour/labour.py    49-line composition point:
                         `LabourMixin(CapacityMixin, PopulationMixin,
                         WagesMixin, TrainingMixin, BondageMixin)`.
-    engine/labour_capacity.py    literacy, institutional and supervisory
+    sim/labour/labour_capacity.py    literacy, institutional and supervisory
                                   ceilings on hiring, teaching, owning or
                                   directing people, plus the founder's own
                                   hour budget (1,263 lines).
-    engine/labour_population.py  the local labour market: depth, price
+    sim/labour/labour_population.py  the local labour market: depth, price
                                   response to recent hiring, population
                                   estimates (626 lines).
-    engine/labour_wages.py       what staff cost every year, and what it
+    sim/labour/labour_wages.py       what staff cost every year, and what it
                                   costs to be one yourself (299 lines).
-    engine/labour_training.py    hiring, firing, teaching, commissioning,
+    sim/labour/labour_training.py    hiring, firing, teaching, commissioning,
                                   what a technology does to an hour once
                                   bought (703 lines).
-    engine/labour_bondage.py     buying people, freeing them, and the pool
+    sim/labour/labour_bondage.py     buying people, freeing them, and the pool
                                   bookkeeping that keeps trained/granted
                                   staff honest (350 lines).
 
@@ -566,12 +566,12 @@ undercounting.
         ('sim/engine/economy_mining.py', 'MiningMixin'),
         ('sim/engine/economy_credit.py', 'CreditMixin'),
         ('sim/engine/economy_production.py', 'ProductionMixin'),
-        ('sim/engine/labour.py', 'LabourMixin'),
-        ('sim/engine/labour_capacity.py', 'CapacityMixin'),
-        ('sim/engine/labour_population.py', 'PopulationMixin'),
-        ('sim/engine/labour_wages.py', 'WagesMixin'),
-        ('sim/engine/labour_training.py', 'TrainingMixin'),
-        ('sim/engine/labour_bondage.py', 'BondageMixin'),
+        ('sim/labour/labour.py', 'LabourMixin'),
+        ('sim/labour/labour_capacity.py', 'CapacityMixin'),
+        ('sim/labour/labour_population.py', 'PopulationMixin'),
+        ('sim/labour/labour_wages.py', 'WagesMixin'),
+        ('sim/labour/labour_training.py', 'TrainingMixin'),
+        ('sim/labour/labour_bondage.py', 'BondageMixin'),
         ('sim/engine/projects.py', 'ProjectsMixin'),
         ('sim/engine/projects_capability.py', 'CapabilityMixin'),
         ('sim/engine/projects_ventures.py', 'VenturesMixin'),
@@ -725,7 +725,7 @@ changes as the code is split further):
     engine_files = ["sim/engine/core.py", "sim/engine/cli.py",
                     "sim/engine/core_step_phases.py", "sim/engine/cli_interactive.py",
                     "sim/engine/proto/techtree.py", "sim/engine/society_state_pressure.py",
-                    "sim/engine/labour_capacity.py", "sim/engine/society_hazards.py"]
+                    "sim/labour/labour_capacity.py", "sim/engine/society_hazards.py"]
     for path in engine_files:
         source = open(path).read()
         lines = source.splitlines()

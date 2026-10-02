@@ -8,8 +8,10 @@ import unittest
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import core, invariants, labour_allocation
-from sim.world import agriculture, labour_market, land
+from sim.engine import core, invariants
+from sim.labour import labour_allocation
+from sim.world import agriculture, land
+from sim.labour import labour_market
 
 FARM_TRADE = labour_allocation.FARM_TRADE
 CIV_ID = "rome_100ad"

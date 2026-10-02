@@ -16,10 +16,10 @@ granted so _resync_pools - which runs unconditionally every step() and
 rebuilds self.household.scholars/artisans from the trades actually on the
 books - does not overwrite the grant out of existence.
 """
-from .data import trade_family
-from . import purchase_rule
+from sim.engine.data import trade_family
+from sim.engine import purchase_rule
 from sim.constants import declare
-from . import money_units
+from sim.engine import money_units
 
 
 class BondageMixin:

@@ -1,9 +1,9 @@
-"""The engine steps sim/world/labour_market.py every simulated year, so the
+"""The engine steps sim/labour/labour_market.py every simulated year, so the
 share of working hours on the farm responds to food scarcity."""
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import labour_allocation
+from sim.labour import labour_allocation
 
 
 def _rome_sim():
@@ -17,7 +17,7 @@ def _farm_hours(test_sim):
 class WorkforceAllocationWiringTests(unittest.TestCase):
 
     def test_engine_imports_the_labour_market(self):
-        import sim.engine.labour_allocation as module
+        import sim.labour.labour_allocation as module
         self.assertTrue(hasattr(module, "labour_market"))
 
     def test_unshocked_first_year_starts_at_the_food_balance_workforce(self):

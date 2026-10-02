@@ -12,10 +12,10 @@ import functools
 from sim.constants import declare
 from sim.world import balance_of_payments
 from sim.geography import freight_cost, sea_freight
-from sim.world.wages import HOURS_PER_WORKER_YEAR
+from sim.labour.wages import HOURS_PER_WORKER_YEAR
 
 from .data import load_civ
-from .wage_provider import people_fed_per_worker
+from sim.labour.wage_provider import people_fed_per_worker
 
 OPENING_CARRIERS_PER_ROUTE = declare(
     "OPENING_CARRIERS_PER_ROUTE", 10.0, kind="temporary_heuristic",

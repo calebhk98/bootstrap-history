@@ -35,7 +35,7 @@ constants.py` with `kind="temporary_heuristic"`, the same discipline
 
 ## What already exists
 
-`sim/world/labour_market.py`'s own module docstring (read directly) already
+`sim/labour/labour_market.py`'s own module docstring (read directly) already
 names a version of this gap: `Workforce.hours_by_trade` is "hours actually
 worked right now, an initial condition plus whatever `Workforce.step` has
 moved since," and it is explicitly the module's job to make a trade's

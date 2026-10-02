@@ -14,7 +14,7 @@ import math
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
-from sim.world.wages import HOURS_PER_WORKER_YEAR
+from sim.labour.wages import HOURS_PER_WORKER_YEAR
 
 from . import energy_prices
 

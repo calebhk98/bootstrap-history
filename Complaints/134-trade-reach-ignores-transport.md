@@ -9,7 +9,7 @@ railways, roads with carts, and later cars reach a region or a country.
 
 ## Evidence
 
-`sim/engine/labour_capacity.py` and `sim/engine/labour_population.py`
+`sim/labour/labour_capacity.py` and `sim/labour/labour_population.py`
 compute reach from town size and population shares; `sim/geography/transport.py`
 already models travel cost and speed by technology but reach does not read it.
 

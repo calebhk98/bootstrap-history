@@ -35,7 +35,7 @@ THREE LAYERS, EACH CATCHING A DIFFERENT SHAPE OF THE SAME MISTAKE.
      had it been written down.
   3. UndeclaredLiteralDuplicateTests - the case that does not even show up
      in the declare() registry, because an undeclared literal carries no
-     name to collide on. sim/world/labour_market.py's own __main__ demo
+     name to collide on. sim/labour/labour_market.py's own __main__ demo
      block wrote the reference labour-hours-per-hectare figure out twice as
      a bare `150.0` rather than reading the declared name. It now imports
      the declaration, so these tests assert that no such copy exists at
@@ -262,7 +262,7 @@ class UndeclaredLiteralDuplicateTests(unittest.TestCase):
 
     NOT A SOURCE-TEXT CHECK ON A LITERAL, A STRUCTURAL ONE ON RECURRENCE.
     When land.py and agriculture.py were gathered onto one declaration of
-    REFERENCE_LABOUR_HOURS_PER_HECTARE, sim/world/labour_market.py's own
+    REFERENCE_LABOUR_HOURS_PER_HECTARE, sim/labour/labour_market.py's own
     __main__ demo was found writing the same physical figure out twice as a
     bare `150.0`, outside that gathering change's ownership. The demo now
     imports the shared constant, so this asks the stronger question a
@@ -313,7 +313,7 @@ class UndeclaredLiteralDuplicateTests(unittest.TestCase):
         missing = sorted(wanted - set(seen))
         self.assertEqual(
             missing, [],
-            "sim/world/labour_market.py's demo no longer assigns %s - the "
+            "sim/labour/labour_market.py's demo no longer assigns %s - the "
             "code moved, so this check is no longer looking at the thing it "
             "was written about. Re-aim it rather than deleting it: the "
             "property is that the demo's labour-hours figures come from "
@@ -321,7 +321,7 @@ class UndeclaredLiteralDuplicateTests(unittest.TestCase):
         for target_name, names_used in sorted(seen.items()):
             self.assertIn(
                 self._SHARED_NAME, names_used,
-                "sim/world/labour_market.py's demo computes %r without "
+                "sim/labour/labour_market.py's demo computes %r without "
                 "reading %s. That is how the bare 150.0 got here the first "
                 "time: the same physical figure written out by hand in a "
                 "fourth place, free to drift away from the three that share "
@@ -345,7 +345,7 @@ class UndeclaredLiteralDuplicateTests(unittest.TestCase):
                 offenders.append(node.lineno)
         self.assertEqual(
             offenders, [],
-            "sim/world/labour_market.py writes %.4g as a bare literal at "
+            "sim/labour/labour_market.py writes %.4g as a bare literal at "
             "line(s) %s. That is %s's value, and land.py, agriculture.py "
             "and this module's own demo all reach it through the one "
             "declaration in sim/world/shared_constants.py. A fourth "

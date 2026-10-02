@@ -8,10 +8,11 @@ import tempfile
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import labour_allocation
+from sim.labour import labour_allocation
 from sim.engine.catalog import load_production_catalog
 from sim.solve_prices_core import techniques_available_to
-from sim.world import agriculture, workforce_spinup
+from sim.world import agriculture
+from sim.labour import workforce_spinup
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _CIV_PATHS = sorted(glob.glob(os.path.join(_ROOT, "data", "civilizations", "*.json")))

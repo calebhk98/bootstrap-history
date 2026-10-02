@@ -4,10 +4,10 @@ premium uses the civilisation's own interest rate."""
 import random
 import unittest
 
-from sim.engine import labour_allocation
+from sim.labour import labour_allocation
 from sim.engine.data import load_civ
 from sim.tests.harness import S, NODES, ORDER
-from sim.world import labour_market, wages
+from sim.labour import labour_market, wages
 
 FARM = labour_allocation.FARM_TRADE
 TOTAL_HOURS = 1000.0

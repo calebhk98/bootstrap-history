@@ -22,7 +22,7 @@ can this household actually put to work this year", the population-side
 half of the same question hours_you_can_call_on (labour_training.py)
 answers for craft hours.
 """
-from .data import (TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family)
+from sim.engine.data import (TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family)
 from sim.constants import declare, REGISTRY
 
 

@@ -4,7 +4,7 @@ Inputs are only what a civilisation already has: the techniques its known
 technologies unlock and household demand. Labour need per trade comes from
 the goods households consume and the recipes that make them, through the whole
 recipe graph. A neutral (equal) split of the workforce is then stepped through
-sim.world.labour_market until the trade split stops moving.
+sim.labour.labour_market until the trade split stops moving.
 
 [temporary_heuristic] A need's budget is split equally by labour value across
 the available goods that satisfy it, an end good (one no available recipe
@@ -24,7 +24,8 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Set
 
 from sim.constants import declare
 from sim.solve_prices_core import techniques_available_to
-from sim.world import demand, labour_market, need_demand
+from sim.world import demand, need_demand
+from sim.labour import labour_market
 
 # Trade whose hours the farm-labour logic owns; its recipe hours are not part
 # of the non-farm split.

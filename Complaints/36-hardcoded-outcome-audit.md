@@ -133,7 +133,7 @@ this call:
    next touches `economy.py`.
 
 3. **`LITERACY_REFERENCE_GENERAL` / `LITERACY_REFERENCE_ELITE`**
-   (`sim/engine/labour.py`, in-flight, `initial_condition`, 0.12 / 0.90,
+   (`sim/labour/labour.py`, in-flight, `initial_condition`, 0.12 / 0.90,
    sourced to `rome_100ad.json`). Worth recording because it has the same
    *shape* as the `DEBT_BASE_RATE` mistake one step earlier: Rome's own
    starting condition is "copied here as the denominator every OTHER

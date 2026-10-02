@@ -5,7 +5,7 @@ hours by the tonne, priced at the unskilled hour like every other labour cost.
 """
 from sim.constants import declare
 
-from . import wage_provider
+from sim.labour import wage_provider
 
 COIN_GUARD_HOURS_PER_TONNE_YEAR = declare(
     "COIN_GUARD_HOURS_PER_TONNE_YEAR", 60.0, kind="temporary_heuristic",

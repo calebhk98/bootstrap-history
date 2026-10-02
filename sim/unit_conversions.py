@@ -184,7 +184,7 @@ KILOGRAMS_PER_GRAM = declare(
     confidence="A",
     why="Turns a *_g-suffixed quantity into a kilogram-equivalent by "
         "MULTIPLICATION - the direction sim/world/demand.py's and "
-        "sim/world/labour_market.py's own (until this task, independently "
+        "sim/labour/labour_market.py's own (until this task, independently "
         "declared) _KG_EQUIVALENT_PER_UNIT_SUFFIX dictionaries already "
         "used, mapping a material key's unit suffix to the multiplier that "
         "makes every material comparable by mass regardless of which unit "

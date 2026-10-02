@@ -5,7 +5,8 @@ import json
 import os
 import unittest
 
-from sim.engine import catalog, data, prices as engine_prices, wage_provider
+from sim.engine import catalog, data, prices as engine_prices
+from sim.labour import wage_provider
 from sim.validate_production import load_production
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

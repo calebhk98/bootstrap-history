@@ -2,7 +2,7 @@
 registry, the civilisation, the price solver and the population's age
 structure.
 
-The schedule itself lives in sim.world.wages and is actor-agnostic; this is
+The schedule itself lives in sim.labour.wages and is actor-agnostic; this is
 the glue that supplies its inputs.
 """
 import functools
@@ -11,9 +11,10 @@ import os
 import warnings
 from typing import Any, Dict, Mapping, Optional
 
-from sim.world import demand, demography, wages
+from sim.world import demand, demography
+from sim.labour import wages
 
-from .default_civilisation import CIVILISATION_DIRECTORY, default_civilisation_id
+from sim.engine.default_civilisation import CIVILISATION_DIRECTORY, default_civilisation_id
 
 # The staple the subsistence basket is priced in.
 FOOD_PRICE_MATERIAL = "wheat_kg"
@@ -89,7 +90,7 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
     coin: one unit is `kg_per_unit` of the coin material, worth its solved
     labour hours, so a labour hour is the reciprocal of that in money.
     """
-    from . import prices as price_solver
+    from sim.engine import prices as price_solver
     standard = coin_standard(civ)
     civilisation_id = civ.get("id")
     opening = wages.WageSchedule(

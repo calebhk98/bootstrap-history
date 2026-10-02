@@ -45,7 +45,7 @@ def apply_revenue(nodes: Iterable[dict], goods: Mapping[str, float],
                   wages: Mapping[str, float], money_per_labour_hour: float,
                   energy: Optional[energy_prices.EnergyPrices] = None) -> None:
     """Set each node's `rev_hours`, `up_hours`, `_revenue_basis` and `_upkeep_basis`."""
-    from sim.world.labour_market import production_data
+    from sim.labour.labour_market import production_data
     production = production_data()
     energy = energy or energy_prices.pool_only(goods)
     for node in nodes:

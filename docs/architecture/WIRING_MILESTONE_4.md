@@ -78,7 +78,7 @@ from the scalar model** are the real prize for this wiring, and are easy to
 miss because neither has "demograph" or "pop_scale" in its own name:
 
 ```python
-# sim/engine/labour.py:1286 (anchor commit), inside national_trade_population
+# sim/labour/labour.py:1286 (anchor commit), inside national_trade_population
 reference_pop = float(self.civ.get("population", 0.0))
 scale_from_baseline = (self.pop_scale / self._pop_scale_base
                        if self._pop_scale_base else 1.0)

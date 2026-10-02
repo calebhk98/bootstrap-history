@@ -21,7 +21,7 @@ year (`sim/tests/test_agriculture_wiring.py`'s
 `FamineHasAPhysicalCauseTests` shocks `farm_land.hectares` by exactly that
 amount and the farm-workforce SIZE this project's engine derives from it
 never notices). A famine can kill people in this model; it cannot yet turn a
-blacksmith into a farmer. Every profession in `sim/engine/labour.py` is
+blacksmith into a farmer. Every profession in `sim/labour/labour.py` is
 priced off a static classification (`TRADE_DENSITY`: "abundant", "common",
 "scarce", "uncommon") that never moves with any other trade's fortunes
 either - a war raising demand for `smith` hours does not shrink `mason`'s
@@ -190,7 +190,7 @@ CAN grow under this mechanism now, but only if the tech tree already
 contains a way to do it that needs no master - see WALKABLE_TRADES - and
 even then bounded by a seed reference, not by an invented absolute number:
 you still cannot train the first optician by bidding hours at him, someone
-has to found THAT trade, which is exactly what `sim/engine/labour.py`'s own
+has to found THAT trade, which is exactly what `sim/labour/labour.py`'s own
 `TRADES_ABSENT` and `trade_schools` machinery is for (see WHAT THIS DOES NOT
 MODEL below and this module's WIRING section for how the two would meet).
 
@@ -240,7 +240,7 @@ is missing").
      large its shortage, and this module still invents no number for that
      first worker: an `electrician` recipe gated behind `dynamo` stays
      exactly as unreachable as it always was until `dynamo` itself is
-     reached. `sim/engine/labour.py` already has the concept this module
+     reached. `sim/labour/labour.py` already has the concept this module
      lacks (`TRADES_ABSENT`, `trade_schools`,
      `SCHOOL_FOUNDED_HIRING_COEFFICIENT`) - a founder-built institution that
      seeds a trade society could not otherwise reach. `Workforce.step`'s
@@ -298,7 +298,7 @@ is missing").
 
 WORKED EXAMPLE, AND HOW TO REPRODUCE IT. Run this file directly:
 
-    python3 sim/world/labour_market.py
+    python3 sim/labour/labour_market.py
 
 for five scenarios end to end: a food shortfall that pulls hours into
 farming and stabilises with the shortfall still unmet; a war that pulls
@@ -834,7 +834,7 @@ WALKABLE_TRADES = trades_reachable_given_technology()
 # SCENARIO 5 below). Everything not in this set defaults to requiring the
 # master-and-apprentice pathway WHAT THIS DOES NOT MODEL item 2 describes,
 # and can only start from zero via a caller-supplied `minimum_absorption_
-# hours_by_trade` (sim/engine/labour.py's own `TRADES_ABSENT`/`trade_
+# hours_by_trade` (sim/labour/labour.py's own `TRADES_ABSENT`/`trade_
 # schools` machinery is the natural source of that number).
 #
 # A caller that HAS the tech tree in scope (sim/engine/ - this module never
@@ -1275,7 +1275,7 @@ def have_versus_need(
     module takes the position that the disagreement is information, not
     noise: it is exactly the pressure `Workforce.step` is there to resolve,
     one bounded year at a time, and a caller that silently substitutes one
-    number for the other (as sim/engine/labour.py does today, pricing every
+    number for the other (as sim/labour/labour.py does today, pricing every
     trade off a population-derived total with no workforce state of its
     own) is skipping that resolution rather than performing it.
     """
@@ -1619,7 +1619,7 @@ if __name__ == "__main__":
          "documented, correct behaviour for a trade that needs a master "
          "who does not exist yet - not a bug this scenario is hiding. A "
          "founder wanting opticians has to found the trade "
-         "(sim/engine/labour.py's `trade_schools`), then hand this "
+         "(sim/labour/labour.py's `trade_schools`), then hand this "
          "mechanism a `minimum_absorption_hours_by_trade` floor, exactly "
          "as WHAT THIS DOES NOT MODEL item 2 describes.")
 

@@ -15,8 +15,8 @@ household-room ceiling; this file only prices the trade once a person is
 in it.
 """
 from . import wage_provider
-from . import money_units
-from .data import TRADE_REGISTRY, WAGES
+from sim.engine import money_units
+from sim.engine.data import TRADE_REGISTRY, WAGES
 from .labour_market_api import LabourMarket
 from .labour_wage_ledger import WageLedgerMixin
 from sim.constants import declare

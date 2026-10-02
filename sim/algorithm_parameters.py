@@ -9,7 +9,7 @@ computation runs, not what it claims about the simulated world.
 WHAT BELONGS HERE. A fixed-point solver's damping factor, its convergence
 tolerance, its iteration cap; a search's maximum period count. Gathered
 from sim/solve_prices_core.py (the price solver's own damped-Jacobi loop)
-and sim/world/labour_market.py (the labour-reallocation fixed point), the
+and sim/labour/labour_market.py (the labour-reallocation fixed point), the
 two places in this project that run an iterative numerical search rather
 than a closed-form calculation. The strongly-connected-components pass
 sim/solve_prices_core.py's own resolvability check runs
@@ -79,7 +79,7 @@ number. sim/solve_prices_core.py therefore re-imports each moved name from
 this file and keeps it bound at its own old attribute name (see that
 file's own comment at the import), so `solve_prices_core.DAMPING_FACTOR`
 still resolves exactly as it always did and neither sibling file needed to
-change at all. sim/world/labour_market.py does the same for its own two
+change at all. sim/labour/labour_market.py does the same for its own two
 names, on the chance anything outside this file's own edits (a test, a
 future caller) references `labour_market.MAXIMUM_REALLOCATION_PERIODS` or
 `labour_market.CONVERGENCE_TOLERANCE_HOURS` directly.
@@ -160,9 +160,9 @@ INITIAL_PRICE_GUESS_HOURS = 1.0
 GROWTH_BOUND_HOURS = 1e9
 
 # ============================================================================
-# sim/world/labour_market.py - the labour-reallocation fixed point
+# sim/labour/labour_market.py - the labour-reallocation fixed point
 # ============================================================================
-# Moved here verbatim, comments included, from sim/world/labour_market.py's
+# Moved here verbatim, comments included, from sim/labour/labour_market.py's
 # own "THE FIXED POINT: REPEAT THE STEP UNTIL THE ALLOCATION STOPS MOVING"
 # section. See that file's own import of these two names for why its own
 # module attributes still work unchanged.

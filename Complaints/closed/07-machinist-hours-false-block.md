@@ -4,7 +4,7 @@
 
 **Type:** Status/constraint bug  
 **Priority:** High
-**Audit (2026-09-18): PARTLY RESOLVED / LIKELY.** `craft_hands_available()` (`sim/engine/labour.py`) already folds contract hours into a trade's availability ("a year of a carpenter's time IS a carpenter"), which closes the general class of bug described here (a project's own staffing gate disagreeing with `portfolio`'s allocation numbers). The specific machinist repro was not independently reproduced this session. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): PARTLY RESOLVED / LIKELY.** `craft_hands_available()` (`sim/labour/labour.py`) already folds contract hours into a trade's availability ("a year of a carpenter's time IS a carpenter"), which closes the general class of bug described here (a project's own staffing gate disagreeing with `portfolio`'s allocation numbers). The specific machinist repro was not independently reproduced this session. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

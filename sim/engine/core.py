@@ -3,7 +3,7 @@ import collections, copy, math, os, random, sys
 
 from sim.constants import book_money_names, declare
 from .money_units import book_money_factor
-from .wage_provider import build_schedule
+from sim.labour.wage_provider import build_schedule
 from . import automation_audit
 from sim.engine.state import SimulationState, ActiveProjectState
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
@@ -53,8 +53,8 @@ from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
 from sim.geography.geography import GeographyMixin
-from .labour import LabourMixin
-from .labour_allocation import LabourAllocationMixin
+from sim.labour.labour import LabourMixin
+from sim.labour.labour_allocation import LabourAllocationMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
