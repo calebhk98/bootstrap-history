@@ -6,7 +6,7 @@ import os
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld
+from sim.agents import SimWorld
 from sim.engine.proto.quote_spending import _quote_hire
 
 TRADE = "artisan"

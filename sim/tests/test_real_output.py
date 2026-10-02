@@ -10,7 +10,7 @@ sim = partial(sim, agent_economy=False)   # these checks pin the engine's own ye
 import copy
 
 from sim.engine import market_demand
-from sim.engine.actors import SimWorld
+from sim.agents import SimWorld
 from sim.engine import prices as price_solver
 from sim.engine.data import calculated_goods_prices
 

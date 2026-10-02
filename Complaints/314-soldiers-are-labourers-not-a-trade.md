@@ -2,7 +2,7 @@
 
 **Status:** partly - soldier is a trade in the one labour market (wage, state hiring, recruitment pressure, test state_soldier_trade); remaining: withdraw soldiers from the society's labour allocation so the unskilled wage moves by tightness, not only through the pressure curve
 
-The state's army is a `labourer` line in the budget (`sim/engine/actors/budget.py`). Soldiers are now taken out of production: `SimWorld.society_output` counts the working age less the soldiers the state keeps, so the state's own revenue falls with a larger army. Three things remain, each measurable.
+The state's army is a `labourer` line in the budget (`sim/agents/budget.py`). Soldiers are now taken out of production: `SimWorld.society_output` counts the working age less the soldiers the state keeps, so the state's own revenue falls with a larger army. Three things remain, each measurable.
 
 1. There is no `soldier` entry in the wage table (`data/` wage schedule, `sim.engine.data.WAGES`), in `TRADE_DENSITY` or in the hiring and training screens, so a soldier cannot be a trade in the founder's labour pool. A trade needs a wage, a national population and a way to be recruited; adding one touches the wage provider, `national_trade_population` and every screen that lists trades, which is not a contained change.
 2. Soldiers pulled out of production do not raise the unskilled wage the founder pays: `wage_per_hour("labourer")` comes from the schedule, not from the labour that is left. Check: run `python3 sim/budget_series.py rome_100ad 60 1` and compare `wage_per_hour("labourer")` in a year with a large army and in one with a small one.

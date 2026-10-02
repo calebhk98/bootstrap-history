@@ -3,7 +3,7 @@ added capacity earns more than the capital costs expands, an entrant expects wha
 and a market that stops growing stops gaining capacity and firms."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld
+from sim.agents import SimWorld
 
 import copy
 import json

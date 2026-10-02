@@ -13,8 +13,8 @@ from functools import partial
 sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
 
 
-from sim.engine.actors import SimWorld
-from sim.engine.actors import budget
+from sim.agents import SimWorld
+from sim.agents import budget
 from sim.engine.proto.saveload import load_state, save_state
 from sim.engine.state import ActorRecord
 
@@ -269,7 +269,7 @@ check("a visible founder in a state with no shortfall still pays the ordinary sh
       (before_capital - ordinary_game.capital, expected))
 
 # ---- the army follows what the state can pay -------------------------------------------------
-from sim.engine.actors.tuning import ARMY_ADJUSTMENT_RATE
+from sim.agents.tuning import ARMY_ADJUSTMENT_RATE
 
 army_game, army_treasury = budget_sim()
 wanted = SimWorld(army_game).army_wanted()

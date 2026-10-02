@@ -214,7 +214,7 @@ template for what follows, not a new idea:
   the old enclosing scope, dead from the moment it was extracted and
   unfindable while it was buried.
 * **The household extraction.** Roughly eighty founder-specific attributes
-  moved off `Sim` onto `sim/engine/actors/household.py`'s `Household`
+  moved off `Sim` onto `sim/agents/household.py`'s `Household`
   object (`docs/architecture/HOUSEHOLD_EXTRACTION.md`; confirmed live at
   `sim/engine/core.py:377`, `self.household = Household(...)`, with 109
   forwarding properties measured by `grep -c "@property" sim/engine/

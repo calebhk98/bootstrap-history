@@ -42,7 +42,7 @@ Measure with these; none of their output is copied here.
 | 0 | the production side (`data/production/`) | Built and validated by `validate_production.py`. The remaining gaps are joint-byproduct materials that cannot be priced from the cost side (`Complaints/29`). |
 | 1 | provenance and a burndown | Working. A rising count of declared heuristics means the audit is finding more, not that the project is regressing. |
 | 2 | the synthetic world | Not started and not needed: domain models were built standalone under `sim/world/` and wired in afterwards. |
-| 3 | actors | `Actor` base with `Household`, `Government` and `Firm` in `sim/engine/actors/` (see `ACTORS.md`). Governments and firms imitate founder inventions; firms do not yet compete for labour or inputs (`Complaints/103`). |
+| 3 | actors | `Actor` base with `Household`, `Government` and `Firm` in `sim/agents/` (see `ACTORS.md`). Governments and firms imitate founder inventions; firms do not yet compete for labour or inputs (`Complaints/103`). |
 | 4 | food and people | Wired: agriculture and demography run through the engine's yearly demographic step, with a persistent granary and weather pooling. See `WIRING_MILESTONE_4.md`. |
 | 5 | the wage and the price solve | Wages come from the labour market (subsistence floor, training premium, tightness), and money is anchored to each civilisation's coin metal; neither reads the book file. Every material price is solved; the book file is deleted. Authored node revenue is not yet derived from output everywhere (`Complaints/283`). |
 | 5b | when a technique exists (era gate) | Built; every technique states what it needs and when, and the solver refuses techniques that cannot reach a needed temperature. Coverage: `validate_production.py`. |

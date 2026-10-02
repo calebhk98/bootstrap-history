@@ -2,7 +2,7 @@
 
 **Status:** closed - the eight fields are declared on their state dataclasses (counters start at a real zero, the rest at None), read by plain attribute access, and guarded by test_household_never_happened_fields.
 
-`sim/engine/actors/household.py` says this about itself, in its own class
+`sim/agents/household.py` says this about itself, in its own class
 docstring:
 
     A NOTE ON WHAT IS *ABSENT* HERE, NOT JUST WHAT IS SET: several fields

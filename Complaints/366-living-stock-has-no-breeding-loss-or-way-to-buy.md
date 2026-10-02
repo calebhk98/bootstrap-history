@@ -18,7 +18,7 @@ missing (see What is done and What remains below):
   a partner's `will_not_sell` (`data/civilizations/han_china_100ad.json`) leaves a society without
   a route to the stock except an expedition that grants it.
 - The refusal is a civilisation data field read in `sim/engine/foreign_economies.py`; an actor-based
-  export policy (`sim/engine/actors/policy.py`) should replace it.
+  export policy (`sim/agents/policy.py`) should replace it.
 
 ## What is done
 
@@ -44,4 +44,4 @@ missing (see What is done and What remains below):
 - Emergency liquidation (`sim/engine/cash_remedies.py`) can still sell breeding stock; stock should be exempt or
   priced as breeding stock.
 - The partner's refusal is still a civilisation data field (`will_not_sell`); an actor-based export policy
-  (`sim/engine/actors/policy.py`) should replace it.
+  (`sim/agents/policy.py`) should replace it.

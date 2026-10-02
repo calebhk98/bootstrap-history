@@ -14,7 +14,7 @@ all four.
 A new package, so this is not more state in the same files:
 
 ```text
-sim/engine/actors/
+sim/agents/
     __init__.py       what a caller imports
     household.py      class Household - the founder/family as an economic actor
 ```

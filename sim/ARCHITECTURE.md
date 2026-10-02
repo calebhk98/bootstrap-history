@@ -182,13 +182,13 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
     engine/fog.py       what the player is allowed to see (521 lines).
     sim/geography/geography.py where things are, per civilisation (282 lines).
 
-    engine/actors/household.py  `Household`: the founder's money, staff,
+    sim/agents/household.py  `Household`: the founder's money, staff,
                         knowledge, plant and standing, extracted off `Sim`
                         so a second economic actor (a firm, a government)
                         can use the same class later without importing the
                         whole engine. 339 lines, 68 `__init__` attributes
                         (script under "The runtime graph" below). Its own
-                        package (`engine/actors/`) rather than one more
+                        package (`sim/agents/`) rather than one more
                         module under `engine/`, for the same reason.
 
     engine/protocol.py  78 lines: a re-export shim, not touched by the
@@ -404,7 +404,7 @@ properties (87 `@property`/`@x.setter` pairs in `core_properties.py`'s
 attribute rather than one-line-forwarding a single field, and moving them
 would put real logic in a file whose whole point is that everything in it
 is inert boilerplate; 1 more, `mine_capacity`, defined on `MiningMixin` in
-`economy_mining.py`). `Household` (`sim/engine/actors/household.py`) holds
+`economy_mining.py`). `Household` (`sim/agents/household.py`) holds
 **68** of its own `__init__` attributes.
 
     python3 - <<'EOCOUNT'
@@ -427,7 +427,7 @@ is inert boilerplate; 1 more, `mine_capacity`, defined on `MiningMixin` in
                                         attrs.add(t.attr)
                         return len(attrs)
     print("Sim.__init__ attrs:", self_init_attrs('sim/engine/core.py', 'Sim'))
-    print("Household.__init__ attrs:", self_init_attrs('sim/engine/actors/household.py', 'Household'))
+    print("Household.__init__ attrs:", self_init_attrs('sim/agents/household.py', 'Household'))
     EOCOUNT
 
     grep -c "^    @property" sim/engine/core_properties.py   # 87
@@ -436,7 +436,7 @@ is inert boilerplate; 1 more, `mine_capacity`, defined on `MiningMixin` in
     grep -c "^\s*@property" sim/engine/economy_mining.py      # 1 (mine_capacity)
 
 `Household` exists because the founder's money, staff, knowledge,
-inventory and standing left `Sim` for `sim/engine/actors/household.py`
+inventory and standing left `Sim` for `sim/agents/household.py`
 (`docs/architecture/HOUSEHOLD_EXTRACTION.md`); what stayed directly on
 `Sim` is the world, the scenario, and a handful of fields biographical to
 one mortal person (`founder_alive`, `life_left`, `dead_reason` and kin)
@@ -925,7 +925,7 @@ simulation. An "obviously safe" cleanup - promoting `getattr(self, x,
 default)` calls to real `__init__` attributes - once passed the entire
 suite while silently breaking save-file semantics, because several of
 those names are in `SAVE_FIELDS` where a _missing_ attribute is
-meaningful; `Household.__init__`'s own docstring (`sim/engine/actors/
+meaningful; `Household.__init__`'s own docstring (`sim/agents/
 household.py`) still calls this out by name for exactly the fields it
 deliberately leaves unassigned. `perf_fingerprint.py` catches this
 class of bug and the suite alone does not. Run it:
@@ -1030,7 +1030,7 @@ Save/load is derived directly from authoritative state definitions:
 To preserve existing callers and compatibility while enforcing a single authoritative source of truth:
 
 - `ForwardingPropertiesMixin` (`sim/engine/core_properties.py`) provides 106 forwarding properties on `Sim` that delegate directly to `self.state.<subsystem>.<field>`.
-- `Household` (`sim/engine/actors/household.py`) serves as a live façade delegating property and attribute access directly to `self._state.<subsystem>`.
+- `Household` (`sim/agents/household.py`) serves as a live façade delegating property and attribute access directly to `self._state.<subsystem>`.
 - `ActiveProjectState` provides typed attributes, dictionary compatibility, and deep change notification bubbling to `self.state.projects._active_ver`.
 - Invalidation hooks and version counters attach directly to the respective subsystem state owners (`ProjectsState`, `HouseholdState`, `GovernanceState`).
 

@@ -2,7 +2,7 @@
 built nodes and firms through repeated whole-set scans. Counted work (and one
 timing measured against a baseline on the same machine with a wide margin)."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.actors import SimWorld, Firm
+from sim.agents import SimWorld, Firm
 from sim.engine.state import ActorRecord
 
 FIRM_COUNT = 150

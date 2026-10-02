@@ -3,8 +3,8 @@ at its wage, conscription moves the wage, and soldiers taken out of the unskille
 labour scarcer."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld
-from sim.engine.actors import budget
+from sim.agents import SimWorld
+from sim.agents import budget
 
 
 def one_year(game):

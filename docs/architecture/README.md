@@ -10,7 +10,7 @@ is now. None of this is an approved plan yet.
 | `PM_ASSESSMENT.md` | What we actually think, with the codebase measured rather than described. Agrees with most of the review, disagrees with it on five specific points, and names the requirement conflict that had to be resolved before any phase plan meant anything. | Ours |
 | `ENDOGENOUS_COSTS_AND_DOMAINS.md` | The plan. How a price gets calculated rather than looked up, which domains produce prices and which only consume them, and the milestones. Supersedes `PM_ASSESSMENT.md` §3.5 and §5. | Ours |
 | `DESIGN_PRINCIPLES.md` | Standing decisions that are not defects: what the model should not be "fixed" into (no blanket research-to-manufacture delay, no revenue nerf to keep the founder poor). | Ours |
-| `HOUSEHOLD_EXTRACTION.md` | Design for moving the founder's ~80 attributes onto their own object in `sim/engine/actors/`, so a government, a firm or a second player can own things too. Includes the measured reason `__getattr__` forwarding is not an option. | Ours |
+| `HOUSEHOLD_EXTRACTION.md` | Design for moving the founder's ~80 attributes onto their own object in `sim/agents/`, so a government, a firm or a second player can own things too. Includes the measured reason `__getattr__` forwarding is not an option. | Ours |
 | `ACTORS.md` | Actor base, policy interface, government and firm actors, imitation of inventions. Current behaviour. | Ours |
 | `ACTORS_NEXT.md` | What the government and firm actors produce that nothing reads, and the ordered increments that make the country a real player. | Ours |
 | `SIM_STATE_INVENTORY.md` | Every `Sim` instance attribute, measured, classified household / world / scenario / internal. The input to the extraction. | Ours |

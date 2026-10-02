@@ -64,7 +64,7 @@ Check with `ls` before trusting this; directories move.
 |---|---|
 | Engine (the `Sim` object and its mixins) | `sim/engine/` |
 | Standalone domain models (agriculture, demography, land, deposits, transport, demand, labour market, ...) | `sim/world/` |
-| Actors other than the world (households, later firms/states/players) | `sim/engine/actors/` |
+| Actors other than the world (households, later firms/states/players) | `sim/agents/` |
 | Price solver | `sim/solve_prices*.py`, `sim/engine/prices.py` |
 | CLI and agent/JSON protocol | `sim/simulator.py`, `sim/engine/cli*.py`, `sim/engine/proto/`, `sim/PROTOCOL.md` |
 | Tests | `sim/tests/`, run through `sim/test_regressions.py` |

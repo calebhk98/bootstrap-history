@@ -7,7 +7,7 @@ from functools import partial
 sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
 
 
-from sim.engine.actors.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
+from sim.agents.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
 
 
 def one_year(game):

@@ -6,7 +6,7 @@ a file of their own.
 import re
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-from .actors import Household
+from sim.agents import Household
 from .data import closure, JSONDict, Nodes
 from .hazard_window import hazards_not_yet_past
 from .hazard_hedge_timing import add_timing_to_steps
@@ -54,7 +54,7 @@ def strip_self_play_advice(text: Optional[str]) -> Optional[str]:
 
 class FogMixin:
     # FOG IS A RATCHET: revealed knowledge never shrinks. `revealed` is stored
-    # on Household (sim/engine/actors/household.py) as a ratcheting property;
+    # on Household (sim/agents/household.py) as a ratcheting property;
     # assignments only grow what is already known.
 
     # Type annotations only (no runtime binding); provided by Sim and sibling

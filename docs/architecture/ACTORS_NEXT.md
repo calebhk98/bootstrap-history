@@ -25,7 +25,7 @@ profit, copies it, and takes `takings / (1 + rivals)` less upkeep.
 
 **What reads their results.** Nothing outside `actors/` and `tests/`:
 
-    grep -rn "\.actors\b\|of_kind\|active_firms\|\.government(" sim --include=*.py | grep -v "sim/engine/actors/\|sim/tests/"
+    grep -rn "\.actors\b\|of_kind\|active_firms\|\.government(" sim --include=*.py | grep -v "sim/agents/\|sim/tests/"
 
 Specific disconnects, each with the player-visible behaviour it duplicates:
 
@@ -152,7 +152,7 @@ Touches economy code; needs the demand wiring in `Complaints/102`.
 
 ### 5. The state's demand and labour (done)
 
-Built: the government keeps a budget (`sim/engine/actors/budget.py`,
+Built: the government keeps a budget (`sim/agents/budget.py`,
 `world_budget.py`): an army and officials, paid at market wages and equipped
 through `military_logistics`; its staff come out of the shared labour pool and
 its iron purchases reach the market as `actor_demand_tonnes`. Its spending

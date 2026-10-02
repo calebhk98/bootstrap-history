@@ -25,12 +25,12 @@ def _count_calls(function_owner, name, work):
 
 
 def _look_up_output_many_times():
-    from sim.engine.actors.supply import materials_made_by
+    from sim.agents.supply import materials_made_by
     for _ in range(500):
         materials_made_by("iron_smelting")
 
 
-from sim.engine.actors.supply import materials_made_by as _warm
+from sim.agents.supply import materials_made_by as _warm
 _warm("iron_smelting")
 check("a warm production lookup resolves no filesystem paths",
       _count_calls(os.path, "abspath", _look_up_output_many_times) == 0)
@@ -49,7 +49,7 @@ check("three early years of the default run take well under a minute of CPU",
 
 
 # --- an actor's supply of a material looks only at the concerns that make it.
-from sim.engine.actors.base import Actor as _Actor
+from sim.agents.base import Actor as _Actor
 
 
 class _CountingWorld:
@@ -85,7 +85,7 @@ check("an actor with no concern making the material asks about none",
 
 
 # --- the registry's supply sum.
-from sim.engine.actors.registry import ActorRegistry as _Registry
+from sim.agents.registry import ActorRegistry as _Registry
 from sim.engine.state import ActorRecord as _Record, ActorsState as _ActorsState
 
 

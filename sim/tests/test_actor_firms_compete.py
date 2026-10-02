@@ -5,7 +5,7 @@ import random
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld, ledger
+from sim.agents import SimWorld, ledger
 from sim.engine.state import ActorRecord
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()

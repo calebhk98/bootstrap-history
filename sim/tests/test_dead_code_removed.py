@@ -12,7 +12,7 @@ import unittest
 
 # (module, dotted attribute path) that must no longer exist.
 DELETED = (
-    ("sim.engine.actors.household", "MineWorking"),
+    ("sim.agents.household", "MineWorking"),
     ("sim.engine.economy_materials", "MaterialSupplyMixin.capacity_reserves"),
     ("sim.engine.commodities", "Ledger.on_hand"),
     ("sim.world.demography", "Population.working_age_population"),

@@ -65,7 +65,7 @@ from .core_step_phases import StepContext, StepPhasesMixin
 from .economy_port import EconomyPortMixin, switch_requested
 from .data import trade_family
 from .invariants import check_simulation_invariants
-from .actors import Household
+from sim.agents import Household
 
 
 _EARTH_RADIUS_KM = 6371.0
@@ -447,7 +447,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         config = self.cfg
         # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,
         # as its own object rather than eighty-odd attributes of this one. See
-        # sim/engine/actors/household.py for what it holds and
+        # sim/agents/household.py for what it holds and
         # docs/architecture/HOUSEHOLD_EXTRACTION.md for why: making this an
         # object of its own, rather than more state on `Sim`, is what would let
         # a government, a rival household or a firm exist someday, each owning

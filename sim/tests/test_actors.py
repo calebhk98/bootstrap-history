@@ -7,11 +7,11 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import (Actor, ActorRegistry, CallbackPolicy, Firm, Government,
+from sim.agents import (Actor, ActorRegistry, CallbackPolicy, Firm, Government,
                                Household, RecordedActor, SimWorld, register_policy)
-from sim.engine.actors import imitation
-from sim.engine.actors.policy import IdlePolicy
-from sim.engine.actors.tuning import SECRET_EXPOSURE
+from sim.agents import imitation
+from sim.agents.policy import IdlePolicy
+from sim.agents.tuning import SECRET_EXPOSURE
 from sim.engine.state import ActorRecord
 from sim.engine.mods import get_ordered_mods, load_mod_tree
 from sim.engine.proto.saveload import load_state, save_state

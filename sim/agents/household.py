@@ -19,7 +19,7 @@ from collections import defaultdict
 from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
 					 Optional, Set, Tuple)
 
-from ..economy import _InvalidatingSet, _InvalidatingDict
+from sim.engine.economy import _InvalidatingSet, _InvalidatingDict
 from .base import Actor
 from .policy import IdlePolicy
 from sim.engine.state import (

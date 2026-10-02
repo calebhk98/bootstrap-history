@@ -46,7 +46,7 @@ Resist it until there is a second actor to look at.").
 
 - `docs/architecture/HOUSEHOLD_EXTRACTION.md` is Milestone 3 of
   `ENDOGENOUS_COSTS_AND_DOMAINS.md`, and `docs/architecture/STATE_OF_THE_
-  PROJECT.md`'s own table marks Milestone 3 **done** ("`sim/engine/actors/
+  PROJECT.md`'s own table marks Milestone 3 **done** ("`sim/agents/
   household.py` (294 lines)"). That is the prerequisite this feature needs,
   already built, not merely planned.
 - `docs/architecture/HISTORICAL_SIM_ARCHITECTURE.md` (the external design

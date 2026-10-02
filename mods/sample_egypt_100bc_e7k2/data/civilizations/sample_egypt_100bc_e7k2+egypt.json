@@ -298,7 +298,7 @@
   ],
   "state_capacity": 0.85,
   "state_pressure": {
-    "_doc": "How this state leans on a household once it is large enough to be worth leaning on. Read by SocietyMixin.requisition_report/office_report/confiscation_risk/state_pressure_report (society.py). The *_name fields are the words a log line or 'risk' uses; the *_note fields are the historical grounding; how much of a year's revenue the state takes at full notice is not set here: it follows the state's unfunded need (see sim/engine/actors/budget.py); protection bargains requisition down (office is not bargained down: it is compulsory).",
+    "_doc": "How this state leans on a household once it is large enough to be worth leaning on. Read by SocietyMixin.requisition_report/office_report/confiscation_risk/state_pressure_report (society.py). The *_name fields are the words a log line or 'risk' uses; the *_note fields are the historical grounding; how much of a year's revenue the state takes at full notice is not set here: it follows the state's unfunded need (see sim/agents/budget.py); protection bargains requisition down (office is not bargained down: it is compulsory).",
     "requisition_name": "the annona and the munera",
     "requisition_note": "Grain for the city and the army was levied as the annona, administered in kind; compulsory public services, the munera, fell on anyone with the property to bear them (Digest 50.4), and after Diocletian's reforms (284-305) the Price Edict of 301 fixed what a thing could be sold for at all, on pain of death. A household with an oil press, a furnace or a granary the state can point to is a household it can assess.",
     "office_name": "the decurionate",
