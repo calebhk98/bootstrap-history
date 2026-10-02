@@ -6,7 +6,9 @@ it received and earned, a merchant from what it bought where. It is rebuilt ever
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Tuple
 
-from .types import AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer
+from .types import EDGE_EXTERNAL, AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer
+
+SALE_PREFIX = "sale of "    # settlement's purpose for a goods sale
 
 
 @dataclass
@@ -26,6 +28,8 @@ class YearLedger:
     clearings: List[ClearingResult] = field(default_factory=list)
     labour_results: List[LabourResult] = field(default_factory=list)
     unpaid: Dict[AgentId, float] = field(default_factory=dict)
+    imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)       # money paid to foreign partners
+    exports_received: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)   # money received from them
     plant_spend: Dict[AgentId, float] = field(default_factory=dict)    # paid for plant goods, a build not a running cost
     unmet_demand: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): quantity
 
@@ -34,6 +38,7 @@ class YearLedger:
             if isinstance(posting, Transfer):
                 self.money_in[posting.payee] = self.money_in.get(posting.payee, 0.0) + posting.amount
                 self.money_out[posting.payer] = self.money_out.get(posting.payer, 0.0) + posting.amount
+                self._note_foreign(posting)
                 if purpose_kind == "wages":
                     self.wages_in[posting.payee] = self.wages_in.get(posting.payee, 0.0) + posting.amount
                 elif purpose_kind == "sales":
@@ -53,6 +58,16 @@ class YearLedger:
     def running_costs(self, agent: AgentId) -> float:
         """Money the agent paid out this year other than for building plant."""
         return max(0.0, self.money_out.get(agent, 0.0) - self.plant_spend.get(agent, 0.0))
+
+    def _note_foreign(self, transfer: Transfer) -> None:
+        """Money through the external edge, by the domestic party and the good named in the purpose."""
+        good = transfer.purpose[len(SALE_PREFIX):] if transfer.purpose.startswith(SALE_PREFIX) else transfer.purpose
+        if transfer.payee == EDGE_EXTERNAL and transfer.payer != EDGE_EXTERNAL:
+            key = (transfer.payer, good)
+            self.imports_paid[key] = self.imports_paid.get(key, 0.0) + transfer.amount
+        elif transfer.payer == EDGE_EXTERNAL and transfer.payee != EDGE_EXTERNAL:
+            key = (transfer.payee, good)
+            self.exports_received[key] = self.exports_received.get(key, 0.0) + transfer.amount
 
     def note_clearing(self, result: ClearingResult) -> None:
         self.clearings.append(result)

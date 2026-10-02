@@ -38,17 +38,22 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         ledger.note_postings(done.transfers, "wages")
 
 
+def tax_facts(setup, record, view, ledger: YearLedger) -> YearFacts:
+    money = setup.currency_id
+    hours = setup.working_hours_per_year
+    working = {cohort.agent_id: cohort.working_people for cohort in record.cohorts.values()}
+    wage_year = {cohort.agent_id: (view.wage(setup.unskilled_trade, labour_area(cohort.tile)) or 0.0) * hours
+                 for cohort in record.cohorts.values()}
+    cash = {agent: record.book.balance(agent, money) for agent in record.book.agents() if not is_edge(agent)}
+    return YearFacts(currency=money, working_people=working, wage_per_labour_year=wage_year, cash=cash,
+                     imports_paid=ledger.imports_paid, exports_received=ledger.exports_received)
+
+
 def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     forms = [form for form in setup.tax_forms if not form.paid_in]
     received = 0.0
     if forms:
-        money = setup.currency_id
-        hours = setup.working_hours_per_year
-        working = {cohort.agent_id: cohort.working_people for cohort in record.cohorts.values()}
-        wage_year = {cohort.agent_id: (view.wage(setup.unskilled_trade, labour_area(cohort.tile)) or 0.0) * hours
-                     for cohort in record.cohorts.values()}
-        cash = {agent: record.book.balance(agent, money) for agent in record.book.agents() if not is_edge(agent)}
-        facts = YearFacts(currency=money, working_people=working, wage_per_labour_year=wage_year, cash=cash)
+        facts = tax_facts(setup, record, view, ledger)
         transfers, _moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity)
         record.book.transfer_many(transfers)
         ledger.note_postings(transfers)
