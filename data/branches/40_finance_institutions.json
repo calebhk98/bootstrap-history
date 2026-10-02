@@ -3,6 +3,7 @@
   "id": "fin_coined_money",
   "name": "Coined money",
   "cat": "money",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -11,12 +12,12 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -26,6 +27,7 @@
   "id": "fin_argentarii",
   "name": "Deposit bankers (argentarii)",
   "cat": "banking",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -36,12 +38,12 @@
    "scribe": 60.0
   },
   "mat": {},
-  "cap": 1500.0,
-  "up": 60.0,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -61,6 +63,7 @@
   "id": "fin_maritime_loan",
   "name": "Maritime loan at high interest",
   "cat": "credit",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -69,12 +72,12 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -84,6 +87,7 @@
   "id": "fin_societas",
   "name": "Partnership (societas)",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -94,12 +98,12 @@
    "scribe": 20.0
   },
   "mat": {},
-  "cap": 300.0,
-  "up": 0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -118,6 +122,7 @@
   "id": "fin_testament",
   "name": "Testament and inheritance law",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -126,12 +131,12 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -141,6 +146,7 @@
   "id": "fin_contract_law",
   "name": "Contract law and enforcement",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -149,12 +155,12 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -164,6 +170,7 @@
   "id": "fin_tax_farming",
   "name": "Tax farming and revenue contracts",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -172,12 +179,12 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -187,6 +194,7 @@
   "id": "fin_market",
   "name": "Permanent market and market law",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -195,12 +203,12 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -210,6 +218,7 @@
   "id": "fin_auction",
   "name": "Auction and competitive bidding",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -218,12 +227,12 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -233,6 +242,7 @@
   "id": "fin_annona",
   "name": "Annona grain dole and administration",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -243,12 +253,12 @@
    "scribe": 200.0
   },
   "mat": {},
-  "cap": 4000.0,
-  "up": 0,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 0,
   "build_yrs": 1.0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -259,6 +269,7 @@
   "id": "fin_collegium",
   "name": "Professional associations (collegia)",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -269,12 +280,12 @@
    "scribe": 40.0
   },
   "mat": {},
-  "cap": 900.0,
-  "up": 0,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -285,6 +296,7 @@
   "id": "fin_arabic_numerals",
   "name": "Arabic numerals in commerce",
   "cat": "accounting",
+  "kind": "INSTITUTION",
   "pre": [
    "arithmetic_positional"
   ],
@@ -300,12 +312,12 @@
   "mat": {
    "papyrus_sheet": 50
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 2,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -315,6 +327,7 @@
   "id": "fin_double_entry",
   "name": "Double-entry bookkeeping",
   "cat": "accounting",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_arabic_numerals"
   ],
@@ -331,12 +344,12 @@
   "mat": {
    "paper_kg": 100
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -346,6 +359,7 @@
   "id": "fin_ledger",
   "name": "Ledger and account books",
   "cat": "accounting",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_double_entry"
   ],
@@ -361,12 +375,12 @@
   "mat": {
    "paper_kg": 80
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 1,
   "risk": 0.05,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -376,6 +390,7 @@
   "id": "fin_trial_balance",
   "name": "Trial balance and error detection",
   "cat": "accounting",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_ledger"
   ],
@@ -391,12 +406,12 @@
   "mat": {
    "paper_kg": 30
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -415,6 +430,7 @@
   "id": "fin_bill_exchange",
   "name": "Bill of exchange",
   "cat": "credit",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law",
    "fin_argentarii",
@@ -432,12 +448,12 @@
   "mat": {
    "parchment_sheet": 50
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.25,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -447,6 +463,7 @@
   "id": "fin_endorsement",
   "name": "Endorsement and negotiability",
   "cat": "credit",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_bill_exchange"
   ],
@@ -462,12 +479,12 @@
   "mat": {
    "parchment_sheet": 30
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -477,6 +494,7 @@
   "id": "fin_cheque",
   "name": "Cheque and demand draft",
   "cat": "credit",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_bill_exchange"
   ],
@@ -492,12 +510,12 @@
   "mat": {
    "parchment_sheet": 20
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -507,6 +525,7 @@
   "id": "fin_promissory_note",
   "name": "Promissory note",
   "cat": "credit",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_bill_exchange"
   ],
@@ -522,12 +541,12 @@
   "mat": {
    "parchment_sheet": 15
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -537,6 +556,7 @@
   "id": "fin_discounting",
   "name": "Discounting and advance payment",
   "cat": "credit",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_bill_exchange"
   ],
@@ -552,12 +572,12 @@
   "mat": {
    "parchment_sheet": 20
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -567,6 +587,7 @@
   "id": "fin_deposit_bank",
   "name": "Deposit bank and current account",
   "cat": "banking",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_argentarii",
    "fin_double_entry"
@@ -584,12 +605,12 @@
    "parchment_sheet": 200,
    "lead_kg": 50
   },
-  "cap": 2000,
-  "up": 200,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -599,6 +620,7 @@
   "id": "fin_fractional_reserve",
   "name": "Fractional reserve banking",
   "cat": "banking",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_deposit_bank"
   ],
@@ -613,12 +635,12 @@
    "scribe": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.3,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -628,6 +650,7 @@
   "id": "fin_clearing_house",
   "name": "Clearing house and interbank settlement",
   "cat": "banking",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_deposit_bank"
   ],
@@ -644,12 +667,12 @@
   "mat": {
    "parchment_sheet": 150
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -659,6 +682,7 @@
   "id": "fin_joint_stock",
   "name": "Joint-stock company with permanent existence",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_double_entry",
    "fin_societas"
@@ -676,12 +700,12 @@
   "mat": {
    "parchment_sheet": 300
   },
-  "cap": 5000,
-  "up": 500,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 10080.939587064662,
   "build_yrs": 2,
   "adopt_yrs": 3,
   "risk": 0.25,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -691,6 +715,7 @@
   "id": "fin_limited_liability",
   "name": "Limited liability",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_joint_stock"
   ],
@@ -705,12 +730,12 @@
    "scribe": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -720,6 +745,7 @@
   "id": "fin_share",
   "name": "Share and share transfer",
   "cat": "investment",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_limited_liability"
   ],
@@ -735,12 +761,12 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -750,6 +776,7 @@
   "id": "fin_stock_exchange",
   "name": "Stock exchange and organised trading",
   "cat": "investment",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_share"
   ],
@@ -766,12 +793,12 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap": 8000,
-  "up": 400,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -781,6 +808,7 @@
   "id": "fin_bond",
   "name": "Bond and debt security",
   "cat": "investment",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_promissory_note"
   ],
@@ -796,12 +824,12 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap": 3000,
-  "up": 150,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -811,6 +839,7 @@
   "id": "fin_public_debt",
   "name": "Public debt and government borrowing",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_bond"
   ],
@@ -824,21 +853,27 @@
    "scribe": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
   "risk": 0.3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "C",
-  "note": "State borrows money instead of raising taxes or debasing currency. A state that can borrow can survive temporary deficits and invest in long-term projects without waiting for revenue. A state that cannot borrow must tax harder or debase, both politically costly."
+  "note": "State borrows money instead of raising taxes or debasing currency. A state that can borrow can survive temporary deficits and invest in long-term projects without waiting for revenue. A state that cannot borrow must tax harder or debase, both politically costly.",
+  "mechanics": {
+   "state_credit": {
+    "source": "A government that can commit its successors to repay and has investors to lend is the precondition (docs/knowledge/96_finance.md, public_debt); early states met a deficit by cutting, debasing or selling office, and funded debt arrives with the Italian city states (Venice's Monte Vecchio, 1167)."
+   }
+  }
  },
  {
   "id": "fin_central_bank",
   "name": "Central bank and monetary authority",
   "cat": "banking",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_deposit_bank"
   ],
@@ -856,12 +891,12 @@
    "mat_gold": 1000,
    "silver_kg": 2000
   },
-  "cap": 10000,
-  "up": 800,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 16129.50333930346,
   "build_yrs": 3,
   "adopt_yrs": 5,
   "risk": 0.3,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 1,
   "art": 2,
   "conf": "C",
@@ -871,6 +906,7 @@
   "id": "fin_paper_money",
   "name": "Paper money and note issue",
   "cat": "money",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_central_bank"
   ],
@@ -888,12 +924,12 @@
    "paper_kg": 500,
    "mat_ink": 50
   },
-  "cap": 5000,
-  "up": 300,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 6048.563752238797,
   "build_yrs": 1.5,
   "adopt_yrs": 3,
   "risk": 0.25,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -903,6 +939,7 @@
   "id": "fin_seigniorage",
   "name": "Seigniorage and debasement",
   "cat": "money",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_coined_money"
   ],
@@ -915,12 +952,12 @@
    "merchant": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -930,6 +967,7 @@
   "id": "fin_bimetallism",
   "name": "Bimetallism and fixed exchange",
   "cat": "money",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_coined_money"
   ],
@@ -943,12 +981,12 @@
    "master": 50
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -964,12 +1002,14 @@
      "order": 3
     }
    ]
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_marine_insurance",
   "name": "Marine insurance",
   "cat": "insurance",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_maritime_loan",
    "fin_argentarii",
@@ -987,12 +1027,12 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap": 4000,
-  "up": 200,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.25,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1012,6 +1052,7 @@
   "id": "fin_fire_insurance",
   "name": "Fire insurance",
   "cat": "insurance",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_marine_insurance"
   ],
@@ -1027,12 +1068,12 @@
   "mat": {
    "parchment_sheet": 150
   },
-  "cap": 3000,
-  "up": 150,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1042,6 +1083,7 @@
   "id": "fin_life_insurance",
   "name": "Life insurance",
   "cat": "insurance",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_marine_insurance",
    "fin_mortality_table"
@@ -1058,12 +1100,12 @@
   "mat": {
    "parchment_sheet": 150
   },
-  "cap": 5000,
-  "up": 250,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.2,
   "adopt_yrs": 3,
   "risk": 0.3,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1073,6 +1115,7 @@
   "id": "fin_mortality_table",
   "name": "Mortality table and actuarial mathematics",
   "cat": "mathematics",
+  "kind": "SCIENCE",
   "pre": [
    "statistics_basic",
    "md2_vital_registration"
@@ -1090,12 +1133,12 @@
   "mat": {
    "paper_kg": 300
   },
-  "cap": 2000,
-  "up": 0.0,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1105,6 +1148,7 @@
   "id": "fin_reinsurance",
   "name": "Reinsurance and risk pooling",
   "cat": "insurance",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_marine_insurance"
   ],
@@ -1120,12 +1164,12 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1135,6 +1179,7 @@
   "id": "fin_mortgage",
   "name": "Mortgage and real estate credit",
   "cat": "credit",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law"
   ],
@@ -1150,12 +1195,12 @@
   "mat": {
    "parchment_sheet": 80
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1165,6 +1210,7 @@
   "id": "fin_annuity",
   "name": "Annuity and fixed income stream",
   "cat": "investment",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_bond"
   ],
@@ -1180,12 +1226,12 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1195,6 +1241,7 @@
   "id": "fin_pension",
   "name": "Pension and retirement scheme",
   "cat": "insurance",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_annuity"
   ],
@@ -1210,12 +1257,12 @@
   "mat": {
    "parchment_sheet": 150
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 3,
   "risk": 0.25,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1225,6 +1272,7 @@
   "id": "fin_savings_bank",
   "name": "Savings bank for small deposits",
   "cat": "banking",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_deposit_bank"
   ],
@@ -1240,12 +1288,12 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1255,6 +1303,7 @@
   "id": "fin_pawnshop",
   "name": "Pawnshop and secured loan",
   "cat": "credit",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -1265,12 +1314,12 @@
    "merchant": 100
   },
   "mat": {},
-  "cap": 1000,
-  "up": 50,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "risk": 0.1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1280,6 +1329,7 @@
   "id": "fin_usury_law",
   "name": "Usury law and interest regulation",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law"
   ],
@@ -1292,12 +1342,12 @@
    "scribe": 150
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1307,6 +1357,7 @@
   "id": "fin_usury_evasion",
   "name": "Usury evasion through legal fiction",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_usury_law"
   ],
@@ -1320,12 +1371,12 @@
    "scribe": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1335,6 +1386,7 @@
   "id": "fin_bankruptcy",
   "name": "Bankruptcy law and insolvency",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law"
   ],
@@ -1347,12 +1399,12 @@
    "scribe": 200
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "C",
@@ -1362,6 +1414,7 @@
   "id": "fin_patent",
   "name": "Patent and exclusive right",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law",
    "fin_government"
@@ -1377,12 +1430,12 @@
    "scribe": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "C",
@@ -1392,6 +1445,7 @@
   "id": "fin_patent_office",
   "name": "Patent office and examination",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_patent"
   ],
@@ -1409,12 +1463,12 @@
   "mat": {
    "parchment_sheet": 500
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 1,
   "conf": "C",
@@ -1424,6 +1478,7 @@
   "id": "fin_copyright",
   "name": "Copyright and literary rights",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_patent",
    "printing_press"
@@ -1438,12 +1493,12 @@
    "scribe": 200
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "C",
@@ -1453,6 +1508,7 @@
   "id": "fin_trademark",
   "name": "Trademark and mark of quality",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law",
    "fin_government"
@@ -1466,12 +1522,12 @@
    "scribe": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1481,6 +1537,7 @@
   "id": "fin_brand",
   "name": "Brand and goodwill",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_trademark"
   ],
@@ -1493,12 +1550,12 @@
    "merchant": 150
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1508,6 +1565,7 @@
   "id": "fin_employment_contract",
   "name": "Contract of employment",
   "cat": "labour",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law"
   ],
@@ -1522,12 +1580,12 @@
   "mat": {
    "parchment_sheet": 10
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1537,6 +1595,7 @@
   "id": "fin_wage",
   "name": "Wage and labour payment",
   "cat": "labour",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -1545,12 +1604,12 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1560,6 +1619,7 @@
   "id": "fin_company_town",
   "name": "Company town and tied housing",
   "cat": "labour",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_employment_contract"
   ],
@@ -1577,12 +1637,12 @@
    "timber_m3": 500,
    "brick_1000": 50
   },
-  "cap": 10000,
-  "up": 500,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 10080.939587064662,
   "build_yrs": 4,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1604,6 +1664,7 @@
   "id": "fin_trade_union",
   "name": "Trade union and workers collegium",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_collegium",
    "fin_government"
@@ -1619,12 +1680,12 @@
    "master": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.3,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "C",
@@ -1634,6 +1695,7 @@
   "id": "fin_cartel",
   "name": "Cartel and market sharing agreement",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law",
    "fin_market"
@@ -1648,12 +1710,12 @@
    "merchant": 200
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "risk": 0.2,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1663,6 +1725,7 @@
   "id": "fin_monopoly",
   "name": "Monopoly and exclusive grant",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law"
   ],
@@ -1677,12 +1740,12 @@
    "scribe": 50
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1692,6 +1755,7 @@
   "id": "fin_tariff",
   "name": "Tariff and import duty",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_tax_farming"
   ],
@@ -1705,12 +1769,12 @@
    "scribe": 50
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -1720,6 +1784,7 @@
   "id": "fin_customs_house",
   "name": "Customs house and tariff collection",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_tariff"
   ],
@@ -1736,12 +1801,12 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1751,6 +1816,7 @@
   "id": "fin_standard_weights",
   "name": "Standard weights and measures",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "cap_measure_mass_mg",
    "cap_measure_len"
@@ -1768,12 +1834,12 @@
   "mat": {
    "mat_bronze": 100
   },
-  "cap": 1000,
-  "up": 50,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev": 50,
+  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1783,6 +1849,7 @@
   "id": "fin_assay_office",
   "name": "Assay office and hallmarking",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_standard_weights"
   ],
@@ -1800,12 +1867,12 @@
   "mat": {
    "ceramic_kg": 50
   },
-  "cap": 3000,
-  "up": 150,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1825,6 +1892,7 @@
   "id": "fin_futures",
   "name": "Futures contract and forward dealing",
   "cat": "investment",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_bill_exchange"
   ],
@@ -1840,12 +1908,12 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap": 3000,
-  "up": 100,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.25,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1855,6 +1923,7 @@
   "id": "fin_commodity_exchange",
   "name": "Commodity exchange and standardised contracts",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_futures"
   ],
@@ -1871,12 +1940,12 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap": 4000,
-  "up": 200,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1886,6 +1955,7 @@
   "id": "fin_arbitrage",
   "name": "Arbitrage and price equalisation",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_market"
   ],
@@ -1898,12 +1968,12 @@
    "merchant": 150
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1913,6 +1983,7 @@
   "id": "fin_newspaper_business",
   "name": "Newspaper as business and subscription",
   "cat": "media",
+  "kind": "INSTITUTION",
   "pre": [
    "printing_press"
   ],
@@ -1931,23 +2002,25 @@
    "paper_kg": 2000,
    "mat_ink": 200
   },
-  "cap": 5000,
-  "up": 500,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 10080.939587064662,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "B",
   "note": "Regular publication reporting news, sold by subscription or single copy. Profitable from subscriptions and later advertising. Attracts literacy and creates information market.",
   "gov": -1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_advertising",
   "name": "Advertising as industry",
   "cat": "media",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_newspaper_business"
   ],
@@ -1964,23 +2037,25 @@
   "mat": {
    "paper_kg": 500
   },
-  "cap": 2000,
-  "up": 200,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 4032.375834825865,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Merchants pay to announce their goods in newspapers and on placards. Becomes major revenue source for publishers. Creates a market for attention.",
   "gov": -1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_classified_ad",
   "name": "Classified advertisement",
   "cat": "media",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_advertising"
   ],
@@ -1996,23 +2071,25 @@
   "mat": {
    "paper_kg": 100
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Small notice for sale or hire of specific items. Much cheaper than display advertising and highly profitable because readers actively search for them.",
   "gov": -1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_almanac",
   "name": "Almanac and reference publication",
   "cat": "media",
+  "kind": "INSTITUTION",
   "pre": [
    "printing_press"
   ],
@@ -2029,23 +2106,25 @@
   "mat": {
    "paper_kg": 500
   },
-  "cap": 1000,
-  "up": 50,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Annual publication of tables, calendars, and reference data. Farmers, sailors, and merchants each buy the relevant sections. Popular and profitable.",
   "gov": -1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_directory",
   "name": "Directory and business listing",
   "cat": "media",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_newspaper_business"
   ],
@@ -2062,23 +2141,25 @@
   "mat": {
    "paper_kg": 800
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Alphabetical listing of merchants, trades, and professions in a city with addresses. Reduces search costs for consumers. Sellers pay to list themselves.",
   "gov": -1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_postal_service",
   "name": "Postal service as paid business",
   "cat": "infrastructure",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "fin_contract_law",
    "fin_inn",
@@ -2097,12 +2178,12 @@
   "mat": {
    "timber_m3": 100
   },
-  "cap": 5000,
-  "up": 300,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2112,6 +2193,7 @@
   "id": "fin_post_office",
   "name": "Post office and mail handling",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_postal_service"
   ],
@@ -2128,12 +2210,12 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2143,6 +2225,7 @@
   "id": "fin_stamp",
   "name": "Postage stamp and paid marking",
   "cat": "media",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_post_office"
   ],
@@ -2159,23 +2242,25 @@
   "mat": {
    "paper_kg": 200
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Adhesive mark proving postage paid. Replaced trust in the post office with prepaid proof. Enables sender to pay instead of recipient.",
   "gov": -1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_telegraph_business",
   "name": "Telegraph as commercial service",
   "cat": "media",
+  "kind": "INSTITUTION",
   "pre": [
    "telegraph_electric"
   ],
@@ -2194,23 +2279,25 @@
    "copper_kg": 200,
    "mat_wood": 500
   },
-  "cap": 5000,
-  "up": 300,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Companies operate telegraph networks and sell message transmission by the word. Enables rapid long-distance communication of prices and news.",
   "gov": -1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_news_agency",
   "name": "News agency and wire service",
   "cat": "media",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_telegraph_business"
   ],
@@ -2227,23 +2314,25 @@
   "mat": {
    "paper_kg": 300
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Service collecting news from correspondents and selling it to newspapers via telegraph. Reduces cost of news gathering and allows small papers to compete.",
   "gov": -1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_lending_library",
   "name": "Lending library and subscription library",
   "cat": "media",
+  "kind": "INSTITUTION",
   "pre": [
    "printing_press"
   ],
@@ -2261,23 +2350,25 @@
    "parchment_sheet": 300,
    "timber_m3": 200
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Members pay subscription fee to borrow books. Economical because each book is read by many people. Profitable even if each book costs more than any individual would pay.",
   "gov": -1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_coffeehouse",
   "name": "Coffee house as information market",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [
    "fud_coffee_trade_import"
   ],
@@ -2294,12 +2385,12 @@
    "timber_m3": 50,
    "brick_1000": 1.0
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2309,6 +2400,7 @@
   "id": "fin_theatre_business",
   "name": "Theatre as business",
   "cat": "spectacle",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law",
    "prn_theatre_pantomime"
@@ -2327,12 +2419,12 @@
    "timber_m3": 300,
    "brick_1000": 2.0
   },
-  "cap": 8000,
-  "up": 400,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 8064.75166965173,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "risk": 0.2,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2359,12 +2451,12 @@
    "paper_kg": 200,
    "mat_ink": 50
   },
-  "cap": 1000,
-  "up": 50,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2374,6 +2466,7 @@
   "id": "fin_gambling_house",
   "name": "Gambling house and gaming establishment",
   "cat": "luxury",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce",
@@ -2388,12 +2481,12 @@
    "timber_m3": 30,
    "brick_1000": 0.5
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "risk": 0.25,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2403,6 +2496,7 @@
   "id": "fin_lottery",
   "name": "Public revenue lottery",
   "cat": "law",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_government"
   ],
@@ -2418,12 +2512,12 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -2433,6 +2527,7 @@
   "id": "fin_racecourse",
   "name": "Racecourse and pari-mutuel betting",
   "cat": "spectacle",
+  "kind": "INSTITUTION",
   "pre": [
    "civ_circus_racecourse",
    "fin_argentarii"
@@ -2451,12 +2546,12 @@
    "timber_m3": 100,
    "brick_1000": 1.0
   },
-  "cap": 5000,
-  "up": 300,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.18,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2466,6 +2561,7 @@
   "id": "fin_totalisator",
   "name": "Totalisator machine and automated payout",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_racecourse"
   ],
@@ -2483,12 +2579,12 @@
    "steel_plate_kg": 500,
    "copper_kg": 200
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.2,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2498,6 +2594,7 @@
   "id": "fin_professional_sport",
   "name": "Professional sport as business",
   "cat": "spectacle",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_theatre_business"
   ],
@@ -2511,12 +2608,12 @@
    "merchant": 250
   },
   "mat": {},
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2526,6 +2623,7 @@
   "id": "fin_ferry",
   "name": "Ferry and toll crossing",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "commerce",
@@ -2541,12 +2639,12 @@
    "timber_m3": 80,
    "cordage_kg": 100
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2556,6 +2654,7 @@
   "id": "fin_toll_bridge",
   "name": "Toll bridge and road toll",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "fin_ferry"
   ],
@@ -2573,23 +2672,25 @@
    "timber_m3": 200,
    "stone_blocks": 5000
   },
-  "cap": 5000,
-  "up": 300,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 6048.563752238797,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Operator builds or repairs a bridge and collects tolls from every user. High initial cost but profitable over decades. Reduces journey time compared to fording.",
   "gov": 2,
-  "sus": 1
+  "sus": 1,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_turnpike_trust",
   "name": "Turnpike trust and road company",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "fin_joint_stock"
   ],
@@ -2607,23 +2708,25 @@
    "stone_blocks": 10000,
    "timber_m3": 500
   },
-  "cap": 15000,
-  "up": 1000,
+  "cap_hours": 302428.18761193985,
+  "up_hours": 20161.879174129324,
   "build_yrs": 4,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "B",
   "note": "Company builds high-quality toll road, collecting tolls to repay investment and fund maintenance. Significantly faster travel time attracts commercial traffic.",
   "gov": 2,
-  "sus": 1
+  "sus": 1,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_canal_company",
   "name": "Canal company and inland waterway",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "fin_joint_stock"
   ],
@@ -2641,23 +2744,25 @@
    "stone_blocks": 20000,
    "timber_m3": 800
   },
-  "cap": 25000,
-  "up": 2000,
+  "cap_hours": 504046.9793532331,
+  "up_hours": 40323.75834825865,
   "build_yrs": 5,
   "adopt_yrs": 3,
   "risk": 0.2,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
   "note": "Company digs canal and charges tolls for passage. Massive investment but water transport is cheaper than land transport for bulk goods. Attracts industries that use water.",
   "gov": 2,
-  "sus": 1
+  "sus": 1,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_railway_company",
   "name": "Railway company and rail service",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "fin_canal_company",
    "railway"
@@ -2676,23 +2781,25 @@
    "steel_plate_kg": 5000,
    "timber_m3": 2000
   },
-  "cap": 50000,
-  "up": 3000,
+  "cap_hours": 1008093.9587064662,
+  "up_hours": 60485.63752238797,
   "build_yrs": 6,
   "adopt_yrs": 5,
   "risk": 0.25,
-  "rev": 2000,
+  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
   "note": "Company operates railroad and charges passengers and freight shippers. Transforms inland transportation but requires massive capital investment and creates monopoly power.",
   "gov": 2,
-  "sus": 1
+  "sus": 1,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_tramway",
   "name": "Tramway and urban rail",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "fin_railway_company"
   ],
@@ -2710,18 +2817,19 @@
    "steel_plate_kg": 2000,
    "timber_m3": 500
   },
-  "cap": 10000,
-  "up": 600,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 12097.127504477594,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Streetcar line within a city, powered by horse or later electricity. Charges passengers and concentrates development along the line.",
   "gov": 2,
-  "sus": 1
+  "sus": 1,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fin_omnibus",
@@ -2744,12 +2852,12 @@
    "timber_m3": 100,
    "mat_leather": 50
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2759,6 +2867,7 @@
   "id": "fin_hotel",
   "name": "Hotel and commercial lodging",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce",
@@ -2774,12 +2883,12 @@
    "timber_m3": 300,
    "brick_1000": 3.0
   },
-  "cap": 5000,
-  "up": 300,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2789,6 +2898,7 @@
   "id": "fin_inn",
   "name": "Inn and coaching house",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce",
@@ -2803,12 +2913,12 @@
    "timber_m3": 200,
    "brick_1000": 2.0
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2818,6 +2928,7 @@
   "id": "fin_restaurant",
   "name": "Restaurant and commercial kitchen",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_hotel"
   ],
@@ -2833,12 +2944,12 @@
    "timber_m3": 50,
    "brick_1000": 1.0
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2848,6 +2959,7 @@
   "id": "fin_department_store",
   "name": "Department store and general merchandise",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_market"
   ],
@@ -2864,12 +2976,12 @@
    "timber_m3": 400,
    "brick_1000": 5.0
   },
-  "cap": 15000,
-  "up": 1000,
+  "cap_hours": 302428.18761193985,
+  "up_hours": 20161.879174129324,
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.2,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -2879,6 +2991,7 @@
   "id": "fin_mail_order",
   "name": "Mail order catalogue and distance selling",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_newspaper_business",
    "fin_postal_service"
@@ -2897,12 +3010,12 @@
    "paper_kg": 1000,
    "mat_ink": 100
   },
-  "cap": 5000,
-  "up": 300,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 6048.563752238797,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.18,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -2912,6 +3025,7 @@
   "id": "fin_chain_store",
   "name": "Chain store and multiple locations",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_department_store"
   ],
@@ -2928,12 +3042,12 @@
    "timber_m3": 2000,
    "brick_1000": 20.0
   },
-  "cap": 30000,
-  "up": 2000,
+  "cap_hours": 604856.3752238797,
+  "up_hours": 40323.75834825865,
   "build_yrs": 4,
   "adopt_yrs": 3,
   "risk": 0.2,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2963,6 +3077,7 @@
   "id": "fin_trading_post",
   "name": "Trading post and remote store",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -2976,12 +3091,12 @@
    "timber_m3": 50,
    "brick_1000": 0.5
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2991,6 +3106,7 @@
   "id": "fin_factory",
   "name": "Factory and integrated production",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_trading_post"
   ],
@@ -3008,12 +3124,12 @@
    "timber_m3": 300,
    "brick_1000": 3.0
   },
-  "cap": 8000,
-  "up": 500,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 10080.939587064662,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3023,6 +3139,7 @@
   "id": "fin_plantation",
   "name": "Plantation and large estate agriculture",
   "cat": "commerce",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce",
@@ -3034,12 +3151,12 @@
    "merchant": 300
   },
   "mat": {},
-  "cap": 10000,
-  "up": 1000,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 20161.879174129324,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "risk": 0.2,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3049,6 +3166,7 @@
   "id": "fin_guild",
   "name": "Guild and monopoly craft",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_collegium",
    "fin_government"
@@ -3063,12 +3181,12 @@
    "master": 200
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0.0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -3078,6 +3196,7 @@
   "id": "fin_apprenticeship",
   "name": "Apprenticeship indenture and training contract",
   "cat": "labour",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law"
   ],
@@ -3092,12 +3211,12 @@
   "mat": {
    "parchment_sheet": 30
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -3107,6 +3226,7 @@
   "id": "fin_professional_exam",
   "name": "Professional examination and licence",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_guild"
   ],
@@ -3123,12 +3243,12 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap": 1000,
-  "up": 50,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -3138,6 +3258,7 @@
   "id": "fin_university",
   "name": "University and degree-granting institution",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "collegium_licensed"
   ],
@@ -3155,12 +3276,12 @@
    "parchment_sheet": 500,
    "timber_m3": 200
   },
-  "cap": 5000,
-  "up": 300,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3183,6 +3304,7 @@
   "id": "fin_endowed_chair",
   "name": "Endowed chair and endowment",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_university"
   ],
@@ -3197,12 +3319,12 @@
    "scribe": 100
   },
   "mat": {},
-  "cap": 10000,
-  "up": 500,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 10080.939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3212,6 +3334,7 @@
   "id": "fin_research_institute",
   "name": "Research institute and endowed laboratory",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_endowed_chair"
   ],
@@ -3229,12 +3352,12 @@
    "timber_m3": 300,
    "lead_kg": 100
   },
-  "cap": 8000,
-  "up": 600,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 12097.127504477594,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -3244,6 +3367,7 @@
   "id": "fin_learned_society",
   "name": "Learned society and academic journal",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_research_institute",
    "printing_press"
@@ -3262,12 +3386,12 @@
    "paper_kg": 800,
    "mat_ink": 100
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3277,6 +3401,7 @@
   "id": "fin_museum",
   "name": "Museum and public collection",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_university"
   ],
@@ -3294,12 +3419,12 @@
    "timber_m3": 400,
    "brick_1000": 4.0
   },
-  "cap": 10000,
-  "up": 500,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 10080.939587064662,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -3309,6 +3434,7 @@
   "id": "fin_census",
   "name": "Census and population enumeration",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_government"
   ],
@@ -3325,12 +3451,12 @@
   "mat": {
    "parchment_sheet": 1000
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -3340,6 +3466,7 @@
   "id": "fin_survey_map",
   "name": "Survey and map as state instrument",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "world_map"
   ],
@@ -3357,12 +3484,12 @@
   "mat": {
    "paper_kg": 500
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -3372,6 +3499,7 @@
   "id": "fin_government",
   "name": "Standing bureaucracy",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [],
   "traits": [
    "commerce"
@@ -3380,12 +3508,12 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0,
   "adopt_yrs": 0,
   "risk": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -3395,6 +3523,7 @@
   "id": "fin_civil_service_exam",
   "name": "Civil service examination",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_university"
   ],
@@ -3411,12 +3540,12 @@
   "mat": {
    "parchment_sheet": 500
   },
-  "cap": 2000,
-  "up": 100,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -3426,6 +3555,7 @@
   "id": "fin_statistical_office",
   "name": "Statistical office and data collection",
   "cat": "institution",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_census"
   ],
@@ -3442,12 +3572,12 @@
   "mat": {
    "paper_kg": 800
   },
-  "cap": 5000,
-  "up": 300,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",

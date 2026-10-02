@@ -3,6 +3,7 @@
   "id": "fud_three_field_rotation",
   "name": "Three-field crop rotation with fallowing",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -12,13 +13,13 @@
    "scribe": 80
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.05,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -38,6 +39,7 @@
   "id": "fud_selective_breeding_pedigree",
   "name": "Selective breeding with written pedigrees",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -50,13 +52,13 @@
   "mat": {
    "parchment_sheet": 50
   },
-  "cap": 100,
-  "up": 0.0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 5.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -79,13 +81,13 @@
    "artisan": 200
   },
   "mat": {},
-  "cap": 50,
-  "up": 10,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 201.61879174129325,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -95,6 +97,7 @@
   "id": "fud_nitrogen_fixing_understanding",
   "name": "Recognition of nitrogen-fixing legume crops",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -104,13 +107,13 @@
    "scholar": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -123,6 +126,7 @@
   "id": "fud_liming_acid_soils",
   "name": "Liming of acidic soils",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -135,13 +139,13 @@
   "mat": {
    "lime_kg": 2000
   },
-  "cap": 50,
-  "up": 0.0,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -155,6 +159,7 @@
   "id": "fud_bone_meal_fertilizer",
   "name": "Bone meal as phosphate fertilizer",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -167,13 +172,13 @@
   "mat": {
    "manure_kg": 5000
   },
-  "cap": 80,
-  "up": 0.0,
+  "cap_hours": 1612.950333930346,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -186,6 +191,7 @@
   "id": "fud_alfalfa",
   "name": "Alfalfa (lucerne) cultivation",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_nitrogen_fixing_understanding"
   ],
@@ -195,13 +201,13 @@
    "labourer": 150
   },
   "mat": {},
-  "cap": 100,
-  "up": 0.0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -214,6 +220,7 @@
   "id": "fud_turnips_winter_fodder",
   "name": "Turnips as storable winter animal feed",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -223,13 +230,13 @@
    "labourer": 200
   },
   "mat": {},
-  "cap": 50,
-  "up": 0.0,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -243,6 +250,7 @@
   "id": "fud_clover_winter_fodder",
   "name": "Clover as winter grazing and fodder",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_nitrogen_fixing_understanding"
   ],
@@ -252,13 +260,13 @@
    "labourer": 100
   },
   "mat": {},
-  "cap": 50,
-  "up": 0.0,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -272,6 +280,7 @@
   "id": "fud_hay_making_storage",
   "name": "Hay making and dry storage",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "75_agriculture_food.md",
   "ph": 100,
@@ -281,25 +290,27 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
   "note": "Cut grass at peak nutrition, dry thoroughly in sun and wind, store in dry barn or haybarn. Timing and weather are critical - rain-soaked hay rots or molts. Enables winter feeding of draft animals when pasture is gone.",
   "traits": [
    "food"
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: hay needs a scythe and a dry barn, both of which any settled agricultural society already has. Crop rotation is unrelated.]"
  },
  {
   "id": "fud_silage_fermentation",
   "name": "Silage production and fermented fodder storage",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_hay_making_storage"
   ],
@@ -313,25 +324,27 @@
    "timber_m3": 8,
    "salt_kg": 50
   },
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.25,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
   "note": "Pack fresh grass tightly in pits or wooden silos with salt, exclude air, and let anaerobic bacteria ferment it. Preserves nutrition without sun-drying and works in wet climates. Requires understanding of fermentation and airtight storage design.",
   "traits": [
    "food"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_root_cellar_storage",
   "name": "Root cellar and cool storage construction",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -345,13 +358,13 @@
    "timber_m3": 15,
    "brick_1000": 2
   },
-  "cap": 400,
-  "up": 0.0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -364,6 +377,7 @@
   "id": "fud_heavy_mouldboard_plough_coulter",
   "name": "Heavy mouldboard plough with coulter (regional)",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "cap_tol_1mm"
@@ -378,13 +392,13 @@
    "timber_m3": 3,
    "iron_bar_kg": 30
   },
-  "cap": 400,
-  "up": 0.0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -398,12 +412,14 @@
     "axis": "toolkit",
     "entry": "HORSE_COLLAR_AND_MOULDBOARD"
    }
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "fud_seed_drill",
   "name": "Mechanical seed drill",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "horse_collar",
@@ -421,13 +437,13 @@
    "iron_bar_kg": 60.0,
    "timber_m3": 2.0
   },
-  "cap": 450.0,
-  "up": 0.0,
+  "cap_hours": 9072.845628358196,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -456,13 +472,13 @@
    "timber_m3": 1,
    "iron_bar_kg": 8
   },
-  "cap": 150,
-  "up": 30,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 604.8563752238797,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -486,13 +502,13 @@
    "timber_m3": 10,
    "iron_bar_kg": 50
   },
-  "cap": 600,
-  "up": 150,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 3024.2818761193985,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -502,6 +518,7 @@
   "id": "fud_winnowing_machine",
   "name": "Mechanical winnowing fan",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_threshing_machine",
    "cap_power_human"
@@ -516,13 +533,13 @@
    "timber_m3": 5,
    "iron_bar_kg": 25
   },
-  "cap": 350,
-  "up": 80,
+  "cap_hours": 7056.657710945264,
+  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -536,6 +553,7 @@
   "id": "fud_mechanical_reaper",
   "name": "Mechanical grain reaper",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "cap_tol_1mm"
@@ -550,13 +568,13 @@
    "timber_m3": 8,
    "iron_bar_kg": 60
   },
-  "cap": 800,
-  "up": 0.0,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -594,13 +612,13 @@
    "steel_noric_kg": 100,
    "iron_bar_kg": 150
   },
-  "cap": 2000,
-  "up": 400,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 8064.75166965173,
   "yrs": 1.0,
   "risk": 0.3,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -610,6 +628,7 @@
   "id": "fud_guano_import_trade",
   "name": "Guano import and application as fertilizer",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -619,13 +638,13 @@
    "labourer": 200
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -638,6 +657,7 @@
   "id": "fud_superphosphate_fertilizer",
   "name": "Superphosphate from bones and sulfuric acid",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_bone_meal_fertilizer",
    "sulfuric_retort",
@@ -654,13 +674,13 @@
    "sulfuric_acid_kg": 500,
    "lead_kg": 50
   },
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -682,6 +702,7 @@
   "id": "fud_haber_process_synthetic_nitrogen",
   "name": "Haber process for synthetic ammonia and nitrate",
   "cat": "agriculture",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_power_electric",
@@ -698,13 +719,13 @@
    "hydrogen_m3": 5000,
    "iron_ore_kg": 500
   },
-  "cap": 10000,
-  "up": 0.0,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.3,
   "sus": 0,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -718,6 +739,7 @@
   "id": "fud_roller_mill",
   "name": "Roller mill for grain (replacing millstone)",
   "cat": "milling",
+  "kind": "ENGINEERING",
   "pre": [
    "water_power_scale",
    "cap_tol_100um",
@@ -738,13 +760,13 @@
    "steel_noric_kg": 50.0,
    "timber_m3": 15.0
   },
-  "cap": 1000,
-  "up": 200,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -766,6 +788,7 @@
   "id": "fud_roller_milled_white_flour",
   "name": "White flour from roller milling and bran separation",
   "cat": "milling",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_roller_mill"
   ],
@@ -775,13 +798,13 @@
    "artisan": 100
   },
   "mat": {},
-  "cap": 200,
-  "up": 50,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -794,6 +817,7 @@
   "id": "fud_yeast_pure_culture",
   "name": "Pure yeast culture isolation and maintenance",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol",
    "cap_measure_temp"
@@ -807,22 +831,24 @@
   "mat": {
    "glass_raw_kg": 50
   },
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 1,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Isolate yeast strain from wild fermentation by serial dilution and propagation in sterile medium. Maintain culture in sealed glass vials. Enables reproducible beer and bread fermentation without wild cultures. Looks like alchemy; requires careful technique and documentation. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sterile culture isolation and maintenance requires temperature control of growth medium]"
+  "note": "Isolate yeast strain from wild fermentation by serial dilution and propagation in sterile medium. Maintain culture in sealed glass vials. Enables reproducible beer and bread fermentation without wild cultures. Looks like alchemy; requires careful technique and documentation.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sterile culture isolation and maintenance requires temperature control of growth medium] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sterile culture isolation and maintenance requires temperature control of growth medium]"
  },
  {
   "id": "fud_brewing_with_hops",
   "name": "Brewing with hops for flavor and preservation",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -832,13 +858,13 @@
    "artisan": 200
   },
   "mat": {},
-  "cap": 100,
-  "up": 50,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 86.7,
+  "rev_hours": 1748.0349243970124,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -848,6 +874,7 @@
   "id": "fud_distillation_spirits",
   "name": "Distillation of spirits and liqueurs",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol"
   ],
@@ -860,13 +887,13 @@
   "mat": {
    "copper_kg": 30
   },
-  "cap": 250,
-  "up": 80,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 1,
   "gov": 1,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -876,6 +903,7 @@
   "id": "fud_vinegar_production",
   "name": "Vinegar production via acetification",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol"
   ],
@@ -887,13 +915,13 @@
   "mat": {
    "wood_ash_kg": 50
   },
-  "cap": 100,
-  "up": 30,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 604.8563752238797,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -903,6 +931,7 @@
   "id": "fud_rice_cultivation",
   "name": "Rice cultivation in paddies",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "crop_rotation"
   ],
@@ -912,13 +941,13 @@
    "labourer": 300
   },
   "mat": {},
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -931,6 +960,7 @@
   "id": "fud_sugar_cane_cultivation",
   "name": "Sugar cane cultivation and juice extraction",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "crop_rotation"
   ],
@@ -940,13 +970,13 @@
    "labourer": 200
   },
   "mat": {},
-  "cap": 100,
-  "up": 80,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -959,6 +989,7 @@
   "id": "fud_beet_sugar_processing",
   "name": "Sugar beet cultivation and crystallization",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "fud_sugar_cane_cultivation",
    "cap_vac_1torr"
@@ -973,17 +1004,17 @@
    "sulfuric_acid_kg": 200,
    "lime_kg": 100
   },
-  "cap": 500,
-  "up": 200,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 4032.375834825865,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Grow sugar beets in cool northern climates where cane fails. Extract juice, treat with lime and acid to remove impurities (sulfur dioxide helps), evaporate under vacuum, and crystallize. Refinery is capital-intensive. Enables sugar production independent of tropical trade. [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum pan evaporation essential for consistent sugar crystallization]",
+  "note": "Grow sugar beets in cool northern climates where cane fails. Extract juice, treat with lime and acid to remove impurities (sulfur dioxide helps), evaporate under vacuum, and crystallize. Refinery is capital-intensive. Enables sugar production independent of tropical trade.",
   "traits": [
    "food"
   ],
@@ -995,12 +1026,14 @@
      "lead_chamber": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum pan evaporation essential for consistent sugar crystallization] [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum pan evaporation essential for consistent sugar crystallization]"
  },
  {
   "id": "fud_tea_trade_import",
   "name": "Tea import and trade channels",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "crop_rotation"
   ],
@@ -1010,13 +1043,13 @@
    "merchant": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1029,6 +1062,7 @@
   "id": "fud_coffee_trade_import",
   "name": "Coffee import from Near East and Ethiopia",
   "cat": "crops",
+  "kind": "RESOURCE",
   "pre": [
    "crop_rotation"
   ],
@@ -1038,20 +1072,21 @@
    "merchant": 100
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "Import coffee beans from Arabian and Ethiopian merchants. Roast, grind, and brew with hot water. Later becomes urban necessity in coffeehouses. Currently rare and expensive in the Mediterranean.",
   "traits": [
    "food"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_potato_tier9",
@@ -1062,13 +1097,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 1.0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1083,13 +1118,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 1.0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1104,13 +1139,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 1.0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1120,6 +1155,7 @@
   "id": "fud_canning_appert_method",
   "name": "Canning by Appert's method (heating in sealed glass)",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_bottling_sealed_cork",
    "cap_heat_1100"
@@ -1133,13 +1169,13 @@
   "mat": {
    "glass_raw_kg": 500
   },
-  "cap": 400,
-  "up": 100,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1163,6 +1199,7 @@
   "id": "fud_tin_plate_cans",
   "name": "Tin plate cans for food preservation",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_canning_appert_method",
    "fud_roller_mill"
@@ -1177,13 +1214,13 @@
    "iron_sheet_kg": 200,
    "tin_kg": 50
   },
-  "cap": 600,
-  "up": 150,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 3024.2818761193985,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1197,6 +1234,7 @@
   "id": "fud_can_opener",
   "name": "Can opener device for tin cans",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_tin_plate_cans"
   ],
@@ -1209,13 +1247,13 @@
   "mat": {
    "steel_noric_kg": 5
   },
-  "cap": 50,
-  "up": 10,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 201.61879174129325,
   "yrs": 1.0,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 50,
+  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1241,13 +1279,13 @@
   "mat": {
    "copper_kg": 30
   },
-  "cap": 300,
-  "up": 80,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1257,6 +1295,7 @@
   "id": "fud_bottling_sealed_cork",
   "name": "Bottling with cork closure and sealed glass",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -1266,13 +1305,13 @@
    "artisan": 100
   },
   "mat": {},
-  "cap": 100,
-  "up": 30,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 604.8563752238797,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1285,6 +1324,7 @@
   "id": "fud_ice_house_construction",
   "name": "Ice house construction and storage",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_root_cellar_storage"
   ],
@@ -1298,13 +1338,13 @@
    "timber_m3": 20,
    "brick_1000": 3
   },
-  "cap": 600,
-  "up": 50,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1317,6 +1357,7 @@
   "id": "fud_ice_harvesting_and_cutting",
   "name": "Ice harvesting from frozen lakes and rivers",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_ice_house_construction"
   ],
@@ -1328,13 +1369,13 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1344,6 +1385,7 @@
   "id": "fud_ice_trade_logistics",
   "name": "Trade and logistics of ice transport",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_ice_harvesting_and_cutting"
   ],
@@ -1354,13 +1396,13 @@
    "labourer": 200
   },
   "mat": {},
-  "cap": 300,
-  "up": 100,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.25,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1368,12 +1410,14 @@
   "traits": [
    "commerce",
    "food"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_mechanical_refrigeration",
   "name": "Mechanical refrigeration using compression and evaporation",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_ice_trade_logistics",
    "cap_power_steam",
@@ -1391,13 +1435,13 @@
    "mercury_kg": 30,
    "iron_bar_kg": 100
   },
-  "cap": 1500,
-  "up": 300,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 6048.563752238797,
   "yrs": 1.0,
   "risk": 0.3,
   "sus": 0,
   "gov": 1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1407,6 +1451,7 @@
   "id": "fud_cold_chain_refrigerated_shipping",
   "name": "Cold chain and refrigerated railway shipping",
   "cat": "refrigeration",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_mechanical_refrigeration",
    "railway"
@@ -1421,13 +1466,13 @@
    "steel_plate_kg": 500,
    "copper_kg": 100
   },
-  "cap": 3000,
-  "up": 500,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 10080.939587064662,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1441,6 +1486,7 @@
   "id": "fud_freezing_with_mechanical_cold",
   "name": "Freezing food with mechanical refrigeration",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_mechanical_refrigeration",
    "fud_ice_house_construction"
@@ -1451,13 +1497,13 @@
    "artisan": 100
   },
   "mat": {},
-  "cap": 200,
-  "up": 100,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1470,6 +1516,7 @@
   "id": "fud_drying_evaporated_milk",
   "name": "Drying and concentration of evaporated milk",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [
    "ag2_pasteurisation",
    "cap_heat_1100"
@@ -1483,25 +1530,27 @@
   "mat": {
    "copper_kg": 20
   },
-  "cap": 300,
-  "up": 100,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 1,
   "art": 0,
   "conf": "B",
   "note": "Heat milk gently in copper pan under partial vacuum (reduces boiling point) or in open pan to evaporate water until thick. Can milk solids are concentrated 2-3 fold. Stores several months in sealed tin. Reconstitutes with water or used directly in cooking.",
   "traits": [
    "food"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_fish_curing_and_smoking",
   "name": "Large-scale fish curing and smoking",
   "cat": "preservation",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "75_agriculture_food.md",
   "ph": 120,
@@ -1512,13 +1561,13 @@
    "salt_kg": 500,
    "firewood_kg": 1000
   },
-  "cap": 300,
-  "up": 100,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1531,6 +1580,7 @@
   "id": "fud_whaling_industry",
   "name": "Organized whaling industry for oil and meat",
   "cat": "fishing",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_whaling_gear",
    "sea_coastal_pilotage",
@@ -1543,22 +1593,24 @@
    "artisan": 200
   },
   "mat": {},
-  "cap": 2000,
-  "up": 500,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 10080.939587064662,
   "yrs": 1.0,
   "risk": 0.3,
   "sus": 0,
   "gov": 1,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 0,
   "conf": "C",
-  "note": "Organize fleets of whaleboats and processing ships to hunt large whales. Render whale blubber into oil for lamps (the best non-animal oil light). Whale meat is tough but provides protein. Dangerous work; whales fight back. Requires capital and international coordination."
+  "note": "Organize fleets of whaleboats and processing ships to hunt large whales. Render whale blubber into oil for lamps (the best non-animal oil light). Whale meat is tough but provides protein. Dangerous work; whales fight back. Requires capital and international coordination.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_vegetable_oil_extraction",
   "name": "Oil extraction from seeds and olives",
   "cat": "oils",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -1570,13 +1622,13 @@
   "mat": {
    "timber_m3": 3
   },
-  "cap": 200,
-  "up": 50,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 1008.0939587064662,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -1586,6 +1638,7 @@
   "id": "fud_margarine_synthesis",
   "name": "Margarine from refined and hardened vegetable oils",
   "cat": "oils",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_vegetable_oil_extraction",
    "cap_gas_o2h2"
@@ -1598,13 +1651,13 @@
   "mat": {
    "hydrogen_m3": 100
   },
-  "cap": 400,
-  "up": 150,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 3024.2818761193985,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 0,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1617,6 +1670,7 @@
   "id": "fud_enclosure_of_common_land",
   "name": "Enclosure of common land and private farming",
   "cat": "economic",
+  "kind": "INSTITUTION",
   "pre": [
    "crop_rotation"
   ],
@@ -1626,13 +1680,13 @@
    "scribe": 100
   },
   "mat": {},
-  "cap": 500,
-  "up": 0,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.3,
   "sus": -1,
   "gov": -1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1646,6 +1700,7 @@
   "id": "fud_farm_as_capital_enterprise",
   "name": "Farm as capital enterprise with investment and profit",
   "cat": "economic",
+  "kind": "INSTITUTION",
   "pre": [
    "fud_enclosure_of_common_land"
   ],
@@ -1655,13 +1710,13 @@
    "scribe": 200
   },
   "mat": {},
-  "cap": 1000,
-  "up": 0,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.2,
   "sus": -1,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1671,6 +1726,7 @@
   "id": "fud_agricultural_treatises",
   "name": "Written agricultural treatises and knowledge codification",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "crop_rotation"
   ],
@@ -1683,13 +1739,13 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 2,
   "art": 0,
   "conf": "B",
@@ -1702,6 +1758,7 @@
   "id": "fud_soil_composition_analysis",
   "name": "Understanding and testing soil composition",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "fud_agricultural_treatises",
    "analytical_chemistry"
@@ -1713,13 +1770,13 @@
    "chemist": 150
   },
   "mat": {},
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 2,
   "art": 0,
   "conf": "C",
@@ -1729,6 +1786,7 @@
   "id": "fud_malt_production",
   "name": "Malt production from barley and other grains",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "crop_rotation"
   ],
@@ -1738,22 +1796,24 @@
    "artisan": 150
   },
   "mat": {},
-  "cap": 200,
-  "up": 80,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "Soak barley, allow it to germinate, then dry in kiln to stop germination. Malting converts starches to fermentable sugars. Malt stores for months and is essential for brewing consistent beer. Requires cool storage to prevent mold."
+  "note": "Soak barley, allow it to germinate, then dry in kiln to stop germination. Malting converts starches to fermentable sugars. Malt stores for months and is essential for brewing consistent beer. Requires cool storage to prevent mold.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_grain_storage_silos",
   "name": "Cylindrical silos for bulk grain storage",
   "cat": "storage",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_arch_roman"
   ],
@@ -1768,13 +1828,13 @@
    "brick_1000": 10,
    "timber_m3": 10
   },
-  "cap": 1000.0,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "yrs": 2.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1782,12 +1842,14 @@
   "traits": [
    "infrastructure"
   ],
-  "build_yrs": 2
+  "build_yrs": 2,
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "fud_livestock_selective_cattle",
   "name": "Selective breeding of draft and dairy cattle",
   "cat": "livestock",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_selective_breeding_pedigree"
   ],
@@ -1797,13 +1859,13 @@
    "labourer": 300
   },
   "mat": {},
-  "cap": 500,
-  "up": 0.0,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 0,
   "yrs": 5.0,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1817,6 +1879,7 @@
   "id": "fud_livestock_selective_sheep",
   "name": "Selective breeding of sheep for wool and meat",
   "cat": "livestock",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_selective_breeding_pedigree"
   ],
@@ -1826,13 +1889,13 @@
    "labourer": 250
   },
   "mat": {},
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 4.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1845,6 +1908,7 @@
   "id": "fud_dairy_butter_production",
   "name": "Butter production at scale from dairy cattle",
   "cat": "dairy",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_livestock_selective_cattle"
   ],
@@ -1854,13 +1918,13 @@
    "artisan": 200
   },
   "mat": {},
-  "cap": 200,
-  "up": 80,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 1612.950333930346,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1870,6 +1934,7 @@
   "id": "fud_dairy_cheese_aging",
   "name": "Controlled cheese aging and storage",
   "cat": "dairy",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_livestock_selective_cattle"
   ],
@@ -1879,13 +1944,13 @@
    "artisan": 150
   },
   "mat": {},
-  "cap": 200,
-  "up": 100,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 2016.1879174129324,
   "yrs": 1.0,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1895,6 +1960,7 @@
   "id": "fud_sourdough_starter",
   "name": "Sourdough starter culture maintenance",
   "cat": "fermentation",
+  "kind": "ENGINEERING",
   "pre": [
    "fud_yeast_pure_culture"
   ],
@@ -1906,16 +1972,46 @@
   "mat": {
    "wheat_kg": 50
   },
-  "cap": 100,
-  "up": 30,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 604.8563752238797,
   "yrs": 1.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
   "note": "Maintain a living culture of wild yeast and lactic acid bacteria in flour and water. Feed it regularly and use it to leaven bread. Improves flavor and digestibility compared to unleavened bread. Requires discipline but produces superior bread."
+ },
+ {
+  "id": "fud_pepper_cultivation",
+  "name": "Black pepper vine gardens",
+  "cat": "crops",
+  "kind": "RESOURCE",
+  "pre": [
+   "sea_monsoon_route"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 60,
+  "lab": {
+   "labourer": 400
+  },
+  "mat": {},
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
+  "yrs": 3.0,
+  "risk": 0.2,
+  "sus": 0,
+  "gov": 1,
+  "rev_hours": 0,
+  "unheld_reason": "Rome and Han buy pepper; growing it is a trade question, not a start technology",
+  "sch": 0,
+  "art": 0,
+  "conf": "C",
+  "note": "Grow Piper nigrum, a climbing vine of the wet tropics, on living supports with the Malabar gardeners' methods. It needs a frost-free humid climate (the production entry names the Koppen classes) and the vines bear only in their third or fourth year. Rome buys the berries but holds neither the vines nor the climate.",
+  "traits": [
+   "food"
+  ]
  }
 ]

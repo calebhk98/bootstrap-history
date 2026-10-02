@@ -19,11 +19,17 @@ grouping evidence.
 """
 from .data import WAGES
 from sim.constants import declare
+from . import money_units
+from sim.world import capital_market
 
 
-def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0):
-    """Pure canonical calculation for the nominal borrowing ceiling."""
-    return max(min(raw_credit, serviceable), running_cost_floor) * price_index
+def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0, market_cap=None):
+    """Pure canonical calculation for the nominal borrowing ceiling. `market_cap` is what lenders can
+    still advance (in the same units as the other figures); None before the market has met."""
+    limit = min(raw_credit, serviceable)
+    if market_cap is not None:
+        limit = min(limit, market_cap)
+    return max(limit, running_cost_floor) * price_index
 
 
 def calculate_affordability(capital, credit_ceiling, credit_share, preserve_debt=False):
@@ -49,18 +55,21 @@ class CreditMixin:
         "CREDIT_LINE_PER_REPUTATION_POINT", 250.0, kind="temporary_heuristic",
         book_money=True, unit="denarii of credit per reputation point", source=None,
         confidence="D",
-        why="How much a point of reputation (itself a heuristic score, see "
+        why="Genuinely a money amount: a credit line is a nominal sum a lender will advance in the coin, not a quantity of anything physical. "
+            "How much a point of reputation (itself a heuristic score, see "
             "STANDING_* above) is worth in raw borrowing power. Doubly "
             "removed from any measurement: reputation is invented and this "
             "conversion rate is invented on top of it.")
-    CREDIT_LINE_PER_FOREST_HA = declare(
-        "CREDIT_LINE_PER_FOREST_HA", 120.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii of credit per hectare of owned forest", source=None,
+    CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA = declare(
+        "CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA", 2420.0, kind="temporary_heuristic",
+        unit="labour hours of credit per hectare of owned forest", source=None,
         confidence="D",
-        why="Forest is real collateral, so it counts toward credit the way "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "Forest is real collateral, so it counts toward credit the way "
             "FOREST_COST_PER_HA says it cost to buy; the per-hectare figure "
             "here is not tied back to that purchase price by any explicit "
             "loan-to-value ratio, just a plausible-feeling fraction of it.")
+    CREDIT_LINE_PER_FOREST_HA = money_units.PricedInLabourHours("CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA")
     CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE = declare(
         "CREDIT_LINE_FLOOR_UPKEEP_BUFFER_SHARE", 0.5, kind="temporary_heuristic",
         unit="fraction of upkeep added to the running-tab floor",
@@ -120,8 +129,18 @@ class CreditMixin:
         # Bounded by what can be serviced: no lender advances more than income
         # can carry, even with a grand patron. Five years of turnover stops a
         # patron-name from creating an unpayable debt trap. [temporary_heuristic]
-        serviceable = floor + max(0.0, earning) * self.CREDIT_SURPLUS_YEARS_MULTIPLE
-        return calculate_credit_ceiling(base, floor, serviceable, self.price_index)
+        # The years of earning a lender will carry are the opening figure, less when money has grown
+        # dearer than at the start; cheaper money from society's saving does not enlarge what THIS
+        # borrower can carry. [temporary_heuristic: CREDIT_SURPLUS_YEARS_MULTIPLE is the figure at the starting rate]
+        market_rate = self.market_rate()
+        years = self.CREDIT_SURPLUS_YEARS_MULTIPLE
+        if market_rate > 0:
+            years *= min(1.0, self.civ["starting_interest_rate"] / market_rate)
+        serviceable = floor + max(0.0, earning) * years
+        # And never more than lenders still hold beyond what everyone else owes them.
+        room = self.market_credit_room(capital_market.FOUNDER_LOAN)
+        return calculate_credit_ceiling(base, floor, serviceable, self.price_index,
+                                        None if room is None else room / self.price_index)
 
     def committed_spend(self):
         """What is still owed, in total, across every project in hand at once.
@@ -170,15 +189,30 @@ class CreditMixin:
         docstring for why reusing them is safe: nothing in this whole call
         graph assigns to self anywhere.
         """
+        breakdown = self.funding_breakdown()
+        return (breakdown["cash_on_hand"] + breakdown["credit_available_now"]
+                + breakdown["surplus_allowance_over_years"])
+
+    def funding_breakdown(self):
+        """The parts funding_capacity() adds, kept apart: cash, the drawable half of the credit
+        line, the surplus allowance (the yearly surplus over the planning years), the yearly
+        surplus itself, and what work in hand still owes."""
         rev = self.revenue()
         upkeep_amount = self.upkeep()
         household = self.state.household
         fixed = (upkeep_amount + self.living_cost(_rev=rev, _upkeep=upkeep_amount)
                  + self.mine_operating_cost()
                  + max(0.0, -household.capital) * self.debt_interest_rate())
-        return (max(0.0, household.capital)
-                + self.credit_limit(_rev=rev, _upkeep=upkeep_amount) * self.SPENDING_DRAW_SHARE_ORDINARY
-                + max(0.0, rev - fixed) * self.CREDIT_SURPLUS_YEARS_MULTIPLE)
+        surplus = max(0.0, rev - fixed)
+        return {
+            "cash_on_hand": max(0.0, household.capital),
+            "credit_available_now": (self.credit_limit(_rev=rev, _upkeep=upkeep_amount)
+                                     * self.SPENDING_DRAW_SHARE_ORDINARY),
+            "sustainable_annual_surplus": surplus,
+            "surplus_allowance_over_years": surplus * self.CREDIT_SURPLUS_YEARS_MULTIPLE,
+            "surplus_years_counted": self.CREDIT_SURPLUS_YEARS_MULTIPLE,
+            "already_committed": self.committed_spend(),
+        }
 
     def shed_loss_makers(self, year):
         """In arrears, stop maintaining anything that costs more than it returns.
@@ -262,17 +296,20 @@ class CreditMixin:
     def debt_interest_rate(self):
         """What arrears cost you a year.
 
-        Starts from the civilisation's own base rate. A man with no standing
+        Starts from the civilisation's loanable-funds market rate (its own starting rate until the
+        market has met), plus a premium for the share of his credit limit he has used. A man with no standing
         borrows from whoever will have him and pays for it. Standing is what makes money cheap, which
         is the same rule as everything else in this model: patronage is the
         currency underneath the currency.
         """
-        rate = self.civ["starting_interest_rate"]     # the civ's own starting rate
-        for _node_id, discount in self.effect_values("debt_rate_discount"):
-            rate -= discount
-        rate -= min(self.DEBT_RATE_REPUTATION_DISCOUNT_CAP,
-                    max(0.0, self.state.household.reputation) / self.DEBT_RATE_REPUTATION_SCALE)
-        return max(0.0, rate)
+        discount = sum(discount for _node_id, discount in self.effect_values("debt_rate_discount"))
+        discount += min(self.DEBT_RATE_REPUTATION_DISCOUNT_CAP,
+                        max(0.0, self.state.household.reputation) / self.DEBT_RATE_REPUTATION_SCALE)
+        used = 0.0
+        if self.state.household.capital < 0:
+            limit = self.credit_limit()
+            used = -self.state.household.capital / limit if limit > 0 else 1.0
+        return capital_market.borrower_rate(self.market_rate(), discount, used)
 
     def charge_interest(self, year):
         """Arrears accrue. They did not before, which made debt free money."""
@@ -281,8 +318,9 @@ class CreditMixin:
             return 0.0
         rate = self.debt_interest_rate()
         owed = -household.capital * rate
-        household.capital -= owed
+        household.debit(owed, "interest on arrears")
         household.interest_paid = (household.interest_paid or 0.0) + owed
+        self.note_interest_paid(owed)
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
             household.log.append((year, "interest on %0.f denarii of arrears at %.1f%% a year"
                                  % (-household.capital, rate * 100)))
@@ -466,7 +504,7 @@ class CreditMixin:
                 #
                 # Closing it is both the fix and the more honest event: what a
                 # creditor can carry away is the shop.
-                household.capital += self.nodes[node_id]["up"] * self.CREDITOR_SEIZURE_VALUE_MULTIPLE
+                household.credit(self.nodes[node_id]["up"] * self.CREDITOR_SEIZURE_VALUE_MULTIPLE, "concern seized by creditors")
                 self.close_work(node_id, self.CLOSED_CREDITOR_SEIZURE, year)
                 taken.append(node_id)
             # Only say it if it happened: firing this every year regardless
@@ -514,7 +552,7 @@ class CreditMixin:
             term = float(self.civ.get("bondage_years", self.DEBT_BONDAGE_DEFAULT_TERM_YEARS))
             household.bondage_years_left = term
             household.bondage_debt = -household.capital
-            household.capital = 0.0
+            household.reset_cash(0.0, "debt taken into bondage")
             household.log.append((year, "BONDAGE: you cannot pay, and you enter service for "
                                  "your debt. For about %d years most of your hours "
                                  "belong to someone else. It is not the end: it is "
@@ -532,7 +570,7 @@ class CreditMixin:
         # are simply in arrears, which already has consequences of its own.
         if household.capital < -limit and year - getattr(household, "last_settlement", -999) >= self.SETTLEMENT_MIN_INTERVAL_YEARS:
             household.last_settlement = year
-            household.capital = -limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION
+            household.reset_cash(-limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, "debts written off in settlement")
             # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
             # fixed "reputation -12" against a reputation of 4.9 would say
             # the same thing twice while the second application does
@@ -622,7 +660,7 @@ class CreditMixin:
                          default=None)
             if best_trade:
                 rate = self.base_annual_wage(best_trade) / self.HOURS_PER_PERSON_YEAR
-                would_earn = (pool * rate * self.price_index * self.wage_index
+                would_earn = (self.labour_market.in_current_money(pool * rate)
                               * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                                            household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
                 # What those same hours are already earning in the practice.
@@ -802,23 +840,25 @@ class CreditMixin:
                      + max(0.0, household_state.capital) * self.LIVING_COST_STATUS_PER_CAPITAL)
         return base + household + tax + status + wages
 
-    LIVING_COST_BASE_SUBSISTENCE = declare(
-        "LIVING_COST_BASE_SUBSISTENCE", 120.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at price_index=1", source=None, confidence="D",
+    LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS = declare(
+        "LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS", 2400.0, kind="temporary_heuristic",
+        unit="labour hours per year at price_index=1", source=None, confidence="D",
         why="Bare subsistence cost for one person (food, the plainest "
             "shelter, nothing else) at this society's reference prices. No "
             "attested Roman subsistence-basket figure backs this exact "
             "number; a real figure needs the same physical grounding "
             "sim/world/agriculture.py gives food (CALORIES_PER_PERSON_DAY, "
             "a real crop and price), not a flat denarii figure.")
-    LIVING_COST_HOUSEHOLD_BASE = declare(
-        "LIVING_COST_HOUSEHOLD_BASE", 90.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at price_index=1, one dependant-equivalent",
+    LIVING_COST_BASE_SUBSISTENCE = money_units.PricedInLabourHours("LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS")
+    LIVING_COST_HOUSEHOLD_BASE_LABOUR_HOURS = declare(
+        "LIVING_COST_HOUSEHOLD_BASE_LABOUR_HOURS", 1800.0, kind="temporary_heuristic",
+        unit="labour hours per year at price_index=1, one dependant-equivalent",
         source=None, confidence="D",
         why="Cost of keeping one household dependant beyond bare personal "
             "subsistence - rent, ordinary household goods, the plain cost "
             "of a household rather than a single person camping. Not "
             "sourced to an attested figure.")
+    LIVING_COST_HOUSEHOLD_BASE = money_units.PricedInLabourHours("LIVING_COST_HOUSEHOLD_BASE_LABOUR_HOURS")
     LIVING_COST_FREEDMAN_SHARE = declare(
         "LIVING_COST_FREEDMAN_SHARE", 0.5, kind="temporary_heuristic",
         unit="dimensionless multiple of LIVING_COST_HOUSEHOLD_BASE per freedman",
@@ -857,10 +897,9 @@ class CreditMixin:
     HOURS_PER_PERSON_YEAR = declare(
         "HOURS_PER_PERSON_YEAR", 2000.0, kind="engineering_estimate",
         unit="hours/person/year", source=
-        "prices.json: a 10-hour day, 250 working days a year, less feasts "
+        "A 10-hour day, 250 working days a year, less feasts "
         "and holidays.",
         confidence="B",
         why="Converts an annual wage into an hourly rate (stall_diagnosis' "
-            "own wage-comparison arithmetic) and back - the same working-"
-            "year convention prices.json itself uses, so the two stay "
-            "consistent.")
+            "own wage-comparison arithmetic) and back - the working-"
+            "year convention the wage provider uses.")

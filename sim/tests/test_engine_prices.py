@@ -10,28 +10,25 @@ the whole point of the module:
     miss;
   - the labour-hours -> denarii conversion is a multiplication by the
     labourer wage rate, not some other rate or direction;
-  - the engine's default behaviour (`sim.engine.data.load()` with no
-    arguments) is untouched - every existing call site calls it that way,
-    and this module must not change what comes back until something opts
-    in via `use_solved_prices`.
+  - the engine's default (`sim.engine.data.load()` with no arguments)
+    prices every material from the solver, with no price book behind it.
 
 Written as unittest.TestCase against synthetic production entries, like
 test_price_solver_cycles.py and test_price_solver_era_gate.py, so this does
 not depend on the real, changing contents of data/production/ for anything
 but one light integration check at the end.
 
-sim/engine/prices.py: solver prices cached on held gate nodes, book fallback, per-material solved/book provenance.
+sim/engine/prices.py: solver prices cached on held gate nodes, per-material solved/gated provenance.
 """
 import json
 import os
-import sys
 import unittest
 
-from sim.engine import data, money_units, prices as engine_prices
+from sim.engine import data, prices as engine_prices
 
 
 def _prices_json(labourer_rate=2.0, smith_rate=4.0, money_per_labour_hour=None):
-    """A minimal prices.json-shaped dict: just enough for
+    """A minimal wage document: just enough for
     wage_ratios_by_trade and denarii_per_labour_hour to read."""
     return {
         "wage_rates_denarii_per_hour": {
@@ -40,7 +37,6 @@ def _prices_json(labourer_rate=2.0, smith_rate=4.0, money_per_labour_hour=None):
         },
         "money_per_labour_hour": (labourer_rate if money_per_labour_hour is None
                                   else money_per_labour_hour),
-        "purchase_prices_denarii": {},
     }
 
 
@@ -157,7 +153,7 @@ class ConversionTests(unittest.TestCase):
 
 
 class PricedGoodsTableTests(unittest.TestCase):
-    """`priced_goods_table` - the book overlay and its provenance report."""
+    """`priced_goods_table` - the solved table and its provenance report."""
 
     def setUp(self):
         engine_prices.reset_caches_for_tests()
@@ -169,88 +165,67 @@ class PricedGoodsTableTests(unittest.TestCase):
             "straw": _entry({"straw_kg": 1.0}, requires_node=None,
                             labour_hours={"labourer": 3.0}),
         }
-        book_goods = {"straw_kg": 999.0, "unrelated_kg": 5.0}
         goods, provenance = engine_prices.priced_goods_table(
-            set(), book_goods, prices_json, production_entries=entries)
-
-        self.assertEqual(provenance["straw_kg"], "solved")
-        # "no_recipe", not merely "book": nothing in this entry set makes
-        # unrelated_kg at all, which is a different finding from a material
-        # some era could make and this one cannot. See priced_goods_table's
-        # docstring for why the split exists.
-        self.assertEqual(provenance["unrelated_kg"], "no_recipe")
-        # 3 labour-hours at 2 denarii/hour = 6 denarii, replacing the book's
-        # invented 999.
+            set(), prices_json, production_entries=entries)
+        self.assertEqual(provenance, {"straw_kg": "solved"})
+        # 3 labour-hours at 2 denarii/hour = 6 denarii.
         self.assertAlmostEqual(goods["straw_kg"], 6.0)
-        self.assertAlmostEqual(
-            goods["unrelated_kg"],
-            money_units.book_to_money(5.0, prices_json["money_per_labour_hour"]))
 
-    def test_a_material_the_solver_cannot_reach_falls_back_to_the_book(self):
-        prices_json = _prices_json()
+    def test_a_material_nothing_makes_has_no_price(self):
         entries = {
             "requires_missing_input": _entry(
                 {"widget_kg": 1.0}, inputs={"no_recipe_for_this_kg": 1.0},
                 requires_node=None, labour_hours={"labourer": 1.0}),
         }
-        book_goods = {"widget_kg": 42.0}
         goods, provenance = engine_prices.priced_goods_table(
-            set(), book_goods, prices_json, production_entries=entries)
-        # A recipe for widget_kg exists, so this is NOT "no_recipe" - the
-        # recipe simply cannot be costed, because one of its inputs has no
-        # price of its own. Either way the book value stands.
-        self.assertEqual(provenance["widget_kg"], "gated")
-        self.assertAlmostEqual(
-            goods["widget_kg"], money_units.book_to_money(42.0, prices_json["money_per_labour_hour"]))
+            set(), _prices_json(), production_entries=entries)
+        self.assertEqual(goods, {})
+        self.assertEqual(provenance, {})
 
-    def test_solver_adds_a_producible_material_the_book_never_had(self):
-        prices_json = _prices_json()
+    def test_a_gated_material_is_priced_as_if_its_technology_were_held(self):
+        prices_json = _prices_json(labourer_rate=2.0)
         entries = {
-            "straw": _entry({"straw_kg": 1.0}, requires_node=None,
-                            labour_hours={"labourer": 1.0}),
+            "kiln": _entry({"brick_kg": 1.0}, requires_node="kiln_node",
+                           labour_hours={"labourer": 4.0}),
         }
         goods, provenance = engine_prices.priced_goods_table(
-            set(), {}, prices_json, production_entries=entries)
-        self.assertEqual(goods, {"straw_kg": 2.0})
-        self.assertEqual(provenance, {"straw_kg": "solved"})
+            set(), prices_json, production_entries=entries)
+        self.assertEqual(provenance, {"brick_kg": "gated"})
+        self.assertAlmostEqual(goods["brick_kg"], 8.0)
+        held_goods, held_provenance = engine_prices.priced_goods_table(
+            {"kiln_node"}, prices_json, production_entries=entries)
+        self.assertEqual(held_provenance, {"brick_kg": "solved"})
+        self.assertAlmostEqual(held_goods["brick_kg"], 8.0)
+
+    def test_the_held_technique_overrides_the_mature_one(self):
+        prices_json = _prices_json(labourer_rate=2.0)
+        entries = {
+            "by_hand": _entry({"cloth_kg": 1.0}, requires_node=None,
+                              labour_hours={"labourer": 10.0}),
+            "by_loom": _entry({"cloth_kg": 1.0}, requires_node="loom_node",
+                              labour_hours={"labourer": 2.0}),
+        }
+        held, _ = engine_prices.priced_goods_table(
+            set(), prices_json, production_entries=entries)
+        mature, _ = engine_prices.priced_goods_table(
+            {"loom_node"}, prices_json, production_entries=entries)
+        self.assertAlmostEqual(held["cloth_kg"], 20.0)
+        self.assertAlmostEqual(mature["cloth_kg"], 4.0)
 
 
-class EngineDefaultBehaviourUnchangedTests(unittest.TestCase):
-    """The commit's own hard requirement: `load()` with no arguments must
-    behave exactly as it always has. `perf_fingerprint.py` is the real proof
-    across whole playthroughs; this is the cheap, always-run version of the
-    same claim."""
+class EngineDefaultIsSolvedTests(unittest.TestCase):
+    """`load()` with no arguments prices goods from the solver alone."""
 
-    def test_load_with_no_arguments_never_imports_the_solver(self):
-        # sim.engine.prices is imported lazily, INSIDE the `if
-        # use_solved_prices:` branch (see data.py's load()) specifically so
-        # a default call cannot pay for, or risk, the solver at all. This
-        # test's own module already imported it at the top of this file (to
-        # reach `engine_prices` above), so the claim has to be checked by
-        # removing it from sys.modules first and restoring whatever was
-        # there afterwards - leaving the process's module cache exactly as
-        # it found it, so later tests that DO opt in are not left importing
-        # a second, uncached copy of the module.
-        previously_imported = sys.modules.pop("sim.engine.prices", None)
-        try:
-            tree, prices_json, nodes, wages, goods = data.load()
-            self.assertNotIn("sim.engine.prices", sys.modules)
-        finally:
-            if previously_imported is not None:
-                sys.modules["sim.engine.prices"] = previously_imported
-        self.assertTrue(goods)  # sanity: still loaded something real
-
-    def test_goods_matches_the_book_exactly_by_default(self):
-        tree, prices_json, nodes, wages, goods = data.load()
-        book_goods = {key: value["p"]
-                      for key, value in prices_json["purchase_prices_denarii"].items()
-                      if not key.startswith("_")}
-        # Book prices are only converted to the coin; the solver only adds materials the book lacks.
+    def test_default_goods_are_the_solved_table(self):
+        _tree, document, nodes, _wages, goods = data.load()
         rate = data.starting_schedule().money_per_labour_hour
-        for key, denarii in book_goods.items():
-            self.assertAlmostEqual(goods[key], money_units.book_to_money(denarii, rate), msg=key)
+        reference_techs = data.load_civ()["starting_techs"]
+        solved, _provenance = engine_prices.priced_goods_table(reference_techs, document)
+        for material, price in solved.items():
+            self.assertAlmostEqual(goods[material], price, msg=material)
+        self.assertAlmostEqual(document["money_per_labour_hour"], rate)
         required = {material for node in nodes.values() for material in node["mat"]}
-        self.assertTrue(set(goods) - set(book_goods) <= required)
+        self.assertTrue(required <= set(goods))
 
 
 class RealDataIntegrationTests(unittest.TestCase):
@@ -270,29 +245,16 @@ class RealDataIntegrationTests(unittest.TestCase):
 
         provenance = data.goods_provenance(starting_techs)
         solved_count = sum(1 for source in provenance.values() if source == "solved")
-        # Anything not solved still comes from the book, whether because no
-        # recipe exists or because this era cannot run the one that does.
-        book_count = sum(1 for source in provenance.values() if source != "solved")
         gated_count = sum(1 for source in provenance.values() if source == "gated")
-        no_recipe_count = sum(1 for source in provenance.values() if source == "no_recipe")
-        # The two reasons must BOTH be represented, or the three-state split
-        # has quietly collapsed back into the two-state one it replaced.
         self.assertGreater(gated_count, 0,
                            "nothing came back 'gated', so era gating is not "
                            "reaching this table at all")
-        self.assertGreater(no_recipe_count, 0,
-                           "nothing came back 'no_recipe' - either every "
-                           "material really is made by something now, or the "
-                           "distinction has collapsed")
-
         self.assertGreater(solved_count, 0,
                            "the solver resolved nothing under Rome's own "
                            "starting technologies - the gate or the wiring "
                            "is broken, not merely incomplete")
-        self.assertGreater(book_count, 0,
-                           "every material resolved, which would mean this "
-                           "test stopped exercising the fallback path")
-        self.assertEqual(solved_count + book_count, len(provenance))
+        mature_count = sum(1 for source in provenance.values() if source == "mature")
+        self.assertEqual(solved_count + gated_count + mature_count, len(provenance))
 
     def test_runtime_price_provider_uses_the_calculator_result(self):
         with open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
@@ -302,14 +264,14 @@ class RealDataIntegrationTests(unittest.TestCase):
 
         calculated = data.calculated_goods_prices(
             starting_techs, civilization_id="rome_100ad")
-        _tree, prices_json, _nodes, _wages, _book_goods = data.load()
         provenance = data.goods_provenance(
             starting_techs, civilization_id="rome_100ad")
-        solved_material = next(material for material, source in provenance.items()
-                               if source == "solved")
-        book_price = prices_json["purchase_prices_denarii"][solved_material]["p"]
-
-        self.assertNotEqual(calculated[solved_material], book_price)
+        gated = next(material for material, source in sorted(provenance.items())
+                     if source == "gated")
+        solved = next(material for material, source in sorted(provenance.items())
+                      if source == "solved")
+        self.assertGreater(calculated[solved], 0.0)
+        self.assertGreater(calculated[gated], 0.0)
 
     def test_the_gate_set_is_a_small_fraction_of_the_tree(self):
         # Pins the design premise CACHE KEY relies on: gates are rare. Not

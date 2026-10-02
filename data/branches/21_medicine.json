@@ -3,6 +3,7 @@
   "id": "med_surgical_kit_good",
   "name": "Good surgical instrument kit",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bronze"
   ],
@@ -10,13 +11,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -29,6 +30,7 @@
   "id": "med_cataract_couching",
   "name": "Cataract couching",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good"
   ],
@@ -36,13 +38,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 1,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -56,6 +58,7 @@
   "id": "med_trepanation",
   "name": "Trepanation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good"
   ],
@@ -63,13 +66,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0.2,
   "sus": 1,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -82,6 +85,7 @@
   "id": "med_amputation",
   "name": "Amputation and prosthetics",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good"
   ],
@@ -94,13 +98,13 @@
    "linen_kg": 2,
    "timber_m3": 0.5
   },
-  "cap": 0,
-  "up": 50,
+  "cap_hours": 0,
+  "up_hours": 1008.0939587064662,
   "yrs": 0,
   "risk": 0.3,
   "sus": 0,
   "gov": 1,
-  "rev": 8.2,
+  "rev_hours": 165.32740922786044,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -113,6 +117,7 @@
   "id": "med_wound_suturing",
   "name": "Wound suturing",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good",
    "mat_linen"
@@ -123,13 +128,13 @@
   "mat": {
    "linen_kg": 0.5
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0.6,
+  "rev_hours": 12.097127504477594,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -142,6 +147,7 @@
   "id": "med_valetudinaria",
   "name": "Military field hospital (valetudinaria)",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -154,13 +160,13 @@
    "brick_1000": 10,
    "timber_m3": 20
   },
-  "cap": 5000,
-  "up": 1000,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 20161.879174129324,
   "yrs": 1,
   "risk": 0,
   "sus": 0,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 3,
   "art": 1,
   "conf": "A",
@@ -174,6 +180,7 @@
   "id": "med_opium_mandrake",
   "name": "Opium and mandrake tinctures",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_olive_oil"
   ],
@@ -183,13 +190,14 @@
   "mat": {
    "olive_oil_kg": 1
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 1,
   "gov": 0,
-  "rev": 0.2,
+  "rev_hours": 4.032375834825865,
+  "output_unbounded_reason": "one declared total would be split across unrelated products, so no single output bounds it",
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -202,6 +210,7 @@
   "id": "med_herbal_pharmacy",
   "name": "Herbal pharmacy (Dioscorides Materia medica)",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_olive_oil"
   ],
@@ -211,13 +220,13 @@
    "scholar": 200
   },
   "mat": {},
-  "cap": 500,
-  "up": 100,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 2016.1879174129324,
   "yrs": 0.5,
   "risk": 0,
   "sus": 0,
   "gov": 1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -230,6 +239,7 @@
   "id": "med_bone_setting",
   "name": "Bone setting",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_surgical_kit_good"
   ],
@@ -241,13 +251,13 @@
   "mat": {
    "linen_kg": 1
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 6.2,
+  "rev_hours": 125.0036508796018,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -260,6 +270,7 @@
   "id": "med_obstetric_practice",
   "name": "Obstetric practice",
   "cat": "obstetrics",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen"
   ],
@@ -272,13 +283,13 @@
    "linen_kg": 2,
    "olive_oil_kg": 0.5
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 12.5,
+  "rev_hours": 252.02348967661655,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -288,23 +299,31 @@
   "id": "med_aqueducts_latrines",
   "name": "Aqueducts and public latrines",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "mat_pozzolana"
   ],
   "kb": "70_medicine_biology.md",
-  "ph": 0,
-  "lab": {},
-  "mat": {},
-  "cap": 0,
-  "up": 0,
-  "yrs": 0,
-  "risk": 0,
+  "ph": 120.0,
+  "lab": {
+   "mason": 6000.0,
+   "labourer": 12000.0,
+   "engineer": 300.0
+  },
+  "mat": {
+   "stone_kg": 500000.0,
+   "lime_kg": 50000.0
+  },
+  "cap_hours": 161295.0333930346,
+  "up_hours": 0,
+  "yrs": 3.0,
+  "risk": 0.05,
   "sus": 0,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
-  "conf": "A",
+  "conf": "C",
   "note": "Abundant clean water and sewage separation are already established wherever aqueduct and drainage engineering has matured. This infrastructure, once mature, is the foundation for any public health improvement.",
   "traits": [
    "infrastructure",
@@ -312,28 +331,30 @@
   ],
   "mechanics": {
    "disease_burden": true
-  }
+  },
+  "build_yrs": 3.0
  },
  {
   "id": "med_legal_physician",
   "name": "Legal protection for physicians",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [],
   "kb": "70_medicine_biology.md",
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Imperial edict: physicians who follow established methods are not liable for death. This requires establishing consensus on best practice.",
+  "note": "Legal protection: physicians who follow established methods are not liable for death. This requires establishing consensus on best practice.",
   "traits": [
    "infrastructure",
    "status_threatening"
@@ -343,6 +364,7 @@
   "id": "med_ligature_haemostasis",
   "name": "Ligature over cautery for haemostasis",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_amputation",
    "mat_linen"
@@ -355,13 +377,13 @@
   "mat": {
    "linen_kg": 2
   },
-  "cap": 200,
-  "up": 50,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 1008.0939587064662,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -374,6 +396,7 @@
   "id": "med_asepsis_antisepsis",
   "name": "Asepsis, antisepsis, and steam sterilization",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory",
    "sanitation_antisepsis",
@@ -387,29 +410,31 @@
    "artisan": 100
   },
   "mat": {},
-  "cap": 1000,
-  "up": 0.0,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.05,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "Asepsis: prevention of contamination. Antisepsis: chemical disinfection. Steam sterilization beats carbolic spray because it kills spores, not just surface germs. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring]",
+  "note": "Asepsis: prevention of contamination. Antisepsis: chemical disinfection. Steam sterilization beats carbolic spray because it kills spores, not just surface germs.",
   "traits": [
    "infrastructure",
    "medical"
   ],
   "mechanics": {
    "disease_burden": true
-  }
+  },
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: steam sterilization and high-pressure steam processing require temperature monitoring]"
  },
  {
   "id": "med_autoclave",
   "name": "Autoclave for steam sterilization",
   "cat": "instruments",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "glass_labware",
@@ -425,13 +450,13 @@
    "steel_noric_kg": 50,
    "glass_raw_kg": 5
   },
-  "cap": 2000,
-  "up": 0.0,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -439,12 +464,14 @@
   "traits": [
    "infrastructure",
    "spectacle"
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: the heat rung was redundant with the high pressure steam prerequisite.]"
  },
  {
   "id": "med_surgical_gloves_mask",
   "name": "Surgical barrier masks and hand coverings",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "med_handwashing_semmelweis",
@@ -458,13 +485,13 @@
   "mat": {
    "linen_kg": 1
   },
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -477,6 +504,7 @@
   "id": "med_handwashing_semmelweis",
   "name": "Handwashing protocol (Semmelweis)",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory",
    "sanitation_antisepsis"
@@ -489,13 +517,13 @@
   "mat": {
    "soap_kg": 5
   },
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0,
   "sus": 1,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -508,6 +536,7 @@
   "id": "med_ether_anaesthesia",
   "name": "Ether, chloroform, and nitrous oxide anaesthesia",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol",
    "cap_heat_1100"
@@ -521,13 +550,13 @@
    "ethanol": 2,
    "charcoal_kg": 1
   },
-  "cap": 800,
-  "up": 0.0,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 2,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -545,13 +574,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -561,6 +590,7 @@
   "id": "med_hypodermic_syringe",
   "name": "Hypodermic syringe and hollow needle",
   "cat": "instruments",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "glass_labware"
@@ -575,13 +605,13 @@
    "glass_raw_kg": 2,
    "steel_noric_kg": 1
   },
-  "cap": 1000,
-  "up": 50,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1008.0939587064662,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -594,6 +624,7 @@
   "id": "med_blood_groups",
   "name": "Blood groups and transfusion",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "microscope_compound",
    "germ_theory",
@@ -608,13 +639,13 @@
   "mat": {
    "sodium_citrate_kg": 0.1
   },
-  "cap": 800,
-  "up": 150,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 3024.2818761193985,
   "yrs": 1,
   "risk": 0.05,
   "sus": 1,
   "gov": 1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 2,
   "art": 1,
   "conf": "A",
@@ -627,6 +658,7 @@
   "id": "med_saline_resuscitation",
   "name": "Saline and fluid resuscitation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_salt",
    "glass_labware"
@@ -639,13 +671,13 @@
   "mat": {
    "salt_kg": 0.5
   },
-  "cap": 200,
-  "up": 30,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 604.8563752238797,
   "yrs": 0,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -658,6 +690,7 @@
   "id": "med_stethoscope_percussion",
   "name": "Stethoscope and percussion",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory"
   ],
@@ -669,13 +702,13 @@
   "mat": {
    "timber_m3": 0.1
   },
-  "cap": 100,
-  "up": 20,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 403.2375834825865,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -698,13 +731,13 @@
    "glass_raw_kg": 0.5,
    "mercury_kg": 0.1
   },
-  "cap": 300,
-  "up": 30,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 604.8563752238797,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -714,6 +747,7 @@
   "id": "med_sphygmomanometer",
   "name": "Sphygmomanometer (blood pressure cuff)",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len",
    "glass_labware",
@@ -730,13 +764,13 @@
    "glass_raw_kg": 1,
    "mercury_kg": 0.5
   },
-  "cap": 600,
-  "up": 50,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1008.0939587064662,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -759,6 +793,7 @@
   "id": "med_ophthalmoscope",
   "name": "Ophthalmoscope",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "mirror_amalgam",
@@ -774,26 +809,28 @@
    "glass_raw_kg": 2,
    "brass_kg": 1
   },
-  "cap": 800,
-  "up": 100,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 2016.1879174129324,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Mirror and lens to view the retina. Reveals aneurysms, cotton-wool spots, diabetic changes. Requires skilled assembly. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lens and mirror optics require precision grinding]",
+  "note": "Mirror and lens to view the retina. Reveals aneurysms, cotton-wool spots, diabetic changes. Requires skilled assembly.",
   "traits": [
    "medical",
    "information"
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lens and mirror optics require precision grinding] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: lens and mirror optics require precision grinding]"
  },
  {
   "id": "med_endoscope",
   "name": "Endoscope",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "glass_labware",
@@ -808,13 +845,13 @@
    "glass_raw_kg": 5,
    "brass_kg": 2
   },
-  "cap": 2000,
-  "up": 200,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 4032.375834825865,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -828,6 +865,7 @@
   "id": "med_xray_imaging",
   "name": "X-ray imaging",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "photography",
@@ -842,13 +880,13 @@
   "mat": {
    "glass_raw_kg": 10
   },
-  "cap": 3000,
-  "up": 500,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 10080.939587064662,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -858,6 +896,7 @@
   "id": "med_electrocardiogram",
   "name": "Electrocardiogram (ECG)",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "galvanometer",
    "electromagnet",
@@ -873,13 +912,13 @@
    "copper_kg": 5,
    "brass_kg": 2
   },
-  "cap": 2000,
-  "up": 300,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 6048.563752238797,
   "yrs": 1,
   "risk": 0.05,
   "sus": 1,
   "gov": 1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -893,6 +932,7 @@
   "id": "med_microscopy_pathology",
   "name": "Microscopy in pathology with histology",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "microscope_compound",
    "germ_theory",
@@ -907,13 +947,13 @@
   "mat": {
    "dye_kg": 0.5
   },
-  "cap": 600,
-  "up": 150,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 3024.2818761193985,
   "yrs": 0.5,
   "risk": 0,
   "sus": 0,
   "gov": 1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 2,
   "art": 0,
   "conf": "A",
@@ -923,6 +963,7 @@
   "id": "med_gram_stain_culture",
   "name": "Bacterial culture and Gram staining",
   "cat": "diagnostics",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory",
    "glass_labware",
@@ -939,22 +980,24 @@
    "dye_kg": 0.2,
    "glass_raw_kg": 2.0
   },
-  "cap": 600,
-  "up": 100,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 2016.1879174129324,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium]"
+  "note": "Petri's shallow agar dishes allow colonies to grow. Gram staining distinguishes by cell wall: crystal violet for gram-positive, red for gram-negative. Guides antibiotic choice.",
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: bacterial culture growth requires precise temperature control of incubation medium]"
  },
  {
   "id": "med_sterile_technique",
   "name": "Sterile technique",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "med_asepsis_antisepsis",
    "med_autoclave"
@@ -965,13 +1008,13 @@
    "scholar": 120
   },
   "mat": {},
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -985,6 +1028,7 @@
   "id": "med_vaccination_progression",
   "name": "Vaccination: variolation to attenuated vaccines",
   "cat": "serology",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory"
   ],
@@ -994,13 +1038,13 @@
    "scholar": 150
   },
   "mat": {},
-  "cap": 800,
-  "up": 150,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 3024.2818761193985,
   "yrs": 1,
   "risk": 0.02,
   "sus": 0,
   "gov": 2,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1018,7 +1062,8 @@
      "order": 4
     }
    ]
-  }
+  },
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "med_antitoxin_serum",
@@ -1034,13 +1079,13 @@
    "scholar": 150
   },
   "mat": {},
-  "cap": 800,
-  "up": 200,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 4032.375834825865,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1050,6 +1095,7 @@
   "id": "med_epidemiology_statistics",
   "name": "Epidemiology, statistics, and vital registration",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory",
    "statistics_basic"
@@ -1062,13 +1108,13 @@
   "mat": {
    "parchment_sheet": 100
   },
-  "cap": 1000,
-  "up": 0.0,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 2,
   "art": 0,
   "conf": "A",
@@ -1082,6 +1128,7 @@
   "id": "med_clinical_trials",
   "name": "Case control and randomised controlled trials",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "med_epidemiology_statistics",
    "scientific_method"
@@ -1092,25 +1139,27 @@
    "scholar": 250
   },
   "mat": {},
-  "cap": 1200,
-  "up": 0.0,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 0,
   "yrs": 2,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 2,
   "art": 0,
   "conf": "B",
   "note": "Case control: backward look at exposure. Fast and cheap. Randomised controlled trial: random assignment to treatment or placebo, prospective, blind. Eliminates bias but takes years.",
   "traits": [
    "medical"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "med_quarantine_sanitation",
   "name": "Quarantine, clean water, and sewage",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "plague_preparedness",
    "germ_theory"
@@ -1125,13 +1174,13 @@
    "alum_kg": 10,
    "brick_1000": 20
   },
-  "cap": 3500,
-  "up": 0.0,
+  "cap_hours": 70566.57710945263,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0,
   "sus": 1,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1156,6 +1205,7 @@
   "id": "med_vector_control",
   "name": "Vector control and drainage for malaria",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory"
   ],
@@ -1167,13 +1217,13 @@
   "mat": {
    "timber_m3": 10
   },
-  "cap": 2000,
-  "up": 0.0,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1190,6 +1240,7 @@
   "id": "med_nutrition_vitamins",
   "name": "Nutrition, deficiency diseases, and vitamins",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "germ_theory"
   ],
@@ -1201,13 +1252,13 @@
   "mat": {
    "salt_kg": 1
   },
-  "cap": 600,
-  "up": 150,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 3024.2818761193985,
   "yrs": 1,
   "risk": 0,
   "sus": 0,
   "gov": 1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1220,6 +1271,7 @@
   "id": "med_insulin",
   "name": "Insulin extraction and purification",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1232,13 +1284,13 @@
    "ethanol": 5,
    "sulfuric_acid_kg": 1
   },
-  "cap": 2000,
-  "up": 500,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 10080.939587064662,
   "yrs": 1,
   "risk": 0.05,
   "sus": 0,
   "gov": 2,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1261,6 +1313,7 @@
   "id": "med_aspirin",
   "name": "Aspirin (acetylsalicylic acid)",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "nitric_acid",
    "destructive_distillation"
@@ -1273,25 +1326,27 @@
   "mat": {
    "charcoal_kg": 1
   },
-  "cap": 600,
-  "up": 100,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 2016.1879174129324,
   "yrs": 0.5,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 0,
   "conf": "A",
   "note": "Acetylation of salicylic acid (from willow bark). Safer than salicylate because absorbed slowly. Reduces fever, pain, inflammation. Bayer trademark.",
   "traits": [
    "medical"
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: acetylation needs acetic anhydride, from acetic acid via wood distillation. Nitric acid was wrong and has been removed.]"
  },
  {
   "id": "med_sulfonamides",
   "name": "Sulfonamides (sulfanilamide)",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_dyes_synthetic",
    "analytical_chemistry",
@@ -1305,25 +1360,27 @@
   "mat": {
    "dye_kg": 1
   },
-  "cap": 1000,
-  "up": 200,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "First broad-spectrum antibiotic 1935, derived from aniline dyes. Inhibits bacterial folate synthesis. Saves millions from streptococcal and gram-negative infections. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management]",
+  "note": "First broad-spectrum antibiotic 1935, derived from aniline dyes. Inhibits bacterial folate synthesis. Saves millions from streptococcal and gram-negative infections.",
   "traits": [
    "medical"
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: sulfonation with concentrated acid is exothermic and requires careful temperature management]"
  },
  {
   "id": "med_penicillin",
   "name": "Penicillin extraction and purification",
   "cat": "pharmacology",
+  "kind": "ENGINEERING",
   "pre": [
    "med_gram_stain_culture",
    "analytical_chemistry"
@@ -1336,13 +1393,13 @@
   "mat": {
    "ethanol": 10
   },
-  "cap": 3000,
-  "up": 800,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 16129.50333930346,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 3000,
+  "rev_hours": 60485.63752238797,
   "sch": 2,
   "art": 0,
   "conf": "B",
@@ -1356,6 +1413,7 @@
   "id": "med_obstetric_antisepsis",
   "name": "Antiseptic obstetrics and incubator",
   "cat": "obstetrics",
+  "kind": "ENGINEERING",
   "pre": [
    "med_handwashing_semmelweis",
    "med_obstetric_practice"
@@ -1370,13 +1428,13 @@
    "glass_raw_kg": 5,
    "timber_m3": 1
   },
-  "cap": 1000,
-  "up": 150,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 3024.2818761193985,
   "yrs": 0.5,
   "risk": 0,
   "sus": 0,
   "gov": 2,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -1392,6 +1450,7 @@
   "id": "med_dentistry",
   "name": "Dentistry and high-speed drill",
   "cat": "dentistry",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "cap_heat_1100"
@@ -1405,13 +1464,13 @@
    "steel_noric_kg": 2,
    "emery_kg": 1
   },
-  "cap": 1000,
-  "up": 150,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 3024.2818761193985,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1425,6 +1484,7 @@
   "id": "med_spectacles_refraction",
   "name": "Spectacles and refraction testing",
   "cat": "ophthalmology",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding"
   ],
@@ -1436,13 +1496,13 @@
   "mat": {
    "glass_raw_kg": 1
   },
-  "cap": 300,
-  "up": 50,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 1008.0939587064662,
   "yrs": 0.5,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -1452,6 +1512,7 @@
   "id": "med_hospital_institution",
   "name": "Hospital as an institution with records",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "med_valetudinaria",
    "med_epidemiology_statistics"
@@ -1464,13 +1525,13 @@
   "mat": {
    "parchment_sheet": 200
   },
-  "cap": 5000,
-  "up": 2000,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 40323.75834825865,
   "yrs": 1,
   "risk": 0,
   "sus": 0,
   "gov": 2,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 3,
   "art": 2,
   "conf": "B",
@@ -1484,6 +1545,7 @@
   "id": "med_nursing_profession",
   "name": "Nursing as a trained profession",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "med_hospital_institution",
    "germ_theory"
@@ -1494,13 +1556,13 @@
    "scholar": 200
   },
   "mat": {},
-  "cap": 800,
-  "up": 500,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 10080.939587064662,
   "yrs": 1,
   "risk": 0,
   "sus": 0,
   "gov": 1,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 2,
   "art": 2,
   "conf": "B",
@@ -1523,6 +1585,7 @@
   "id": "med_medical_education",
   "name": "Medical education and cadaver dissection",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "med_hospital_institution"
   ],
@@ -1534,13 +1597,13 @@
   "mat": {
    "parchment_sheet": 50
   },
-  "cap": 2000,
-  "up": 500,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 10080.939587064662,
   "yrs": 1,
   "risk": 0,
   "sus": 2,
   "gov": 1,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 3,
   "art": 0,
   "conf": "B",
@@ -1554,6 +1617,7 @@
   "id": "med_forensic_medicine",
   "name": "Forensic medicine and autopsy",
   "cat": "institutions",
+  "kind": "INSTITUTION",
   "pre": [
    "med_medical_education",
    "med_legal_physician"
@@ -1564,13 +1628,13 @@
    "scholar": 150
   },
   "mat": {},
-  "cap": 600,
-  "up": 150,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 3024.2818761193985,
   "yrs": 0.5,
   "risk": 0,
   "sus": 0,
   "gov": 3,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 1,
   "art": 0,
   "conf": "B",

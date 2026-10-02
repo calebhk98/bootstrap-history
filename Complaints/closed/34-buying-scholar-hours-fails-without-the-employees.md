@@ -32,7 +32,7 @@ appears to have the two the wrong way round.
 There is also a plausible real constraint hiding behind the bug, and it
 should not be lost when the bug is fixed: scarce skilled trades genuinely
 should be hard to hire at short notice, and the same playthrough raised that
-separately (`Complaints/35`, "instantaneous hiring pools" - typing `hire
+separately (`Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, "instantaneous hiring pools" - typing `hire
 artisan 25` and getting 25 master craftsmen inside one year). The right
 answer is probably that skilled hours ARE buyable and are priced by their
 scarcity, not that they are refused.
@@ -58,7 +58,7 @@ per CLAUDE.md 8.
 
 ## Related
 
-`Complaints/35` collects the rest of that playthrough, including the hiring
+`Complaints/reports/playthrough-review-han-china-100-to-400ad.md` collects the rest of that playthrough, including the hiring
 question above, which shares a root: the model has no notion of how scarce
 a particular skill is in a particular place at a particular time.
 

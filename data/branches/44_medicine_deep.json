@@ -3,6 +3,7 @@
   "id": "md2_circulation",
   "name": "Circulation of the blood",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "germ_theory",
    "microscope_compound"
@@ -18,12 +19,13 @@
   "dev_people": 1,
   "note": "Not that blood moves, but that it circulates: same blood returns to the heart, not consumed, and the quantity is small enough that arterial blood must reach veins via capillaries",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_gas_exchange",
   "name": "Lung gas exchange",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_circulation",
    "microscope_compound"
@@ -39,12 +41,13 @@
   "dev_people": 1,
   "note": "The kernel: lungs do not simply absorb blood like a sponge, they exchange gases across a thin barrier",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_digestion",
   "name": "Digestive process",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "microscope_compound",
    "analytical_chemistry"
@@ -60,12 +63,13 @@
   "dev_people": 2,
   "note": "Not just mechanical grinding: chemical transformation by acid and ferments, absorption through intestinal wall",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_nervous_system",
   "name": "Nervous system structure and function",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_cadaver_dissection",
    "microscope_compound"
@@ -81,12 +85,13 @@
   "dev_people": 2,
   "note": "Not simple mechanical tubes but specialized tissue conducting electrical signals; distinction between sensory and motor nerves",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_endocrine_system",
   "name": "Endocrine glands and hormones",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_digestion",
    "md2_nervous_system"
@@ -102,12 +107,13 @@
   "dev_people": 3,
   "note": "Distinction between nervous (electrical) and endocrine (chemical) signaling; hormones as circulating chemical messengers",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_kidney",
   "name": "Kidney filtration",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_circulation",
    "microscope_compound"
@@ -123,12 +129,13 @@
   "dev_people": 1,
   "note": "Not simple sieving; selective reabsorption of useful substances and variable water retention",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_immunity",
   "name": "Immune system and antibodies",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "germ_theory",
    "microscope_compound"
@@ -144,12 +151,13 @@
   "dev_people": 4,
   "note": "Specific immunity: different pathogens provoke different antibodies; second exposure produces faster response",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_cell_theory",
   "name": "Cell as basic unit of life",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "microscope_compound"
   ],
@@ -164,12 +172,13 @@
   "dev_people": 1,
   "note": "Not just observation of cells under lens, but the theory that organisation is cellular throughout, not fibrous or humoral",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_mendelian_inheritance",
   "name": "Mendelian inheritance laws",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_cell_theory"
   ],
@@ -184,12 +193,13 @@
   "dev_people": 1,
   "note": "Not blending but discrete particles; dominance and recessiveness; 3:1 and 9:3:3:1 ratios in crosses",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_chromosome",
   "name": "Chromosome and heredity",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_mendelian_inheritance",
    "microscope_compound"
@@ -205,12 +215,13 @@
   "dev_people": 2,
   "note": "Direct observation: chromosomes visible at meiosis and mitosis; map genes to chromosome locations",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_gene",
   "name": "Gene as unit of inheritance",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_chromosome"
   ],
@@ -225,12 +236,13 @@
   "dev_people": 2,
   "note": "Gene not mere bead on string but active agent; one gene one enzyme; mutation as change in gene",
   "conf": "C",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_dna",
   "name": "DNA as hereditary material",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "md2_gene",
    "atomic_theory"
@@ -246,12 +258,13 @@
   "dev_people": 4,
   "note": "Double helix structure; base pairing; information stored in sequence; DNA replication fidelity",
   "conf": "C",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_stethoscope",
   "name": "Stethoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -274,12 +287,13 @@
   "dev_people": 1,
   "note": "Laennec's tube: stiffened paper initially, then wood; acoustic coupling transforms inaudible vibrations to audible without stethoscope being nearly as gross as hands on chest",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_percussion",
   "name": "Percussion technique",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -294,12 +308,13 @@
   "dev_people": 1,
   "note": "Auenbrugger's method: tapping chest produces different notes over fluid, solid, air; requires training to distinguish",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_auscultation",
   "name": "Systematic auscultation",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_stethoscope"
   ],
@@ -314,12 +329,13 @@
   "dev_people": 2,
   "note": "Not just listening but cataloguing: rales, rhonchi, murmurs, clicks; correlation with pathology and prognosis",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_clinical_thermometer",
   "name": "Clinical thermometer",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "thermometer",
    "cap_measure_temp",
@@ -344,13 +360,14 @@
   "dev_people": 1,
   "note": "Mercury in glass with fixed point at 37 C. Temperature tells severity of infection. Fever is sometimes the body fighting infection.",
   "conf": "B",
-  "cap": 300.0,
-  "up": 0.0
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0
  },
  {
   "id": "md2_sphygmomanometer",
   "name": "Sphygmomanometer",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_clinical_thermometer",
    "barometer",
@@ -377,7 +394,7 @@
   "dev_people": 2,
   "note": "Riva-Rocci cuff and column: cuff inflated until radial pulse disappears, pressure read from mercury manometer, deflation to systolic and diastolic points",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_ophthalmoscope",
@@ -412,6 +429,7 @@
   "id": "md2_otoscope",
   "name": "Otoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding"
   ],
@@ -433,12 +451,13 @@
   "dev_people": 1,
   "note": "Simple conical speculum plus lens; not just view but teach recognition of cerumen, infection, perforation, light reflex",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_laryngoscope",
   "name": "Laryngoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "mirror_amalgam"
@@ -463,12 +482,13 @@
   "dev_people": 1,
   "note": "Indirect laryngoscopy: angled mirror reflects light and image back; direct intubation for anesthesia came later",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_endoscope",
   "name": "Rigid endoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "md2_light_source"
@@ -493,12 +513,13 @@
   "dev_people": 3,
   "note": "Early versions for urethra and bladder; later gastroscopy; achromatic objective required; light source separate initially, then coaxial",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_cystoscope",
   "name": "Cystoscope",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_endoscope"
   ],
@@ -521,12 +542,13 @@
   "dev_people": 2,
   "note": "Fenestrated sheath; working channel for instrumentation; direct vision of trigone, ureteral orifices and mucosa",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_xray_plate",
   "name": "X-ray radiography",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "vacuum_pumps"
@@ -559,12 +581,13 @@
     }
    }
   ],
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_fluoroscopy",
   "name": "Fluoroscopy imaging",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_xray_plate"
   ],
@@ -597,12 +620,13 @@
     }
    }
   ],
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_contrast_media",
   "name": "Contrast media",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_xray_plate",
    "analytical_chemistry"
@@ -627,12 +651,14 @@
   "conf": "B",
   "gov": -1,
   "sus": 3,
-  "up": 0.0
+  "up_hours": 0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "md2_ecg",
   "name": "Electrocardiogram",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "galvanometer",
    "discharge_xray"
@@ -657,12 +683,13 @@
   "dev_people": 4,
   "note": "String galvanometer initially; three standard bipolar leads; later six unipolar; PQRST waves; arrhythmias and ischemia visible",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_eeg",
   "name": "Electroencephalogram",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "vacuum_tube",
    "electromagnet"
@@ -687,12 +714,13 @@
   "dev_people": 5,
   "note": "Scalp electrodes; low voltage millivolt signals require vacuum tube amplification; alpha waves at rest; seizure spikes; sleep stages",
   "conf": "C",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_basal_metabolic_rate",
   "name": "Basal metabolic rate measurement",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_clinical_thermometer",
    "md2_spirometer"
@@ -716,12 +744,13 @@
   "dev_people": 2,
   "note": "Measured during fasting sleep; oxygen consumption or carbon dioxide production; thyroid function assessment; reproducibility requires strict conditions",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_haemocytometer",
   "name": "Haemocytometer",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "cap_tol_100um"
@@ -745,12 +774,13 @@
   "dev_people": 2,
   "note": "Precisely ruled counting grid; known depth; dilution factor; normal range and interpretation of anemia and polycythemia",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_differential_count",
   "name": "Differential white cell count",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_haemocytometer",
    "md2_staining_methylene"
@@ -766,12 +796,13 @@
   "dev_people": 1,
   "note": "Blood smear stained and examined under oil immersion; neutrophils, lymphocytes, monocytes, eosinophils, basophils; left shift in infection",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_urinalysis",
   "name": "Urinalysis",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -792,12 +823,13 @@
   "dev_people": 1,
   "note": "Specific gravity, pH, protein, glucose, ketones, bilirubin; crystals and casts under microscope; infection indicated by bacteria and white cells",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_blood_sugar_test",
   "name": "Blood glucose measurement",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -815,12 +847,13 @@
   "dev_people": 2,
   "note": "Fasting baseline; response to glucose load; distinction between diabetes and hypoglycemia; Somogyi effect and brittle diabetes",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_wassermann_test",
   "name": "Wassermann test",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "md2_immunity"
@@ -840,7 +873,7 @@
   "dev_people": 2,
   "note": "Antibodies in syphilitic serum fix complement; addition of sensitized RBC shows hemolysis or lack thereof; false positives in lupus and atypical pneumonia",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_tuberculin_test",
@@ -869,6 +902,7 @@
   "id": "md2_biopsy",
   "name": "Tissue biopsy",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "microscope_compound"
@@ -888,12 +922,13 @@
   "dev_people": 2,
   "note": "Needle or punch biopsy; immediate fixation; staining and microscopy; diagnosis of malignancy, inflammation, infection without surgical exploration",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_frozen_section",
   "name": "Frozen section histology",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_biopsy",
    "mat_ice_artificial"
@@ -914,12 +949,13 @@
   "dev_people": 2,
   "note": "Specimen frozen in cryostat at -20 C; thin sections cut without embedding; rapid staining; intraoperative diagnosis for tumor margins and unexpected findings",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_autoclave",
   "name": "Autoclave sterilizer",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure"
   ],
@@ -943,12 +979,13 @@
   "dev_people": 3,
   "note": "Prevost and Junker's pressure vessel; 120 C at 2 atmospheres; spore kill vs vegetative cell; correct loading and cycles critical",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_surgical_glove",
   "name": "Surgical glove",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis",
    "mat_rubber_coagulated"
@@ -971,12 +1008,13 @@
   "dev_people": 1,
   "note": "Halsted's gloves: latex not yet vulcanized properly so degraded; talc powder inside for donning; protective not just of patient but of surgeon",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_surgical_mask",
   "name": "Surgical facemask",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -997,12 +1035,13 @@
   "dev_people": 1,
   "note": "Initially cloth; later gauze in layers; protection of surgical field from oral and nasal flora; not protection of wearer",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_surgical_gown",
   "name": "Surgical gown",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -1023,12 +1062,13 @@
   "dev_people": 1,
   "note": "Initially ordinary cotton; later white linen for visibility of blood; design prevents microbial shedding from body; sleeves fully extended",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_surgical_drape",
   "name": "Sterile drape",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -1049,12 +1089,13 @@
   "dev_people": 1,
   "note": "Towels and sheets arranged in layers; fenestration to expose only site; edges kept moist to prevent microbial wicking",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_catgut_suture",
   "name": "Catgut suture",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -1075,12 +1116,13 @@
   "dev_people": 1,
   "note": "Not cat but sheep or horse; prepared from submucosa; caliber standardization; chromic acid treatment for slower absorption",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_synthetic_suture",
   "name": "Synthetic suture",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1102,12 +1144,13 @@
   "dev_people": 3,
   "note": "Nylon monofilament; less inflammation than catgut; does not dissolve; surgical silk still used for specialized purposes",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_haemostat",
   "name": "Surgical haemostat",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -1129,12 +1172,13 @@
   "dev_people": 1,
   "note": "Pean, Kelly, mosquito; teeth and serrated jaws; spring handles; ratchet locking; arterial vs venous clamps",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_retractor",
   "name": "Self-retaining retractor",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis",
    "interchangeable_parts"
@@ -1158,12 +1202,13 @@
   "dev_people": 2,
   "note": "Balfour, Weitlaner designs; arms with adjustable blades; ratchet or screw adjustments; frees assistant for other duties",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_electrocautery",
   "name": "Surgical electrocautery",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "dynamo"
@@ -1189,12 +1234,14 @@
   "conf": "B",
   "gov": 1,
   "sus": 8,
-  "up": 0.0
+  "up_hours": 0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "md2_tourniquet",
   "name": "Surgical tourniquet",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "sanitation_antisepsis",
    "mat_rubber_coagulated"
@@ -1217,12 +1264,13 @@
   "dev_people": 1,
   "note": "Bloodless field enables fine dissection; time limit critical to prevent tissue necrosis; cuff pressure above systolic; Esmarch exsanguination",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_blood_transfusion",
   "name": "Blood transfusion",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_blood_typing"
   ],
@@ -1240,12 +1288,13 @@
   "dev_people": 2,
   "note": "Whole blood or separated components; indications for hemorrhage and anemia; citrate anticoagulation; compatibility testing beforehand",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_blood_typing",
   "name": "Blood typing and cross-matching",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "microscope_compound"
@@ -1265,12 +1314,13 @@
   "dev_people": 2,
   "note": "Landsteiner's groups; major and minor cross-match; agglutination reactions; hemolytic transfusion reactions from mismatch",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_blood_bank",
   "name": "Blood bank and storage",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_blood_typing",
    "mat_ice_artificial"
@@ -1300,6 +1350,7 @@
   "id": "md2_citrate_anticoagulation",
   "name": "Citrate anticoagulation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "md2_blood_typing"
@@ -1318,12 +1369,13 @@
   "dev_people": 1,
   "note": "Citrate binds calcium needed for coagulation cascade; citrate toxicity from massive transfusion; later use in dialysis",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_iv_saline",
   "name": "Intravenous saline solution",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1344,12 +1396,13 @@
   "dev_people": 1,
   "note": "Isotonic with plasma; no hemolysis; replaces losses from hemorrhage and dehydration; colloid vs crystalloid later debated",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_anaesthetic_machine",
   "name": "Anaesthetic machine",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "electromagnet"
@@ -1373,12 +1426,13 @@
   "dev_people": 5,
   "note": "Cylinders, regulators, flowmeters, vaporizer, carbon dioxide absorber, reservoir bag, mask and circuit; precise mixing prevents hypoxia",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_endotracheal_intubation",
   "name": "Endotracheal intubation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_laryngoscope",
    "mat_rubber_coagulated"
@@ -1400,12 +1454,13 @@
   "dev_people": 2,
   "note": "Direct vision with laryngoscope; cuffed tube prevents aspiration; IPPV with mechanical ventilation; complications from prolonged intubation",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_spinal_anaesthesia",
   "name": "Spinal anaesthesia",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection"
   ],
@@ -1423,12 +1478,13 @@
   "dev_people": 2,
   "note": "Bier and Corning puncture; level of blockade; hypotension and bradycardia; post-dural puncture headache; advantages over general for lower surgeries",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_local_anaesthesia",
   "name": "Local infiltration anaesthesia",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "medical"
@@ -1444,12 +1500,13 @@
   "dev_people": 1,
   "note": "Initial cocaine; later procaine and lidocaine; epinephrine added for vasoconstriction and prolonged effect; nerve blocks more selective",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_appendicectomy",
   "name": "Appendicectomy",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "sanitation_antisepsis"
@@ -1468,12 +1525,13 @@
   "dev_people": 2,
   "note": "McBurney's point incision; ligation of appendicular artery; stump inversion; early diagnosis critical to prevent perforation and peritonitis",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_hernia_repair",
   "name": "Hernia repair",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "sanitation_antisepsis"
@@ -1492,12 +1550,13 @@
   "dev_people": 1,
   "note": "Identification of defect; dissection of sac; return of viscera; fascial layer closure; recurrence common with simple suture alone",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_gastrectomy",
   "name": "Gastrectomy",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "sanitation_antisepsis"
@@ -1516,12 +1575,13 @@
   "dev_people": 2,
   "note": "For ulcer or malignancy; Billroth I and II anastomoses; blood supply from left gastric, right gastric and gastroepiploic vessels",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_caesarean_section",
   "name": "Caesarean section",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection"
   ],
@@ -1539,12 +1599,13 @@
   "dev_people": 2,
   "note": "Lower segment transverse vs classical vertical; classical not repeated in later pregnancies; perimortem indication when vaginal delivery not safe",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_orthopaedic_fixation",
   "name": "Orthopaedic internal fixation",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_plaster_cast",
    "interchangeable_parts"
@@ -1568,12 +1629,13 @@
   "dev_people": 3,
   "note": "Plates, screws and wires; compression plating; timing of mobilization; infection and delayed union complications",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_plaster_cast",
   "name": "Plaster cast immobilization",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_gypsum",
    "med_bone_setting"
@@ -1595,12 +1657,13 @@
   "dev_people": 1,
   "note": "Gypsum plaster bandage over clean padding immobilises a reduced fracture while it sets. Bone setting, swelling allowance, skin inspection, and keeping pressure off bony points are prerequisites.",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_traction",
   "name": "Skeletal traction",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_wire_drawing",
    "md2_cadaver_dissection"
@@ -1623,12 +1686,13 @@
   "dev_people": 1,
   "note": "Pin or wire through bone; pulleys and weights; femoral traction for hip fracture; weeks of bedrest; skin care critical",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_skin_graft",
   "name": "Skin grafting",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection",
    "sanitation_antisepsis"
@@ -1647,12 +1711,13 @@
   "dev_people": 2,
   "note": "Full thickness vs split thickness; donor site must heal; vascularization of graft; autograft only option early; allograft rejection",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_cataract_extraction",
   "name": "Cataract extraction",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "md2_cadaver_dissection"
@@ -1672,12 +1737,13 @@
   "dev_people": 2,
   "note": "Intracapsular vs extracapsular; phacoemulsification came much later; post-operative aphakia managed with thick glasses",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_thyroidectomy",
   "name": "Thyroidectomy",
   "cat": "surgery",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_cadaver_dissection"
   ],
@@ -1695,12 +1761,13 @@
   "dev_people": 2,
   "note": "Iodine preparation to reduce vascularity; recurrent laryngeal nerve identification; hypoparathyroidism from inadvertent gland removal; thyroid storm crisis",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_digitalis",
   "name": "Digitalis glycosides",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_plant_chemistry"
   ],
@@ -1721,12 +1788,13 @@
   "dev_people": 2,
   "note": "Withering's empirical observation; positive inotropic and negative chronotropic; narrow therapeutic window; digitalis toxicity from accumulation",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_morphine",
   "name": "Morphine isolation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1747,7 +1815,7 @@
   "dev_people": 2,
   "note": "Serturner's work; crystalline form; injection and oral routes; respiratory depression and addiction risks",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_quinine",
@@ -1783,6 +1851,7 @@
   "id": "md2_salicylate",
   "name": "Salicylate and aspirin",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_plant_chemistry",
    "analytical_chemistry"
@@ -1801,12 +1870,13 @@
   "dev_people": 2,
   "note": "Willow bark traditional; salicin to salicylate to acetylation; Bayer's aspirin; anticoagulant effect discovered later",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_barbiturates",
   "name": "Barbiturate sedatives",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1824,12 +1894,13 @@
   "dev_people": 3,
   "note": "Barbital, phenobarbital, pentobarbital; intravenous and oral; dependence and withdrawal; narrow margin between sedation and respiratory depression",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_insulin",
   "name": "Insulin extraction",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_endocrine_system"
   ],
@@ -1851,12 +1922,13 @@
   "dev_people": 4,
   "note": "Banting and Best 1921; pancreatic extract; purification; potency standardization in units; subcutaneous injection; insulin shock therapy",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_thyroid_extract",
   "name": "Thyroid hormone extract",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_endocrine_system"
   ],
@@ -1874,12 +1946,13 @@
   "dev_people": 2,
   "note": "Desiccated thyroid tissue; later synthetic thyroxine; monitoring with BMR or TSH absent; potency variability",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_adrenaline",
   "name": "Adrenaline isolation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -1897,12 +1970,13 @@
   "dev_people": 2,
   "note": "Takamine 1901 isolation; synthetic by 1906; cardiac and vascular effects; hypertensive crisis; added to local anesthetics for vasoconstriction",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_sulphonamides",
   "name": "Sulphonamide drugs",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_dyes_synthetic",
    "analytical_chemistry"
@@ -1921,12 +1995,13 @@
   "dev_people": 3,
   "note": "Domagk's work; competitive antagonism of para-aminobenzoic acid; Prontosil red dye prodrug; broad spectrum but streptococcal resistance",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_penicillin_production",
   "name": "Penicillin cultivation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_microbiology_culture"
   ],
@@ -1945,12 +2020,13 @@
   "dev_people": 4,
   "note": "Penicillium notatum on culture plates; broth fermentation; antibiotic activity in filtrate; scaling to deep tank fermentation",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_penicillin_fermentation",
   "name": "Deep tank fermentation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_penicillin_production",
    "cap_power_steam"
@@ -1974,12 +2050,13 @@
   "dev_people": 6,
   "note": "Aeration and agitation; temperature and pH control; foaming control with silicone; corn steep liquor as nitrogen source; yield improvement over years",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_penicillin_freeze_dry",
   "name": "Freeze-drying penicillin",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_penicillin_fermentation",
    "mat_ice_artificial"
@@ -2000,12 +2077,13 @@
   "dev_people": 4,
   "note": "Vacuum and low temperature sublimation; water removal; stable powder form; reconstitution before injection; crystal structure preservation",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_streptomycin",
   "name": "Streptomycin isolation",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_microbiology_culture"
   ],
@@ -2023,12 +2101,13 @@
   "dev_people": 3,
   "note": "Waksman's screening; first effective TB drug; ototoxicity and renal damage at high doses; resistance development in monotherapy",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_antitoxin",
   "name": "Antitoxin serum therapy",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "germ_theory",
@@ -2049,13 +2128,14 @@
   "dev_people": 2,
   "note": "Serum from horses immunized with toxin. Diphtheria antitoxin reduced mortality from 50% to 20%. Anaphylaxis kills 1 in 1000. Passive immunity is temporary.",
   "conf": "B",
-  "cap": 800.0,
-  "up": 0.0
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0
  },
  {
   "id": "md2_vaccine_smallpox",
   "name": "Smallpox vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2073,7 +2153,7 @@
   "dev_people": 2,
   "note": "Jenner's cowpox observation; lymph from pustule; arm-to-arm transfer; lyophilization for storage; eradication by vaccination",
   "conf": "B",
-  "up": 0.0,
+  "up_hours": 0,
   "mechanics": {
    "hazard_counters": [
     {
@@ -2089,6 +2169,7 @@
   "id": "md2_vaccine_rabies",
   "name": "Rabies vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2107,12 +2188,13 @@
   "dev_people": 3,
   "note": "Pasteur's nerve tissue vaccine; duck egg culture later; post-bite series; timing critical before symptom onset",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vaccine_typhoid",
   "name": "Typhoid vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "md2_microbiology_culture"
@@ -2131,7 +2213,7 @@
   "dev_people": 2,
   "note": "Heat-killed or chemical inactivation; partial protection; revaccination needed; enteric fever still endemic in poor sanitation",
   "conf": "B",
-  "up": 0.0,
+  "up_hours": 0,
   "mechanics": {
    "hazard_counters": [
     {
@@ -2147,6 +2229,7 @@
   "id": "md2_vaccine_cholera",
   "name": "Cholera vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "md2_microbiology_culture"
@@ -2165,12 +2248,13 @@
   "dev_people": 2,
   "note": "Killed phenol-treated organisms; mucosal immunity weak with injected vaccine; oral rehydration more life-saving than vaccination",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vaccine_plague",
   "name": "Plague vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "md2_microbiology_culture"
@@ -2189,7 +2273,7 @@
   "dev_people": 2,
   "note": "Killed bacillus; variable efficacy; antiplague serum more immediately useful; vector control reduces need for vaccination",
   "conf": "B",
-  "up": 0.0,
+  "up_hours": 0,
   "mechanics": {
    "hazard_counters": [
     {
@@ -2205,6 +2289,7 @@
   "id": "md2_vaccine_diphtheria",
   "name": "Diphtheria toxoid",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2222,12 +2307,13 @@
   "dev_people": 2,
   "note": "Formalin-detoxified toxin retains immunogenicity; more effective than killed organism; Schick test for immunity status",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vaccine_tetanus",
   "name": "Tetanus toxoid",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2245,12 +2331,13 @@
   "dev_people": 2,
   "note": "Formalin inactivation of toxin; effective but slower than antitoxin; booster doses maintain immunity; wound prophylaxis combination with antitoxin",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vaccine_pertussis",
   "name": "Pertussis vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity",
    "md2_microbiology_culture"
@@ -2269,12 +2356,13 @@
   "dev_people": 2,
   "note": "Whole cell killed vaccine; high fever and local reaction; acellular vaccine much later; maternal antibodies in infant protection",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vaccine_yellow_fever",
   "name": "Yellow fever vaccine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_immunity"
   ],
@@ -2292,12 +2380,13 @@
   "dev_people": 3,
   "note": "17D strain attenuation; long-lived immunity; dengue and other flaviviruses cross-protect partially; vector control still needed",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vitamin_a",
   "name": "Vitamin A and deficiency",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2316,12 +2405,13 @@
   "dev_people": 2,
   "note": "Night blindness and xerophthalmia from deficiency; provitamin A in beta-carotene; hypervitaminosis A toxicity; fortification of milk",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vitamin_b1",
   "name": "Vitamin B1 thiamine",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2340,12 +2430,13 @@
   "dev_people": 2,
   "note": "Beriberi from deficiency; rice bran source; wet vs dry beriberi; Wernicke-Korsakoff syndrome in alcoholism",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vitamin_b12",
   "name": "Vitamin B12 cobalamin",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2363,12 +2454,13 @@
   "dev_people": 3,
   "note": "Pernicious anemia from intrinsic factor deficiency; injected when oral absorption fails; only animal source; methylmalonuria in deficiency",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vitamin_c",
   "name": "Vitamin C ascorbic acid",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2387,12 +2479,13 @@
   "dev_people": 2,
   "note": "Scurvy from deficiency; citrus and fresh fruit source; wound healing impaired; role in infection and immunity",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_vitamin_d",
   "name": "Vitamin D cholecalciferol",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2411,12 +2504,13 @@
   "dev_people": 2,
   "note": "Rickets from deficiency; cod liver oil source; sun exposure activation; secondary hyperparathyroidism in deficiency",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_iodised_salt",
   "name": "Iodised salt",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_thyroid_extract"
   ],
@@ -2435,12 +2529,13 @@
   "dev_people": 2,
   "note": "Endemic goiter in iodine-poor regions; iodine content degrades with time; fortification acceptance varies culturally",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_oral_rehydration",
   "name": "Oral rehydration solution",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "md2_digestion"
   ],
@@ -2459,12 +2554,13 @@
   "dev_people": 1,
   "note": "WHO/UNICEF ORS; glucose-sodium cotransport in small intestine; as effective as IV therapy; salt ratio critical",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_sand_filtration",
   "name": "Sand filtration",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_aqueduct_roman"
   ],
@@ -2502,6 +2598,7 @@
   "id": "md2_chlorination",
   "name": "Water chlorination",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_sand_filtration"
   ],
@@ -2525,6 +2622,7 @@
   "id": "md2_sewage_separation",
   "name": "Separate sewage collection",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_aqueduct_roman",
    "civ_sewer_roman"
@@ -2553,6 +2651,7 @@
   "id": "md2_activated_sludge",
   "name": "Activated sludge treatment",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_sewage_separation"
   ],
@@ -2579,6 +2678,7 @@
   "id": "md2_milk_pasteurisation",
   "name": "Milk pasteurisation",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "thermometer",
    "cap_power_steam"
@@ -2598,12 +2698,13 @@
   "dev_people": 2,
   "note": "Low-temperature long-time or high-temperature short-time; kills TB, brucella, campylobacter; spoilage organisms also reduced",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_meat_inspection",
   "name": "Meat inspection",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_cadaver_dissection"
   ],
@@ -2622,12 +2723,13 @@
   "dev_people": 1,
   "note": "Visual and palpation; tuberculosis, anthrax, trichinosis detection; condemned meat; documentation of inspection",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_food_adulteration_law",
   "name": "Food purity legislation",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "analytical_chemistry"
   ],
@@ -2646,12 +2748,13 @@
   "dev_people": 1,
   "note": "Definition of adulterant; food standards; labeling requirements; enforcement and penalties; detection of substitutes",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_notifiable_disease",
   "name": "Notifiable disease system",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_vital_registration"
   ],
@@ -2670,12 +2773,13 @@
   "dev_people": 1,
   "note": "Surveillance for outbreaks; data collection; confidentiality protection; rapid reporting for emerging threats",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_contact_tracing",
   "name": "Contact tracing",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_notifiable_disease"
   ],
@@ -2694,12 +2798,13 @@
   "dev_people": 2,
   "note": "Case finding and source identification; quarantine placement; cohort management; resource-intensive but effective for containment",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_isolation_hospital",
   "name": "Isolation hospital",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory",
    "sanitation_antisepsis"
@@ -2738,6 +2843,7 @@
   "id": "md2_vector_control",
   "name": "Vector control",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "scientific_method"
   ],
@@ -2755,12 +2861,13 @@
   "dev_people": 1,
   "note": "Map disease against mosquitoes, fleas, or lice and remove breeding sites, isolate bedding, and install barriers. Chemical insecticides and resistance management are separate later technologies.",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_mosquito_net",
   "name": "Mosquito bed net",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "md2_vector_control"
   ],
@@ -2781,12 +2888,13 @@
   "dev_people": 1,
   "note": "Simple barrier; treated with insecticide for duration; major malaria control tool; high coverage critical for population effect",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_pit_latrine",
   "name": "Improved pit latrine",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -2812,6 +2920,7 @@
   "id": "md2_hospital_infection_control",
   "name": "Hospital infection control",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "sanitation_antisepsis",
    "md2_autoclave"
@@ -2830,12 +2939,13 @@
   "dev_people": 2,
   "note": "Hand hygiene; environmental cleaning; isolation precautions; sterilization of equipment; staff education and compliance",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_maternal_clinic",
   "name": "Maternal health clinic",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory"
   ],
@@ -2859,6 +2969,7 @@
   "id": "md2_child_clinic",
   "name": "Child health clinic",
   "cat": "public_health",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "germ_theory"
   ],
@@ -2882,6 +2993,7 @@
   "id": "md2_case_record",
   "name": "Case record keeping",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "scientific_method"
   ],
@@ -2902,12 +3014,13 @@
   "dev_people": 1,
   "note": "Standardized form and order; problem list; assessment and plan; longitudinal follow-up; quality of care measure",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_case_series",
   "name": "Case series analysis",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_case_record"
   ],
@@ -2925,12 +3038,13 @@
   "dev_people": 1,
   "note": "Pattern recognition; natural history description; hypothesis generation; no control group; rapid publication possible",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_cohort_study",
   "name": "Cohort study",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_case_series",
    "statistics_basic"
@@ -2949,12 +3063,13 @@
   "dev_people": 2,
   "note": "Prospective or retrospective; relative risk calculation; attrition and confounding challenges; expensive but strong evidence",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_case_control_study",
   "name": "Case-control study",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_case_series",
    "statistics_basic"
@@ -2973,12 +3088,13 @@
   "dev_people": 2,
   "note": "Odds ratio approximates relative risk; efficient for rare diseases; recall bias and selection bias risks; faster than cohort",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_randomised_controlled_trial",
   "name": "Randomised controlled trial",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "statistics_basic",
    "md2_blinding"
@@ -2997,12 +3113,13 @@
   "dev_people": 4,
   "note": "Gold standard for efficacy evidence; eliminates selection bias; requires large sample sizes; protocol registration and monitoring critical",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_blinding",
   "name": "Blinding in trials",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_placebo"
   ],
@@ -3020,12 +3137,13 @@
   "dev_people": 1,
   "note": "Single blind subject only, double blind subject and investigator, triple blind adds assessor; unblinding for safety; masked capsules and injections",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_placebo",
   "name": "Placebo control",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_case_control_study"
   ],
@@ -3043,12 +3161,13 @@
   "dev_people": 1,
   "note": "Ethical constraints: cannot use placebo when proven treatment exists; placebo effect real but separate from pharmacological effect",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_medical_statistics",
   "name": "Medical statistics",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "statistics_basic"
   ],
@@ -3064,9 +3183,9 @@
   "adopt_yrs": 2,
   "dev_years": 10,
   "dev_people": 2,
-  "note": "Hypothesis testing; confidence intervals; power calculations; multiple comparison corrections; software automation",
+  "note": "Hypothesis testing; confidence intervals; power calculations; multiple comparison corrections; tabulation by hand or machine",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_mortality_table",
@@ -3094,6 +3213,7 @@
   "id": "md2_vital_registration",
   "name": "Vital registration system",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "citizenship"
   ],
@@ -3112,12 +3232,13 @@
   "dev_people": 1,
   "note": "Legal proof of identity; cause of death requires physician; population denominator for rates; undercount in poor regions",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_nursing_profession",
   "name": "Professional nursing",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "sanitation_antisepsis"
   ],
@@ -3136,12 +3257,13 @@
   "dev_people": 2,
   "note": "Nightingale training standards; apprenticeship in hospital; gender issues in recruitment; autonomy vs physician delegation",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_cadaver_dissection",
   "name": "Cadaver dissection",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "citizenship"
   ],
@@ -3159,12 +3281,13 @@
   "dev_people": 1,
   "note": "Legal cadaver supply from executed criminals and unclaimed poor; religious objections; reveals anatomy without speculation",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_medical_licensing",
   "name": "Medical licensing",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "collegium_licensed"
   ],
@@ -3182,12 +3305,13 @@
   "dev_people": 2,
   "note": "Qualification standards; examination by peers; legal monopoly; disciplinary power; excludes charlatans but also innovation",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_medical_journal",
   "name": "Medical journal publication",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "corpus_dispersed"
   ],
@@ -3205,12 +3329,13 @@
   "dev_people": 2,
   "note": "Priority claims and knowledge dissemination; peer review for quality; citation tracking; reproducibility and fraud detection",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_pharmacopoeia",
   "name": "Pharmacopoeia",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "analytical_chemistry",
    "md2_drug_standardisation"
@@ -3230,12 +3355,13 @@
   "dev_people": 2,
   "note": "Prescription reference; legal authority; assurance of composition and quality; updated as new drugs appear and old ones refined",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_drug_standardisation",
   "name": "Drug standardisation",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "analytical_chemistry"
   ],
@@ -3254,12 +3380,13 @@
   "dev_people": 2,
   "note": "Units of activity for biologics like insulin and antitoxin; animal testing for potency; variation in natural products",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_bioassay",
   "name": "Bioassay",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_drug_standardisation"
   ],
@@ -3277,12 +3404,13 @@
   "dev_people": 2,
   "note": "In vivo measurement; reproducibility; refinement with statistical design; reduces animal use compared to crude testing",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_staining_methylene",
   "name": "Methylene blue staining",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_dyes_synthetic"
   ],
@@ -3300,12 +3428,13 @@
   "dev_people": 1,
   "note": "Gram and acid-fast stain modifications; vivid blue color; bacteria and WBC visible; Ehrlich's discovery",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_spirometer",
   "name": "Spirometer",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "thermometer"
   ],
@@ -3326,12 +3455,13 @@
   "dev_people": 2,
   "note": "Dry or water-sealed bell; volume displaced; obstructive vs restrictive pattern recognition",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_light_source",
   "name": "Surgical light source",
   "cat": "diagnosis",
+  "kind": "ENGINEERING",
   "pre": [
    "arc_light_lamp"
   ],
@@ -3354,12 +3484,13 @@
   "dev_people": 2,
   "note": "Carbon arc initially; tungsten filament later; reflector geometry; color temperature; heat dissipation",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_microbiology_culture",
   "name": "Microbiology culture technique",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "md2_agar_media"
   ],
@@ -3377,12 +3508,13 @@
   "dev_people": 2,
   "note": "Petri dishes with agar; colony morphology; Gram stain; culture identification; antibiotic sensitivity testing",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_plant_chemistry",
   "name": "Plant chemistry extraction",
   "cat": "therapeutics",
+  "kind": "ENGINEERING",
   "pre": [
    "distillation_alcohol"
   ],
@@ -3400,12 +3532,13 @@
   "dev_people": 2,
   "note": "Solvent selection; concentration; crystallization; identity verification; standardization of final product",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "md2_agar_media",
   "name": "Agar culture media",
   "cat": "method",
+  "kind": "SCIENCE",
   "pre": [
    "med_autoclave",
    "med_sterile_technique",
@@ -3425,6 +3558,6 @@
   "dev_people": 1,
   "note": "Agar is the whole point and it is not obvious: gelatin melts at blood heat and is digested by the very bacteria you are growing, so plates liquefy overnight. Agar from red seaweed sets at 40 C, melts at 85 C and almost nothing eats it, which is why solid plate culture works at all. Red seaweed (Gelidium and relatives) grows around most temperate and Mediterranean coastlines and is available wherever you have sea access to them.",
   "conf": "B",
-  "up": 0.0
+  "up_hours": 0
  }
 ]

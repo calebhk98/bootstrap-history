@@ -31,14 +31,17 @@ the same reason: it is called from here (`cmd_menu`, `cmd_play`) but also
 from `_save_listing` over there, so keeping it here would have made the
 save/load module import back from this one.
 """
-import json, os, random, sys, time
+import json, os, random, re, sys, time
 
-from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
-                   load, load_civ, load_geography, money_short, money_word,
+from .data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
+                   load, load_civ, load_geography, money_short, money_unit_note, money_word,
                    STARTING_KITS, win_condition_describe)
 from .core import Sim
 from . import protocol as _protocol
-from . import settings
+from . import cli_options, cli_units_options, settings
+from .settings_table import normal_seed, valid_seed_text  # noqa: F401
+from .proto import step_progress
+from .proto import util as proto_util
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
                        load_state, parse_typed, render_final, render_pretty,
                        save_state)
@@ -91,6 +94,8 @@ def cmd_play(args):
     # not line by line, because it is all the same kind of text - what a
     # first-timer needs and nobody else does - and a veteran who has turned
     # it off still gets the arrival capital/year from 'state' on request.
+    if fresh:
+        print("Seed: %s (replay these dice with --seed %s)" % (sim.seed, sim.seed))
     if fresh and app_cfg.get("show_welcome", True):
         _play_print_welcome(sim, kit)
 
@@ -123,6 +128,21 @@ def cmd_play(args):
             break
         _play_report_end_if_new(sim, nodes, args)
     return _play_finish(sim, nodes, args, session)
+
+
+DEFAULT_SEED_ENV = "ROME_DEFAULT_SEED"
+
+
+def resolve_seed(asked):
+    """The seed a sitting plays with: the one asked for, else the one named by
+    ROME_DEFAULT_SEED (the regression harness fixes it so its runs replay),
+    else a fresh draw so every new game rolls different dice."""
+    if asked is not None:
+        return normal_seed(asked)
+    fixed = os.environ.get(DEFAULT_SEED_ENV)
+    if fixed:
+        return normal_seed(fixed)
+    return random.SystemRandom().randrange(1, 2 ** 31)
 
 
 def _play_init(args):
@@ -175,10 +195,14 @@ def _play_build_sim(args):
     kit = getattr(args, "kit", None)
     if kit:
         cfg["start_kit"] = kit
+    seed = resolve_seed(getattr(args, "seed", None))
+    deterministic = (getattr(args, "deterministic", False)
+                     or bool(app_cfg.get("default_deterministic", False)))
     sim = Sim(nodes, order,
-            DetRNG(args.seed) if getattr(args, "deterministic", False) else random.Random(args.seed),
-            events=True, bounty_set=set(),
+            DetRNG(seed) if deterministic else random.Random(seed),
+            events=bool(app_cfg.get("default_events", True)), bounty_set=set(),
             manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg)
+    sim.seed = seed
     sim.goal = goal
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + horizon
@@ -194,8 +218,10 @@ def _play_build_sim(args):
     # The reader is a person typing words, so the worked examples inside every
     # reply should be words too. See protocol.to_typed_hints.
     _protocol.TYPED_HINTS = True
+    proto_util.HUMAN_AT_KEYBOARD = True
     _protocol.MONEY_SHORT = money_short(sim.civ)
     _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(app_cfg)
+    cli_units_options.apply_saved_preferences(app_cfg)
     return sim, nodes, session, app_cfg, kit, horizon
 
 
@@ -278,9 +304,9 @@ def _play_print_welcome(sim, kit):
     # A kit is a number of labourer-years, so it is stated here in the
     # civilisation's own money at its own opening wage.
     if kit and kit in STARTING_KITS:
-        print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %d %s.'
+        print(_wrap('The "%s" kit is %.1f labourer-years of wages, which here is %d %s. %s'
                     % (kit, STARTING_KITS[kit]["labourer_years"], sim.capital,
-                       money_word(sim.civ))))
+                       money_word(sim.civ), money_unit_note(sim.civ))))
     print()
     # `open` BELONGS IN THE OPENING. Finishing a project earns you
     # nothing until you open its doors, auto_open ships off for a player
@@ -307,9 +333,11 @@ def _play_print_welcome(sim, kit):
     # word to take on faith.
     print(_wrap("These five are a beginning, not the whole of it - there "
                 "are far more commands than this. 'help' lists the rest, "
-                "one topic at a time: %s. Reach for it the moment you "
-                "type a word the game does not know, not only once you "
-                "are stuck." % ", ".join(_protocol.HELP_TOPICS)))
+                "one topic at a time: %s. 'help commands' opens with a short "
+                "beginner index, and 'help sittings' explains playing one "
+                "command per process with the game saved between runs. Reach "
+                "for it the moment you type a word the game does not know, "
+                "not only once you are stuck." % ", ".join(_protocol.HELP_TOPICS)))
     # THE WALKTHROUGH, NOT BURIED: `path <goal>` lays out everything still
     # standing between here and one thing AND which of it you could start
     # today. It has no business being harder to find than the five above,
@@ -412,6 +440,27 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
     return False, session, False, None
 
 
+def _manual_save_note(resp, session):
+    """After a typed `save` succeeds: freeze the saved file as a checkpoint so
+    resuming it forks a new session instead of overwriting it, and return the
+    text saying where it landed and how to move it. Empty when the command was
+    not a successful save, or when it wrote the live session file itself."""
+    saved = resp.get("saved") if resp.get("ok") else None
+    if not saved or not session or os.path.abspath(saved) == os.path.abspath(session):
+        return ""
+    landed = os.path.abspath(saved)
+    meta = dict(settings.load_session_meta(session))
+    meta["checkpoint"] = True
+    settings.save_session_meta(saved, meta)
+    return _wrap(
+        "Saved a snapshot at %s. The live game (still autosaved after every "
+        "command) is the separate file %s. Resuming the snapshot starts a new "
+        "live file and leaves the snapshot as it is. To move it to another "
+        "machine or container, copy that file (and %s next to it) there and "
+        "run: python3 sim/simulator.py play --session <the copy>"
+        % (landed, os.path.abspath(session), os.path.basename(settings._meta_path(saved))))
+
+
 def _play_run_one_command(sim, nodes, cmd, session):
     """Run one already-parsed command through the dispatcher: dispatch it,
     autosave, and print its rendering. The printing has to happen here,
@@ -430,6 +479,7 @@ def _play_run_one_command(sim, nodes, cmd, session):
     # to its output being rendered, which is the interval the player
     # actually waits through.
     _t0 = time.time()
+    step_progress.set_after_year(step_progress.commit_and_report(session, sys.stderr))
     try:
         resp = _agent_dispatch(sim, nodes, cmd)
     except Exception as error:            # never lose a session to a bug
@@ -437,6 +487,8 @@ def _play_run_one_command(sim, nodes, cmd, session):
                 "error": "internal error handling that command: %s: %s. "
                          "The game is intact; try something else."
                          % (type(error).__name__, error)}
+    finally:
+        step_progress.set_after_year(None)  # the hook saves to this command's session only
     # SAVE FIRST, THEN SPEAK. The state change is already committed by the
     # time we get here, so writing it must not be contingent on the output
     # succeeding: a closed stdout pipe killing the process on the first
@@ -464,6 +516,10 @@ def _play_run_one_command(sim, nodes, cmd, session):
         # Only when it is worth knowing. A tenth of a second on every line
         # is noise that would bury the one command that took nine seconds.
         print(_text + ("\n   (took %.1fs)" % _took if _took >= 0.5 else ""))
+        if cmd.get("cmd") == "save" and not cmd.get("json"):
+            note = _manual_save_note(resp, session)
+            if note:
+                print(note)
         print()
     except BrokenPipeError:
         # Somebody closed the pipe. The game is saved; leave quietly.
@@ -596,6 +652,8 @@ def _ingame_options(sim, session):
             print("   3) move this save to a different file")
         print("   f) turn fuzzy estimates on from now on%s"
               % ("  (already on)" if sim.fuzzy_estimates else ""))
+        print("   u) display units (%s)"
+              % cli_units_options.summary_line(settings.load_config()))
         print("   b) back to the game")
         try:
             typed = input("\n   > ").strip()
@@ -669,6 +727,10 @@ def _ingame_options(sim, session):
                 print("   -- done. Mortality is on from %d AD." % sim.year)
             else:
                 print("   -- unchanged.")
+
+        elif word in ("u", "unit", "units"):
+            cli_units_options.edit_display_units(
+                settings.load_config(), sim.civ.get("id"), input)
 
         elif word in ("f", "fuzzy") and not sim.fuzzy_estimates:
             # One-way like mortality, unlike fog: turning it on only hides
@@ -847,6 +909,10 @@ def _new_game(civs, cfg):
     horizon = _new_game_ask_horizon(cfg)
     if horizon is None:
         return None
+    print()
+    seed = _new_game_ask_seed(cfg)
+    if seed is False:
+        return None
 
     # REMEMBERED FOR NEXT TIME, SILENTLY - not a settings screen's job: a
     # player who favours one civilisation and kit should not have to retype
@@ -895,7 +961,7 @@ def _new_game(civs, cfg):
     args = Args()
     args.strategy = "recommended"
     args.goal = goal
-    args.seed = 1
+    args.seed = seed
     args.horizon = horizon
     args.civ = civ["id"]
     args.kit = kit
@@ -941,7 +1007,6 @@ def _new_game_pick_civ(civs, cfg):
         if raw.isdigit() and 1 <= int(raw) <= len(civs):
             civ = civs[int(raw) - 1]
             break
-        print("   -- a number from 1 to %d." % len(civs))
         print("   -- a number from 1 to %d." % len(civs))
     return civ
 
@@ -1007,6 +1072,30 @@ def _new_game_ask_fuzzy(cfg):
                 ["y", "n"], fuzzy_default)
 
 
+def _new_game_ask_seed(cfg):
+    """The seed question. Returns the typed seed (a number or a word), None
+    for a random draw (blank, unless settings hold a default seed), or False
+    if the player backed out."""
+    configured = cfg.get("default_seed")
+    if configured is not None and not valid_seed_text(configured):
+        configured = None
+    shown = "default %s" % configured if configured is not None else "random"
+    while True:
+        try:
+            raw = input("   Seed, a number or a word (blank for a random one) [%s]: "
+                        % shown).strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return False
+        if not raw:
+            return None if configured is None else normal_seed(configured)
+        if raw.lower() in ("q", "quit", "exit"):
+            return False
+        if valid_seed_text(raw):
+            return normal_seed(raw)
+        print("   -- one word of letters, digits, '-' or '_', or blank for a random seed.")
+
+
 def _new_game_ask_kit(cfg):
     """The starting-kit question. Returns the chosen kit's id, or None if
     the player backed out.
@@ -1033,8 +1122,8 @@ def _new_game_ask_mortality(cfg):
     print(_wrap("MORTALITY. By default the founder does not age, which measures "
                 "the tree rather than a lifespan lottery. Turned on, you get one "
                 "human life and everything you have not made permanent dies with "
-                "you. The premise of the whole game is that one is the honest "
-                "number. You can turn this on later, mid-game, without "
+                "you. Either way shapes what you can reach and how you must plan. "
+                "You can turn this on later, mid-game, without "
                 "restarting (see the in-game 'options' command) - but not off "
                 "again once it is on, the same as fog.", indent="   "))
     mortal_default = "y" if cfg.get("default_mortal", False) else "n"
@@ -1050,22 +1139,23 @@ def _new_game_pick_goal(tree, nodes, cfg):
     Returns the chosen goal's node id, or None if the player backed out.
     """
     print("-" * 78)
-    print(_wrap("THE GOAL. The transistor (1951) is the original target and "
-                "still the default, and from scratch it takes centuries - which "
-                "is the whole reason the founder does not age by default. Below "
-                "are the alternatives: achievements a single lifetime can "
+    goals = selectable_goals(tree, nodes)
+    default_goal_id = cfg.get("default_goal") or goals[0]["node"]
+    if default_goal_id not in nodes:
+        default_goal_id = goals[0]["node"]
+    default_gi = next((i for i, goal_row in enumerate(goals, 1)
+                       if goal_row["node"] == default_goal_id), 1)
+    print(_wrap("THE GOAL. %s is the default, the target `play` aims at when "
+                "no goal is named, and from scratch it takes centuries - which "
+                "is the whole reason the founder does not age by default. The "
+                "others are alternatives: achievements a single lifetime can "
                 "actually finish, and a handful almost as large as the "
                 "transistor itself. 'closure' is how many other things it needs "
                 "first; 'floor' is the fewest calendar years that work could "
-                "possibly take, with every dice roll going your way.",
+                "possibly take, with every dice roll going your way."
+                % nodes[goals[0]["node"]].get("name", goals[0]["node"]),
                 indent="   "))
     print()
-    goals = goal_catalog(tree, nodes)
-    default_goal_id = cfg.get("default_goal") or tree["meta"]["goal_node"]
-    if default_goal_id not in nodes:
-        default_goal_id = tree["meta"]["goal_node"]
-    default_gi = next((i for i, goal_row in enumerate(goals, 1)
-                       if goal_row["node"] == default_goal_id), 1)
     for i, goal_row in enumerate(goals, 1):
         node = goal_row["node"]
         need = closure(nodes, node)
@@ -1120,8 +1210,7 @@ def _new_game_print_horizon_intro(nodes, goal):
     print()
     # THE ONE HONEST THING A MODE MENU CAN SAY HERE: the same number of years
     # is a completely different offer depending which civilisation it is
-    # attached to - see DICE_FREE_FLOOR_YEARS's own comment for the measurement
-    # and data/review/PATH_SEARCH.md for the method. Said to the player
+    # attached to - see data/review/PATH_SEARCH.md for the measurement. Said to the player
     # NOW, about the civilisation they just picked, rather than left for them
     # to discover by overshooting a horizon that was never going to be enough.
     # THE FLOOR OF THE GOAL YOU JUST PICKED, not of a default one: a static
@@ -1318,7 +1407,7 @@ def _load_game(cfg):
         pass
     args = Args()
     args.strategy = "recommended"
-    args.seed = 1
+    args.seed = None
     args.horizon = 500
     args.civ = None
     args.kit = "poor_scholar"
@@ -1330,150 +1419,8 @@ def _load_game(cfg):
 
 
 def _options_menu(cfg):
-    """Preferences about the APPLICATION, not about any one game: where
-    saves go, how wide a line wraps, how many rows a long table shows
-    before paging, and whether the welcome/tutorial text prints on a new
-    game. See settings.py's module docstring for why this screen holds
-    exactly these and none of the things a playthrough itself decides
-    (civilisation, starting kit, fog, mortality, horizon) - those are
-    remembered from the New Game wizard's last answers instead (see
-    _new_game), and the couple of them that are honestly changeable
-    mid-game (horizon, mortality) have their own, much smaller, in-game
-    'options' command (_ingame_options) for a game already running.
-    """
-    while True:
-        cfg = _apply_display_prefs(cfg)
-        cur_width = settings.resolve_display_width(cfg)
-        width_src = ("override" if isinstance(cfg.get("display_width"), (int, float))
-                                   and cfg["display_width"] else
-                    "detected from your terminal")
-        print()
-        print("-" * 78)
-        print("   OPTIONS")
-        print("-" * 78)
-        print(_wrap("Preferences about this PROGRAM, not about any one game - "
-                    "they apply whether you are starting a new one, loading an "
-                    "old one, or running it from the command line with flags. "
-                    "What a single playthrough is (civilisation, starting kit, "
-                    "fog, mortality, the horizon) is asked when that game "
-                    "starts, not here."))
-        print()
-        print("   1) save location      : %s"
-              % settings.resolve_save_dir(cfg, ensure=False))
-        print("   2) display width      : %d columns (%s)" % (cur_width, width_src))
-        print("   3) rows per table      : %d" % settings.resolve_rows_per_page(cfg))
-        print("   4) welcome/tutorial text on new games : %s"
-              % ("on" if cfg.get("show_welcome", True) else "off"))
-        print("   b) back to the main menu")
-        try:
-            raw = input("\n   > ").strip().lower()
-        except (EOFError, KeyboardInterrupt):
-            print(); return cfg
-        word = raw.split()[0] if raw.split() else ""
-
-        if word in ("", "b", "back"):
-            return cfg
-
-        elif word in ("1", "save", "location"):
-            cur = settings.resolve_save_dir(cfg, ensure=False)
-            print(_wrap("Where new games are saved, and where 'Load a saved "
-                        "game' looks. Existing save files are not moved - use "
-                        "'options' inside a game in progress to move that one "
-                        "game's save."))
-            if os.environ.get(settings.SAVE_DIR_ENV):
-                print(_wrap("Note: the %s environment variable is set to %r "
-                            "right now and overrides whatever is chosen here "
-                            "until it is unset."
-                            % (settings.SAVE_DIR_ENV,
-                               os.environ[settings.SAVE_DIR_ENV])))
-            try:
-                raw2 = input("   New save directory [currently %s, blank to "
-                             "leave unchanged]: " % cur).strip()
-            except (EOFError, KeyboardInterrupt):
-                print(); continue
-            if not raw2:
-                continue
-            newdir = os.path.expanduser(raw2)
-            try:
-                os.makedirs(newdir, exist_ok=True)
-                probe = os.path.join(newdir, ".rome-write-test")
-                with open(probe, "w"):
-                    pass
-                os.remove(probe)
-            except OSError as error:
-                print("   -- could not use that directory: %s" % error)
-                continue
-            cfg["save_dir"] = newdir
-            settings.save_config(cfg)
-            print("   -- saved. New games, and 'Load a saved game', will use %s"
-                  % newdir)
-
-        elif word in ("2", "width", "display"):
-            print(_wrap("How many columns text wraps to and tables are sized "
-                        "for. Left alone, the game asks your terminal and uses "
-                        "that (right now it reads %d). Set a number to "
-                        "override it - for a terminal that cannot be asked, or "
-                        "one you simply want narrower or wider - or type "
-                        "'auto' to go back to asking the terminal."
-                        % settings.resolve_display_width(
-                            dict(cfg, display_width=None))))
-            try:
-                raw2 = input("   New width [currently %d (%s), a number, "
-                             "'auto', or blank to leave unchanged]: "
-                             % (cur_width, width_src)).strip().lower()
-            except (EOFError, KeyboardInterrupt):
-                print(); continue
-            if not raw2:
-                continue
-            if raw2 in ("auto", "detect", "default"):
-                cfg["display_width"] = None
-                settings.save_config(cfg)
-                print("   -- saved. Width will be asked from your terminal "
-                      "from now on.")
-                continue
-            try:
-                display_width = int(raw2)
-                if display_width < 20:
-                    raise ValueError
-            except ValueError:
-                print("   -- a whole number of columns (at least 20), 'auto', "
-                      "or blank.")
-                continue
-            cfg["display_width"] = display_width
-            settings.save_config(cfg)
-            print("   -- saved. %d columns from now on." % display_width)
-
-        elif word in ("3", "rows", "page"):
-            try:
-                raw2 = input("   Rows per table before paging [currently %d, "
-                             "blank to leave unchanged]: "
-                             % settings.resolve_rows_per_page(cfg)).strip()
-            except (EOFError, KeyboardInterrupt):
-                print(); continue
-            if not raw2:
-                continue
-            try:
-                rows_per_page = int(raw2)
-                if rows_per_page <= 0:
-                    raise ValueError
-            except ValueError:
-                print("   -- a whole number of rows, more than 0.")
-                continue
-            cfg["rows_per_page"] = rows_per_page
-            settings.save_config(cfg)
-            print("   -- saved.")
-
-        elif word in ("4", "welcome", "tutorial"):
-            value = _ask("   Show the welcome message and tutorial on new games? "
-                     "[y/n] ", ["y", "n"],
-                     "y" if cfg.get("show_welcome", True) else "n")
-            if value:
-                cfg["show_welcome"] = (value == "y")
-                settings.save_config(cfg)
-                print("   -- saved.")
-
-        else:
-            print("   -- 1 to 4, or b.")
+    """The main menu's Options screen; see cli_options."""
+    return cli_options.options_menu(cfg)
 
 
 def cmd_menu(args):

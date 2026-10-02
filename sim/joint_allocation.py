@@ -12,9 +12,11 @@ import os
 import warnings
 
 from sim.constants import declare
+from sim.engine.default_civilisation import default_civilisation_id
+from sim.joint_floor import JOINT_BYPRODUCT_FLOOR_SHARE, lift_to_floor  # noqa: F401
 from sim.world import demand, deposits
 
-DEFAULT_CIVILIZATION = "rome_100ad"
+DEFAULT_CIVILIZATION = default_civilisation_id()
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR = declare(
@@ -83,7 +85,8 @@ def allocate_joint_cost(outputs, current_prices, total_cost,
         name: anchors[name] if name in anchored
         else standalone_cost_per_kg * kilograms_per_unit[name]
         for name in split_outputs}
-    prices.update(_split_by_value(split_outputs, reference_prices, total_cost))
+    split = _split_by_value(split_outputs, reference_prices, total_cost)
+    prices.update(lift_to_floor(split, split_outputs, kilograms_per_unit, total_cost))
     return prices
 
 
@@ -132,7 +135,7 @@ def _civilisation(civilization_id):
         return json.load(handle)
 
 
-def build_demand_anchors(civilization_id=None, supply_by_material=None):
+def build_demand_anchors(civilization_id=None, supply_by_material=None, civilization=None):
     """NeedDemandAnchors for a civilisation, or None when nothing is anchorable.
 
     Demand comes from the needs data (data/world/needs.json and mods), the
@@ -160,7 +163,7 @@ def build_demand_anchors(civilization_id=None, supply_by_material=None):
     supply_by_material = dict(supply_by_material, **declared)
     if not supply_by_material:
         return None
-    civilisation = _civilisation(civilization_id)
+    civilisation = civilization if civilization is not None else _civilisation(civilization_id)
     bins = demand.income_bins(
         float(civilisation["population"]), MEAN_INCOME_LABOUR_HOURS_PER_CAPITA_PER_YEAR)
     technology_demand = need_demand.technology_material_demand(

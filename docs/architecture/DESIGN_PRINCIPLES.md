@@ -22,8 +22,8 @@ reasons the model already derives.
 
 A universal delay would duplicate those mechanisms and would itself be a
 hardcoded outcome (`CLAUDE.md` section 4.1). Real remaining gaps are specific:
-sector-specific diffusion (`Complaints/116`), the growth curve
-(`Complaints/104`) and supplier depth (`Complaints/115`), not the seam between
+sector-specific diffusion (`Complaints/112`), the growth curve
+(`Complaints/101`) and supplier depth (`Complaints/111`), not the seam between
 research and manufacture.
 
 Verify the claim with `python3 sim/simulator.py why <node>` (build staff,
@@ -41,13 +41,13 @@ So do not suppress wealth by crushing venture revenue, capping income or
 scaling revenue down until the player stays poor. That is a hardcoded outcome
 (`CLAUDE.md` section 4.1) and the wrong fix. The right fixes add mechanisms
 that redistribute or constrain a growing economy: independent firms and
-imitation competing margins away (`Complaints/107`), a state that taxes and
-requisitions (`Complaints/109`), deeper capital markets (`Complaints/110`),
-and political interest groups extracting concessions (`Complaints/114`). Any
+imitation competing margins away (`Complaints/103`), a state that taxes and
+requisitions (`Complaints/105`), deeper capital markets (`Complaints/106`),
+and political interest groups extracting concessions (`Complaints/110`). Any
 of those will lower the founder's share as a side effect; that is the point,
 and it is not a licence to shrink the economy directly.
 
 Existing wealth-responsive mechanisms (state notice and prominence hazard in
 `sim/engine/society_state_pressure.py`) already react to wealth; their
-saturation at extreme fortunes is a separate defect (`Complaints/118`).
-Read together with `Complaints/117` (snowball difficulty).
+saturation at extreme fortunes is a separate defect (`Complaints/114`).
+Read together with `Complaints/113` (snowball difficulty).

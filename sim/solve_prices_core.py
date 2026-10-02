@@ -28,8 +28,10 @@ REPO_ROOT = os.path.dirname(HERE)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 from sim.joint_allocation import allocate_joint_cost, cap_anchors  # noqa: E402
+from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 from sim.world import deposits                  # noqa: E402  (RENT ON EXTRACTED MATERIALS)
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND)
+from sim.world.capital_market import capital_recovery_factor  # noqa: E402  (CAPITAL)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
 # GUESS_HOURS and GROWTH_BOUND_HOURS live in sim/algorithm_parameters.py and
 # are imported back here under their original names, so every existing
@@ -53,9 +55,9 @@ NUMERAIRE_TRADE = "labourer"
 # invites.
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
-# PHYSICAL CAPABILITY CAPS (Complaints/44 - see TEMPERATURE in this
+# PHYSICAL CAPABILITY CAPS (Complaints/43 - see TEMPERATURE in this
 # module's own docstring for the full defect and the reasoning behind the
-# number below). data/tech_tree.json's own `cap_heat_0700` node -
+# number below). the tree's own `cap_heat_0700` node -
 # "Sustained 700 C (pottery kiln)... Already available wherever there is
 # an updraught pottery kiln, wood fired. Free starting capability. Glazes,
 # bricks, lime, glass working" - carries no prerequisite at all (`pre:
@@ -151,7 +153,7 @@ def capability_required_grades(production_entries):
 
 def capability_price_for_requirement(carrier, required_value, production_entries,
                                      current_prices, wage_by_trade,
-                                     rent_hours_per_kg_by_material=None):
+                                     rent_hours_per_kg_by_material=None, interest_rate=0.0):
     """(price, recipe_id) for the CHEAPEST technique that both supplies
     `carrier` and clears `required_value` on the physical dimension
     CAPABILITY_CAP_FIELDS grades it by, costed at this round's own
@@ -201,7 +203,7 @@ def capability_price_for_requirement(carrier, required_value, production_entries
             continue
         result = recipe_cost_and_allocation(
             recipe_id, entry, current_prices, wage_by_trade,
-            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate)
         if result is None:
             continue
         _total_cost, output_prices = result
@@ -231,7 +233,7 @@ def _capability_graded_price(carrier, entry, current_prices,
 
     `capability_band_price_by_carrier` is None outside `solve`'s own
     iteration (the one-off ore and wheat base-price calls in
-    `rent_hours_per_kg_by_ore_material` and `land_rent_hours_per_iugerum`,
+    `rent_hours_per_kg_by_ore_material` and `land_rent_hours_per_hectare`,
     neither of which ever states a capped-carrier requirement) and for
     any carrier CAPABILITY_CAP_FIELDS does not grade at all, in which
     case this always falls through to the plain, ungraded lookup.
@@ -308,6 +310,17 @@ def wage_ratios_by_trade(prices_json):
             if not trade.startswith("_")}
 
 
+def load_starting_interest_rate(civilization_id):
+    """The yearly rate on loans the civilization starts at (an initial condition, as its starting
+    technologies are): the market rate its plant must earn over depreciation, until a market has met."""
+    path = os.path.join(HERE, os.pardir, "data", "civilizations", "%s.json" % civilization_id)
+    if os.path.exists(path):
+        with open(path) as handle:
+            return float(json.load(handle)["starting_interest_rate"])
+    from sim.engine.data import load_civ        # a civilisation a mod defines is not a file of its own
+    return float(load_civ(civilization_id)["starting_interest_rate"])
+
+
 def load_starting_technologies(civilization_id):
     """The set of tech-tree node ids a civilization begins the game holding.
 
@@ -345,7 +358,7 @@ def techniques_available_to(production_entries, reached_nodes):
       unclassified - the entry carries no `requires_node` at all, so nobody
                      has said when it becomes available. Dropped, because
                      admitting it is precisely how a photovoltaic panel ended
-                     up pricing Roman electricity (Complaints/39), and
+                     up pricing Roman electricity (Complaints/38), and
                      counted, because a silent drop is how that stayed
                      invisible for as long as it did.
 
@@ -388,8 +401,8 @@ def _dependency_materials(entry):
     its ordinary process `inputs`, plus every capital good's own
     `build_materials` (see the module docstring's CAPITAL section), plus
     `thermal_mj` and/or `mechanical_mj` themselves whenever the entry needs
-    a nonzero amount of either (see ENERGY), plus `iugerum_land` itself
-    whenever the entry states a nonzero `land_iugera_years` (see RENT ON
+    a nonzero amount of either (see ENERGY), plus `hectare_land` itself
+    whenever the entry states a nonzero `land_hectare_years` (see RENT ON
     GROWN AND LAND-LIMITED MATERIALS). Resolvability has to see all
     four, or a capital-only cycle - `iron_bar_kg` priced partly in
     `iron_bar_kg`, via its own finery hammer's iron fittings - or an energy
@@ -402,8 +415,8 @@ def _dependency_materials(entry):
     for energy_key in ENERGY_CARRIER_FIELDS:
         if entry.get(energy_key):
             dependencies.add(energy_key)
-    if entry.get("land_iugera_years"):
-        dependencies.add("iugerum_land")
+    if entry.get("land_hectare_years"):
+        dependencies.add("hectare_land")
     return dependencies
 
 
@@ -546,7 +559,7 @@ def _has_external_anchor(entry, resolved_so_far):
     member of its own cycle: ordinary labour, capital build-labour, a
     material dependency that is already resolved (ultimately an extracted
     good, priced at labour plus zero rent), or land (ultimately priced by
-    the Ricardian rent on `iugerum_land`, another extracted good in
+    the Ricardian rent on `hectare_land`, another extracted good in
     everything but name). A cycle where every relevant recipe fails this
     never bottoms out in labour or an extracted good at all - see the
     module docstring's CYCLES section - so there is nothing to price it
@@ -562,7 +575,7 @@ def _has_external_anchor(entry, resolved_so_far):
         if any(material in resolved_so_far
                for material in (capital_good.get("build_materials") or {})):
             return True
-    if entry.get("land_iugera_years") and "iugerum_land" in resolved_so_far:
+    if entry.get("land_hectare_years") and "hectare_land" in resolved_so_far:
         return True
     return False
 
@@ -778,12 +791,12 @@ def _extraction_rent_cost_hours(outputs, rent_by_kg):
 
 
 def _land_cost_hours(entry, current_prices):
-    # LAND (Complaints/49 - see RENT ON GROWN AND LAND-LIMITED MATERIALS in
-    # the module docstring). `land_iugera_years` is a BATCH-level quantity,
-    # exactly like `inputs` and `labour_hours` above, of iugera-years this
-    # whole batch ties up `iugerum_land` for - priced through this same
+    # LAND (Complaints/48 - see RENT ON GROWN AND LAND-LIMITED MATERIALS in
+    # the module docstring). `land_hectare_years` is a BATCH-level quantity,
+    # exactly like `inputs` and `labour_hours` above, of hectare-years this
+    # whole batch ties up `hectare_land` for - priced through this same
     # `current_prices` vector rather than a separate rent table, because
-    # `iugerum_land` is an ORDINARY material once its own price is set (by
+    # `hectare_land` is an ORDINARY material once its own price is set (by
     # the rent term above, on ITS OWN recipe in data/production/
     # 40_organics.json) and a crop paying for the land it grows on is no
     # different from a furnace paying for the ore it smelts. Kept as its
@@ -791,16 +804,18 @@ def _land_cost_hours(entry, current_prices):
     # same reason CAPITAL's build bill is not hand-added to `inputs`: this
     # is land OCCUPIED for a season, not a material CONSUMED making one
     # batch, and the field name should say so.
-    land_iugera_years = entry.get("land_iugera_years") or 0.0
-    if not land_iugera_years:
+    land_hectare_years = entry.get("land_hectare_years") or 0.0
+    if not land_hectare_years:
         return 0.0
-    land_price = current_prices.get("iugerum_land")
+    land_price = current_prices.get("hectare_land")
     if land_price is None:
         return None
-    return land_iugera_years * land_price
+    return land_hectare_years * land_price
 
 
-def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade):
+def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade, interest_rate=0.0):
+    # Each plant repays its build bill over its service life with interest at the market rate on what is
+    # unpaid (`capital_recovery_factor`); at a nil rate that is the build bill over the life.
     capital_cost_hours = 0.0
     for capital_good in capital_goods:
         build_materials = capital_good.get("build_materials") or {}
@@ -815,8 +830,8 @@ def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade):
         for trade, hours_per_build in build_labour_hours.items():
             build_cost_hours += hours_per_build * wage_by_trade[trade]
 
-        lifetime_output = capital_good["service_life_years"] * capital_good["annual_output_at_basis"]
-        capital_cost_hours += build_cost_hours / lifetime_output
+        yearly_share = capital_recovery_factor(interest_rate, capital_good["service_life_years"])
+        capital_cost_hours += build_cost_hours * yearly_share / capital_good["annual_output_at_basis"]
     return capital_cost_hours
 
 
@@ -828,7 +843,7 @@ def _energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
     # against this same batch's basis output) - NOT a per-unit-of-output
     # charge the way `capital` is, so unlike capital_cost_hours none of
     # these terms gets multiplied by batch_output_quantity. PER-CONSUMER
-    # GRADING (Complaints/44, continued - see TEMPERATURE in the module
+    # GRADING (Complaints/43, continued - see TEMPERATURE in the module
     # docstring): the price paid is not always `current_prices[energy_key]`
     # any more - `_capability_graded_price` returns THIS recipe's own
     # graded price when it states its own requirement, and falls back to
@@ -859,7 +874,8 @@ def _allocate_output_prices(outputs, current_prices, total_process_cost_hours,
 def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
                                rent_hours_per_kg_by_material=None,
                                capability_band_price_by_carrier=None,
-                               demand_anchor_price_by_material=None):
+                               demand_anchor_price_by_material=None,
+                               interest_rate=0.0):
     """Cost one recipe's whole batch, then split it across its outputs.
 
     Returns (total_process_cost_hours, {output_material: price_per_unit}),
@@ -898,8 +914,9 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     simply holds a 100% share.
 
     CAPITAL (see the module docstring): each item in `entry["capital"]` adds
-    (cost of its build_materials + cost of its build_labour_hours) /
-    (service_life_years * annual_output_at_basis) to the cost of ONE UNIT of
+    (cost of its build_materials + cost of its build_labour_hours) * the yearly share that repays it
+    over service_life_years with interest at `interest_rate` (the civilisation's market rate; nil
+    leaves depreciation alone) / annual_output_at_basis to the cost of ONE UNIT of
     this recipe's basis output, priced through this same `current_prices`
     vector rather than looked up - a furnace built partly from the metal it
     makes is exactly the kind of dependency `compute_resolvable_materials`
@@ -936,7 +953,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
         return None
 
     capital_cost_hours = _capital_cost_hours_per_unit(
-        entry.get("capital") or [], current_prices, wage_by_trade)
+        entry.get("capital") or [], current_prices, wage_by_trade, interest_rate)
     if capital_cost_hours is None:
         return None
 
@@ -967,7 +984,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
 # consumes their ore, so there is only one candidate for them. Iron has
 # two - pig_iron_kg (blast furnace) and iron_bloom_kg (direct bloomery) -
 # at different ore-to-metal ratios, and which of them an era can even RUN
-# differs: `--civ rome_100ad` gates pig_iron_kg out entirely (blast_furnace
+# differs: the default civilisation gates pig_iron_kg out entirely (blast_furnace
 # is not a Roman technology) while leaving iron_bloom_kg available, so a
 # single fixed recipe id here would silently leave iron at zero rent for
 # every Roman-era gated solve - exactly the scenario this task's own VERIFY
@@ -982,6 +999,8 @@ RENT_BEARING_ORE_MATERIALS = {
     "galena_kg": ("lead", ("lead_kg",)),
     "silver_ore_kg": ("silver", ("silver_kg",)),
     "cinnabar_kg": ("mercury", ("mercury_kg",)),
+    "gold_gravel_kg": ("gold", ("gold_kg",)),
+    "gold_lode_ore_kg": ("gold", ("gold_lode_kg",)),
 }
 
 
@@ -1075,7 +1094,8 @@ def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
 
         deposits_for_metal = deposits.load_deposits(metal)
         quantity_demanded_tonnes_per_year = (
-            resources_json["empire_output_100ad"][metal]["t_per_yr"])
+            deposits.empire_output_net_of_byproducts_tonnes_per_year(
+                metal, resources_json))
         outcome = deposits.find_marginal_deposit(
             deposits_for_metal, quantity_demanded_tonnes_per_year)
         metal_price_per_kg = outcome.price_at_margin_labour_hours_per_kg
@@ -1095,12 +1115,12 @@ def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
 # has no per-civilization breakdown either), even though land's OWN
 # mechanism, unlike ore's, is genuinely per-civilization the moment --civ
 # names one.
-DEFAULT_LAND_CIVILIZATION = "rome_100ad"
+DEFAULT_LAND_CIVILIZATION = default_civilisation_id()
 
 
-def land_rent_hours_per_iugerum(production_entries, wage_by_trade,
-                                civilization_id=None):
-    """{"iugerum_land": hours of rent per iugerum}, or {} if there is no
+def land_rent_hours_per_hectare(production_entries, wage_by_trade,
+                                civilization_id=None, civilizations=None):
+    """{"hectare_land": hours of rent per hectare}, or {} if there is no
     reference crop price or no priceable land to convert into one this
     round - see sim/world/land.py's own module docstring for the mechanism
     (the Ricardian margin of cultivation over a civilization's own held
@@ -1110,29 +1130,29 @@ def land_rent_hours_per_iugerum(production_entries, wage_by_trade,
 
     THE ALGEBRA. sim/world/land.py's own `margin_outcome_for_civilization`
     returns a supply-weighted average rent in kilograms of grain-equivalent
-    per iugerum - a PHYSICAL quantity, not a price (see that module's own
+    per hectare - a PHYSICAL quantity, not a price (see that module's own
     WHY THE HOURS CONVERSION LIVES IN sim/solve_prices.py, NOT HERE
     section for why the conversion happens here rather than there).
     Multiplying by wheat_kg's own ZERO-LAND-RENT price (labour only, exactly
     like rent_hours_per_kg_by_ore_material's own `ore_base_price_per_kg`)
     turns that physical surplus into the labour-hour unit this file prices
-    everything else in. `iugerum_land` itself has no `inputs` and no
+    everything else in. `hectare_land` itself has no `inputs` and no
     `labour_hours` of its own (data/production/40_organics.json's own
     entry says so directly), so this rent figure becomes its WHOLE solved
     price with nothing else added - see recipe_cost_and_allocation's own
     rent_hours term.
 
     THE ZERO-LAND-RENT REFERENCE PRICE, AND WHY IT STAYS ZERO-RENT EVEN NOW
-    THAT wheat_kg CONSUMES LAND (Complaints/49). Before this round wheat_kg
+    THAT wheat_kg CONSUMES LAND (Complaints/48). Before this round wheat_kg
     truly had no `inputs` at all, so calling `recipe_cost_and_allocation`
     with an empty price dict gave its labour-only price by construction.
-    wheat_kg now also states a `land_iugera_years` (see RENT ON GROWN AND
+    wheat_kg now also states a `land_hectare_years` (see RENT ON GROWN AND
     LAND-LIMITED MATERIALS above), so the SAME call would otherwise return
-    None the moment it tries to look up a price for `iugerum_land` that this
+    None the moment it tries to look up a price for `hectare_land` that this
     empty dict does not have. The fix is to seed exactly that one price at
-    0.0 rather than leave it absent - `{"iugerum_land": 0.0}` - which
-    reproduces the pre-Complaints/49 answer exactly (0.0 hours/iugerum times
-    any `land_iugera_years` is 0.0, so the land term drops out and only
+    0.0 rather than leave it absent - `{"hectare_land": 0.0}` - which
+    reproduces the pre-Complaints/48 answer exactly (0.0 hours/hectare times
+    any `land_hectare_years` is 0.0, so the land term drops out and only
     labour remains) rather than changing what this reference price MEANS.
     This is deliberately NOT circular: the reference price answers "what
     would wheat cost if land were free", which this function needs as a
@@ -1140,8 +1160,8 @@ def land_rent_hours_per_iugerum(production_entries, wage_by_trade,
     once, outside the main iteration, the same way it always was - wheat's
     ACTUAL solved price (what every other recipe that consumes wheat_kg
     pays, and what bread is costed from) is computed by the ordinary
-    Jacobi iteration in `solve()` below, WITH land_iugera_years priced in,
-    using `iugerum_land`'s price that THIS function's own return value
+    Jacobi iteration in `solve()` below, WITH land_hectare_years priced in,
+    using `hectare_land`'s price that THIS function's own return value
     fixes beforehand. See WHY NO NEW CYCLE in the module docstring.
     """
     civilization_id = civilization_id or DEFAULT_LAND_CIVILIZATION
@@ -1153,7 +1173,7 @@ def land_rent_hours_per_iugerum(production_entries, wage_by_trade,
         # into hours with, so land keeps the old RENT_IS_ZERO answer.
         return {}
     wheat_cost = recipe_cost_and_allocation(
-        "wheat_kg", wheat_entry, {"iugerum_land": 0.0}, wage_by_trade)
+        "wheat_kg", wheat_entry, {"hectare_land": 0.0}, wage_by_trade)
     if wheat_cost is None:
         return {}
     _wheat_total_hours, wheat_output_prices = wheat_cost
@@ -1162,21 +1182,23 @@ def land_rent_hours_per_iugerum(production_entries, wage_by_trade,
         return {}
 
     try:
-        outcome = land.margin_outcome_for_civilization(civilization_id)
+        outcome = land.margin_outcome_for_civilization(civilization_id, civilizations=civilizations)
     except (FileNotFoundError, KeyError):
         # An unknown civilization id, or one missing a population field -
         # should not happen for this project's own data/civilizations/
         # files, handled the same way a missing ore recipe is: no rent
         # guessed, the old zero-rent answer stands.
         return {}
-    if outcome.price_kg_grain_equivalent_per_iugerum <= 0.0:
+    rent_kg_per_hectare = outcome.price_kg_grain_equivalent_per_hectare
+    if rent_kg_per_hectare <= 0.0:
         return {}
-    rent_hours = outcome.price_kg_grain_equivalent_per_iugerum * wheat_price_per_kg
-    return {"iugerum_land": rent_hours}
+    rent_hours = rent_kg_per_hectare * wheat_price_per_kg
+    return {"hectare_land": rent_hours}
 
 
 def _capability_band_prices_this_round(required_grades_by_carrier, production_entries,
-                                       prices, wage_by_trade, rent_hours_per_kg_by_material):
+                                       prices, wage_by_trade, rent_hours_per_kg_by_material,
+                                       interest_rate=0.0):
     # PER-CONSUMER GRADING: re-solved every round, from THIS round's
     # own (pre-update) `prices`, exactly like every candidate recipe
     # below is costed against those same prices (Jacobi - see this
@@ -1187,7 +1209,8 @@ def _capability_band_prices_this_round(required_grades_by_carrier, production_en
             required_value: capability_price_for_requirement(
                 carrier, required_value, production_entries, prices,
                 wage_by_trade,
-                rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+                rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
+                interest_rate=interest_rate)
             for required_value in required_values
         }
         for carrier, required_values in required_grades_by_carrier.items()
@@ -1197,13 +1220,13 @@ def _capability_band_prices_this_round(required_grades_by_carrier, production_en
 def _solve_round_candidates(production_entries, recipe_ids_in_order, resolvable_materials,
                             prices, wage_by_trade, rent_hours_per_kg_by_material,
                             band_price_by_carrier, floor_by_carrier,
-                            demand_anchor_price_by_material=None):
+                            demand_anchor_price_by_material=None, interest_rate=0.0):
     def cost(recipe_id, entry, anchors):
         return recipe_cost_and_allocation(
             recipe_id, entry, prices, wage_by_trade,
             rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
             capability_band_price_by_carrier=band_price_by_carrier,
-            demand_anchor_price_by_material=anchors)
+            demand_anchor_price_by_material=anchors, interest_rate=interest_rate)
 
     runnable = [
         recipe_id for recipe_id in recipe_ids_in_order
@@ -1272,7 +1295,7 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
 def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
          damping=DAMPING_FACTOR, max_iterations=MAXIMUM_ITERATIONS,
          tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None,
-         demand_anchors=None):
+         demand_anchors=None, interest_rate=0.0):
     """Damped Jacobi fixed-point iteration over every resolvable material.
 
     Every material updates from the SAME round's starting prices (Jacobi,
@@ -1286,7 +1309,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
     Returns (prices, iterations_run, final_residual, chosen_recipe_by_material).
 
-    PHYSICAL CAPABILITY CAPS, PER CONSUMER (Complaints/44, continued; see
+    PHYSICAL CAPABILITY CAPS, PER CONSUMER (Complaints/43, continued; see
     CAPABILITY_CAP_FIELDS and TEMPERATURE in the module docstring). Two
     things are computed once, before the very first round, from THIS
     solve's own `production_entries` alone - exactly like
@@ -1326,14 +1349,15 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
         band_price_by_carrier = _capability_band_prices_this_round(
             required_grades_by_carrier, production_entries, prices, wage_by_trade,
-            rent_hours_per_kg_by_material)
+            rent_hours_per_kg_by_material, interest_rate)
 
         candidates_by_material = _solve_round_candidates(
             production_entries, recipe_ids_in_order, resolvable_materials, prices,
             wage_by_trade, rent_hours_per_kg_by_material, band_price_by_carrier,
             floor_by_carrier,
             demand_anchor_price_by_material=(
-                demand_anchors.prices(prices) if demand_anchors else None))
+                demand_anchors.prices(prices) if demand_anchors else None),
+            interest_rate=interest_rate)
 
         floor_source = getattr(demand_anchors, "scarcity_floor_prices", None)
         prices, final_residual = _solve_round_update_prices(
@@ -1349,7 +1373,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_material,
                                           prices, wage_by_trade, share_threshold=0.5,
                                           rent_hours_per_kg_by_material=None,
-                                          demand_anchors=None):
+                                          demand_anchors=None, interest_rate=0.0):
     """{material: value_share} for every material whose CONVERGED, CHOSEN
     recipe is a joint-production recipe in which this material holds under
     `share_threshold` of the batch's value.
@@ -1370,7 +1394,7 @@ def minor_joint_byproducts_are_unanchored(production_entries, chosen_recipe_by_m
             continue
         result = recipe_cost_and_allocation(
             recipe_id, entry, prices, wage_by_trade,
-            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
+            rent_hours_per_kg_by_material=rent_hours_per_kg_by_material, interest_rate=interest_rate)
         if result is None:
             continue
         total_process_cost, _output_prices = result

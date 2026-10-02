@@ -71,9 +71,18 @@ def compact_state(out, sim=None, nodes=None):
     if "events" in out:
         compact["completed"] = [row.get("id") for row in out.get("completed") or []]
         compact["lost"] = out.get("lost")
-        compact["events"] = [{"year": row.get("year"), "message": _short(row.get("message"))}
+        compact["events"] = [{"year": row.get("year"), "message": _short(row.get("message")),
+                              **({"severity": row["severity"]} if row.get("severity") else {})}
                              for row in out.get("events") or []]
     return compact
+
+
+def _blocked_by(out):
+    """Missing prerequisites, then what the other blockers (supply options, power gates) name."""
+    ids = list(out.get("missing_prerequisites") or [])
+    for blocker in out.get("blockers") or []:
+        ids.extend(node_id for node_id in blocker.get("ids") or [] if node_id not in ids)
+    return ids
 
 
 def compact_why(out, sim=None, nodes=None):
@@ -84,7 +93,9 @@ def compact_why(out, sim=None, nodes=None):
               "startable" if out.get("can_start_now") else "blocked")
     compact = {"ok": True, "id": out.get("id"), "name": out.get("name"),
                "status": status, "blocked": status == "blocked",
-               "blocked_by": out.get("missing_prerequisites") or []}
+               "blocked_by": _blocked_by(out)}
+    if out.get("blockers"):
+        compact["blocked_kinds"] = list(dict.fromkeys(blocker["kind"] for blocker in out["blockers"]))
     explanation = (out.get("start_blocked_reason") or out.get("waiting_on")
                    or out.get("why_underfunded"))
     if explanation is not None:

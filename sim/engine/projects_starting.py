@@ -14,6 +14,10 @@ a passed (or overridden) legality test leads to.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
+from . import purchase_rule
+from .blockers import blocker_kind
+from .interest_groups import check_group_prohibition
+from .living_stock import check_unheld_stock
 from .data import win_condition_describe
 from sim.constants import declare
 
@@ -30,15 +34,19 @@ class StartingMixin:
         if cost_left is None:
             bill = self.settle_project_materials(node_id)
             cost_left = bill
+        rebuild_factor = self.rebuild_work_factor(node_id)
         record = dict(
-            ph_left=float(node["ph"] if ph_left is None else ph_left),
+            ph_left=float(node["ph"] * rebuild_factor if ph_left is None else ph_left),
             yrs=0.0, spent=float(spent),
             cost_left=float(cost_left),
             status="ACTIVE")
+        if rebuild_factor < 1.0:
+            record["rebuild_factor"] = rebuild_factor
         if bill is not None:
             record["bill"] = float(bill)
         if include_labor:
-            record["lab_left"] = dict(node["lab"])
+            record["lab_left"] = {trade: hours * rebuild_factor
+                                  for trade, hours in node["lab"].items()}
         self.state.projects.active[node_id] = record
         return record
 
@@ -70,7 +78,8 @@ class StartingMixin:
         "BRIBE_DENARII_PER_SCANDAL_POINT", 300.0, kind="temporary_heuristic",
         book_money=True, unit="denarii per point of household.scandal, at bribability=1",
         source=None, confidence="D",
-        why="What it costs to erase one point of scandal outright. Scandal "
+        why="Genuinely a money amount: a bribe is handed over as coin and the sum is negotiated between the parties, not fixed by the labour of any good. "
+            "What it costs to erase one point of scandal outright. Scandal "
             "itself has no independent source model for who spreads it or "
             "how fast (the same gap STANDING_SCANDAL_PENALTY_PER_POINT in "
             "economy.py notes), so this conversion rate is a placeholder "
@@ -136,7 +145,7 @@ class StartingMixin:
         refused = 0.0
         if amount > useful + 0.5:
             refused, amount = amount - useful, useful
-        household.capital -= amount
+        household.debit(amount, "bribes")
         household.bribes_ytd = self.BRIBE_MEMORY_DECAY * household.bribes_ytd + amount
         household.scandal = max(0.0, household.scandal - amount / self.BRIBE_DENARII_PER_SCANDAL_POINT * bribability)
         self.update_protection()
@@ -215,7 +224,7 @@ class StartingMixin:
         projects = self.state.projects
         if price > household.capital:
             return False
-        household.costCapital(price)
+        household.cost_capital(price, "bounties posted")
         household.bounties_paid += 1
         # The prize pays for all the work: no poster hours, no hired trades.
         self.initialize_project(node_id, ph_left=0.0, spent=price, cost_left=0.0,
@@ -303,7 +312,8 @@ class StartingMixin:
     ARREARS_CHEAP_PROJECT_FLOOR = declare(
         "ARREARS_CHEAP_PROJECT_FLOOR", 600.0, kind="temporary_heuristic",
         book_money=True, unit="denarii", source=None, confidence="D",
-        why="Even deep in persistent arrears, a project costing less than "
+        why="Genuinely a money amount: it is a nominal debt threshold, and a debt is a promise of a fixed sum of the coin it was contracted in, whatever that coin later buys. "
+            "Even deep in persistent arrears, a project costing less than "
             "this is always 'cheap enough to need nobody's permission' - a "
             "flat floor under ARREARS_CHEAP_PROJECT_SURPLUS_MULTIPLE's own "
             "surplus-based figure so a household with zero surplus is not "
@@ -322,7 +332,8 @@ class StartingMixin:
     ARREARS_HARD_STOP_FLOOR = declare(
         "ARREARS_HARD_STOP_FLOOR", 4000.0, kind="temporary_heuristic",
         book_money=True, unit="denarii", source=None, confidence="D",
-        why="However cheap a project looks, new work stops outright once "
+        why="Genuinely a money amount: it is a nominal debt threshold, and a debt is a promise of a fixed sum of the coin it was contracted in, whatever that coin later buys. "
+            "However cheap a project looks, new work stops outright once "
             "the household is this far underwater - a flat floor under "
             "ARREARS_HARD_STOP_REVENUE_MULTIPLE's revenue-based figure so "
             "a household with negligible revenue is not exempted from the "
@@ -415,6 +426,7 @@ class StartingMixin:
                 return verdict
         return True, None
 
+    @blocker_kind("goal")
     def _check_win_condition(self, node_id, node, ignore_trade, _memo, _why):
         if node.get("win_condition"):
             # A THRESHOLD GOAL, NOT A PROJECT. This is measured, not built:
@@ -434,6 +446,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("done")
     def _check_already_done(self, node_id, node, ignore_trade, _memo, _why):
         projects = self.state.projects
         if node_id in projects.done:
@@ -456,22 +469,35 @@ class StartingMixin:
             return False, ("already done" if _why else None)
         return None
 
+    @blocker_kind("active")
     def _check_already_active(self, node_id, node, ignore_trade, _memo, _why):
         if node_id in self.state.projects.active:
             return False, ("already active" if _why else None)
         return None
 
+    @blocker_kind("knowledge")
     def _check_needs_first(self, node_id, node, ignore_trade, _memo, _why):
         # NOT DEAR HERE, IMPOSSIBLE HERE. See SocietyMixin.needs_first.
         # needs_first() itself is always called: `_nf` IS the answer, not
         # just words about it. Only the sentence built from the two strings
         # it hands back is skippable.
-        _nf, _why_nf = self.needs_first(node_id)
+        _nf, _why_nf = self.needs_first(node_id, about_stock=False)
         if _nf:
             return False, (("%s. Build %s first and this opens with it"
                            % (_why_nf, _nf)) if _why else None)
         return None
 
+    @blocker_kind("supply")
+    def _check_needs_held_herd(self, node_id, node, ignore_trade, _memo, _why):
+        # THE SAME GATE, WHEN WHAT IS MISSING IS LIVING STOCK: knowing the technique is not the
+        # blocker, so it is reported as a supply gap.
+        _nf, _why_nf = self.needs_first(node_id, about_stock=True)
+        if _nf:
+            return False, (("%s. Build %s first and this opens with it"
+                           % (_why_nf, _nf)) if _why else None)
+        return None
+
+    @blocker_kind("unavailable")
     def _check_unobtainable(self, node_id, node, ignore_trade, _memo, _why):
         # A MOTHBALL ENTRY WITHOUT THE KNOWLEDGE IS A STALE ENTRY: it must
         # fall through to the ordinary checks below, not be refused here and
@@ -483,6 +509,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("unavailable")
     def _check_foreign_only(self, node_id, node, ignore_trade, _memo, _why):
         if self._is_foreign_only(node_id):
             return False, (("that is an institution of a different society. %s has "
@@ -491,6 +518,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("knowledge")
     def _check_missing_prereqs(self, node_id, node, ignore_trade, _memo, _why):
         missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in self.state.projects.done]
         if missing:
@@ -515,6 +543,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("supply")
     def _check_substitution(self, node_id, node, ignore_trade, _memo, _why):
         if not self.substitution_quality(node_id)[1]:
             # substitution_quality(node_id) ITSELF is always called, above - it is
@@ -577,6 +606,7 @@ class StartingMixin:
                    for active_id in sorted(projects.active))
         return owed + price <= self.state.household.capital
 
+    @blocker_kind("money")
     def _check_credit_frozen(self, node_id, node, ignore_trade, _memo, _why):
         scenario_year = self.state.scenario.year
         household = self.state.household
@@ -601,6 +631,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("money")
     def _check_arrears(self, node_id, node, ignore_trade, _memo, _why):
         household = self.state.household
         insolvent_years = household.insolvent_years
@@ -623,6 +654,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_people_exist(self, node_id, node, ignore_trade, _memo, _why):
         # Staffing demand against the people who exist, before any per-person
         # hiring advice: no price or school makes up a missing population.
@@ -633,6 +665,7 @@ class StartingMixin:
             return False, (shortfall if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_scholar_staff(self, node_id, node, ignore_trade, _memo, _why):
         # SCHOLARS UNDER CONTRACT COUNT TOO - Complaints/34. This read
         # effective_scholars(), the standing headcount, so scholar hours you
@@ -654,10 +687,12 @@ class StartingMixin:
                             "any hours already bought under contract as that "
                             "share of one more. %s"
                            % (node["sch"], self.scholar_hands_available(),
-                              self._staff_advice("scholars")))
+                              self._staff_advice(
+                                  "scholars", node["sch"] - self.scholar_hands_available())))
                            if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_craft_staff(self, node_id, node, ignore_trade, _memo, _why):
         # CRAFTSMEN YOU HAVE UNDER CONTRACT COUNT TOO. This read self.household.artisans
         # alone, so work you had already paid an outside shop to do could not
@@ -688,10 +723,12 @@ class StartingMixin:
                            "already bought under contract as that share of "
                            "one more. %s"
                            % (node["art"], self.craft_hands_available(),
-                              self._staff_advice("artisans")))
+                              self._staff_advice(
+                                  "artisans", node["art"] - self.craft_hands_available())))
                            if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_absent_trades(self, node_id, node, ignore_trade, _memo, _why):
         # THE TRADE HAS TO EXIST. A node wanting 450 hours of an engineer cannot
         # be built by smiths, and in 100 AD there is no such person as a private
@@ -706,6 +743,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("specialists")
     def _check_none_left_trades(self, node_id, node, ignore_trade, _memo, _why):
         # AND SOMEBODY HAS TO BE LEFT: a trade you taught still counts as
         # existing after the last of them has died or been poached, so a
@@ -728,6 +766,7 @@ class StartingMixin:
                            if _why else None)
         return None
 
+    @blocker_kind("politics")
     def _check_social_approval(self, node_id, node, ignore_trade, _memo, _why):
         # SOCIAL APPROVAL GATE. Some things the State does not want built, and no
         # amount of money substitutes for someone powerful being willing to be
@@ -796,9 +835,11 @@ class StartingMixin:
         _check_already_done,
         _check_already_active,
         _check_needs_first,
+        _check_needs_held_herd,
         _check_unobtainable,
         _check_foreign_only,
         _check_missing_prereqs,
+        check_unheld_stock,
         _check_substitution,
         _check_credit_frozen,
         _check_arrears,
@@ -807,6 +848,7 @@ class StartingMixin:
         _check_craft_staff,
         _check_absent_trades,
         _check_none_left_trades,
+        check_group_prohibition,
         _check_social_approval,
     )
 
@@ -850,13 +892,18 @@ class StartingMixin:
     def start_refusal(self, node_id, extra_owed=0.0):
         """Why the project cannot begin now, or None. Changes no state.
 
-        extra_owed is money already committed by starts not yet applied
-        (a preview's earlier picks), counted like work in hand.
+        The first entry of start_blockers, so the refusal and every readout
+        that lists blockers are one function.
         """
-        may_start, why = self.start_reason(node_id)
-        if not may_start:
-            return why
-        # commit past cash but not past what cash plus credit can carry
+        blockers = self.start_blockers(node_id, extra_owed)
+        return blockers[0]["text"] if blockers else None
+
+    def _money_refusal(self, node_id, extra_owed=0.0):
+        """Why the bill is past cash plus credit (materials due now included), or None.
+
+        extra_owed is money already committed by starts not yet applied,
+        counted like work in hand.
+        """
         price = self.project_cost(node_id)
         projects = self.state.projects
         refusal = self.project_material_upfront_refusal(node_id)
@@ -872,10 +919,13 @@ class StartingMixin:
         # applies to the first project too
         if owed + price > ceiling:
             return ("you already owe %s denarii on work in hand; this "
-                    "would take it to %s, and between cash and credit "
-                    "you can raise %s. Finish or stop something first."
+                    "would take it to %s, and between cash and your credit line "
+                    "you can raise %s, so you are %s short. Finish or stop "
+                    "something first, or earn or pay down that amount.%s"
                     % ("{:,.0f}".format(owed), "{:,.0f}".format(owed + price),
-                       "{:,.0f}".format(ceiling)))
+                       "{:,.0f}".format(ceiling),
+                       "{:,.0f}".format(owed + price - ceiling),
+                       purchase_rule.remedies_text(self)))
         return None
 
     def start_project(self, node_id):

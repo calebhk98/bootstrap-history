@@ -3,6 +3,7 @@
   "id": "cn_quarrying_wedge",
   "name": "Stone quarrying with wedge",
   "cat": "stone",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -17,14 +18,14 @@
   "mat": {
    "iron_bar_kg": 5
   },
-  "cap": 100,
-  "up": 10,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 201.61879174129325,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 50,
+  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -34,6 +35,7 @@
   "id": "cn_stone_saw",
   "name": "Stone saw with abrasive",
   "cat": "stone",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -50,14 +52,14 @@
    "iron_bar_kg": 8,
    "mat_sand": 20
   },
-  "cap": 150,
-  "up": 20,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 403.2375834825865,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 80,
+  "rev_hours": 1612.950333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -67,6 +69,7 @@
   "id": "cn_gang_saw",
   "name": "Gang saw for stone",
   "cat": "stone",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_stone_saw",
    "cap_power_water"
@@ -84,14 +87,14 @@
    "iron_bar_kg": 60,
    "mat_wood": 100
   },
-  "cap": 600,
-  "up": 80,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1612.950333930346,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -101,6 +104,7 @@
   "id": "cn_stone_polish",
   "name": "Stone polishing and smoothing",
   "cat": "stone",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -113,14 +117,14 @@
   "mat": {
    "mat_emery": 5
   },
-  "cap": 120,
-  "up": 15,
+  "cap_hours": 2419.425500895519,
+  "up_hours": 302.42818761193985,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 60,
+  "rev_hours": 1209.7127504477594,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -130,6 +134,7 @@
   "id": "cn_mortar",
   "name": "Lime mortar",
   "cat": "binders",
+  "kind": "RESOURCE",
   "pre": [
    "mat_lime",
    "mil_artillery_piece"
@@ -149,14 +154,14 @@
    "lime_kg": 50.0,
    "sand_kg": 100.0
   },
-  "cap": 200,
-  "up": 30,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -175,6 +180,7 @@
   "id": "cn_gypsum_plaster",
   "name": "Gypsum plaster finish",
   "cat": "binders",
+  "kind": "RESOURCE",
   "pre": [
    "mat_gypsum"
   ],
@@ -187,14 +193,14 @@
   "mat": {
    "plaster_kg": 60
   },
-  "cap": 150,
-  "up": 25,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 504.0469793532331,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 80,
+  "rev_hours": 1612.950333930346,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -219,14 +225,14 @@
    "lime_kg": 80,
    "mat_lime": 30
   },
-  "cap": 250,
-  "up": 40,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 2,
   "risk": 0.08,
-  "rev": 120,
+  "rev_hours": 2419.425500895519,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -236,6 +242,7 @@
   "id": "cn_terrazzo",
   "name": "Terrazzo floor finish",
   "cat": "finishes",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_mortar",
    "cn_stone_polish"
@@ -251,14 +258,14 @@
    "mat_sand": 100,
    "calcite_kg": 50
   },
-  "cap": 300,
-  "up": 50,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -268,6 +275,7 @@
   "id": "cn_artificial_stone",
   "name": "Artificial cast stone",
   "cat": "binders",
+  "kind": "RESOURCE",
   "pre": [
    "cn_mortar",
    "cap_tol_1mm"
@@ -285,14 +293,14 @@
    "mat_lime": 60,
    "mat_sand": 150
   },
-  "cap": 400,
-  "up": 60,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.6,
   "adopt_yrs": 2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 180,
+  "rev_hours": 3629.138251343278,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -302,6 +310,7 @@
   "id": "cn_post_lintel",
   "name": "Post and lintel structure",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -316,14 +325,14 @@
    "iron_bar_kg": 10,
    "mat_wood": 200
   },
-  "cap": 200,
-  "up": 30,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -333,6 +342,7 @@
   "id": "cn_true_arch",
   "name": "True arch in stone",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -345,14 +355,14 @@
   "mat": {
    "iron_bar_kg": 5
   },
-  "cap": 300,
-  "up": 50,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 120,
+  "rev_hours": 2419.425500895519,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -362,6 +372,7 @@
   "id": "cn_groin_vault",
   "name": "Groin vault in stone",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch"
   ],
@@ -374,14 +385,14 @@
   "mat": {
    "iron_bar_kg": 15
   },
-  "cap": 800,
-  "up": 120,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 2419.425500895519,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -391,6 +402,7 @@
   "id": "cn_ribbed_vault",
   "name": "Ribbed vault in stone",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_groin_vault"
   ],
@@ -403,14 +415,14 @@
   "mat": {
    "iron_bar_kg": 20
   },
-  "cap": 1000,
-  "up": 150,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 2.5,
   "adopt_yrs": 2,
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -420,6 +432,7 @@
   "id": "cn_flying_buttress",
   "name": "Flying buttress in stone",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch"
   ],
@@ -432,14 +445,14 @@
   "mat": {
    "iron_bar_kg": 10
   },
-  "cap": 700,
-  "up": 100,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -449,6 +462,7 @@
   "id": "cn_timber_truss",
   "name": "Timber roof truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -461,14 +475,14 @@
   "mat": {
    "mat_wood": 300
   },
-  "cap": 400,
-  "up": 60,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 180,
+  "rev_hours": 3629.138251343278,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -490,14 +504,14 @@
   "mat": {
    "mat_wood": 250
   },
-  "cap": 350,
-  "up": 50,
+  "cap_hours": 7056.657710945264,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -507,6 +521,7 @@
   "id": "cn_queen_post",
   "name": "Queen post roof truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss",
    "civ_roof_king_post"
@@ -523,14 +538,14 @@
    "timber_m3": 2.5,
    "wood_kg": 280.0
   },
-  "cap": 500,
-  "up": 75,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1512.1409380596992,
   "build_yrs": 0.7,
   "adopt_yrs": 0,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -540,6 +555,7 @@
   "id": "cn_lattice_truss",
   "name": "Lattice truss for beams",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss"
   ],
@@ -554,14 +570,14 @@
   "mat": {
    "mat_wood": 200
   },
-  "cap": 600,
-  "up": 100,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 220,
+  "rev_hours": 4435.613418308451,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -571,6 +587,7 @@
   "id": "cn_warren_truss",
   "name": "Warren truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_lattice_truss",
    "cap_tol_100um"
@@ -588,14 +605,14 @@
    "mat_wood": 220,
    "iron_bar_kg": 20
   },
-  "cap": 800,
-  "up": 150,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -605,6 +622,7 @@
   "id": "cn_pratt_truss",
   "name": "Pratt truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_warren_truss"
   ],
@@ -621,14 +639,14 @@
    "mat_wood": 230,
    "iron_bar_kg": 25
   },
-  "cap": 900,
-  "up": 160,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 3225.900667860692,
   "build_yrs": 1.3,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 320,
+  "rev_hours": 6451.801335721384,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -638,6 +656,7 @@
   "id": "cn_trussed_arch",
   "name": "Trussed arch",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch",
    "cn_timber_truss"
@@ -653,14 +672,14 @@
    "mat_wood": 250,
    "iron_bar_kg": 15
   },
-  "cap": 900,
-  "up": 140,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 2822.6630843781054,
   "build_yrs": 1.8,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 380,
+  "rev_hours": 7661.514086169143,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -670,6 +689,7 @@
   "id": "cn_space_frame",
   "name": "Space frame three-dimensional truss",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_warren_truss",
    "cap_tol_10um"
@@ -687,14 +707,14 @@
    "mat_wood": 300,
    "iron_bar_kg": 60
   },
-  "cap": 2000,
-  "up": 300,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "dev_years": 15,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -704,6 +724,7 @@
   "id": "cn_iron_column",
   "name": "Cast iron column",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "blast_furnace"
   ],
@@ -717,14 +738,14 @@
   "mat": {
    "cast_iron_kg": 200
   },
-  "cap": 700,
-  "up": 100,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -734,6 +755,7 @@
   "id": "cn_cast_iron_beam",
   "name": "Cast iron beam",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_iron_column"
   ],
@@ -749,14 +771,14 @@
   "mat": {
    "cast_iron_kg": 250
   },
-  "cap": 900,
-  "up": 150,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 320,
+  "rev_hours": 6451.801335721384,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -766,6 +788,7 @@
   "id": "cn_wrought_iron_girder",
   "name": "Wrought iron plate girder",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -779,14 +802,14 @@
   "mat": {
    "iron_bar_kg": 300
   },
-  "cap": 1200,
-  "up": 200,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 380,
+  "rev_hours": 7661.514086169143,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -805,6 +828,7 @@
   "id": "cn_rolled_I_beam",
   "name": "Rolled iron or steel I beam",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel"
   ],
@@ -820,14 +844,14 @@
   "mat": {
    "steel_plate_kg": 350
   },
-  "cap": 1500,
-  "up": 280,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 5645.326168756211,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 450,
+  "rev_hours": 9072.845628358196,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -837,6 +861,7 @@
   "id": "cn_plate_girder",
   "name": "Steel plate girder assembly",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "mfg_hot_riveting"
@@ -853,14 +878,14 @@
   "mat": {
    "steel_plate_kg": 380
   },
-  "cap": 1400,
-  "up": 250,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.4,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.16,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -880,6 +905,7 @@
   "id": "cn_riveted_connection",
   "name": "Riveted bolted connection",
   "cat": "connections",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -892,14 +918,14 @@
   "mat": {
    "iron_bar_kg": 40
   },
-  "cap": 600,
-  "up": 80,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.9,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 220,
+  "rev_hours": 4435.613418308451,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -919,6 +945,7 @@
   "id": "cn_bolted_connection",
   "name": "Bolted connection with nut",
   "cat": "connections",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -934,14 +961,14 @@
   "mat": {
    "iron_bar_kg": 35
   },
-  "cap": 800,
-  "up": 120,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 280,
+  "rev_hours": 5645.326168756211,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -951,6 +978,7 @@
   "id": "cn_welded_connection",
   "name": "Electric arc welded joint",
   "cat": "connections",
+  "kind": "ENGINEERING",
   "pre": [
    "arc_furnace_ferroalloys",
    "cap_power_electric"
@@ -967,14 +995,14 @@
   "mat": {
    "steel_plate_kg": 60
   },
-  "cap": 1600,
-  "up": 250,
+  "cap_hours": 32259.00667860692,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -984,6 +1012,7 @@
   "id": "cn_gusset_plate",
   "name": "Gusset plate reinforcement",
   "cat": "connections",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_riveted_connection"
   ],
@@ -996,14 +1025,14 @@
   "mat": {
    "iron_bar_kg": 50
   },
-  "cap": 700,
-  "up": 100,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 240,
+  "rev_hours": 4838.851001791038,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1030,14 +1059,14 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap": 3000,
-  "up": 500,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 10080.939587064662,
   "build_yrs": 2.5,
   "adopt_yrs": 2,
   "dev_years": 15,
   "dev_people": 4,
   "risk": 0.19,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -1047,6 +1076,7 @@
   "id": "cn_curtain_wall",
   "name": "Curtain wall non-structural facade",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_steel_frame",
    "mat_glass_soda"
@@ -1066,14 +1096,14 @@
    "iron_bar_kg": 60.0,
    "steel_plate_kg": 150.0
   },
-  "cap": 2000,
-  "up": 300,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1083,6 +1113,7 @@
   "id": "cn_cantilever",
   "name": "Cantilever beam or slab",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_rolled_I_beam",
    "cap_tol_100um"
@@ -1098,14 +1129,14 @@
   "mat": {
    "steel_plate_kg": 250
   },
-  "cap": 1200,
-  "up": 200,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.15,
-  "rev": 380,
+  "rev_hours": 7661.514086169143,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1115,6 +1146,7 @@
   "id": "cn_suspension_bridge",
   "name": "Suspension bridge system",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_wire_cable_spinning"
   ],
@@ -1130,14 +1162,14 @@
   "mat": {
    "steel_plate_kg": 1000
   },
-  "cap": 5000,
-  "up": 800,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 16129.50333930346,
   "build_yrs": 3,
   "adopt_yrs": 2,
   "dev_years": 20,
   "dev_people": 5,
   "risk": 0.2,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 2,
   "art": 5,
   "conf": "B",
@@ -1147,6 +1179,7 @@
   "id": "cn_wire_cable_spinning",
   "name": "Steel wire rope and spinning",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "mfg_wire_drawing"
@@ -1163,14 +1196,14 @@
   "mat": {
    "steel_plate_kg": 400
   },
-  "cap": 1400,
-  "up": 250,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 450,
+  "rev_hours": 9072.845628358196,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1189,6 +1222,7 @@
   "id": "cn_cable_anchorage",
   "name": "Cable anchorage block",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_wire_cable_spinning"
   ],
@@ -1204,14 +1238,14 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap": 1800,
-  "up": 350,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 7056.657710945264,
   "build_yrs": 2,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.16,
-  "rev": 520,
+  "rev_hours": 10484.17717054725,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1221,6 +1255,7 @@
   "id": "cn_stiffening_truss",
   "name": "Stiffening truss for deck",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_warren_truss"
   ],
@@ -1236,14 +1271,14 @@
   "mat": {
    "steel_plate_kg": 350
   },
-  "cap": 1600,
-  "up": 300,
+  "cap_hours": 32259.00667860692,
+  "up_hours": 6048.563752238797,
   "build_yrs": 1.8,
   "adopt_yrs": 0,
   "dev_years": 9,
   "dev_people": 2,
   "risk": 0.15,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1253,6 +1288,7 @@
   "id": "cn_box_girder",
   "name": "Box girder or tubular section",
   "cat": "structural",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_plate_girder",
    "civ_neutral_axis",
@@ -1270,14 +1306,14 @@
   "mat": {
    "steel_plate_kg": 300
   },
-  "cap": 1500,
-  "up": 280,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 5645.326168756211,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.15,
-  "rev": 450,
+  "rev_hours": 9072.845628358196,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1287,6 +1323,7 @@
   "id": "cn_arch_bridge_steel",
   "name": "Steel arch bridge",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_rolled_I_beam",
    "civ_arch_roman",
@@ -1305,14 +1342,14 @@
   "mat": {
    "steel_plate_kg": 700
   },
-  "cap": 2200,
-  "up": 400,
+  "cap_hours": 44356.13418308451,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2.2,
   "adopt_yrs": 1,
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 520,
+  "rev_hours": 10484.17717054725,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1322,6 +1359,7 @@
   "id": "cn_bascule_bridge",
   "name": "Bascule drawbridge",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_rolled_I_beam",
    "cap_power_electric"
@@ -1339,14 +1377,14 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap": 2500,
-  "up": 450,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 9072.845628358196,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 11,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 1,
   "art": 4,
   "conf": "C",
@@ -1356,6 +1394,7 @@
   "id": "cn_swing_bridge",
   "name": "Swing bridge on central pivot",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_wrought_iron_girder"
   ],
@@ -1371,14 +1410,14 @@
   "mat": {
    "iron_bar_kg": 600
   },
-  "cap": 1900,
-  "up": 350,
+  "cap_hours": 38307.57043084571,
+  "up_hours": 7056.657710945264,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 1,
   "art": 3,
   "conf": "C",
@@ -1388,6 +1427,7 @@
   "id": "cn_pontoon_bridge",
   "name": "Pontoon floating bridge",
   "cat": "bridges",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -1403,14 +1443,14 @@
   "mat": {
    "mat_wood": 500
   },
-  "cap": 1600,
-  "up": 300,
+  "cap_hours": 32259.00667860692,
+  "up_hours": 6048.563752238797,
   "build_yrs": 1.8,
   "adopt_yrs": 1,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 1,
   "art": 2,
   "conf": "C",
@@ -1420,6 +1460,7 @@
   "id": "cn_aqueduct",
   "name": "Masonry aqueduct arch bridge",
   "cat": "infrastructure",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_true_arch"
   ],
@@ -1434,14 +1475,14 @@
   "mat": {
    "iron_bar_kg": 30
   },
-  "cap": 1200,
-  "up": 200,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "build_yrs": 3,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1451,6 +1492,7 @@
   "id": "cn_siphon",
   "name": "Inverted siphon pipe",
   "cat": "infrastructure",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_aqueduct",
    "mat_lead"
@@ -1467,14 +1509,14 @@
   "mat": {
    "lead_kg": 200
   },
-  "cap": 900,
-  "up": 150,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 320,
+  "rev_hours": 6451.801335721384,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1484,6 +1526,7 @@
   "id": "cn_pile_driving",
   "name": "Pile driving by drop hammer",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human"
   ],
@@ -1499,14 +1542,14 @@
    "mat_wood": 200,
    "iron_bar_kg": 40
   },
-  "cap": 400,
-  "up": 60,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 140,
+  "rev_hours": 2822.6630843781054,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1516,6 +1559,7 @@
   "id": "cn_screw_pile",
   "name": "Screw pile with helical blade",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -1531,14 +1575,14 @@
   "mat": {
    "iron_bar_kg": 150
   },
-  "cap": 1000,
-  "up": 180,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 3629.138251343278,
   "build_yrs": 1.2,
   "adopt_yrs": 1,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 340,
+  "rev_hours": 6855.03891920397,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1548,6 +1592,7 @@
   "id": "cn_sheet_piling",
   "name": "Sheet piling wall",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_pile_driving"
   ],
@@ -1563,14 +1608,14 @@
   "mat": {
    "iron_bar_kg": 250
   },
-  "cap": 1100,
-  "up": 200,
+  "cap_hours": 22178.067091542256,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 380,
+  "rev_hours": 7661.514086169143,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1580,6 +1625,7 @@
   "id": "cn_caisson",
   "name": "Caisson cofferdam box",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_sheet_piling",
    "civ_cofferdam"
@@ -1599,23 +1645,25 @@
    "timber_m3": 8.0,
    "wood_kg": 300.0
   },
-  "cap": 1400,
-  "up": 250,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "build_yrs": 2,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 2,
   "conf": "C",
-  "note": "A large hollow box sunk into water or soft ground, interior pumped dry, filled with concrete. London Bridge (1831) used caissons. Allows foundation work below water. Risk of leaking, and the deeper you go, the harder to keep dry."
+  "note": "A large hollow box sunk into water or soft ground, interior pumped dry, filled with concrete. London Bridge (1831) used caissons. Allows foundation work below water. Risk of leaking, and the deeper you go, the harder to keep dry.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "cn_pneumatic_caisson",
   "name": "Pneumatic caisson with air pressure",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_caisson",
    "cap_power_steam"
@@ -1633,14 +1681,14 @@
    "mat_wood": 300,
    "steel_plate_kg": 150
   },
-  "cap": 1800,
-  "up": 350,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 7056.657710945264,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1666,14 +1714,14 @@
    "mat_wood": 200,
    "iron_bar_kg": 50
   },
-  "cap": 700,
-  "up": 100,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.9,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.09,
-  "rev": 240,
+  "rev_hours": 4838.851001791038,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1683,6 +1731,7 @@
   "id": "cn_diaphragm_wall",
   "name": "Diaphragm wall with slurry",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_sheet_piling",
    "cap_measure_len"
@@ -1700,14 +1749,14 @@
    "cement_portland_kg": 400,
    "mat_bentonite_slurry": 200
   },
-  "cap": 2200,
-  "up": 400,
+  "cap_hours": 44356.13418308451,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2.2,
   "adopt_yrs": 2,
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 580,
+  "rev_hours": 11693.889920995009,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1717,6 +1766,7 @@
   "id": "cn_underpinning",
   "name": "Underpinning of existing structure",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_caisson"
   ],
@@ -1732,14 +1782,14 @@
   "mat": {
    "iron_bar_kg": 80
   },
-  "cap": 1500,
-  "up": 280,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 5645.326168756211,
   "build_yrs": 2,
   "adopt_yrs": 0,
   "dev_years": 9,
   "dev_people": 2,
   "risk": 0.16,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1749,6 +1799,7 @@
   "id": "cn_dewatering",
   "name": "Dewatering system with pumps",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -1764,14 +1815,14 @@
   "mat": {
    "iron_bar_kg": 120
   },
-  "cap": 1000,
-  "up": 150,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.11,
-  "rev": 340,
+  "rev_hours": 6855.03891920397,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1781,6 +1832,7 @@
   "id": "cn_soil_compaction",
   "name": "Soil compaction by roller",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human"
   ],
@@ -1795,14 +1847,14 @@
   "mat": {
    "cast_iron_kg": 200
   },
-  "cap": 800,
-  "up": 120,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1812,6 +1864,7 @@
   "id": "cn_retaining_wall",
   "name": "Retaining wall gravity structure",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch"
   ],
@@ -1826,14 +1879,14 @@
   "mat": {
    "iron_bar_kg": 20
   },
-  "cap": 900,
-  "up": 140,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 2822.6630843781054,
   "build_yrs": 1.5,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 360,
+  "rev_hours": 7258.276502686556,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1843,6 +1896,7 @@
   "id": "cn_gravity_dam",
   "name": "Gravity dam masonry structure",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_retaining_wall"
   ],
@@ -1857,14 +1911,14 @@
   "mat": {
    "iron_bar_kg": 50
   },
-  "cap": 1400,
-  "up": 250,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1874,6 +1928,7 @@
   "id": "cn_arch_dam",
   "name": "Arch dam curved structure",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch",
    "cn_gravity_dam"
@@ -1890,14 +1945,14 @@
   "mat": {
    "iron_bar_kg": 40
   },
-  "cap": 1600,
-  "up": 300,
+  "cap_hours": 32259.00667860692,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2.8,
   "adopt_yrs": 1,
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1907,6 +1962,7 @@
   "id": "cn_earth_dam",
   "name": "Earth dam with clay core",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_soil_compaction"
   ],
@@ -1922,14 +1978,14 @@
   "mat": {
    "clay_kg": 1000
   },
-  "cap": 1200,
-  "up": 200,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1939,6 +1995,7 @@
   "id": "cn_spillway",
   "name": "Spillway overflow structure",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_true_arch",
    "cn_gravity_dam",
@@ -1958,14 +2015,14 @@
    "brick_1000": 50.0,
    "iron_bar_kg": 30.0
   },
-  "cap": 1300,
-  "up": 220,
+  "cap_hours": 26210.442926368123,
+  "up_hours": 4435.613418308451,
   "build_yrs": 1.8,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1975,6 +2032,7 @@
   "id": "cn_tunnel_cut_cover",
   "name": "Tunnel by cut and cover",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_cofferdam"
   ],
@@ -1990,14 +2048,14 @@
   "mat": {
    "iron_bar_kg": 100
   },
-  "cap": 1400,
-  "up": 250,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "build_yrs": 2,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2007,6 +2065,7 @@
   "id": "cn_tunnel_shield",
   "name": "Tunnel shield method",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_pneumatic_caisson",
    "civ_tunnel_rock_drill",
@@ -2025,14 +2084,14 @@
    "iron_bar_kg": 100.0,
    "steel_plate_kg": 300.0
   },
-  "cap": 1800,
-  "up": 350,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 7056.657710945264,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 520,
+  "rev_hours": 10484.17717054725,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2042,6 +2101,7 @@
   "id": "cn_drill_blast",
   "name": "Drill and blast tunnel",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_tunnel_cut_cover",
    "mat_nitroglycerin"
@@ -2058,14 +2118,14 @@
   "mat": {
    "mat_nitroglycerin": 50
   },
-  "cap": 1600,
-  "up": 300,
+  "cap_hours": 32259.00667860692,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2.2,
   "adopt_yrs": 1,
   "dev_years": 9,
   "dev_people": 2,
   "risk": 0.18,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2075,6 +2135,7 @@
   "id": "cn_tunnel_lining",
   "name": "Tunnel permanent lining",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_tunnel_shield"
   ],
@@ -2090,14 +2151,14 @@
   "mat": {
    "cement_portland_kg": 200
   },
-  "cap": 1300,
-  "up": 220,
+  "cap_hours": 26210.442926368123,
+  "up_hours": 4435.613418308451,
   "build_yrs": 1.8,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2107,6 +2168,7 @@
   "id": "cn_ventilation_shaft",
   "name": "Ventilation shaft and duct",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_tunnel_lining"
   ],
@@ -2122,14 +2184,14 @@
   "mat": {
    "cement_portland_kg": 150
   },
-  "cap": 1100,
-  "up": 180,
+  "cap_hours": 22178.067091542256,
+  "up_hours": 3629.138251343278,
   "build_yrs": 1.5,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 340,
+  "rev_hours": 6855.03891920397,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2139,6 +2201,7 @@
   "id": "cn_crane_treadwheel",
   "name": "Treadwheel crane",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human",
    "mat_wrought_iron"
@@ -2155,14 +2218,14 @@
   "mat": {
    "mat_wood": 200
   },
-  "cap": 500,
-  "up": 70,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.7,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.09,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2172,6 +2235,7 @@
   "id": "cn_crane_derrick",
   "name": "Derrick crane with guy lines",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss"
   ],
@@ -2188,14 +2252,14 @@
    "mat_wood": 250,
    "hemp_fiber_kg": 100
   },
-  "cap": 700,
-  "up": 100,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.11,
-  "rev": 280,
+  "rev_hours": 5645.326168756211,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2205,6 +2269,7 @@
   "id": "cn_crane_tower",
   "name": "Tower crane on fixed base",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_rolled_I_beam",
    "cap_power_electric"
@@ -2222,14 +2287,14 @@
   "mat": {
    "steel_plate_kg": 400
   },
-  "cap": 1800,
-  "up": 350,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 7056.657710945264,
   "build_yrs": 1.8,
   "adopt_yrs": 1,
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2239,6 +2304,7 @@
   "id": "cn_block_tackle_hoist",
   "name": "Block and tackle with rope",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human"
   ],
@@ -2254,14 +2320,14 @@
    "mat_wood": 80,
    "cordage_kg": 50
   },
-  "cap": 250,
-  "up": 30,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 80,
+  "rev_hours": 1612.950333930346,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2271,6 +2337,7 @@
   "id": "cn_scaffolding",
   "name": "Timber scaffolding system",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -2286,14 +2353,14 @@
    "mat_wood": 150,
    "hemp_fiber_kg": 80
   },
-  "cap": 600,
-  "up": 80,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 180,
+  "rev_hours": 3629.138251343278,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2320,14 +2387,14 @@
   "mat": {
    "iron_bar_kg": 250
   },
-  "cap": 1200,
-  "up": 200,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2337,6 +2404,7 @@
   "id": "cn_plumbing_stack",
   "name": "Plumbing vertical stack system",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_lead"
   ],
@@ -2351,14 +2419,14 @@
   "mat": {
    "lead_kg": 200
   },
-  "cap": 900,
-  "up": 130,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 2621.0442926368123,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 340,
+  "rev_hours": 6855.03891920397,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2378,6 +2446,7 @@
   "id": "cn_trapped_drain",
   "name": "Trap with water seal",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_plumbing_stack"
   ],
@@ -2392,14 +2461,14 @@
   "mat": {
    "lead_kg": 80
   },
-  "cap": 600,
-  "up": 80,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 220,
+  "rev_hours": 4435.613418308451,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2409,6 +2478,7 @@
   "id": "cn_sewer_system",
   "name": "Sewer gravity drainage network",
   "cat": "infrastructure",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_trapped_drain"
   ],
@@ -2425,14 +2495,14 @@
   "mat": {
    "cast_iron_kg": 300
   },
-  "cap": 1300,
-  "up": 250,
+  "cap_hours": 26210.442926368123,
+  "up_hours": 5040.469793532331,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 1,
   "art": 3,
   "conf": "C",
@@ -2442,6 +2512,7 @@
   "id": "cn_water_main",
   "name": "Water main distribution pipe",
   "cat": "infrastructure",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "cn_plumbing_stack"
   ],
@@ -2457,14 +2528,14 @@
   "mat": {
    "cast_iron_kg": 250
   },
-  "cap": 1100,
-  "up": 180,
+  "cap_hours": 22178.067091542256,
+  "up_hours": 3629.138251343278,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 380,
+  "rev_hours": 7661.514086169143,
   "sch": 1,
   "art": 2,
   "conf": "C",
@@ -2474,6 +2545,7 @@
   "id": "cn_damp_proof_course",
   "name": "Damp proof course barrier layer",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bitumen"
   ],
@@ -2486,14 +2558,14 @@
   "mat": {
    "mat_bitumen": 50
   },
-  "cap": 500,
-  "up": 60,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 160,
+  "rev_hours": 3225.900667860692,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2512,6 +2584,7 @@
   "id": "cn_cavity_wall",
   "name": "Cavity wall with air space",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_damp_proof_course"
   ],
@@ -2526,14 +2599,14 @@
   "mat": {
    "brick_1000": 0.4
   },
-  "cap": 1000,
-  "up": 150,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.3,
   "adopt_yrs": 1,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 340,
+  "rev_hours": 6855.03891920397,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2543,6 +2616,7 @@
   "id": "cn_central_heating",
   "name": "Central heating hot water system",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_plumbing_stack",
    "cap_heat_1300",
@@ -2565,14 +2639,14 @@
    "cast_iron_kg": 250.0,
    "lead_kg": 100.0
   },
-  "cap": 1500.0,
-  "up": 200,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.4,
   "adopt_yrs": 1,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2595,14 +2669,14 @@
   "mat": {
    "cast_iron_kg": 150
   },
-  "cap": 700,
-  "up": 100,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 240,
+  "rev_hours": 4838.851001791038,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2612,6 +2686,7 @@
   "id": "cn_forced_ventilation",
   "name": "Forced ventilation mechanical system",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -2628,14 +2703,14 @@
    "cast_iron_kg": 200,
    "iron_sheet_kg": 150
   },
-  "cap": 1100,
-  "up": 180,
+  "cap_hours": 22178.067091542256,
+  "up_hours": 3629.138251343278,
   "build_yrs": 1.3,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 380,
+  "rev_hours": 7661.514086169143,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2645,6 +2720,7 @@
   "id": "cn_fire_escape",
   "name": "Fire escape stairs and landings",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_rolled_I_beam"
   ],
@@ -2660,14 +2736,14 @@
   "mat": {
    "iron_bar_kg": 200
   },
-  "cap": 900,
-  "up": 130,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 2621.0442926368123,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 320,
+  "rev_hours": 6451.801335721384,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2677,6 +2753,7 @@
   "id": "cn_sprinkler",
   "name": "Automatic fire sprinkler",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_water_main",
    "cap_measure_temp"
@@ -2694,14 +2771,14 @@
    "cast_iron_kg": 150,
    "mat_bronze": 50
   },
-  "cap": 1300,
-  "up": 200,
+  "cap_hours": 26210.442926368123,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2711,6 +2788,7 @@
   "id": "cn_plate_glass_window",
   "name": "Plate glass large pane",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_glass_lead",
    "cap_heat_1600"
@@ -2727,14 +2805,14 @@
   "mat": {
    "glass_raw_kg": 300
   },
-  "cap": 1400,
-  "up": 250,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 9,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2744,6 +2822,7 @@
   "id": "cn_sash_window",
   "name": "Sash window with cord and weight",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_plate_glass_window"
   ],
@@ -2758,14 +2837,14 @@
    "mat_wood": 100,
    "cast_iron_kg": 100
   },
-  "cap": 1000,
-  "up": 150,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.1,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 360,
+  "rev_hours": 7258.276502686556,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2775,6 +2854,7 @@
   "id": "cn_roof_truss_corrugated",
   "name": "Roof truss with corrugated iron",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss",
    "mat_bulk_steel"
@@ -2792,14 +2872,14 @@
    "iron_bar_kg": 200,
    "iron_sheet_kg": 300
   },
-  "cap": 1200,
-  "up": 200,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.3,
   "adopt_yrs": 1,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2809,6 +2889,7 @@
   "id": "cn_asphalt_roofing",
   "name": "Asphalt roll roofing and shingles",
   "cat": "envelope",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bitumen"
   ],
@@ -2825,14 +2906,14 @@
    "mat_bitumen": 150,
    "mat_felt": 200
   },
-  "cap": 1000,
-  "up": 150,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.11,
-  "rev": 340,
+  "rev_hours": 6855.03891920397,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2842,6 +2923,7 @@
   "id": "cn_insulation",
   "name": "Building insulation materials",
   "cat": "building_systems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_temp",
    "prn_wood_pulp"
@@ -2859,14 +2941,14 @@
    "wood_pulp_kg": 150,
    "mat_cork": 100
   },
-  "cap": 1100,
-  "up": 180,
+  "cap_hours": 22178.067091542256,
+  "up_hours": 3629.138251343278,
   "build_yrs": 1.2,
   "adopt_yrs": 1,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 380,
+  "rev_hours": 7661.514086169143,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2876,6 +2958,7 @@
   "id": "cn_concrete_mixer",
   "name": "Rotary concrete mixer drum",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -2891,14 +2974,14 @@
   "mat": {
    "cast_iron_kg": 300
   },
-  "cap": 1300,
-  "up": 250,
+  "cap_hours": 26210.442926368123,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2908,6 +2991,7 @@
   "id": "cn_vibratory_compaction",
   "name": "Vibratory compaction of concrete",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric"
   ],
@@ -2923,14 +3007,14 @@
   "mat": {
    "cast_iron_kg": 100
   },
-  "cap": 1000,
-  "up": 150,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 320,
+  "rev_hours": 6451.801335721384,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2940,6 +3024,7 @@
   "id": "cn_formwork_shuttering",
   "name": "Formwork and shuttering system",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_timber_truss"
   ],
@@ -2955,14 +3040,14 @@
   "mat": {
    "mat_wood": 300
   },
-  "cap": 1400,
-  "up": 250,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.5,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 420,
+  "rev_hours": 8467.989253134316,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2972,6 +3057,7 @@
   "id": "cn_slipform",
   "name": "Slipform creeping formwork",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_formwork_shuttering",
    "cap_power_electric"
@@ -2988,14 +3074,14 @@
   "mat": {
    "steel_plate_kg": 400
   },
-  "cap": 2000,
-  "up": 400,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2.5,
   "adopt_yrs": 2,
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -3005,6 +3091,7 @@
   "id": "cn_shotcrete",
   "name": "Sprayed concrete shotcrete",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_concrete_mixer",
    "cap_power_steam"
@@ -3021,14 +3108,14 @@
   "mat": {
    "cement_portland_kg": 200
   },
-  "cap": 1400,
-  "up": 280,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5645.326168756211,
   "build_yrs": 1.6,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 460,
+  "rev_hours": 9274.46442009949,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3038,6 +3125,7 @@
   "id": "cn_expansion_joint",
   "name": "Expansion joint control system",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_temp"
   ],
@@ -3051,14 +3139,14 @@
    "mat_bitumen": 50,
    "mat_cork": 80
   },
-  "cap": 800,
-  "up": 120,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 280,
+  "rev_hours": 5645.326168756211,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -3068,6 +3156,7 @@
   "id": "cn_reinforced_concrete",
   "name": "Reinforced concrete slab and beam",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "mat_cement_portland",
@@ -3088,14 +3177,14 @@
    "cement_portland_kg": 200,
    "steel_plate_kg": 150
   },
-  "cap": 1600,
-  "up": 300,
+  "cap_hours": 32259.00667860692,
+  "up_hours": 6048.563752238797,
   "build_yrs": 1.8,
   "adopt_yrs": 1,
   "dev_years": 9,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3122,6 +3211,7 @@
   "id": "cn_deformed_rebar",
   "name": "Deformed reinforcing bar",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel"
   ],
@@ -3137,14 +3227,14 @@
   "mat": {
    "steel_plate_kg": 180
   },
-  "cap": 1200,
-  "up": 200,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.3,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.11,
-  "rev": 380,
+  "rev_hours": 7661.514086169143,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3164,6 +3254,7 @@
   "id": "cn_prestressed_concrete",
   "name": "Prestressed concrete element",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_reinforced_concrete"
   ],
@@ -3181,14 +3272,14 @@
    "steel_plate_kg": 200,
    "cement_portland_kg": 250
   },
-  "cap": 1900,
-  "up": 380,
+  "cap_hours": 38307.57043084571,
+  "up_hours": 7661.514086169143,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 11,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 580,
+  "rev_hours": 11693.889920995009,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -3198,6 +3289,7 @@
   "id": "cn_post_tensioning",
   "name": "Post tensioning with stressing jacks",
   "cat": "techniques",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_prestressed_concrete"
   ],
@@ -3213,14 +3305,14 @@
   "mat": {
    "steel_plate_kg": 220
   },
-  "cap": 1850,
-  "up": 350,
+  "cap_hours": 37299.47647213925,
+  "up_hours": 7056.657710945264,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 540,
+  "rev_hours": 10887.414754029835,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -3230,6 +3322,7 @@
   "id": "cn_precast_panel",
   "name": "Precast concrete panel",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_reinforced_concrete"
   ],
@@ -3245,14 +3338,14 @@
   "mat": {
    "cement_portland_kg": 300
   },
-  "cap": 1500,
-  "up": 280,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 5645.326168756211,
   "build_yrs": 1.8,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3262,6 +3355,7 @@
   "id": "cn_portland_cement",
   "name": "Portland cement powder",
   "cat": "binders",
+  "kind": "RESOURCE",
   "pre": [
    "cap_heat_1600"
   ],
@@ -3278,14 +3372,14 @@
    "mat_limestone": 200,
    "clay_kg": 100
   },
-  "cap": 1400,
-  "up": 250,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3295,6 +3389,7 @@
   "id": "cn_rotary_cement_kiln",
   "name": "Rotary cement kiln",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_portland_cement",
    "cap_power_steam"
@@ -3311,14 +3406,14 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap": 2200,
-  "up": 450,
+  "cap_hours": 44356.13418308451,
+  "up_hours": 9072.845628358196,
   "build_yrs": 2.5,
   "adopt_yrs": 2,
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 620,
+  "rev_hours": 12500.365087960181,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -3328,6 +3423,7 @@
   "id": "cn_cement_clinker_grinding",
   "name": "Cement clinker mill grinding",
   "cat": "equipment",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_portland_cement"
   ],
@@ -3343,14 +3439,14 @@
   "mat": {
    "steel_plate_kg": 300
   },
-  "cap": 1500,
-  "up": 280,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 5645.326168756211,
   "build_yrs": 1.6,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 480,
+  "rev_hours": 9677.702003582075,
   "sch": 0,
   "art": 3,
   "conf": "C",

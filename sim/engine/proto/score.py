@@ -127,10 +127,12 @@ def _score_components(sim, nodes, reveal_tree_total):
         total = len(nodes)
         raw = len(sim.done)
         normalized = min(1.0, raw / total) if total else 0.0
-        out["technology_coverage"] = {"raw": raw, "of_total": total,
+        out["technology_coverage"] = {"counts": "technologies completed, out of the whole tree",
+                                       "raw": raw, "of_total": total,
                                        "normalized": normalized}
     else:
         out["technology_coverage"] = {
+            "counts": "technologies completed, out of the whole tree",
             "raw": len(sim.done), "of_total": None, "normalized": None,
             "withheld": ("the tree's total size is the one thing fog keeps "
                          "from you; this resolves once the run ends")}
@@ -146,7 +148,9 @@ def _score_components(sim, nodes, reveal_tree_total):
     eli = max(0.0, float(sim.civ.get("literacy_elite", 0.0)))
     eli_ceiling = max(1e-9, sim.literacy_ceiling_elite())
     lit_norm = 0.5 * min(1.0, gen / gen_ceiling) + 0.5 * min(1.0, eli / eli_ceiling)
-    out["literacy"] = {"raw": round(gen, 4),
+    out["literacy"] = {"counts": ("general and elite literacy, each as a share of the ceiling "
+                                  "this society's farm share and unschooled share allow"),
+                        "raw": round(gen, 4),
                         "raw_detail": {"general": round(gen, 4),
                                        "general_ceiling": round(gen_ceiling, 4),
                                        "elite": round(eli, 4),
@@ -165,7 +169,9 @@ def _score_components(sim, nodes, reveal_tree_total):
     WORKFORCE_ANCHOR = 7000.0
     headcount = max(0.0, sim.headcount())
     work_norm = min(1.0, math.log1p(headcount) / math.log1p(WORKFORCE_ANCHOR))
-    out["workforce"] = {"raw": round(headcount, 1), "normalized": work_norm}
+    out["workforce"] = {"counts": ("everyone on your books (employees, slaves, freedmen), "
+                                   "on a log scale"),
+                         "raw": round(headcount, 1), "normalized": work_norm}
 
     # ECONOMY (10%) - capital, but never as a bare denarius figure: each
     # civilisation's currency is a different scale (civs/*.json: "denarius",
@@ -183,13 +189,13 @@ def _score_components(sim, nodes, reveal_tree_total):
     # calibration save's 4.41 million worker-years, rounded to a clean
     # figure (50 million), not that save's own number.
     ECONOMY_ANCHOR_WORKER_YEARS = 50_000_000.0
-    reference_wage = max(1e-6, sim.base_annual_wage("artisan")
-                          * max(1e-6, float(sim.price_index))
-                          * max(1e-6, float(sim.wage_index)))
+    reference_wage = max(1e-6, sim.labour_market.in_current_money(sim.base_annual_wage("artisan")))
     worker_years = max(0.0, sim.capital) / reference_wage
     econ_norm = min(1.0, math.log1p(worker_years)
                     / math.log1p(ECONOMY_ANCHOR_WORKER_YEARS))
-    out["economy"] = {"raw": round(sim.capital, 1),
+    out["economy"] = {"counts": ("your money in years of an ordinary worker's wage here, "
+                                 "on a log scale"),
+                       "raw": round(sim.capital, 1),
                        "raw_detail": {"worker_years_equivalent":
                                       round(worker_years, 1)},
                        "normalized": econ_norm}
@@ -213,9 +219,16 @@ def _score_components(sim, nodes, reveal_tree_total):
         else:
             inst_vals.append(1.0 if sim.running(institution_id) else 0.0)
     inst_norm = (sum(inst_vals) / len(inst_vals)) if inst_vals else 0.0
-    out["institutions"] = {"raw": sum(1 for value in inst_vals if value > 0.0),
-                            "of_total": len(inst_vals),
-                            "normalized": inst_norm}
+    finished_but_closed = [institution_id for institution_id in inst_keys
+                           if sim.has(institution_id) and not sim.running(institution_id)]
+    out["institutions"] = {
+        "counts": ("the fixed list of capability institutions, each counted only while it is "
+                   "OPEN and running (those that scale count by units against a ceiling); "
+                   "finished knowledge and a finished but shut concern score nothing"),
+        "raw": sum(1 for value in inst_vals if value > 0.0),
+        "of_total": len(inst_vals), "normalized": inst_norm,
+        "counted": [institution_id for institution_id, value in zip(inst_keys, inst_vals) if value > 0.0],
+        "finished_but_closed": finished_but_closed}
 
     # RESILIENCE (10%) - an equally-weighted average of five fractions, each
     # a real, already-saved field read against a real threshold, none of
@@ -251,8 +264,16 @@ def _score_components(sim, nodes, reveal_tree_total):
     res_parts = [corpus_preserved, solvent_share, staffing_share,
                  scandal_margin, founder_share]
     res_norm = sum(res_parts) / len(res_parts)
-    out["resilience"] = {"raw": sum(1 for value in res_parts if value >= 0.999),
-                          "of_total": len(res_parts), "normalized": res_norm}
+    out["resilience"] = {
+        "counts": ("an average of five shares of your own record, NOT the hazards ahead or the "
+                   "defences against them (`risk` shows those): the share of everything you "
+                   "completed that was never forgotten, years solvent, years with no staffing "
+                   "closure, room left before scandal turns dangerous, and the founder alive"),
+        "raw": sum(1 for value in res_parts if value >= 0.999),
+        "of_total": len(res_parts), "normalized": res_norm,
+        "raw_detail": {"corpus_kept": round(corpus_preserved, 3), "years_solvent": round(solvent_share, 3),
+                       "years_staffed": round(staffing_share, 3), "scandal_room": round(scandal_margin, 3),
+                       "founder_alive": round(founder_share, 3)}}
 
     # STANDING (5%) - reputation alone, not eminence: eminence is a danger
     # signal (how close you sit to being confiscated or denounced for being
@@ -261,7 +282,8 @@ def _score_components(sim, nodes, reveal_tree_total):
     # projects.py clamps it at 100) is this engine's own plain measure of
     # standing.
     rep = max(0.0, min(100.0, sim.reputation))
-    out["standing"] = {"raw": round(rep, 1), "normalized": rep / 100.0}
+    out["standing"] = {"counts": "your reputation, 0 to 100 (not eminence, which is a danger)",
+                       "raw": round(rep, 1), "normalized": rep / 100.0}
 
     for name, weight in SCORE_WEIGHTS.items():
         comp = out[name]
@@ -291,7 +313,8 @@ def _score_achievements(sim, nodes):
         "won": len(sim.forgotten or {}) == 0,
         "what": "the corpus was never diminished by a sacking"}
     out["never_understaffed"] = {
-        "won": len(getattr(sim, "shut_for_staff", None) or {}) == 0,
+        "won": (not sim.state.projects.ever_closed_for_staff
+                and not getattr(sim, "shut_for_staff", None)),
         "what": "no concern ever closed for want of staff"}
     out["clean_ledger"] = {
         "won": (sim.insolvent_years == 0
@@ -307,6 +330,24 @@ def _score_achievements(sim, nodes):
                  "timeline (%s years, one director, unlimited money)"
                  % _fmt_num(floor) if floor else "the goal's floor is unknown")}
     return out
+
+
+def victory_report(sim, nodes):
+    """What to show the moment the goal completes: the date, the years it took,
+    the score so far and the achievements, and how the fogged total is revealed."""
+    report = score_report(sim, nodes)
+    won = sorted(name for name, entry in (report.get("achievements") or {}).items() if entry.get("won"))
+    if report.get("total") is None:
+        how = ("type 'finish' to end the run and see the full score, or keep building; "
+               "the score is shown when the run ends")
+    else:
+        how = "type 'score' for the breakdown, or 'finish' to end the run here"
+    return {"goal_in_words": report.get("goal_in_words"),
+            "year": sim.goal_year,
+            "elapsed_years": sim.goal_year - sim.cfg["start_year"],
+            "points_so_far": report.get("points"),
+            "achievements": won,
+            "to_see_your_score": how}
 
 
 def score_report(sim, nodes):
@@ -392,10 +433,28 @@ def _score_lines(out, indent="  "):
         if component.get("normalized") is None:
             lines.append("%s%-20s withheld: %s" % (indent, label, component.get("withheld", "-")))
             continue
+        raw_text = _fmt_num(component.get("raw"))
+        detail = component.get("raw_detail") or {}
+        if "general_ceiling" in detail:
+            raw_text = "%.2f%% of %.2f%%" % (detail["general"] * 100, detail["general_ceiling"] * 100)
         lines.append("%s%-20s raw %-14s normalized %-6s weight %-5s weighted %s"
-                 % (indent, label, _fmt_num(component.get("raw")),
+                 % (indent, label, raw_text,
                     "%.3f" % component["normalized"], "%.0f%%" % (component["weight"] * 100),
                     "%.4f" % component["weighted"]))
+    lines.append("")
+    lines.append("%sWHAT EACH COUNTS" % indent)
+    for name in _SCORE_COMPONENT_ORDER:
+        component = (out.get("components") or {}).get(name) or {}
+        if component.get("counts"):
+            lines.append(_wrap("%s: %s" % (name.replace("_", " "), component["counts"]), indent=indent + "  "))
+        change = component.get("since_last_score")
+        if change:
+            lines.append("%s    since your last score (%s): raw was %s, normalized %+.3f"
+                         % (indent, _fmt_num(change.get("year")), _fmt_num(change.get("raw_before")),
+                            change["normalized_change"]))
+        if component.get("finished_but_closed"):
+            lines.append(_wrap("finished but closed, so scoring nothing until opened: "
+                               + ", ".join(component["finished_but_closed"]), indent=indent + "    "))
     lines.append("")
     if out.get("total") is not None:
         lines.append("%sTOTAL: %.1f%%  (%s / 1000 points)%s"

@@ -164,16 +164,17 @@ timbering it, building the hoist, or (for Las Medulas) building the aqueduct
 hardness alone, and `shafts_needed` counts how many a district's output
 requires from what one shaft's hoist can raise (surface and hand-worked
 alluvial ground need no shaft, so their fixed cost is zero); `amortized_sinking_cost_labour_hours_per_kg`
-spreads it over the deposit's whole assumed lifetime metal output (the same
-reserve figure `DepositState` already uses); `total_cost_labour_hours_per_kg`
+spreads it over the metal raised during one shaft service life
+(`SHAFT_SERVICE_LIFE_YEARS`: timbering and headworks are rebuilt on that
+timescale, so the horizon belongs to the works and not to the ore body; it is
+deliberately a different knob from `DEPOSIT_ASSUMED_WORKING_LIFE_YEARS`, which
+only sizes the demonstration reserve); `total_cost_labour_hours_per_kg`
 is the two added together, and is what `supply_curve` and
-`find_marginal_deposit` now sort and price by. Because the fixed cost is the
-SAME whichever reserve size it is divided by, a deposit with a huge total
-reserve pays almost nothing per kilogram for its shaft; a deposit with a
-tiny one can be pushed out of the market by its shaft cost alone even if its
-ore is rich - exactly the "uneconomic at low output, economic at high
-output" shape a pure per-tonne cost can never produce on its own, because a
-per-tonne cost does not care how many tonnes there turn out to be.
+`find_marginal_deposit` now sort and price by. Whether the sinking share is
+large enough to reorder a supply curve is measured, not asserted: run the
+script in Complaints/54. A deposit with a tiny output can be pushed out of
+the market by its shaft cost alone even if its ore is rich, which a pure
+per-tonne cost cannot produce.
 
 DECLINING GRADE WITHIN A DEPOSIT - THE INTENSIVE MARGIN, AND THE STAKEHOLDER'S
 SECOND OBSERVATION. Everything above `find_marginal_deposit` already models
@@ -250,15 +251,14 @@ joint_output_mass_shares and joint_output_value_shares both take as their
 own first argument (see that module's own functions, not imported here -
 see this module's STANDALONE section) - so a caller with real prices in
 hand can run this deposit's joint output straight through Complaints/29's
-own demand-cleared value-share answer instead of a mass split. WHAT THIS
-DOES NOT DO: it does not fold a byproduct's quantity into that metal's OWN
-`load_deposits` accounting or supply curve - britannia_lead's silver
-byproduct, added as this module's own worked example, is not added to
-`load_deposits("silver")`'s britannia_silver_generic entry, and summing
-byproduct output into a metal's real market-clearing supply is future work,
-not this task's - see data/world/deposits.json's own britannia_lead entry
-for why that would double-count against an already-calibrated regional
-share.
+own demand-cleared value-share answer instead of a mass split.
+
+A BYPRODUCT IS COUNTED ONCE: `load_deposits` of the byproduct's metal splits
+only what the empire total leaves after the byproduct
+(`empire_output_net_of_byproducts_tonnes_per_year`), so silver raised with
+lead is not also asked of the silver-only deposits. A byproduct is stated as
+an assay per tonne of the primary metal contained (`kg_per_tonne_of_primary_
+metal` in data/world/deposits.json), one figure per deposit.
 """
 import collections
 import json
@@ -268,6 +268,7 @@ from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
+from sim.world import mine_fire_setting, mine_works, tile_lookup
 
 # ============================================================================
 # DATA FILE LOCATIONS
@@ -279,7 +280,6 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(os.path.dirname(_THIS_DIR))
-GEOGRAPHY_FILE = os.path.join(_ROOT, "data", "world", "geography.json")
 RESOURCES_FILE = os.path.join(_ROOT, "data", "world", "resources.json")
 DEPOSITS_FILE = os.path.join(_ROOT, "data", "world", "deposits.json")
 
@@ -289,15 +289,6 @@ DEPOSITS_FILE = os.path.join(_ROOT, "data", "world", "deposits.json")
 # through declare(): it is a list of names, not a fact with a value that
 # could be wrong.
 METALS = ("iron", "copper", "tin", "lead", "silver", "gold", "mercury")
-
-# geography.json's own regional mineral shares are calibrated so that ONLY
-# these seven "home" regions (reach_from_italia 0 or 1) sum to about 1.0 per
-# metal - see that file's regions._note. A farther region with a nonzero
-# share (China's iron, India's copper) is ADDITIONAL production outside the
-# empire's own output, not a slice of it (geography.json says so explicitly
-# for Malayan tin), so including it here would double-count against
-# resources.json's empire-wide total rather than partition it.
-HOME_REACH_MAXIMUM = 1
 
 
 # ============================================================================
@@ -358,41 +349,6 @@ BREAKING_HOURS_PER_TONNE_HARD = declare(
         "reason Rio Tinto's copper and Dacia's gold come out as this "
         "module's costliest deposits - see the module docstring's ALLUVIAL "
         "GOLD AND DEEP VEIN GOLD section.")
-
-HAULAGE_MULTIPLIER_SHALLOW_VEIN = declare(
-    "HAULAGE_MULTIPLIER_SHALLOW_VEIN", 1.5,
-    kind="engineering_estimate",
-    unit="multiplier on breaking hours (dimensionless)",
-    source=None,
-    confidence="D",
-    why="A modest extra labour charge for hoisting broken ore up a ladder "
-        "or basket-and-windlass from a shaft too deep to simply carry ore "
-        "out on foot, but shallow enough that standing water is not yet a "
-        "problem needing continuous pumping. No specific ancient hoisting-"
-        "rate figure is behind this number; it is a placeholder pending a "
-        "real derivation from shaft depth and basket-hoist rate, which is "
-        "why it is a temporary_heuristic-confidence figure declared at "
-        "engineering_estimate kind only because the DIRECTION (deeper "
-        "costs more) is not in doubt even though the SIZE is.")
-
-HAULAGE_MULTIPLIER_DEEP_VEIN = declare(
-    "HAULAGE_MULTIPLIER_DEEP_VEIN", 3.5,
-    kind="engineering_estimate",
-    unit="multiplier on breaking hours (dimensionless)",
-    source="Roman deep mines - Rio Tinto above all - are the standard "
-           "textbook example of ancient continuous dewatering: recovered "
-           "drainage-wheel batteries (compartmentalised Archimedes-screw "
-           "and reverse-overshot-wheel trains) lifted water from shafts "
-           "on the order of a hundred metres deep, run continuously, which "
-           "on top of the long ore-hoist itself is a substantial standing "
-           "labour charge quite separate from breaking the rock.",
-    confidence="D",
-    why="Same reasoning as HAULAGE_MULTIPLIER_SHALLOW_VEIN's own "
-        "declaration - the DIRECTION (deep, wet workings cost much more "
-        "than shallow dry ones) is well attested by the archaeology; the "
-        "specific multiplier is this file's own placeholder pending a real "
-        "derivation from shaft depth, water inflow rate and a drainage "
-        "wheel's lift-rate, none of which this project has yet.")
 
 ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE = declare(
     "ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE", 1.5,
@@ -538,6 +494,19 @@ SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD = declare(
     why="The water a shaft meets must be lifted out; the works to do it "
         "grow with the height to lift.")
 
+SHAFT_SERVICE_LIFE_YEARS = declare(
+    "SHAFT_SERVICE_LIFE_YEARS", 30.0, kind="engineering_estimate",
+    unit="years a sunk shaft and its headworks serve before being rebuilt",
+    source="Timber shaft lining, windlass frame and drainage works rot and "
+           "are replaced on a timescale of decades in the documented "
+           "ancient and medieval mining districts.",
+    confidence="D",
+    why="The horizon over which one shaft's build cost is spread. It is a "
+        "property of the works, not of the ore body, so it is separate "
+        "from DEPOSIT_ASSUMED_WORKING_LIFE_YEARS (a stock for the depletion "
+        "demonstration); a shaft that outlasts neither is rebuilt, and each "
+        "rebuild costs the same again.")
+
 HOIST_FRAME_HOURS = declare(
     "HOIST_FRAME_HOURS", 500.0, kind="temporary_heuristic",
     unit="labourer-hours per shaft", source=None, confidence="D",
@@ -606,12 +575,6 @@ _HARDNESS_BREAKING_HOURS = {
     "hard": BREAKING_HOURS_PER_TONNE_HARD,
 }
 
-_DEPTH_HAULAGE_MULTIPLIER = {
-    "surface": 1.0,
-    "shallow_vein": HAULAGE_MULTIPLIER_SHALLOW_VEIN,
-    "deep_vein": HAULAGE_MULTIPLIER_DEEP_VEIN,
-}
-
 # Shaft depth per depth class; classes with no shaft are absent.
 _SHAFT_DEPTH_METRES = {
     "shallow_vein": SHAFT_DEPTH_METRES_SHALLOW_VEIN,
@@ -644,8 +607,8 @@ ByproductSpec = collections.namedtuple("ByproductSpec", [
 Deposit = collections.namedtuple("Deposit", [
     "name",
     "metal",
-    "region",                     # geography.json key, or a free-text label
-                                   # (e.g. "dacia") when no such region exists
+    "tile",                       # key of geography.json's land_tiles that
+                                  # holds the deposit's lat/lon
     "material_moved",             # "ore" or "gravel"
     "ore_grade_kg_per_tonne",     # kg of CONTAINED METAL per tonne raised
     "depth_class",
@@ -654,7 +617,10 @@ Deposit = collections.namedtuple("Deposit", [
     "note",
     "byproducts",                 # tuple of ByproductSpec, empty for most
                                    # deposits - see POLYMETALLIC DEPOSITS
-], defaults=((),))
+    "ore_type",                   # "primary" for ore smelted or amalgamated
+                                   # as such; "jarosite" for gossan that
+                                   # needs added lead as a collector
+], defaults=((), "primary"))
 
 
 def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
@@ -678,10 +644,24 @@ def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
     elif deposit.depth_class == "alluvial":
         hours_per_tonne_material = ALLUVIAL_HAND_PROCESSING_HOURS_PER_TONNE
     else:
-        hours_per_tonne_material = (
-            _HARDNESS_BREAKING_HOURS[deposit.hardness_class]
-            * _DEPTH_HAULAGE_MULTIPLIER[deposit.depth_class])
+        hours_per_tonne_material = vein_hours_per_tonne_ore(deposit)
     return hours_per_tonne_material / deposit.ore_grade_kg_per_tonne
+
+
+def vein_hours_per_tonne_ore(deposit: "Deposit") -> float:
+    """Labourer-hours per tonne of ore presented from a vein or surface
+    working: breaking and fire-setting every tonne of rock broken (ore plus
+    the barren rock that comes with it), then hoisting, carrying, draining
+    and timbering (sim/world/mine_works.py)."""
+    rock_per_ore = mine_works.rock_broken_tonnes_per_tonne_ore(deposit.depth_class)
+    on_rock = (_HARDNESS_BREAKING_HOURS[deposit.hardness_class]
+               + mine_fire_setting.fire_setting_labour_hours_per_tonne_rock(
+                   deposit.hardness_class))
+    on_ore = sum(mine_works.works_hours_per_tonne_ore(
+        deposit.depth_class, deposit.hardness_class,
+        _lift_hours_per_tonne_metre(), shaft_depth_metres(deposit),
+        mine_fire_setting.MINING_SHIFT_HOURS).values())
+    return on_rock * rock_per_ore + on_ore
 
 
 # ============================================================================
@@ -728,7 +708,12 @@ def shaft_cost_labour_hours(deposit: "Deposit") -> float:
     support = SHAFT_SUPPORT_HOURS_PER_METRE * (
         depth + depth ** 2 / (2.0 * SHAFT_SUPPORT_DEPTH_SCALE_METRES))
     drainage = SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD * depth
-    return breaking + spoil_lift + support + drainage + HOIST_FRAME_HOURS
+    # A ventilation shaft is sunk and lined like the working shaft but has
+    # no hoist frame and no sump.
+    ventilation = (mine_works.VENTILATION_OPENINGS_PER_WORKING_SHAFT
+                   * (breaking + spoil_lift + support))
+    return (breaking + spoil_lift + support + drainage + HOIST_FRAME_HOURS
+            + ventilation)
 
 
 def shaft_rock_capacity_tonnes_per_year(deposit: "Deposit") -> float:
@@ -784,34 +769,35 @@ def build_cost_labour_hours_per_tonne_year(deposit: "Deposit") -> float:
 
 
 def amortized_sinking_cost_labour_hours_per_kg(
-        deposit: "Deposit", working_life_years: Optional[float] = None) -> float:
+        deposit: "Deposit", shaft_service_life_years: Optional[float] = None) -> float:
     """The whole district's build cost (shafts for its own annual output
-    times the per-shaft cost), spread over its assumed lifetime metal
-    output. Zero where no works are needed.
+    times the per-shaft cost), spread over the metal raised during one
+    shaft service life (SHAFT_SERVICE_LIFE_YEARS), not over the assumed
+    reserve. Zero where no works are needed.
     """
     fixed_hours = build_cost_labour_hours(deposit, deposit.quantity_tonnes_per_year)
     if fixed_hours <= 0.0:
         return 0.0
-    working_life_years = (DEPOSIT_ASSUMED_WORKING_LIFE_YEARS
-                           if working_life_years is None else working_life_years)
-    total_reserve_kg = (deposit.quantity_tonnes_per_year * working_life_years
-                         * KILOGRAMS_PER_TONNE)
-    if total_reserve_kg <= 0.0:
+    shaft_service_life_years = (SHAFT_SERVICE_LIFE_YEARS
+                                if shaft_service_life_years is None
+                                else shaft_service_life_years)
+    output_over_service_life_kg = (deposit.quantity_tonnes_per_year
+                                   * shaft_service_life_years * KILOGRAMS_PER_TONNE)
+    if output_over_service_life_kg <= 0.0:
         return float("inf")
-    return fixed_hours / total_reserve_kg
+    return fixed_hours / output_over_service_life_kg
 
 
-def total_cost_labour_hours_per_kg(
-        deposit: "Deposit", working_life_years: Optional[float] = None) -> float:
+def total_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
     """The deposit's full unit cost: the recurring extraction cost plus its
-    fixed sinking cost amortised over its assumed lifetime output. This is
+    fixed sinking cost amortised over one shaft service life. This is
     what supply_curve and find_marginal_deposit actually sort and price by
     - see the module docstring's SINKING COST section for why a pure
     per-tonne cost cannot, on its own, make a poor deposit uneconomic at
     low demand and economic at high demand.
     """
     return (extraction_cost_labour_hours_per_kg(deposit)
-            + amortized_sinking_cost_labour_hours_per_kg(deposit, working_life_years))
+            + amortized_sinking_cost_labour_hours_per_kg(deposit))
 
 
 # ============================================================================
@@ -938,19 +924,6 @@ def _load_json(path: str) -> Any:
         return json.load(handle)
 
 
-def _region_share(
-        geography: Dict[str, Any], region: str, metal: str) -> Optional[float]:
-    """geography.json's own regional mineral share for `metal` at `region`,
-    or None if that region carries no entry for it at all (as opposed to an
-    explicit zero) - used only to tell a genuine gap in geography.json apart
-    from a region that simply produces none of this metal.
-    """
-    entry = geography["regions"].get(region)
-    if entry is None:
-        return None
-    return entry.get("minerals", {}).get(metal)
-
-
 _GRADE_DECLARED: set = set()
 
 
@@ -984,49 +957,45 @@ def _declare_grade(deposit_entry: Dict[str, Any], metal: str) -> float:
 def _declare_byproduct_grade(
         deposit_entry: Dict[str, Any], byproduct_entry: Dict[str, Any],
         primary_metal: str) -> float:
-    """Run one byproduct's own ore_grade_kg_per_tonne through declare(),
-    exactly as _declare_grade does for the primary metal - a byproduct
-    grade is just as much a physical fact about the rock as the primary
-    one, and just as capable of being confidence D. Shares the "DEPOSIT_
-    GRADE_" name prefix (and therefore sim/tests/test_deposits.py's
-    every_declared_grade_is_engineering_or_heuristic_kind check) rather
-    than inventing a separate prefix nothing already enforces.
-    """
+    """The byproduct's grade in the rock, from its assay per tonne of the
+    primary metal contained (`kg_per_tonne_of_primary_metal`, the figure
+    sources quote) times the deposit's own primary grade. The assay goes
+    through declare() as a physical fact about this deposit's rock, never
+    derived from what either metal sells for; it shares the "DEPOSIT_GRADE_"
+    prefix so sim/tests/test_deposits.py's kind check covers it."""
+    grade = (deposit_entry["ore_grade_kg_per_tonne"]
+             * byproduct_entry["kg_per_tonne_of_primary_metal"] / KILOGRAMS_PER_TONNE)
     name = "DEPOSIT_GRADE_%s_BYPRODUCT_%s_%s" % (
         byproduct_entry["metal"].upper(), primary_metal.upper(),
         deposit_entry["name"].upper())
     if name in _GRADE_DECLARED:
-        return byproduct_entry["ore_grade_kg_per_tonne"]
+        return grade
     _GRADE_DECLARED.add(name)
     confidence = byproduct_entry.get("conf", "D")
     kind = "engineering_estimate" if confidence in ("A", "B", "C") else "temporary_heuristic"
-    return declare(
-        name, byproduct_entry["ore_grade_kg_per_tonne"],
+    declare(
+        name, byproduct_entry["kg_per_tonne_of_primary_metal"],
         kind=kind,
-        unit="kg contained %s / tonne of the SAME rock %s's own "
-             "ore_grade_kg_per_tonne is quoted against"
-             % (byproduct_entry["metal"], deposit_entry["name"]),
+        unit="kg of %s per tonne of %s contained in %s's rock"
+             % (byproduct_entry["metal"], primary_metal, deposit_entry["name"]),
         source=byproduct_entry.get("source"), confidence=confidence,
-        why="A polymetallic by-product grade - %s's %s ore also carries "
-            "%s at this grade, fixed by geology (see the module "
-            "docstring's POLYMETALLIC DEPOSITS section): opening the "
-            "deposit for %s necessarily raises this much %s too, whether "
-            "or not anyone wants it, and never derived from what either "
-            "metal sells for."
+        why="A polymetallic by-product assay - %s's %s ore also carries "
+            "%s, fixed by geology (see the module docstring's POLYMETALLIC "
+            "DEPOSITS section): opening the deposit for %s necessarily "
+            "raises this much %s too, and it is never derived from what "
+            "either metal sells for."
             % (deposit_entry["name"], primary_metal, byproduct_entry["metal"],
                primary_metal, byproduct_entry["metal"]))
+    return grade
 
 
 _SHARE_DECLARED: set = set()
 
 
 def _declare_explicit_share(deposit_entry: Dict[str, Any], metal: str) -> float:
-    """share_of_empire_output, for the two metals (gold, mercury)
-    geography.json carries no regional breakdown for at all - see
-    data/world/deposits.json's own _doc. Declared for the same reason the
-    grade is: it is a number this file asserts, not arithmetic on an
-    already-declared one.
-    """
+    """share_of_empire_output: this deposit's slice of the metal's output,
+    the figure the quantity is derived from. Declared because it is a number
+    this file asserts, not arithmetic on an already-declared one."""
     name = "DEPOSIT_SHARE_%s_%s" % (metal.upper(), deposit_entry["name"].upper())
     if name in _SHARE_DECLARED:
         return deposit_entry["share_of_empire_output"]
@@ -1038,63 +1007,65 @@ def _declare_explicit_share(deposit_entry: Dict[str, Any], metal: str) -> float:
         unit="fraction of empire_output_100ad for this metal (dimensionless)",
         source=deposit_entry.get("source"),
         confidence=confidence,
-        why="Stands in for the regional breakdown data/world/geography.json "
-            "carries for iron, copper, tin, lead and silver but not for %s "
-            "- see data/world/deposits.json's own _doc for why gold and "
-            "mercury need their own explicit share instead of a "
-            "geography.json lookup." % metal)
+        why="Stands in for a located production figure per deposit: the "
+            "share of the %s output of the Roman world worked at this "
+            "site, normalised so the deposits of one metal sum to about "
+            "1.0 (see data/world/deposits.json's own _doc)." % metal)
+
+
+def empire_output_net_of_byproducts_tonnes_per_year(
+        metal: str, resources: Optional[Dict[str, Any]] = None,
+        deposits_data: Optional[Dict[str, Any]] = None) -> float:
+    """The empire total of `metal` less what other metals' deposits raise of
+    it as a byproduct (silver riding with lead), so one ounce is counted once:
+    this is what the metal's own deposits must supply and the quantity its
+    own shares split (Complaints/291). Byproduct tonnes are the other
+    deposit's share times its own empire total times the assay, which needs
+    no grade."""
+    resources = resources if resources is not None else _load_json(RESOURCES_FILE)
+    deposits_data = (deposits_data if deposits_data is not None
+                      else _load_json(DEPOSITS_FILE))
+    total = resources["empire_output_100ad"][metal]["t_per_yr"]
+    for other_metal, entries in deposits_data["deposits"].items():
+        if other_metal == metal:
+            continue
+        other_total = resources["empire_output_100ad"][other_metal]["t_per_yr"]
+        for entry in entries:
+            for byproduct_entry in entry.get("byproducts", []):
+                if byproduct_entry["metal"] == metal:
+                    total -= (entry["share_of_empire_output"] * other_total
+                              * byproduct_entry["kg_per_tonne_of_primary_metal"]
+                              / KILOGRAMS_PER_TONNE)
+    return max(0.0, total)
 
 
 def load_deposits(
-        metal: str, geography: Optional[Dict[str, Any]] = None,
-        resources: Optional[Dict[str, Any]] = None,
+        metal: str, resources: Optional[Dict[str, Any]] = None,
         deposits_data: Optional[Dict[str, Any]] = None) -> List["Deposit"]:
     """Every named deposit for `metal`, with its extraction-cost inputs and
-    its derived `quantity_tonnes_per_year`, built from data/world/
-    deposits.json plus (for iron, copper, tin, lead, silver)
-    data/world/geography.json's own regional mineral shares times
-    data/world/resources.json's empire_output_100ad, or (for gold, mercury,
-    which geography.json carries no regional breakdown for) the deposit's
-    own declared share_of_empire_output.
+    its derived `quantity_tonnes_per_year`: the deposit's own
+    share_of_empire_output times data/world/resources.json's
+    empire_output_100ad. Each deposit sits on the land tile holding its lat/lon
+    (a key of geography.json's land_tiles); nothing here reads the region
+    records.
 
-    The three data arguments default to loading the files fresh, and are
-    accepted as arguments purely so a caller (or a test) that already has
-    them in hand is not made to re-read three files it just read.
+    The data arguments default to loading the files fresh, and are accepted
+    purely so a caller (or a test) that already has them in hand is not made
+    to re-read them.
     """
     if metal not in METALS:
         raise ValueError("unknown metal %r; must be one of %s" % (metal, METALS))
-    geography = geography if geography is not None else _load_json(GEOGRAPHY_FILE)
     resources = resources if resources is not None else _load_json(RESOURCES_FILE)
     deposits_data = (deposits_data if deposits_data is not None
                       else _load_json(DEPOSITS_FILE))
 
-    empire_total_tonnes = resources["empire_output_100ad"][metal]["t_per_yr"]
+    empire_total_tonnes = empire_output_net_of_byproducts_tonnes_per_year(
+        metal, resources, deposits_data)
 
     out = []
     for entry in deposits_data["deposits"].get(metal, []):
         grade = _declare_grade(entry, metal)
-        share: Optional[float]
-        if "share_of_empire_output" in entry:
-            share = _declare_explicit_share(entry, metal)
-        else:
-            region_entry = geography["regions"].get(entry["region"])
-            if region_entry is None:
-                raise KeyError(
-                    "%s: region %r not found in data/world/geography.json, "
-                    "and this entry carries no share_of_empire_output of "
-                    "its own" % (entry["name"], entry["region"]))
-            if region_entry.get("reach_from_italia", 99) > HOME_REACH_MAXIMUM:
-                # geography.json's own shares are normalised so only the
-                # "home" regions sum to ~1.0 per metal (see this module's
-                # HOME_REACH_MAXIMUM); a farther region's share is EXTRA
-                # production, not part of empire_output_100ad's total, so it
-                # is deliberately excluded here rather than double-counted.
-                continue
-            share = _region_share(geography, entry["region"], metal)
-            if share is None:
-                raise KeyError(
-                    "%s: region %r has no %r entry in geography.json's "
-                    "minerals table" % (entry["name"], entry["region"], metal))
+        share = _declare_explicit_share(entry, metal)
         quantity_tonnes_per_year = share * empire_total_tonnes
         byproducts = tuple(
             ByproductSpec(
@@ -1107,14 +1078,15 @@ def load_deposits(
         out.append(Deposit(
             name=entry["name"],
             metal=metal,
-            region=entry["region"],
+            tile=tile_lookup.tile_holding(entry["lat"], entry["lon"]),
             material_moved=entry["material_moved"],
             ore_grade_kg_per_tonne=grade,
             depth_class=entry["depth_class"],
             hardness_class=entry.get("hardness_class"),
             quantity_tonnes_per_year=quantity_tonnes_per_year,
             note=entry.get("source", ""),
-            byproducts=byproducts))
+            byproducts=byproducts,
+            ore_type=entry.get("ore_type", "primary")))
     return out
 
 
@@ -1130,31 +1102,25 @@ SupplyCurvePoint = collections.namedtuple("SupplyCurvePoint", [
 ])
 
 
-def supply_curve(
-        deposits: List["Deposit"],
-        working_life_years: Optional[float] = None) -> List["SupplyCurvePoint"]:
+def supply_curve(deposits: List["Deposit"]) -> List["SupplyCurvePoint"]:
     """`deposits`, sorted cheapest-first, each annotated with its own FULL
     unit cost (total_cost_labour_hours_per_kg: recurring extraction plus
     amortised sinking - see the module docstring's SINKING COST section)
     and the running total of quantity available at or below that cost -
     the object Complaints/32 says this project is missing entirely. Ties
     broken by name, so the curve is deterministic regardless of the order
-    `deposits` arrives in. `working_life_years` is forwarded to
-    total_cost_labour_hours_per_kg for every deposit; the default (None)
-    uses DEPOSIT_ASSUMED_WORKING_LIFE_YEARS for all of them, matching
-    DepositState's own default reserve.
+    `deposits` arrives in.
     """
     ordered = sorted(
         deposits,
-        key=lambda d: (total_cost_labour_hours_per_kg(d, working_life_years), d.name))
+        key=lambda d: (total_cost_labour_hours_per_kg(d), d.name))
     points = []
     cumulative = 0.0
     for deposit in ordered:
         cumulative += deposit.quantity_tonnes_per_year
         points.append(SupplyCurvePoint(
             deposit=deposit,
-            own_cost_labour_hours_per_kg=total_cost_labour_hours_per_kg(
-                deposit, working_life_years),
+            own_cost_labour_hours_per_kg=total_cost_labour_hours_per_kg(deposit),
             quantity_tonnes_per_year=deposit.quantity_tonnes_per_year,
             cumulative_quantity_tonnes_per_year=cumulative))
     return points
@@ -1183,8 +1149,8 @@ MarginalOutcome = collections.namedtuple("MarginalOutcome", [
 
 
 def find_marginal_deposit(
-        deposits: List["Deposit"], quantity_demanded_tonnes_per_year: float,
-        working_life_years: Optional[float] = None) -> "MarginalOutcome":
+        deposits: List["Deposit"],
+        quantity_demanded_tonnes_per_year: float) -> "MarginalOutcome":
     """The Ricardian rent calculation this module exists for.
 
     Walks `deposits` cheapest-first, filling `quantity_demanded_tonnes_per_
@@ -1207,13 +1173,13 @@ def find_marginal_deposit(
     "Cost" throughout is supply_curve's own total_cost_labour_hours_per_kg
     (recurring extraction plus amortised sinking cost - see the module
     docstring's SINKING COST section), not the older extraction-only
-    figure; `working_life_years` is forwarded to it unchanged.
+    figure.
     """
     if quantity_demanded_tonnes_per_year < 0:
         raise ValueError("quantity demanded cannot be negative: %r"
                           % (quantity_demanded_tonnes_per_year,))
 
-    points = supply_curve(deposits, working_life_years)
+    points = supply_curve(deposits)
     remaining = quantity_demanded_tonnes_per_year
     allocations = []
     marginal_deposit = None
@@ -1405,8 +1371,7 @@ def simulate_depletion(
                 quantity_tonnes_per_year=state.annual_capacity_tonnes())
             for state in available]
         outcome = find_marginal_deposit(
-            this_year_deposits, quantity_demanded_tonnes_per_year,
-            working_life_years=working_life_years)
+            this_year_deposits, quantity_demanded_tonnes_per_year)
 
         # find_marginal_deposit sorts internally (supply_curve), so
         # outcome.allocations is NOT in `available`'s order - matching by
@@ -1463,7 +1428,7 @@ if __name__ == "__main__":
     print("=" * 72)
     for metal in METALS:
         deposits = load_deposits(metal)
-        demand = resources["empire_output_100ad"][metal]["t_per_yr"]
+        demand = empire_output_net_of_byproducts_tonnes_per_year(metal)
         outcome = find_marginal_deposit(deposits, demand)
         print("\n%s (stated Roman output: %.4g t/yr)" % (metal.upper(), demand))
         for allocation in sorted(outcome.allocations,
@@ -1487,7 +1452,7 @@ if __name__ == "__main__":
     print("(price now creeps up WITHIN a deposit's life too - the intensive "
           "margin - not only when one is exhausted)")
     silver_deposits = load_deposits("silver")
-    silver_demand = resources["empire_output_100ad"]["silver"]["t_per_yr"]
+    silver_demand = empire_output_net_of_byproducts_tonnes_per_year("silver")
     silver_outcomes = simulate_depletion(
         silver_deposits, silver_demand,
         years=int(DEPOSIT_ASSUMED_WORKING_LIFE_YEARS * 1.2))

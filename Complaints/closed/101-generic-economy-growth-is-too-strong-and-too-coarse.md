@@ -1,0 +1,148 @@
+# Generic economy growth per completed technology is too strong and too coarse
+
+**Status:** closed - the index is gone: `Sim.economy`, `economy_index()`, `ECONOMY_INDEX_PER_*_NODE`, `ECONOMY_OUTPUT_SCALING_EXPONENT` and `output_volume_scale()` are deleted; output is the quantity the market clears at the opening's prices (`sim/engine/real_output.py`, pinned by sim/tests/test_real_output.py). What remains is Complaints 369 and 370.
+
+**Source:** playtest findings document, ECON-002. **Type:** Design/balance
+recommendation, already substantially aligned with CLAUDE.md's own stated
+direction.
+
+## The player's observation and worked calculation
+
+`sim/engine/economy.py` defines (verified at lines 222-241 in the current
+tree):
+
+    ECONOMY_INDEX_PER_DIFFUSED_NODE = 0.055   # fraction of output per diffused technology
+    ECONOMY_INDEX_PER_LOCKED_NODE   = 0.030   # fraction of output per undispersed technology
+
+and `economy_index()` (lines 336-349):
+
+    diffused = count of completed, non-granted technologies
+    economy_index = 1 + 0.055 * diffused     (if corpus_dispersed is running)
+                  = 1 + 0.030 * diffused     (otherwise)
+
+`sim/engine/economy_production.py` then raises that index to a fixed
+exponent wherever gross revenue is scaled:
+
+    gross = total_revenue * (economy_index ** ECONOMY_OUTPUT_SCALING_EXPONENT)
+
+with `ECONOMY_OUTPUT_SCALING_EXPONENT = 0.75` (declared at line 193-203 of
+that file).
+
+The player's example: 500 diffused nodes gives an economy index of roughly
+28.5; 718 diffused nodes gives roughly 40.5, and 40.5 raised to the power
+0.75 is roughly a 16x output multiplier.
+
+**Arithmetic checked directly:**
+
+    1 + 0.055 * 500 = 28.5
+    1 + 0.055 * 718 = 40.49
+    40.49 ** 0.75   = 16.05
+
+Both figures the player quoted are correct, computed against the coefficients
+as they stand in the current tree.
+
+## How this sits against CLAUDE.md
+
+This is close to a textbook case of what CLAUDE.md §3.1 warns against: an
+outcome (an economy-wide productivity multiplier) that stands in for a
+mechanism (specific technologies having specific, derivable effects on
+specific parts of the economy) the project intends to build but has not yet
+built. The code's own comments already say this. `ECONOMY_INDEX_PER_
+DIFFUSED_NODE`'s `why` field (verified directly) reads: "standing in for the
+real mechanism - diffusion of a specific technology through a specific
+population over time - that nothing in this project computes yet." The
+player's write-up says the same thing independently, and says the code
+comment already labels it a temporary heuristic; that claim is true, checked
+below.
+
+**Labelling, checked against `sim/constants.py --burndown`:** both
+coefficients, and `ECONOMY_OUTPUT_SCALING_EXPONENT`, are declared through
+`sim/constants.py`'s `declare()` with `kind="temporary_heuristic"` and
+`confidence="D"`. Run directly:
+
+    python3 sim/constants.py --burndown 2>&1 | grep -i "ECONOMY_INDEX\|ECONOMY_OUTPUT_SCALING"
+    ->    ECONOMY_OUTPUT_SCALING_EXPONENT    dimensionless exponent on self.economy engine.economy_production
+          ECONOMY_INDEX_PER_DIFFUSED_NODE    fraction of output per diffused technology engine.economy
+          ECONOMY_INDEX_PER_LOCKED_NODE      fraction of output per undispersed technology engine.economy
+
+All three appear in the burndown's "outstanding promises" list (numbers
+invented because the derivation mechanism does not exist yet), not in its
+separate "11 hardcoded outcomes" list (the smaller set CLAUDE.md §3.1 forbids
+outright). That header line, also run directly:
+
+    885 numbers declared, 698 are temporary heuristics (78.9%)
+
+So this is correctly labelled today. It is a large, coarse heuristic, not an
+unlabelled one, and not one of the eleven the project already treats as a
+live rule violation.
+
+## What the finding recommends, and where it already has support
+
+Reduce reliance on the flat node-count index as domain-specific mechanisms
+(agricultural productivity, energy per capita, transport/freight, literacy
+and human capital, industrial output, finance) come online, letting each of
+them carry part of the growth load instead. This is the same recommendation
+as `LATE-010` (filed as `Complaints/112`), which should be read alongside
+this one: `LATE-010` is the "what replaces it," this complaint is the "why
+the current thing is oversized."
+
+`ENDOGENOUS_COSTS_AND_DOMAINS.md` (`docs/architecture/`) already plans this
+direction in Part 3's domain table: labour market, production and the price
+solve at Layer 3, then infrastructure/transport, trade, settlement and
+urbanisation at Layers 4-5, each meant to produce a real price rather than
+have the price handed down from a flat multiplier. This complaint does not
+duplicate that plan; it adds the specific measured magnitude of the current
+stand-in (a ~16x multiplier at 718 nodes) as evidence for why the migration
+matters, which the architecture documents do not currently quote.
+
+## Size
+
+This is not a one-line balance tweak. Reducing the index's weight without a
+replacement mechanism just makes the game poorer for no modelled reason
+(CLAUDE.md §3.2 explicitly allows the baseline to get worse while real
+mechanisms are built, but that is a reason to do this deliberately alongside
+`LATE-010`'s domain-specific work, not a reason to shrink the coefficient in
+isolation). Treat this as advisory to the domain-by-domain migration effort,
+not a standalone ticket.
+
+Also reported (final playtests, A and B; `Complaints/reports/final-playtests-triage.md`): A: 451.8 million denarii at 361 AD from about 111 concerns and 330 employees, annual surplus 13.3 million, 'by the final century I rarely cared about the ordinary price of another invention'; they want the existing saturation mechanic expanded, not arbitrary cost multipliers. B: income +16 thousand a year (111 AD), +1 million (137 AD), +5 million (170 AD), about 400 million held by 216 AD, and money stops mattering by about 125 AD. B also asks whether population runs hot: 120.2 million by 302 AD from about 65 million after plague mitigation, against another run's 66.9 million at 361 AD (different run, untested here; `python3 sim/simulator.py` ensemble comparison would settle it, see CLAUDE.md 4.2).
+
+Related: 341, 354.
+
+## What replaced the index, and what was measured
+
+Every reader listed below was moved to the quantity or price it needs:
+- Takings and upkeep of a concern (`concern_takings`, `upkeep`, `venture_real_upkeep`): the concern's own volume, no index. The ceiling on what the market absorbs follows measured output per head (`Sim.real_output_per_head()`), as does the state's funding ask and, through `LABOUR_PAY_SHARE_OF_OUTPUT_GAIN`, the pay scale.
+- Society output (`SimWorld.society_output`): `Sim.real_output_hours()` times the money an hour is worth.
+- Household demand (`market_demand.py`): the population, and the prices of the opening's goods against the opening's, so a cheaper good is wanted in greater quantity. Income is held in labour hours (Complaint 370).
+- Goods categories' re-equilibration speed, the clearing cache signature and the shared-answer stamp no longer read an index.
+- `EconomyState.economy` is now `EconomyState.output_per_head`, written once a year when the market closes; `perf_fingerprint.BASELINE_FIELDS` follows.
+
+Measured, `_fp/measure.py`, seed 1, 150 years from the opening, recommended strategy:
+- Rome: before, the founder's capital reached 7.2e9 and 612 firms by year 250 (index 112); after, capital stays within a few hundred thousand of zero (4.2e3 at year 250), firms 8 to 11, real output per head flat within a few percent. Takeoff vanishes.
+- Han: before, no takeoff either (capital below zero throughout, 7 firms); after, the same with 5 to 6 firms.
+- Why: the takeoff was the index lifting every concern's takings while a concern's costs stood still (Complaint 354). Without the index the founder's takings are flat, and the techniques completed in 150 years cheapen too few of the opening basket's goods for households to buy much more of them. A founder that is ahead of the society, or concerns whose volume follows their improved entries, would restore a return on technology: Complaint 369.
+- CPU per simulated year (Rome): 4.5 s before, 0.3 s after, because the economy no longer explodes; not a like-for-like speed comparison.
+
+Also fixed on the way: the foreign trading partners' freight facts were remembered until the price table changed, so an unbroken game and a reloaded one disagreed by a few millionths on trade flows; they are now remembered for a year.
+
+## The map of readers, as it stood before the change
+
+Measured with `grep -rn "economy\.economy\b\|ECONOMY_OUTPUT_SCALING_EXPONENT\|output_volume_scale\|concern_running_scale\|concern_takings" sim`. The index is `state.economy.economy` (`Sim.economy`), written once a year by `_step_money` (core_step_phases.py) from `economy_index()` (economy.py).
+
+Direct readers of the index:
+- economy_production.py: `patron_funding_ask` (state funding ask), `revenue_key` (cache key), `_compute_revenue_uncached` (gross and the market-size ceiling), `output_volume_scale`, `revenue_sources` (workshop row), `practice_note`.
+- economy_absorption.py: workshop share of the absorbed deduction.
+- economy_goods.py: goods-category speed of re-equilibration (`GOODS_TAU_ECONOMY_EXPONENT`) and three cache keys.
+- market_demand.py: household income (`MEAN_INCOME_HOURS_PER_CAPITA` times the index) and `economy_size_ratio`.
+- market_clearing.py: the clearing cache signature.
+- view_share.py: the shared-answer stamp.
+- core_properties.py, household.py (field table), core.py, state.py (`EconomyState.economy`), perf_fingerprint.py (`BASELINE_FIELDS`).
+
+Readers of `output_volume_scale()` (the index to the 0.75):
+- economy_production.py: `concern_takings` (every concern's takings, the founder's and every firm's through actors/world.py), `concern_running_scale` (upkeep of every concern, `projects_venture_quotes.py` and `actors/world.py upkeep`).
+- actors/world.py `society_output` (state revenue, entrepreneurial capital limit, capital income).
+- labour_market_api.py `pay_scale` (via `LABOUR_PAY_SHARE_OF_OUTPUT_GAIN`, zero by default).
+
+Tests that set or read it: test_money_units_one_boundary, test_firm_costs_scale, test_market_engine.
+

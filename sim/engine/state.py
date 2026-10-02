@@ -12,6 +12,7 @@ from typing import (
 	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
 )
 
+from sim.engine import cash_book
 from sim.engine.economy import _InvalidatingDict
 
 
@@ -190,6 +191,11 @@ class HouseholdState:
 	last_withdrawal: Optional[int] = None
 	last_settlement: int = -999
 	spend_last_year: Optional[float] = None
+	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
+	# and the last few closed years
+	cash_flow: Dict[str, float] = field(default_factory=dict)
+	cash_mark: Optional[float] = None
+	cash_periods: List[Dict[str, Any]] = field(default_factory=list)
 
 	# Workforce and human capital
 	scholars: float = 0.0
@@ -205,6 +211,8 @@ class HouseholdState:
 	relocation_hours_this_year: float = 0.0
 	base_tile: Optional[str] = None
 	hour_allocations: Dict[str, float] = field(default_factory=dict)
+	# standing order id -> [hours ordered, shortfall kind] last reported as unused, so repeats stay quiet
+	unused_hours_reported: Dict[str, List[Any]] = field(default_factory=dict)
 	work_trade: Optional[str] = None
 	last_taught: Dict[str, int] = field(default_factory=dict)
 	training: List[List[Any]] = field(default_factory=list)
@@ -220,6 +228,11 @@ class HouseholdState:
 	# spare generic hands the reserve_staff policy keeps above what concerns hold (`reserve`)
 	reserve_craftsmen: int = 0
 	reserve_scholars: int = 0
+	# a planned project and the cash target put by for it (`saving`)
+	saving_for: Optional[str] = None
+	saving_target: float = 0.0
+	# what the automatic policies did in the last few years (`automation`)
+	automation_audit: List[Any] = field(default_factory=list)
 	_said_deputies: int = 0
 	_said_near_limit: Optional[bool] = None
 	_said_autoopen: Optional[Dict[str, int]] = None
@@ -229,19 +242,34 @@ class HouseholdState:
 	last_military_demand: int = -999
 	_said_confiscation_band: int = -1
 
-	def cost_capital(self, amount: float) -> None:
-		"""Deduct an amount of capital for household expenditure and track total spend."""
-		cost = float(amount)
-		self.capital -= cost
-		self.total_spend += cost
-
-	def costCapital(self, amount: float) -> None:
-		"""Alias for cost_capital following camelCase convention."""
-		self.cost_capital(amount)
-
-	def add_capital(self, amount: float) -> None:
-		"""Credit capital into household purse."""
+	def credit(self, amount: float, purpose: Any) -> None:
+		"""Money in, entered in the cash book under its cause."""
 		self.capital += float(amount)
+		cash_book.record(self, 1.0, float(amount), purpose)
+
+	def debit(self, amount: float, purpose: Any) -> None:
+		"""Money out, entered in the cash book under its cause."""
+		self.capital -= float(amount)
+		cash_book.record(self, -1.0, float(amount), purpose)
+
+	def reset_cash(self, new_capital: float, purpose: Any) -> None:
+		"""Set the purse to an exact figure (a settlement), entering the difference under its cause."""
+		difference = new_capital - self.capital
+		self.capital = new_capital
+		cash_book.record(self, 1.0, difference, purpose)
+
+	def cost_capital(self, amount: float, purpose: Any = "expenditure") -> None:
+		"""Pay out of the purse and track total spend."""
+		self.debit(amount, purpose)
+		self.total_spend += float(amount)
+
+	def costCapital(self, amount: float, purpose: Any = "expenditure") -> None:
+		"""Alias for cost_capital following camelCase convention."""
+		self.cost_capital(amount, purpose)
+
+	def add_capital(self, amount: float, purpose: Any = "receipts") -> None:
+		"""Credit capital into household purse."""
+		self.credit(amount, purpose)
 
 	def add_reputation(self, delta: float) -> None:
 		"""Increase household reputation standing."""
@@ -268,6 +296,7 @@ class ProjectsState:
 	done_year: Optional[Dict[str, int]] = None
 	operating: Set[str] = field(default_factory=set)
 	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
+	uninformed_failures: Dict[str, int] = field(default_factory=dict)
 	mothballed: Set[str] = field(default_factory=set)
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)
@@ -276,11 +305,20 @@ class ProjectsState:
 	forgotten: Dict[str, int] = field(default_factory=dict)
 	trade_hours_used: Dict[str, float] = field(default_factory=dict)
 	revealed: Set[str] = field(default_factory=set)
+	# node id -> what the founder chose to do with the invention: {"mode", "published_year",
+	# "licensees": {actor id -> {"fee", "royalty", "year"}}}; a node absent from it is on the default
+	disclosures: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	# concerns whose staff the yearly step hires for before the closure rule (`keep <id> staffed`)
 	keep_staffed: Set[str] = field(default_factory=set)
+	# node ids, `category:<cat>` and `trait:<trait>` the automatic starters (rush, auto_open, auto_commission) skip
+	excluded: Set[str] = field(default_factory=set)
 	stalled: int = 0
 	# work id -> {"reason": str, "year": int}; only while the work is mothballed
 	closures: Dict[str, Dict[str, object]] = field(default_factory=dict)
+	# every work ever shut for want of staff; kept after it reopens
+	ever_closed_for_staff: Set[str] = field(default_factory=set)
+	# this year's staffing closures and reopenings: year, closed, reopened, short (resource -> amount)
+	staffing_tally: Dict[str, object] = field(default_factory=dict)
 
 	def active_keys_sorted(self) -> List[str]:
 		"""Return active project ids in the canonical resolution order.
@@ -310,23 +348,42 @@ class EconomyState:
 	shortages: collections.Counter = field(default_factory=collections.Counter)
 	throttle: float = 1.0
 	binding: Optional[str] = None
+	shortage_condition: Optional[Dict[str, Any]] = None
 	forest_ha: float = 0.0
 	nitre_bed_m2: float = 0.0
 	market_pressure: float = 0.0
 	output_factor: float = 1.0
-	economy: float = 1.0
+	# real output per person over the opening's, measured when the market closes (real_output.py)
+	output_per_head: float = 1.0
+	# material -> its price in labour hours the first year households were offered it, which values it in real output
+	introduction_prices: Dict[str, float] = field(default_factory=dict)
 	money_real: float = 1.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
 	_material_stock_opening: Optional[Dict[str, Any]] = None
+	# commodity -> society capacity, stock and last price ratio (market_clearing.py)
+	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
+	# the year's purchases and sales by commodity and party, and the founder's draws (goods_market_api.py)
+	market_flows: Optional[Dict[str, Any]] = None
+	# foreign economy id -> commodity -> its capacity, stock and price ratio (foreign_economies.py)
+	foreign_market_book: Dict[str, Dict[str, Dict[str, float]]] = field(default_factory=dict)
+	# foreign economy id -> goods and coin paid, and the route's lift (foreign_payments.py)
+	foreign_ledger: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	capacity_pool: Dict[str, float] = field(default_factory=dict)
 	farm_hectares: Optional[float] = None
 	farm_stock_kg: float = 0.0
 	farm_cleared_hectares: Optional[float] = None
 	farm_last_shortfall_kg: Optional[float] = None
+	# gross harvest of the last year the farm closed, in kilograms of grain (0 before the first)
+	farm_last_harvest_kg: float = 0.0
+	# year -> value of goods this society imported ("in") and exported ("out") that year, in its money;
+	# the state's customs read the last completed year (foreign_payments.py)
+	foreign_trade_by_year: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	farm_last_marginal_product: Optional[float] = None
 	society_labour_hours: Dict[str, float] = field(default_factory=dict)
 	farm_hours_needed: Optional[float] = None
 	wage_tightness_factors: Dict[str, float] = field(default_factory=dict)
+	# tonnes a year per material the last throttle saw; the next year's prices read it before it is recomputed
+	material_demand_at_last_throttle: Optional[Dict[str, float]] = None
 	_dashboard_history: Optional[List[Any]] = None
 
 
@@ -362,6 +419,7 @@ class ScenarioState:
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
 	_said_explanations: Optional[Dict[str, int]] = None
+	score_last_seen: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -370,6 +428,9 @@ class PopulationState:
 	pop_children: float = 0.0
 	pop_working_age: float = 0.0
 	pop_elderly: float = 0.0
+	population_change_last_year: Optional[float] = None
+	# one dict per simulated year: year, population, births, deaths, nutrition_ratio
+	yearly_record: List[Any] = field(default_factory=list)
 
 
 @dataclass
@@ -386,21 +447,85 @@ class ActorRecord:
 	works: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	failed_copies: Dict[str, int] = field(default_factory=dict)
 	opened_year: Dict[str, int] = field(default_factory=dict)
+	# node id -> how many times the concern's founding size the firm runs it at (absent = one)
+	capacity: Dict[str, float] = field(default_factory=dict)
 	target: Optional[str] = None
 	location: Optional[str] = None
 	exited_year: Optional[int] = None
 	loss_years: int = 0
 	founded_year: Optional[int] = None
 	last_margin: float = 0.0
+	# node id -> share of the concern's staff found in the labour pool last year
+	staffing: Dict[str, float] = field(default_factory=dict)
 	# purpose -> money in and out over the actor's life; money = income - outlays
 	income: Dict[str, float] = field(default_factory=dict)
 	outlays: Dict[str, float] = field(default_factory=dict)
+	# a state's standing need by line last year, and the part it could not pay
+	need: Dict[str, float] = field(default_factory=dict)
+	unfunded: Dict[str, float] = field(default_factory=dict)
+	# what the state seeks of the people it can see: share of income at full notice by kind of
+	# claim, and the visible income those shares are spread over
+	levy_requisition_rate: float = 0.0
+	levy_office_rate: float = 0.0
+	levy_base: float = 0.0
+	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
+	army: float = 0.0
+	# a state's revenue last year by form, in money's worth, and the part of it taken in kind
+	revenue_by_form: Dict[str, float] = field(default_factory=dict)
+	revenue_in_kind: Dict[str, float] = field(default_factory=dict)
+	# material -> tonnes the state took in kind last year, and tonnes it holds in store now
+	in_kind_received: Dict[str, float] = field(default_factory=dict)
+	stores: Dict[str, float] = field(default_factory=dict)
+	# an interest group's kind (what hurt it), subject (the commodity or trade), what caused the
+	# hurt in words, people it speaks for, the income it lost (net of what the state made good),
+	# the share of the state's attention it commands, and what it asks of the state
+	group_kind: str = ""
+	subject: str = ""
+	cause: str = ""
+	members: float = 0.0
+	lost_income: float = 0.0
+	grievance: float = 0.0
+	strength: float = 0.0
+	peak_strength: float = 0.0
+	claim: float = 0.0
+	received_last_year: float = 0.0
+	demands: List[str] = field(default_factory=list)
+	petitions: int = 0
+	last_logged_year: Optional[int] = None
+	# what the treasury paid the founder as patron this year
+	patron_grant: float = 0.0
+
+
+@dataclass
+class CapitalMarketRecord:
+	"""A civilisation's loanable-funds market as it stood at its last yearly meeting."""
+	# yearly market rate; 0 until the market has met, when the civilisation's starting rate stands
+	rate: float = 0.0
+	# funds demanded per unit held at the first meeting: the balance at which the rate is the starting rate
+	reference_utilisation: float = 0.0
+	# funds lenders hold, by source (households, firms, founder, state), and in all
+	supply_by_source: Dict[str, float] = field(default_factory=dict)
+	supply: float = 0.0
+	# borrowing by the economy the simulation does not model actor by actor
+	background: float = 0.0
+	# what lenders will advance to modelled borrowers in all (before what is already lent)
+	capacity: float = 0.0
+	# actor id -> what it owed at the meeting
+	loans: Dict[str, float] = field(default_factory=dict)
+	# interest borrowers have paid and lenders not yet been paid; and running totals of each side
+	interest_pool: float = 0.0
+	interest_paid_total: float = 0.0
+	interest_received_total: float = 0.0
+	# the part of what lenders received that went to the society's savers (households, not modelled by actor)
+	interest_to_households: float = 0.0
 
 
 @dataclass
 class ActorsState:
 	"""Every actor other than the founder's household, keyed by actor id."""
 	records: Dict[str, ActorRecord] = field(default_factory=dict)
+	# civilisation id -> its loanable-funds market
+	markets: Dict[str, CapitalMarketRecord] = field(default_factory=dict)
 
 
 @dataclass
@@ -423,6 +548,7 @@ class SimulationState:
 	_fuzzy_salt: int = 0
 	_immortal: bool = True
 	_rng: Optional[List[Any]] = None
+	_seed: Optional[Union[int, str]] = None
 
 
 ALL_STATE_CLASSES = (

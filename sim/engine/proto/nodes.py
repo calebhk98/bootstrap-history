@@ -4,6 +4,7 @@ import re
 from collections import defaultdict
 
 from ..data import load
+from ..identity_cache import IdentityCache
 
 # The real ids, and a case-folded index onto them. Built once: parse_typed has
 # no Sim to ask and runs on every line a player types. One load(), not two -
@@ -115,13 +116,13 @@ def _downstream_of(node_id, nodes):
 # dict alive for as long as the entry lives, so its id cannot be recycled
 # into a stale hit while the entry is still around - the collision this
 # guards against is structurally impossible, not just unlikely.
-_unlocked_by_cache = {}  # id(nodes) -> (nodes, {prereq_id: sorted[dependent_id]})
+_unlocked_by_cache = IdentityCache()  # nodes -> {prereq_id: sorted[dependent_id]}
 
 
 def _unlocked_by_index(nodes):
-    entry = _unlocked_by_cache.get(id(nodes))
-    if entry is not None and entry[0] is nodes:
-        return entry[1]
+    cached = _unlocked_by_cache.get(nodes)
+    if cached is not None:
+        return cached
     idx = {}
     for node_id, value in nodes.items():
         prereqs = set(value["pre"])
@@ -131,7 +132,7 @@ def _unlocked_by_index(nodes):
             idx.setdefault(prereq_id, []).append(node_id)
     for lst in idx.values():
         lst.sort()
-    _unlocked_by_cache[id(nodes)] = (nodes, idx)
+    _unlocked_by_cache.put(nodes, idx)
     return idx
 
 

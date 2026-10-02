@@ -31,7 +31,7 @@ class ElectricityMixin:
     # THE GAP THIS CLOSES. cap_power_electric, cap_power_grid, cap_power_steam
     # and cap_power_water are capability nodes whose own NAMES narrate a scale
     # ("kW scale", "MW scale", "portable, hundreds of kW", "tens of kW on one
-    # shaft" - see tech_tree.json), and nothing turns that prose into a
+    # shaft" - see data/branches/), and nothing turns that prose into a
     # tracked watt without this. Two consequences follow if it is not
     # tracked: a generation/demand/reserve-margin display cannot be given
     # (the `capacity` command's power section has nothing to show), and -
@@ -198,6 +198,19 @@ class ElectricityMixin:
             "sources_kw": sources_kw,
             "total_kw": local_kw + grid_kw + mod_generation_kw,
         }
+
+    def installed_generation_kw_by_tier(self):
+        """{tier node id: kW of built generating plant filed under that tier}.
+
+        Transmission is not generation, so it is left out.
+        """
+        done = self.state.projects.done
+        by_tier = {}
+        for node_id in self.nodes_with_mechanic("power_generation"):
+            spec = self.mechanic(node_id, "power_generation")
+            if node_id in done and spec["role"] != "transmission":
+                by_tier[spec["tier"]] = by_tier.get(spec["tier"], 0.0) + self.mechanic(spec["tier"], "power_tier")["anchor_kw"]
+        return by_tier
 
     def generation_capacity_kw(self):
         """The one number resource_throttle() needs: total_kw, cached."""
@@ -409,7 +422,7 @@ class ElectricityMixin:
         # calls is the quadratic blowup this codebase already had to fix once
         # for done_in_order() (see its own comment). Good for one step(): a
         # query between steps reads the demand as of the last one, which is
-        # already true of price_index, self.economy and self.household.throttle itself.
+        # already true of price_index, output_per_head and self.household.throttle itself.
         self.household._material_demand_cache = self.annual_material_demand()
         industrial, lab = self._throttle_demand_split(self.household._material_demand_cache)
         stock = self._material_stock()
@@ -461,6 +474,7 @@ class ElectricityMixin:
             if fraction < worst:
                 worst, who = fraction, "electricity"
         all_tags = set(industrial) | set(lab) | self._own_production_tags()
+        self.goods_market.reset_draws()
         for emp_key, tag in sorted(all_tags):
             ind_need = industrial.get((emp_key, tag), 0.0)
             lab_need = lab.get((emp_key, tag), 0.0)
@@ -498,6 +512,7 @@ class ElectricityMixin:
             # (DOCS_VS_ENGINE.md #3). Capped at own_and_stock, never at the
             # larger `have`, for exactly the reason in the comment above.
             stock[emp_key] = max(0.0, own_and_stock - lab_drawn - consumed_ind)
+            self.goods_market.note_draw(emp_key, lab_drawn + consumed_ind - own_and_stock)
         economy.throttle, economy.binding = worst, who
         # Stored AFTER mutation, against stock as this call actually left
         # it - so an immediate repeat call's sig (computed from that same,

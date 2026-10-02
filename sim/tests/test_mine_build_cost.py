@@ -10,7 +10,7 @@ from sim.world import deposits
 def _deposit(grade=10.0, depth_class="shallow_vein", hardness="medium",
              quantity=100.0, name="probe"):
     return deposits.Deposit(
-        name=name, metal="probe_metal", region="nowhere", material_moved="ore",
+        name=name, metal="probe_metal", tile="nowhere", material_moved="ore",
         ore_grade_kg_per_tonne=grade, depth_class=depth_class,
         hardness_class=hardness, quantity_tonnes_per_year=quantity, note="")
 
@@ -57,8 +57,8 @@ check("a richer ore needs fewer shafts for the same metal output",
 # --- the solver's amortised share is that same per-shaft cost, spread.
 _district = _deposit(quantity=400.0, depth_class="deep_vein", grade=5.0)
 _reserve_kg = (_district.quantity_tonnes_per_year
-               * deposits.DEPOSIT_ASSUMED_WORKING_LIFE_YEARS * 1000.0)
-check("amortised sinking share times reserve is shafts_needed x shaft cost",
+               * deposits.SHAFT_SERVICE_LIFE_YEARS * 1000.0)
+check("amortised sinking share times output over a shaft life is shafts_needed x shaft cost",
       abs(deposits.amortized_sinking_cost_labour_hours_per_kg(_district) * _reserve_kg
           - deposits.shafts_needed(_district, 400.0) * deposits.shaft_cost_labour_hours(_district))
       < 1e-6 * deposits.build_cost_labour_hours(_district, 400.0))

@@ -97,10 +97,13 @@ check("the freight distance matches an independent haversine calculation "
 _inputs = _transport.draught_freight_physical_inputs(
     _transport.OX, int(s_mexica.LAND_FREIGHT_TEAM_SIZE),
     _transport.CART, _transport.DIRT_TRACK)
-_feed_price = s_mexica._book_price_per_kg(s_mexica.FREIGHT_FEED_PRICE_MATERIAL)
+_feed_price = s_mexica._material_price_per_kg(s_mexica.FREIGHT_FEED_PRICE_MATERIAL)
 _wage = s_mexica.wage_per_hour(s_mexica.FREIGHT_DRIVER_WAGE_TRADE)
-_expected_denarii_per_tonne_km = (_inputs.feed_kg_per_tonne_km * _feed_price
-                                   + _inputs.driver_hours_per_tonne_km * _wage)
+_expected_denarii_per_tonne_km = s_mexica.land_freight_money_per_tonne_km()
+_running_denarii_per_tonne_km = (_inputs.feed_kg_per_tonne_km * _feed_price
+                                 + _inputs.driver_hours_per_tonne_km * _wage)
+check("a cart haul costs more than its feed and driver: the carrier's capital and empty return are in",
+      _expected_denarii_per_tonne_km > _running_denarii_per_tonne_km, None)
 _expected_cost_per_kg = _expected_denarii_per_tonne_km * _mexica_coal_km / 1000.0
 check("coal's freight cost per kilogram matches transport.py's own feed and "
       "driver-hour figures times the real distance, exactly",

@@ -98,7 +98,7 @@ _s_die.life_left = 1.0
 for _ in range(6):
     _s_die.step()
 check("the founder's death says what it means for the run, not only that it happened",
-      any("THE FOUNDER DIES" in message and "nobody to direct" in message
+      any("THE FOUNDER DIES" in message and "no deputy" in message
           for _, message in _s_die.log),
       [message for _, message in _s_die.log if "FOUNDER DIES" in message][:1])
 check("...and the programme dissolving is counted down where a player sees it",

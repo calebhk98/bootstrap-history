@@ -7,6 +7,16 @@ right, one was stale by the time this was written (the weather fix it
 describes as pending has since shipped), and the exact region count was off
 by one.
 
+
+**Since this was written:** land rent's extensive margin reads tiles (section
+2.2 is stale); deposits carry a latitude and longitude and the holding tile is
+found at load (`data/world/deposits.json`; section 2.3 and the deposit stage of
+section 5 are done); the forest ceiling sums tile areas; the stage-1 weather
+cell cap exists. The region layer is now a derived view (`sim/world/regions.py`):
+region land is a sum over tiles and region records hold no land. Reach and
+freight still read each region's hand-set anchor point (`Complaints/328`);
+the other remains are in `Complaints/136`.
+
 ---
 
 ## 0. Verdict in one paragraph
@@ -17,7 +27,7 @@ pooling naively by region already migrated to `land_tiles`, with a real
 spatial-correlation model, in a commit made the same day this document was
 written. What has NOT moved is land rent, mineral deposits, and the
 Ricardian price mechanism they feed - three consumers still keyed on the 21
-hand-drawn regions, with the same 86x size-disparity defect Complaints/46 and
+hand-drawn regions, with the same 86x size-disparity defect Complaints/45 and
 50 documented. The weather cost problem is real, confirmed cubic by both the
 loop structure and direct timing, and it is not close: at a 10,000-tile
 world, one default Monte Carlo run for Rome (`--mc 200`, the shipped
@@ -162,7 +172,7 @@ regions - it does NOT count regions the way the old weather code and the old
 forest-ceiling code once did. Its own docstring says so explicitly ("not
 counted by how many region labels that ground happens to be filed under").
 That means the specific "China gets one weather system because it is one
-label" defect Complaints/50 found was **already fixed in this file** before
+label" defect Complaints/49 found was **already fixed in this file** before
 this task started; it is not a live bug here, only in the sense that the
 underlying region SIZES are still capricious, not in the sense that anything
 here mis-measures them.
@@ -171,7 +181,7 @@ here mis-measures them.
 
 The starting brief states "Only the weather pooling in sim/engine/core.py
 reads `land_tiles`" as if it were still the simple per-region pooling
-Complaints/47 and 50 describe. That undersells what is actually there.
+Complaints/46 and 49 describe. That undersells what is actually there.
 `git log --oneline -3 -- sim/engine/core.py` shows the current mechanism was
 committed as `a59f803`, "Weather correlates over distance, and crops
 finally pay for their land", **committed today (2026-09-18, per `git log -1
@@ -210,21 +220,21 @@ docstrings, which is why every citation here is by name):
   weighted average.
 
 This is a materially different, and materially better, mechanism than the
-one the starting brief and Complaints/47/50 describe as current: it answers
-Complaints/50's own question - "over what distance does growing-season
+one the starting brief and Complaints/46/50 describe as current: it answers
+Complaints/49's own question - "over what distance does growing-season
 weather stop agreeing with itself?" - with an actual number, instead of the
 two hardcoded answers ("one region is one weather system, perfectly
 correlated with itself and independent of every other region") that
-complaint measured as both wrong. `Complaints/50` is still an open file (not
-in `Complaints/closed/`) despite this; `Complaints/47`, the complaint it
+complaint measured as both wrong. `Complaints/49` is still an open file (not
+in `Complaints/closed/`) despite this; `Complaints/46`, the complaint it
 superseded, is closed. I did not move either file - not my brief - but flag
-this for whoever owns that queue: the fix Complaints/50 called for appears
+this for whoever owns that queue: the fix Complaints/49 called for appears
 to already be merged and tested (`sim/tests/test_growing_season_weather_
 correlation.py`, 15 tests, all pass - see section 6).
 
 ### 1.4 What was already fixed on the regions side too
 
-`Complaints/46` recommended two fixes in order: (1) an intensive margin on
+`Complaints/45` recommended two fixes in order: (1) an intensive margin on
 land rent, cheap, fixes the region-count artefact without touching the map;
 (2) re-tiling, expensive, the real fix. Fix (1) is done:
 
@@ -244,10 +254,10 @@ NOT the same as the region-size defect being fixed - see section 2.
 
 ## 2. The real cost of the split: concrete wrong answers
 
-### 2.1 Fixed already, but instructive: the weather bug (Complaints/50)
+### 2.1 Fixed already, but instructive: the weather bug (Complaints/49)
 
 Before the commit described in 1.3, weather drew one independent sample per
-REGION RECORD. Complaints/50's own measurement, from before that fix (I am
+REGION RECORD. Complaints/49's own measurement, from before that fix (I am
 quoting its numbers, not re-deriving them - the mechanism they describe no
 longer exists to re-run):
 
@@ -274,7 +284,7 @@ extensive margin sees. The extensive margin - which region is the worst one
 actually needed, and how much every better region earns over it - still
 ranks by REGION, not by land quality within a region. `north_africa` is
 5,750,000 km2 rated at a single `fertility_quality_multiplier`, described in
-Complaints/46 as "96% Sahara, rated 1.35 fertility on the strength of the
+Complaints/45 as "96% Sahara, rated 1.35 fertility on the strength of the
 Nile". Any consumer that asks "is there a margin between good and bad land
 inside north_africa" gets no answer, because the region has one row. This is
 not hypothetical: it is the literal shape of the data today -
@@ -301,15 +311,15 @@ model cannot distinguish them.
 (`geography["regions"].get(region)`), the same one-parcel-per-label pattern.
 A validation run comparing ore rent or extraction cost between two
 similarly-endowed empires would see the same region-count sensitivity
-Complaints/50 measured for weather, on whichever deposit-driven price it
+Complaints/49 measured for weather, on whichever deposit-driven price it
 computes, for as long as this file stays on `regions`. I did not re-derive a
 specific wrong number here - that is a further investigation, not this
-one - but the mechanism that produced Complaints/50's number is present in
+one - but the mechanism that produced Complaints/49's number is present in
 this file's own region keying, unexamined.
 
 ### 2.4 Not actually broken: freight
 
-Complaints/46 argues freight (region centroids, `economy_freight.py`) is
+Complaints/45 argues freight (region centroids, `economy_freight.py`) is
 fine as-is, because a centroid is a point and 21 of them give reasonable
 great-circle distance bands regardless of the region's OWN area. I re-read
 `economy_freight.py`'s use (`self._regions[region_id]["lat"/"lon"]`,
@@ -584,7 +594,7 @@ time python3 sim/solve_prices.py > /dev/null
 -> real 0m0.247s
 ```
 
-(Complaints/46 quotes 0.37 seconds for this; my own measurement here is
+(Complaints/45 quotes 0.37 seconds for this; my own measurement here is
 0.22-0.25s, likely just machine variance rather than a real discrepancy - I
 am flagging the difference rather than silently picking the better-sounding
 number.) So migrating land rent from 21 regions to however many tiles a
@@ -789,14 +799,14 @@ which is what 4.2 actually removes.
 Each stage is independently shippable. Stages already complete are marked
 so as not to re-propose finished work.
 
-**Stage 0 - intensive margin on land rent. DONE.** (Complaints/46's own
+**Stage 0 - intensive margin on land rent. DONE.** (Complaints/45's own
 recommendation 1; confirmed merged, section 1.4.) Fixes the exact-zero
 symptom for a one-region civilisation without touching the map. Changes
 `iugerum_land`'s price for any civilisation this affects - a deliberate,
 called-out output change, not a regression.
 
 **Stage 0.5 - weather onto `land_tiles` with spatial correlation. DONE.**
-(Complaints/50's own recommendation; confirmed merged and tested, sections
+(Complaints/49's own recommendation; confirmed merged and tested, sections
 1.3 and 6.) Changes every civilisation's harvest variance from what it was
 under per-region pooling. Also a deliberate, already-shipped output change.
 
@@ -823,7 +833,7 @@ neutral refactor.
 **Stage 3 - mineral deposits onto `land_tiles`.** `sim/world/deposits.py`'s
 region-keyed deposit locations move to tile grain. Changes ore rent and
 extraction cost. Lower priority than stage 2 - I did not find a measured
-wrong-answer example for this consumer the way Complaints/46 and 50
+wrong-answer example for this consumer the way Complaints/45 and 49
 document for land and weather (section 2.3), only the same mechanism
 present, unexamined - so this stage should start with the same kind of
 measurement those complaints did, not go straight to a rewrite.
@@ -884,7 +894,7 @@ not expect to move, moved" is.
 
 I ran the weather-specific test files directly rather than assume their own
 docstrings' claims about pass/fail state, since those docstrings are
-themselves prose and CLAUDE.md §8 asks that assertions be measured:
+themselves prose and CLAUDE.md §6 asks that assertions be measured:
 
 ```
 python3 -m unittest sim.tests.test_regional_weather_wiring -v
@@ -952,7 +962,7 @@ once instead of one).
 
 Stage 3 (deposits) and stage 5 (retiring `regions`) are real but not
 urgent; neither blocks the stakeholder's two stated items, and stage 3 in
-particular should start with the kind of measurement Complaints/46 and 50
+particular should start with the kind of measurement Complaints/45 and 49
 did for their own consumers - a concrete wrong number - before committing
 to a rewrite, since I did not find one already on record for deposits.
 

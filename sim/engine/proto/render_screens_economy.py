@@ -7,7 +7,8 @@ narrative or a status line. Pure presentation, same as every module in this
 split: nothing here touches the live Sim - see render.py and ARCHITECTURE.md.
 """
 
-from .util import _factor, _fmt_num, _pct, _wrap
+from .. import units_text
+from .util import _coin_hoard_line, _factor, _fmt_num, _pct, _wrap
 from .capacity_remedies import render_remedies
 
 # render_capacity is split into one function per screen section - resources,
@@ -160,7 +161,7 @@ def render_capacity(out):
 
 
 def render_materials(out):
-    lines = ["MATERIAL STOCKS  (tonnes on hand; flows per year)",
+    lines = ["MATERIAL STOCKS  (%s on hand; flows per year)" % units_text.text_label("mass", "tonnes"),
          "  %-14s %10s %10s %10s %10s" %
          ("MATERIAL", "ON HAND", "YOUR FLOW", "DEMAND", "BUY/T")]
     for row in out.get("materials") or []:
@@ -173,6 +174,40 @@ def render_materials(out):
     return "\n".join(lines)
 
 
+def _bottleneck_lines(groups):
+    if not groups:
+        return []
+    lines = ["", "  BOTTLENECKS  (what blocks running work, most fixable first)"]
+    for group in groups:
+        lines.append("    %-12s %d project%s, %s hrs still to work: %s"
+                     % (group["kind"], group["count"], "" if group["count"] == 1 else "s",
+                        _fmt_num(group["hours_still_to_work"]), ", ".join(group["projects"][:4])
+                        + (" and %d more" % (group["count"] - 4) if group["count"] > 4 else "")))
+        lines.append(_wrap(group["what_it_means"], indent="      "))
+        for pool in group["pools"]:
+            if "demand_hours_this_year" in pool:
+                lines.append("      %s: %s h demand / %s h supply%s"
+                             % (pool["pool"], _fmt_num(pool["demand_hours_this_year"]),
+                                _fmt_num(pool["supply_hours_this_year"]),
+                                ", affecting %d" % pool["projects_affected"]
+                                if "projects_affected" in pool else ""))
+            elif "demand" in pool:
+                lines.append("      %s: %s to pay / %s you could raise"
+                             % (pool["pool"], _fmt_num(pool["demand"]), _fmt_num(pool["supply"])))
+    return lines
+
+
+def _waiting_lines(groups):
+    if not groups:
+        return []
+    lines = ["", "  WAITING TO START  (open to you, but the gate refuses them today)"]
+    for group in groups:
+        lines.append("    %-12s %d: %s%s" % (group["kind"], group["count"], ", ".join(group["projects"][:4]),
+                                            " and %d more" % (group["count"] - 4) if group["count"] > 4 else ""))
+        lines.append(_wrap(group["what_it_means"], indent="      "))
+    return lines
+
+
 def render_portfolio(out):
     lines = ["PROJECT PORTFOLIO"]
     rows = out.get("projects") or []
@@ -180,6 +215,8 @@ def render_portfolio(out):
              % (out.get("active_project_count") or 0,
                 "" if out.get("active_project_count") == 1 else "s",
                 _fmt_num(out.get("founder_hours_available_this_year"))))
+    lines += _bottleneck_lines(out.get("bottlenecks") or [])
+    lines += _waiting_lines(out.get("waiting_to_start") or [])
     if rows:
         for row in rows:
             _rank = row.get("pool_rank_this_year")
@@ -196,6 +233,8 @@ def render_portfolio(out):
                         _fmt_num(row.get("founder_hours_total")),
                         ("  (priority #%s of %s active)" % (_rank, _count))
                         if _rank and _count else ""))
+            if row.get("hours_effective_last_year") is not None:
+                lines.append("    last year: %s effective" % _fmt_num(row["hours_effective_last_year"]))
             lines.append(_wrap("waiting on: " + str(row.get("waiting_on")), indent="      "))
             if row.get("why_underfunded"):
                 lines.append(_wrap(row["why_underfunded"], indent="      "))
@@ -321,7 +360,20 @@ def render_changes(out):
 # same order as render_capacity above.
 
 def _money_header_line(out):
-    return ["Capital: %s den     Revenue: %s den/yr" % (_fmt_num(out.get("capital")), _fmt_num(out.get("revenue")))]
+    return (["Capital: %s den     Revenue: %s den/yr" % (_fmt_num(out.get("capital")), _fmt_num(out.get("revenue")))]
+            + _coin_hoard_line(out))
+
+
+
+def _money_book_block(out):
+    book = out.get("cash_book") or {}
+    if not book.get("causes"):
+        return []
+    lines = ["Cash since the last year closed (opening %s, now %s):"
+             % (_fmt_num(book.get("opening")), _fmt_num(book.get("closing")))]
+    for cause, amount in sorted(book["causes"].items(), key=lambda item: -abs(item[1])):
+        lines.append("  %-44s %s" % (cause, _fmt_num(amount)))
+    return lines
 
 
 def _money_from_block(out):
@@ -338,6 +390,15 @@ def _money_from_block(out):
         label = raw_key[1:].replace("_", " ") if raw_key.startswith("_") else raw_key
         lines.append("    %-38s %s" % (label, _fmt_num(value)))
     lines.append("    %-38s %s" % ("(these add up to the revenue above; wage work is below)", ""))
+    squeeze = out.get("where_the_market_squeeze_falls")
+    if squeeze:
+        lines.append("  the market will not absorb, by category (nominal -> absorbed, lost):")
+        for row in squeeze:
+            lines.append("    %-24s %12s -> %12s  lost %s" % (
+                row["category"][:24], _fmt_num(row["nominal"]), _fmt_num(row["absorbed"]),
+                _fmt_num(row["lost"])))
+            if row.get("concerns"):
+                lines.append(_wrap("in it: " + ", ".join(row["concerns"]), indent="      "))
     if out.get("still_building_up_custom"):
         lines.append(_wrap("STILL BUILDING UP: " + out["still_building_up_custom"],
                        indent="    "))
@@ -385,6 +446,12 @@ def _money_net_lines(out):
              "prints this same figure)     spent on projects last step: %s"
              % (_fmt_num(out.get("net_per_year")),
                 _fmt_num(out.get("spent_on_projects_last_year")))]
+    advance = (out.get("what_it_costs_you") or {}).get(
+        "of_which_already_paid_as_hiring_advances")
+    if advance:
+        lines.append("  (this year's hiring advances, %s, are a one-off credit and "
+                     "are not in the recurring figure: the same wages fall due "
+                     "again next year)" % _fmt_num(advance))
     if out.get("net_after_project_spend") is not None:
         lines.append("Net/yr after it: %s   (one-off; `state` prints this too, "
                  "alongside the recurring figure above)"
@@ -398,19 +465,49 @@ def _money_credit_lines(out):
                 out.get("of_that_limit_you_have_used") or "none",
                 _pct(out.get("interest_rate_on_arrears")),
                 _fmt_num(out.get("interest_paid_in_total")))]
+    market = out.get("loanable_funds_market") or {}
+    if market.get("met"):
+        lines.append("Market rate: %s     funds lenders hold: %s     still on offer to you: %s     the state owes: %s"
+                     % (_pct(market.get("market_rate")), _fmt_num(market.get("funds_lenders_hold")),
+                        _fmt_num(market.get("lenders_will_still_advance_you")), _fmt_num(market.get("the_state_owes"))))
+    if out.get("sustainable_debt") is not None:
+        lines.append("Sustainable debt at this surplus: %s   (%s)"
+                     % (_fmt_num(out["sustainable_debt"]),
+                        out.get("sustainable_debt_means") or ""))
     if out.get("still_owed_on_work_in_hand"):
         lines.append("Still owed on work in hand: %s" % _fmt_num(out["still_owed_on_work_in_hand"]))
     return lines
 
 
+def _money_funding_lines(out):
+    funding = out.get("funding")
+    if not funding:
+        return []
+    return ["",
+            "WHAT YOU CAN COMMIT TO PROJECTS",
+            "  CASH ON HAND:      %s   (spendable today)" % _fmt_num(funding["cash_on_hand"]),
+            "  CREDIT AVAILABLE:  %s   (the part of the credit line the game lets projects draw; borrowed, at interest)"
+            % _fmt_num(funding["credit_available_now"]),
+            "  ANNUAL SURPLUS:    %s/yr   (what the standing income leaves after running costs; not cash yet - "
+            "the game counts %s years of it, %s, towards the total below)"
+            % (_fmt_num(funding["sustainable_annual_surplus"]), _fmt_num(funding["surplus_years_counted"]),
+               _fmt_num(funding["surplus_allowance_over_years"])),
+            "  TOTAL THE GAME THINKS YOU COULD FUND: %s   (only cash and credit are available now)"
+            % _fmt_num(out.get("you_could_actually_fund_up_to")),
+            "  ALREADY COMMITTED: %s   (still owed on work in hand, paid in instalments over the coming years)"
+            % _fmt_num(funding["already_committed"])]
+
+
 def render_money(out):
     lines = ["LEDGER"]
     lines += _money_header_line(out)
+    lines += _money_book_block(out)
     lines += _money_from_block(out)
     lines += _money_wage_work_lines(out)
     lines += _money_costs_block(out)
     lines += _money_net_lines(out)
     lines += _money_credit_lines(out)
+    lines += _money_funding_lines(out)
     return "\n".join(lines)
 
 
@@ -600,6 +697,20 @@ def _labour_household_block(out):
     return lines
 
 
+def _labour_workforce_block(out):
+    workforce = out.get("workforce")
+    if not workforce:
+        return []
+    lines = ["", "WORKFORCE RISK: about %s people leave or die a year; %s in training; reserve %s"
+             % (_fmt_num(workforce["expected_losses_per_year"]), workforce["in_training"],
+                "%s craftsmen, %s scholars" % (workforce["reserve"]["craftsmen"], workforce["reserve"]["scholars"])
+                if workforce.get("reserve") else "off ('reserve craftsmen <n>' with 'policy reserve_staff on')")]
+    for row in workforce.get("depends_on_one_person") or []:
+        lines.append(_wrap("  %s %s: 'keep <id> staffed' or 'policy auto_replace_foreman on' protects it"
+                           % (row["concern"], row["warning"]), indent="  "))
+    return lines
+
+
 def _labour_hire_block(out):
     lines = ["", "YOU COULD HIRE: " + (", ".join(out.get("you_could_hire_here") or []) or "nobody new")]
     if out.get("only_the_ones_you_taught"):
@@ -636,6 +747,7 @@ def _render_labour_overview(out):
     lines = ["LABOUR"]
     lines += _labour_staff_block(out)
     lines += _labour_household_block(out)
+    lines += _labour_workforce_block(out)
     lines += _labour_hire_block(out)
     lines += _labour_training_block(out)
     lines += _labour_totals_block(out)
@@ -664,13 +776,21 @@ def render_population(out):
     lines.append("")
     lines.append("%-14s %14s %14s %10s %8s" % ("TRADE", "IN THE COUNTRY", "WITHIN REACH",
                                            "YOU EMPLOY", "% OF REACH"))
+    has_placeholder = False
     for row in out.get("trades") or []:
         share = row.get("share_of_the_reachable_pool_you_employ")
+        trade_name = row.get("trade", "")
+        if row.get("is_placeholder"):
+            trade_name = trade_name + "*"
+            has_placeholder = True
         lines.append("%-14s %14s %14s %10s %8s"
-                 % (row.get("trade"), _fmt_num(row.get("estimated_in_the_country")),
+                 % (trade_name, _fmt_num(row.get("estimated_in_the_country")),
                     _fmt_num(row.get("within_your_reach")) if row.get("exists_here") else "-",
                     _fmt_num(row.get("you_employ")),
                     ("%.1f%%" % (share * 100)) if share is not None else "-"))
+    if has_placeholder:
+        lines.append("")
+        lines.append("* = a rough placeholder figure, not yet a cited estimate")
     if out.get("what_this_means"):
         lines.append("")
         lines.append(_wrap(out["what_this_means"]))

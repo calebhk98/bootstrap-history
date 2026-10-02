@@ -3,6 +3,7 @@
   "id": "mil_gunpowder_base",
   "name": "Gunpowder foundation",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "nitre_beds"
   ],
@@ -15,12 +16,12 @@
    "labourer": 20.0
   },
   "mat": {},
-  "cap": 40.0,
-  "up": 0,
+  "cap_hours": 806.475166965173,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
   "risk": 0.0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -31,6 +32,7 @@
   "id": "mil_serpentine_powder",
   "name": "Serpentine powder",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_gunpowder_base"
   ],
@@ -47,12 +49,12 @@
    "mat_charcoal": 8,
    "nitre_kg": 15
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -79,12 +81,12 @@
    "mat_charcoal": 8,
    "nitre_kg": 15
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -94,6 +96,7 @@
   "id": "mil_powder_mill",
   "name": "Powder mill",
   "cat": "manufacturing",
+  "kind": "ENGINEERING",
   "pre": [
    "gunpowder"
   ],
@@ -113,12 +116,12 @@
    "mat_wood": 400,
    "mat_stone": 1000
   },
-  "cap": 1000,
-  "up": 200,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "risk": 0.0,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -128,6 +131,7 @@
   "id": "mil_incorporating_mill",
   "name": "Incorporating mill",
   "cat": "manufacturing",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_powder_mill"
   ],
@@ -148,12 +152,12 @@
    "mat_stone": 1200,
    "copper_kg": 50
   },
-  "cap": 1500,
-  "up": 300,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 6048.563752238797,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "risk": 0.25,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -163,6 +167,7 @@
   "id": "mil_fuse_slow_match",
   "name": "Slow match",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "gunpowder"
   ],
@@ -180,12 +185,12 @@
    "nitre_kg": 0.5,
    "mat_charcoal": 0.2
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 0.5,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -195,6 +200,7 @@
   "id": "mil_fuse_quick_match",
   "name": "Quick match",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_fuse_slow_match",
    "mat_sulfur"
@@ -214,23 +220,25 @@
    "mat_charcoal": 0.1,
    "mat_sulfur": 0.1
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 0.5,
   "risk": 0.08,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Sulfur accelerates burn rate reliably. Enables faster priming sequences and synchronized multi-gun barrages in artillery.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_wheel_lock",
   "name": "Wheel lock mechanism",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "gunpowder",
    "cap_tol_1mm"
@@ -250,23 +258,25 @@
    "iron_bar_kg": 60,
    "tool_steel_kg": 20
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Spring-driven spinning wheel strikes flint or pyrite against steel frizzen to generate sparks. Eliminates need for slow match and frees hands, but mechanism is complex and expensive.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_matchlock",
   "name": "Matchlock mechanism",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_fuse_slow_match",
    "cap_tol_1mm"
@@ -285,12 +295,12 @@
    "iron_bar_kg": 40,
    "tool_steel_kg": 10
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -306,12 +316,14 @@
      "order": 3
     }
    ]
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_flintlock",
   "name": "Flintlock mechanism",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_wheel_lock",
    "cap_tol_100um"
@@ -331,12 +343,12 @@
    "tool_steel_kg": 30,
    "iron_bar_kg": 60
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 3,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -352,12 +364,14 @@
      "order": 4
     }
    ]
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_percussion_cap",
   "name": "Percussion cap",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "atomic_theory",
    "mat_mercury",
@@ -377,23 +391,25 @@
    "copper_kg": 5,
    "fulminate_kg": 0.5
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Mercury fulminate in small copper cup detonates reliably when struck by hammer. Replaces flint-spark with chemical ignition, enabling breech-loading and faster fire.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_cartridge_paper",
   "name": "Paper cartridge",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "gunpowder",
    "mat_paper"
@@ -411,23 +427,25 @@
    "nitre_kg": 0.3,
    "lead_kg": 0.05
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 1,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
   "note": "Powder and ball wrapped in paper tube, carried at the hip. Quadruples loading speed compared to separate powder horn and pouch. Transformation of fire rate through ammunition packaging.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_cartridge_metallic",
   "name": "Metallic cartridge",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_percussion_cap",
    "interchangeable_parts"
@@ -446,23 +464,25 @@
    "lead_kg": 5,
    "nitre_kg": 0.5
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 2,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Brass case contains powder, primer, and bullet in one unit. Self-contained; does not leak or absorb moisture. Requires precision manufacture but enables reliable rapid fire.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_centrefire_primer",
   "name": "Centrefire primer",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_cartridge_metallic",
    "cap_tol_10um"
@@ -481,23 +501,25 @@
    "copper_kg": 1,
    "fulminate_kg": 0.1
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.08,
   "adopt_yrs": 1,
   "risk": 0.07,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Percussion compound in center of cartridge base, struck by firing pin rather than edge. Enables breech block design and rapid mechanical operation.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_rifling",
   "name": "Rifling",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -514,23 +536,25 @@
    "steel_plate_kg": 200,
    "iron_bar_kg": 100
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Helical grooves in barrel impart spin to projectile, stabilizing flight and improving accuracy beyond 100 yards. Cost in barrel wear and loading complexity offset by lethal accuracy at range.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_minie_ball",
   "name": "Minie ball",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_rifling",
    "cap_tol_1mm"
@@ -546,23 +570,25 @@
   "mat": {
    "lead_kg": 10
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
   "note": "Conical lead projectile with hollow base. Skirt expands under powder gas to grip rifling, then sheds when leaving barrel. Combines ease of loading with stability from rifling.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_breech_loader",
   "name": "Breech-loading rifle",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_cartridge_paper",
    "mil_percussion_cap",
@@ -583,23 +609,25 @@
    "iron_bar_kg": 150,
    "tool_steel_kg": 40
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 3,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Loading from the rear of the barrel eliminates need for ramming. Soldier can load from prone position or behind cover. Triples sustained fire rate and changes infantry tactics from advance to entrenchment.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_bolt_action",
   "name": "Bolt-action rifle",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_cartridge_metallic",
    "mil_centrefire_primer",
@@ -619,23 +647,25 @@
    "steel_plate_kg": 350,
    "tool_steel_kg": 60
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Rotating bolt with cam-operated locking, opened and closed by hand lever. Repeats rapidly and runs within tolerances. Becomes the dominant rifle design because it is simple, robust, and fast.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_magazine",
   "name": "Magazine",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_cartridge_paper",
    "interchangeable_parts"
@@ -653,23 +683,25 @@
    "steel_plate_kg": 50,
    "tool_steel_kg": 15
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
   "note": "Spring-loaded box stores cartridges and feeds them upward to chamber. Enables rapid fire without manual feeding. Magazine design determines whether rates of fire double or triple.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_lever_action",
   "name": "Lever-action rifle",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_magazine",
    "mil_cartridge_metallic"
@@ -689,23 +721,25 @@
    "iron_bar_kg": 140,
    "tool_steel_kg": 35
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.35,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Lever under stock cycles bolt and chambers round. Allows fast fire from shoulder without bolt manipulation. Preferred for practical shooting because dominant hand never leaves grip.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_revolver",
   "name": "Revolver",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_cartridge_metallic",
    "mil_centrefire_primer",
@@ -725,23 +759,25 @@
    "steel_plate_kg": 400,
    "tool_steel_kg": 80
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Rotating cylinder with six chambers. Simple mechanical operation, requires no magazine. Cylinder indexing requires precision tolerances. Sidearm of choice for cavalry and officers.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_self_loading_pistol",
   "name": "Self-loading pistol",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_centrefire_primer",
    "mil_magazine",
@@ -761,23 +797,25 @@
    "steel_plate_kg": 450,
    "tool_steel_kg": 100
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "Recoil or blowback operates slide to cycle bolt. Magazine holds 8-10 rounds. More complex than revolver but faster reloading. Becomes standard military sidearm after 1900.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_machine_gun_recoil",
   "name": "Machine gun, recoil-operated",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_centrefire_primer",
    "mil_magazine",
@@ -796,23 +834,25 @@
    "steel_plate_kg": 1200,
    "tool_steel_kg": 200
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 2,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Recoil of firing cycle works the bolt. Bolt cycles faster than hand can move, enabling sustained fire. Requires cooling and ammunition supply. Changes tactics from cavalry to entrenchment.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_machine_gun_gas",
   "name": "Machine gun, gas-operated",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_centrefire_primer",
    "mil_magazine",
@@ -831,23 +871,25 @@
    "steel_plate_kg": 1100,
    "tool_steel_kg": 180
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.9,
   "adopt_yrs": 2,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Taps gas from barrel rear to drive piston. More controllable than recoil operation, runs cooler. Becomes preferred design for sustained fire roles because cooling load is lower.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_water_jacket",
   "name": "Water jacket",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_machine_gun_recoil"
   ],
@@ -864,23 +906,25 @@
    "steel_plate_kg": 150,
    "copper_kg": 80
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
   "note": "Water-filled steel sleeve around barrel dissipates heat. Allows sustained fire for hours instead of minutes. Adds weight and complexity but multiplies practical sustained rate of fire.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_belt_feed",
   "name": "Belt feed system",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_magazine",
    "interchangeable_parts"
@@ -898,23 +942,25 @@
    "steel_plate_kg": 80,
    "tool_steel_kg": 40
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Cloth or steel belt carries linked rounds to feed mechanism. Eliminates magazine changes, extends firing duration. Enables crew-served weapons with sustained fire roles.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_smokeless_powder",
   "name": "Smokeless powder",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_nitrocellulose",
    "nitric_acid",
@@ -936,12 +982,12 @@
    "coal_kg": 100.0,
    "nitrocellulose_kg": 8.0
   },
-  "cap": 3000.0,
-  "up": 0,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 2,
   "risk": 0.15,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -953,9 +999,11 @@
   "id": "mil_cordite",
   "name": "Cordite",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_smokeless_powder",
-   "mat_nitrocellulose"
+   "mat_nitrocellulose",
+   "mat_petroleum_refined"
   ],
   "traits": [
    "military"
@@ -971,26 +1019,29 @@
    "mat_glycerol": 2,
    "mat_petroleum_refined": 1
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1,
   "risk": 0.12,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Nitrocellulose extruded into stick form with petroleum jelly as binder. Consistent burn rate, no dust, stores without separation. British standard ammunition propellant.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_artillery_piece",
   "name": "Artillery piece",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
-   "mat_bronze"
+   "mat_bronze",
+   "gunpowder"
   ],
   "traits": [
    "military"
@@ -1003,14 +1054,15 @@
    "engineer": 60
   },
   "mat": {
-   "mat_bronze": 2000
+   "mat_bronze": 2000,
+   "gunpowder_kg": 300
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1021,7 +1073,10 @@
      "kind": "sack_chance",
      "share": 0.3,
      "label": "guns on the walls",
-     "order": 5
+     "order": 5,
+     "requires_running": [
+      "gunpowder"
+     ]
     }
    ]
   }
@@ -1030,6 +1085,7 @@
   "id": "mil_trunnion",
   "name": "Trunnion",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_artillery_piece"
   ],
@@ -1045,12 +1101,12 @@
   "mat": {
    "mat_bronze": 150
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 0.5,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1060,6 +1116,7 @@
   "id": "mil_artillery_carriage",
   "name": "Artillery carriage",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_trunnion",
    "mat_wrought_iron"
@@ -1078,12 +1135,12 @@
    "mat_wood": 800,
    "iron_bar_kg": 300
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1093,6 +1150,7 @@
   "id": "mil_recoil_mechanism",
   "name": "Recoil mechanism",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_artillery_carriage",
    "cap_tol_10um"
@@ -1111,23 +1169,25 @@
    "steel_plate_kg": 400,
    "tool_steel_kg": 100
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 1.5,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "The recoil mechanism is what lets a gun stay aimed between shots, which multiplies rate of fire far more than any improvement to the barrel. Hydraulic and spring system absorbs energy smoothly. French 75 mattered because it was the first truly quick-firing gun.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_breech_block",
   "name": "Breech block",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_artillery_piece",
    "cap_tol_100um"
@@ -1145,23 +1205,25 @@
   "mat": {
    "steel_plate_kg": 200
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Wedge or interrupted thread closes rear of barrel for breech-loading. Sliding or screw-in designs differ in speed vs seal. Requires precision tolerances to prevent gas leakage and chamber rupture.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_artillery_shell",
   "name": "Artillery shell",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_artillery_piece"
   ],
@@ -1177,23 +1239,25 @@
   "mat": {
    "cast_iron_kg": 50
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
   "note": "Hollow iron sphere filled with black powder and fitted with fuse. Bursts on impact. Different from solid shot, extends damage area beyond direct hit.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_shrapnel_shell",
   "name": "Shrapnel shell",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_artillery_shell",
    "mil_fuse_quick_match"
@@ -1213,23 +1277,25 @@
    "lead_kg": 30,
    "mat_sulfur": 2
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 2,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Filled with lead balls and black powder, bursts in air by time fuse before ground impact. Sprays projectiles over area. Designed by Henry Shrapnel, becomes primary anti-personnel load.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_high_explosive_shell",
   "name": "High explosive shell",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_artillery_shell",
    "mat_nitroglycerin"
@@ -1247,23 +1313,25 @@
    "cast_iron_kg": 60,
    "mat_nitroglycerin": 20
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 2,
   "risk": 0.08,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "Bursts by impact detonator rather than burning fuse. Nitroglycerin or dynamite inside creates pressure wave that demolishes fortifications. Changes fortification design completely.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_fuse_types",
   "name": "Artillery fuse designs",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_fuse_quick_match"
   ],
@@ -1280,18 +1348,19 @@
    "nitre_kg": 1,
    "mat_sulfur": 0.5
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.08,
   "adopt_yrs": 1,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Time fuse burns at set rate to burst in air, percussion fuse detonates on impact, mechanical fuse uses spring striker. Fuse choice determines how shell fragments are distributed.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_mortar",
@@ -1312,12 +1381,12 @@
   "mat": {
    "mat_bronze": 600
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 1,
   "adopt_yrs": 1,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1327,6 +1396,7 @@
   "id": "mil_howitzer",
   "name": "Howitzer",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_artillery_piece",
    "mil_breech_block"
@@ -1344,23 +1414,25 @@
   "mat": {
    "steel_plate_kg": 1000
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Intermediate angle gun between mortar and cannon. Longer range than mortar, higher angle than gun. Breech loading enables fast fire. Becomes dominant field artillery.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_indirect_fire",
   "name": "Indirect fire",
   "cat": "tactics",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_howitzer",
    "algebra_symbolic"
@@ -1375,12 +1447,12 @@
    "scholar": 80
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 2,
   "risk": 0.0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1390,6 +1462,7 @@
   "id": "mil_forward_observer",
   "name": "Forward observer",
   "cat": "tactics",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_indirect_fire",
    "telegraph_electric"
@@ -1403,12 +1476,12 @@
    "engineer": 80
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1418,6 +1491,7 @@
   "id": "mil_range_table",
   "name": "Range table",
   "cat": "tactics",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_howitzer",
    "newtonian_mechanics"
@@ -1435,12 +1509,12 @@
   "mat": {
    "paper_kg": 5
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1450,6 +1524,7 @@
   "id": "mil_rangefinder",
   "name": "Rangefinder",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "cap_tol_10um"
@@ -1468,23 +1543,25 @@
    "brass_kg": 80,
    "steel_plate_kg": 100
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Optical stereo matching measures distance to target. Baseline typically 1-2 meters. Accuracy within 100 meters at 10 km. Enables first-shot hits.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_fire_control_director",
   "name": "Fire control director",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_rangefinder",
    "mil_range_table",
@@ -1503,23 +1580,25 @@
    "steel_plate_kg": 400,
    "brass_kg": 150
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.8,
   "adopt_yrs": 3,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Central control station receives rangefinder and compass data, calculates firing solution for multiple guns. Synchronizes fire from battery. Naval ships use this to hit moving targets.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_fire_control_computing",
   "name": "Fire control computing",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_fire_control_director",
    "calculus"
@@ -1538,23 +1617,25 @@
    "brass_kg": 100,
    "steel_plate_kg": 150
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 3,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Mechanical calculator using differential gears solves ballistic equations. Predicts future position of moving target, accounts for wind. Enables engagement of fast warships.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_anti_aircraft_gun",
   "name": "Anti-aircraft gun",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_howitzer",
    "mil_rangefinder"
@@ -1572,23 +1653,25 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 1.2,
   "adopt_yrs": 2,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Rapid-fire gun on rotating mount with high elevation angle. Feeds ammunition by belt. Requires predictor to aim ahead of aircraft. Effective only in large numbers.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_proximity_fuse",
   "name": "Proximity fuse",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_high_explosive_shell",
    "vacuum_tube",
@@ -1607,23 +1690,25 @@
    "glass_lead_kg": 15,
    "mat_bronze": 30
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,
   "risk": 0.08,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "Radio tube in shell detects reflected signal from aircraft, triggers detonation at closest approach. Creates lethal radius without direct impact. Transforms air defense effectiveness.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_trace_italienne",
   "name": "Trace italienne",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_artillery_piece"
   ],
@@ -1634,18 +1719,25 @@
   "kb": "97_military.md",
   "ph": 100,
   "lab": {
-   "engineer": 120
+   "engineer": 120.0,
+   "mason": 9000.0,
+   "labourer": 40000.0
   },
-  "mat": {},
-  "cap": 0,
-  "up": 0,
+  "mat": {
+   "stone_kg": 600000.0,
+   "wood_kg": 30000.0,
+   "lime_kg": 80000.0
+  },
+  "cap_hours": 60485.63752238797,
+  "up_hours": 491,
   "build_yrs": 4,
   "adopt_yrs": 3,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
+  "_internal": "[HEURISTIC: yearly repair of stone and lime mortar taken as one percent of the construction labour of masons and labourers; no weathering or siege-damage model yet.]",
   "note": "The bastion answers the cannon because a round tower has dead ground at its foot where attackers hide, and an angled bastion does not. Low angled walls cannot be battered. Defense trades height for firepower.",
   "mechanics": {
    "hazard_counters": [
@@ -1662,6 +1754,7 @@
   "id": "mil_bastion",
   "name": "Bastion",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_trace_italienne"
   ],
@@ -1672,21 +1765,24 @@
   "kb": "97_military.md",
   "ph": 90,
   "lab": {
-   "engineer": 110,
-   "mason": 120
+   "engineer": 110.0,
+   "mason": 12000.0,
+   "labourer": 50000.0
   },
   "mat": {
-   "mat_stone": 5000
+   "stone_kg": 1500000.0,
+   "lime_kg": 200000.0
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 621,
   "build_yrs": 3,
   "adopt_yrs": 2,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
+  "_internal": "[HEURISTIC: yearly repair of stone and lime mortar taken as one percent of the construction labour of masons and labourers; no weathering or siege-damage model yet.]",
   "note": "Angled stone structure jutting from wall allows cannon to fire along curtain, eliminating dead ground. Acute angle makes it harder to breach. Replaces round tower.",
   "mechanics": {
    "hazard_counters": [
@@ -1703,6 +1799,7 @@
   "id": "mil_glacis",
   "name": "Glacis",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_trace_italienne"
   ],
@@ -1719,12 +1816,12 @@
   "mat": {
    "mat_stone": 2000
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "risk": 0.0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1734,6 +1831,7 @@
   "id": "mil_ravelin",
   "name": "Ravelin",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_bastion"
   ],
@@ -1750,12 +1848,12 @@
   "mat": {
    "mat_stone": 3000
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1765,6 +1863,7 @@
   "id": "mil_casemate",
   "name": "Casemate",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_bastion"
   ],
@@ -1782,12 +1881,12 @@
    "mat_stone": 4000,
    "lime_kg": 800
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 1.5,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1797,6 +1896,7 @@
   "id": "mil_armoured_cupola",
   "name": "Armoured cupola",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_casemate",
    "mat_bulk_steel"
@@ -1814,12 +1914,12 @@
   "mat": {
    "steel_plate_kg": 2800
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1829,6 +1929,7 @@
   "id": "mil_concrete_fortification",
   "name": "Concrete fortification",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cement_portland",
    "mil_trace_italienne"
@@ -1848,12 +1949,12 @@
    "mat_sand": 3000,
    "mat_stone": 2000
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 1.5,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1873,6 +1974,7 @@
   "id": "mil_trench",
   "name": "Trench",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_artillery_shell",
    "mil_machine_gun_recoil"
@@ -1887,12 +1989,12 @@
    "engineer": 60
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1902,6 +2004,7 @@
   "id": "mil_barbed_wire",
   "name": "Barbed wire",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel"
   ],
@@ -1917,12 +2020,12 @@
   "mat": {
    "steel_plate_kg": 20
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.05,
   "adopt_yrs": 0.5,
   "risk": 0.0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1932,6 +2035,7 @@
   "id": "mil_machine_gun_nest",
   "name": "Machine gun nest",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_trench",
    "mil_machine_gun_recoil"
@@ -1948,12 +2052,12 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1963,6 +2067,7 @@
   "id": "mil_pillbox",
   "name": "Pillbox",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_machine_gun_nest",
    "mat_concrete_reinforced"
@@ -1980,12 +2085,12 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1995,6 +2100,7 @@
   "id": "mil_anti_tank_ditch",
   "name": "Anti-tank ditch",
   "cat": "fortification",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_tank"
   ],
@@ -2008,12 +2114,12 @@
    "engineer": 70
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0.5,
   "risk": 0.0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -2023,6 +2129,7 @@
   "id": "mil_plate_armour_firearms",
   "name": "Plate armour against firearms",
   "cat": "armour",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_matchlock"
   ],
@@ -2037,12 +2144,12 @@
   "mat": {
    "steel_plate_kg": 80
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2052,6 +2159,7 @@
   "id": "mil_ironclad",
   "name": "Ironclad",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_watt",
    "mat_bulk_steel"
@@ -2070,12 +2178,12 @@
    "steel_plate_kg": 5000,
    "iron_bar_kg": 2000
   },
-  "cap": 20000,
-  "up": 1000,
+  "cap_hours": 403237.5834825865,
+  "up_hours": 20161.879174129324,
   "build_yrs": 4,
   "adopt_yrs": 2,
   "risk": 0.05,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2085,6 +2193,7 @@
   "id": "mil_armoured_cruiser",
   "name": "Armoured cruiser",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_ironclad",
    "mat_bulk_steel"
@@ -2102,12 +2211,12 @@
   "mat": {
    "steel_plate_kg": 6000
   },
-  "cap": 25000,
-  "up": 1200,
+  "cap_hours": 504046.9793532331,
+  "up_hours": 24194.255008955188,
   "build_yrs": 4.5,
   "adopt_yrs": 2,
   "risk": 0.04,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2117,6 +2226,7 @@
   "id": "mil_dreadnought",
   "name": "Dreadnought",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_ironclad",
    "mat_bulk_steel"
@@ -2134,12 +2244,12 @@
   "mat": {
    "steel_plate_kg": 10000
   },
-  "cap": 30000,
-  "up": 1500,
+  "cap_hours": 604856.3752238797,
+  "up_hours": 30242.818761193987,
   "build_yrs": 5,
   "adopt_yrs": 3,
   "risk": 0.05,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -2149,6 +2259,7 @@
   "id": "mil_battlecruiser",
   "name": "Battlecruiser",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_dreadnought"
   ],
@@ -2165,12 +2276,12 @@
   "mat": {
    "steel_plate_kg": 7000
   },
-  "cap": 28000,
-  "up": 1400,
+  "cap_hours": 564532.616875621,
+  "up_hours": 28226.630843781055,
   "build_yrs": 4.5,
   "adopt_yrs": 2,
   "risk": 0.06,
-  "rev": 1400,
+  "rev_hours": 28226.630843781055,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -2180,6 +2291,7 @@
   "id": "mil_face_hardened_armour",
   "name": "Face-hardened armour",
   "cat": "armour",
+  "kind": "ENGINEERING",
   "pre": [
    "case_hardening",
    "mat_bulk_steel"
@@ -2197,12 +2309,12 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2212,6 +2324,7 @@
   "id": "mil_torpedo",
   "name": "Torpedo",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_nitroglycerin",
    "steam_watt",
@@ -2236,12 +2349,12 @@
    "nitroglycerin_kg": 100.0,
    "steel_plate_kg": 200.0
   },
-  "cap": 1500.0,
-  "up": 0,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 0,
   "build_yrs": 0.8,
   "adopt_yrs": 2,
   "risk": 0.08,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -2251,6 +2364,7 @@
   "id": "mil_torpedo_boat",
   "name": "Torpedo boat",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_torpedo",
    "steam_watt"
@@ -2267,12 +2381,12 @@
   "mat": {
    "steel_plate_kg": 1000
   },
-  "cap": 5000,
-  "up": 0.0,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2282,6 +2396,7 @@
   "id": "mil_destroyer",
   "name": "Destroyer",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_torpedo_boat"
   ],
@@ -2298,12 +2413,12 @@
   "mat": {
    "steel_plate_kg": 2000
   },
-  "cap": 8000,
-  "up": 0.0,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 1.5,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2330,12 +2445,12 @@
   "mat": {
    "steel_plate_kg": 2500
   },
-  "cap": 10000,
-  "up": 600,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 12097.127504477594,
   "build_yrs": 2.5,
   "adopt_yrs": 2,
   "risk": 0.06,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -2362,12 +2477,12 @@
    "glass_lead_kg": 30,
    "brass_kg": 60
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2377,6 +2492,7 @@
   "id": "mil_torpedo_tube",
   "name": "Torpedo tube",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_torpedo"
   ],
@@ -2392,12 +2508,12 @@
   "mat": {
    "steel_plate_kg": 300
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2407,6 +2523,7 @@
   "id": "mil_depth_charge",
   "name": "Depth charge",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_high_explosive_shell"
   ],
@@ -2423,12 +2540,12 @@
    "cast_iron_kg": 80,
    "mat_nitroglycerin": 50
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2438,6 +2555,7 @@
   "id": "mil_asdic",
   "name": "ASDIC",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "vacuum_tube"
   ],
@@ -2454,23 +2572,25 @@
    "sand_quartz_kg": 20,
    "brass_kg": 100
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "Acoustic sonar using ultrasonic waves. Detects submarine by echoes. Requires trained operator to interpret. Revolutionary for anti-submarine warfare. Makes surface ships able to find and attack submerged vessels.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_naval_mine",
   "name": "Naval mine",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -2487,12 +2607,12 @@
    "cast_iron_kg": 50,
    "gunpowder_kg": 5
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0.5,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2502,6 +2622,7 @@
   "id": "mil_minesweeper",
   "name": "Minesweeper",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_naval_mine"
   ],
@@ -2517,12 +2638,12 @@
   "mat": {
    "steel_plate_kg": 1500
   },
-  "cap": 8000,
-  "up": 0.0,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 1,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2532,6 +2653,7 @@
   "id": "mil_tank",
   "name": "Tank",
   "cat": "vehicles",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_otto_cycle_four_stroke",
    "mat_bulk_steel"
@@ -2549,12 +2671,12 @@
   "mat": {
    "steel_plate_kg": 3000
   },
-  "cap": 15000,
-  "up": 0.0,
+  "cap_hours": 302428.18761193985,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 3,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -2564,6 +2686,7 @@
   "id": "mil_track",
   "name": "Track system",
   "cat": "vehicles",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_otto_cycle_four_stroke",
    "cap_tol_1mm",
@@ -2581,12 +2704,12 @@
   "mat": {
    "steel_plate_kg": 800
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 1.5,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2596,6 +2719,7 @@
   "id": "mil_sponson",
   "name": "Sponson",
   "cat": "vehicles",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_tank"
   ],
@@ -2611,12 +2735,12 @@
   "mat": {
    "steel_plate_kg": 400
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2626,6 +2750,7 @@
   "id": "mil_tank_turret",
   "name": "Tank turret",
   "cat": "vehicles",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_tank"
   ],
@@ -2641,12 +2766,12 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2656,6 +2781,7 @@
   "id": "mil_turret_traverse",
   "name": "Turret traverse mechanism",
   "cat": "vehicles",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_tank_turret"
   ],
@@ -2671,12 +2797,12 @@
   "mat": {
    "steel_plate_kg": 200
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2686,6 +2812,7 @@
   "id": "mil_sloped_armour",
   "name": "Sloped armour",
   "cat": "vehicles",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_tank"
   ],
@@ -2701,12 +2828,12 @@
   "mat": {
    "steel_plate_kg": 600
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2716,6 +2843,7 @@
   "id": "mil_armoured_car",
   "name": "Armoured car",
   "cat": "vehicles",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_otto_cycle_four_stroke",
    "mat_bulk_steel"
@@ -2732,12 +2860,12 @@
   "mat": {
    "steel_plate_kg": 1200
   },
-  "cap": 8000,
-  "up": 0.0,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 0,
   "build_yrs": 1.2,
   "adopt_yrs": 1.5,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2763,12 +2891,12 @@
   "mat": {
    "steel_plate_kg": 1500
   },
-  "cap": 10000,
-  "up": 700,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 14113.315421890527,
   "build_yrs": 1.3,
   "adopt_yrs": 1.5,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2778,6 +2906,7 @@
   "id": "mil_self_propelled_gun",
   "name": "Self-propelled gun",
   "cat": "vehicles",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_tank",
    "mil_howitzer"
@@ -2795,12 +2924,12 @@
   "mat": {
    "steel_plate_kg": 2500
   },
-  "cap": 12000,
-  "up": 0.0,
+  "cap_hours": 241942.5500895519,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -2810,6 +2939,7 @@
   "id": "mil_observation_balloon",
   "name": "Observation balloon",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "hot_air_balloon"
   ],
@@ -2825,12 +2955,12 @@
    "mat_linen": 200,
    "cordage_kg": 500
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 1,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2840,6 +2970,7 @@
   "id": "mil_aerial_reconnaissance",
   "name": "Aerial reconnaissance",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_observation_balloon",
    "telegraph_electric",
@@ -2855,12 +2986,12 @@
    "engineer": 100
   },
   "mat": {},
-  "cap": 80.0,
-  "up": 0,
+  "cap_hours": 1612.950333930346,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -2870,6 +3001,7 @@
   "id": "mil_aerial_camera",
   "name": "Aerial camera",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "photography",
    "mil_observation_balloon"
@@ -2887,12 +3019,12 @@
    "glass_lead_kg": 40,
    "brass_kg": 60
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2902,6 +3034,7 @@
   "id": "mil_bomb_general_purpose",
   "name": "Bomb, general purpose",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -2917,12 +3050,12 @@
   "mat": {
    "cast_iron_kg": 80
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 0.5,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2932,6 +3065,7 @@
   "id": "mil_bomb_sight",
   "name": "Bomb sight",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_bomb_general_purpose",
    "lens_grinding"
@@ -2951,12 +3085,12 @@
    "brass_kg": 120,
    "steel_plate_kg": 80
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.4,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2966,6 +3100,7 @@
   "id": "mil_gun_synchroniser",
   "name": "Machine gun synchroniser",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_machine_gun_recoil"
   ],
@@ -2982,12 +3117,12 @@
    "steel_plate_kg": 150,
    "tool_steel_kg": 40
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2997,6 +3132,7 @@
   "id": "mil_fighter_aircraft",
   "name": "Fighter aircraft",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "air_light_petrol_engine",
    "mil_machine_gun_recoil"
@@ -3014,12 +3150,12 @@
    "mat_aluminium": 400,
    "petroleum_refined_kg": 100
   },
-  "cap": 5000,
-  "up": 0.0,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -3037,6 +3173,7 @@
   "id": "mil_bomber_aircraft",
   "name": "Bomber aircraft",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "air_light_petrol_engine",
    "mil_bomb_sight"
@@ -3054,12 +3191,12 @@
    "mat_aluminium": 800,
    "petroleum_refined_kg": 200
   },
-  "cap": 10000,
-  "up": 0.0,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.06,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -3077,6 +3214,7 @@
   "id": "mil_dive_bomber",
   "name": "Dive bomber",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "air_light_petrol_engine",
    "mil_bomb_sight"
@@ -3094,12 +3232,12 @@
    "mat_aluminium": 600,
    "petroleum_refined_kg": 120
   },
-  "cap": 7000,
-  "up": 0.0,
+  "cap_hours": 141133.15421890526,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 2,
   "risk": 0.07,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -3117,6 +3255,7 @@
   "id": "mil_aircraft_carrier",
   "name": "Aircraft carrier",
   "cat": "naval",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_ironclad",
    "mil_fighter_aircraft"
@@ -3134,12 +3273,12 @@
   "mat": {
    "steel_plate_kg": 10000
   },
-  "cap": 35000,
-  "up": 0.0,
+  "cap_hours": 705665.7710945264,
+  "up_hours": 0,
   "build_yrs": 5,
   "adopt_yrs": 3,
   "risk": 0.06,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -3149,6 +3288,7 @@
   "id": "mil_arrester_wire",
   "name": "Arrester wire",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_aircraft_carrier"
   ],
@@ -3164,12 +3304,12 @@
    "steel_plate_kg": 200,
    "cordage_kg": 100
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -3179,6 +3319,7 @@
   "id": "mil_aircraft_catapult",
   "name": "Aircraft catapult",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_aircraft_carrier",
    "steam_watt"
@@ -3195,12 +3336,12 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.04,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3210,6 +3351,7 @@
   "id": "mil_radar",
   "name": "Radar",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "vacuum_tube",
    "if_cathode_ray_tube",
@@ -3229,23 +3371,25 @@
    "cast_iron_kg": 200.0,
    "copper_kg": 150.0
   },
-  "cap": 8000.0,
-  "up": 0,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 0,
   "build_yrs": 0.6,
   "adopt_yrs": 3,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "Radiofrequency pulses detect aircraft at distance. Cathode ray tube display shows bearing and range. Enables detection through clouds and darkness. Changes air defence from visual tracking to radar guidance.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_chain_home",
   "name": "Chain Home radar network",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_radar",
    "telegraph_electric",
@@ -3265,23 +3409,25 @@
    "brass_kg": 1000,
    "steel_plate_kg": 2000
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "The chain home idea - distributed radar stations reporting to central control centre which directs fighters. Early warning gives time to scramble interceptors. Won the Battle of Britain.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_iff_system",
   "name": "IFF system",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_radar",
    "vacuum_tube"
@@ -3298,23 +3444,25 @@
   "mat": {
    "brass_kg": 80
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1.5,
   "risk": 0.03,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Identification Friend or Foe - radar transponder in aircraft responds to interrogation. Allows ground radar to distinguish friendly from enemy aircraft. Eliminates tragic friendly fire incidents.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_guided_bomb",
   "name": "Guided bomb",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_bomb_general_purpose",
    "vacuum_tube"
@@ -3332,12 +3480,12 @@
    "cast_iron_kg": 100,
    "brass_kg": 80
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.06,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -3347,6 +3495,7 @@
   "id": "mil_ballistic_rocket",
   "name": "Ballistic rocket",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "en_rocket_motor",
    "cap_heat_1600",
@@ -3364,23 +3513,25 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 1.2,
   "adopt_yrs": 3,
   "risk": 0.08,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "Liquid or solid fuel rocket follows ballistic trajectory. Reaches targets beyond artillery range. Difficult to intercept in flight. Changes strategic targeting doctrine.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_jet_fighter",
   "name": "Jet fighter aircraft",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "en_jet_engine",
    "mil_fighter_aircraft"
@@ -3398,12 +3549,12 @@
    "stainless_steel_kg": 300,
    "petroleum_refined_kg": 120
   },
-  "cap": 8000,
-  "up": 0.0,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 3,
   "risk": 0.07,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -3413,6 +3564,7 @@
   "id": "mil_chemical_chlorine",
   "name": "Chlorine gas weapon",
   "cat": "chemical",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_chlorine"
   ],
@@ -3427,23 +3579,25 @@
   "mat": {
    "bleach_kg": 10
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.15,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Chlorine and phosgene and mustard as weapons with an honest note on what they did - chlorine gas released upwind of trenches. Causes choking and lung damage. Casualties and demoralisation disproportionate to deaths. Introduced April 1915.",
   "sus": 6,
-  "gov": 0
+  "gov": 0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_chemical_phosgene",
   "name": "Phosgene gas",
   "cat": "chemical",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_chlorine"
   ],
@@ -3460,23 +3614,25 @@
    "bleach_kg": 8,
    "mat_carbon": 3
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1.5,
   "risk": 0.18,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "More toxic than chlorine. Causes pulmonary oedema, soldiers drown in fluid from their own lungs. More difficult to detect by smell, lulls victims into complacency. Called cocainised gas by soldiers.",
   "sus": 6,
-  "gov": 0
+  "gov": 0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_chemical_mustard",
   "name": "Mustard gas",
   "cat": "chemical",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_sulfur",
    "mat_chlorine",
@@ -3495,23 +3651,25 @@
    "ethylene_glycol_kg": 5,
    "mat_sulfur": 3
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 1.5,
   "risk": 0.2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "Blistering agent that damages skin and mucous membranes. Oily liquid, persists in soil and clothing. Casualties mount over days as soldiers do not realise exposure until burns appear. Deadliest chemical of the war.",
   "sus": 6,
-  "gov": 0
+  "gov": 0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_gas_mask",
   "name": "Gas mask",
   "cat": "chemical",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_synthetic_rubber"
   ],
@@ -3528,23 +3686,25 @@
    "mat_charcoal": 5,
    "glass_lead_kg": 20
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
   "note": "Charcoal filter and glass eyepieces allow breathing filtered air. Early models inadequate against phosgene and mustard. Better filters developed by 1916. Makes chemical gas less decisive.",
   "sus": 6,
-  "gov": 0
+  "gov": 0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_flamethrower",
   "name": "Flamethrower",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_petroleum_refined"
   ],
@@ -3562,23 +3722,25 @@
    "steel_plate_kg": 80,
    "mat_petroleum_refined": 20
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Pressurised tank of burning petroleum with ignition system. Sprays flame 30-40 meters. Clears trenches and bunkers. Operator vulnerable during reload. Demoralising effect exceeds practical damage.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_incendiary_bomb",
   "name": "Incendiary bomb",
   "cat": "air",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_petroleum_refined"
   ],
@@ -3595,12 +3757,12 @@
    "cast_iron_kg": 50,
    "mat_petroleum_refined": 20
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 1,
   "risk": 0.05,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3610,6 +3772,7 @@
   "id": "mil_napalm",
   "name": "Napalm",
   "cat": "chemical",
+  "kind": "ENGINEERING",
   "pre": [
    "mil_incendiary_bomb",
    "mat_bulk_steel"
@@ -3627,23 +3790,25 @@
    "mat_petroleum_refined": 30,
    "aluminium_soap_kg": 3
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.15,
   "adopt_yrs": 2,
   "risk": 0.08,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "Jellied petroleum that sticks to skin and burns. Developed late in World War 2. Continues burning after impact, causing severe burns. Area denial weapon that fills woods and buildings.",
   "sus": 6,
-  "gov": 0
+  "gov": 0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_atomic_bomb",
   "name": "Atomic bomb",
   "cat": "weapons",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "in2_ultracentrifuge",
@@ -3664,23 +3829,25 @@
    "uranium_235_kg": 50,
    "plutonium_kg": 10
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0,
   "risk": 0.2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
   "note": "The atomic bomb as a single node with an honest statement: requires the isotope separation and reactor programme it needs and the fact that it is the one node in this tree whose use is a mass atrocity. Hiroshima and Nagasaki killed 150,000-200,000 civilians, mostly instantly. Nuclear weapons end conventional warfare through deterrence.",
   "gov": 3,
-  "sus": 6
+  "sus": 6,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_general_staff",
   "name": "General staff",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_government"
   ],
@@ -3694,12 +3861,12 @@
    "engineer": 80
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3709,6 +3876,7 @@
   "id": "mil_war_college",
   "name": "War college",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mil_general_staff"
   ],
@@ -3724,12 +3892,12 @@
   "mat": {
    "paper_kg": 20
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3739,6 +3907,7 @@
   "id": "mil_logistics_discipline",
   "name": "Logistics as discipline",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mil_general_staff",
    "statistics_basic"
@@ -3753,12 +3922,12 @@
    "engineer": 80
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1.5,
   "risk": 0.0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3768,6 +3937,7 @@
   "id": "mil_railway_mobilisation",
   "name": "Railway timetable mobilisation",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "railway",
    "mil_general_staff"
@@ -3782,12 +3952,12 @@
    "scholar": 90
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3797,6 +3967,7 @@
   "id": "mil_field_telephone",
   "name": "Field telephone",
   "cat": "communications",
+  "kind": "ENGINEERING",
   "pre": [
    "telegraph_electric"
   ],
@@ -3814,23 +3985,25 @@
    "brass_kg": 60,
    "mat_wood": 100
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Telephone for battalion and company command. Connects front line to artillery. Enables real-time adjustment of fire. Requires cable laying and maintenance under fire.",
   "gov": 3,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_wireless_set",
   "name": "Wireless set",
   "cat": "communications",
+  "kind": "ENGINEERING",
   "pre": [
    "radio",
    "vacuum_tube"
@@ -3848,23 +4021,25 @@
    "brass_kg": 100,
    "mat_wood": 50
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
   "note": "Portable radio transmitter-receiver for unit command. Eliminates need for telephone cables. Message delay and security risk compared to telephone. Becomes standard by 1940.",
   "gov": 3,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mil_signals_intelligence",
   "name": "Signals intelligence",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mil_wireless_set"
   ],
@@ -3879,12 +4054,12 @@
    "engineer": 90
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.2,
   "adopt_yrs": 1.5,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3894,6 +4069,7 @@
   "id": "mil_cryptanalysis",
   "name": "Cryptanalysis",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mil_signals_intelligence",
    "algebra_symbolic"
@@ -3908,12 +4084,12 @@
    "scholar": 240
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3923,6 +4099,7 @@
   "id": "mil_operational_research",
   "name": "Operational research",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "statistics_basic",
    "calculus"
@@ -3936,12 +4113,12 @@
    "scholar": 270
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 2,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3951,6 +4128,7 @@
   "id": "mil_ammunition_standardisation",
   "name": "Ammunition standardisation",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "interchangeable_parts"
   ],
@@ -3964,12 +4142,12 @@
    "artisan": 80
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.3,
   "adopt_yrs": 1.5,
   "risk": 0.01,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -3979,6 +4157,7 @@
   "id": "mil_arsenal_manufacturing",
   "name": "Arsenal and interchangeable manufacture",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "interchangeable_parts"
   ],
@@ -3994,12 +4173,12 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap": 10000,
-  "up": 2000,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 40323.75834825865,
   "build_yrs": 2,
   "adopt_yrs": 2,
   "risk": 0.02,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -4009,6 +4188,7 @@
   "id": "mil_conscription_reserve",
   "name": "Conscription and reserve",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mil_general_staff"
   ],
@@ -4021,12 +4201,12 @@
    "scholar": 80
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "build_yrs": 0.1,
   "adopt_yrs": 3,
   "risk": 0.0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",

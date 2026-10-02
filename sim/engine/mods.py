@@ -81,8 +81,8 @@ def _json_files(directory: str) -> Iterable[str]:
 
 
 def _node_defaults(node: Dict[str, Any]) -> Dict[str, Any]:
-    defaults = {"ph": 60, "lab": {}, "mat": {}, "cap": 200, "up": 40,
-                "risk": 0.15, "rev": 0, "sch": 0, "art": 1, "conf": "C",
+    defaults = {"ph": 60, "lab": {}, "mat": {}, "cap_hours": 4032.375834825865,
+                "up_hours": 806.475166965173, "risk": 0.15, "rev_hours": 0, "sch": 0, "art": 1, "conf": "C",
                 "kb": "", "pre": [], "req_any": [], "traits": [],
                 "build_yrs": 0.0, "adopt_yrs": 0.0, "sus": 0, "gov": 0,
                 "dev_years": None, "dev_people": None}
@@ -112,7 +112,7 @@ def load_mod_tree(base_tree: Dict[str, Any], manifests: Iterable[ModManifest],
     manifests = list(manifests)
     by_id = {manifest.id: manifest for manifest in manifests}
     claims: Dict[Any, str] = {}
-    origins = {node_id: "data/tech_tree.json" for node_id in nodes}
+    origins = {node_id: "data/branches" for node_id in nodes}
     goals = list(tree.get("meta", {}).get("goals") or [])
     for manifest in manifests:
         for path in _json_files(os.path.join(manifest.directory, "data", "branches")):

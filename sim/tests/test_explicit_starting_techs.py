@@ -1,49 +1,26 @@
-"""Regression coverage for civilization-specific, explicit opening knowledge."""
+"""Opening knowledge is exactly what the civilisation declares, and nothing else."""
 from .harness import *  # noqa: F401,F403
 
+_civilisation_ids = S.civilization_ids()
+_starts = {civ_id: sim(civ=civ_id) for civ_id in _civilisation_ids}
 
-_expected_grants = {
-    "rome_100ad": 225,
-    "han_china_100ad": 109,
-    "norse_900ad": 150,
-    "england_1300": 204,
-    "mexica_1500": 35,
-}
-for _civ, _count in _expected_grants.items():
-    _start = sim(civ=_civ)
-    check("%s grants exactly its declared starting state" % _civ,
-          _start.granted == set(_start.civ["starting_techs"])
-          and len(_start.granted) == _count,
-          sorted(_start.granted))
-
-# These are free Roman/Mediterranean nodes in the universal graph.  Their
-# prerequisites being empty or already known must not silently confer them on
-# a scenario that does not declare them.
-_mexica = sim(civ="mexica_1500")
-_contaminants = {
-    "civ_glass_windows", "civ_iron_wrought", "civ_lead_pipes",
-    "fin_coinage", "lnd_wheel_spoked", "mat_wrought_iron",
-}
-check("Mexica start does not inherit Old World ambient technologies",
-      not (_contaminants & _mexica.done),
-      sorted(_contaminants & _mexica.done))
-
-_han = sim(civ="han_china_100ad")
-check("Han starts with lodestone knowledge, not a navigational compass",
-      "sea_lodestone" in _han.done and "sea_magnetic_compass" not in _han.done,
-      sorted({"sea_lodestone", "sea_magnetic_compass"} & _han.done))
+for _civ, _start in _starts.items():
+    _declared = set(S.load_civ(_civ)["starting_techs"])
+    check("%s holds exactly its declared starting technologies" % _civ,
+          _start.granted == _declared and _start.done == _declared,
+          sorted((_start.granted ^ _declared) | (_start.done ^ _declared)))
 
 # Ownership must stay stable after time advances; zero-cost descendants are
 # projects, not a delayed ambient gift.
-_before = set(_mexica.granted)
-_mexica.step()
-check("advancing time does not infer additional starting ownership",
-      _mexica.granted == _before, sorted(_mexica.granted - _before))
+for _civ, _start in _starts.items():
+    _before = set(_start.granted)
+    _start.step()
+    check("%s: advancing time does not infer additional starting ownership" % _civ,
+          _start.granted == _before, sorted(_start.granted ^ _before))
 
-# A typo in explicit scenario data must not degrade into a warning followed by
-# a different opening state.  That formerly hid eight bad ids across three
-# civilizations, including four of the Mexica's five declared technologies.
-_bad_civ = copy.deepcopy(S.load_civ("mexica_1500"))
+# A typo in explicit scenario data must fail fast, not degrade into a
+# different opening state.
+_bad_civ = copy.deepcopy(S.load_civ(_civilisation_ids[0]))
 _bad_civ["starting_techs"].append("not_a_real_node")
 try:
     S.Sim(NODES, ORDER, random.Random(1), events=False, civ=_bad_civ)

@@ -76,7 +76,7 @@ save location" list is "language", and it is not here: this codebase has no
 internationalisation to switch on. _localise_words/_localise_money in
 protocol.py swap the NAME of the currency per civilisation (denarii,
 hacksilver, beans, pence) - flavour, not translation - and the many
-thousands of words of node notes (data/tech_tree.json) and the
+thousands of words of node notes (data/branches/) and the
 docs/knowledge/ corpus exist in English only. A menu entry offering
 "language" with nothing behind it would be worse than no entry: a setting
 that silently does nothing. Real language support would mean translating
@@ -110,6 +110,7 @@ class Config(TypedDict):
     rows_per_page: int
     show_welcome: bool
     commission_display: str
+    display_units: Dict[str, str]
     default_civ: str
     default_kit: str
     default_fog: bool
@@ -117,6 +118,9 @@ class Config(TypedDict):
     default_mortal: bool
     default_goal: Optional[str]
     default_horizon: int
+    default_seed: Optional[Any]
+    default_events: bool
+    default_deterministic: bool
 
 
 class SessionMeta(TypedDict):
@@ -199,6 +203,9 @@ CONFIG_DEFAULTS: Config = {
     "rows_per_page": 30,
     "show_welcome": True,
     "commission_display": "both",  # "commissioned", "ready", or "both"
+    # Unit id per dimension (area, mass, temperature, money) the player wants
+    # shown; a missing dimension means "as the game writes it" (Complaint 285).
+    "display_units": {},
     # REMEMBERED, NOT CONFIGURED - see the module docstring. These four plus
     # the horizon are the New Game wizard's last-used answers, written back
     # by cli.py's _new_game the moment a game actually starts, and are not
@@ -216,6 +223,11 @@ CONFIG_DEFAULTS: Config = {
     # see _new_game, which resolves this the same way resolve_goal() does.
     "default_goal": None,
     "default_horizon": 500,
+    # None draws a fresh seed; a number is what the new-game menu's blank seed answer uses.
+    "default_seed": None,
+    # Typed `play` games only; `agent` games take --no-events/--deterministic.
+    "default_events": True,
+    "default_deterministic": False,
 }
 
 # THE OLD HARDCODED NUMBERS, named, so a process that cannot ask its
@@ -275,6 +287,17 @@ def resolve_commission_display(cfg: Optional[Config] = None) -> str:
     if value in ("commissioned", "ready", "both"):
         return value
     return "both"
+
+
+def resolve_display_units(cfg: Optional[Config] = None) -> Dict[str, str]:
+    """The chosen unit id per dimension; anything that is not a string pair is ignored."""
+    if cfg is None:
+        cfg = load_config()
+    raw = cfg.get("display_units")
+    if not isinstance(raw, dict):
+        return {}
+    return {dimension: unit for dimension, unit in raw.items()
+            if isinstance(dimension, str) and isinstance(unit, str)}
 
 
 def config_path() -> str:
@@ -511,20 +534,24 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
                 blob = json.load(handle)
             if not isinstance(blob, dict) or "_civ" not in blob:
                 continue
+            scenario = blob.get("scenario") or {}
+            household = blob.get("household") or {}
+            founder = blob.get("founder") or {}
+            projects = blob.get("projects") or {}
             row.update({
                 "readable": True,
                 "civ_id": blob.get("_civ"),
-                "year": blob.get("year"),
+                "year": scenario.get("year"),
                 "fog": bool(blob.get("_fog", False)),
-                "founder_alive": blob.get("founder_alive", True),
-                "dead_reason": blob.get("dead_reason"),
-                "goal_year": blob.get("goal_year"),
+                "founder_alive": founder.get("founder_alive", True),
+                "dead_reason": founder.get("dead_reason"),
+                "goal_year": scenario.get("goal_year"),
                 "goal": blob.get("_goal"),
-                "reputation": blob.get("reputation"),
-                "scholars": blob.get("scholars"),
-                "artisans": blob.get("artisans"),
-                "capital": blob.get("capital"),
-                "done": ((blob.get("done") or {}).get("__set__") or []),
+                "reputation": household.get("reputation"),
+                "scholars": household.get("scholars"),
+                "artisans": household.get("artisans"),
+                "capital": household.get("capital"),
+                "done": ((projects.get("done") or {}).get("__set__") or []),
             })
         except (OSError, ValueError):
             pass

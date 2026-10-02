@@ -10,11 +10,17 @@ at length, why this replaced a slower and less sensitive home-grown check.
 from .harness import *  # noqa: F401,F403
 
 
+# Cross-instance state (a module-level cache or counter two Sims share) makes the
+# second run differ from its first year on, so a short horizon sees it; the
+# hash-seed check below measured divergence within 1-7 years for the same
+# reason. The run used to be 180 years, which cost minutes.
+_SAME_PROCESS_YEARS = 30
+
 # --- BREAK: `--seed` did not reproduce a run. Same script, same seed, three
 # runs: 587,300 / 6,664,218 / 6,652,459 in capital. PYTHONHASHSEED=0 made them
 # identical. Float sums over SETS: addition is not associative, the total
 # gates open_venture with a hard comparison, and one bit decides a century.
-def _one_run(seed=9, years=180, civ="rome_100ad"):
+def _one_run(seed=9, years=_SAME_PROCESS_YEARS, civ="rome_100ad"):
     run = S.Sim(NODES, ORDER, random.Random(seed), events=True, manual=False,
                civ=S.load_civ(civ), cfg={"start_capital": 100000.0})
     run.goal, run.done_year = GOAL, {}
@@ -25,8 +31,8 @@ def _one_run(seed=9, years=180, civ="rome_100ad"):
     return (round(run.capital, 6), len(run.done), len(run.operating),
             round(run.reputation, 9))
 
-# THE FIRST OF THESE COSTS 190 OF THE SUITE'S SECONDS, because it simulates
-# 180 years. It catches cross-instance state leaking WITHIN one process (two
+# THE FIRST OF THESE USED TO SIMULATE 180 YEARS TWICE (minutes of the suite).
+# It catches cross-instance state leaking WITHIN one process (two
 # Sim objects built back to back in the same interpreter disagreeing), which
 # is a different bug class from the second
 # check below and one perf_fingerprint cannot see, because perf_fingerprint
@@ -68,15 +74,15 @@ slow_check("the same seed gives the same run, twice in one process",
 # made the old check's sensitivity depend on luck neither run controlled.
 # Two explicit, different seeds make it the same every time this suite runs.
 #
-# 40 years, not perf_fingerprint's own 200-400: detection above was within
-# 1-7 years on every scenario, so 40 is nearly 6x the slowest of those - a
-# short horizon is not a weaker test here, it is simply not paying for 160+
+# 12 years, not perf_fingerprint's own 200-400: detection above was within
+# 1-7 years on every scenario, so 12 is well over the slowest of those - a
+# short horizon is not a weaker test here, it is simply not paying for 190+
 # extra years of a signal that, per that measurement, is essentially always
-# already in by year 7.
-_HASH_SEED_HORIZON = 40
+# already in by year 7. The two subprocesses run side by side.
+_HASH_SEED_HORIZON = 12
 
 
-def _fingerprint_under_seed(hash_seed, years_cap):
+def _start_fingerprint(hash_seed, years_cap):
     """Run every perf_fingerprint scenario, capped to `years_cap` years, in a
     fresh subprocess under PYTHONHASHSEED=<hash_seed>. Returns, for each
     scenario, its name and its list of per-year digests - perf_fingerprint's
@@ -102,18 +108,24 @@ def _fingerprint_under_seed(hash_seed, years_cap):
         "    out.append([nm, digs])\n"
         "print(json.dumps(out))\n"
     ) % (HERE, years_cap)
-    det = subprocess.run([sys.executable, "-c", script], capture_output=True,
-                         text=True, timeout=600,
-                         env=dict(os.environ, PYTHONHASHSEED=str(hash_seed)))
-    if det.returncode != 0:
+    return hash_seed, subprocess.Popen(
+        [sys.executable, "-c", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, env=dict(os.environ, PYTHONHASHSEED=str(hash_seed)))
+
+
+def _finish_fingerprint(started):
+    hash_seed, process = started
+    stdout, stderr = process.communicate(timeout=600)
+    if process.returncode != 0:
         raise RuntimeError("fingerprint subprocess (hash seed %s) failed: %s"
-                           % (hash_seed, det.stderr[-2000:]))
-    return json.loads(det.stdout)
+                           % (hash_seed, stderr[-2000:]))
+    return json.loads(stdout)
 
 
 def _same_under_other_hash_seed():
-    fingerprints_a = _fingerprint_under_seed(0, _HASH_SEED_HORIZON)
-    fingerprints_b = _fingerprint_under_seed(1234567, _HASH_SEED_HORIZON)
+    started = [_start_fingerprint(0, _HASH_SEED_HORIZON),
+               _start_fingerprint(1234567, _HASH_SEED_HORIZON)]
+    fingerprints_a, fingerprints_b = [_finish_fingerprint(each) for each in started]
     if fingerprints_a == fingerprints_b:
         return True, ""
     for (scenario_name, digests_a), (_, digests_b) in zip(fingerprints_a, fingerprints_b):

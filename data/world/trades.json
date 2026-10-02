@@ -104,6 +104,11 @@
     "smith": {
       "family": "craft",
       "training_years": 5
+    },
+    "soldier": {
+      "family": "labour",
+      "note": "A man under arms, drawn from the working age; the state's army is booked in this trade. Basic training is months, not years (Vegetius, De re militari 1.13 gives four months).",
+      "training_years": 1
     }
   }
 }

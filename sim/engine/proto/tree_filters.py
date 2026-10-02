@@ -48,7 +48,7 @@ def _haystack(nodes, node_id):
     if isinstance(aliases, str):
         aliases = [aliases]
     return " ".join([node_id.replace("_", " "), node_id, node.get("name", ""),
-                     node.get("kb", ""), node.get("cat", "").replace("_", " ")]
+                     node.get("cat", "").replace("_", " ")]
                     + aliases).lower()
 
 
@@ -81,6 +81,12 @@ def parse_state(cmd):
     return state, None
 
 
+def subject_names():
+    """The subject headings `available <subject>` knows, in order."""
+    from .techtree import SUBJECTS
+    return list(SUBJECTS.values())
+
+
 def parse_topic(cmd, nodes):
     """(tag, category, error) from the tag and category options."""
     tag = str(cmd.get("tag") or "").strip().strip('"\'').lower().replace(" ", "_")
@@ -88,9 +94,10 @@ def parse_topic(cmd, nodes):
     category = category.replace(" ", "_")
     if tag and tag not in topic_tags.current():
         near = difflib.get_close_matches(tag, list(topic_tags.current()), n=3)
-        return "", "", ("unknown tag %r%s. The tags are: %s." % (
+        return "", "", ("unknown tag %r%s. The tags are: %s. Tags and subjects are different lists; "
+                        "to look for a word or a subject type 'available %s' (subjects: %s)." % (
             tag, (" (did you mean %s?)" % ", ".join(near)) if near else "",
-            ", ".join(topic_tags.current())))
+            ", ".join(topic_tags.current()), tag.replace("_", " "), ", ".join(subject_names())))
     if category:
         cats = {node["cat"] for node in nodes.values()}
         if category not in cats:
@@ -146,6 +153,9 @@ def _row(sim, nodes, node_id, state):
         row["why_not"] = sim.start_reason(node_id)[1]
         row["missing"] = shown
         row["hidden_missing"] = len(missing) - len(shown)
+    stock = sim.stock_needed_by(node_id)
+    if stock:
+        row["living_stock"] = stock
     return row
 
 
@@ -243,12 +253,25 @@ def state_reply(sim, nodes, state, find, want_subject, keep, known, startable, p
     return out
 
 
+def stock_line(row):
+    """What living stock a row's node needs held, beside what is held."""
+    return "HELD: " + "; ".join(
+        "%s %s of %s needed" % (gate["material"], _held_figure(gate["held"]), _held_figure(gate["needed"]))
+        for gate in row["living_stock"])
+
+
+def _held_figure(units):
+    return ("%.3f" % units).rstrip("0").rstrip(".")
+
+
 def render_state_rows(out):
     """Plain-text table for a state list."""
     lines = ["RESEARCH, state %s: %s" % (out["state"], out.get("count")), out.get("showing", "")]
     for row in out.get("rows", []):
         lines.append("  %-34s %-22s %s" % (row["id"], ",".join(row["tags"]) or row["cat"],
                                            row.get("why_not") or row["name"]))
+        if row.get("living_stock"):
+            lines.append("      " + stock_line(row))
     if out.get("blocked_note"):
         lines += ["", out["blocked_note"]]
     if out.get("nothing_matched"):

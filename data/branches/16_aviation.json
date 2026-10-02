@@ -3,6 +3,7 @@
   "id": "air_kite_basic",
   "name": "Kite",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "mat_silk"
@@ -16,13 +17,13 @@
    "silk_kg": 0.5,
    "linen_kg": 1
   },
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0.1,
   "risk": 0.05,
   "sus": 1,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -36,6 +37,7 @@
   "id": "air_observation_balloon_tethered",
   "name": "Tethered observation balloon",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_linen",
    "mat_silk",
@@ -52,13 +54,13 @@
    "silk_kg": 4,
    "beeswax_kg": 2
   },
-  "cap": 100,
-  "up": 0.0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 2,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -81,13 +83,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -97,6 +99,7 @@
   "id": "air_goldbeater_skin",
   "name": "Goldbeater's skin envelope",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered"
   ],
@@ -109,13 +112,13 @@
    "leather_kg": 4,
    "beeswax_kg": 1
   },
-  "cap": 80,
-  "up": 0.0,
+  "cap_hours": 1612.950333930346,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.15,
   "sus": 1,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -130,6 +133,7 @@
   "id": "air_varnished_silk_envelope",
   "name": "Varnished silk envelope",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered",
    "mat_shellac"
@@ -143,13 +147,13 @@
    "silk_kg": 6,
    "shellac_kg": 1
   },
-  "cap": 60,
-  "up": 0.0,
+  "cap_hours": 1209.7127504477594,
+  "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.12,
   "sus": 1,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -164,6 +168,7 @@
   "id": "air_hydrogen_generation_charcoal",
   "name": "Hydrogen from iron and acid",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "mat_charcoal",
@@ -182,13 +187,13 @@
    "salt_kg": 1,
    "clay_kg": 1
   },
-  "cap": 120,
-  "up": 0.0,
+  "cap_hours": 2419.425500895519,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -196,12 +201,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_coal_gas_generation",
   "name": "Coal gas for ballooning",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "coal_coke",
    "destructive_distillation"
@@ -217,13 +224,13 @@
    "charcoal_kg": 10,
    "clay_kg": 2
   },
-  "cap": 200,
-  "up": 60,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 1209.7127504477594,
   "yrs": 1,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -231,12 +238,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_balloon_valve",
   "name": "Balloon valve",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered",
    "mat_wrought_iron",
@@ -252,13 +261,13 @@
    "iron_bar_kg": 0.5,
    "leather_kg": 1
   },
-  "cap": 40,
-  "up": 0.0,
+  "cap_hours": 806.475166965173,
+  "up_hours": 0,
   "yrs": 0.2,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -272,6 +281,7 @@
   "id": "air_balloon_ballast",
   "name": "Ballast and descent control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered"
   ],
@@ -283,13 +293,13 @@
   "mat": {
    "sand_quartz_kg": 5
   },
-  "cap": 10,
-  "up": 0,
+  "cap_hours": 201.61879174129325,
+  "up_hours": 0,
   "yrs": 0.1,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -303,6 +313,7 @@
   "id": "air_parachute",
   "name": "Parachute",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_observation_balloon_tethered",
    "mat_linen"
@@ -315,13 +326,13 @@
   "mat": {
    "linen_kg": 5
   },
-  "cap": 60,
-  "up": 0,
+  "cap_hours": 1209.7127504477594,
+  "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.1,
   "sus": 2,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -329,12 +340,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_elongated_envelope",
   "name": "Elongated balloon envelope",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_varnished_silk_envelope"
   ],
@@ -347,13 +360,13 @@
    "silk_kg": 10,
    "shellac_kg": 2
   },
-  "cap": 80,
-  "up": 0.0,
+  "cap_hours": 1612.950333930346,
+  "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.12,
   "sus": 1,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -361,12 +374,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_dirigible_engine_mount",
   "name": "Mounted engine under balloon",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_elongated_envelope",
    "air_light_petrol_engine"
@@ -381,13 +396,13 @@
    "timber_m3": 1,
    "iron_bar_kg": 20
   },
-  "cap": 150,
-  "up": 0.0,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 0,
   "yrs": 0.6,
   "risk": 0.18,
   "sus": 1,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -402,6 +417,7 @@
   "id": "air_rigid_airship_frame",
   "name": "Rigid airship frame",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_dirigible_engine_mount",
    "mat_aluminium"
@@ -418,13 +434,13 @@
    "iron_bar_kg": 10,
    "aluminium_kg": 15
   },
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.2,
   "sus": 1,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -440,6 +456,7 @@
   "id": "air_hydrogen_danger",
   "name": "Hydrogen safety limits",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_coal_gas_generation"
   ],
@@ -450,13 +467,13 @@
    "scholar": 100
   },
   "mat": {},
-  "cap": 50,
-  "up": 0,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.05,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -466,12 +483,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_aerofoil_section",
   "name": "Cambered aerofoil section",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "scientific_method"
   ],
@@ -481,13 +500,13 @@
    "scholar": 200
   },
   "mat": {},
-  "cap": 80,
-  "up": 0,
+  "cap_hours": 1612.950333930346,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -497,12 +516,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_cayley_forces",
   "name": "Separation of forces: lift, drag, thrust, control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "newtonian_mechanics"
@@ -513,13 +534,13 @@
    "scholar": 300
   },
   "mat": {},
-  "cap": 100,
-  "up": 0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -529,12 +550,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_wind_tunnel",
   "name": "Wind tunnel for lift and drag measurement",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_cast_iron",
@@ -550,13 +573,13 @@
    "timber_m3": 2,
    "iron_bar_kg": 15
   },
-  "cap": 120,
-  "up": 0.0,
+  "cap_hours": 2419.425500895519,
+  "up_hours": 0,
   "yrs": 0.6,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -570,6 +593,7 @@
   "id": "air_glider_simple",
   "name": "Simple glider",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "air_cayley_forces",
@@ -585,13 +609,13 @@
    "timber_m3": 1.5,
    "linen_kg": 3
   },
-  "cap": 100,
-  "up": 0.0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.25,
   "sus": 2,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -605,6 +629,7 @@
   "id": "air_three_axis_control",
   "name": "Three-axis control: roll, pitch, yaw",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_glider_simple",
    "air_wind_tunnel"
@@ -619,13 +644,13 @@
    "timber_m3": 0.5,
    "linen_kg": 2
   },
-  "cap": 80,
-  "up": 0.0,
+  "cap_hours": 1612.950333930346,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.2,
   "sus": 1,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -639,6 +664,7 @@
   "id": "air_wing_warping",
   "name": "Wing warping",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_three_axis_control"
   ],
@@ -651,13 +677,13 @@
    "timber_m3": 0.3,
    "linen_kg": 1.5
   },
-  "cap": 60,
-  "up": 0.0,
+  "cap_hours": 1209.7127504477594,
+  "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.15,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -667,12 +693,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_aileron",
   "name": "Aileron for roll control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_three_axis_control",
    "cap_tol_1mm"
@@ -688,13 +716,13 @@
    "linen_kg": 1,
    "iron_bar_kg": 2
   },
-  "cap": 70,
-  "up": 0.0,
+  "cap_hours": 1411.3315421890527,
+  "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.12,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -704,12 +732,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_rudder_vertical",
   "name": "Rudder for yaw control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_glider_simple"
   ],
@@ -722,13 +752,13 @@
    "timber_m3": 0.2,
    "linen_kg": 1
   },
-  "cap": 40,
-  "up": 0.0,
+  "cap_hours": 806.475166965173,
+  "up_hours": 0,
   "yrs": 0.2,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -742,6 +772,7 @@
   "id": "air_elevator_pitch",
   "name": "Elevator for pitch control",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_glider_simple"
   ],
@@ -754,13 +785,13 @@
    "timber_m3": 0.15,
    "linen_kg": 1
   },
-  "cap": 35,
-  "up": 0.0,
+  "cap_hours": 705.6657710945263,
+  "up_hours": 0,
   "yrs": 0.15,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -774,6 +805,7 @@
   "id": "air_propeller_wing",
   "name": "Propeller as rotating aerofoil",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "air_wind_tunnel"
@@ -788,13 +820,13 @@
    "timber_m3": 0.5,
    "iron_bar_kg": 3
   },
-  "cap": 90,
-  "up": 0.0,
+  "cap_hours": 1814.569125671639,
+  "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.12,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -804,12 +836,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_light_petrol_engine",
   "name": "Light petrol engine",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_aluminium",
    "cap_tol_100um",
@@ -826,13 +860,13 @@
    "steel_plate_kg": 5,
    "iron_bar_kg": 4
   },
-  "cap": 200,
-  "up": 40,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 806.475166965173,
   "yrs": 1.2,
   "risk": 0.2,
   "sus": 10,
   "gov": 3,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -842,12 +876,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_power_to_weight",
   "name": "Power-to-weight ratio and flight",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_light_petrol_engine",
    "air_cayley_forces"
@@ -858,13 +894,13 @@
    "scholar": 200
   },
   "mat": {},
-  "cap": 80,
-  "up": 0,
+  "cap_hours": 1612.950333930346,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -874,12 +910,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_powered_aeroplane",
   "name": "Powered aeroplane",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_three_axis_control",
    "air_light_petrol_engine",
@@ -899,13 +937,13 @@
    "aluminium_kg": 10,
    "steel_plate_kg": 3
   },
-  "cap": 250,
-  "up": 60,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 1209.7127504477594,
   "yrs": 2,
   "risk": 0.3,
   "sus": 3,
   "gov": 1,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -920,6 +958,7 @@
   "id": "air_radial_engine",
   "name": "Radial engine",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_light_petrol_engine",
    "cap_tol_100um"
@@ -935,13 +974,13 @@
    "iron_bar_kg": 5,
    "aluminium_kg": 3
   },
-  "cap": 180,
-  "up": 35,
+  "cap_hours": 3629.138251343278,
+  "up_hours": 705.6657710945263,
   "yrs": 1,
   "risk": 0.18,
   "sus": 10,
   "gov": 3,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -951,12 +990,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_rotary_engine",
   "name": "Rotary engine",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_light_petrol_engine",
    "cap_tol_100um",
@@ -973,13 +1014,13 @@
    "iron_bar_kg": 4,
    "aluminium_kg": 4
   },
-  "cap": 200,
-  "up": 40,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 806.475166965173,
   "yrs": 1.1,
   "risk": 0.2,
   "sus": 10,
   "gov": 3,
-  "rev": 280,
+  "rev_hours": 5645.326168756211,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -989,12 +1030,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_biplane",
   "name": "Biplane structure",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_three_axis_control"
   ],
@@ -1008,13 +1051,13 @@
    "wire_drawn_kg": 5,
    "linen_kg": 5
   },
-  "cap": 100,
-  "up": 0.0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.12,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1024,12 +1067,14 @@
    "infrastructure",
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_monoplane_structure",
   "name": "Monoplane cantilever wing",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "cap_tol_100um",
@@ -1046,13 +1091,13 @@
    "steel_plate_kg": 12,
    "aluminium_kg": 8
   },
-  "cap": 150,
-  "up": 0.0,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.15,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1071,12 +1116,14 @@
     }
    }
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_stressed_skin_fuselage",
   "name": "Stressed-skin fuselage",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_aluminium",
    "mat_concrete_reinforced"
@@ -1091,13 +1138,13 @@
    "aluminium_kg": 15,
    "steel_plate_kg": 3
   },
-  "cap": 180,
-  "up": 0.0,
+  "cap_hours": 3629.138251343278,
+  "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.16,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1108,12 +1155,14 @@
    "military",
    "spectacle"
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "air_airspeed_indicator",
   "name": "Airspeed indicator",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_pitot_tube",
    "barometer"
@@ -1129,13 +1178,13 @@
    "brass_kg": 2,
    "steel_noric_kg": 0.5
   },
-  "cap": 70,
-  "up": 0.0,
+  "cap_hours": 1411.3315421890527,
+  "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1143,12 +1192,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "air_pitot_tube",
   "name": "Pitot tube",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "barometer",
    "cap_tol_100um",
@@ -1165,13 +1216,13 @@
    "brass_kg": 3.0,
    "glass_raw_kg": 0.3
   },
-  "cap": 400.0,
-  "up": 0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "yrs": 0.1,
   "risk": 0.05,
   "sus": 10,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1179,12 +1230,14 @@
   "traits": [
    "military",
    "spectacle"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.] [FIXED after independent audit: tier raised to match its barometer dependency.]"
  },
  {
   "id": "air_altimeter",
   "name": "Altimeter (aneroid barometer)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "barometer",
    "cap_tol_1mm"
@@ -1200,13 +1253,13 @@
    "steel_noric_kg": 1,
    "glass_raw_kg": 0.5
   },
-  "cap": 90,
-  "up": 0.0,
+  "cap_hours": 1814.569125671639,
+  "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1220,6 +1273,7 @@
   "id": "air_compass_magnetic",
   "name": "Compass for navigation",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "mat_silk",
@@ -1234,13 +1288,13 @@
    "iron_bar_kg": 0.2,
    "silk_kg": 0.2
   },
-  "cap": 20,
-  "up": 0,
+  "cap_hours": 403.2375834825865,
+  "up_hours": 0,
   "yrs": 0.1,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -1254,6 +1308,7 @@
   "id": "air_artificial_horizon",
   "name": "Artificial horizon (gyroscopic)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "mat_bulk_steel",
@@ -1274,13 +1329,13 @@
    "steel_plate_kg": 8.0,
    "timber_m3": 0.1
   },
-  "cap": 300.0,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "C",
@@ -1294,6 +1349,7 @@
   "id": "air_flying_boat",
   "name": "Flying boat",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_powered_aeroplane",
    "mat_bulk_steel"
@@ -1309,13 +1365,13 @@
    "linen_kg": 6,
    "steel_plate_kg": 8
   },
-  "cap": 200,
-  "up": 60,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 1209.7127504477594,
   "yrs": 1.2,
   "risk": 0.2,
   "sus": 2,
   "gov": 2,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1330,6 +1386,7 @@
   "id": "air_aerodrome",
   "name": "Aerodrome (landing field)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_powered_aeroplane"
   ],
@@ -1341,13 +1398,13 @@
   "mat": {
    "brick_1000": 5
   },
-  "cap": 300,
-  "up": 50,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 1008.0939587064662,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1362,6 +1419,7 @@
   "id": "air_aerial_photography",
   "name": "Aerial photography",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_powered_aeroplane",
    "photography"
@@ -1373,13 +1431,13 @@
    "artisan": 80
   },
   "mat": {},
-  "cap": 100,
-  "up": 30,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 604.8563752238797,
   "yrs": 0.4,
   "risk": 0.15,
   "sus": 1,
   "gov": 3,
-  "rev": 88.0,
+  "rev_hours": 1774.2453673233806,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1404,13 +1462,13 @@
    "scholar": 150
   },
   "mat": {},
-  "cap": 80,
-  "up": 40,
+  "cap_hours": 1612.950333930346,
+  "up_hours": 806.475166965173,
   "yrs": 0.3,
   "risk": 0.2,
   "sus": 1,
   "gov": 3,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1420,6 +1478,7 @@
   "id": "air_aerial_bombing",
   "name": "Aerial bombing",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_powered_aeroplane",
    "mat_nitroglycerin"
@@ -1431,13 +1490,13 @@
    "artisan": 100
   },
   "mat": {},
-  "cap": 120,
-  "up": 80,
+  "cap_hours": 2419.425500895519,
+  "up_hours": 1612.950333930346,
   "yrs": 0.6,
   "risk": 0.25,
   "sus": 2,
   "gov": 2,
-  "rev": 122.0,
+  "rev_hours": 2459.7492592437775,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1452,6 +1511,7 @@
   "id": "air_helicopter_rotor",
   "name": "Helicopter rotor system",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "air_light_petrol_engine",
@@ -1468,13 +1528,13 @@
    "steel_plate_kg": 10,
    "aluminium_kg": 8
   },
-  "cap": 250,
-  "up": 70,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 1411.3315421890527,
   "yrs": 1.5,
   "risk": 0.22,
   "sus": 2,
   "gov": 1,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 1,
   "art": 0,
   "conf": "C",
@@ -1488,6 +1548,7 @@
   "id": "air_autogyro",
   "name": "Autogyro (powered rotor-wing)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_aerofoil_section",
    "air_light_petrol_engine",
@@ -1504,13 +1565,13 @@
    "steel_plate_kg": 8,
    "aluminium_kg": 6
   },
-  "cap": 180,
-  "up": 50,
+  "cap_hours": 3629.138251343278,
+  "up_hours": 1008.0939587064662,
   "yrs": 1.2,
   "risk": 0.18,
   "sus": 1,
   "gov": 1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1524,6 +1585,7 @@
   "id": "air_jet_engine_concept",
   "name": "Jet engine principle",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "thermodynamics_theory",
    "newtonian_mechanics",
@@ -1537,27 +1599,29 @@
    "chemist": 100
   },
   "mat": {},
-  "cap": 120,
-  "up": 0,
+  "cap_hours": 2419.425500895519,
+  "up_hours": 0,
   "yrs": 2.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Newton's third law: jet out the back, thrust forward. A compressor forces air in, fuel burns in a combustion chamber, hot gas expands and exits at high velocity. No piston engine, no propeller. Much simpler mechanically than reciprocating engines but requires materials that survive continuous high temperature under pressure. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat]",
+  "note": "Newton's third law: jet out the back, thrust forward. A compressor forces air in, fuel burns in a combustion chamber, hot gas expands and exits at high velocity. No piston engine, no propeller. Much simpler mechanically than reciprocating engines but requires materials that survive continuous high temperature under pressure.",
   "traits": [
    "military",
    "spectacle"
   ],
-  "build_yrs": 2.0
+  "build_yrs": 2.0,
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat] [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: combustion chamber operates at sustained 1600+ C, requires regenerative furnace scale heat]"
  },
  {
   "id": "air_jet_engine_build",
   "name": "Jet engine (centrifugal compressor)",
   "cat": "aviation",
+  "kind": "ENGINEERING",
   "pre": [
    "air_jet_engine_concept",
    "mat_tool_steel_hss",
@@ -1576,13 +1640,13 @@
    "nickel_kg": 3,
    "copper_kg": 2
   },
-  "cap": 350,
-  "up": 100,
+  "cap_hours": 7056.657710945264,
+  "up_hours": 2016.1879174129324,
   "yrs": 2.5,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev": 482.3,
+  "rev_hours": 9724.074325682574,
   "sch": 1,
   "art": 0,
   "conf": "C",

@@ -98,7 +98,7 @@ def figure_in(message, phrase):
 
 
 quoted = crowded_sim([], others)
-quoted.economy *= 1.4
+quoted.state.economy.output_factor *= 1.4
 quoted.price_index *= 1.3
 node_id = others[0]
 quoted.operating.add(node_id)

@@ -1,4 +1,4 @@
-"""household_never_happened_fields: Complaints/57. "Never happened" is a declared
+"""household_never_happened_fields: Complaints/55. "Never happened" is a declared
 None (or a real zero for a counter), never an absent attribute read through getattr."""
 import re
 from .harness import *  # noqa: F401,F403

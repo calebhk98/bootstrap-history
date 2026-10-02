@@ -3,6 +3,7 @@
   "id": "met_ore_crushing_sorting",
   "name": "Ore dressing: crushing and hand sorting",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "10_metallurgy.md",
   "ph": 20,
@@ -13,13 +14,13 @@
    "timber_m3": 1,
    "iron_bar_kg": 5
   },
-  "cap": 50,
-  "up": 10,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 201.61879174129325,
   "yrs": 0.3,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -32,6 +33,7 @@
   "id": "met_fire_assay",
   "name": "Fire assay for ore grade",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "lead_metallurgy"
@@ -46,13 +48,13 @@
    "lead_kg": 2,
    "charcoal_kg": 1
   },
-  "cap": 100,
-  "up": 20,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 403.2375834825865,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -75,6 +77,7 @@
   "id": "met_water_ore_stamp",
   "name": "Water-powered ore stamp mill",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water",
    "crank_conrod"
@@ -91,13 +94,13 @@
    "iron_bar_kg": 30,
    "iron_bloom_kg": 20
   },
-  "cap": 500,
-  "up": 80,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1612.950333930346,
   "yrs": 1.5,
   "risk": 0.1,
   "sus": 1,
   "gov": 1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -118,6 +121,7 @@
   "id": "met_jigging_gravity",
   "name": "Jigging and gravity separation",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "met_ore_crushing_sorting",
    "cap_measure_len"
@@ -133,13 +137,13 @@
    "iron_bar_kg": 8,
    "sand_quartz_kg": 50
   },
-  "cap": 200,
-  "up": 40,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 806.475166965173,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -152,6 +156,7 @@
   "id": "met_roasting_calcining",
   "name": "Roasting and calcining ore",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "charcoal_industrial"
@@ -166,22 +171,24 @@
    "charcoal_kg": 50,
    "iron_ore_kg": 100
   },
-  "cap": 150,
-  "up": 50,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 1008.0939587064662,
   "yrs": 0.6,
   "risk": 0.12,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Heat ore in an open pile to drive off volatile sulfur and water, and to crack the rock for easier reduction. Many sulfide ores cannot be smelted without roasting first; the roast fumes are toxic. Needs a scholar to understand empirical craft proportion or roasters waste half their ore."
+  "note": "Heat ore in an open pile to drive off volatile sulfur and water, and to crack the rock for easier reduction. Many sulfide ores cannot be smelted without roasting first; the roast fumes are toxic. Needs a scholar to understand empirical craft proportion or roasters waste half their ore.",
+  "_internal": "[FIXED after independent audit: the word stoichiometry is anachronistic for a tier 1 node; Richter is 1792. Ancient roasters worked by craft knowledge.]"
  },
  {
   "id": "met_reverberatory",
   "name": "Reverberatory furnace",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "refractory_fireclay",
@@ -200,13 +207,13 @@
    "timber_m3": 5,
    "iron_bar_kg": 40
   },
-  "cap": 1000,
-  "up": 200,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "yrs": 2,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -216,6 +223,7 @@
   "id": "met_cupola_furnace",
   "name": "Cupola furnace for iron casting",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "refractory_fireclay",
@@ -234,25 +242,27 @@
    "iron_bar_kg": 30,
    "timber_m3": 3
   },
-  "cap": 800,
-  "up": 120,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 2419.425500895519,
   "yrs": 1.8,
   "risk": 0.12,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "A",
   "note": "A small tall furnace that melts scrap and pig iron for casting into sand moulds. Much hotter than an open hearth because the stack draft is strong. The problem is contamination from coke ash unless you use charcoal and then your fuel bill is punishing. Solves small-batch casting need cheaply.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: it was tier 1 while depending on the blast furnace, which is a major independent metallurgical leap.]"
  },
  {
   "id": "met_froth_flotation",
   "name": "Froth flotation ore concentration",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "analytical_chemistry",
    "cap_measure_mass_mg",
@@ -273,13 +283,14 @@
    "sulfur_kg": 100.0,
    "timber_m3": 4.0
   },
-  "cap": 1200,
-  "up": 200,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "yrs": 3,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
+  "output_unbounded_reason": "extraction: a deposit or a parent stream sets the output, not a plant or staff the node states",
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -292,6 +303,7 @@
   "id": "met_converter_furnace",
   "name": "Converter furnace for steel",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "met_basic_lining_phosphorus",
@@ -309,29 +321,31 @@
    "limestone_kg": 20,
    "iron_bar_kg": 40
   },
-  "cap": 2000,
-  "up": 300,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 6048.563752238797,
   "yrs": 2.5,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
-  "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff. [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C]",
+  "note": "Blast compressed air through molten iron-carbon; exothermic oxidation of silicon and carbon raises temperature while generating heat. Brittle and rapid\u2014if the converter tips or the air supply fails during a heat, you have a disaster of molten metal on the floor. Speed and low labour cost per ton is the payoff.",
   "mechanics": {
    "labour_productivity": {
     "trade": "furnaceman",
     "bonus": 0.08,
     "order": 6
    }
-  }
+  },
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C] [REVIEWED: prerequisite(s) cap_heat_1600 added by a reviewer working node by node. Reason: molten iron oxidation furnace reaches 1600-1700 C]"
  },
  {
   "id": "met_basic_lining_phosphorus",
   "name": "Basic lining and the phosphorus problem",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "analytical_chemistry"
@@ -348,13 +362,13 @@
    "dolomite_kg": 50,
    "iron_ore_kg": 50
   },
-  "cap": 1500,
-  "up": 0.0,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 0,
   "yrs": 2.8,
   "risk": 0.18,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -364,6 +378,7 @@
   "id": "met_open_hearth_furnace",
   "name": "Open hearth furnace and scrap recycling",
   "cat": "smelting",
+  "kind": "ENGINEERING",
   "pre": [
    "high_temp_furnace",
    "met_reverberatory",
@@ -382,13 +397,13 @@
    "limestone_kg": 30,
    "iron_bar_kg": 50
   },
-  "cap": 2500,
-  "up": 400,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 8064.75166965173,
   "yrs": 3,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -411,6 +426,7 @@
   "id": "met_continuous_casting",
   "name": "Continuous casting and ingot casting",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "high_temp_furnace",
    "cap_heat_1600"
@@ -428,13 +444,13 @@
    "timber_m3": 3,
    "clay_kg": 100
   },
-  "cap": 800,
-  "up": 150,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 3024.2818761193985,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -447,6 +463,7 @@
   "id": "met_two_high_mill",
   "name": "Two-high rolling mill",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam",
    "cap_heat_1300",
@@ -466,13 +483,13 @@
    "timber_m3": 6,
    "coal_kg": 200
   },
-  "cap": 3500,
-  "up": 500,
+  "cap_hours": 70566.57710945263,
+  "up_hours": 10080.939587064662,
   "yrs": 3,
   "risk": 0.18,
   "sus": 1,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -482,6 +499,7 @@
   "id": "met_three_high_mill",
   "name": "Three-high rolling mill",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "cap_tol_100um",
@@ -498,13 +516,13 @@
    "steel_plate_kg": 100,
    "timber_m3": 5
   },
-  "cap": 2800,
-  "up": 400,
+  "cap_hours": 56453.26168756211,
+  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.15,
   "sus": 1,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -521,6 +539,7 @@
   "id": "met_reversing_mill",
   "name": "Reversing rolling mill",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "motor_transformer_ac"
@@ -537,13 +556,13 @@
    "copper_kg": 30,
    "timber_m3": 6
   },
-  "cap": 4000,
-  "up": 600,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 12097.127504477594,
   "yrs": 3,
   "risk": 0.2,
   "sus": 1,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -553,6 +572,7 @@
   "id": "met_section_mill",
   "name": "Section mill for rails and beams",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_three_high_mill",
    "mat_tool_steel_hss"
@@ -568,13 +588,13 @@
    "iron_bar_kg": 80,
    "timber_m3": 5
   },
-  "cap": 3200,
-  "up": 500,
+  "cap_hours": 64518.01335721384,
+  "up_hours": 10080.939587064662,
   "yrs": 2.8,
   "risk": 0.17,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -584,6 +604,7 @@
   "id": "met_rail_mill",
   "name": "Rail mill production",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "railway"
@@ -599,13 +620,13 @@
    "iron_bar_kg": 100,
    "coal_kg": 150
   },
-  "cap": 3000,
-  "up": 450,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 9072.845628358196,
   "yrs": 2.5,
   "risk": 0.16,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -619,6 +640,7 @@
   "id": "met_wire_rod_rolling",
   "name": "Wire rod rolling mill",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "cap_power_steam"
@@ -634,13 +656,13 @@
    "coal_kg": 100,
    "timber_m3": 4
   },
-  "cap": 2200,
-  "up": 350,
+  "cap_hours": 44356.13418308451,
+  "up_hours": 7056.657710945264,
   "yrs": 2.2,
   "risk": 0.14,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -653,6 +675,7 @@
   "id": "met_tube_mill_seamless",
   "name": "Tube mill and seamless tube production",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_two_high_mill",
    "met_mannesmann_piercing",
@@ -669,13 +692,13 @@
    "iron_bar_kg": 100,
    "coal_kg": 150
   },
-  "cap": 3800,
-  "up": 550,
+  "cap_hours": 76615.14086169143,
+  "up_hours": 11089.033545771128,
   "yrs": 2.9,
   "risk": 0.18,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -685,6 +708,7 @@
   "id": "met_mannesmann_piercing",
   "name": "Mannesmann piercing for seamless tube",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "met_two_high_mill",
    "geometry_analytic",
@@ -700,13 +724,13 @@
    "timber_m3": 2,
    "iron_bar_kg": 20
   },
-  "cap": 500,
-  "up": 0.0,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 0,
   "yrs": 2,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -716,6 +740,7 @@
   "id": "met_drawn_tube",
   "name": "Drawn tube production",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "drawplate_wire",
    "cap_power_water",
@@ -732,25 +757,27 @@
    "coal_kg": 80,
    "soap_kg": 2
   },
-  "cap": 800,
-  "up": 150,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 3024.2818761193985,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Anneal a tube, coat with soap as lubricant, draw it through a die on a water-powered wire draw to reduce diameter and thicken walls uniformly. Much slower than rolling but gives excellent surface finish and precise dimensions. The soaped tube must be perfectly round or it jams in the die. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish]",
+  "note": "Anneal a tube, coat with soap as lubricant, draw it through a die on a water-powered wire draw to reduce diameter and thicken walls uniformly. Much slower than rolling but gives excellent surface finish and precise dimensions. The soaped tube must be perfectly round or it jams in the die.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: wire-drawing die precision and resulting surface finish]"
  },
  {
   "id": "met_trip_hammer",
   "name": "Trip hammer and water-driven forge hammer",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water",
    "crank_conrod"
@@ -766,13 +793,13 @@
    "iron_bar_kg": 60,
    "iron_bloom_kg": 30
   },
-  "cap": 600,
-  "up": 120,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 2419.425500895519,
   "yrs": 1.2,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -789,6 +816,7 @@
   "id": "met_drop_hammer",
   "name": "Drop hammer for heavy forging",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water",
    "case_hardening",
@@ -810,13 +838,13 @@
    "iron_bloom_kg": 40.0,
    "timber_m3": 8.0
   },
-  "cap": 1000.0,
-  "up": 200.0,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -829,6 +857,7 @@
   "id": "met_steam_hammer",
   "name": "Steam hammer for precision forging",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_power_steam",
@@ -845,13 +874,13 @@
    "steel_plate_kg": 60,
    "coal_kg": 200
   },
-  "cap": 2500,
-  "up": 400,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.16,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -861,6 +890,7 @@
   "id": "met_hydraulic_press",
   "name": "Hydraulic press and accumulator",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_power_steam",
@@ -883,25 +913,27 @@
    "steel_plate_kg": 100.0,
    "timber_m3": 4.0
   },
-  "cap": 5000.0,
-  "up": 1000.0,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 20161.879174129324,
   "yrs": 2.8,
   "risk": 0.18,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
-  "note": "A pump driven by steam fills a cylinder with oil; the incompressible oil presses a ram with immense steady force. An accumulator (air-charged vessel) smooths pulsation and stores energy. Pascal's law means a small pump can generate large forces through a large piston. The limit is seal quality and pipe strength; if oil leaks you lose pressure instantly. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining]",
+  "note": "A pump driven by steam fills a cylinder with oil; the incompressible oil presses a ram with immense steady force. An accumulator (air-charged vessel) smooths pulsation and stores energy. Pascal's law means a small pump can generate large forces through a large piston. The limit is seal quality and pipe strength; if oil leaks you lose pressure instantly.",
   "traits": [
    "labour_saving"
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: pressure seal quality and pipe strength require file and gauge precision machining]"
  },
  {
   "id": "met_extrusion_press",
   "name": "Extrusion and the extrusion press",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_hydraulic_press",
    "cap_heat_1300",
@@ -921,13 +953,13 @@
    "iron_bar_kg": 200.0,
    "steel_plate_kg": 120.0
   },
-  "cap": 3000.0,
-  "up": 600.0,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 12097.127504477594,
   "yrs": 2.5,
   "risk": 0.17,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -940,6 +972,7 @@
   "id": "met_deep_drawing",
   "name": "Deep drawing and pressing dies",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "met_hydraulic_press",
    "cap_tol_100um",
@@ -961,13 +994,13 @@
    "soap_kg": 3.0,
    "steel_plate_kg": 100.0
   },
-  "cap": 2600,
-  "up": 420,
+  "cap_hours": 52420.885852736246,
+  "up_hours": 8467.989253134316,
   "yrs": 2.6,
   "risk": 0.16,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -980,6 +1013,7 @@
   "id": "met_green_sand_mold",
   "name": "Green sand molding for casting",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300"
   ],
@@ -995,13 +1029,13 @@
    "charcoal_kg": 10,
    "timber_m3": 2
   },
-  "cap": 400,
-  "up": 0.0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -1011,6 +1045,7 @@
   "id": "met_dry_sand_mold",
   "name": "Dry sand molding for fine castings",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [
    "met_green_sand_mold",
    "cap_heat_0700"
@@ -1026,13 +1061,13 @@
    "clay_kg": 150,
    "timber_m3": 3
   },
-  "cap": 700,
-  "up": 0.0,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -1045,6 +1080,7 @@
   "id": "met_investment_casting",
   "name": "Investment casting and lost wax",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "10_metallurgy.md",
   "ph": 100,
@@ -1056,22 +1092,24 @@
    "clay_kg": 200,
    "sand_quartz_kg": 100
   },
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "A",
-  "note": "Carve fine details in wax, embed in clay and sand, fire to melt and drive out the wax, pour molten metal into the cavity. Results in intricate castings with no parting lines. Already established for jewellery wherever fine metalworking exists. For large castings it becomes expensive in wax and labor but the precision is unmatched. The name investment refers to the clay-sand shell that receives the investment."
+  "note": "Carve fine details in wax, embed in clay and sand, fire to melt and drive out the wax, pour molten metal into the cavity. Results in intricate castings with no parting lines. Already established for jewellery wherever fine metalworking exists. For large castings it becomes expensive in wax and labor but the precision is unmatched. The name investment refers to the clay-sand shell that receives the investment.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "met_die_casting",
   "name": "Die casting and hot chamber casting",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [
    "met_hydraulic_press",
    "mat_zinc",
@@ -1088,13 +1126,13 @@
    "steel_plate_kg": 80,
    "timber_m3": 2
   },
-  "cap": 2200,
-  "up": 0.0,
+  "cap_hours": 44356.13418308451,
+  "up_hours": 0,
   "yrs": 2.2,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -1107,6 +1145,7 @@
   "id": "met_chill_casting",
   "name": "Chill casting and directional solidification",
   "cat": "casting",
+  "kind": "ENGINEERING",
   "pre": [
    "met_green_sand_mold",
    "cap_measure_temp"
@@ -1122,13 +1161,13 @@
    "copper_kg": 20,
    "timber_m3": 2
   },
-  "cap": 600,
-  "up": 0.0,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 0,
   "yrs": 1.2,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1141,6 +1180,7 @@
   "id": "met_powder_metallurgy",
   "name": "Powder metallurgy and sintering",
   "cat": "forming",
+  "kind": "ENGINEERING",
   "pre": [
    "atomic_theory",
    "cap_heat_1600",
@@ -1160,13 +1200,13 @@
    "charcoal_kg": 100,
    "coal_kg": 80
   },
-  "cap": 2400,
-  "up": 400,
+  "cap_hours": 48388.510017910376,
+  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1207,13 +1247,13 @@
    "silver_kg": 2,
    "sulfuric_acid_kg": 10
   },
-  "cap": 400,
-  "up": 80,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 1612.950333930346,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1223,6 +1263,7 @@
   "id": "met_electro_refining",
   "name": "Electro-refining for high-purity copper",
   "cat": "refining",
+  "kind": "ENGINEERING",
   "pre": [
    "electroplating",
    "mat_copper"
@@ -1238,13 +1279,13 @@
    "sulfuric_acid_kg": 20,
    "timber_m3": 1
   },
-  "cap": 600,
-  "up": 120,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 2419.425500895519,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1267,6 +1308,7 @@
   "id": "met_galvanizing",
   "name": "Galvanizing with zinc coating",
   "cat": "surface_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_zinc",
    "zinc_metal",
@@ -1284,13 +1326,13 @@
    "zinc_kg": 20,
    "sulfuric_acid_kg": 5
   },
-  "cap": 800,
-  "up": 0.0,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.12,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1306,12 +1348,14 @@
      "lead_chamber": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: molten zinc is about 450 C, nowhere near a blast furnace. Zinc metal was also listed twice.]"
  },
  {
   "id": "met_tin_plate",
   "name": "Tin plate production",
   "cat": "surface_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "electroplating",
    "mat_tin",
@@ -1328,17 +1372,17 @@
    "tin_kg": 10,
    "sulfuric_acid_kg": 8
   },
-  "cap": 900,
-  "up": 0.0,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 0,
   "yrs": 1.6,
   "risk": 0.11,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "A",
-  "note": "Electroplate iron sheet with tin or dip into molten tin. Tin is non-toxic and corrosion-resistant, so tinned steel is ideal for food storage. The tin coating must be continuous or rust starts at the pin-holes. Electroplated tin plate is thinner and cheaper than dipped; dipped is thicker but more durable. The difference is in the tin-iron bond strength. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range]",
+  "note": "Electroplate iron sheet with tin or dip into molten tin. Tin is non-toxic and corrosion-resistant, so tinned steel is ideal for food storage. The tin coating must be continuous or rust starts at the pin-holes. Electroplated tin plate is thinner and cheaper than dipped; dipped is thicker but more durable. The difference is in the tin-iron bond strength.",
   "traits": [
    "food",
    "commerce"
@@ -1351,12 +1395,14 @@
      "lead_chamber": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range] [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: molten tin dipping at 232 C within pottery kiln range]"
  },
  {
   "id": "met_annealing_recrystallization",
   "name": "Annealing and recrystallization",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "cap_measure_temp"
@@ -1371,13 +1417,13 @@
    "charcoal_kg": 50,
    "timber_m3": 2
   },
-  "cap": 400,
-  "up": 0.0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1387,6 +1433,7 @@
   "id": "met_quenching_media",
   "name": "Quenching media and quench crack prevention",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "case_hardening",
    "cap_measure_temp",
@@ -1404,13 +1451,13 @@
    "tallow_kg": 10,
    "timber_m3": 2
   },
-  "cap": 600,
-  "up": 0.0,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 0,
   "yrs": 1.4,
   "risk": 0.13,
   "sus": 3,
   "gov": -1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -1418,12 +1465,14 @@
   "traits": [
    "information",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "met_tempering_color",
   "name": "Tempering and temper color chart",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "case_hardening",
    "cap_measure_temp"
@@ -1438,13 +1487,13 @@
    "charcoal_kg": 30,
    "timber_m3": 1.5
   },
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -1454,6 +1503,7 @@
   "id": "met_normalizing",
   "name": "Normalizing for uniformity",
   "cat": "heat_treatment",
+  "kind": "ENGINEERING",
   "pre": [
    "met_annealing_recrystallization",
    "cap_heat_1100"
@@ -1468,13 +1518,13 @@
    "charcoal_kg": 50,
    "timber_m3": 2
   },
-  "cap": 400,
-  "up": 0.0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.09,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1487,6 +1537,7 @@
   "id": "met_phase_diagram_knowledge",
   "name": "Iron-carbon phase diagram as scientific knowledge",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "analytical_chemistry",
    "thermodynamics_theory",
@@ -1502,13 +1553,13 @@
    "iron_bar_kg": 50,
    "charcoal_kg": 50
   },
-  "cap": 1000,
-  "up": 0.0,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 0,
   "yrs": 2,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1518,6 +1569,7 @@
   "id": "met_hardenability_alloys",
   "name": "Hardenability and alloy steel design",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "met_phase_diagram_knowledge",
    "atomic_theory"
@@ -1534,13 +1586,13 @@
    "manganese_kg": 10,
    "iron_bar_kg": 50
   },
-  "cap": 1500,
-  "up": 0.0,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 0,
   "yrs": 2.5,
   "risk": 0.18,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1570,6 +1622,7 @@
   "id": "met_metallography",
   "name": "Metallography: polishing, etching and microscopy",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "microscope_compound",
    "cap_tol_100um",
@@ -1586,13 +1639,13 @@
    "ethanol_kg": 5,
    "sulfuric_acid_kg": 3
   },
-  "cap": 800,
-  "up": 0.0,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0,
   "yrs": 1.8,
   "risk": 0.12,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1630,13 +1683,13 @@
    "steel_plate_kg": 30,
    "timber_m3": 3
   },
-  "cap": 1800,
-  "up": 300,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 6048.563752238797,
   "yrs": 2.2,
   "risk": 0.16,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1646,6 +1699,7 @@
   "id": "met_hardness_test",
   "name": "Hardness testing and Rockwell scale",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "micrometer_gauges",
    "cap_tol_100um"
@@ -1660,13 +1714,13 @@
    "diamond_g": 1,
    "steel_plate_kg": 5
   },
-  "cap": 1200,
-  "up": 0.0,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 0,
   "yrs": 1.6,
   "risk": 0.11,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1676,6 +1730,7 @@
   "id": "met_fatigue_testing",
   "name": "Fatigue testing and fracture mechanics",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "mt2_tensile_test",
    "statistics_basic",
@@ -1692,13 +1747,13 @@
    "iron_bar_kg": 100,
    "coal_kg": 100
   },
-  "cap": 2500,
-  "up": 0.0,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 0,
   "yrs": 3,
   "risk": 0.2,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1711,6 +1766,7 @@
   "id": "met_spectroscopic_assay",
   "name": "Spectroscopic assay of metals",
   "cat": "knowledge",
+  "kind": "SCIENCE",
   "pre": [
    "spectroscope",
    "analytical_chemistry"
@@ -1725,13 +1781,13 @@
    "copper_kg": 1,
    "glass_raw_kg": 0.5
   },
-  "cap": 1400,
-  "up": 0.0,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 0,
   "yrs": 2,
   "risk": 0.14,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1741,6 +1797,7 @@
   "id": "met_safety_lamps_ventilation",
   "name": "Safety lamps and mine ventilation",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water",
    "cap_heat_0700"
@@ -1757,13 +1814,13 @@
    "timber_m3": 4,
    "coal_kg": 50
   },
-  "cap": 900,
-  "up": 180,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 3629.138251343278,
   "yrs": 1.8,
   "risk": 0.16,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1776,6 +1833,7 @@
   "id": "met_mine_pumping",
   "name": "Mine pumping systems",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -1792,13 +1850,13 @@
    "copper_kg": 20,
    "lead_kg": 10
   },
-  "cap": 2000,
-  "up": 400,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 8064.75166965173,
   "yrs": 2.5,
   "risk": 0.15,
   "sus": 1,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -1818,6 +1876,7 @@
   "id": "met_winding_engine",
   "name": "Winding engine and mine shaft hoisting",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_watt",
    "cap_power_steam"
@@ -1833,13 +1892,13 @@
    "steel_plate_kg": 100,
    "coal_kg": 300
   },
-  "cap": 3000,
-  "up": 500,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 10080.939587064662,
   "yrs": 2.8,
   "risk": 0.18,
   "sus": 1,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -1852,6 +1911,7 @@
   "id": "met_black_powder_blasting",
   "name": "Blasting with black powder and dynamite",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "gunpowder",
    "nitre_beds"
@@ -1867,13 +1927,13 @@
    "sulfur_kg": 10,
    "nitre_kg": 50
   },
-  "cap": 600,
-  "up": 120,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 2419.425500895519,
   "yrs": 1.4,
   "risk": 0.25,
   "sus": 1,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -1886,12 +1946,14 @@
     "yield": 1.0,
     "cost": 0.85
    }
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "met_dynamite_blasting",
   "name": "Dynamite and modern explosives",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_nitroglycerin",
    "cap_measure_mass_mg"
@@ -1906,13 +1968,13 @@
    "mat_nitroglycerin_kg": 10,
    "kieselguhr_kg": 20
   },
-  "cap": 1000,
-  "up": 200,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "yrs": 1.8,
   "risk": 0.3,
   "sus": 1,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1925,12 +1987,14 @@
     "yield": 1.0,
     "cost": 0.65
    }
-  }
+  },
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "met_pneumatic_drill",
   "name": "Pneumatic rock drill",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_power_steam"
@@ -1946,13 +2010,13 @@
    "steel_plate_kg": 60,
    "coal_kg": 150
   },
-  "cap": 1800,
-  "up": 350,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 7056.657710945264,
   "yrs": 2.2,
   "risk": 0.17,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -1965,6 +2029,7 @@
   "id": "met_deep_shaft_sinking",
   "name": "Deep shaft sinking techniques",
   "cat": "mining",
+  "kind": "ENGINEERING",
   "pre": [
    "met_mine_pumping",
    "met_safety_lamps_ventilation"
@@ -1980,13 +2045,13 @@
    "iron_bar_kg": 200,
    "coal_kg": 300
   },
-  "cap": 5000,
-  "up": 1000,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 20161.879174129324,
   "yrs": 5,
   "risk": 0.22,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "A",
@@ -2017,13 +2082,13 @@
    "flux_kg": 2,
    "iron_bar_kg": 10
   },
-  "cap": 1200,
-  "up": 200,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "yrs": 1.8,
   "risk": 0.14,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -2048,13 +2113,13 @@
    "flux_kg": 2,
    "copper_kg": 5
   },
-  "cap": 1400,
-  "up": 250,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 5040.469793532331,
   "yrs": 2,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -2078,13 +2143,13 @@
    "copper_kg": 5,
    "coal_kg": 100
   },
-  "cap": 1800,
-  "up": 300,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 6048.563752238797,
   "yrs": 2.2,
   "risk": 0.16,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -2094,6 +2159,7 @@
   "id": "met_acetylene_supply",
   "name": "Acetylene from calcium carbide",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1600",
    "cap_gas_o2h2",
@@ -2111,17 +2177,17 @@
    "timber_m3": 2,
    "coal_kg": 100
   },
-  "cap": 1600,
-  "up": 0.0,
+  "cap_hours": 32259.00667860692,
+  "up_hours": 0,
   "yrs": 2.2,
   "risk": 0.18,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
-  "note": "Heat coke and lime to 2000 C in an electric furnace to make calcium carbide, then mix with water and collect the acetylene gas. The carbide reacts violently with water so the generator must be robust and well-designed or it leaks. Acetylene is unstable and cannot be pressurized above 2 atmospheres without risk of explosion, so it must be dissolved in acetone in a porous mass (a carbide lamp cartridge) for transport. [REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide at 2000 C in electric furnace; current prerequisite insufficient]",
+  "note": "Heat coke and lime to 2000 C in an electric furnace to make calcium carbide, then mix with water and collect the acetylene gas. The carbide reacts violently with water so the generator must be robust and well-designed or it leaks. Acetylene is unstable and cannot be pressurized above 2 atmospheres without risk of explosion, so it must be dissolved in acetone in a porous mass (a carbide lamp cartridge) for transport.",
   "traits": [
    "commerce",
    "infrastructure"
@@ -2133,6 +2199,7 @@
      "chm_alkali_waste": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide at 2000 C in electric furnace; current prerequisite insufficient] [REVIEWED: prerequisite(s) cap_heat_3000 added by a reviewer working node by node. Reason: calcium carbide at 2000 C in electric furnace; current prerequisite insufficient]"
  }
 ]

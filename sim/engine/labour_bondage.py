@@ -19,6 +19,7 @@ books - does not overwrite the grant out of existence.
 from .data import trade_family
 from . import purchase_rule
 from sim.constants import declare
+from . import money_units
 
 
 class BondageMixin:
@@ -176,11 +177,12 @@ class BondageMixin:
             "(see this function's own docstring on the exploit this "
             "closed), not derived from an observed price-quantity curve "
             "for any real slave market.")
-    SLAVE_BASE_PRICE_DENARII = declare(
-        "SLAVE_BASE_PRICE_DENARII", 300.0, kind="hardcoded_outcome",
-        book_money=True, unit="denarii, at price_index=1 and zero market pressure",
+    SLAVE_BASE_PRICE_LABOUR_HOURS = declare(
+        "SLAVE_BASE_PRICE_LABOUR_HOURS", 6050.0, kind="hardcoded_outcome",
+        unit="labour hours, at price_index=1 and zero market pressure",
         source=None, confidence="D",
-        why="The list price of one person before any congestion surcharge "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "The list price of one person before any congestion surcharge "
             "- a flat number this file asserts rather than derives from "
             "food, security, transport and recruitment costs the way "
             "CLAUDE.md 3.1 asks a price to be derived. §3.1 CANDIDATE: "
@@ -198,6 +200,7 @@ class BondageMixin:
             "from. A real mechanism would price a person the way "
             "labour.py now prices free labour: from local supply, risk "
             "and what the buyer can actually enforce.")
+    SLAVE_BASE_PRICE = money_units.PricedInLabourHours("SLAVE_BASE_PRICE_LABOUR_HOURS")
 
     def slave_quote(self, n_people):
         """What buying this many people actually costs, here, today.
@@ -222,7 +225,7 @@ class BondageMixin:
         people_count = float(n_people)
         exponent = self.SLAVE_PRICE_CONGESTION_EXPONENT
         integral = (((already + people_count) ** exponent) - (already ** exponent)) / (exponent * (depth ** (exponent - 1.0)))
-        return self.SLAVE_BASE_PRICE_DENARII * (people_count + integral) * self.price_index
+        return self.SLAVE_BASE_PRICE * (people_count + integral) * self.price_index
 
     def buy_slaves(self, n_people):
         """The option the model refuses to hide, and refuses to make costless.
@@ -270,7 +273,7 @@ class BondageMixin:
         if not purchase_rule.can_pay(self, price):
             household._last_buy_refusal = purchase_rule.refusal_text(self, "%d slaves" % n_people, price)
             return 0
-        household.capital -= price
+        household.debit(price, "slaves bought")
         household.slaves += n_people
         economy.market_pressure = economy.market_pressure + n_people
         # Untrained on arrival. They become productive through household.training.

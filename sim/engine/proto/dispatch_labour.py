@@ -9,10 +9,12 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
+from sim.world import tile_names
 from .command_registry import command
 from ..data import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state import _staff_fraction_note
 from .util import _num, _qty
+from .quote_spending import COMMISSION_NOTE
 
 
 @command("work", group="labour",
@@ -77,10 +79,12 @@ def _cmd_work(sim, nodes, cmd, ended):
 
 @command("allocate", group="labour", aliases=("direct", "assign", "split"),
          summary="a standing order for your own hours",
-         usage=["allocate", "allocate <id> <hours>", "allocate <id> off",
+         usage=["allocate", "allocate <id> <hours>", "allocate <id> <hours> useful",
+                "allocate <id> off",
                 "allocate work <trade> <hours>"],
          options={"<id>": "an active project", "<hours>": "hours every year; 0 or off clears it",
-                  "work <trade>": "sell hours as wages instead of a project"},
+                  "work <trade>": "sell hours as wages instead of a project",
+                  "useful": "cap the order at the hours the project can use now"},
          description="Gives a project this many of your hours every year, ahead of "
                      "anything undirected. Bare allocate lists what is set; hours "
                      "nobody directs are still shared by priority.")
@@ -159,9 +163,15 @@ def _cmd_allocate(sim, nodes, cmd, ended):
         had = sim.hour_allocations.pop(target_id, None)
         return ({"ok": True, "cleared": target_id, "had_been_a_year": had}
                 if had else {"ok": True, "cleared": target_id})
+    capped_from = None
+    if cmd.get("useful"):
+        useful = sim.project_useful_hours(target_id)
+        if hours > useful:
+            capped_from, hours = hours, useful
     sim.hour_allocations[target_id] = float(hours)
     return {"ok": True, "set": target_id, "name": nodes[target_id]["name"],
             "hours_a_year": float(hours),
+            **({"capped_to_useful_work_from": capped_from} if capped_from is not None else {}),
             "note": "this many of your own hours go to %s every year "
                     "from now on, ahead of anything you have not "
                     "directed - it can still never exceed what the pool "
@@ -179,6 +189,10 @@ def _cmd_allocate(sim, nodes, cmd, ended):
                      "labour topic for how trades differ.")
 def _cmd_labour(sim, nodes, cmd, ended):
     one = (cmd.get("trade") or "").strip().lower()
+    # US and UK spellings of a trade name are the same trade
+    for variant in (one.replace("or", "our"), one.replace("our", "or")):
+        if one not in WAGES and variant in WAGES:
+            one = variant
     if one and one not in WAGES:
         return {"ok": False, "error": "no such trade: %s. They are: %s"
                 % (one, ", ".join(sorted(WAGES)))}
@@ -186,14 +200,14 @@ def _cmd_labour(sim, nodes, cmd, ended):
         # THE PRICE YOU ACTUALLY PAY, not the table price: leaning on a
         # trade's local supply bids it up, and the premium has to appear
         # here, not only in the bill.
-        _lpf = sim.labour_price_factor(trade)
+        _lpf = sim.labour_market.price_factor(trade)
         entry = {"trade": trade,
-             "a_year_of_one": round(sim.annual_wage(trade), 0),
+             "a_year_of_one": round(sim.labour_market.quote_annual(trade), 0),
              "you_employ": round(sim.employees.get(trade, 0.0), 2)}
         if long:
             entry["wage_foundation"] = {
                 "base_for_skill_and_difficulty": round(sim.base_annual_wage(trade), 2),
-                **{factor_key: round(value, 3) for factor_key, value in sim.wage_cost_factors(trade).items()},
+                **{factor_key: round(value, 3) for factor_key, value in sim.labour_market.cost_factors(trade).items()},
                 "demographic_scarcity": round(sim.wage_index, 3),
                 "local_trade_scarcity": round(_lpf, 3),
                 "society_price_level": round(sim.price_index, 3),
@@ -238,8 +252,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                             "back down" % trade)
         if long:
             entry.update({"kind": trade_family(trade),
-                      "wage_per_hour": round(sim.wage_per_hour(trade) * sim.wage_index
-                                             * sim.price_index, 3),
+                      "wage_per_hour": round(sim.labour_market.in_current_money(sim.wage_per_hour(trade)), 3),
                       # SPLIT, because the total includes your own people
                       # and calling all of it "the market" made hiring look
                       # like it created smiths out of nothing.
@@ -271,17 +284,17 @@ def _cmd_labour(sim, nodes, cmd, ended):
             # THE HIRE YOU ARE CONTEMPLATING, NOT THE MARKET AS IT STANDS.
             # a_year_of_one above is true the instant it is quoted and can
             # be false one command later: hiring is what moves
-            # labour_price_factor, and wage_bill charges the NEW factor
+            # labour market price_factor, and wage_bill charges the NEW factor
             # to every head of the trade you then have, not only the one
             # you added, so the standing wage bill after hiring can be far
             # higher than "a year of one" quoted before the hire. See
-            # labour_price_factor_after_hiring's own docstring for the
+            # labour market price_factor_after's own docstring for the
             # full account; this is that forecast, priced and put on the
             # one screen a player actually reads before committing.
             if sim.trade_available(trade):
-                _lpf_after = sim.labour_price_factor_after_hiring(trade, 1.0)
+                _lpf_after = sim.labour_market.price_factor_after(trade, 1.0)
                 _rate_after = round(
-                    sim.annual_wage(trade, include_local_scarcity=False) * _lpf_after, 0)
+                    sim.labour_market.unscarce_annual(trade) * _lpf_after, 0)
                 # ALWAYS SHOWN, QUIETLY: this is the number the task is
                 # actually about, and it belongs on the screen whether or
                 # not the move is large enough to also earn the banner
@@ -294,7 +307,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                 # a single hire. Flagging that every time would be a
                 # warning nobody reads by the tenth trade. 5% (the same
                 # bound `labour_pressure` itself treats as worth a name,
-                # see labour_price_factor's own note on what "roughly
+                # see labour market price_factor's own note on what "roughly
                 # doubles the price at the whole of it" means) is where a
                 # single hire stops being noise and starts being the
                 # reason your wage bill actually moved - true of a rare,
@@ -356,16 +369,16 @@ def _cmd_labour(sim, nodes, cmd, ended):
             # carry their keep, and this sentence has to say so
             # consistently with the `hire` refusal, which already does.
             "and_how_many_of_the_lettered_trades_this_society_supplies": (
-                "%s: right now your household can hold at most %.1f of them "
-                "in total, hired and taught together. That is your reach "
-                "into the labour market, not a fact about how many people "
-                "here can read. It RISES: a school, an academy and an "
-                "imperial patron train and pay scholars on their own "
-                "budget and lift this ceiling with them, which is the large "
-                "effect; printing, paper and libraries widen literacy "
-                "itself, which is the smaller one."
-                % (", ".join(sorted(sim.LITERATE_TRADES)),
-                   sim.literate_capacity("scholar"))),
+                "each lettered trade has its own ceiling on people hired and "
+                "taught together, not one shared total: %s. These are your "
+                "reach into the labour market, not a fact about how many "
+                "people here can read. Scholars rise with a school, an "
+                "academy and an imperial patron, which train and pay them on "
+                "their own budget; the other trades rise with printing, "
+                "paper and libraries, which widen literacy itself."
+                % ", ".join("%s %.1f" % (trade, sim.literate_capacity(trade))
+                            for trade in sorted(sim.LITERATE_TRADES))),
+            "workforce": sim.workforce_report(),
             "slaves": sim.slaves, "freedmen": sim.freedmen,
             "annual_wage_bill": round(sim.wage_bill(), 1),
             "craftsmen_on_your_staff": round(sim.artisans, 2),
@@ -405,11 +418,13 @@ def _cmd_labour(sim, nodes, cmd, ended):
          summary="hire staff by the year",
          usage=["hire <trade> <n>", '{"cmd":"hire","trade":"smith","n":3}'],
          options={"<trade>": "a trade that exists here", "<n>": "how many"},
-         description="Paid every year whether or not there is work for them.")
+         description="Paid every year whether or not there is work for them. The first "
+                     "year is paid at once as an advance. `quote hire <trade> <n>` shows "
+                     "what is paid now and what is due each year after.")
 def _cmd_hire(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    if not sim.founder_alive and sim.directors_extra < 0.5:
+    if not sim.founder_alive and not sim.deputies_carry_the_work():
         return {"ok": False,
                 "error": "there is nobody left to take anyone on: the "
                          "founder is dead and no deputy remains to direct "
@@ -417,6 +432,8 @@ def _cmd_hire(sim, nodes, cmd, ended):
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
+    wages_before = sim.wage_bill()
+    _count, fee_paid, _refusal = sim.hire_check(cmd.get("trade"), quantity)
     hired, err = sim.hire(cmd.get("trade"), quantity)
     if not hired:
         return {"ok": False, "error": err}
@@ -431,6 +448,8 @@ def _cmd_hire(sim, nodes, cmd, ended):
     return {"ok": True, "hired": cmd.get("trade"), "n": cmd.get("n"),
             "you_now_employ": round(sim.employees.get(str(cmd.get("trade")).lower(), 0.0), 2),
             "annual_wage_bill": round(sim.wage_bill(), 1),
+            "paid_now": round(fee_paid, 1),
+            "from_next_year_per_year": round(sim.wage_bill() - wages_before, 1),
             "capital": round(sim.capital, 1)}
 
 
@@ -447,6 +466,7 @@ def _cmd_fire(sim, nodes, cmd, ended):
     fired, err = sim.fire(cmd.get("trade"), quantity)
     if not fired:
         return {"ok": False, "error": err}
+    advance_credit = min(sim.living_cost(), sim.wages_prepaid)
     # Same reasoning as `hire` above: `err` here is fire()'s own success
     # message, which says exactly what happened - staff let go, an
     # apprenticeship cancelled, or both - and cmd["n"] alone would not.
@@ -455,6 +475,11 @@ def _cmd_fire(sim, nodes, cmd, ended):
            "annual_wage_bill": round(sim.wage_bill(), 1)}
     if err:
         out["what_happened"] = err
+    if advance_credit > 0.5:
+        out["advance_still_credited"] = round(advance_credit, 1)
+        out["advance_note"] = ("wages paid in advance this year are not refunded in "
+                               "cash; they stay as credit against this year's costs "
+                               "and nothing more is owed for the person who left")
     return out
 
 
@@ -463,17 +488,26 @@ def _cmd_fire(sim, nodes, cmd, ended):
          summary="teach a trade this society lacks",
          usage=["train <trade> <n>"],
          options={"<trade>": "a trade that does not exist here", "<n>": "how many"},
-         description="Teaches from nothing, out of your own hours.")
+         description="Teaches from nothing, out of your own hours. The trainees join the "
+                     "payroll when they finish and raise the wage bill; `quote train "
+                     "<trade> <n>` shows the keep paid now and that wage bill first.")
 def _cmd_train(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
+    # The wage bill is read before teaching, the same call `quote train` makes.
+    plan, _refusal = sim.train_check(cmd.get("trade"), quantity, cmd.get("from"))
+    wage_bill_added = (sim.trainee_wage_bill(str(cmd.get("trade")).strip().lower(), plan["count"])
+                       if plan else 0.0)
+    capital_before = sim.capital
     trained, msg = sim.train(cmd.get("trade"), quantity, cmd.get("from"))
     if not trained:
         return {"ok": False, "error": msg}
     out = {"ok": True, "training": msg, "capital": round(sim.capital, 1),
+           "paid_now": round(capital_before - sim.capital, 1),
+           "wage_bill_added_per_year": round(wage_bill_added, 1),
            "your_hours_left_this_year": round(
                max(0.0, sim.director_pool() - sim.director_hours_committed()), 1)}
     # TRAIN AND HIRE ARE TWO SEPARATE STEPS, and this message is the one
@@ -488,11 +522,10 @@ def _cmd_train(sim, nodes, cmd, ended):
     _trade = str(cmd.get("trade") or "").strip().lower()
     if _trade in TRADES_ABSENT:
         out["means"] = (
-            "%s now exists here, but nobody can do that work yet: a "
-            "project needing it draws only on people trained or hired "
-            "into this exact trade, never a general market. "
-            "'hire %s <n>' adds more right away, without waiting; "
-            "otherwise the people above are it until they finish."
+            "%s now exists here. A project needing it draws only on people "
+            "trained or hired into this exact trade, never a general market. "
+            "'hire %s <n>' adds more right away, without waiting for training; "
+            "otherwise the people above are it."
             % (_trade, _trade))
     return out
 
@@ -502,18 +535,21 @@ def _cmd_train(sim, nodes, cmd, ended):
          summary="buy a job rather than a person",
          usage=["commission <trade> <hours>"],
          options={"<trade>": "the trade", "<hours>": "hours of that trade's work"},
-         description="Pays for hours of a trade's work once, with no continuing wage.")
+         description="Pays for hours of a trade's work once, with no continuing wage. "
+                     "The hours last this year only and cannot supervise a concern. "
+                     "`quote commission <trade> <hours>` shows the price first.")
 def _cmd_commission(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
     hours, err = _qty(cmd, "hours")
     if err:
         return {"ok": False, "error": err + ". Nothing was changed."}
+    fee_paid, _refusal = sim.commission_check(cmd.get("trade"), hours)
     commissioned, msg = sim.commission(cmd.get("trade"), hours)
     if not commissioned:
         return {"ok": False, "error": msg}
     return {"ok": True, "commissioned": msg, "capital": round(sim.capital, 1),
-            "note": "These hours are available to your projects this year only."}
+            "paid_now": round(fee_paid, 1), "note": COMMISSION_NOTE}
 
 
 @command("move_base", group="labour", aliases=("move", "relocate", "moveto"),
@@ -534,10 +570,14 @@ def _cmd_move_base(sim, nodes, cmd, ended):
             if tile == home or people[tile] < 1.0:
                 continue
             days, hours, money = sim.relocation_quote(tile)
-            rows.append({"tile": tile, "people": round(people[tile]),
+            rows.append({"tile": tile, "name": tile_names.tile_name(tile),
+                         "region": tile_names.region_name(tile),
+                         "terrain": tile_names.terrain(tile),
+                         "people": round(people[tile]),
                          "days_on_the_road": round(days), "your_hours_lost": round(hours),
                          "wages_paid_on_the_way": round(money)})
         return {"ok": True, "you_are_based_at": home,
+                "you_are_at_name": tile_names.tile_name(home),
                 "the_town_there": round(sim.home_town_population_estimate()),
                 "tiles": rows,
                 "how": 'move to one: {"cmd":"move_base","to":"<tile>"}'}

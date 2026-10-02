@@ -3,7 +3,7 @@
 What this repository uses to check its own maintainability, which parts are
 hand-written and why, and which established library sits under each one.
 Every number below carries the command that produced it, per CLAUDE.md
-section 8; run the command rather than trust the number if it matters to you.
+section 6; run the command rather than trust the number if it matters to you.
 
 The stakeholder's instruction that produced this document: "It looks like the
 scanner was hand wrote, can we look for any libraries/tools to help us with
@@ -183,7 +183,7 @@ targets it; it stays hand-written and labelled as such.
 (open-file-with-context-handler, 52), `RUF100` (unused-noqa, 84 real /
 85 measured under `--isolated`, see below). Each is selected individually,
 not by family, and the file's own comments carry the full reasoning
-alongside each one, per CLAUDE.md section 8. Counts:
+alongside each one, per CLAUDE.md section 6. Counts:
 `python3 -m ruff check sim/ --statistics` (uses the real, non-isolated
 config).
 

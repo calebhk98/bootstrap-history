@@ -10,6 +10,7 @@ import json
 import os
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Tuple
 
+from .tree_source import load_base_tree
 from .mods import ModError, ModManifest, get_ordered_mods, load_mod_production, load_mod_tree
 from .mods_ids import check_new_id, is_mod_content
 from .mods_base import check_not_removed, claim_fields, claim_removal, deep_merge
@@ -38,15 +39,22 @@ def _trade_from(trade_id: str, metadata: Mapping[str, Any], source: str) -> Trad
 
 
 _production_cache: Dict[Tuple[str, str], Dict[str, Any]] = {}
+# The same cache keyed on the arguments as given, so a repeat call (the market
+# asks per concern per year) resolves no paths.
+_production_cache_by_arguments: Dict[Tuple[str, Optional[str]], Dict[str, Any]] = {}
 
 
 def load_production_catalog(root: str, mods_dir: Optional[str] = None,
                             manifests: Optional[Iterable[ModManifest]] = None
                             ) -> Dict[str, Any]:
     """Load base recipes and enabled mods in deterministic dependency order."""
+    if manifests is None and (root, mods_dir) in _production_cache_by_arguments:
+        return _production_cache_by_arguments[(root, mods_dir)]
+    argument_key = (root, mods_dir)
     mods_dir = mods_dir or os.path.join(root, "mods")
     cache_key = (os.path.abspath(root), os.path.abspath(mods_dir))
     if manifests is None and cache_key in _production_cache:
+        _production_cache_by_arguments[argument_key] = _production_cache[cache_key]
         return _production_cache[cache_key]
     merged: Dict[str, Any] = {}
     origins: Dict[str, str] = {}
@@ -68,6 +76,7 @@ def load_production_catalog(root: str, mods_dir: Optional[str] = None,
     merged = load_mod_production(merged, ordered)
     if manifests is None:
         _production_cache[cache_key] = merged
+        _production_cache_by_arguments[argument_key] = merged
     return merged
 
 
@@ -112,10 +121,9 @@ def validate_mod_material_paths(nodes: Iterable[Mapping[str, Any]],
 
 
 def load_mod_tree_nodes(root: str, mods_dir: Optional[str] = None) -> Iterable[Dict[str, Any]]:
-    """Technology nodes of the base tree with enabled mods applied."""
-    with open(os.path.join(root, "data", "tech_tree.json"), encoding="utf-8") as source:
-        base_tree = json.load(source)
-    tree = load_mod_tree(base_tree, get_ordered_mods(mods_dir or os.path.join(root, "mods")),
+    """Technology nodes of the base tree with enabled mods applied. `root` locates the mods
+    directory; the base tree is built from the repository's branch files."""
+    tree = load_mod_tree(load_base_tree(), get_ordered_mods(mods_dir or os.path.join(root, "mods")),
                          copy_base=False)
     return tree["nodes"]
 

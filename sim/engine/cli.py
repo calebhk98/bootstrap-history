@@ -28,7 +28,9 @@ import collections, json, math, os, random
 from collections import defaultdict
 
 from .catalog import load_production_catalog
-from .data import (ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
+from . import validate_material_gating, validate_output_bounds, validate_unheld_gates
+from .default_civilisation import default_civilisation_id
+from .data import (ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
                    hard_pre, load, load_civ, resolve_goal,
                    STARTING_KITS, STRATS, topo_order, win_condition_describe)
 
@@ -37,7 +39,7 @@ import argparse, sys
 
 from .core import Sim
 from . import protocol as _protocol
-from . import settings
+from . import cli_units_options, settings
 # civ_of_save/goal_of_save are the only names this file reads from
 # .protocol; `cmd_agent` and everything else that needs
 # _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
@@ -137,47 +139,6 @@ def ensure_fixed_hash_seed(seed="0"):
 # had just won the whole game proposed naming a few points on that same line
 # - Challenge/Standard/Relaxed/Endless - rather than asking for four bare
 # numbers with no sense of what any of them mean.
-#
-# THE ONE THING A NAME CANNOT FIX ON ITS OWN: the SAME horizon is a
-# completely different offer depending which civilisation it is attached to.
-# Measured with every stroke of luck removed - no events, no project
-# failures, an immortal founder, the game's own planner doing the ordering -
-# reaching the current goal has taken about 451 years from Han China and
-# about 1,019 from Rome (see data/review/PATH_SEARCH.md section 6 for
-# the method and the full tables). A 500-year Standard is generous for the
-# one and short of reachable for the other, and a menu that offers both
-# civilisations and both horizons with nothing connecting them is offering a
-# choice it has not explained. See _new_game's own use of this table for
-# where that connection actually gets said out loud, to whichever
-# civilisation a player has just picked.
-#
-# THIS IS A MEASUREMENT OF THE PLANNER'S OWN POLICY, NOT A PROPERTY OF THE
-# GAME - say so, if this is ever quoted outside this file. PATH_SEARCH.md
-# section 4 traces Rome's 1,019-year figure to a specific, diagnosed cause
-# (an early credit-exhaustion cycle the automatic optimizer falls into and
-# does not climb back out of for roughly 850 years) and section 4.4 proves,
-# by direct ablation, that no reordering of the strategy file - which is
-# the entire space planner.py/path_search.py can search - changes it. A
-# real, far stronger playthrough (playtest/fixtures/
-# rome_434_goal_startable.json) reaches the SAME goal in 334 years, three
-# times faster, by playing manually rather than by any order this table's
-# own instrument can express. Do not read 1,019 as "Rome cannot be won
-# faster" - only as "this structural instrument, searched honestly,
-# including a move that tries to grow the household's own capacity (see
-# PATH_SEARCH.md section 5), could not find an order that does."
-#
-# NOT RECOMPUTED HERE, EVER. A single dice-free trial takes anywhere from
-# several seconds (a short horizon, as path_search.py's own search rounds
-# run it) to minutes (a full-length one, per PATH_SEARCH.md's own timing
-# notes) - far too slow for a menu a player is sitting in front of, and nor
-# is it this file's place to duplicate planner.py/path_search.py's own
-# measurement. Hand-updated if that document's own numbers change; a
-# civilisation not in this table is simply not given a number, rather than
-# being handed a guess dressed as a fact.
-DICE_FREE_FLOOR_YEARS = {
-    "han_china_100ad": 451,
-    "rome_100ad": 1019,
-}
 
 # NAMED, NOT INVENTED. Every one of these is the SAME knob the engine always
 # had (a plain year count the run ends at) - nothing here scales a cost, a
@@ -186,19 +147,9 @@ DICE_FREE_FLOOR_YEARS = {
 # number because the engine only ever took one. Endless is not a bigger
 # number wearing a disguise - see ENDLESS_HORIZON_YEARS below for exactly
 # what it is and is not.
-# CHALLENGE'S NOTE NO LONGER QUOTES THE DICE-FREE FLOOR, AND MUST NOT. It used
-# to say 400 years was "short of the measured dice-free floor for at least one
-# civilisation ... means playing better than the unlucky-proof plan", pointing
-# at DICE_FREE_FLOOR_YEARS above. Every word of that was true about the
-# instrument and false as advice: a player reading it concludes Rome cannot be
-# won in 400 years, and a player has since reached the same Rome goal's
-# startable point in 334 years (playtest/fixtures/
-# rome_434_goal_startable.json) under fog, on a second attempt, with the
-# point-contact transistor failing six times in a row. 1,019 is not a floor
-# under play, it is one policy's ceiling - see DICE_FREE_FLOOR_YEARS' own
-# comment and PATH_SEARCH.md section 4. The note says what the setting is for
-# instead, and the only per-goal number a player is given in this wizard is
-# critical_path's, computed for the goal they actually picked.
+# The notes do not quote any measured floor or call a setting unreachable: the
+# only per-goal number a player is given in this wizard is critical_path's,
+# computed for the goal they actually picked.
 # (key, label, years-or-None, one-line description)
 HORIZON_MODES = (
     ("challenge", "Challenge", 400,
@@ -394,6 +345,32 @@ def _check_node_prereqs(node_id, node_record, nodes):
     return errs
 
 
+def _check_node_option_ids(node_id, node_record, nodes, goods):
+    """An option in a `req_any` group is a node, a material, or a free commodity the
+    engine lets a player buy. A bare id that is not a node but becomes one with the
+    node's own id prefix is a misspelt node id, which the engine would silently
+    price as a commodity."""
+    errs = []
+    prefix = node_id.split("_", 1)[0] + "_"
+    for group in node_record.get("req_any") or []:
+        for option_id in group.get("options") or {}:
+            if option_id in nodes or option_id in goods or option_id in (node_record.get("mat") or {}):
+                continue
+            if prefix + option_id in nodes:
+                errs.append("%s: option %s in group %s names no node; did you mean %s?"
+                            % (node_id, option_id, group.get("group", "?"), prefix + option_id))
+    return errs
+
+
+def _loose_option_ids(node_record, nodes, goods):
+    """Option ids that are neither a node nor a material: the engine prices them as
+    purchasable commodities, so each is a candidate for a real node or good."""
+    return {option_id for group in node_record.get("req_any") or []
+            for option_id in group.get("options") or {}
+            if option_id not in nodes and option_id not in goods
+            and option_id not in (node_record.get("mat") or {})}
+
+
 def _check_node_materials(node_id, node_record, goods, producible):
     """A material nothing declares is an error; a declared one the solver cannot price yet is a warning."""
     errs, warns = [], []
@@ -405,6 +382,13 @@ def _check_node_materials(node_id, node_record, goods, producible):
         else:
             errs.append("%s: unpriced material %s" % (node_id, material_id))
     return errs, warns
+
+
+def _check_node_stock(node_id, node_record, known_materials):
+    """Stock a node holds or grants must be a material the catalogue produces."""
+    return ["%s: %s names stock %s that nothing produces" % (node_id, field_name, material)
+            for field_name in ("holds", "grants")
+            for material in (node_record.get(field_name) or {}) if material not in known_materials]
 
 
 def _check_node_trades(node_id, node_record, wages):
@@ -443,15 +427,29 @@ def _validate_nodes(nodes, goods, wages, producible=()):
     per check, so a check that finds nothing just contributes nothing -
     nobody has to remember to guard the call site."""
     errs, warns = [], []
+    known_materials = set(goods) | set(producible)
+    loose_option_ids = set()
     for node_id, node_record in nodes.items():
         errs += _check_node_prereqs(node_id, node_record, nodes)
+        errs += _check_node_option_ids(node_id, node_record, nodes, known_materials)
+        loose_option_ids |= _loose_option_ids(node_record, nodes, known_materials)
         material_errs, material_warns = _check_node_materials(node_id, node_record, goods, producible)
         errs += material_errs
         warns += material_warns
+        errs += _check_node_stock(node_id, node_record, known_materials)
         errs += _check_node_trades(node_id, node_record, wages)
         errs += _check_node_risk(node_id, node_record)
         warns += _check_node_confidence(node_id, node_record)
         errs += _check_node_required_fields(node_id, node_record)
+    if loose_option_ids:
+        node_tails = collections.Counter(node_id.split("_", 1)[1] for node_id in nodes if "_" in node_id)
+        node_tails.update(node_id.split("_", 2)[2] for node_id in nodes if node_id.count("_") >= 2)
+        near_misses = sorted(option_id for option_id in loose_option_ids if node_tails[option_id] == 1)
+        warns.append("%d distinct req_any option ids are neither a node nor a material and are "
+                     "treated as purchasable commodities (e.g. %s); %d of them are also the tail of "
+                     "one node id and may be a misspelt node (e.g. %s)"
+                     % (len(loose_option_ids), ", ".join(sorted(loose_option_ids)[:5]),
+                        len(near_misses), ", ".join(near_misses[:5]) or "none"))
     return errs, warns
 
 
@@ -562,17 +560,52 @@ def cmd_validate(args):
         producible.update((entry.get("outputs") or {}).keys())
     errs, warns = _validate_nodes(nodes, goods, wages, producible)
     errs += _validate_topo_order(nodes)
+    errs += validate_output_bounds.check_output_bounds(nodes, production)
+    errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
+    from sim import civ_start_check
+    errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
     errs += goal_errs
 
     _print_validate_summary(nodes, goal_rows, default_goal)
     _print_validate_findings(errs, warns)
     _validate_reachability(args, errs, nodes, goal_rows)
+    errs += _validate_civilisation_starts(nodes, production)
     _print_validate_ok(errs)
     return 1 if errs else 0
 
 
-# Complaints/38: A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say
+def _validate_civilisation_starts(nodes, production):
+    """Complaints/124: each civilisation's start must agree with itself.
+    A free node it neither holds nor gates is an error; the other two classes
+    are reported (held-without-prerequisite is pinned by its own test)."""
+    from sim import civ_start_check
+    results = civ_start_check.check_all(
+        nodes, civ_start_check.load_civilisations(ROOT), production)
+    print()
+    print("CIVILISATION STARTS (free but unheld / held without prerequisite / unmakeable material"
+          " / capability rung gap / briefing contradiction)")
+    print("\n".join(civ_start_check.report_lines(results)))
+    errors = ["%s: free node startable at arrival but not held or gated: %s"
+              % (name, ", ".join(found["free_unheld"]))
+              for name, found in sorted(results.items()) if found["free_unheld"]]
+    errors += ["%s: held but the civilisation's own briefing says absent (%s): %s"
+               % (name, claim, ", ".join(held))
+               for name, found in sorted(results.items())
+               for claim, held in found["briefing"].items()]
+    civilisations = civ_start_check.load_civilisations(ROOT)
+    for name, found in sorted(results.items()):
+        gap_errors, gap_warnings = civ_start_check.prerequisite_gap_findings(
+            name, civilisations[name], found["missing_prereq"])
+        errors += gap_errors
+        for message in gap_warnings:
+            print("WARNING: " + message)
+    for message in errors:
+        print("ERROR: " + message)
+    return errors
+
+
+# Complaints/37: A FOUNDER'S WHOLE WORKING LIFE, IN HOURS - used only to say
 # how big a number is, never to gate anything a player can actually do
 # (neither cmd_path nor cmd_why stops a player starting a project past this
 # many hours; this is a claim made TO the player, not a rule enforced on
@@ -641,7 +674,7 @@ def cmd_path(args):
     print("\nLongest serial chain (%.1f yr floor, cannot be bought down with money):" % yrs)
     for node_id in chain:
         print("   -> %s  (%.1f yr floor, %d your-hrs)" % (node_id, nodes[node_id]["yrs"], nodes[node_id]["ph"]))
-    # Complaints/38: the printed budget and the feasibility judgement below
+    # Complaints/37: the printed budget and the feasibility judgement below
     # both come from one call (_founder_lifetime_hours), so they say the
     # same thing about the same DEFAULTS whatever those are.
     lifetime_hours = _founder_lifetime_hours()
@@ -1023,7 +1056,7 @@ def cmd_compare(args):
                         "start_kit": (getattr(args, "kit", "poor_scholar")
                                       if getattr(args, "kit", "poor_scholar") in STARTING_KITS
                                       else "poor_scholar")},
-                   civ=load_civ(getattr(args, "civ", "rome_100ad")),
+                   civ=load_civ(getattr(args, "civ", None)),
                    bounty_set=bounties).run(goal, args.horizon)
                for i in range(args.mc)]
         _summarise(res, "%s%s" % (label, "  [deterministic]" if deterministic else ""))
@@ -1052,7 +1085,7 @@ def _civ_for_session(args):
                       % (saved, asked))
                 raise SystemExit(1)
             return saved
-    return asked or "rome_100ad"
+    return asked or default_civilisation_id()
 
 
 def _goal_for_session(args, tree, nodes):
@@ -1191,7 +1224,7 @@ def _print_ablation_table(scored):
               (node_id, success_rate, confidence_interval, median_year or "never", ("%d yr" % delay) if median_year else "n/a", verdict))
 
 
-# Complaints/38 section 2: cmd_sweep's "mortality" axis sweeps
+# Complaints/37 section 2: cmd_sweep's "mortality" axis sweeps
 # founder_life_mean and needs a spread to draw around each mean point. This
 # USED to be a separately declared 4.0, half of DEFAULTS["founder_life_sd"]
 # (8.0) - the standard deviation every ordinary game, core.py's own
@@ -1324,7 +1357,7 @@ def _print_sweep_footer(any_thin, any_success, axis, strategy):
 
 def cmd_goals(args):
     """List every selectable goal: the transistor and every alternative in
-    data/tech_tree.json meta.goals, with its closure size and dice-free
+    data/branches/_META.json meta.goals, with its closure size and dice-free
     critical-path floor - the same pair of numbers 'validate' prints, on
     their own, for picking a goal rather than auditing the tree. See
     'validate --deep' for whether each one is actually reachable, one CPM
@@ -1332,12 +1365,7 @@ def cmd_goals(args):
     """
     tree, prices, nodes, wages, goods = load()
     default_goal = resolve_goal(tree, nodes, None)
-    catalog = goal_catalog(tree, nodes)
-
-    # Ensure the default goal appears in the catalog even if not in meta.goals
-    catalog_nodes = set(goal["node"] for goal in catalog)
-    if default_goal not in catalog_nodes and default_goal in nodes:
-        catalog.insert(0, {"node": default_goal, "name": nodes[default_goal].get("name", default_goal)})
+    catalog = selectable_goals(tree, nodes)
 
     print("%-34s %9s %10s  %-11s %s" % ("name", "closure", "floor(yr)", "scale", "node"))
     print("-" * 100)
@@ -1392,6 +1420,7 @@ def _apply_display_prefs(cfg=None):
     _protocol.DISPLAY_WIDTH = _DISPLAY_WIDTH
     _protocol.DEFAULT_AVAILABLE_LIMIT = settings.resolve_rows_per_page(cfg)
     _protocol.COMMISSION_DISPLAY = settings.resolve_commission_display(cfg)
+    cli_units_options.apply_saved_preferences(cfg)
     return cfg
 
 
@@ -1438,7 +1467,7 @@ def _pick_session_filename(civ_id):
     """
     # CLAIMED, NOT MERELY CHECKED. This tested os.path.exists and returned the
     # name without creating anything, so six games started at once all saw the
-    # same gap and all picked rome_100ad_78.json: five of them overwrote each
+    # same gap and all picked the same file name: five of them overwrote each
     # other, under a banner promising you can resume exactly where you left
     # off. O_EXCL makes the check and the claim one operation.
     #
@@ -1532,7 +1561,7 @@ def main():
                             "rolls, not only the dated hazards this flag silences, "
                             "comes out the same way every time.")
         subparser.add_argument("--no-bounties", action="store_true")
-        subparser.add_argument("--civ", default="rome_100ad",
+        subparser.add_argument("--civ", default=default_civilisation_id(),
                        help="which civilization to play. See data/civilizations/")
         subparser.add_argument("--kit", default="poor_scholar",
                        help="starting wealth: " + ", ".join(STARTING_KITS))
@@ -1580,7 +1609,7 @@ def main():
                                     "sim/planner.py. A developer/optimizer tool, "
                                     "like compare/sweep/sensitivity - never reached from "
                                     "play or agent.")
-    subparser.add_argument("--civ", default="rome_100ad")
+    subparser.add_argument("--civ", default=default_civilisation_id())
     subparser.add_argument("--goal", default=None)
     subparser.add_argument("--out", required=True, metavar="FILE",
                    help="strategy file to write; feed it back in with --strategy")
@@ -1634,7 +1663,7 @@ def main():
                                       "See sim/path_search.py. A developer/"
                                       "optimizer tool, like plan/compare/sweep/"
                                       "sensitivity - never reached from play or agent.")
-    subparser.add_argument("--civ", default="rome_100ad")
+    subparser.add_argument("--civ", default=default_civilisation_id())
     subparser.add_argument("--goal", default=None)
     subparser.add_argument("--out", required=True, metavar="FILE",
                    help="strategy file to write; feed it back in with --strategy")
@@ -1670,7 +1699,11 @@ def main():
                         "(the transistor and every alternative); default is the "
                         "tree's own default. Omit when resuming a --session: "
                         "the save says which goal it is.")
-    subparser.add_argument("--seed", type=int, default=1)
+    subparser.add_argument("--seed", default=None,
+                   help="fix the dice so a game can be replayed: a number or a word. "
+                        "Default: a fresh "
+                        "seed for each new game, printed at the start and kept in "
+                        "the save.")
     subparser.add_argument("--horizon", type=int, default=500)
     subparser.add_argument("--civ", default=None,
                    help="which civilisation. Omit when resuming a --session: the "
@@ -1712,7 +1745,8 @@ def main():
                    help="which goal to play toward. See 'goals' for the roster; "
                         "default is the tree's own default. Omit when resuming a "
                         "--session: the save says which goal it is.")
-    subparser.add_argument("--seed", type=int, default=1)
+    subparser.add_argument("--seed", default=1,
+                   help="fix the dice: a number or a word; kept in the save")
     subparser.add_argument("--horizon", type=int, default=500)
     subparser.add_argument("--civ", default=None,
                    help="which civilisation. Omit when resuming a --session: the "

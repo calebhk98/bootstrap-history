@@ -44,6 +44,9 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"wages_prepaid": "household",
 	"wages_earned": "household",
 	"interest_paid": "household",
+	"cash_flow": "household",
+	"cash_mark": "household",
+	"cash_periods": "household",
 	"reputation": "household",
 	"scandal": "household",
 	"scandal_last_year": "household",
@@ -112,6 +115,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"revealed": "projects",
 	"stalled": "projects",
 	"closures": "projects",
+	"ever_closed_for_staff": "projects",
 
 	# EconomyState
 	"mines": "economy",
@@ -126,13 +130,16 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"nitre_bed_m2": "economy",
 	"market_pressure": "economy",
 	"output_factor": "economy",
-	"economy": "economy",
+	"output_per_head": "economy",
+	"introduction_prices": "economy",
 	"money_real": "economy",
 	"_material_stock_ledger": "economy",
 	"farm_hectares": "economy",
 	"farm_stock_kg": "economy",
 	"farm_cleared_hectares": "economy",
 	"farm_last_shortfall_kg": "economy",
+	"farm_last_harvest_kg": "economy",
+	"foreign_trade_by_year": "economy",
 	"farm_hours_needed": "economy",
 	"farm_last_marginal_product": "economy",
 	"society_labour_hours": "economy",
@@ -231,6 +238,8 @@ class Household(Actor):
 				population=PopulationState(),
 			)
 
+		self._state.household.cash_mark = float(starting_capital)
+
 		# Wrap mutation-aware collections with callbacks if provided
 		if operating_changed is not None:
 			self._state.projects.operating = _InvalidatingSet(
@@ -293,6 +302,12 @@ class Household(Actor):
 	@money.setter
 	def money(self, value: float) -> None:
 		self.capital = value
+
+	def credit(self, amount: float, purpose: Any) -> None:
+		self._state.household.credit(amount, purpose)
+
+	def debit(self, amount: float, purpose: Any) -> None:
+		self._state.household.debit(amount, purpose)
 
 	@property
 	def workforce(self) -> Any:
@@ -435,6 +450,9 @@ class Household(Actor):
 	def _inst_units_ver(self, value: int) -> None:
 		if self._state.governance is not None:
 			setattr(self._state.governance, "_inst_units_ver", int(value))
+
+	def opened_year_of(self, node_id: str, default: int) -> int:
+		return (self._state.projects.opened_year or {}).get(node_id, default)
 
 	def __getattr__(self, name: str) -> Any:
 		if name.startswith("_state"):

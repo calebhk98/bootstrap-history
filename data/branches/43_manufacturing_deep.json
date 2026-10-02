@@ -3,6 +3,7 @@
   "id": "mfg_chip_formation",
   "name": "Chip formation",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -23,12 +24,13 @@
   "dev_people": 1,
   "risk": 0.1,
   "note": "The invention is understanding that metal removal is a shear process at the tool face, not a crushing. Built-up edge is a protective phenomenon, not a defect. Chip curl and control is geometry, not magic.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_rake_clearance",
   "name": "Rake and clearance angles",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_chip_formation"
   ],
@@ -47,7 +49,7 @@
   "dev_people": 2,
   "risk": 0.15,
   "note": "Rake reduces cutting force and heat; clearance allows the tool to enter without rubbing. The tradeoff is tool strength. Geometry alone saves 30 percent power and doubles tool life.",
-  "up": 0.0,
+  "up_hours": 0,
   "mechanics": {
    "labour_productivity": {
     "trade": "machinist",
@@ -60,6 +62,7 @@
   "id": "mfg_carbon_steel_tool",
   "name": "Carbon steel cutting tools",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "crucible_steel",
    "mfg_rake_clearance"
@@ -80,12 +83,13 @@
   "dev_people": 1,
   "risk": 0.2,
   "note": "Carbon steel, hardened and tempered blue, works to about 500 C tool face before softening catastrophically. Mushet steel adds tungsten and vanadium to push this to 600 C, but is expensive and brittle.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_mushet_steel",
   "name": "Mushet steel tooling",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "crucible_steel",
    "mfg_carbon_steel_tool"
@@ -117,12 +121,13 @@
     }
    }
   ],
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_hss_development",
   "name": "High speed steel research",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_mushet_steel",
    "cap_heat_1600",
@@ -143,7 +148,7 @@
    "mat_tungsten": 8,
    "cobalt_kg": 4
   },
-  "cap": 200,
+  "cap_hours": 4032.375834825865,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
   "dev_years": 18,
@@ -158,7 +163,7 @@
     }
    }
   ],
-  "up": 0.0,
+  "up_hours": 0,
   "mechanics": {
    "labour_productivity": {
     "trade": "machinist",
@@ -171,6 +176,7 @@
   "id": "mfg_hss_production",
   "name": "High speed steel tools",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_hss_development"
   ],
@@ -187,8 +193,8 @@
    "steel_plate_kg": 2,
    "tool_steel_kg": 6
   },
-  "cap": 500,
-  "up": 0.0,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 0,
   "build_yrs": 0.5,
   "adopt_yrs": 2,
   "dev_years": 0,
@@ -200,6 +206,7 @@
   "id": "mfg_stellite_tool",
   "name": "Stellite tools",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_chromium",
    "mfg_mushet_steel"
@@ -233,12 +240,13 @@
     }
    }
   ],
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_brazed_tip",
   "name": "Brazed tool tip",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_carbon_steel_tool",
    "mfg_brazing"
@@ -259,12 +267,13 @@
   "dev_people": 1,
   "risk": 0.15,
   "note": "Brazing carbide tips directly to steel has a thermal expansion mismatch that causes failure. The invention is using a brass layer that stretches to absorb the difference without cracking.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_cemented_carbide",
   "name": "Cemented carbide",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_tungsten",
    "electrolysis_industrial"
@@ -288,12 +297,13 @@
   "dev_people": 5,
   "risk": 0.25,
   "note": "Tungsten carbide is hard at 1500 C. Cobalt binder keeps it from shattering. The tooling is not steel: it is ceramic sintering, which demands vacuum furnace or inert atmosphere. Cost is ten times HSS, but speed gain is five times and tool life is infinite until breakage.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_indexable_insert",
   "name": "Indexable insert",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cemented_carbide",
    "interchangeable_parts"
@@ -317,12 +327,13 @@
   "dev_people": 3,
   "risk": 0.2,
   "note": "The breakthrough is geometric: chipbreaker geometry cast into the carbide die itself. When one edge dulls, rotate the insert. No resharpening. Tool room cost drops to nearly zero.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_cutting_speed",
   "name": "Cutting speed and feed",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_rake_clearance",
    "cap_measure_time_ms"
@@ -341,12 +352,13 @@
   "dev_people": 2,
   "risk": 0.1,
   "note": "Speed is not instinctive: go too fast and the tool melts, too slow and it wears by diffusion. The rule is empirical and depends on tool material, workpiece material, and coolant. Taylor measured hundreds of cuts to find the relationship.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_cutting_fluid",
   "name": "Cutting fluid",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_olive_oil"
   ],
@@ -375,12 +387,13 @@
   "dev_people": 1,
   "risk": 0.05,
   "note": "Oil cools and lubricates the chip and tool. Tallow smokes less but is slower. Water-based emulsion is dangerous because it causes sudden tool failure, but is cheaper. The right choice depends on the material and speed.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_engine_lathe",
   "name": "Engine lathe",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "screw_lathe",
    "cap_tol_10um",
@@ -411,8 +424,8 @@
    "iron_bar_kg": 80,
    "mat_bronze": 30
   },
-  "cap": 400,
-  "up": 0.0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.5,
   "dev_years": 15,
@@ -424,6 +437,7 @@
   "id": "mfg_turret_lathe",
   "name": "Turret lathe",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "mfg_indexing_head"
@@ -452,8 +466,8 @@
    "iron_bar_kg": 120,
    "mat_bronze": 50
   },
-  "cap": 800,
-  "up": 0.0,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 12,
@@ -465,6 +479,7 @@
   "id": "mfg_automatic_screw",
   "name": "Automatic screw machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_turret_lathe",
    "mfg_cam_lobe",
@@ -495,8 +510,8 @@
    "steel_plate_kg": 150,
    "mat_bronze": 80
   },
-  "cap": 2000,
-  "up": 0.0,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 0,
   "build_yrs": 3,
   "adopt_yrs": 1.5,
   "dev_years": 20,
@@ -508,6 +523,7 @@
   "id": "mfg_multi_spindle",
   "name": "Multi-spindle automatic",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_automatic_screw",
    "cap_power_steam"
@@ -527,8 +543,8 @@
    "steel_plate_kg": 200,
    "mat_bronze": 100
   },
-  "cap": 6000,
-  "up": 0.0,
+  "cap_hours": 120971.27504477595,
+  "up_hours": 0,
   "build_yrs": 4,
   "adopt_yrs": 2,
   "dev_years": 25,
@@ -540,6 +556,7 @@
   "id": "mfg_vertical_jig_borer",
   "name": "Vertical jig borer",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "boring_mill",
@@ -568,8 +585,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 40
   },
-  "cap": 600,
-  "up": 0.0,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.5,
   "dev_years": 14,
@@ -581,6 +598,7 @@
   "id": "mfg_horizontal_jig_borer",
   "name": "Horizontal jig borer",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_vertical_jig_borer"
   ],
@@ -605,8 +623,8 @@
    "iron_bar_kg": 120,
    "mat_bronze": 50
   },
-  "cap": 500,
-  "up": 0.0,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.3,
   "dev_years": 10,
@@ -618,6 +636,7 @@
   "id": "mfg_radial_drill",
   "name": "Radial drill",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_power_steam"
@@ -646,8 +665,8 @@
    "iron_bar_kg": 120,
    "mat_bronze": 60
   },
-  "cap": 800,
-  "up": 0.0,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.3,
   "dev_years": 8,
@@ -659,6 +678,7 @@
   "id": "mfg_shaper",
   "name": "Shaper",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "precision_three_plate",
@@ -689,8 +709,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 40
   },
-  "cap": 600,
-  "up": 0.0,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.2,
   "dev_years": 10,
@@ -702,6 +722,7 @@
   "id": "mfg_planer",
   "name": "Planer",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_shaper",
    "cap_tol_10um"
@@ -730,8 +751,8 @@
    "iron_bar_kg": 150,
    "mat_bronze": 60
   },
-  "cap": 1000,
-  "up": 0.0,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.3,
   "dev_years": 12,
@@ -743,6 +764,7 @@
   "id": "mfg_slotter",
   "name": "Slotter",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_shaper"
   ],
@@ -771,8 +793,8 @@
    "iron_bar_kg": 80,
    "mat_bronze": 30
   },
-  "cap": 400,
-  "up": 0.0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.2,
   "dev_years": 8,
@@ -784,6 +806,7 @@
   "id": "mfg_universal_mill",
   "name": "Universal milling machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "mfg_indexing_head",
@@ -813,8 +836,8 @@
    "iron_bar_kg": 120,
    "mat_bronze": 60
   },
-  "cap": 800,
-  "up": 0.0,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.5,
   "dev_years": 14,
@@ -826,6 +849,7 @@
   "id": "mfg_horizontal_mill",
   "name": "Horizontal milling machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_tol_10um"
@@ -854,8 +878,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 50
   },
-  "cap": 700,
-  "up": 0.0,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.3,
   "dev_years": 12,
@@ -867,6 +891,7 @@
   "id": "mfg_vertical_mill",
   "name": "Vertical milling machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_tol_10um"
@@ -895,8 +920,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 50
   },
-  "cap": 700,
-  "up": 0.0,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.4,
   "dev_years": 12,
@@ -908,6 +933,7 @@
   "id": "mfg_profile_mill",
   "name": "Profile milling machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_universal_mill",
    "mfg_optical_comparator"
@@ -935,8 +961,8 @@
    "steel_plate_kg": 150,
    "mat_bronze": 80
   },
-  "cap": 1200,
-  "up": 0.0,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 0,
   "build_yrs": 3,
   "adopt_yrs": 1,
   "dev_years": 16,
@@ -948,6 +974,7 @@
   "id": "mfg_gear_hobber",
   "name": "Gear hobbing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_universal_mill",
    "cap_tol_10um"
@@ -975,8 +1002,8 @@
    "iron_bar_kg": 120,
    "mat_bronze": 80
   },
-  "cap": 2000,
-  "up": 0.0,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 0.8,
   "dev_years": 15,
@@ -988,6 +1015,7 @@
   "id": "mfg_gear_shaper",
   "name": "Gear shaper",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_shaper",
    "cap_tol_10um"
@@ -1016,8 +1044,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 60
   },
-  "cap": 1200,
-  "up": 0.0,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.5,
   "dev_years": 13,
@@ -1029,6 +1057,7 @@
   "id": "mfg_gear_grinder",
   "name": "Gear grinding machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cylindrical_grinder",
    "cap_tol_10um",
@@ -1055,8 +1084,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 70
   },
-  "cap": 1500,
-  "up": 0.0,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 0,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 14,
@@ -1068,6 +1097,7 @@
   "id": "mfg_broaching_machine",
   "name": "Broaching machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_power_steam"
@@ -1096,8 +1126,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 50
   },
-  "cap": 1000,
-  "up": 0.0,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.4,
   "dev_years": 11,
@@ -1137,8 +1167,8 @@
    "iron_bar_kg": 80,
    "mat_bronze": 40
   },
-  "cap": 800,
-  "up": 150,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
   "dev_years": 10,
@@ -1150,6 +1180,7 @@
   "id": "mfg_cylindrical_grinder",
   "name": "Cylindrical grinder",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "cap_tol_1um",
@@ -1183,8 +1214,8 @@
    "iron_bar_kg": 80.0,
    "steel_plate_kg": 30.0
   },
-  "cap": 850.0,
-  "up": 0.0,
+  "cap_hours": 17137.597298009925,
+  "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
   "dev_years": 10,
@@ -1196,6 +1227,7 @@
   "id": "mfg_centreless_grinder",
   "name": "Centreless grinder",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cylindrical_grinder",
    "cap_tol_1um"
@@ -1223,8 +1255,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 60
   },
-  "cap": 2000,
-  "up": 0.0,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.8,
   "dev_years": 12,
@@ -1236,6 +1268,7 @@
   "id": "mfg_internal_grinder",
   "name": "Internal grinder",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cylindrical_grinder",
    "cap_tol_1um"
@@ -1261,8 +1294,8 @@
    "iron_bar_kg": 90,
    "mat_bronze": 50
   },
-  "cap": 1000,
-  "up": 0.0,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.5,
   "dev_years": 11,
@@ -1274,6 +1307,7 @@
   "id": "mfg_tool_grinder",
   "name": "Tool and cutter grinder",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "prc_surface_grinder",
    "cap_tol_10um"
@@ -1301,8 +1335,8 @@
    "iron_bar_kg": 80,
    "mat_bronze": 40
   },
-  "cap": 600,
-  "up": 0.0,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.2,
   "dev_years": 9,
@@ -1314,6 +1348,7 @@
   "id": "mfg_honing",
   "name": "Honing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_cylindrical_grinder"
   ],
@@ -1340,8 +1375,8 @@
    "iron_bar_kg": 70,
    "mat_bronze": 35
   },
-  "cap": 600,
-  "up": 0.0,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 8,
@@ -1353,6 +1388,7 @@
   "id": "mfg_lapping",
   "name": "Lapping machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1um",
    "cap_measure_light"
@@ -1369,8 +1405,8 @@
    "mat_leather": 30,
    "mat_wool": 10
   },
-  "cap": 400,
-  "up": 0.0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.3,
   "dev_years": 10,
@@ -1382,6 +1418,7 @@
   "id": "mfg_superfinishing",
   "name": "Superfinishing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_honing",
    "cap_tol_100nm"
@@ -1409,8 +1446,8 @@
    "iron_bar_kg": 80,
    "mat_bronze": 50
   },
-  "cap": 800,
-  "up": 0.0,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.5,
   "dev_years": 10,
@@ -1422,6 +1459,7 @@
   "id": "mfg_sawing_machine",
   "name": "Sawing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "cap_power_human"
@@ -1451,8 +1489,8 @@
    "iron_bar_kg": 80,
    "mat_bronze": 30
   },
-  "cap": 500,
-  "up": 0.0,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 6,
@@ -1464,6 +1502,7 @@
   "id": "mfg_shearing_machine",
   "name": "Shearing machine",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel"
   ],
@@ -1492,8 +1531,8 @@
    "iron_bar_kg": 90,
    "mat_bronze": 40
   },
-  "cap": 600,
-  "up": 0.0,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 7,
@@ -1505,6 +1544,7 @@
   "id": "mfg_punch_press",
   "name": "Punch press",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -1533,8 +1573,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 50
   },
-  "cap": 1000,
-  "up": 0.0,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 0,
   "build_yrs": 1.8,
   "adopt_yrs": 0.2,
   "dev_years": 8,
@@ -1546,6 +1586,7 @@
   "id": "mfg_press_brake",
   "name": "Press brake",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -1574,8 +1615,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 40
   },
-  "cap": 800,
-  "up": 0.0,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 0,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 7,
@@ -1602,8 +1643,8 @@
    "iron_bar_kg": 150,
    "mat_bronze": 100
   },
-  "cap": 5000,
-  "up": 1000,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 20161.879174129324,
   "build_yrs": 2,
   "adopt_yrs": 0.3,
   "dev_years": 10,
@@ -1631,8 +1672,8 @@
    "iron_bar_kg": 120,
    "mat_bronze": 50
   },
-  "cap": 1000,
-  "up": 200,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "build_yrs": 2,
   "adopt_yrs": 0.1,
   "dev_years": 5,
@@ -1644,6 +1685,7 @@
   "id": "mfg_forging_press",
   "name": "Forging press",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -1672,8 +1714,8 @@
    "iron_bar_kg": 120,
    "mat_bronze": 60
   },
-  "cap": 1200,
-  "up": 0.0,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.2,
   "dev_years": 8,
@@ -1685,6 +1727,7 @@
   "id": "mfg_upsetter",
   "name": "Upsetter",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_forging_press",
    "mfg_automatic_screw"
@@ -1712,8 +1755,8 @@
    "iron_bar_kg": 150,
    "mat_bronze": 80
   },
-  "cap": 2000,
-  "up": 0.0,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 0,
   "build_yrs": 2.2,
   "adopt_yrs": 0.8,
   "dev_years": 12,
@@ -1725,6 +1768,7 @@
   "id": "mfg_roll_former",
   "name": "Roll former",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_forging_press",
    "cap_power_steam"
@@ -1753,8 +1797,8 @@
    "iron_bar_kg": 120,
    "mat_bronze": 80
   },
-  "cap": 1500,
-  "up": 0.0,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 0,
   "build_yrs": 2,
   "adopt_yrs": 0.4,
   "dev_years": 10,
@@ -1766,6 +1810,7 @@
   "id": "mfg_spinning_lathe",
   "name": "Spinning lathe",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_engine_lathe",
    "mat_wrought_iron"
@@ -1795,8 +1840,8 @@
    "iron_bar_kg": 50,
    "mat_wood": 80
   },
-  "cap": 400,
-  "up": 0.0,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 0,
   "build_yrs": 1.2,
   "adopt_yrs": 0.1,
   "dev_years": 4,
@@ -1826,8 +1871,8 @@
    "iron_bar_kg": 100,
    "mat_bronze": 60
   },
-  "cap": 1000,
-  "up": 200,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
   "dev_years": 9,
@@ -1839,6 +1884,7 @@
   "id": "mfg_wire_drawing",
   "name": "Wire drawing bench",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "drawplate_wire",
    "mat_wrought_iron",
@@ -1868,8 +1914,8 @@
    "cast_iron_kg": 280,
    "iron_bar_kg": 80
   },
-  "cap": 600,
-  "up": 0.0,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 0,
   "build_yrs": 1.3,
   "adopt_yrs": 0.1,
   "dev_years": 6,
@@ -1899,8 +1945,8 @@
    "iron_bar_kg": 200,
    "mat_bronze": 120
   },
-  "cap": 3000,
-  "up": 600,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 12097.127504477594,
   "build_yrs": 2.5,
   "adopt_yrs": 1,
   "dev_years": 14,
@@ -1912,6 +1958,7 @@
   "id": "mfg_collet",
   "name": "Collet chuck",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "precision_three_plate",
    "cap_tol_10um"
@@ -1932,12 +1979,13 @@
   "dev_people": 1,
   "risk": 0.1,
   "note": "Collet grip depends on taper angle and pull distance. A 5-degree taper holds round bar within 0.01 mm runout. Spring back in the sleeve means one pull distance only.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_three_jaw_chuck",
   "name": "Three-jaw chuck",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -1960,12 +2008,13 @@
   "dev_people": 1,
   "risk": 0.12,
   "note": "The scroll is a spiral groove; rotating the key slides all three jaws in or out simultaneously. Concentricity is within 0.1 mm. Jaw inserts are replaceable.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_four_jaw_chuck",
   "name": "Four-jaw chuck",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -1986,12 +2035,13 @@
   "dev_people": 1,
   "risk": 0.1,
   "note": "Four independent jaws are turned by hand-tightened keys. Setup is slower but concentricity can be dial-indicated to 0.01 mm. Better for irregular workpieces.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_magnetic_chuck",
   "name": "Magnetic chuck",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet"
   ],
@@ -2013,12 +2063,13 @@
   "dev_people": 2,
   "risk": 0.15,
   "note": "For grinding and milling only; the piece must be magnetic steel. Flat magnetic chucks hold to within 0.05 mm runout. Switching on and off takes seconds.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_mandrel",
   "name": "Mandrel",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um"
   ],
@@ -2038,12 +2089,13 @@
   "dev_people": 1,
   "risk": 0.08,
   "note": "A simple tapered shaft; the workpiece bores are pressed onto it. Runout depends on bore tolerance and taper fit. Expanding mandrels use a tapered sleeve inside the bore.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_arbor",
   "name": "Arbor",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um"
   ],
@@ -2063,12 +2115,13 @@
   "dev_people": 1,
   "risk": 0.09,
   "note": "A shaft held in the spindle, stepped to fit different cutter bores. Runout at the cutter is critical. Often uses a tapered nose for indexable tools.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_indexing_head",
   "name": "Indexing head",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_dividing_engine",
    "cap_tol_10um"
@@ -2091,12 +2144,13 @@
   "dev_people": 2,
   "risk": 0.14,
   "note": "A worm and wheel drive indexed by a pin in a circle of holes. Divisions are exact; an 80-tooth wheel and 40-tooth worm gives 160 positions. Universal heads tilt for helical work.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_rotary_table",
   "name": "Rotary table",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_indexing_head",
    "cap_tol_10um"
@@ -2121,12 +2175,13 @@
   "dev_people": 1,
   "risk": 0.12,
   "note": "A heavy cast table with T-slot and dial. Worm and wheel indexing or continuous servo drive. Used for large castings and forgings where an indexing head cannot reach.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_die_set",
   "name": "Die set",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2147,12 +2202,13 @@
   "dev_people": 1,
   "risk": 0.11,
   "note": "Guide posts and bushings keep punch and die aligned. Clearance between punch and die is the specification. Die sets are modular; the press changes only the top and bottom dies.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_progressive_die",
   "name": "Progressive die",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_die_set"
   ],
@@ -2176,12 +2232,13 @@
   "dev_people": 2,
   "risk": 0.16,
   "note": "The strip indexes one station per stroke: blank, pierce, draw, trim, form. One operator feeds stock. Setup is expensive but production is fast and scrap is low.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_compound_die",
   "name": "Compound die",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_die_set"
   ],
@@ -2205,12 +2262,13 @@
   "dev_people": 2,
   "risk": 0.14,
   "note": "The blank punch and trim punch are on one ram; the strip is pierced and blanked simultaneously. Pressure must be balanced or the part shifts and the hole is off-center.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_mould",
   "name": "Green-sand flask pattern and mould",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "met_green_sand_mold"
   ],
@@ -2238,12 +2296,13 @@
   "dev_people": 1,
   "risk": 0.12,
   "note": "A reusable pattern, cope-and-drag flask, gates, risers, and rammed green sand produce repeatable metal castings. Generic casting moulds are ancient; this node standardises the flask process and shrinkage allowance.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_core_box",
   "name": "Core box",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2264,12 +2323,13 @@
   "dev_people": 2,
   "risk": 0.13,
   "note": "Cores are made separately, baked, and dropped into the mould cavity. The core box defines the core shape; precision here determines hole accuracy. Cores are more expensive than sand.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_pattern",
   "name": "Pattern and shrinkage allowance",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "crucible_steel"
@@ -2291,12 +2351,13 @@
   "dev_people": 2,
   "risk": 0.12,
   "note": "Iron shrinks about 0.5 percent as it cools. The pattern is made 0.5 percent larger. Brass shrinks 0.3 percent. If the pattern is wrong, every casting from it is wrong.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_go_gauge",
   "name": "Go/no-go gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2318,12 +2379,13 @@
   "dev_people": 1,
   "risk": 0.08,
   "note": "Two gauges: one that must fit, one that must not. Simpler than a micrometer, faster on the floor. Accuracy is binary, not analog. Used for inspection at the machine.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_plug_gauge",
   "name": "Plug gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2345,12 +2407,13 @@
   "dev_people": 1,
   "risk": 0.09,
   "note": "Two plugs: one slightly smaller (go), one slightly larger (no-go). The hole must accept the go and reject the no-go. Simple and fast.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_ring_gauge",
   "name": "Ring gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2372,12 +2435,13 @@
   "dev_people": 1,
   "risk": 0.09,
   "note": "Two rings: one slightly larger (go), one slightly smaller (no-go). The shaft must fit the go and be rejected by the no-go. Worn hand tools are checked this way.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_snap_gauge",
   "name": "Snap gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2399,12 +2463,13 @@
   "dev_people": 1,
   "risk": 0.08,
   "note": "Two adjustable anvils on a spring handle. Fast inspection of diameters, widths, thicknesses. Feel is everything; training is needed for reproducibility.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_thread_gauge",
   "name": "Thread gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -2426,12 +2491,13 @@
   "dev_people": 1,
   "risk": 0.1,
   "note": "Checks both pitch and form. Go and no-go rings or plugs. Thread gauges are more expensive than plug or ring gauges because the form must be cut exactly.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_height_gauge",
   "name": "Height gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2455,12 +2521,13 @@
   "dev_people": 2,
   "risk": 0.12,
   "note": "Measures height above a flat surface to 0.1 mm. Used with an angle plate to check dimensions on irregular parts. Needs a flat reference surface.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_sine_bar",
   "name": "Sine bar",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len",
    "cap_tol_10um",
@@ -2487,12 +2554,13 @@
   "dev_people": 2,
   "risk": 0.11,
   "note": "Steel bar with two precision cylinders at known distance (5 or 10 inches). Tilting it onto gauge blocks sets angle via simple trigonometry. Enables angle grinding and gear pitch to 0.1 degrees. Accuracy requires gauge blocks.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_dial_indicator",
   "name": "Dial indicator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len",
    "cap_tol_10um",
@@ -2523,12 +2591,13 @@
   "dev_people": 2,
   "risk": 0.13,
   "note": "Plunger moves gear-driven pointer over dial. 10 mm plunge motion maps to 100 mm dial rotation, enabling 0.01mm readability. Mechanical magnification via gearing. Enables spindle runout and table flatness checking.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_comparator",
   "name": "Comparator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_dial_indicator",
    "cap_tol_1um"
@@ -2553,12 +2622,13 @@
   "dev_people": 2,
   "risk": 0.14,
   "note": "A lever and pivot system magnifies dial motion 10 or 100 fold. Reads 0.001 mm easily. Used for quality inspection and machine calibration. Sensitivity requires a light touch.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_air_gauge",
   "name": "Air gauge",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len",
    "cap_power_steam"
@@ -2592,12 +2662,13 @@
   "dev_people": 2,
   "risk": 0.16,
   "note": "Compressed air flows through a restrictive jet into the bore. Pressure is read on a gauge. Size is inferred from pressure. Fast and non-contact; used for 100 percent inspection. Settable to 0.01 mm.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_optical_comparator",
   "name": "Optical comparator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "cap_measure_light",
@@ -2627,13 +2698,15 @@
   "note": "Illuminated workpiece cast onto ground glass at 50x magnification. Check holes, threads, edge radius, form. Accuracy is limited by light diffraction. Used for tool inspection and quality audits.",
   "gov": 1,
   "sus": 3,
-  "cap": 2000.0,
-  "up": 0.0
+  "cap_hours": 40323.75834825865,
+  "up_hours": 0,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "mfg_tolerance_limit",
   "name": "Tolerance and limit system",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "interchangeable_parts"
@@ -2654,12 +2727,13 @@
   "dev_people": 3,
   "risk": 0.1,
   "note": "Basic, deviation, upper limit, lower limit. Fits are loose, normal, tight. Code them once in a standard book. Every drawing references the book. Variation is managed by tolerance, not by selection.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_control_chart",
   "name": "Control chart",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_tolerance_limit",
    "statistics_basic"
@@ -2681,12 +2755,13 @@
   "dev_people": 3,
   "risk": 0.12,
   "note": "Plotted means and ranges show when process is drifting. Samples of five parts, measured every hour. Chart is hand-drawn. When average moves outside control limits, stop and adjust. Saves scrap.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_sampling_plan",
   "name": "Sampling inspection",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "statistics_basic"
   ],
@@ -2706,12 +2781,13 @@
   "dev_people": 2,
   "risk": 0.11,
   "note": "Specified sample size and acceptance number. If defects exceed limit, reject the lot. Faster than 100 percent inspection. Risk is quantified: alpha and beta errors.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_hot_riveting",
   "name": "Hot riveting",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -2730,12 +2806,13 @@
   "dev_people": 1,
   "risk": 0.1,
   "note": "Rivet is heated red-hot, inserted into aligned holes, and upset by a hammer or press. Stronger than cold riveting. Skill is needed to heat correctly without burning.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_cold_riveting",
   "name": "Cold riveting",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -2754,12 +2831,13 @@
   "dev_people": 1,
   "risk": 0.09,
   "note": "Cold is weaker than hot but faster. Used for thin sheet and small fasteners. Die must be tight or the rivet head is deformed.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_forge_weld",
   "name": "Forge welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_wrought_iron"
@@ -2780,12 +2858,13 @@
   "dev_people": 1,
   "risk": 0.15,
   "note": "Borax flux prevents oxidation. Pieces must reach the same temperature or the joint will crack. Skill is high; success rate for large joints is 70 percent.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_oxy_acetylene",
   "name": "Oxy-acetylene welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2",
    "cap_heat_2000",
@@ -2815,13 +2894,14 @@
   "dev_people": 2,
   "risk": 0.2,
   "note": "A flame from acetylene and oxygen burning at 3000 K melts both the filler rod and the parent metal, joining them. Works on steel, copper, and aluminum. The flame is small and precisely controllable, so you can weld thin sheet or repair castings. Safety requires careful regulator tuning: reverse flow into acetylene generator causes explosion. The acetylene supply infrastructure is the bottleneck.",
-  "cap": 1200.0,
-  "up": 0.0
+  "cap_hours": 24194.255008955188,
+  "up_hours": 0
  },
  {
   "id": "mfg_arc_weld_bare",
   "name": "Arc welding with bare electrode",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_2000",
    "cap_heat_3000",
@@ -2848,13 +2928,14 @@
   "dev_people": 2,
   "risk": 0.18,
   "note": "Strike an arc between a consumable electrode and the work. The arc melts both the electrode and the parent metal; electrode metal and flux coat the weld pool. Much faster than oxy-acetylene and less sensitive to wind. Requires a DC power supply and reliable electrical grid. The flux coating prevents oxidation and lowers the melting point of the surface oxide, so the weld pools together instead of balling up.",
-  "cap": 1400.0,
-  "up": 0.0
+  "cap_hours": 28226.630843781055,
+  "up_hours": 0
  },
  {
   "id": "mfg_arc_weld_coated",
   "name": "Arc welding with coated electrode",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_arc_weld_bare",
    "mfg_flux"
@@ -2877,12 +2958,13 @@
   "dev_people": 2,
   "risk": 0.15,
   "note": "Flux shields the arc and produces a slag that protects the molten metal. The slag is chipped off after cooling. Weld is stronger and less porous than bare electrode.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_submerged_arc",
   "name": "Submerged arc welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_arc_weld_coated",
    "cap_power_electric"
@@ -2907,12 +2989,13 @@
   "dev_people": 3,
   "risk": 0.2,
   "note": "Wire feed is automatic; flux is poured on. Arc is invisible beneath the flux. Very clean; minimal spatter. Used for large structural welds. Quality is high but equipment is complex.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_resistance_spot",
   "name": "Resistance spot welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "cap_measure_time_ms",
@@ -2939,13 +3022,14 @@
   "dev_people": 2,
   "risk": 0.18,
   "note": "Clamp the work between two copper electrodes and pass current through it. Resistance heating melts a small zone where the overlap is, forming a weld nugget. Works only on sheet metal and thin stock. No filler, no gas, fast and clean. The electrodes must be soft copper with high conductivity or they overheat and wear. Spot welding revolutionized automotive body assembly.",
-  "cap": 1800.0,
-  "up": 0.0
+  "cap_hours": 36291.382513432785,
+  "up_hours": 0
  },
  {
   "id": "mfg_resistance_seam",
   "name": "Resistance seam welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_resistance_spot",
    "cap_power_electric"
@@ -2969,12 +3053,13 @@
   "dev_people": 2,
   "risk": 0.19,
   "note": "Rollers rotate and advance at synchronised speed, pulsing current. Creates a sealed seam. Used for tanks and pipes. Overlap of nuggets makes the seam.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_flash_butt",
   "name": "Flash butt welding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_resistance_spot",
    "cap_power_electric"
@@ -2995,12 +3080,13 @@
   "dev_people": 2,
   "risk": 0.17,
   "note": "Two parts are brought together under pressure. Current causes localized melting and expulsion. Parts are then upset together. Used for end-to-end joints in rails and tubes.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_brazing",
   "name": "Brazing",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_brass"
@@ -3021,12 +3107,13 @@
   "dev_people": 1,
   "risk": 0.12,
   "note": "Filler melts at 900-1000 C but does not melt the base metal. Strong joint by wetting and capillary action. Flux is essential to remove oxides.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_silver_solder",
   "name": "Silver soldering",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_silver",
@@ -3048,12 +3135,13 @@
   "dev_people": 1,
   "risk": 0.1,
   "note": "Ancient hard soldering joins closely hand-fitted precious-metal surfaces with a lower-melting silver-copper alloy and flux. Skilled filing and capillary action, rather than a claimed universal 0.1 mm machine tolerance, control the seam.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_soft_solder",
   "name": "Soft soldering",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_0700",
    "mat_lead"
@@ -3075,12 +3163,13 @@
   "dev_people": 1,
   "risk": 0.08,
   "note": "Filler wets and fills the joint. Weak in shear but adequate for plumbing and sheet-metal seams. Flux prevents oxidation. Must be cleaned after soldering or corrosion occurs.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_flux",
   "name": "Flux",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [],
   "req_any": [
    {
@@ -3107,12 +3196,13 @@
   "dev_people": 1,
   "risk": 0.07,
   "note": "Borax is best for braze and forge. Rosin is used for electronics. Salt is crude but works. Flux residue must be cleaned or it causes corrosion.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_adhesive_bond",
   "name": "Adhesive bonding",
   "cat": "joining",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bitumen"
   ],
@@ -3141,12 +3231,13 @@
   "dev_people": 1,
   "risk": 0.15,
   "note": "Used for wood and leather. Not for metal under load. Gap-filling is possible but joint is only as strong as the adhesive.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_pickling",
   "name": "Pickling",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "hydrochloric_acid"
   ],
@@ -3165,12 +3256,13 @@
   "dev_people": 1,
   "risk": 0.13,
   "note": "Iron parts are soaked in acid after heat-treat or forge. Scale dissolves. Temperature and time control removal rate. Parts must be rinsed immediately or they rust.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_shot_blasting",
   "name": "Shot blasting",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -3191,12 +3283,13 @@
   "dev_people": 1,
   "risk": 0.1,
   "note": "Shot is recirculated. Removes scale and rust. Creates compressive stress in the surface, improving fatigue life. Expensive equipment but fast cleaning.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_sand_blasting",
   "name": "Sand blasting",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam"
   ],
@@ -3227,12 +3320,13 @@
   "dev_people": 1,
   "risk": 0.12,
   "note": "Cheaper than shot. Faster removal of rust and scale. Health hazard from silica dust. Nozzle wears quickly. Surface finish is rougher.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_tumbling",
   "name": "Tumbling",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -3254,12 +3348,13 @@
   "dev_people": 1,
   "risk": 0.09,
   "note": "Media is ceramic or steel balls. Slow but gentle. Burrs and sharp edges are removed. Edge radius increases by 0.2 mm. Batch size must be large for economy.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_buffing",
   "name": "Buffing and polishing",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_tumbling"
   ],
@@ -3279,7 +3374,7 @@
   "dev_people": 1,
   "risk": 0.1,
   "note": "Final finish for inspection or appearance. Removes fine scratches. Does not correct form errors. Labor-intensive; operator skill affects consistency.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_electroplating",
@@ -3310,6 +3405,7 @@
   "id": "mfg_anodising",
   "name": "Anodising",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_aluminium",
    "electrolysis_industrial"
@@ -3340,12 +3436,13 @@
     }
    }
   ],
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_galvanising",
   "name": "Galvanising",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_zinc",
    "cap_heat_0700"
@@ -3365,12 +3462,13 @@
   "dev_people": 1,
   "risk": 0.12,
   "note": "Hot-dip is cheap but uneven. Thickness is 0.05 to 0.1 mm. Flux must be used to prevent oxidation in the bath. Parts are shaken to remove excess.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_painting",
   "name": "Painting",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [],
   "req_any": [
    {
@@ -3397,12 +3495,13 @@
   "dev_people": 1,
   "risk": 0.08,
   "note": "Surface preparation is 80 percent of quality. Dust must be removed. Paint thickness should be even. Multiple coats improve coverage and durability.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_enamelling",
   "name": "Enamelling",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "mat_glass_soda",
@@ -3423,12 +3522,13 @@
   "dev_people": 1,
   "risk": 0.14,
   "note": "Enamel powder is dusted or sprayed onto the part, then heated to 700-900 C. Shrinkage mismatch causes cracking if not managed. Appearance is high gloss.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_phosphating",
   "name": "Phosphating",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "chm_superphosphate"
   ],
@@ -3447,12 +3547,13 @@
   "dev_people": 1,
   "risk": 0.1,
   "note": "Chemical conversion coating, 0.001 to 0.01 mm. Improves paint adhesion and rust resistance. Produces distinctive gray or tan surface. Fast process.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_japanning",
   "name": "Japanning",
   "cat": "finishing",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_0700",
    "mat_shellac"
@@ -3472,7 +3573,7 @@
   "dev_people": 1,
   "risk": 0.09,
   "note": "Traditional for machinery. Two or three coats, each baked. Provides protection and appearance. Slower than painting but harder finish.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_assembly_line",
@@ -3492,8 +3593,8 @@
    "master": 200
   },
   "mat": {},
-  "cap": 5000,
-  "up": 1000,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 20161.879174129324,
   "build_yrs": 1,
   "adopt_yrs": 3,
   "dev_years": 12,
@@ -3505,6 +3606,7 @@
   "id": "mfg_work_study",
   "name": "Work study",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_time_study"
   ],
@@ -3524,12 +3626,13 @@
   "dev_people": 3,
   "risk": 0.12,
   "note": "Observation identifies unnecessary motion. Methods are redesigned. Work is simplified so skill requirements drop and training is faster. Productivity gains of 20 to 40 percent.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_time_study",
   "name": "Time study",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "cap_measure_time_ms"
   ],
@@ -3548,12 +3651,13 @@
   "dev_people": 2,
   "risk": 0.1,
   "note": "Multiple runs, average cycles. Normal pace and foreign elements identified. Accounts for fatigue and personal time. Builds the standard hour.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_standard_hour",
   "name": "Standard hour",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_time_study"
   ],
@@ -3573,12 +3677,13 @@
   "dev_people": 2,
   "risk": 0.09,
   "note": "If standard is 100 pieces per hour and a worker makes 120, efficiency is 120 percent. Used to pay piece rates fairly. Rates must be updated when methods change.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_piece_rate",
   "name": "Piece rate payment",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_standard_hour"
   ],
@@ -3597,12 +3702,13 @@
   "dev_people": 2,
   "risk": 0.12,
   "note": "Worker is motivated to speed production. Quality must be monitored separately. Disputes over rate fairness are common. Requires accurate timekeeping and inspection.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_production_schedule",
   "name": "Production schedule",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "fin_contract_law"
   ],
@@ -3622,12 +3728,13 @@
   "dev_people": 2,
   "risk": 0.1,
   "note": "A written routing and due-date board coordinates orders, materials, and labour across a workshop. It presupposes recorded commitments and repeated production, not modern software.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_bill_materials",
   "name": "Bill of materials",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_drawing_office"
   ],
@@ -3647,12 +3754,13 @@
   "dev_people": 2,
   "risk": 0.09,
   "note": "Exploded from drawings. Used for procurement and assembly. Must be updated when design changes. One assembly may contain hundreds of parts.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_inventory_mgmt",
   "name": "Inventory and reorder point",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_production_schedule"
   ],
@@ -3672,12 +3780,13 @@
   "dev_people": 2,
   "risk": 0.08,
   "note": "Reorder point accounts for lead time and usage rate. Too high and money is tied up. Too low and production stops. Manual ledger is slow; calculation is simple arithmetic.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_drawing_office",
   "name": "Drawing office",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_orthographic",
    "prc_straightedge",
@@ -3706,6 +3815,7 @@
   "id": "mfg_orthographic",
   "name": "Orthographic projection and drawing conventions",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "geometry_analytic"
   ],
@@ -3724,12 +3834,13 @@
   "dev_people": 2,
   "risk": 0.09,
   "note": "Top, front, side views show all dimensions needed. Operator does not interpret; numbers are clear. Standardization means a drawing from one factory is readable anywhere.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_dimensioning",
   "name": "Dimensioning and tolerancing conventions",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_tolerance_limit",
    "cap_measure_len",
@@ -3751,12 +3862,13 @@
   "dev_people": 2,
   "risk": 0.1,
   "note": "Defines basic size, deviation, fit type. All operators read from the same playbook. Reduces ambiguity that causes scrap.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_blueprint",
   "name": "Blueprint process",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "photography"
   ],
@@ -3777,12 +3889,13 @@
   "dev_people": 2,
   "risk": 0.1,
   "note": "Original is drawn on translucent linen. Contact print on blueprint paper produces white lines on blue. Copies are made at copying house. One master feeds 50 machines.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_change_order",
   "name": "Change order",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_drawing_office"
   ],
@@ -3801,12 +3914,13 @@
   "dev_people": 2,
   "risk": 0.11,
   "note": "Customer-driven or engineering-discovered. Each change is approved, costed, and scheduled. Affects inventory, work in progress, and tools. Traceability is recorded.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_tool_room",
   "name": "Tool room",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_die_set"
   ],
@@ -3825,12 +3939,13 @@
   "dev_people": 2,
   "risk": 0.1,
   "note": "Tools are issued by requisition, returned by EOD. Sharpening is scheduled. Inventory is by category. One tool room supports 50 machines.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_maintenance",
   "name": "Maintenance department",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "workshop_first"
   ],
@@ -3850,12 +3965,13 @@
   "dev_people": 2,
   "risk": 0.09,
   "note": "Scheduled oil changes, bearing checks, belt replacement. Machine breakdowns are catastrophic; prevention is cheaper. Daily rounds by maintenance crew. Spare parts are stockpiled.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_quality_dept",
   "name": "Quality department",
   "cat": "organisation",
+  "kind": "INSTITUTION",
   "pre": [
    "mfg_control_chart"
   ],
@@ -3876,12 +3992,13 @@
   "dev_people": 2,
   "risk": 0.11,
   "note": "Separate from production to avoid bias. Audits process at machines and in receiving. Finds root causes of defects. Reports to management. Drives continuous improvement.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_dividing_engine",
   "name": "Dividing engine",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "screw_lathe",
    "cap_tol_10um"
@@ -3905,12 +4022,13 @@
   "dev_people": 3,
   "risk": 0.18,
   "note": "NEEDS cap_tol_10um (worm pitch, wheel bore). MAKES cap_tol_100um on gear blanks. Accurate gear generation depends on indexing precision. Once calibrated, divisions repeat exactly.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_cam_lobe",
   "name": "Cam lobe profile cutting",
   "cat": "cutting",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_profile_mill",
    "cap_measure_light"
@@ -3931,12 +4049,13 @@
   "dev_people": 2,
   "risk": 0.19,
   "note": "Cams control the sequence of operations. Profile error of 0.1 mm causes misfeeds or collisions. Cutting is slow; inspection by optical comparator is essential.",
-  "up": 0.0
+  "up_hours": 0
  },
  {
   "id": "mfg_escapement_lever",
   "name": "Escapement lever mechanism",
   "cat": "tooling",
+  "kind": "ENGINEERING",
   "pre": [
    "mfg_indexing_head",
    "cap_tol_10um"
@@ -3958,6 +4077,6 @@
   "dev_people": 2,
   "risk": 0.13,
   "note": "Holds position between strokes, advances one station per cycle. Timing must be precise or the next tool collides with work. Spring return must be repeatable.",
-  "up": 0.0
+  "up_hours": 0
  }
 ]

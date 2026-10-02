@@ -21,20 +21,23 @@ grouping evidence, and for why this lives in a separate file.
 """
 from .data import trade_family
 from sim.constants import declare
+from . import money_units, node_revenue_market
 
 
 class ProductionMixin:
 
-    STATE_FUNDING_BASE = declare(
-        "STATE_FUNDING_BASE", 2500.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at economy=1, state_capacity=1, pop_scale=1",
+    STATE_FUNDING_BASE_LABOUR_HOURS = declare(
+        "STATE_FUNDING_BASE_LABOUR_HOURS", 50400.0, kind="temporary_heuristic",
+        unit="labour hours/year at output_per_head=1, state_capacity=1, pop_scale=1",
         source=None, confidence="D",
-        why="What an imperial patron is worth in direct funding at a "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "What an imperial patron is worth in direct funding at a "
             "reference civilisation size and state capacity. No fiscal "
             "record backs this figure; a real answer needs a state budget "
             "model - tax revenue, the fiscus's own spending priorities - "
             "that this engine does not have, per CLAUDE.md 3.1's ban on "
             "asserting a state revenue outright.")
+    STATE_FUNDING_BASE = money_units.PricedInLabourHours("STATE_FUNDING_BASE_LABOUR_HOURS")
     STATE_FUNDING_POP_SCALE_EXPONENT = declare(
         "STATE_FUNDING_POP_SCALE_EXPONENT", 0.4, kind="temporary_heuristic",
         unit="dimensionless exponent on pop_scale", source=None,
@@ -54,13 +57,21 @@ class ProductionMixin:
             "own scale, so this denominator is picked to make the term feel "
             "proportionate rather than derived from anything.")
 
-    def state_funding(self):
+    def patron_funding_ask(self):
+        """What a patron state would give the founder in a year if its treasury could spare it."""
         if not self.running_with_mechanic("state_funding"):
             return 0.0
-        return (self.STATE_FUNDING_BASE * self.state.economy.economy * self.state_capacity
+        return (self.STATE_FUNDING_BASE * self.real_output_per_head() * self.state_capacity
                 * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
                 * (1.0 + max(0.0, self.state.governance.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
                 * self.rep_factor())
+
+    def state_funding(self):
+        """What the treasury has paid the founder this year; the government decides it
+        (Government.pay_patron) from its purse after its standing need."""
+        state = self.state.actors
+        record = None if state is None else state.records.get("government:" + str(self.civ.get("id")))
+        return 0.0 if record is None else record.patron_grant
 
     def venture_ramp(self, node_id):
         """How much of its full takings a concern is making, 0..1.
@@ -124,7 +135,7 @@ class ProductionMixin:
         Dependencies:
           - self.year: changes annually in sim.step()
           - self.pop_scale: changes annually in sim.step()
-          - self.economy: changes with state events
+          - economy.output_per_head: measured when the year's market closes
           - self.household._operating_ver: changes whenever self.household.operating is mutated
           - self.household._done_ver: changes whenever self.household.done or granted is mutated
           - self.household._workforce_ver: changes whenever self.household.employees is mutated
@@ -149,7 +160,7 @@ class ProductionMixin:
         key = (
             scenario.year,
             self.pop_scale,
-            getattr(economy, "economy", 1.0),
+            economy.output_per_head,
             getattr(projects, "_operating_ver", 0),
             getattr(projects, "_done_ver", 0),
             getattr(household, "_workforce_ver", 0),
@@ -162,6 +173,8 @@ class ProductionMixin:
             economy.output_factor,
             household.reputation,
             founder.founder_alive,
+            self.state_funding(),
+            self.home_price_level(),
         )
         if getattr(self.household, "_revenue_cache_key", None) == key:
             return self.household._revenue_cache_val
@@ -196,7 +209,7 @@ class ProductionMixin:
             node = self.nodes[node_id]
             if node["rev"]:
                 # AT THIS SOCIETY'S PRICES, like everything else it charges you.
-                # The tree's revenue figures are Rome 100 AD denarii and this
+                # The tree's revenue figures are labour hours and this
                 # was the one flow that never converted them, so a physician's
                 # practice paid exactly 233.5 in Tenochtitlan, in Luoyang and
                 # in Scandinavia while the cost of building anything differed
@@ -217,7 +230,7 @@ class ProductionMixin:
                     # services, institutions and patronage the brief asked to
                     # leave alone - see that method's own comment for why.
                     total_revenue += (node["rev"] * _units * self.venture_ramp(node_id) * self.price_index
-                          * self.goods_market_factor(node_id))
+                          * self.goods_market_factor(node_id) * self.node_output_market_factor(node))
         # THERE IS ONLY SO MUCH MARKET. Uncapped, this compounds: every venture
         # pays back quickly, so its income buys the next one, and nothing
         # stops a run's capital from growing far past what a real market this
@@ -232,28 +245,18 @@ class ProductionMixin:
         # workshop_first matters and why it is cheap.
         total_revenue += self.workshop_output()
         economy = self.state.economy
-        gross = total_revenue * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
+        gross = total_revenue
         ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
-            * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * self.price_index
+            * self.real_output_per_head() * self.price_index
         gross = gross / (1.0 + gross / max(1.0, ceiling))
         return (gross + self.state_funding()) * economy.output_factor
 
-    ECONOMY_OUTPUT_SCALING_EXPONENT = declare(
-        "ECONOMY_OUTPUT_SCALING_EXPONENT", 0.75, kind="temporary_heuristic",
-        unit="dimensionless exponent on self.economy", source=None,
+    REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE = declare(
+        "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE", 18100000.0, kind="temporary_heuristic",
+        unit="labour hours/year at pop_scale=1, output_per_head=1", source=None,
         confidence="D",
-        why="How sub-linearly overall output grows with the `economy` "
-            "index (economy_index(), itself already a temporary_heuristic "
-            "curve - see ECONOMY_INDEX_PER_DIFFUSED_NODE above), used "
-            "everywhere gross revenue is scaled by it in this file. The "
-            "sub-linear SHAPE reflects real diminishing returns to a single "
-            "aggregate multiplier; the specific 0.75 exponent is tuned "
-            "against playtests, not fitted to any output data.")
-    REVENUE_CEILING_PER_POP_SCALE = declare(
-        "REVENUE_CEILING_PER_POP_SCALE", 900000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year at pop_scale=1, economy=1", source=None,
-        confidence="D",
-        why="The saturating ceiling on how much revenue a single founder's "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "The saturating ceiling on how much revenue a single founder's "
             "ventures can pull out of one civilisation's whole market - "
             "invented specifically to stop a run compounding into billions "
             "against an empire whose own annual product is not separately "
@@ -261,6 +264,7 @@ class ProductionMixin:
             "three billion denarii). A real ceiling needs an actual GDP "
             "figure for the civilisation to compare against, which this "
             "engine does not compute.")
+    REVENUE_CEILING_PER_POP_SCALE = money_units.PricedInLabourHours("REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE")
 
     SLAVE_LABOUR_PRODUCTIVITY_SHARE = declare(
         "SLAVE_LABOUR_PRODUCTIVITY_SHARE", 0.7, kind="temporary_heuristic",
@@ -292,12 +296,13 @@ class ProductionMixin:
         household = self.state.household
         craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
         craft += household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE
+        market = self.labour_market
         wage = 0.0
         for trade, count in household.employees.items():
             if trade_family(trade) == "craft":
-                wage += count * self.base_annual_wage(trade)
+                wage += count * market.quote_annual(trade)
         wage += ((household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE)
-                 * self.base_annual_wage("artisan"))
+                 * market.quote_annual("artisan"))
         mark = self.WORKSHOP_WAGE_MARKUP_BASE
         mark = self.effect_sum("workshop_markup", mark)
         # AND EVERYTHING YOU KNOW HOW TO DO, which is where the value of a
@@ -316,8 +321,7 @@ class ProductionMixin:
         # makes the workshop you actually staff and pay for more productive,
         # which is how method has always paid. It needs a workshop and it needs
         # people; with neither, it is still worth nothing.
-        return (wage * mark * self.capability_factor()
-                * self.wage_index * self.price_index)
+        return wage * mark * self.capability_factor()
 
     def capability_factor(self):
         """How much better your methods make the same pair of hands.
@@ -358,9 +362,9 @@ class ProductionMixin:
             node = self.nodes[node_id]
             if node["rev"] <= 0:
                 continue
-            weight += node["rev"]
+            weight += node["rev_hours"]     # in hours, so the price level of money does not enter it
         result = 1.0 + self.CAPABILITY_FACTOR_CEILING_BONUS * (
-            weight / (weight + self.CAPABILITY_FACTOR_HALF_SATURATION_REV))
+            weight / (weight + self.CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS))
         self.household._cap_factor = result
         return result
 
@@ -374,33 +378,38 @@ class ProductionMixin:
             "worker would be implausible; 2x (a doubling) is a tuned "
             "ceiling, not derived from any output-per-technology "
             "measurement.")
-    CAPABILITY_FACTOR_HALF_SATURATION_REV = declare(
-        "CAPABILITY_FACTOR_HALF_SATURATION_REV", 40000.0,
-        kind="temporary_heuristic", book_money=True, unit="denarii of tier-weighted revenue "
-        "at half of CAPABILITY_FACTOR_CEILING_BONUS", source=None,
+    CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS = declare(
+        "CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS", 806000.0,
+        kind="temporary_heuristic", unit="labour hours of tier-weighted revenue at half of CAPABILITY_FACTOR_CEILING_BONUS", source=None,
         confidence="D",
-        why="How much accumulated tier-weighted method it takes to reach "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "How much accumulated tier-weighted method it takes to reach "
             "half the maximum capability bonus - the saturating curve's "
             "own scale. Tuned against playtests (see the comment this "
             "replaces: '40,000 of tier-weighted method roughly doubles "
             "what a workshop makes'), not fitted to any measured "
             "productivity data.")
+    CAPABILITY_FACTOR_HALF_SATURATION_REV = money_units.PricedInLabourHours("CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS")
+
+    def node_output_market_factor(self, node):
+        """This year's market over long-run prices for what an output-derived node sells and buys; one otherwise."""
+        baskets = self.concern_baskets_now(node["id"])
+        if baskets is None:
+            return 1.0
+        return node_revenue_market.market_factor(
+            {"_output_per_year": baskets.outputs, "_purchases_per_year": baskets.purchases},
+            self._material_prices(), self.market_price_ratio)
 
     def concern_takings(self, node_id, ramp):
-        """Yearly takings of one concern at a given ramp, before market saturation."""
+        """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure
+        carried to the techniques held now (concern_volume.py); callers apply the market's price."""
         economy = self.state.economy
-        return (self.nodes[node_id]["rev"] * ramp
-                * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
-                * economy.output_factor * self.price_index)
+        return (self.nodes[node_id]["rev"] * ramp * economy.output_factor * self.price_index
+                * self.concern_value_ratio(node_id))
 
-    def revenue_sources(self):
-        """Where the money actually comes from, itemised.
-
-        A player who never issues a single start can still get richer
-        every year, from practising medicine - the cover identity the game
-        tells you to adopt - which is otherwise invisible anywhere else in
-        the interface.
-        """
+    def ledger_concern_rows(self):
+        """Yearly takings of every concern and practice that earns, by node
+        id, as the ledger credits them."""
         rows = {}
         projects = self.state.projects
         economy = self.state.economy
@@ -425,6 +434,18 @@ class ProductionMixin:
                 amt = self.venture_real_earnings(node_id)
             if amt > 0.5:
                 rows[node_id] = round(amt, 1)
+        return rows
+
+    def revenue_sources(self):
+        """Where the money actually comes from, itemised.
+
+        A player who never issues a single start can still get richer
+        every year, from practising medicine - the cover identity the game
+        tells you to adopt - which is otherwise invisible anywhere else in
+        the interface.
+        """
+        economy = self.state.economy
+        rows = self.ledger_concern_rows()
         # ALL OF IT, OR SAY WHAT IS MISSING: a ledger that shows only the
         # fifteen largest rows and nothing else does not add up to the
         # revenue it states. Every running earner has to be represented -
@@ -436,7 +457,7 @@ class ProductionMixin:
         rest = sum(value for _node_id, value in ranked[15:])
         if rest > 0.5:
             out["_and_%d_smaller_concerns" % len(ranked[15:])] = round(rest, 1)
-        workshop_total = self.workshop_output() * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * economy.output_factor
+        workshop_total = self.workshop_output() * economy.output_factor
         if workshop_total > 0.5:
             out["_what_your_own_workshop_sells"] = round(workshop_total, 1)
         if self.state_funding() > 0.5:
@@ -514,8 +535,7 @@ class ProductionMixin:
         # ONLY WHAT THE LEDGER ACTUALLY SHOWS. Naming rows that were dropped
         # for being under half a denarius invites the reader to look for them.
         economy = self.state.economy
-        scale = (self.PRACTICE_SHARE * self.practice_attention()
-                 * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT) * economy.output_factor)
+        scale = self.PRACTICE_SHARE * self.practice_attention() * economy.output_factor
         prac = sorted(node_id for node_id in self._practice_set()
                       if self.nodes[node_id]["rev"] * scale > 0.5)
         if not prac:
@@ -632,11 +652,16 @@ class ProductionMixin:
         # Both halves of that follow `operating`, so closing something really
         # does stop the bleeding, and knowing how to do something costs nothing
         # to know.
+        return sum(self.upkeep_by_concern().values())
+
+    def upkeep_by_concern(self):
+        """{node id: yearly running cost} for each concern or practice that is paid for;
+        `upkeep` is its sum."""
         practice_set = self._practice_set()
         operating = self.state.projects.operating
-        return sum(self.institution_upkeep(node_id)
-                   for node_id in self._revenue_upkeep_candidates()
-                   if node_id in operating or node_id in practice_set)
+        return {node_id: self.venture_real_upkeep(node_id)
+                for node_id in self._revenue_upkeep_candidates()
+                if node_id in operating or node_id in practice_set}
 
     INSTITUTION_FLOOR = declare(
         "INSTITUTION_FLOOR", 0.20, kind="temporary_heuristic",
@@ -700,9 +725,9 @@ class ProductionMixin:
     # with three people in it is not billed as though every
     # branch were already fully staffed.
     # People one unit supports: each institution's `institution_places` mechanic.
-    INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD = declare(
-        "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD", 250.0,
-        kind="temporary_heuristic", book_money=True, unit="denarii of upkeep per head",
+    INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD = declare(
+        "INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD", 250.0,
+        kind="temporary_heuristic", unit="labour hours of upkeep per head",
         source=None, confidence="D",
         why="For an institution not in INSTITUTION_PLACES, how many "
             "denarii of upkeep one person's worth of capacity is assumed "
@@ -711,6 +736,7 @@ class ProductionMixin:
             "wage a head' per the comment this replaces - the right ORDER "
             "of magnitude for a building whose cost is its people, not a "
             "specific attested wage.")
+    INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD = money_units.PricedInLabourHours("INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD")
 
     def institution_places(self, node_id):
         """Roughly how many people ONE UNIT of this establishment is built to

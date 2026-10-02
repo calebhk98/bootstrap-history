@@ -3,7 +3,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.proto.render_screens_economy import render_capacity
 
-# Complaint 92: the capacity screen offers the commands that would end each shortage.
+# Complaint 90: the capacity screen offers the commands that would end each shortage.
 
 test_sim = sim(capital=1e7)
 for node_id in list(ORDER)[:400]:
@@ -45,7 +45,7 @@ check("an oversubscribed trade offers hiring it", any(command.startswith("hire s
 check("...and housing when the household has no room for that many",
       any(command.startswith("buy housing") for command in commands), rows)
 
-# Complaint 193: one shortfall per material, so the suggested size covers what the row reports.
+# Complaint 189: one shortfall per material, so the suggested size covers what the row reports.
 import math
 import re
 

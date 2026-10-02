@@ -21,6 +21,7 @@
     "structures": 1.7
   },
   "currency": "hacksilver by weight",
+  "currency_words": {"long": "in hacksilver", "short": "hacksilver"},
   "coin_standard": {
     "material": "silver_kg",
     "kg_per_unit": 0.025,
@@ -167,6 +168,7 @@
   "literacy_elite": 0.15,
   "literacy_general": 0.02,
   "name": "Scandinavia in the Viking age",
+  "short_name": "Scandinavia",
   "notes": [
     "Population is 1.5 million against Rome's 65 million. You will never assemble a large workforce, so every plan must be capital-light and skill-heavy.",
     "Base reach 4: these ships already go to Greenland, the Caspian and Newfoundland. The Atlantic is not a barrier here, which flips the entire expedition branch."
@@ -179,7 +181,14 @@
     "what_this_models": "You are one household, not all of Viking-age Scandinavia. There are perhaps a million and a half people in the whole region and barely one in thirty lives anywhere worth calling a town - about 45,000 people in all - so the single market your household actually reaches is smaller again: the order of 14,000. A trade this thin is not a bug in the game; it is Scandinavia. Type 'population' once you are playing to see the numbers for yourself."
   },
   "population": 1500000,
+  "standing_army": 2000,
   "price_index": 1.4,
+  "prerequisite_gaps": {
+    "ag2_refrigeration_ice": "unreviewed",
+    "exp_openocean_navigation": "unreviewed",
+    "med_trepanation": "unreviewed",
+    "med_wound_suturing": "unreviewed"
+  },
   "starting_techs": [
     "ag2_composting",
     "ag2_liming",
@@ -189,6 +198,7 @@
     "ag2_potash",
     "ag2_refrigeration_ice",
     "cap_heat_0700",
+    "cap_heat_1100",
     "cap_power_human",
     "cap_power_muscle",
     "cap_tol_1mm",
@@ -276,6 +286,7 @@
     "opt_sundial",
     "opt_water_globe_magnifier",
     "prn_carbon_ink",
+    "prn_codex_bound",
     "prn_parchment_sheets",
     "prn_scribal_copying",
     "prn_sculpture",
@@ -283,12 +294,13 @@
     "prn_wax_tablets",
     "pwr_animal_treadmill",
     "pwr_force_pump",
+    "pwr_peat",
     "pwr_screw_press_power",
+    "refractory_fireclay",
     "sea_anchor",
     "sea_clinker_hull",
     "sea_coastal_pilotage",
     "sea_keel_deep",
-    "sea_merchant_ships_large",
     "sea_sounding_lines",
     "sea_square_sail",
     "sea_steering_oars",
@@ -317,12 +329,11 @@
     "tx2_dyeing_fibre",
     "tx2_dyeing_piece",
     "tx2_dyeing_yarn",
-    "tx2_eye_pointed_needle",
     "tx2_flax_fibre",
     "tx2_fulling",
     "tx2_heddle",
     "tx2_hemp_fibre",
-    "tx2_needle",
+    "tx2_needle_hand",
     "tx2_pin",
     "tx2_retting",
     "tx2_rope_lay",
@@ -337,10 +348,8 @@
     "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it. With state_capacity this low, state_notice() (society.py) almost never crosses even the lowest threshold here - correctly: 'the thing is an assembly, not a state' (this file's own institutions.note). Were this society to spend centuries building the kings, bishops, written law and towns its own opening.what_is_coming already promises, state_capacity rises (the same _TECH_EFFECTS.json deltas every civilisation reads) and this mechanic starts to bite on its own, which is the honest way for that promise to come true.",
     "requisition_name": "what is owed at the thing",
     "requisition_note": "There is no tax office in Viking-age Scandinavia. What a household owes is assessed and announced at the thing, the assembly of free men, as a levy toward a specific expedition, a hosting obligation (veizla) to a chieftain's retinue, or a fine set by the law-speaker. It is real, and it is also the weakest version of this pressure in the whole file, because there is barely a state to enforce it.",
-    "requisition_base_share": 0.09,
     "office_name": "standing watch for the leidang",
     "office_note": "A levy muster could call a household's own ship and crew to a king's or jarl's service; refusing a summons a chieftain could actually enforce cost standing at the next thing, not a fine collected by any office.",
-    "office_base_share": 0.03,
     "military_name": "a chieftain's muster",
     "military_note": "A household that can arm men well is a household a chieftain wants in his own following, not a rival's; good iron gets noticed long before any king could requisition it by law.",
     "confiscation_name": "outlawry and the seizure of the estate",
@@ -382,11 +391,45 @@
       [
         "Licensed collegium of physicians and teachers",
         "A recognised fellowship of healers and teachers"
+      ],
+      [
+        "Found the school (the Museum)",
+        "Found the school (the church or hall school)"
       ]
     ]
   },
   "starting_interest_rate": 0.2,
   "starting_tax_share": 0.04,
+  "state_revenue": [
+    {
+      "form": "tribute_in_grain",
+      "basis": "harvest",
+      "rate": 0.04,
+      "paid_in": "wheat_kg",
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): the king's due from farmers in feasting and tribute (veizla, skatt) taken in kind; the share carries over the civilisation's former fitted tax share and has no source of its own.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "market_toll",
+      "basis": "imports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): tolls at trading towns (Hedeby, Kaupang) are attested; their rate is not.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "market_toll_out",
+      "basis": "exports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): tolls at trading towns (Hedeby, Kaupang) are attested; their rate is not.",
+        "confidence": "D"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "No Norse lending record survives for this date. Set from the neighbouring Carolingian and Anglo-Saxon world, where credit was informal and short-term rates high. Weak evidence.",
@@ -395,6 +438,66 @@
     "starting_tax_share": {
       "source": "Levies were tribute, thing dues, and ship-levy service to a chieftain or king, not a steady share of revenue. A low share reflects weak state reach; an estimate.",
       "confidence": "D"
+    },
+    "standing_army": {
+      "source": "The retinues (hirdmen) of the kings and great chieftains; the leidang fleet was mustered for a season, not kept (Sawyer, Kings and Vikings). An approximate opening headcount of men kept in a ruler's pay.",
+      "confidence": "D"
+    }
+  },
+  "needs_first": {
+    "Mediterranean crafts": {
+      "node": "kt_mediterranean_crafts",
+      "because": "this society does not know the Mediterranean public-works, surveying and stage crafts; learn them first, by engaging craftsmen and copying the works",
+      "ids": [
+        "civ_aqueduct_roman",
+        "civ_chorobates",
+        "civ_dome_roman",
+        "civ_glass_windows",
+        "civ_insula",
+        "civ_marble_facing",
+        "civ_surveying_groma",
+        "fin_government",
+        "fin_maritime_loan",
+        "fin_tax_farming",
+        "hom_cosmetics_roman",
+        "hom_flush_latrine_simple",
+        "hom_hypocaust",
+        "hom_lead_plumbing",
+        "hom_perfume_enfleurage",
+        "hom_public_bath",
+        "lnd_cursus_publicus",
+        "lnd_milestone",
+        "lnd_paved_road_network",
+        "mat_papyrus",
+        "med_cataract_couching",
+        "med_legal_physician",
+        "med_surgical_kit_good",
+        "med_valetudinaria",
+        "opt_dioptra",
+        "opt_geared_mechanisms",
+        "opt_groma",
+        "opt_water_clock",
+        "prn_library_archive",
+        "prn_mosaic_fresco",
+        "prn_papyrus_sheets",
+        "prn_theatre_pantomime",
+        "sea_mortise_tenon",
+        "sea_pharos_lighthouse",
+        "sea_spritsail",
+        "tex_dye_murex"
+      ]
+    },
+    "eastern trade goods": {
+      "node": "exp_trade_route_extend",
+      "because": "this society does not trade in the eastern goods these depend on; extend the trade routes first",
+      "ids": [
+        "mat_camphor",
+        "mat_natron",
+        "mat_olive_oil",
+        "mat_shellac",
+        "mat_silk",
+        "sea_monsoon_route"
+      ]
     }
   }
 }

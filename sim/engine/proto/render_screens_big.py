@@ -9,13 +9,17 @@ the live Sim - see render.py and ARCHITECTURE.md.
 
 import textwrap
 
-from .util import _factor, _fmt_num, _fmt_range, _pct, _wrap
-from .tree_filters import render_state_rows
+from .util import _coin_hoard_line, _factor, _fmt_num, _fmt_range, _pct, _wrap
+from .tree_filters import render_state_rows, stock_line
 from .wave_summary import summary_line
 from .step_problems import problems_lines
+from ..shortage_conditions import condition_line
+from .event_severity import event_marker, order_events
+from .step_alerts import alert_lines
 from .render_screens_market import why_goods_market_lines
 from ..knowledge_warning import warning_lines
 from .state_shut_staffing import render_shut_for_want_of_staff
+from .hazard_words import why_hazard_lines, why_standing_lines
 # DISPLAY_WIDTH is NOT imported here: cli.py patches engine.protocol.DISPLAY_WIDTH
 # directly at runtime, so every reader of it in this file goes through the
 # protocol module itself, live, rather than a plain name bound once at import
@@ -68,6 +72,7 @@ def _state_money(out):
     net_plain = out.get("net_per_year")
     spend = out.get("project_spend_this_year")
     lines.append("Money: %s den" % _fmt_num(out.get("capital")))
+    lines += _coin_hoard_line(out)
     # BOTH NUMBERS, ALWAYS - NOT ONE HIDING THE OTHER: net_after_project_spend
     # alone is capital in less what you owe, less whatever went into
     # projects THIS YEAR, so starting one expensive thing makes the
@@ -92,6 +97,10 @@ def _state_money(out):
     elif net_plain is not None:
         lines.append("  standing net %s%s den/yr (does not count project spend)"
                  % ("+" if net_plain >= 0 else "", _fmt_num(net_plain)))
+    if (out.get("capital") or 0) < 0 and out.get("sustainable_debt") is not None:
+        lines.append("  you owe %s; sustainable debt at your recurring surplus is %s "
+                     "(`money` explains)"
+                     % (_fmt_num(-out["capital"]), _fmt_num(out["sustainable_debt"])))
     if out.get("in_bondage_for_debt"):
         lines.append("IN DEBT BONDAGE: %s years left owing %s den"
                  % (_fmt_num(out["in_bondage_for_debt"]), _fmt_num(out.get("debt_still_to_work_off"))))
@@ -119,7 +128,27 @@ def _staffing_warning_sentences(warnings):
         sentences.append("%s and %s: the household has %s spare %s before these close"
                          % (", ".join(names[:-1]), names[-1],
                             ("%.1f" % within).rstrip("0").rstrip("."), word))
+    explained = {}
+    for warning in warnings or []:
+        if isinstance(warning, dict) and warning.get("explained"):
+            explained.setdefault(warning.get("of"), warning["explained"])
+    sentences.extend(explained.values())
     return sentences
+
+
+def _founder_age_words(out):
+    if not out.get("founder_ages"):
+        return " (you do not age)"
+    if not out.get("founder_alive"):
+        return ""
+    age, usual = out.get("founder_age"), out.get("founder_usual_age_at_death")
+    if age is None:
+        return ""
+    words = ", aged about %s" % age
+    if usual:
+        words += " (people in your place mostly die between %s and %s%s)" % (
+            usual[0], usual[1], "; you are past the middle of that" if age >= (usual[0] + usual[1]) / 2 else "")
+    return words
 
 
 def _state_founder(out):
@@ -139,7 +168,7 @@ def _state_founder(out):
                 ("DEAD (aged about %s at death, in %s)"
                  % (out.get("founder_died_aged"), out.get("founder_died_in"))
                  if out.get("founder_died_aged") is not None else "DEAD"),
-                " and ageing" if out.get("founder_ages") else " (you do not age)",
+                _founder_age_words(out),
                 _fmt_num(out.get("founder_hours_available")),
                 ("   (%s of your own, plus %s deputies directing work in your "
                  "name at %s hours each)"
@@ -157,12 +186,24 @@ def _state_founder(out):
     return lines
 
 
+# TEMPORARY HEURISTIC (presentation): how many running projects `state` lists before it summarises the rest.
+RUNNING_LISTED = 12
+
+
 def _state_running(out):
     lines = []
     active = out.get("active") or {}
     lines.append("")
     lines.append("RUNNING (%d):" % len(active) if active else "RUNNING: nothing")
-    for node_id, progress in sorted(active.items(), key=lambda kv: kv[0]):
+    listed = sorted(active.items())
+    hidden = []
+    if len(listed) > RUNNING_LISTED:
+        # the ones with something to act on come first; the rest are summarised by what they wait on
+        listed.sort(key=lambda item: (not (item[1].get("why_underfunded")
+                                           or item[1].get("will_be_abandoned_in_years") is not None), item[0]))
+        hidden = listed[RUNNING_LISTED:]
+        listed = sorted(listed[:RUNNING_LISTED])
+    for node_id, progress in listed:
         total = progress.get("founder_hours_total") or 0
         left = progress.get("founder_hours_left") or 0
         pct = 100.0 * (total - left) / total if total else 100.0
@@ -190,7 +231,17 @@ def _state_running(out):
                         "" if progress["will_be_abandoned_in_years"] == 1 else "S",
                         "an" if _tr[0][0] in "aeiou" else "a",
                         " or ".join(_tr), node_id))
+    if hidden:
+        lines.append(_running_summary(hidden))
     return lines
+
+
+def _running_summary(hidden):
+    waits = {}
+    for _node_id, progress in hidden:
+        waits[progress.get("waiting_on") or "-"] = waits.get(progress.get("waiting_on") or "-", 0) + 1
+    return ("  ... and %d more, waiting on %s ('portfolio' lists every one)"
+            % (len(hidden), ", ".join("%s (%d)" % (kind, count) for kind, count in sorted(waits.items()))))
 
 
 def _state_stuck(out):
@@ -210,9 +261,13 @@ def _state_concerns(out):
     idle_v = out.get("you_know_how_to_run_but_have_not_opened")
     if out.get("concerns_you_run") or idle_v:
         lines.append("")
-        lines.append("RUNNING AS CONCERNS: %s   (you know how to run %s more and "
-                 "have not opened them - 'ventures')"
-                 % (_fmt_num(out.get("concerns_you_run")), _fmt_num(idle_v)))
+        if out.get("shut_concerns_pointer_seen"):
+            lines.append("RUNNING AS CONCERNS: %s   (%s shut: 'ventures')"
+                     % (_fmt_num(out.get("concerns_you_run")), _fmt_num(idle_v)))
+        else:
+            lines.append("RUNNING AS CONCERNS: %s   (you know how to run %s more and "
+                     "have not opened them - 'ventures')"
+                     % (_fmt_num(out.get("concerns_you_run")), _fmt_num(idle_v)))
         if out.get("shut_concerns_would_earn_a_year"):
             lines.append("  those shut concerns would clear %s den/yr between them, "
                      "and earn nothing while they are shut"
@@ -245,6 +300,14 @@ def _state_employ(out):
     if out.get("staff_are_fractional_because"):
         lines.append(_wrap(out["staff_are_fractional_because"], indent="  "))
     return lines
+
+
+def _state_living_stock(out):
+    held = out.get("living_stock") or {}
+    if not held:
+        return []
+    return ["", "LIVING STOCK HELD: " + ", ".join("%s %s" % (material, _fmt_num(units))
+                                                for material, units in sorted(held.items()))]
 
 
 def _state_standing(out):
@@ -297,6 +360,13 @@ def _state_standing(out):
 
 def _state_knowledge_warning(out):
     return [""] + warning_lines(out.get("knowledge_loss_warning")) if out.get("knowledge_loss_warning") else []
+
+
+def _state_conditions(out):
+    rows = out.get("conditions")
+    if not rows:
+        return []
+    return [""] + ["CONDITION: " + condition_line(row) for row in rows]
 
 
 def _state_at_risk(out):
@@ -401,7 +471,7 @@ def _state_completed_head_lines(out):
                         % (record.get("year"), record.get("name"),
                            " (restore brings it back for a fraction of the cost)"
                            if record.get("can_be_restored") else ""))
-        for event in events or []:
+        for event in order_events(events):
             # "DURING 381", NOT "EVENT 381". step() captures the year at the
             # top, logs everything that happens during that year under it, and
             # increments at the end - so an event is stamped with the year being
@@ -413,10 +483,27 @@ def _state_completed_head_lines(out):
             # way, the two screens stop contradicting each other - and nothing
             # in any save or log changes, which a shift of the stamped year
             # itself could not have promised.
-            head.append("  DURING %s: %s" % (event.get("year"), event.get("message")))
+            marker = event_marker(event.get("message"))
+            head.append("  %sDURING %s: %s" % (marker + " " if marker else "",
+                                                event.get("year"), event.get("message")))
+            head.extend("      - " + detail for detail in event.get("details") or [])
         if out.get("stopped_early"):
             head.append("  " + out["stopped_early"])
+    if out.get("victory"):
+        head = _victory_lines(out["victory"]) + head
     return head
+
+
+def _victory_lines(victory):
+    lines = ["=" * 70, "VICTORY: %s, in %s AD, %s years after you arrived"
+             % (victory.get("goal_in_words") or "the goal", victory.get("year"), victory.get("elapsed_years"))]
+    if victory.get("points_so_far") is not None:
+        lines.append("  score so far: %s of 1000" % victory["points_so_far"])
+    if victory.get("achievements"):
+        lines.append("  achievements: " + ", ".join(victory["achievements"]))
+    lines.append(_wrap("  " + victory.get("to_see_your_score", ""), indent="  "))
+    lines.append("=" * 70)
+    return lines
 
 
 def _state_completed_head(out, lines):
@@ -447,19 +534,23 @@ def _render_sections(out, renderers):
 
 
 def render_state(out):
-    """A position, not a dict: year, money, what is running and what each
-    thing is waiting on, who you employ, what is about to happen to you.
+    """A position, not a dict: year, money, goal and what is about to happen to you first,
+    then what is running and what each thing is waiting on, who you employ, where you stand.
 
     Works on both the short state() and state(full=true), and on step()'s
     reply, which is this same shape with completed/events stitched on front.
     """
     renderers = (
-        _state_header, _state_money, _state_founder, _state_running,
-        _state_stuck, _state_concerns, _state_employ, _state_standing,
-        _state_knowledge_warning, _state_at_risk, _state_goal,
+        _state_header, _state_money, _state_founder, _state_conditions, _state_goal,
+        _state_at_risk, _state_knowledge_warning, _state_running, _state_stuck,
+        _state_concerns, _state_employ, _state_living_stock, _state_standing,
     )
     lines = _render_sections(out, renderers)
     lines = _state_completed_head(out, lines)
+    emergency = out.get("demographic_emergency")
+    if emergency:
+        lines = ["DEMOGRAPHIC EMERGENCY: population %+.0f%% in the last year" % (100 * emergency["population_change"]),
+                 "  fewer people to farm, hire and pay taxes; expect wages and food prices to move", ""] + lines
     lines += _state_also(out)
     return "\n".join(lines)
 
@@ -472,7 +563,7 @@ _RESTS_SHORT = {"almost everything": "ALL", "a great deal": "much",
                 "nothing else; this is worth having for itself": "-"}
 
 
-def _cost_marker(entry, purse):
+def _cost_marker(entry):
     """A row you cannot pay for today gets its cost marked.
 
     "MOST RESTS ON THESE" can head its list with items well beyond an
@@ -480,10 +571,7 @@ def _cost_marker(entry, purse):
     everything rests on - and the reader still needs to know which of
     them they can act on this year.
     """
-    cost = entry.get("cost")
-    if purse is None or not isinstance(cost, (int, float)):
-        return ""
-    return "" if cost <= purse else "*"
+    return "*" if entry.get("cannot_pay_now") else ""
 
 
 def _available_row(entry, width=None, purse=None):
@@ -505,6 +593,8 @@ def _available_row(entry, width=None, purse=None):
     downstream_count = entry.get("downstream_count")
     rests = (_fmt_num(downstream_count) if downstream_count is not None
              else _RESTS_SHORT.get(entry.get("how_much_rests_on_this"), "?"))
+    if entry.get("on_road_to_goal"):
+        rests += ">"   # on the road to your goal; the legend says so
     # THE ID IS NOT DECORATION, IT IS THE NEXT THING YOU TYPE: truncating
     # it would mean the longest ids could not be copied out of the table
     # at all, and `start` would refuse an id the table had just printed
@@ -518,15 +608,16 @@ def _available_row(entry, width=None, purse=None):
                                break_long_words=True) or [""]
     row = _AVAILABLE_ROW_FORMAT % (
         width, (entry.get("id") or ""), name_lines[0],
-        _fmt_num(entry.get("cost")) + _cost_marker(entry, purse),
+        _fmt_num(entry.get("cost")) + _cost_marker(entry),
         _fmt_num(hours), _fmt_num(years), _pct(risk),
         _fmt_range(entry.get("earns_per_year")), _fmt_num(entry.get("costs_per_year_after")),
         _fmt_num(entry.get("net_per_year")) if "net_per_year" in entry else "-",
         _fmt_num(payback) if payback is not None else "-",
         staff, (foreman["trade"][:7] if foreman else "-"), rests)
     # The rest of a long name goes on the lines below, under the NAME column.
+    stock = [" " * (width + 1) + stock_line(entry)] if entry.get("living_stock") else []
     return "\n".join([row] + [" " * (width + 1) + name_line
-                             for name_line in name_lines[1:]])
+                             for name_line in name_lines[1:]] + stock)
 
 
 _AVAILABLE_NAME_WIDTH = 14
@@ -575,7 +666,7 @@ def _available_subjects_block(out, header, _width, _purse):
             summary_row["subject"][:24], _fmt_num(summary_row["things"]), _fmt_num(summary_row["cheapest"]),
             _fmt_num(summary_row["dearest"]), _fmt_num(summary_row["you_could_pay_for"])))
     lines.append("")
-    lines.append("CHEAPEST SIX RIGHT NOW, sorted by cost:")
+    lines.append("CHEAPEST RIGHT NOW, sorted by cost:")
     lines.append(header)
     for entry in sorted(out.get("cheapest_six") or [], key=lambda e: e.get("cost", 0)):
         lines.append(_available_row(entry, _width, _purse))
@@ -598,6 +689,17 @@ def _available_empty_block(out):
     # something is broken.
     lines.append(out.get("nothing_matched")
              or "Nothing you could begin today matches that.")
+    if out.get("known_but_blocked_matches"):
+        lines.append("%d known but not startable yet match: add state:blocked to list them."
+                     % out["known_but_blocked_matches"])
+    hint = out.get("try_instead") or {}
+    if hint.get("tags"):
+        lines.append("Topics with things you know of (use tag:<name>):")
+        for entry in hint["tags"]:
+            lines.append("  %-24s %d startable, %d blocked" % (
+                entry["tag"], entry["startable"], entry["blocked"]))
+    for entry in hint.get("closest_visible", []):
+        lines.append("  close: %s (%s), %s" % (entry["name"], entry["id"], entry["state"]))
     return lines
 
 
@@ -615,6 +717,9 @@ def _available_list_block(out, header, _width, _purse):
     if out.get("more"):
         lines.append("")
         lines.append(out["more"])
+    if out.get("how_matched"):
+        lines.append("")
+        lines.append("  Search: " + out["how_matched"] + ".")
     return lines
 
 
@@ -638,10 +743,12 @@ def _available_legend_block(out, _purse):
         if any(entry.get("short_of_staff") for entry in _shown if isinstance(entry, dict)):
             lines.append("  A * after STAFF means you do not have them yet - 'hire' "
                      "or 'train' first, or the work waits.")
-        if _purse is not None and any(_cost_marker(entry, _purse) for entry in _shown
+        if any(entry.get("on_road_to_goal") for entry in _shown if isinstance(entry, dict)):
+            lines.append("  A > after RESTS means your goal needs it; it says nothing of how far away it is.")
+        if _purse is not None and any(_cost_marker(entry) for entry in _shown
                                       if isinstance(entry, dict)):
-            lines.append("  A * after COST means you could not raise it today: "
-                     "between cash and credit you can put %s into a project."
+            lines.append("  A * after COST means `start` would refuse it today (`start <id>` "
+                     "says why); between cash and credit you can put %s into a project."
                      % _fmt_num(_purse))
     return lines
 
@@ -749,10 +856,14 @@ def _why_cost(out):
 
 def _why_hours_risk(out):
     lines = []
-    lines.append("YOUR HOURS: %s%s     CALENDAR FLOOR: %s years%s     FAILURE RISK: %s"
+    lines.append("YOUR HOURS: %s%s     CALENDAR FLOOR (a minimum): %s years%s     FAILURE RISK: %s"
              % (_est(out, "founder_hours", out.get("founder_hours")), _est_tag(out, "founder_hours"),
                 _est(out, "calendar_floor_years", out.get("calendar_floor_years")),
                 _est_tag(out, "calendar_floor_years"), _pct(out.get("risk"))))
+    if out.get("earliest_completion_years") is not None:
+        lines.append("EARLIEST FINISH, no failures: %s years (around %s); the bill is paid in yearly "
+                     "instalments that reputation does not shorten"
+                     % (_fmt_num(out["earliest_completion_years"]), _fmt_num(out.get("earliest_completion_year"))))
     if out.get("attempts_already_failed"):
         lines.append("ATTEMPTS ALREADY FAILED: %d. The risk above is what the next "
                  "attempt actually faces; it was %s before anyone tried. What "
@@ -761,7 +872,7 @@ def _why_hours_risk(out):
                  % (out["attempts_already_failed"],
                     _pct(out.get("risk_before_any_attempt"))))
     if out.get("failure_costs"):
-        lines.append("IF IT FAILS: %s gone (40%% of the money) and %s of your "
+        lines.append("IF IT FAILS: %s gone (a share of the money you still pay) and %s of your "
                  "hours to do again. It can fail more than once."
                  % (_fmt_num(out.get("failure_costs")),
                     _fmt_num(out.get("failure_costs_hours"))))
@@ -801,6 +912,10 @@ def _why_staff_keep_open(out):
                      "substitute; you have %s free now)"
                      % (_est(out, "staff_to_keep_it_open", foreman.get("fte")), foreman.get("trade"),
                         _fmt_num(foreman.get("free_now"))))
+        if out.get("charge_to_open"):
+            lines.append("  CHARGE TO OPEN: %s den, paid when you `open` it "
+                         "(`quote open <id>` shows it too)"
+                         % _fmt_num(out["charge_to_open"]))
         if out.get("staff_to_keep_it_open_means"):
             lines.append(_wrap("  " + out["staff_to_keep_it_open_means"], indent="     "))
         if out.get("more_supervision_than_you_have_free_right_now"):
@@ -880,7 +995,13 @@ def _why_status(out):
         # so itself, so a second "MISSING PREREQUISITES: ..." line here would
         # show the same list twice, once wrapped in a sentence and once
         # bare. Show the sentence; it is the more complete of the two.
-        lines.append(_wrap(out["start_blocked_reason"], indent="  "))
+        blockers = out.get("blockers") or []
+        if blockers:
+            for blocker in blockers:
+                lines.append(_wrap("BLOCKED BY %s: %s" % (blocker["kind"].upper(), blocker["text"]),
+                                   indent="  "))
+        else:
+            lines.append(_wrap(out["start_blocked_reason"], indent="  "))
     else:
         missing = out.get("missing_prerequisites")
         direct = out.get("direct_prerequisites")
@@ -962,6 +1083,40 @@ def _why_trailing(out):
     return lines
 
 
+def _why_benefit(out):
+    lines = []
+    benefit = out.get("benefit")
+    if benefit:
+        lines.append("")
+        lines.append("BENEFIT")
+        lines.append(_wrap("  permanent: %s" % benefit["permanent"]))
+        lines.append(_wrap("  while open: %s" % benefit["while_open"]))
+        lines.append(_wrap("  cost of opening: %s" % benefit["cost_of_opening"]))
+        lines.append(_wrap("  if shut: %s" % benefit["if_shut"]))
+    if out.get("rebuild"):
+        lines.append("")
+        lines.append(_wrap("REBUILD: %s" % out["rebuild"]))
+    return lines
+
+
+def _why_living_stock(out):
+    """What you know apart from what you hold: a technique is learned, a herd is possessed."""
+    gates = out.get("living_stock") or []
+    if not gates:
+        return []
+    lines = [""]
+    lines.append("KNOWLEDGE: %s - %s" % (out.get("name") or "this",
+                                          "known" if out.get("done") else "not yet learned"))
+    for gate in gates:
+        route = ("brought by %s, or by trade" % gate["brought_by"] if gate.get("brought_by")
+                 else "by trade, gift or expedition")
+        lines.append(_wrap("HELD: %s %s of %s needed - %s"
+                           % (gate["material"], _fmt_num(gate["held"]), _fmt_num(gate["needed"]),
+                              "enough" if gate["held"] >= gate["needed"] else "not enough: " + route),
+                           indent="  "))
+    return lines
+
+
 def render_why(out):
     """A page about one thing: what it needs, what it costs, what depends
     on it, and whether you could start it today.
@@ -969,7 +1124,8 @@ def render_why(out):
     return "\n".join(_render_sections(out, (
         _why_header, _why_cost, _why_hours_risk, _why_staff_needed,
         _why_staff_keep_open, _why_labour_materials, _why_upkeep_revenue,
-        why_goods_market_lines, _why_status, _why_chain, _why_unlocks_downstream,
+        why_goods_market_lines, _why_status, _why_living_stock, _why_benefit, why_standing_lines,
+        why_hazard_lines, _why_chain, _why_unlocks_downstream,
         _why_trailing,
     )))
 
@@ -978,5 +1134,8 @@ def render_step(out):
     # step()'s reply is completed/events stitched onto a full state() reply;
     # render_state already knows how to read completed/events off the front.
     rendered = render_state(out)
+    alerts = alert_lines(out.get("alerts"))
+    if alerts:
+        rendered = "\n".join(alerts) + "\n\n" + rendered
     problems = problems_lines(out.get("problems"))
     return rendered + "\n" + "\n".join(problems) if problems else rendered

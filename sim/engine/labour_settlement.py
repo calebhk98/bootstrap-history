@@ -80,7 +80,7 @@ class SettlementMixin:
 
     def _relocation_wage_bill_per_year(self):
         household = self.state.household
-        return sum(count * self.annual_wage(trade, include_local_scarcity=False)
+        return sum(count * self.labour_market.unscarce_annual(trade)
                    for trade, count in household.employees.items())
 
     def relocation_quote(self, tile):
@@ -112,13 +112,13 @@ class SettlementMixin:
                            "wages while your household travels; you have %s."
                            % (tile, math.ceil(days), "{:,.0f}".format(money),
                               "{:,.0f}".format(household.capital)))
-        household.cost_capital(money)
+        household.cost_capital(money, "relocation")
         household.relocation_hours_this_year = (
             (household.relocation_hours_this_year or 0.0) + hours)
         # Local contracts and the local market's memory stay behind.
         household.commissioned = {}
         household.contract_hours = {}
-        household.labour_pressure_records = {}
+        self.labour_market.clear_pressure()
         household.familiarity *= self.RELOCATION_STANDING_RETAINED
         household.protection *= self.RELOCATION_STANDING_RETAINED
         household.base_tile = tile

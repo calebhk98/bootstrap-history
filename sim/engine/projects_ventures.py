@@ -18,6 +18,7 @@ of Sim; they are a mixin only so that they can live in a file of their own
 import collections
 
 from sim.constants import declare
+from . import money_units
 
 
 class VenturesMixin:
@@ -60,9 +61,9 @@ class VenturesMixin:
             "ratio.")
     # Floor on supervision: a zero-build concern still needs staff watching.
     # One pair of hands per this much revenue.
-    VENTURE_HANDS_PER_REVENUE = declare(
-        "VENTURE_HANDS_PER_REVENUE", 1500.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year of revenue per pair of hands", source=None,
+    VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS = declare(
+        "VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS", 30000.0, kind="temporary_heuristic",
+        unit="labour hours per year of revenue per pair of hands", source=None,
         confidence="D",
         why="A floor under venture_supervision's own build-crew share: "
             "even a concern that took nobody to build (a bottling shed, a "
@@ -73,6 +74,7 @@ class VenturesMixin:
             "cannot run itself for nothing (see the Han break-test this "
             "constant's own comment describes); not a measured "
             "supervisor-to-revenue ratio for any real enterprise.")
+    VENTURE_HANDS_PER_REVENUE = money_units.PricedInLabourHours("VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS")
 
     def venture_hands(self, node_id):
         """(scholars, craftsmen) of your own that running this ties up."""
@@ -179,6 +181,17 @@ class VenturesMixin:
                 max(0.0, self.state.household.artisans + own - art_used))
 
 
+    def opening_fee(self, node_id, units=None):
+        """(charge, size) for opening a concern now; `open` charges exactly this.
+
+        A starter founding of a scalable institution has a floor on its size;
+        reopening restores the prior size, not a full founding."""
+        if node_id in self.SCALABLE_INSTITUTIONS and units is not None:
+            unit_count = max(self.STARTER_FOUNDING_MIN_UNITS, float(units))
+        else:
+            unit_count = self.reopen_units(node_id)
+        return self.reopen_fee(node_id, unit_count), unit_count
+
     def open_venture(self, node_id, pay=True, units=None):
         """Start actually running something you have worked out how to do.
 
@@ -219,34 +232,10 @@ class VenturesMixin:
                 return self._expand_institution(node_id, float(units), pay)
             return False, "you are already running that"
         scalable = node_id in self.SCALABLE_INSTITUTIONS
-        # Starter founding has a floor. Reopening restores prior size, not 1.0.
-        if scalable and units is not None:
-            unit_count = max(self.STARTER_FOUNDING_MIN_UNITS, float(units))
-        else:
-            unit_count = self.reopen_units(node_id)
-        sch_free, art_free = self.venture_staff_free()
-        need_sch, need_art = self.venture_hands(node_id)
-        need_sch, need_art = need_sch * unit_count, need_art * unit_count
-        foreman_trade, foreman_fte = self.venture_foreman(node_id)
-        foreman_fte *= unit_count
-        # Use tolerance to avoid false contradictions in error messages.
-        if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
-            return False, ("nobody free to keep an eye on it: it needs %.2f "
-                           "scholars and %.2f craftsmen to supervise, and you "
-                           "have %.2f and %.2f not already watching something "
-                           "else. Hire, teach, or close something."
-                           % (need_sch, need_art, sch_free, art_free))
-        if (foreman_trade and foreman_fte
-                > self.venture_foreman_free(foreman_trade) + 0.01):
-            return False, ("no qualified foreman is free: this concern needs "
-                           "%.2f %s FTE to supervise its specialist work, and "
-                           "you have %.2f free. Hire a %s or close another "
-                           "concern using one. Generic artisans cannot "
-                           "substitute for this trade."
-                           % (foreman_fte, foreman_trade,
-                              self.venture_foreman_free(foreman_trade),
-                              foreman_trade))
-        fee = self.reopen_fee(node_id, unit_count)
+        fee, unit_count = self.opening_fee(node_id, units)
+        refusal = self.staffing_open_refusal(node_id, unit_count)
+        if refusal:
+            return False, refusal
         projects = self.state.projects
         household = self.state.household
         scenario = self.state.scenario
@@ -260,7 +249,7 @@ class VenturesMixin:
                                % ("{:,.0f}".format(fee),
                                   "{:,.0f}".format(household.capital),
                                   "{:,.0f}".format(self.spending_power("buy"))))
-            household.capital -= fee
+            household.debit(fee, "opening a venture")
         projects.operating.add(node_id)
         projects.mothballed.discard(node_id)
         self.clear_closure(node_id)
@@ -328,7 +317,7 @@ class VenturesMixin:
                                % (node_id, add_units, "{:,.0f}".format(fee),
                                   "{:,.0f}".format(self.state.household.capital),
                                   "{:,.0f}".format(self.spending_power("buy"))))
-            self.state.household.capital -= fee
+            self.state.household.debit(fee, "expanding a venture")
         governance = self.state.governance
         inst_units = getattr(governance, "inst_units", None)
         if inst_units is None:

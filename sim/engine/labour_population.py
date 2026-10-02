@@ -1,14 +1,12 @@
 """The local labour market: who is out there, how much of them this
-household can reach, and what leaning on a trade recently does to its price.
+household can reach.
 
 Split out of labour.py (see that file's own docstring for why). These are
 methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and moved verbatim.
 
-labour_pressure/_add_labour_pressure/labour_price_factor and its
-after-hiring forecast are "the market responds to demand, and to supply" -
-the same saturating-price idea market_pressure already applies to slaves
-(see labour_bondage.py), extended to ordinary hiring. trade_available,
+What leaning on a trade does to its price lives in labour_market_api.py.
+trade_available,
 found_trade_school and _trade_market_class decide whether a trade can be
 had here AT ALL and which reachable-population class it falls in, which
 market_supply, reachable_trade_population and national_trade_population -
@@ -25,132 +23,15 @@ half of the same question hours_you_can_call_on (labour_training.py)
 answers for craft hours.
 """
 from .data import (TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family)
-from sim.constants import declare
+from sim.constants import declare, REGISTRY
 
 
 class PopulationMixin:
-    """The labour market this household draws on: its depth, its price
-    response to recent hiring, and the population estimates behind both -
+    """The labour market this household draws on: its depth and the
+    population estimates behind it -
     see this module's own docstring for why these subjects sit together.
     """
 
-
-    # ---- the market responds to demand, and to supply ----------------------
-    # FINDINGS_ROUND2 section R: market_pressure already does this for slaves
-    # - buying in bulk bids the price up, it remembers between purchases, and
-    # it decays - and nothing else in the economy had an equivalent. This is
-    # the labour half: the same saturating idea, extended honestly rather than
-    # copied, and self-contained (decayed on READ rather than decremented once
-    # a year in step(), which lives in core.py, so nothing outside this file
-    # has to know this exists). 0.6x a year, the same rate market_pressure
-    # decays at (0.55, near enough) - mostly gone in three years.
-    LABOUR_PRESSURE_DECAY_RATE = declare(
-        "LABOUR_PRESSURE_DECAY_RATE", 0.6, kind="temporary_heuristic",
-        unit="fraction of remembered pressure surviving per year",
-        source=None, confidence="D",
-        why="How fast a burst of recent hiring or commissioning stops "
-            "moving the price of a trade - the same rate this file's own "
-            "comment says market_pressure decays at for slaves (0.55, "
-            "'near enough'), reused for labour rather than fitted "
-            "independently. Mostly gone in three years; a real figure "
-            "would come from how fast a local labour market actually "
-            "recovers from a demand shock, which nothing here measures.")
-
-    def labour_pressure(self, trade):
-        rec = self.household.labour_pressure_records.get(trade)
-        if not rec:
-            return 0.0
-        hours, year = rec
-        age = max(0.0, self.state.scenario.year - year)
-        return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
-
-    def _add_labour_pressure(self, trade, hours):
-        pressures = self.household.labour_pressure_records
-        pressures[trade] = (self.labour_pressure(trade) + max(0.0, hours), self.state.scenario.year)
-
-    LABOUR_PRESSURE_SHARE_CAP = declare(
-        "LABOUR_PRESSURE_SHARE_CAP", 1.5, kind="temporary_heuristic",
-        unit="dimensionless (pressure / market_supply)",
-        source=None, confidence="D",
-        why="Caps how much of the price-pressure curve a single burst of "
-            "hiring can reach, so leaning on a trade harder and harder does "
-            "not send its price to infinity. The curve shape (saturating, "
-            "not linear) is a real claim about markets; where exactly it "
-            "saturates is tuned.")
-    LABOUR_PRICE_PRESSURE_COEFFICIENT = declare(
-        "LABOUR_PRICE_PRESSURE_COEFFICIENT", 0.9, kind="temporary_heuristic",
-        unit="dimensionless", source=None, confidence="D",
-        why="How much a fully-leaned-on trade's price roughly doubles by: "
-            "at share=1.0 this term alone adds 0.9 to the multiplier. "
-            "material_price_factor uses the identical curve for the same "
-            "reason (see this function's own docstring); the coefficient "
-            "itself is tuned to feel like a real but survivable premium, "
-            "not fitted to an observed labour-market price response.")
-
-    def _labour_price_factor_from(self, pressure, supply):
-        """The one curve behind labour_price_factor - split out so a forecast
-        can share it exactly rather than recomputing it (see
-        labour_price_factor_after_hiring)."""
-        supply = max(1.0, supply)
-        share = min(self.LABOUR_PRESSURE_SHARE_CAP, pressure / supply)
-        return 1.0 + self.LABOUR_PRICE_PRESSURE_COEFFICIENT * share * share
-
-    def labour_price_factor(self, trade):
-        """What hiring, commissioning or keeping MORE of this trade costs
-        beyond the wage table, from how hard you have recently leaned on its
-        local supply.
-
-        `market_supply(trade)` is the ceiling: everyone this trade could put
-        to work here, including everyone you already employ. Recent pressure
-        taken as a share of that ceiling is negligible at a fifth of it and
-        roughly doubles the price at the whole of it - the same curve
-        `material_price_factor` uses for the same reason. Because the ceiling
-        itself grows when you teach the trade a bigger workforce, or when an
-        institution or literacy widens it, the SAME recent pressure buys a
-        smaller premium once the supply behind it is bigger: teaching fifty
-        machinists is what makes hiring the fifty-first one cheap again, not
-        merely possible.
-        """
-        return self._labour_price_factor_from(self.labour_pressure(trade),
-                                               self.market_supply(trade))
-
-    def labour_price_factor_after_hiring(self, trade, hire_count=1.0):
-        """What labour_price_factor(trade) becomes the INSTANT you hire n
-        more - not the market as it stands, the hire you are contemplating.
-
-        This is the number `hire` itself effectively charges from the moment
-        the new people are on the books (see wage_bill, which applies the
-        CURRENT labour_price_factor to every head of a trade, not only the
-        newest one): a Norse player was quoted "a year of one: 525" for a
-        scholar, hired one, and the standing wage bill came to 847.92 - 61%
-        more - because that one hire pushed labour_price_factor for scholars
-        from 1.0 to 1.615 against a near-empty local supply. The quote and
-        the bill were never inconsistent; the quote just priced the market
-        as it stood, one command before the player's own action moved it.
-
-        Genuinely simulates the hire rather than re-deriving market_supply's
-        formula a second time (which differs for a taught-only trade): adds
-        n to employees[trade], reads the real market_supply(trade) back, and
-        undoes the change. labour_pressure needs no such trick - it is a
-        running total, not a function of current headcount - so n more
-        hours are simply added to it, exactly as _add_labour_pressure would.
-        """
-        hire_count = max(0.0, hire_count)
-        if hire_count <= 0:
-            return self.labour_price_factor(trade)
-        add_hours = hire_count * self.HOURS_PER_PERSON_YEAR
-        household = self.state.household
-        before = household.employees.get(trade, 0.0)
-        household.employees[trade] = before + hire_count
-        try:
-            supply_after = self.market_supply(trade)
-        finally:
-            if before:
-                household.employees[trade] = before
-            else:
-                household.employees.pop(trade, None)
-        pressure_after = self.labour_pressure(trade) + add_hours
-        return self._labour_price_factor_from(pressure_after, supply_after)
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""
@@ -205,11 +86,11 @@ class PopulationMixin:
             return False, ("the trade must exist before a school can reproduce "
                            "it; teach or discover %s first" % trade)
         seats = float(seats)
-        cost = seats * self.TRADE_SCHOOL_COST_PER_SEAT * self.price_index
+        cost = seats * self.trade_school_price_per_seat()
         household = self.state.household
         if seats <= 0 or cost > household.capital:
             return False, "cannot afford that trade school"
-        household.capital -= cost
+        household.debit(cost, "trade schools")
         schools = getattr(household, "trade_schools", None)
         if schools is None:
             schools = household.trade_schools = {}
@@ -237,9 +118,44 @@ class PopulationMixin:
         if trade_family(trade) == "scholar":
             return "scholar"
         if trade in ("labourer", "artisan", "carpenter", "mason", "potter", "smith",
-                 "sailor", "miner", "furnaceman"):
+                 "sailor", "miner", "furnaceman", "soldier"):
             return "common"
         return "uncommon"          # glassblowers, engravers, opticians' forebears
+
+    def _trade_density_source(self, trade):
+        """Which declared constant this trade's population estimate comes from.
+        Returns the constant's name as a string (e.g., "TRADE_DENSITY_SCARCE",
+        "SCHOLAR_ENGAGEMENT_FRACTION", "MERCHANT_DENSITY"). Used by
+        population_report and _density_is_placeholder to look up metadata.
+        """
+        if not self.trade_available(trade):
+            return None
+        if trade == "scholar":
+            return "SCHOLAR_ENGAGEMENT_FRACTION"
+        if trade == "scribe":
+            return "SCRIBE_ENGAGEMENT_FRACTION"
+        if trade == "merchant":
+            return "MERCHANT_DENSITY"
+        if trade in TRADES_ABSENT:
+            # Taught trades have their own density not yet declared
+            return None
+        # Craft trades use TRADE_DENSITY
+        cls = self._trade_market_class(trade)
+        return f"TRADE_DENSITY_{cls.upper()}"
+
+    def _density_is_placeholder(self, trade):
+        """Whether a trade's population estimate is a placeholder
+        (temporary_heuristic) or a cited estimate (engineering_estimate).
+        Looks up the constant name in REGISTRY rather than hard-coding which
+        trades are placeholders, so the answer stays consistent with the
+        declaration itself.
+        """
+        source_name = self._trade_density_source(trade)
+        if source_name is None:
+            return False
+        if source_name not in REGISTRY:
+            return False
+        return REGISTRY[source_name].get("kind") == "temporary_heuristic"
 
     # HIRING A HANDFUL OF SMITHS MUST NOT MOVE THE STANDING WAGE. A market
     # supply pool sized for a single provincial town, not the whole country,
@@ -421,27 +337,12 @@ class PopulationMixin:
         why="As SCARCE_TRADE_HIRING_SHARE, for the 'uncommon' class "
             "(glassblowers, engravers, masters).")
 
-    def market_supply(self, trade):
-        """Hours a year of this trade the local labour market can actually supply.
-
-        THIS IS ONE TOWN'S MARKET, NOT THE COUNTRY'S - the household this
-        game puts you in charge of draws on one town's labour, the way a
-        real Roman, Han or Norse founder would have. See
-        TOWN_POPULATION_REFERENCE's own comment for why that is a
-        defensible modelling choice and TRADE_DENSITY for how big 'one
-        town's worth' of each trade actually is; national_trade_population
-        answers the country-wide question this number is not trying to.
-        """
-        if not self.trade_available(trade):
-            return 0.0
+    def _hiring_cap_before_actors(self, trade):
+        """Hours a year of a trade the town's people offer, before firms' and governments' staff
+        are taken out of it."""
         base = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
                 * (self.POP_SCALE_FLOOR_SHARE
                    + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
-        household = self.state.household
-        school_hours = ((household.trade_schools or {}).get(trade, 0.0)
-                        * self.HOURS_PER_PERSON_YEAR)
-        if trade in TRADES_ABSENT:
-            return self._taught_trade_people(trade) * self.HOURS_PER_PERSON_YEAR
         cls = self._trade_market_class(trade)
         if cls in ("abundant", "common"):
             # A REAL TOWN'S WORTH, not base's village-sized share of it (see
@@ -465,7 +366,31 @@ class PopulationMixin:
         # train().
         if trade in self.LITERATE_TRADES:
             cap *= self.literacy_factor(trade)
-        # The reachable pool is people, so it cannot exceed those who exist.
+        return cap
+
+    def market_supply(self, trade):
+        """Hours a year of this trade the local labour market can actually supply.
+
+        THIS IS ONE TOWN'S MARKET, NOT THE COUNTRY'S - the household this
+        game puts you in charge of draws on one town's labour, the way a
+        real Roman, Han or Norse founder would have. See
+        TOWN_POPULATION_REFERENCE's own comment for why that is a
+        defensible modelling choice and TRADE_DENSITY for how big 'one
+        town's worth' of each trade actually is; national_trade_population
+        answers the country-wide question this number is not trying to.
+        """
+        if not self.trade_available(trade):
+            return 0.0
+        household = self.state.household
+        school_hours = ((household.trade_schools or {}).get(trade, 0.0)
+                        * self.HOURS_PER_PERSON_YEAR)
+        if trade in TRADES_ABSENT:
+            return self._taught_trade_people(trade) * self.HOURS_PER_PERSON_YEAR
+        cap = self._shared_answer(
+            ("hiring_cap", trade), (self.civ.get("literacy_elite"), self.civ.get("literacy_general")),
+            lambda: self._hiring_cap_before_actors(trade))
+        # firms and governments hire from the same pool, so what they employ is not on offer
+        cap = max(0.0, cap - self.actor_staff_fte(trade) * self.HOURS_PER_PERSON_YEAR)
         hours = cap + household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR + school_hours
         return min(hours, self.people_who_exist(trade) * self.HOURS_PER_PERSON_YEAR)
 
@@ -563,6 +488,9 @@ class PopulationMixin:
         # The age-cohort model's running headcount is the actual population.
         pop = self.population.total
         urban = pop * float(self.civ.get("urban_fraction", 0.0))
+        if trade == "soldier":
+            # any of the working age may be called up
+            return self.population.working_age
         if trade == "scholar":
             return pop * float(self.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
         if trade == "scribe":
@@ -611,9 +539,10 @@ class PopulationMixin:
                 "you_employ": round(have, 2),
                 "share_of_the_reachable_pool_you_employ":
                     round(have / reach, 4) if reach > 1e-9 else None,
+                "is_placeholder": self._density_is_placeholder(trade),
             })
         return {
-            "civilisation": self.civ.get("name", self.civ.get("id", "")),
+            "civilisation": self.civ.get("short_name", self.civ.get("name", self.civ.get("id", ""))),
             "population": round(pop),
             "reference_population_before_simulated_changes": round(reference_pop),
             "population_change_from_reference": round(scale_from_baseline - 1.0, 4),

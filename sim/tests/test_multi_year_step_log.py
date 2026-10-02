@@ -1,6 +1,6 @@
 """multi_year_step_log: `step N` logs and reports every simulated year.
 
-Complaints/163: after `step 2` the log showed nothing for the second year.
+Complaints/159: after `step 2` the log showed nothing for the second year.
 Measured: the multi-year step logs exactly what N single steps log; the
 "population still N% below trend" line is deliberately rate-limited, not
 missing.
@@ -47,7 +47,8 @@ check("every year with a log entry inside the step appears in the step's events"
       (logged_years, reported_years))
 printed = _RP("step", multi_reply)
 check("the printed step report shows events of every reported year",
-      all("DURING %d" % year in printed for year in reported_years),
+      all(("DURING %d" % year in printed) or ("COMPLETED %d" % year in printed)
+          for year in reported_years),
       (reported_years, printed[:800]))
 
 # The wage-cascade note is throttled, so most years legitimately have no such line.

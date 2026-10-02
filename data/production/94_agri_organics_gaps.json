@@ -1,20 +1,140 @@
 {
  "_note": "Organic gap materials that branch nodes consume and no other production file makes. Yields are physical (cited in each yield_basis); labour is borrowed from a named neighbouring entry, or left out and said so.",
  "materials": {
+  "silkworm_eggs_kg": {
+   "outputs": {
+    "silkworm_eggs_kg": 5.0
+   },
+   "inputs": {
+    "silk_cocoon_kg": 100.0
+   },
+   "labour_hours": {
+    "artisan": 150.0
+   },
+   "basis": "per 100 kg of fresh cocoons set aside as seed and allowed to hatch, mate and lay, output as kg of eggs",
+   "yield_basis": "SEED REARING, the grainage: cocoons kept for breeding are not stifled, the moths emerge, pair and lay on cloth or paper and the eggs are stored cool until spring. A fresh cocoon weighs about two grams, so 100 kg is about fifty thousand cocoons, half of them female; a female lays several hundred eggs of about half a milligram each, which is on the order of 5 kg of eggs in all (an estimate from those three figures, not checked against a source). The cocoons are not sold as silk, so they enter as a material input at the cocoon entry's own price. LABOUR: the sorting, pairing, laying and egg storage by hand, taken as about 150 artisan-hours (an estimate; none could be sourced). Made only where sericulture is held, so a society without the worm prices it as if it were. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_sericulture"
+  },
+  "ramie_stock_kg": {
+   "outputs": {
+    "ramie_stock_kg": 2000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 400.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare of ramie nursery per year, output as kg of rhizome cuttings for planting out",
+   "yield_basis": "GROWN. Ramie is a perennial that spreads by rhizome and is propagated by dividing it, not by seed; an established stand yields a standing crop of rhizome many times what it takes to plant the same area again. 2000 kg of cuttings per hectare-year is an order-of-magnitude estimate, not checked against a source. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: lifting, dividing and bundling the rhizome by hand, taken as about 400 labourer-hours (an estimate). Made only where ramie is already grown, so the stock cannot be had without a society that holds it. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_ramie_fibre"
+  },
+  "draught_animal_kg": {
+   "outputs": {
+    "draught_animal_kg": 100.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "pasture",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight of working cattle and horses reared to work age",
+   "yield_basis": "GROWN on pasture by a breeding herd: cows and mares calve or foal, the young are reared on grass and hay to work age. Live-weight gain on extensive pasture is on the order of 100 kg per hectare per year (an estimate, not checked against a source). LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: herding, calving and breaking to harness, taken as about 40 labourer-hours (an estimate). The animals' own feed is the pasture, charged as land. Made only where draught power is held, because a society with no animal to breed cannot start a herd by labour. Conf C.",
+   "conf": "C",
+   "requires_node": "cap_power_muscle"
+  },
+  "cashmere_goat_kg": {
+   "outputs": {
+    "cashmere_goat_kg": 100.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "pasture",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight of fine-undercoat goats reared to breeding age",
+   "yield_basis": "GROWN on pasture by a breeding flock: does kid and the young are reared on browse and grass to breeding age. The yield and the labour are borrowed from the draught_animal_kg entry (about 100 kg of live weight per hectare of extensive pasture a year, an estimate, not checked against a source); a goat is smaller than a head of cattle but is stocked more densely, so the per-hectare weight is taken as the same. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: herding, kidding and shearing or combing, taken as about 40 labourer-hours (an estimate). Made only where the fibre is already produced, because a society with no breeding goats cannot start a flock by labour. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_cashmere"
+  },
+  "angora_goat_kg": {
+   "outputs": {
+    "angora_goat_kg": 100.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "pasture",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight of Angora goats reared to breeding age",
+   "yield_basis": "GROWN on pasture by a breeding flock: does kid and the young are reared on browse and grass to breeding age. The yield and the labour are borrowed from the draught_animal_kg entry (about 100 kg of live weight per hectare of extensive pasture a year, an estimate, not checked against a source); a goat is smaller than a head of cattle but is stocked more densely, so the per-hectare weight is taken as the same. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: herding, kidding and shearing or combing, taken as about 40 labourer-hours (an estimate). Made only where the fibre is already produced, because a society with no breeding goats cannot start a flock by labour. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_mohair"
+  },
+  "jute_seed_kg": {
+   "outputs": {
+    "jute_seed_kg": 400.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare of jute grown for seed per year, output as kg of seed",
+   "yield_basis": "GROWN. A jute crop left to flower and ripen for seed, not cut for fibre, yields a few hundred kilograms of seed per hectare; 400 kg is an order-of-magnitude estimate, not checked against a source. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; seed threshing and cleaning is not added, so labour is understated. Made only where jute is already grown. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_jute_fibre"
+  },
+  "hop_rhizome_kg": {
+   "outputs": {
+    "hop_rhizome_kg": 500.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 300.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare of hop nursery per year, output as kg of rhizome cuttings for planting out",
+   "yield_basis": "GROWN. A hop stand is propagated from cuttings of its rootstock; a nursery hectare yields cuttings for planting several hectares of garden. 500 kg of cuttings per hectare-year is an order-of-magnitude estimate, not checked against a source. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: twice wheat_kg's 150 labourer-hours per hectare, for the digging, cutting and bundling of rootstock by hand (an estimate). Made only where hops are already grown. Conf C.",
+   "conf": "C",
+   "requires_node": "ag2_hopping"
+  },
+  "pyrethrum_stock_kg": {
+   "outputs": {
+    "pyrethrum_stock_kg": 300.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 300.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare of pyrethrum nursery per year, output as kg of crowns and seed for planting out",
+   "yield_basis": "GROWN. Pyrethrum is propagated by dividing established crowns or by seed; a nursery hectare yields stock for planting several hectares. 300 kg per hectare-year is an order-of-magnitude estimate, not checked against a source. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: twice wheat_kg's 150 labourer-hours per hectare, for lifting, dividing and bundling by hand (an estimate). Made only where pyrethrum is already grown. Conf C.",
+   "conf": "C",
+   "requires_node": "ag2_pyrethrum"
+  },
   "mulberry_leaves_kg": {
    "outputs": {
     "mulberry_leaves_kg": 20000.0
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "labourer": 950.0
    },
-   "land_iugera_years": 3.9635,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of intensively pruned mulberry orchard per year, output as kg of fresh leaf",
-   "yield_basis": "GROWN. The 20-30 tonnes of leaf per hectare per year for an intensively pruned orchard is the figure silk_kg's own yield_basis uses; the low end is taken. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "yield_basis": "GROWN. The 20-30 tonnes of leaf per hectare per year for an intensively pruned orchard is the figure silk_kg's own yield_basis uses; the low end is taken. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: 150 labourer-hours per hectare for the orchard's tillage, pruning and manuring (borrowed from wheat_kg's field labour) plus about 800 for picking: the leaf is stripped by hand, and 20,000 kg at about 25 kg per worker-hour is 800 hours (an order-of-magnitude estimate; not checked against a source, none could be opened). Conf C.",
    "conf": "C",
-   "requires_node": "tx2_silkworm_stock"
+   "requires_node": "tx2_silk_fibre"
   },
   "pyrethrum_flower": {
    "outputs": {
@@ -24,10 +144,10 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_iugera_years": 3.9635,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of pyrethrum (Chrysanthemum cinerariifolium) per year, output as kg of dried flower heads",
-   "yield_basis": "GROWN. Established pyrethrum stands are usually quoted at roughly 500-1500 kg of dried flower per hectare per year; the lower-middle of that range is taken for unimproved stock. Pyrethrins are a fraction of a percent to about 1-2 percent of the dried flower, which downstream extraction consumes. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "yield_basis": "GROWN. Established pyrethrum stands are usually quoted at roughly 500-1500 kg of dried flower per hectare per year; the lower-middle of that range is taken for unimproved stock. Pyrethrins are a fraction of a percent to about 1-2 percent of the dried flower, which downstream extraction consumes. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
    "conf": "C",
    "requires_node": "ag2_pyrethrum_stock"
   },
@@ -39,10 +159,10 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_iugera_years": 3.9635,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of hop bine per year, output as kg of dried cones",
-   "yield_basis": "GROWN. Traditional hop gardens yielded on the order of 1000-1500 kg of dried cones per hectare per year (about 10-12 hundredweight per acre in older English records); the middle is taken. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "yield_basis": "GROWN. Traditional hop gardens yielded on the order of 1000-1500 kg of dried cones per hectare per year (about 10-12 hundredweight per acre in older English records); the middle is taken. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
    "conf": "C",
    "requires_node": "ag2_hop_stock"
   },
@@ -54,10 +174,10 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_iugera_years": 3.9635,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of sugar cane per year, output as kg of raw (muscovado-type) sugar boiled from pressed juice",
-   "yield_basis": "GROWN, then pressed and boiled in the field-side works. Hand-and-animal-mill cane of the pre-industrial period runs on the order of 30-40 tonnes of cane per hectare, of which roller crushing and open-kettle boiling recover roughly 5-6 percent as crystallised raw sugar, giving about 2 tonnes per hectare. Boiling heat is supplied by burning the crushed cane (bagasse), which the crop itself provides, so no thermal input is charged. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "yield_basis": "GROWN, then pressed and boiled in the field-side works. Hand-and-animal-mill cane of the pre-industrial period runs on the order of 30-40 tonnes of cane per hectare, of which roller crushing and open-kettle boiling recover roughly 5-6 percent as crystallised raw sugar, giving about 2 tonnes per hectare. Boiling heat is supplied by burning the crushed cane (bagasse), which the crop itself provides, so no thermal input is charged. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
    "conf": "C",
    "requires_node": "ag2_sugar_voyage"
   },
@@ -69,10 +189,10 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_iugera_years": 3.9635,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of opium poppy per year, output as kg of dried raw opium latex",
-   "yield_basis": "GROWN. Hand-lanced poppy capsules give on the order of 10-25 kg of raw opium per hectare in traditional cultivation; 15 kg is taken. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "yield_basis": "GROWN. Hand-lanced poppy capsules give on the order of 10-25 kg of raw opium per hectare in traditional cultivation; 15 kg is taken. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
    "conf": "C",
    "requires_node": "med_opium_mandrake"
   },
@@ -84,10 +204,10 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_iugera_years": 3.9635,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of tobacco per year, output as kg of nicotine recovered in the extract",
-   "yield_basis": "GROWN, then leached. Pre-industrial tobacco yielded roughly 1000 kg of cured leaf per hectare; cured leaf holds about 2 percent nicotine by mass, and leaching or steam distillation recovers about 80 percent, so 1000 x 0.02 x 0.8 = 16 kg of nicotine. Waste stems and dust carry the same alkaloid at lower grade, which this basis does not distinguish. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "yield_basis": "GROWN, then leached. Pre-industrial tobacco yielded roughly 1000 kg of cured leaf per hectare; cured leaf holds about 2 percent nicotine by mass, and leaching or steam distillation recovers about 80 percent, so 1000 x 0.02 x 0.8 = 16 kg of nicotine. Waste stems and dust carry the same alkaloid at lower grade, which this basis does not distinguish. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
    "conf": "C",
    "requires_node": "exp_atlantic_crossing"
   },
@@ -99,10 +219,10 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_iugera_years": 3.9635,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of cultivated foxglove (Digitalis purpurea) per year, output as kg of dried leaf",
-   "yield_basis": "GROWN. Cultivated foxglove, a biennial harvested for its leaf, is commonly cited at about 1-2 tonnes of dried leaf per hectare per year; the midpoint is taken. Glycoside content is a fraction of a percent of the dried leaf and is left to the consuming node. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "yield_basis": "GROWN. Cultivated foxglove, a biennial harvested for its leaf, is commonly cited at about 1-2 tonnes of dried leaf per hectare per year; the midpoint is taken. Glycoside content is a fraction of a percent of the dried leaf and is left to the consuming node. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
    "conf": "C",
    "requires_node": "md2_plant_chemistry"
   },
@@ -114,10 +234,10 @@
    "labour_hours": {
     "labourer": 150.0
    },
-   "land_iugera_years": 3.9635,
+   "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "basis": "per hectare of potatoes per year, output as kg of washed, dried potato starch",
-   "yield_basis": "GROWN, then rasped and washed. Pre-industrial potato yields are on the order of 10 tonnes of tubers per hectare; tubers are about 17 percent starch by mass and rasping and washing recovers about 85 percent, so 10000 x 0.17 x 0.85 = 1445 kg. LAND: the batch is one hectare-year, converted to iugerum_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
+   "yield_basis": "GROWN, then rasped and washed. Pre-industrial potato yields are on the order of 10 tonnes of tubers per hectare; tubers are about 17 percent starch by mass and rasping and washing recovers about 85 percent, so 10000 x 0.17 x 0.85 = 1445 kg. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
    "conf": "C",
    "requires_node": "ag2_potato_newworld"
   },
@@ -259,10 +379,12 @@
     "mat_iodine_compound": 1000.0
    },
    "inputs": {},
-   "labour_hours": {},
+   "labour_hours": {
+    "labourer": 30000.0
+   },
    "extracted_from": "seaweed (kelp ash from coastal weed)",
    "basis": "per tonne of iodine, as iodide salt, recovered from kelp ash",
-   "yield_basis": "EXTRACTED. Burnt kelp ('kelp' in the Scottish sense) carries on the order of 0.5-1 percent iodine by mass, and leaching plus crystallisation recovers most of it; at 0.75 percent about 133 tonnes of kelp ash stand behind a tonne, itself burnt from a couple of dozen times its mass of wet weed. Gathering and burning labour have no cited figure and are left out, so this is a floor. Conf C.",
+   "yield_basis": "EXTRACTED. Burnt kelp ('kelp' in the Scottish sense) carries on the order of 0.5-1 percent iodine by mass, and leaching plus crystallisation recovers most of it; at 0.75 percent about 133 tonnes of kelp ash stand behind a tonne, itself burnt from a couple of dozen times its mass of wet weed. LABELLED HEURISTIC for the labour (no cited figure): gathering and burning about 3200 tonnes of wet weed per tonne of iodine at roughly a tonne of wet weed gathered, spread to dry and burnt per labourer-day of ten hours, plus leaching and crystallising the ash, comes to about thirty thousand labourer-hours. Conf C.",
    "conf": "C",
    "requires_node": "analytical_chemistry"
   },

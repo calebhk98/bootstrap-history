@@ -3,6 +3,7 @@
   "id": "tr_wooden_waggonway",
   "name": "Wooden waggonway",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_muscle"
   ],
@@ -23,7 +24,7 @@
   "dev_years": 20,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -55,7 +56,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -88,7 +89,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -98,6 +99,7 @@
   "id": "tr_rail_rolling",
   "name": "Rail rolling in mill",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "boring_mill",
@@ -121,7 +123,7 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.18,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -131,6 +133,7 @@
   "id": "tr_bullhead_rail",
   "name": "Bullhead rail",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_rail_rolling",
    "cap_tol_100um"
@@ -152,7 +155,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 256.7,
+  "rev_hours": 5175.554383998997,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -162,6 +165,7 @@
   "id": "tr_flatbottom_rail",
   "name": "Flat bottom rail",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_rail_rolling",
    "cap_tol_100um"
@@ -183,7 +187,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -193,6 +197,7 @@
   "id": "tr_rail_welding",
   "name": "Rail welding",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_rail_rolling",
    "cap_heat_3000",
@@ -216,7 +221,7 @@
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.22,
-  "rev": 570.0,
+  "rev_hours": 11492.271129253715,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -226,6 +231,7 @@
   "id": "tr_fishplate",
   "name": "Fishplate for rail joining",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_1mm",
@@ -251,17 +257,18 @@
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
   "note": "Simple wrought iron plate on both sides of rail joint, bolted through. Prevents vertical deflection and twisting at the joint. The kernel is that bolted joints are maintenance-intensive because vibration loosens bolts; springs under bolt heads help, but regular tightening is essential.",
-  "cap": 600.0
+  "cap_hours": 12097.127504477594
  },
  {
   "id": "tr_sleeper_ballast",
   "name": "Sleeper and ballast foundation",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_wooden_waggonway"
   ],
@@ -284,7 +291,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -294,6 +301,7 @@
   "id": "tr_chair_key",
   "name": "Chair and key for bullhead rail",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "blast_furnace",
    "tr_sleeper_ballast"
@@ -315,7 +323,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -325,6 +333,7 @@
   "id": "tr_points_frog",
   "name": "Points and frog",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_iron_edge_rail",
    "cap_tol_100um",
@@ -349,7 +358,7 @@
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 326.7,
+  "rev_hours": 6586.88592618805,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -359,6 +368,7 @@
   "id": "tr_turntable",
   "name": "Locomotive turntable",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_1mm"
@@ -382,7 +392,7 @@
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 242.7,
+  "rev_hours": 4893.288075561187,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -392,6 +402,7 @@
   "id": "tr_sprung_buffer",
   "name": "Sprung coupling buffer",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "case_hardening"
@@ -415,7 +426,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -425,6 +436,7 @@
   "id": "tr_screw_coupling",
   "name": "Screw coupling",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_1mm"
@@ -446,7 +458,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -456,6 +468,7 @@
   "id": "tr_knuckle_coupler",
   "name": "Automatic knuckle coupler",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_sprung_buffer",
    "cap_tol_100um",
@@ -480,7 +493,7 @@
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 356.7,
+  "rev_hours": 7191.7423014119295,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -490,6 +503,7 @@
   "id": "tr_vacuum_brake",
   "name": "Vacuum brake",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100",
    "cap_tol_100um",
@@ -514,7 +528,7 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 900,
+  "rev_hours": 18145.691256716393,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -524,6 +538,7 @@
   "id": "tr_westinghouse_brake",
   "name": "Westinghouse air brake",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam",
    "cap_tol_100um",
@@ -548,7 +563,7 @@
   "dev_years": 25,
   "dev_people": 4,
   "risk": 0.2,
-  "rev": 428.0,
+  "rev_hours": 8629.28428652735,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -558,6 +573,7 @@
   "id": "tr_bogie_truck",
   "name": "Bogie truck with leading wheels",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "finery_puddling",
@@ -582,7 +598,7 @@
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.12,
-  "rev": 321.3,
+  "rev_hours": 6478.011778647752,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -592,6 +608,7 @@
   "id": "tr_leading_truck",
   "name": "Leading truck for guiding",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "finery_puddling"
@@ -615,7 +632,7 @@
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.08,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -625,6 +642,7 @@
   "id": "tr_locomotive_boiler",
   "name": "Locomotive boiler with multitubular flues",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "cap_tol_100um",
@@ -657,7 +675,7 @@
   "dev_years": 20,
   "dev_people": 5,
   "risk": 0.25,
-  "rev": 2500,
+  "rev_hours": 50404.69793532331,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -667,6 +685,7 @@
   "id": "tr_blastpipe",
   "name": "Blastpipe for draught",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler"
   ],
@@ -687,7 +706,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -697,6 +716,7 @@
   "id": "tr_superheater",
   "name": "Superheater",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler",
    "cap_heat_1300",
@@ -728,18 +748,19 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Superheater tubes run through the furnace smoke box; steam passing through is heated above saturation temperature. Dry steam has much better expansion efficiency and does not condense in the cylinders. The kernel is that if steam reaches saturation again in the cylinders from pressure drop, water slugs damage the valves and pistons; superheat prevents this.",
-  "cap": 3000.0,
-  "up": 250.0
+  "cap_hours": 60485.63752238797,
+  "up_hours": 5040.469793532331
  },
  {
   "id": "tr_injector_feedwater",
   "name": "Injector feedwater pump",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler",
    "cap_tol_100um"
@@ -763,7 +784,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -773,6 +794,7 @@
   "id": "tr_slide_valve",
   "name": "Slide valve for steam distribution",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_100um"
@@ -795,7 +817,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -805,6 +827,7 @@
   "id": "tr_piston_valve",
   "name": "Piston valve",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_slide_valve",
    "cap_tol_100um",
@@ -828,7 +851,7 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -838,6 +861,7 @@
   "id": "tr_stephenson_linkmotion",
   "name": "Stephenson link motion",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "cap_tol_1mm"
@@ -861,7 +885,7 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 289.3,
+  "rev_hours": 5832.831645075614,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -871,6 +895,7 @@
   "id": "tr_walschaerts_valve",
   "name": "Walschaerts valve gear",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "cap_tol_100um"
@@ -894,7 +919,7 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 351.7,
+  "rev_hours": 7090.932905541283,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -904,6 +929,7 @@
   "id": "tr_compound_expansion",
   "name": "Compound expansion engine",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler",
    "cap_tol_100um",
@@ -933,18 +959,19 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 1300,
+  "rev_hours": 26210.442926368123,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "Multiple cylinders at different pressures; steam expands through each in turn; triples fuel efficiency compared to a simple engine; coal consumption becomes the limiting factor.",
-  "cap": 5000.0,
-  "up": 600.0
+  "cap_hours": 100809.39587064662,
+  "up_hours": 12097.127504477594
  },
  {
   "id": "tr_articulated_locomotive",
   "name": "Articulated locomotive",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_compound_expansion",
    "tr_bogie_truck",
@@ -970,7 +997,7 @@
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.22,
-  "rev": 2500,
+  "rev_hours": 50404.69793532331,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -980,6 +1007,7 @@
   "id": "tr_electric_locomotive",
   "name": "Electric locomotive with trolley pole",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "tr_third_rail",
@@ -1004,7 +1032,7 @@
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 658.3,
+  "rev_hours": 13272.565060329332,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -1014,6 +1042,7 @@
   "id": "tr_third_rail",
   "name": "Third rail power conductor",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining",
    "cap_tol_100um"
@@ -1034,7 +1063,7 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1044,6 +1073,7 @@
   "id": "tr_catenary_overhead",
   "name": "Overhead catenary for power",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining",
    "cap_tol_100um",
@@ -1066,7 +1096,7 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 1800,
+  "rev_hours": 36291.382513432785,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1076,6 +1106,7 @@
   "id": "tr_pantograph",
   "name": "Pantograph current collector",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_catenary_overhead",
    "cap_tol_100um"
@@ -1099,7 +1130,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1109,6 +1140,7 @@
   "id": "tr_diesel_electric",
   "name": "Diesel electric transmission",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "lnd_diesel_cycle",
@@ -1135,7 +1167,7 @@
   "dev_years": 25,
   "dev_people": 5,
   "risk": 0.25,
-  "rev": 1238.3,
+  "rev_hours": 24966.454981324343,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -1145,6 +1177,7 @@
   "id": "tr_semaphore_signal",
   "name": "Semaphore station and sight line",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_surveying_groma"
   ],
@@ -1168,7 +1201,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1178,6 +1211,7 @@
   "id": "tr_block_signalling",
   "name": "Block signalling system",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_semaphore_signal"
   ],
@@ -1197,7 +1231,7 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.08,
-  "rev": 216.7,
+  "rev_hours": 4369.0792170338245,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1207,6 +1241,7 @@
   "id": "tr_track_circuit",
   "name": "Track circuit for detection",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "cap_tol_100um"
@@ -1231,7 +1266,7 @@
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.12,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1241,6 +1276,7 @@
   "id": "tr_interlocking_signal",
   "name": "Interlocking for signal control",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_track_circuit",
    "electromagnet"
@@ -1265,7 +1301,7 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 390.7,
+  "rev_hours": 7877.246193332327,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1275,6 +1311,7 @@
   "id": "tr_automatic_train_stop",
   "name": "Automatic train stop",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_track_circuit",
    "cap_heat_1100",
@@ -1297,7 +1334,7 @@
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 333.3,
+  "rev_hours": 6719.9543287373035,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1307,7 +1344,10 @@
   "id": "tr_sleeping_car",
   "name": "Sleeping car for passengers",
   "cat": "rail",
-  "pre": [],
+  "kind": "ENGINEERING",
+  "pre": [
+   "lnd_standard_gauge"
+  ],
   "traits": [
    "luxury",
    "infrastructure"
@@ -1327,7 +1367,7 @@
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.08,
-  "rev": 234.7,
+  "rev_hours": 4731.993042168152,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1337,6 +1377,7 @@
   "id": "tr_refrigerated_wagon",
   "name": "Refrigerated wagon",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_ice_artificial"
   ],
@@ -1359,7 +1400,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 250.8,
+  "rev_hours": 5056.599296871635,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1369,6 +1410,7 @@
   "id": "tr_hopper_wagon",
   "name": "Hopper wagon for bulk minerals",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron",
    "tr_sleeper_ballast",
@@ -1393,7 +1435,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1414,6 +1456,7 @@
   "id": "tr_tank_wagon",
   "name": "Tank wagon for liquids",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_riveted_plating",
    "cap_tol_100um"
@@ -1435,7 +1478,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 269.3,
+  "rev_hours": 5429.594061593028,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1445,6 +1488,7 @@
   "id": "tr_marshalling_hump",
   "name": "Marshalling hump yard",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_knuckle_coupler",
    "tr_track_circuit"
@@ -1466,7 +1510,7 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 233.3,
+  "rev_hours": 4703.766411324372,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1476,6 +1520,7 @@
   "id": "tr_clinker_planking",
   "name": "Clinker planking hull construction",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_mortise_tenon"
   ],
@@ -1497,18 +1542,19 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
   "note": "Each plank overlaps the one below; fastened with iron rivets or treenails. Flexes with the hull movement. The kernel is that overlap provides some hydrodynamic benefit at speed, and the joint overlaps create a labyrinth that slows leaking. Clinker hulls are lighter and more flexible than carvel.",
-  "cap": 400.0,
-  "up": 60.0
+  "cap_hours": 8064.75166965173,
+  "up_hours": 1209.7127504477594
  },
  {
   "id": "tr_carvel_planking",
   "name": "Carvel planking hull construction",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "sea_mortise_tenon"
@@ -1531,18 +1577,19 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Planks meet edge to edge on the outside; frames inside hold the shape. Smoother hull than clinker, better for large vessels. The kernel is that seams must be perfectly caulked or the ship leaks. The planks are attached to frames with treenails (wooden pegs) or iron bolts; treenails are preferred because iron rusts and weakens the hull.",
-  "cap": 600.0,
-  "up": 80.0
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1612.950333930346
  },
  {
   "id": "tr_frame_first_construction",
   "name": "Frame-first hull construction",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -1560,7 +1607,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 180.3,
+  "rev_hours": 3635.1868150955174,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1589,7 +1636,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1599,6 +1646,7 @@
   "id": "tr_lateen_sail",
   "name": "Lateen sail",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "sea_square_sail"
   ],
@@ -1618,7 +1666,7 @@
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.02,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1628,6 +1676,7 @@
   "id": "tr_square_rig",
   "name": "Square rig sails",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -1645,7 +1694,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.04,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1655,6 +1704,7 @@
   "id": "tr_fore_aft_rig",
   "name": "Fore-and-aft rig",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_lateen_sail"
   ],
@@ -1677,18 +1727,19 @@
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
   "note": "Fore-and-aft sails point along the ship length. A boom extends below the sail, controlled by rope blocks. This rig allows sailing close to the wind. The kernel is that controlling the boom requires skill and strength; an accidental jibe (boom swing) can decapitate a sailor. Modern fore-and-aft rigs use mechanical systems to prevent that.",
-  "cap": 500.0,
-  "up": 60.0
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1209.7127504477594
  },
  {
   "id": "tr_jib",
   "name": "Jib triangular foresail",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_fore_aft_rig"
   ],
@@ -1708,7 +1759,7 @@
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.03,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1718,6 +1769,7 @@
   "id": "tr_staysail",
   "name": "Staysail",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_fore_aft_rig"
   ],
@@ -1737,7 +1789,7 @@
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.03,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1747,6 +1799,7 @@
   "id": "tr_reefing",
   "name": "Reefing sails",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving",
@@ -1765,7 +1818,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1775,6 +1828,7 @@
   "id": "tr_capstan",
   "name": "Capstan for hauling",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_power_human"
@@ -1798,7 +1852,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1808,6 +1862,7 @@
   "id": "tr_windlass",
   "name": "Windlass for anchor hauling",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_power_human"
@@ -1831,7 +1886,7 @@
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1841,6 +1896,7 @@
   "id": "tr_block_tackle",
   "name": "Block and tackle pulley",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving",
@@ -1861,7 +1917,7 @@
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.02,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -1871,6 +1927,7 @@
   "id": "tr_chain_cable",
   "name": "Chain cable",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_heat_1100"
@@ -1891,7 +1948,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1901,6 +1958,7 @@
   "id": "tr_stockless_anchor",
   "name": "Stockless anchor",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300",
    "case_hardening"
@@ -1922,7 +1980,7 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 199.3,
+  "rev_hours": 4018.2625194039747,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1932,6 +1990,7 @@
   "id": "tr_copper_sheathing",
   "name": "Copper sheathing for wooden hulls",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining",
    "cap_tol_1mm",
@@ -1957,18 +2016,20 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Copper is expensive but prevents marine growth (barnacles, weed) that increases drag. Needs copper nails for fastening; iron nails corrode and weaken the sheathing. The kernel is that copper is sacrificial: it oxidizes and protects the wood. Replacement is expensive but hull speed is preserved.",
-  "cap": 3000.0,
-  "up": 300.0
+  "cap_hours": 60485.63752238797,
+  "up_hours": 6048.563752238797,
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: sheet thickness uniformity important for corrosion resistance]"
  },
  {
   "id": "tr_caulking_oakum",
   "name": "Caulking with oakum",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving",
@@ -1989,7 +2050,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1999,6 +2060,7 @@
   "id": "tr_bilge_pump",
   "name": "Shipboard bilge-pump adaptation",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_human",
    "pwr_force_pump",
@@ -2023,7 +2085,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.04,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2033,6 +2095,7 @@
   "id": "tr_watertight_bulkhead",
   "name": "Watertight bulkhead",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -2050,7 +2113,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 161.6,
+  "rev_hours": 3258.1596745392985,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2060,6 +2123,7 @@
   "id": "tr_double_bottom",
   "name": "Double bottom hull structure",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_riveted_plating",
    "cap_tol_100um"
@@ -2081,7 +2145,7 @@
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.12,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2112,7 +2176,7 @@
   "dev_years": 15,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 3000,
+  "rev_hours": 60485.63752238797,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -2122,6 +2186,7 @@
   "id": "tr_steel_hull",
   "name": "Steel hull construction",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "tr_riveted_plating",
@@ -2145,18 +2210,19 @@
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.2,
-  "rev": 4000,
+  "rev_hours": 80647.5166965173,
   "sch": 0,
   "art": 5,
   "conf": "C",
   "note": "Steel is stronger than iron; hulls can be thinner and faster. Requires bulk steel production at scale. The kernel is that welded seams (instead of rivets) are superior, but welding came late; early steel hulls still used rivets. Transition from iron to steel hulls took decades.",
-  "cap": 3000.0,
-  "up": 250.0
+  "cap_hours": 60485.63752238797,
+  "up_hours": 5040.469793532331
  },
  {
   "id": "tr_riveted_plating",
   "name": "Riveted hull plating",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_heat_1100"
@@ -2178,7 +2244,7 @@
   "dev_years": 10,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 314.7,
+  "rev_hours": 6344.943376098498,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2188,6 +2254,7 @@
   "id": "tr_welded_hull",
   "name": "Welded hull seams",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_riveted_plating",
    "arc_furnace_ferroalloys",
@@ -2211,7 +2278,7 @@
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.2,
-  "rev": 2500,
+  "rev_hours": 50404.69793532331,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2221,6 +2288,7 @@
   "id": "tr_screw_propeller",
   "name": "Screw propeller",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "boring_mill",
    "cap_tol_100um",
@@ -2249,18 +2317,19 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Screw propeller is more efficient than paddle wheel in rough seas, but requires shaft alignment that paddle wheels do not. The kernel is that any misalignment creates vibration that damages bearings. Modern propellers use bronze casting and careful balancing.",
-  "cap": 2500.0,
-  "up": 200.0
+  "cap_hours": 50404.69793532331,
+  "up_hours": 4032.375834825865
  },
  {
   "id": "tr_paddle_wheel",
   "name": "Paddle wheel for propulsion",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "case_hardening",
@@ -2287,18 +2356,19 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Paddle wheels are simple but inefficient; they throw water up as well as back. Efficiency is worse in rough seas where paddles lose water contact. The kernel is that paddle wheels project far above the deck, limiting gun ports and cargo space. Screw propellers fit inside the hull.",
-  "cap": 2000.0,
-  "up": 250.0
+  "cap_hours": 40323.75834825865,
+  "up_hours": 5040.469793532331
  },
  {
   "id": "tr_variable_pitch_propeller",
   "name": "Variable pitch propeller",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_screw_propeller",
    "cap_tol_10um"
@@ -2322,7 +2392,7 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 493.7,
+  "rev_hours": 9953.919748267646,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2332,6 +2402,7 @@
   "id": "tr_stern_tube",
   "name": "Stern tube and stuffing box",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "boring_mill",
    "cap_tol_100um"
@@ -2354,7 +2425,7 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 900,
+  "rev_hours": 18145.691256716393,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2364,6 +2435,7 @@
   "id": "tr_marine_engine",
   "name": "Marine steam engine",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "cap_tol_100um",
@@ -2388,7 +2460,7 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 557.3,
+  "rev_hours": 11236.215263742271,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2398,6 +2470,7 @@
   "id": "tr_triple_expansion",
   "name": "Triple expansion marine engine",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_marine_engine",
    "cap_tol_100um"
@@ -2421,7 +2494,7 @@
   "dev_years": 18,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 689.3,
+  "rev_hours": 13897.583314727342,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -2453,7 +2526,7 @@
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 1800,
+  "rev_hours": 36291.382513432785,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2463,6 +2536,7 @@
   "id": "tr_marine_turbine",
   "name": "Marine steam turbine",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_watt",
    "cap_tol_10um"
@@ -2486,7 +2560,7 @@
   "dev_years": 20,
   "dev_people": 5,
   "risk": 0.22,
-  "rev": 1045.0,
+  "rev_hours": 21069.163736965143,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -2496,6 +2570,7 @@
   "id": "tr_reduction_gearing",
   "name": "Reduction gearing for propeller",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_screw_propeller",
    "cap_tol_10um"
@@ -2518,7 +2593,7 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 1800,
+  "rev_hours": 36291.382513432785,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2528,6 +2603,7 @@
   "id": "tr_marine_diesel",
   "name": "Marine diesel engine",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "lnd_diesel_cycle",
    "cap_tol_100um",
@@ -2552,7 +2628,7 @@
   "dev_years": 18,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 736.7,
+  "rev_hours": 14853.256387581074,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -2562,6 +2638,7 @@
   "id": "tr_ballast_tank",
   "name": "Ballast tank system",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_riveted_plating",
    "cap_tol_100um"
@@ -2582,7 +2659,7 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 333.3,
+  "rev_hours": 6719.9543287373035,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2592,6 +2669,7 @@
   "id": "tr_submarine_hull",
   "name": "Submarine pressure hull",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "cap_tol_100um"
@@ -2614,7 +2692,7 @@
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.25,
-  "rev": 3000,
+  "rev_hours": 60485.63752238797,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -2624,6 +2702,7 @@
   "id": "tr_periscope",
   "name": "Periscope",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "cap_tol_100um",
@@ -2647,16 +2726,18 @@
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 3,
   "conf": "C",
-  "note": "Periscope tube has lenses at top and bottom, mirror or prism in center. Light path bends 90 degrees at each end. The kernel is that mirror quality determines image brightness; tarnished mirrors make the image dim and hard to use in darkness."
+  "note": "Periscope tube has lenses at top and bottom, mirror or prism in center. Light path bends 90 degrees at each end. The kernel is that mirror quality determines image brightness; tarnished mirrors make the image dim and hard to use in darkness.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tr_lifeboat",
   "name": "Lifeboat and davit system",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "sea_iron_hull"
@@ -2682,18 +2763,19 @@
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
   "note": "Lifeboats must be strong enough for occupants, yet light enough to hoist with hand-cranked davits. Canvas or cork flotation prevents swamping. The kernel is that early lifeboats were poorly designed; many people drowned in lifeboats that swamped. Modern designs have watertight compartments and proper freeboard.",
-  "cap": 500.0,
-  "up": 50.0
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1008.0939587064662
  },
  {
   "id": "tr_ship_telegraph",
   "name": "Ship telegraph signal system",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet"
   ],
@@ -2715,7 +2797,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2725,6 +2807,7 @@
   "id": "tr_gyrocompass_repeater",
   "name": "Gyrocompass repeater",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_gyrocompass",
    "cap_tol_10um"
@@ -2748,7 +2831,7 @@
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.12,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2758,6 +2841,7 @@
   "id": "tr_log_sounding",
   "name": "Log and sounding instruments",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2779,7 +2863,7 @@
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.03,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2811,7 +2895,7 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 1100,
+  "rev_hours": 22178.067091542256,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2821,6 +2905,7 @@
   "id": "tr_dry_dock",
   "name": "Dry dock facility",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_canal_lock",
    "civ_pumping_station"
@@ -2841,7 +2926,7 @@
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 266.7,
+  "rev_hours": 5377.17317574029,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2851,6 +2936,7 @@
   "id": "tr_slipway_launch",
   "name": "Slipway for ship launch",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -2869,7 +2955,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 218.0,
+  "rev_hours": 4395.289659960193,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2879,6 +2965,7 @@
   "id": "tr_canal_lock",
   "name": "Canal lock for water level control",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "mat_pozzolana",
@@ -2906,18 +2993,19 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Locks allow boats to navigate waterfalls or height differences. Gates must seal perfectly; any leak drains the lock. The kernel is that operating a lock requires skill: chambers must be filled and drained at the right rate, and gates must close in sequence or water escapes.",
-  "cap": 8000.0,
-  "up": 600.0
+  "cap_hours": 161295.0333930346,
+  "up_hours": 12097.127504477594
  },
  {
   "id": "tr_canal_lift",
   "name": "Canal lift water elevator",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_canal_lock",
    "civ_pumping_station",
@@ -2940,7 +3028,7 @@
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 2500,
+  "rev_hours": 50404.69793532331,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -2950,6 +3038,7 @@
   "id": "tr_dredger",
   "name": "Dredger for channel deepening",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_screw_propeller",
    "cap_power_steam"
@@ -2973,7 +3062,7 @@
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 470.0,
+  "rev_hours": 9476.083211840782,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2983,6 +3072,7 @@
   "id": "tr_tug",
   "name": "Tug boat for towing",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_screw_propeller",
    "finery_puddling"
@@ -3006,7 +3096,7 @@
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 257.7,
+  "rev_hours": 5195.716263173126,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3037,7 +3127,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -3047,6 +3137,7 @@
   "id": "tr_axle_bearing_box",
   "name": "Axle bearing journal box",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "finery_puddling",
    "cap_tol_100um"
@@ -3068,7 +3159,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3078,6 +3169,7 @@
   "id": "tr_smoke_box",
   "name": "Smoke box and char arrester",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_locomotive_boiler"
   ],
@@ -3097,7 +3189,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3107,6 +3199,7 @@
   "id": "tr_grade_crossing",
   "name": "Grade crossing and safety gates",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_semaphore_signal"
   ],
@@ -3128,7 +3221,7 @@
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3138,6 +3231,7 @@
   "id": "tr_rail_gauge_standardization",
   "name": "Standard rail gauge",
   "cat": "rail",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_sleeper_ballast",
    "cap_measure_len"
@@ -3154,7 +3248,7 @@
   "dev_years": 3,
   "dev_people": 2,
   "risk": 0.05,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -3164,6 +3258,7 @@
   "id": "tr_sextant_navigation",
   "name": "Sextant for celestial navigation",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding",
    "cap_measure_len",
@@ -3189,13 +3284,13 @@
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Sextant has two mirrors and a half-silvered beam-splitter. User sees the horizon and celestial body simultaneously, then measures the angle. The kernel is that accuracy depends on optical clarity and mechanical precision; a sextant made with care is accurate to 1 minute of arc.",
-  "cap": 2500.0,
-  "up": 150.0
+  "cap_hours": 50404.69793532331,
+  "up_hours": 3024.2818761193985
  },
  {
   "id": "tr_marine_chronometer",
@@ -3224,7 +3319,7 @@
   "dev_years": 25,
   "dev_people": 4,
   "risk": 0.2,
-  "rev": 2500,
+  "rev_hours": 50404.69793532331,
   "sch": 0,
   "art": 5,
   "conf": "C",
@@ -3234,6 +3329,7 @@
   "id": "tr_mast_stepping",
   "name": "Mast stepping and rigging",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -3253,7 +3349,7 @@
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3263,6 +3359,7 @@
   "id": "tr_fore_and_aft_rigging",
   "name": "Fore-and-aft rigging system",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_fore_aft_rig"
   ],
@@ -3283,7 +3380,7 @@
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 146.7,
+  "rev_hours": 2957.7476748447716,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3293,6 +3390,7 @@
   "id": "tr_keelson",
   "name": "Keelson internal keel",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [
    "tr_frame_first_construction"
   ],
@@ -3312,7 +3410,7 @@
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3322,6 +3420,7 @@
   "id": "tr_hull_sheathing_wood",
   "name": "Internal hull sheathing and ceiling",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -3339,7 +3438,7 @@
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 179.2,
+  "rev_hours": 3613.0087480039747,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3368,7 +3467,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -3378,6 +3477,7 @@
   "id": "tr_rigging_block_lashing",
   "name": "Block rigging and rope lashing",
   "cat": "marine",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [
    "labour_saving"
@@ -3395,7 +3495,7 @@
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.03,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 1,
   "conf": "C",

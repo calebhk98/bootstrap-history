@@ -61,6 +61,7 @@ import math
 from .data import haversine_km
 from . import commodities as _commod
 from sim.constants import declare
+from . import money_units
 from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -313,20 +314,17 @@ class FreightMixin:
         kilogram than real fodder, so this reads as a conservative
         (upper-bound), not measured, feed cost.
 
-        VEHICLE WEAR/CAPITAL IS NOT INCLUDED. transport.py's own vehicle_
-        wear_fraction_per_tonne_km has no market price to convert it into
-        money - nothing in prices.json prices a cart - so this understates
-        the true cost of the haul. Named here and in the class comment
-        above, not hidden.
+        THE CARRIER'S CAPITAL AND EMPTY RETURN ARE INCLUDED, by the same
+        function foreign routes use (`land_freight_money_per_tonne_km`): oxen
+        and cart at the market rate, their depreciation, and the return trip
+        empty (a labelled heuristic: no domestic flow ledger says what comes
+        back). The cargo's own interest and spoilage enter through
+        material_freight_factor().
         """
         distance_km = self.material_freight_distance_km(material)
         if not distance_km:
             return 0.0
-        inputs = self._land_freight_physical_inputs()
-        feed_price_per_kg = self._book_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
-        driver_wage_per_hour = self.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
-        denarii_per_tonne_km = (inputs.feed_kg_per_tonne_km * feed_price_per_kg
-                                 + inputs.driver_hours_per_tonne_km * driver_wage_per_hour)
+        denarii_per_tonne_km = self.land_freight_money_per_tonne_km()
         denarii_per_tonne = denarii_per_tonne_km * distance_km
         return denarii_per_tonne / KILOGRAMS_PER_TONNE
 
@@ -348,13 +346,15 @@ class FreightMixin:
         than silently double- or under-counting when several of these
         multiply together in project_cost().
         """
-        book_price_per_kg = self._book_price_per_kg(emp_key)
+        book_price_per_kg = self._material_price_per_kg(emp_key)
         if not book_price_per_kg or book_price_per_kg <= 0:
             return 1.0
         freight_per_kg = self.material_freight_cost_per_kg(emp_key)
         if freight_per_kg <= 0:
             return 1.0
-        return 1.0 + freight_per_kg / book_price_per_kg
+        cargo_share = self.domestic_cargo_cost_share(
+            emp_key, self.material_freight_distance_km(emp_key))
+        return 1.0 + freight_per_kg / book_price_per_kg + cargo_share
 
     def material_price_factor(self, emp_key):
         """What buying MORE of this tracked commodity costs beyond the flat
@@ -372,7 +372,7 @@ class FreightMixin:
         the material CHEAPER, only available. Both halves are here: `need`
         and `_material_market_tonnes(emp_key)` are resource_throttle()'s own
         figures, so demand approaching the market ceiling raises the price on
-        the same saturating curve labour_price_factor uses (negligible at a
+        the same saturating curve labour market price_factor uses (negligible at a
         fifth of the ceiling, roughly double at the whole of it); owning
         enough of your own extraction (mine_capacity, forest_ha,
         nitre_bed_m2) to cover the need removes the premium rather than
@@ -553,9 +553,9 @@ class FreightMixin:
     # heap of dung, straw and ash turned for two years; it is cheap to lay and
     # slow to yield, which is exactly why nobody builds one until they are
     # already short.
-    NITRE_COST_PER_M2 = declare(
-        "NITRE_COST_PER_M2", 2.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/square metre", source=
+    NITRE_LABOUR_HOURS_PER_M2 = declare(
+        "NITRE_LABOUR_HOURS_PER_M2", 40.0, kind="temporary_heuristic",
+        unit="labour hours per square metre", source=
         "The figure step() used before this was given a proper `quote` "
         "path (spend / 2.0), carried forward unchanged so buying a bed the "
         "new way costs exactly what the old automatic policy always paid.",
@@ -563,6 +563,7 @@ class FreightMixin:
         why="Cost to lay one square metre of nitre bed. Not sourced to any "
             "attested saltpetre-works price; a carried-forward implementation "
             "constant.")
+    NITRE_COST_PER_M2 = money_units.PricedInLabourHours("NITRE_LABOUR_HOURS_PER_M2")
     NITRE_YIELD_T_PER_M2 = declare(
         "NITRE_YIELD_T_PER_M2", 0.0008, kind="temporary_heuristic",
         unit="tonnes saltpetre/square metre/year", source=None,
@@ -589,7 +590,7 @@ class FreightMixin:
         household = self.state.household
         if not purchase_rule.can_pay(self, cost):
             return 0.0
-        household.capital -= cost
+        household.debit(cost, "nitre beds laid down")
         self.state.economy.nitre_bed_m2 += square_metres
         return square_metres
 
@@ -665,9 +666,20 @@ class FreightMixin:
                    "{:,.0f}".format(square_meters * self.NITRE_COST_PER_M2
                                    * self.price_index))),
                 "commands": ["buy nitre %d" % square_meters]}
-        if binding in self.MINE_OPEX_PER_T:
+        if binding in self.MINE_OPEX_MATERIALS:
+            sinking = [tranche for tranche in (self.state.economy.mine_tranches or []) if tranche[0] == binding]
+            sinking_tonnes = sum(tranche[1] for tranche in sinking)
+            if sinking_tonnes > 0.0:
+                ready_year = int(min(tranche[2] for tranche in sinking))
+                shortfall_t = max(0.0, shortfall_t - sinking_tonnes)
+                sinking_text = ("A working of %s tonnes a year is already being sunk, ready in %d. "
+                                % ("{:,.0f}".format(sinking_tonnes), ready_year))
+                if shortfall_t < 1.0:
+                    return {"text": sinking_text + "It covers the shortfall; wait for it.", "commands": []}
+            else:
+                sinking_text = ""
             tonnes_short = max(1, math.ceil(shortfall_t - 1e-9))
-            return {"text": (
+            return {"text": sinking_text + (
                 "The market will not sell you enough %s, so you have to dig "
                 "it: %s. 'quote mine %s %d' for the price, then 'buy mine "
                 "%s %d'. A shaft takes a few years to come into production."

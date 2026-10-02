@@ -8,7 +8,7 @@ function's own docstring for why a strategy file is public information, not
 a live look into a fogged session's own state.
 
 `cmd_sweep` stayed behind in cli.py rather than joining this file: it
-constructs `Sim(...)` directly, and `sim/tests/test_complaint_38_founder_lifetime.py`
+constructs `Sim(...)` directly, and `sim/tests/test_complaint_37_founder_lifetime.py`
 monkeypatches `engine.cli.Sim` before calling it, to record every cfg a
 sweep point builds. That patch rebinds the name `Sim` only in cli.py's own
 namespace - a function defined here would keep resolving `Sim` against
@@ -235,7 +235,7 @@ WHY_OPPOSITION_SUSPICION_PER_UNIT = declare(
         "happen. Left at its source value rather than silently removed or "
         "changed - a literal migration must not also fix what it says, the "
         "same discipline _founder_lifetime_hours()'s own comment explains "
-        "for a case that WAS worth fixing (Complaints/38); worth an actual "
+        "for a case that WAS worth fixing (Complaints/37); worth an actual "
         "read of whether 'sus' still does anything before the next hand "
         "touches this line.")
 
@@ -253,7 +253,7 @@ def cmd_why(args):
     print(node_record["note"])
     print()
     print("Recipe          : %s/%s" % (os.path.relpath(KNOWLEDGE_DIR, ROOT), node_record["kb"]))
-    # Complaints/38: same computed budget cmd_path prints and judges against
+    # Complaints/37: same computed budget cmd_path prints and judges against
     # - see _founder_lifetime_hours()'s own comment - so this percentage
     # cannot go stale against either of those the way a separately typed
     # "72,000-hour life" did.

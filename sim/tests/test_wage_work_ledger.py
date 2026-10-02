@@ -1,8 +1,8 @@
 """Wage work shows in `money` and `log`; the shortage remedy tells the truth
-about the player's own workings (complaints 148 and 175)."""
+about the player's own workings (complaints 144 and 171)."""
 from .harness import *  # noqa: F401,F403
 
-# --- complaint 148: one-off wage work -------------------------------------
+# --- complaint 144: one-off wage work -------------------------------------
 _replies, _, _ = proto([
     {"cmd": "work", "trade": "scholar", "hours": 1500, "preview": True},
     {"cmd": "money"},
@@ -31,7 +31,7 @@ check("`work` says the lost practice income is simply not collected at the next 
 check("`log` has a line for the wage work",
       "wage work" in str(_log).lower(), str(_log)[:400])
 
-# --- complaint 148: the standing order, and the text screen -----------------
+# --- complaint 144: the standing order, and the text screen -----------------
 _replies, _, _ = proto([
     {"cmd": "allocate", "id": "work", "trade": "scholar", "hours": 1000},
     {"cmd": "step", "n": 1},
@@ -49,7 +49,7 @@ check("the money text shows the wage rows and no longer claims the rows "
       "wage work last year" in _text and "(these add up to the revenue above)" not in _text,
       _text)
 
-# --- complaint 175: shortage remedy ----------------------------------------
+# --- complaint 171: shortage remedy ----------------------------------------
 _s = sim()
 
 _s.annual_material_demand = lambda: {"gold_kg": 0.0}

@@ -16,6 +16,7 @@
     "textiles": 0.7
   },
   "currency": "sterling penny",
+  "currency_words": {"long": "pence", "short": "pence"},
   "coin_standard": {
     "material": "silver_kg",
     "kg_per_unit": 0.00135,
@@ -290,6 +291,7 @@
   "literacy_elite": 0.5,
   "literacy_general": 0.06,
   "name": "England under Edward I",
+  "short_name": "England",
   "notes": [
     "You arrive 48 years before the Black Death kills something like 45% of the population.",
     "The perpetual corporation is worth more to a multi-generation programme than any machine in the tree.",
@@ -303,7 +305,16 @@
     "what_this_models": "You are one household, not the English crown. Four and a half million people live in this kingdom and roughly one in eight in a chartered town - about 540,000 town dwellers - but every trade you can hire is sized to the ONE town your household actually works in: the order of 15,000 people. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the kingdom's true numbers."
   },
   "population": 4500000,
+  "standing_army": 3000,
   "price_index": 1.1,
+  "prerequisite_gaps": {
+    "ag2_refrigeration_ice": "unreviewed",
+    "mat_paper": "unreviewed",
+    "sc2_institution_textbook": "unreviewed",
+    "sea_sternpost_rudder": "unreviewed",
+    "tex_indigo": "unreviewed",
+    "water_power_scale": "unreviewed"
+  },
   "starting_techs": [
     "ag2_composting",
     "ag2_liming",
@@ -313,6 +324,7 @@
     "ag2_potash",
     "ag2_refrigeration_ice",
     "cap_heat_0700",
+    "cap_heat_1100",
     "cap_power_human",
     "cap_power_muscle",
     "cap_power_water",
@@ -359,6 +371,7 @@
     "hom_candle_tallow",
     "hom_flush_latrine_simple",
     "hom_furniture_wooden",
+    "hom_lead_plumbing",
     "hom_locks_keys",
     "hom_mirror_bronze_polished",
     "hom_musical_instruments",
@@ -445,6 +458,7 @@
     "prn_carbon_ink",
     "prn_codex_bound",
     "prn_library_archive",
+    "prn_mosaic_fresco",
     "prn_parchment_sheets",
     "prn_scribal_copying",
     "prn_sculpture",
@@ -454,9 +468,11 @@
     "pwr_animal_treadmill",
     "pwr_coal_seam",
     "pwr_force_pump",
+    "pwr_peat",
     "pwr_petroleum_seeps",
     "pwr_screw_press_power",
     "pwr_ship_sail",
+    "refractory_fireclay",
     "sc2_institution_textbook",
     "sea_anchor",
     "sea_coastal_pilotage",
@@ -494,12 +510,11 @@
     "tx2_dyeing_fibre",
     "tx2_dyeing_piece",
     "tx2_dyeing_yarn",
-    "tx2_eye_pointed_needle",
     "tx2_flax_fibre",
     "tx2_fulling",
     "tx2_heddle",
     "tx2_hemp_fibre",
-    "tx2_needle",
+    "tx2_needle_hand",
     "tx2_pin",
     "tx2_retting",
     "tx2_rope_lay",
@@ -515,10 +530,8 @@
     "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
     "requisition_name": "purveyance",
     "requisition_note": "Purveyance let the Crown take goods and transport for the royal household at a fixed, below-market price, enforced by royal officers with the power of distraint; it was a standing grievance from Magna Carta's clause 28 onward, and a household with a visible surplus was exactly who the purveyor called on first.",
-    "requisition_base_share": 0.13,
     "office_name": "the shrievalty",
     "office_note": "Sheriffs and other unpaid county offices were pressed onto men of the right income, who then answered with their own estate for any shortfall in what the office owed the Exchequer - a burden substantial enough that wealthy men regularly paid fines specifically to be excused it.",
-    "office_base_share": 0.05,
     "military_name": "the Crown's monopoly patents on arms",
     "military_note": "Letters patent (in force here by 1331) let the Crown grant, and just as easily claim, exclusive rights over a trade it judged militarily useful; a founder casting a working gun attracts exactly that kind of royal interest.",
     "confiscation_name": "attainder",
@@ -560,11 +573,44 @@
       [
         "Licensed collegium of physicians and teachers",
         "A chartered guild of physicians and teachers"
+      ],
+      [
+        "Found the school (the Museum)",
+        "Found the school (the cathedral school)"
       ]
     ]
   },
   "starting_interest_rate": 0.2,
   "starting_tax_share": 0.1,
+  "state_revenue": [
+    {
+      "form": "lay_subsidy",
+      "basis": "coin_stock",
+      "rate": 0.017,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): the lay subsidy was a fifteenth or tenth of movable goods, voted in some years and not others; one year in four at a fifteenth averages to about this share of a year. Coin stands in for movables, the only wealth the simulation holds as a stock.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "wool_custom",
+      "basis": "exports_value",
+      "rate": 0.06,
+      "_internal": {
+        "source": "The great custom of 1275: 6s 8d on a sack of wool, about a twentieth to a sixth of its price (Ormrod, English State Fiscal Policy; Lloyd, English Wool Trade).",
+        "confidence": "C"
+      }
+    },
+    {
+      "form": "import_custom",
+      "basis": "imports_value",
+      "rate": 0.03,
+      "_internal": {
+        "source": "Carta mercatoria of 1303: an additional 3d in the pound (1.25 per cent) on aliens' imports, plus prisage on wine; the figure is of that order.",
+        "confidence": "C"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "Canon law forbade Christian usury; Jewish lenders (expelled 1290) charged up to the statutory two pence a pound a week, and Italian merchant-bankers disguised interest at lower effective rates. An estimate between these.",
@@ -573,6 +619,45 @@
     "starting_tax_share": {
       "source": "Lay subsidies at a tenth of moveables in towns and a fifteenth in the country, plus customs and manorial dues. Granted irregularly, so the yearly share is an estimate.",
       "confidence": "C"
+    },
+    "standing_army": {
+      "source": "Paid garrisons of the royal castles and the household troops; armies for a campaign were raised by commissions of array and indentures, not kept (Prestwich, Armies and Warfare in the Middle Ages). An approximate opening headcount of the force the Crown kept in pay in peace.",
+      "confidence": "D"
+    }
+  },
+  "needs_first": {
+    "Mediterranean crafts": {
+      "node": "kt_mediterranean_crafts",
+      "because": "this society does not know the Mediterranean public-works, surveying and stage crafts; learn them first, by engaging craftsmen and copying the works",
+      "ids": [
+        "civ_aqueduct_roman",
+        "civ_chorobates",
+        "civ_dome_roman",
+        "civ_insula",
+        "civ_surveying_groma",
+        "hom_cosmetics_roman",
+        "hom_hypocaust",
+        "hom_public_bath",
+        "lnd_cursus_publicus",
+        "med_legal_physician",
+        "med_valetudinaria",
+        "opt_groma",
+        "prn_papyrus_sheets",
+        "sea_mortise_tenon",
+        "sea_pharos_lighthouse",
+        "sea_spritsail",
+        "tex_dye_murex"
+      ]
+    },
+    "eastern trade goods": {
+      "node": "exp_trade_route_extend",
+      "because": "this society does not trade in the eastern goods these depend on; extend the trade routes first",
+      "ids": [
+        "mat_camphor",
+        "mat_natron",
+        "mat_shellac",
+        "sea_monsoon_route"
+      ]
     }
   }
 }

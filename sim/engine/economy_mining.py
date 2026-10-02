@@ -25,55 +25,21 @@ other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
 from sim.constants import declare
+from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model
+from sim.world import land
 from . import purchase_rule
 
 
 class MiningMixin:
-    MINE_OPEX_PER_T_COAL = declare(
-        "MINE_OPEX_PER_T_COAL", 1.5, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_IRON = declare(
-        "MINE_OPEX_PER_T_IRON", 12.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_COPPER = declare(
-        "MINE_OPEX_PER_T_COPPER", 55.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_LEAD = declare(
-        "MINE_OPEX_PER_T_LEAD", 18.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_TIN = declare(
-        "MINE_OPEX_PER_T_TIN", 95.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_SILVER = declare(
-        "MINE_OPEX_PER_T_SILVER", 2200.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-    MINE_OPEX_PER_T_GOLD = declare(
-        "MINE_OPEX_PER_T_GOLD", 42000.0, kind="engineering_estimate",
-        book_money=True, unit="denarii per tonne extracted", source=None, confidence="D",
-        why="Curated recurring cost per tonne extracted from a working of this "
-            "material; the deposits' own extraction labour (see _mine_labour_hours_per_tonne) is the derivation to migrate to.")
-
     MINE_OPEX_MATERIALS = ("coal", "iron", "copper", "lead", "tin", "silver", "gold")
 
     @property
     def MINE_OPEX_PER_T(self):
-        """Curated running cost per tonne, by material, in this civilisation's coin."""
-        return {material: getattr(self, "MINE_OPEX_PER_T_" + material.upper())
-                for material in self.MINE_OPEX_MATERIALS}
+        """Running cost per tonne extracted, by material, in this civilisation's
+        coin: the deposits' own extraction labour at the miner's wage."""
+        return {material: self._mine_opex(material) for material in self.MINE_OPEX_MATERIALS}
 
     MINE_LEAD_YEARS = declare(
         "MINE_LEAD_YEARS", 3.0, kind="engineering_estimate",
@@ -115,7 +81,7 @@ class MiningMixin:
             total = sum(dep.quantity_tonnes_per_year for dep in pool)
             return [(dep, dep.quantity_tonnes_per_year / total) for dep in pool]
         seam = deposit_model.Deposit(
-            name="generic_" + mat, metal=mat, region="", material_moved="ore",
+            name="generic_" + mat, metal=mat, tile="", material_moved="ore",
             ore_grade_kg_per_tonne=KILOGRAMS_PER_TONNE,
             depth_class=self.GENERIC_MINE_DEPTH_CLASS,
             hardness_class=self.GENERIC_MINE_HARDNESS_CLASS,
@@ -138,17 +104,15 @@ class MiningMixin:
 
     def _mine_capex_opex(self, mat):
         """(capex per t/yr to sink, opex per t/yr to run) for standing
-        production of `mat`. Capex is derived from the physical works;
-        opex is the curated figure where there is one, else the deposits'
-        own extraction labour. (None, None) for a name nothing prices."""
-        if mat not in self.MINE_OPEX_PER_T:
-            price = self._book_price_per_kg(mat)
+        production of `mat`, both from the deposits' physical works at the
+        miner's wage. (None, None) for a name nothing prices."""
+        if mat not in self.MINE_OPEX_MATERIALS:
+            price = self._material_price_per_kg(mat)
             if price is None or price <= 0:
                 return None, None
         wage = self.wage_per_hour(self.MINE_TRADE)
         build_hours, running_hours = self._mine_labour_hours_per_tonne(mat)
-        opex = self.MINE_OPEX_PER_T.get(mat, running_hours * wage)
-        return build_hours * wage, opex
+        return build_hours * wage, running_hours * wage
 
     def _mine_capex(self, mat):
         capex, _opex = self._mine_capex_opex(mat)
@@ -161,12 +125,10 @@ class MiningMixin:
     def mineable(self, mat):
         """Can you sink standing production capacity in this material at
         all? True for the seven curated metals and, generalised, for any
-        material key or curated commodity id this file can find a book
-        price for - which in practice is anything a node in the tech tree
-        actually buys, since every one of those has a prices.json entry by
-        construction (data.py's own load() could not have computed
-        `_material_cost` otherwise). False only for a name that prices
-        nothing at all: a typo, not a real gap."""
+        material key or curated commodity id this file can find a
+        calculated price for - in practice anything a node in the tech tree
+        buys, since the solver prices every material a recipe makes. False
+        only for a name that prices nothing at all: a typo, not a real gap."""
         return self._mine_capex(self._normalize_material_name(mat)) is not None
 
     def mine_catalog_hint(self):
@@ -272,14 +234,16 @@ class MiningMixin:
             "for forest_land_ceiling() below. Tuned, not derived from any "
             "attested relationship between income and organisational "
             "capacity.")
-    REVENUE_SCALE_DENARII = declare(
-        "REVENUE_SCALE_DENARII", 60000.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii/year of revenue for +100% ceiling", source=None,
+    REVENUE_SCALE_LABOUR_HOURS = declare(
+        "REVENUE_SCALE_LABOUR_HOURS", 1210000.0, kind="temporary_heuristic",
+        unit="labour hours/year of revenue for +100% ceiling", source=None,
         confidence="D",
-        why="How much annual revenue it takes to double a standing "
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "How much annual revenue it takes to double a standing "
             "ceiling via REVENUE_SCALE_CAP_MULTIPLE, reused identically in "
             "forest_land_ceiling() below. Tuned, not derived from any "
             "attested income-to-capacity relationship.")
+    REVENUE_SCALE_DENARII = money_units.PricedInLabourHours("REVENUE_SCALE_LABOUR_HOURS")
 
     # ---- DEPLETION: the easy seam runs out ---------------------------
     #
@@ -452,6 +416,17 @@ class MiningMixin:
     # Bessemer/open-hearth bulk steel, the second and further step of the same
     # effect as blast_furnace, further from ore than the last.
 
+    def _running_kept(self, name):
+        """A dict for derived values that depend only on which nodes are built, granted and
+        operating (what `running` reads); it starts empty whenever that changes."""
+        projects = self.state.projects
+        stamp = (getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
+                 len(projects.done), len(projects.granted), len(projects.operating))
+        kept = self.__dict__.get("_running_kept_tables")
+        if kept is None or kept[0] is not projects or kept[1] != stamp or kept[2] is not self.nodes:
+            kept = self.__dict__["_running_kept_tables"] = (projects, stamp, self.nodes, {})
+        return kept[3].setdefault(name, {})
+
     def mining_tech(self, mat):
         """(yield_mult, cost_mult) technology has bought this material's
         mining so far. yield_mult >= 1 raises what a working can pull out
@@ -460,12 +435,18 @@ class MiningMixin:
         file (MARKET_SHARE, goods_reach_factor): a mine at three times the
         book yield is a real historical claim, thirty times is the
         abolished unobtainable category with its sign flipped."""
+        kept = self._running_kept("mining_tech")
+        found = kept.get(mat)
+        if found is not None:
+            return found
         yield_mult, cost_mult = 1.0, 1.0
         for node_id, spec in self._effect_terms("mining_tech"):
             if self.running(node_id) and mat in spec.get("materials", (mat,)):
                 yield_mult *= spec["yield"]
                 cost_mult *= spec["cost"]
-        return min(yield_mult, self.MINING_TECH_YIELD_CEILING), max(self.MINING_TECH_COST_FLOOR, cost_mult)
+        found = kept[mat] = (min(yield_mult, self.MINING_TECH_YIELD_CEILING),
+                                max(self.MINING_TECH_COST_FLOOR, cost_mult))
+        return found
 
     MINING_TECH_YIELD_CEILING = declare(
         "MINING_TECH_YIELD_CEILING", 3.0, kind="temporary_heuristic",
@@ -546,6 +527,12 @@ class MiningMixin:
         return (working["capacity"] * self._mine_opex(mat) * self.price_index
                 * self.mining_cost_scale_for(working))
 
+    def mine_operating_cost_new(self, mat, tonnes):
+        """What a freshly commissioned working of `tonnes` will be charged a
+        year, by the same function that charges every standing working."""
+        return self.mine_operating_cost_for(
+            {"material": mat, "capacity": tonnes, "intensity_yrs": 0.0})
+
     def mine_quote(self, mat, t_per_yr):
         """What a mine would cost, BEFORE you commit to it.
 
@@ -554,13 +541,13 @@ class MiningMixin:
         price shown and no way to ask beforehand.
         """
         mat = self._normalize_material_name(mat)
-        cap, opex_per_t = self._mine_capex_opex(mat)
+        cap, _opex_per_t = self._mine_capex_opex(mat)
         if cap is None:
             return None
         tonnes = max(0.0, float(t_per_yr))
         scale = self.mining_cost_scale(mat)
         sink = tonnes * cap * self.price_index * scale
-        opex = tonnes * opex_per_t * self.price_index * scale
+        opex = self.mine_operating_cost_new(mat, tonnes)
         ceiling = self.mine_land_ceiling(mat)
         economy = self.state.economy
         household = self.state.household
@@ -747,7 +734,7 @@ class MiningMixin:
             cost = t_per_yr * cap * self.price_index * scale
         if t_per_yr <= 0:
             return 0.0
-        household.capital -= cost
+        household.debit(cost, "mines opened")
         # Each investment is its own working with its own sinking time.
         # Pooling them and taking the LATEST ready date would mean a
         # player who invests spare cash every year, which is exactly what
@@ -830,7 +817,7 @@ class MiningMixin:
             kept = []
             for working in self._workings_of(material):
                 cut = working["capacity"] * self.MOTHBALL_CUT_SHARE
-                household.add_capital(cut * self._mine_opex(material) * self.price_index)
+                household.credit(cut * self._mine_opex(material) * self.price_index, "mine running costs saved by mothballing")
                 working["capacity"] -= cut
                 if working["capacity"] >= 1.0:
                     kept.append(working)
@@ -865,7 +852,7 @@ class MiningMixin:
     #
     # KEYED ON AREA (geography.json's own `land.land_area_km2` per home
     # region - see home_land_area_km2() below), NOT ON A COUNT OF REGION
-    # LABELS (len(home_regions)): Complaint 46 names the same failure here
+    # LABELS (len(home_regions)): Complaint 45 names the same failure here
     # that it names for rent - a region is a filing label, not a unit of
     # area, and the labels range 86x in size (americas_north 19.8M km2
     # down to britannia's 230,000 -- data/world/geography.json). Keying
@@ -875,7 +862,7 @@ class MiningMixin:
     # but singular region (9.6M km2, bigger than Rome's whole seven put
     # together) would price out at less than a seventh of Rome's ceiling
     # for holding MORE ground - the map's filing system leaking into the
-    # economics, exactly as Complaint 46 describes for rent.
+    # economics, exactly as Complaint 45 describes for rent.
     #
     # [C], sized against the one real anchor available: resources.json's
     # empire-wide 500,000 t/yr of charcoal implies roughly 667,000 ha under
@@ -924,21 +911,17 @@ class MiningMixin:
             "independently measured.")
 
     def home_land_area_km2(self):
-        """Total land area, in km2, of this civilization's own home_regions --
-        read from geography.json's per-region `land.land_area_km2`, not
-        counted by how many region labels that ground happens to be filed
-        under (see forest_land_ceiling()'s own comment for why the count
-        was wrong). Falls back to Italia's area, the same fallback
-        _compute_home_centroid() uses for a civ file with no valid
-        home_regions at all, so this never divides by zero or crashes on a
-        malformed civ file."""
-        home = [region_id for region_id in (self.civ.get("home_regions") or []) if region_id in self._regions]
-        area = sum(float((self._regions[region_id].get("land") or {}).get("land_area_km2", 0.0))
-                   for region_id in home)
+        """Total land area, in km2, of the tiles this civilization's
+        home_regions resolve to, not counted by how many region labels that
+        ground is filed under (see forest_land_ceiling()). Falls back to
+        Italia's tiles, as _compute_home_centroid() falls back to Italia,
+        for a civ file with no resolvable home_regions, so this never
+        divides by zero or crashes on a malformed civ file."""
+        area = land.territory_land_area_km2(self.civ.get("home_regions") or [], self.geo)
         if area > 0.0:
             return area
-        fallback = self._regions.get("italia") or next(iter(self._regions.values()), {})
-        return float((fallback.get("land") or {}).get("land_area_km2", 0.0)) or 1.0
+        fallback = "italia" if "italia" in self._regions else next(iter(self._regions), None)
+        return land.territory_land_area_km2([fallback], self.geo) or 1.0
 
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""
@@ -972,6 +955,6 @@ class MiningMixin:
         # A shaft that costs nothing needs no budget check.
         if cost > 0 and not purchase_rule.can_pay(self, cost):
             return 0.0
-        household.capital -= cost
+        household.debit(cost, "forest bought")
         economy.forest_ha += hectares
         return hectares

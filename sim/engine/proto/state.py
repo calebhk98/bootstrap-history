@@ -3,8 +3,11 @@
 import math, re
 
 from ..data import closure
+from .. import shortage_conditions
 from ..knowledge_warning import knowledge_loss_warning
 from .state_shut_staffing import shut_for_want_of_staff
+from .step_alerts import demographic_emergency
+from .state_succession import succession_block
 
 def _agent_end_reason(sim):
     """None while the run is live; otherwise why it stopped, for state() and
@@ -54,6 +57,12 @@ def _agent_end_reason(sim):
     return None
 
 
+# Hazard fields only the `risk` screen needs.
+_RISK_ONLY_KEYS = ("note", "what_you_can_do", "staff_loss_before_what_you_have_built",
+                   "output_factor", "output_factor_after_what_you_have_built",
+                   "national_public_health")
+
+
 def _risk_without_the_essays(knowledge_risk):
     """knowledge_risk with the hazard prose stripped, for embedding in state."""
     if not isinstance(knowledge_risk, dict):
@@ -62,7 +71,7 @@ def _risk_without_the_essays(knowledge_risk):
     ahead = out.get("known_hazards_ahead")
     if isinstance(ahead, list):
         out["known_hazards_ahead"] = [
-            {key: value for key, value in hazard.items() if key not in ("note", "what_you_can_do")}
+            {key: value for key, value in hazard.items() if key not in _RISK_ONLY_KEYS}
             for hazard in ahead if isinstance(hazard, dict)]
         out["the_full_account_of_each"] = '{"cmd":"risk"}'
     return out
@@ -94,6 +103,9 @@ def _staff_fraction_note(sim):
             "wage and output of one artisan plus a third of another's.")
 
 
+_STAFFING_HINT = "'labour' shows who can be hired; 'hire <trade> 1' or 'train <trade>' adds one"
+
+
 def _waiting_on(sim, nodes, node_id, progress, bill):
     """What is ACTUALLY holding this project up, checked against today."""
     node = nodes[node_id]
@@ -123,20 +135,18 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
         supply = sim.hours_you_can_call_on(trade)
         total_demand = portfolio_demand.get(trade, {}).get(
             "demand_hours_this_year", need)
-        if supply < need or total_demand > supply + 1e-6:
-            # The society's CAPACITY is the durable fact and the one a player
-            # can act on; what is left after this year's bookings is noise that
-            # changes every step. Say the first, and only mention the second
-            # when it is what is actually binding.
-            if supply < need:
-                staffing_short.append(
-                    "%s (wants %.0f hours a year; this society can "
-                    "field %.0f at most)" % (trade, need, max(0.0, supply)))
-            elif total_demand > supply + 1e-6:
-                booked_short.append(
-                    "%s (wants %.0f hours a year; the %ss here can "
-                    "supply %.0f but your other work has them booked)"
-                    % (trade, need, trade, max(0.0, supply)))
+        # The society's capacity is the durable fact a player can act on;
+        # this year's bookings only matter when they are what binds.
+        kind = sim.trade_shortage_kind(trade, need, total_demand)
+        if kind == "staffing":
+            staffing_short.append(
+                "%s (wants %.0f hours a year; this society can "
+                "field %.0f at most)" % (trade, need, max(0.0, supply)))
+        elif kind == "booked":
+            booked_short.append(
+                "%s (wants %.0f hours a year; the %ss here can "
+                "supply %.0f but your other work has them booked)"
+                % (trade, need, trade, max(0.0, supply)))
     # BOTH, WHEN BOTH ARE TRUE, NOT JUST THE FIRST ONE FOUND: this loop
     # already knows every trade this project is short on, so returning the
     # moment staffing_short has anything in it would silently drop
@@ -149,15 +159,18 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
     if staffing_short and booked_short:
         return ("nobody to do the work: " + "; ".join(sorted(staffing_short)[:3])
                 + ". Also short, but only because your own other work has it "
-                  "booked: " + "; ".join(sorted(booked_short)[:3]))
+                  "booked: " + "; ".join(sorted(booked_short)[:3])
+                + ". " + _STAFFING_HINT)
     if staffing_short:
-        return "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3])
+        return "nobody to do the work: " + "; ".join(sorted(staffing_short)[:3]) + ". " + _STAFFING_HINT
     if booked_short:
         # A DIFFERENT SENTENCE FOR A DIFFERENT REMEDY. The society CAN field
         # this trade; it is your own other active work that has it booked.
         # Teaching or hiring more does nothing here - 'portfolio' (the
         # aggregate demand-vs-supply view) or stopping something else does.
-        return "trade hours already booked: " + "; ".join(sorted(booked_short)[:3])
+        return ("trade hours already booked: " + "; ".join(sorted(booked_short)[:3])
+                + ". 'portfolio' shows the competing demand; 'priority <id> first' or "
+                  "'allocate <id> <hours>' decides who gets the hours")
     if progress["ph_left"] <= 0 and bill > 0.5:
         # MONEY YOU HAVE IS NOT MONEY YOU ARE SHORT OF: step() pays at most
         # one year's instalment - the cost divided by the node's calendar
@@ -184,7 +197,10 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
                 "%s is more than you can raise at this moment"
                 % ("{:,.0f}".format(bill), "{:,.0f}".format(per_year)))
     if progress["ph_left"] <= 0:
-        return "the calendar"
+        years_left = max(1, math.ceil(node["yrs"] - progress.get("yrs", 0.0) - 1e-9))
+        return ("the calendar: the work and the money are done, and the least "
+                "time it takes (%g years) has about %d more year%s to run"
+                % (node["yrs"], years_left, "" if years_left == 1 else "s"))
     # MATERIALS. A shortage scales only projects consuming its supply pool -
     # see core.py step() 5 - so a project with
     # founder-hours still to spend and nobody short on trade or money can
@@ -198,22 +214,17 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
                 "running at %d%% of the pace its hours alone "
                 "would allow; 'capacity' shows the shortfall"
                 % (sim.binding, round(_thr * 100)))
-    # FOUNDER HOURS - AND WHY THIS MUCH OF THEM: a project sharing the pool
-    # with ten others and one sitting alone must not both say the
-    # identical "your hours" - the priority rank and share among active
-    # projects has to be shown too. The numbers below are read from
-    # step()'s own bookkeeping (core.py, "pool_rank_this_year" and
-    # neighbours) - never recomputed - so this sentence and what actually
-    # happened cannot disagree.
-    _rank = progress.get("pool_rank_this_year")
-    _count = progress.get("pool_active_count_this_year")
-    _total = progress.get("pool_total_this_year")
+    # Rank, count and pool come from the live queue the allocator also uses.
+    _rank, _count, _total = sim.hour_standing(node_id) or (None, None, None)
     if _rank and _count and _count > 1:
         return ("your hours: priority #%d of %d active projects sharing "
                 "this year's %s directed hours; 'portfolio' shows what "
                 "each one is getting and why"
                 % (_rank, _count, "{:,.0f}".format(_total or 0.0)))
-    return "your hours"
+    free_hours = max(0.0, sim.director_pool() - sim.director_hours_committed())
+    return ("your hours: %s of your own hours of work are still to do, and "
+            "you have %s uncommitted this year"
+            % ("{:,.0f}".format(progress["ph_left"]), "{:,.0f}".format(free_hours)))
 
 
 def _goal_progress_count(sim, nodes):
@@ -310,6 +321,7 @@ def _agent_state_active_projects(sim, nodes):
     active = {}
     for node_id, progress in sim.active.items():
         node = nodes[node_id]
+        _standing = sim.hour_standing(node_id) or (None, None, None)
         bill = progress.get("cost_left")
         _at_risk = progress.get("stalled_years", 0)
         if bill is None:
@@ -349,10 +361,9 @@ def _agent_state_active_projects(sim, nodes):
                      # agreement between two pieces of code that happen to
                      # compute it the same way. None before the first step()
                      # a fresh project has lived through.
-                     "pool_rank_this_year": progress.get("pool_rank_this_year"),
-                     "pool_active_count_this_year":
-                         progress.get("pool_active_count_this_year"),
-                     "pool_total_this_year": progress.get("pool_total_this_year"),
+                     "pool_rank_this_year": _standing[0],
+                     "pool_active_count_this_year": _standing[1],
+                     "pool_total_this_year": _standing[2],
                      "pool_remaining_before_this_year":
                          progress.get("pool_remaining_before_this_year"),
                      "underfunded_this_year": progress.get("underfunded_this_year", False),
@@ -368,6 +379,10 @@ def _agent_state_active_projects(sim, nodes):
                      # See `allocate` and core.py step()'s own comment on
                      # hour_allocations.
                      "hours_directed_this_year": progress.get("hours_directed_this_year"),
+                     # THE LIVE RISK: what the dice use now, after any failed
+                     # attempts, beside the first-attempt figure.
+                     "chance_of_failure_now": sim.effective_risk(node_id),
+                     "chance_of_failure_before_any_attempt": node["risk"] or None,
                      "bountied": node_id in sim.bountied}
     return active
 
@@ -381,6 +396,7 @@ def _agent_state_headline_money(sim, end_year):
         # A clock you cannot see is not a constraint, it is an ambush.
         "horizon_year": end_year, "years_left": max(0, end_year - sim.year),
         "capital": round(sim.capital, 1), "revenue": round(sim.revenue(), 1),
+        "coin_hoard": sim.coin_hoard_report(),
         "upkeep": round(sim.upkeep(), 1),
         # Capital can fall even with both revenue and upkeep reported as
         # zero if nothing here shows where it went: living costs (food,
@@ -443,10 +459,6 @@ def _agent_state_spend_and_net(sim):
     """This year's project spend, interest, and the two net-income figures
     (this year's actual, and the standing ordinary-year one).
     """
-    _standing_revenue = sim.revenue_capacity()
-    _standing_upkeep = sim.upkeep()
-    _standing_living = sim.living_cost(
-        _rev=_standing_revenue, _upkeep=_standing_upkeep)
     return {
         # net_per_year counts the STANDING flows only, never what projects
         # consume - usually the largest outflow by far - so it can report
@@ -485,12 +497,9 @@ def _agent_state_spend_and_net(sim):
         # is what credit_limit() already reads, with the identical
         # reasoning in its own docstring ("a lender does not cut your
         # line because you took a job this year").
-        "net_per_year": round(_standing_revenue - _standing_upkeep
-                              - _standing_living
-                              + min(_standing_living,
-                                    sim.wages_prepaid)
-                              - sim.mine_operating_cost()
-                              - max(0.0, -sim.capital) * sim.debt_interest_rate(), 1),
+        "net_per_year": round(sim.recurring_net(), 1),
+        # The same figure `money` prints, from the one method both read.
+        "sustainable_debt": round(sim.sustainable_debt(), 1),
     }
 
 
@@ -554,7 +563,7 @@ def _agent_state_training_and_hours(sim, active, full):
              "now, not on you or your money. A calendar floor is not "
              "exclusive research time - start something else alongside "
              "it while it runs. 'available' or 'stuck' says what you "
-             "could begin today."
+             "could begin today; 'idle' splits the hours and names the delay."
              % "{:,.0f}".format(max(0.0, sim.director_pool()
                                     - sim.director_hours_committed())))
             if (active
@@ -567,7 +576,7 @@ def _agent_state_training_and_hours(sim, active, full):
             # completely, and hours do not carry.
             else ("%s founder-hours this year are going into nothing at all: "
                   "you have no work in hand. Hours do not carry to next year. "
-                  "'available' or 'stuck' says what you could begin today."
+                  "'available' or 'stuck' says what you could begin today; 'idle' splits the hours and names the delay."
                   % "{:,.0f}".format(max(0.0, sim.director_pool()
                                          - sim.director_hours_committed()))
                   if (not active
@@ -603,12 +612,19 @@ def _agent_state_founder(sim):
     """
     return {
         "founder_alive": sim.founder_alive,
+        "founder_age": (sim.founder_age()
+                        if sim.founder_alive and not sim.cfg.get("immortal", True) else None),
+        "founder_usual_age_at_death": (
+            [round(sim.cfg["founder_arrival_age"] + sim.cfg["founder_life_mean"] - sim.cfg["founder_life_sd"]),
+             round(sim.cfg["founder_arrival_age"] + sim.cfg["founder_life_mean"] + sim.cfg["founder_life_sd"])]
+            if not sim.cfg.get("immortal", True) else None),
         # THE AGE ITSELF, AS A FIELD, not only inside a log sentence a script
         # would have to parse. See _founder_death_info.
         "founder_died_aged": (_founder_death_info(sim) or {}).get("aged_about"),
         "founder_died_in": (_founder_death_info(sim) or {}).get("year"),
         "scholars": round(sim.scholars, 2), "artisans": round(sim.artisans, 2),
         "directors_extra": round(sim.directors_extra, 2),
+        "succession": succession_block(sim),
     }
 
 
@@ -884,6 +900,15 @@ def _agent_state(sim, nodes, cmd=None):
     warning = knowledge_loss_warning(sim)
     if warning:
         out["knowledge_loss_warning"] = warning
+    emergency = demographic_emergency(sim.state.population.population_change_last_year)
+    if emergency:
+        out["demographic_emergency"] = emergency
+    conditions = shortage_conditions.condition_rows(sim)
+    if conditions:
+        out["conditions"] = conditions
+    living_stock = sim.held_living_stock()
+    if living_stock:
+        out["living_stock"] = living_stock
     return _agent_state_shorten(out, full)
 
 

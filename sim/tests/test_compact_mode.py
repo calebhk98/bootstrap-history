@@ -1,4 +1,4 @@
-"""The agent-oriented compact mode: Complaints/35 section 1.
+"""The agent-oriented compact mode: Complaints/reports/playthrough-review-han-china-100-to-400ad.md section 1.
 
 A player of this game who is itself an AI agent asked for "an explicit
 agent-oriented compact mode that can return highly structured state without
@@ -17,7 +17,7 @@ sim/engine/proto/*.py:
   'compact' - a SHORT SUMMARY of the reply on 'state', 'step', 'why' and
               'stuck' (see sim/engine/proto/compact.py): only the fields a
               turn needs, far smaller than 'json' and than the text screen.
-              Implies 'json'. Complaints/173.
+              Implies 'json'. Complaints/169.
 
 The compact agent output mode keeps reason-carrying prose; the mode-off path is byte-identical.
 """

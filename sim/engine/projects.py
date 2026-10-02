@@ -55,20 +55,41 @@ already gives for keeping its own cross-cutting constants on ITS
 composition point rather than in one of ITS four sub-mixins - so these stay
 here, on the composition point all six inherit from, instead.
 """
+from .blockers import BlockersMixin
 from .projects_capability import CapabilityMixin
 from .projects_ventures import VenturesMixin
 from .projects_staffing import StaffingMixin
 from .projects_staffing_shortfall import StaffingShortfallMixin
+from .projects_staffing_report import StaffingReportMixin
+from .projects_open_gate import OpenGateMixin
+from .allocation_notes import AllocationNotesMixin
 from .projects_venture_quotes import VentureQuotesMixin
+from .projects_hour_queue import HourQueueMixin
 from .projects_starting import StartingMixin
+from .projects_exclusions import ExclusionsMixin
 from .projects_progress import ProgressMixin
 from .projects_completion import CompletionMixin
+from .projects_rebuild import RebuildMixin
 from sim.constants import declare
 
 
-class ProjectsMixin(CapabilityMixin, VenturesMixin, StaffingMixin,
-                     StaffingShortfallMixin, VentureQuotesMixin,
-                     StartingMixin, ProgressMixin, CompletionMixin):
+class ProjectsMixin(
+        BlockersMixin,
+        CapabilityMixin,
+        VenturesMixin,
+        StaffingMixin,
+        StaffingShortfallMixin,
+        StaffingReportMixin,
+        OpenGateMixin,
+        AllocationNotesMixin,
+        VentureQuotesMixin,
+        HourQueueMixin,
+        StartingMixin,
+        ExclusionsMixin,
+        ProgressMixin,
+        CompletionMixin,
+        RebuildMixin,
+    ):
     """Composition point only: every method below is defined in one of the
     six sibling modules above, not here - what IS defined directly here is
     the handful of constants read from more than one of them (see this

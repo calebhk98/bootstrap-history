@@ -20,6 +20,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 import collections
 
 from sim.constants import declare
+from .failure_diagnosis import failure_teaches
 
 
 class ProgressMixin:
@@ -163,6 +164,38 @@ class ProgressMixin:
                       "desired": min(left, ceiling)}
         return out
 
+    def project_useful_hours(self, node_id):
+        """The most of your own hours active project `node_id` can use in a
+        year: its pace (project_hour_pace) bounded by the work left, times
+        the same resource throttle step() applies."""
+        project_state = self.state.projects.active[node_id]
+        return (min(project_state["ph_left"], self.project_hour_pace(node_id))
+                * self.project_resource_throttle(node_id))
+
+    def trade_shortage_kind(self, trade_id, need, total_demand=None):
+        """Why a trade is short for a project that wants `need` hours a year
+        of it: "staffing" when the society cannot field that much at all,
+        "booked" when it can but the portfolio's demand exceeds it, else None.
+        `total_demand` None means the caller already knows the project fell
+        short, so what the society can field decides between the two."""
+        supply = self.hours_you_can_call_on(trade_id)
+        if supply < need:
+            return "staffing"
+        if total_demand is None or total_demand > supply + 1e-6:
+            return "booked"
+        return None
+
+    def trade_shortfall_note(self, project_state):
+        """The step-log reason for a project short of hired trades: booked
+        by other work, or more than the society can field at all."""
+        short = sorted(project_state.get("short_of_trade") or [])
+        staffing = [trade_id for trade_id in short
+                    if trade_id in (project_state.get("short_of_trade_staffing") or [])]
+        booked = [trade_id for trade_id in short if trade_id not in staffing]
+        if booked:
+            return "trade hours already booked: " + ", ".join(booked[:2])
+        return "nobody to do the work: this society cannot field enough " + ", ".join(staffing[:2])
+
     def trade_demand_vs_supply(self):
         """Aggregate, by hired trade: what this year's ACTIVE portfolio
         wants from it (summed trade_draw_plan 'desired', the same demand
@@ -225,6 +258,8 @@ class ProgressMixin:
         hired_hours = 0.0
         worst = 1.0
         plan = self.trade_draw_plan(node_id, lab_left)
+        need_by_trade = {trade_id: min(entry["nominal"], entry["left"])
+                         for trade_id, entry in plan.items()}
         for trade_id, plan_entry in sorted(plan.items()):
             left, nominal = plan_entry["left"], plan_entry["nominal"]
             have = max(0.0, self.hours_you_can_call_on(trade_id)
@@ -241,14 +276,19 @@ class ProgressMixin:
         if worst < 1.0:
             project_state["status"] = "BLOCKED_INPUTS"
             frac *= worst
-            project_state["short_of_trade"] = sorted(
+            short_trades = sorted(
                 trade_id for trade_id, left in lab_left.items()
                 if left > 0 and (self.hours_you_can_call_on(trade_id)
                                   - projects.trade_hours_used.get(trade_id, 0.0))
                 < min(left, node["lab"][trade_id] / max(1.0, node["yrs"])))[:3]
+            project_state["short_of_trade"] = short_trades
+            project_state["short_of_trade_staffing"] = [
+                trade_id for trade_id in short_trades
+                if self.trade_shortage_kind(trade_id, need_by_trade.get(trade_id, 0.0)) == "staffing"]
         else:
             project_state["status"] = "ACTIVE"
             project_state.pop("short_of_trade", None)
+            project_state.pop("short_of_trade_staffing", None)
         # DEADLINE: prevents creep. Unmet trades trigger abandonment.
         if project_state["yrs"] >= self.lab_max_span(node_id) and any(value > 0.5 for value in lab_left.values()):
             unmet = sorted(trade_id for trade_id, value in lab_left.items() if value > 0.5)
@@ -283,7 +323,9 @@ class ProgressMixin:
             "rate, not fitted to any real learning-curve data.")
 
     def _retry_risk_multiplier(self, node_id):
-        attempt_count = self.state.projects.failed_attempts.get(node_id, 0)
+        projects = self.state.projects
+        attempt_count = (projects.failed_attempts.get(node_id, 0)
+                         - projects.uninformed_failures.get(node_id, 0))
         if attempt_count <= 0:
             return 1.0
         return (self.RETRY_RISK_FLOOR
@@ -407,7 +449,21 @@ class ProgressMixin:
         if node["yrs"] >= self.DIFFUSION_LIMITED_YEARS_THRESHOLD:   # diffusion-limited nodes, not physical curing
             floor = max(self.CALENDAR_FLOOR_MIN_YEARS,
                         node["yrs"] / (1.0 + self.state.household.reputation / self.CALENDAR_FLOOR_REPUTATION_SCALE))
-        return floor
+        return floor * self.rebuild_work_factor(node_id)
+
+    def payment_schedule_years(self, node_id):
+        """Years the bill takes to pay in full: it is paid in equal yearly
+        instalments over the node's nominal years, which reputation never
+        shortens."""
+        return max(1.0, self.nodes[node_id]["yrs"] * self.rebuild_work_factor(node_id))
+
+    def earliest_completion_years(self, node_id):
+        """The soonest the project can finish, with no failure: the longer of
+        the calendar floor and the payment schedule, less what a running
+        attempt has already served."""
+        earliest = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
+        running = self.state.projects.active.get(node_id)
+        return max(0.0, earliest - running.get("yrs", 0.0)) if running else earliest
 
     def expected_calendar_years(self, node_id, _max_extra_attempts=500):
         """Expected calendar years to SUCCEED at node_id, counting every retry the
@@ -454,9 +510,11 @@ class ProgressMixin:
            learning (failed_attempts is never reset) - a real, separate
            wrinkle, and the player's own choice, not the dice's.
         """
-        floor = self.calendar_floor(node_id)
+        floor = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
         projects = self.state.projects
         initial_failed_attempts = projects.failed_attempts.get(node_id, 0)
+        initial_uninformed = projects.uninformed_failures.get(node_id, 0)
+        teaches = failure_teaches(self, node_id)
         _had_key = node_id in projects.failed_attempts
         _active = projects.active.get(node_id) if node_id in projects.active else None
         total = 0.0
@@ -475,11 +533,15 @@ class ProgressMixin:
                 total += survive * years_this_attempt
                 # Stand in for i failures, read effective_risk, restore in finally.
                 projects.failed_attempts[node_id] = attempt_index
+                # Failures nobody can diagnose add nothing to the learning.
+                projects.uninformed_failures[node_id] = initial_uninformed + (
+                    0 if teaches else attempt_index - initial_failed_attempts)
                 survive *= self.effective_risk(node_id)
                 attempt_index += 1
                 if survive < 1e-12 or attempt_index - initial_failed_attempts > _max_extra_attempts:
                     break
         finally:
+            projects.uninformed_failures[node_id] = initial_uninformed
             if _had_key:
                 projects.failed_attempts[node_id] = initial_failed_attempts
             else:

@@ -140,6 +140,10 @@ DEFAULT_AVAILABLE_LIMIT = 30
 
 SAVE_SUFFIXES = (".json", ".save")
 
+# True while a person is typing at the keyboard (`play`): they own the machine,
+# so a typed save may go to any path. The JSON protocol keeps the sandbox.
+HUMAN_AT_KEYBOARD = False
+
 
 def _unsafe_path(path):
     """None if this is a reasonable place for a save file; a refusal if not.
@@ -151,6 +155,10 @@ def _unsafe_path(path):
     commands to this process can already run code as this user. It is here
     so the ordinary accident does not happen, not because a sandbox exists.
     """
+    if HUMAN_AT_KEYBOARD:
+        if not os.path.normpath(path).lower().endswith(SAVE_SUFFIXES):
+            return "a save file should end in %s" % " or ".join(SAVE_SUFFIXES)
+        return None
     if os.path.isabs(path) or path.startswith(("/", "\\")):
         return ("a save file must be a relative path, not an absolute one. "
                 "Try {\"cmd\":\"save\",\"file\":\"mygame.json\"}")
@@ -289,3 +297,12 @@ def _localise_money(obj, word):
         # match on it; only the values a person reads get rewritten.
         return {key: _localise_money(value, word) for key, value in obj.items()}
     return obj
+
+
+def _coin_hoard_line(out):
+    hoard = out.get("coin_hoard")
+    if not hoard or not hoard.get("tonnes"):
+        return []
+    return ["  held as coin that is %s tonnes of %s; keeping it under guard costs about %s den/yr"
+            % (_fmt_num(hoard["tonnes"]), str(hoard["metal"]).replace("_kg", "").replace("_", " "),
+               _fmt_num(hoard["keeping_cost_per_year"]))]

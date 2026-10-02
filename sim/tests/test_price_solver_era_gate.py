@@ -1,4 +1,4 @@
-"""Pins the era gate that Complaints/39 asked for: `sim/solve_prices.py` had
+"""Pins the era gate that Complaints/38 asked for: `sim/solve_prices.py` had
 no notion of WHEN, so a 100 AD Roman scenario priced all three of its energy
 carriers off a photovoltaic panel. The panel was correct data and the
 cheapest source of electricity at solved prices; it was simply not available

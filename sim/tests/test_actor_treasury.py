@@ -1,4 +1,4 @@
-"""Complaint 189: money moves between actors through a ledger, and the state's
+"""Complaint 185: money moves between actors through a ledger, and the state's
 takings from the founder are received by the government actor."""
 import copy
 import json
@@ -35,7 +35,7 @@ def actor_sim(extra_nodes):
     return game
 
 
-def grown(civ, employees=2000.0, capital=60000000.0, eminence=25.0, events=False):
+def grown(civ, employees=2000.0, capital=1.0e10, eminence=100.0, events=False):
     """A household large enough that the state has noticed it."""
     game = sim(civ=civ, events=events)
     game.employees["artisan"] = employees
@@ -43,7 +43,7 @@ def grown(civ, employees=2000.0, capital=60000000.0, eminence=25.0, events=False
     game.capital = capital
     game.eminence = eminence
     game.update_protection()
-    return game
+    return state_seeking(game)
 
 
 class AlwaysFires(random.Random):
@@ -140,6 +140,8 @@ drawn = grown("rome_100ad", events=True)
 drawn.rng = AlwaysFires(1)
 drawn.military_demand_eligible = lambda: True  # the state can fight and has noticed the household
 treasury = government_of(drawn)
+treasury.record.unfunded = {"army": 1.0e5}  # the state could not pay for its army
+treasury.record.levy_base = 1.0e6
 capital_before, treasury_before = drawn.capital, treasury.money
 drawn._state_pressure(drawn.year)
 paid = capital_before - drawn.capital

@@ -5,8 +5,9 @@ one SocietyMixin with 61 methods. This piece is diffusion in both of the
 senses the tree needs: how much of one venture's own edge has leaked to
 imitators who watched the founder run it (diffusion_share, diffusion_index),
 and how a DONE node spreads into the wider civilisation category by
-category - food, medical, information and state-military - at its own pace
-(_diffusion_category, _diffusible_ids, _state_has_a_patron, _diffusion_pace,
+category - food, medical and information at a curve of their own, and state-military as
+what the government actor holds
+(_diffusion_category, _diffusible_ids, _diffusion_pace,
 civ_diffusion, _category_diffusion_index, food_diffusion_index,
 medical_diffusion_index, information_diffusion_index,
 state_military_diffusion,
@@ -21,6 +22,7 @@ that they can live in a file of their own. Behaviour is unchanged and
 verified byte-identical.
 """
 from sim.constants import declare
+from .institution_societies import belongs_to_other_society
 
 
 class DiffusionMixin:
@@ -28,13 +30,8 @@ class DiffusionMixin:
     # ---- WHAT YOU BUILT DOES NOT STAY YOURS ---------------------------------
     # "To make it even more interesting, you could make it so others try to
     # figure your stuff out, to sell it themselves... over a generation or
-    # two." economy_index() (economy.py) already spends the idea that
-    # diffused technology enriches the whole empire - it raises the WHOLE
-    # economy the instant a tier-2+ node is DONE, with no delay and no
-    # distinction between a technique you have never opened for business and
-    # one you have been visibly selling from for a century. That is the
-    # empire-wide half of the story, and it is not this file's to touch
-    # (economy.py is another agent's). What is missing, and IS this file's
+    # two." The empire-wide half of the story is real output (real_output.py):
+    # a technique cheapens the goods its entries make. What is missing, and IS this file's
     # job, is the other half: a NUMBER, per venture, for how much of the one
     # thing YOU personally run has leaked to imitators - not a price, which
     # is the competing agent's own territory (see goods_market_factor,
@@ -133,10 +130,9 @@ class DiffusionMixin:
 
         FOR THE MARKET AGENT: a revenue formula that wants to spend this
         number honestly should reduce what THIS venture earns by up to this
-        share while economy_index() (or its successor) is credited with the
-        matching gain to the wider economy - `diffused` there already grows
-        with projects.done regardless of this function, so the two are additive,
-        not double-counting the same escape.
+        share while the wider economy is credited with the matching gain through
+        the goods' prices (real_output.py), which follow projects.done regardless
+        of this function, so the two are additive, not double-counting the same escape.
         """
         projects = self.state.projects
         scenario = self.state.scenario
@@ -214,11 +210,11 @@ class DiffusionMixin:
 
     # Years for HALF of a just-completed technology in this category to
     # have spread through the society at large, absent any literacy or
-    # state-capacity effect (see _diffusion_pace). Food and military are
-    # faster than medical and information on purpose: a better crop or a
-    # working gun is something a neighbour can see working and copy without
-    # reading a word, where germ theory or a press depends on somebody
-    # publishing and somebody else literate enough to read it. 25 years (a
+    # state-capacity effect (see _diffusion_pace). Food is faster than
+    # medical and information on purpose: a better crop is something a
+    # neighbour can see working and copy without reading a word, where
+    # germ theory or a press depends on somebody publishing and somebody
+    # else literate enough to read it. 25 years (a
     # generation) is pitched at the low end of "a few decades", matching
     # Nunn and Qian's (2011) own description of the potato's spread across
     # Europe as a matter of generations rather than years.
@@ -234,13 +230,6 @@ class DiffusionMixin:
             "neighbour can see working and copy without reading a word. "
             "Pitched at the low end of 'a few decades' to match the cited "
             "source's description, not fitted to it numerically.")
-    DIFFUSION_HALF_LIFE_MILITARY_YEARS = declare(
-        "DIFFUSION_HALF_LIFE_MILITARY_YEARS", 20.0, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Years for half of a newly-completed military technology to "
-            "reach the state's own armies - fastest of the four "
-            "categories, a working gun is something a neighbour can copy "
-            "without reading a word. Tuned, not measured.")
     DIFFUSION_HALF_LIFE_MEDICAL_YEARS = declare(
         "DIFFUSION_HALF_LIFE_MEDICAL_YEARS", 35.0, kind="temporary_heuristic",
         unit="years", source=None, confidence="D",
@@ -256,7 +245,6 @@ class DiffusionMixin:
             "not measured.")
     DIFFUSION_HALF_LIFE_YEARS = {
         "food": DIFFUSION_HALF_LIFE_FOOD_YEARS,
-        "military": DIFFUSION_HALF_LIFE_MILITARY_YEARS,
         "medical": DIFFUSION_HALF_LIFE_MEDICAL_YEARS,
         "information": DIFFUSION_HALF_LIFE_INFORMATION_YEARS,
     }
@@ -283,13 +271,6 @@ class DiffusionMixin:
             self._diffusible_ids_cache = cache
         return cache.get(cat, ())
 
-    def _state_has_a_patron(self):
-        """Only a patron gives the STATE anything - the same gate
-        update_protection() already applies to military_leverage()'s own
-        bonus there: a workshop with nobody to arm is a private matter, not
-        the army's equipment."""
-        return bool(self.running_with_mechanic("patron"))
-
     def _diffusion_pace(self, cat):
         """How much faster than DIFFUSION_HALF_LIFE_YEARS[cat]'s bare figure
         this category is actually moving, for THIS society, right now.
@@ -302,12 +283,8 @@ class DiffusionMixin:
         spreads, and both categories that are genuinely about text
         (information itself, and medicine once it depends on germ theory
         rather than on watching a quarantine work) inherit that here.
-        Military instead reads state_capacity, not literacy, because what
-        limits an army re-equipping is organisation and money, not how many
-        soldiers can read (mil_general_staff and mil_conscription_reserve
-        are already scored for state_capacity in _TECH_EFFECTS.json on
-        exactly that reasoning). Food reads neither: a better crop needs
-        nobody to read anything and no army to re-equip, only a neighbour's
+        Military is not here: it is what the government holds. Food reads
+        neither: a better crop needs nobody to read anything and no army to re-equip, only a neighbour's
         field to watch.
         """
         pace = 1.0
@@ -318,26 +295,7 @@ class DiffusionMixin:
                      + self.LITERACY_DIFFUSION_PACE_SPAN
                      * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,
                            gen_lit / max(0.02, self.LITERACY_REFERENCE_GENERAL)))
-        elif cat == "military":
-            pace *= self.MILITARY_DIFFUSION_PACE_BASE + self.MILITARY_DIFFUSION_PACE_STATE_CAPACITY_SPAN * self.state_capacity
         return pace
-
-    MILITARY_DIFFUSION_PACE_BASE = declare(
-        "MILITARY_DIFFUSION_PACE_BASE", 0.5, kind="temporary_heuristic",
-        unit="dimensionless (pace multiplier floor)", source=None,
-        confidence="D",
-        why="Floor on military diffusion pace at zero state capacity - an "
-            "army re-equips slowly, not instantly, even for the "
-            "weakest-capacity state. Tuned, not measured.")
-    MILITARY_DIFFUSION_PACE_STATE_CAPACITY_SPAN = declare(
-        "MILITARY_DIFFUSION_PACE_STATE_CAPACITY_SPAN", 1.5, kind="temporary_heuristic",
-        unit="dimensionless (pace multiplier span across state_capacity)",
-        source=None, confidence="D",
-        why="How much extra military diffusion pace a maximally capable "
-            "state buys on top of MILITARY_DIFFUSION_PACE_BASE - what "
-            "limits an army re-equipping is organisation and money, not "
-            "literacy (see this method's own docstring). Tuned, not "
-            "measured.")
 
     def civ_diffusion(self, node_id):
         """0..1: how much of the WHOLE SOCIETY, not this household, has
@@ -346,12 +304,12 @@ class DiffusionMixin:
         `done`, not `operating` (contrast diffusion_share): a field of New
         World crops or a boiled-water habit is something the country copies
         whether or not the founder still keeps a market stall in it. Zero
-        for anything outside the four DIFFUSION_HALF_LIFE_YEARS categories -
+        for anything outside the four diffusion categories -
         most of the tree is neither a crop, a cure, a weapon nor a text, and
         this mechanism has nothing to say about a lathe or a bookkeeping
-        method. Military is additionally zero without a patron
-        (_state_has_a_patron): the government cannot be using cannon the
-        founder never showed to anyone with soldiers.
+        method. Military is not a curve: it is 1 when the government
+        actor holds the node (copied from the founder, or licensed) and 0
+        when it does not.
         """
         projects = self.state.projects
         scenario = self.state.scenario
@@ -363,8 +321,8 @@ class DiffusionMixin:
         cat = self._diffusion_category(node)
         if cat is None:
             return 0.0
-        if cat == "military" and not self._state_has_a_patron():
-            return 0.0
+        if cat == "military":
+            return 1.0 if node_id in self.state_treasury().knowledge else 0.0
         done_year_map = projects.done_year or {}
         age = max(0.0, scenario.year - done_year_map.get(node_id, scenario.year))
         half_life = (self.DIFFUSION_HALF_LIFE_YEARS[cat]
@@ -401,7 +359,12 @@ class DiffusionMixin:
         return self._category_diffusion_index("information")
 
     def state_military_diffusion(self):
-        return self._category_diffusion_index("military")
+        """Share of the founder's military work the government actor holds."""
+        held = self.state_treasury().knowledge
+        projects = self.state.projects
+        ids = [node_id for node_id in self._diffusible_ids("military")
+               if node_id in projects.done and node_id not in projects.granted]
+        return sum(1 for node_id in ids if node_id in held) / len(ids) if ids else 0.0
 
     # ---- DISEASE: THE COUNTRY IS HARDER TO KILL WHOLESALE ------------------
     # National prevalence of an epidemic falls as the country absorbs the
@@ -427,40 +390,41 @@ class DiffusionMixin:
     # military_leverage() and _military_war_relief() (further below)
     # already answer "does the founder's OWN workshop protect the
     # founder" - has()-gated, private, and wired only into output_factor.
-    # Give the ROMAN GOVERNMENT cannons and it is a different claim that it
-    # is not being sacked by tribes: the STATE's own armies, not the
-    # founder's private arsenal, and
-    # sack_chance as well as output_factor. state_military_diffusion()
-    # (above) is that number - patron-gated the same way update_protection
-    # already gates military leverage's own patronage bonus, because a
-    # foundry with nobody to arm is not the state's equipment yet, however
-    # much of the tree it covers.
-    STATE_MIL_RELIEF_CAP_OUTPUT = declare(
-        "STATE_MIL_RELIEF_CAP_OUTPUT", 0.25, kind="temporary_heuristic",
-        unit="dimensionless (fraction of output-shock harm removed at "
-             "full diffusion)", source=None, confidence="D",
-        why="Ceiling on how much the state's own armed forces (once the "
-            "founder's military work has diffused to them) soften an "
-            "output-crushing war - smaller than STATE_MIL_RELIEF_CAP_SACK "
-            "because output shocks have other causes besides invasion. "
-            "Tuned, not measured.")
-    STATE_MIL_RELIEF_CAP_SACK = declare(
-        "STATE_MIL_RELIEF_CAP_SACK", 0.35, kind="temporary_heuristic",
-        unit="dimensionless (fraction of sack-chance harm removed at full "
-             "diffusion)", source=None, confidence="D",
-        why="Ceiling on how much the state's own armed forces soften "
-            "sack_chance specifically - 'give the Roman government "
-            "cannons and it is not being sacked by tribes' (see the "
-            "section comment above). Tuned, not measured.")
+    # Give a government cannons and it is a different claim that it is not
+    # being sacked by tribes: the STATE's own armies, not the founder's
+    # private arsenal, and sack_chance as well as output_factor.
+    # Each of the founder's military inventions the government holds (it copied it from its own
+    # budget or was licensed it) removes its own share of the harm, one after another on what is
+    # left, as hazard_relief combines every defence. The share of the founder's tree the state holds
+    # (state_military_diffusion) is reported but is not the basis: inventing more weapons never
+    # lowers the relief.
+    STATE_MIL_RELIEF_PER_WEAPON_OUTPUT = declare(
+        "STATE_MIL_RELIEF_PER_WEAPON_OUTPUT", 0.04, kind="temporary_heuristic",
+        unit="dimensionless (share of the remaining output-shock harm one held "
+             "weapon removes)", source=None, confidence="D",
+        why="What the state's armies gain from one more of the founder's weapons "
+            "against an output-crushing war; smaller than the sack figure because "
+            "output shocks have other causes besides invasion. Tuned, not measured.")
+    STATE_MIL_RELIEF_PER_WEAPON_SACK = declare(
+        "STATE_MIL_RELIEF_PER_WEAPON_SACK", 0.06, kind="temporary_heuristic",
+        unit="dimensionless (share of the remaining sack-chance harm one held "
+             "weapon removes)", source=None, confidence="D",
+        why="What the state's armies gain from one more of the founder's weapons "
+            "against being sacked by tribes. Tuned, not measured.")
 
-    def _state_military_diffusion_relief(self, cap):
-        diffused = self.state_military_diffusion()
-        if diffused <= 0.0:
+    def state_military_weapons_held(self):
+        """How many of the founder's military inventions the government holds."""
+        held = self.state_treasury().knowledge
+        projects = self.state.projects
+        return sum(1 for node_id in self._diffusible_ids("military")
+                   if node_id in projects.done and node_id not in projects.granted and node_id in held)
+
+    def _state_military_diffusion_relief(self, per_weapon):
+        weapons = self.state_military_weapons_held()
+        if weapons <= 0:
             return 1.0, None
-        share = cap * diffused
-        return (1.0 - share), ("the state's own armies now carry some of "
-                               "what you worked out (%d%% of it has "
-                               "reached them)" % round(diffused * 100))
+        return ((1.0 - per_weapon) ** weapons,
+                "the state's own armies now carry %d of the weapons you worked out" % weapons)
 
     def world_diffusion_report(self):
         """None while nothing the founder has built is spreading into the
@@ -497,12 +461,8 @@ class DiffusionMixin:
     # summary, and nothing at all about where any of it leads.
 
     def _is_foreign_institution(self, node_id):
-        # CACHED FOREVER, not per-year, and ONLY for civs that actually pay
-        # for the string search below. Rome's own answer is unconditionally
-        # False without looking at k at all - that branch was already as
-        # cheap as a Python method call can be, and touching a cache dict for
-        # it would only add overhead. Everyone else's answer depends only on
-        # this civilization's id (fixed at construction) and this node's own
+        # CACHED FOREVER, not per-year: the answer depends only on this
+        # civilization's society (fixed at construction) and this node's own
         # key and name (fixed tree data) - nothing that changes over a run.
         # The 4a auto-grant loop in step() called this for every node in
         # `order` (2,831 of them) every single year, most of them already
@@ -511,33 +471,29 @@ class DiffusionMixin:
         # of times over. See `_done_changed` for the convention this
         # deliberately does NOT need: there is no invalidation here because
         # nothing it reads can change after the Sim is built.
-        if self.civ.get("id") == "rome_100ad":
-            return False
         cache = self.__dict__.setdefault("_foreign_institution_cache", {})
         value = cache.get(node_id)
         if value is None:
             hay = (node_id + " " + self.nodes[node_id].get("name", "")).lower()
-            value = any(marker in hay for marker in self.FOREIGN_MARKERS)
+            value = belongs_to_other_society(hay, self.civ, "markers")
             cache[node_id] = value
         return value
 
     def _is_foreign_only(self, node_id):
         """A legal or civic institution of a society that is not this one."""
         # CACHED FOREVER, for the same reason as _is_foreign_institution just
-        # above, and with the same Rome fast path kept outside the cache.
+        # above.
         # start_reason() calls this on every not-yet-done node it is asked
         # about, every year, for as long as that node stays unbuilt.
-        if self.civ.get("id") == "rome_100ad":
-            return False
         cache = self.__dict__.setdefault("_foreign_only_cache", {})
         value = cache.get(node_id)
         if value is None:
             hay = (node_id + " " + self.nodes[node_id].get("name", "")).lower()
-            value = any(marker in hay for marker in self.FOREIGN_INSTITUTIONS)
+            value = belongs_to_other_society(hay, self.civ, "exclusive_markers")
             cache[node_id] = value
         return value
 
-    def needs_first(self, node_id):
+    def needs_first(self, node_id, about_stock=None):
         """(node, why) this society must have before it can begin `node_id` at all.
 
         cost_multipliers say a domain is DEARER here. Some things are not dear,
@@ -547,13 +503,21 @@ class DiffusionMixin:
 
         Data, like everything else about a civilisation, and always liftable -
         every entry names the node that opens it. See _SCHEMA.md.
+
+        `about_stock` narrows to the gates that rest on held living stock (True) or on
+        knowledge alone (False); left out, either.
         """
         spec = self.civ.get("needs_first") or {}
         for key, ent in spec.items():
             if key.startswith("_") or not isinstance(ent, dict):
                 continue
+            if about_stock is not None and bool(ent.get("material")) != about_stock:
+                continue
             if node_id in (ent.get("ids") or ()):
                 node = ent.get("node")
+                stock = {ent["material"]: ent.get("units", 0.0)} if ent.get("material") else None
+                if stock and self.stock_holds_met(stock):
+                    continue
                 if node and node not in self.state.projects.done:
                     return node, (ent.get("because") or
                                   "this society has no %s" % key)

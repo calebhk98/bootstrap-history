@@ -49,9 +49,11 @@ check("a furnace you actually run still carries real upkeep",
       NODES["met_open_hearth_furnace"]["up"])
 # A venture that sells something was never in scope for the audit - revenue
 # is what makes it a going concern in the first place - so blast_furnace,
-# which both sells cast iron and costs money to run, is untouched.
-check("a venture that already sells something keeps its upkeep untouched",
-      abs(NODES["blast_furnace"]["up"] - book_money(7000.0)) < 1e-6 and NODES["blast_furnace"]["rev"] > 0,
+# which both sells cast iron and costs money to run, keeps a running cost. That
+# cost is now derived from its staff and plant (sim/engine/node_upkeep.py),
+# not the authored figure the audit once left alone.
+check("a venture that already sells something keeps its upkeep",
+      NODES["blast_furnace"]["up"] > 0 and NODES["blast_furnace"]["rev"] > 0,
       (NODES["blast_furnace"]["up"], NODES["blast_furnace"]["rev"]))
 
 # --- JOB 2: rubber should be made, not bought. A play tester asked whether
@@ -91,7 +93,7 @@ check("England no longer starts already owning the iron gap its own briefing des
 
 # --- JOB 3b: the cursus publicus (Roman imperial dispatch relay) and the
 # Pharos (one specific Ptolemaic building at Alexandria) are not a generic
-# capability any society might have. FOREIGN_MARKERS in fog.py already
+# capability any society might have. data/institution_societies.json already
 # catches both by name; this pins that Han China - which has no Roman
 # citizenship, no Roman roads and no Alexandria - is never handed either one
 # for free, the way testers kept finding Roman-branded grants in other

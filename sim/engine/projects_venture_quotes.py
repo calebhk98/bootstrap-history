@@ -6,18 +6,24 @@ class VentureQuotesMixin:
     def venture_real_earnings(self, node_id, units=1.0, fully_ramped=False):
         """Yearly takings as the ledger credits them, the figure `ventures` prints.
 
-        Applies the economy, output factor and price level the tree's raw
+        Applies the output factor and price level the tree's raw
         revenue lacks, and, for a running concern, its revenue ramp and its
         goods market. `fully_ramped` leaves the ramp out (what it reaches).
         """
         running = node_id in self.state.projects.operating
         ramp = 1.0 if fully_ramped or not running else self.venture_ramp(node_id)
-        market = self.goods_market_factor(node_id) if running else 1.0
+        market = (self.goods_market_factor(node_id) * self.node_output_market_factor(self.nodes[node_id])
+                  if running else 1.0)
         return self.concern_takings(node_id, ramp) * units * market
 
-    def venture_real_upkeep(self, node_id, units=1.0):
-        """Yearly running cost at the current price level, the figure `ventures` prints."""
-        return self.nodes[node_id]["up"] * units * self.price_index
+    def venture_real_upkeep(self, node_id, units=None):
+        """Yearly running cost at the current price level: the figure every
+        screen quotes and the ledger charges (`upkeep`). `units` prices a
+        stated number of units of the concern instead of what is open now."""
+        scale = self.price_index
+        if units is None:
+            return self.institution_upkeep(node_id) * scale
+        return self.nodes[node_id]["up"] * units * scale
 
     def reopen_units(self, node_id):
         """How much of a scalable institution a reopening restores (one, for anything else)."""

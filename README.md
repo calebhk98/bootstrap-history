@@ -46,7 +46,7 @@ python3 sim/simulator.py play --civ england_1300 --kit merchant --goal <goal> --
   tighten as you start and finish it. The new-game menu asks about it next to fog,
   and the in-game `options` screen can turn it on later.
 - `--mortal` lets the founder die of old age; by default you are immortal.
-- `--seed` fixes the dice, so a game can be replayed.
+- `--seed N` fixes the dice, so a game can be replayed; a seed is a number or one word (`--seed rome42`). Without it each new game draws a fresh seed, prints it at the start and keeps it in the save. The menu asks for a seed too: blank draws one, a number or word uses it, and `default_seed` in the settings file supplies the blank answer.
 
 ## Playing
 
@@ -81,11 +81,15 @@ python3 sim/simulator.py play --civ rome_100ad --session mygame.json    # start 
 echo "step 5" | python3 sim/simulator.py play --session mygame.json     # carry on from it
 ```
 
-Inside a game, `save <file>` and `load <file>` do the same by hand, and the
+Inside a game, `save <file>` and `load <file>` do the same by hand. A typed `save` says the full path it wrote; that snapshot is separate from the live game file, and resuming it starts a new live file rather than overwriting it. To move a save to another machine or container, copy the file (and the `.meta.json` beside it) and run `play --session <the copy>`. The
 menu's "Load a saved game" lists saves in your save folder. Set the folder
 with the `ROME_SAVE_DIR` environment variable or from the menu's Options;
 otherwise it is `.rome-saves` in your home directory. A save belongs to the
 version that wrote it: after updating the game, start a new game.
+
+## Display units
+
+The `options` screen (main menu item 5, and `u` in the in-game `options`) lets you pick the unit each kind of quantity is shown in: area (hectare, square kilometre, acre, your civilisation's own measure), mass, temperature and money (your coin or labour hours). Leaving a kind alone shows it exactly as the game always has. Commands still take the units their help names. The units are data in `data/world/units.json`; see [sim/PROTOCOL.md](sim/PROTOCOL.md) for the JSON side.
 
 ## Mods
 
@@ -93,8 +97,8 @@ A mod is a folder in `mods/` with a `mod.json` inside. To install one, drop
 the folder into `mods/`. To remove it, delete the folder or move it out. There
 is no registry to edit, and mods run no code; they only add data.
 
-A mod can add or change technologies, goals, production recipes, trades and
-civilisations, and can remove existing ones. Things a mod adds are named
+A mod can add or change technologies, goals, production recipes, trades,
+display units and civilisations, and can remove existing ones. Things a mod adds are named
 `<mod id>:<name>` and appear in the game like any other. Mods already installed
 in `mods/` show up in `civs` and `goals`. If two mods clash, or one needs
 another that is missing, the game refuses to load and the message names both.

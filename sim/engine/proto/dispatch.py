@@ -1,9 +1,12 @@
 """The command table: every accepted command name (and alias) mapped to the small handler that answers it, and the dispatcher that resolves names, guards fog, validates the command, and looks the handler up."""
 
+import importlib
+import os
+import pkgutil
 import re
 
 from ..data import money_word
-from .. import fuzzy_estimates
+from .. import fuzzy_estimates, units
 
 from .economy import _dashboard_snapshot
 from . import command_registry
@@ -12,53 +15,48 @@ from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from .saveload import load_state, save_state
+from .score import victory_report
 from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
+from . import step_progress
+from .guidance import delay_kinds, delay_phrase
+from .event_groups import group_disaster_events
+from .event_severity import tag_events
+from .step_alerts import step_alerts
+from .step_stops import newly_startable_goal, severe_stop_reason
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
 
-# The four handler groups moved out of this module, by subject - see each
-# one's own docstring. This stays the composition point: the command table
-# below, KNOWN_COMMANDS/_ID_COMMANDS/_NAME_COMMANDS above, the fog guard and
-# name resolution in _agent_dispatch_inner, and every name protocol.py's
-# shim re-exports (including every _cmd_* below, imported back from wherever
-# it now lives so `from .proto.dispatch import _cmd_x` keeps working).
-from .dispatch_inspection import (
-    _cmd_state, _cmd_available, _cmd_log, _cmd_score, _cmd_why, _cmd_path,
-    _cmd_materials, _cmd_risk, _cmd_values, _cmd_stuck, _cmd_mines,
-    _cmd_capacity, _cmd_portfolio, _cmd_economy, _cmd_changes,
-    _cmd_population)
-from .dispatch_money import (
-    _cmd_bounty, _cmd_buy, _cmd_sell, _cmd_money, _cmd_quote, _cmd_close,
-    _cmd_withdraw, _cmd_bribe)
-from .dispatch_market import _cmd_market  # noqa: F401
-from .dispatch_staff_controls import _cmd_keep, _cmd_reserve  # noqa: F401
-from .dispatch_priority import _cmd_priority  # noqa: F401
-from .dispatch_labour import (
-    _cmd_work, _cmd_allocate, _cmd_labour, _cmd_hire, _cmd_fire, _cmd_train,
-    _cmd_commission, _cmd_move_base)
-from .dispatch_ventures import (
-    _cmd_start, _cmd_stop, _cmd_rush, _cmd_mothball, _cmd_restore,
-    _cmd_open, _cmd_ventures, _cmd_policy)
-
-# Every command that names a technology. Under fog, NONE of them may say
-# anything about one you have not heard of - including refusing it for a reason
-# that describes it.
-_ID_COMMANDS = ("why", "path", "start", "stop", "bounty", "mothball", "restore")
-
-# Every command whose `id` a typed NAME should resolve onto, before anything
-# else touches it. `open` is not in _ID_COMMANDS above - it is safe without
-# the fog guard, because you can only open something you have already done -
-# but a player still types its name, not its id, so it needs the same
-# resolution the fog-guarded commands get.
-_NAME_COMMANDS = _ID_COMMANDS + ("open",)
+# Every dispatch_*.py module in this package registers its commands with
+# @command when imported; they are found by name here, so a new module needs
+# no edit. Each module's _cmd_* handlers are re-exported from this module so
+# `from .proto.dispatch import _cmd_x` keeps working.
+for _module_info in sorted(pkgutil.iter_modules([os.path.dirname(__file__)]),
+                           key=lambda info: info.name):
+    if _module_info.name.startswith("dispatch_"):
+        _module = importlib.import_module("%s.%s" % (__package__, _module_info.name))
+        globals().update({name: value for name, value in vars(_module).items()
+                          if name.startswith("_cmd_")})
 
 
+def id_commands():
+    """Commands that name a technology. Under fog, NONE of them may say
+    anything about one you have not heard of - including refusing it for a
+    reason that describes it."""
+    return command_registry.names_with_shape("tech")
 
-@command("save", group="game",
+
+def name_commands():
+    """Commands whose `id` a typed NAME should resolve onto before anything
+    else touches it: the id commands, plus those safe without the fog guard
+    (you can only open something already done) that still take a name."""
+    return command_registry.names_with_shape("tech", "tech_done")
+
+
+@command("save", shape="file", group="game",
          summary="write the game to a file",
          usage=["save <file>", '{"cmd":"save","file":"mygame.json"}'],
-         options={"<file>": "a relative file name"},
+         options={"<file>": "a file name (a relative name for scripts; typed in play, any path)"},
          description="Writes the whole game. See the sittings topic for scripting.")
 def _cmd_save(sim, nodes, cmd, ended):
     command = cmd.get("cmd")  # this handler serves both "save" and "load"; see below
@@ -139,6 +137,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     # warning and that field can never disagree about what "idle" means.
     # Non-blocking: it says so and proceeds, it does not refuse the step.
     multi_year_hours_warning = None
+    lone_dependencies = sim.sole_supervisors() if years > 1 else []
     if years > 1:
         _pre_state = _agent_state(sim, nodes)
         _idle_note = _pre_state.get("free_hours_going_unused")
@@ -171,10 +170,11 @@ def _cmd_step(sim, nodes, cmd, ended):
                     "into the next one - so 'step %d' spends this "
                     "year's slack exactly as idle as it is right now, "
                     "%d more times over, unless you start something "
-                    "first. Proceeding anyway."
+                    "first. Running projects wait on: %s. Proceeding anyway."
                     % (years, "{:,.0f}".format(
                            _pre_state.get("founder_hours_available") or 0.0),
-                       nodes[_could_start]["name"], years, years))
+                       nodes[_could_start]["name"], years, years,
+                       delay_phrase(delay_kinds(sim, nodes))))
     # LOST, not only completed: a game whose only score is what you have
     # built has to report subtraction at least as loudly as addition, so
     # anything that drops out of `done` during a multi-year step has to be
@@ -206,11 +206,13 @@ def _cmd_step(sim, nodes, cmd, ended):
     _STEP_STOP_MARKERS = ("CREDIT EXHAUSTED", "FOUNDER DIES",
                           "CLOSE TO THE LIMIT")
     completed, lost, events = [], [], []
+    disasters = []
     founder_died_this_step = None
     stopped_early = None
     end_year = sim.end_year
     ran = 0
     goal_before = sim.goal_snapshot()
+    goal_year_before = sim.goal_year
     route = route_nodes(sim) if years > 1 else set()
     snapshots = []
     for _ in range(years):
@@ -224,11 +226,21 @@ def _cmd_step(sim, nodes, cmd, ended):
         # own diff can still be taken, cheaply, before it is gone.
         before_revealed = set(getattr(sim, "revealed", set()))
         before_operating = set(sim.operating)
+        _arrival_snapshot = None if getattr(sim, "_dashboard_history", None) else _dashboard_snapshot(sim)
+        stalled_before = set(stalled_projects(sim))
+        goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
+        population_before = sim.population.total
         sim.step()
         ran += 1
+        population_change = sim.population.total / population_before - 1.0 if population_before > 0 else 0.0
+        sim.state.population.population_change_last_year = round(population_change, 4)
         hist = getattr(sim, "_dashboard_history", None)
         if hist is None:
             hist = sim._dashboard_history = []
+        if not hist:
+            # the arrival year is the first point `changes` can measure from
+            hist.append({**_arrival_snapshot, "revealed_added": [], "concerns_opened": [],
+                         "concerns_closed": [], "completed": []})
         _snap = _dashboard_snapshot(sim)
         _snap["revealed_added"] = sorted(
             set(getattr(sim, "revealed", set())) - before_revealed)
@@ -240,6 +252,10 @@ def _cmd_step(sim, nodes, cmd, ended):
             snapshots.append({**_snap, "route_startable": route_startable(sim, route)})
         else:
             snapshots.append(_snap)
+        step_progress.after_year(sim, {"year": sim.year, "capital": _snap["capital"],
+                                       "completed": len(_snap["completed"]),
+                                       "closed": len(_snap["concerns_closed"]), "years_asked": years,
+                                       "population_change": population_change})
         # sorted(), because this is a set difference and a set of strings
         # iterates in an order that depends on PYTHONHASHSEED. Two runs of
         # the same game with the same seed reported the same completions in
@@ -263,6 +279,8 @@ def _cmd_step(sim, nodes, cmd, ended):
             lost.append({"id": node_id, "name": nodes[node_id]["name"], "year": sim.year,
                          "can_be_restored": node_id in getattr(sim, "mothballed", set())})
         _this_year = sim.log[before_log:]
+        if getattr(sim, "disaster_this_year", None):
+            disasters.append(sim.disaster_this_year)
         for year, message in _this_year:
             events.append({"year": year, "message": message})
             if "founder dies" in message.lower():
@@ -291,13 +309,39 @@ def _cmd_step(sim, nodes, cmd, ended):
                              "time passes. Step again when you are ready."
                              % (ran, years))
             break
+        severe_reason = severe_stop_reason(
+            [{"message": message} for _, message in _this_year],
+            [nodes[node_id]["name"] for node_id in _snap["concerns_closed"]
+             if sim.staff_closure_age(node_id) is not None],
+            sorted(set(stalled_projects(sim)) - stalled_before),
+            [name for name in [newly_startable_goal(sim, goal_was_startable)] if name])
+        if ran < years and severe_reason:
+            stopped_early = ("stopped after %d of the %d years you asked for: %s. "
+                             "Step again when you have had a look." % (ran, years, severe_reason))
+            break
     out = dict(ok=True, completed=completed, lost=lost, events=events)
+    if years > 1 and lone_dependencies:
+        out["multi_year_staffing_warning"] = (
+            "before stepping %d years: %s each rest on one person; a single departure closes them. "
+            "'keep <id> staffed' or 'policy auto_replace_foreman on' protects them."
+            % (years, ", ".join(row["concern"] for row in lone_dependencies[:3])))
+    out["alerts"] = step_alerts(
+        events, lost,
+        [nodes[node_id]["name"] for snap in snapshots for node_id in snap.get("concerns_closed", ())],
+        founder_died_this_step, sim.goal_year if goal_year_before is None else None,
+        stopped_early, sim.state.population.population_change_last_year,
+        staffing_line=sim.staffing_closure_summary())
     summary = wave_summary(completed, events, goal_before, sim.goal_snapshot())
+    for disaster in disasters:
+        out["events"] = group_disaster_events(out["events"], disaster["name"], disaster["messages"])
+    out["events"] = tag_events(out["events"])
     if summary:
         out["summary"] = summary
     problems = step_problems(ran, snapshots, events, stalled_projects(sim))
     if problems:
         out["problems"] = problems
+    if goal_year_before is None and sim.goal_year is not None:
+        out["victory"] = victory_report(sim, nodes)
     if founder_died_this_step:
         out["the_founder_died_this_step"] = founder_died_this_step
     if stopped_early:
@@ -309,7 +353,7 @@ def _cmd_step(sim, nodes, cmd, ended):
 
 
 
-@command("quit", group="game", aliases=("q", "exit", "bye"),
+@command("quit", shape="bare", group="game", aliases=("q", "exit", "bye"),
          summary="stop",
          usage=["quit"], options={},
          description="Ends the session.")
@@ -321,7 +365,7 @@ def _cmd_quit(sim, nodes, cmd, ended):
 
 # "load" shares the save handler.
 command_registry.register_command(
-    "load", group="game", summary="read a game from a file",
+    "load", group="game", shape="file", summary="read a game from a file",
     usage=["load <file>"], options={"<file>": "a file written by save"},
     description="Replaces the current game with a saved one.",
     handler=_cmd_save)
@@ -355,6 +399,7 @@ def _agent_dispatch(sim, nodes, cmd):
         _out = fuzzy_estimates.fuzz_reply(sim, _entry["name"] if _entry else None, cmd, _out)
     _out = _localise_money(_out, money_word(sim.civ))
     _out = _localise_words(_out, ((sim.civ.get("local_words") or {}).get("pairs")))
+    _out = units.add_display(_out, sim)
     # Compact runs last so the short summary already carries the local vocabulary.
     if isinstance(cmd, dict) and cmd.get("compact"):
         _out = _add_compact_fields(cmd.get("cmd"), _out, sim, sim.nodes)
@@ -376,7 +421,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # takes a raw id unchanged - this only fires when what was given is NOT
     # already one, so scripts and the `agent` protocol lose nothing.
     if (isinstance(cmd.get("cmd"), str) and isinstance(cmd.get("id"), str)
-            and cmd["cmd"].strip().lower() in _NAME_COMMANDS
+            and cmd["cmd"].strip().lower() in name_commands()
             and cmd["id"] not in nodes):
         _name_cands = _resolve_by_name(cmd["id"])
         if sim.fog:
@@ -446,7 +491,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
         # already says only "this needs N other things you have not heard
         # of yet", which is the honest answer.
         _goal_why = (_op == "why" and _node_id == sim.goal)
-        if _op in _ID_COMMANDS and isinstance(_node_id, str) and not _goal_why and (
+        if _op in id_commands() and isinstance(_node_id, str) and not _goal_why and (
                 _node_id not in nodes or not sim.is_visible(_node_id)):
             if _node_id == sim.goal:
                 # You know its name; you were handed it on arrival. Telling you

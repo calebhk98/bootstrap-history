@@ -13,22 +13,20 @@ from typing import Any, Dict, Mapping, Optional
 
 from sim.world import demand, demography, wages
 
+from .default_civilisation import CIVILISATION_DIRECTORY, default_civilisation_id
+
 # The staple the subsistence basket is priced in.
 FOOD_PRICE_MATERIAL = "wheat_kg"
 
 REFERENCE_POPULATION = 10000.0
 
-_CIVILISATION_DIRECTORY = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "data", "civilizations")
 
 
 @functools.lru_cache(maxsize=None)
 def reference_civilisation() -> Dict[str, Any]:
     """The default civilisation's own file, for the context-free wage table
     tools and the price solver use when no civilisation is in play."""
-    from .settings import CONFIG_DEFAULTS
-    path = os.path.join(_CIVILISATION_DIRECTORY, CONFIG_DEFAULTS["default_civ"] + ".json")
+    path = os.path.join(CIVILISATION_DIRECTORY, default_civilisation_id() + ".json")
     with open(path, encoding="utf-8") as handle:
         return json.load(handle)
 
@@ -101,7 +99,8 @@ def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
         warnings.simplefilter("ignore")
         solved = price_solver.solved_prices(
             civ["starting_techs"], opening.ratio_document(),
-            production_entries=production_entries, civilization_id=civilisation_id)
+            production_entries=production_entries, civilization_id=civilisation_id,
+            civilization=civ)
     for role, material in (("staple", FOOD_PRICE_MATERIAL), ("coin", standard["material"])):
         if material not in solved.resolvable_materials:
             raise ValueError(

@@ -170,13 +170,11 @@ check("a cash-short hire is still refused (the asymmetry itself is kept, "
       "not loosened)", _ok_h is False, (_ok_h, _msg_h))
 check("...but the refusal now says WHICH rule this is: half the credit "
       "line, not all of it",
-      "half" in _msg_h and "credit line" in _msg_h, _msg_h)
+      "50%" in _msg_h and "credit line" in _msg_h, _msg_h)
 check("...and WHY: a lender funds work under way (what starting a project "
       "can point to), not a payroll or a one-off fee",
-      "work already under way" in _msg_h
-      and ("payroll" in _msg_h or "wage" in _msg_h), _msg_h)
-_fee_h = 3.0 * S.ANNUAL_WAGE.get("smith", 375.0) * s_asym.wage_index * s_asym.price_index \
-    * s_asym.labour_price_factor("smith")
+      "lender advances against a purchase" in _msg_h, _msg_h)
+_fee_h = s_asym.hire_fee("smith", 3)
 check("...and still states the plain facts a refusal always has: the exact "
       "cost hire() actually computed",
       "{:,.0f}".format(round(_fee_h)) in _msg_h, (_fee_h, _msg_h))
@@ -187,13 +185,13 @@ check("...and still states the plain facts a refusal always has: the exact "
 _ok_t, _msg_t = s_asym.train("machinist", 3, None)
 check("train's cash-short refusal uses the identical reasoning as hire's, "
       "not a second wording for the same rule",
-      _ok_t is False and "half" in _msg_t and "work already under way" in _msg_t,
+      _ok_t is False and "50%" in _msg_t and "lender advances against a purchase" in _msg_t,
       _msg_t)
 s_asym2 = sim(capital=0.0)
 s_asym2.capital = -50000.0
 _ok_c, _msg_c = s_asym2.commission("smith", 3500.0)
 check("commission's cash-short refusal uses the same reasoning too",
-      _ok_c is False and "half" in _msg_c and "work already under way" in _msg_c,
+      _ok_c is False and "50%" in _msg_c and "lender advances against a purchase" in _msg_c,
       _msg_c)
 
 # --- BREAK (verified against the real engine): the arithmetic
@@ -403,7 +401,7 @@ check("...and it is still capital plus half the line when there is no hole "
       abs(_sp_solvent.spending_power("buy") - 505.0) < 1e-9,
       _sp_solvent.spending_power("buy"))
 _fph_bug = WAGES["smith"] * 1.6 * s_bug.wage_index * s_bug.price_index \
-    * s_bug.labour_price_factor("smith")
+    * s_bug.labour_market.price_factor("smith")
 s_bug_u = sim(capital=0.0)
 s_bug_u.capital = -500.0
 s_bug_u.credit_limit = lambda: 210.0
@@ -463,7 +461,7 @@ check("the affordability figure the quote screen shows while in debt "
       abs(_quoted - s_sym.spending_power("buy")) < 0.05,
       (_quoted, s_sym.spending_power("buy")))
 _pph_sym = S.ANNUAL_WAGE.get("smith", 375.0) * s_sym.wage_index * s_sym.price_index \
-    * s_sym.labour_price_factor("smith")
+    * s_sym.labour_market.price_factor("smith")
 _n_under_sym = max(1, int(_quoted // _pph_sym))
 _n_over_sym = _n_under_sym + 2
 s_sym_u = sim(capital=0.0)
@@ -546,7 +544,9 @@ check("...and a household that can afford the show still pays for it",
 # and mines and NOT the interest it was already paying, so a household bleeding
 # 552 a year decided it had five years of headroom against money that did not
 # exist.
-s_bd = sim(capital=-20000.0, manual=False)
+# 20000 coin was about 74,600 labour hours of debt; stated in hours so the
+# test does not move with what the coin metal costs.
+s_bd = sim(capital=-74600.0 * sim().money_per_labour_hour(), manual=False)
 s_bd.insolvent_years = 20
 _before = len(s_bd.active)
 s_bd.step()

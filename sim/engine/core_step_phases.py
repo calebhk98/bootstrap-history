@@ -18,9 +18,12 @@ that this file does not attempt - do not assume a phase here can be moved
 into a domain file without first working out its self.* footprint.
 """
 import math
+import random
 from dataclasses import dataclass
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE, PERCENT_SCALE
+from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+from . import automation_audit, shortage_conditions
 from .invariants import check_labour_market_invariants
 
 
@@ -118,9 +121,18 @@ class StepPhasesMixin:
         # to say why cannot tell attrition from a bug - it looks exactly
         # like staff vanishing.
         if _lost:
-            self.state.household.log.append((self.state.scenario.year, "you lose %s to death and to better offers"
-                             % ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
-                                         for trade_id, count in sorted(_lost.items()))))
+            # Deaths follow the working-age mortality rate; the rest of the yearly loss is turnover to better offers.
+            death_share = min(1.0, BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE / max(attrition_rate, 1e-9))
+            died = {}
+            for trade_id, count in _lost.items():
+                labeller = random.Random("staff-loss-%s-%s" % (self.state.scenario.year, trade_id))
+                died[trade_id] = sum(1 for _ in range(count) if labeller.random() < death_share)
+            poached = {trade_id: count - died[trade_id] for trade_id, count in _lost.items()}
+            for cause, counts in (("death", died), ("better offers", poached)):
+                people = ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
+                                   for trade_id, count in sorted(counts.items()) if count)
+                if people:
+                    self.state.household.log.append((self.state.scenario.year, "you lose %s to %s" % (people, cause)))
         # Rehire a specialist foreman an open concern just lost, before the
         # staffing rule closes the concern.
         if self.state.founder.policy.get("auto_replace_foreman", False):
@@ -171,10 +183,10 @@ class StepPhasesMixin:
             gone = 0.0
             _before_shed = self.staff_snapshot()
             # shed, dearest first, until the wages you are left with fit
-            for trade_id in sorted(self.state.household.employees, key=lambda t: -self.annual_wage(t)):
+            for trade_id in sorted(self.state.household.employees, key=lambda t: -self.labour_market.quote_annual(t)):
                 if short <= 0:
                     break
-                wage = self.annual_wage(trade_id)
+                wage = self.labour_market.quote_annual(trade_id)
                 if wage <= 0:
                     continue
                 # A WHOLE PERSON, ROUNDED UP. `short / wage` is a quantity of
@@ -265,9 +277,19 @@ class StepPhasesMixin:
                 have = self.state.household.employees.get(trade, 0.0)
                 delta = self._stochastic_round(want) - have
                 if delta >= 1.0:
-                    self.hire(trade, int(delta))
+                    _before = self.state.household.capital
+                    _hired, _ = self.hire(trade, int(delta))
+                    if _hired:
+                        automation_audit.record(
+                            self, "auto_hire", "hire", "%d %s" % (int(delta), trade),
+                            "staff target %.1f against %.1f held, with %.1f supervision room"
+                            % (want, have, self.supervision_room()), _before)
                 elif delta <= -1.0:
+                    _before = self.state.household.capital
                     self.fire(trade, int(-delta))
+                    automation_audit.record(
+                        self, "auto_hire", "release", "%d %s" % (int(-delta), trade),
+                        "staff target %.1f is below the %.1f held" % (want, have), _before)
             _grow_to("artisan", max(craft * 0.25, craft - specials))
             if desired_sc > 0:
                 _grow_to("scholar", desired_sc)
@@ -293,9 +315,13 @@ class StepPhasesMixin:
                 have = self.state.household.employees.get(trade_id, 0.0)
                 want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.state.household.trades_created else 0.0)
                 short = want - have
-                if short > 0.02 and self.state.household.capital > self.annual_wage(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
+                if short > 0.02 and self.state.household.capital > self.labour_market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
+                    _before = self.state.household.capital
                     self.state.household.employees[trade_id] = have + short
-                    self.state.household.capital -= short * self.annual_wage(trade_id)
+                    self.state.household.debit(short * self.labour_market.quote_annual(trade_id), "wages advanced for replacement staff")
+                    automation_audit.record(
+                        self, "auto_hire", "replace", "%.1f %s" % (short, trade_id),
+                        "something draws on the trade and %.1f are held against a target of %.1f" % (have, want), _before)
             self._resync_pools()
         self.hold_staff_reserve()
         # BUY A JOB WHEN A HANDFUL OF HANDS IS THE ONLY THING IN THE WAY:
@@ -305,7 +331,13 @@ class StepPhasesMixin:
         # wall, has the money, and has no way to spend it on the wall is
         # the same dead end wearing a different hat.
         if self.state.founder.policy.get("auto_commission", not self.manual):
-            self.auto_commission_for_blocked()
+            _before = self.state.household.capital
+            _commissioned = self.auto_commission_for_blocked()
+            if _commissioned:
+                automation_audit.record(
+                    self, "auto_commission", "commission",
+                    "%.0f hours of %s" % (_commissioned[2], _commissioned[1]),
+                    "%s is blocked only on craftsmen's hands" % _commissioned[0], _before)
         self.state.household.directors_extra += (di_cap - self.state.household.directors_extra) * self.DIRECTORS_EXTRA_APPROACH_RATE - self.state.household.directors_extra * attrition_rate
         self.state.household.artisans = max(0.0, self.state.household.artisans)
         self.state.household.scholars = max(0.0, self.state.household.scholars)
@@ -326,7 +358,6 @@ class StepPhasesMixin:
 
     def _step_money(self):
         # 2. money
-        self.economy = self.economy_index()
         living_cost = self.living_cost()
         # THE YEAR YOU PAID FOR IN ADVANCE IS NOT BILLED AGAIN: `hire` takes
         # a finder's fee and the first year's wages up front, and
@@ -340,7 +371,10 @@ class StepPhasesMixin:
         self.state.founder.living_cost_paid += living_cost
         mine_cost = self.mine_operating_cost()
         self.state.economy.mine_cost_paid += mine_cost
-        self.state.household.capital += self.revenue() - self.upkeep() - living_cost - mine_cost
+        revenue, upkeep = self.revenue(), self.upkeep()
+        self.state.household.credit(revenue - upkeep - living_cost - mine_cost, {
+            "venture revenue": revenue, "running costs of concerns": -upkeep,
+            "living costs": -living_cost, "mine running costs": -mine_cost})
         # A mine you cannot pay for is a mine you stop working. Without this the
         # opex accrued for ever against a bankrupt enterprise: the England run
         # sank a large mine, lost its revenue and then ran three centuries at
@@ -358,12 +392,24 @@ class StepPhasesMixin:
         # on reclaiming what attrition shut, before anything is judged still
         # short and closed again. See reopen_restaffed_ventures's own
         # docstring for why this is not gated by auto_open.
-        self.reopen_restaffed_ventures(self.state.scenario.year)
+        _before = self.state.household.capital
+        _reopened = self.reopen_restaffed_ventures(self.state.scenario.year)
+        if _reopened:
+            automation_audit.record(
+                self, "reopen (always on, not a policy)", "reopen", ", ".join(_reopened),
+                "a staffing closure, and the people to watch it are free again", _before,
+                ids=list(_reopened))
         self.close_unstaffed_ventures(self.state.scenario.year)
         # Open what plainly pays for itself, before the books are struck: a
         # concern you opened this year is a concern that earns this year.
         if self.state.founder.policy.get("auto_open", not self.manual):
-            self.auto_open_ventures()
+            _before = self.state.household.capital
+            _opened = self.auto_open_ventures()
+            if _opened:
+                automation_audit.record(
+                    self, "auto_open", "open", ", ".join(_opened),
+                    "net-positive concerns already built, within the staff and money available",
+                    _before, ids=list(_opened))
         self.charge_interest(self.state.scenario.year)
         if self.state.founder.policy.get("auto_shed", True):
             self.shed_loss_makers(self.state.scenario.year)
@@ -505,7 +551,7 @@ class StepPhasesMixin:
         self.advance_society(self.state.scenario.year)
         self.advance_actors(self.state.scenario.year)
         # 2c. THRESHOLD GOALS. A node carrying a `win_condition` (see
-        # data.py's WIN_CONDITION_LABELS and tech_tree.json's own goals
+        # data.py's WIN_CONDITION_LABELS and the tree's own goals
         # using one) is never built - start_reason refuses it outright -
         # it completes itself the moment a live measurement crosses its
         # target. Checked here, right after the literacy/trade growth this
@@ -516,8 +562,16 @@ class StepPhasesMixin:
 
     def _step_dated_shocks(self):
         # 3. dated shocks
+        self.disaster_this_year = None
         if self.events:
-            self._shocks(self.state.scenario.year)
+            year = self.state.scenario.year
+            logged_before = len(self.log)
+            self._shocks(year)
+            names = [hazard.get("name", "a hazard") for hazard in self.civ.get("hazards", [])
+                     if hazard.get("years", [0, 0])[0] <= year <= hazard.get("years", [0, 0])[-1]]
+            if names:
+                self.disaster_this_year = {"name": ", ".join(names),
+                                           "messages": [message for _, message in self.log[logged_before:]]}
             if self.state.founder.dead_reason:
                 return True
         return False
@@ -648,7 +702,7 @@ class StepPhasesMixin:
             _tr_upkeep = self.upkeep()
             _spare_tr = _tr_rev - _tr_upkeep - self.living_cost(_rev=_tr_rev, _upkeep=_tr_upkeep)
             for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
-                _wages = 2.0 * self.annual_wage(trade_id)
+                _wages = 2.0 * self.labour_market.quote_annual(trade_id)
                 _budget = (max(0.0, _spare_tr) + max(0.0, self.state.household.capital) * 0.10
                            if _score >= 500 else max(0.0, _spare_tr) * 0.5)
                 if _wages > _budget:
@@ -703,7 +757,10 @@ class StepPhasesMixin:
                 # same unfairness either way: the founder-hours it asked for
                 # either went unsold or went somewhere the player never
                 # chose.
-                if _wd - (_already + _got) > 1.0:
+                _work_reason = ("room" if _room < _want else "market")
+                if _wd - (_already + _got) <= 1.0:
+                    self.clear_unused_hours_report("work")
+                elif self.unused_hours_is_news("work", [round(_wd), _work_reason]):
                     self.state.household.log.append((self.state.scenario.year, "DIRECTED HOURS UNUSED: your standing "
                                          "order to sell %s hours a year as a "
                                          "%s only managed %s this year - %s. "
@@ -877,8 +934,16 @@ class StepPhasesMixin:
                     _want_ha = max(0.0, _need_t) / max(self.CHARCOAL_PER_HA, 1e-9)
                     _afford_ha = (_can_raise * 0.35
                                   / (self.FOREST_COST_PER_HA * self.price_index))
+                    _before = self.state.household.capital
+                    _hectares_before = self.state.economy.forest_ha
                     self.buy_forest(min(400.0, _want_ha, _afford_ha))
-            elif (self.state.economy.binding in self.MINE_OPEX_PER_T
+                    if self.state.economy.forest_ha > _hectares_before:
+                        automation_audit.record(
+                            self, "auto_forest", "forest",
+                            "%.0f hectares of coppice" % (self.state.economy.forest_ha - _hectares_before),
+                            "charcoal demand exceeds what %.0f hectares yield by %.0f tonnes a year"
+                            % (_hectares_before, max(0.0, _need_t)), _before)
+            elif (self.state.economy.binding in self.MINE_OPEX_MATERIALS
                     and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # Size the mine from ALL the material keys that feed this
                 # bucket, not one of them. The throttle counted iron ore AND
@@ -904,8 +969,18 @@ class StepPhasesMixin:
                 # commission is not ordered twice.
                 want = max(0.0, short - self.mine_capacity.get(self.state.economy.binding, 0.0)
                            - self.state.economy.mine_pending.get(self.state.economy.binding, 0.0))
-                self.open_mine(self.state.economy.binding, min(want, self.state.household.capital * 0.25
-                                                 / max(1.0, self._mine_capex(self.state.economy.binding))))
+                _before = self.state.household.capital
+                _pending = self.state.economy.mine_pending.get(self.state.economy.binding, 0.0)
+                _ordered = min(want, self.state.household.capital * 0.25
+                               / max(1.0, self._mine_capex(self.state.economy.binding)))
+                self.open_mine(self.state.economy.binding, _ordered)
+                if _ordered > 0:
+                    automation_audit.record(
+                        self, "auto_mine", "mine",
+                        "%.0f t/year of %s ordered" % (_ordered, self.state.economy.binding),
+                        "demand %.0f t/year > active %.0f t/year; pending capacity considered %.0f t/year"
+                        % (short, self.mine_capacity.get(self.state.economy.binding, 0.0), _pending),
+                        _before)
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
                 if self.state.economy.binding in ("iron", "copper", "lead"):
@@ -927,8 +1002,12 @@ class StepPhasesMixin:
                 # The shortage is real and unresolved; more money is not the
                 # answer to it.
                 spend = min(self.state.household.capital * 0.05, self.book_money(2000.0))
-                self.state.household.capital -= spend
+                self.state.household.debit(spend, "nitre beds laid down")
                 self.state.economy.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
+                automation_audit.record(
+                    self, "auto_mine", "nitre", "%d square metres of nitre bed" % (spend / self.NITRE_COST_PER_M2),
+                    "saltpetre is the binding shortage; the yearly spend is capped, not sized to the gap",
+                    self.state.household.capital + spend)
                 self.state.household.log.append((self.state.scenario.year, "laid down %d square metres of nitre bed "
                                      "for %d denarii (auto_mine)"
                                  % (spend / self.NITRE_COST_PER_M2, spend)))
@@ -936,9 +1015,13 @@ class StepPhasesMixin:
             # SAY WHAT TO DO ABOUT IT: a bare "SHORT OF SALTPETRE: work at
             # 5% of plan" with no remedy attached reads as the game being
             # stuck rather than as something actionable.
-            self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: work running at %d%% of plan. %s"
-                             % (self.state.economy.binding.upper(), thr * 100,
-                                self.shortage_remedy(self.state.economy.binding))))
+            # One standing condition; the full message only when it is new or has moved materially.
+            if shortage_conditions.note_shortage(self, self.state.economy.binding, thr):
+                self.state.household.log.append((self.state.scenario.year, "SHORT OF %s: work running at %d%% of plan. %s"
+                                 % (self.state.economy.binding.upper(), thr * 100,
+                                    self.shortage_remedy(self.state.economy.binding))))
+        else:
+            shortage_conditions.clear_shortage(self)
 
     def _step_progress_project(self, node_id, pool_rank, pool_total_this_year,
                               pool_active_count_this_year, remaining, hired_left,
@@ -1150,7 +1233,8 @@ class StepPhasesMixin:
                 _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                     "your other standing allocations and active "
                     "work already claimed the rest of this year's "
-                    "%s hours before this one's turn came"
+                    "%s hours before this one's turn came ('priority "
+                    "<id> first' moves a project up the queue)"
                     % "{:,.0f}".format(_pool_total_this_year)))
         return remaining, per, spent_hours, _dir_hours
 
@@ -1331,7 +1415,7 @@ class StepPhasesMixin:
         # second place a standing allocation can go unhonoured, and the
         # completion check. Nothing to return - project_state carries every
         # result the caller (and the rest of the game) reads back.
-        self.state.household.capital -= money
+        self.state.household.debit(money, "project payments")
         self.state.household.total_spend += money
         project_state["spent"] += money
         project_state["cost_left"] = max(0.0, project_state["cost_left"] - money)
@@ -1373,8 +1457,7 @@ class StepPhasesMixin:
                     (node_id, round(_inner_gap, 0), project_state["why_underfunded"]))
             elif _inner_gap > 1.0 and project_state.get("short_of_trade"):
                 _directed_hours_unused.append((node_id, round(_inner_gap, 0),
-                    "trade hours already booked: " + ", ".join(
-                        sorted(project_state["short_of_trade"])[:2])))
+                    self.trade_shortfall_note(project_state)))
         # Count it HERE, after the hired-hours scaling and the
         # affordability clamp, not before them: accumulating the notional
         # figure instead would make project_spend_last_year disagree with
@@ -1397,6 +1480,8 @@ class StepPhasesMixin:
         # line); hours need it too.
         if project_state["ph_left"] < 0.5:
             project_state["ph_left"] = 0.0
+        if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor:
+            self.settle_cost_tail(node_id, project_state)
         if project_state["ph_left"] <= 0 and project_state["yrs"] >= floor and project_state["cost_left"] <= 0.5:
             self._complete(node_id)
             if _afford_context is not None:
@@ -1411,52 +1496,7 @@ class StepPhasesMixin:
         #    attention finishes nothing, which is a real failure mode but not the
         #    one we are trying to model here.
         #
-        # ONLY THE HANDFUL OF KEYS active_sorted ACTUALLY NEEDS, NOT EVERY
-        # NODE IN THE TREE: a bare `{k: i for i, k in enumerate(self.order)}`
-        # would build a fresh 2,849-entry dict from scratch every single
-        # year to answer `rank.get(k, 9999)` for the at most a few dozen
-        # keys in self.state.projects.active. Nothing below reads `rank` for any
-        # node NOT in self.state.projects.active (checked: its only other use is
-        # the `_pool_rank` loop variable a few lines further down, an
-        # unrelated name), so recording a position for every other one of
-        # the ~2,849 nodes would be pure waste.
-        # This still walks self.order and cannot skip any of it in the
-        # worst case (an active key can be anywhere in `order`), so it is
-        # not a complexity win - but it stops paying for ~2,849 dict
-        # insertions when only a few dozen are ever read, and exits the
-        # walk the moment every active key's position has been found
-        # (start_project, in projects.py, moves a project to the FRONT of
-        # `order` the instant a human starts it by hand, so active keys
-        # skew early there in practice, though the automated 4b loop above
-        # does not reorder `order` and gives no such guarantee - the early
-        # exit is a bonus, not a requirement of correctness). Recomputed
-        # fresh every call: no cache, no staleness risk.
-        _active_left = set(self.state.projects.active)
-        rank = {}
-        if _active_left:
-            for i, node_id in enumerate(self.order):
-                if node_id in _active_left:
-                    rank[node_id] = i
-                    _active_left.discard(node_id)
-                    if not _active_left:
-                        break
-        # A STANDING ALLOCATION IS A PROMISE, NOT A PRIORITY BID. Without
-        # this, a project the player explicitly told `allocate` to give 500
-        # hours a year could still be starved by three higher-`order`
-        # undirected projects taking the whole pool first - the exact
-        # opposite of what asking for an explicit split means. Every project
-        # the player has put a standing instruction on is moved to the
-        # FRONT of the queue (still ordered among themselves by the usual
-        # priority, so two directed projects do not disagree about which of
-        # them goes first); everything without one shares whatever is left
-        # exactly as it always has, by the same `order`-based priority. A
-        # player who never calls `allocate` has an empty hour_allocations,
-        # every project sorts into the same single undirected bucket it
-        # always did, and this line changes nothing for them.
-        active_sorted = sorted(
-            self.state.projects.active,
-            key=lambda k: (0 if self.state.household.hour_allocations.get(k, 0.0) > 0 else 1,
-                           rank.get(k, 9999)))
+        active_sorted = self.hour_priority_queue()
         remaining = pool
         self.state.projects.trade_hours_used = {}
         # Summed as the loop runs, not re-read from self.state.projects.active afterwards,
@@ -1536,15 +1576,7 @@ class StepPhasesMixin:
         # purpose rather than leaving the split to priority order. Sorted
         # by id for a deterministic order across runs with the same seed -
         # several projects can be cut short in the same year.
-        if _directed_hours_unused:
-            for _node_id, _hr, _why in sorted(_directed_hours_unused):
-                self.state.household.log.append((self.state.scenario.year, "DIRECTED HOURS UNUSED: you allocated hours "
-                                     "to %s this year that it could not use - "
-                                     "%s of them went begging because %s. "
-                                     "'portfolio' shows the rest; 'allocate' "
-                                     "changes or clears the standing order"
-                                 % (self.nodes[_node_id]["name"],
-                                    "{:,.0f}".format(_hr), _why)))
+        self.report_unused_directed_hours(_directed_hours_unused)
 
         # Snapshot BEFORE 5b spends more of `remaining` on wage work: otherwise
         # offered_to_projects below double-counts wage hours as though they had
@@ -1581,7 +1613,7 @@ class StepPhasesMixin:
             year_hours = max(1.0, self.director_pool())
             practice_lost = self.revenue() * (hours / year_hours) * (
                 1.0 if self.practice_attention() > 0 else 0.0)
-            rate = (self.annual_wage(trade) / self.HOURS_PER_PERSON_YEAR
+            rate = (self.labour_market.quote_annual(trade) / self.HOURS_PER_PERSON_YEAR
                     * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                                  self.state.household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
             if hours * rate > practice_lost:
@@ -1683,7 +1715,7 @@ class StepPhasesMixin:
                 and self.state.founder.policy.get("auto_bribe", not self.manual)):
             spend = min(self.state.household.capital * self.AUTO_BRIBE_CAPITAL_SHARE,
                         self.state.household.scandal * self.AUTO_BRIBE_COST_PER_SCANDAL_POINT)
-            self.state.household.capital -= spend
+            self.state.household.debit(spend, "bribes")
             self.state.household.bribes_ytd = self.BRIBES_YTD_DECAY * self.state.household.bribes_ytd + spend
             self.state.household.scandal -= (spend / self.BRIBE_SCANDAL_REDUCTION_SCALE
                                        * self.value_weights["bribability"])
@@ -1724,7 +1756,7 @@ class StepPhasesMixin:
                 roll = self.rng.random()
                 if roll < self.EMINENCE_OUTCOME_CONFISCATION_SHARE:
                     take = self.state.household.capital * self.EMINENCE_CONFISCATION_CAPITAL_LOSS
-                    self.state.household.capital -= take
+                    self.state.household.debit(take, "confiscation by the state")
                     self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
                     self.state.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
                     self.state.household.log.append((self.state.scenario.year, "PROMINENCE: property confiscated, %d den lost, "
@@ -1749,8 +1781,8 @@ class StepPhasesMixin:
         #     you know.
         if self.state.household.bondage_years_left > 0:
             self.state.household.bondage_years_left -= 1
-            paid = self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE *\
-                (self.wage_per_hour("labourer") * self.BONDAGE_WAGE_MARKUP) * self.wage_index * self.price_index
+            paid = (self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE
+                    * self.BONDAGE_WAGE_MARKUP * self.labour_market.quote("labourer"))
             self.state.household.bondage_debt = max(0.0, self.state.household.bondage_debt - paid)
             if self.state.household.bondage_debt <= 0 and self.state.household.bondage_years_left > 0:
                 self.state.household.bondage_years_left = 0     # paid early
@@ -1760,6 +1792,29 @@ class StepPhasesMixin:
                 self.state.household.log.append((self.state.scenario.year, "your term is served and the debt is discharged; "
                                      "you are your own man again"))
 
+    def _deputy_hours_sentence(self):
+        if self.state.household.directors_extra <= 0:
+            return "You trained no deputy to take over."
+        return ("Your deputies carry about %d hours a year, which is not enough "
+                "to take over." % round(self.deputy_hours()))
+
+    def _deputy_consequence(self):
+        if self.deputies_carry_the_work():
+            return ("Your %.1f deputies direct the work in your name and the "
+                    "programme goes on without you." % self.state.household.directors_extra)
+        return (self._deputy_hours_sentence() + " Nothing that needs your hours "
+                "can be begun again, and what you built will be forgotten over "
+                "the next twelve years unless deputies grow to carry the work.")
+
+    def _what_survived_the_dissolution(self):
+        kept = [node_id for node_id in self.state.projects.done
+                if self.corpus_is_dispersed(node_id)]
+        if kept:
+            return ("the school dispersed, but its codices survive in other "
+                    "hands (%d works of yours with them)"
+                    % len(self.state.projects.done - self.state.projects.granted))
+        return "the school dispersed and the work was forgotten"
+
     def _step_founder_mortality(self):
         # 7. founder mortality
         if self.state.founder.founder_alive:
@@ -1768,32 +1823,14 @@ class StepPhasesMixin:
                 self.state.founder.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
             if self.state.founder.life_left <= 0:
                 self.state.founder.founder_alive = False
-                # SAY WHAT IT MEANS, not only that it happened: the engine is
-                # not in fact silent about the consequence of the founder's
-                # death - deputies carry the work, and with none the
-                # programme dissolves over twelve years - but that has to
-                # be said here, in the same line, not left for the player
-                # to work out on their own.
-                _dep = self.state.household.directors_extra
-                self.state.household.log.append((self.state.scenario.year, "THE FOUNDER DIES, aged about %d. %s"
-                                 % (self.cfg["founder_arrival_age"] + self.state.scenario.year
-                                    - self.cfg["start_year"],
-                                    ("Your %.1f deputies direct the work in your "
-                                     "name and the programme goes on without you: "
-                                     "that is what training them was for."
-                                     % _dep) if _dep >= 0.5 else
-                                    "You trained no deputy, so there is nobody to "
-                                    "direct anything. Nothing that needs your "
-                                    "hours can ever be begun again, and what you "
-                                    "built will be forgotten over the next twelve "
-                                    "years unless a deputy appears. This run is "
-                                    "effectively over; 'state' shows how far you "
-                                    "got.")))
+                self.state.household.log.append(
+                    (self.state.scenario.year, "THE FOUNDER DIES, aged about %d. %s"
+                     % (self.founder_age(), self._deputy_consequence())))
         # a programme with no director is not paused, it is dissolving
-        if not self.state.founder.founder_alive and self.state.household.directors_extra < 0.5:
+        if not self.state.founder.founder_alive and not self.deputies_carry_the_work():
             self.state.projects.stalled += 1
             if self.state.projects.stalled >= self.DISSOLUTION_YEARS_BEFORE_FORGETTING:
-                losable = sorted(node_id for node_id in self.state.projects.done if node_id not in self.state.projects.granted)
+                losable = self.losable_node_ids()
                 # sorted() matters: self.state.projects.done is a SET, and a set iterates in an
                 # order that depends on PYTHONHASHSEED, so feeding it unsorted to
                 # rng.sample made the same --seed give a different answer on every
@@ -1804,18 +1841,13 @@ class StepPhasesMixin:
                         self.state.projects.operating.discard(node_id)
                         self.state.projects.done.discard(node_id)
                         self._done_changed()
-            # COUNT IT DOWN WHERE THE PLAYER CAN SEE IT: twelve years of a
-            # dissolving programme passing with nothing said but the
-            # shedding itself would read as merely unlucky rather than as
-            # the run actually being finished.
             if self.state.projects.stalled in (3, 6, 9, 11):
                 self.state.household.log.append((self.state.scenario.year, "THE PROGRAMME IS DISSOLVING: %d year(s) "
-                                     "since the founder died with no deputy to "
-                                     "take over. What you built is being "
+                                     "since the founder died. %s What you built is being "
                                      "forgotten. The run ends at twelve."
-                                 % self.state.projects.stalled))
+                                 % (self.state.projects.stalled, self._deputy_hours_sentence())))
             if self.state.projects.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
                 self._catastrophe("the founder died without training successors; "
-                                  "the school dispersed and the work was forgotten")
+                                  + self._what_survived_the_dissolution())
         else:
             self.state.projects.stalled = 0

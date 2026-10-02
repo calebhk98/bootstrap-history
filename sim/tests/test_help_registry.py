@@ -65,11 +65,12 @@ check("the front page links every registered topic",
 
 # --- a throwaway command registration shows up in help with no other edit
 from sim.engine.proto import command_registry as _registry
+from sim.engine.proto.typed import parse_typed
 
 
 @_registry.command("zz_throwaway", group="game", summary="a throwaway probe",
                    usage=["zz_throwaway <n>"], description="Exists only for this test.",
-                   options={"n": "how many"}, aliases=("zzt",))
+                   options={"n": "how many"}, aliases=("zzt",), shape="file")
 def _cmd_zz_throwaway(sim, nodes, cmd, ended):
     return {"ok": True}
 
@@ -83,6 +84,9 @@ try:
           _throwaway_page["name"] == "zz_throwaway"
           and _throwaway_page["options"] == {"n": "how many"}
           and _throwaway_page["usage"] == ["zz_throwaway <n>"], _throwaway_page)
+    check("...and its typed line parses by its declared shape, by name or alias",
+          parse_typed("zzt out.json")[0] == {"cmd": "zz_throwaway", "file": "out.json"},
+          parse_typed("zzt out.json"))
     check("...and the registry can build the dispatch table entry for it",
           _registry.handlers().get("zz_throwaway") is _cmd_zz_throwaway)
 finally:

@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 from .actors import Household
 from .data import closure, JSONDict, Nodes
 from .hazard_window import hazards_not_yet_past
+from .hazard_hedge_timing import add_timing_to_steps
 
 # Removes sentences where a node grades itself against the rest of the tree.
 # Matches exact phrases like "pivot", "highest-value", "costs more than any
@@ -96,7 +97,7 @@ class FogMixin:
         sharing one memo down that whole call tree, checking visibility of a
         single deep node re-derived the visibility of common ancestors once per
         path to them, which is exponential in the depth of the tree. A profiler
-        on `can_start('dynamo')` on norse_900ad under fog counted 12,465 nested
+        on `can_start('dynamo')` on a late civilisation under fog counted 12,465 nested
         calls to start_reason from three top-level ones, at 0.45s each; a plain
         `available` call, which checks all ~2,800 nodes this way, did not return
         in 60 seconds. The memo makes one recursive descent O(nodes touched)
@@ -144,8 +145,10 @@ class FogMixin:
         bits = []
         if known:
             bits.append("missing prerequisites: " + ", ".join(known))
-        bits.append("%d other thing%s you have not heard of yet"
-                    % (hidden, "" if hidden == 1 else "s"))
+        hidden_kinds = self._hidden_prerequisite_kinds([prereq_id for prereq_id in missing if prereq_id not in known])
+        bits.append("%d other thing%s you have not heard of yet%s"
+                    % (hidden, "" if hidden == 1 else "s",
+                       " (%s)" % ", ".join(hidden_kinds) if hidden_kinds else ""))
         msg = "; and ".join(bits) if known else \
             ("this needs %s, and you do not yet know what %s"
              % (bits[-1], "they are" if hidden > 1 else "it is"))
@@ -153,6 +156,29 @@ class FogMixin:
         # whole method exists to apply, so the hint is built from it and a
         # hidden prerequisite is never named by the hint either.
         return msg + self._free_prereq_hint(known)
+
+    # Plain words for a node's kind, so a hidden blocker keeps its identity but shows what sort of thing it is.
+    FOG_KIND_HINTS = {
+        "ENGINEERING": "a technique or device", "SCIENCE": "an idea or body of theory",
+        "INSTITUTION": "an institution or social arrangement", "RESOURCE": "a material or its source",
+        "INFRASTRUCTURE": "a built facility", "CAPABILITY": "a measurement or power capability",
+    }
+    # A hidden prerequisite shows its kind only when this share of its own prerequisites is already done.
+    FOG_HINT_NEARNESS = 0.5
+
+    def _hidden_prerequisite_kinds(self, hidden_ids: List[str]) -> List[str]:
+        """Kind phrases for hidden prerequisites the player has built enough nearby knowledge to place."""
+        done = self.state.projects.done
+        kinds: List[str] = []
+        for node_id in hidden_ids:
+            node = self.nodes.get(node_id) or {}
+            prereqs = node.get("pre") or []
+            near = (sum(1 for prereq_id in prereqs if prereq_id in done) / len(prereqs) >= self.FOG_HINT_NEARNESS
+                    if prereqs else True)
+            phrase = self.FOG_KIND_HINTS.get(node.get("kind"))
+            if near and phrase and phrase not in kinds:
+                kinds.append(phrase)
+        return kinds
 
     # Capability nodes (cap_measure_*, cap_power_*) cost nothing, take no time.
     # A refusal naming one must say it is free and startable now, not just the name.
@@ -234,7 +260,7 @@ class FogMixin:
         chance, frac, hedge = self.corpus_hedge()
         projects = self.state.projects
         scenario = self.state.scenario
-        at_risk = len(projects.done - projects.granted)
+        at_risk = len(set(self.losable_node_ids(keep_dispersed=False)))
         # WHAT YOU HAVE ALREADY LOST, and have to build again: without this,
         # the only record of a sacking is a log line a century back, and
         # the only way to discover a loss is one cryptic refusal at a time
@@ -262,13 +288,23 @@ class FogMixin:
             row["what_you_can_do"] = {}
             for kind in ("staff_loss", "sack_chance", "output_factor", "real_erosion"):
                 if kind in hazard or (kind == "sack_chance" and hazard.get("sack_chance")):
-                    row["what_you_can_do"][kind] = self.hazard_advice(kind)
+                    row["what_you_can_do"][kind] = self.hazard_advice(kind, hazard)
+            add_timing_to_steps(row["what_you_can_do"], scenario.year, year_start, in_progress)
             if "sack_chance" in hazard:
                 row["sack_chance_after_what_you_have_built"] = round(
-                    hazard["sack_chance"] * self.hazard_relief("sack_chance")[0], 4)
+                    self.hazard_figure("sack_chance", hazard), 4)
+            if "output_factor" in hazard:
+                row["output_factor"] = hazard["output_factor"]
+                row["output_factor_after_what_you_have_built"] = round(
+                    self.hazard_figure("output_factor", hazard), 4)
             if "staff_loss" in hazard:
-                row["staff_loss_after_what_you_have_built"] = round(
-                    hazard["staff_loss"] * self.hazard_relief("staff_loss")[0], 4)
+                exposure = self.staff_loss_exposure(hazard["staff_loss"])
+                row["staff_loss_before_what_you_have_built"] = round(exposure["before_defences"], 4)
+                row["staff_loss_after_what_you_have_built"] = round(exposure["loss"], 4)
+                if exposure["national_relief"] > 0.02:
+                    row["national_public_health"] = {
+                        "share_removed": round(exposure["national_relief"], 4),
+                        "from": self.national_public_health_sources()}
                 remaining = max(year_start, scenario.year)
                 waves = max(1, year_end - remaining + 1)
                 per_wave = row["staff_loss_after_what_you_have_built"]
@@ -358,6 +394,11 @@ class FogMixin:
         """
         if self.nodes[node_id]["cat"] in self.NEVER_ABANDON:
             return True
+        return self.on_road_to_goal(node_id)
+
+    def on_road_to_goal(self, node_id: str) -> bool:
+        """Whether the goal needs this node. A yes/no with no distance, so it
+        names no route the player has not already been shown."""
         if not hasattr(self, "_goal_closure"):
             try:
                 self._goal_closure = closure(self.nodes, self.state._goal)
@@ -365,11 +406,3 @@ class FogMixin:
                 self._goal_closure = set()
         return node_id in self._goal_closure
 
-    FOREIGN_MARKERS = ("_roman", "_rome", "annona", "insula", "societas",
-                       "collegium", "argentarii", "latifundi",
-                       "cursus", "pharos")  # Rome-specific things: state grain dole, imperial dispatch, etc.
-
-    # Blocks only civ-specific institutions, not generic capabilities. A Roman arch
-    # is a construction technique anyone can learn; annona is a state benefit Rome alone
-    # can grant. Most of this list is empty by design. [temporary_heuristic]
-    FOREIGN_INSTITUTIONS = ()

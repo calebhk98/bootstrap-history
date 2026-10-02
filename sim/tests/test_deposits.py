@@ -7,13 +7,9 @@ deposits.py's own docstring for why), so importing sim/tests/harness.py
 would pull in the whole engine for no reason. sim/tests/__main__.py's
 _run_topic already runs both styles identically.
 
-CalibrationAgainstBookPricesTests is the one class that reads
-data/prices.json - the CALIBRATION TARGETS deposits.py's own docstring
-promises are read only by tests, never by the module's own functions (see
-sim/world/agriculture.py's own CALIBRATION TARGETS section for the same
-discipline applied there first). It reports the disagreement; it never
-asserts a tolerance tight enough to tempt anyone into tuning a grade or a
-breaking-hours constant to close it.
+CalibrationReportTests prints the derived price at the margin per metal in
+labour hours, never asserting a tolerance tight enough to tempt anyone into
+tuning a grade or a breaking-hours constant to close a gap.
 
 sim/world/deposits.py standalone: Ricardian rent from ore grade, depth and hardness (unittest-style).
 """
@@ -35,7 +31,7 @@ def _make_deposit(name, metal="test_metal", material_moved="ore",
                    hardness_class="medium", quantity_tonnes_per_year=100.0,
                    note="", byproducts=()):
     return deposits.Deposit(
-        name=name, metal=metal, region="nowhere",
+        name=name, metal=metal, tile="nowhere",
         material_moved=material_moved,
         ore_grade_kg_per_tonne=ore_grade_kg_per_tonne,
         depth_class=depth_class, hardness_class=hardness_class,
@@ -158,9 +154,9 @@ class MarginalDepositRentTests(unittest.TestCase):
     """
 
     def setUp(self):
-        # hours_per_tonne_material fixed at BREAKING_HOURS_PER_TONNE_MEDIUM
-        # (surface, medium) for all three, so cost = MEDIUM / grade exactly.
-        medium = deposits.BREAKING_HOURS_PER_TONNE_MEDIUM
+        # hours per tonne of ore fixed by (surface, medium) for all three, so cost = MEDIUM / grade exactly.
+        medium = deposits.vein_hours_per_tonne_ore(
+            _make_deposit("probe", depth_class="surface", hardness_class="medium"))
         self.cheap = _make_deposit("cheap", depth_class="surface",
                                     hardness_class="medium",
                                     ore_grade_kg_per_tonne=medium / 1.0,   # cost 1.0
@@ -593,10 +589,12 @@ class PolymetallicByproductTests(unittest.TestCase):
         self.assertEqual(byproduct.metal, "silver")
         self.assertEqual(byproduct.material_key, "silver_kg")
         self.assertGreater(byproduct.ore_grade_kg_per_tonne, 0.0)
-        # Every OTHER named lead deposit carries none - this is a worked
-        # example on one deposit, not a blanket assumption.
+        # Lead in a district with a silver deposit carries that district's
+        # assay (Complaints/291); a lead deposit with no silver deposit in
+        # its district carries none.
+        silver_tiles = {deposit.tile for deposit in deposits.load_deposits("silver")}
         for name, deposit in lead_deposits.items():
-            if name != "britannia_lead":
+            if deposit.tile not in silver_tiles:
                 self.assertEqual(deposit.byproducts, (), name)
 
     def test_byproduct_quantity_is_fixed_by_the_grade_ratio_not_chosen(self):
@@ -689,7 +687,9 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         for metal in ("iron", "copper", "tin", "lead", "silver"):
             total = sum(deposit.quantity_tonnes_per_year
                         for deposit in deposits.load_deposits(metal))
-            expected = resources["empire_output_100ad"][metal]["t_per_yr"]
+            # Silver riding with lead is counted once (Complaints/291): the
+            # silver deposits split only what the lead byproduct leaves.
+            expected = deposits.empire_output_net_of_byproducts_tonnes_per_year(metal)
             self.assertAlmostEqual(total / expected, 1.0, delta=0.05,
                                     msg=metal)
 
@@ -711,10 +711,17 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         # load_deposits must not pull either in, since data/world/
         # deposits.json names no china or southeast_asia deposit at all
         # and resources.json's empire_output_100ad is Rome's own figure.
-        names = {deposit.region for deposit in deposits.load_deposits("iron")}
-        self.assertNotIn("china", names)
-        names = {deposit.region for deposit in deposits.load_deposits("tin")}
-        self.assertNotIn("southeast_asia", names)
+        with open(os.path.join(_REPO_ROOT, "data", "world", "geography.json")) as handle:
+            land_tiles = json.load(handle)["land_tiles"]
+        region_of_tile = {tile_id: region_id
+                          for region_id, tile_ids in land_tiles["region_to_tiles"].items()
+                          for tile_id in tile_ids}
+        iron_regions = {region_of_tile.get(deposit.tile)
+                        for deposit in deposits.load_deposits("iron")}
+        self.assertNotIn("china", iron_regions)
+        tin_regions = {region_of_tile.get(deposit.tile)
+                       for deposit in deposits.load_deposits("tin")}
+        self.assertNotIn("southeast_asia", tin_regions)
 
 
 class NoPriceDataTests(unittest.TestCase):
@@ -730,7 +737,7 @@ class NoPriceDataTests(unittest.TestCase):
         # would fail on the very sentences documenting this discipline.
         # What actually matters is that the module never OPENS that file
         # or reads its wage/purchase-price tables, which is what this
-        # checks: the only three _FILE constants this module defines, and
+        # checks: the only two _FILE constants this module defines, and
         # the only paths handed to _load_json / open() anywhere in it.
         path = os.path.join(_REPO_ROOT, "sim", "world", "deposits.py")
         with open(path) as handle:
@@ -742,9 +749,9 @@ class NoPriceDataTests(unittest.TestCase):
                 if node.value.endswith(".json"):
                     opened_paths.add(node.value)
         self.assertEqual(
-            opened_paths, {"geography.json", "resources.json", "deposits.json"},
+            opened_paths, {"resources.json", "deposits.json"},
             "sim/world/deposits.py references a JSON filename other than "
-            "the three data files it is meant to read: %s" % opened_paths)
+            "the two data files it is meant to read: %s" % opened_paths)
         self.assertNotIn("purchase_prices_denarii", source)
         self.assertNotIn("wage_rates_denarii_per_hour", source)
 
@@ -801,92 +808,34 @@ class StandaloneImportTests(unittest.TestCase):
                 "sim/world/deposits.py imports the price solver directly")
 
 
-class CalibrationAgainstBookPricesTests(unittest.TestCase):
-    """The only class in this file that reads data/prices.json - a
-    CALIBRATION TARGET, per this module's own docstring and sim/world/
-    agriculture.py's precedent, read here to REPORT the disagreement and
-    never fed back into deposits.py or data/world/deposits.json to close
-    it.
-    """
+class CalibrationReportTests(unittest.TestCase):
+    """The derived price at the margin, reported in labour hours per kg and
+    never fed back into deposits.py or data/world/deposits.json."""
 
     def setUp(self):
         # Instance-level setUp, not setUpClass: sim/tests/__main__.py's
-        # _run_topic flattens a unittest suite and calls each TestCase's
-        # own .run() individually so it can report per-test results in the
-        # same summary line every other topic uses (see that file's own
-        # docstring) - which means it never drives a TestSuite's shared
-        # _handleClassSetUp, so setUpClass silently never runs. Cheap
-        # enough (two JSON reads) to redo per test.
-        with open(os.path.join(_REPO_ROOT, "data", "prices.json")) as handle:
-            self.book_prices = json.load(handle)
-        self.labourer_wage_denarii_per_hour = (
-            self.book_prices["wage_rates_denarii_per_hour"]["labourer"]["rate"])
+        # _run_topic never drives a TestSuite's shared class setup.
         self.resources = deposits._load_json(deposits.RESOURCES_FILE)
 
-    _BOOK_KEY = {
-        "iron": "iron_ore_kg", "copper": "copper_kg", "tin": "tin_kg",
-        "lead": "lead_kg", "silver": "silver_kg", "gold": "gold_kg",
-        "mercury": "mercury_kg",
-    }
-
-    def _price_at_margin_denarii_per_kg(self, metal):
+    def _price_at_margin(self, metal):
         deposit_list = deposits.load_deposits(metal)
         demand = self.resources["empire_output_100ad"][metal]["t_per_yr"]
         outcome = deposits.find_marginal_deposit(deposit_list, demand)
-        return (outcome.price_at_margin_labour_hours_per_kg
-                * self.labourer_wage_denarii_per_hour)
+        return outcome.price_at_margin_labour_hours_per_kg
 
-    def test_report_disagreement_against_book_prices(self):
-        # No assertion tight enough to tune against - see this class's own
-        # docstring. The only assertions are sanity bounds: every derived
-        # price is a positive, finite number of denarii/kg.
-        print("\nCalibrationAgainstBookPricesTests: derived price at the "
-              "margin vs data/prices.json's book price, both denarii/kg "
-              "(labourer wage = %.4g den/h)"
-              % self.labourer_wage_denarii_per_hour)
-        purchase_prices = self.book_prices["purchase_prices_denarii"]
+    def test_report_derived_price_at_the_margin(self):
+        print("\nCalibrationReportTests: derived price at the margin, "
+              "labour hours per kg")
         for metal in deposits.METALS:
-            derived = self._price_at_margin_denarii_per_kg(metal)
-            book = purchase_prices[self._BOOK_KEY[metal]]["p"]
-            ratio = book / derived if derived else float("inf")
-            print("  %-8s derived=%12.4f  book=%10.4f  book/derived=%10.2fx"
-                  % (metal, derived, book, ratio))
+            derived = self._price_at_margin(metal)
+            print("  %-8s derived=%12.4f" % (metal, derived))
             self.assertGreater(derived, 0.0, metal)
             self.assertLess(derived, float("inf"), metal)
 
-    def test_cinnabar_mineral_is_the_fairer_comparison_for_mercury(self):
-        # mercury_kg is REFINED metal (needs roasting cinnabar and
-        # condensing the vapour, a process this module does not model -
-        # see its own docstring's WHAT THIS MODULE DELIBERATELY DOES NOT
-        # DO section); cinnabar_kg is the RAW MINERAL, sold as pigment
-        # with no metallurgy at all, which is what this module's mercury
-        # deposits actually produce a cost for. Both are printed so the
-        # report can say plainly which gap is smelting and which is still
-        # unexplained scarcity.
-        derived = self._price_at_margin_denarii_per_kg("mercury")
-        purchase_prices = self.book_prices["purchase_prices_denarii"]
-        mercury_book = purchase_prices["mercury_kg"]["p"]
-        cinnabar_book = purchase_prices["cinnabar_kg"]["p"]
-        print("\nmercury: derived (mining only) = %.4f den/kg; "
-              "book mercury_kg (refined) = %.4f; book cinnabar_kg "
-              "(raw mineral, no smelting needed) = %.4f"
-              % (derived, mercury_book, cinnabar_book))
-        self.assertGreater(derived, 0.0)
-
     def test_report_silver_to_lead_ratio(self):
-        # The task's own named calibration fact: silver was roughly a
-        # hundred times lead by weight. Reported both from this module's
-        # own derived margin costs and from data/prices.json's book
-        # figures, with no assertion that either actually lands near 100 -
-        # see this class's own docstring.
-        silver = self._price_at_margin_denarii_per_kg("silver")
-        lead = self._price_at_margin_denarii_per_kg("lead")
-        purchase_prices = self.book_prices["purchase_prices_denarii"]
-        book_silver = purchase_prices["silver_kg"]["p"]
-        book_lead = purchase_prices["lead_kg"]["p"]
-        print("\nsilver:lead ratio - this module's derived margin costs: "
-              "%.1fx; data/prices.json's own book prices: %.1fx"
-              % (silver / lead, book_silver / book_lead))
+        silver = self._price_at_margin("silver")
+        lead = self._price_at_margin("lead")
+        print("\nsilver:lead ratio from derived margin costs: %.1fx" % (silver / lead))
         self.assertGreater(silver / lead, 1.0)
 
 

@@ -18,11 +18,27 @@ GOVERNMENT_WORTH_SHARE_PER_GAIN = declare(
 	why="What one unit of weighted gain is worth to a state, as a share of "
 		"its yearly revenue. Stands in for a model of what armies, roads "
 		"and prestige return.")
-GOVERNMENT_DISCRETIONARY_SHARE = declare(
-	"GOVERNMENT_DISCRETIONARY_SHARE", 0.001, kind="temporary_heuristic",
-	unit="share of annual state revenue", source=None, confidence="D",
-	why="Revenue a state can divert to acquiring know-how in a year. "
-		"Stands in for a budget model competing uses draw on.")
+ADMINISTRATIVE_SPAN = declare(
+	"ADMINISTRATIVE_SPAN", 5000.0, kind="temporary_heuristic",
+	unit="people governed per official at full state capacity", source=None,
+	confidence="D",
+	why="How many people one paid official can keep on the rolls and the "
+		"assessments; a state with less capacity keeps proportionally fewer "
+		"officials. Stands in for a model of what administration is for "
+		"(census, assessment, courts, posts).")
+LEVY_RATE_CEILING = declare(
+	"LEVY_RATE_CEILING", 0.3, kind="temporary_heuristic",
+	unit="share of a taxpayer's income", source=None, confidence="D",
+	why="The most of one visible taxpayer's income the state can take in a "
+		"year however large its shortfall; beyond it taxpayers hide, flee or "
+		"stop earning. Stands in for a model of evasion and of what a "
+		"taxpayer does when the claim on him is ruinous.")
+ARMY_ADJUSTMENT_RATE = declare(
+	"ARMY_ADJUSTMENT_RATE", 0.1, kind="temporary_heuristic",
+	unit="share of the standing army per year", source=None, confidence="D",
+	why="The most a state raises or disbands of its standing army in a "
+		"year toward the size it wants and can pay. Stands in for recruiting, "
+		"training and demobilisation as processes.")
 COPY_EFFORT_SHARE = declare(
 	"COPY_EFFORT_SHARE", 0.4, kind="temporary_heuristic",
 	unit="share of the original work", source=None, confidence="D",
@@ -72,3 +88,13 @@ ATTENTION_SPAN = declare(
 	why="How many of the most promising inventions an actor works out a "
 		"copying plan for in a year; stands in for limited attention and "
 		"keeps the yearly evaluation bounded.")
+EXPANSION_RATE = declare(
+	"EXPANSION_RATE", 0.5, kind="temporary_heuristic",
+	unit="share of present capacity per year", source=None, confidence="D",
+	why="The most capacity a firm adds to a concern in a year, however good the return; stands in for "
+		"the time to build plant and to find and train the people.")
+MANAGEMENT_SPAN_EXPONENT = declare(
+	"MANAGEMENT_SPAN_EXPONENT", 0.15, kind="temporary_heuristic",
+	unit="exponent of capacity on the wage bill beyond the people hired", source=None, confidence="D",
+	why="Wages of a concern run at several times its founding size grow faster than its staff: the "
+		"overseers and managers a larger concern needs. Stands in for a model of span of control.")

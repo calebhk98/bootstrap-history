@@ -9,7 +9,9 @@ ARCHITECTURE.md.
 """
 
 import json, re
+from .. import units_text
 
+from .render_screens_automation import render_automation
 from .util import _fmt_num
 from .render_screens_start import render_start
 from .render_screens_big import render_state, render_step, render_available, render_why
@@ -19,6 +21,11 @@ from .render_screens_economy import (
     render_population, render_ventures,
 )
 from .render_screens_market import render_market
+from .render_screens_world import (
+    render_map, render_commitments, render_education, render_demography, render_divergence,
+)
+from .render_figures import render_figures
+from .render_screens_groups import render_groups
 from .render_screens_status import (
     render_values, render_final, render_score, render_error, render_stuck,
     render_risk, render_generic, render_log, render_policy, render_rush,
@@ -26,6 +33,7 @@ from .render_screens_status import (
 )
 
 _RENDERERS = {
+    "figures": render_figures, "whychanged": render_figures, "numbers": render_figures,
     "policy": render_policy,
     "state": render_state, "step": render_step, "available": render_available,
     "why": render_why, "money": render_money, "ledger": render_money,
@@ -36,11 +44,14 @@ _RENDERERS = {
     "values": render_values, "rush": render_rush,
     "capacity": render_capacity, "industry": render_capacity,
     "materials": render_materials,
-    "market": render_market,
+    "market": render_market, "groups": render_groups,
     "dashboard": render_capacity, "portfolio": render_portfolio,
+    "automation": render_automation, "audit": render_automation,
     "economy": render_economy, "changes": render_changes,
     "population": render_population,
-    "final": render_final, "score": render_score,
+    "map": render_map, "commitments": render_commitments, "education": render_education,
+    "demography": render_demography, "divergence": render_divergence,
+    "final": render_final, "finish": render_final, "score": render_score,
     "start": render_start, "begin": render_start, "research": render_start,
     "build": render_start,
 }
@@ -54,7 +65,7 @@ _RENDERERS = {
 # only when the caller says the reader is typing.
 TYPED_HINTS = False
 # The short form used in the compact lines ("400 den", "net +12 den/yr"). Set
-# alongside TYPED_HINTS by whichever front end is rendering; see MONEY_WORDS.
+# alongside TYPED_HINTS by whichever front end is rendering; see `currency_words` in the civilisation file.
 MONEY_SHORT = "den"
 # Which mine commission milestones to show in rendered text: one of
 # 'commissioned', 'ready', or 'both'. Set by cli.py based on player config.
@@ -172,7 +183,9 @@ def render_pretty(command_name, resp):
         # the game explains what to type - which is most of the places it
         # explains anything. Wrapping the final words is the only way the
         # line lengths can be right.
+        resp = units_text.for_text(resp, renderer is render_generic)
         out = renderer(_typed_deep(resp) if TYPED_HINTS else resp)
+        MONEY_SHORT = units_text.text_label("money", MONEY_SHORT)
         if MONEY_SHORT != "den":
             # "Money: 400 den" must not survive unchanged in a game counted
             # in pence: every "den" in the rendered text has to be swapped

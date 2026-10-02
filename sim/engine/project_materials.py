@@ -65,19 +65,17 @@ class ProjectMaterialsMixin:
         return max(worst_other, own_factor) * self.material_freight_factor(emp_key)
 
     def material_purchase_cost(self, material, tonnes, already=0.0):
-        """(money, mean money per tonne) to buy `tonnes` of a material now,
-        the price rising as the order is filled. None when it has no price."""
-        unit_price = self._book_price_per_kg(material)
-        if unit_price is None:
-            return None
-        emp_key, tag = self._material_tag(material)
-        per_tonne = unit_price / tonnes_per_unit(material) * self.price_index
-        factor = self._price_factor_across_purchase(emp_key, tag, already, max(0.0, tonnes))
-        return per_tonne * factor * max(0.0, tonnes), per_tonne * factor
+        """(money, mean money per tonne) to buy `tonnes` of a material now, the price rising as
+        the order is filled. None when it has no price (see GoodsMarket.quote_buy)."""
+        return self.goods_market.quote_buy(material, tonnes, already)
 
     def project_material_bill(self, node_id):
         """Per material: needed, held (stock and own output over the build),
-        missing, and the market cost of the missing part."""
+        missing, and the market cost of the missing part. Callers must not
+        change the returned dict: inside a view's bill scope it is shared."""
+        return self._shared_bill(node_id, lambda: self._compute_material_bill(node_id))
+
+    def _compute_material_bill(self, node_id):
         span = max(1.0, float(self.nodes[node_id].get("build_yrs")
                               or self.nodes[node_id].get("yrs") or 1.0))
         stock_left, own_left, headroom_left = {}, {}, {}
@@ -116,15 +114,37 @@ class ProjectMaterialsMixin:
                          "priced": quoted is not None})
         return {"rows": rows, "cost_of_missing": total}
 
+    def _up_front_materials_money(self, node_id):
+        """Money the start would spend now on the materials the market can
+        deliver, or zero when the start could not pay it."""
+        _total, up_front = self.project_material_parts(node_id)
+        up_front *= self.opposition_factor(node_id) * self.material_cost_factor(node_id)
+        if up_front <= 0 or not purchase_rule.can_pay(self, up_front):
+            return 0.0
+        return up_front
+
     def settle_project_materials(self, node_id):
         """Buy the materials the market can deliver now (when the money can
         be raised) and return what is left to pay in instalments."""
         full = self.project_cost_now(node_id)
-        _total, up_front = self.project_material_parts(node_id)
-        up_front *= self.opposition_factor(node_id) * self.material_cost_factor(node_id)
-        if up_front <= 0 or not purchase_rule.can_pay(self, up_front):
+        if self._up_front_materials_money(node_id) <= 0:
             return full
         return full - self.buy_project_materials(node_id)
+
+    def failure_bill(self, node_id):
+        """The money bill the player bears for this project: the frozen bill
+        once it runs, else what a start today would leave to pay after the
+        up-front materials (which stay in stock and are not at risk)."""
+        if node_id in self.state.projects.active:
+            return self.project_cost(node_id)
+        return self.project_cost_now(node_id) - self._up_front_materials_money(node_id)
+
+    def failure_loss(self, node_id):
+        """Money a failed attempt costs; the one figure `why` quotes and
+        `_complete` charges."""
+        if not self.nodes[node_id]["risk"]:
+            return 0.0
+        return max(0.0, self.failure_bill(node_id)) * self.FAILURE_RESET_SHARE
 
     def project_material_parts(self, node_id):
         """(cost of the missing materials, of which paid for at the start),
@@ -141,7 +161,7 @@ class ProjectMaterialsMixin:
         """Labour and capital, with every factor except the material ones."""
         node = self.nodes[node_id]
         return ((node["_total_cost"] - node["_material_cost"]) * self.cost_money_factor()
-                * self.civ_cost_factor(node_id))
+                * self.civ_cost_factor(node_id) * self.rebuild_work_factor(node_id))
 
     def bounty_price(self, node_id):
         """A prize for the whole project: the multiplier times what this
@@ -153,21 +173,16 @@ class ProjectMaterialsMixin:
         """Pay for what the market can deliver now of the missing materials
         and bank it as stock. Returns the money paid."""
         factor = self.opposition_factor(node_id) * self.material_cost_factor(node_id)
-        household = self.state.household
-        opening = self._material_opening_stock()
-        stock = self._material_stock()
+        market = self.goods_market
         paid = 0.0
         for row in self.project_material_bill(node_id)["rows"]:
             tonnes = row["deliverable_now_tonnes"]
             if tonnes <= 0 or not row["priced"]:
                 continue
             money = row["price_per_tonne"] * tonnes * factor
-            emp_key = self._material_tag(row["material"])[0]
-            household.capital -= money
-            stock[emp_key] += tonnes
-            opening[emp_key] = opening.get(emp_key, 0.0) + tonnes
+            market.settle_purchase(market.founder, self._material_tag(row["material"])[0], tonnes, money,
+                                   "materials bought for projects")
             paid += money
-        household._stock_throttle_sig = None
         return paid
 
     def project_material_upfront_refusal(self, node_id):

@@ -1,9 +1,15 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
 from ..data import WAGES, trade_family
+from ..market_report import goods_demand
+from .. import figures_headline  # noqa: F401  (registers the headline figures)
+from .. import cash_book
+from ..figures import figure_snapshot
 
 from .state import _agent_state
 from .capacity_remedies import capacity_remedies
+from .portfolio_bottlenecks import blocker_kind_of, bottleneck_groups
+from .portfolio_waiting import waiting_to_start
 
 # WHAT EACH TRAIT IN self.value_weights ACTUALLY DOES, in the player's own words. Event
 # text names these fields directly - "corpus_dispersed changes the society:
@@ -145,11 +151,15 @@ def _power_tiers(sim, nodes):
     """
     tiers = []
     highest = None
+    installed_by_tier = sim.installed_generation_kw_by_tier()
     for nid, label in _power_ladder(nodes):
         if nid not in nodes or not sim.is_visible(nid):
             continue
         built = sim.has(nid)
-        tiers.append({"capability": label, "id": nid, "built": built})
+        installed_kw = round(installed_by_tier.get(nid, 0.0), 1)
+        tiers.append({"capability": label, "id": nid, "built": built,
+                      "installed_kw": installed_kw,
+                      "no_generation_installed": installed_kw <= 0.0})
         if built:
             highest = label
     return tiers, highest
@@ -449,9 +459,9 @@ def _portfolio_constraint(waiting):
         return "materials"
     if waiting.startswith("money") or "pace it can absorb money" in waiting:
         return "money"
-    if waiting == "the calendar":
+    if waiting.startswith("the calendar"):
         return "calendar"
-    if waiting == "your hours" or waiting.startswith("your hours:"):
+    if waiting.startswith("your hours"):
         return "founder_hours"
     return "unclear"
 
@@ -480,6 +490,7 @@ def _portfolio_rows(nodes, active_out):
         constraint = _portfolio_constraint(entry.get("waiting_on"))
         row = {
             "id": node_id, "name": entry["name"], "constraint": constraint,
+            "blocker_kind": blocker_kind_of(constraint),
             "waiting_on": entry.get("waiting_on"),
             # READ, NOT RECOMPUTED, same as everything below it: arrears
             # gives unspendable founder hours back, so waiting_on above can
@@ -508,7 +519,9 @@ def _portfolio_rows(nodes, active_out):
             "calendar_years_left": round(
                 max(0.0, float(node["yrs"]) - float(entry.get("years_in_progress") or 0.0)), 1),
             "still_to_pay": entry.get("still_to_pay"),
-            "chance_of_failure": node.get("risk") or None,
+            "chance_of_failure": entry.get("chance_of_failure_now") or None,
+            "chance_of_failure_before_any_attempt": entry.get("chance_of_failure_before_any_attempt"),
+            "chance_of_failure_is": "the live figure, after any failed attempts",
         }
         if "will_be_abandoned_in_years" in entry:
             row["will_be_abandoned_in_years"] = entry["will_be_abandoned_in_years"]
@@ -593,6 +606,14 @@ def _trade_demand_rows(sim):
     return rows
 
 
+def _add_last_year_hours(sim, rows):
+    """Each row's effective hours in the year before the latest, from the yearly snapshots."""
+    history = getattr(sim, "_dashboard_history", None) or []
+    earlier = history[-2].get("project_hours_effective") if len(history) >= 3 else None
+    for row in rows:
+        row["hours_effective_last_year"] = (earlier or {}).get(row["id"])
+
+
 def _agent_portfolio(sim, nodes, cmd=None):
     """The screen a player who had already won the game asked for four
     separate times in one run: what every active project is actually
@@ -604,15 +625,20 @@ def _agent_portfolio(sim, nodes, cmd=None):
     state_out = _agent_state(sim, nodes)
     active_out = state_out.get("active") or {}
     rows = _portfolio_rows(nodes, active_out)
+    _add_last_year_hours(sim, rows)
     pool_total = state_out.get("founder_hours_available")
     count = len(active_out)
+    trade_rows = _trade_demand_rows(sim)
     return {
         "ok": True,
         "active_project_count": count,
         "founder_hours_available_this_year": pool_total,
         "free_hours_going_unused": state_out.get("free_hours_going_unused"),
+        "bottlenecks": bottleneck_groups(sim, rows, trade_rows, pool_total,
+                                         state_out.get("resource_throttle"), state_out.get("throttle_binding")),
+        "waiting_to_start": waiting_to_start(sim, nodes),
         "projects": rows,
-        "trade_hours_demand_vs_supply": _trade_demand_rows(sim),
+        "trade_hours_demand_vs_supply": trade_rows,
         "note": ("%d active project%s %s sharing this year's %s directed "
                 "hours; each row above shows what IT got and why. "
                 "'trade_hours_demand_vs_supply' is the same question for "
@@ -657,7 +683,9 @@ def _dashboard_snapshot(sim):
     """One year's worth of the numbers `changes` diffs against later - a
     timestamped copy of figures already computed elsewhere (price_index,
     literacy, mine_capacity, ...), not a new figure of its own. Called once
-    per simulated year from the `step` dispatch below."""
+    per simulated year from the `step` dispatch below. It also closes the cash book's
+    period, so the book and the snapshots share their year boundaries."""
+    cash_book.close_period(sim)
     return {
         "year": sim.year,
         "price_index": round(sim.price_index, 4),
@@ -678,6 +706,9 @@ def _dashboard_snapshot(sim):
         "scandal": round(sim.scandal, 2),
         "reputation": round(sim.reputation, 1),
         "eminence": round(sim.eminence, 2),
+        "figures": figure_snapshot(sim),
+        "project_hours_effective": {node_id: progress.get("hours_effective_this_year", 0.0)
+                                    for node_id, progress in sim.active.items()},
     }
 
 
@@ -737,16 +768,17 @@ def _agent_economy(sim, cmd=None):
             seen.add(material_key)
             rows.append({"material": material_key,
                         "price_factor_over_book": round(sim.material_price_factor(material_key), 3)})
+        out["goods_demand"] = goods_demand(sim)
         out["tracked_material_prices"] = sorted(rows, key=lambda r: -r["price_factor_over_book"])
         # THE SAME FORMULA `labour`'s own row() uses for "a_year_of_one", not
         # a second version of a wage this file already prints elsewhere.
         out["wages_by_trade"] = [
-            {"trade": trade, "a_year_of_one": round(sim.annual_wage(trade), 0),
+            {"trade": trade, "a_year_of_one": round(sim.labour_market.quote_annual(trade), 0),
              "wage_foundation": {
                  "base_for_skill_and_difficulty": round(sim.base_annual_wage(trade), 2),
-                 **{factor_key: round(value, 3) for factor_key, value in sim.wage_cost_factors(trade).items()},
+                 **{factor_key: round(value, 3) for factor_key, value in sim.labour_market.cost_factors(trade).items()},
                  "demographic_scarcity": round(sim.wage_index, 3),
-                 "local_trade_scarcity": round(sim.labour_price_factor(trade), 3)}}
+                 "local_trade_scarcity": round(sim.labour_market.price_factor(trade), 3)}}
             for trade in sorted(WAGES) if sim.trade_available(trade)]
     return out
 

@@ -84,21 +84,35 @@ check("...but a whole number still goes through, and lands exactly that many",
 # enough to reach what the tree actually asks for.
 # =============================================================================
 
-# 73 SECONDS, because it needs two and a half centuries of a rich run before
-# the question it asks even becomes interesting. The cheap half of the same
-# fix - that the ceiling itself widens with the institutions - is checked
-# below in milliseconds and stays on the fast path.
-def _auto_hire_respects_the_wall():
-    household = sim(capital=1e9, manual=False)
-    for _ in range(250):
-        household.step()
-    return (household.scholars <= household.literate_capacity("scholar") + 1e-6
-            and household.scholars > 10.0,
-            (household.scholars, household.literate_capacity("scholar")))
+# The long run this once needed (250 simulated years of a rich household) is
+# replaced by the one-step check below plus the wall-widening check after it.
 
-slow_check("auto_hire never grows scholars past the wall hire() enforces, and "
-           "over two and a half centuries grows well past the old ceiling of six",
-           _auto_hire_respects_the_wall)
+# The same clamp without the 250 years. hire() refuses past the wall anyway, so
+# the clamp only shows in the headcount much later; it shows at once in the
+# scholar headcount auto_hire ASKS for, which is the last `_stochastic_round`
+# of the step. A wall already reached must cap that ask at the wall. (Remove
+# the `min(..., literate_capacity("scholar"))` in core_step_phases.py and the
+# first check fails.)
+def _scholars_asked_for(wall):
+    household = sim(capital=1e9, manual=False)
+    household.literate_capacity = lambda trade: wall
+    household.hire("scholar", 2)
+    asked = []
+    original = household._stochastic_round
+    def recording_round(value, *args, **kwargs):
+        asked.append(value)
+        return original(value, *args, **kwargs)
+    household._stochastic_round = recording_round
+    household.step()
+    return asked[-1] if asked else None
+
+_asked_walled = _scholars_asked_for(2.0)
+_asked_open = _scholars_asked_for(50.0)
+check("auto_hire never asks for more scholars than the wall allows",
+      _asked_walled is not None and _asked_walled <= 2.0 + 1e-6, _asked_walled)
+check("... though the same household asks for more when the wall is open, so "
+      "the check above measures the wall and not an unable household",
+      _asked_open is not None and _asked_open > 2.0 + 1e-6, _asked_open)
 
 # The bare, no-institution ceiling a fresh household sees is unchanged...
 s0 = sim()
@@ -291,21 +305,23 @@ def _nitre_laid(capital):
     household.step()
     return household.nitre_bed_m2 - before
 
+from sim.engine.money_units import BOOK_LABOURER_WAGE_DENARII_PER_HOUR
+_nitre_cost_per_m2 = S.Sim.NITRE_LABOUR_HOURS_PER_M2 * BOOK_LABOURER_WAGE_DENARII_PER_HOUR
 check("the nitre purchase is held to a flat two thousand denarii a year "
       "however rich the household - sizing it to the shortfall instead, "
       "the way the mine branch beside it does, measured worse on every "
       "count and is recorded in core.py as a road not to walk again",
-      _nitre_laid(5_000_000.0) <= 2000.0 / S.Sim.NITRE_COST_PER_M2 + 1e-6,
+      _nitre_laid(5_000_000.0) <= 2000.0 / _nitre_cost_per_m2 + 1e-6,
       _nitre_laid(5_000_000.0))
 check("...and a poor household is held to a twentieth of its capital",
-      _nitre_laid(3_000.0) <= 3_000.0 * 0.05 / S.Sim.NITRE_COST_PER_M2 + 1e-6,
+      _nitre_laid(3_000.0) <= 3_000.0 * 0.05 / _nitre_cost_per_m2 + 1e-6,
       _nitre_laid(3_000.0))
 check("the nitre yield and price the advice quotes are the ones the "
-      "purchase actually uses - 0.0008 t/m2 at 2.0 den/m2, so a tonne a "
+      "purchase actually uses - 0.0008 t/m2 at 40 labour hours/m2, so a tonne a "
       "year of shortfall costs 2,500 denarii of bed",
       abs(S.Sim.NITRE_YIELD_T_PER_M2 - 0.0008) < 1e-12
-      and abs(S.Sim.NITRE_COST_PER_M2 - 2.0) < 1e-12,
-      (S.Sim.NITRE_YIELD_T_PER_M2, S.Sim.NITRE_COST_PER_M2))
+      and abs(S.Sim.NITRE_LABOUR_HOURS_PER_M2 - 40.0) < 1e-12,
+      (S.Sim.NITRE_YIELD_T_PER_M2, _nitre_cost_per_m2))
 check("saltpetre still cannot simply be bought - the beds are the answer, "
       "not a market share",
       S.Sim.MARKET_SHARE["saltpetre"] == 0.0, S.Sim.MARKET_SHARE["saltpetre"])

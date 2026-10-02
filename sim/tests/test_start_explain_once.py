@@ -3,7 +3,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.proto.render_screens_start import render_start
 
-# Complaint 78: `start` explains the fixed price and the untrained-trade warning once, then points back.
+# Complaint 76: `start` explains the fixed price and the untrained-trade warning once, then points back.
 
 test_sim = sim(capital=1_000_000)
 first = S._agent_dispatch(test_sim, NODES, {"cmd": "start", "id": "tx2_shed"})

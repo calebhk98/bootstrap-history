@@ -114,9 +114,9 @@ class EngineWageTests(unittest.TestCase):
                 ratios[trade], engine.wage_per_hour(trade) / engine.wage_per_hour("labourer"))
         # Payroll's annual figure is that same hourly wage over a working year.
         self.assertAlmostEqual(
-            engine.annual_wage("smith", include_local_scarcity=False),
+            engine.labour_market.unscarce_annual("smith"),
             engine.wage_per_hour("smith") * engine.HOURS_PER_PERSON_YEAR
-            * engine.wage_cost_factors("smith")["weighted"]
+            * engine.labour_market.cost_factors("smith")["weighted"]
             * engine.price_index * engine.wage_index)
         # The price solver's money conversion is the schedule's coin-anchored rate.
         self.assertEqual(engine_prices.denarii_per_labour_hour(engine.wage_document()),
@@ -135,7 +135,7 @@ class EngineWageTests(unittest.TestCase):
         engine = self.sim
         engine.state.economy.wage_tightness_factors["smith"] = 1.2
         engine.hire("artisan", 1)
-        pressure = engine.labour_pressure("artisan")
+        pressure = engine.labour_market.pressure("artisan")
         self.assertGreater(pressure, 0.0)
         with tempfile.TemporaryDirectory() as directory:
             path = os.path.join(directory, "save.json")
@@ -143,7 +143,7 @@ class EngineWageTests(unittest.TestCase):
             fresh = sim(civ="rome_100ad", events=False)
             load_state(fresh, path)
         self.assertEqual(fresh.wage_schedule().tightness_factors["smith"], 1.2)
-        self.assertAlmostEqual(fresh.labour_pressure("artisan"), pressure)
+        self.assertAlmostEqual(fresh.labour_market.pressure("artisan"), pressure)
 
     def test_start_is_at_equilibrium(self):
         engine = self.sim
@@ -156,29 +156,19 @@ class EngineWageTests(unittest.TestCase):
 
 
 _RUNNER = """
-import builtins, io, json, random, sys
-real_open = builtins.open
-def guarded_open(path, *args, **kwargs):
-    handle = real_open(path, *args, **kwargs)
-    if str(path).endswith("prices.json") and "b" not in (args[0] if args else kwargs.get("mode", "r")):
-        document = json.load(handle)
-        handle.close()
-        document.pop("wage_rates_denarii_per_hour", None)
-        return io.StringIO(json.dumps(document))
-    return handle
-builtins.open = guarded_open
+import json, random
 from sim import simulator as S
 tree, prices, nodes, wages, goods = S.load()
 _lab, order, _b = S.load_strategy("recommended", nodes, tree["meta"]["goal_node"])
 engine = S.Sim(nodes, order, random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
 print(json.dumps({"labourer": engine.wage_per_hour("labourer"),
-                  "smith": engine.wage_per_hour("smith"), "annual": engine.annual_wage("smith")}))
+                  "smith": engine.wage_per_hour("smith"), "annual": engine.labour_market.quote_annual("smith")}))
 """
 
 
 class NoBookWagesTests(unittest.TestCase):
 
-    def test_engine_runs_with_the_wage_section_unavailable(self):
+    def test_engine_runs_with_no_wage_book_on_disk(self):
         result = subprocess.run([sys.executable, "-c", _RUNNER], capture_output=True, text=True,
                                 timeout=600, cwd=ROOT)
         self.assertEqual(result.returncode, 0, result.stderr[-800:])

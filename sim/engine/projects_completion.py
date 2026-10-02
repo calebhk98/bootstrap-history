@@ -16,6 +16,9 @@ file of their own.
 """
 from sim.constants import declare
 from .data import closure
+from .failure_cause import failure_cause
+from .failure_diagnosis import failure_teaches, note_failure
+from .permanent_benefit import permanent_parts
 
 FAILED_PREFIX = "FAILED at"
 MINOR_MARK = "(minor)"
@@ -59,6 +62,12 @@ class CompletionMixin:
         why="A failure on the goal's own prerequisite road blocks the goal, "
             "so its loss counts for more when deciding how loudly to say "
             "it. Presentation only.")
+
+    def reputation_gain_of(self, node):
+        """The standing finishing `node` adds; `why` quotes this same figure."""
+        return (self.REPUTATION_GAIN_BASE
+                + self.REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT * max(0.0, self.state_interest(node))
+                + (self.REPUTATION_GAIN_REVENUE_BONUS if node["rev"] > 0 else 0.0))
 
     def goal_closure_ids(self):
         """Every node the current goal needs, cached per goal."""
@@ -178,7 +187,13 @@ class CompletionMixin:
         if self.rng.random() < _risk_this_attempt:
             _yrs_before = projects.active[node_id]["yrs"]
             projects.failed_attempts[node_id] += 1
-            projects.active[node_id]["ph_left"] = node["ph"] * self.FAILURE_RESET_SHARE
+            _diagnosis = note_failure(self, node_id)
+            claimed = node_id in projects.bountied
+            # A bounty's claimant redoes the work: the poster's prize holds and
+            # no hours or money fall on the poster.
+            projects.active[node_id]["ph_left"] = (
+                0.0 if claimed else
+                node["ph"] * self.rebuild_work_factor(node_id) * self.FAILURE_RESET_SHARE)
             # THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not
             # reset the multi-year diffusion clock to zero, restarting the
             # whole process from nothing. Even ONE failed attempt already
@@ -193,37 +208,49 @@ class CompletionMixin:
             # programme is only ever readier, never instantly ready.
             _retain = self._retry_calendar_retain(node_id)
             projects.active[node_id]["yrs"] = _yrs_before * _retain
-            _lost = node["_total_cost"] * self.FAILURE_RESET_SHARE * self.cost_money_factor()
+            _lost = 0.0 if claimed else self.failure_loss(node_id)
             _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
-            household.capital -= _lost
+            household.debit(_lost, "failure losses")
             # A failure always announces itself; its size sets how loudly.
             _next_risk = self.effective_risk(node_id)
             _banked = projects.active[node_id]["yrs"]
+            if claimed:
+                household.log.append((scenario.year,
+                    "%s %s: the claimant's attempt failed. The prize you posted holds "
+                    "and they try again (attempt %d, chance of failing %d%%); nothing "
+                    "more falls on you."
+                    % (FAILED_PREFIX, node["name"],
+                       projects.failed_attempts[node_id] + 1, round(_next_risk * 100))))
+                return
             if _severity == "minor":
                 household.log.append((scenario.year,
                     "%s %s %s: lost %s denarii, %d%% of the hours to redo; "
-                    "attempt %d, next attempt's chance of failing %d%%."
+                    "attempt %d, next attempt's live chance of failing %d%%."
                     % (FAILED_PREFIX, node["name"], MINOR_MARK,
                        "{:,.0f}".format(max(0.0, _lost)),
                        round(self.FAILURE_RESET_SHARE * 100),
                        projects.failed_attempts[node_id] + 1,
-                       round(_next_risk * 100))))
+                       round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else "")))
                 return
             household.log.append((scenario.year,
-                             FAILED_PREFIX + " %s: it did not work. %d%% of the hours "
+                             FAILED_PREFIX + " %s: it did not work. What failed: %s. "
+                             "%d%% of the hours "
                              "are to do again (%s of your own) and %s is gone. "
-                             "Attempt %d. What went wrong is now understood well "
-                             "enough that the next attempt's chance of failing "
-                             "this way is %d%%, down from the %d%% this attempt "
+                             "Attempt %d. %s the next attempt's live chance of failing "
+                             "(the figure `risk`, `why` and `portfolio` now quote) "
+                             "is %d%%, down from the %d%% this attempt "
                              "just faced, and %.1f of the %.1f years already "
-                             "spent count toward next time's wait."
-                             % (node["name"], round(self.FAILURE_RESET_SHARE * 100),
+                             "spent count toward next time's wait. %s"
+                             % (node["name"], failure_cause(self, node_id),
+                                round(self.FAILURE_RESET_SHARE * 100),
                                 "{:,.0f}".format(node["ph"] * self.FAILURE_RESET_SHARE),
                                 "{:,.0f}".format(max(0.0, _lost)),
                                 projects.failed_attempts[node_id] + 1,
+                                "What went wrong is now understood well enough that"
+                                if failure_teaches(self, node_id) else "Nothing was learned, so",
                                 round(_next_risk * 100),
                                 round(_risk_this_attempt * 100),
-                                _banked, _yrs_before)))
+                                _banked, _yrs_before, _diagnosis)))
             return
         goal_before = self.goal_snapshot()
         del projects.active[node_id]
@@ -237,21 +264,24 @@ class CompletionMixin:
         household.hour_allocations.pop(node_id, None)
         projects.done.add(node_id)
         self._done_changed()
+        for material, units in (node.get("grants") or {}).items():
+            self.grant_stock(material, units)
         if projects.done_year is None:
             projects.done_year = {}
         projects.done_year[node_id] = scenario.year
         # A technology changes the society that built it. Only for work YOU
         # completed: a society is not altered by owning something it always had.
+        # The alarm is read before the work's own effects apply, which is
+        # the figure `why` quotes.
+        alarm = self.alarm_of(node)
         self.apply_tech_effects(node_id)
         self.reveal_from(node_id)
         # Visible, useful, State-approved work builds standing. Obscure laboratory
         # work does not, however important it is, which is a real and annoying fact
         # about how credibility actually accrues.
-        gain = (self.REPUTATION_GAIN_BASE
-                + self.REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT * max(0.0, self.state_interest(node))
-                + (self.REPUTATION_GAIN_REVENUE_BONUS if node["rev"] > 0 else 0.0))
-        household.reputation = min(self.REPUTATION_CEILING, household.reputation + gain)
-        household.scandal += self.alarm_of(node)
+        household.reputation = min(self.REPUTATION_CEILING,
+                                   household.reputation + self.reputation_gain_of(node))
+        household.scandal += alarm
         governance.gov += self.state_interest(node)
         # _grant_staff, NOT a bare += on household.scholars/household.artisans:
         # _resync_pools(), which step() calls unconditionally every year,
@@ -275,10 +305,12 @@ class CompletionMixin:
         if self.is_venture(node_id) and not self.policy.get("auto_open", not self.manual):
             # Built is not open: say what is switched off until it is opened.
             benefit = self.NOT_OPERATING_BENEFIT.get(node_id)
+            held = permanent_parts(node, self._tech_effects.get(node_id) or {})
             household.log.append((scenario.year,
-                "completed: %s. STATUS: CLOSED / NOT OPERATING. %s Open it "
+                "completed: %s. STATUS: CLOSED / NOT OPERATING. %s%s Open it "
                 "('open %s') to begin and to start paying upkeep."
                 % (node["name"],
+                   ("In force already, open or not: %s. " % "; ".join(held)) if held else "",
                    ("Not in effect until open: %s." % benefit) if benefit
                    else "Nothing is earning yet.", node_id)))
             shortfall = self.opening_shortfall(node_id)

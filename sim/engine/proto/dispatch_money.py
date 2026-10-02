@@ -13,50 +13,30 @@ from .explain_once import already_explained
 from .util import _qty
 from .buy_targets import canonical_target, target_names, usage_lines
 from .quote_purchases import FLAT_QUOTERS
-from .. import purchase_rule
+from .stock_purchases import buy_living_stock
+from .quote_spending import SPENDING_QUOTERS, bounty_refusal
+from .. import cash_book, purchase_rule
 
 
-@command("bounty", group="projects",
+@command("bounty", shape="tech", group="projects",
          summary="pay someone else to solve it",
          usage=["bounty <id>"], options={"<id>": "a technology"},
-         description="Posts a public prize instead of building it yourself.")
+         description="Posts a public prize instead of building it yourself, paid in full "
+                     "when posted. `quote bounty <id>` shows the price multiplier, whether "
+                     "it is allowed and why not, before you commit.")
 def _cmd_bounty(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s); nothing more can be bought. 'state' shows where you finished and how far you got" % ended}
     node_id = cmd.get("id")
-    if node_id not in nodes:
-        return {"ok": False, "error": "unknown node id %r" % node_id}
-    if node_id in sim.done:
-        return {"ok": False, "error": "%s is already done" % node_id}
-    # ELIGIBILITY FIRST, ALWAYS: since an active project's prerequisites
-    # are already satisfied (that is what let it start), eligibility here
-    # depends only on craft recognition, so checking it before the
-    # "already active" branch costs nothing and never sends a player to
-    # stop something that could not become a bounty anyway.
-    if not sim.bounty_eligible(node_id):
-        node = nodes[node_id]
-        missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in sim.done]
-        if missing:
-            # SAME FOG FILTER `why` USES, not a second one: printing a
-            # missing prerequisite by raw id regardless of whether the
-            # player has ever heard of it would leak it as a spoiler.
-            return {"ok": False, "error": sim.missing_prereq_message(missing)}
-        return {"ok": False,
-                "error": "not bounty-eligible (category %s): a craftsman "
-                         "in %s could not recognise success at this without "
-                         "understanding the theory, so there is nothing to "
-                         "award the prize for. A bounty works where the craft "
-                         "already exists here and success is visible."
-                         % (node["cat"],
-                            sim.civ.get("name", "this society"))}
-    if node_id in sim.active:
-        return {"ok": False, "error": "%s is already active; stop it first if you want "
-                                      "to switch to a bounty instead" % node_id}
+    refusal = bounty_refusal(sim, nodes, node_id)
+    if refusal:
+        return {"ok": False, "error": refusal}
     price = sim.bounty_price(node_id)
     if not sim.post_bounty(node_id):
         return {"ok": False, "error": "cannot afford the bounty: needs about %.0f denarii, "
                                       "you have %.0f. Earn or wait, then try again" % (price, sim.capital)}
-    return {"ok": True, "posted": node_id, "price": round(price, 1), "capital": round(sim.capital, 1)}
+    return {"ok": True, "posted": node_id, "price": round(price, 1),
+            "paid_now": round(price, 1), "capital": round(sim.capital, 1)}
 
 
 
@@ -211,13 +191,14 @@ _BUY_HANDLERS = {
     "school": _buy_school,
     "material": _buy_material,
     "mine": _buy_mine,
+    "living_stock": buy_living_stock,
     "slaves": _buy_slaves,
     "manumit": _buy_manumit,
 }
 
 
 @command("buy", group="money",
-         summary="farmland, housing, schools, stock, forest, nitre, mines, slaves",
+         summary="farmland, housing, schools, stock, living stock, forest, nitre, mines, slaves",
          usage=usage_lines(),
          options={"what": ", ".join(target_names()),
                   "n": "the amount"},
@@ -259,14 +240,16 @@ def _cmd_sell(sim, nodes, cmd, ended):
         return {"ok": False, "error": err or "n must be greater than zero"}
     sold = sim.sell_material_stock(material, quantity)
     if sold <= 0:
-        return {"ok": False, "error": "you have none of that material stock to sell"}
+        return {"ok": False, "error": "nothing sold: you hold none of that material, or the "
+                "market has taken all of it that it will absorb this year"}
     return {"ok": True, "material": material, "sold_tonnes": sold,
+            "asked_tonnes": quantity,
             "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
             "capital": round(sim.capital, 1)}
 
 
 
-@command("money", group="money", aliases=("ledger", "accounts", "cash"),
+@command("money", shape="bare", group="money", aliases=("ledger", "accounts", "cash"),
          summary="the whole ledger",
          usage=["money"], options={},
          description="What comes in and where it comes from, what goes out, and the "
@@ -280,14 +263,6 @@ def _cmd_money(sim, nodes, cmd, ended):
     _prepaid = min(sim.living_cost(), sim.wages_prepaid)
     fixed = (sim.upkeep() + sim.living_cost() - _prepaid
              + sim.mine_operating_cost())
-    _standing_revenue = sim.revenue_capacity()
-    _standing_upkeep = sim.upkeep()
-    _standing_living = sim.living_cost(
-        _rev=_standing_revenue, _upkeep=_standing_upkeep)
-    _standing_prepaid = min(
-        _standing_living, sim.wages_prepaid)
-    _standing_fixed = (_standing_upkeep + _standing_living
-                       - _standing_prepaid + sim.mine_operating_cost())
     _ramp, _prac = sim.still_ramping(), sim.practice_note()
     if _prac and already_explained(sim, "practice", cmd):
         _prac = sim.practice_note(brief=True)
@@ -298,10 +273,16 @@ def _cmd_money(sim, nodes, cmd, ended):
     # is doing to costs needs a line here too, not only inside one
     # project's own `why`. See economy.py's material_market_summary().
     _mat_mkt = sim.material_market_summary()
+    _sources = sim.revenue_sources()
+    _squeeze = sim.market_absorption_by_category(
+        -(_sources.get("_what_the_market_will_not_absorb") or 0.0))
     return {"ok": True,
             "capital": round(sim.capital, 1),
+            "coin_hoard": sim.coin_hoard_report(),
+            "cash_book": cash_book.book(sim),
             "revenue": round(sim.revenue(), 1),
-            "where_the_money_comes_from": sim.revenue_sources(),
+            "where_the_money_comes_from": _sources,
+            **({"where_the_market_squeeze_falls": _squeeze} if _squeeze else {}),
             **({"wage_work_this_year": sim.wage_work_this_year()}
                if sim.wage_work_this_year() else {}),
             **({"wage_work_last_year": sim.state.household.wage_work_last_year}
@@ -337,9 +318,7 @@ def _cmd_money(sim, nodes, cmd, ended):
             # player who sold founder-hours with `work` watched this
             # swing to -193/yr for exactly one year and back, which is
             # not what "recurring" means.
-            "net_per_year": round(
-                _standing_revenue - _standing_fixed
-                - max(0.0, -sim.capital) * sim.debt_interest_rate(), 1),
+            "net_per_year": round(sim.recurring_net(), 1),
             "spent_on_projects_last_year": round(getattr(sim, "spend_last_year", 0.0), 1),
             # THE SAME FIGURE `state` PRINTS: net_per_year is the standing
             # flows, before anything goes into the work in hand, and this
@@ -352,6 +331,7 @@ def _cmd_money(sim, nodes, cmd, ended):
                 - getattr(sim, "spend_last_year", 0.0), 1),
             "credit_limit": round(sim.credit_limit(), 1),
             "interest_rate_on_arrears": round(sim.debt_interest_rate(), 4),
+            "loanable_funds_market": sim.capital_market_report(),
             "interest_paid_in_total": round(getattr(sim, "interest_paid", 0.0), 1),
             # HOW CLOSE, not just how far it goes. See warn_near_the_limit.
             "of_that_limit_you_have_used": (
@@ -368,7 +348,11 @@ def _cmd_money(sim, nodes, cmd, ended):
             # docstring for why this is the same number the un-manual
             # director's own start heuristic uses to avoid over-committing
             # itself.
-            "you_could_actually_fund_up_to": round(sim.funding_capacity(), 1)}
+            "you_could_actually_fund_up_to": round(sim.funding_capacity(), 1),
+            "funding": {name: round(amount, 1) for name, amount in sim.funding_breakdown().items()},
+            "sustainable_debt": round(sim.sustainable_debt(), 1),
+            "sustainable_debt_means": sim.debt_service_forecast(
+                max(0.0, -sim.capital))["sustainable_debt_means"]}
 
 
 
@@ -379,6 +363,9 @@ def _cmd_money(sim, nodes, cmd, ended):
                   "n": "the amount"},
          description="Prices a purchase without making it.")
 def _cmd_quote(sim, nodes, cmd, ended):
+    spending_target = str(cmd.get("what") or "").strip().lower()
+    if spending_target in SPENDING_QUOTERS:
+        return SPENDING_QUOTERS[spending_target](sim, nodes, cmd)
     what = canonical_target(cmd.get("what") or "mine") or ""
     # EVERYTHING YOU CAN BUY, NOT JUST MINES: any purchase command with no
     # price shown anywhere, no way to ask for one, and no market to sell
@@ -423,7 +410,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
         if err_s:
             return {"ok": False, "error": err_s}
         budget = purchase_rule.purchase_budget(sim)
-        per_person_base = sim.SLAVE_BASE_PRICE_DENARII * sim.price_index
+        per_person_base = sim.SLAVE_BASE_PRICE * sim.price_index
         lower, upper = 0.0, budget / max(per_person_base, 1e-9)
         affordable = 0.0
         for _ in range(20):
@@ -454,12 +441,19 @@ def _cmd_quote(sim, nodes, cmd, ended):
     if what != "mine":
         return {"ok": False,
                 "error": "quote works for everything buy does: " + ", ".join(target_names())
+                         + ", and for " + ", ".join(SPENDING_QUOTERS)
                          + ". For example: quote mine coal 500, quote farm 20, "
                            "quote material iron 10"}
     quantity, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err}
     quote = sim.mine_quote(cmd.get("material"), quantity)
+    if quote is None and cmd.get("material") in nodes:
+        return {"ok": False, "error": "%r is a project, not something to buy. Quote what it costs "
+                "to run with 'quote open %s', or a prize for it with 'quote bounty %s'; "
+                "'why %s' gives its cost. Other quotes: %s." % (
+                    cmd.get("material"), cmd.get("material"), cmd.get("material"),
+                    cmd.get("material"), ", ".join(target_names() + list(SPENDING_QUOTERS)))}
     if quote is None:
         return {"ok": False, "error": "no such material: %r. %s"
                 % (cmd.get("material"), sim.mine_catalog_hint())}
@@ -474,7 +468,12 @@ def _cmd_quote(sim, nodes, cmd, ended):
 def _cmd_close(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
-    mine_closed, msg = sim.close_mine(cmd.get("material") or cmd.get("what"))
+    target = cmd.get("material") or cmd.get("what")
+    if target in nodes:
+        return {"ok": False, "error": "%r is a project or concern, not a mine: 'close' shuts mines "
+                "(close <material>). To stop a finished concern's upkeep use 'mothball %s'; "
+                "'ventures' lists what you run." % (target, target)}
+    mine_closed, msg = sim.close_mine(target)
     if not mine_closed:
         return {"ok": False, "error": msg}
     return {"ok": True, "closed": msg,

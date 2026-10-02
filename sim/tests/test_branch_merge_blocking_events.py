@@ -1,11 +1,8 @@
-"""`treetool.py merge --dry-run` must not lose anything a branch author wrote.
+"""`treetool.py merge` must not lose anything a branch author wrote.
 
-Complaints/54. The merge refuses to write while any event would drop a
-requirement. Unknown trades, unresolvable prerequisites and dependency cycles
-must stay at zero. Undeclared materials still block, and each remaining name is
-pinned with its event count. The pin fails in both directions: a new name (or a
-higher count) is a regression, and a cleared name asks to be un-pinned so the
-list can only shrink.
+Complaints/52. The merge refuses to write while any event would drop a
+requirement. Unknown trades, unresolvable prerequisites, dependency cycles and
+undeclared materials must all be zero.
 """
 import collections
 import os
@@ -16,11 +13,6 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-
-# Materials that branch nodes name and no production recipe makes.
-# Each needs a recipe with a physical yield, or a node edit; none may be guessed.
-KNOWN_UNDECLARED_MATERIALS = {
-}
 
 ZERO_CATEGORIES = ("unknown_trade", "unresolvable_prerequisite", "material_is_technology", "dependency_cycle")
 
@@ -62,21 +54,11 @@ class BranchMergeBlockingEventTests(unittest.TestCase):
                 "(trade name, prerequisite id, or the cycle edge)."
                 % category))
 
-    def test_no_new_undeclared_material(self):
+    def test_no_undeclared_material(self):
         counts = measure_undeclared_counts(self.events)
-        worse = {name: count for name, count in counts.items()
-                 if count > KNOWN_UNDECLARED_MATERIALS.get(name, 0)}
-        self.assertEqual(worse, {}, (
-            "New undeclared material events: %s. Add a production recipe "
-            "in data/production/, or rename the material in the branch." % worse))
-
-    def test_a_cleared_material_lowers_the_pin(self):
-        counts = measure_undeclared_counts(self.events)
-        cleared = {name: pinned for name, pinned in KNOWN_UNDECLARED_MATERIALS.items()
-                   if counts.get(name, 0) < pinned}
-        self.assertEqual(cleared, {}, (
-            "Cleared or reduced: %s. Lower KNOWN_UNDECLARED_MATERIALS so the "
-            "count can only go down." % cleared))
+        self.assertEqual(dict(counts), {}, (
+            "Undeclared material events: %s. Add a production recipe "
+            "in data/production/, or rename the material in the branch." % dict(counts)))
 
 
 if __name__ == "__main__":

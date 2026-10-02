@@ -1,5 +1,5 @@
 """Regression tests for the granary fix -
-Complaints/45-no-granary-so-the-baseline-collapses.md.
+Complaints/44-no-granary-so-the-baseline-collapses.md.
 
 WHAT THIS GUARDS. Three separate, previously-unguarded properties, each of
 which broke the model in its own way while this fix was being built:
@@ -13,9 +13,9 @@ which broke the model in its own way while this fix was being built:
      caught empirically during this task: the first attempt at persisting
      `stock_after_kg` alone drove rome_100ad from 65,000,000 to roughly
      700,000 people over a century of ordinary weather with no hazard -
-     WORSE than Complaints/45's original 21.9%-of-start bug, not better.
+     WORSE than Complaints/44's original 21.9%-of-start bug, not better.
   2. `Sim.farm_stock_kg` round-trips through save/load (SAVE_FIELDS,
-     sim/engine/proto/saveload.py) - the field Complaints/45 says is the
+     sim/engine/proto/saveload.py) - the field Complaints/44 says is the
      one thing standing between "carry the granary across years" and it
      actually happening, and per CLAUDE.md SS3.5, a field that fails to
      round-trip breaks the game in normal play the moment `--session` is
@@ -27,7 +27,7 @@ which broke the model in its own way while this fix was being built:
      the engine boundary (sim/engine/core.py's `_demographic_recovery`),
      not that any particular numeric value was chosen for other reasons.
 
-This module also PINS the headline measurement Complaints/45 itself is
+This module also PINS the headline measurement Complaints/44 itself is
 about: an unshocked rome_100ad century should land substantially above the
 21.9%-of-start figure the bug produced, without demanding it land at
 exactly 100% (CLAUDE.md SS3.2 - the baseline is allowed to still be
@@ -237,7 +237,7 @@ class GranaryCapacityTests(unittest.TestCase):
 
 
 class CenturyMeasurementTests(unittest.TestCase):
-    """The actual number Complaints/45 is about. Loose bounds, deliberately
+    """The actual number Complaints/44 is about. Loose bounds, deliberately
     - see CLAUDE.md SS3.2: the baseline is not required to be flat, and
     must never be forced flat by tuning a physical quantity (this test
     would not catch that kind of cheat anyway; sim/audit_costs.py and
@@ -245,7 +245,7 @@ class CenturyMeasurementTests(unittest.TestCase):
     granary regressing back to inert (a fresh `Storage(stock_kg=0.0, ...)`
     built every year again) or the double-seed-deduction bug returning,
     either of which would drag the century-end fraction back down toward
-    Complaints/45's original 21.9%, or below it.
+    Complaints/44's original 21.9%, or below it.
     """
 
     def test_unshocked_century_lands_well_above_the_pre_fix_measurement(self):
@@ -255,7 +255,7 @@ class CenturyMeasurementTests(unittest.TestCase):
             test_sim._demographic_recovery(year)
         end = test_sim.population.total
         fraction = end / start
-        # Complaints/45's own pre-fix measurement was 0.219 (21.9%); this
+        # Complaints/44's own pre-fix measurement was 0.219 (21.9%); this
         # task's own re-measurement on this checkout, before the granary
         # existed, was 0.195. Comfortably above either, without demanding
         # anything close to 1.0.
@@ -274,7 +274,7 @@ class CenturyMeasurementTests(unittest.TestCase):
         # forbid the outcome this whole milestone is for. A population that
         # grows must, on average, be fed at or above subsistence - that is
         # what growth IS. With weather drawn per home region and pooled by
-        # land share (Complaints/47), good years survive often enough to
+        # land share (Complaints/46), good years survive often enough to
         # show up in the mean, measured at 1.0042 over this century. The
         # band is comfortably fed, not gorging - the physical ceiling on
         # that is MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE (1.75), and a mean
@@ -293,7 +293,7 @@ class FarmWorkforceShareIsFixedTests(unittest.TestCase):
     available. This test pins that: the SAME fraction applies whether the
     population is comfortably fed or in the middle of a severe,
     land-caused famine, which is the direct, checked answer to "can a
-    famine turn blacksmiths into farmers" (Complaints/45's fourth
+    famine turn blacksmiths into farmers" (Complaints/44's fourth
     question) - not yet, because nothing here reads the famine at all
     before deciding how many people farm.
     """

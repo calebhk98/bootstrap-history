@@ -9,7 +9,7 @@ ROME 100 AD -> TRANSISTOR : tech-tree simulator, planner and game.
     python3 sim/simulator.py validate
     python3 sim/simulator.py civs                       who you can play
     python3 sim/simulator.py play --manual               free choice, no autopilot
-    python3 sim/simulator.py agent --civ rome_100ad --fog
+    python3 sim/simulator.py agent --civ <civilisation_id> --fog
 
 `agent` speaks one JSON object per line in and one per line out. It explains
 itself: it prints a welcome on first run and answers {"cmd":"help"}. There is
@@ -35,9 +35,9 @@ while _SIM_DIR in sys.path:
 	sys.path.remove(_SIM_DIR)
 
 from sim.engine.data import *            # noqa: F401,F403
-from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS, GEOFILE, PRICES,
+from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS, GEOFILE,
                          RESFILE, STARTING_KITS, STRATS, TECH_EFFECTS,
-                         TRADES_ABSENT, TRADE_FAMILY, TRADE_NOTES, TREE, WAGES,
+                         TRADES_ABSENT, TRADE_FAMILY, TRADE_NOTES, WAGES,
                          closure, critical_path, haversine_km, load, load_civ,
                          load_geography, load_resources, topo_order,
                          trade_family, goal_catalog, goal_lookup, resolve_goal,

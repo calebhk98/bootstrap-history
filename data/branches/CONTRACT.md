@@ -59,16 +59,20 @@ tree that runs from the Roman Empire of 100 AD to modern technology.
 | field | meaning |
 |---|---|
 | `pre` | prerequisite ids, AND semantics. **Include capability rungs.** |
+| `holds` | optional `{material: units}`: living stock the actor must HOLD to begin (silkworm eggs, a breeding herd, planting stock). Having stock is a possession, not research: a node never stands for holding it. Use `holds` on the node that needs the stock, and a production entry for the material so a partner can sell it. |
+| `grants` | optional `{material: units}`: stock a completed venture brings back (an expedition's founding herd), added to the held stock when it completes. |
 | `ph` | the founder's own hours. Scarce: he has about 72,000 in a lifetime. Most nodes should be 40 to 400; only things needing his personal insight go above 600. |
 | `lab` | hired hours by trade. Allowed trades ONLY: labourer, artisan, master, glassblower, smith, carpenter, miner, scribe, scholar, furnaceman, potter, chemist, machinist |
 | `mat` | materials consumed. Allowed keys are listed in PRICED_MATERIALS below. |
-| `cap` | one-off capital in denarii beyond labour and materials |
-| `up` | annual upkeep in denarii |
+| `cap_hours` | one-off capital in labour hours beyond labour and materials |
+| `up_hours` | annual upkeep in labour hours |
 | `yrs` | **calendar floor**: curing, growing, seasoning, or a generation of economic diffusion. Money cannot buy this down. Be honest; this is what sets the real timeline. |
 | `risk` | 0 to 1, probability an attempt fails outright |
 | `sus` | suspicion delta. Rome executes magicians and much of this looks like magic. |
 | `gov` | State interest, -3 will actively suppress, +3 will fund and demand. **Use negative values.** Labour-displacing machinery, anything breaking elite information control, and anything that looks like a faction all attract hostility. |
-| `rev` | net denarii per year at maturity, 0 if not a product |
+| `rev_hours` | net labour hours per year at maturity, 0 if not a product |
+| `output_unbounded_reason` | optional. Required on a node that gates a production entry and keeps an authored `rev_hours` because no plant, staff or `annual_output_t` bounds its output; says why. `validate` reads it. |
+| `unheld_reason` | optional. Required on a node that a production entry requires, that no civilisation holds at the start, and whose prerequisites are all held somewhere; says why nobody starts with it. `validate` reads it. |
 | `sch` / `art` | trained scholars and artisans required on staff |
 | `conf` | A well attested, B probable, C your estimate |
 | `note` | 1 to 4 sentences. State the non-obvious kernel, the honest limitation, and any anachronism trap. This is the most valuable field; write it like you are explaining to someone who has to actually do it. |
@@ -85,7 +89,7 @@ mercury_kg sulfur_kg natron_kg lime_kg alum_kg green_vitriol_kg pyrolusite_kg
 calamine_kg galena_kg fluorspar_kg sand_quartz_kg clay_kg glass_raw_kg
 linen_rag_kg papyrus_sheet parchment_sheet silk_kg shellac_kg beeswax_kg
 tallow_kg emery_kg asbestos_kg bitumen_kg timber_m3 brick_1000 ox mule
-slave_unskilled slave_skilled iugerum_land iron_ore_kg copper_ore_kg cinnabar_kg
+slave_unskilled slave_skilled hectare_land iron_ore_kg copper_ore_kg cinnabar_kg
 bauxite_kg manganese_kg wood_ash_kg manure_kg salt_kg blue_vitriol_kg
 boric_acid_kg agate_kg antimony_kg cryolite_kg flue_dust_kg graphite_kg
 quartz_tube_kg bronze_kg zinc_kg iron_sheet_kg steel_plate_kg nickel_kg

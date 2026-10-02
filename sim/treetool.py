@@ -12,7 +12,8 @@ proportionate, could someone holding only its prerequisites really build it.
 
 `judge` scores every node in isolation and reports the defects by name.
 
-    python3 sim/treetool.py merge          # branches -> tech_tree.json
+    python3 sim/treetool.py merge          # check the branch files merge cleanly
+    python3 sim/treetool.py merge --out F  # also write the merged tree to F
     python3 sim/treetool.py judge          # score every node, summary
     python3 sim/treetool.py judge --full   # every defect, node by node
     python3 sim/treetool.py judge --id X   # one node's report card
@@ -39,14 +40,15 @@ from sim.presentation import (                                   # noqa: E402
 from sim.engine.catalog import (load_production_catalog, load_trade_registry,  # noqa: E402
                                 material_namespace)
 from sim import tool_costs                                       # noqa: E402
+from sim.engine.tree_source import (                             # noqa: E402
+    META_FILE, MERGED_DUPLICATE_IDS_FILE, NO_MODS_DIRECTORY, load_base_tree)
 DATA = os.path.join(ROOT, "data")
 BR   = os.path.join(DATA, "branches")
-TREE = os.path.join(DATA, "tech_tree.json")
-TREE_INDENT = 2  # matches the committed data/tech_tree.json layout
+TREE_INDENT = 2  # layout of a tree written with `merge --out`
 
 def load_trades():
-    """Read trade identity from the canonical, mod-aware trade registry."""
-    return set(load_trade_registry(ROOT))
+    """Read trade identity from the base trade registry, without mods."""
+    return set(load_trade_registry(ROOT, mods_dir=NO_MODS_DIRECTORY))
 
 # Schema v2. `yrs`, `sus` and `gov` are v1 and are backfilled, not demanded.
 # Only these are genuinely required. Everything else has a sane default, because
@@ -54,8 +56,11 @@ def load_trades():
 # Availability is described by prerequisites, capabilities, and costs rather
 # than a universal numeric rank.
 REQUIRED = ["id","name","cat","pre","note"]
-DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap":200,"up":40,"risk":0.15,"rev":0,
+DEFAULTS = {"ph":60,"lab":{},"mat":{},"cap_hours":4032.375834825865,"up_hours":806.475166965173,"risk":0.15,"rev_hours":0,
             "sch":0,"art":1,"conf":"C","kb":""}
+
+# TRANSITIONAL: capital above this many labour hours counts as physical work.
+PHYSICAL_CAPITAL_HOURS = 4032
 
 def _num(value, default=0.0):
     """Branch authors sometimes write a number as a string, or as a range like
@@ -70,7 +75,7 @@ def _num(value, default=0.0):
 def normalise_v2(node):
     for field, value in DEFAULTS.items():
         node.setdefault(field, json.loads(json.dumps(value)))
-    for field, default in (("ph",60),("cap",200),("up",40),("risk",0.15),("rev",0),
+    for field, default in (("ph",60),("cap_hours",4032.375834825865),("up_hours",806.475166965173),("risk",0.15),("rev_hours",0),
                  ("sch",0),("art",1)):
         node[field] = _num(node.get(field), default)
     node["risk"] = min(0.95, max(0.0, node["risk"]))
@@ -103,11 +108,8 @@ def load_aliases():
 
 def load_material_namespace(tree_nodes=()):
     """Material identity: everything the production catalogue declares plus what tree nodes require."""
-    production = load_production_catalog(ROOT)
+    production = load_production_catalog(ROOT, mods_dir=NO_MODS_DIRECTORY)
     return material_namespace(production, tree_nodes)
-
-
-MERGED_DUPLICATE_IDS_FILE = "_MERGED_DUPLICATE_IDS.json"
 
 
 def load_merged_duplicate_ids():
@@ -134,95 +136,93 @@ def load_merged_duplicate_ids():
     return json.load(open(path))["merged_duplicate_ids"]
 
 
-def cmd_merge(args):
-    goods, valid_trades, alias, dropset, base, retired, nodes = _merge_load_inputs()
-    errs, warns, added, updated = [], [], 0, 0
-    # STAGE 3 (Complaints/30): which branch file, if any, has already supplied
-    # THIS RUN'S definition of an id. Seeding `nodes` from the current tree
-    # above means every id starts present, so `node["id"] in nodes` cannot
-    # tell a genuine edit (branch redefines an id the TREE carried over) apart
-    # from a real collision (two branch files redefine the same id). This
-    # dict is the difference: it only ever holds ids a BRANCH FILE, in THIS
-    # run, has claimed, so a second claim by a different file is unambiguous.
-    branch_origin = {}
-    # Cross-branch-file collisions: sim/validate_production.py already treats
-    # a key defined in two files of data/production/ as an ERROR naming both
-    # sides rather than a silent "first one wins" (see its load_production).
-    # Complaints/30 asks for the identical rule here. Collected separately
-    # from `errs` so the merge can refuse to write while still reporting
-    # everything else it found.
-    collisions = []
-    # Every event that DELETES something a branch author wrote: a labour
-    # trade the registry does not know, an undeclared material, a
-    # material that is really a technology, a prerequisite naming no node,
-    # or a back edge cut to break a cycle. Collected separately from `warns`
-    # (informational, does not lose data) so the merge can refuse to write
-    # unless the operator explicitly accepts the loss. See the refusal block
-    # below, after both loops that populate this list have run.
-    losses = []
+class BuiltTree:
+    """What one merge of the branch files produced: the tree and everything the merge noticed."""
 
+    def __init__(self):
+        self.tree = {"meta": {}, "nodes": []}
+        self.errs, self.warns, self.losses, self.collisions = [], [], [], []
+        self.added = self.updated = 0
+        self.dangling = collections.Counter()
+
+
+def build_tree():
+    """Merge every branch file into a tree, in memory. Prints and writes nothing.
+
+    Branch files are the only source: nothing is seeded from an earlier tree.
+    If two files define one id the merge stops early with `collisions` set.
+    """
+    goods, valid_trades, alias, dropset, meta, retired = _merge_load_inputs()
+    built = BuiltTree()
+    nodes = {}
+    # which branch file has claimed an id in this run, so a second claim is a collision
+    branch_origin = {}
+    known_ids = _all_branch_node_ids()
     for filename in sorted(os.listdir(BR)):
-        if not filename.endswith(".json") or filename == MERGED_DUPLICATE_IDS_FILE:
+        if not filename.endswith(".json") or filename in (MERGED_DUPLICATE_IDS_FILE, META_FILE):
             continue
         file_added, file_updated = _merge_process_branch_file(
-            filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions)
-        added += file_added
-        updated += file_updated
+            filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin,
+            built.errs, built.warns, built.losses, built.collisions, known_ids)
+        built.added += file_added
+        built.updated += file_updated
+    if built.collisions:
+        return built
+    built.dangling = _merge_resolve_prerequisites(nodes, retired, built.losses)
+    _merge_break_cycles(nodes, built.losses)
+    meta["merged_duplicate_ids"] = retired
+    built.tree = {"meta": meta, "nodes": [nodes[node_id] for node_id in sorted(nodes)]}
+    return built
 
-    # A collision names an id whose correct content is genuinely undecided -
-    # neither the "first file wins" nor the "last file wins" reading is a fix,
-    # both are the same silent guess the branch-edit bug already made once.
-    # Refuse to write 2.8 MB of data over an unresolved disagreement between
-    # two branch files; report everything found first, then say why nothing
-    # was written, matching how sim/validate_production.py surfaces the same
-    # rule (it has nothing to write, so it can report and exit; this does).
-    if _merge_report_collisions(errs, collisions):
+
+def cmd_merge(args):
+    built = build_tree()
+    if _merge_report_collisions(built.errs, built.collisions):
         return 1
-
-    dangling = _merge_resolve_prerequisites(nodes, retired, losses)
-
-    _merge_break_cycles(nodes, losses)
-
-    # `losses` now holds every event, from both loops above, that deleted
-    # something a branch author wrote rather than merely warning about it:
-    # an unknown labour trade, an undeclared material, a material that is
-    # really a technology, a prerequisite naming no node, or a back edge cut
-    # to break a cycle. Print every one, grouped by kind - someone fixing
-    # the source data needs to see every problem in one pass, not the first
-    # 25 and a count of the rest. Refuse to write unless the operator passed
-    # --accept-data-loss: the same "collect everything, report, do not
-    # write" shape as the collision refusal above, because this merge
-    # already deletes data silently today, and that is the bug Task 1 of
-    # this pass exists to close.
-    if _merge_report_losses(losses, getattr(args, "accept_data_loss", False)):
+    # Every event that deleted something a branch author wrote is listed in one pass;
+    # a merge with any such event refuses unless --accept-data-loss is given.
+    if _merge_report_losses(built.losses, getattr(args, "accept_data_loss", False)):
         return 1
-
-    return _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns, dangling, args)
+    return _merge_summarize(built, args)
 
 
 def _merge_load_inputs():
-    """The merge's read side: material namespace, aliases, the current tree, the dedup record, and
-    the seed `nodes` dict (current tree, normalised, with `_src` defaulted to "core")."""
+    """The merge's read side: material namespace, trade registry, branch metadata and the dedup record."""
     valid_trades = load_trades()
     alias, dropset = load_aliases()
-    base = json.load(open(TREE))
-    goods = load_material_namespace(base["nodes"])
-    # Ids retired by deduplication. Branch files still contain both spellings
-    # of a technology that two authors invented independently, so without this
-    # the next merge silently resurrects every duplicate. Read from source
-    # (data/branches/_MERGED_DUPLICATE_IDS.json), not from tech_tree.json's
-    # meta - that meta key is written BY this function, a few lines below the
-    # end of this one, so treating it as an input would make the merge read
-    # its own last output instead of the human decision it is supposed to
-    # represent.
+    goods = load_material_namespace()
+    # Ids retired by deduplication. Branch files still contain both spellings of a
+    # technology that two authors invented independently; the record lives in the branches.
     retired = load_merged_duplicate_ids()
-    nodes = {node["id"]: normalise_v2(node) for node in base["nodes"]}
-    for node in nodes.values():
-        node.setdefault("_src", "core")
-    return goods, valid_trades, alias, dropset, base, retired, nodes
+    return goods, valid_trades, alias, dropset, load_branch_meta(), retired
 
 
-def _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns):
+def load_branch_meta():
+    """Tree-level metadata (title, goals, goal node) from the branch directory."""
+    path = os.path.join(BR, META_FILE)
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8") as source:
+        return json.load(source)
+
+
+def _all_branch_node_ids():
+    """Every id defined in any branch file, so a repair in one file can see ids
+    that a later file defines."""
+    ids = set()
+    for filename in sorted(os.listdir(BR)):
+        if not filename.endswith(".json") or filename in (MERGED_DUPLICATE_IDS_FILE, META_FILE):
+            continue
+        try:
+            batch = json.load(open(os.path.join(BR, filename)))
+        except Exception:
+            continue
+        if isinstance(batch, list):
+            ids.update(node["id"] for node in batch if isinstance(node, dict) and "id" in node)
+    return ids
+
+
+def _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns, known_ids=frozenset()):
     # Branch authors routinely refer to their OWN nodes without the file's
     # id prefix: a file of ag2_* nodes asks for "coulter" when it means
     # "ag2_coulter". Left alone the prereq resolver below silently drops
@@ -238,10 +238,11 @@ def _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns):
             continue
         fixed = []
         for prereq in node.get("pre", []):
-            if prereq in own or prereq in nodes:
+            if prereq in own or prereq in nodes or prereq in known_ids:
                 fixed.append(prereq)
                 continue
-            cands = {prefix + prereq for prefix in prefixes if prefix + prereq in own}
+            cands = {prefix + prereq for prefix in prefixes
+                     if prefix + prereq in own and prefix + prereq != node.get("id")}
             if len(cands) == 1:
                 resolved_prereq_id = cands.pop()
                 fixed.append(resolved_prereq_id)
@@ -380,7 +381,7 @@ def _merge_ingest_node(node, filename, nodes, alias, dropset, goods, valid_trade
     return status
 
 
-def _merge_process_branch_file(filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions):
+def _merge_process_branch_file(filename, nodes, alias, dropset, goods, valid_trades, retired, branch_origin, errs, warns, losses, collisions, known_ids=frozenset()):
     """Parse one branches/*.json file, fix its self-referencing prereqs, and ingest
     every node in it. Returns (added, updated) for this file alone."""
     try:
@@ -392,7 +393,7 @@ def _merge_process_branch_file(filename, nodes, alias, dropset, goods, valid_tra
         errs.append("%s: top level is not a list" % filename)
         return 0, 0
 
-    _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns)
+    _merge_fix_self_referencing_prereqs(batch, filename, nodes, warns, known_ids)
 
     added = updated = 0
     for node in batch:
@@ -486,25 +487,24 @@ def _merge_report_losses(losses, accept_data_loss):
     return False
 
 
-def _merge_write_and_summarize(base, nodes, retired, added, updated, errs, warns, dangling, args):
-    base["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
-    base["meta"]["goal_node"] = "point_contact_transistor"
-    base["meta"]["merged_duplicate_ids"] = retired
-    _write_json(base, TREE, args, indent=TREE_INDENT)
-
-    print("\nmerged  : %d nodes (%d added from branches, %d updated from branches)"
-          % (len(nodes), added, updated))
-    print("errors  : %d" % len(errs))
-    for error in errs[:MERGE_ERRORS_SHOWN]:
+def _merge_summarize(built, args):
+    out_path = getattr(args, "out", None)
+    if out_path:
+        with open(out_path, "w", encoding="utf-8") as handle:
+            json.dump(built.tree, handle, indent=TREE_INDENT)
+        print("wrote %s" % out_path)
+    print("\nmerged  : %d nodes (%d from branches)" % (len(built.tree["nodes"]), built.added + built.updated))
+    print("errors  : %d" % len(built.errs))
+    for error in built.errs[:MERGE_ERRORS_SHOWN]:
         print("   " + error)
-    print("warnings: %d" % len(warns))
-    for warning in warns[:MERGE_WARNINGS_SHOWN]:
+    print("warnings: %d" % len(built.warns))
+    for warning in built.warns[:MERGE_WARNINGS_SHOWN]:
         print("   " + warning)
-    if len(warns) > MERGE_WARNINGS_SHOWN:
-        print("   ... %d more" % (len(warns) - MERGE_WARNINGS_SHOWN))
-    if dangling:
+    if len(built.warns) > MERGE_WARNINGS_SHOWN:
+        print("   ... %d more" % (len(built.warns) - MERGE_WARNINGS_SHOWN))
+    if built.dangling:
         print("\nmost-wanted unresolved prereq ids (candidates for new nodes):")
-        for prereq_id, value in dangling.most_common(20):
+        for prereq_id, value in built.dangling.most_common(20):
             print("   %-40s wanted by %d nodes" % (prereq_id, value))
     return 0
 
@@ -558,7 +558,7 @@ def _judge_abstract_defects(node):
 def _judge_capability_defects(node, caps, ancestry, text):
     """CAP-NONE plus the per-word capability-rung checks (heat, tolerance, vacuum, purity, power)."""
     defects = []
-    physical = bool(node.get("mat")) or node.get("cap", 0) >= 200
+    physical = bool(node.get("mat")) or node.get("cap_hours", 0) >= PHYSICAL_CAPITAL_HOURS
     if not caps and physical and len(ancestry) >= 3 and node["cat"] not in (
             "social", "institution", "mathematics", "physics", "foundation",
             "information", "capability"):
@@ -775,7 +775,7 @@ def _judge_write_judgement(results, args):
 
 
 def cmd_judge(args):
-    tree = json.load(open(TREE))
+    tree = build_tree().tree
     nodes = {node["id"]: node for node in tree["nodes"]}
     cost_report = _judge_compute_costs(nodes)
     results = _judge_build_results(nodes)
@@ -908,8 +908,11 @@ def cmd_repair(args):
     A tree whose capability prerequisites were inferred by a script is better
     than one where they are missing, but only if it says so. Every edge added
     here is recorded in the node so a reader can discount it.
+
+    The tree is generated from the branch files, so this reports what it would
+    change; the changes themselves are made in the branch files.
     """
-    tree = json.load(open(TREE))
+    tree = build_tree().tree
     nodes = {node["id"]: node for node in tree["nodes"]}
     stored_total_costs = {node_id: node.get("_total_cost") for node_id, node in nodes.items()}
     _judge_compute_costs(nodes)
@@ -935,8 +938,6 @@ def cmd_repair(args):
         for key in ("_labour_cost", "_material_cost", "_cost_missing"):
             node.pop(key, None)
         node["_total_cost"] = stored_total_costs[node_id]
-    tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
-    _write_json(tree, TREE, args, indent=TREE_INDENT)
     print("REPAIR PASS")
     for ident, value in counts.most_common():
         print("   %-32s %d" % (ident, value))
@@ -952,7 +953,7 @@ def cmd_apply_caps(args):
     real node, it must not already be present, and it must not create a cycle.
     """
     import glob
-    tree = json.load(open(TREE))
+    tree = build_tree().tree
     nodes = {node["id"]: node for node in tree["nodes"]}
     applied = refused = empty = unknown = 0
     reasons = {}
@@ -986,11 +987,11 @@ def cmd_apply_caps(args):
                 applied += 1
             if got:
                 reasons[node_id] = (got, fix.get("reason", ""))
-                node["note"] = node["note"].rstrip() + (
-                    " [REVIEWED: prerequisite(s) %s added by a reviewer working node by node. "
+                marker = (
+                    "[REVIEWED: prerequisite(s) %s added by a reviewer working node by node. "
                     "Reason: %s]" % (", ".join(got), fix.get("reason", "not given")))
-    tree["nodes"] = [nodes[node_id] for node_id in sorted(nodes)]
-    _write_json(tree, TREE, args, indent=TREE_INDENT)
+                node["_internal"] = (node.get("_internal") or "").rstrip() + " " + marker
+                node["_internal"] = node["_internal"].strip()
     print("APPLY REVIEWER-ASSIGNED PREREQUISITES")
     print("   edges applied                    %d" % applied)
     print("   nodes judged to need none        %d" % empty)
@@ -1052,6 +1053,7 @@ def main():
                         "the default is to fix the source branch files instead. Pass this only "
                         "once you have looked at the printed list and decided the loss is "
                         "correct.")
+    subparser.add_argument("--out", help="also write the merged tree, as JSON, to this path")
     subparsers.add_parser("apply-caps")
     subparser = subparsers.add_parser("repair")
     subparser.add_argument("--infer-caps", action="store_true",
@@ -1062,9 +1064,8 @@ def main():
     subparser.add_argument("--full", action="store_true")
     subparser.add_argument("--id")
     subparser.add_argument("--grade")
-    # ON EVERY SUBCOMMAND, not only the ones that look dangerous: all four
-    # write a committed data file, and which ones those are is exactly the
-    # thing a person running this for the first time does not know.
+    # On every subcommand so a caller gets an explanation, not an argparse error,
+    # from the ones that no longer write anything.
     for command_parser in subparsers.choices.values():
         command_parser.add_argument(
             "--write", action="store_true",
@@ -1080,6 +1081,11 @@ def main():
         command_parser.add_argument("--dry-run", action="store_true",
                                     help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.write and args.cmd != "judge":
+        print("%s writes nothing: the tech tree is generated from data/branches/ at load time. "
+              "Make the change in the branch files; `merge --out FILE` exports the merged tree."
+              % args.cmd)
+        return 2
     return {"merge": cmd_merge, "judge": cmd_judge, "repair": cmd_repair,
             "apply-caps": cmd_apply_caps}[args.cmd](args)
 

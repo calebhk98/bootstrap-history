@@ -14,12 +14,19 @@ from .explain_once import already_explained
 import os
 import tempfile
 
-from ..data import downstream_count
+from ..data import TRADE_FAMILY, downstream_count
 from ..purchase_rule import purchase_budget
 from .nodes import _did_you_mean
 from .saveload import load_state, save_state
 from .util import _flag
+from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
 from .ventures import _VENTURE_SUPERVISION_NOTE
+
+
+def _scholar_family_names():
+    """The scholar-family trades from the trade table, as a plural list."""
+    names = sorted(trade + "s" for trade, family in TRADE_FAMILY.items() if family == "scholar")
+    return ", ".join(names[:-1]) + " and " + names[-1]
 
 
 _CREDIT_PROSE = {"on_credit": ("nothing_is_borrowed_yet", "what_happens_there"),
@@ -49,7 +56,7 @@ def _shorten_credit_forecast(sim, cmd, out):
     out["credit_forecast_in_full"] = full
 
 
-@command("start", group="projects", aliases=("begin", "research", "build"),
+@command("start", shape="tech", group="projects", aliases=("begin", "research", "build"),
          summary="begin work on something",
          usage=["start <id or name>"], options={"<id>": "a technology or concern"},
          description="If it cannot start, the error says exactly what is missing. A "
@@ -239,6 +246,7 @@ def _cmd_start(sim, nodes, cmd, ended):
             "estimated_annual_interest": round(
                 _gap * sim.debt_interest_rate(), 1),
             "you_would_then_owe": round(_after, 1),
+            **sim.debt_service_forecast(_after),
             "no_one_advances_past": round(_lim, 1),
             "what_happens_there":
                 "past that limit every project in hand halts unfinished, "
@@ -284,8 +292,8 @@ def _cmd_start(sim, nodes, cmd, ended):
                 "'on_credit' priced only this project against your cash; "
                 "your other work in hand draws on the same cash at the "
                 "same time, so the real combined draw is bigger than "
-                "that figure alone suggests. 'your_real_ceiling' is "
-                "what funding_capacity() judges you could service in "
+                "that figure alone suggests. 'your_real_ceiling_if_it_comes_to_that' is "
+                "what the game judges you could service in "
                 "total before it stops being safe - cash, half your "
                 "credit line, and about five years of what your "
                 "standing income can spare - not a hard limit today. "
@@ -323,7 +331,7 @@ def _cmd_start(sim, nodes, cmd, ended):
 
 
 
-@command("stop", group="projects", aliases=("x", "abandon", "cancel"),
+@command("stop", shape="tech", group="projects", aliases=("x", "abandon", "cancel"),
          summary="abandon a project, losing what you spent",
          usage=["stop <id>"], options={"<id>": "an active project"},
          description="Sunk cost is sunk.")
@@ -404,15 +412,26 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
             "would_start": result["started"],
             "total_cost": result["total_cost"],
             "total_annual_draw": result["total_annual_draw"],
+            "total_founder_hours": result["total_founder_hours"],
+            "filters": result["filters"],
+            "trade_bottlenecks": result["trade_bottlenecks"],
+            "risk_exposure": result["risk_exposure"],
             "count_not_started": result["count_not_started"],
             "not_started": result["not_started"],
+            "excluded": result.get("excluded", []),
             "how_to_confirm": confirm or "Repeat the same rush without 'preview' to begin these."}
 
 
 @command("rush", group="projects", aliases=("startall", "start_all", "muster"),
          summary="start everything you could begin today",
-         usage=["rush", "rush limit:5", "rush preview", "rush max_total_cost:<n>"],
-         options={"limit": "cap the count", "max_total_cost": "cap total money",
+         usage=["rush", "rush limit:5", "rush preview", "rush max_total_cost:<n>",
+                "rush category:textiles max_cost:500 preview"],
+         # excluded things are left out; see the 'exclude' command
+         options={"ids": "only these ids, comma separated",
+                  "category": "only this subject (the node's category)",
+                  "max_cost": "skip projects dearer than this each",
+                  "max_hours": "skip projects needing more founder hours than this each",
+                  "limit": "cap the count", "max_total_cost": "cap total money",
                   "max_annual_draw": "cap yearly draw", "reserve_cash": "keep this much back",
                   "preview": "show what it would start and spend, starting nothing"},
          description="Highest-leverage first. Also spelled 'start all'.")
@@ -438,11 +457,19 @@ def _cmd_rush(sim, nodes, cmd, ended):
     caps, cap_error = _rush_caps(cmd)
     if cap_error:
         return {"ok": False, "error": cap_error}
-    capped = any(value is not None for value in caps.values())
+    filters, filter_error = parse_rush_filters(cmd, nodes)
+    if filter_error:
+        return {"ok": False, "error": filter_error}
+    capped = any(value is not None for value in caps.values()) or bool(filters)
     if _flag(cmd.get("preview")):
         return _rush_preview(sim, nodes, cmd, ended)
     _memo = {}
     _ok = [node_id for node_id in sim.order if sim.can_start(node_id, _memo=_memo)]
+    # what the actor excluded stays out of the rush, and the result says why
+    excluded_rows = [{"id": node_id, "name": nodes[node_id]["name"], "why": sim.exclusion_reason(node_id)}
+                     for node_id in _ok if sim.exclusion_reason(node_id)]
+    _ok = [node_id for node_id in _ok if not sim.exclusion_reason(node_id)]
+    _ok = [node_id for node_id in _ok if passes_rush_filters(sim, nodes, node_id, filters)]
     # HIGHEST-LEVERAGE FIRST, INTERNALLY ONLY. This never shows a player
     # a downstream_count - that is a fog spoiler, see _node_explain's own
     # comment on it - it only uses the number to decide which of several
@@ -516,11 +543,16 @@ def _cmd_rush(sim, nodes, cmd, ended):
                             "annual_draw": round(annual_draw, 1)})
         else:
             not_started.append({"id": node_id, "why": why})
+    bottlenecks, risk_exposure = rush_exposure(sim, nodes, started)
     return {"ok": True, "started": started, "count_started": len(started),
+            "trade_bottlenecks": bottlenecks, "risk_exposure": risk_exposure,
             "total_cost": round(total_cost, 1),
             "total_annual_draw": round(total_draw, 1),
+            "total_founder_hours": round(_owed, 1),
+            "filters": filters,
             "not_started": not_started,
             "count_not_started": len(not_started),
+            "excluded": excluded_rows,
             # THE SAME WARNING `policy` CARRIES, for the same reason. This
             # is an automatic behaviour and it reads as the game offering to
             # play your turn well for you. It is not: it begins things in
@@ -543,7 +575,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
 
 
 
-@command("mothball", group="projects",
+@command("mothball", shape="tech", group="projects",
          summary="shut a finished work down",
          usage=["mothball <id>"], options={"<id>": "a finished concern"},
          description="Stops its upkeep; restore reopens it.")
@@ -576,7 +608,7 @@ def _cmd_mothball(sim, nodes, cmd, ended):
 
 
 
-@command("restore", group="projects",
+@command("restore", shape="tech", group="projects",
          summary="reopen a mothballed work",
          usage=["restore <id>"], options={"<id>": "a mothballed concern"},
          description="Undoes mothball.")
@@ -591,11 +623,12 @@ def _cmd_restore(sim, nodes, cmd, ended):
 
 
 
-@command("open", group="projects",
+@command("open", shape="tech_done", group="projects",
          summary="start running something you have worked out how to do",
          usage=["open <id>"], options={"<id>": "a finished concern"},
          description="Until you open it, it earns nothing and costs nothing. Finishing "
-                     "is not the same as running.")
+                     "is not the same as running. Opening charges a fee for stock and "
+                     "premises; `quote open <id>` shows it first.")
 def _cmd_open(sim, nodes, cmd, ended):
     if ended:
         return {"ok": False, "error": "the run has ended (%s). 'state' shows where you finished and how far you got" % ended}
@@ -616,6 +649,7 @@ def _cmd_open(sim, nodes, cmd, ended):
     _units = cmd.get("units")
     if _units is not None and not isinstance(_units, (int, float)):
         return {"ok": False, "error": "units must be a number"}
+    charge, _size = sim.opening_fee(node_id, _units)
     opened, msg = sim.open_venture(node_id, units=_units)
     if not opened:
         return {"ok": False, "error": msg}
@@ -624,7 +658,8 @@ def _cmd_open(sim, nodes, cmd, ended):
     # line in the player's own history, not just in the reply to this one
     # command. open_venture itself stays silent; see its docstring.
     sim.log.append((sim.year, "opened: %s (%s)" % (nodes[node_id]["name"], msg)))
-    return {"ok": True, "opened": msg, "capital": round(sim.capital, 1),
+    return {"ok": True, "opened": msg, "opening_charge": round(charge, 1),
+            "paid_now": round(charge, 1), "capital": round(sim.capital, 1),
             "revenue": round(sim.revenue(), 1), "upkeep": round(sim.upkeep(), 1)}
 
 
@@ -636,7 +671,8 @@ _VENTURES_PAGE = 20
 @command("ventures", group="projects",
          summary="what you run and could run",
          usage=["ventures", "ventures limit:50 offset:20"],
-         options={"limit / offset": "page through the concerns you know how to run and have not opened"},
+         options={"limit / offset": "page through the concerns you know how to run and have not opened",
+                  "closed": "show only what is shut or never opened, not what is running"},
          description="What you are running, and what you know how to run and have not opened, "
                      "twenty at a time.")
 def _cmd_ventures(sim, nodes, cmd, ended):
@@ -694,8 +730,10 @@ def _cmd_ventures(sim, nodes, cmd, ended):
     # same way.
     _idle_ordinary = [node_id for node_id in idle if node_id not in sim.CAPABILITY_INSTITUTIONS]
     _idle_capability = [node_id for node_id in idle if node_id in sim.CAPABILITY_INSTITUTIONS]
+    only_closed = bool(cmd.get("closed"))
     out = {"ok": True,
-           "running": [_vrow(node_id) for node_id in running] or "nothing",
+           "running": ([_vrow(node_id) for node_id in running] or "nothing")
+                      if not only_closed else "not shown: you asked for closed concerns only",
            "you_know_how_but_have_not_opened":
                [dict(_vrow(node_id), to_open_it=round(sim.venture_capex(node_id), 1))
                 for node_id in _idle_ordinary[offset:offset + limit]] or "nothing",
@@ -737,9 +775,13 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            # which of the two columns a trade lands in.
            "these_are_not_interchangeable": (
                "Most concerns want CRAFTSMEN to keep an eye on them. "
-               "Engineers, chemists and machinists are scholars here, and "
-               "a scholar cannot watch a workshop. 'labour <trade>' says "
-               "which of the two a trade is."),
+               "The scholar-family trades (%s) are not craftsmen, and a "
+               "scholar cannot watch a workshop; every other trade counts "
+               "as craft. 'labour <trade>' says which family a trade is. "
+               "On the prompt, sch counts you and the scholars you employ "
+               "(not the other scholar-family trades) and art counts you "
+               "and every craft trade you employ."
+               % _scholar_family_names()),
            # "needs", "held_in_all" and "people_free_to_run_something_new"
            # above are venture_hands()/venture_staff_free()'s own numbers
            # - a continuous SHARE of a person's year, never a headcount -
@@ -879,7 +921,8 @@ def _cmd_policy(sim, nodes, cmd, ended):
                                    "no standing obligation either way",
                 "auto_bribe": "pay your way out of a scandal before it kills you",
                 "auto_court_heir": "spend 800 denarii (price-adjusted) when a "
-                                   "patron dies to court the successor. Off by "
+                                   "patron dies to court the successor. By hand: "
+                                   "'bribe <amount>'. Off by "
                                    "default in manual play; on unattended",
                 "auto_shed": "let go of WORKS that cost more than they return "
                              "(this is about buildings and practices, not people)",
@@ -901,6 +944,7 @@ def _cmd_policy(sim, nodes, cmd, ended):
                              "much you need it; open those yourself with "
                              "'open <id>'",
             },
+            "excluded_from_automation": sorted(sim.state.projects.excluded) or "none ('exclude <id>' adds)",
             "note": "Anything switched off here you can still do by hand: hire, "
                     "train, buy, commission, mothball, restore, bribe.",
             # A note that reads as covering everything the game ever does

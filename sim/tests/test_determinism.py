@@ -24,7 +24,7 @@ effect was sporadic, depending on the process's whole allocation history, so on
 unfixed code 200 years x 8 repeats caught it and 200 years x 4 did not, and
 150 x 4 caught it while 150 x 8 did not. It has no false positives - differing
 digests always mean something is genuinely wrong - and imperfect sensitivity.
-It is a slow_check because it costs about half a minute.
+It is a slow_check because even shortened it costs more than the rest of this file.
 
 The STRUCTURAL one is the real guard. Rather than sampling for the symptom it
 forbids the shape: an `id()` may be used as a dict key for speed, and the entry
@@ -53,6 +53,18 @@ from .harness import ROOT
 # is on an integer. What makes it SAFE is the entry holding the object too, so
 # the hit can be confirmed with `is` and the object cannot be collected while
 # the entry that might match it is alive.
+def _id_aliases(source):
+    """Line numbers where the builtin `id` is used as a value rather than
+    called (`key = id`, `map(id, xs)`, `sorted(xs, key=id)`, `{id: x}`), which
+    would let an address slip past the call check below."""
+    tree = ast.parse(source)
+    called = {id(node.func) for node in ast.walk(tree)
+              if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    return [node.lineno for node in ast.walk(tree)
+            if isinstance(node, ast.Name) and node.id == "id"
+            and isinstance(node.ctx, ast.Load) and id(node) not in called]
+
+
 def _id_call_report(path):
     """(allowed, suspect) line numbers for id() calls in one file."""
     tree = ast.parse(open(path).read())
@@ -96,10 +108,22 @@ check("no engine code compares or stores a bare id() - an address is not an "
       "non-deterministic",
       not _suspects, _suspects)
 
+check("the alias check sees `id` passed or stored as a value",
+      [len(_id_aliases(src)) for src in
+       ("key = id\n", "list(map(id, xs))\n", "sorted(xs, key=id)\n", "ok = id(x)\n")]
+      == [1, 1, 1, 0])
+_aliases = []
+for _path in _engine_files:
+    for _line in _id_aliases(open(_path).read()):
+        _aliases.append("%s:%d" % (os.path.relpath(_path, ROOT), _line))
+check("no engine code passes or stores the builtin `id` as a value, which "
+      "would hide an address-as-identity from the call check",
+      not _aliases, _aliases)
+
 check("...and the id()-keyed caches that remain are still there, so the check "
       "above is guarding something rather than passing because nobody uses "
       "id() any more",
-      _id_keyed_caches >= 4, _id_keyed_caches)
+      _id_keyed_caches >= 2, _id_keyed_caches)
 
 
 # --- Every id()-keyed cache must keep the object itself, not only its address.
@@ -123,12 +147,26 @@ for _path in _engine_files:
 # --- THE BEHAVIOURAL CHECK. Slow, and sensitive rather than certain - see the
 # module docstring. Worth having anyway: it is the only check here that would
 # notice a completely different cause producing the same symptom.
+# Four runs of 40 years, not ten of 200. What this check can see that the
+# structural one cannot is state that survives from one Sim to the next inside
+# one process (a module-level counter, a cache not reset), and that shows from
+# the second run's first year, so a few repeats of a short horizon see it as
+# well as many long ones. The sporadic id()-reuse symptom was never reliably
+# caught by repeats at any length (200 years x 8 caught it, 200 x 4 did not, and
+# ten runs of 200 years pass on a tree that still has an id() in a signature),
+# which is why the structural guard above carries that class. Cost is a small
+# fraction of the old half-minute; the horizon includes the first year in which
+# the founder opens ventures and the market clears with firms present.
+_REPEATS = 4
+_YEARS = 40
+
+
 def _repeated_runs_agree():
     from sim import perf_fingerprint as fingerprint
-    scenario = fingerprint.SCENARIOS[0]
-    digests = [fingerprint.digest(fingerprint.run(scenario)[0]) for _ in range(10)]
+    scenario = dict(fingerprint.SCENARIOS[0], years=_YEARS)
+    digests = [fingerprint.digest(fingerprint.run(scenario)[0]) for _ in range(_REPEATS)]
     return len(set(digests)) == 1, sorted(set(digests))
 
 
-slow_check("ten runs of the same scenario in one process give one answer",
+slow_check("four runs of the same scenario in one process give one answer",
            _repeated_runs_agree)

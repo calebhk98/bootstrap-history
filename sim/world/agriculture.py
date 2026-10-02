@@ -14,7 +14,7 @@ instead of an assumption baked into `data/prices.json`.
 STANDALONE ON PURPOSE. Nothing here imports from `sim/engine/`, and nothing
 in `sim/engine/` imports this. See `sim/world/__init__.py` for why the
 package as a whole is built this way: a module with no dependency on
-`sim/engine/`, `data/branches/`, `data/production/` or `data/tech_tree.json`
+`sim/engine/`, `data/branches/`, `data/production/`
 cannot be broken by edits to those paths, and cannot break their tests
 either. `sim/world/demography.py`, not touched by this file, is the intended
 CONSUMER on the population side: it takes a plain
@@ -584,7 +584,7 @@ MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE = declare(
         "population ate WELL. Consumption was min(demand, stock), so the "
         "nutrition ratio could never exceed 1.0 however full the granary "
         "was, and a good year therefore bought nothing while a bad year "
-        "still cost lives. That one-sidedness is what Complaints/45 is "
+        "still cost lives. That one-sidedness is what Complaints/44 is "
         "about, and the granary only fixed half of it - it banked the grain "
         "and then never let anyone eat it.")
 

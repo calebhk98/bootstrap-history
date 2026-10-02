@@ -21,9 +21,10 @@ is now. None of this is an approved plan yet.
 | `DEMAND_AT_SCALE.md` | Whether `sim/world/demand.py`'s household-demand model holds outside Roman Egypt, against the stakeholder's own critique. | Ours |
 | `MAP_AND_WEATHER.md` | Why the map and the weather model are two disconnected systems, and what it would take to join them. | Ours |
 | `ECONOMY_MODEL_SURVEY.md` | How other models and games price goods, set wages, split joint products and create starting conditions, with what to borrow for each of our modules. | Ours, from external sources |
+| `CODE_ANALYSIS_TOOLING.md` | What checks the code's maintainability (`sim/code_health.py`, pylint, the rename prover), which parts are hand-written and which library sits under each. | Ours |
 
 Read them in that order. `ENDOGENOUS_COSTS_AND_DOMAINS.md` is the live plan and
-`Complaints/123-delete-prices-json.md` is its concrete exit checklist for the
+`Complaints/119-delete-prices-json.md` is its concrete exit checklist for the
 legacy file (it is an issue, so it is tracked with the others);
 `PM_ASSESSMENT.md` is the reasoning that led to it; `STATE_OF_THE_PROJECT.md`
 is where its milestone table is kept current; the two external documents

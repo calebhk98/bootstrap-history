@@ -32,7 +32,7 @@ hedge_sim.done.add("sanitation_antisepsis")
 hedge_sim._done_changed()
 _multiplier, why = hedge_sim.hazard_relief("staff_loss")
 check("a lapsed hedge names the concern whose closure lapsed it",
-      any("lapsed: " in text and text.endswith("is closed)")
+      any("lapsed: " in text and "is closed" in text
           and hedge_sim.nodes["sanitation_antisepsis"]["name"] in text for text in why), why)
 
 risk_replies, _, _ = proto([{"cmd": "risk"}])

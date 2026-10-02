@@ -1,8 +1,9 @@
 [
  {
   "id": "civ_arch_roman",
-  "name": "Roman masonry arch",
+  "name": "Masonry arch",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 60.0,
@@ -10,13 +11,13 @@
    "mason": 120.0
   },
   "mat": {},
-  "cap": 350.0,
-  "up": 0,
+  "cap_hours": 7056.657710945264,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -30,6 +31,7 @@
   "id": "civ_vault_barrel",
   "name": "Barrel vault",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_arch_roman"
   ],
@@ -37,13 +39,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -56,6 +58,7 @@
   "id": "civ_dome_roman",
   "name": "Roman concrete dome",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_vault_barrel",
    "mat_pozzolana"
@@ -66,13 +69,13 @@
    "mason": 300.0
   },
   "mat": {},
-  "cap": 2500.0,
-  "up": 0,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 0,
   "yrs": 1.5,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -86,6 +89,7 @@
   "id": "civ_aqueduct_roman",
   "name": "Roman aqueduct with inverted siphons",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman"
   ],
@@ -96,13 +100,13 @@
    "mason": 400.0
   },
   "mat": {},
-  "cap": 3000.0,
-  "up": 150.0,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 3024.2818761193985,
   "yrs": 2.0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -111,8 +115,9 @@
  },
  {
   "id": "civ_road_paved",
-  "name": "Roman paved road with surveying",
+  "name": "Paved road with surveying",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_surveying_groma"
   ],
@@ -123,13 +128,13 @@
    "mason": 100.0
   },
   "mat": {},
-  "cap": 1200.0,
-  "up": 0,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -154,6 +159,7 @@
   "id": "civ_surveying_groma",
   "name": "Groma: Roman X-staff surveying tool",
   "cat": "tools",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 20.0,
@@ -161,13 +167,13 @@
    "carpenter": 20.0
   },
   "mat": {},
-  "cap": 100.0,
-  "up": 0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 0.2,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -181,6 +187,7 @@
   "id": "civ_chorobates",
   "name": "Chorobates: Roman water levelling rod",
   "cat": "tools",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 25.0,
@@ -188,13 +195,13 @@
    "carpenter": 30.0
   },
   "mat": {},
-  "cap": 120.0,
-  "up": 0,
+  "cap_hours": 2419.425500895519,
+  "up_hours": 0,
   "yrs": 0.2,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -206,8 +213,9 @@
  },
  {
   "id": "civ_sewer_roman",
-  "name": "Roman sewer with gravity flow",
+  "name": "Sewer with gravity flow",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman",
    "civ_surveying_groma"
@@ -219,13 +227,13 @@
    "mason": 300.0
   },
   "mat": {},
-  "cap": 2200.0,
-  "up": 90.0,
+  "cap_hours": 44356.13418308451,
+  "up_hours": 1814.569125671639,
   "yrs": 1.5,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -234,8 +242,9 @@
  },
  {
   "id": "civ_brick_tile",
-  "name": "Roman fired brick and tile",
+  "name": "Fired brick and tile",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 40.0,
@@ -243,13 +252,13 @@
    "potter": 80.0
   },
   "mat": {},
-  "cap": 200.0,
-  "up": 0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 0.3,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -260,18 +269,19 @@
   "id": "civ_marble_facing",
   "name": "Marble veneer and ashlar facing",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [],
   "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -281,6 +291,7 @@
   "id": "civ_insula",
   "name": "Insula: Roman apartment block",
   "cat": "buildings",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_brick_tile",
    "civ_arch_roman"
@@ -292,13 +303,13 @@
    "mason": 250.0
   },
   "mat": {},
-  "cap": 1800.0,
-  "up": 0,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 0,
   "yrs": 1.0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -309,6 +320,7 @@
   "id": "civ_glass_windows",
   "name": "Glass panes for windows",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_glass_soda"
   ],
@@ -316,13 +328,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -335,6 +347,7 @@
   "id": "civ_amphitheatre",
   "name": "Amphitheatre with tiered seating",
   "cat": "buildings",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_arch_roman",
    "civ_vault_barrel"
@@ -343,13 +356,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -366,13 +379,13 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -382,6 +395,7 @@
   "id": "civ_cofferdam",
   "name": "Cofferdam and underwater concrete",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman",
    "mat_pozzolana",
@@ -397,13 +411,13 @@
    "iron_bar_kg": 50.0,
    "wood_kg": 200.0
   },
-  "cap": 700.0,
-  "up": 100.0,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 2016.1879174129324,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
@@ -416,6 +430,7 @@
   "id": "civ_truss_triangulated",
   "name": "Triangulated truss frame",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_arch_roman",
    "cap_tol_1mm"
@@ -430,13 +445,13 @@
    "timber_m3": 3,
    "iron_bar_kg": 15
   },
-  "cap": 50,
-  "up": 0.0,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -449,6 +464,7 @@
   "id": "civ_roof_king_post",
   "name": "King post roof truss",
   "cat": "structures",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_truss_triangulated",
    "cn_timber_truss"
@@ -462,13 +478,13 @@
    "timber_m3": 2.0,
    "wood_kg": 250.0
   },
-  "cap": 350.0,
-  "up": 0.0,
+  "cap_hours": 7056.657710945264,
+  "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -492,13 +508,13 @@
   "mat": {
    "timber_m3": 2.5
   },
-  "cap": 40,
-  "up": 6,
+  "cap_hours": 806.475166965173,
+  "up_hours": 120.97127504477595,
   "yrs": 0.3,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -508,6 +524,7 @@
   "id": "civ_bridge_timber_truss",
   "name": "Timber trussed bridge",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_truss_triangulated",
    "civ_arch_roman"
@@ -522,13 +539,13 @@
    "timber_m3": 8,
    "iron_bar_kg": 50
   },
-  "cap": 150,
-  "up": 0.0,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.15,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -542,6 +559,7 @@
   "id": "civ_bridge_cast_iron",
   "name": "Cast iron bridge",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "blast_furnace",
    "civ_arch_roman"
@@ -555,13 +573,13 @@
   "mat": {
    "cast_iron_kg": 80
   },
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -575,6 +593,7 @@
   "id": "civ_iron_wrought",
   "name": "Wrought iron working and riveting",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "cap_heat_0700"
@@ -583,22 +602,24 @@
   "ph": 0,
   "lab": {},
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0,
   "risk": 0,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "A",
-  "note": "Wrought iron from bloomery furnace is ductile, tough, and resistant to corrosion. Smith heating and hand-forging creates toughness. Rivets are driven hot; the cooled rivet locks parts together. Roman and medieval smiths knew this; it is not high art, but skilled work. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C]"
+  "note": "Wrought iron from bloomery furnace is ductile, tough, and resistant to corrosion. Smith heating and hand-forging creates toughness. Rivets are driven hot; the cooled rivet locks parts together. Roman and medieval smiths knew this; it is not high art, but skilled work.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C] [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: riveting and forging require heating wrought iron to cherry red approximately 750 C]"
  },
  {
   "id": "civ_bridge_wrought_iron_truss",
   "name": "Wrought iron truss bridge",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_truss_triangulated",
    "civ_iron_wrought",
@@ -614,13 +635,13 @@
   "mat": {
    "iron_bar_kg": 120
   },
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -634,6 +655,7 @@
   "id": "civ_wire_drawn",
   "name": "Drawn wire and wire rope",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "drawplate_wire",
    "mat_wrought_iron"
@@ -646,13 +668,13 @@
   "mat": {
    "iron_bar_kg": 20
   },
-  "cap": 80,
-  "up": 10,
+  "cap_hours": 1612.950333930346,
+  "up_hours": 201.61879174129325,
   "yrs": 0.5,
   "risk": 0.08,
   "sus": 0,
   "gov": 0,
-  "rev": 50,
+  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -662,6 +684,7 @@
   "id": "civ_bridge_suspension",
   "name": "Suspension bridge with wire cables",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_wire_drawn",
    "cap_measure_len",
@@ -677,13 +700,13 @@
   "mat": {
    "iron_bar_kg": 250
   },
-  "cap": 500,
-  "up": 0.0,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 0,
   "yrs": 2,
   "risk": 0.15,
   "sus": 1,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -697,6 +720,7 @@
   "id": "civ_statics",
   "name": "Statics and equilibrium of forces",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "geometry_analytic",
    "newtonian_mechanics"
@@ -707,13 +731,13 @@
    "scholar": 400
   },
   "mat": {},
-  "cap": 200.0,
-  "up": 0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -726,6 +750,7 @@
   "id": "civ_method_joints",
   "name": "Method of joints for truss analysis",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_statics"
   ],
@@ -735,13 +760,13 @@
    "scholar": 300
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -754,6 +779,7 @@
   "id": "civ_bending_moment",
   "name": "Bending moment and shear diagrams",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_statics",
    "calculus"
@@ -764,13 +790,13 @@
    "scholar": 400
   },
   "mat": {},
-  "cap": 50,
-  "up": 0,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 0,
   "yrs": 1.2,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -783,6 +809,7 @@
   "id": "civ_neutral_axis",
   "name": "Neutral axis in bending",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_bending_moment"
   ],
@@ -792,13 +819,13 @@
    "scholar": 250
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0.6,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -808,6 +835,7 @@
   "id": "civ_euler_buckling",
   "name": "Euler buckling of slender columns",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_statics",
    "calculus",
@@ -819,13 +847,13 @@
    "scholar": 400
   },
   "mat": {},
-  "cap": 50,
-  "up": 0,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.12,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -838,6 +866,7 @@
   "id": "civ_elasticity_theory",
   "name": "Theory of elasticity",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_neutral_axis",
    "calculus"
@@ -848,13 +877,13 @@
    "scholar": 600
   },
   "mat": {},
-  "cap": 100,
-  "up": 0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 2,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 2,
   "art": 0,
   "conf": "B",
@@ -864,6 +893,7 @@
   "id": "civ_factor_safety",
   "name": "Factor of safety concept",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_method_joints",
    "statistics_basic"
@@ -874,13 +904,13 @@
    "scholar": 200
   },
   "mat": {},
-  "cap": 0,
-  "up": 0,
+  "cap_hours": 0,
+  "up_hours": 0,
   "yrs": 0.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -890,6 +920,7 @@
   "id": "civ_materials_testing",
   "name": "Materials testing and calibration",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "balance_analytical",
    "cap_measure_mass_mg"
@@ -901,13 +932,13 @@
    "artisan": 200
   },
   "mat": {},
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -917,6 +948,7 @@
   "id": "civ_foundation_piles",
   "name": "Foundation piles and pile driving",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_statics"
   ],
@@ -929,13 +961,13 @@
   "mat": {
    "timber_m3": 5
   },
-  "cap": 100,
-  "up": 0.0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -945,6 +977,7 @@
   "id": "civ_foundation_spread",
   "name": "Spread footing on compacted soil",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_statics"
   ],
@@ -956,13 +989,13 @@
   "mat": {
    "timber_m3": 1
   },
-  "cap": 50,
-  "up": 0,
+  "cap_hours": 1008.0939587064662,
+  "up_hours": 0,
   "yrs": 0.3,
   "risk": 0.15,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -985,13 +1018,13 @@
    "timber_m3": 8,
    "iron_bar_kg": 40
   },
-  "cap": 300,
-  "up": 20,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 403.2375834825865,
   "yrs": 1.2,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1001,6 +1034,7 @@
   "id": "civ_caisson_compressed_air",
   "name": "Compressed air caisson and decompression",
   "cat": "foundations",
+  "kind": "ENGINEERING",
   "pre": [
    "cn_caisson",
    "cap_power_steam"
@@ -1014,13 +1048,13 @@
   "mat": {
    "iron_bar_kg": 80
   },
-  "cap": 500,
-  "up": 0.0,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.3,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1033,6 +1067,7 @@
   "id": "civ_soil_mechanics",
   "name": "Soil mechanics and bearing capacity",
   "cat": "theory",
+  "kind": "SCIENCE",
   "pre": [
    "civ_foundation_spread",
    "civ_statics",
@@ -1044,13 +1079,13 @@
    "scholar": 500
   },
   "mat": {},
-  "cap": 150,
-  "up": 0,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 2,
   "art": 0,
   "conf": "B",
@@ -1060,6 +1095,7 @@
   "id": "civ_tunnel_rock_drill",
   "name": "Rock drilling and tunnelling",
   "cat": "excavation",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_statics",
    "cap_measure_len"
@@ -1074,13 +1110,13 @@
    "timber_m3": 4,
    "iron_bar_kg": 30
   },
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.2,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1106,13 +1142,13 @@
   "mat": {
    "iron_bar_kg": 100
   },
-  "cap": 400,
-  "up": 50,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 1008.0939587064662,
   "yrs": 2,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1122,6 +1158,7 @@
   "id": "civ_dam_gravity",
   "name": "Gravity dam in masonry or concrete",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman",
    "civ_statics"
@@ -1136,25 +1173,27 @@
    "brick_1000": 200,
    "lime_kg": 100
   },
-  "cap": 500,
-  "up": 50,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1008.0939587064662,
   "yrs": 2,
   "risk": 0.15,
   "sus": 0,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
   "note": "A thick wall holding back water by its own weight. Water pressure increases with depth (proportional to depth squared). The base must resist both the vertical load and the horizontal thrust. Most dam failures are not structural (cracking) but hydraulic (seepage, overtopping).",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_dam_arch",
   "name": "Arch dam in concrete",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_dam_gravity",
    "civ_arch_roman"
@@ -1168,25 +1207,27 @@
   "mat": {
    "lime_kg": 80
   },
-  "cap": 400,
-  "up": 40,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 806.475166965173,
   "yrs": 2,
   "risk": 0.2,
   "sus": 0,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
   "note": "A curved dam transfers water pressure sideways to the canyon walls, not to the base. Thinner and lighter than a gravity dam. Requires rock walls on both sides and calculation of the arch stress. The Hoover Dam (1936) is an arch; it can hold a lake with less concrete than gravity.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_dam_earth_fill",
   "name": "Earth fill dam with compacted layers",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_soil_mechanics"
   ],
@@ -1198,13 +1239,13 @@
   "mat": {
    "timber_m3": 2
   },
-  "cap": 300,
-  "up": 50,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 1008.0939587064662,
   "yrs": 1.5,
   "risk": 0.25,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "C",
@@ -1231,13 +1272,13 @@
    "brick_1000": 50,
    "iron_bar_kg": 30
   },
-  "cap": 200,
-  "up": 30,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1247,6 +1288,7 @@
   "id": "civ_water_treatment",
   "name": "Water treatment works and coagulation",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_aqueduct_roman",
    "analytical_chemistry"
@@ -1260,13 +1302,13 @@
   "mat": {
    "alum_kg": 50
   },
-  "cap": 250,
-  "up": 40,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 806.475166965173,
   "yrs": 1.2,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1279,6 +1321,7 @@
   "id": "civ_pumping_station",
   "name": "Pumping station and mechanical lift",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "bellows_water_blown",
    "civ_aqueduct_roman"
@@ -1292,13 +1335,13 @@
   "mat": {
    "iron_bar_kg": 80
   },
-  "cap": 300,
-  "up": 50,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 1008.0939587064662,
   "yrs": 1,
   "risk": 0.15,
   "sus": 0,
   "gov": 2,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1311,6 +1354,7 @@
   "id": "civ_water_tower",
   "name": "Water tower and pressure system",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_pumping_station"
   ],
@@ -1324,13 +1368,13 @@
    "timber_m3": 4,
    "iron_bar_kg": 40
   },
-  "cap": 150,
-  "up": 20,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 403.2375834825865,
   "yrs": 0.8,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 50,
+  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1340,6 +1384,7 @@
   "id": "civ_sewer_separate",
   "name": "Pilot separate foul and storm sewer standard",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_sewer_roman"
   ],
@@ -1352,13 +1397,13 @@
   "mat": {
    "brick_1000": 80
   },
-  "cap": 800.0,
-  "up": 30,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 604.8563752238797,
   "yrs": 5.0,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1367,12 +1412,14 @@
    "infrastructure"
   ],
   "build_yrs": 2,
-  "adopt_yrs": 5
+  "adopt_yrs": 5,
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_sewage_treatment",
   "name": "Sewage treatment works and activated sludge",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_sewer_separate",
    "germ_theory"
@@ -1386,25 +1433,27 @@
   "mat": {
    "iron_bar_kg": 60
   },
-  "cap": 300,
-  "up": 60,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 1209.7127504477594,
   "yrs": 1.5,
   "risk": 0.15,
   "sus": 0,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
   "note": "Sewage (biological waste) requires aerobic decomposition. Activated sludge is bacteria and protozoa that eat organic matter when aerated. Germ theory explains why pathogens die in treatment; without it, the mechanism is invisible. Treated effluent is safe to discharge.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_steel_frame",
   "name": "Steel frame building",
   "cat": "buildings",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "civ_method_joints",
@@ -1423,13 +1472,13 @@
   "mat": {
    "steel_plate_kg": 800.0
   },
-  "cap": 3000.0,
-  "up": 500.0,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 10080.939587064662,
   "yrs": 2,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 2,
   "art": 0,
   "conf": "B",
@@ -1455,13 +1504,13 @@
    "iron_bar_kg": 60,
    "glass_raw_kg": 100
   },
-  "cap": 300,
-  "up": 30,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.05,
   "sus": 0,
   "gov": 0,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 1,
   "conf": "B",
@@ -1471,6 +1520,7 @@
   "id": "civ_elevator_otis",
   "name": "Elevator with safety brake (Otis)",
   "cat": "machines",
+  "kind": "ENGINEERING",
   "pre": [
    "steam_high_pressure",
    "civ_steel_frame",
@@ -1487,13 +1537,13 @@
   "mat": {
    "iron_bar_kg": 250.0
   },
-  "cap": 1200.0,
-  "up": 200.0,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 4032.375834825865,
   "yrs": 1.5,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 1,
   "art": 0,
   "conf": "A",
@@ -1520,13 +1570,13 @@
   "mat": {
    "steel_plate_kg": 80
   },
-  "cap": 200,
-  "up": 30,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1548,13 +1598,13 @@
   "mat": {
    "steel_plate_kg": 70
   },
-  "cap": 250,
-  "up": 40,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 806.475166965173,
   "yrs": 1.2,
   "risk": 0.12,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1578,13 +1628,13 @@
   "mat": {
    "steel_plate_kg": 120
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "yrs": 2,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1594,6 +1644,7 @@
   "id": "civ_bridge_cantilever",
   "name": "Cantilever bridge",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bulk_steel",
    "civ_bending_moment"
@@ -1607,13 +1658,13 @@
   "mat": {
    "steel_plate_kg": 100
   },
-  "cap": 500,
-  "up": 0.0,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 0,
   "yrs": 1.8,
   "risk": 0.12,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1639,13 +1690,13 @@
   "mat": {
    "steel_plate_kg": 50
   },
-  "cap": 150,
-  "up": 20,
+  "cap_hours": 3024.2818761193985,
+  "up_hours": 403.2375834825865,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1655,6 +1706,7 @@
   "id": "civ_glass_plate",
   "name": "Plate glass for windows and storefronts",
   "cat": "materials",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_glass_soda",
    "precision_three_plate",
@@ -1668,25 +1720,27 @@
   "mat": {
    "glass_raw_kg": 100
   },
-  "cap": 200,
-  "up": 30,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 604.8563752238797,
   "yrs": 1.2,
   "risk": 0.15,
   "sus": 2,
   "gov": 1,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Large flat panes of clear glass. Cast plate glass (poured onto a flat table, then ground and polished) allows sizes to 3-4 metres. Transforms storefronts and windows. Sheet glass (drawn from a bath) is cheaper but smaller. Large panes are fragile but stunning. [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy]",
+  "note": "Large flat panes of clear glass. Cast plate glass (poured onto a flat table, then ground and polished) allows sizes to 3-4 metres. Transforms storefronts and windows. Sheet glass (drawn from a bath) is cheaper but smaller. Large panes are fragile but stunning.",
   "traits": [
    "luxury"
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]  [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy] [REVIEWED: prerequisite(s) cap_tol_100um added by a reviewer working node by node. Reason: grinding and polishing flat glass requires 0.1mm surface accuracy]"
  },
  {
   "id": "civ_fireproofing",
   "name": "Fireproofing and fire-resistant structure",
   "cat": "buildings",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_steel_frame",
    "refractory_fireclay"
@@ -1700,13 +1754,13 @@
    "brick_1000": 100,
    "clay_kg": 50
   },
-  "cap": 300,
-  "up": 0.0,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1719,6 +1773,7 @@
   "id": "civ_building_code",
   "name": "Building code and regulatory standards",
   "cat": "institutional",
+  "kind": "INSTITUTION",
   "pre": [
    "civ_factor_safety"
   ],
@@ -1728,13 +1783,13 @@
    "scholar": 400
   },
   "mat": {},
-  "cap": 100,
-  "up": 0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 1.5,
   "risk": 0.05,
   "sus": 0,
   "gov": 3,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 2,
   "art": 0,
   "conf": "B",
@@ -1742,12 +1797,14 @@
   "traits": [
    "infrastructure",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_lightning_conductor",
   "name": "Lightning conductor and grounding",
   "cat": "safety",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "mat_copper"
@@ -1760,17 +1817,18 @@
   "mat": {
    "iron_bar_kg": 15
   },
-  "cap": 100,
-  "up": 0.0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 0.4,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
-  "note": "A copper or iron rod running from the roof to ground rod(s) in moist earth. Captures lightning and shunts it safely into the ground. Franklin (1752) invented this; it saved many buildings. Reduces fire and injury. Requires good earth contact; a dry ground rod does nothing."
+  "note": "A copper or iron rod running from the roof to ground rod(s) in moist earth. Captures lightning and shunts it safely into the ground. Franklin (1752) invented this; it saved many buildings. Reduces fire and injury. Requires good earth contact; a dry ground rod does nothing.",
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_theodolite",
@@ -1789,13 +1847,13 @@
    "brass_kg": 20,
    "glass_raw_kg": 5
   },
-  "cap": 250,
-  "up": 10,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 201.61879174129325,
   "yrs": 1,
   "risk": 0.08,
   "sus": 0,
   "gov": 1,
-  "rev": 50,
+  "rev_hours": 1008.0939587064662,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1805,6 +1863,7 @@
   "id": "civ_precise_levelling",
   "name": "Precise levelling and level network",
   "cat": "tools",
+  "kind": "ENGINEERING",
   "pre": [
    "telescope",
    "cap_measure_len"
@@ -1817,13 +1876,13 @@
   "mat": {
    "brass_kg": 10
   },
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.05,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1836,6 +1895,7 @@
   "id": "civ_town_planning",
   "name": "Town planning and street layout",
   "cat": "institutional",
+  "kind": "INSTITUTION",
   "pre": [
    "civ_surveying_groma"
   ],
@@ -1845,13 +1905,13 @@
    "scholar": 300
   },
   "mat": {},
-  "cap": 200,
-  "up": 0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
   "sus": 1,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 1,
   "conf": "B",
@@ -1859,12 +1919,14 @@
   "traits": [
    "infrastructure",
    "status_threatening"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_harbour_dock",
   "name": "Harbour and dock with breakwaters",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_cofferdam",
    "civ_arch_roman"
@@ -1879,25 +1941,27 @@
    "brick_1000": 150,
    "iron_bar_kg": 50
   },
-  "cap": 400,
-  "up": 60,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 1209.7127504477594,
   "yrs": 1.5,
   "risk": 0.15,
   "sus": 0,
   "gov": 3,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 1,
   "art": 0,
   "conf": "B",
   "note": "A protected basin with stone or wooden walls. Breakwaters outside reduce waves. Quays allow cargo loading and unloading. Docks with gates can maintain constant water level despite tides. Venice was the model; modern container ports are different in scale only.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_canal_pound_lock",
   "name": "Canal pound lock for level changes",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_gate_sluice"
   ],
@@ -1911,13 +1975,13 @@
    "timber_m3": 6,
    "brick_1000": 50
   },
-  "cap": 250,
-  "up": 30,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 604.8563752238797,
   "yrs": 1,
   "risk": 0.12,
   "sus": 0,
   "gov": 2,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 1,
   "art": 0,
   "conf": "B",
@@ -1925,12 +1989,14 @@
   "traits": [
    "commerce",
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  },
  {
   "id": "civ_gate_sluice",
   "name": "Sluice gate for water control",
   "cat": "water",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "civ_arch_roman"
   ],
@@ -1944,13 +2010,13 @@
    "timber_m3": 2,
    "iron_bar_kg": 20
   },
-  "cap": 100,
-  "up": 10,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 201.61879174129325,
   "yrs": 0.6,
   "risk": 0.1,
   "sus": 0,
   "gov": 1,
-  "rev": 50,
+  "rev_hours": 1008.0939587064662,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1960,6 +2026,7 @@
   "id": "civ_dredging",
   "name": "Dredging for channel maintenance",
   "cat": "excavation",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_pumping_station",
    "steam_atmospheric",
@@ -1975,13 +2042,13 @@
    "iron_bar_kg": 100.0,
    "timber_m3": 20.0
   },
-  "cap": 3000.0,
-  "up": 400.0,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 8064.75166965173,
   "yrs": 1,
   "risk": 0.15,
   "sus": 0,
   "gov": 2,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -1994,6 +2061,7 @@
   "id": "civ_street_paved",
   "name": "Paved street and sidewalk",
   "cat": "transport",
+  "kind": "ENGINEERING",
   "pre": [
    "civ_road_paved"
   ],
@@ -2007,13 +2075,13 @@
    "brick_1000": 50,
    "sand_quartz_kg": 100
   },
-  "cap": 100,
-  "up": 0.0,
+  "cap_hours": 2016.1879174129324,
+  "up_hours": 0,
   "yrs": 0.8,
   "risk": 0.08,
   "sus": 0,
   "gov": 1,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 0,
   "art": 0,
   "conf": "B",
@@ -2027,6 +2095,7 @@
   "id": "civ_street_lighting",
   "name": "Street lighting with electricity",
   "cat": "urban",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "arc_light_lamp",
    "power_grid"
@@ -2039,19 +2108,20 @@
   "mat": {
    "copper_kg": 15
   },
-  "cap": 200,
-  "up": 0.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 0,
   "yrs": 1,
   "risk": 0.1,
   "sus": 0,
   "gov": 2,
-  "rev": 0,
+  "rev_hours": 0,
   "sch": 1,
   "art": 0,
   "conf": "B",
   "note": "Gas lamps (post-1800) were bright but hot. Arc lamps (post-1850) were bright and stable. Incandescent bulbs (post-1880) were safer. Electric grid power (post-1900) made street lighting universal. Crime dropped; nightlife boomed. The cost was perpetual maintenance of wiring and poles.",
   "traits": [
    "infrastructure"
-  ]
+  ],
+  "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
  }
 ]

@@ -20,6 +20,9 @@ import concurrent.futures as _concurrent_futures
 import threading
 import tempfile
 
+# Games started without --seed draw a fresh one; the suite needs them to replay.
+os.environ.setdefault("ROME_DEFAULT_SEED", "1")
+
 # ruff reports collections, copy, glob and re (from the combined import just
 # above) and tempfile as unused in THIS file - correctly, harness.py itself
 # never calls them. They stay because other topic modules use them bare
@@ -179,6 +182,27 @@ def sim(civ="rome_100ad", capital=None, manual=True, events=False):
               civ=S.load_civ(civ), cfg=config)
     test_sim.goal, test_sim.done_year = GOAL, {}
     return test_sim
+
+
+def concern_needing_craftsmen_to_supervise():
+    """A concern that earns, needs no scholars, and holds more craftsmen than the founder
+    and the closure slack can cover alone (more than its build crew shown as staff_needed), so losing every hired craftsman shuts it."""
+    probe = sim()
+    for candidate_id in sorted(NODES):
+        node = NODES[candidate_id]
+        if node["rev"] > 0 and node["sch"] == 0 and node["art"] > 0 and not (node.get("lab") or {}).get("artisan"):
+            scholars, craftsmen = probe.venture_hands(candidate_id)
+            if scholars == 0 and max(node["art"], probe.FOUNDER_IS_WORTH + probe.STAFFING_CLOSURE_SLACK) < craftsmen <= 5.5 and probe.venture_foreman(candidate_id)[0] is None:
+                return candidate_id
+    raise AssertionError("no concern needs craftsmen to supervise")
+
+
+def state_seeking(game, requisition=0.16, office=0.06):
+    """Put the state in need: the rates it takes at full notice from the income it can see, as a
+    year's shortfall would leave them. Returns the game."""
+    record = game.state_treasury().record
+    record.levy_requisition_rate, record.levy_office_rate = requisition, office
+    return game
 
 
 def run_it(sim_state, *keys):

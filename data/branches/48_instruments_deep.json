@@ -3,6 +3,7 @@
   "id": "in2_simple_lens",
   "name": "Simple plano-convex lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "lens_grinding"
   ],
@@ -17,25 +18,27 @@
   "mat": {
    "glass_raw_kg": 2
   },
-  "cap": 300,
-  "up": 30,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "The kernel is that a single spherical surface converges parallel light to a point. Aberrations are severe; useful only for low magnification.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_doublet_lens",
   "name": "Doublet achromatic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens",
    "mat_glass_lead",
@@ -54,25 +57,27 @@
   "mat": {
    "glass_raw_kg": 1.2
   },
-  "cap": 800,
-  "up": 60,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
   "dev_years": 12,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "Red and blue light have different refractive indices; flint glass bends them oppositely. A concave flint inside a convex crown cancels the dispersion while keeping convergence. Cemented joint must be optically contacted.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_triplet_lens",
   "name": "Triplet apochromatic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_doublet_lens",
    "glass_borosilicate"
@@ -91,25 +96,27 @@
    "glass_lead_kg": 2,
    "glass_borosilicate_kg": 1.5
   },
-  "cap": 2000,
-  "up": 120,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1,
   "adopt_yrs": 0,
   "dev_years": 15,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 5,
   "conf": "C",
   "note": "Flint-crown-flint sandwich with carefully chosen thicknesses eliminates both primary and secondary chromatic aberration. Air gaps between elements are essential; spacing is critical.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_petzval_portrait_lens",
   "name": "Petzval portrait lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_doublet_lens"
   ],
@@ -126,25 +133,27 @@
    "glass_raw_kg": 2,
    "glass_lead_kg": 1.5
   },
-  "cap": 1200,
-  "up": 80,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.8,
   "adopt_yrs": 0.2,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "The kernel is that a convergent group behind the aperture stop naturally focuses field curvature to a curved surface, which is acceptable for portrait work where central sharpness matters. f/3.5 was revolutionary for 1840s photography.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_cooke_triplet_photography",
   "name": "Cooke triplet photographic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_triplet_lens"
   ],
@@ -161,25 +170,27 @@
    "glass_lead_kg": 1.5,
    "glass_borosilicate_kg": 1
   },
-  "cap": 1500,
-  "up": 90,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 1814.569125671639,
   "build_yrs": 0.9,
   "adopt_yrs": 0.3,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "Symmetry means left and right aberrations cancel; the central meniscus acts as field flattener. Astigmatism and coma are small across a wide field. This design persisted unchanged into the 1970s.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_tessar_lens",
   "name": "Tessar compound photographic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_cooke_triplet_photography"
   ],
@@ -196,25 +207,27 @@
    "glass_raw_kg": 2,
    "glass_lead_kg": 2
   },
-  "cap": 1800,
-  "up": 100,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 0.2,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 900,
+  "rev_hours": 18145.691256716393,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "The rear doublet is cemented; front elements air-spaced. Tessar corrects all primary aberrations (spherical, coma, astigmatism, field curvature) and controls distortion. f/4.5 was standard for hand cameras 1902-1950.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_telephoto_design",
   "name": "Telephoto lens principle",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_doublet_lens"
   ],
@@ -230,25 +243,27 @@
    "glass_raw_kg": 2,
    "glass_lead_kg": 1.5
   },
-  "cap": 1000,
-  "up": 70,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.7,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "The interval between front and rear elements is shorter than focal length; magnification and physical compactness are the point. Rear element separation tunes back working distance.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_wide_angle_lens",
   "name": "Wide angle photographic lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_cooke_triplet_photography",
    "cap_tol_100um"
@@ -266,25 +281,27 @@
    "glass_raw_kg": 2.5,
    "glass_lead_kg": 2
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "Large field angle means massive distortion if not corrected. Symmetrical designs minimize distortion at the cost of vignetting. Focal length/image diagonal ratio defines angle of view.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_primary_mirror",
   "name": "Telescope primary mirror parabolic",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "mirror_amalgam",
    "master_screw"
@@ -303,25 +320,27 @@
    "mat_mercury": 2,
    "tin_kg": 1.5
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.5,
   "adopt_yrs": 0,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.22,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 5,
   "conf": "B",
   "note": "The parabola corrects spherical aberration; a sphere would have offaxis focus. Speculums corrode; silvered glass requires maintenance every few years. Precision to 0.1 wavelength required for good focus.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_cassegrain_reflector",
   "name": "Cassegrain reflector telescope",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_primary_mirror"
   ],
@@ -337,25 +356,27 @@
    "glass_raw_kg": 1,
    "mat_mercury": 0.5
   },
-  "cap": 2500,
-  "up": 180,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 3629.138251343278,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.18,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "Effective focal length can be very large; physical tube is short and stiff. Secondary blockage costs light; useful for high magnification and spectroscopy. Cassegrain and Gregorian differ in secondary curvature (convex vs concave).",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_newtonian_reflector",
   "name": "Newtonian reflector telescope",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_primary_mirror"
   ],
@@ -371,25 +392,27 @@
    "glass_raw_kg": 1,
    "mat_mercury": 0.3
   },
-  "cap": 1500,
-  "up": 120,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2419.425500895519,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 1,
   "risk": 0.15,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Simple and cheap; no secondary mirror obstruction. Off-axis aberrations manageable up to f/4. The flat (Newtonian diagonal) must be very small (5-15% blockage) and precisely angled.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_schmidt_corrector_plate",
   "name": "Schmidt corrector plate",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "mirror_amalgam"
   ],
@@ -406,25 +429,27 @@
    "glass_raw_kg": 2,
    "mat_mercury": 0.5
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.8,
   "adopt_yrs": 0,
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.2,
-  "rev": 1800,
+  "rev_hours": 36291.382513432785,
   "sch": 0,
   "art": 5,
   "conf": "C",
   "note": "A spherical mirror has severe offaxis aberrations. A thin aspheric plate near the center of curvature corrects all of them. Requires precision figuring to waves; small deviations ruin image.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_prism_amici",
   "name": "Prism: Amici roof prism",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -440,25 +465,27 @@
   "mat": {
    "glass_raw_kg": 2
   },
-  "cap": 1200,
-  "up": 80,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "The roof angle must be precisely 90 degrees; any error causes the two roof faces to produce a split image. Coating the roof faces was later improvement.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_prism_porro",
   "name": "Prism: Porro prism binocular",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -474,25 +501,27 @@
   "mat": {
    "glass_raw_kg": 2
   },
-  "cap": 1000,
-  "up": 70,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Porro gives longer eyepiece separation than roof; better for binoculars where one prism arm doubles as the barrel. Internal reflections must not degrade contrast.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_beam_splitter",
   "name": "Beam splitter dichroic mirror",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "mirror_amalgam"
   ],
@@ -509,25 +538,27 @@
    "glass_raw_kg": 1.5,
    "mat_mercury": 0.3
   },
-  "cap": 800,
-  "up": 50,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Evaporated metal films or dielectric coatings create partial reflectors. Dichroic effect (color-dependent reflection) requires interference; multilayer coatings achieve sharp wavelength separation.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_polariser_crystal",
   "name": "Polariser: Nicol prism calcite",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -544,25 +575,27 @@
    "glass_raw_kg": 0.1,
    "calcite_kg": 2
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.16,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "Natural birefringence of calcite; extraordinary ray and ordinary ray have different refractive indices. Carving and cementing a prism at the Brewster angle transmits one, reflects the other internally.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_waveplate_mica",
   "name": "Wave plate phase retarder",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_polariser_crystal"
   ],
@@ -578,25 +611,27 @@
   "mat": {
    "mica_kg": 0.05
   },
-  "cap": 600,
-  "up": 40,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
   "note": "Quarter wave plate shifts phase by 90 degrees; half wave by 180. Thickness controls retardation. Mica easily cleaves to controlled thickness; later crystals like quartz are more stable.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_interference_filter",
   "name": "Interference filter coated",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_beam_splitter"
   ],
@@ -614,25 +649,27 @@
    "magnesium_fluoride_kg": 0.1,
    "zinc_sulfide_kg": 0.1
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 0.2,
   "dev_years": 20,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "Alternating high and low index layers create destructive interference outside the pass band. Extremely narrow passbands possible; sharp edges. Requires vacuum evaporation and strict thickness control.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_antireflection_coating",
   "name": "Antireflection coating single wavelength",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_beam_splitter"
   ],
@@ -649,25 +686,27 @@
    "glass_raw_kg": 1,
    "magnesium_fluoride_kg": 0.05
   },
-  "cap": 1800,
-  "up": 120,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 2419.425500895519,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "A single quarter-wave layer of the right index nearly halves losses at design wavelength; this doubled the effective aperture of telescopes and microscopes. Multicoatings extend bandwidth.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_reticle_crosshair",
   "name": "Reticle: crosshair or graticule",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "glass_clear"
   ],
@@ -680,14 +719,14 @@
   "mat": {
    "glass_raw_kg": 0.2
   },
-  "cap": 300,
-  "up": 20,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 403.2375834825865,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -699,6 +738,7 @@
   "id": "in2_eyepiece_huygens",
   "name": "Eyepiece: Huygens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -711,14 +751,14 @@
   "mat": {
    "glass_raw_kg": 0.5
   },
-  "cap": 400,
-  "up": 30,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -730,6 +770,7 @@
   "id": "in2_eyepiece_kellner",
   "name": "Eyepiece: Kellner",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_doublet_lens"
   ],
@@ -743,14 +784,14 @@
    "glass_raw_kg": 0.5,
    "glass_lead_kg": 0.2
   },
-  "cap": 600,
-  "up": 40,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -762,6 +803,7 @@
   "id": "in2_eyepiece_ramsden",
   "name": "Eyepiece: Ramsden",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -774,14 +816,14 @@
   "mat": {
    "glass_raw_kg": 0.5
   },
-  "cap": 350,
-  "up": 25,
+  "cap_hours": 7056.657710945264,
+  "up_hours": 504.0469793532331,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 120,
+  "rev_hours": 2419.425500895519,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -793,6 +835,7 @@
   "id": "in2_eyepiece_orthoscopic",
   "name": "Eyepiece: Orthoscopic",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_triplet_lens"
   ],
@@ -806,25 +849,27 @@
    "glass_raw_kg": 0.8,
    "glass_lead_kg": 0.4
   },
-  "cap": 1000,
-  "up": 60,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "All aberrations well corrected; distortion nearly absent. Best planetary observation eyepiece until the Erfle; good for telescopes of any focal ratio.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_eyepiece_erfle",
   "name": "Eyepiece: Erfle wide field",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_triplet_lens"
   ],
@@ -838,25 +883,27 @@
    "glass_raw_kg": 1,
    "glass_lead_kg": 0.6
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.12,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "The kernel: five elements can be tuned to flatten field and correct all aberrations across a wide angle. Previous 3-4 element designs limited to 50 degrees.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_condenser_substage",
   "name": "Condenser: sub-stage aperture control",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -869,14 +916,14 @@
   "mat": {
    "glass_raw_kg": 1
   },
-  "cap": 400,
-  "up": 30,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -888,6 +935,7 @@
   "id": "in2_immersion_objective_oil",
   "name": "Immersion objective: oil lens",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_condenser_substage",
    "fused_quartz"
@@ -905,25 +953,27 @@
    "quartz_tube_kg": 1,
    "olive_oil_kg": 0.1
   },
-  "cap": 1200,
-  "up": 80,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Oil (n=1.52) matches glass closely; light bent less at air-glass interface, allowing higher NA. Allows numerical apertures above 1.0, finer resolution. Standard for 1000x magnification.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_phase_contrast_objective",
   "name": "Phase contrast objective and annuli",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_immersion_objective_oil",
    "fused_quartz"
@@ -941,25 +991,27 @@
    "glass_raw_kg": 2,
    "quartz_tube_kg": 1
   },
-  "cap": 2500,
-  "up": 200,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 0.3,
   "dev_years": 25,
   "dev_people": 3,
   "risk": 0.18,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "Transparent samples have tiny amplitude differences that the eye cannot detect; phase differences are huge but invisible. Phase plate retards diffracted light; interference makes phases visible. Revolutionary for biology.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_dark_field_condenser",
   "name": "Dark field condenser: oblique illumination",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_condenser_substage"
   ],
@@ -972,25 +1024,27 @@
   "mat": {
    "glass_raw_kg": 1.5
   },
-  "cap": 1000,
-  "up": 70,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 8,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Unstained samples are nearly invisible in brightfield because they scatter little and absorb little. Dark field cuts direct light; scattered light from particles appears bright on black background.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_ultramicroscope",
   "name": "Ultramicroscope: dark field with slit lamp",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_dark_field_condenser",
    "cap_heat_1600",
@@ -1012,25 +1066,27 @@
    "iron_bar_kg": 5.0,
    "timber_m3": 0.2
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 0.8,
   "adopt_yrs": 0.1,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Colloid particles smaller than visible wavelength scatter light; ultramicroscope can detect particles 10-100 nm, below direct visibility limit. Used to verify kinetic theory of matter.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_microtome_sliding",
   "name": "Microtome: sliding blade",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -1044,14 +1100,14 @@
    "steel_plate_kg": 2,
    "glass_raw_kg": 0.5
   },
-  "cap": 600,
-  "up": 50,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 1,
   "risk": 0.1,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1063,6 +1119,7 @@
   "id": "in2_microtome_rotary",
   "name": "Microtome: rotary feed",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -1078,25 +1135,27 @@
    "steel_plate_kg": 2.5,
    "cast_iron_kg": 10
   },
-  "cap": 1200,
-  "up": 100,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
   "note": "Screw advance per rotation is fixed and precise; blade remains stationary; hundreds of consecutive micron-thick sections from one specimen. Required for neuroanatomy.",
   "gov": 1,
-  "sus": 3
+  "sus": 3,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_electron_microscope_column",
   "name": "Electron microscope: column and lens assembly",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "cap_vac_1e3"
@@ -1115,25 +1174,27 @@
    "copper_kg": 20,
    "iron_bar_kg": 50
   },
-  "cap": 10000,
-  "up": 1000,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 20161.879174129324,
   "build_yrs": 3,
   "adopt_yrs": 0.5,
   "dev_years": 30,
   "dev_people": 8,
   "risk": 0.25,
-  "rev": 15000,
+  "rev_hours": 302428.18761193985,
   "sch": 0,
   "art": 3,
   "conf": "B",
   "note": "Electrons have wavelength 1000x smaller than visible light; 2000x higher resolution. Requires high vacuum, high voltage (50-100 kV), and magnetic lenses. Sample preparation and observation technique are complex.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_electron_source_cathode",
   "name": "Electron source: heated cathode",
   "cat": "optics",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "mat_tungsten",
@@ -1148,25 +1209,27 @@
   "mat": {
    "tungsten_kg": 0.05
   },
-  "cap": 2000,
-  "up": 200,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 0.1,
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Filament life determined by evaporation rate; higher temperature gives more current but shorter life. Wehnelt cap focuses emission. Tungsten chosen for high melting point and low evaporation.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_spectrograph_prism",
   "name": "Spectrograph: prism camera",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "spectroscope",
    "photography"
@@ -1184,14 +1247,14 @@
    "glass_raw_kg": 2,
    "glass_lead_kg": 1
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 0.8,
   "adopt_yrs": 0.1,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1201,6 +1264,7 @@
   "id": "in2_spectrograph_grating",
   "name": "Spectrograph: grating camera",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "spectroscope",
    "opt_diffraction_grating"
@@ -1218,14 +1282,14 @@
    "glass_raw_kg": 2,
    "silver_kg": 0.5
   },
-  "cap": 3000,
-  "up": 250,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.2,
   "adopt_yrs": 0.2,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1251,14 +1315,14 @@
    "glass_raw_kg": 5,
    "diamond_g": 1.0
   },
-  "cap": 4000,
-  "up": 300,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 0,
   "dev_years": 25,
   "dev_people": 4,
   "risk": 0.2,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 5,
   "conf": "B",
@@ -1268,6 +1332,7 @@
   "id": "in2_ruling_engine",
   "name": "Ruling engine: precision screw diamond",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw",
    "cap_tol_1um",
@@ -1291,14 +1356,14 @@
    "iron_bar_kg": 50.0,
    "steel_noric_kg": 8.0
   },
-  "cap": 8000,
-  "up": 500,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 10080.939587064662,
   "build_yrs": 3,
   "adopt_yrs": 0.1,
   "dev_years": 40,
   "dev_people": 6,
   "risk": 0.25,
-  "rev": 2000,
+  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 5,
   "conf": "B",
@@ -1325,14 +1390,14 @@
    "glass_raw_kg": 4,
    "mat_mercury": 1
   },
-  "cap": 2500,
-  "up": 200,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1342,6 +1407,7 @@
   "id": "in2_interferometer_fabry_perot",
   "name": "Interferometer: Fabry-P\u00e9rot etalon",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "mirror_amalgam"
   ],
@@ -1358,14 +1424,14 @@
    "glass_raw_kg": 3,
    "silver_kg": 2
   },
-  "cap": 3000,
-  "up": 250,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.8,
   "adopt_yrs": 0.2,
   "dev_years": 22,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1375,6 +1441,7 @@
   "id": "in2_mass_spectrograph",
   "name": "Mass spectrograph: deflection",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "discharge_xray"
@@ -1393,14 +1460,14 @@
    "copper_kg": 15,
    "iron_bar_kg": 30
   },
-  "cap": 6000,
-  "up": 400,
+  "cap_hours": 120971.27504477595,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2.5,
   "adopt_yrs": 0.2,
   "dev_years": 30,
   "dev_people": 5,
   "risk": 0.22,
-  "rev": 2000,
+  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1410,6 +1477,7 @@
   "id": "in2_cyclotron",
   "name": "Cyclotron accelerator: magnet and RF coil",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "cap_heat_1300"
@@ -1428,14 +1496,14 @@
    "copper_kg": 100,
    "iron_bar_kg": 200
   },
-  "cap": 50000,
-  "up": 3000,
+  "cap_hours": 1008093.9587064662,
+  "up_hours": 60485.63752238797,
   "build_yrs": 4,
   "adopt_yrs": 0.3,
   "dev_years": 40,
   "dev_people": 8,
   "risk": 0.3,
-  "rev": 20000,
+  "rev_hours": 403237.5834825865,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1445,6 +1513,7 @@
   "id": "in2_van_de_graaff_generator",
   "name": "Van de Graaff static generator",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "electrostatics"
@@ -1463,14 +1532,14 @@
    "copper_kg": 50,
    "mat_leather": 20
   },
-  "cap": 8000,
-  "up": 500,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 10080.939587064662,
   "build_yrs": 3,
   "adopt_yrs": 0.2,
   "dev_years": 35,
   "dev_people": 5,
   "risk": 0.25,
-  "rev": 3000,
+  "rev_hours": 60485.63752238797,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1480,6 +1549,7 @@
   "id": "in2_cloud_chamber_wilson",
   "name": "Cloud chamber: Wilson expansion chamber",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "glass_labware",
    "sc2_physics_nucleus_discovery"
@@ -1498,14 +1568,14 @@
    "iron_bar_kg": 20,
    "lead_kg": 10
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 0.1,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.18,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1515,6 +1585,7 @@
   "id": "in2_photographic_emulsion",
   "name": "Photographic emulsion detector",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "photography"
   ],
@@ -1530,14 +1601,14 @@
    "silver_nitrate_kg": 0.05,
    "gelatin_kg": 5
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1547,6 +1618,7 @@
   "id": "in2_xray_diffraction_camera",
   "name": "X-ray diffraction camera: Bragg geometry",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "mirror_amalgam"
@@ -1564,14 +1636,14 @@
    "glass_raw_kg": 2,
    "iron_bar_kg": 15
   },
-  "cap": 3500,
-  "up": 250,
+  "cap_hours": 70566.57710945263,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 18,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 1300,
+  "rev_hours": 26210.442926368123,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1581,6 +1653,7 @@
   "id": "in2_electron_diffraction_camera",
   "name": "Electron diffraction camera: LEED",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "cap_vac_1e3"
@@ -1598,25 +1671,27 @@
    "glass_raw_kg": 2,
    "iron_bar_kg": 20
   },
-  "cap": 4000,
-  "up": 300,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 0.1,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 4,
   "conf": "C",
   "note": "Electron wavelength < 1 Angstrom; very small diffraction angles. Phosphor screen detects diffraction pattern. Low-energy electrons (50-500 eV) scatter strongly from top layers.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_ultracentrifuge",
   "name": "Ultracentrifuge: high-speed rotor",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac",
    "cap_tol_10um"
@@ -1634,14 +1709,15 @@
    "iron_bar_kg": 50,
    "steel_plate_kg": 30
   },
-  "cap": 8000,
-  "up": 600,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 12097.127504477594,
   "build_yrs": 2.5,
   "adopt_yrs": 0.2,
   "dev_years": 25,
   "dev_people": 4,
   "risk": 0.2,
-  "rev": 2000,
+  "rev_hours": 40323.75834825865,
+  "output_unbounded_reason": "its entries add less than their staff cost at solved prices and state no labour or plant, so a declared output would derive zero revenue",
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -1651,6 +1727,7 @@
   "id": "in2_ph_meter_potentiometer",
   "name": "pH meter: glass electrode potentiometer",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "daniell_cell",
    "vacuum_tube"
@@ -1669,14 +1746,14 @@
    "glass_lead_kg": 1,
    "copper_kg": 3
   },
-  "cap": 2500,
-  "up": 200,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 0.3,
   "dev_years": 18,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1686,6 +1763,7 @@
   "id": "in2_oscilloscope_crt",
   "name": "Oscilloscope: cathode ray tube display",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "electromagnet"
@@ -1705,14 +1783,14 @@
    "copper_kg": 15,
    "zinc_sulfide_kg": 1
   },
-  "cap": 5000,
-  "up": 400,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2,
   "adopt_yrs": 0.4,
   "dev_years": 30,
   "dev_people": 5,
   "risk": 0.2,
-  "rev": 3000,
+  "rev_hours": 60485.63752238797,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1722,6 +1800,7 @@
   "id": "in2_strain_gauge_electric",
   "name": "Strain gauge: bonded resistance wire",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "micrometer_gauges",
    "copper_refining"
@@ -1736,25 +1815,27 @@
    "constantan_kg": 0.05,
    "mat_silk": 0.5
   },
-  "cap": 1000,
-  "up": 70,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
   "note": "Temperature compensation via dummy gauge. Bridge circuit nulls initial resistance; strain produces bridge imbalance. Gauge factor (delta-R/R per unit strain) is material-dependent and reproducible.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_strain_gauge_bridge",
   "name": "Strain gauge bridge amplifier",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_strain_gauge_electric",
    "vacuum_tube"
@@ -1771,14 +1852,14 @@
   "mat": {
    "copper_kg": 5
   },
-  "cap": 2500,
-  "up": 200,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.2,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1788,6 +1869,7 @@
   "id": "in2_wind_tunnel_subsonic",
   "name": "Wind tunnel: subsonic test section",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_steam",
    "cap_tol_100um"
@@ -1805,14 +1887,14 @@
    "cast_iron_kg": 200,
    "iron_bar_kg": 100
   },
-  "cap": 8000,
-  "up": 600,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 12097.127504477594,
   "build_yrs": 2.5,
   "adopt_yrs": 0.3,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.18,
-  "rev": 2000,
+  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1822,6 +1904,7 @@
   "id": "in2_shock_tube",
   "name": "Shock tube: driven and dump sections",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1600"
   ],
@@ -1837,14 +1920,14 @@
    "iron_bar_kg": 100,
    "steel_plate_kg": 50
   },
-  "cap": 6000,
-  "up": 400,
+  "cap_hours": 120971.27504477595,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2,
   "adopt_yrs": 0.1,
   "dev_years": 25,
   "dev_people": 3,
   "risk": 0.2,
-  "rev": 2000,
+  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1854,6 +1937,7 @@
   "id": "in2_towing_tank",
   "name": "Towing tank: model boat resistance measurement",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_water"
   ],
@@ -1869,14 +1953,14 @@
    "steel_plate_kg": 500,
    "iron_bar_kg": 200
   },
-  "cap": 12000,
-  "up": 800,
+  "cap_hours": 241942.5500895519,
+  "up_hours": 16129.50333930346,
   "build_yrs": 3,
   "adopt_yrs": 0.2,
   "dev_years": 25,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1886,6 +1970,7 @@
   "id": "in2_vibration_table",
   "name": "Vibration table: shaker with electromagnet",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "cap_power_electric"
@@ -1903,14 +1988,14 @@
    "copper_kg": 20,
    "iron_bar_kg": 50
   },
-  "cap": 4000,
-  "up": 300,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 6048.563752238797,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1920,6 +2005,7 @@
   "id": "in2_fatigue_machine",
   "name": "Fatigue test machine: rotating bending",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac"
   ],
@@ -1935,14 +2021,14 @@
    "cast_iron_kg": 80,
    "iron_bar_kg": 40
   },
-  "cap": 3000,
-  "up": 250,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -1952,6 +2038,7 @@
   "id": "in2_creep_furnace",
   "name": "Creep furnace: constant load at high temperature",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1600"
   ],
@@ -1968,14 +2055,14 @@
    "iron_bar_kg": 30,
    "clay_kg": 100
   },
-  "cap": 3500,
-  "up": 350,
+  "cap_hours": 70566.57710945263,
+  "up_hours": 7056.657710945264,
   "build_yrs": 1.8,
   "adopt_yrs": 0.1,
   "dev_years": 18,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -1985,6 +2072,7 @@
   "id": "in2_high_pressure_cell",
   "name": "High pressure cell: diamond anvil or autoclave",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "cap_heat_1600"
@@ -2000,14 +2088,14 @@
   "mat": {
    "tool_steel_kg": 20
   },
-  "cap": 5000,
-  "up": 400,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2,
   "adopt_yrs": 0.1,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.18,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2017,6 +2105,7 @@
   "id": "in2_cryostat_dewar_flask",
   "name": "Cryostat: dewar flask double-walled",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "fused_quartz"
   ],
@@ -2033,14 +2122,14 @@
    "glass_raw_kg": 5,
    "mat_mercury": 0.5
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 0.1,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2050,6 +2139,7 @@
   "id": "in2_joule_thomson_valve",
   "name": "Joule-Thomson expansion valve",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1300"
   ],
@@ -2065,14 +2155,14 @@
    "iron_bar_kg": 10,
    "steel_plate_kg": 5
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2082,6 +2172,7 @@
   "id": "in2_linde_cycle_expansion_engine",
   "name": "Linde cycle: expansion engine and recuperator",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_joule_thomson_valve"
   ],
@@ -2097,14 +2188,15 @@
    "iron_bar_kg": 50,
    "copper_kg": 20
   },
-  "cap": 4500,
-  "up": 300,
+  "cap_hours": 90728.45628358195,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 0.2,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
+  "output_unbounded_reason": "its entries add less than their staff cost at solved prices and state no labour or plant, so a declared output would derive zero revenue",
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2114,6 +2206,7 @@
   "id": "in2_claude_cycle_air_liquefaction",
   "name": "Claude cycle: air liquefaction with work extraction",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_linde_cycle_expansion_engine"
   ],
@@ -2129,14 +2222,15 @@
    "iron_bar_kg": 60,
    "copper_kg": 25
   },
-  "cap": 5000,
-  "up": 350,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 7056.657710945264,
   "build_yrs": 2.2,
   "adopt_yrs": 0.2,
   "dev_years": 22,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 1800,
+  "rev_hours": 36291.382513432785,
+  "output_unbounded_reason": "the line's basis unit is not a kilogram, so a declared annual_output_t cannot bound it",
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2146,6 +2240,7 @@
   "id": "in2_adiabatic_demagnetization",
   "name": "Adiabatic demagnetization apparatus",
   "cat": "laboratory",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "in2_cryostat_dewar_flask"
@@ -2161,14 +2256,14 @@
   "mat": {
    "iron_bar_kg": 50
   },
-  "cap": 8000,
-  "up": 600,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 12097.127504477594,
   "build_yrs": 2.5,
   "adopt_yrs": 0.1,
   "dev_years": 25,
   "dev_people": 3,
   "risk": 0.19,
-  "rev": 2000,
+  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2178,6 +2273,7 @@
   "id": "in2_chain_surveyor",
   "name": "Measuring chain: steel links",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2190,14 +2286,14 @@
   "mat": {
    "iron_bar_kg": 10
   },
-  "cap": 200,
-  "up": 20,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 403.2375834825865,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2207,6 +2303,7 @@
   "id": "in2_tape_measure_steel",
   "name": "Steel measuring tape: wound on reel",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2220,14 +2317,14 @@
   "mat": {
    "steel_plate_kg": 15
   },
-  "cap": 300,
-  "up": 25,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 504.0469793532331,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2237,6 +2334,7 @@
   "id": "in2_spirit_level",
   "name": "Spirit level: bubble in tube",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -2250,14 +2348,14 @@
    "glass_raw_kg": 2,
    "brass_kg": 3
   },
-  "cap": 400,
-  "up": 30,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2267,6 +2365,7 @@
   "id": "in2_theodolite",
   "name": "Theodolite: angle measurement",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spirit_level",
    "micrometer_gauges",
@@ -2293,14 +2392,14 @@
    "iron_bar_kg": 30.0,
    "timber_m3": 0.4
   },
-  "cap": 2500,
-  "up": 150,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.5,
   "adopt_yrs": 0,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 900,
+  "rev_hours": 18145.691256716393,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2310,6 +2409,7 @@
   "id": "in2_tacheometer",
   "name": "Tacheometer: distance and elevation measurement",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_theodolite"
   ],
@@ -2326,14 +2426,14 @@
    "brass_kg": 12,
    "glass_raw_kg": 4
   },
-  "cap": 2000,
-  "up": 120,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1.2,
   "adopt_yrs": 0.1,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2343,6 +2443,7 @@
   "id": "in2_plane_table",
   "name": "Plane table: graphical surveying",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spirit_level",
    "cap_tol_1mm",
@@ -2362,14 +2463,14 @@
    "timber_m3": 0.3,
    "wood_kg": 10.0
   },
-  "cap": 500,
-  "up": 40,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 7,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2379,6 +2480,7 @@
   "id": "in2_alidade_ruler",
   "name": "Alidade: sight ruler for plane table",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_plane_table"
   ],
@@ -2392,14 +2494,14 @@
    "brass_kg": 5,
    "glass_raw_kg": 1
   },
-  "cap": 600,
-  "up": 40,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2409,6 +2511,7 @@
   "id": "in2_triangulation_tripod_station",
   "name": "Triangulation: station marker",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_theodolite"
   ],
@@ -2422,14 +2525,14 @@
    "mat_wood": 20,
    "brass_kg": 2
   },
-  "cap": 400,
-  "up": 30,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2439,6 +2542,7 @@
   "id": "in2_baseline_measurement_apparatus",
   "name": "Baseline measurement: apparatus and calibration",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_tape_measure_steel",
    "cap_measure_len"
@@ -2455,14 +2559,14 @@
    "steel_plate_kg": 50,
    "mat_stone": 5000
   },
-  "cap": 2000,
-  "up": 200,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1,
   "adopt_yrs": 0.1,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2472,6 +2576,7 @@
   "id": "in2_geodetic_apparatus",
   "name": "Geodetic survey apparatus complete",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_baseline_measurement_apparatus",
    "in2_theodolite"
@@ -2489,14 +2594,14 @@
    "brass_kg": 20,
    "glass_raw_kg": 8
   },
-  "cap": 5000,
-  "up": 400,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2,
   "adopt_yrs": 0.2,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2506,6 +2611,7 @@
   "id": "in2_precise_levelling_rod",
   "name": "Precise levelling: rod and staff",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spirit_level",
    "micrometer_gauges"
@@ -2524,14 +2630,14 @@
    "brass_kg": 10,
    "mat_wood": 15
   },
-  "cap": 2000,
-  "up": 120,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1.2,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2541,6 +2647,7 @@
   "id": "in2_gravimeter_spring_balance",
   "name": "Gravimeter: spring balance portable",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "micrometer_gauges"
   ],
@@ -2557,14 +2664,14 @@
    "tool_steel_kg": 5,
    "iron_bar_kg": 10
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 0.1,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2574,6 +2681,7 @@
   "id": "in2_magnetometer_compass",
   "name": "Magnetometer: sensitive compass",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "galvanometer",
@@ -2592,14 +2700,14 @@
    "quartz_tube_kg": 0.001,
    "lodestone_kg": 1
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2627,14 +2735,14 @@
    "glass_raw_kg": 4,
    "mat_mercury": 1
   },
-  "cap": 2500,
-  "up": 150,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.5,
   "adopt_yrs": 0,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2644,6 +2752,7 @@
   "id": "in2_artificial_horizon_bubble",
   "name": "Artificial horizon: bubble level",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spirit_level"
   ],
@@ -2658,14 +2767,14 @@
   "mat": {
    "glass_raw_kg": 1
   },
-  "cap": 300,
-  "up": 20,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 403.2375834825865,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 4,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2675,6 +2784,7 @@
   "id": "in2_marine_chronometer",
   "name": "Marine chronometer: spring balance compensation",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "clock_pendulum",
    "master_screw",
@@ -2697,14 +2807,14 @@
    "brass_kg": 200.0,
    "steel_noric_kg": 1.0
   },
-  "cap": 3000,
-  "up": 250,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 5040.469793532331,
   "build_yrs": 2,
   "adopt_yrs": 0.1,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -2714,6 +2824,7 @@
   "id": "in2_chronometer_rate_check",
   "name": "Chronometer rate observation",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_marine_chronometer"
   ],
@@ -2727,14 +2838,14 @@
    "paper_kg": 0.5,
    "brass_kg": 1
   },
-  "cap": 500,
-  "up": 30,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -2744,6 +2855,7 @@
   "id": "in2_sounding_machine_lead_line",
   "name": "Sounding machine: lead line and marks",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_len"
   ],
@@ -2759,14 +2871,14 @@
    "lead_kg": 30,
    "cordage_kg": 100
   },
-  "cap": 200,
-  "up": 15,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 302.42818761193985,
   "build_yrs": 0.15,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.04,
-  "rev": 80,
+  "rev_hours": 1612.950333930346,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -2776,6 +2888,7 @@
   "id": "in2_echo_sounder_acoustic",
   "name": "Echo sounder: acoustic depth finder",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "discharge_xray",
@@ -2792,14 +2905,14 @@
   "mat": {
    "iron_bar_kg": 30
   },
-  "cap": 4000,
-  "up": 300,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 0.2,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2809,6 +2922,7 @@
   "id": "in2_gyrocompass",
   "name": "Gyrocompass: spinning rotor",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "motor_transformer_ac"
   ],
@@ -2825,14 +2939,14 @@
    "cast_iron_kg": 200,
    "copper_kg": 40
   },
-  "cap": 6000,
-  "up": 400,
+  "cap_hours": 120971.27504477595,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2.5,
   "adopt_yrs": 0.2,
   "dev_years": 25,
   "dev_people": 4,
   "risk": 0.17,
-  "rev": 2000,
+  "rev_hours": 40323.75834825865,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2842,6 +2956,7 @@
   "id": "in2_gyro_horizon_artificial",
   "name": "Gyro horizon: attitude indicator",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_gyrocompass"
   ],
@@ -2857,14 +2972,14 @@
    "cast_iron_kg": 100,
    "copper_kg": 20
   },
-  "cap": 4000,
-  "up": 300,
+  "cap_hours": 80647.5166965173,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 0.1,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2874,6 +2989,7 @@
   "id": "in2_radio_direction_finder",
   "name": "Radio direction finder: loop antenna",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "radio",
    "electromagnet"
@@ -2890,14 +3006,14 @@
    "copper_kg": 10,
    "mat_wood": 20
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2907,6 +3023,7 @@
   "id": "in2_aerial_camera_mount",
   "name": "Aerial camera: gyro-stabilized mount",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "photography",
    "in2_gyrocompass"
@@ -2924,14 +3041,14 @@
    "copper_kg": 25,
    "aluminium_kg": 15
   },
-  "cap": 5000,
-  "up": 350,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 7056.657710945264,
   "build_yrs": 2.2,
   "adopt_yrs": 0.3,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2941,6 +3058,7 @@
   "id": "in2_photogrammetry_stereoscope",
   "name": "Photogrammetry: stereoscope and comparator",
   "cat": "surveying",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_aerial_camera_mount"
   ],
@@ -2956,14 +3074,14 @@
    "glass_raw_kg": 4,
    "brass_kg": 15
   },
-  "cap": 3000,
-  "up": 200,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 900,
+  "rev_hours": 18145.691256716393,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -2973,6 +3091,7 @@
   "id": "in2_photometer_visual_comparison",
   "name": "Photometer: visual brightness comparison",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_simple_lens"
   ],
@@ -2986,14 +3105,14 @@
    "glass_raw_kg": 2,
    "brass_kg": 3
   },
-  "cap": 600,
-  "up": 40,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3003,6 +3122,7 @@
   "id": "in2_bolometer_thermal_detector",
   "name": "Bolometer: blackened platinum resistance",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "micrometer_gauges",
    "mat_platinum_bulk"
@@ -3019,14 +3139,14 @@
    "platinum_g": 200.0,
    "paper_kg": 1
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0.1,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3036,6 +3156,7 @@
   "id": "in2_photocell_vacuum_photoelectric",
   "name": "Photocell: vacuum photoelectric",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "discharge_xray",
    "vacuum_tube"
@@ -3049,25 +3170,27 @@
   "mat": {
    "caesium_g": 10.0
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 0.1,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "C",
   "note": "Quantum efficiency 5-10 percent; spectral response depends on cathode material. Cathode sensitivity to residual gas vapor is problem.",
   "gov": 1,
-  "sus": 8
+  "sus": 8,
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "in2_photomultiplier_cascade_amplifier",
   "name": "Photomultiplier: secondary emission cascade",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_photocell_vacuum_photoelectric",
    "vacuum_tube"
@@ -3084,14 +3207,14 @@
   "mat": {
    "copper_beryllium_kg": 0.1
   },
-  "cap": 2500,
-  "up": 200,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3101,6 +3224,7 @@
   "id": "in2_spectral_radiometer",
   "name": "Spectral radiometer: grating and photocells",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_spectrograph_grating",
    "in2_photomultiplier_cascade_amplifier",
@@ -3117,14 +3241,14 @@
   "mat": {
    "glass_raw_kg": 3
   },
-  "cap": 5000,
-  "up": 400,
+  "cap_hours": 100809.39587064662,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2,
   "adopt_yrs": 0.2,
   "dev_years": 20,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3134,6 +3258,7 @@
   "id": "in2_electroscope_gold_leaf",
   "name": "Electroscope: gold leaf detector",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "electrostatics"
   ],
@@ -3147,14 +3272,14 @@
    "glass_raw_kg": 2,
    "mat_gold": 0.001
   },
-  "cap": 400,
-  "up": 30,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 120,
+  "rev_hours": 2419.425500895519,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3166,6 +3291,7 @@
   "id": "in2_ionisation_chamber",
   "name": "Ionisation chamber: gas filled detector",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_electroscope_gold_leaf"
   ],
@@ -3182,14 +3308,14 @@
    "glass_raw_kg": 3,
    "brass_kg": 5
   },
-  "cap": 1000,
-  "up": 80,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.7,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3199,6 +3325,7 @@
   "id": "in2_geiger_counter",
   "name": "Geiger-M\u00fcller counter: proportional region",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_ionisation_chamber"
   ],
@@ -3215,14 +3342,14 @@
    "glass_raw_kg": 2,
    "brass_kg": 8
   },
-  "cap": 1500,
-  "up": 120,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3232,6 +3359,7 @@
   "id": "in2_scintillation_detector",
   "name": "Scintillation detector: crystal and photomultiplier",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_photomultiplier_cascade_amplifier"
   ],
@@ -3247,14 +3375,14 @@
   "mat": {
    "zinc_sulfide_kg": 5
   },
-  "cap": 3000,
-  "up": 250,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.5,
   "adopt_yrs": 0.2,
   "dev_years": 18,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3264,6 +3392,7 @@
   "id": "in2_travelling_microscope",
   "name": "Travelling microscope for length measurement",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "microscope_compound",
    "micrometer_gauges"
@@ -3281,14 +3410,14 @@
    "glass_raw_kg": 2,
    "iron_bar_kg": 20
   },
-  "cap": 1800,
-  "up": 120,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1,
   "adopt_yrs": 0.1,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3312,14 +3441,14 @@
    "glass_raw_kg": 3,
    "iron_bar_kg": 30
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 0.2,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3329,6 +3458,7 @@
   "id": "in2_analytical_balance",
   "name": "Analytical balance: equal arm",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_mass_mg"
   ],
@@ -3342,14 +3472,14 @@
    "iron_bar_kg": 10,
    "brass_kg": 5
   },
-  "cap": 600,
-  "up": 50,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3359,6 +3489,7 @@
   "id": "in2_torsion_balance",
   "name": "Torsion balance: vertical fiber suspension",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_analytical_balance",
    "fused_quartz"
@@ -3375,14 +3506,14 @@
    "quartz_tube_kg": 0.001,
    "glass_raw_kg": 2
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0.1,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3392,6 +3523,7 @@
   "id": "in2_microbalance_quartz",
   "name": "Microbalance: quartz oscillator frequency shift",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_quartz_resonator_frequency",
    "el2_quartz_crystal"
@@ -3406,14 +3538,14 @@
    "electrician": 350
   },
   "mat": {},
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3423,6 +3555,7 @@
   "id": "in2_thermocouple",
   "name": "Thermocouple: junction EMF measurement",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "daniell_cell"
   ],
@@ -3437,14 +3570,14 @@
    "copper_kg": 1,
    "constantan_kg": 1
   },
-  "cap": 400,
-  "up": 25,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 504.0469793532331,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -3454,6 +3587,7 @@
   "id": "in2_resistance_thermometer_RTD",
   "name": "Resistance thermometer: platinum RTD",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "copper_refining"
   ],
@@ -3468,14 +3602,14 @@
   "mat": {
    "platinum_g": 500.0
   },
-  "cap": 1200,
-  "up": 80,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3485,6 +3619,7 @@
   "id": "in2_gas_thermometry_absolute",
   "name": "Gas thermometry: absolute temperature scale",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "thermometer",
    "cap_measure_len"
@@ -3501,14 +3636,14 @@
    "glass_raw_kg": 5,
    "mat_mercury": 2
   },
-  "cap": 3000,
-  "up": 250,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 5040.469793532331,
   "build_yrs": 1.5,
   "adopt_yrs": 0.1,
   "dev_years": 20,
   "dev_people": 2,
   "risk": 0.16,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3518,6 +3653,7 @@
   "id": "in2_mercury_barometer",
   "name": "Mercury barometer: column height",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "thermometer"
   ],
@@ -3531,14 +3667,14 @@
    "glass_raw_kg": 2,
    "mat_mercury": 5
   },
-  "cap": 600,
-  "up": 40,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3548,6 +3684,7 @@
   "id": "in2_aneroid_capsule",
   "name": "Aneroid pressure gauge: evacuated bellows",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um"
   ],
@@ -3563,14 +3700,14 @@
    "brass_kg": 10,
    "steel_plate_kg": 5
   },
-  "cap": 1000,
-  "up": 70,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.7,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3593,14 +3730,14 @@
    "brass_kg": 15,
    "steel_plate_kg": 8
   },
-  "cap": 1200,
-  "up": 80,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.8,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3610,6 +3747,7 @@
   "id": "in2_mcleod_vacuum_gauge",
   "name": "McLeod gauge: compression manometer",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_mercury_barometer"
   ],
@@ -3625,14 +3763,14 @@
    "glass_raw_kg": 3,
    "mat_mercury": 2
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 0.1,
   "dev_years": 12,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3642,6 +3780,7 @@
   "id": "in2_quartz_resonator_frequency",
   "name": "Quartz resonator: piezoelectric oscillator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "fused_quartz",
    "el2_quartz_crystal"
@@ -3656,14 +3795,14 @@
    "electrician": 200
   },
   "mat": {},
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 0.2,
   "dev_years": 15,
   "dev_people": 2,
   "risk": 0.15,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 0,
   "art": 3,
   "conf": "C",
@@ -3673,6 +3812,7 @@
   "id": "in2_orifice_flow_meter",
   "name": "Orifice plate: differential pressure flow measurement",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_mercury_barometer"
   ],
@@ -3686,14 +3826,14 @@
    "brass_kg": 5,
    "iron_bar_kg": 10
   },
-  "cap": 800,
-  "up": 50,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 6,
   "dev_people": 1,
   "risk": 0.09,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -3703,6 +3843,7 @@
   "id": "in2_venturi_flow_meter",
   "name": "Venturi tube: smooth convergent-divergent flow",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "in2_orifice_flow_meter"
   ],
@@ -3718,14 +3859,14 @@
    "mat_bronze": 20,
    "brass_kg": 10
   },
-  "cap": 1500,
-  "up": 100,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.8,
   "adopt_yrs": 0.1,
   "dev_years": 10,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 2,
   "conf": "C",
@@ -3747,14 +3888,14 @@
   "mat": {
    "brass_kg": 3
   },
-  "cap": 400,
-  "up": 30,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 1,
   "conf": "C",
@@ -3764,6 +3905,7 @@
   "id": "in2_balance_spring_watch",
   "name": "Balance spring: spiral hairspring",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "master_screw"
   ],
@@ -3778,14 +3920,14 @@
   "mat": {
    "steel_plate_kg": 0.5
   },
-  "cap": 2000,
-  "up": 150,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1.2,
   "adopt_yrs": 0,
   "dev_years": 15,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 900,
+  "rev_hours": 18145.691256716393,
   "sch": 0,
   "art": 4,
   "conf": "C",
@@ -3795,6 +3937,7 @@
   "id": "in2_tuning_fork_oscillator",
   "name": "Tuning fork: acoustic resonator",
   "cat": "measurement",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_heat_1100"
   ],
@@ -3807,14 +3950,14 @@
   "mat": {
    "steel_plate_kg": 0.5
   },
-  "cap": 500,
-  "up": 40,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 8,
   "dev_people": 1,
   "risk": 0.09,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "C",

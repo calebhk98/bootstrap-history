@@ -2,7 +2,7 @@
 
 Direction for making the government actor a real participant rather than a
 scaffold. Current behaviour is in `ACTORS.md`; the tracked problems are
-`Complaints/189` (actors run but nothing reads them) and `Complaints/107`.
+`Complaints/185` (actors run but nothing reads them) and `Complaints/103`.
 Stakeholder decision recorded in 189: no quick fix. Do not skip the actor
 phase and do not wire a token consumer. Even a single-player game is
 multiplayer, because the country (Rome, China, ...) is another player, without
@@ -55,7 +55,7 @@ from outside, and nothing outside can be attributed to them.
   each such edge is named.
 - A consumer is built only after its producer has a real budget. A state
   spending rule sitting on an invented purse would be numbers on numbers
-  (the same argument `Complaints/109` makes about state finance).
+  (the same argument `Complaints/105` makes about state finance).
 - Heuristics stay labelled (`declare(..., kind="temporary_heuristic")`) and
   each increment says which ones it retires.
 
@@ -91,7 +91,13 @@ consumer.
 Retires: nothing yet. It is the precondition for 2 to 5, because a state
 whose purse is not fed by real flows cannot be given real spending.
 
-### 2. Firms and the state are taxed and assessed by the same rule
+### 2. Firms and the state are taxed and assessed by the same rule (done)
+
+Built: `society_state_pressure` assesses any actor through `visible_scale` and
+splits the levy with `levy_shares`; the founder's `household_scale` and the
+requisition and office reports use them. Firms are still too small to cross
+the notice line, so in practice their levy is zero; measure with a long run
+before assuming otherwise.
 
 Reads: an actor's visible wealth and staff (the same `household_scale` idea,
 computed for any actor from what an observer can see), the civilisation's
@@ -105,7 +111,12 @@ Tests: a firm and the founder with equal visible scale are assessed equally;
 a state with no capacity collects nothing from either. Fingerprint: firm
 years only.
 
-### 3. The state's know-how is the state's adoption
+### 3. The state's know-how is the state's adoption (done)
+
+Built: `state_military_diffusion` is the share of the founder's military
+inventions the government actor holds; the half-life constants are retired.
+Still open: that share falls as the founder invents more weapons, so the war
+relief caps need a per-weapon basis (`Complaints/330`).
 
 Reads: the government's knowledge and copies in progress.
 Changes: `state_military_diffusion` and the state's other adoption effects read
@@ -119,7 +130,17 @@ it should be caused by a budget model, not an arbitrary constant).
 Tests: fewer funded copies, less relief; the existing craftsmen-wording
 checks on state military diffusion are rewritten to the mechanism.
 
-### 4. Firm output reaches the market
+### 4. Firm output reaches the market (done)
+
+Built: `Sim.actor_supply(material)` sums every firm's and government's
+concerns in tonnes a year, scaled by ramp and staffing, excluding the
+founder's; `actor_concerns_in(category)` and `actor_market_version()` key the
+goods-category cache. Firms also hire from the same reachable trade pool as
+the founder (`actor_staff_fte` is subtracted in `market_supply` and
+`hire_check`), except taught-only trades. Still open: a node that makes
+several materials splits its output equally among them (an unlabelled
+heuristic), and a firm's entry value still uses the founder's gross split by
+operators.
 
 Reads: every actor's concerns as supply into a goods category.
 Changes: the founder's goods market factor counts firm supply. A firm's takings
@@ -127,9 +148,15 @@ come out of the same demand the founder sells into, so takings are no longer
 created.
 Replaces: `diffusion_share` and the category supply counting only the
 founder's concerns (heuristic retired: the leak to unnamed competitors).
-Touches economy code; needs the demand wiring in `Complaints/106`.
+Touches economy code; needs the demand wiring in `Complaints/102`.
 
-### 5. The state's demand and labour
+### 5. The state's demand and labour (done)
+
+Built: the government keeps a budget (`sim/engine/actors/budget.py`,
+`world_budget.py`): an army and officials, paid at market wages and equipped
+through `military_logistics`; its staff come out of the shared labour pool and
+its iron purchases reach the market as `actor_demand_tonnes`. Its spending
+covers only those two lines, so every state runs a surplus (`Complaints/286`).
 
 Reads: the state's outlays by purpose from 1.
 Changes: what the state spends on wages and goods is demand: staff hired by
@@ -140,22 +167,29 @@ becomes a payment from the treasury to the founder, replacing
 Replaces: `state_funding`, the wage the founder pays for trades the state
 also hires.
 
-### 6. The state's need drives the levy
+### 6. The state's need drives the levy (done)
+
+Built: every visible actor, founder and firms alike, pays the society's
+ordinary share (`starting_tax_share` times state capacity) through
+`levy_shares`, and a need-driven levy on top raises the unfunded part of the
+budget, capped at `LEVY_RATE_CEILING`. The army moves toward what the state
+can pay at `ARMY_ADJUSTMENT_RATE`. Still open: the force the state wants
+follows population, not threat (`Complaints/286`); patron funding (`Complaints/287`).
 
 Reads: a spending model (standing costs, war, garrison from
 `sim/world/military_logistics.py`) against receipts.
 Changes: the shortfall between need and revenue is what the state seeks to
 raise, from those it can see, instead of a per-civilisation share of revenue.
 Replaces: `requisition_base_share`, `office_base_share` and the military demand
-shares as civilisation data (`Complaints/109`).
+shares as civilisation data (`Complaints/105`).
 
 ### 7. Other countries and fog
 
 Several governments, each with its own location, purse and view. A foreign
-state sees only what reaches it (`Complaints/113`). Interest groups
-(`Complaints/114`) are actors that press the state's policy.
+state sees only what reaches it (`Complaints/109`). Interest groups
+(`Complaints/110`) are actors that press the state's policy.
 
 ## Not decided here
 
 How a state's policy is chosen when a human plays it (the callback policy
-exists); credit and bonds for the state (`Complaints/110`).
+exists); credit and bonds for the state (`Complaints/106`).

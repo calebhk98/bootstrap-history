@@ -57,12 +57,24 @@ Two fixes, usable separately or together:
       {"cmd":"state"}                              current situation, in full
       {"cmd":"available"}                          every node that can legally start now,
                                                     with cost, founder hours, calendar
-                                                    floor, prerequisites and its note
+                                                    floor, prerequisites and its note;
+                                                    each row says on_road_to_goal (yes or
+                                                    no, never a distance) and
+                                                    is_supply_or_capability; a row `start`
+                                                    would refuse carries cannot_pay_now, and
+                                                    the subjects table's you_could_pay_for
+                                                    counts what `start` accepts
       {"cmd":"available","state":"blocked","tag":"mechanical_power"}
                                                    filters: state is startable (default),
                                                     blocked, active or done; tag is a
                                                     topic, category a node category; find
-                                                    also matches stems and topic words.
+                                                    also matches stems and topic words,
+                                                    never a knowledge-file name; a
+                                                    subject that is not a subject
+                                                    heading is searched as find; limit
+                                                    beats all; a find reply carries
+                                                    "how_matched"; an offset past the
+                                                    end says so in "nothing_matched".
                                                     Non-startable states reply with
                                                     "rows" (id, name, tags, why_not,
                                                     missing); an empty search adds
@@ -70,7 +82,29 @@ Two fixes, usable separately or together:
                                                     to nodes the player has heard of.
       {"cmd":"why","id":"zinc_metal"}              the full explanation for one node:
                                                     cost, staff, risk, chain, what it
-                                                    unlocks, why it is or isn't startable
+                                                    unlocks, why it is or isn't startable.
+                                                    A blocked node carries blocked_kind and
+                                                    blockers, a list of {kind, text, ids}
+                                                    (kinds: knowledge, power, supply,
+                                                    specialists, money, politics, closed);
+                                                    the start refusal is the first entry.
+                                                    standing_effect gives the reputation and
+                                                    scandal finishing it adds; hazard_effect,
+                                                    when it softens a hazard ahead, lists
+                                                    {name, kind, years, now, with_it}, the
+                                                    same figures `risk` prints.
+                                                    earliest_completion_years and
+                                                    earliest_completion_year are the
+                                                    soonest finish with no failure;
+                                                    compact adds blocked_kinds and puts
+                                                    the supply options in blocked_by.
+                                                    The heard-of rows of `available`, and
+                                                    the rows of path and stuck, carry kind (stuck
+                                                    also uses calendar and idle; each_kind
+                                                    labels each project in hand). `labour`
+                                                    carries "workforce": single-person
+                                                    dependencies, expected yearly losses,
+                                                    reserve and training.
       {"cmd":"path","id":"zinc_metal"}             everything still undone on the way
                                                     to this node, in dependency order
       {"cmd":"start","id":"zinc_metal"}            begin a project (error explains
@@ -81,6 +115,68 @@ Two fixes, usable separately or together:
                                                     "this_oversubscribes_a_trade" - it
                                                     still starts, this is a warning)
       {"cmd":"stop","id":"zinc_metal"}             abandon a project; sunk cost is sunk
+      {"cmd":"exclude","what":"freedman_staff"}    never let rush, rush preview, auto_open or
+      {"cmd":"exclude","what":"trait:buys_people"}  auto_commission begin this id; also
+      {"cmd":"exclude","what":"category:<cat>"}     category:<cat> and trait:<trait>. Saved with
+      {"cmd":"include","what":"<entry>|all"}        the game; rush and rush preview list what
+      {"cmd":"exclude"}                             they left out, with the reason, under
+                                                    "excluded". Bare exclude lists the entries.
+                                                    `start` by hand is unaffected.
+      {"cmd":"figures"}                            the headline figures that explain their own
+      {"cmd":"figures","id":"<name>"}               change. With an id (cash, income, upkeep,
+      {"cmd":"why","id":"<figure name>"}            recurring_net, population, literacy_general,
+                                                    literacy_elite, price_index, hazard):
+                                                    {name, label, unit, current, previous,
+                                                    previous_year, change, causes:[{cause,
+                                                    previous, current, contribution}], drivers:
+                                                    [{driver, previous, current}], note}.
+                                                    The causes add up to the change; what the
+                                                    named parts leave out is a cause called
+                                                    "not itemised". previous is null until a
+                                                    year has been stepped. Figures register in
+                                                    sim/engine/figures_headline.py. The cash
+                                                    figure takes its causes from the cash book
+                                                    (below), so for cash nothing is left "not
+                                                    itemised" beyond rounding.
+      {"cmd":"money"}                              the ledger screen; its "cash_book" is
+                                                    {year, opening, closing, causes:{cause:
+                                                    signed amount}, earlier_years:[{year,
+                                                    opening, closing, causes}]}: every change to
+                                                    the founder's cash since the last yearly
+                                                    snapshot, by cause (opening + causes =
+                                                    closing). Written by HouseholdState.credit /
+                                                    debit / reset_cash, the only writers of the
+                                                    purse (sim/engine/cash_book.py); a save keeps
+                                                    the open period and a few closed years.
+      {"cmd":"leverage"}                           {leverage_points:[{lever, why_it_matters,
+                                                    figures}], note}: literacy, labour, finance,
+                                                    institutions, knowledge, materials, each
+                                                    from the engine's own figures. `path` adds
+                                                    the same leverage_points plus
+                                                    years_following_the_chain_alone.
+      {"cmd":"disclose"}                           {inventions:[{id, mode, licensees, operating}],
+                                                    can_license_to:[actor ids]}: what you chose for
+                                                    each invention you made; mode is default (it
+                                                    spreads by being seen in use), secret, license
+                                                    or publish.
+      {"cmd":"disclose","id":"<id>","mode":"secret"|"publish"}
+                                                   secret: outsiders learn it only as fast as the
+                                                    trades and materials it needs allow, and
+                                                    believe the concern later. publish: anyone
+                                                    copies at once, you gain standing once, and it
+                                                    cannot be taken back.
+      {"cmd":"disclose","id":"<id>","mode":"license","licensee":"<firm or state id>","fee":N,"royalty":R}
+                                                   the licensee pays `fee` from its purse to you
+                                                    and can make it at once; a firm also pays you
+                                                    share R of its takings each year (a state has
+                                                    no takings, so no royalty). Replies {ok, note,
+                                                    inventions} or {ok:false, error}.
+      {"cmd":"idle"}                               {directed_hours_this_year, committed_hours,
+                                                    idle_hours, delay_kinds:{kind:[ids]},
+                                                    what_the_wait_is, potential_uses:{
+                                                    startable_today, startable_at_no_cash_cost,
+                                                    train_oversubscribed_trades, wage_work}}.
+                                                    Never spends hours.
       {"cmd":"portfolio"}                          every active project: the founder-
                                                     hours it is ACTUALLY getting this
                                                     year and why (its rank in the queue,
@@ -96,6 +192,15 @@ Two fixes, usable separately or together:
       {"cmd":"bounty","id":"zinc_metal"}           post a public prize instead of
                                                     building it yourself (tier <=2 crafts
                                                     only; converts denarii into hours)
+      {"cmd":"quote","what":"bounty","id":"zinc_metal"}   price, multiplier, eligibility and refusal
+      {"cmd":"quote","what":"hire","trade":"smith","n":2}   paid now and due each year after
+      {"cmd":"quote","what":"commission","trade":"smith","hours":200}   fee; hours last this year
+      {"cmd":"quote","what":"open","id":"fin_restaurant"}   the opening charge, before `open`
+      {"cmd":"quote","what":"train","trade":"machinist","n":2}   keep paid now, your hours, and
+                                                    `wage_bill_added_per_year` once they join
+                                                    Each quote returns `paid_now`, the figure the
+                                                    command then charges. hire, commission, open,
+                                                    train and bounty replies carry `paid_now` too.
       {"cmd":"buy","what":"forest","n":100}        buy 100 ha of coppice woodland
       {"cmd":"buy","what":"mine","material":"iron","n":500}   sink a mine
       {"cmd":"buy","what":"slaves","n":4}          the economic actions the optimizer
@@ -111,7 +216,34 @@ Two fixes, usable separately or together:
                                                     do not bank at all between years, so
                                                     an idle year repeated N times is N
                                                     idle years, not one. Non-blocking:
-                                                    the years still run.
+                                                    the years still run. Every reply has
+                                                    "alerts": a short list (empty when
+                                                    quiet) of deaths, sackings, closures,
+                                                    losses, credit trouble and population
+                                                    collapse, worst tier first; the
+                                                    staffing closure line (closed,
+                                                    reopened, still shut, cause, remedies)
+                                                    stands for closures. A disaster year's
+                                                    log lines come back as one "events"
+                                                    row whose "details" lists them; a
+                                                    lasting shortage is "conditions" on
+                                                    every state and step reply (material,
+                                                    throughput, years, trend), logged in
+                                                    full only when new or materially
+                                                    changed. The step also
+                                                    stops early for a concern closed for
+                                                    want of staff, a newly blocked
+                                                    project, a severe failure or the goal
+                                                    becoming startable ("stopped_early").
+                                                    With years>1 and a concern resting
+                                                    on one person, "multi_year_staffing_warning"
+                                                    names it. With --session each
+                                                    simulated year is saved as it ends and
+                                                    a progress line goes to stderr, so an
+                                                    interrupt keeps the finished years.
+                                                    A population fall past a threshold
+                                                    also adds "demographic_emergency" to
+                                                    every state reply.
       {"cmd":"move_base"}                          list the tiles your nation holds that
                                                     you could move to, with people,
                                                     days on the road and the cost
@@ -122,6 +254,45 @@ Two fixes, usable separately or together:
                                                     this year's founder hours, local
                                                     contracts and most local standing.
                                                     Refused for a tile nobody lives on.
+      {"cmd":"map"} / {"cmd":"map","full":true}    the land you hold: "you_are_based_at",
+                                                    "tiles" (name, region, terrain,
+                                                    people, days_from_your_base,
+                                                    "deposits"), "next_door" (bordering
+                                                    tiles not held), "tiles_held". Names
+                                                    are a country and a number; the data
+                                                    names no towns. `move_base` rows carry
+                                                    the same name, region and terrain.
+                                                    Typed: `map`, `country`, `geography`.
+      {"cmd":"education"}                          "literacy" (general and elite, each
+                                                    with its ceiling, share of the
+                                                    ceiling and next year's value),
+                                                    "schools" (the visible schooling
+                                                    nodes), "schooling_flow",
+                                                    "effective_schooling_flow",
+                                                    "literate_trades", "trainees",
+                                                    "not_held".
+      {"cmd":"demography"}                         "cohorts", "last_year" (births, deaths,
+                                                    nutrition_ratio; null until a year has
+                                                    been simulated in this session),
+                                                    "disease_burden", "epidemics_under_way",
+                                                    "trades", "not_held".
+      {"cmd":"divergence"}                         start values against now ("population",
+                                                    "wage_index", "price_index",
+                                                    "literacy_general", "literacy_elite",
+                                                    "territory"), "technologies_you_built",
+                                                    "dated_events" (status happened, under
+                                                    way, upcoming or before the run began;
+                                                    "causes_checked" is false for all) and
+                                                    "cannot_know". Under fog an upcoming
+                                                    event has no name.
+      {"cmd":"finish"}                             end the run here and return the final
+                                                    report with the full score (fog's
+                                                    withheld total included); the save
+                                                    still loads but the run stays ended.
+                                                    A `step` that reaches the goal also
+                                                    returns a "victory" block: date,
+                                                    elapsed years, points so far,
+                                                    achievements, how to get the score.
       {"cmd":"quit"}                               end the session
       {"cmd":"help"}                               front page and topic list
       {"cmd":"help","topic":"commands"}            every command, grouped (see below)
@@ -147,7 +318,10 @@ Two fixes, usable separately or together:
       refused, and the reason says so plainly.
 
       A `step` reply also carries `completed` (each record has `kind`:
-      "technology", "concern" or "granted"), `events`, and, when anything
+      "technology", "concern" or "granted"), `events` (each row has `severity`, one of
+      the eight tiers in `sim/engine/proto/event_severity.py`, run_ending first and
+      informational last; the text rendering lists the worst tiers first and
+      marks them), and, when anything
       completed or failed, `summary`: `completed`, `by_kind`, `failed`,
       `minor_failures` and, when the goal moved, `goal` (`measures` of
       label/before/after and `road_steps_gained`). The text rendering leads
@@ -190,7 +364,41 @@ Two fixes, usable separately or together:
                            other active projects, named by rank and total
       `portfolio`'s own `constraint` field on each project is exactly this
       classification, and is built from the same `waiting_on` sentence, not
-      a second guess at it.
+      a second guess at it. Each project also carries `blocker_kind`, that
+      constraint named in the shared blocker kinds of sim/engine/blockers.py
+      (staffing and trade_hours are specialists, materials is supply,
+      founder_hours is hours), and `portfolio` leads with `bottlenecks`:
+      [{kind, count, projects, hours_still_to_work, what_it_means, pools}],
+      one per kind, most fixable first; pools are the engine's demand against
+      supply for that kind (trade hours, directed hours, capital, the binding
+      material).
+
+      HAZARD FIGURES. In `risk`, each hazard's `what_you_can_do[kind]` carries
+      `mitigations`: one {node, label, status ("in force" or "lapsed"),
+      removes_share, points} per defence, and for a lapsed one closed_because,
+      concern_to_open and how. `staff_loss_before_what_you_have_built`,
+      `staff_loss_after_what_you_have_built`, `output_factor_after_what_you_have_built`
+      and `national_public_health` ({share_removed, from}) are the figures the
+      yearly shocks apply. Each `score` component has a `counts` sentence;
+      `institutions` also lists `counted` and `finished_but_closed`.
+
+      INTEREST GROUPS (Complaint 110). `groups` (aliases `interest_groups`, `factions`) lists
+      the groups the economy has organised against the founder: {name, kind, cause (in words),
+      people, income_lost_per_year, grievance_share, pull_on_the_state, state_undertakes_to_make_good,
+      demands, petitions, organised_since}, with `state_leaves_unpaid_to_raise_from_taxpayers`,
+      `state_in_deficit` and a `note`. `kind` is `displaced_producers` (the society's producers of
+      a commodity the founder sold into the market) or `squeezed_employers` (employers of a trade
+      whose price the founder's and the firms' hiring pushed up). A group's pull is the share of
+      the state's attention its lost income earns; the state's answer is decided by its capacity
+      and its purse: it books the claim as a line of its budget (`concession: group:<kind>:<subject>`),
+      what its purse cannot pay is raised in the levy on taxpayers it sees (`requisition_report`
+      names the group), a state not in deficit may forbid starting the techniques that make the
+      commodity (a `politics` blocker in `why`, lifted by protection above the state-opposition
+      line), and every petition puts blame (scandal) on the founder and a log line naming the
+      group and its cause. `risk` carries `interest_groups` and `state_attention` carries
+      `interest_groups` (names and causes) while any group is organised. Groups are actors of
+      kind `interest_group` in the actor registry (ActorRecord fields `group_kind`, `subject`,
+      `cause`, `members`, `lost_income`, `grievance`, `strength`, `claim`, `demands`).
 
       MACHINE-READABLE MODES. 'state json', 'portfolio json' and 'risk json'
       (typed, inside `play`) print the raw reply - the exact line a script
@@ -199,3 +407,51 @@ Two fixes, usable separately or together:
       have lost runs parsing prose that was never meant to be machine-read.
       It is the identical resp dict either way, so the JSON and the prose can
       never disagree, and fog is scrubbed once, upstream of both.
+
+
+DISPLAY UNITS (Complaint 285)
+-----------------------------------------------------------------------------
+Replies keep the numbers the engine writes. When the player has chosen a unit
+for a dimension (`options`, saved as `display_units` in the application config:
+a unit id per dimension of `area`, `mass`, `temperature`, `money`), every
+quantity of that dimension in any reply gains a sibling field
+`<field>_display`: `{"value": 12.3, "unit": "acre", "symbol": "ac"}`. The
+original field is unchanged and still in its documented unit (`*_hectares` in
+hectares, `*_tonnes` in tonnes, `*_kg` in kilograms, money fields in the
+civilisation's coin). With nothing chosen no `_display` field appears and replies
+are byte-identical to before. Commands take the units their help names.
+
+Which fields are quantities is data: `field_rules` in `data/world/units.json`
+(a regular expression on the field name, the dimension, the native unit).
+Units, their symbols and conversions are data in the same file; a mod adds
+`<mod_id>:<name>` units in its own `data/world/units.json`. Code: `sim/engine/units.py`
+(registry, one `format_<dimension>` per dimension, `add_display`),
+`sim/engine/units_text.py` (text screens), `sim/engine/cli_units_options.py` (the
+options entry). Text screens show the chosen unit's value and symbol.
+Compound units (price per tonne, yield per hectare) are not converted yet.
+
+
+LOANABLE-FUNDS MARKET (Complaint 106)
+-----------------------------------------------------------------------------
+`money` gains `loanable_funds_market`, the civilisation's capital market as it
+met at the start of the current year (the screen prints it as one line under
+the credit limit):
+
+    {"met": true,                      false (and only `market_rate`, the
+                                       civilisation's starting rate) before the
+                                       first yearly meeting
+     "market_rate": 0.12,              yearly rate on loans in the civilisation
+     "funds_lenders_hold": 1.2e10,     what households, firms, the founder and
+                                       the state hold in loanable form (coin)
+     "lenders_will_still_advance_you": null | number
+                                       what lenders still advance beyond what
+                                       others owe; your credit_limit is never more
+     "the_state_owes": 0.0,            what the government actor has borrowed
+     "means": "..."}
+
+`interest_rate_on_arrears` is now the market rate plus a premium that grows
+with the share of `credit_limit` used, less the founder's standing (which only removes premium; the rate is never below the market rate); it is not a
+fixed number for the game. `credit_limit` falls as the market rate rises and is
+bounded by `lenders_will_still_advance_you`. The state's own debt and interest
+appear in `sim/actor_ledger.py` (outlay purpose `interest`; a negative purse is
+debt) and nowhere in the founder's replies.

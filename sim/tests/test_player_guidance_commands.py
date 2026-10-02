@@ -203,7 +203,8 @@ check("...and the dearest society's chain really is the dearest",
 _s_ch = sim(civ="norse_900ad")
 from sim.engine.data import closure as _closure
 # The chain is what is BEHIND it, so the node itself is not in the bill.
-_behind = sorted(_closure(NODES, "telescope") - {"telescope"})
+# and what the society already holds is not still to be paid for.
+_behind = sorted(_closure(NODES, "telescope") - {"telescope"} - set(_s_ch.done))
 check("...and it is the sum of what each of those nodes would actually cost",
       abs(_chains["norse_900ad"]
           - sum(_s_ch.project_cost(node_id) for node_id in _behind)) < 0.5,
@@ -339,6 +340,7 @@ for _p in S.closure(NODES, "lens_grinding"):
 s_can.done.add("lens_grinding")
 s_can._done_changed()
 s_can.artisans = 10.0
+s_can.employees[s_can.venture_foreman("lens_grinding")[0] or "artisan"] = 4.0
 _stuck_can = S._agent_dispatch(s_can, NODES, {"cmd": "stuck"})
 _can_reason = next((reason for reason in _stuck_can["what_is_holding_you_up"]
                    if isinstance(reason, dict)

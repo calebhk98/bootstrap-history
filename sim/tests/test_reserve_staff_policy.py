@@ -1,4 +1,4 @@
-"""reserve_staff: the keep-N-spare part of complaint 180."""
+"""reserve_staff: the keep-N-spare part of complaint 176."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.proto.typed import parse_typed
 

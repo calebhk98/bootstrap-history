@@ -20,7 +20,7 @@ converge here.
   nothing could supply one - "the next lever is therefore NOT more deposit
   data: it is whatever decides how much is demanded."
 
-  Complaints/35 SS4: the stakeholder's own rebuttal to "who buys all this
+  Complaints/reports/playthrough-review-han-china-100-to-400ad.md SS4: the stakeholder's own rebuttal to "who buys all this
   industrial output in an agrarian economy" - "if you have been making
   computers, you are creating the demand by it existing." That is half
   right and half not, and this module is what actually tests which half:
@@ -770,7 +770,7 @@ def market_clearing_price(
 # DERIVED (PRODUCER) DEMAND
 # ============================================================================
 # "If you have been making computers, you are creating the demand by it
-# existing" (Complaints/35 SS4) is exactly right for what a recipe consumes -
+# existing" (Complaints/reports/playthrough-review-han-china-100-to-400ad.md SS4) is exactly right for what a recipe consumes -
 # and data/production/*.json already states every recipe's input
 # coefficients, so this section invents no new number at all. Given a
 # `planned_output_levels` dict (how much of each recipe's own output is

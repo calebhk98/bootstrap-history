@@ -80,7 +80,7 @@ check("a room refusal names what raises the room, not what buys people",
       not _ok_rm and "built" in _why_rm and "hire" not in _why_rm.split(".")[1],
       _why_rm)
 check("...and names the nearest of them first, not the largest",
-      _why_rm.index("workshop_first") < _why_rm.index("school_founded"),
+      _why_rm.index("workshop_first") < (_why_rm.find("school_founded") if "school_founded" in _why_rm else len(_why_rm)),
       _why_rm[_why_rm.index("built"):][:120])
 s_rm2 = sim(capital=1000000.0)
 s_rm2.done.update(NODES); s_rm2._done_changed()

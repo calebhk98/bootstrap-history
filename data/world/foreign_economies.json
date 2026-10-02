@@ -1,0 +1,19 @@
+{
+  "_doc": {
+    "purpose": "Economies other than the player's own that take part in the same markets. Each entry names a civilisation file: its own technologies, wage and coin price its goods (solved, never listed here), its population sizes its market, its home regions place it on the map, and freight over the route between the two places sets which goods can profitably cross.",
+    "fields": "civilization: id of a file in data/civilizations. from_year, until_year: the years it exists as a trading economy (negative is BC). source: where those dates come from. An economy is skipped for the civilisation that is the player's own.",
+    "enabled": "true to let the economy trade; false (or absent) leaves it out of every game. On: measured flows (python3 sim/foreign_trade_report.py) stay small and stable once merchants have a cost and a response (591) and ornament demand saturates (483); Complaints/324 still limits which goods a partner trades.",
+    "not_traded_materials": "Priced things that cannot be carried across a border (land).",
+    "frozen": "A foreign economy's technology stays at its own file's starting_techs for the whole game."
+  },
+  "not_traded_materials": ["hectare_land"],
+  "economies": [
+    {
+      "civilization": "han_china_100ad",
+      "enabled": true,
+      "from_year": -202,
+      "until_year": 220,
+      "source": "Han dynasty, 202 BC to AD 220 (Western and Eastern Han)."
+    }
+  ]
+}

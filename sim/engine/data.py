@@ -10,7 +10,7 @@ ROME 100 AD -> TRANSISTOR : tech-tree simulator, planner and game.
     python3 sim/simulator.py validate
     python3 sim/simulator.py civs                       who you can play
     python3 sim/simulator.py play --manual               free choice, no autopilot
-    python3 sim/simulator.py agent --civ rome_100ad --fog
+    python3 sim/simulator.py agent --civ <civilisation_id> --fog
 
 `agent` speaks one JSON object per line in and one per line out. It explains
 itself: it prints a welcome on first run and answers {"cmd":"help"}. There is
@@ -25,16 +25,19 @@ sys.setrecursionlimit(20000)
 import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
+from .identity_cache import IdentityCache
 from .mods import get_ordered_mods, load_mod_tree
+from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
-from . import money_units, wage_provider
+from . import energy_prices, money_units, node_revenue, wage_provider
+from .default_civilisation import default_civilisation_id
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
-# dictionary read straight from a JSON file (tech_tree.json, prices.json,
+# dictionary read straight from a JSON file (branches,
 # geography.json, resources.json, a civilization file) with no schema
 # object anywhere in the codebase to check it against, so `Dict[str, Any]`
 # is the true type, not a placeholder for one this pass ran out of time to
@@ -42,7 +45,7 @@ from .catalog import (load_mod_tree_nodes, load_production_catalog,
 # particular is not given a `TypedDict` despite CLAUDE.md SS7 naming a core
 # set of its fields (lab, mat, cap, rev, up, ph, sch, art, sus, gov, conf,
 # pre, yrs, kb) - those are the fields every node shares, but the full key
-# set actually present (35 distinct keys across data/tech_tree.json, some
+# set actually present (35 distinct keys across data/branches/, some
 # only on nodes of one particular `kind`) is wider and genuinely
 # kind-dependent, which is exactly the "open and data-driven" case the
 # task's own instructions say stays a plain mapping.
@@ -103,8 +106,6 @@ class SimulationDefaults(TypedDict):
 HERE = os.path.dirname(os.path.abspath(__file__))          # sim/engine
 SIMDIR = os.path.dirname(HERE)                             # sim
 ROOT = os.path.dirname(SIMDIR)                             # rome
-TREE = os.path.join(ROOT, "data", "tech_tree.json")
-PRICES = os.path.join(ROOT, "data", "prices.json")
 STRATS = os.path.join(SIMDIR, "strategies")   # sim/strategies, beside simulator.py
 MODDIR = os.path.join(ROOT, "mods")
 KNOWLEDGE_DIR = os.path.join(ROOT, "docs", "knowledge")   # the how-to library the tree's kb links point into
@@ -166,9 +167,7 @@ _TRADE_REGISTRY = load_trade_registry(ROOT, load_production_catalog(ROOT, MODDIR
 TRADE_REGISTRY = _TRADE_REGISTRY
 
 # Trade identity, availability, and explanatory text belong to the trade
-# registry, not to the legacy table that temporarily supplies their wages.
-# Keeping them here made deleting prices.json impossible even after wages move
-# to the labour market, and inferred availability from English prose.
+# registry.
 def _load_trade_notes() -> Dict[str, str]:
     """Compatibility loader backed by the canonical trade registry."""
     return {trade_id: trade.note for trade_id, trade in _TRADE_REGISTRY.items()}
@@ -196,41 +195,21 @@ def trade_family(trade: str) -> str:
     return TRADE_FAMILY.get(trade, "craft")
 
 
-# WHAT MONEY IS CALLED WHERE YOU ARE. Every civilisation file has carried a
-# `currency` field since the schema was written and not one line of the engine
-# ever read it, so an English player in 1300 counted denarii, hired against an
-# equestrian census and was quoted for papyrus. The engine's arithmetic is all
-# calibrated to Rome 100 AD through price_index, which is a real and defensible
-# modelling choice; calling the unit a denarius in Tenochtitlan is not.
-#
-# The map is from the `currency` field to the form that reads correctly in a
-# sentence like "you have 400 ___". A civilisation whose currency is not listed
-# falls back to its own field, and then to denarii.
-MONEY_WORDS: Dict[str, str] = {
-    "denarius": "denarii",
-    "sterling penny": "pence",
-    "wu zhu cash": "cash",
-    "hacksilver by weight": "in hacksilver",
-    "cacao bean and cotton cloth": "in cacao beans",
-    "Ptolemaic silver tetradrachm": "tetradrachms",
-}
+# What money is called where you are comes from the civilisation file's
+# `currency_words` ({"long": "...", "short": "..."}); a file without it falls
+# back to its `currency` field. Long form reads in "you have 400 ___", short
+# form in compact lines; both come from one place so a sentence cannot mix them.
 
 
-# THE SAME WORD IN BOTH FORMS, except for Rome where "den" is the established
-# abbreviation and appears throughout the notes. Long form and short form must
-# stay in step: if one clause is localised from the payload and the next from
-# the renderer, a sentence can read "needs about 1959 pence, you have 612 den" -
-# the currency drifting between three names inside one message.
-MONEY_SHORT_WORDS: Dict[str, str] = {
-    "denarius": "den", "sterling penny": "pence", "wu zhu cash": "cash",
-    "hacksilver by weight": "hacksilver", "cacao bean and cotton cloth": "beans",
-    "Ptolemaic silver tetradrachm": "tetradr",
-}
+def money_unit_note(civ: Optional[JSONDict]) -> str:
+    """What the money amounts mean, for the start text and `help money`."""
+    return ("Amounts are in %s, but the wage behind them comes from the game's labour "
+            "market, so they will not match surviving price records." % money_word(civ))
 
 
 def money_word(civ: Optional[JSONDict]) -> str:
-    cur = (civ or {}).get("currency") or "denarius"
-    return MONEY_WORDS.get(cur, cur)
+    civ = civ or {}
+    return (civ.get("currency_words") or {}).get("long") or civ.get("currency") or "denarii"
 
 
 @functools.lru_cache(maxsize=None)
@@ -239,6 +218,19 @@ def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wa
     if civilization_id is None:
         return _STARTING_SCHEDULE
     return wage_provider.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
+
+
+_HELD_CIVILISATION_SCHEDULES: Dict[str, wage_provider.wages.WageSchedule] = {}
+
+
+def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
+    """The opening wage schedule of a civilisation record the caller holds (it may exist only in
+    memory), remembered by its whole content so a variant is never served another's schedule."""
+    key = json.dumps(civ, sort_keys=True, default=str)
+    schedule = _HELD_CIVILISATION_SCHEDULES.get(key)
+    if schedule is None:
+        schedule = _HELD_CIVILISATION_SCHEDULES[key] = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    return schedule
 
 
 def kit_capital(kit_id: str, civ: JSONDict) -> float:
@@ -250,14 +242,15 @@ def kit_capital(kit_id: str, civ: JSONDict) -> float:
 
 def money_short(civ: Optional[JSONDict]) -> str:
     """The abbreviation used in compact lines: "400 den", "net +12 den/yr"."""
-    cur = (civ or {}).get("currency") or "denarius"
-    return MONEY_SHORT_WORDS.get(cur, MONEY_WORDS.get(cur, "den"))
+    civ = civ or {}
+    return (civ.get("currency_words") or {}).get("short") or civ.get("currency") or "den"
 
 
-def load_civ(name: str = "rome_100ad") -> JSONDict:
+def load_civ(name: Optional[str] = None) -> JSONDict:
     """A civilization is DATA, not code. Swapping Rome for Han China, Viking
     Norway, Mexica Tenochtitlan or somewhere invented is a different file, not a
     different simulator. See data/civilizations/_SCHEMA.md."""
+    name = name or default_civilisation_id()
     path = os.path.join(CIVDIR, name + ".json")
     base_civ = json.load(open(path)) if os.path.exists(path) else None
     civ = apply_mod_civilization(name, base_civ, get_ordered_mods(MODDIR))
@@ -266,7 +259,7 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
         # civilizations, so the listing below excludes them - the same
         # convention cli.py applies everywhere it lists this directory. An
         # unfiltered listing would answer a typo with "available:
-        # _TECH_EFFECTS, england_1300, ...", naming a file nobody can play.
+        # _TECH_EFFECTS, ...", naming a file nobody can play.
         have = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                       if filename.endswith(".json") and not filename.startswith("_"))
         for manifest in get_ordered_mods(MODDIR):
@@ -293,6 +286,11 @@ def load_civ(name: str = "rome_100ad") -> JSONDict:
         if not isinstance(civ.get(field), (int, float)) or isinstance(civ.get(field), bool):
             raise ValueError("civilization %r must declare a numeric %s"
                              % (civ.get("id", name), field))
+    for form in civ.get("state_revenue", []):
+        if not (isinstance(form.get("form"), str) and isinstance(form.get("basis"), str)
+                and isinstance(form.get("rate"), (int, float)) and form["rate"] > 0):
+            raise ValueError("civilization %r state_revenue form %r needs a name, a basis and a positive rate"
+                             % (civ.get("id", name), form))
     civ.setdefault("values", {})
     for field, default in (("w_military",0.5),("w_labour_saving",0.0),("w_information",0.0),
                  ("w_novelty",0.0),("w_magic_fear",0.4),("w_religious_rigidity",0.3),
@@ -317,80 +315,44 @@ def _in_coin(money: float, document: JSONDict, money_per_labour_hour: float) -> 
     return money / document["money_per_labour_hour"] * money_per_labour_hour
 
 
-def load(use_solved_prices: bool = False,
-         held_technology_ids: Iterable[str] = (),
+def has_luck_component(node: JSONDict) -> bool:
+    """False for a pure concept: science that uses no materials and no hired trades has nothing to go wrong."""
+    return node.get("kind") != "SCIENCE" or bool(node.get("mat")) or bool(node.get("lab"))
+
+
+def load(held_technology_ids: Optional[Iterable[str]] = None,
          civilization_id: Optional[str] = None
          ) -> Tuple[JSONDict, JSONDict, Nodes, Dict[str, float], Dict[str, float]]:
-    """Load the tree and `prices.json`, and derive each node's cost.
+    """Load the tree and derive each node's cost from calculated prices.
 
-    `use_solved_prices` remains off by default for legacy content. If a loaded
-    technology names a material absent from the old goods table, however, the
-    solver runs automatically: this is what lets a self-contained mod add a
-    material without patching `prices.json`. The import stays lazy so an
-    unchanged base-only load retains its historical path and startup cost.
+    Returns (tree, wage document, nodes, wages per hour, goods). The wage
+    document is the opening schedule in the shape the price solver reads.
+    `goods` is the solver's price for every material the recipes can make
+    under `held_technology_ids`, in the civilisation's coin; a material only a
+    technology not yet held can make is priced at the nearest technique that
+    makes it, with the technologies held for everything else (see
+    `sim.engine.prices.priced_goods_table`). A material nothing makes is absent.
+    Left as `None`, `held_technology_ids` is the starting technologies of
+    `civilization_id` (the reference civilisation if none), so a concern's
+    derived revenue is priced against techniques some civilisation holds.
 
-    Passing `use_solved_prices=True` asks `sim.engine.prices` to solve a
-    price for every material it can under `held_technology_ids` (an
-    iterable of tech-tree node ids - typically a civilization's completed
-    node set) and substitutes those into `goods` in place of the book
-    figure, falling back to the book for anything the solver cannot yet
-    price. The RETURN SHAPE is unchanged either way - still the same
-    five-tuple every caller already unpacks - so this is a pure substitution
-    of where `goods`'s numbers came from, not a new thing callers have to
-    learn to read. Node costs (`_labour_cost`, `_material_cost`, `_total_cost`,
-    `_hired_hours`) are then derived from `goods` exactly as before, so a
-    solved material's price flows through to node cost the same way a book
-    one always has.
-
-    Use `goods_provenance()` below to see WHICH materials came from which
-    source, independent of whether this switch is on - that report is the
-    measurable burndown of `data/prices.json`, and it should be checkable
-    without having to first flip the engine's own behaviour.
-
-    `civilization_id` matters only when `use_solved_prices` is True: it
-    decides whose held territory `iugerum_land` prices against (see
-    `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION). It defaults to
-    `None`, which `sim.engine.prices.priced_goods_table` resolves to Rome -
-    the same default the standalone `sim/solve_prices.py --civ`-less run
-    uses - so a caller pricing a NON-ROME civilization's goods table must
-    pass its id here explicitly, or its land is silently priced as Rome's.
+    `civilization_id` decides whose coin and whose held territory prices are
+    stated against (see `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION);
+    the default is the reference civilisation.
     """
     manifests = get_ordered_mods(MODDIR)
     check_all_civilizations(CIVDIR, manifests)
-    with open(TREE) as source:
-        tree = load_mod_tree(json.load(source), manifests, copy_base=False)
-    with open(PRICES) as source:
-        prices = json.load(source)
+    tree = load_mod_tree(load_base_tree(), manifests, copy_base=False)
     nodes = {node["id"]: node for node in tree["nodes"]}
     schedule = starting_schedule(civilization_id)
     wages = schedule.wages_per_hour()
     rate = schedule.money_per_labour_hour
-    book_goods = {key: value["p"] for key, value in prices["purchase_prices_denarii"].items()
-                  if not key.startswith("_")}
-    goods = money_units.convert_book_table(book_goods, rate)
-    required_materials = {material for node in nodes.values()
-                          for material in (node.get("mat") or {})}
-    if use_solved_prices:
-        from . import prices as price_solver
-        goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, book_goods, schedule.document(),
-            civilization_id=civilization_id)
-    elif not required_materials.issubset(goods):
-        # Book prices stay; the solver only fills materials the book lacks.
-        from . import prices as price_solver
-        reference_document = _STARTING_SCHEDULE.document()
-        solved_goods, _provenance = price_solver.priced_goods_table(
-            held_technology_ids, book_goods, reference_document,
-            civilization_id=civilization_id)
-        goods.update({material: _in_coin(solved_goods[material], reference_document, rate)
-                      for material in required_materials - set(goods) if material in solved_goods})
-        unresolved = required_materials - set(goods)
-        if unresolved:
-            # TRANSITIONAL: price era-gated materials as if every technology were held.
-            era_free_goods, _provenance = price_solver.priced_goods_table(
-                list(nodes), book_goods, reference_document, civilization_id=civilization_id)
-            goods.update({material: _in_coin(era_free_goods[material], reference_document, rate)
-                          for material in unresolved if material in era_free_goods})
+    document = schedule.document()
+    if held_technology_ids is None:
+        held_technology_ids = load_civ(civilization_id)["starting_techs"]
+    from . import prices as price_solver
+    goods, _provenance = price_solver.priced_goods_table(
+        held_technology_ids, document, civilization_id=civilization_id)
     production = load_production_catalog(ROOT, MODDIR)
     load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
@@ -406,79 +368,81 @@ def load(use_solved_prices: bool = False,
                                  "production path but is unavailable with the selected "
                                  "technologies" % (node["id"], material))
     for node in nodes.values():
+        if not has_luck_component(node):
+            node["risk"] = 0.0
         # TRANSITIONAL: a material the price solver cannot resolve counts as free, so the cost is a lower bound.
         node["_material_hours"] = sum(goods.get(material, 0.0) * quantity
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
-    money_units.stamp_nodes(nodes.values(), wages, rate)
-    return tree, prices, nodes, wages, goods
-
-
-def _book_prices() -> Tuple[Dict[str, Any], Dict[str, float]]:
-    """Load the legacy price document and its public material-price table."""
-    with open(PRICES) as source:
-        prices = json.load(source)
-    goods = {
-        key: value["p"]
-        for key, value in prices["purchase_prices_denarii"].items()
-        if not key.startswith("_")
-    }
-    return prices, goods
+    energy = energy_prices.graded(held_technology_ids, document, goods, civilization_id)
+    node_revenue.apply_revenue(nodes.values(), goods, wages, rate, energy)
+    for node in nodes.values():
+        node["_derived_for"] = civilization_id or default_civilisation_id()
+    money_units.price_nodes(nodes.values(), wages, rate)
+    return tree, document, nodes, wages, goods
 
 
 def goods_provenance(held_technology_ids: Iterable[str] = (),
-                      civilization_id: Optional[str] = None) -> Dict[str, str]:
-    """{material: "solved" | "gated" | "no_recipe"} for every material
-    `prices.json` prices, from `sim.engine.prices.priced_goods_table` - the
-    burndown that measures "prices.json slowly deleted" one entry at a time
-    (see that module's docstring). This always asks the solver, regardless
-    of `load()`'s own `use_solved_prices` switch: the point is to be able to
-    measure the split BEFORE deciding to turn the engine's own prices over
-    to it, not only after.
+                      civilization_id: Optional[str] = None,
+                      civilization: Optional[JSONDict] = None) -> Dict[str, str]:
+    """{material: "solved" | "gated" | "mature"} for every material the solver prices:
+    "gated" ones are priced at a technique not held, "mature" ones where nothing
+    in reach makes them (see `sim.engine.prices.priced_goods_table`).
 
     `civilization_id` should be the SAME civilization `held_technology_ids`
-    came from - see `sim/engine/prices.py`'s RENT NEEDS A CIVILIZATION for
-    why land rent needs to know this and cannot infer it from
-    `held_technology_ids` alone. Left at `None` it prices land as Rome's,
-    which is silently wrong for any other civilization's report.
+    came from: land rent is solved against its territory, and left at `None`
+    it is the reference civilisation's.
     """
-    prices, goods = _book_prices()
     from . import prices as price_solver
+    schedule = (schedule_of_civilisation(civilization) if civilization is not None
+                else starting_schedule(civilization_id))
     _goods, provenance = price_solver.priced_goods_table(
-        held_technology_ids, goods, starting_schedule(civilization_id).document(),
-        civilization_id=civilization_id)
+        held_technology_ids, schedule.document(),
+        civilization_id=civilization_id, civilization=civilization)
     return provenance
 
 
 def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
                             civilization_id: Optional[str] = None,
-                            money_per_labour_hour: Optional[float] = None
+                            money_per_labour_hour: Optional[float] = None,
+                            civilization: Optional[JSONDict] = None
                             ) -> Dict[str, float]:
-    """Return the calculator-backed material-price table for an era.
-
-    This is the migration boundary for runtime systems that used to open
-    ``data/prices.json`` independently.  The old table is still supplied to
-    :func:`sim.engine.prices.priced_goods_table` because unsolved and gated
-    materials do not yet have an endogenous value, but every material the
-    calculator *can* resolve is replaced here.  Keeping that remaining
-    fallback in one provider makes it visible and lets consumers migrate now,
-    rather than each retaining a private reader until the final deletion.
-    """
-    prices, book_goods = _book_prices()
+    """The calculated material-price table for an era, in the civilisation's
+    coin or, when `money_per_labour_hour` is given, in that coin."""
     from . import prices as price_solver
-    document = starting_schedule(civilization_id).document()
+    schedule = (schedule_of_civilisation(civilization) if civilization is not None
+                else starting_schedule(civilization_id))
+    document = schedule.document()
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, book_goods, document, civilization_id=civilization_id)
+        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization)
     if money_per_labour_hour is not None:
-        # The caller's coin differs from the civilisation file's: rescale.
         goods = {material: _in_coin(price, document, money_per_labour_hour)
                  for material, price in goods.items()}
     return goods
 
 
+def calculated_goods_table(held_technology_ids: Iterable[str] = (),
+                           civilization_id: Optional[str] = None,
+                           civilization: Optional[JSONDict] = None
+                           ) -> Tuple[Dict[str, float], Dict[str, str]]:
+    """(labour-hour price, provenance) of every material the solver prices, from one solve."""
+    from . import prices as price_solver
+    schedule = (schedule_of_civilisation(civilization) if civilization is not None
+                else starting_schedule(civilization_id))
+    document = schedule.document()
+    goods, provenance = price_solver.priced_goods_table(
+        held_technology_ids, document, civilization_id=civilization_id, civilization=civilization)
+    return ({material: _in_coin(price, document, 1.0) for material, price in goods.items()}, provenance)
+
+
 def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
     """The tree with every money field in the civilisation's coin."""
     schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    first = next(iter(nodes.values()), None)
+    if first is not None and civ.get("id") and first.get("_derived_for") != civ["id"]:
+        nodes = node_revenue.for_civilisation(nodes, civ, schedule)
+        money_units.price_nodes(nodes.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
+        return nodes
     return money_units.rebased_nodes(
         nodes, schedule.wages_per_hour(), schedule.money_per_labour_hour)
 
@@ -496,7 +460,7 @@ def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, J
 # integers, computed once per tree and cached. Ordinary set unions would be
 # 2,831 sets of up to 2,831 ids; an int OR is the same operation with the
 # machine doing the work.
-_DESC_CACHE: Dict[int, Tuple[Nodes, Dict[str, int], Dict[str, int]]] = {}
+_DESC_CACHE = IdentityCache()  # nodes -> (masks, index)
 
 
 def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
@@ -517,9 +481,9 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
     # against it, so its address cannot be recycled into a false hit while the
     # entry lives. sim/engine/proto/nodes.py makes the same argument at length
     # for the same shape of cache.
-    hit = _DESC_CACHE.get(id(nodes))
-    if hit is not None and hit[0] is nodes:
-        return hit[1], hit[2]
+    hit = _DESC_CACHE.get(nodes)
+    if hit is not None:
+        return hit
     index: Dict[str, int] = {node_id: i for i, node_id in enumerate(sorted(nodes))}
     kids: Dict[str, List[str]] = {node_id: [] for node_id in nodes}
     for node_id in nodes:
@@ -549,7 +513,7 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
             for child_id in kids[node_id]:
                 if child_id not in masks:
                     stack.append((child_id, False))
-    _DESC_CACHE[id(nodes)] = (nodes, masks, index)
+    _DESC_CACHE.put(nodes, (masks, index))
     return masks, index
 
 
@@ -724,7 +688,7 @@ def critical_path(nodes: Nodes, goal: str) -> Tuple[float, List[str]]:
 
 
 # ----------------------------------------------------------------------------
-# Goals: DATA, not code. One registry, `meta.goals` in tech_tree.json, that
+# Goals: DATA, not code. One registry, `meta.goals` in data/branches/_META.json, that
 # `validate`, `path`, `plan`, the menu's new-game wizard and every command
 # below that takes `--goal` all read - so there is exactly one list of what
 # a player or a measurement can aim at, not one opinion per command.
@@ -742,7 +706,7 @@ def critical_path(nodes: Nodes, goal: str) -> Tuple[float, List[str]]:
 # ----------------------------------------------------------------------------
 
 def goal_catalog(tree: JSONDict, nodes: Optional[Nodes] = None) -> List[JSONDict]:
-    """The roster of selectable goals, in the order tech_tree.json lists
+    """The roster of selectable goals, in the order _META.json lists
     them. Pass `nodes` to check every entry actually names a real node - a
     cheap check worth making once, in `validate`, rather than trusting the
     data file silently."""
@@ -750,9 +714,23 @@ def goal_catalog(tree: JSONDict, nodes: Optional[Nodes] = None) -> List[JSONDict
     if nodes is not None:
         bad = [goal_entry["node"] for goal_entry in goals if goal_entry.get("node") not in nodes]
         if bad:
-            raise SystemExit("tech_tree.json meta.goals names nodes that do "
+            raise SystemExit("meta.goals in data/branches/_META.json names nodes that do "
                              "not exist: %s" % ", ".join(bad))
     return goals
+
+
+def selectable_goals(tree: JSONDict, nodes: Nodes) -> List[JSONDict]:
+    """goal_catalog with the default goal (meta.goal_node) first, added by name
+    when the catalog does not list it, so a menu shows the goal `play` aims at
+    when no --goal is given."""
+    default_goal = resolve_goal(tree, nodes, None)
+    catalog = list(goal_catalog(tree, nodes))
+    listed = next((entry for entry in catalog if entry["node"] == default_goal), None)
+    if listed is None:
+        listed = {"node": default_goal, "name": nodes[default_goal].get("name", default_goal)}
+    else:
+        catalog.remove(listed)
+    return [listed] + catalog
 
 
 def goal_lookup(tree: JSONDict, node_id: str) -> Optional[JSONDict]:
@@ -837,11 +815,11 @@ def win_condition_describe(node_record: JSONDict) -> str:
 # them to money.
 STARTING_KITS: Dict[str, StartingKit] = {
     "destitute":   {"labourer_years": 0.0, "desc": "the clothes you stand in. You must earn your first meal."},
-    "poor_scholar":{"labourer_years": 4.033, "desc": "DEFAULT. A few months' subsistence, a knife, a lens, a codex of notes. About what a working teacher has."},
+    "poor_scholar":{"labourer_years": 4.033, "desc": "DEFAULT. A few years of a labourer's wages in cash, a knife, a lens, a codex of notes. About what a working teacher has."},
     "artisan":     {"labourer_years": 12.10, "desc": "enough to rent a workshop and buy a first set of tools."},
     "merchant":    {"labourer_years": 40.33, "desc": "a modest trading capital. You can fund one real venture."},
-    "rich_merchant":{"labourer_years": 201.6, "desc": "wealthy but well under the equestrian census of 100,000."},
-    "equestrian":  {"labourer_years": 1008.0, "desc": "the equestrian census exactly. Conspicuous."},
+    "rich_merchant":{"labourer_years": 201.6, "desc": "wealthy, but well short of the fortune that marks the top of society."},
+    "equestrian":  {"labourer_years": 1008.0, "desc": "the fortune that marks the top rank of the local elite, exactly. Conspicuous."},
     # "the medians sit inside the noise band" is not true of the whole kit
     # range: measured on the finish, not just the opening - Rome, 8 runs a
     # kit, one seed - the median year the transistor is reached runs 476
@@ -850,7 +828,7 @@ STARTING_KITS: Dict[str, StartingKit] = {
     # claim is true of the middle of the range and false at the top of it,
     # which is exactly the kind of statement that should not be made in one
     # sentence about "the whole kit range".
-    "absurd":      {"labourer_years": 10081.0, "desc": "four senatorial fortunes in unminted gold. It used to make things worse and no longer does: once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a million denarii buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
+    "absurd":      {"labourer_years": 10081.0, "desc": "four great fortunes in unminted gold. Once money can be converted into protection and into sunk mines, wealth helps. What it does NOT do is make you a magician: a vast fortune buys perhaps a tenth off the time, not a different game. What money changes most is the OPENING - the first fifty years, where a poor founder is choosing between eating and building."},
 }
 
 DEFAULTS: SimulationDefaults = dict(

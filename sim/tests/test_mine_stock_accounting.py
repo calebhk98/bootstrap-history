@@ -1,4 +1,4 @@
-"""mine_stock_accounting: complaint 152, banked stock is the mine's yearly flow, once per year."""
+"""mine_stock_accounting: complaint 148, banked stock is the mine's yearly flow, once per year."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.proto.economy import _mine_rows_for_material
 

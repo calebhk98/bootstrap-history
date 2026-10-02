@@ -3,6 +3,7 @@
     "id": "chm_catalyst_concept",
     "name": "Catalysis and catalyst theory",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "analytical_chemistry",
       "thermodynamics_theory",
@@ -18,13 +19,13 @@
       "platinum_g": 10,
       "lead_kg": 5
     },
-    "cap": 500,
-    "up": 0.0,
+    "cap_hours": 10080.939587064662,
+    "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 2,
     "gov": 1,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -45,6 +46,7 @@
     "id": "chm_pressure_vessel",
     "name": "High-pressure autoclave and steam digester",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_heat_1300",
       "cap_tol_100um",
@@ -62,13 +64,13 @@
       "iron_bar_kg": 80,
       "coal_kg": 20
     },
-    "cap": 2000,
-    "up": 0.0,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 0,
     "yrs": 1.5,
     "risk": 0.25,
     "sus": 2,
     "gov": 1,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -81,6 +83,7 @@
     "id": "chm_pressure_gauge",
     "name": "Bourdon tube pressure gauge and safety relief valve",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_100um",
       "cap_measure_temp",
@@ -98,13 +101,13 @@
       "bronze_kg": 80.0,
       "iron_bar_kg": 50.0
     },
-    "cap": 800,
-    "up": 0.0,
+    "cap_hours": 16129.50333930346,
+    "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.15,
     "sus": 1,
     "gov": 2,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -118,6 +121,7 @@
     "id": "chm_contact_sulfuric",
     "name": "Contact process for sulfuric acid using platinum catalyst",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "sulfuric_retort",
       "lead_chamber",
@@ -138,13 +142,13 @@
       "coal_kg": 200,
       "iron_ore_kg": 50
     },
-    "cap": 5000,
-    "up": 400,
+    "cap_hours": 100809.39587064662,
+    "up_hours": 8064.75166965173,
     "yrs": 2.0,
     "risk": 0.15,
     "sus": 3,
     "gov": 3,
-    "rev": 8000,
+    "rev_hours": 161295.0333930346,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -166,6 +170,7 @@
     "id": "chm_contact_vanadium",
     "name": "Vanadium pentoxide catalyst for contact sulfuric acid",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_contact_sulfuric",
       "analytical_chemistry",
@@ -181,13 +186,13 @@
       "sand_quartz_kg": 100,
       "lead_kg": 50
     },
-    "cap": 1500,
-    "up": 150,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 3024.2818761193985,
     "yrs": 1.0,
     "risk": 0.2,
     "sus": 2,
     "gov": 2,
-    "rev": 1100.3,
+    "rev_hours": 22184.115655294496,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -201,6 +206,7 @@
     "id": "chm_oleum",
     "name": "Oleum (fuming sulfuric acid) production",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_contact_sulfuric",
       "lead_chamber"
@@ -215,13 +221,13 @@
       "lead_kg": 50,
       "coal_kg": 100
     },
-    "cap": 2000,
-    "up": 200,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 4032.375834825865,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 3,
     "gov": 2,
-    "rev": 1402.7,
+    "rev_hours": 28281.067917551205,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -236,6 +242,7 @@
     "id": "chm_solvay_process",
     "name": "Solvay process: ammonia-soda manufacturing",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "potash_soda",
       "soda_leblanc",
@@ -255,26 +262,29 @@
       "coal_kg": 300,
       "limestone_kg": 200
     },
-    "cap": 8000,
-    "up": 500,
+    "cap_hours": 161295.0333930346,
+    "up_hours": 10080.939587064662,
     "yrs": 2.0,
     "risk": 0.1,
     "sus": 2,
     "gov": 3,
-    "rev": 12000,
+    "rev_hours": 241942.5500895519,
+    "output_unbounded_reason": "its product is priced at the dearer incumbent route, so a derived payback falls under the floor (Complaints/329)",
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "The genius: ammonia is expensive so you recycle it. Limestone calcines to CO2 which carbonates the ammonia-brine. NaHCO3 precipitates, is filtered, then thermally decomposed to soda ash. The ammonia is recovered by treating the residue with lime and distilling. Leblanc loses all this to slag mountains. Solvay's yield is 80% versus Leblanc's 40%, and the only waste is calcium chloride brines. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: limestone calcining produces lime; thermal decomposition of NaHCO3 at low temperature]",
+    "note": "The genius: ammonia is expensive so you recycle it. Limestone calcines to CO2 which carbonates the ammonia-brine. NaHCO3 precipitates, is filtered, then thermally decomposed to soda ash. The ammonia is recovered by treating the residue with lime and distilling. Leblanc loses all this to slag mountains. Solvay's yield is 80% versus Leblanc's 40%, and the only waste is calcium chloride brines.",
     "traits": [
       "inexplicable",
       "infrastructure"
-    ]
+    ],
+    "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: limestone calcining produces lime; thermal decomposition of NaHCO3 at low temperature] [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: limestone calcining produces lime; thermal decomposition of NaHCO3 at low temperature]"
   },
   {
     "id": "chm_ammonia_recovery",
     "name": "Ammonia recovery and regeneration in soda plants",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_solvay_process",
       "distillation_alcohol"
@@ -289,13 +299,13 @@
       "coal_kg": 150,
       "lead_kg": 30
     },
-    "cap": 1500,
-    "up": 150,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 3024.2818761193985,
     "yrs": 1.0,
     "risk": 0.05,
     "sus": 0,
     "gov": 1,
-    "rev": 3000,
+    "rev_hours": 60485.63752238797,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -308,6 +318,7 @@
     "id": "chm_deacon_process",
     "name": "Deacon process: oxidation of hydrogen chloride to chlorine",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "hydrochloric_acid",
       "cap_heat_1600",
@@ -323,13 +334,13 @@
       "copper_kg": 20,
       "coal_kg": 200
     },
-    "cap": 3000,
-    "up": 250,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 5040.469793532331,
     "yrs": 1.5,
     "risk": 0.15,
     "sus": 2,
     "gov": 2,
-    "rev": 5000,
+    "rev_hours": 100809.39587064662,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -343,6 +354,7 @@
     "id": "chm_weldon_process",
     "name": "Weldon process: regeneration of manganese dioxide from manganous chloride",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "hydrochloric_acid",
       "chm_deacon_process"
@@ -357,13 +369,13 @@
       "manganese_kg": 50,
       "lime_kg": 30
     },
-    "cap": 1500,
-    "up": 100,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.1,
     "sus": 1,
     "gov": 1,
-    "rev": 2000,
+    "rev_hours": 40323.75834825865,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -384,11 +396,14 @@
     "id": "chm_bleaching_powder",
     "name": "Bleaching powder: mixed calcium hypochlorite",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "soda_leblanc",
       "chm_deacon_process"
     ],
     "kb": "20_chemistry.md",
+    "annual_output_t": 300,
+    "annual_output_basis": "A bleach works of about twelve hands working two thousand hours a year each at the seventy-five hours a tonne the entry states: roughly three hundred tonnes of powder. Declared plant size from the entry's own hours, conf C.",
     "ph": 80,
     "lab": {
       "chemist": 120,
@@ -398,13 +413,13 @@
       "lime_kg": 100,
       "coal_kg": 50
     },
-    "cap": 1000,
-    "up": 80,
+    "cap_hours": 20161.879174129324,
+    "up_hours": 1612.950333930346,
     "yrs": 0.5,
     "risk": 0.1,
     "sus": 1,
     "gov": 2,
-    "rev": 710.7,
+    "rev_hours": 14329.047529053712,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -418,6 +433,7 @@
     "id": "chm_chlor_alkali_mercury",
     "name": "Chlor-alkali process: mercury cathode cell",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "electrolysis_industrial",
       "mercury_supply",
@@ -436,13 +452,13 @@
       "iron_sheet_kg": 50,
       "salt_kg": 1000
     },
-    "cap": 10000,
-    "up": 800,
+    "cap_hours": 201618.79174129324,
+    "up_hours": 16129.50333930346,
     "yrs": 2.0,
     "risk": 0.2,
     "sus": 3,
     "gov": 3,
-    "rev": 15000,
+    "rev_hours": 302428.18761193985,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -456,6 +472,7 @@
     "id": "chm_chlor_alkali_diaphragm",
     "name": "Chlor-alkali process: asbestos diaphragm cell",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "electrolysis_industrial",
       "cap_measure_elec"
@@ -471,13 +488,13 @@
       "iron_sheet_kg": 40,
       "salt_kg": 1000
     },
-    "cap": 8000,
-    "up": 600,
+    "cap_hours": 161295.0333930346,
+    "up_hours": 12097.127504477594,
     "yrs": 2.0,
     "risk": 0.15,
     "sus": 2,
     "gov": 3,
-    "rev": 14000,
+    "rev_hours": 282266.3084378105,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -491,6 +508,7 @@
     "id": "chm_caustic_soda",
     "name": "Caustic soda: concentration and purification",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_chlor_alkali_mercury",
       "potash_soda",
@@ -507,25 +525,28 @@
       "coal_kg": 150,
       "lead_kg": 30
     },
-    "cap": 2000,
-    "up": 200,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 4032.375834825865,
     "yrs": 1.0,
     "risk": 0.05,
     "sus": 0,
     "gov": 1,
-    "rev": 4000,
+    "rev_hours": 80647.5166965173,
+    "output_unbounded_reason": "one declared total would be split across unrelated products, so no single output bounds it",
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Caustic soda boils above 100 C, so direct heating to dryness would decompose it. Vacuum evaporation keeps temperature below 100 C while removing water. The product is chemically pure but must be handled in glass or lead; iron is attacked immediately and dissolved. [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum evaporation at low temperature to avoid decomposition of caustic soda]",
+    "note": "Caustic soda boils above 100 C, so direct heating to dryness would decompose it. Vacuum evaporation keeps temperature below 100 C while removing water. The product is chemically pure but must be handled in glass or lead; iron is attacked immediately and dissolved.",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum evaporation at low temperature to avoid decomposition of caustic soda] [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum evaporation at low temperature to avoid decomposition of caustic soda]"
   },
   {
     "id": "chm_ostwald_ammonia_oxidation",
     "name": "Ostwald process: oxidation of ammonia to nitric acid",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_catalyst_concept",
       "cap_heat_1300",
@@ -542,13 +563,13 @@
       "platinum_g": 100,
       "coal_kg": 200
     },
-    "cap": 5000,
-    "up": 400,
+    "cap_hours": 100809.39587064662,
+    "up_hours": 8064.75166965173,
     "yrs": 1.5,
     "risk": 0.1,
     "sus": 3,
     "gov": 3,
-    "rev": 10000,
+    "rev_hours": 201618.79174129324,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -570,6 +591,7 @@
     "id": "chm_haber_bosch",
     "name": "Haber-Bosch synthesis of ammonia",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_gas_o2h2",
       "cap_heat_1600",
@@ -589,13 +611,13 @@
       "iron_bar_kg": 200,
       "coal_kg": 500
     },
-    "cap": 20000,
-    "up": 1500,
+    "cap_hours": 403237.5834825865,
+    "up_hours": 30242.818761193987,
     "yrs": 3.0,
     "risk": 0.25,
     "sus": 3,
     "gov": 3,
-    "rev": 18000,
+    "rev_hours": 362913.8251343278,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -609,6 +631,7 @@
     "id": "chm_cyanamide_fixation",
     "name": "Cyanamide process: nitrogen fixation by carbide",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "coal_coke",
       "cap_heat_3000",
@@ -624,13 +647,13 @@
       "coal_kg": 300,
       "limestone_kg": 200
     },
-    "cap": 5000,
-    "up": 400,
+    "cap_hours": 100809.39587064662,
+    "up_hours": 8064.75166965173,
     "yrs": 1.5,
     "risk": 0.15,
     "sus": 2,
     "gov": 2,
-    "rev": 8000,
+    "rev_hours": 161295.0333930346,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -638,12 +661,14 @@
     "traits": [
       "inexplicable",
       "infrastructure"
-    ]
+    ],
+    "_internal": "[FIXED after independent audit: the cyanamide route runs through calcium carbide, which needs the electric arc furnace.]"
   },
   {
     "id": "chm_electric_arc_nitrogen",
     "name": "Electric arc nitrogen fixation: nitrogen oxides from air",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_gas_o2h2",
       "cap_heat_3000"
@@ -657,13 +682,13 @@
     "mat": {
       "coal_kg": 200
     },
-    "cap": 3000,
-    "up": 300,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 6048.563752238797,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 1,
     "gov": 2,
-    "rev": 6000,
+    "rev_hours": 120971.27504477595,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -677,6 +702,7 @@
     "id": "chm_superphosphate",
     "name": "Superphosphate: acidulation of rock phosphate",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "sulfuric_retort",
       "lead_chamber",
@@ -694,13 +720,14 @@
       "iron_ore_kg": 200.0,
       "sulfuric_acid_kg": 600.0
     },
-    "cap": 2000,
-    "up": 150,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 3024.2818761193985,
     "yrs": 1.0,
     "risk": 0.05,
     "sus": 0,
     "gov": 2,
-    "rev": 4000,
+    "rev_hours": 80647.5166965173,
+    "output_unbounded_reason": "the line's basis unit is not a kilogram, so a declared annual_output_t cannot bound it",
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -708,12 +735,14 @@
     "traits": [
       "inexplicable",
       "infrastructure"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_potash_mining",
     "name": "Potash mining and refining",
     "cat": "mineral_extraction",
+    "kind": "ENGINEERING",
     "pre": [
       "mining_concession"
     ],
@@ -726,25 +755,27 @@
     "mat": {
       "timber_m3": 10
     },
-    "cap": 3000,
-    "up": 200,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 4032.375834825865,
     "yrs": 1.5,
     "risk": 0.2,
     "sus": 0,
     "gov": 1,
-    "rev": 5000,
+    "rev_hours": 100809.39587064662,
     "sch": 0,
     "art": 0,
     "conf": "B",
     "note": "Potash salts like sylvinite are mined like any mineral ore. The mined rock is then dissolved in water, filtered to remove insoluble matter, and crystallised. Potassium is essential to agriculture: wheat and potatoes are heavy exporters of K2O, depleting soils rapidly without replenishment.",
     "traits": [
       "infrastructure"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_coal_tar_distillation",
     "name": "Coal tar fractionation and distillation",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "destructive_distillation",
       "chm_fractionating_column"
@@ -759,13 +790,13 @@
       "coal_kg": 500,
       "lead_kg": 50
     },
-    "cap": 5000,
-    "up": 400,
+    "cap_hours": 100809.39587064662,
+    "up_hours": 8064.75166965173,
     "yrs": 1.5,
     "risk": 0.15,
     "sus": 2,
     "gov": 1,
-    "rev": 8000,
+    "rev_hours": 161295.0333930346,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -778,6 +809,7 @@
     "id": "chm_fractionating_column",
     "name": "Fractionating column with bubble caps",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "distillation_alcohol",
       "cap_heat_1100",
@@ -793,13 +825,13 @@
       "copper_kg": 100,
       "iron_bar_kg": 50
     },
-    "cap": 4000,
-    "up": 0.0,
+    "cap_hours": 80647.5166965173,
+    "up_hours": 0,
     "yrs": 1.5,
     "risk": 0.1,
     "sus": 1,
     "gov": 1,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -812,6 +844,7 @@
     "id": "chm_benzene",
     "name": "Benzene extraction from coal tar",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation",
       "cap_pure_4N",
@@ -825,13 +858,13 @@
     "mat": {
       "coal_kg": 200
     },
-    "cap": 1500,
-    "up": 100,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 2,
     "gov": 1,
-    "rev": 3000,
+    "rev_hours": 60485.63752238797,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -844,6 +877,7 @@
     "id": "chm_aniline",
     "name": "Aniline from benzene via nitrobenzene",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_benzene",
       "chm_oleum",
@@ -859,25 +893,27 @@
       "coal_kg": 150,
       "iron_bar_kg": 50
     },
-    "cap": 3000,
-    "up": 250,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 5040.469793532331,
     "yrs": 1.0,
     "risk": 0.2,
     "sus": 3,
     "gov": 1,
-    "rev": 5000,
+    "rev_hours": 100809.39587064662,
     "sch": 0,
     "art": 0,
     "conf": "B",
     "note": "Oleum nitrates benzene to nitrobenzene in minutes. Reduction with iron powder in dilute acid yields aniline. Aniline is a colourless liquid, bp 184 C, that polymerises in air to a black tar unless kept dry. It is the keystone of synthetic dyes and must be kept under nitrogen or mineral oil.",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[FIXED after independent audit: nitration of benzene needs nitric acid, which was missing. The Bechamp reduction uses iron in dilute acid, not hydrogen, so the industrial_gases prerequisite was not load-bearing and has been removed.]"
   },
   {
     "id": "chm_azo_dyes",
     "name": "Azo dyes: diazotisation and azo coupling",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_aniline",
       "nitric_acid"
@@ -890,13 +926,13 @@
     "mat": {
       "coal_kg": 100
     },
-    "cap": 2000,
-    "up": 150,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 3024.2818761193985,
     "yrs": 2.0,
     "risk": 0.25,
     "sus": 2,
     "gov": 1,
-    "rev": 4000,
+    "rev_hours": 80647.5166965173,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -910,6 +946,7 @@
     "id": "chm_alizarin",
     "name": "Alizarin synthesis: oxidation of anthraquinone",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_coal_tar_distillation",
       "electrolysis_industrial"
@@ -923,13 +960,13 @@
     "mat": {
       "coal_kg": 150
     },
-    "cap": 3000,
-    "up": 250,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 5040.469793532331,
     "yrs": 1.0,
     "risk": 0.15,
     "sus": 2,
     "gov": 1,
-    "rev": 6000,
+    "rev_hours": 120971.27504477595,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -942,6 +979,7 @@
     "id": "chm_indigo_synthesis",
     "name": "Indigo synthesis from N-phenylglycine",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_aniline",
       "analytical_chemistry"
@@ -955,13 +993,13 @@
     "mat": {
       "coal_kg": 150
     },
-    "cap": 4000,
-    "up": 300,
+    "cap_hours": 80647.5166965173,
+    "up_hours": 6048.563752238797,
     "yrs": 1.0,
     "risk": 0.2,
     "sus": 3,
     "gov": 1,
-    "rev": 7000,
+    "rev_hours": 141133.15421890526,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -974,6 +1012,7 @@
     "id": "chm_saccharin",
     "name": "Saccharin synthesis",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_benzene",
       "chm_oleum"
@@ -986,13 +1025,13 @@
     "mat": {
       "coal_kg": 80
     },
-    "cap": 1500,
-    "up": 120,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2419.425500895519,
     "yrs": 2.0,
     "risk": 0.1,
     "sus": 1,
     "gov": 1,
-    "rev": 2000,
+    "rev_hours": 40323.75834825865,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1006,6 +1045,7 @@
     "id": "chm_salicylic_acid",
     "name": "Salicylic acid: hydroxylation of benzenesulfonic acid",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "chm_benzene",
       "chm_oleum",
@@ -1019,13 +1059,13 @@
     "mat": {
       "coal_kg": 100
     },
-    "cap": 1500,
-    "up": 100,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 0,
     "gov": 1,
-    "rev": 2000,
+    "rev_hours": 40323.75834825865,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1038,6 +1078,7 @@
     "id": "chm_aspirin",
     "name": "Aspirin synthesis from salicylic acid",
     "cat": "pharmaceutical",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_salicylic_acid"
     ],
@@ -1049,13 +1090,13 @@
     "mat": {
       "coal_kg": 50
     },
-    "cap": 500,
-    "up": 50,
+    "cap_hours": 10080.939587064662,
+    "up_hours": 1008.0939587064662,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 0,
     "gov": 1,
-    "rev": 360.7,
+    "rev_hours": 7272.389818108447,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1068,6 +1109,7 @@
     "id": "chm_sulfonamides",
     "name": "Sulfonamide antibiotics: sulfanilamide synthesis",
     "cat": "pharmaceutical",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_aniline",
       "chm_salicylic_acid"
@@ -1081,13 +1123,13 @@
     "mat": {
       "coal_kg": 100
     },
-    "cap": 2000,
-    "up": 150,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 3024.2818761193985,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 1,
     "gov": 2,
-    "rev": 4000,
+    "rev_hours": 80647.5166965173,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -1101,6 +1143,7 @@
     "id": "chm_continuous_batch",
     "name": "Continuous versus batch processing decision",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_measure_time_s"
     ],
@@ -1111,13 +1154,13 @@
       "chemist": 100
     },
     "mat": {},
-    "cap": 500,
-    "up": 0,
+    "cap_hours": 10080.939587064662,
+    "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.0,
     "sus": 6,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -1125,12 +1168,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_corrosion_lead",
     "name": "Corrosion-resistant plant: lead and lead-lined vessels",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "lead_metallurgy",
       "cap_tol_1mm"
@@ -1144,13 +1189,13 @@
     "mat": {
       "lead_kg": 200
     },
-    "cap": 1500,
-    "up": 0.0,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.05,
     "sus": 0,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1163,6 +1208,7 @@
     "id": "chm_corrosion_stoneware",
     "name": "Corrosion-resistant vessels: acid-resistant stoneware",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_porcelain"
     ],
@@ -1174,13 +1220,13 @@
     "mat": {
       "clay_kg": 100
     },
-    "cap": 1000,
-    "up": 0.0,
+    "cap_hours": 20161.879174129324,
+    "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 0,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1193,6 +1239,7 @@
     "id": "chm_corrosion_glass_lined",
     "name": "Glass-lined steel vessels",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_glass_soda",
       "mat_bulk_steel",
@@ -1208,13 +1255,13 @@
       "glass_raw_kg": 200,
       "steel_plate_kg": 100
     },
-    "cap": 3000,
-    "up": 0.0,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.15,
     "sus": 1,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1227,6 +1274,7 @@
     "id": "chm_corrosion_stainless",
     "name": "Stainless steel vessels for corrosive service",
     "cat": "materials",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_stainless",
       "mat_bulk_steel"
@@ -1239,13 +1287,13 @@
     "mat": {
       "steel_plate_kg": 200
     },
-    "cap": 2000,
-    "up": 0.0,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 0,
     "yrs": 2.0,
     "risk": 0.05,
     "sus": 0,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1259,6 +1307,7 @@
     "id": "chm_filter_press",
     "name": "Filter press: plate-and-frame filtration",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_1mm"
     ],
@@ -1272,13 +1321,13 @@
       "iron_bar_kg": 100,
       "linen_kg": 20
     },
-    "cap": 2000,
-    "up": 0.0,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 6,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1286,12 +1335,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_centrifuge",
     "name": "Industrial centrifuge for separation",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_tol_100um",
       "cap_power_steam"
@@ -1305,13 +1356,13 @@
       "iron_bar_kg": 150,
       "steel_plate_kg": 50
     },
-    "cap": 3000,
-    "up": 0.0,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 0,
     "yrs": 1.5,
     "risk": 0.15,
     "sus": 1,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1324,6 +1375,7 @@
     "id": "chm_evaporator_surface",
     "name": "Surface evaporator for concentration",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_heat_1100",
       "cap_measure_temp"
@@ -1338,13 +1390,13 @@
       "copper_kg": 50,
       "coal_kg": 150
     },
-    "cap": 2000,
-    "up": 0.0,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 6,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1352,12 +1404,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_crystallisation",
     "name": "Crystallisation and crystal separation",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_measure_temp"
     ],
@@ -1367,13 +1421,13 @@
       "artisan": 80
     },
     "mat": {},
-    "cap": 500,
-    "up": 0.0,
+    "cap_hours": 10080.939587064662,
+    "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.0,
     "sus": 6,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1381,12 +1435,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_ion_exchange",
     "name": "Ion exchange resins for water softening and purification",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_bulk_steel",
       "chm_formaldehyde_synthesis"
@@ -1400,25 +1456,27 @@
     "mat": {
       "coal_kg": 150
     },
-    "cap": 3000,
-    "up": 200,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 4032.375834825865,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 1,
     "gov": 1,
-    "rev": 3000,
+    "rev_hours": 60485.63752238797,
     "sch": 1,
     "art": 0,
     "conf": "B",
     "note": "Phenolic or acrylic polymer beads are cross-linked with divinylbenzene and charged with either H+ cations or OH- anions. Water percolated through the column exchanges Ca2+ for H+, softening and acidifying simultaneously. The resin is regenerated with acid or base. Ion exchange is essential for producing ultrapure process water and boiler feedwater.",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_chromatography",
     "name": "Chromatography: column and paper methods",
     "cat": "analytical_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "analytical_chemistry",
       "cap_pure_4N"
@@ -1432,13 +1490,13 @@
     "mat": {
       "sand_quartz_kg": 50
     },
-    "cap": 500,
-    "up": 0.0,
+    "cap_hours": 10080.939587064662,
+    "up_hours": 0,
     "yrs": 2.0,
     "risk": 0.05,
     "sus": 1,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1465,13 +1523,13 @@
       "nickel_kg": 10,
       "copper_kg": 5
     },
-    "cap": 1500,
-    "up": 100,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 0,
     "gov": 1,
-    "rev": 2000,
+    "rev_hours": 40323.75834825865,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1481,6 +1539,7 @@
     "id": "chm_alkali_waste",
     "name": "Leblanc process waste: calcium carbide and the alkali waste problem",
     "cat": "environmental_chemistry",
+    "kind": "ENGINEERING",
     "pre": [
       "soda_leblanc"
     ],
@@ -1490,13 +1549,13 @@
       "scholar": 200
     },
     "mat": {},
-    "cap": 0,
-    "up": 0,
+    "cap_hours": 0,
+    "up_hours": 0,
     "yrs": 0.5,
     "risk": 0.0,
     "sus": 2,
     "gov": -3,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -1510,6 +1569,7 @@
     "id": "chm_industrial_hygiene",
     "name": "Industrial hygiene and occupational chemical poisoning",
     "cat": "occupational_health",
+    "kind": "INSTITUTION",
     "pre": [
       "germ_theory"
     ],
@@ -1520,13 +1580,13 @@
       "chemist": 100
     },
     "mat": {},
-    "cap": 0,
-    "up": 0,
+    "cap_hours": 0,
+    "up_hours": 0,
     "yrs": 1.0,
     "risk": 0.05,
     "sus": 2,
     "gov": 2,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -1534,12 +1594,14 @@
     "traits": [
       "infrastructure",
       "medical"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_black_powder",
     "name": "Black powder: gunpowder production",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "gunpowder"
     ],
@@ -1547,13 +1609,13 @@
     "ph": 0,
     "lab": {},
     "mat": {},
-    "cap": 0,
-    "up": 0,
+    "cap_hours": 0,
+    "up_hours": 0,
     "yrs": 0.0,
     "risk": 0.0,
     "sus": 0,
     "gov": 3,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "A",
@@ -1567,6 +1629,7 @@
     "id": "chm_guncotton",
     "name": "Guncotton: nitration of cellulose",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "nitric_acid",
       "chm_oleum",
@@ -1581,21 +1644,22 @@
       "linen_rag_kg": 50,
       "coal_kg": 50
     },
-    "cap": 2000,
-    "up": 150,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 3024.2818761193985,
     "yrs": 0.5,
     "risk": 0.3,
     "sus": 2,
     "gov": 3,
-    "rev": 3000,
+    "rev_hours": 60485.63752238797,
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Linen is nitrated with mixed acid at 0 C. Temperature control is absolutely critical; deviation to 5 C causes runaway and explosion. Guncotton is more powerful than black powder and is initially unstable, spontaneously heating if stored damp. Modern stabilisation uses diphenylamine to suppress decomposition. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: nitration at 0 C with deviation to 5 C causing explosion; critical temperature control needed]",
+    "note": "Linen is nitrated with mixed acid at 0 C. Temperature control is absolutely critical; deviation to 5 C causes runaway and explosion. Guncotton is more powerful than black powder and is initially unstable, spontaneously heating if stored damp. Modern stabilisation uses diphenylamine to suppress decomposition.",
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: nitration at 0 C with deviation to 5 C causing explosion; critical temperature control needed] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: nitration at 0 C with deviation to 5 C causing explosion; critical temperature control needed]"
   },
   {
     "id": "chm_nitroglycerin",
@@ -1614,13 +1678,13 @@
     "mat": {
       "coal_kg": 80
     },
-    "cap": 3000,
-    "up": 200,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 4032.375834825865,
     "yrs": 1.0,
     "risk": 0.4,
     "sus": 3,
     "gov": 3,
-    "rev": 4000,
+    "rev_hours": 80647.5166965173,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1630,6 +1694,7 @@
     "id": "chm_dynamite",
     "name": "Dynamite: nitroglycerin in diatomaceous earth",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "mat_nitroglycerin"
     ],
@@ -1641,13 +1706,13 @@
     "mat": {
       "asbestos_kg": 80
     },
-    "cap": 2000,
-    "up": 100,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.15,
     "sus": 1,
     "gov": 3,
-    "rev": 5000,
+    "rev_hours": 100809.39587064662,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1655,12 +1720,14 @@
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_gelignite",
     "name": "Gelignite: nitroglycerin in colloidal cellulose",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "mat_nitroglycerin",
       "chm_guncotton"
@@ -1673,13 +1740,13 @@
     "mat": {
       "coal_kg": 80
     },
-    "cap": 2000,
-    "up": 100,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.15,
     "sus": 1,
     "gov": 3,
-    "rev": 1374.4,
+    "rev_hours": 27710.486736923343,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1687,7 +1754,8 @@
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_smokeless_powder",
@@ -1706,13 +1774,13 @@
     "mat": {
       "coal_kg": 100
     },
-    "cap": 3000,
-    "up": 200,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 4032.375834825865,
     "yrs": 1.0,
     "risk": 0.2,
     "sus": 2,
     "gov": 3,
-    "rev": 6000,
+    "rev_hours": 120971.27504477595,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1722,6 +1790,7 @@
     "id": "chm_tnt",
     "name": "TNT: trinitrotoluene synthesis",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "chm_toluene",
       "chm_oleum",
@@ -1735,26 +1804,28 @@
     "mat": {
       "coal_kg": 100
     },
-    "cap": 3000,
-    "up": 250,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 5040.469793532331,
     "yrs": 1.0,
     "risk": 0.2,
     "sus": 2,
     "gov": 3,
-    "rev": 6000,
+    "rev_hours": 120971.27504477595,
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Toluene is nitrated to mononitrotoluene, then dinitrotoluene, then trinitrotoluene. Each stage requires strong acid and careful temperature control. TNT is relatively stable compared to nitroglycerin and can be melted to pour into shells. Its insensitivity to shock makes it ideal for military use. [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: exothermic nitration reactions require careful temperature measurement and control]",
+    "note": "Toluene is nitrated to mononitrotoluene, then dinitrotoluene, then trinitrotoluene. Each stage requires strong acid and careful temperature control. TNT is relatively stable compared to nitroglycerin and can be melted to pour into shells. Its insensitivity to shock makes it ideal for military use.",
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: exothermic nitration reactions require careful temperature measurement and control] [REVIEWED: prerequisite(s) cap_measure_temp added by a reviewer working node by node. Reason: exothermic nitration reactions require careful temperature measurement and control]"
   },
   {
     "id": "chm_picric_acid",
     "name": "Picric acid: trinitrophenol synthesis",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "chm_phenol",
       "chm_oleum"
@@ -1767,13 +1838,13 @@
     "mat": {
       "coal_kg": 80
     },
-    "cap": 2000,
-    "up": 150,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 3024.2818761193985,
     "yrs": 0.5,
     "risk": 0.15,
     "sus": 1,
     "gov": 2,
-    "rev": 2000,
+    "rev_hours": 40323.75834825865,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1788,6 +1859,7 @@
     "id": "chm_blasting_cap",
     "name": "Blasting cap and fulminate detonator",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "chm_fulminate",
       "cap_tol_1mm"
@@ -1802,13 +1874,13 @@
       "copper_kg": 10,
       "mercury_kg": 5
     },
-    "cap": 1500,
-    "up": 100,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.25,
     "sus": 2,
     "gov": 3,
-    "rev": 2000,
+    "rev_hours": 40323.75834825865,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1822,11 +1894,14 @@
     "id": "chm_fulminate",
     "name": "Mercury fulminate preparation",
     "cat": "explosives",
+    "kind": "RESOURCE",
     "pre": [
       "mercury_supply",
       "nitric_acid"
     ],
     "kb": "20_chemistry.md",
+    "annual_output_t": 10,
+    "annual_output_basis": "Batches of the order of ten kilograms (the quantity that can be nitrated and precipitated safely in one vessel), about three a day over three hundred days, giving nine tonnes, taken as ten. Declared plant size, conf C.",
     "ph": 80,
     "lab": {
       "chemist": 150
@@ -1835,13 +1910,13 @@
       "mercury_kg": 20,
       "coal_kg": 50
     },
-    "cap": 1000,
-    "up": 80,
+    "cap_hours": 20161.879174129324,
+    "up_hours": 1612.950333930346,
     "yrs": 0.5,
     "risk": 0.3,
     "sus": 2,
     "gov": 2,
-    "rev": 1500,
+    "rev_hours": 30242.818761193987,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1849,7 +1924,8 @@
     "traits": [
       "infrastructure",
       "military"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]"
   },
   {
     "id": "chm_celluloid",
@@ -1866,13 +1942,13 @@
     "mat": {
       "coal_kg": 80
     },
-    "cap": 2000,
-    "up": 150,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 3024.2818761193985,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 1,
     "gov": 0,
-    "rev": 3000,
+    "rev_hours": 60485.63752238797,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1882,6 +1958,7 @@
     "id": "chm_casein",
     "name": "Casein plastics from milk protein",
     "cat": "plastics",
+    "kind": "RESOURCE",
     "pre": [
       "analytical_chemistry"
     ],
@@ -1893,13 +1970,13 @@
     "mat": {
       "milk_kg": 500
     },
-    "cap": 1500,
-    "up": 120,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2419.425500895519,
     "yrs": 2.0,
     "risk": 0.05,
     "sus": 0,
     "gov": 0,
-    "rev": 2000,
+    "rev_hours": 40323.75834825865,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -1913,6 +1990,7 @@
     "id": "chm_bakelite",
     "name": "Bakelite: phenol-formaldehyde plastic",
     "cat": "plastics",
+    "kind": "RESOURCE",
     "pre": [
       "chm_phenol",
       "chm_formaldehyde_synthesis",
@@ -1929,17 +2007,18 @@
       "coal_kg": 100.0,
       "formaldehyde_kg": 200.0
     },
-    "cap": 9000.0,
-    "up": 900.0,
+    "cap_hours": 181456.9125671639,
+    "up_hours": 18145.691256716393,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 1,
     "gov": 0,
-    "rev": 4000,
+    "rev_hours": 80647.5166965173,
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Phenol and formaldehyde condense at 150-180 C in the presence of acid catalyst. The resin is thermoset: once cured, it cannot be remelted. Bakelite is hard, brittle, and heat-resistant. It is used for electrical insulation, radio bodies, and industrial equipment. It was the first fully synthetic plastic and dominated the 1920s."
+    "note": "Phenol and formaldehyde condense at 150-180 C in the presence of acid catalyst. The resin is thermoset: once cured, it cannot be remelted. Bakelite is hard, brittle, and heat-resistant. It is used for electrical insulation, radio bodies, and industrial equipment. It was the first fully synthetic plastic and dominated the 1920s.",
+    "_internal": "[FIXED after independent audit: the note said phenol and formaldehyde condense, but formaldehyde appeared in neither the prerequisites nor the materials.]"
   },
   {
     "id": "chm_pvc_synthesis",
@@ -1957,13 +2036,13 @@
     "mat": {
       "coal_kg": 150
     },
-    "cap": 5000,
-    "up": 400,
+    "cap_hours": 100809.39587064662,
+    "up_hours": 8064.75166965173,
     "yrs": 1.5,
     "risk": 0.15,
     "sus": 1,
     "gov": 1,
-    "rev": 6000,
+    "rev_hours": 120971.27504477595,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -1973,6 +2052,7 @@
     "id": "chm_polyethylene",
     "name": "Polyethylene synthesis under high pressure",
     "cat": "plastics",
+    "kind": "RESOURCE",
     "pre": [
       "chm_pressure_vessel",
       "cap_gas_o2h2"
@@ -1986,13 +2066,14 @@
     "mat": {
       "coal_kg": 200
     },
-    "cap": 8000,
-    "up": 600,
+    "cap_hours": 161295.0333930346,
+    "up_hours": 12097.127504477594,
     "yrs": 2.0,
     "risk": 0.2,
     "sus": 1,
     "gov": 1,
-    "rev": 8000,
+    "rev_hours": 161295.0333930346,
+    "output_unbounded_reason": "the line's basis unit is not a kilogram, so a declared annual_output_t cannot bound it",
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -2002,6 +2083,7 @@
     "id": "chm_nylon",
     "name": "Nylon 6,6 synthesis and polymerisation",
     "cat": "plastics",
+    "kind": "RESOURCE",
     "pre": [
       "chm_aniline",
       "analytical_chemistry",
@@ -2023,13 +2105,13 @@
       "hydrogen_m3": 500.0,
       "oxygen_m3": 500.0
     },
-    "cap": 8000,
-    "up": 1500.0,
+    "cap_hours": 161295.0333930346,
+    "up_hours": 30242.818761193987,
     "yrs": 2.0,
     "risk": 0.15,
     "sus": 1,
     "gov": 1,
-    "rev": 10000,
+    "rev_hours": 201618.79174129324,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -2037,7 +2119,8 @@
     "traits": [
       "commerce",
       "labour_saving"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: polyamide polymerization requires rough vacuum to remove water and ammonia byproducts]"
   },
   {
     "id": "chm_soap_hard",
@@ -2051,13 +2134,13 @@
     "ph": 0,
     "lab": {},
     "mat": {},
-    "cap": 0,
-    "up": 0,
+    "cap_hours": 0,
+    "up_hours": 0,
     "yrs": 0.0,
     "risk": 0.0,
     "sus": 0,
     "gov": 0,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "A",
@@ -2067,6 +2150,7 @@
     "id": "chm_detergent_synthetic",
     "name": "Synthetic detergent from petroleum sulfonic acid",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "mat_petroleum_refined",
       "soda_leblanc"
@@ -2080,25 +2164,27 @@
       "coal_kg": 100.0,
       "sulfuric_acid_kg": 400.0
     },
-    "cap": 2000,
-    "up": 150,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 3024.2818761193985,
     "yrs": 1.0,
     "risk": 0.05,
     "sus": 0,
     "gov": 1,
-    "rev": 4000,
+    "rev_hours": 80647.5166965173,
     "sch": 0,
     "art": 0,
     "conf": "B",
     "note": "Synthetic detergents are made by sulfonation of alkenes from cracking petroleum fractions. The sulfonic acid is neutralised with soda ash. Detergent molecules have a long nonpolar hydrocarbon tail that dissolves in grease and a polar sulfonate head that dissolves in water. Synthetic detergents work better in cold water than soap and do not leave scum.",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[FIXED after independent audit: sulfonation needs sulfuric acid and the neutralisation needs soda ash; neither was listed.]"
   },
   {
     "id": "chm_glycerol",
     "name": "Glycerol production and purification",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "soap_hard",
       "cap_pure_4N",
@@ -2112,25 +2198,28 @@
     "mat": {
       "coal_kg": 80
     },
-    "cap": 1500,
-    "up": 150.0,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 3024.2818761193985,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 0,
     "gov": 1,
-    "rev": 2500,
+    "rev_hours": 50404.69793532331,
+    "output_unbounded_reason": "its entries add less than their staff cost at solved prices and state no labour or plant, so a declared output would derive zero revenue",
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Soap manufacture produces a glycerol-rich lye as byproduct. The lye is acidified and glycerol is extracted with ethanol, then distilled under vacuum. Glycerol is a primary feedstock for nitroglycerin and explosives, and also a humectant in textiles and pharmaceuticals. [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum distillation of ethanol-glycerol requires rough vacuum]",
+    "note": "Soap manufacture produces a glycerol-rich lye as byproduct. The lye is acidified and glycerol is extracted with ethanol, then distilled under vacuum. Glycerol is a primary feedstock for nitroglycerin and explosives, and also a humectant in textiles and pharmaceuticals.",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum distillation of ethanol-glycerol requires rough vacuum] [REVIEWED: prerequisite(s) cap_vac_1torr added by a reviewer working node by node. Reason: vacuum distillation of ethanol-glycerol requires rough vacuum]"
   },
   {
     "id": "chm_matches",
     "name": "Friction matches: red phosphorus safety match",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_phosphorus_extraction"
     ],
@@ -2143,13 +2232,13 @@
     "mat": {
       "wood_kg": 50
     },
-    "cap": 1500,
-    "up": 100,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.1,
     "sus": 6,
     "gov": 0,
-    "rev": 2000,
+    "rev_hours": 40323.75834825865,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2157,7 +2246,8 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: this node does not declare the capability rung it needs. An automated pass once inferred one, and an independent review found that EVERY inferred rung it sampled was wrong, so all of them were reverted. The gap is left visible on purpose: a missing prerequisite you can see beats a wrong one you cannot.]  [AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_photography",
@@ -2177,13 +2267,13 @@
       "silver_kg": 10,
       "coal_kg": 100
     },
-    "cap": 2000,
-    "up": 150,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 3024.2818761193985,
     "yrs": 1.0,
     "risk": 0.1,
     "sus": 1,
     "gov": 0,
-    "rev": 3000,
+    "rev_hours": 60485.63752238797,
     "sch": 1,
     "art": 0,
     "conf": "B",
@@ -2193,6 +2283,7 @@
     "id": "chm_refrigerant_ammonia",
     "name": "Ammonia as refrigerant in compression cycles",
     "cat": "thermodynamics",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_haber_bosch",
       "thermodynamics_theory"
@@ -2207,13 +2298,13 @@
       "copper_kg": 50,
       "iron_bar_kg": 100
     },
-    "cap": 3000,
-    "up": 200,
+    "cap_hours": 60485.63752238797,
+    "up_hours": 4032.375834825865,
     "yrs": 1.0,
     "risk": 0.15,
     "sus": 1,
     "gov": 1,
-    "rev": 4000,
+    "rev_hours": 80647.5166965173,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2223,6 +2314,7 @@
     "id": "chm_toluene",
     "name": "Toluene extraction from coal tar",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation",
       "distillation_alcohol"
@@ -2235,13 +2327,13 @@
     "mat": {
       "coal_kg": 150
     },
-    "cap": 1500,
-    "up": 100,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 1,
     "gov": 1,
-    "rev": 2500,
+    "rev_hours": 50404.69793532331,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2254,11 +2346,14 @@
     "id": "chm_phenol",
     "name": "Phenol extraction from coal tar and synthesis",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation",
       "chm_salicylic_acid"
     ],
     "kb": "20_chemistry.md",
+    "annual_output_t": 500,
+    "annual_output_basis": "One tar-distillery fractionating the tar of a large gasworks or coke-oven battery; phenols are a few tenths of a percent of the tar, giving the order of five hundred tonnes of phenol a year. Declared plant size, conf C.",
     "ph": 120,
     "lab": {
       "chemist": 150
@@ -2266,13 +2361,13 @@
     "mat": {
       "coal_kg": 100
     },
-    "cap": 1500,
-    "up": 120,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2419.425500895519,
     "yrs": 0.5,
     "risk": 0.1,
     "sus": 1,
     "gov": 0,
-    "rev": 3000,
+    "rev_hours": 60485.63752238797,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2285,6 +2380,7 @@
     "id": "chm_naphthalene",
     "name": "Naphthalene extraction and purification",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation"
     ],
@@ -2296,13 +2392,13 @@
     "mat": {
       "coal_kg": 150
     },
-    "cap": 1500,
-    "up": 100,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 6,
     "gov": 0,
-    "rev": 2500,
+    "rev_hours": 50404.69793532331,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2310,12 +2406,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_anthracene",
     "name": "Anthracene extraction and oxidation",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_coal_tar_distillation"
     ],
@@ -2327,13 +2425,13 @@
     "mat": {
       "coal_kg": 150
     },
-    "cap": 1500,
-    "up": 100,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 6,
     "gov": 0,
-    "rev": 2500,
+    "rev_hours": 50404.69793532331,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2341,12 +2439,14 @@
     "traits": [
       "inexplicable",
       "spectacle"
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_activated_carbon",
     "name": "Activated carbon production and use",
     "cat": "chemical_engineering",
+    "kind": "ENGINEERING",
     "pre": [
       "charcoal_industrial",
       "cap_heat_1100"
@@ -2360,13 +2460,13 @@
     "mat": {
       "coal_kg": 245
     },
-    "cap": 1500,
-    "up": 120,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2419.425500895519,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 6,
     "gov": 0,
-    "rev": 2500,
+    "rev_hours": 50404.69793532331,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2385,12 +2485,14 @@
           "steam_watt": 1.0
         }
       }
-    ]
+    ],
+    "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
   },
   {
     "id": "chm_water_coagulation",
     "name": "Water treatment by coagulation and settling",
     "cat": "water_chemistry",
+    "kind": "ENGINEERING",
     "pre": [
       "analytical_chemistry"
     ],
@@ -2402,13 +2504,13 @@
     "mat": {
       "alum_kg": 100
     },
-    "cap": 500,
-    "up": 50,
+    "cap_hours": 10080.939587064662,
+    "up_hours": 1008.0939587064662,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 0,
     "gov": 1,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2421,6 +2523,7 @@
     "id": "chm_water_filtration",
     "name": "Sand filtration and multimedia filter beds",
     "cat": "water_chemistry",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_water_coagulation"
     ],
@@ -2432,13 +2535,13 @@
     "mat": {
       "sand_quartz_kg": 1000
     },
-    "cap": 1000,
-    "up": 100,
+    "cap_hours": 20161.879174129324,
+    "up_hours": 2016.1879174129324,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 0,
     "gov": 1,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2451,6 +2554,7 @@
     "id": "chm_water_chlorination",
     "name": "Chlorination of drinking water for disinfection",
     "cat": "water_chemistry",
+    "kind": "ENGINEERING",
     "pre": [
       "chm_deacon_process",
       "chm_bleaching_powder"
@@ -2463,13 +2567,13 @@
     "mat": {
       "bleach_kg": 50
     },
-    "cap": 800,
-    "up": 80,
+    "cap_hours": 16129.50333930346,
+    "up_hours": 1612.950333930346,
     "yrs": 0.5,
     "risk": 0.05,
     "sus": 1,
     "gov": 2,
-    "rev": 0,
+    "rev_hours": 0,
     "sch": 0,
     "art": 0,
     "conf": "B",
@@ -2483,6 +2587,7 @@
     "id": "chm_formaldehyde_synthesis",
     "name": "Formaldehyde oxidation of methanol",
     "cat": "organic_chemistry",
+    "kind": "SCIENCE",
     "pre": [
       "distillation_alcohol",
       "chm_catalyst_concept",
@@ -2497,29 +2602,33 @@
     "mat": {
       "coal_kg": 80
     },
-    "cap": 1500,
-    "up": 120,
+    "cap_hours": 30242.818761193987,
+    "up_hours": 2419.425500895519,
     "yrs": 0.5,
     "risk": 0.1,
     "sus": 0,
     "gov": 1,
-    "rev": 2500,
+    "rev_hours": 50404.69793532331,
     "sch": 0,
     "art": 0,
     "conf": "B",
-    "note": "Methanol vapour is oxidised over silver gauze at 600 C. Formaldehyde is produced as an equilibrium mixture with methanol and water; the product is stabilised by dissolving in water as formalin. Formaldehyde is a cross-linking reagent for proteins and cellulose, essential for resins. [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: methanol oxidation over silver at 600 C, within pottery kiln range]",
+    "note": "Methanol vapour is oxidised over silver gauze at 600 C. Formaldehyde is produced as an equilibrium mixture with methanol and water; the product is stabilised by dissolving in water as formalin. Formaldehyde is a cross-linking reagent for proteins and cellulose, essential for resins.",
     "traits": [
       "inexplicable"
-    ]
+    ],
+    "_internal": "[REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: methanol oxidation over silver at 600 C, within pottery kiln range] [REVIEWED: prerequisite(s) cap_heat_0700 added by a reviewer working node by node. Reason: methanol oxidation over silver at 600 C, within pottery kiln range]"
   },
   {
     "id": "chm_phosphorus_extraction",
     "name": "White phosphorus extraction from bone ash",
     "cat": "mineral_extraction",
+    "kind": "ENGINEERING",
     "pre": [
       "cap_heat_1300"
     ],
     "kb": "20_chemistry.md",
+    "annual_output_t": 50,
+    "annual_output_basis": "A match-industry works with one or two retorts reducing bone-ash phosphate, about one tonne of phosphorus a week over fifty weeks. Declared plant size, conf C.",
     "ph": 120,
     "lab": {
       "furnaceman": 150
@@ -2528,13 +2637,14 @@
       "charcoal_kg": 200,
       "bone_ash_kg": 500
     },
-    "cap": 2000,
-    "up": 150,
+    "cap_hours": 40323.75834825865,
+    "up_hours": 3024.2818761193985,
     "yrs": 0.5,
     "risk": 0.2,
     "sus": 2,
     "gov": 1,
-    "rev": 2000,
+    "rev_hours": 40323.75834825865,
+    "unheld_reason": "phosphorus is isolated in the 1600s",
     "sch": 0,
     "art": 0,
     "conf": "B",

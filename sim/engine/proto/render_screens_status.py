@@ -15,6 +15,7 @@ table of startable-today nodes, the one place here that reaches into the
 from .score import _score_lines
 from ..knowledge_warning import warning_lines
 from .util import _factor, _fmt_num, _pct, _wrap
+from .hazard_words import advice_header
 from .render_screens_big import _available_row, available_header
 
 def render_values(out):
@@ -90,12 +91,15 @@ def render_stuck(out):
         lines.append("  " + reasons)
     else:
         for reason in reasons:
-            lines.append("  %s:" % str(reason.get("what", "")).upper())
+            kind_label = " [%s]" % reason["kind"] if reason.get("kind") else ""
+            lines.append("  %s%s:" % (str(reason.get("what", "")).upper(), kind_label))
             if reason.get("why"):
                 lines.append(_wrap(reason["why"], indent="    "))
             _why_underfunded = reason.get("each_why_underfunded") or {}
             for node_id, value in sorted((reason.get("each_waiting_on") or {}).items()):
-                lines.append(_wrap("%s - waiting on %s" % (node_id, value), indent="    "))
+                project_kind = (reason.get("each_kind") or {}).get(node_id)
+                lines.append(_wrap("%s%s - waiting on %s" % (node_id, " [%s]" % project_kind if project_kind else "", value),
+                                   indent="    "))
                 if _why_underfunded.get(node_id):
                     lines.append(_wrap(_why_underfunded[node_id], indent="      "))
             if reason.get("the_nearest_few"):
@@ -161,11 +165,7 @@ def render_risk(out):
         if hazard.get("note"):
             lines.append(_wrap(hazard["note"], indent="  "))
         for kind, advice in (hazard.get("what_you_can_do") or {}).items():
-            lines.append(_advice_line(kind, advice))
-        for kind in ("sack_chance", "staff_loss"):
-            after = hazard.get("%s_after_what_you_have_built" % kind)
-            if after is not None:
-                lines.append("  %s after what you have built: %s" % (kind.replace("_", " "), _pct(after)))
+            lines.append(_advice_line(kind, advice, hazard))
         if hazard.get("staff_loss") is not None:
             lines.append("  staff loss is a separate %s chance EVERY year, not a "
                      "total for the epidemic: %d checks remain; that is about "
@@ -176,6 +176,12 @@ def render_risk(out):
                         _pct(hazard.get("chance_of_at_least_one_staff_loss_wave", 0)),
                         _pct(hazard.get("expected_cumulative_staff_loss", 0))))
     lines.extend(_confiscation_lines(out.get("confiscation")))
+    for group in out.get("interest_groups") or []:
+        lines.append("")
+        lines.append(_wrap("INTEREST GROUP %s (about %s people, %s a year lost): because %s%s"
+                           % (group["name"], _fmt_num(group["people"]), _fmt_num(group["income_lost_per_year"]),
+                              group["cause"], "; asks to " + "; ".join(group["demands"]) if group["demands"] else ""),
+                          indent="  "))
     return "\n".join(lines)
 
 
@@ -192,18 +198,30 @@ def _confiscation_lines(confiscation):
     return lines
 
 
-def _advice_line(kind, advice, indent="  "):
+def _advice_line(kind, advice, hazard=None, indent="  "):
     """One hazard's exposure, in a sentence rather than a bare dict repr -
     playing this through a real run, {'you_currently_take': 1.0, 'because_of':
     [], 'what_would_help': '...'} printed as literal Python was the single
     worst line in the whole rendering.
+
+    The figure is said in the unit it is in (a share of your staff, output
+    against normal), then each defence with what it takes off.
     """
     if not isinstance(advice, dict):
         return "%s%s: %s" % (indent, kind.replace("_", " "), advice)
-    take = advice.get("you_currently_take")
     because = advice.get("because_of") or []
-    line = "%s%s: you take %s of it" % (indent, kind.replace("_", " "), _pct(take))
-    if because:
+    line = advice_header(kind, advice, hazard or {}, indent)
+    mitigations = advice.get("mitigations") or []
+    if mitigations:
+        line += "\n%s  what you have built:" % indent
+        for mitigation in mitigations:
+            effect = ("takes off %.1f points" % (mitigation["points"] * 100)
+                      if mitigation.get("points") is not None
+                      else "removes %s of the harm" % _pct(mitigation["removes_share"]))
+            if mitigation.get("status") == "lapsed":
+                effect += ", residual only; '%s' brings back the full effect" % mitigation["how"]
+            line += "\n%s    - %s: %s" % (indent, mitigation["label"], effect)
+    elif because:
         line += " (softened by %s)" % ", ".join(because)
     help_ = advice.get("what_would_help")
     if help_:
@@ -222,9 +240,14 @@ def _advice_line(kind, advice, indent="  "):
                               % (step["id"], _fmt_num(step["cost"]),
                                  step.get("because_it_gives_you") or "a hedge")
                               for step in now))
+        for step in now:
+            if step.get("timing"):
+                line += "\n%s    %s: %s" % (indent, step["id"], step["timing"]["in_words"])
     for step in later[:2]:
         line += "\n%s  %s is one of them, waiting on: %s" % (
             indent, step["id"], (step.get("waiting_on") or "").split(". To get")[0])
+        if step.get("timing"):
+            line += "\n%s    %s" % (indent, step["timing"]["in_words"])
     return line
 
 
@@ -359,22 +382,40 @@ def render_rush(out):
                  "%s a year" % (out.get("count_would_start", 0),
                                 _fmt_num(out.get("total_cost")),
                                 _fmt_num(out.get("total_annual_draw")))]
+        if out.get("filters"):
+            lines.append("  filters: " + ", ".join("%s=%s" % pair for pair in sorted(out["filters"].items())))
+        if "total_founder_hours" in out:
+            lines.append("  founder hours owed: %s" % _fmt_num(out["total_founder_hours"]))
+        for row in out.get("trade_bottlenecks") or []:
+            lines.append("  BOTTLENECK %s: wants %s hours a year, society can supply %s"
+                         % (row["trade"], _fmt_num(row["demand_hours_this_year"]),
+                            _fmt_num(row["supply_hours_this_year"])))
+        if out.get("risk_exposure"):
+            lines.append("  risk: about %s of these would be expected to fail; riskiest %s"
+                         % (_fmt_num(out["risk_exposure"]["expected_failures"]),
+                            out["risk_exposure"]["riskiest"]))
         for row in out.get("would_start") or []:
             lines.append("  WOULD START %s (%s): %s" % (row.get("id"),
                          _fmt_num(row.get("cost")), row.get("name")))
         for row in out.get("not_started") or []:
             lines.append("  SKIPPED %s: %s" % (row.get("id"), row.get("why")))
+        for row in out.get("excluded") or []:
+            lines.append("  EXCLUDED %s: %s" % (row.get("id"), row.get("why")))
         if out.get("how_to_confirm"):
             lines.append("")
             lines.append(_wrap(out["how_to_confirm"]))
         return "\n".join(lines)
     lines = ["RUSH: %d started, %d not" % (out.get("count_started", 0),
                                        out.get("count_not_started", 0))]
+    if out.get("filters"):
+        lines.append("  filters: " + ", ".join("%s=%s" % pair for pair in sorted(out["filters"].items())))
     for row in out.get("started") or []:
         lines.append("  STARTED %s (%s): %s" % (row.get("id"), _fmt_num(row.get("cost")),
                                             row.get("name")))
     for row in out.get("not_started") or []:
         lines.append("  NOT STARTED %s: %s" % (row.get("id"), row.get("why")))
+    for row in out.get("excluded") or []:
+        lines.append("  EXCLUDED %s: %s" % (row.get("id"), row.get("why")))
     if out.get("this_is_an_approximation_not_optimal_play"):
         lines.append("")
         lines.append(_wrap(out["this_is_an_approximation_not_optimal_play"]))

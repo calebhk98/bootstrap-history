@@ -3,6 +3,7 @@
   "id": "tl_horseshoe",
   "name": "Nailed horseshoe",
   "cat": "animal_traction",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "horse_collar"
@@ -18,14 +19,14 @@
   "mat": {
    "iron_bar_kg": 5.0
   },
-  "cap": 200.0,
-  "up": 50.0,
+  "cap_hours": 4032.375834825865,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.1,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -61,14 +62,14 @@
    "mat_leather": 3,
    "mat_wool": 1
   },
-  "cap": 400,
-  "up": 40,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.2,
   "adopt_yrs": 0.1,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -78,6 +79,7 @@
   "id": "tl_whippletree",
   "name": "Whippletree and swingletree",
   "cat": "animal_traction",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "mat_wrought_iron"
@@ -96,14 +98,14 @@
    "timber_m3": 0.5,
    "wood_kg": 3.0
   },
-  "cap": 300,
-  "up": 30,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -123,6 +125,7 @@
   "id": "tl_tandem_harness",
   "name": "Tandem harness for shafts",
   "cat": "animal_traction",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "mat_leather"
@@ -139,14 +142,14 @@
    "mat_leather": 4,
    "cordage_kg": 2
   },
-  "cap": 350,
-  "up": 35,
+  "cap_hours": 7056.657710945264,
+  "up_hours": 705.6657710945263,
   "build_yrs": 0.3,
   "adopt_yrs": 0.1,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.09,
-  "rev": 180,
+  "rev_hours": 3629.138251343278,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -165,6 +168,7 @@
   "id": "tl_stirrup",
   "name": "Stirrup with foot loop",
   "cat": "animal_traction",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "mat_leather",
@@ -183,14 +187,14 @@
    "iron_bar_kg": 3.0,
    "leather_kg": 2.0
   },
-  "cap": 250.0,
-  "up": 30.0,
+  "cap_hours": 5040.469793532331,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.04,
-  "rev": 80,
+  "rev_hours": 1612.950333930346,
   "sch": 0,
   "art": 1,
   "conf": "A",
@@ -204,12 +208,14 @@
      "mat_wrought_iron": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[FIXED after independent audit: the horse collar is draught harness and has nothing to do with a mounted rider's balance. The real missing input is a framed saddle.]"
  },
  {
   "id": "tl_spoked_wheel",
   "name": "Improved spoked wheel",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -226,14 +232,14 @@
    "iron_bar_kg": 4,
    "mat_wood": 8
   },
-  "cap": 500,
-  "up": 50,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -253,6 +259,7 @@
   "id": "tl_iron_tyre",
   "name": "Iron tyre band",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_spoked_wheel",
    "mat_wrought_iron",
@@ -269,14 +276,14 @@
   "mat": {
    "iron_bar_kg": 5
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -296,6 +303,7 @@
   "id": "tl_shrink_fit",
   "name": "Shrink-fit tyre assembly",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_iron_tyre",
    "cap_heat_1100"
@@ -309,14 +317,14 @@
    "smith": 200
   },
   "mat": {},
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.7,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -341,14 +349,14 @@
   "mat": {
    "gravel_kg": 1000
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 0.5,
   "dev_years": 8,
   "dev_people": 3,
   "risk": 0.16,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 50,
   "art": 4,
   "conf": "B",
@@ -358,6 +366,7 @@
   "id": "tl_road_roller",
   "name": "Steam road roller",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "lnd_macadam",
    "steam_high_pressure",
@@ -377,14 +386,14 @@
    "steel_plate_kg": 20,
    "cast_iron_kg": 15
   },
-  "cap": 2000,
-  "up": 200,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 0.3,
   "dev_years": 6,
   "dev_people": 3,
   "risk": 0.18,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -411,14 +420,14 @@
    "mat_bitumen": 200,
    "gravel_kg": 1000
   },
-  "cap": 1200,
-  "up": 120,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1.2,
   "adopt_yrs": 0.5,
   "dev_years": 7,
   "dev_people": 3,
   "risk": 0.17,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 50,
   "art": 4,
   "conf": "B",
@@ -428,6 +437,7 @@
   "id": "tl_concrete_roadway",
   "name": "Reinforced concrete road",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "mat_concrete_reinforced"
   ],
@@ -443,14 +453,14 @@
   "mat": {
    "steel_plate_kg": 500
   },
-  "cap": 3000,
-  "up": 300,
+  "cap_hours": 60485.63752238797,
+  "up_hours": 6048.563752238797,
   "build_yrs": 2,
   "adopt_yrs": 1,
   "dev_years": 10,
   "dev_people": 4,
   "risk": 0.2,
-  "rev": 1500,
+  "rev_hours": 30242.818761193987,
   "sch": 100,
   "art": 5,
   "conf": "B",
@@ -460,6 +470,7 @@
   "id": "tl_cambered_drainage",
   "name": "Cambered road and drainage",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -470,14 +481,14 @@
    "engineer": 150
   },
   "mat": {},
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.8,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 30,
   "art": 3,
   "conf": "A",
@@ -487,6 +498,7 @@
   "id": "tl_kerbing",
   "name": "Kerb and gutter edge",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [],
   "traits": [
    "infrastructure"
@@ -499,14 +511,14 @@
   "mat": {
    "mat_stone": 50
   },
-  "cap": 500,
-  "up": 50,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.5,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 20,
   "art": 2,
   "conf": "A",
@@ -516,6 +528,7 @@
   "id": "tl_level_crossing",
   "name": "Level crossing: road and rail",
   "cat": "roads_surfaces",
+  "kind": "INFRASTRUCTURE",
   "pre": [
    "railway"
   ],
@@ -530,14 +543,14 @@
   "mat": {
    "steel_plate_kg": 100
   },
-  "cap": 1500,
-  "up": 150,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 1,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.22,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 60,
   "art": 3,
   "conf": "B",
@@ -547,6 +560,7 @@
   "id": "tl_plain_bearing",
   "name": "Plain journal bearing",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_bronze"
   ],
@@ -559,14 +573,14 @@
   "mat": {
    "mat_bronze": 1
   },
-  "cap": 400,
-  "up": 40,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -586,6 +600,7 @@
   "id": "tl_roller_bearing",
   "name": "Roller bearing: cylindrical",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm"
   ],
@@ -600,14 +615,14 @@
   "mat": {
    "steel_plate_kg": 2
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -617,6 +632,7 @@
   "id": "tl_ball_bearing",
   "name": "Ball bearing: spherical",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "cap_heat_1100",
@@ -634,23 +650,25 @@
   "mat": {
    "steel_plate_kg": 5.0
   },
-  "cap": 1200,
-  "up": 120,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 2419.425500895519,
   "build_yrs": 0.8,
   "adopt_yrs": 0.3,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Steel balls in a cage roll between races. Reduces friction in wheel hubs and pedal cranks by 90 percent. Makes the bicycle practical and comfortable for long rides."
+  "note": "Steel balls in a cage roll between races. Reduces friction in wheel hubs and pedal cranks by 90 percent. Makes the bicycle practical and comfortable for long rides.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_taper_roller_bearing",
   "name": "Taper roller bearing",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_ball_bearing",
    "cap_tol_10um"
@@ -666,14 +684,14 @@
   "mat": {
    "steel_plate_kg": 2
   },
-  "cap": 1800,
-  "up": 180,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 3629.138251343278,
   "build_yrs": 1,
   "adopt_yrs": 0.3,
   "dev_years": 8,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -683,6 +701,7 @@
   "id": "tl_grease_cup",
   "name": "Grease cup with screw plunger",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -695,14 +714,14 @@
   "mat": {
    "iron_bar_kg": 0.2
   },
-  "cap": 300,
-  "up": 30,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -722,6 +741,7 @@
   "id": "tl_oil_bath",
   "name": "Oil bath: submerged bearing",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_ball_bearing",
    "mat_olive_oil"
@@ -737,14 +757,14 @@
   "mat": {
    "cast_iron_kg": 2
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.4,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.08,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -754,6 +774,7 @@
   "id": "tl_leaf_spring",
   "name": "Leaf spring: stacked flat",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -768,14 +789,14 @@
   "mat": {
    "iron_bar_kg": 3
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -795,6 +816,7 @@
   "id": "tl_elliptic_spring",
   "name": "Elliptic spring: single curved",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_leaf_spring",
    "cap_heat_1100"
@@ -810,14 +832,14 @@
   "mat": {
    "iron_bar_kg": 2.5
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -827,6 +849,7 @@
   "id": "tl_coil_spring",
   "name": "Coil spring: helical wire",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "cap_tol_1mm"
@@ -842,14 +865,14 @@
   "mat": {
    "iron_bar_kg": 1.5
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -869,6 +892,7 @@
   "id": "tl_friction_damper",
   "name": "Friction damper: sliding block",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_coil_spring"
   ],
@@ -884,14 +908,14 @@
    "mat_bronze": 0.5,
    "iron_bar_kg": 1
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.4,
   "adopt_yrs": 0.1,
   "dev_years": 3,
   "dev_people": 2,
   "risk": 0.08,
-  "rev": 280,
+  "rev_hours": 5645.326168756211,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -901,6 +925,7 @@
   "id": "tl_hydraulic_shock",
   "name": "Hydraulic shock absorber",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_coil_spring",
    "cap_tol_10um"
@@ -916,14 +941,14 @@
   "mat": {
    "steel_plate_kg": 3
   },
-  "cap": 1200,
-  "up": 120,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 2419.425500895519,
   "build_yrs": 0.8,
   "adopt_yrs": 0.2,
   "dev_years": 6,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -933,6 +958,7 @@
   "id": "tl_fifth_wheel",
   "name": "Fifth wheel coupling",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "tl_ball_bearing"
@@ -949,14 +975,14 @@
   "mat": {
    "iron_bar_kg": 5
   },
-  "cap": 900,
-  "up": 90,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 1814.569125671639,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 450,
+  "rev_hours": 9072.845628358196,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -986,14 +1012,14 @@
    "engineer": 150
   },
   "mat": {},
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.4,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1003,6 +1029,7 @@
   "id": "tl_kingpin",
   "name": "Kingpin and steering arm",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron",
    "tl_ball_bearing"
@@ -1016,14 +1043,14 @@
   "mat": {
    "iron_bar_kg": 1
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -1043,6 +1070,7 @@
   "id": "tl_brake_shoe",
   "name": "Brake shoe: curved pad",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron",
    "cap_tol_1mm",
@@ -1059,14 +1087,14 @@
   "mat": {
    "cast_iron_kg": 20.0
   },
-  "cap": 500,
-  "up": 50,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -1087,6 +1115,7 @@
   "id": "tl_drum_brake",
   "name": "Drum brake: shoes in cylinder",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_brake_shoe",
    "mat_cast_iron"
@@ -1102,14 +1131,14 @@
   "mat": {
    "cast_iron_kg": 3
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1130,6 +1159,7 @@
   "id": "tl_disc_brake",
   "name": "Disc brake: pad on disk",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel"
@@ -1145,14 +1175,14 @@
   "mat": {
    "steel_plate_kg": 2
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.7,
   "adopt_yrs": 0.3,
   "dev_years": 6,
   "dev_people": 3,
   "risk": 0.13,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -1172,6 +1202,7 @@
   "id": "tl_hydraulic_brake_line",
   "name": "Hydraulic brake line and cylinder",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "mat_bulk_steel"
@@ -1187,14 +1218,14 @@
   "mat": {
    "steel_plate_kg": 1.5
   },
-  "cap": 900,
-  "up": 90,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 1814.569125671639,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1214,6 +1245,7 @@
   "id": "tl_handbrake",
   "name": "Handbrake: lever and cable",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -1229,14 +1261,14 @@
    "iron_bar_kg": 0.5,
    "cordage_kg": 1
   },
-  "cap": 500,
-  "up": 50,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -1256,6 +1288,7 @@
   "id": "tl_differential",
   "name": "Differential: bevel gears",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_wrought_iron",
@@ -1278,14 +1311,14 @@
    "iron_bar_kg": 80.0,
    "steel_plate_kg": 40.0
   },
-  "cap": 2500.0,
-  "up": 200.0,
+  "cap_hours": 50404.69793532331,
+  "up_hours": 4032.375834825865,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1299,12 +1332,14 @@
      "mat_wrought_iron": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_live_axle",
   "name": "Live axle: powered driving",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_differential"
   ],
@@ -1319,14 +1354,14 @@
   "mat": {
    "iron_bar_kg": 4
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1336,6 +1371,7 @@
   "id": "tl_dead_axle",
   "name": "Dead axle: non-driven",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -1348,14 +1384,14 @@
   "mat": {
    "iron_bar_kg": 3
   },
-  "cap": 400,
-  "up": 40,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -1375,6 +1411,7 @@
   "id": "tl_universal_joint",
   "name": "Universal joint: Cardan shaft",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_wrought_iron"
@@ -1390,14 +1427,14 @@
   "mat": {
    "iron_bar_kg": 1
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1417,6 +1454,7 @@
   "id": "tl_propshaft",
   "name": "Propshaft: transmission shaft",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_universal_joint",
    "cap_tol_100um"
@@ -1432,14 +1470,14 @@
   "mat": {
    "steel_plate_kg": 2
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1449,6 +1487,7 @@
   "id": "tl_velocipede",
   "name": "Velocipede: pedal-driven wheel",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_spoked_wheel",
    "cap_tol_1mm"
@@ -1465,14 +1504,14 @@
   "mat": {
    "iron_bar_kg": 2
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1482,6 +1521,7 @@
   "id": "tl_penny_farthing",
   "name": "Penny-farthing: large wheel",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_velocipede",
    "cap_tol_100um",
@@ -1504,23 +1544,25 @@
    "iron_bar_kg": 20.0,
    "timber_m3": 1.0
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
-  "note": "Huge front wheel, tiny back wheel. Higher wheel passes obstacles; one turn of the crank moves you further. Unstable and dangerous but fast. Rider height makes it impractical for most."
+  "note": "Huge front wheel, tiny back wheel. Higher wheel passes obstacles; one turn of the crank moves you further. Unstable and dangerous but fast. Rider height makes it impractical for most.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_chain_drive",
   "name": "Chain drive: roller chain",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_wrought_iron"
@@ -1536,14 +1578,14 @@
   "mat": {
    "iron_bar_kg": 1
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1563,6 +1605,7 @@
   "id": "tl_safety_bicycle",
   "name": "Safety bicycle: chain-driven",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_chain_drive",
    "tl_ball_bearing",
@@ -1586,23 +1629,25 @@
    "rubber_kg": 2.0,
    "timber_m3": 1.0
   },
-  "cap": 900,
-  "up": 90,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 1814.569125671639,
   "build_yrs": 0.7,
   "adopt_yrs": 0.3,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 4,
   "conf": "B",
-  "note": "Equal-size wheels with chain drive; seat low and central. The chain and the differential-free rear drive are the inventions. Safe, stable, and fast. Modern bicycle geometry."
+  "note": "Equal-size wheels with chain drive; seat low and central. The chain and the differential-free rear drive are the inventions. Safe, stable, and fast. Modern bicycle geometry.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_freewheel",
   "name": "Freewheel: ratchet hub",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_safety_bicycle",
    "cap_tol_100um"
@@ -1618,14 +1663,14 @@
   "mat": {
    "steel_plate_kg": 1
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.2,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1635,6 +1680,7 @@
   "id": "tl_derailleur",
   "name": "Derailleur: chain shifter",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_freewheel",
    "cap_tol_10um"
@@ -1650,14 +1696,14 @@
   "mat": {
    "steel_plate_kg": 0.5
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.7,
   "adopt_yrs": 0.3,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -1667,6 +1713,7 @@
   "id": "tl_hub_gear",
   "name": "Hub gear: internal speeds",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_freewheel",
    "cap_tol_10um"
@@ -1682,14 +1729,14 @@
   "mat": {
    "steel_plate_kg": 1.5
   },
-  "cap": 1200,
-  "up": 120,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 2419.425500895519,
   "build_yrs": 0.8,
   "adopt_yrs": 0.4,
   "dev_years": 7,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -1699,6 +1746,7 @@
   "id": "tl_caliper_brake",
   "name": "Caliper brake: side-pull",
   "cat": "bicycles",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_safety_bicycle",
    "cap_tol_100um"
@@ -1714,14 +1762,14 @@
   "mat": {
    "steel_plate_kg": 0.5
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.2,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1731,6 +1779,7 @@
   "id": "tl_carburettor",
   "name": "Carburettor: fuel atomiser",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel",
@@ -1751,14 +1800,14 @@
    "copper_kg": 5.0,
    "steel_plate_kg": 10.0
   },
-  "cap": 900,
-  "up": 90,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 1814.569125671639,
   "build_yrs": 0.7,
   "adopt_yrs": 0.3,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -1772,12 +1821,14 @@
      "mat_wrought_iron": 0.7
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_throttle",
   "name": "Throttle valve: fuel control",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_carburettor"
   ],
@@ -1792,14 +1843,14 @@
   "mat": {
    "cast_iron_kg": 0.5
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.4,
   "adopt_yrs": 0.1,
   "dev_years": 3,
   "dev_people": 2,
   "risk": 0.08,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1809,6 +1860,7 @@
   "id": "tl_magneto_ignition",
   "name": "Magneto ignition: coil armature",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_time_ms",
    "cap_heat_1100"
@@ -1824,14 +1876,14 @@
   "mat": {
    "steel_plate_kg": 1
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 6,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -1841,6 +1893,7 @@
   "id": "tl_coil_ignition",
   "name": "Coil ignition: battery and breaker",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "electromagnet",
    "cap_measure_time_ms"
@@ -1856,14 +1909,14 @@
   "mat": {
    "steel_plate_kg": 0.5
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1873,6 +1926,7 @@
   "id": "tl_spark_plug",
   "name": "Spark plug: electrode gap",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_10um",
    "mat_porcelain",
@@ -1895,14 +1949,14 @@
    "platinum_g": 2.0,
    "porcelain_kg": 0.2
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1914,12 +1968,14 @@
      "mat_platinum_bulk": 1.0
     }
    }
-  ]
+  ],
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_distributor",
   "name": "Distributor: switching contacts",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_spark_plug",
    "cap_tol_100um"
@@ -1935,14 +1991,14 @@
   "mat": {
    "steel_plate_kg": 0.5
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -1952,6 +2008,7 @@
   "id": "tl_electric_starter",
   "name": "Electric starter motor",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric"
   ],
@@ -1966,14 +2023,14 @@
   "mat": {
    "steel_plate_kg": 2
   },
-  "cap": 1200,
-  "up": 120,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 2419.425500895519,
   "build_yrs": 0.8,
   "adopt_yrs": 0.3,
   "dev_years": 7,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -1996,14 +2053,14 @@
   "mat": {
    "steel_plate_kg": 1.5
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -2013,6 +2070,7 @@
   "id": "tl_radiator",
   "name": "Radiator: water cooler",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_brass",
@@ -2032,14 +2090,14 @@
    "brass_kg": 2.0,
    "cast_iron_kg": 150.0
   },
-  "cap": 900,
-  "up": 100.0,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2059,6 +2117,7 @@
   "id": "tl_water_pump",
   "name": "Water pump: centrifugal",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_cast_iron"
@@ -2074,14 +2133,14 @@
   "mat": {
    "cast_iron_kg": 1.5
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2102,6 +2161,7 @@
   "id": "tl_thermostat",
   "name": "Thermostat: temperature valve",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_measure_temp",
    "mat_wrought_iron"
@@ -2117,14 +2177,14 @@
   "mat": {
    "iron_bar_kg": 0.3
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.4,
   "adopt_yrs": 0.1,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -2144,6 +2204,7 @@
   "id": "tl_fan_belt",
   "name": "Fan belt and pulley drive",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_water_pump",
    "mat_rubber_coagulated",
@@ -2160,14 +2221,14 @@
   "mat": {
    "mat_rubber": 1
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2177,6 +2238,7 @@
   "id": "tl_cone_clutch",
   "name": "Cone clutch: friction surface",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_bronze"
@@ -2192,14 +2254,14 @@
   "mat": {
    "mat_bronze": 1
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2219,6 +2281,7 @@
   "id": "tl_plate_clutch",
   "name": "Plate clutch: disk friction",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_cast_iron"
@@ -2234,14 +2297,14 @@
   "mat": {
    "cast_iron_kg": 1.5
   },
-  "cap": 900,
-  "up": 90,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 1814.569125671639,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 450,
+  "rev_hours": 9072.845628358196,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2262,6 +2325,7 @@
   "id": "tl_sliding_gearbox",
   "name": "Sliding gearbox: mesh shift",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_cast_iron"
@@ -2277,14 +2341,14 @@
   "mat": {
    "cast_iron_kg": 3
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2305,6 +2369,7 @@
   "id": "tl_synchromesh",
   "name": "Synchromesh: synchronizer ring",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_sliding_gearbox",
    "cap_tol_10um"
@@ -2320,14 +2385,14 @@
   "mat": {
    "steel_plate_kg": 1.5
   },
-  "cap": 1200,
-  "up": 120,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 2419.425500895519,
   "build_yrs": 0.8,
   "adopt_yrs": 0.3,
   "dev_years": 7,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -2337,6 +2402,7 @@
   "id": "tl_epicyclic_gearbox",
   "name": "Epicyclic gearbox: planetary",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_cast_iron"
@@ -2352,14 +2418,14 @@
   "mat": {
    "cast_iron_kg": 2.5
   },
-  "cap": 1400,
-  "up": 140,
+  "cap_hours": 28226.630843781055,
+  "up_hours": 2822.6630843781054,
   "build_yrs": 1,
   "adopt_yrs": 0.3,
   "dev_years": 8,
   "dev_people": 3,
   "risk": 0.15,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -2380,6 +2446,7 @@
   "id": "tl_automatic_transmission",
   "name": "Automatic transmission: hydraulic",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_epicyclic_gearbox",
    "cap_tol_10um"
@@ -2395,14 +2462,14 @@
   "mat": {
    "steel_plate_kg": 4
   },
-  "cap": 2000,
-  "up": 200,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 4032.375834825865,
   "build_yrs": 1.5,
   "adopt_yrs": 0.5,
   "dev_years": 10,
   "dev_people": 4,
   "risk": 0.18,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 50,
   "art": 5,
   "conf": "B",
@@ -2412,6 +2479,7 @@
   "id": "tl_fuel_pump",
   "name": "Fuel pump: mechanical",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "cap_tol_100um"
@@ -2427,14 +2495,14 @@
   "mat": {
    "cast_iron_kg": 1
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.08,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2444,6 +2512,7 @@
   "id": "tl_oil_pump",
   "name": "Oil pump: pressure lubrication",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "cap_tol_100um"
@@ -2459,14 +2528,14 @@
   "mat": {
    "cast_iron_kg": 1.5
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2476,6 +2545,7 @@
   "id": "tl_air_filter",
   "name": "Air filter: intake cleaning",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [],
   "traits": [],
   "kb": "86_transport_deep.md#tl_carburettor",
@@ -2486,14 +2556,14 @@
   "mat": {
    "mat_cloth": 0.5
   },
-  "cap": 400,
-  "up": 40,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -2503,6 +2573,7 @@
   "id": "tl_muffler",
   "name": "Muffler: silencer pipe",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron",
    "mfg_hot_riveting"
@@ -2518,14 +2589,14 @@
   "mat": {
    "cast_iron_kg": 2
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.4,
   "adopt_yrs": 0,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.07,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -2546,6 +2617,7 @@
   "id": "tl_windscreen_wiper",
   "name": "Windscreen wiper: mechanical",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "crank_conrod",
    "mat_rubber_coagulated",
@@ -2562,14 +2634,14 @@
   "mat": {
    "mat_rubber": 0.2
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.08,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2579,6 +2651,7 @@
   "id": "tl_headlamp",
   "name": "Headlamp: electric light",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "arc_light_lamp"
@@ -2594,14 +2667,14 @@
   "mat": {
    "glass_raw_kg": 1
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -2611,6 +2684,7 @@
   "id": "tl_indicator",
   "name": "Indicator light: direction signal",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric"
   ],
@@ -2625,14 +2699,14 @@
   "mat": {
    "glass_raw_kg": 0.1
   },
-  "cap": 500,
-  "up": 50,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 200,
+  "rev_hours": 4032.375834825865,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -2642,6 +2716,7 @@
   "id": "tl_omnibus",
   "name": "Omnibus: passenger coach",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "horse_collar",
    "tl_elliptic_spring",
@@ -2669,23 +2744,25 @@
    "timber_m3": 100.0,
    "wood_kg": 50.0
   },
-  "cap": 8000.0,
-  "up": 1000.0,
+  "cap_hours": 161295.0333930346,
+  "up_hours": 20161.879174129324,
   "build_yrs": 1.5,
   "adopt_yrs": 0.3,
   "dev_years": 6,
   "dev_people": 3,
   "risk": 0.12,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 50,
   "art": 4,
   "conf": "B",
-  "note": "Coach carrying multiple paying passengers on a fixed route. Cheaper than hiring a private carriage. Operates on schedule and shares capacity with strangers."
+  "note": "Coach carrying multiple paying passengers on a fixed route. Cheaper than hiring a private carriage. Operates on schedule and shares capacity with strangers.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_horse_tram",
   "name": "Tram: horse-drawn",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_omnibus",
    "railway"
@@ -2704,14 +2781,14 @@
    "iron_bar_kg": 15,
    "mat_wood": 40
   },
-  "cap": 1500,
-  "up": 150,
+  "cap_hours": 30242.818761193987,
+  "up_hours": 3024.2818761193985,
   "build_yrs": 2,
   "adopt_yrs": 0.4,
   "dev_years": 7,
   "dev_people": 3,
   "risk": 0.13,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 60,
   "art": 4,
   "conf": "B",
@@ -2721,6 +2798,7 @@
   "id": "tl_steam_tram",
   "name": "Tram: steam-powered",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_horse_tram",
    "steam_high_pressure"
@@ -2739,14 +2817,14 @@
    "cast_iron_kg": 20,
    "iron_bar_kg": 10
   },
-  "cap": 2000,
-  "up": 200,
+  "cap_hours": 40323.75834825865,
+  "up_hours": 4032.375834825865,
   "build_yrs": 2.5,
   "adopt_yrs": 0.5,
   "dev_years": 8,
   "dev_people": 4,
   "risk": 0.15,
-  "rev": 900,
+  "rev_hours": 18145.691256716393,
   "sch": 80,
   "art": 5,
   "conf": "B",
@@ -2756,6 +2834,7 @@
   "id": "tl_electric_tram",
   "name": "Tram: electric powered",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "power_grid",
    "tl_motor_dc"
@@ -2773,14 +2852,14 @@
   "mat": {
    "steel_plate_kg": 15
   },
-  "cap": 1800,
-  "up": 180,
+  "cap_hours": 36291.382513432785,
+  "up_hours": 3629.138251343278,
   "build_yrs": 2,
   "adopt_yrs": 0.5,
   "dev_years": 7,
   "dev_people": 3,
   "risk": 0.13,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 70,
   "art": 4,
   "conf": "B",
@@ -2790,6 +2869,7 @@
   "id": "tl_trolleybus",
   "name": "Trolleybus: electric bus",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_electric_tram",
    "tl_omnibus"
@@ -2807,14 +2887,14 @@
   "mat": {
    "steel_plate_kg": 10
   },
-  "cap": 1900,
-  "up": 190,
+  "cap_hours": 38307.57043084571,
+  "up_hours": 3830.7570430845717,
   "build_yrs": 2.2,
   "adopt_yrs": 0.5,
   "dev_years": 7,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 850,
+  "rev_hours": 17137.597298009925,
   "sch": 70,
   "art": 4,
   "conf": "B",
@@ -2824,6 +2904,7 @@
   "id": "tl_motor_lorry",
   "name": "Motor lorry: gasoline truck",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_carburettor",
    "tl_coil_ignition",
@@ -2842,14 +2923,14 @@
   "mat": {
    "steel_plate_kg": 25
   },
-  "cap": 2200,
-  "up": 220,
+  "cap_hours": 44356.13418308451,
+  "up_hours": 4435.613418308451,
   "build_yrs": 2.5,
   "adopt_yrs": 0.5,
   "dev_years": 10,
   "dev_people": 4,
   "risk": 0.16,
-  "rev": 1200,
+  "rev_hours": 24194.255008955188,
   "sch": 100,
   "art": 5,
   "conf": "B",
@@ -2859,6 +2940,7 @@
   "id": "tl_articulated_trailer",
   "name": "Articulated trailer: semi-trailer",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_fifth_wheel",
    "tl_motor_lorry"
@@ -2877,14 +2959,14 @@
    "iron_bar_kg": 15,
    "mat_wood": 30
   },
-  "cap": 1600,
-  "up": 160,
+  "cap_hours": 32259.00667860692,
+  "up_hours": 3225.900667860692,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
   "dev_years": 6,
   "dev_people": 3,
   "risk": 0.12,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 60,
   "art": 4,
   "conf": "B",
@@ -2894,6 +2976,7 @@
   "id": "tl_tractor",
   "name": "Tractor: agricultural motorvehicle",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_carburettor",
    "tl_ball_bearing",
@@ -2917,14 +3000,14 @@
    "rubber_kg": 50.0,
    "steel_plate_kg": 180.0
   },
-  "cap": 10000.0,
-  "up": 1500.0,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 30242.818761193987,
   "build_yrs": 2.8,
   "adopt_yrs": 0.5,
   "dev_years": 11,
   "dev_people": 4,
   "risk": 0.17,
-  "rev": 1400,
+  "rev_hours": 28226.630843781055,
   "sch": 120,
   "art": 5,
   "conf": "B",
@@ -2934,6 +3017,7 @@
   "id": "tl_caterpillar_track",
   "name": "Caterpillar track: endless belt",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_1mm",
    "mat_wrought_iron",
@@ -2959,14 +3043,14 @@
    "rubber_kg": 30.0,
    "steel_plate_kg": 200.0
   },
-  "cap": 6000.0,
-  "up": 400.0,
+  "cap_hours": 120971.27504477595,
+  "up_hours": 8064.75166965173,
   "build_yrs": 2.2,
   "adopt_yrs": 0.4,
   "dev_years": 8,
   "dev_people": 4,
   "risk": 0.14,
-  "rev": 1000,
+  "rev_hours": 20161.879174129324,
   "sch": 100,
   "art": 5,
   "conf": "B",
@@ -2986,6 +3070,7 @@
   "id": "tl_half_track",
   "name": "Half-track vehicle",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_caterpillar_track",
    "tl_motor_lorry",
@@ -3005,14 +3090,14 @@
   "mat": {
    "steel_plate_kg": 1500.0
   },
-  "cap": 10000.0,
-  "up": 700.0,
+  "cap_hours": 201618.79174129324,
+  "up_hours": 14113.315421890527,
   "build_yrs": 2.4,
   "adopt_yrs": 0.4,
   "dev_years": 9,
   "dev_people": 4,
   "risk": 0.15,
-  "rev": 1100,
+  "rev_hours": 22178.067091542256,
   "sch": 110,
   "art": 5,
   "conf": "B",
@@ -3022,6 +3107,7 @@
   "id": "tl_motorcycle",
   "name": "Motorcycle: two-wheeled motor",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_safety_bicycle",
    "tl_carburettor"
@@ -3038,14 +3124,14 @@
   "mat": {
    "steel_plate_kg": 8
   },
-  "cap": 1700,
-  "up": 170,
+  "cap_hours": 34275.19459601985,
+  "up_hours": 3427.519459601985,
   "build_yrs": 1.8,
   "adopt_yrs": 0.3,
   "dev_years": 7,
   "dev_people": 3,
   "risk": 0.13,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 70,
   "art": 4,
   "conf": "B",
@@ -3055,6 +3141,7 @@
   "id": "tl_snow_plough",
   "name": "Snow plough: powered blade",
   "cat": "vehicle_types",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_motor_lorry"
   ],
@@ -3070,14 +3157,14 @@
   "mat": {
    "cast_iron_kg": 8
   },
-  "cap": 1200,
-  "up": 120,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1.3,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 50,
   "art": 3,
   "conf": "B",
@@ -3087,6 +3174,7 @@
   "id": "tl_pneumatic_tyre",
   "name": "Pneumatic tyre: air-filled",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_pure_2N",
    "cap_heat_1100",
@@ -3106,23 +3194,25 @@
    "cotton_fabric_kg": 2.0,
    "rubber_kg": 5.0
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 1,
   "adopt_yrs": 0.5,
   "dev_years": 8,
   "dev_people": 3,
   "risk": 0.18,
-  "rev": 800,
+  "rev_hours": 16129.50333930346,
   "sch": 50,
   "art": 4,
   "conf": "B",
-  "note": "REQUIRES NATURAL RUBBER, reachable only through the West African coastal expedition branch (see mat_natural_rubber, exp_coastal_africa): rubber is not native to the Mediterranean, Scandinavia, North China or England, and the Hevea of the New World is not reachable at all without an Atlantic crossing - but the Landolphia and Funtumia vines of West and Central Africa are real rubber, reachable by coastal sailing, which is the route this node actually uses. Air-filled tube and tyre absorb shocks perfectly. Solid rubber or leather tyre is a poor substitute: rides are harsh and efficiency is lost. This is an honest limitation."
+  "note": "REQUIRES NATURAL RUBBER, reachable only through the West African coastal expedition branch (see mat_natural_rubber, exp_coastal_africa): rubber is not native to the Mediterranean, Scandinavia, North China or England, and the Hevea of the New World is not reachable at all without an Atlantic crossing - but the Landolphia and Funtumia vines of West and Central Africa are real rubber, reachable by coastal sailing, which is the route this node actually uses. Air-filled tube and tyre absorb shocks perfectly. Solid rubber or leather tyre is a poor substitute: rides are harsh and efficiency is lost. This is an honest limitation.",
+  "_internal": "[AUDIT: State interest and suspicion were unset and have been defaulted from the category.]"
  },
  {
   "id": "tl_inner_tube",
   "name": "Inner tube: rubber bladder",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_pneumatic_tyre"
   ],
@@ -3137,14 +3227,14 @@
   "mat": {
    "rubber_kg": 2
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 450,
+  "rev_hours": 9072.845628358196,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3154,6 +3244,7 @@
   "id": "tl_tyre_bead",
   "name": "Tyre bead: rim seat",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_pneumatic_tyre",
    "cap_tol_1mm"
@@ -3169,14 +3260,14 @@
   "mat": {
    "rubber_kg": 1
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3186,6 +3277,7 @@
   "id": "tl_tyre_tread",
   "name": "Tyre tread pattern",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_pneumatic_tyre",
    "cap_heat_1100"
@@ -3199,14 +3291,14 @@
    "chemist": 160
   },
   "mat": {},
-  "cap": 650,
-  "up": 65,
+  "cap_hours": 13105.221463184062,
+  "up_hours": 1310.5221463184062,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 30,
   "art": 3,
   "conf": "B",
@@ -3216,6 +3308,7 @@
   "id": "tl_solid_rubber_tyre",
   "name": "Solid rubber tyre",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_natural_rubber",
    "tl_vulcanized_rubber"
@@ -3231,14 +3324,14 @@
   "mat": {
    "rubber_kg": 8
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3248,6 +3341,7 @@
   "id": "tl_motor_dc",
   "name": "DC electric motor",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_power_electric",
    "electromagnet"
@@ -3264,14 +3358,14 @@
   "mat": {
    "steel_plate_kg": 1.5
   },
-  "cap": 900,
-  "up": 90,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 1814.569125671639,
   "build_yrs": 0.7,
   "adopt_yrs": 0.2,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3281,6 +3375,7 @@
   "id": "tl_wire_spoke_wheel",
   "name": "Wire spoke wheel",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_spoked_wheel",
    "cap_tol_100um"
@@ -3297,14 +3392,14 @@
   "mat": {
    "iron_bar_kg": 2
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3314,6 +3409,7 @@
   "id": "tl_vulcanized_rubber",
   "name": "Vulcanized rubber",
   "cat": "wheels_running_gear",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_sulfur",
    "cap_heat_1100",
@@ -3331,14 +3427,14 @@
    "rubber_kg": 5,
    "mat_sulfur": 1
   },
-  "cap": 900,
-  "up": 90,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 1814.569125671639,
   "build_yrs": 0.7,
   "adopt_yrs": 0.3,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -3348,6 +3444,7 @@
   "id": "tl_connecting_rod",
   "name": "Connecting rod: piston link",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel"
@@ -3363,14 +3460,14 @@
   "mat": {
    "steel_plate_kg": 1.5
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.7,
   "adopt_yrs": 0.1,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -3390,6 +3487,7 @@
   "id": "tl_piston_assembly",
   "name": "Piston with rings",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_cast_iron"
@@ -3405,14 +3503,14 @@
   "mat": {
    "cast_iron_kg": 2
   },
-  "cap": 1100,
-  "up": 110,
+  "cap_hours": 22178.067091542256,
+  "up_hours": 2217.8067091542257,
   "build_yrs": 0.8,
   "adopt_yrs": 0.2,
   "dev_years": 7,
   "dev_people": 2,
   "risk": 0.14,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -3433,6 +3531,7 @@
   "id": "tl_intake_valve",
   "name": "Intake valve with cam",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel"
@@ -3448,14 +3547,14 @@
   "mat": {
    "steel_plate_kg": 0.5
   },
-  "cap": 900,
-  "up": 90,
+  "cap_hours": 18145.691256716393,
+  "up_hours": 1814.569125671639,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 600,
+  "rev_hours": 12097.127504477594,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3475,6 +3574,7 @@
   "id": "tl_exhaust_valve",
   "name": "Exhaust valve with spring",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_intake_valve",
    "cap_heat_1300"
@@ -3490,14 +3590,14 @@
   "mat": {
    "steel_plate_kg": 0.5
   },
-  "cap": 1000,
-  "up": 100,
+  "cap_hours": 20161.879174129324,
+  "up_hours": 2016.1879174129324,
   "build_yrs": 0.7,
   "adopt_yrs": 0.1,
   "dev_years": 6,
   "dev_people": 2,
   "risk": 0.13,
-  "rev": 650,
+  "rev_hours": 13105.221463184062,
   "sch": 0,
   "art": 4,
   "conf": "B",
@@ -3507,6 +3607,7 @@
   "id": "tl_carbide_lamp",
   "name": "Carbide headlamp",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_gas_o2h2"
   ],
@@ -3521,14 +3622,14 @@
   "mat": {
    "brass_kg": 1
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3551,14 +3652,14 @@
   "mat": {
    "lead_kg": 8
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.2,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.12,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3568,6 +3669,7 @@
   "id": "tl_engine_block",
   "name": "Engine block: cast cylinder",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron",
    "cap_heat_1600"
@@ -3584,14 +3686,14 @@
   "mat": {
    "cast_iron_kg": 50
   },
-  "cap": 1200,
-  "up": 120,
+  "cap_hours": 24194.255008955188,
+  "up_hours": 2419.425500895519,
   "build_yrs": 1,
   "adopt_yrs": 0.2,
   "dev_years": 6,
   "dev_people": 3,
   "risk": 0.14,
-  "rev": 700,
+  "rev_hours": 14113.315421890527,
   "sch": 50,
   "art": 4,
   "conf": "B",
@@ -3612,6 +3714,7 @@
   "id": "tl_cooling_fan",
   "name": "Cooling fan: mechanical drive",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_radiator"
   ],
@@ -3626,14 +3729,14 @@
   "mat": {
    "cast_iron_kg": 2
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.09,
-  "rev": 350,
+  "rev_hours": 7056.657710945264,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3643,6 +3746,7 @@
   "id": "tl_pressure_relief_valve",
   "name": "Pressure relief valve: oil system",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_oil_pump"
   ],
@@ -3657,14 +3761,14 @@
   "mat": {
    "cast_iron_kg": 0.5
   },
-  "cap": 600,
-  "up": 60,
+  "cap_hours": 12097.127504477594,
+  "up_hours": 1209.7127504477594,
   "build_yrs": 0.4,
   "adopt_yrs": 0.1,
   "dev_years": 3,
   "dev_people": 1,
   "risk": 0.08,
-  "rev": 300,
+  "rev_hours": 6048.563752238797,
   "sch": 0,
   "art": 2,
   "conf": "B",
@@ -3674,6 +3778,7 @@
   "id": "tl_cam_follower",
   "name": "Cam follower and tappet",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "cap_tol_100um",
    "mat_bulk_steel"
@@ -3689,14 +3794,14 @@
   "mat": {
    "steel_plate_kg": 1
   },
-  "cap": 800,
-  "up": 80,
+  "cap_hours": 16129.50333930346,
+  "up_hours": 1612.950333930346,
   "build_yrs": 0.6,
   "adopt_yrs": 0.1,
   "dev_years": 5,
   "dev_people": 2,
   "risk": 0.11,
-  "rev": 500,
+  "rev_hours": 10080.939587064662,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3716,6 +3821,7 @@
   "id": "tl_ignition_timing",
   "name": "Ignition timing advance mechanism",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_magneto_ignition",
    "cap_measure_time_ms"
@@ -3731,14 +3837,14 @@
   "mat": {
    "steel_plate_kg": 0.3
   },
-  "cap": 700,
-  "up": 70,
+  "cap_hours": 14113.315421890527,
+  "up_hours": 1411.3315421890527,
   "build_yrs": 0.5,
   "adopt_yrs": 0.1,
   "dev_years": 4,
   "dev_people": 2,
   "risk": 0.1,
-  "rev": 400,
+  "rev_hours": 8064.75166965173,
   "sch": 0,
   "art": 3,
   "conf": "B",
@@ -3748,6 +3854,7 @@
   "id": "tl_transmission_lubrication",
   "name": "Transmission oil sump and drain",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_cast_iron"
   ],
@@ -3760,14 +3867,14 @@
   "mat": {
    "cast_iron_kg": 3
   },
-  "cap": 500,
-  "up": 50,
+  "cap_hours": 10080.939587064662,
+  "up_hours": 1008.0939587064662,
   "build_yrs": 0.3,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.06,
-  "rev": 250,
+  "rev_hours": 5040.469793532331,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -3788,6 +3895,7 @@
   "id": "tl_wire_rope_brake",
   "name": "Wire rope brake cable",
   "cat": "carriage_engineering",
+  "kind": "ENGINEERING",
   "pre": [
    "mat_wrought_iron"
   ],
@@ -3800,14 +3908,14 @@
   "mat": {
    "iron_bar_kg": 0.3
   },
-  "cap": 400,
-  "up": 40,
+  "cap_hours": 8064.75166965173,
+  "up_hours": 806.475166965173,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 2,
   "dev_people": 1,
   "risk": 0.05,
-  "rev": 150,
+  "rev_hours": 3024.2818761193985,
   "sch": 0,
   "art": 2,
   "conf": "A",
@@ -3827,6 +3935,7 @@
   "id": "tl_anti_siphon_valve",
   "name": "Anti-siphon valve in fuel line",
   "cat": "motor_subsystems",
+  "kind": "ENGINEERING",
   "pre": [
    "tl_fuel_pump"
   ],
@@ -3839,14 +3948,14 @@
   "mat": {
    "brass_kg": 0.2
   },
-  "cap": 300,
-  "up": 30,
+  "cap_hours": 6048.563752238797,
+  "up_hours": 604.8563752238797,
   "build_yrs": 0.2,
   "adopt_yrs": 0,
   "dev_years": 1,
   "dev_people": 1,
   "risk": 0.04,
-  "rev": 100,
+  "rev_hours": 2016.1879174129324,
   "sch": 0,
   "art": 1,
   "conf": "A",

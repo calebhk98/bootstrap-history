@@ -1,6 +1,6 @@
 """Raw-material supply: the nine hand-named commodities, and the generic
 mechanism that covers the other ~150 (159 distinct material keys in
-data/tech_tree.json today minus the 9 named ones; see the
+the tech tree today minus the 9 named ones; see the
 GENERALISING BEYOND THE 9 HAND-NAMED COMMODITIES comment below for the
 precise 146-of-159 count against the 13 MATERIAL_CHECKS keys).
 
@@ -13,7 +13,7 @@ carried over from an earlier year. Covers: CHARCOAL_PER_HA/MARKET_SHARE
 fallback that fits an output-vs-price curve from those nine so that
 every OTHER material key behaves correctly without anyone having
 curated it by hand (_commodity_ledger()/_material_commodity_map()/
-_material_prices()/_book_price_per_kg()/_material_tag()/
+_material_prices()/_material_price_per_kg()/_material_tag()/
 _generic_national_output_t_per_yr()/_generic_market_share()/
 _normalize_material_name()); chosen_fuel() and annual_material_demand()
 (what a year's building programme actually needs); _own_material_supply()/
@@ -32,9 +32,8 @@ apply here exactly as they do everywhere else in the engine, regardless
 of which file a method lives in.
 
 THE CACHES. _commodity_ledger() and _material_commodity_map() cache their
-immutable catalogues on MaterialSupplyMixin. _material_prices() is different:
-it caches calculator output on each Sim, keyed by completed technologies,
-because completing a production gate can change the computed price vector.
+immutable catalogues on MaterialSupplyMixin. _material_prices() (incumbent_prices.py) is
+different: it caches calculator output on each Sim.
 
 TRAP: the literal class name in that getattr/setattr MUST match whatever
 class actually holds the two shared catalogue methods. If they are ever moved
@@ -49,9 +48,20 @@ import collections
 
 from . import commodities as _commod
 from sim.constants import declare
-from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from .project_materials import tonnes_per_unit
+
+
+
+class _StockLedger(collections.Counter):
+    """The material stock Counter; it notes when a capacity key (hours, patronage) may have been
+    written into it, so the move of those into the capacity pool is not redone on every read."""
+
+    unswept = True
+
+    def __setitem__(self, key, value):
+        if key not in self:
+            self.unswept = True
+        super().__setitem__(key, value)
 
 
 class MaterialSupplyMixin:
@@ -157,13 +167,13 @@ class MaterialSupplyMixin:
     #
     # data/review/COMMODITY_DYNAMISM.md, an audit run directly against
     # this engine, found 149 of the then 162 distinct material keys the
-    # tech tree used (about 92%) had a price read once from prices.json at
+    # tech tree used (about 92%) had a price read once at
     # load time and never revisited for scarcity, surplus or anything else,
     # because MATERIAL_CHECKS/MARKET_SHARE above only ever named 13 keys by
     # hand. The tree has since dropped to 159 distinct material keys, all
     # 13 MATERIAL_CHECKS keys still among them, so the live count today is
     # 146 of 159 (still about 92%) - counted by intersecting MATERIAL_CHECKS
-    # against every `mat` key in data/tech_tree.json; COMMODITY_DYNAMISM.md's
+    # against every `mat` key in data/branches/; COMMODITY_DYNAMISM.md's
     # own audit script is not committed to the repo (same status as
     # NAMING_PLAN.md's scanner), so this is measured, not scriptable here.
     # Its own worked case was aluminium: "no mine, no supply lever of any
@@ -171,11 +181,9 @@ class MaterialSupplyMixin:
     #
     # The fix below is NOT a per-material rule. It is a generic fallback that
     # activates for any material key this file has no curated entry for,
-    # using the one number every material already has: its own book price in
-    # prices.json (every material key a node's `mat` dict names MUST have a
-    # prices.json entry already, or data.py's own load() would have raised
-    # building `_material_cost` in the first place - so this genuinely
-    # covers all 159, not just the ones anyone thought to add). A cheap,
+    # using the one number every material already has: its calculated price
+    # (the solver prices every material a node's `mat` dict names, or load()
+    # would have raised building `_material_cost`). A cheap,
     # plentiful material gets assumed to have a large national output and a
     # wide buyable share; a dear, rare one gets less of both - fitted, not
     # guessed, from the curated figures the 9 tracked commodities already
@@ -258,39 +266,11 @@ class MaterialSupplyMixin:
             MaterialSupplyMixin._material_commod_map_cache = cached
         return cached
 
-    def _material_prices(self):
-        """Calculator-backed prices for the technologies currently held.
-
-        The cache belongs to this simulation and is keyed by completed
-        technologies because completing a production gate can make another
-        recipe solvable.  ``data.calculated_goods_prices`` still has a
-        documented legacy fallback for materials the calculator cannot yet
-        resolve; importantly, this subsystem no longer opens or interprets
-        that legacy file independently.
-        """
-        projects = self.state.projects
-        stamp = (getattr(projects, "_done_ver", 0), len(projects.done))
-        cached = getattr(self, "_material_prices_cache", None)
-        # the same done set object at the same version and size: no need to
-        # rebuild and compare the frozenset on every lookup
-        if cached is not None and cached[2] == stamp and cached[3] is projects.done:
-            return cached[1]
-        held = frozenset(projects.done)
-        if cached is None or cached[0] != held:
-            from .data import calculated_goods_prices
-            prices = calculated_goods_prices(
-                held, civilization_id=self.civ.get("id"),
-                money_per_labour_hour=self.money_per_labour_hour())
-        else:
-            prices = cached[1]
-        self._material_prices_cache = (held, prices, stamp, projects.done)
-        return prices
-
     def _done_memo(self, name, key, compute):
-        """`compute()` remembered per (name, key) while the done set is
-        unchanged; for answers that depend only on what is built."""
+        """`compute()` remembered per (name, key) while the done set and the techniques in use are
+        unchanged; for answers that depend only on what is built and run."""
         projects = self.state.projects
-        stamp = (getattr(projects, "_done_ver", 0), len(projects.done))
+        stamp = (self.price_epoch(), len(projects.done))
         memo = getattr(self, "_done_memo_store", None)
         if memo is None or memo[0] != stamp or memo[1] is not projects.done:
             memo = self._done_memo_store = (stamp, projects.done, {})
@@ -300,7 +280,7 @@ class MaterialSupplyMixin:
             table[entry] = compute()
         return table[entry]
 
-    def _book_price_per_kg(self, tag):
+    def _material_price_per_kg(self, tag):
         """Denarii/kg for a raw material key (for example aluminium_kg) from
         the calculator-backed table, or a curated commodity id from
         commodities.json's own base_price - the two files agree by
@@ -317,10 +297,10 @@ class MaterialSupplyMixin:
             return self.book_money(price) or None
         return None
 
-    def _book_denarii_price_per_kg(self, tag):
+    def _denarii_price_per_kg(self, tag):
         """The price in book denarii, the unit the output and market-share
         curves below were fitted in."""
-        price = self._book_price_per_kg(tag)
+        price = self._material_price_per_kg(tag)
         return None if price is None else price / self.book_money(1.0)
 
     def _material_tag(self, mat_key):
@@ -371,10 +351,11 @@ class MaterialSupplyMixin:
         ledger = self._commodity_ledger()
         if tag in ledger.commodities:
             return ledger.country_output(tag, built=self.state.projects.done)
-        price = self._book_denarii_price_per_kg(tag)
-        if price is None or price <= 0:
+        price = self._denarii_price_per_kg(tag)
+        price_power = None if price is None or price <= 0 else price ** self.GENERIC_OUTPUT_PRICE_EXPONENT
+        if not price_power:     # unpriced, free, or so cheap the power underflows
             return self.GENERIC_OUTPUT_CEILING_T_PER_YR
-        out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / (price ** self.GENERIC_OUTPUT_PRICE_EXPONENT)
+        out = self.GENERIC_OUTPUT_ANCHOR_T_PER_YR / price_power
         return max(self.GENERIC_OUTPUT_FLOOR_T_PER_YR,
                    min(self.GENERIC_OUTPUT_CEILING_T_PER_YR, out))
 
@@ -398,7 +379,7 @@ class MaterialSupplyMixin:
         if tag in ledger.commodities:
             return float(ledger.commodities[tag].get(
                 "market_share", self.GENERIC_MARKET_SHARE_LEDGER_FALLBACK))
-        price = self._book_denarii_price_per_kg(tag)
+        price = self._denarii_price_per_kg(tag)
         if price is None or price <= 0:
             return self.GENERIC_MARKET_SHARE_NO_PRICE_FALLBACK
         return max(self.GENERIC_MARKET_SHARE_FLOOR,
@@ -465,7 +446,7 @@ class MaterialSupplyMixin:
         materials should not have to guess it needs no suffix, and the
         seven original short names must keep working exactly as before."""
         mat = str(mat or "").strip().lower()
-        if not mat or mat in self.MINE_OPEX_PER_T:
+        if not mat or mat in self.MINE_OPEX_MATERIALS:
             return mat
         prices = self._material_prices()
         if mat in prices or mat in self._commodity_ledger().commodities:
@@ -684,6 +665,20 @@ class MaterialSupplyMixin:
                     * self.mine_depletion_factor(mat) * yld)
         return 0.0
 
+    def _national_output_tonnes(self, emp_key):
+        """Tonnes a year the whole society produces of `emp_key`, from the
+        resource table where it names one, else the generic estimate."""
+        entry = self.res["empire_output_100ad"].get(emp_key)
+        return entry.get("t_per_yr", 0) if entry is not None else (
+            self._generic_national_output_t_per_yr(emp_key))
+
+    def _society_output_tonnes(self, emp_key):
+        """What the society's own producers can bring to market a year: the
+        national output scaled to the territory held (see _material_market_tonnes
+        for the same scale)."""
+        scale = self.pop_scale if emp_key == "charcoal" else self.mineral_scale(emp_key)
+        return self._national_output_tonnes(emp_key) * scale
+
     def _material_market_tonnes(self, emp_key):
         """Tonnes a year of `emp_key` the empire's market will sell you, at
         your current standing. The MARKET half of resource_throttle()'s
@@ -696,10 +691,7 @@ class MaterialSupplyMixin:
         a reasoned default for everything else, so a material nobody named
         still has a market rather than an actual hard zero.
         """
-        emp = self.res["empire_output_100ad"]
-        entry = emp.get(emp_key)
-        national = entry.get("t_per_yr", 0) if entry is not None else (
-                   self._generic_national_output_t_per_yr(emp_key))
+        national = self._national_output_tonnes(emp_key)
         share = self.MARKET_SHARE.get(emp_key)
         if share is None:
             share = self._generic_market_share(emp_key)
@@ -709,8 +701,11 @@ class MaterialSupplyMixin:
         # has the fiscus itself as a supplier, and the metalla were largely
         # imperial property. Charcoal is exempt because no amount of standing
         # makes a bulky crumbling fuel travel further than it can travel.
+        kept = self._running_kept("market_tonnes")
         if emp_key != "charcoal":
-            favour = self.effect_best("market_standing")
+            if "favour" not in kept:
+                kept["favour"] = self.effect_best("market_standing")
+            favour = kept["favour"]
             if favour is not None:
                 share *= favour[1]["factor"]
             share = min(share, self.MARKET_STANDING_SHARE_CEILING)
@@ -727,9 +722,14 @@ class MaterialSupplyMixin:
         market = national * share * scale
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
         # This is the single most useful thing in the geography file.
-        for node_id in self.nodes_with_mechanic("supplies_material_by_sea_route"):
-            if emp_key in self.mechanic(node_id, "supplies_material_by_sea_route")["materials"] and self.running(node_id):
-                market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
+        routes = kept.get(emp_key)
+        if routes is None:
+            routes = kept[emp_key] = sum(
+                1 for node_id in self.nodes_with_mechanic("supplies_material_by_sea_route")
+                if emp_key in self.mechanic(node_id, "supplies_material_by_sea_route")["materials"]
+                and self.running(node_id))
+        for _route in range(routes):
+            market += self.SALTPETRE_TRADE_ROUTE_TONNES_PER_YR
         return market
 
     MARKET_STANDING_SHARE_CEILING = declare(
@@ -841,7 +841,7 @@ class MaterialSupplyMixin:
     # same way _material_tag already does: any future node that needs a
     # gram-scale quantity of anything gets this for free by being written
     # with a *_g key, the same way it already gets priced by
-    # _book_price_per_kg without anyone adding it to a list. A *_g key's
+    # _material_price_per_kg without anyone adding it to a list. A *_g key's
     # demand is met from stock - and, whatever stock cannot cover, bought
     # outright on the spot, uncapped by mine or market flow - and NEVER sets
     # `binding`: buying a gram of something is a purchase, not a capacity
@@ -878,18 +878,20 @@ class MaterialSupplyMixin:
         economy = self.state.economy
         stock = getattr(economy, "_material_stock_ledger", None)
         if stock is None:
-            stock = economy._material_stock_ledger = collections.Counter()
-        elif not isinstance(stock, collections.Counter):
+            stock = economy._material_stock_ledger = _StockLedger()
+        elif not isinstance(stock, _StockLedger):
             # A RESUMED SAVE HANDS THIS BACK AS A PLAIN DICT. It is in
             # SAVE_FIELDS so that a reloaded game is the same game - without it
             # a resume silently restarted at zero stock and played differently
             # from the run that was saved, the same class of fault as a fog
             # that could be rewound by reloading. JSON has no Counter, so
             # promote whatever came back before anything adds to it.
-            stock = economy._material_stock_ledger = collections.Counter(stock)
-        for key in list(stock):
-            if key in self.NON_PHYSICAL_CAPACITY_KEYS or key.endswith("_hours"):
+            stock = economy._material_stock_ledger = _StockLedger(stock)
+        if stock.unswept:
+            non_physical = self.NON_PHYSICAL_CAPACITY_KEYS
+            for key in [key for key in stock if key in non_physical or key.endswith("_hours")]:
                 economy.capacity_pool[key] = economy.capacity_pool.get(key, 0.0) + stock.pop(key)
+            stock.unswept = False
         return stock
 
     def _material_opening_stock(self):
@@ -923,52 +925,15 @@ class MaterialSupplyMixin:
 
     def material_trade_quote(self, material):
         """Current buy/sell quote for one tonne of a material commodity."""
-        material = str(material or "").strip().lower()
-        per_kg = self._book_price_per_kg(material)
-        if per_kg is None:
-            return None
-        emp_key = self._material_tag(material)[0]
-        buy = (per_kg / tonnes_per_unit(material) * self.price_index
-               * self.material_price_factor(emp_key))
-        return {"material": material, "stock_key": emp_key, "buy_per_tonne": buy,
-                "sell_per_tonne": buy * self.MATERIAL_TRADE_SELL_SHARE_OF_BUY,
-                "market_available_tonnes_per_year": self._material_market_tonnes(emp_key)}
+        return self.goods_market.quote(material)
 
     def buy_material_stock(self, material, tonnes):
-        """Buy a material at the market: the price climbs as the order is
-        filled, and the order is cut to what the market sells in a year."""
-        quote = self.material_trade_quote(material)
-        tonnes = float(tonnes)
-        if not quote or tonnes <= 0:
-            return 0.0
-        tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
-        if tonnes <= 0:
-            return 0.0
-        cost = self.material_purchase_cost(quote["material"], tonnes)[0]
-        household = self.state.household
-        if not purchase_rule.can_pay(self, cost):
-            return 0.0
-        household.capital -= cost
-        opening = self._material_opening_stock()
-        self._material_stock()[quote["stock_key"]] += tonnes
-        opening[quote["stock_key"]] = opening.get(quote["stock_key"], 0.0) + tonnes
-        household._stock_throttle_sig = None
-        return tonnes
+        """The founder buys a material at the market (see GoodsMarket.buy)."""
+        return self.goods_market.buy(self.goods_market.founder, material, tonnes)
 
     def sell_material_stock(self, material, tonnes):
-        quote = self.material_trade_quote(material)
-        tonnes = float(tonnes)
-        if not quote or tonnes <= 0:
-            return 0.0
-        sold = min(tonnes, self.material_stock_t(quote["stock_key"]))
-        if sold <= 0:
-            return 0.0
-        opening = self._material_opening_stock()
-        self._material_stock()[quote["stock_key"]] -= sold
-        opening[quote["stock_key"]] = opening.get(quote["stock_key"], 0.0) - sold
-        self.state.household.add_capital(sold * quote["sell_per_tonne"])
-        self.state.household._stock_throttle_sig = None
-        return sold
+        """The founder sells stock at the market (see GoodsMarket.sell)."""
+        return self.goods_market.sell(self.goods_market.founder, material, tonnes)
 
     def materials_report(self):
         """Stocks, annual flows, demand, and current trade values."""

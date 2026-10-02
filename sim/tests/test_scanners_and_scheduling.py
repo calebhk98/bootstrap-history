@@ -39,7 +39,8 @@ _fogscan_args = {
 }
 # save/load/quit: side effects (a file written, the run ended) unrelated to
 # what this test is about, and excluded for that reason, not for safety.
-_fogscan_skip = {"save", "load", "quit"}
+# finish ends the run and on purpose shows the road that fog hid until then.
+_fogscan_skip = {"save", "load", "quit", "finish"}
 _word_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 _fogscan_leaks = {}
 for _c in S.KNOWN_COMMANDS:
@@ -299,8 +300,8 @@ check("...and the headline itself uses 'spare', which only reads one way "
 # floor ... means playing better than the unlucky-proof plan". True about the
 # instrument, false as advice: a player reached the same Rome goal's startable
 # point in 334 years under fog, on a second attempt, with the point-contact
-# transistor failing six times. DICE_FREE_FLOOR_YEARS stays in the file as a
-# measurement of one policy, and the menu a player reads stays out of the
+# transistor failing six times. The per-civilisation table was deleted (it named civilisation
+# ids and went stale); the menu a player reads stays out of the
 # business of telling them what is reachable, because critical_path already
 # tells them that for the goal they actually picked.
 from sim.engine import cli as _CLI
@@ -311,11 +312,8 @@ check("no horizon-mode description quotes the dice-free floor or calls any "
       not any(word in _hz_notes for word in
               ("dice-free", "unlucky-proof", "1,019", "1019", "451")),
       _hz_notes)
-check("the floor table itself is still there, still per-civilisation, and "
-      "still the number PATH_SEARCH.md measured",
-      _CLI.DICE_FREE_FLOOR_YEARS.get("rome_100ad") == 1019
-      and _CLI.DICE_FREE_FLOOR_YEARS.get("han_china_100ad") == 451,
-      _CLI.DICE_FREE_FLOOR_YEARS)
+check("the per-civilisation floor table no longer exists in the engine",
+      not hasattr(_CLI, "DICE_FREE_FLOOR_YEARS"))
 
 # RETRY LEARNING HAS TO SURVIVE A SAVE. failed_attempts drives
 # _retry_risk_multiplier and _retry_calendar_retain, and it was not in
@@ -688,12 +686,12 @@ check("render_state no longer crashes when a staffing warning is live, and "
 # ======================================================================
 _s_ey = sim(civ="rome_100ad")
 _riskfree = next(node_id for node_id in NODES if NODES[node_id].get("risk", 1) == 0)
-check("risk-free node: expected calendar years is exactly the bare floor - "
+check("risk-free node: expected calendar years is exactly the earliest completion - "
       "there is nothing to retry",
       abs(_s_ey.expected_calendar_years(_riskfree)
-          - _s_ey.calendar_floor(_riskfree)) < 1e-9,
+          - _s_ey.earliest_completion_years(_riskfree)) < 1e-9,
       (_riskfree, _s_ey.expected_calendar_years(_riskfree),
-       _s_ey.calendar_floor(_riskfree)))
+       _s_ey.earliest_completion_years(_riskfree)))
 _pct_floor = _s_ey.calendar_floor("point_contact_transistor")
 _pct_exp = _s_ey.expected_calendar_years("point_contact_transistor")
 check("a risky node's expected calendar cost is strictly more than its bare "
@@ -1375,9 +1373,10 @@ check("none of the 13 new nodes was inserted as a prerequisite of anything "
               for i, node in NODES.items() for new_id in _ctl_new_ids
               if i not in _ctl_new_ids),
       "a pre-existing node references a new one")
-check("...and the goal's required closure is still exactly 160 nodes, "
+# 163 since zinc comes by retort from calamine and charcoal, not by way of steelmaking
+check("...and the goal's required closure is still exactly 163 nodes, "
       "unchanged by adding a whole optional side-branch of theory",
-      len(S.closure(NODES, GOAL)) == 160, len(S.closure(NODES, GOAL)))
+      len(S.closure(NODES, GOAL)) == 163, len(S.closure(NODES, GOAL)))
 
 # failure_kind is a property of the NODE, in the tree data, not a list kept
 # in the engine - this is what CONTROL_RELIEF_CAPABILITY in projects.py
@@ -1624,8 +1623,8 @@ for _cv in _ALL_CIVS:
           "military/confiscation names and notes, not a shared generic one"
           % _cv,
           all(_sp.get(field_name) for field_name in (
-              "requisition_name", "requisition_note", "requisition_base_share",
-              "office_name", "office_note", "office_base_share",
+              "requisition_name", "requisition_note",
+              "office_name", "office_note",
               "military_name", "military_note",
               "confiscation_name", "confiscation_note")),
           _sp)
@@ -1642,7 +1641,7 @@ def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     grown_sim.capital = capital
     grown_sim.eminence = eminence
     grown_sim.update_protection()
-    return grown_sim
+    return state_seeking(grown_sim)
 
 
 _big = _grown("rome_100ad")
@@ -1703,7 +1702,10 @@ check("military demand still needs SOME visible scale - a founder who has "
            and _tiny_notice.state_notice() > _tiny_notice.STATE_NOTICE_THRESHOLD_MILITARY),
       _tiny_notice.state_notice())
 
-_huge = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+# 60 million coin at the old coin value, stated in labour hours so it does not
+# move with what the coin metal costs
+HUGE_CAPITAL_ROME = 2.24e8 * sim(civ="rome_100ad").money_per_labour_hour()
+_huge = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 check("confiscation is a TAIL risk: it stays at zero until well past the "
       "general notice line, not the moment requisition starts",
       _big.confiscation_risk()[0] == 0.0 and _big.state_notice() > _big.STATE_NOTICE_THRESHOLD,
@@ -1711,8 +1713,8 @@ check("confiscation is a TAIL risk: it stays at zero until well past the "
 check("...and only arrives once a household is truly enormous",
       _huge.confiscation_risk()[0] > 0.0, _huge.state_notice())
 
-_huge_bare = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
-_huge_shielded = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+_huge_bare = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
+_huge_shielded = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 _huge_shielded.protection = 0.85
 _huge_shielded.done.add("academy_network")
 _huge_shielded._done_changed()
@@ -1737,7 +1739,7 @@ check("Norse state_capacity (0.15) caps notice so low that even an "
       _norse_extreme.state_notice() < _norse_extreme.STATE_NOTICE_THRESHOLD
       and _norse_extreme.requisition_report()[0] == 0.0,
       _norse_extreme.state_notice())
-_norse_built = sim(civ="norse_900ad")
+_norse_built = state_seeking(sim(civ="norse_900ad"))
 _norse_built.civ["state_capacity"] = 0.9          # as if centuries of kings,
 _norse_built.state_capacity = 0.9                 # bishops and taxes arrived
 _norse_built.employees["artisan"] = 2000.0
@@ -1752,7 +1754,7 @@ check("...but a Norse state that DID build up state_capacity (the same "
 # Fog safety (hard rule 3): nothing this mechanic prints may name a node id
 # the player has not discovered. _state_pressure only ever uses this
 # civilisation's own plain-language state_pressure names, never a tech id.
-_fogged = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+_fogged = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 _fogged.fog = True
 _fogged.year = _fogged.year
 _before_log = len(_fogged.log)
@@ -1774,7 +1776,7 @@ class _AlwaysFires(random.Random):
         return 0.0
 
 
-_det_off = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+_det_off = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 _det_off.events = False
 _det_off.rng = _AlwaysFires(1)
 _cap_before_off = _det_off.capital
@@ -1791,7 +1793,7 @@ check("...but the deterministic requisition/office tax still applies - it "
       "is not a roll of the dice, and a dice-free trial must still feel it",
       _det_off.capital < _cap_before_off, (_det_off.capital, _cap_before_off))
 
-_det_on = _grown("rome_100ad", employees=2000.0, capital=60000000.0, eminence=25.0)
+_det_on = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 _det_on.events = True
 _det_on.rng = _AlwaysFires(1)
 _det_on._state_pressure(_det_on.year)

@@ -105,16 +105,12 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
     engine/prices.py    the price SOLVER (`docs/architecture/
                         ENDOGENOUS_COSTS_AND_DOMAINS.md` Part 2): reads
                         `data/production/` and computes a price for a
-                        material from physical recipe data where one is
-                        derivable, falling back to `data/prices.json`'s book
-                        figure otherwise. Called from `data.py` only, behind
-                        `use_solved_prices` (default `False` - every existing
-                        call site still calls `load()` with the old
-                        behaviour). Not imported by `economy.py` or any
-                        economy sub-mixin - "economy.py, which actually
-                        spends a price on something, is another agent's file
-                        this round," per this file's own docstring. Not a
-                        mixin: a standalone module `data.py` calls into.
+                        material from physical recipe data. Every price in
+                        play is solved; there is no price table to fall back
+                        on. `data.py`'s `load()` calls it; the yearly market
+                        (`sim/world/market.py`, `market_clearing.py`) moves
+                        prices around the solved long-run cost. Not a mixin:
+                        a standalone module `data.py` calls into.
     engine/commodities.py  commodities as first-class things - iron, wool,
                         coffee, copper, gold and the rest - with their own
                         price/national-output machinery, read from
@@ -890,52 +886,38 @@ is `StepPhasesMixin`'s 19 methods in "The method count" above.
 
 ## Where the data lives, and who reads it
 
-    data/tech_tree.json    2.8 MB, 2,864 nodes (its top-level "nodes" key
-                           holds a JSON list, not an object keyed by id -
-                           `len()` on it still gives the node count).
+    the tech tree          built from data/branches/ at load time by
+                           `sim/engine/tree_source.py` (no committed copy;
+                           the build is cached under `.cache/tech_tree/`,
+                           keyed on the content of its inputs). Its "nodes"
+                           key holds a list, not an object keyed by id.
                            data.py loads it; core, economy, projects,
-                           settings, cli read it through data. treetool.py
-                           writes it.
+                           settings, cli read it through data.
 
-                           python3 -c "import json; print(len(json.load(open('data/tech_tree.json'))['nodes']))"
-    data/prices.json       the book prices data.py always loads as a
-                           fallback. Read directly by data.py; consulted
-                           (not yet spent by economy.py - see below) by
-                           `sim/engine/prices.py`'s solver.
+                           python3 -c "from sim.engine.tree_source import load_base_tree; print(len(load_base_tree()['nodes']))"
     data/production/       physical recipe data (yields, stoichiometry,
                            ore grades) `sim/engine/prices.py` reads to
-                           compute a price instead of looking one up, when
-                           `data.py`'s `load(use_solved_prices=True)` or
-                           `goods_provenance()` is asked for it.
-                           `use_solved_prices` defaults to `False`, and
-                           `economy.py` and its sub-mixins - the code that
-                           actually SPENDS a price on something - do not
-                           call either function, so the running engine's
-                           behaviour is unchanged by this file existing;
-                           it is wired into `data.py` as a measurable,
-                           opt-in burndown of `prices.json`, not yet into
-                           what a game actually charges. See
-                           `sim/engine/prices.py`'s own docstring and
-                           `docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md`
-                           Part 2.
+                           compute every price; there is no book table.
 
                            python3 sim/audit_costs.py --materials
     data/civilizations/    five playable civs. data.py, cli.py.
     data/world/            geography and commodities. data.py, geography.py,
                            commodities.py.
-    data/branches/         authoring input, merged into the tree by
-                           treetool.py: **40** files
-                           (`ls data/branches/*.json | wc -l`).
+    data/branches/         the only source of the tree, merged by
+                           treetool.py's `build_tree`; `_META.json` holds
+                           the tree-level metadata
+                           (`ls data/branches/*.json | wc -l` counts files).
     data/judgement.json    written by `treetool.py judge`. READ BY NOTHING.
                            A report artifact that is committed.
 
 ## Four things that will bite you
 
-**The tree tools write to the repository.** `treetool.py merge|judge|repair|
-apply-caps` each rewrite a committed data file, and `judge` in particular
-reads like a report command while doing so. Every subcommand now reports by
-default and writes nothing; `--write` is what commits the result
-(`ls -la data/judgement.json` to see whether it did).
+**`judge --write` rewrites a committed data file.** `judge` reads like a
+report command, so it reports by default and `--write` is what commits
+`data/judgement.json` (`ls -la data/judgement.json` to see whether it did).
+`merge`, `repair` and `apply-caps` write nothing: the tree is generated from
+the branch files, so a change to it is a change to a branch file;
+`merge --out FILE` exports the merged tree.
 
 **Green tests do not mean unchanged behaviour.** The suite asserts on
 outputs and messages. It does not assert that the simulation is the same

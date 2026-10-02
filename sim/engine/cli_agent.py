@@ -14,6 +14,7 @@ from .data import load, load_civ, STARTING_KITS
 from .core import Sim
 from .protocol import _agent_dispatch, _agent_help, load_state, render_pretty, save_state
 from . import settings
+from .proto import step_progress
 
 # Session helpers: shared with cli_interactive.py's cmd_play for the same
 # reason (a --session file resumes the civilisation/goal it was started
@@ -50,10 +51,13 @@ def cmd_agent(args):
     # no matter what was asked for.
     cfg = {"start_kit": args.kit, "horizon_years": args.horizon,
            "immortal": not getattr(args, "mortal", False)}
+    from .settings_table import normal_seed
+    seed = normal_seed(args.seed)
     sim = Sim(nodes, order,
-            DetRNG(args.seed) if getattr(args, "deterministic", False) else random.Random(args.seed),
+            DetRNG(seed) if getattr(args, "deterministic", False) else random.Random(seed),
             events=not args.no_events,
             cfg=cfg, civ=load_civ(_civ_for_session(args)), bounty_set=set(), manual=True)
+    sim.seed = seed
     sim.goal = goal
     sim.done_year = {}
     sim.end_year = sim.cfg["start_year"] + args.horizon
@@ -121,6 +125,7 @@ def cmd_agent(args):
             indent=1) + "\n")
         sys.stderr.flush()
 
+    step_progress.set_after_year(step_progress.commit_and_report(session, sys.stderr))
     if args.script:
         try:
             cmds = json.load(open(args.script))

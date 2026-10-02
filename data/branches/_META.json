@@ -1,0 +1,134 @@
+{
+ "cost_disclaimer": "Every ph/lab/cap figure is a [C] estimate unless the note says otherwise. They are calibrated so that the SHAPE of the tree is right: which items are cheap, which are slow, which are gated on people rather than money. Do not read three significant figures into any of them.",
+ "goal_node": "point_contact_transistor",
+ "goals": [
+  {
+   "blurb": "Reach the junction device that made the electronic age practical.",
+   "name": "Grown and alloy junction transistors",
+   "node": "junction_transistor",
+   "scale": "civilisation"
+  },
+  {
+   "blurb": "Found the method itself: controlled experiment, hypothesis, and a result someone else can repeat.",
+   "name": "Establish experimental science",
+   "node": "scientific_method",
+   "scale": "lifetime"
+  },
+  {
+   "blurb": "Show, not just argue, that disease has a cause you can see and name.",
+   "name": "Develop germ theory",
+   "node": "germ_theory",
+   "scale": "lifetime"
+  },
+  {
+   "blurb": "Write down everything you know, plainly enough that it outlives you.",
+   "name": "Leave behind a written corpus",
+   "node": "corpus_written",
+   "scale": "lifetime"
+  },
+  {
+   "blurb": "Rise from a curiosity the state tolerates to someone it funds and defends.",
+   "name": "Win the patronage of the state",
+   "node": "patron_imperial",
+   "scale": "lifetime"
+  },
+  {
+   "blurb": "Build the first source of a steady electric current.",
+   "name": "Establish electrical generation",
+   "node": "voltaic_pile",
+   "scale": "lifetime"
+  },
+  {
+   "blurb": "Found the schools that make reading common rather than rare, and see it show up in the census.",
+   "name": "Raise literacy above a fifth",
+   "node": "goal_literacy_common",
+   "scale": "lifetime"
+  },
+  {
+   "blurb": "Cut most of what plague and famine take, with sanitation, quarantine and the vaccines germ theory makes possible.",
+   "name": "Curb epidemic mortality",
+   "node": "goal_public_health",
+   "scale": "lifetime"
+  },
+  {
+   "blurb": "Build the first engine that turns heat into work without a river or a draft animal.",
+   "name": "Produce a steam engine",
+   "node": "steam_atmospheric",
+   "scale": "lifetime"
+  },
+  {
+   "blurb": "Make parts to a tolerance where any one of them fits in place of any other.",
+   "name": "Interchangeable manufacturing",
+   "node": "interchangeable_parts",
+   "scale": "lifetime"
+  },
+  {
+   "blurb": "Field the all-big-gun steel battleship that makes every earlier navy obsolete.",
+   "name": "Build a modern navy",
+   "node": "mil_dreadnought",
+   "scale": "generations"
+  },
+  {
+   "blurb": "Carry a signal the distance a continent, or an ocean, actually needs.",
+   "name": "Span a continent by telegraph",
+   "node": "com_loading_coil",
+   "scale": "generations"
+  },
+  {
+   "blurb": "Move from a blacksmith's iron to a steel industry: bulk production, alloys, and steel that does not rust.",
+   "name": "Industrialise steel",
+   "node": "mat_stainless",
+   "scale": "civilisation"
+  },
+  {
+   "blurb": "Turn the radio from a signalling device into a medium: scheduled programming, an audience, a business.",
+   "name": "Radio broadcasting",
+   "node": "com_broadcasting_institution",
+   "scale": "civilisation"
+  },
+  {
+   "blurb": "Pull nitrogen from the air itself and put it on the fields, ending the old ceiling on how much food the land can give.",
+   "name": "Synthetic fertiliser",
+   "node": "fud_haber_process_synthetic_nitrogen",
+   "scale": "civilisation"
+  },
+  {
+   "blurb": "Build a heavier-than-air machine that takes off, flies under its own power, and lands under control.",
+   "name": "Powered flight",
+   "node": "air_powered_aeroplane",
+   "scale": "civilisation"
+  },
+  {
+   "blurb": "Mechanise the fields enough to free the children working them, and put nearly everyone who could read before you in a classroom.",
+   "name": "Maximise literacy",
+   "node": "goal_literate_nation",
+   "scale": "civilisation"
+  }
+ ],
+ "schema": {
+  "art": "minimum trained technical artisans required on staff to attempt",
+  "bounty_rule": "A node can be bought as a public prize when its craft category is glass_optics, metallurgy, precision, power, agriculture, information, or instruments, or when the selected civilization has a strong local craft tradition. The test is whether a local artisan could recognise success without understanding the theory. Price is c. 2.5x honest cost, costs the poster no hours of their own, consumes no supervision slot. See 04_ECONOMICS.md section 7.",
+  "cap_hours": "one-off capital in labour hours beyond labour and materials (land, buildings, purchased tools)",
+  "cat": "category",
+  "conf": "A well attested, B probable, C author's estimate",
+  "gov": "State interest, -3 (will actively suppress) to +3 (will fund and demand). NEGATIVE VALUES ARE ENFORCED BY THE SIMULATOR: a node with gov < 0 costs 25% more per point (bribes, delay, relocation to a province, a compliant front man), adds 3 extra suspicion per point, cannot be attempted without at least a local patron, and at gov <= -2 requires senatorial patronage. This is the 'you need social approval for this' mechanic.",
+  "id": "unique key",
+  "kb": "knowledge file and anchor holding the actual how-to",
+  "lab": "hired labour hours by trade; priced from data/prices.json wage_rates",
+  "mat": "materials consumed, key = item in prices.json, value = kg or units",
+  "name": "human name",
+  "note": "commentary, warnings, and reasoning for the numbers",
+  "ph": "YOUR OWN hours. The scarcest resource in the game. c. 2400/yr available.",
+  "pre": "list of prerequisite node ids (AND semantics)",
+  "rev_hours": "net revenue in labour hours per year at maturity, 0 if not a product",
+  "risk": "probability a given attempt fails outright and must be retried at 40% of cost",
+  "sch": "minimum trained natural philosophers required on staff to attempt",
+  "sus": "suspicion delta on completion, see 03_SOCIAL_POLITICS.md",
+  "up_hours": "annual upkeep in labour hours once operating",
+  "yrs": "minimum calendar years, a floor that labour cannot buy down (curing, growing, seasoning, maturation)"
+ },
+ "schema_version": 3,
+ "start_year": 100,
+ "title": "Rome 100 AD to the Transistor: dependency tree",
+ "version": "1.0"
+}

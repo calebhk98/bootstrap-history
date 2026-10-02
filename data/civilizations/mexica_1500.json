@@ -21,6 +21,34 @@
     "transport": 2.2
   },
   "currency": "cacao bean and cotton cloth",
+  "currency_words": {
+    "long": "in cacao beans",
+    "short": "beans"
+  },
+  "briefing_absent": [
+    {
+      "claim": "No iron",
+      "nodes": [
+        "mat_wrought_iron",
+        "mat_cast_iron",
+        "blast_furnace"
+      ]
+    },
+    {
+      "claim": "No draught animals and no practical wheel",
+      "nodes": [
+        "cap_power_muscle",
+        "horse_collar",
+        "lnd_ox_transport",
+        "lnd_mule_transport",
+        "lnd_two_wheel_cart",
+        "lnd_four_wheel_cart",
+        "lnd_wheel_spoked",
+        "lnd_tyre_iron",
+        "pwr_animal_treadmill"
+      ]
+    }
+  ],
   "coin_standard": {
     "material": "cotton_fabric_kg",
     "kg_per_unit": 0.4,
@@ -308,6 +336,7 @@
   "literacy_elite": 0.4,
   "literacy_general": 0.03,
   "name": "The Mexica Triple Alliance",
+  "short_name": "The Mexica Triple Alliance",
   "notes": [
     "NO IRON, NO DRAUGHT ANIMALS, NO PRACTICAL WHEEL. Obsidian is sharper than steel and shatters. Every metallurgy node starts from copper and gold.",
     "Chinampa agriculture yields more per hectare than any European system, so the food constraint that shapes the Roman tree does not bind here.",
@@ -321,27 +350,40 @@
     "what_this_models": "You are one household, not the Triple Alliance. Five million people live under this order and a full quarter of them in a town - about 1,250,000 town dwellers, more urbanised than Rome itself - but every trade you can hire is sized to the ONE town your household actually works in: the order of 15,000 people, not Tenochtitlan's quarter of a million. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the Alliance's true numbers."
   },
   "population": 5000000,
+  "standing_army": 20000,
   "price_index": 0.8,
+  "prerequisite_gaps": {
+    "fud_cacao": "Mesoamerican staple, not derived from European contact; the tree gates it on the contact node exp_americas_factory, which is the wrong direction (Sahagun, Florentine Codex bk 11; Complaints/41)",
+    "fud_chinampa": "Mesoamerican staple, not derived from European contact; the tree gates it on the contact node exp_americas_factory, which is the wrong direction (Sahagun, Florentine Codex bk 11; Complaints/41)",
+    "fud_maize": "Mesoamerican staple, not derived from European contact; the tree gates it on the contact node exp_americas_factory, which is the wrong direction (Sahagun, Florentine Codex bk 11; Complaints/41)"
+  },
   "starting_techs": [
     "cap_heat_0700",
     "cap_power_human",
     "cap_tol_1mm",
     "civ_monumental_stone",
     "fin_auction",
+    "fin_contract_law",
     "fin_government",
     "fin_market",
     "fin_tax_farming",
+    "fin_testament",
+    "fin_wage",
     "fud_cacao",
     "fud_chinampa",
     "fud_maize",
     "hom_board_games",
+    "hom_candle_beeswax",
     "hom_furniture_wooden",
     "hom_mirror_bronze_polished",
     "hom_musical_instruments",
     "hom_oil_lamp_simple",
+    "lnd_bridge",
+    "lnd_litter",
     "mat_alum",
     "mat_beeswax",
     "mat_bitumen",
+    "mat_bronze",
     "mat_carbon_black",
     "mat_charcoal",
     "mat_emery",
@@ -352,22 +394,28 @@
     "mat_obsidian_blade",
     "mat_salt",
     "mat_silver",
+    "mat_sulfur",
+    "opt_metal_mirror_polished",
+    "prn_carbon_ink",
+    "prn_codex_bound",
+    "prn_library_archive",
+    "prn_scribal_copying",
     "prn_sculpture",
+    "prn_seals_stamps",
     "tex_cotton_trade",
     "tex_drop_spindle",
     "tex_felting",
     "tex_vegetable_tanning",
-    "tex_wool"
+    "tex_wool",
+    "tx2_needle_hand"
   ],
   "state_capacity": 0.8,
   "state_pressure": {
     "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
     "requisition_name": "the tribute of the calpixque",
     "requisition_note": "The tlatoani's tribute collectors, the calpixque, assessed tribute in kind on a fixed schedule recorded in documents like the Codex Mendoza - cacao, featherwork, cloth, metal - and a calpulli producing more than its neighbours simply had a larger quota fixed on it, not a lighter one.",
-    "requisition_base_share": 0.22,
     "office_name": "a cuauhpilli commission",
     "office_note": "Commoners who distinguished themselves, especially in war, could be raised to the cuauhpilli, a service nobility that came with land and duties at once - an honour that was also a standing claim on the man's time and output for the state that raised him.",
-    "office_base_share": 0.05,
     "military_name": "the tlatoani's armouries",
     "military_note": "A producer of obsidian-edged weapons or featherwork armour at any scale was already supplying the macehualtin levies and the pochteca's own guarded caravans; the Triple Alliance's wars were frequent enough that such a workshop was never overlooked for long.",
     "confiscation_name": "forfeiture to the tlatoani",
@@ -395,9 +443,12 @@
     "_doc": "Things this society cannot begin at all until it has the one thing they all rest on. Distinct from cost_multipliers, which make a domain dearer: these are not dear here, they are impossible. A break tester started horse_collar in the Valley of Mexico in 1500 on the same screen as a menu describing a society with no draught animals, and `why` there still called it a collar for a draught horse. Every entry is liftable by the node it names.",
     "draught animals": {
       "node": "exp_import_draught_animals",
+      "material": "draught_animal_kg",
+      "units": 1000,
       "because": "there is no draught animal in Mesoamerica: no horse, no ox, no mule, nothing that pulls. Every load in this society moves on a human back. Bring animals across first and all of this opens at once",
       "ids": [
         "ag2_horse_hoe",
+        "cap_power_muscle",
         "en_horse_gin",
         "horse_collar",
         "lnd_four_wheel_cart",
@@ -424,6 +475,82 @@
         "sea_spritsail",
         "sea_monsoon_route"
       ]
+    },
+    "Old World goods": {
+      "node": "kt_old_world_goods",
+      "because": "this society has had no contact with the Old World, so its goods, metals and crafts are not here; bring them across and establish them first",
+      "ids": [
+        "civ_aqueduct_roman",
+        "civ_chorobates",
+        "civ_dome_roman",
+        "civ_glass_windows",
+        "civ_insula",
+        "civ_marble_facing",
+        "civ_surveying_groma",
+        "fin_coined_money",
+        "fin_maritime_loan",
+        "hom_candle_tallow",
+        "hom_cosmetics_roman",
+        "hom_flush_latrine_simple",
+        "hom_hypocaust",
+        "hom_lead_plumbing",
+        "hom_locks_keys",
+        "hom_perfume_enfleurage",
+        "hom_public_bath",
+        "lnd_axle_pivot_front",
+        "lnd_milestone",
+        "lnd_paved_road_network",
+        "mat_asbestos",
+        "mat_brass",
+        "mat_calamine",
+        "mat_camphor",
+        "mat_galena",
+        "mat_glass_soda",
+        "mat_lead",
+        "mat_linen",
+        "mat_mercury",
+        "mat_natron",
+        "mat_olive_oil",
+        "mat_papyrus",
+        "mat_pyrolusite",
+        "mat_shellac",
+        "mat_silk",
+        "mat_tallow",
+        "mat_tin",
+        "mat_vitriols",
+        "med_cataract_couching",
+        "med_legal_physician",
+        "med_surgical_kit_good",
+        "med_trepanation",
+        "med_valetudinaria",
+        "opt_burning_glass",
+        "opt_dioptra",
+        "opt_geared_mechanisms",
+        "opt_groma",
+        "opt_steelyards",
+        "opt_sundial",
+        "opt_water_clock",
+        "opt_water_globe_magnifier",
+        "prn_mosaic_fresco",
+        "prn_papyrus_sheets",
+        "prn_parchment_sheets",
+        "prn_theatre_pantomime",
+        "prn_wax_tablets",
+        "pwr_force_pump",
+        "pwr_screw_press_power",
+        "sea_anchor",
+        "sea_coastal_pilotage",
+        "sea_pharos_lighthouse",
+        "sea_sounding_lines",
+        "sea_steering_oars",
+        "tex_dye_madder",
+        "tex_dye_murex",
+        "tex_dye_woad",
+        "tex_sailcloth",
+        "tex_silk_trade",
+        "tex_two_beam_loom",
+        "tex_warp_weighted_loom"
+      ]
     }
   },
   "local_words": {
@@ -444,11 +571,36 @@
       [
         "Licensed collegium of physicians and teachers",
         "A recognised body of ticitl and teachers"
+      ],
+      [
+        "Found the school (the Museum)",
+        "Found the school (the calmecac)"
       ]
     ]
   },
   "starting_interest_rate": 0.1,
   "starting_tax_share": 0.2,
+  "state_revenue": [
+    {
+      "form": "tribute_in_grain",
+      "basis": "harvest",
+      "rate": 0.15,
+      "paid_in": "wheat_kg",
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): commoners' tribute in goods to the calpixqui (Codex Mendoza tribute lists name the goods, not a share of the harvest); the share carries over the civilisation's former fitted share and has no source of its own.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "market_dues",
+      "basis": "imports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): market and long-distance traders (pochteca) paid dues to the ruler; the rate is unattested.",
+        "confidence": "D"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "Credit was in kind (cacao, cloth, maize) with pledges of labour; no attested monetary interest rate. A placeholder for near-absent formal lending.",
@@ -456,6 +608,10 @@
     },
     "starting_tax_share": {
       "source": "Commoner tribute in goods and labour recorded in the Codex Mendoza and Matricula de Tributos; the share falling on a trading household is an estimate.",
+      "confidence": "D"
+    },
+    "standing_army": {
+      "source": "The warrior orders and the palace guard, the men who fought as a profession; the rest of an army was levied from the calpulli for the campaign (Hassig, Aztec Warfare). An approximate opening headcount.",
       "confidence": "D"
     }
   }

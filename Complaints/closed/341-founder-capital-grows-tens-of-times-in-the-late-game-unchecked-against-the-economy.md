@@ -1,0 +1,15 @@
+# The founder's capital grows tens of times in the late game, and nothing compares it with the economy it lives in
+
+**Status:** closed - owner decision (2026-10-02): ignored; with a correct economic model a founder cannot hold more than the economy gives, and a large share is expected in this scenario
+
+In a Rome seed-1 run with the recommended strategy the founder's capital rises steeply between years 100 and 150 (measured by the firm-entry and capital-market checks; Han does the same on some seeds). By year 100 the founder holds a few percent of one year's society output at most; nobody has measured the share at year 150. Some seeds stay near zero and others take off between years 75 and 100, so the outcome is bimodal.
+
+Why it matters: a founder who ends up owning more than the economy can produce, or whose wealth compounds with no market, tax or political limit, makes every late-game strategy look the same. Historically the richest private fortunes were a few percent of the economy's yearly output; that is a validation range, not a target.
+
+What to measure first: founder capital against `society_output()` (sim/engine/actors/world.py) every decade to year 150, for Rome and Han, seeds 1-4, and what the founder's income is made of when it takes off (concern revenue, interest, rent, sales to the state). Then decide whether the cause is a mechanism that is missing (saturation of the founder's markets, taxation of visible wealth, interest groups pushing back) or one that is wrong (revenue still authored, `Complaints/283`, `319`). Related: `330`, `331`, `307`, `110`.
+
+Measured (Complaint 331 work; Rome seed 1, recommended strategy, `_fp/measure.py`-style driver stepping the game and reading `Sim.household.money` against `SimWorld.society_output()`): founder capital is about 3.6% of one year's society output at year 100 and about 11% at year 150 (peaking near 18% at year 130). Giving firms the means to grow did not change it (the founder's own concerns are not what firm capacity touches).
+
+Diagnosis (firm-costs-scale; Rome seed 1, recommended strategy, `_fp`-style driver): `society_output()` was the working population at the opening unskilled wage, so it did not rise when the economy index did, while the founder's takings rose with the index to the 0.75 power. The share of capital over society output therefore rose with the index alone. The founder's income at takeoff is overwhelmingly concern margin (venture revenue), with interest and sales to the state small beside it (the cash book, `cash_book.causes_since`). The founder's concerns also ran with costs that did not follow the volume they sold (Complaint 345). `society_output` now multiplies by `output_volume_scale()` (value of an hour at the economy's output per hour, not a wage), and the upkeep of a concern that sells follows its volume, so the founder's share of society output is measured against an economy that grows as his does. Re-measure the share per decade with the driver; the founder's capital is still not capped and has no target.
+
+Related: 101, 354.

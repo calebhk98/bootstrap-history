@@ -47,7 +47,8 @@ mechanism the founder uses must be usable by any actor.
 Three artefacts share one dataset:
 
 - **Data** (`data/`): the tech tree (authored per domain in `data/branches/`,
-  merged by `sim/treetool.py`), production recipes (`data/production/`),
+  built at load by `sim/engine/tree_source.py`), production recipes
+  (`data/production/`),
   civilisations, world geography, trades.
 - **Knowledge** (under `docs/`): how to physically do each thing the tree
   names. Tree nodes link to it through their `kb` field (`file.md#anchor`).
@@ -69,7 +70,7 @@ Check with `ls` before trusting this; directories move.
 | Tests | `sim/tests/`, run through `sim/test_regressions.py` |
 | Engine shape, measured | `sim/ARCHITECTURE.md` |
 | Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |
-| Open problems, bug reports (each has a `**Status:**` line) | `Complaints/` (open), `Complaints/closed/` (done); `python3 sim/issue_status.py` prints the table, `--check` validates it |
+| Open problems, bug reports (each has a `**Status:**` line) | `Complaints/` (open), `Complaints/closed/` (done); `python3 sim/issue_status.py` prints the table, `--check` validates it; a new issue takes its number from `--next`, and if two branches collide, run `--renumber --write` after merging |
 | Playtest and audit reports; standing design decisions | `Complaints/reports/`; `docs/architecture/DESIGN_PRINCIPLES.md` |
 | Mods: loader, contract, backlog | `sim/engine/mods.py`, `mods/README.md`, `mods/TASKS.md` |
 | Playtest setup for agent players | `playtest/` |
@@ -112,8 +113,8 @@ maintenance. Dragons are agents with calorie needs. None get a bespoke branch.
 are allowed while the deeper mechanism does not exist; unlabelled ones are
 not. Tag them so the migration queue is measurable.
 
-**4.5 Prices are calculated, not looked up.** `data/prices.json` is the old
-way and is being deleted; do not add new readers of it. A production yield is
+**4.5 Prices are calculated, not looked up.** There is no price table (the
+old `data/prices.json` is deleted); do not add one back. A production yield is
 a physical fact (ore grade times recovery, stoichiometry, latent heat), never
 derived from a sale price or tuned so a computed price matches the book.
 
@@ -191,8 +192,9 @@ rename changed only names, via bytecode). Plan: `docs/architecture/NAMING_PLAN.m
 - **Green tests do not mean unchanged behaviour.** The suite asserts on
   outputs and messages. `sim/perf_fingerprint.py` checks the simulation
   itself (it does not cover the protocol layer).
-- **Tree tools write only when asked.** `treetool.py merge|judge|repair|apply-caps`
-  report by default; `--write` commits the result to data files.
+- **The tree is built, not committed.** `data/tech_tree.json` is generated from
+  `data/branches/` at load and is not in git. `treetool.py` reports; only
+  `judge --write` writes to data files.
 
 ---
 

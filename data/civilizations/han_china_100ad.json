@@ -17,6 +17,21 @@
     "printing": 0.6
   },
   "currency": "wu zhu cash",
+  "currency_words": {
+    "long": "cash",
+    "short": "cash"
+  },
+  "briefing_absent": [
+    {
+      "claim": "Glass: the Han have almost none and the optical branch must be started from sand and a furnace",
+      "nodes": [
+        "mat_glass_soda",
+        "civ_glass_windows",
+        "opt_dioptra",
+        "glass_clear"
+      ]
+    }
+  ],
   "coin_standard": {
     "material": "bronze_kg",
     "kg_per_unit": 0.003,
@@ -211,6 +226,7 @@
   "literacy_elite": 0.95,
   "literacy_general": 0.06,
   "name": "The Later Han Empire",
+  "short_name": "The Later Han Empire",
   "notes": [
     "You start with cast iron, paper, the horse collar, the seed drill and water-powered bellows already in hand. That is roughly a thousand years of head start over Rome on the metallurgy and agriculture branches.",
     "The bureaucracy is the customer, the funder and the competition. Impress the examiners, not a patron."
@@ -223,11 +239,20 @@
     "what_this_models": "You are one household, not the Han bureaucracy. Fifty-eight million people live under this administration and roughly one in ten of them in a town at all - about 5,800,000 town dwellers - but every trade you can hire is sized to the ONE town your household actually reaches: the order of 46,000 people, not the empire. Type 'population' once you are playing to see how your own reach compares, trade by trade, to the empire's true numbers."
   },
   "population": 58000000,
+  "standing_army": 200000,
   "price_index": 0.75,
+  "prerequisite_gaps": {
+    "bellows_water_blown": "unreviewed",
+    "blast_furnace": "unreviewed",
+    "fud_heavy_mouldboard_plough_coulter": "unreviewed",
+    "fud_seed_drill": "unreviewed",
+    "mat_paper": "unreviewed"
+  },
   "starting_techs": [
     "bellows_water_blown",
     "blast_furnace",
     "cap_heat_0700",
+    "cap_heat_1100",
     "cap_heat_1300",
     "cap_power_human",
     "cap_power_muscle",
@@ -237,7 +262,9 @@
     "fin_coined_money",
     "fin_contract_law",
     "fin_government",
+    "fin_maritime_loan",
     "fin_market",
+    "fin_tax_farming",
     "fin_testament",
     "fin_wage",
     "fud_heavy_mouldboard_plough_coulter",
@@ -245,6 +272,7 @@
     "hom_board_games",
     "hom_candle_beeswax",
     "hom_candle_tallow",
+    "hom_flush_latrine_simple",
     "hom_furniture_wooden",
     "hom_locks_keys",
     "hom_mirror_bronze_polished",
@@ -270,12 +298,12 @@
     "mat_brass",
     "mat_bronze",
     "mat_calamine",
+    "mat_camphor",
     "mat_carbon_black",
     "mat_cast_iron",
     "mat_charcoal",
     "mat_emery",
     "mat_galena",
-    "mat_glass_soda",
     "mat_gold",
     "mat_gypsum",
     "mat_lead",
@@ -302,6 +330,7 @@
     "med_trepanation",
     "med_wound_suturing",
     "opt_burning_glass",
+    "opt_geared_mechanisms",
     "opt_metal_mirror_polished",
     "opt_steelyards",
     "opt_sundial",
@@ -317,6 +346,7 @@
     "pwr_animal_treadmill",
     "pwr_force_pump",
     "pwr_screw_press_power",
+    "refractory_fireclay",
     "sea_anchor",
     "sea_coastal_pilotage",
     "sea_lodestone",
@@ -333,17 +363,26 @@
     "tex_vegetable_tanning",
     "tex_warp_weighted_loom",
     "tex_wool",
-    "tx2_fulling"
+    "tx2_fulling",
+    "tx2_needle_hand",
+    "tx2_ramie_fibre",
+    "tx2_sericulture",
+    "tx2_silk_fibre"
+  ],
+  "opening_stock": {
+    "ramie_stock_kg": 2000,
+    "silkworm_eggs_kg": 0.5
+  },
+  "will_not_sell": [
+    "silkworm_eggs_kg"
   ],
   "state_capacity": 0.9,
   "state_pressure": {
     "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
     "requisition_name": "the salt and iron monopolies",
     "requisition_note": "Salt and iron were state monopolies since Emperor Wu's reign - the Discourses on Salt and Iron (81 BC) record the court debate over exactly this policy - and the corvee could be called on a household's own hands as readily as on its goods. An ironworks or a saltern good enough to notice is, in Han law, a business the state already claims a right to run.",
-    "requisition_base_share": 0.2,
     "office_name": "a commandery post",
     "office_note": "An examined man of property could be named to a commandery office he had not sought, answerable afterward for the district's own tax quota out of his own estate if the harvest or the rolls came up short - a liability the examination system handed out along with the prestige.",
-    "office_base_share": 0.05,
     "military_name": "the imperial workshops",
     "military_note": "The Han already ran imperial armouries turning out crossbow locks to interchangeable tolerance; a household that can do the same is a supplier the state expects to hear from, not a curiosity it leaves alone.",
     "confiscation_name": "clan and property seizure",
@@ -385,11 +424,54 @@
       [
         "Licensed collegium of physicians and teachers",
         "A registered guild of physicians and teachers"
+      ],
+      [
+        "Found the school (the Museum)",
+        "Found the school (the Imperial Academy)"
       ]
     ]
   },
   "starting_interest_rate": 0.2,
   "starting_tax_share": 0.08,
+  "state_revenue": [
+    {
+      "form": "land_tax",
+      "basis": "harvest",
+      "rate": 0.0333,
+      "paid_in": "wheat_kg",
+      "_internal": {
+        "source": "Field rent of one thirtieth of the yield, fixed under Emperor Jing (Hanshu, Shihuo zhi), paid in grain.",
+        "confidence": "B"
+      }
+    },
+    {
+      "form": "poll_tax",
+      "basis": "adult_labour_years",
+      "rate": 0.03,
+      "_internal": {
+        "source": "The suanfu: 120 cash a year on each person of fifteen to fifty-six (Hanshu 1; chinaknowledge.de, suanfu). The share is that sum against an unskilled worker's yearly pay, which is itself an estimate of a few thousand cash.",
+        "confidence": "C"
+      }
+    },
+    {
+      "form": "import_duty",
+      "basis": "imports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): pass and market dues are attested under the Han but no rate is; a placeholder at a few per cent.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "export_duty",
+      "basis": "exports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): pass and market dues are attested under the Han but no rate is; a placeholder at a few per cent.",
+        "confidence": "D"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "Shiji ch.129 puts a lending return near a fifth a year; Han memorials (Chao Cuo) describe peasant debt doubling within a year, so the spread is wide. Eastern Han specifics are thin.",
@@ -398,6 +480,53 @@
     "starting_tax_share": {
       "source": "Land tax at a thirtieth of harvest, plus poll tax, a merchant surcharge, and corvee commuted to cash and the salt and iron regime. Merchants were taxed above farmers; the combined share on trading revenue is an estimate.",
       "confidence": "D"
+    },
+    "standing_army": {
+      "source": "The Eastern Han standing army: border garrisons and the capital troops, a few hundred thousand at most, far below the Former Han's conscript levies (Bielenstein, The Bureaucracy of Han Times). An approximate opening headcount.",
+      "confidence": "D"
+    }
+  },
+  "needs_first": {
+    "Mediterranean crafts": {
+      "node": "kt_mediterranean_crafts",
+      "because": "this society does not know the Mediterranean public-works, surveying and stage crafts; learn them first, by engaging craftsmen and copying the works",
+      "ids": [
+        "civ_aqueduct_roman",
+        "civ_chorobates",
+        "civ_dome_roman",
+        "civ_glass_windows",
+        "civ_insula",
+        "civ_marble_facing",
+        "civ_surveying_groma",
+        "hom_cosmetics_roman",
+        "hom_hypocaust",
+        "hom_lead_plumbing",
+        "hom_perfume_enfleurage",
+        "hom_public_bath",
+        "lnd_cursus_publicus",
+        "mat_glass_soda",
+        "mat_papyrus",
+        "med_legal_physician",
+        "med_valetudinaria",
+        "opt_dioptra",
+        "opt_groma",
+        "prn_mosaic_fresco",
+        "prn_papyrus_sheets",
+        "prn_parchment_sheets",
+        "prn_theatre_pantomime",
+        "sea_mortise_tenon",
+        "sea_pharos_lighthouse",
+        "sea_spritsail",
+        "tex_dye_murex",
+        "tex_dye_woad"
+      ]
+    },
+    "eastern trade goods": {
+      "node": "exp_trade_route_extend",
+      "because": "this society does not trade in the eastern goods these depend on; extend the trade routes first",
+      "ids": [
+        "sea_monsoon_route"
+      ]
     }
   }
 }

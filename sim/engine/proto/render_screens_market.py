@@ -12,18 +12,31 @@ def render_market(out):
         lines.append("  %-14s %5s of %s/yr quoted   competing: %s"
                      % (row["category"], _pct(row["share_of_quoted_earned"]),
                         _fmt_num(row["quoted_per_year"]), ", ".join(row["concerns"])))
+    demand = out.get("demand") or []
+    if demand:
+        lines += ["", "DEMAND BY GOODS CATEGORY  (sale price and quantity against the day you first sold; "
+                      "NEW = what one more concern would earn of its quoted figure)",
+                  "  %-14s %6s %9s %9s %6s" % ("CATEGORY", "YOURS", "PRICE", "QUANTITY", "NEW")]
+        for row in demand:
+            lines.append("  %-14s %6d %9s %9s %6s"
+                         % (row["category"], row["concerns_of_yours"],
+                            _pct(row["sale_price_vs_opening"]) if row["sale_price_vs_opening"] is not None else "-",
+                            _pct(row["quantity_vs_opening"]) if row["quantity_vs_opening"] is not None else "-",
+                            _pct(row["new_concern_earns_share"])))
     materials = out.get("materials") or {}
     rows = materials.get("rows") or []
     lines += ["", "MATERIAL PRICES  (%s-%s of %s; own = you supply it)"
               % (materials.get("offset", 0) + 1, materials.get("offset", 0) + len(rows),
                  materials.get("total")),
-              "  %-26s %10s %10s %14s  %s" % ("MATERIAL", "BUY/T", "SELL/T", "MARKET T/YR", "OWN")]
+              "  %-26s %10s %10s %14s  %-4s %s" % ("MATERIAL", "BUY/T", "SELL/T", "MARKET T/YR", "OWN", "NOTE")]
     for row in rows:
-        lines.append("  %-26s %10s %10s %14s  %s"
-                     % (row["material"], _fmt_num(row["buy_per_tonne"]),
-                        _fmt_num(row["sell_per_tonne"]),
-                        _fmt_num(row["market_available_tonnes_per_year"]),
-                        "own" if row["own_supply"] else ""))
+        lines.append(("  %-26s %10s %10s %14s  %-4s %s"
+                      % (row["material"], _fmt_num(row["buy_per_tonne"]),
+                         _fmt_num(row["sell_per_tonne"]),
+                         _fmt_num(row["market_available_tonnes_per_year"]),
+                         "own" if row["own_supply"] else "",
+                         "priced at a technique you do not have"
+                         if row.get("price_basis") in ("gated", "mature") else "")).rstrip())
     if materials.get("offset", 0) + len(rows) < materials.get("total", 0):
         lines.append("  more: market offset %d" % (materials["offset"] + len(rows)))
     lines += ["", "WAGES  (a year of one person; 'labour <trade>' for detail)",
@@ -38,4 +51,12 @@ def render_market(out):
 
 def why_goods_market_lines(out):
     """The `why` section naming a concern's goods market."""
-    return [out["goods_market_line"]] if out.get("goods_market_line") else []
+    lines = [out["goods_market_line"]] if out.get("goods_market_line") else []
+    effect = out.get("opening_effect")
+    if effect:
+        lines.append("Opening it: earns about %s a year at maturity; your existing concerns in %s "
+                     "change by %s a year; net %s. (%s)"
+                     % (_fmt_num(effect["new_concern_earns_per_year"]), effect["category"],
+                        _fmt_num(effect["existing_concerns_change_per_year"]),
+                        _fmt_num(effect["net_change_per_year"]), effect["basis"]))
+    return lines

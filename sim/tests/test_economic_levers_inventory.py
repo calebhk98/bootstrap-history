@@ -14,11 +14,11 @@ check("typed economic levers reach their protocol actions",
 
 
 s = sim(capital=1_000_000)
-wage0 = s.annual_wage("artisan")
+wage0 = s.labour_market.quote_annual("artisan")
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "farm", "n": 120})
 check("farmland is a direct lever that lowers food costs and wages",
       reply["ok"] and reply["food_cost_factor"] < 1
-      and s.annual_wage("artisan") < wage0, reply)
+      and s.labour_market.quote_annual("artisan") < wage0, reply)
 
 room0 = s.supervision_room()
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "housing", "n": 5})
@@ -26,13 +26,13 @@ check("worker housing directly expands household capacity",
       reply["ok"] and s.supervision_room() == room0 + 5, reply)
 
 s.trades_created.add("chemist")
-s._add_labour_pressure("chemist", 2_000)
-scarcity0 = s.labour_price_factor("chemist")
+s.labour_market.press("chemist", 2_000)
+scarcity0 = s.labour_market.price_factor("chemist")
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "trade_school",
                                      "trade": "chemist", "n": 2})
 check("a named trade school makes its profession more common",
       reply["ok"] and s.market_supply("chemist") >= 4_000
-      and s.labour_price_factor("chemist") < scarcity0, reply)
+      and s.labour_market.price_factor("chemist") < scarcity0, reply)
 
 pop = S._agent_dispatch(s, NODES, {"cmd": "population"})
 check("population exposes national, reachable, and employed trade demographics",

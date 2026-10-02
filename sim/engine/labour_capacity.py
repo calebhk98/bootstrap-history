@@ -26,6 +26,7 @@ import math
 
 from .data import TRADES_ABSENT, WAGES, closure
 from sim.constants import declare
+from .wage_provider import reference_civilisation
 
 
 class CapacityMixin:
@@ -106,29 +107,28 @@ class CapacityMixin:
     LITERATE_TRADES = frozenset({"scholar", "scribe", "engineer", "chemist",
                                  "machinist", "optician", "electrician"})
     # The literacy this file's trade shares and staff ceilings were already
-    # tuned against, before literacy was read anywhere: Rome's own numbers
-    # (rome_100ad.json), because every other constant in this economy - price
-    # index, cost multipliers - is already calibrated relative to Rome. Below
-    # its own reference literacy stays 1.0 and NOTHING changes for Rome; a
+    # tuned against, before literacy was read anywhere: the default
+    # civilisation's own numbers, because every other constant in this economy -
+    # price index, cost multipliers - is calibrated relative to it. Below
+    # its own reference literacy stays 1.0 and NOTHING changes for it; a
     # civilization with less of either number gets a genuinely smaller pool,
-    # in proportion, and a civilization with more (Han's elite literacy, 0.95
-    # against Rome's 0.9) is not penalised for having read more than Rome did.
+    # in proportion, and a civilization with more (a higher elite literacy
+    # than the reference) is not penalised for having read more.
     LITERACY_REFERENCE_GENERAL = declare(
-        "LITERACY_REFERENCE_GENERAL", 0.12, kind="initial_condition",
+        "LITERACY_REFERENCE_GENERAL", reference_civilisation()["literacy_general"], kind="initial_condition",
         unit="fraction of population able to read (general)",
-        source="rome_100ad.json's own literacy_general field.",
+        source="the default civilisation file's own literacy_general field.",
         confidence="B",
-        why="Rome's own starting literacy_general, copied here as the "
+        why="The default civilisation's starting literacy_general, read here as the "
             "denominator every OTHER civilisation's literate-trade capacity "
             "is measured against, because every other constant in this "
-            "economy (price index, cost multipliers) is already calibrated "
-            "relative to Rome. A duplicate of a real starting condition, "
-            "not an invented number - but it IS a duplicate, kept in sync "
-            "with rome_100ad.json only by hand.")
+            "economy (price index, cost multipliers) is calibrated "
+            "relative to that civilisation. A real starting condition, "
+            "read from its file, not an invented number.")
     LITERACY_REFERENCE_ELITE = declare(
-        "LITERACY_REFERENCE_ELITE", 0.90, kind="initial_condition",
+        "LITERACY_REFERENCE_ELITE", reference_civilisation()["literacy_elite"], kind="initial_condition",
         unit="fraction of the propertied class able to read (elite)",
-        source="rome_100ad.json's own literacy_elite field.", confidence="B",
+        source="the default civilisation file's own literacy_elite field.", confidence="B",
         why="As LITERACY_REFERENCE_GENERAL, for the lettered, propertied "
             "pool `scholar` is drawn from.")
     LITERACY_FACTOR_CAP = declare(
@@ -607,7 +607,7 @@ class CapacityMixin:
                     * self.rep_factor()
                     + max(0.0, self.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
-        afford = budget / (self.staff_wage_reference() * self.price_index * self.wage_index)
+        afford = budget / self.labour_market.in_current_money(self.staff_wage_reference())
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
         # this institutional ceiling (see step(), section 1). It must be
         # folded into the SAME denominator this ceiling is scaled against,
@@ -810,7 +810,7 @@ class CapacityMixin:
                      "status_threatening": STATE_WEIGHT_STATUS_THREATENING,
                      "weapon_democratising": STATE_WEIGHT_WEAPON_DEMOCRATISING}
 
-    def _staff_advice(self, kind):
+    def _staff_advice(self, kind, deficit=None):
         """Name the remedy, not just the shortfall - and only remedies you could
         actually have heard of.
 
@@ -819,10 +819,15 @@ class CapacityMixin:
         same second is a contradiction, not help. Hiring is always
         sayable, because the labour market is in front of you; a named
         institution is not, until it is.
+
+        `deficit` is how many more people the caller is short; the hire
+        advice is sized to it.
         """
         bits = []
         for node, why in self.STAFF_SOURCES.get(kind, []):
-            if node in ("BUY", "HIRE"):
+            if node == "HIRE" and deficit:
+                bits.append(self.staff_hire_advice(kind, math.ceil(deficit - 1e-9)))
+            elif node in ("BUY", "HIRE"):
                 bits.append(why)
             # CLOSED IS NOT MISSING. market_supply() only applies a source's
             # multiplier via running(node), so a school built and then shut

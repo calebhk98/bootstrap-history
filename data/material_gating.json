@@ -1,0 +1,145 @@
+{
+ "_about": "Materials a consumer node may use only if a producing node is in its own ancestry (prerequisites or req_any options), because no ancient process makes them. Read by validate (sim/engine/validate_material_gating.py). ungated_consumers: node -> reason it is exempt. only_consumers limits the rule to named nodes, with scope_reason.",
+ "materials": {
+  "aluminium_kg": {
+   "producer_nodes": [
+    "mat_aluminium"
+   ]
+  },
+  "aluminum_oxide_kg": {
+   "producer_nodes": [
+    "ch2_process_bayer"
+   ]
+  },
+  "ammonia_kg": {
+   "producer_nodes": [
+    "chm_haber_bosch",
+    "chm_solvay_process",
+    "mat_ammonia"
+   ]
+  },
+  "bleach_kg": {
+   "producer_nodes": [
+    "chm_bleaching_powder",
+    "mat_chlorine"
+   ]
+  },
+  "calcium_carbide_kg": {
+   "producer_nodes": [
+    "chm_alkali_waste"
+   ]
+  },
+  "celluloid_kg": {
+   "producer_nodes": [
+    "mat_celluloid"
+   ]
+  },
+  "chromium_kg": {
+   "producer_nodes": [
+    "mat_chromium"
+   ]
+  },
+  "cryolite_kg": {
+   "producer_nodes": [
+    "mat_cryolite"
+   ]
+  },
+  "manganese_kg": {
+   "producer_nodes": [
+    "mat_manganese"
+   ]
+  },
+  "molybdenum_kg": {
+   "producer_nodes": [
+    "mt2_molybdenum_extraction"
+   ]
+  },
+  "nickel_kg": {
+   "producer_nodes": [
+    "mat_nickel"
+   ],
+   "ungated_consumers": {
+    "electroplating": "sits upstream of mat_nickel (mat_nickel -> cap_pure_4N -> electroplating), so gating it on nickel would make it unbuildable; silver, copper and gold plating are electroplating too"
+   }
+  },
+  "petroleum_refined_kg": {
+   "producer_nodes": [
+    "mat_petroleum_refined"
+   ]
+  },
+  "phosphorus_red_kg": {
+   "producer_nodes": [
+    "chm_phosphorus_extraction"
+   ]
+  },
+  "platinum_g": {
+   "producer_nodes": [
+    "mat_platinum_bulk"
+   ]
+  },
+  "porcelain_kg": {
+   "producer_nodes": [
+    "mat_porcelain"
+   ]
+  },
+  "quartz_tube_kg": {
+   "producer_nodes": [
+    "fused_quartz"
+   ]
+  },
+  "rubber_tubing_kg": {
+   "producer_nodes": [
+    "mat_rubber_coagulated",
+    "mat_synthetic_rubber"
+   ]
+  },
+  "selenium_kg": {
+   "producer_nodes": [
+    "pwr_selenium_metal"
+   ]
+  },
+  "steam_kg": {
+   "producer_nodes": [
+    "cap_power_steam",
+    "steam_atmospheric",
+    "steam_high_pressure",
+    "steam_watt"
+   ]
+  },
+  "sulfuric_acid_kg": {
+   "producer_nodes": [
+    "chm_contact_sulfuric",
+    "lead_chamber"
+   ]
+  },
+  "tungsten_kg": {
+   "producer_nodes": [
+    "mat_tungsten"
+   ]
+  },
+  "wood_pulp_kg": {
+   "producer_nodes": [
+    "prn_wood_pulp"
+   ]
+  },
+  "zinc_kg": {
+   "producer_nodes": [
+    "mat_zinc",
+    "zinc_industry_scale",
+    "zinc_metal"
+   ]
+  },
+  "graphite_kg": {
+   "producer_nodes": [
+    "mat_graphite_pure"
+   ],
+   "only_consumers": [
+    "ge_reduction",
+    "silicon_path",
+    "single_crystal",
+    "zone_refining"
+   ],
+   "scope_reason": "only the ultra-high-purity semiconductor consumers need pure graphite; ordinary natural graphite brush contacts and die-sinker electrodes buy it on the market"
+  }
+ }
+}

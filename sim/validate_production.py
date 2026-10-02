@@ -185,7 +185,7 @@ def check_requires_node(where, entry, known_nodes):
     #
     # This exists because sim/solve_prices.py had no notion of WHEN: a
     # 100 AD scenario priced its electricity off a photovoltaic panel,
-    # which is the defect Complaints/39 records. A typo here reads as
+    # which is the defect Complaints/38 records. A typo here reads as
     # "this technique is never available", which is why the id is
     # checked against the tree rather than taken on trust.
     if "requires_node" in entry:
@@ -367,7 +367,7 @@ def check_mass_conservation(where, entry):
     #
     # Only checked where every output and at least one input is quoted in
     # kilograms, because this file also carries cubic metres of timber,
-    # grams of platinum, thousands of bricks and an iugerum of land, and
+    # grams of platinum, thousands of bricks and a hectare of land, and
     # adding those together would be arithmetic about nothing. An entry
     # that fails this has either an inverted ratio or a unit slip, and both
     # are invisible on a read-through: the numbers look like numbers.

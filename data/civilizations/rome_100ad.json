@@ -16,6 +16,7 @@
     "structures": 0.75
   },
   "currency": "denarius",
+  "currency_words": {"long": "denarii", "short": "den"},
   "coin_standard": {
     "material": "silver_kg",
     "kg_per_unit": 0.0027,
@@ -267,6 +268,7 @@
   "literacy_elite": 0.9,
   "literacy_general": 0.12,
   "name": "The Roman Empire under Trajan",
+  "short_name": "The Roman Empire",
   "notes": [
     "Slavery is the central economic institution and it suppresses the business case for every labour-saving device.",
     "Manual work is socially degrading: Cicero De Officiis 1.150-151, Seneca Ep. 90.",
@@ -281,7 +283,12 @@
     "what_this_models": "You are one household, not the Roman state. Sixty-five million people live under Trajan and roughly one in eight of them in a town at all - about 7,800,000 town dwellers - but every trade you can hire, and every price that moves when you hire one more, is sized to the ONE town your household actually works in: the order of 50,000 people, not the Empire. Type 'population' once you are playing to see exactly how your own reach compares, trade by trade, to the whole of it."
   },
   "population": 65000000,
+  "standing_army": 380000,
   "price_index": 1.0,
+  "prerequisite_gaps": {
+    "ag2_refrigeration_ice": "unreviewed",
+    "sc2_institution_textbook": "unreviewed"
+  },
   "starting_techs": [
     "ag2_composting",
     "ag2_liming",
@@ -291,6 +298,7 @@
     "ag2_potash",
     "ag2_refrigeration_ice",
     "cap_heat_0700",
+    "cap_heat_1100",
     "cap_power_human",
     "cap_power_muscle",
     "cap_tol_1mm",
@@ -386,6 +394,7 @@
     "mat_brass",
     "mat_bronze",
     "mat_calamine",
+    "mat_camphor",
     "mat_carbon_black",
     "mat_charcoal",
     "mat_emery",
@@ -403,6 +412,7 @@
     "mat_olive_oil",
     "mat_papyrus",
     "mat_parchment",
+    "mat_pozzolana",
     "mat_pyrolusite",
     "mat_salt",
     "mat_shellac",
@@ -460,9 +470,11 @@
     "pwr_force_pump",
     "pwr_petroleum_seeps",
     "pwr_screw_press_power",
+    "refractory_fireclay",
     "sc2_institution_textbook",
     "sea_anchor",
     "sea_coastal_pilotage",
+    "sea_harbours_pozzolana",
     "sea_lead_sheathing",
     "sea_lodestone",
     "sea_merchant_ships_large",
@@ -500,10 +512,9 @@
     "tx2_dyeing_fibre",
     "tx2_dyeing_piece",
     "tx2_dyeing_yarn",
-    "tx2_eye_pointed_needle",
     "tx2_fulling",
     "tx2_heddle",
-    "tx2_needle",
+    "tx2_needle_hand",
     "tx2_pin",
     "tx2_scouring",
     "tx2_warp_sizing",
@@ -511,13 +522,11 @@
   ],
   "state_capacity": 0.85,
   "state_pressure": {
-    "_doc": "How this state leans on a household once it is large enough to be worth leaning on. Read by SocietyMixin.requisition_report/office_report/confiscation_risk/state_pressure_report (society.py). The *_name fields are the words a log line or 'risk' uses; the *_note fields are the historical grounding; *_base_share is the MOST of a year's revenue this civilisation's state takes at full notice, before protection bargains requisition down (office is not bargained down: it is compulsory).",
+    "_doc": "How this state leans on a household once it is large enough to be worth leaning on. Read by SocietyMixin.requisition_report/office_report/confiscation_risk/state_pressure_report (society.py). The *_name fields are the words a log line or 'risk' uses; the *_note fields are the historical grounding; how much of a year's revenue the state takes at full notice is not set here: it follows the state's unfunded need (see sim/engine/actors/budget.py); protection bargains requisition down (office is not bargained down: it is compulsory).",
     "requisition_name": "the annona and the munera",
     "requisition_note": "Grain for the city and the army was levied as the annona, administered in kind; compulsory public services, the munera, fell on anyone with the property to bear them (Digest 50.4), and after Diocletian's reforms (284-305) the Price Edict of 301 fixed what a thing could be sold for at all, on pain of death. A household with an oil press, a furnace or a granary the state can point to is a household it can assess.",
-    "requisition_base_share": 0.16,
     "office_name": "the decurionate",
     "office_note": "Municipal office was not petitioned for, it was assigned by census qualification, and it cost the office-holder his own money - the council seat that funded the games, the grain dole and the aqueduct repair out of pocket (the munus, again), while also making him answerable for the town's own tax quota if the rolls came up short. Being rich enough to be asked is being rich enough to ruin yourself refusing.",
-    "office_base_share": 0.06,
     "military_name": "the fabricae",
     "military_note": "The later empire armed itself through state arms factories (fabricae) that could draw requisitioned metalworking skill on short notice; a smith who can cast a working gun in the fourth century is a smith the praetorian prefecture wants an accounting from, Price Edict or no Price Edict.",
     "confiscation_name": "proscription and the bona damnatorum",
@@ -543,6 +552,45 @@
   "year": 100,
   "starting_interest_rate": 0.12,
   "starting_tax_share": 0.06,
+  "state_revenue": [
+    {
+      "form": "land_tax",
+      "basis": "harvest",
+      "rate": 0.1,
+      "paid_in": "wheat_kg",
+      "_internal": {
+        "source": "A tenth of the crop, taken in grain: the decuma of Sicily under the Lex Hieronica (Cicero, Verrines 2.3) and the provincial tribute in grain; Egypt took more. Rome's provincial land tax is not known as one rate; a tenth is the attested modal share.",
+        "confidence": "C"
+      }
+    },
+    {
+      "form": "poll_tax",
+      "basis": "adult_labour_years",
+      "rate": 0.04,
+      "_internal": {
+        "source": "Provincial poll tax (tributum capitis), for instance the Egyptian laographia of some twenty drachmae a man against a wage of about a drachma a day. Italy and citizens were exempt, which this empire-wide share ignores.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "import_duty",
+      "basis": "imports_value",
+      "rate": 0.025,
+      "_internal": {
+        "source": "Portoria: the quadragesima (2.5 per cent) on goods crossing customs districts in Gaul, Asia, Illyricum and Africa (de Laet, Portorium, 1949; Hopkins, JRS 70, 1980).",
+        "confidence": "B"
+      }
+    },
+    {
+      "form": "export_duty",
+      "basis": "exports_value",
+      "rate": 0.025,
+      "_internal": {
+        "source": "Portoria at 2.5 per cent, charged on goods leaving a customs district as on those entering (de Laet, Portorium, 1949).",
+        "confidence": "B"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "Centesimae usurae, 1% a month, was the legal ceiling on ordinary loans; the respectable-lending rate, with maritime and unsecured lending far higher.",
@@ -550,6 +598,10 @@
     },
     "starting_tax_share": {
       "source": "Portoria customs (a few per cent), the vicesima on some transactions, and local dues combined into one share of a trading household's revenue. An estimate, not a fiscal reconstruction.",
+      "confidence": "C"
+    },
+    "standing_army": {
+      "source": "About thirty legions of some five thousand and the auxilia, roughly equal in number to the legionaries (Tacitus, Annals 4.5; modern estimates run 350,000 to 450,000). The standing force the state paid and equipped, an approximate opening headcount.",
       "confidence": "C"
     }
   }

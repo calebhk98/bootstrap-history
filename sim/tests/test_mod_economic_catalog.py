@@ -8,6 +8,7 @@ from sim.engine.catalog import (load_production_catalog, load_trade_registry,
                                 material_namespace,
                                 validate_mod_material_paths)
 from sim.engine.mods import get_ordered_mods, load_mod_tree
+from sim.engine.tree_source import load_base_tree
 from sim.engine import data, prices, wage_provider
 from sim.validate_production import check
 from sim.world import demand, labour_market
@@ -27,7 +28,7 @@ class ModEconomicCatalogTests(unittest.TestCase):
         (mod / "mod.json").write_text(json.dumps({
             "id": "test_acme_k3f9", "name": "Acme", "version": "1", "dependencies": [], "conflicts": []}))
         self.nodes = [{"id": "test_acme_k3f9:metallurgy", "name": "Metallurgy", "mat": {"test_acme_k3f9:ingot": 10},
-                       "lab": {}, "pre": [], "cap": 0}]
+                       "lab": {}, "pre": [], "cap_hours": 0}]
         (mod / "data/branches/metals.json").write_text(json.dumps({"nodes": self.nodes}))
         (mod / "data/goals.json").write_text(json.dumps({"goals": [{"id": "test_acme_k3f9:goal", "node": "test_acme_k3f9:metallurgy"}]}))
         (mod / "data/civilizations/test_acme_k3f9+republic.json").write_text(json.dumps({
@@ -64,7 +65,7 @@ class ModEconomicCatalogTests(unittest.TestCase):
                       "money_per_labour_hour": 1.0}
         solved = prices.solved_prices([], price_book, production_entries=production)
         self.assertIn("test_acme_k3f9:ingot", solved.resolvable_materials)
-        goods, provenance = prices.priced_goods_table([], {}, price_book, production_entries=production)
+        goods, provenance = prices.priced_goods_table([], price_book, production_entries=production)
         self.assertGreater(goods["test_acme_k3f9:ingot"], 0)
         self.assertEqual("solved", provenance["test_acme_k3f9:ingot"])
         self.assertEqual(10 * goods["test_acme_k3f9:ingot"],
@@ -112,8 +113,7 @@ class ModEconomicCatalogTests(unittest.TestCase):
         ids = {mod.id for mod in manifests}
         self.assertIn("sample_egypt_100bc_e7k2", ids)
         self.assertIn("sample_slaveholding_goal_m4q8", ids)
-        base = json.loads((repo / "data/tech_tree.json").read_text())
-        tree = load_mod_tree(base, manifests)
+        tree = load_mod_tree(load_base_tree(), manifests)
         self.assertTrue(any(goal.get("node", "").startswith("sample_slaveholding_goal_m4q8:")
                             for goal in tree["meta"]["goals"]))
 

@@ -1,6 +1,6 @@
-"""Pins the fix for Complaints/44, in two rounds.
+"""Pins the fix for Complaints/43, in two rounds.
 
-ROUND ONE (the original Complaints/44 incident): England 1300's water wheel
+ROUND ONE (the original Complaints/43 incident): England 1300's water wheel
 made mechanical_mj roughly 1,347 times cheaper than human muscle, cheap
 enough that thermal_mj_friction (a warm bearing, ~98% efficient at turning
 shaft work into heat) undercut charcoal for the shared, undifferentiated
@@ -260,7 +260,7 @@ class PerConsumerGradingTests(unittest.TestCase):
 
 
 class SyntheticFrictionScenarioTests(unittest.TestCase):
-    """Reproduces the SHAPE of Complaints/44 with tiny synthetic entries: a
+    """Reproduces the SHAPE of Complaints/43 with tiny synthetic entries: a
     cheap mechanical_mj source (standing in for a water wheel), a friction
     conversion that wins on running cost alone, and a real fuel that costs
     more per MJ but clears the temperature floor. This exercises `solve`
@@ -308,7 +308,7 @@ class RealDataAcceptanceTests(unittest.TestCase):
     """The acceptance tests this task was actually given, against the real
     data/production/70_energy.json and data/civilizations/*.json: England
     1300 must burn a real fuel, not friction, Rome must be unaffected, and
-    both civilisations' gated solves must converge - see Complaints/44's
+    both civilisations' gated solves must converge - see Complaints/43's
     own before/after numbers and this task's own report for the round-two
     numbers (a synthetic hot consumer added to the real England 1300
     economy leaves plaster_kg's real, converged price untouched).
@@ -324,11 +324,15 @@ class RealDataAcceptanceTests(unittest.TestCase):
             rent_hours_per_kg_by_material=rent)
         return chosen.get("thermal_mj")
 
-    def test_england_1300_burns_a_real_fuel_not_friction(self):
-        self.assertEqual(self._thermal_choice("england_1300"), "thermal_mj_charcoal")
+    # Coal is priceable once iron_bar_kg is makeable (its shaft capital draws on bar),
+    # so the cheapest real fuel may be either solid fuel; friction must never win.
+    REAL_FUELS = ("thermal_mj_charcoal", "thermal_mj_coal")
 
-    def test_rome_100ad_still_burns_charcoal(self):
-        self.assertEqual(self._thermal_choice("rome_100ad"), "thermal_mj_charcoal")
+    def test_england_1300_burns_a_real_fuel_not_friction(self):
+        self.assertIn(self._thermal_choice("england_1300"), self.REAL_FUELS)
+
+    def test_rome_100ad_burns_a_real_fuel_not_friction(self):
+        self.assertIn(self._thermal_choice("rome_100ad"), self.REAL_FUELS)
 
     def test_thermal_mj_friction_cannot_clear_the_universal_floor(self):
         # The physical fact this whole fix rests on: friction's own stated

@@ -1,4 +1,4 @@
-"""staff_ledger_and_idle_trades: complaints 171, 168 and the auto_replace_foreman part of 180."""
+"""staff_ledger_and_idle_trades: complaints 167, 164 and the auto_replace_foreman part of 180."""
 import re
 
 from .harness import *  # noqa: F401,F403

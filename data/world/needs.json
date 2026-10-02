@@ -30,7 +30,16 @@
   "ornament": {
    "surplus_budget_share": 0.06,
    "unit": "kg of bright durable metal equivalent",
+   "satiation_per_capita_per_year": 0.0005,
+   "satiation_basis": "TRANSITIONAL heuristic: ornament metal is durable, so yearly purchase is wear and loss of the stock held, not the budget share; about 25 g held per head and about 2 per cent worn or lost a year. Validation bound used by tests: at most a few grams per head per year. A held-stock model would replace it.",
    "effectiveness_basis": "display value per kg of worked metal; a cultural quantity, equal across the bright metals"
+  },
+  "seasoning": {
+   "surplus_budget_share": 0.01,
+   "unit": "kg of black pepper equivalent",
+   "satiation_per_capita_per_year": 0.002,
+   "satiation_basis": "TRANSITIONAL heuristic: spices are bought for taste and to dress plain food, and a household's yearly use is grams, not a budget share; a couple of grams per head a year is an order of magnitude, not a measured figure. A model of taste, and of how far an elite's use exceeds the common people's, would replace it.",
+   "effectiveness_basis": "flavouring strength per kg relative to black pepper; taken equal across the spices until a source gives them separately"
   },
   "warmth_and_light": {
    "surplus_budget_share": 0.15,
@@ -77,6 +86,9 @@
   "silver_kg": {"satisfies": {"ornament": 1.0}},
   "gold_kg": {"satisfies": {"ornament": 1.0}},
   "platinum_g": {"satisfies": {"ornament": 0.001}},
+
+  "pepper_kg": {"satisfies": {"seasoning": 1.0}},
+  "cassia_kg": {"satisfies": {"seasoning": 1.0}},
 
   "firewood_kg": {"satisfies": {"warmth_and_light": 15.0}},
   "charcoal_kg": {"satisfies": {"warmth_and_light": 29.0}},

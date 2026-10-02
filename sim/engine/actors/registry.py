@@ -1,4 +1,6 @@
 """The set of actors other than the founder's household, and their yearly turn."""
+from bisect import bisect_left
+from itertools import accumulate
 from typing import Any, Dict, List, Optional, Set
 
 from sim.engine.state import ActorRecord, ActorsState
@@ -7,10 +9,11 @@ from . import imitation
 from .base import RecordedActor
 from .firm import Firm
 from .government import Government
+from .group import InterestGroup
 from .policy import make_policy
 from .tuning import ENTREPRENEURIAL_CAPITAL_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
 
-ACTOR_CLASSES = {"firm": Firm, "government": Government}
+ACTOR_CLASSES = {"firm": Firm, "government": Government, "interest_group": InterestGroup}
 
 
 class _ConcernWatch:
@@ -18,14 +21,17 @@ class _ConcernWatch:
 	current whenever its concern set changes. Holds only plain data, so a
 	state holding watched sets still copies."""
 
-	def __init__(self, firm_id: str, holders: Dict[str, Set[str]]) -> None:
+	def __init__(self, firm_id: str, holders: Dict[str, Set[str]], version: List[int]) -> None:
 		self.firm_id = firm_id
 		self.holders = holders
+		self.version = version
 		self.known: Set[str] = set()
 		self.target: Any = None
 
 	def __call__(self) -> None:
 		current = set(self.target)
+		if current != self.known:
+			self.version[0] += 1
 		for node_id in self.known - current:
 			self.holders[node_id].discard(self.firm_id)
 		for node_id in current - self.known:
@@ -43,6 +49,20 @@ class ActorRegistry:
 		# which firms hold each concern (kept current by _ConcernWatch), and the ids in order
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
+		self._staff: Optional[Dict[str, float]] = None
+		# per trade, every actor's staff in id order and the running left-to-right sum of it, kept
+		# current by re-summing from the one actor whose staff changed (see `_staff_total`)
+		self._columns: Dict[str, Any] = {}
+		self._column_position: Dict[str, int] = {}
+		self._changed_actors: Set[str] = set()
+		self._columns_synced = False
+		self._category_counts: Optional[Any] = None
+		self._acting: Optional[RecordedActor] = None
+		self._staff_basis: Dict[str, float] = {}
+		self._bans: Optional[Dict[str, str]] = None
+		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
+		self.version: List[int] = [0]
+		self._capacity_totals: Optional[Any] = None
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -58,14 +78,140 @@ class ActorRegistry:
 		actor = ACTOR_CLASSES[record.kind](actor_id, record, make_policy(record.policy_kind))
 		if isinstance(actor, Firm):
 			actor.rivals_of = self.rivals_of
+			actor.on_capacity_change = self.note_capacity_change
 			from sim.engine.economy import _InvalidatingSet
-			watch = _ConcernWatch(actor_id, self._holders)
+			watch = _ConcernWatch(actor_id, self._holders, self.version)
 			record.concerns = _InvalidatingSet(record.concerns, on_change=watch)
 			watch.target = record.concerns
 			watch()
 		self.actors[actor_id] = actor
+		prior_order = self._ordered_ids
 		self._ordered_ids = None
+		if previous is None and self._columns and prior_order is not None and len(prior_order) == len(self.actors) - 1:
+			self._insert_into_columns(actor_id, prior_order)
+		else:
+			self.refresh_staff()
+		self._bans = None
 		return actor
+
+	def note_capacity_change(self) -> None:
+		"""A firm has grown a concern: caches of the market's total supply are stale."""
+		self.version[0] += 1
+
+	def capacity_in(self, node_id: str) -> float:
+		"""Founding sizes of one concern that every active firm runs, summed."""
+		key = (self.version[0], len(self.actors))
+		if self._capacity_totals is None or self._capacity_totals[0] != key:
+			totals: Dict[str, float] = {}
+			for firm in self.active_firms():
+				for held in firm.concerns:
+					totals[held] = totals.get(held, 0.0) + firm.record.capacity.get(held, 1.0)
+			self._capacity_totals = (key, totals)
+		return self._capacity_totals[1].get(node_id, 0.0)
+
+	def concerns_in(self, category: str, nodes: Dict[str, Any]) -> float:
+		"""Founding sizes of concerns of goods category `category` that actors operate, summed over operators."""
+		# one pass counts every category; it is kept while no firm's concerns change (an exiting firm
+		# empties its concerns first, which counts as a change)
+		key = (self.version[0], len(self.actors))
+		if self._category_counts is None or self._category_counts[0] != key:
+			counts: Dict[Any, float] = {}
+			for firm in self.active_firms():
+				for node_id in firm.concerns:
+					node_category = nodes[node_id].get("cat")
+					counts[node_category] = counts.get(node_category, 0.0) + firm.record.capacity.get(node_id, 1.0)
+			self._category_counts = (key, counts)
+		return self._category_counts[1].get(category, 0)
+
+	def refresh_staff(self) -> None:
+		"""Forget the staffing and demand tallies so the next read counts every actor again."""
+		self._staff = None
+		self._columns = {}
+		self._changed_actors = set()
+		self._columns_synced = False
+
+	def _staff_total(self, trade: str) -> float:
+		"""People of one trade across every actor, summed left to right in actor-id order, as
+		`staff_by_trade` sums them, but as of the same moments: the actors' staff as read at the
+		first count after a change, the acting actor's as it stood then."""
+		acting = self._acting
+		if not self._columns_synced:
+			if acting is not None:
+				self._staff_basis = dict(acting.workforce)
+			changed = self._changed_actors
+			if acting is not None:
+				changed = changed | {acting.actor_id}
+			for actor_id in changed:
+				self._resum_actor(actor_id)
+			self._changed_actors = set()
+			self._columns_synced = True
+		column = self._columns.get(trade)
+		if column is None:
+			if self._ordered_ids is None:
+				self._ordered_ids = sorted(self.actors)
+			self._current_positions()
+			values = [self.actors[actor_id].record.workforce.get(trade, 0.0) for actor_id in self._ordered_ids]
+			if acting is not None:
+				values[self._column_position[acting.actor_id]] = self._staff_basis.get(trade, 0.0)
+			column = self._columns[trade] = (values, list(accumulate(values, initial=0.0)))
+		return column[1][-1]
+
+	def _current_positions(self) -> None:
+		"""Make `_column_position` match the actor-id order."""
+		if self._ordered_ids is None:
+			self._ordered_ids = sorted(self.actors)
+		if len(self._column_position) != len(self._ordered_ids):
+			self._column_position = {actor_id: place for place, actor_id in enumerate(self._ordered_ids)}
+
+	def _insert_into_columns(self, actor_id: str, order: List[str]) -> None:
+		"""Add one new actor to the id order and to every counted trade's column, re-summing
+		from its place; the next count then re-reads the acting actor's staff."""
+		place = bisect_left(order, actor_id)
+		order.insert(place, actor_id)
+		self._ordered_ids = order
+		self._column_position = {}
+		staff = self.actors[actor_id].record.workforce
+		for trade, (values, running) in self._columns.items():
+			values.insert(place, staff.get(trade, 0.0))
+			running[place + 1:] = list(accumulate(values[place:], initial=running[place]))[1:]
+		self._staff = None
+		self._columns_synced = False
+
+	def _resum_actor(self, actor_id: str) -> None:
+		"""Bring every counted trade's column up to the actor's present staff."""
+		actor = self.actors.get(actor_id)
+		self._current_positions()
+		place = self._column_position.get(actor_id)
+		if actor is None or place is None:
+			self._columns = {}
+			return
+		staff = actor.record.workforce
+		for trade, (values, running) in self._columns.items():
+			people = staff.get(trade, 0.0)
+			if people != values[place]:
+				values[place] = people
+				running[place + 1:] = list(accumulate(values[place:], initial=running[place]))[1:]
+
+	def staff_by_trade(self) -> Dict[str, float]:
+		"""People of each trade every recorded actor employs, in full-time equivalents."""
+		if self._staff is None:
+			totals: Dict[str, float] = {}
+			if self._ordered_ids is None:
+				self._ordered_ids = sorted(self.actors)
+			for actor_id in self._ordered_ids:
+				for trade, people in self.actors[actor_id].record.workforce.items():
+					totals[trade] = totals.get(trade, 0.0) + people
+			self._staff = totals
+			if self._acting is not None:
+				self._staff_basis = dict(self._acting.workforce)
+		return self._staff
+
+	def staff_fte(self, trade: str, excluding: Optional[str] = None) -> float:
+		"""People of one trade the actors employ, leaving out one actor's own staff."""
+		total = self._staff_total(trade)
+		if excluding is not None and excluding in self.actors:
+			total -= self.actors[excluding].workforce.get(trade, 0.0)
+		return max(0.0, total)
 
 	def add(self, actor_id: str, record: ActorRecord) -> RecordedActor:
 		self.state.records[actor_id] = record
@@ -93,48 +239,120 @@ class ActorRegistry:
 	def active_firms(self) -> List[Firm]:
 		return [firm for firm in self.of_kind("firm") if firm.record.exited_year is None]  # type: ignore[misc]
 
-	def rivals_of(self, node_id: str, asking_id: str) -> int:
-		"""Other operators sharing the market for a concern, the founder included."""
+	def rivals_of(self, node_id: str, asking_id: str) -> float:
+		"""Founding sizes of the concern that other operators run in its market, the founder's included."""
 		operators = self._holders.get(node_id, ())
-		count = len(operators) - (1 if asking_id in operators else 0)
+		count = self.capacity_in(node_id)
+		if asking_id in operators:
+			count -= self.actors[asking_id].record.capacity.get(node_id, 1.0)
 		founder_operates = self.world is not None and self.world.is_public(node_id)
 		return count + (1 if founder_operates else 0)
 
+	def _workforces(self) -> Dict[str, Dict[str, float]]:
+		return {actor_id: dict(actor.workforce) for actor_id, actor in self.actors.items()}
+
 	def advance(self, world: Any) -> None:
 		self.world = world
+		first = True
+		before = self._workforces()
 		for actor_id in sorted(self.actors):
 			actor = self.actors[actor_id]
+			world.market_forget(actor_id)
 			if actor.kind == "firm" and actor.record.exited_year is not None:
 				continue
+			# the tally is a count of everyone's staff as of the acting actor's staff in `_staff_basis`
+			self._acting, self._staff_basis = actor, dict(actor.workforce)
 			actor.advance(world)
+			actor.sell_output(world)
+			# it stays when the acting actor's staff is what the count saw; the first actor of a
+			# year always recounts, since anything between years is unseen
+			if first:
+				self.refresh_staff()
+			elif actor.workforce != self._staff_basis:
+				self._staff = None
+				self._changed_actors.add(actor.actor_id)
+				self._columns_synced = False
+			first = False
+		self._acting = None
 		self.consider_entry(world)
+		self.consider_groups(world)
+		# entry and group formation change staff after the last count; whatever reads before the next
+		# year's first actor (the founder's own turn) sees what is there, as a reloaded game does.
+		# A year in which no actor's staff differs from the year's start leaves the tally standing.
+		if self._workforces() != before:
+			self.refresh_staff()
+		self._bans = None
 
 	def consider_entry(self, world: Any) -> List[str]:
-		"""Found a firm for each proven concern that a new entrant could profit from."""
+		"""Found a firm for each proven concern whose market still pays an entrant, after its own
+		output and that of entrants already waiting reaches the market, more than the capital
+		it ties up would earn at the market's rate."""
 		self.world = world
 		founded = []
 		capital_limit = world.society_output() * ENTREPRENEURIAL_CAPITAL_SHARE
+		capital_rate = world.market_rate()
 		waiting: Dict[str, int] = {}
 		for firm in self.active_firms():
 			target = firm.record.target
 			if target is not None and target not in firm.concerns:
-				waiting[target] = waiting.get(target, 0) + 1
+				key = world.market_key(target)
+				waiting[key] = waiting.get(key, 0) + 1
 		for node_id in world.proven_concerns():
-			operators = self.rivals_of(node_id, "") + waiting.get(node_id, 0)
-			expected = world.concern_gross(node_id) / (operators + 1.0) - world.upkeep(node_id)
-			probe = Firm("probe", ActorRecord(kind="firm"))
+			key = world.market_key(node_id)
+			rivals = self.rivals_of(node_id, "")
+			expected = (world.entry_gross(node_id, rivals, waiting.get(key, 0) + 1)
+						 - world.upkeep(node_id) - world.concern_wage_bill(node_id))
+			if expected <= 0:
+				continue
+			probe = Firm("probe", ActorRecord(kind="firm", last_margin=expected, founded_year=world.year))
 			chain = imitation.missing_chain(node_id, world, probe)
 			if not chain:
 				continue
 			plan = imitation.copy_plan(probe, chain, world)
-			worth = expected * VALUE_HORIZON_YEARS * imitation.copy_chance(chain, world)
+			chance = imitation.copy_chance(chain, world)
+			worth = expected * VALUE_HORIZON_YEARS * chance
 			stake = plan["total"] * ENTRY_STAKE_BUFFER
-			if expected <= 0 or worth <= plan["total"] or stake > capital_limit:
+			pooled = min(stake, capital_limit)
+			borrowed = stake - pooled  # the rest of the stake is raised as credit, on what the entrant expects to earn
+			if borrowed > probe.spare_credit(world):
+				continue
+			capital_cost = pooled * capital_rate + (borrowed * probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
+			if worth <= plan["total"] or expected * chance <= capital_cost:
 				continue
 			firm_id = "firm:%d" % (len(self.state.records) + 1)
 			founded_firm = self.add(firm_id, ActorRecord(
 				kind="firm", name=firm_id, target=node_id,
 				last_margin=expected, founded_year=world.year))
-			founded_firm.credit(stake, "pooled capital")
+			founded_firm.credit(pooled, "pooled capital")
+			waiting[key] = waiting.get(key, 0) + 1
 			founded.append(firm_id)
 		return founded
+
+	def consider_groups(self, world: Any) -> List[str]:
+		"""Organise a group for each body of people whose lost income has reached the point at
+		which they act on the state, and call a dissolved group back when its cause returns."""
+		from .group_tuning import GROUP_ORGANISING_WEIGHT
+		formed = []
+		for key, sector in sorted(world.sectors().items()):
+			if sector.lost_income / world.scope_revenue(sector.scope) < GROUP_ORGANISING_WEIGHT:
+				continue
+			group_id = "group:" + key
+			existing = self.actors.get(group_id)
+			if existing is not None and existing.record.exited_year is None:
+				continue
+			if existing is None:
+				existing = self.add(group_id, ActorRecord(**InterestGroup.founded_by(sector), founded_year=world.year))
+			else:
+				existing.record.exited_year = None
+			existing.record.lost_income = 0.0
+			existing.advance(world)
+			formed.append(group_id)
+		return formed
+
+	def prohibitions(self) -> Dict[str, str]:
+		"""Commodity -> name of the interest group whose demand to forbid the techniques that
+		make it the state is meeting this year."""
+		if self._bans is None:
+			self._bans = {group.record.subject: group.record.name for group in self.of_kind("interest_group")
+						  if group.record.exited_year is None and group.record.demands}
+		return self._bans

@@ -1,8 +1,8 @@
 """Hazards, their timelines, and the losses they cause.
 
 Everything about a dated hazard once it is a live threat rather than a
-source of state pressure: what built defences take off it (hazard_relief,
-_military_war_relief), how long a hedge has left to be built
+source of state pressure: what built defences take off it (_military_war_relief; the
+relief itself is in hazard_relief.py), how long a hedge has left to be built
 (_calendar_floor_remaining, hazard_advice, hedge_first_steps), when it
 lands (_yr_words, hazard_timeline), what a loss does to the household
 (lose_capital, _resolve_hazard_condition, _shocks, _random_events,
@@ -18,7 +18,8 @@ byte-for-byte if draw order is preserved. These are methods of Sim; they
 are a mixin only so that they can live in a file of their own.
 """
 from sim.constants import declare
-from .data import (closure, critical_path)
+from . import money_units
+from .data import (closure, critical_path, money_word)
 from .hazard_window import hazards_not_yet_past
 
 
@@ -43,54 +44,30 @@ class HazardsMixin:
             return 1.0
         return self.KNOWLEDGE_RESIDUE_AFTER_CLOSURE
 
-    def hazard_relief(self, kind, beyond_national=False):
-        """How much of one kind of harm the things you have built take off.
+    def _counter_requirements(self, node, kind, label):
+        """Node ids a counter needs running as well (`requires_running` on its
+        `hazard_counters` entry), e.g. guns on the walls need the powder works."""
+        for counter in (self.nodes[node].get("mechanics") or {}).get("hazard_counters", ()):
+            if counter["kind"] == kind and counter["label"] == label:
+                return counter.get("requires_running") or ()
+        return ()
 
-        Returns (multiplier, [what did it]). Diminishing: each counter removes a
-        share of what is LEFT, so five partial answers are strong and none of
-        them is a switch that turns history off. With `beyond_national`, a
-        technique counts only for the part of the country that has not adopted
-        it yet, since national adoption already lowered the exposure.
-        """
-        mult, why = 1.0, []
-        for node, share, label in self.HAZARD_COUNTERS.get(kind, ()):
-            if node == "_own_gold":
-                strength = 1.0 if self.mine_capacity.get("gold", 0.0) > 0.0005 else 0.0
-            elif node == "_own_silver":
-                strength = 1.0 if self.mine_capacity.get("silver", 0.0) > 0.01 else 0.0
+    def apply_staff_survival(self, survival_share):
+        """Each person on the books survives a shock with probability
+        `survival_share`, rolled one by one so headcounts stay whole."""
+        household = self.state.household
+        household.scholars = self._surviving_people(household.scholars, survival_share)
+        household.artisans = self._surviving_people(household.artisans, survival_share)
+        for trade in sorted(household.employees):
+            survivors = self._surviving_people(household.employees[trade], survival_share)
+            if survivors > 0:
+                household.employees[trade] = survivors
             else:
-                strength = self._counter_strength(node)
-                if beyond_national:
-                    strength *= 1.0 - self.civ_diffusion(node)
-            if strength > 0.0:
-                mult *= (1.0 - share * strength)
-                why.append(label if strength >= 1.0 else
-                           "%s (lapsed: %s is closed)" % (label, self.nodes[node]["name"]))
-        if kind == "output_factor":
-            war_relief, reason = self._military_war_relief()
-            if reason:
-                mult *= war_relief
-                why.append(reason)
-            # THE STATE'S OWN ARMIES, NOT ONLY THE FOUNDER'S WORKSHOP - see
-            # "WAR: A STATE THAT IS ACTUALLY ARMED" above.
-            state_relief, reason2 = self._state_military_diffusion_relief(
-                self.STATE_MIL_RELIEF_CAP_OUTPUT)
-            if reason2:
-                mult *= state_relief
-                why.append(reason2)
-        elif kind == "sack_chance":
-            # The founder's own walls and guns already sit in
-            # HAZARD_COUNTERS["sack_chance"] above, has()-gated like every
-            # other private hedge. This is the part that was missing: "give
-            # the Roman government cannons and it is not being sacked by
-            # tribes" is a claim about the STATE's army, which diffuses in
-            # slowly and only once there is a patron to hand it to.
-            state_relief, reason2 = self._state_military_diffusion_relief(
-                self.STATE_MIL_RELIEF_CAP_SACK)
-            if reason2:
-                mult *= state_relief
-                why.append(reason2)
-        return mult, why
+                household.employees.pop(trade)
+
+    def _surviving_people(self, headcount, survival_share):
+        people = int(round(headcount))
+        return float(sum(1 for _ in range(people) if self.rng.random() >= 1.0 - survival_share))
 
     MILITARY_WAR_RELIEF_CAP = declare(
         "MILITARY_WAR_RELIEF_CAP", 0.30, kind="temporary_heuristic",
@@ -168,12 +145,14 @@ class HazardsMixin:
                         for node_id in chain if node_id not in done)
         return round(remaining, 1)
 
-    def hazard_advice(self, kind):
+    def hazard_advice(self, kind, hazard=None):
         """What KIND of thing would help, without naming what you cannot see.
 
         Under fog this must not turn into a list of node ids to go and build:
         that is the tech tree by the back door. It names the kind of answer, in
-        the same words a person in the year 100 would use.
+        the same words a person in the year 100 would use. With the `hazard`
+        itself, each defence is also listed with what it takes off that
+        hazard's own figure (mitigation_table).
         """
         words = {"staff_loss": "clean water, quarantine, and eventually inoculation",
                  "sack_chance": "walls, firearms, powerful friends, and copies of "
@@ -182,8 +161,16 @@ class HazardsMixin:
                                   "a war can cut, and a state that can fight back",
                  "real_erosion": "metal you dug yourself, land, and a way to prove "
                                  "what a coin contains"}
-        mult, why = self.hazard_relief(kind)
+        beyond_national = kind == "staff_loss"
+        mult, why = self.hazard_relief(kind, beyond_national=beyond_national)
         out = {"you_currently_take": round(mult, 3), "because_of": why}
+        if hazard is not None and kind in hazard:
+            base = hazard[kind]
+            if kind == "staff_loss":
+                base = self.staff_loss_exposure(base)["before_defences"]
+            elif kind == "output_factor":
+                base = 1.0 - base
+            out["mitigations"] = self.mitigation_table(kind, base, beyond_national)
         if mult > 0.75:
             out["what_would_help"] = words.get(kind, "")
             # AND SOMETHING YOU CAN ACT ON: a category-level answer like
@@ -400,7 +387,7 @@ class HazardsMixin:
             row.pop("in_progress", None)
         return rows
 
-    def lose_capital(self, fraction):
+    def lose_capital(self, fraction, cause="losses"):
         """Destroy a fraction of what you HAVE. Never a fraction of what you owe.
 
         Multiplying `self.state.household.capital` by a fraction directly is
@@ -419,7 +406,7 @@ class HazardsMixin:
         if household.capital <= 0:
             return 0.0
         lost = household.capital * max(0.0, min(1.0, fraction))
-        household.capital -= lost
+        household.debit(lost, cause)
         return lost
 
     def _resolve_hazard_condition(self, hazard, year, hazard_start):
@@ -579,23 +566,21 @@ class HazardsMixin:
         if "staff_loss" in hazard and rng.random() < self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE:
             historical = hazard["staff_loss"]
             # National prevalence after the country's own medicine; the
-            # household is exposed to this, not to the historical rate.
-            med_relief = self.medical_diffusion_relief()
-            raw = historical * (1.0 - med_relief)
-            # Household mitigations cut its risk only where the nation has not adopted them.
-            relief, why = self.hazard_relief("staff_loss", beyond_national=True)
-            loss = raw * relief
+            # household is exposed to this, not to the historical rate. Its
+            # own mitigations cut its risk only where the nation has not
+            # adopted them.
+            exposure = self.staff_loss_exposure(historical)
+            med_relief, raw = exposure["national_relief"], exposure["before_defences"]
+            relief, why, loss = exposure["relief"], exposure["why"], exposure["loss"]
             household = self.state.household
             _people_before = (household.scholars + household.artisans
                               + sum(household.employees.values()))
             _staff_before = self.staff_snapshot()
-            household.scholars *= (1 - loss); household.artisans *= (1 - loss)
-            for trade in list(household.employees):
-                household.employees[trade] *= (1 - loss)
+            self.apply_staff_survival(1 - loss)
             household.directors_extra *= (1 - loss)
             self.log_staff_reduction(hazard.get("name", "a plague"), _staff_before)
             # Cash goes with the trade that stopped.
-            cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE)
+            cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE, "plague losses")
             self._apply_population_mortality_shock(raw)
             # Refresh population and wage screens now, not at year end.
             self._refresh_demographic_indexes(year)
@@ -611,8 +596,8 @@ class HazardsMixin:
                 else:
                     _hit.append("staff -%d%%" % (loss * 100))
             if cash > 0.5:
-                _hit.append("%s gone with the trade that stopped"
-                            % "{:,.0f}".format(cash))
+                _hit.append("%s %s of takings lost while the trade stood idle"
+                            % ("{:,.0f}".format(cash), money_word(self.civ)))
             if not _hit:
                 _hit.append("you had nothing it could take")
             msg = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(_hit))
@@ -625,16 +610,18 @@ class HazardsMixin:
                            (" (the country's own public health has "
                             "spread far enough to hold this below the "
                             "%d%% this would otherwise have been - "
-                            "%d%% softer)"
+                            "%d%% softer; that is medical work you "
+                            "built (%s) spreading through the country)"
                             % (round(historical * 100),
-                               round(med_relief * 100)))
+                               round(med_relief * 100),
+                               self._national_sources_words()))
                            if med_relief > 0.02 else ""))
             elif med_relief > 0.02 and historical > 0.01:
                 msg += (". Empire-wide: the country's own public health "
-                        "- not only yours - has spread far enough that "
+                        "(medical work you built: %s) has spread far enough that "
                         "this, historically a %d%% loss, barely "
                         "registers"
-                        % round(historical * 100))
+                        % (self._national_sources_words(), round(historical * 100)))
             self.state.household.log.append((year, msg))
 
     def _shock_sack_chance(self, hazard, year):
@@ -672,11 +659,9 @@ class HazardsMixin:
         _people0 = (household.artisans + household.scholars
                     + sum(household.employees.values()))
         _act0 = len(projects.active)
-        self.lose_capital(self.SACK_CAPITAL_LOSS)
+        self.lose_capital(self.SACK_CAPITAL_LOSS, "sack and plunder")
         _staff_before = self.staff_snapshot()
-        household.artisans *= self.SACK_STAFF_RETENTION; household.scholars *= self.SACK_STAFF_RETENTION
-        for trade in list(household.employees):
-            household.employees[trade] *= self.SACK_STAFF_RETENTION
+        self.apply_staff_survival(self.SACK_STAFF_RETENTION)
         self.log_staff_reduction("the sack of a site", _staff_before)
         household.directors_extra *= self.SACK_DIRECTORS_RETENTION
         for node_id in sorted(projects.active):
@@ -717,9 +702,7 @@ class HazardsMixin:
         # Exclude: society inheritance (granted), dispersed copies (beyond reach).
         # Losable: corpus_written only (local site); corpus_dispersed survives.
         projects = self.state.projects
-        losable = sorted(node_id for node_id in projects.done
-                         if node_id not in projects.granted
-                         and not self.corpus_is_dispersed(node_id))
+        losable = self.losable_node_ids()
         if losable:
             drop = rng.sample(losable, max(1, int(len(losable) * frac)))
             _lost = projects.forgotten
@@ -781,10 +764,9 @@ class HazardsMixin:
         """
         if "output_factor" in hazard:
             relief, why = self.hazard_relief("output_factor")
-            # relief moves the floor back toward 1.0 rather than scaling the
-            # damage: self-sufficiency means less of your income was ever
-            # coming through the thing the war cut.
-            floor = 1.0 - (1.0 - hazard["output_factor"]) * relief
+            # Self-sufficiency means less of your income was ever coming
+            # through the thing the war cut.
+            floor = self.output_floor(hazard["output_factor"], relief)
             economy = self.state.economy
             scenario = self.state.scenario
             before = economy.output_factor
@@ -814,7 +796,7 @@ class HazardsMixin:
             economy.money_real *= (1 - hazard["real_erosion"])
             bite = hazard["real_erosion"] * self.REAL_EROSION_CASH_LOSS_SHARE * relief
             had = max(0.0, household.capital)
-            self.lose_capital(bite)
+            self.lose_capital(bite, "debasement and real erosion")
             lost = had - max(0.0, household.capital)
             if not scenario._said_debasement or year - scenario._said_debasement >= 15:
                 scenario._said_debasement = year
@@ -889,12 +871,19 @@ class HazardsMixin:
         why="Fraction of protection kept when a patron dies - losing most "
             "of your cover until a new patron relationship is established. "
             "Tuned, not measured.")
-    PATRON_DEATH_COURTING_GIFT = declare(
-        "PATRON_DEATH_COURTING_GIFT", 800.0, kind="temporary_heuristic",
-        book_money=True, unit="denarii at price_index=1.0", source=None, confidence="D",
-        why="Cost of courting a dead patron's heir afresh, at this "
+    PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS = declare(
+        "PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS", 16100.0, kind="temporary_heuristic",
+        unit="labour hours at price_index=1.0", source=None, confidence="D",
+        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
+            "Cost of courting a dead patron's heir afresh, at this "
             "society's own price level. Invented figure, not sourced to "
             "any attested gift-giving custom.")
+    PATRON_DEATH_COURTING_GIFT = money_units.PricedInLabourHours("PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS")
+    PATRON_DEATH_RECOVERY_NOTE = (
+        ". The dip lasts until the next year-end recount of protection, when "
+        "the patron's office passes to his heir and the offices and standing "
+        "you hold count again; the scandal is a one-off, not a yearly trend. "
+        "By hand, 'bribe <amount>' courts the heir and buys scandal down.")
     FIRE_ANNUAL_CHANCE = declare(
         "FIRE_ANNUAL_CHANCE", 0.03, kind="temporary_heuristic",
         unit="dimensionless (yearly probability)", source=None,
@@ -935,12 +924,15 @@ class HazardsMixin:
                 and (last_patron_death is None or year - last_patron_death > self.PATRON_DEATH_COOLDOWN_YEARS)):
             founder.last_patron_death = year
             household.scandal += self.PATRON_DEATH_SCANDAL
+            # A one-off jump is not a trend: the year's starting mark moves with it.
+            if household.scandal_last_year is not None:
+                household.scandal_last_year += self.PATRON_DEATH_SCANDAL
             was = household.protection
             household.protection *= self.PATRON_DEATH_PROTECTION_RETENTION
             gift = self.PATRON_DEATH_COURTING_GIFT * self.price_index
             courted = self.policy.get("auto_court_heir", not self.manual)
             if courted:
-                household.capital -= gift
+                household.debit(gift, "courting a patron's heir")
             if courted:
                 msg = ("your patron dies; auto_court_heir courts his heir "
                        "afresh for %s denarii. Protection falls from %d%% to "
@@ -952,16 +944,16 @@ class HazardsMixin:
                        "auto_court_heir is off; protection falls from %d%% "
                        "to %d%% and scandal rises by %d"
                        % (was * 100, household.protection * 100, self.PATRON_DEATH_SCANDAL))
-            household.log.append((year, msg))
+            household.log.append((year, msg + self.PATRON_DEATH_RECOVERY_NOTE))
         if rng.random() < self.FIRE_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
-            self.lose_capital(self.FIRE_CAPITAL_LOSS)
+            self.lose_capital(self.FIRE_CAPITAL_LOSS, "fire")
             household.log.append((year, "fire in the %s: it destroyed %s"
                              % (self.civ.get("fire_quarter", "crowded quarter"),
                                 self._loss_words(had))))
         if rng.random() < self.BANDITRY_ANNUAL_CHANCE:
             had = max(0.0, household.capital)
-            self.lose_capital(self.BANDITRY_CAPITAL_LOSS)
+            self.lose_capital(self.BANDITRY_CAPITAL_LOSS, "banditry")
             household.log.append((year, "banditry or a frontier war disrupts supply: "
                                  "it cost you %s" % self._loss_words(had)))
 

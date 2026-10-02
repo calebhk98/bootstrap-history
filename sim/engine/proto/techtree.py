@@ -8,6 +8,7 @@ from ..fog import strip_self_play_advice
 from . import available_economics, tree_filters
 from .nodes import _downstream_of, _unlocked_by
 from .state import _waiting_on
+from .why_benefit import benefit_block
 from .ventures import _VENTURE_SUPERVISION_NOTE
 # DEFAULT_AVAILABLE_LIMIT is NOT imported here: cli.py patches
 # engine.protocol.DEFAULT_AVAILABLE_LIMIT directly at runtime, so
@@ -212,8 +213,7 @@ def _brief(sim, nodes, node_id, fog):
                 # small thing and were not expecting what it took off a large
                 # project. Zero when the work cannot fail, so nothing invents
                 # a danger that is not there.
-                "failure_costs": (round(sim.project_cost(node_id) * 0.4, 1)
-                                  if node["risk"] else 0.0),
+                "failure_costs": round(sim.failure_loss(node_id), 1),
                 "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
                 "earns_per_year": (_est if _est is not None
                                    else round(sim.venture_real_earnings(node_id), 1)),
@@ -241,9 +241,20 @@ def _brief(sim, nodes, node_id, fog):
             "downstream_count": len(_downstream_of(node_id, nodes))}
 
 
+def _startable_row(sim, nodes, node_id, fog, brief=True):
+    """One row of a startable list, marked when `start` would refuse it. The
+    mark asks start_refusal, the function `start` and `stuck` use."""
+    entry = (_brief if brief else _full_entry)(sim, nodes, node_id, fog)
+    if sim.start_refusal(node_id) is not None:
+        entry["cannot_pay_now"] = True
+    return entry
+
+
 def _full_entry(sim, nodes, node_id, fog):
     entry = _brief(sim, nodes, node_id, fog)
     node = nodes[node_id]
+    entry["on_road_to_goal"] = sim.on_road_to_goal(node_id)
+    entry["is_supply_or_capability"] = node["cat"] in ("material", "capability")
     if fog:
         entry["summary"] = sim.fog_summary(node_id)
         if node["lab"]:
@@ -320,11 +331,16 @@ def _available_params(cmd):
     want_subject = (cmd.get("subject") or cmd.get("group") or "").strip()
     want_subject = want_subject.strip('"\'').lower()
     find = (cmd.get("find") or cmd.get("search") or "").strip().strip('"\'').lower()
-    show_all = bool(cmd.get("all"))
     try:
         limit = int(cmd.get("limit", 0))
     except (TypeError, ValueError):
         limit = 0
+    # an explicit page size wins over "all"
+    show_all = bool(cmd.get("all")) and not limit
+    # a bare word that is not a subject heading is a search word
+    if want_subject and not find and not any(
+            want_subject in heading.lower() for heading in SUBJECTS.values()):
+        find, want_subject = want_subject, ""
     try:
         offset = max(0, int(cmd.get("offset", 0)))
     except (TypeError, ValueError):
@@ -464,7 +480,8 @@ def _heard_of_block(sim, nodes, fog, find, want_subject, _sort_fn, reverse, hear
         heard_more = max(0, len(_heard_all) - heard_offset - len(heard))
         heard_from = heard_offset
     heard_block = [{"id": node_id, "name": nodes[node_id]["name"],
-                    "why_not": sim.start_reason(node_id)[1]} for node_id in heard]
+                    "why_not": sim.start_reason(node_id)[1],
+                    "kind": (sim.start_blockers(node_id) or [{"kind": None}])[0]["kind"]} for node_id in heard]
     return heard_more, heard_from, heard_block
 
 
@@ -487,7 +504,12 @@ def _list_page(sim, nodes, sel, startable, why_these, fog, show_all, offset, lim
                        if not page else
                        "%d-%d%s" % (offset + 1, offset + len(page),
                                     (" " + why_these) if why_these else "")),
-           "available": [_full_entry(sim, nodes, node_id, fog) for node_id in page]}
+           "available": [_startable_row(sim, nodes, node_id, fog, brief=False)
+                         for node_id in page]}
+    if not page and sel and offset:
+        out["nothing_matched"] = ("That page is past the end: %d match, so use offset 0 to %d."
+                                  % (len(sel), max(0, len(sel) - 1)))
+        return out, page
     if not page:
         # "1-0 matching 'furnace'" over an empty table is a range that
         # cannot exist, printed where an answer should be. Say the answer
@@ -498,13 +520,14 @@ def _list_page(sim, nodes, sel, startable, why_these, fog, show_all, offset, lim
         # search ignoring ids, when it searches both ids and names, and
         # only among what is startable NOW.
         out["nothing_matched"] = (
-            "Nothing you could begin today matches that. This looks at both "
-            "ids and names, but only among what you could start now."
+            "Nothing you could begin today matches that. A word is looked for in ids, "
+            "names, aliases and each thing's topic, among what you could start now; "
+            "'available find <word>' says so explicitly, 'available <subject>' lists "
+            "a subject, and 'available state:blocked <word>' looks at what you know but "
+            "cannot start yet."
             + (" That does not mean there is no such thing; it means "
-               "nothing in front of you right now answers to it. Try a "
-               "shorter word, or a subject: 'available metallurgy'."
-               if fog else
-               " Try a shorter word, or a subject: 'available metallurgy'."))
+               "nothing in front of you right now answers to it. Try a shorter word."
+               if fog else " Try a shorter word."))
     return out, page
 
 
@@ -520,7 +543,9 @@ def _list_sort_and_paging_hints(out, sel, page, show_all, offset, sort_by, _sort
     out["to_sort_or_page_differently"] = (
         "add a 'sort' of %s (smallest first), and 'reverse' for largest first; 'offset'/'limit' "
         "page the list you could start, 'heard_offset' pages the "
-        "heard-of one below it - all the way to the end."
+        "heard-of one below it - all the way to the end. Options can come in any "
+        "order, e.g. 'available metallurgy sort risk limit 10 offset 10'; 'limit' "
+        "beats 'all'."
         % ", ".join(_SORT_KEY_NAMES))
     if not show_all and offset + len(page) < len(sel):
         out["more"] = ('%d more; ask again with "offset": %d'
@@ -565,10 +590,8 @@ def _digest_subject_rows(sim, nodes, startable):
     for node_id in startable:
         group = groups.setdefault(_subject_of(nodes[node_id]), [])
         group.append(node_id)
-    # The AFFORD column is about STARTING work, so it uses the rule `start`
-    # uses. It used the purchase rule, which is why the hint under the table
-    # offered "available afford 1,083" for a player `start` would have let
-    # commit 1,767. See Sim.spending_power.
+    # The AFFORD column counts what `start` would accept, so it asks the
+    # function `start` and `stuck` ask.
     purse = sim.spending_power("start")
     rows = []
     for name, node_ids in sorted(groups.items(), key=lambda kv: -len(kv[1])):
@@ -576,7 +599,8 @@ def _digest_subject_rows(sim, nodes, startable):
         rows.append({"subject": name, "things": len(node_ids),
                      "cheapest": round(costs[0], 1),
                      "dearest": round(costs[-1], 1),
-                     "you_could_pay_for": sum(1 for cost in costs if cost <= purse)})
+                     "you_could_pay_for": sum(1 for node_id in node_ids
+                                              if sim.start_refusal(node_id) is None)})
     return rows, purse
 
 
@@ -599,6 +623,14 @@ def _digest_leverage_and_cheap(sim, nodes, startable):
     cheap = [node_id for node_id in sorted(startable, key=lambda k: sim.project_cost(k))
              if node_id not in leverage][:5]
     return leverage, cheap
+
+
+def _digest_row(sim, nodes, node_id, fog):
+    """A startable row for the digest: the paged list (`limit`, `all`) keeps the
+    calendar-floor detail the digest table never shows."""
+    row = _startable_row(sim, nodes, node_id, fog)
+    row.pop("nominal_calendar_floor_before_reputation", None)
+    return row
 
 
 def _digest_stack_caution(sim, leverage):
@@ -664,11 +696,12 @@ def _digest_reply(sim, nodes, startable, fog, DEFAULT_AVAILABLE_LIMIT,
            # renders and that `why` exists to give you properly. The digest's
            # job is to help you choose which `why` to run, and it has a size
            # budget precisely so that it stays a digest.
-           "cheapest_six": [_brief(sim, nodes, node_id, fog) for node_id in cheap],
+           "cheapest_six": [_digest_row(sim, nodes, node_id, fog) for node_id in cheap],
            # _brief, not _full_entry: the table renders only the columns, and a
            # second block of fog summaries pushed the reply past the size a
            # reply is allowed to be. See the wall-of-text check.
-           "most_rests_on_these": [_brief(sim, nodes, node_id, fog) for node_id in leverage],
+           "most_rests_on_these": [_digest_row(sim, nodes, node_id, fog)
+                                   for node_id in leverage],
            "to_see_more": {
                "one subject": '{"cmd":"available","subject":"metallurgy"}',
                "by name": '{"cmd":"available","find":"furnace"}',
@@ -711,7 +744,7 @@ def _agent_available(sim, nodes, cmd=None):
     # prerequisites is even visible, which asks the same question about
     # THEIR missing prerequisites, and neighbouring nodes in `order` share
     # most of that ancestry. Recomputing it fresh per node, 2,800 times, is
-    # what made a single `available` call under fog on norse_900ad take
+    # what made a single `available` call under fog take
     # upward of a minute; sharing the memo across the sweep makes it once
     # per node actually touched. See is_visible()'s docstring.
     _memo = {}
@@ -767,6 +800,9 @@ def _agent_available(sim, nodes, cmd=None):
         out["state"] = "startable"
         if tag or category:
             out.update({k: v for k, v in (("tag", tag), ("category", category)) if v})
+        if find:
+            out["how_matched"] = ("each word matched a name, id, alias or the topic "
+                                  "vocabulary of the thing's category")
         if find or keep is not None:
             # Say what the filter skipped, so blocked matches are not invisible.
             out["known_but_blocked_matches"] = tree_filters.blocked_match_count(
@@ -978,6 +1014,10 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
     return {
         "calendar_floor_years": round(sim.calendar_floor(node_id), 2),
         "nominal_calendar_floor_before_reputation": node["yrs"],
+        # The soonest finish with no failure: the longer of the floor above
+        # and the payment schedule, which reputation does not shorten.
+        "earliest_completion_years": round(sim.earliest_completion_years(node_id), 2),
+        "earliest_completion_year": round(sim.state.scenario.year + sim.earliest_completion_years(node_id), 1),
         "risk": sim.effective_risk(node_id),
         # THE EXPECTED TOTAL, RETRIES INCLUDED - not the floor and the risk
         # left for the player to combine by hand. A 45%-risk, 4-year-floor
@@ -1000,7 +1040,7 @@ def _explain_timing_and_risk(sim, nodes, node_id, node):
         # takes a flat 40% of the money and puts 40% of the hours back on the
         # slate, and a player deciding whether to risk it is holding the size
         # of the project in their head, not the percentage.
-        "failure_costs": round(sim.project_cost(node_id) * 0.4, 1) if node["risk"] else 0.0,
+        "failure_costs": round(sim.failure_loss(node_id), 1),
         "failure_costs_hours": round(node["ph"] * 0.4, 1) if node["risk"] else 0.0,
     }
 
@@ -1045,7 +1085,7 @@ def _staffing_build_crew(sim, node):
     }
 
 
-def _staffing_standing_crew(sim, _is_venture, _sup_sch, _sup_art, _free_sch, _free_art,
+def _staffing_standing_crew(sim, node_id, _is_venture, _sup_sch, _sup_art, _free_sch, _free_art,
                              _foreman_trade, _foreman_fte):
     """staff_to_keep_it_open and the rest of the venture-supervision
     fields - the STANDING crew `open` actually checks, a separate and
@@ -1074,6 +1114,8 @@ def _staffing_standing_crew(sim, _is_venture, _sup_sch, _sup_art, _free_sch, _fr
             {"trade": _foreman_trade, "fte": round(_foreman_fte, 2),
              "free_now": round(sim.venture_foreman_free(_foreman_trade), 2)}
             if _foreman_trade else None),
+        "charge_to_open": (round(sim.opening_fee(node_id)[0], 1)
+                           if _is_venture else None),
         "staff_to_keep_it_open_means": (
             "a SEPARATE requirement from staff_needed above, and the one "
             "'open' actually enforces once this is built: a continuous "
@@ -1119,7 +1161,7 @@ def _explain_staffing(sim, nodes, node_id, node):
                                      else (None, 0.0))
     out = {}
     out.update(_staffing_build_crew(sim, node))
-    out.update(_staffing_standing_crew(sim, _is_venture, _sup_sch, _sup_art, _free_sch,
+    out.update(_staffing_standing_crew(sim, node_id, _is_venture, _sup_sch, _sup_art, _free_sch,
                                         _free_art, _foreman_trade, _foreman_fte))
     return out
 
@@ -1339,6 +1381,15 @@ def _explain_lineage(sim, nodes, node_id, node):
     return out
 
 
+def _blocker_fields(sim, node_id, started):
+    """The kind-classified blockers: the same list the `start` gate reads."""
+    if started:
+        return {"blocked_kind": None, "blockers": []}
+    blockers = [{"kind": blocker["kind"], "text": sim.fog_scrub(blocker["text"]), "ids": blocker["ids"]}
+                for blocker in sim.start_blockers(node_id)]
+    return {"blocked_kind": blockers[0]["kind"] if blockers else None, "blockers": blockers}
+
+
 def _explain_status(sim, nodes, node_id, node):
     """Done, active, startable now, and why not."""
     started = node_id in sim.done or node_id in sim.active
@@ -1351,6 +1402,9 @@ def _explain_status(sim, nodes, node_id, node):
         # been heard of. If you cannot see a thing, you cannot see its name
         # in someone else's sentence either.
         "start_blocked_reason": None if started else sim.fog_scrub(sim.start_reason(node_id)[1]),
+        **_blocker_fields(sim, node_id, started),
+        "living_stock": [dict(gate, brought_by=gate["brought_by"] if sim._visible_to_player(gate["brought_by"])
+                              else None) if gate["brought_by"] else gate for gate in sim.stock_gates(node_id)],
     }
 
 
@@ -1453,4 +1507,15 @@ def _node_explain(sim, nodes, node_id):
     out.update(_explain_status(sim, nodes, node_id, node))
     out.update(_explain_active_wait(sim, nodes, node_id))
     out.update(_explain_labour_notes(sim, node))
+    benefit = benefit_block(sim, node_id)
+    if benefit:
+        out["benefit"] = benefit
+    rebuild = sim.rebuild_explanation(node_id)
+    if rebuild:
+        out["rebuild"] = rebuild
+    out["standing_effect"] = {"scandal": round(sim.alarm_of(node), 2),
+                              "reputation": round(sim.reputation_gain_of(node), 2)}
+    hazard_effect = sim.hazard_effect_preview(node_id)
+    if hazard_effect:
+        out["hazard_effect"] = hazard_effect
     return out

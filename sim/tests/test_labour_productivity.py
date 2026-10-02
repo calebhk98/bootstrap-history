@@ -27,9 +27,9 @@ try:
     big.hire("smith", 50)            # TEN TIMES as many smiths
     big.year += 10                   # same decay, same settling time
     cost_small = (S.ANNUAL_WAGE["smith"] * small.wage_index * small.price_index
-                  * small.labour_price_factor("smith"))
+                  * small.labour_market.price_factor("smith"))
     cost_big = (S.ANNUAL_WAGE["smith"] * big.wage_index * big.price_index
-                * big.labour_price_factor("smith"))
+                * big.labour_market.price_factor("smith"))
     check("once the market has settled, a smith costs the SAME base wage "
           "whether the trade has 5 people in it or 50 - training ten times "
           "as many smiths does not cut the price below the wage table, it "
@@ -316,126 +316,34 @@ check("`state` reports how much of what you run has diffused to competitors",
       and 0.0 <= _st_dif[0]["diffusion_index"] <= 1.0,
       _st_dif[0].get("diffusion_index"))
 
-# --- JOB: the rubber bug (ac69bfb, e88a822) recurs across the tree. A node
-# can consume a material nothing in its own ancestry can produce, and the
-# game will still sell it at a flat book price - so you could build an
-# aluminium monoplane in Rome 100AD with no grid, no generator, no
-# electrolysis cell, buying the metal at 6 denarii a kilo. This pins the 24
-# materials audited and fixed for that gap (see data/review/
-# MATERIAL_GATING.md for the full audit, including the ~69 materials judged
-# genuinely purchasable in antiquity - iron, copper, wool, clay, timber,
-# salt and the like - where no gate is correct).
-#
-# The walk follows BOTH `pre` and `req_any` - a node can be reached either
-# way (ac69bfb's own JOB 3c, and _node_explain's "req_any COUNTS AS
-# UNLOCKING" above, make the same point) - and a req_any OPTION may name a
-# material rather than a node ("a purchasable commodity", see
-# substitution_quality), which is not something to recurse into. And the
-# graph is genuinely cyclic once req_any counts (junction_transistor ->
-# silicon_path -> point_contact_transistor -> junction_transistor is one
-# example already noted elsewhere in this tree) - a visited set is not
-# optional here, it is the difference between this check finishing and an
-# OOM kill.
-def _full_ancestors(node_id, _nodes=NODES):
-    seen, stack = set(), [node_id]
-    while stack:
-        cur = stack.pop()
-        if cur in seen:
-            continue
-        seen.add(cur)
-        node = _nodes.get(cur)
-        if not node:
-            continue
-        for prereq_id in (node.get("pre") or []):
-            if prereq_id in _nodes and prereq_id not in seen:
-                stack.append(prereq_id)
-        for req_group in (node.get("req_any") or []):
-            for opt in (req_group.get("options") or {}):
-                if opt in _nodes and opt not in seen:
-                    stack.append(opt)
-    seen.discard(node_id)
-    return seen
+# --- the rubber bug: a node consumed a material nothing in its own ancestry can
+# produce, and the game sold it at a flat book price. The rule and its data live
+# in data/material_gating.json and sim/engine/validate_material_gating.py.
+from sim.engine import validate_material_gating as _gating
+_rules = _gating.load_gating(S.ROOT)
+_gaps = _gating.check_material_gating(NODES, _rules)
+check("every consumer of a gated material has a producer in its own ancestry, "
+      "or a declared reason it does not", not _gaps, _gaps)
+_probe_nodes = {"maker": {"pre": []}, "user": {"pre": ["maker"], "mat": {"widget_kg": 1}},
+                "stranger": {"pre": [], "mat": {"widget_kg": 1}}}
+_probe_rule = {"widget_kg": {"producer_nodes": ["maker"]}}
+check("the gating rule flags a consumer with no producer and accepts a declared exemption",
+      len(_gating.check_material_gating(_probe_nodes, _probe_rule)) == 1
+      and _gating.check_material_gating(
+          _probe_nodes, {"widget_kg": {**_probe_rule["widget_kg"],
+                                       "ungated_consumers": {"stranger": "judged purchasable here"}}}) == [],
+      _gating.check_material_gating(_probe_nodes, _probe_rule))
 
-
-# material key -> node ids, any ONE of which in a consumer's full ancestry
-# means that consumer can plausibly get the material. Kept in sync by hand
-# with the fixes this pins; MATERIAL_GATING.md explains each choice.
-_GATED_MATERIALS = {
-    "aluminium_kg": {"mat_aluminium"},
-    "aluminum_oxide_kg": {"ch2_process_bayer"},
-    "ammonia_kg": {"mat_ammonia", "chm_haber_bosch", "chm_solvay_process"},
-    "bleach_kg": {"mat_chlorine", "chm_bleaching_powder"},
-    "calcium_carbide_kg": {"chm_alkali_waste"},
-    "celluloid_kg": {"mat_celluloid"},
-    "chromium_kg": {"mat_chromium"},
-    "cryolite_kg": {"mat_cryolite"},
-    "manganese_kg": {"mat_manganese"},
-    "molybdenum_kg": {"mt2_molybdenum_extraction"},
-    "nickel_kg": {"mat_nickel"},
-    "petroleum_refined_kg": {"mat_petroleum_refined"},
-    "phosphorus_red_kg": {"chm_phosphorus_extraction"},
-    "platinum_g": {"mat_platinum_bulk"},
-    "porcelain_kg": {"mat_porcelain"},
-    "quartz_tube_kg": {"fused_quartz"},
-    "rubber_tubing_kg": {"mat_rubber_coagulated", "mat_synthetic_rubber"},
-    "selenium_kg": {"pwr_selenium_metal"},
-    "steam_kg": {"steam_atmospheric", "steam_watt", "cap_power_steam",
-                 "steam_high_pressure"},
-    "sulfuric_acid_kg": {"lead_chamber", "chm_contact_sulfuric"},
-    "tungsten_kg": {"mat_tungsten"},
-    "wood_pulp_kg": {"prn_wood_pulp"},
-    "zinc_kg": {"mat_zinc", "zinc_metal", "zinc_industry_scale"},
-}
-# graphite_kg is only gated for the four ultra-high-purity semiconductor
-# consumers - ordinary (natural, low-purity) graphite brush contacts and
-# die-sinker electrodes are left alone deliberately, so this one is pinned
-# node-by-node rather than material-wide (gp_carbon_brushes buying natural
-# graphite off the market is correct, not a gap).
-_graphite_pinned = ("ge_reduction", "silicon_path", "single_crystal",
-                     "zone_refining")
-
-# electroplating consumes nickel_kg but is deliberately left off the hook:
-# it sits UPSTREAM of mat_nickel itself (mat_nickel -> cap_pure_4N ->
-# electroplating), so gating it on nickel would make electroplating
-# permanently unbuildable. The generic electroplating technique doesn't
-# specifically need nickel anyway - silver, copper and gold plating are
-# electroplating too - so this stays a documented, judged-legitimate gap
-# rather than a fix (see MATERIAL_GATING.md).
-_KNOWN_UNGATED = {"nickel_kg": {"electroplating"}}
-
-_mat_gaps = {}
-for _mat, _prods in _GATED_MATERIALS.items():
-    _consumers = [node_id for node_id, value in NODES.items() if (value.get("mat") or {}).get(_mat)]
-    _excuse = _KNOWN_UNGATED.get(_mat, set())
-    _bad = [node_id for node_id in _consumers
-            if node_id not in _excuse and not (_prods & _full_ancestors(node_id))]
-    if _bad:
-        _mat_gaps[_mat] = _bad
-check("every consumer of a material this tree can only make by an invented, "
-      "non-ancient process has that process (or an equally real substitute) "
-      "somewhere in its own ancestry - not just a book price",
-      not _mat_gaps, _mat_gaps)
-check("...and there really are gated materials and consumers here to check, "
-      "not an empty audit passing by having nothing to look at",
-      len(_GATED_MATERIALS) >= 20
-      and sum(1 for material in _GATED_MATERIALS
-              for _node_id, node in NODES.items() if (node.get("mat") or {}).get(material)) >= 60,
-      len(_GATED_MATERIALS))
-_graphite_bad = [node_id for node_id in _graphite_pinned
-                 if "mat_graphite_pure" not in _full_ancestors(node_id)]
-check("the semiconductor-grade graphite crucibles on the road to the goal "
-      "itself require actually-pure graphite, not natural lump graphite "
-      "bought off the market",
-      not _graphite_bad, _graphite_bad)
+_SUPERVISED = concern_needing_craftsmen_to_supervise()
 
 # --- three players: `why` quoted the BUILD crew as the staff requirement,
 # and `open` actually enforces ongoing SUPERVISION (venture_hands), a
 # different and sometimes larger number never shown before the money was
 # spent. `why` must now show both, from the same function `open` checks.
-r, _, _ = proto([{"cmd": "why", "id": "cementation_steel"}])
+r, _, _ = proto([{"cmd": "why", "id": _SUPERVISED}])
 _why_open = r[0]["staff_to_keep_it_open"]
 _s = sim()
-_expect_sch, _expect_art = _s.venture_hands("cementation_steel")
+_expect_sch, _expect_art = _s.venture_hands(_SUPERVISED)
 check("`why`'s supervision figure is computed by the same function `open` "
       "enforces (venture_hands), not a second estimate of it",
       abs(_why_open["scholars"] - round(_expect_sch, 2)) < 0.01
@@ -462,13 +370,13 @@ check("a pure-knowledge node (no revenue, no upkeep) carries no "
 # `open`, for ever. "Most of the mid and late game was a repetitive
 # hire-then-reopen treadmill rather than fresh decisions."
 s = sim(capital=50000.0)
-_node_id = "cementation_steel"
+_node_id = _SUPERVISED
 s.done.add(_node_id)
 s._done_changed()
 s.employees["artisan"] = 6.0
 s._resync_pools()
 ok, _ = s.open_venture(_node_id)
-check("set-up: cementation_steel opens with six craftsmen on staff", ok)
+check("set-up: the supervised concern opens with six craftsmen on staff", ok)
 s.employees["artisan"] = 0.0
 s._resync_pools()
 closed = s.close_unstaffed_ventures(s.year)
@@ -491,7 +399,7 @@ check("...and it comes back on its own once restaffed, with no 'open' typed",
 # charge bug: an unexplained number and a wrong number look identical to a
 # player who cannot see the arithmetic behind either.
 s_rg = sim(capital=1_000_000.0)
-_kg = "cementation_steel"
+_kg = _node_id
 # restore_work, unlike open_venture, checks that every prerequisite is
 # still done - so, unlike the plain open/close fixture above, this one
 # needs the whole ancestry marked done too.

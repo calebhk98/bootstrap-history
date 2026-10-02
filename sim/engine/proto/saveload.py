@@ -18,6 +18,7 @@ def save_state(sim, path):
 	sim.state._weights = dict(sim.value_weights)
 	sim.state._fog = sim.fog
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
+	sim.state._seed = getattr(sim, "seed", None)
 	try:
 		rng_state = sim.rng.getstate()
 		sim.state._rng = [rng_state[0], list(rng_state[1]), rng_state[2]]
@@ -28,8 +29,11 @@ def save_state(sim, path):
 		sim.state.population.pop_working_age = float(sim.population.working_age)
 		sim.state.population.pop_elderly = float(sim.population.elderly)
 
+	held_demand = sim.household._material_demand_cache
+	sim.state.economy.material_demand_at_last_throttle = None if held_demand is None else dict(held_demand)
+
 	# dumps (not dump, not indent) so the C encoder does the work
-	text = json.dumps(serialize_state(sim.state), sort_keys=True, default=str,
+	text = json.dumps(serialize_state(sim.state), default=str,
 					  separators=(",", ":"))
 	absolute = os.path.abspath(path)
 	# a command that changed nothing leaves the file as it is
@@ -281,6 +285,8 @@ def load_state(sim, path):
 		sim.cfg["immortal"] = bool(state._immortal)
 	if state._goal is not None:
 		sim.goal = state._goal
+	if state._seed is not None:
+		sim.seed = state._seed
 	if state._rng is not None:
 		rng_version, _keys, rng_gaussian = state._rng
 		sim.rng.setstate((rng_version, tuple(int(state_int) for state_int in _keys), rng_gaussian))

@@ -131,3 +131,6 @@ sim/_prover_pinned.py
 .cache/
 _loadtest_tmp*/
 _playtest_tmp*/
+
+# Built from data/branches/ at load time (sim/engine/tree_source.py); never committed
+data/tech_tree.json
