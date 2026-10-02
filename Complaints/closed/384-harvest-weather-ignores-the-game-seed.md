@@ -1,6 +1,6 @@
 # Harvest weather is the same in every game of a civilisation, whatever the seed
 
-**Status:** open - waiting on an owner decision: changing it moves every recorded fingerprint
+**Status:** closed - the weather seed mixes in a salt drawn once from the game's dice and saved with the game (`Sim._farm_year_weather_seed`, `sim/engine/core.py`), so seeds differ and a resumed game draws the same weather; pinned by sim/tests/test_agriculture_wiring.py
 
 The harvest weather draw is seeded only by the civilisation id, the weather cell and the calendar year (`Sim._farm_year_weather_seed`, `sim/engine/core.py`). The docstring explains why it is a pure function: so that a year draws the same weather whether it is reached in one run or across many `--session` commands. The game's own seed (`--seed`, kept in the save as `_seed`) does not enter it. So every game of a civilisation replays one fixed sequence of good and bad harvests.
 

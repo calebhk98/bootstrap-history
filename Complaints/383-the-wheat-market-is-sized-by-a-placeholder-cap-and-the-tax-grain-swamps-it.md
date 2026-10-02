@@ -1,6 +1,6 @@
 # The wheat market is sized by a placeholder cap, so the state's tax grain swamps it and farm output collapses
 
-**Status:** open - the agent economy sizes every market from producers' real output (docs/architecture/ECONOMY_AGENTS.md); the regression test lands with it
+**Status:** partly - on the agent economy every market is sized by producers' real output and the state's tax grain is held, not dumped (regression in sim/tests/test_agent_economy_wiring.py); closes when that economy becomes the default
 
 Rome, seed 1. The state's land tax takes a tenth of the harvest in wheat (`data/civilizations/rome_100ad.json`, form `land_tax`). It sells what its budget lines will not draw (`sim/engine/actors/government_stores.py`, `sell_surplus`), as a price-taker, through `world.market_sale`. The harvest is the farm model's whole gross harvest (`harvest_tonnes`, `sim/engine/actors/world_revenue.py`).
 
