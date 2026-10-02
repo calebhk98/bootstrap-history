@@ -46,6 +46,81 @@
    "conf": "C",
    "requires_node": "cap_power_muscle"
   },
+  "cashmere_goat_kg": {
+   "outputs": {
+    "cashmere_goat_kg": 100.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "pasture",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight of fine-undercoat goats reared to breeding age",
+   "yield_basis": "GROWN on pasture by a breeding flock: does kid and the young are reared on browse and grass to breeding age. The yield and the labour are borrowed from the draught_animal_kg entry (about 100 kg of live weight per hectare of extensive pasture a year, an estimate, not checked against a source); a goat is smaller than a head of cattle but is stocked more densely, so the per-hectare weight is taken as the same. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: herding, kidding and shearing or combing, taken as about 40 labourer-hours (an estimate). Made only where the fibre is already produced, because a society with no breeding goats cannot start a flock by labour. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_cashmere"
+  },
+  "angora_goat_kg": {
+   "outputs": {
+    "angora_goat_kg": 100.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "pasture",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight of Angora goats reared to breeding age",
+   "yield_basis": "GROWN on pasture by a breeding flock: does kid and the young are reared on browse and grass to breeding age. The yield and the labour are borrowed from the draught_animal_kg entry (about 100 kg of live weight per hectare of extensive pasture a year, an estimate, not checked against a source); a goat is smaller than a head of cattle but is stocked more densely, so the per-hectare weight is taken as the same. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: herding, kidding and shearing or combing, taken as about 40 labourer-hours (an estimate). Made only where the fibre is already produced, because a society with no breeding goats cannot start a flock by labour. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_mohair"
+  },
+  "jute_seed_kg": {
+   "outputs": {
+    "jute_seed_kg": 400.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 150.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare of jute grown for seed per year, output as kg of seed",
+   "yield_basis": "GROWN. A jute crop left to flower and ripen for seed, not cut for fibre, yields a few hundred kilograms of seed per hectare; 400 kg is an order-of-magnitude estimate, not checked against a source. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; seed threshing and cleaning is not added, so labour is understated. Made only where jute is already grown. Conf C.",
+   "conf": "C",
+   "requires_node": "tx2_jute_fibre"
+  },
+  "hop_rhizome_kg": {
+   "outputs": {
+    "hop_rhizome_kg": 500.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 300.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare of hop nursery per year, output as kg of rhizome cuttings for planting out",
+   "yield_basis": "GROWN. A hop stand is propagated from cuttings of its rootstock; a nursery hectare yields cuttings for planting several hectares of garden. 500 kg of cuttings per hectare-year is an order-of-magnitude estimate, not checked against a source. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: twice wheat_kg's 150 labourer-hours per hectare, for the digging, cutting and bundling of rootstock by hand (an estimate). Made only where hops are already grown. Conf C.",
+   "conf": "C",
+   "requires_node": "ag2_hopping"
+  },
+  "pyrethrum_stock_kg": {
+   "outputs": {
+    "pyrethrum_stock_kg": 300.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 300.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "basis": "per hectare of pyrethrum nursery per year, output as kg of crowns and seed for planting out",
+   "yield_basis": "GROWN. Pyrethrum is propagated by dividing established crowns or by seed; a nursery hectare yields stock for planting several hectares. 300 kg per hectare-year is an order-of-magnitude estimate, not checked against a source. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: twice wheat_kg's 150 labourer-hours per hectare, for lifting, dividing and bundling by hand (an estimate). Made only where pyrethrum is already grown. Conf C.",
+   "conf": "C",
+   "requires_node": "ag2_pyrethrum"
+  },
   "mulberry_leaves_kg": {
    "outputs": {
     "mulberry_leaves_kg": 20000.0

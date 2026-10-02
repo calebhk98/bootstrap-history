@@ -42,6 +42,8 @@ from .market_clearing import MarketClearingMixin
 from .foreign_economies import ForeignEconomiesMixin
 from .living_stock import LivingStockMixin
 from .coin_hoard import CoinHoardMixin
+from .living_stock_trade import LivingStockTradeMixin
+from .living_stock_yearly import LivingStockYearlyMixin
 from .market_demand import MarketDemandMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
@@ -204,7 +206,8 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
-          StepPhasesMixin, LabourAllocationMixin, LivingStockMixin, CoinHoardMixin):
+          StepPhasesMixin, LabourAllocationMixin, LivingStockMixin, CoinHoardMixin,
+          LivingStockTradeMixin, LivingStockYearlyMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -2150,6 +2153,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self._step_bondage()                   # 6b. serving out a debt
         self._step_founder_mortality()          # 7. founder mortality
         self._step_market()                    # 7b. the year's market closes
+        self.step_living_stock()               # 7c. held stock breeds and dies
 
         # 8. random events
         if self.events and not self.state.founder.dead_reason:

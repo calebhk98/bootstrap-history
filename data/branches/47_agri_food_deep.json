@@ -2230,9 +2230,8 @@
   "name": "Pyrethrum",
   "cat": "pests",
   "kind": "ENGINEERING",
-  "pre": [
-   "ag2_pyrethrum_stock"
-  ],
+  "pre": [],
+  "holds": {"pyrethrum_stock_kg": 10},
   "traits": [
    "food",
    "labour_saving"
@@ -2976,9 +2975,9 @@
   "cat": "processing",
   "kind": "ENGINEERING",
   "pre": [
-   "ag2_hop_stock",
    "ag2_malting"
   ],
+  "holds": {"hop_rhizome_kg": 10},
   "traits": [
    "food"
   ],

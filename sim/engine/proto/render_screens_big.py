@@ -10,7 +10,7 @@ the live Sim - see render.py and ARCHITECTURE.md.
 import textwrap
 
 from .util import _coin_hoard_line, _factor, _fmt_num, _fmt_range, _pct, _wrap
-from .tree_filters import render_state_rows
+from .tree_filters import render_state_rows, stock_line
 from .wave_summary import summary_line
 from .step_problems import problems_lines
 from ..shortage_conditions import condition_line
@@ -276,6 +276,14 @@ def _state_employ(out):
     return lines
 
 
+def _state_living_stock(out):
+    held = out.get("living_stock") or {}
+    if not held:
+        return []
+    return ["", "LIVING STOCK HELD: " + ", ".join("%s %s" % (material, _fmt_num(units))
+                                                for material, units in sorted(held.items()))]
+
+
 def _state_standing(out):
     lines = []
     lines.append("")
@@ -509,7 +517,7 @@ def render_state(out):
     renderers = (
         _state_header, _state_money, _state_founder, _state_conditions, _state_goal,
         _state_at_risk, _state_knowledge_warning, _state_running, _state_stuck,
-        _state_concerns, _state_employ, _state_standing,
+        _state_concerns, _state_employ, _state_living_stock, _state_standing,
     )
     lines = _render_sections(out, renderers)
     lines = _state_completed_head(out, lines)
@@ -581,8 +589,9 @@ def _available_row(entry, width=None, purse=None):
         _fmt_num(payback) if payback is not None else "-",
         staff, (foreman["trade"][:7] if foreman else "-"), rests)
     # The rest of a long name goes on the lines below, under the NAME column.
+    stock = [" " * (width + 1) + stock_line(entry)] if entry.get("living_stock") else []
     return "\n".join([row] + [" " * (width + 1) + name_line
-                             for name_line in name_lines[1:]])
+                             for name_line in name_lines[1:]] + stock)
 
 
 _AVAILABLE_NAME_WIDTH = 14

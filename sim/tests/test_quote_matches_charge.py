@@ -31,6 +31,8 @@ _ROWS = [
      "buy", {"what": "material", "material": "iron", "n": 0.5}, "to_buy_it"),
     ("mine", {"what": "mine", "material": "coal", "n": 50},
      "buy", {"what": "mine", "material": "coal", "n": 50}, "to_sink_it"),
+    ("living stock", {"what": "living_stock", "material": "ramie_stock_kg", "n": 100},
+     "buy", {"what": "living_stock", "material": "ramie_stock_kg", "n": 100}, "to_buy_it"),
     ("slaves", {"what": "slaves", "n": 3}, "buy", {"what": "slaves", "n": 3}, "to_buy_them"),
     ("hire", {"what": "hire", "trade": "smith", "n": 1},
      "hire", {"trade": "smith", "n": 1}, "paid_now"),

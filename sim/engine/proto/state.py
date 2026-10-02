@@ -906,6 +906,9 @@ def _agent_state(sim, nodes, cmd=None):
     conditions = shortage_conditions.condition_rows(sim)
     if conditions:
         out["conditions"] = conditions
+    living_stock = sim.held_living_stock()
+    if living_stock:
+        out["living_stock"] = living_stock
     return _agent_state_shorten(out, full)
 
 

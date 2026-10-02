@@ -9,6 +9,7 @@
   "dev_people": null,
   "dev_years": null,
   "gov": 0,
+  "grants": {"cashmere_goat_kg": 600},
   "id": "tx2_cashmere_goat_stock",
   "kb": "90_textiles.md",
   "lab": {
@@ -41,6 +42,7 @@
   "dev_people": null,
   "dev_years": null,
   "gov": 0,
+  "grants": {"jute_seed_kg": 100},
   "id": "tx2_jute_seed_stock",
   "kb": "90_textiles.md",
   "lab": {
@@ -73,6 +75,7 @@
   "dev_people": null,
   "dev_years": null,
   "gov": 0,
+  "grants": {"angora_goat_kg": 600},
   "id": "tx2_angora_goat_stock",
   "kb": "90_textiles.md",
   "lab": {
@@ -137,6 +140,7 @@
   "dev_people": null,
   "dev_years": null,
   "gov": 0,
+  "grants": {"hop_rhizome_kg": 50},
   "id": "ag2_hop_stock",
   "kb": "75_agriculture_food.md",
   "lab": {
@@ -169,6 +173,7 @@
   "dev_people": null,
   "dev_years": null,
   "gov": 0,
+  "grants": {"pyrethrum_stock_kg": 50},
   "id": "ag2_pyrethrum_stock",
   "kb": "75_agriculture_food.md",
   "lab": {

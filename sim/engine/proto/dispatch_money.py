@@ -13,6 +13,7 @@ from .explain_once import already_explained
 from .util import _qty
 from .buy_targets import canonical_target, target_names, usage_lines
 from .quote_purchases import FLAT_QUOTERS
+from .stock_purchases import buy_living_stock
 from .quote_spending import SPENDING_QUOTERS, bounty_refusal
 from .. import cash_book, purchase_rule
 
@@ -190,13 +191,14 @@ _BUY_HANDLERS = {
     "school": _buy_school,
     "material": _buy_material,
     "mine": _buy_mine,
+    "living_stock": buy_living_stock,
     "slaves": _buy_slaves,
     "manumit": _buy_manumit,
 }
 
 
 @command("buy", group="money",
-         summary="farmland, housing, schools, stock, forest, nitre, mines, slaves",
+         summary="farmland, housing, schools, stock, living stock, forest, nitre, mines, slaves",
          usage=usage_lines(),
          options={"what": ", ".join(target_names()),
                   "n": "the amount"},

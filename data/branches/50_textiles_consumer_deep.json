@@ -1721,9 +1721,8 @@
   "name": "Jute cultivation and fibre",
   "cat": "fibres",
   "kind": "RESOURCE",
-  "pre": [
-   "tx2_jute_seed_stock"
-  ],
+  "pre": [],
+  "holds": {"jute_seed_kg": 20},
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 50,
@@ -1807,9 +1806,8 @@
   "name": "Mohair: angora goat fibre",
   "cat": "fibres",
   "kind": "RESOURCE",
-  "pre": [
-   "tx2_angora_goat_stock"
-  ],
+  "pre": [],
+  "holds": {"angora_goat_kg": 150},
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 50,
@@ -1828,9 +1826,8 @@
   "name": "Cashmere: goat undercoat fibre",
   "cat": "fibres",
   "kind": "RESOURCE",
-  "pre": [
-   "tx2_cashmere_goat_stock"
-  ],
+  "pre": [],
+  "holds": {"cashmere_goat_kg": 150},
   "traits": [],
   "kb": "90_textiles.md",
   "ph": 50,

@@ -5,6 +5,7 @@ handler refuses on, and returns a reply dict (or an error dict).
 """
 
 from .. import purchase_rule
+from .stock_purchases import quote_living_stock
 
 
 def _flat_unit_quote(sim, what, unit_name, unit_price, quantity, note, **extra):
@@ -80,4 +81,5 @@ FLAT_QUOTERS = {
     "school": _quote_school,
     "material": _quote_material,
     "manumit": _quote_manumit,
+    "living_stock": quote_living_stock,
 }
