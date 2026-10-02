@@ -14,4 +14,4 @@ Store a position for every hand-placed reference and resolve it to a tile at loa
 
 ## Done
 
-Each deposit in `data/world/deposits.json` carries `lat` and `lon`, and `sim/world/tile_lookup.py` resolves the nearest tile centre at load, so a regenerated grid needs no edit to deposits. Any later hand-placed reference (a town, Complaints/289) should do the same.
+Each deposit in `data/world/deposits.json` carries `lat` and `lon`, and `sim/geography/tile_lookup.py` resolves the nearest tile centre at load, so a regenerated grid needs no edit to deposits. Any later hand-placed reference (a town, Complaints/289) should do the same.

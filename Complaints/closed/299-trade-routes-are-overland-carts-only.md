@@ -12,14 +12,14 @@ tonne cross.
 
 ## What it would take
 
-Choose the cheapest of the modes `sim/world/transport.py` models (barge,
+Choose the cheapest of the modes `sim/geography/transport.py` models (barge,
 pack, cart) over a route graph, and add a sea mode. This is also what
 `Complaints/134` asks of trade reach.
 
 ## Resolved
 
-`sim/world/sea_freight.py` gives a sailing hull's physical inputs per tonne-km;
-`sim/world/trade_routes.py` finds the cheapest chain of legs over
+`sim/geography/sea_freight.py` gives a sailing hull's physical inputs per tonne-km;
+`sim/geography/trade_routes.py` finds the cheapest chain of legs over
 `data/world/trade_routes.json`, each leg by the cheapest mode both economies
 hold the node for (sea needs ports at both ends, from the geography file's
 `coastal` flag); `sim/engine/foreign_routes.py` prices the modes with this

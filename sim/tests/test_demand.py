@@ -592,7 +592,7 @@ class NoLoneLetterMathsNotationTests(unittest.TestCase):
     match pre-existing, out-of-scope notation this task was never asked to
     touch: sim/world/agriculture.py's `harvest = TFP * H^(1-a) * L^a`
     (Cobb-Douglas notation, itself introduced by name a few lines above)
-    and sim/world/transport.py's `C = (team_pull / GRAVITY - T * g) / (r +
+    and sim/geography/transport.py's `C = (team_pull / GRAVITY - T * g) / (r +
     g) - V` (introduced by "writing V for vehicle mass, C for cargo
     mass..." immediately above it). Those two modules are not this task's
     to fix, and CLAUDE.md's own instruction is to prefer a narrow, certain

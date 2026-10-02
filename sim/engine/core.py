@@ -13,7 +13,7 @@ from sim.world import demography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
-from sim.world import regions
+from sim.geography import regions
 # Weather is drawn per geography.json land_tiles cell (see
 # `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
@@ -52,7 +52,7 @@ from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
-from .geography import GeographyMixin
+from sim.geography.geography import GeographyMixin
 from .labour import LabourMixin
 from .labour_allocation import LabourAllocationMixin
 from .projects import ProjectsMixin

@@ -13,7 +13,8 @@ sim = partial(sim, agent_economy=False)   # these checks pin the engine's own ye
 
 
 from sim.engine.data import load_civ
-from sim.world import balance_of_payments, freight_cost, sea_freight, trade_between, trade_routes, transport
+from sim.world import balance_of_payments, trade_between
+from sim.geography import freight_cost, sea_freight, trade_routes, transport
 from sim.world.market import MarketConditions
 
 PARTNER = "han_china_100ad"

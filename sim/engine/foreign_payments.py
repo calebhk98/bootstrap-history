@@ -10,7 +10,8 @@ yards can build, and its capital is paid for through the freight rate (`foreign_
 import functools
 
 from sim.constants import declare
-from sim.world import balance_of_payments, freight_cost, sea_freight
+from sim.world import balance_of_payments
+from sim.geography import freight_cost, sea_freight
 from sim.world.wages import HOURS_PER_WORKER_YEAR
 
 from .data import load_civ

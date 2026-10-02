@@ -4,10 +4,10 @@ material_freight_factor, and their effect on material_price_factor().
 
 Uses the flat check()-at-import style most topics use (see harness.py),
 because this exercises a live Sim through the engine, unlike sim/tests/
-test_transport.py, which tests sim/world/transport.py entirely standalone
+test_transport.py, which tests sim/geography/transport.py entirely standalone
 (see that module's own docstring for why it is written differently).
 
-WHAT THIS GUARDS. sim/world/transport.py derives freight cost per tonne-km
+WHAT THIS GUARDS. sim/geography/transport.py derives freight cost per tonne-km
 from animal metabolism and road physics but had nothing in the engine
 calling it (see docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md's
 milestone table, "partly built, none wired"). These checks pin the crossing
@@ -24,7 +24,7 @@ Wires transport.py into economy.py through a live Sim and geography mineral tabl
 """
 from .harness import *  # noqa: F401,F403
 
-from sim.world import transport as _transport
+from sim.geography import transport as _transport
 from sim.engine.data import haversine_km
 
 # =============================================================================

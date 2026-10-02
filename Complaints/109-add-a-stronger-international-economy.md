@@ -19,7 +19,7 @@ more as wealth grows, rather than less.
 `docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md` Part 3's domain table
 lists "Trade: one market becomes many, linked by real freight cost" at
 Layer 4. That is domestic multi-market trade (already partly wired:
-`sim/engine/economy.py` imports `sim/world/transport.py` for freight cost
+`sim/engine/economy.py` imports `sim/geography/transport.py` for freight cost
 between a civilisation's own regions), not specifically a foreign/
 international layer with tariffs, embargoes or foreign competitors. Direct
 search of `HISTORICAL_SIM_ARCHITECTURE.md` for "tariff", "export", "foreign

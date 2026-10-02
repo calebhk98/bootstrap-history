@@ -7,7 +7,7 @@ their own. Behaviour is unchanged and verified byte-identical.
 
 from typing import cast, Dict, NotRequired, Tuple, TypedDict
 
-from .data import (haversine_km, JSONDict)
+from sim.engine.data import (haversine_km, JSONDict)
 
 
 class MineralShares(TypedDict):

@@ -12,7 +12,7 @@ from functools import partial
 sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
 
 
-from sim.engine import crop_climate
+from sim.geography import crop_climate
 from sim.engine import foreign_economies as _foreign_module
 from sim.engine.data import goods_provenance, load_civ
 from sim.engine.prices import default_production_entries

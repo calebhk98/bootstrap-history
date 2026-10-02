@@ -2,7 +2,7 @@
 
 The wind does the work, so there is no feed term for animals: what a tonne-km
 costs is the crew's hours and rations spread over the cargo and the ground
-the hull covers in a day. Same output shape as `sim/world/transport.py`
+the hull covers in a day. Same output shape as `sim/geography/transport.py`
 (`FreightPhysicalInputs`), so a route can pick the cheapest mode without
 caring which one it is. No prices here: the caller turns rations and hours
 into money.

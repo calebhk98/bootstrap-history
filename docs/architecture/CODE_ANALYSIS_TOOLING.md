@@ -268,19 +268,19 @@ and better answer than proving one after the fact.
 tried on a real local in a scratch copy of this repository** (`cp -a`, never
 the real checkout) **and the pipeline works end to end:**
 
-    # sim/engine/geography.py:270, a real function-local `ab` used three
+    # sim/geography/geography.py:270, a real function-local `ab` used three
     # times across a for-loop body (float(cast(...)), a comparison, two
     # uses in the accumulator) - a genuine Tier-1 case from this codebase,
     # not a constructed one.
     from rope.base.project import Project
     from rope.refactor.rename import Rename
     project = Project('.')
-    resource = project.get_resource('sim/engine/geography.py')
+    resource = project.get_resource('sim/geography/geography.py')
     renamer = Rename(project, resource, <offset of ab>)
     project.do(renamer.get_changes('mineral_abundance'))
     # -> all three occurrences renamed, nothing else in the 300-line file touched
 
-    python3 sim/prove_rename_safe.py --verbose HEAD sim/engine/geography.py
+    python3 sim/prove_rename_safe.py --verbose HEAD sim/geography/geography.py
     # -> "PROVEN: every change is a local-variable rename. Identical
     #     bytecode, identical attributes and globals, identical constants."
     #    1 changed file(s) checked, 0 unchanged or absent, 0 failed

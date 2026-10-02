@@ -1,18 +1,19 @@
 """Freight between this society and another economy: the cheapest route over
 the map's links, each leg by the cheapest mode both economies can use.
 
-Mode costs come from the physical models (`sim/world/transport.py` for cart,
-pack string and towed barge; `sim/world/sea_freight.py` for a sailing hull),
+Mode costs come from the physical models (`sim/geography/transport.py` for cart,
+pack string and towed barge; `sim/geography/sea_freight.py` for a sailing hull),
 priced with this society's feed price, wages, carrier prices and market rate,
-with the empty return where flows are one-sided (`sim/world/freight_cost.py`).
+with the empty return where flows are one-sided (`sim/geography/freight_cost.py`).
 The legs of the chosen route are kept, with their travel days, so a player can
 see where goods travel.
 """
 import functools
 
 from sim.constants import declare
-from sim.world import cargo_cost, freight_cost, sea_freight, trade_routes, trader_response
-from sim.world import transport as freight_physics
+from sim.world import trader_response
+from sim.geography import cargo_cost, freight_cost, sea_freight, trade_routes
+from sim.geography import transport as freight_physics
 
 from .data import haversine_km, load_civ
 

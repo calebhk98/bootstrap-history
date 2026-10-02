@@ -62,15 +62,15 @@ Global notes
 
 23. **Materials supply, stock and resource throttle** - engine/economy_materials.py (nine curated commodities + generic fitted fallback for other keys, `annual_material_demand`, stock/flow, `resource_throttle` inputs), engine/economy_electricity.py `resource_throttle`, `project_resource_throttle`; step `_step_materials`. Wired: throttle scales work done each year. GENERIC_OUTPUT_* fit is hardcoded_outcome.
 
-24. **Freight and material price factor** - engine/economy_freight.py (`material_freight_cost_per_kg`, `material_price_factor`, `material_market_factor`, `shortage_remedy`); physics from world/transport.py (ox + cart + dirt track only). Wired via project_cost.
+24. **Freight and material price factor** - engine/economy_freight.py (`material_freight_cost_per_kg`, `material_price_factor`, `material_market_factor`, `shortage_remedy`); physics from sim/geography/transport.py (ox + cart + dirt track only). Wired via project_cost.
 
 25. **Mining, depletion, forests, nitre** - engine/economy_mining.py (`open_mine`, `commission_mines`, `_advance_mine_depletion`, `mine_land_ceiling`, `buy_forest`, `mothball_mines`, `mine_operating_cost`), world/deposits.py (`load_deposits`, `Deposit`, build and extraction labour), economy_freight `build_nitre`; step `_step_materials`, `_step_money`. Wired. Auto_mine, auto_forest, auto_mothball policies. Stock/land ceilings depend on standing and state capacity.
 
 26. **Electricity** - engine/economy_electricity.py (`generation_capacity_kw`, `_electricity_demand_kw`). Wired: part of `resource_throttle`. Heuristic-labelled duty cycles.
 
-27. **Geography and reach** - engine/geography.py (`region_reach`, `material_reach`, `material_cost_factor`, `mineral_scale`, `_compute_home_centroid`); data/world/geography.json. Wired (used by material supply and freight).
+27. **Geography and reach** - sim/geography/geography.py (`region_reach`, `material_reach`, `material_cost_factor`, `mineral_scale`, `_compute_home_centroid`); data/world/geography.json. Wired (used by material supply and freight).
 
-28. **Settlement, town and moving base** - world/settlement.py, engine/labour_settlement.py (`base_tile`, `move_base`, tile population share); proto `move_base` (costs founder hours: `relocation_hours_this_year`). Wired (town population feeds hiring market). Tile share of nation = share of cultivable capacity (temporary_heuristic).
+28. **Settlement, town and moving base** - sim/geography/settlement.py, engine/labour_settlement.py (`base_tile`, `move_base`, tile population share); proto `move_base` (costs founder hours: `relocation_hours_this_year`). Wired (town population feeds hiring market). Tile share of nation = share of cultivable capacity (temporary_heuristic).
 
 29. **Society values** - `value_weights` (w_magic_fear, w_religious_rigidity, w_military, adaptation_rate, bribability, ...), engine/society_hazards.py `_shock_values` (values drift across a hazard's window); read by alarm, state interest, familiarity. Wired. Weights come from civ data.
 
@@ -129,7 +129,7 @@ Global notes
 
 55. **Military logistics** - world/military_logistics.py: only `annual_iron_and_ammunition_burden_kg_per_soldier` and `MODERN_SERVICE_RIFLE` are called by the engine (society_state_pressure.py ~286). Rest is standalone/test-only; `foraging_corridor_width_km` has no caller; two CALIBRATION_LEGION_* constants unreferenced.
 
-56. **Transport physics** - world/transport.py: engine reads only the ox/cart/dirt-track draught-freight inputs (economy_freight ~227). `required_tractive_force_newtons`, `distance_per_day_km` unreferenced; other vehicles/surfaces reachable only from tests/tools.
+56. **Transport physics** - sim/geography/transport.py: engine reads only the ox/cart/dirt-track draught-freight inputs (economy_freight ~227). `required_tractive_force_newtons`, `distance_per_day_km` unreferenced; other vehicles/surfaces reachable only from tests/tools.
 
 57. **Commodity ledger** - engine/commodities.py: `CommodityLedger` used by economy_materials for national output/market share and `propagate_demand` in `wire_chain_report`. The stock class `Ledger` (and `on_hand`) are not used by the engine ("Sim has no inventory" per its docstring). Sim keeps its own Counter stock.
 

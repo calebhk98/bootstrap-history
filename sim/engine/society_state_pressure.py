@@ -241,7 +241,7 @@ class StatePressureMixin:
 
           - PROJECTION RANGE (pack_animal_max_one_way_range_km()) needs a
             supply base and a distance from it - real coordinates and a
-            campaign location - which live in sim/engine/geography.py
+            campaign location - which live in sim/geography/geography.py
             (region_reach() and friends), a file this crossing is not
             permitted to touch and which has no notion of a military
             campaign either. The range figure itself does not vary with

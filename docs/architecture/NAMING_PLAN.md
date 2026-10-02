@@ -106,7 +106,7 @@ Full per-name and per-file counts are reproducible with the scanner at
  17  sim/tests/test_suite_portability.py
  16  sim/tests/test_arrears_hours.py
  14  sim/tests/test_industrial_dashboard.py
- 12  sim/engine/geography.py
+ 12  sim/geography/geography.py
  10  sim/tests/test_economic_levers_inventory.py
   7  sim/demo_commodities.py
   7  sim/tests/test_complaints_09_16.py
@@ -228,7 +228,7 @@ to treat as one concept.
 
 **`x` — 157 bindings, 28 files. Verdict: CONSISTENT role (generic item), but
 never actually a coordinate.**
-`grep` of `sim/engine/geography.py` (the one file that does real lat/long
+`grep` of `sim/geography/geography.py` (the one file that does real lat/long
 math) turns up zero uses of `x` or `y` as coordinates — `haversine_km` uses
 `lat1, lat2` spelled out. Every sampled `x` is a generic loop item: a
 filename (`sim/engine/data.py:219`), a node id (`sim/path_search.py:366`,

@@ -10,7 +10,8 @@ a region's metal shares add the deposits on its tiles
 import math
 from typing import Any, Dict, Tuple
 
-from sim.world import mineral_shares, tile_lookup
+from sim.world import mineral_shares
+from sim.geography import tile_lookup
 
 
 region_of_tile = tile_lookup.region_of_tile

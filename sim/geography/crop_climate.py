@@ -7,7 +7,7 @@ civilisation knows how is a separate gate, the entry's `requires_node`.
 """
 import functools
 
-from .data import load_civ, load_geography
+from sim.engine.data import load_civ, load_geography
 
 CLASSES_FIELD = "grown_in_climate_classes"
 

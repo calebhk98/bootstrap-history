@@ -8,7 +8,7 @@ deposits from sim.world.deposits.
 import functools
 
 from sim.world import deposits as deposit_model
-from sim.world import tile_names
+from sim.geography import tile_names
 
 TILES_SHOWN_BY_DEFAULT = 12
 

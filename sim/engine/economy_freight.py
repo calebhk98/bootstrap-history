@@ -10,7 +10,7 @@ the real, physical distance an ox-cart has to haul it from the nearest
 region that has it (_land_freight_physical_inputs()/
 _material_source_regions()/material_freight_distance_km()/
 material_freight_cost_per_kg()/material_freight_factor() - see the
-freight section below for sim/world/transport.py's own physics and
+freight section below for sim/geography/transport.py's own physics and
 what this crossing deliberately does and does not cover). Covers, in
 addition: material_price_factor()/_demand_by_emp_key()/
 material_market_factor()/material_market_summary() (the price a
@@ -65,7 +65,7 @@ from . import money_units
 from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from sim.world import transport as freight_physics
+from sim.geography import transport as freight_physics
 
 
 class FreightMixin:
@@ -124,7 +124,7 @@ class FreightMixin:
 
     # ---- freight: moving a material from where it comes from to you ------
     #
-    # sim/world/transport.py derives what an ox team hauling a cart actually
+    # sim/geography/transport.py derives what an ox team hauling a cart actually
     # costs per tonne-km from animal metabolism, rolling resistance and a
     # road surface - real physics, no price anywhere in it (see that
     # module's own NOT A MONEY FIGURE section for why). Until now nothing in

@@ -3,7 +3,8 @@
 expected loss at sea, and domestic freight that includes the carrier's capital and empty return."""
 from .harness import *  # noqa: F401,F403
 
-from sim.world import cargo_cost, freight_cost, sea_freight, trader_response, transport
+from sim.world import trader_response
+from sim.geography import cargo_cost, freight_cost, sea_freight, transport
 
 RATE = 0.1
 check("a longer voyage charges more interest on the same cargo value",

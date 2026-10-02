@@ -1,7 +1,8 @@
 """What a state asks the simulated world when it budgets: its people, its prices, its taxpayers."""
 from typing import Any, List, Tuple
 
-from sim.world import demand, territory
+from sim.world import demand
+from sim.geography import territory
 
 from .tuning_spending import THREAT_ARMY_RESPONSE
 

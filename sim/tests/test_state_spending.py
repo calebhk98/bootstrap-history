@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.actors import SimWorld
 from sim.engine.actors import budget
-from sim.world import territory
+from sim.geography import territory
 
 
 def one_year(game):

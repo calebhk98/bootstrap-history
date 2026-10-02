@@ -64,7 +64,7 @@ quartz and mercury are abstract capital purchases rather than physical
 freight on canals and rivers. No need to secure mining concessions in
 specific provinces.
 
-*Project state:* `sim/world/transport.py` now derives freight cost per
+*Project state:* `sim/geography/transport.py` now derives freight cost per
 tonne-km from animal metabolism and rolling resistance, and
 `sim/world/deposits.py` gives minerals locations, grades and finite stocks.
 Neither is wired into the engine. Coverage is not the same as being wired
@@ -149,7 +149,7 @@ of them weigh roughly 80-100 tonnes, needing vaults and guards.
 
 This is a good check precisely because it is arithmetic rather than
 judgement, and the project already has the pieces: coin mass is physical,
-`sim/world/transport.py` prices moving mass, and storage and guarding are
+`sim/geography/transport.py` prices moving mass, and storage and guarding are
 costs an actor should bear. A treasury that weighs nothing is a hardcoded
 outcome in the sense of CLAUDE.md 3.1.
 

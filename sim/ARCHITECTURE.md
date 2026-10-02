@@ -180,7 +180,7 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
                         - one shared function, used by both callers, instead
                         of two drifting copies.
     engine/fog.py       what the player is allowed to see (521 lines).
-    engine/geography.py where things are, per civilisation (282 lines).
+    sim/geography/geography.py where things are, per civilisation (282 lines).
 
     engine/actors/household.py  `Household`: the founder's money, staff,
                         knowledge, plant and standing, extracted off `Sim`
@@ -585,7 +585,7 @@ undercounting.
         ('sim/engine/society_adoption.py', 'AdoptionMixin'),
         ('sim/engine/society_diffusion.py', 'DiffusionMixin'),
         ('sim/engine/fog.py', 'FogMixin'),
-        ('sim/engine/geography.py', 'GeographyMixin'),
+        ('sim/geography/geography.py', 'GeographyMixin'),
     ]
     total = sum(count_class_methods(fname, cname) for fname, cname in pieces)
     print(total)
@@ -1043,7 +1043,7 @@ To preserve existing callers and compatibility while enforcing a single authorit
 
 ### 1. Internal Engine State Access Architecture
 
-All internal simulation code across all engine mixins (`sim/engine/geography.py`, `fog.py`, `economy_*.py`, `labour_*.py`, `projects_*.py`, `society_*.py`, `core_step_phases.py`, and `core.py`) accesses persistent live simulation state exclusively through its authoritative subsystem owner:
+All internal simulation code across all engine mixins (`sim/geography/geography.py`, `fog.py`, `economy_*.py`, `labour_*.py`, `projects_*.py`, `society_*.py`, `core_step_phases.py`, and `core.py`) accesses persistent live simulation state exclusively through its authoritative subsystem owner:
 
 - `sim.state.household` (`HouseholdState`): Capital, workforce, wages, financial ledgers, debt, standing, and household capacity.
 - `sim.state.projects` (`ProjectsState`): Active, done, revealed, operating, mothballed, and shut projects, attempts, and work trackers.

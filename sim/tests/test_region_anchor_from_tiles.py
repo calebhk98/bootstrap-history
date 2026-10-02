@@ -5,7 +5,7 @@ import math
 import os
 import unittest
 
-from sim.world import regions
+from sim.geography import regions
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

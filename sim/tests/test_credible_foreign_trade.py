@@ -13,7 +13,8 @@ from sim.engine import foreign_economies as _foreign_module
 from sim.engine import foreign_capacity as _capacity
 from sim.engine.data import haversine_km, load_civ, load_geography, starting_schedule
 from sim.engine.project_materials import tonnes_per_unit
-from sim.world import market, sea_freight, trade_between, trade_routes, transport
+from sim.world import market, trade_between
+from sim.geography import sea_freight, trade_routes, transport
 
 PARTNER = "han_china_100ad"
 

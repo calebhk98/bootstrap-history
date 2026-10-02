@@ -6,7 +6,8 @@ import json
 import os
 import unittest
 
-from sim.world import deposits, land, mineral_shares, regions, tile_lookup
+from sim.world import deposits, land, mineral_shares
+from sim.geography import regions, tile_lookup
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
