@@ -69,7 +69,7 @@ class MarketClearingMixin:
             entry = book[commodity] = {
                 "reference_tonnes": output, "capacity_tonnes": output,
                 "stock_tonnes": 0.0, "price_ratio": 1.0,
-                "society_sales_tonnes": output}
+                "society_sales_tonnes": output, "traded_tonnes": output}
         return entry
 
     def _market_flow_figures(self, commodity, with_flows):
@@ -108,7 +108,7 @@ class MarketClearingMixin:
         entry = self._market_entry(commodity)
         if entry is None:
             return None
-        signature = (self.population.total, self.state.economy.economy,
+        signature = (self.population.total,
                      entry["capacity_tonnes"], entry["stock_tonnes"],
                      self._market_flow_figures(commodity, with_flows),
                      self.actor_market_version(), self.state.scenario.year,
@@ -193,4 +193,6 @@ class MarketClearingMixin:
             entry["stock_tonnes"] = market.stock_after_year(outcome)
             entry["price_ratio"] = outcome.price_ratio
             entry["society_sales_tonnes"] = outcome.society_sales_tonnes
+            entry["traded_tonnes"] = outcome.quantity_traded_tonnes
         self.foreign_fleet_year_end()
+        self._close_real_output()

@@ -1,8 +1,8 @@
-"""Complaints 345 and 341: what a concern must carry grows with what it sells. When the economy
-grows and labour is the scarce input a concern's wage bill grows with it, its running costs follow
-the volume it sells, a category's takings are the market's own price times volume shared out, and
-the number of firms in a niche is set by the market's size over a firm's, so it stops growing when
-the market stops growing."""
+"""Complaints 345 and 341: what a concern must carry follows the economy. When output per hour
+grows and labour is the scarce input a concern's wage bill grows with it, a concern's running
+costs and takings are its own (no index scales either), a category's takings are the market's own
+price times volume shared out, and the number of firms in a niche is set by the market's size over
+a firm's, so it stops growing when the market stops growing."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.actors import SimWorld
@@ -52,13 +52,21 @@ CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
 NODE = make_node("zz_scale", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
 
 
+def grow_market(game, growth):
+	"""Every commodity clears `growth` times its quantity, and the society's output follows."""
+	for entry in game.state.economy.market_book.values():
+		entry["traded_tonnes"] *= growth
+	game._close_real_output()
+	game._revenue_cache_key = None
+
+
 def settled(growth=1.0, years=40, rate=0.12):
 	game = actor_sim([NODE])
 	game.market_rate = lambda: rate
 	founder_runs(game, "zz_scale", opened_ago=10)
 	for _ in range(years):
 		next_year(game)
-	game.state.economy.economy *= growth
+	grow_market(game, growth)
 	for _ in range(years):
 		next_year(game)
 	return game
@@ -73,7 +81,7 @@ world = SimWorld(game)
 wage_before = world.concern_wage_bill("zz_scale")
 hour_before = world.labour_market.quote("labourer")
 founder_before = game.labour_market.quote_annual("artisan")
-game.state.economy.economy *= 10.0
+game.state.economy.output_per_head *= 10.0
 game._revenue_cache_key = None
 world = SimWorld(game)
 check("when pay follows output a concern's wage bill grows with the economy",
@@ -82,33 +90,31 @@ check("the wage an hour of labour earns rises with output per hour",
       world.labour_market.quote("labourer") > 2.0 * hour_before, (hour_before, world.labour_market.quote("labourer")))
 check("the founder pays the same rise a firm does: one wage for every employer",
       abs(game.labour_market.quote_annual("artisan") / founder_before - world.labour_market.quote("labourer") / hour_before) < 1e-6)
-check("what the society makes follows the economy's output per hour",
-      world.society_output() > 2.0 * SimWorld(actor_sim([NODE])).society_output())
+check("what the society makes does not follow a figure someone sets: it is the quantities its market clears",
+      world.society_output() == SimWorld(actor_sim([NODE])).society_output())
 
-# ---- running costs follow the volume a concern sells ---------------------------------------------
+# ---- a concern's running costs and takings are its own: no index scales either --------------------
 game = actor_sim([NODE])
 founder_runs(game, "zz_scale", opened_ago=10)
 next_year(game)
 world = SimWorld(game)
 upkeep_before = world.upkeep("zz_scale")
-margin_ratio_before = (world.concern_takings("zz_scale", game.year - 10) - upkeep_before) / upkeep_before
-game.state.economy.economy *= 10.0
+takings_before = world.concern_takings("zz_scale", game.year - 10)
+game.state.economy.output_per_head *= 10.0
 world = SimWorld(game)
-check("the upkeep of a concern that earns rises with the volume it sells",
-      world.upkeep("zz_scale") > 2.0 * upkeep_before, (upkeep_before, world.upkeep("zz_scale")))
+check("the upkeep of a concern that earns does not rise with an economy's output per head",
+      world.upkeep("zz_scale") == upkeep_before, (upkeep_before, world.upkeep("zz_scale")))
+check("nor do its takings: the volume it sells is its own",
+      world.concern_takings("zz_scale", game.year - 10) == takings_before)
 check("the founder pays the same upkeep an actor does for the same concern",
       abs(game.venture_real_upkeep("zz_scale") - world.upkeep("zz_scale")) < 1e-6 * world.upkeep("zz_scale"))
-margin_ratio_after = (world.concern_takings("zz_scale", game.year - 10) - world.upkeep("zz_scale")) / world.upkeep("zz_scale")
-check("a bigger market does not by itself make a concern's takings dwarf its costs",
-      margin_ratio_after < 2.0 * margin_ratio_before + 1.0, (margin_ratio_before, margin_ratio_after))
 
 # ---- a category's takings are its market's price times volume, shared out ------------------------
 shared = settled()
 world = SimWorld(shared)
 sellers = len(shared.actors.active_firms()) + 1
 ratios = shared._goods_category_ratios(CATEGORY)
-volume_scale = shared.state.economy.economy ** shared.ECONOMY_OUTPUT_SCALING_EXPONENT
-market_total = (NODE["rev"] * volume_scale * shared.state.economy.output_factor * shared.price_index
+market_total = (NODE["rev"] * shared.state.economy.output_factor * shared.price_index
                 * ratios[0] * ratios[1] * shared.income_factor())
 each = world.concern_takings("zz_scale", shared.year - 20)
 check("every seller's takings are one share of the market's price times volume",
@@ -120,9 +126,8 @@ grown = settled(growth=10.0)
 steady_count = len(steady.actors.active_firms())
 grown_count = len(grown.actors.active_firms())
 check("firms entered the niche", steady_count > 0, steady_count)
-check("firms grow more slowly than the volume they share: costs follow what is sold",
-      grown_count < 10.0 ** S.Sim.ECONOMY_OUTPUT_SCALING_EXPONENT * steady_count,
-      (steady_count, grown_count))
+check("firms grow no faster than the market they share",
+      grown_count <= 10.0 * steady_count, (steady_count, grown_count))
 count = len(grown.actors.active_firms())
 for _ in range(15):
 	next_year(grown)

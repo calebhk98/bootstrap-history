@@ -6,7 +6,7 @@ class VentureQuotesMixin:
     def venture_real_earnings(self, node_id, units=1.0, fully_ramped=False):
         """Yearly takings as the ledger credits them, the figure `ventures` prints.
 
-        Applies the economy, output factor and price level the tree's raw
+        Applies the output factor and price level the tree's raw
         revenue lacks, and, for a running concern, its revenue ramp and its
         goods market. `fully_ramped` leaves the ramp out (what it reaches).
         """
@@ -20,7 +20,7 @@ class VentureQuotesMixin:
         """Yearly running cost at the current price level: the figure every
         screen quotes and the ledger charges (`upkeep`). `units` prices a
         stated number of units of the concern instead of what is open now."""
-        scale = self.price_index * self.concern_running_scale(node_id)
+        scale = self.price_index
         if units is None:
             return self.institution_upkeep(node_id) * scale
         return self.nodes[node_id]["up"] * units * scale

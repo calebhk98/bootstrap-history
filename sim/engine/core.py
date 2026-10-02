@@ -41,6 +41,7 @@ from .market_clearing import MarketClearingMixin
 from .foreign_economies import ForeignEconomiesMixin
 from .living_stock import LivingStockMixin
 from .market_demand import MarketDemandMixin
+from .real_output import RealOutputMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
 from .geography import GeographyMixin
@@ -200,7 +201,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
         "its members - see _cap_pooled_farm_weather_cells.")
 
 
-class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, FogMixin, GeographyMixin, LabourMixin,
+class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin, LivingStockMixin):
     STATE_CAPACITY_DEFAULT = declare(
@@ -542,11 +543,10 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self._spend_this_year = 0.0
         # WORLD state: monetary and real facts about the whole civilisation,
         # not about this household. money_real is currency debasement;
-        # economy/output_factor are the size and health of the whole imperial
+        # output_factor is the health of the whole imperial
         # economy relative to 100 AD, crushed by war and plague, not by any
         # one household's fortunes.
         self.money_real = 1.0     # purchasing power of one coin, 1.0 at the start date
-        self.economy = 1.0        # size of the imperial economy relative to the start date
         self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's

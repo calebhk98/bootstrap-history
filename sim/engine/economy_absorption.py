@@ -25,9 +25,7 @@ class MarketAbsorptionMixin:
             group = groups.setdefault(category, {"nominal": 0.0, "members": []})
             group["nominal"] += amount
             group["members"].append((amount, node_id))
-        workshop = (self.workshop_output()
-                    * (economy.economy ** self.ECONOMY_OUTPUT_SCALING_EXPONENT)
-                    * economy.output_factor)
+        workshop = self.workshop_output() * economy.output_factor
         if workshop > 0.5:
             groups[WORKSHOP_CATEGORY] = {"nominal": workshop, "members": []}
         squeezed_total = sum(group["nominal"] for group in groups.values())

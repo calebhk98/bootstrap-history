@@ -130,7 +130,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"nitre_bed_m2": "economy",
 	"market_pressure": "economy",
 	"output_factor": "economy",
-	"economy": "economy",
+	"output_per_head": "economy",
 	"money_real": "economy",
 	"_material_stock_ledger": "economy",
 	"farm_hectares": "economy",

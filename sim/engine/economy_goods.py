@@ -402,14 +402,6 @@ class GoodsMixin:
             "to new supply faster, but this specific sub-linear exponent "
             "is tuned rather than fitted to any market-size-versus-"
             "diffusion-speed data.")
-    GOODS_TAU_ECONOMY_EXPONENT = declare(
-        "GOODS_TAU_ECONOMY_EXPONENT", 0.25, kind="temporary_heuristic",
-        unit="dimensionless exponent on self.economy", source=None,
-        confidence="D",
-        why="As GOODS_TAU_POP_SCALE_EXPONENT, for how much a more "
-            "developed economy speeds a goods market's re-equilibration - "
-            "plausible in direction, tuned in size.")
-
     def _goods_category_ratios(self, cat, extra=0):
         """(price_ratio, qty_ratio, n_active) for a whole category, shared
         by every concern that sells into it - the actual mechanism
@@ -436,7 +428,7 @@ class GoodsMixin:
         shared_key = (
             scenario.year,
             getattr(self, "pop_scale", 1.0),
-            getattr(economy, "economy", 1.0),
+            economy.output_per_head,
             getattr(projects, "_operating_ver", 0),
             getattr(projects, "_done_ver", 0),
             self.actor_market_version(),
@@ -457,8 +449,7 @@ class GoodsMixin:
         n_active, world_age, cfg = category_state
         n_active += extra
         reach = self.goods_reach_factor()
-        tau = max(1.0, cfg["tau"] * (self.pop_scale ** self.GOODS_TAU_POP_SCALE_EXPONENT)
-                  * (economy.economy ** self.GOODS_TAU_ECONOMY_EXPONENT) / reach)
+        tau = max(1.0, cfg["tau"] * (self.pop_scale ** self.GOODS_TAU_POP_SCALE_EXPONENT) / reach)
         world_supply = 1.0 + world_age / tau
         total_supply = world_supply * n_active
         eta = cfg["eta"]
@@ -636,7 +627,7 @@ class GoodsMixin:
         shared_key = (
             scenario.year,
             getattr(self, "pop_scale", 1.0),
-            getattr(economy, "economy", 1.0),
+            economy.output_per_head,
             getattr(projects, "_operating_ver", 0),
             getattr(projects, "_done_ver", 0),
             getattr(economy, "farm_hectares", 0.0) or 0.0,
@@ -728,7 +719,7 @@ class GoodsMixin:
         shared_key = (
             scenario.year,
             getattr(self, "pop_scale", 1.0),
-            getattr(economy, "economy", 1.0),
+            economy.output_per_head,
             getattr(projects, "_operating_ver", 0),
             getattr(projects, "_done_ver", 0),
             getattr(economy, "farm_hectares", 0.0) or 0.0,

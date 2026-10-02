@@ -311,7 +311,7 @@ class WagesMixin(WageLedgerMixin):
 
     LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = declare(
         "LABOUR_PAY_SHARE_OF_OUTPUT_GAIN", 0.0, kind="temporary_heuristic",
-        unit="exponent on output_volume_scale (1 = pay rises as fast as output per hour)",
+        unit="exponent on output_per_head (1 = pay rises as fast as output per hour)",
         source=None, confidence="D",
         why="How far pay per hour follows output per hour, for every employer alike (founder, "
             "firms, state, households). Zero: the schedule's own clearing (tightness, which moves "

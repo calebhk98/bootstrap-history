@@ -30,13 +30,8 @@ class DiffusionMixin:
     # ---- WHAT YOU BUILT DOES NOT STAY YOURS ---------------------------------
     # "To make it even more interesting, you could make it so others try to
     # figure your stuff out, to sell it themselves... over a generation or
-    # two." economy_index() (economy.py) already spends the idea that
-    # diffused technology enriches the whole empire - it raises the WHOLE
-    # economy the instant a tier-2+ node is DONE, with no delay and no
-    # distinction between a technique you have never opened for business and
-    # one you have been visibly selling from for a century. That is the
-    # empire-wide half of the story, and it is not this file's to touch
-    # (economy.py is another agent's). What is missing, and IS this file's
+    # two." The empire-wide half of the story is real output (real_output.py):
+    # a technique cheapens the goods its entries make. What is missing, and IS this file's
     # job, is the other half: a NUMBER, per venture, for how much of the one
     # thing YOU personally run has leaked to imitators - not a price, which
     # is the competing agent's own territory (see goods_market_factor,
@@ -135,10 +130,9 @@ class DiffusionMixin:
 
         FOR THE MARKET AGENT: a revenue formula that wants to spend this
         number honestly should reduce what THIS venture earns by up to this
-        share while economy_index() (or its successor) is credited with the
-        matching gain to the wider economy - `diffused` there already grows
-        with projects.done regardless of this function, so the two are additive,
-        not double-counting the same escape.
+        share while the wider economy is credited with the matching gain through
+        the goods' prices (real_output.py), which follow projects.done regardless
+        of this function, so the two are additive, not double-counting the same escape.
         """
         projects = self.state.projects
         scenario = self.state.scenario

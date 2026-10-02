@@ -40,10 +40,12 @@ check("...and the glut is bounded by the cost of capacity already built",
 check("...and the quote the founder sees falls with it",
       quote_buy(s) < quote_buy(sim(civ="rome_100ad", capital=1e9)), quote_buy(s))
 
-# --- income drives it the other way.
+# --- more people drive it the other way.
 s = sim(civ="rome_100ad", capital=1e9)
-s.state.economy.economy = 2.0
-check("a richer society buys more and the shortage lifts the price above long-run cost",
+s.population.children *= 2.0
+s.population.working_age *= 2.0
+s.population.elderly *= 2.0
+check("a society twice as large buys more and the shortage lifts the price above long-run cost",
       s.market_price_ratio(MATERIAL) > 1.05, s.market_price_ratio(MATERIAL))
 
 # --- stock windfall: every household finds iron in their room.
