@@ -137,8 +137,10 @@ class EconomyWorksWithAnyCoin(unittest.TestCase):
         self.assertLess(han.project_cost(node_id), han.capital * 20,
                         "concern is out of reach of the opening purse")
         self.assertGreater(payback(han), 0)
-        self.assertLess(payback(han), payback(rome) * 3.0)
-        self.assertGreater(payback(han), payback(rome) / 3.0)
+        # a unit error moves payback tenfold; real price structures differ by a few times, and Rome's
+        # low unskilled wage (Complaint 388) makes its goods dear in labour, so the band is fourfold
+        self.assertLess(payback(han), payback(rome) * 4.0)
+        self.assertGreater(payback(han), payback(rome) / 4.0)
 
     def test_purse_and_annual_wage_are_of_one_scale_in_every_civilisation(self):
         rome = build(data.load_civ("rome_100ad"))
