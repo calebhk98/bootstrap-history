@@ -4,8 +4,8 @@ import dataclasses
 import math
 from typing import Dict, Tuple
 
-from . import (currency, households, inventory, merchants, metal_stock, producers, producers_close, state_budget,
-               taxes)
+from . import (currency, households, inventory, merchants, metal_stock, ownership, producers, producers_close,
+               state_budget, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
 from .national_prices import national_prices
@@ -88,11 +88,12 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
                 producer, capacity_runs=producer.capacity_runs * (1.0 - wear), years_of_loss=0,
                 expected_prices=closed.producer.expected_prices), recipe, ledger)
             continue
-        record.book.transfer_many(closed.transfers)
+        paid = ownership.spread(record, closed.transfers)
+        record.book.transfer_many(paid)
         worn = producer.capacity_runs - closed.producer.capacity_runs
         if worn > 0.0 and revenue > costs:
             record.worn_runs[producer_id] = worn    # a producer covering its costs rebuilds what wore out
-        for transfer in closed.transfers:
+        for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
         if closed.loan_request is not None:
             record.loan_requests.append(closed.loan_request)
@@ -103,8 +104,9 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
                                          view.interest_rate(money))
-        record.book.transfer_many(transfers)
-        for transfer in transfers:
+        paid = ownership.spread(record, transfers)
+        record.book.transfer_many(paid)
+        for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
