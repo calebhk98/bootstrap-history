@@ -62,6 +62,7 @@ from .society_disclosure import DisclosureMixin
 from .interest_groups import InterestGroupsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
+from .economy_port import EconomyPortMixin
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from .actors import Household
@@ -215,7 +216,7 @@ YEARLY_RECORD_LIMIT = 300
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin, LivingStockMixin, CoinHoardMixin,
-          LivingStockTradeMixin, LivingStockYearlyMixin):
+          LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
