@@ -1,0 +1,116 @@
+"""A cohort's goods bids for the year, planned on last year's prices.
+
+Spending this year is income plus the adjustment that brings cash back to its target. The floors of
+the needs (subsistence) are served first; what is left over is surplus spending, split across the needs
+by their budget weights (Stone-Geary: a floor plus a marginal share of the surplus). Inside a need the
+spending goes to goods by cost per need unit. A need with a per-head limit stops taking money at it.
+A durable is demanded as replacement: the stock that serves the need's flow over the good's life, less
+what is held after this year's wear.
+
+The sum of every bid's budget never exceeds cash: floors are budgeted first (with room for a price
+rise), surplus spending only from what remains.
+"""
+import math
+from typing import List, Mapping, Optional
+
+from sim.constants import declare
+from sim.world.need_satiation import apply_satiation
+
+from . import currency
+from .households_basket import Basket, PricedNeed, need_prices, satiation_limit
+from .households_cohort import Cohort
+from .protocols import AgentOrders, MarketView
+from .types import Bid, FundsOffer, GoodId, GoodSpec
+
+FLOOR_BUDGET_PRICE_MARGIN = declare(
+    "FLOOR_BUDGET_PRICE_MARGIN", 0.25, kind="temporary_heuristic",
+    unit="share of the floor's cost at last year's prices", source=None, confidence="D",
+    why="A household sets aside more than last year's price for its subsistence goods, in case prices "
+        "rose before it buys. Above that rise it goes short. Real households keep reserves and shop "
+        "around, which are not modelled.")
+BUDGET_SAFETY_SHARE = 1e-9
+
+# TEMPORARY HEURISTIC: a household lends savings only at a rate that at least keeps their real value,
+# so its minimum rate is its expected inflation. Real lenders also price default risk and their own
+# alternatives, which the credit market does not yet show them.
+
+
+def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId, GoodSpec]) -> float:
+    """1.0 for a good used up in the year; for a durable, replacement over the flow it serves."""
+    spec = specs.get(good)
+    if spec is None or spec.service_life_years <= 0.0:
+        return 1.0
+    if flow <= 0.0:
+        return 0.0
+    wear = held * min(1.0, 1.0 / spec.service_life_years)
+    return max(0.0, flow * spec.service_life_years - held + wear) / flow
+
+
+def _need_units(priced: List[PricedNeed], basket: Basket, people: float, surplus: float):
+    """(floor units, total units) per need id: floors plus weighted surplus, limited by satiation."""
+    floors = {need.spec.need_id: need.spec.subsistence_per_person * people for need in priced}
+    weight_total = math.fsum(need.spec.budget_weight for need in priced)
+    totals = dict(floors)
+    if surplus > 0.0 and weight_total > 0.0:
+        for need in priced:
+            totals[need.spec.need_id] += (surplus * need.spec.budget_weight / weight_total
+                                          / need.price_index)
+        limits = {need.spec.need_id: {"surplus_budget_share": need.spec.budget_weight,
+                                      "satiation_per_capita_per_year": satiation_limit(basket, need.spec.need_id)}
+                  for need in priced}
+        apply_satiation(totals, {need.spec.need_id: need.price_index for need in priced}, limits, people)
+    return floors, totals
+
+
+def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
+                 basket: Basket, specs: Mapping[GoodId, GoodSpec],
+                 priced: Optional[List[PricedNeed]] = None) -> AgentOrders:
+    """`priced` may be passed (from `need_prices`) to share the price work among a tile's classes."""
+    priced = need_prices(basket, view, cohort.tile) if priced is None else priced
+    cash = max(0.0, cash)
+    if not priced or cohort.people <= 0.0:
+        return AgentOrders()
+    first_good = priced[0].goods[0][0]
+    area_currency = view.currency_of(view.area_of(first_good, cohort.tile))
+    reference_spending = cohort.last_year_spending or income_this_year
+    target = cohort.cash_target or currency.cash_balance_target(
+        reference_spending, view.interest_rate(area_currency), cohort.expected_inflation)
+    spending = max(0.0, min(cash, income_this_year
+                            + currency.spending_adjustment(cash, target, income_this_year)))
+    floor_cost = math.fsum(need.price_index * need.spec.subsistence_per_person * cohort.people
+                           for need in priced)
+    floors, totals = _need_units(priced, basket, cohort.people, spending - floor_cost)
+    rows = []
+    for need in priced:
+        need_id = need.spec.need_id
+        for good, price, _effect, share in need.goods:
+            per_unit = need.price_index * share / price
+            floor_quantity = floors[need_id] * per_unit
+            flexible_quantity = max(0.0, totals[need_id] - floors[need_id]) * per_unit
+            ratio = _durable_ratio(good, floor_quantity + flexible_quantity,
+                                   view.stock(cohort.agent_id, good, cohort.tile), specs)
+            if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
+                rows.append((need.spec.subsistence_per_person > 0.0, good, price,
+                             floor_quantity * ratio, flexible_quantity * ratio))
+    floor_spend = math.fsum(price * floor for _tier, _good, price, floor, _flex in rows)
+    flexible_spend = math.fsum(price * flex for _tier, _good, price, _floor, flex in rows)
+    floor_wanted = floor_spend * (1.0 + FLOOR_BUDGET_PRICE_MARGIN)
+    usable = cash * (1.0 - BUDGET_SAFETY_SHARE)
+    floor_scale = min(1.0, usable / floor_wanted) if floor_wanted > 0.0 else 0.0
+    left = usable - floor_wanted * floor_scale
+    flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
+    bids = []
+    budget_total = 0.0
+    for has_floor, good, price, floor, flex in sorted(rows, key=lambda row: row[1]):
+        budget = (floor * price * (1.0 + FLOOR_BUDGET_PRICE_MARGIN) * floor_scale
+                  + flex * price * flexible_scale)
+        if budget <= 0.0:
+            continue
+        budget_total += budget
+        bids.append(Bid(cohort.agent_id, good, view.area_of(good, cohort.tile), cohort.tile,
+                        floor, flex, price, 1.0, budget, 0 if has_floor else 1))
+    funds = ()
+    savings = cash - budget_total - target
+    if savings > 0.0:
+        funds = (FundsOffer(cohort.agent_id, area_currency, savings, max(0.0, cohort.expected_inflation)),)
+    return AgentOrders(bids=tuple(bids), funds_offers=funds)
