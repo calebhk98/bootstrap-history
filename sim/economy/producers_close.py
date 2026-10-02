@@ -37,13 +37,6 @@ EXPANSION_SHARE_PER_YEAR = declare(
     unit="share of current capacity added in a year", source=None, confidence="D",
     why="Plant takes time to build and a lender to find; how fast a profitable producer grows is "
         "bounded by both, which are not yet modelled. A bound keeps growth gradual.")
-MAXIMUM_ENTRANTS_PER_YEAR = declare(
-    "MAXIMUM_ENTRANTS_PER_YEAR", 3, kind="temporary_heuristic", unit="new producers a year",
-    source=None, confidence="D",
-    why="Entry waits on someone with the means and knowledge to start; how many do so a year is not "
-        "yet derived from owners' wealth. A bound stops every profitable site filling at once.")
-
-
 @dataclass(frozen=True)
 class YearClose:
     producer: Producer
@@ -51,15 +44,6 @@ class YearClose:
     loan_request: Optional[LoanRequest] = None
     expansion_runs: float = 0.0     # capacity the loan, if funded, builds: wear replaced plus growth
     exited: bool = False
-
-
-@dataclass(frozen=True)
-class Site:
-    """Where a new producer could start: the caller's choice of tile, owner and size."""
-    tile: TileId
-    owner: AgentId
-    capacity_runs: float
-    yield_factor: float = 1.0
 
 
 def working_capital_target(recipe: Recipe, capacity_runs: float, input_prices, wages) -> float:
@@ -117,33 +101,3 @@ def _expansion(producer, recipe, view, currency, rate, wear, inputs, wages):
     amount = runs * value
     return LoanRequest(producer.agent_id, currency, amount, yearly_return, recipe.plant_life_years,
                        amount, "expand"), runs
-
-
-def entrants(recipes: Mapping[str, Recipe], view: MarketView, sites: Sequence[Site],
-             occupied: Collection[Tuple[str, TileId]] = (), prefix: str = "producer"
-             ) -> List[Producer]:
-    """New producers where a recipe's expected return on new capacity beats the live rate, the best
-    returns first (ties by recipe id then tile), up to the yearly bound. Expected output prices are
-    last year's prices. A pair already in `occupied` is skipped, so a good's market fills a few
-    producers a year rather than at once. The caller funds the plant."""
-    candidates = []
-    for recipe_id in sorted(recipes):
-        recipe = recipes[recipe_id]
-        for site in sites:
-            if (recipe_id, site.tile) in occupied:
-                continue
-            probe = Producer("probe", site.owner, recipe_id, site.tile, site.capacity_runs, site.yield_factor)
-            outputs = expected_output_prices(probe, recipe, view)
-            inputs = live_input_prices(probe, recipe, view)
-            wages = live_wages(probe, recipe, view)
-            scaled = {good: price * site.yield_factor for good, price in outputs.items()}
-            yearly_return = unit_cost.return_on_capital(recipe, scaled, inputs, wages)
-            currency = view.currency_of(view.area_of(sorted(recipe.outputs)[0], site.tile))
-            if yearly_return > view.interest_rate(currency):
-                candidates.append((-yearly_return, recipe_id, site.tile, site, outputs))
-    candidates.sort(key=lambda row: row[:3])
-    chosen = []
-    for _negative, recipe_id, tile, site, outputs in candidates[:MAXIMUM_ENTRANTS_PER_YEAR]:
-        chosen.append(Producer("%s:%s:%s:%d" % (prefix, recipe_id, tile, view.year), site.owner, recipe_id,
-                               tile, site.capacity_runs, site.yield_factor, dict(outputs)))
-    return chosen

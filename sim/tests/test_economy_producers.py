@@ -210,28 +210,5 @@ class CloseYearTests(unittest.TestCase):
         self.assertLessEqual(expected, 3.0)
 
 
-class EntrantTests(unittest.TestCase):
-    def sites(self):
-        return [producers_close.Site("t%d" % i, "owner%d" % i, 5.0) for i in range(6)]
-
-    def test_entry_where_return_beats_the_rate_and_not_where_it_does_not(self):
-        rich = View({"grain": 5.0, "seed": 1.0}, {"hand": 1.0})
-        poor = View({"grain": 0.5, "seed": 1.0}, {"hand": 1.0})
-        self.assertTrue(producers_close.entrants({"farm": FARM}, rich, self.sites()))
-        self.assertEqual(producers_close.entrants({"farm": FARM}, poor, self.sites()), [])
-
-    def test_entry_is_bounded_each_year_and_skips_occupied_sites(self):
-        rich = View({"grain": 5.0, "seed": 1.0}, {"hand": 1.0})
-        chosen = producers_close.entrants({"farm": FARM}, rich, self.sites(), occupied={("farm", "t0")})
-        self.assertEqual(len(chosen), producers_close.MAXIMUM_ENTRANTS_PER_YEAR)
-        self.assertNotIn("t0", [producer.tile for producer in chosen])
-        self.assertEqual(chosen[0].expected_prices["grain"], 5.0)
-
-    def test_entry_is_deterministic(self):
-        rich = View({"grain": 5.0, "seed": 1.0}, {"hand": 1.0})
-        first = producers_close.entrants({"farm": FARM}, rich, self.sites())
-        self.assertEqual(first, producers_close.entrants({"farm": FARM}, rich, list(reversed(self.sites()))))
-
-
 if __name__ == "__main__":
     unittest.main()

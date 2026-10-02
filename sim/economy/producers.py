@@ -5,7 +5,7 @@ The year loop calls these in order (`economy.py` owns the loop; `producers_close
     plan(producer, recipe, view, cash)            -> Plan: runs, labour bids, input bids
     produce(producer, recipe, inputs_held, hours_hired, runs_planned) -> (runs achieved, GoodsMoves)
     offers(producer, recipe, view, stock_by_good, cash_shortfall, interest_rate, specs) -> Offers
-    producers_close.close_year(...), producers_close.entrants(...)
+    producers_close.close_year(...); entry.py starts new producers
 
 Planning uses EXPECTED prices (what the producer last saw, adjusted adaptively), not this year's, so
 supply follows last year's price: the cobweb lag. A producer runs while a run's expected revenue covers
