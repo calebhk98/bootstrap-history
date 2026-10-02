@@ -174,6 +174,7 @@ class ProductionMixin:
             household.reputation,
             founder.founder_alive,
             self.state_funding(),
+            self.home_price_level(),
         )
         if getattr(self.household, "_revenue_cache_key", None) == key:
             return self.household._revenue_cache_val
@@ -361,9 +362,9 @@ class ProductionMixin:
             node = self.nodes[node_id]
             if node["rev"] <= 0:
                 continue
-            weight += node["rev"]
+            weight += node["rev_hours"]     # in hours, so the price level of money does not enter it
         result = 1.0 + self.CAPABILITY_FACTOR_CEILING_BONUS * (
-            weight / (weight + self.CAPABILITY_FACTOR_HALF_SATURATION_REV))
+            weight / (weight + self.CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS))
         self.household._cap_factor = result
         return result
 

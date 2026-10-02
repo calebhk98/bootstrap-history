@@ -13,10 +13,11 @@ what that producer runs and supply from what it makes, would replace the solved 
 class TechniquesInUseMixin:
 
     def price_epoch(self):
-        """Changes whenever the techniques in use might: for caches whose answers read prices."""
+        """Changes whenever the techniques in use might, or the price level does: for caches whose
+        answers read prices."""
         projects = self.state.projects
         return (getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
-                self.actor_market_version())
+                self.actor_market_version(), self.home_price_level())
 
     def techniques_in_use(self):
         """Nodes whose production entries some producer runs now."""
