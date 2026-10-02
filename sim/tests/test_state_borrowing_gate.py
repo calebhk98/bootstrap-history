@@ -2,7 +2,7 @@
 `state_credit` mechanic). Before it holds one, a deficit beyond the reserve cuts spending."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld
+from sim.engine.actors import SimWorld, budget
 
 
 def one_year(game):
@@ -10,10 +10,26 @@ def one_year(game):
     game.advance_actors(game.state.scenario.year)
 
 
+def army_between_revenue_and_credit():
+    """An army whose bill is half of what the state could borrow against its revenue once it holds the
+    technology: more than its revenue carries, less than its credit could."""
+    game = sim()
+    treasury = game.state_treasury()
+    treasury.knowledge.add(game.nodes_with_mechanic("state_credit")[0])
+    world = SimWorld(game)
+    bill = lambda soldiers: sum(line.money for line in budget.standing_lines(world, soldiers))
+    fixed_bill = bill(0.0)
+    bill_per_soldier = bill(1.0) - fixed_bill
+    return (0.5 * treasury.credit_ceiling(world) - fixed_bill) / bill_per_soldier
+
+
+ARMY = army_between_revenue_and_credit()
+
+
 def deficit_game(holds_node=False, baseline=False):
     """Rome with an army its revenue cannot carry but its credit could, and an empty purse."""
     game = sim()
-    game.civ["standing_army"] = 3.0e6
+    game.civ["standing_army"] = ARMY
     treasury = game.state_treasury()
     treasury.money = 0.0
     node = game.nodes_with_mechanic("state_credit")[0]
