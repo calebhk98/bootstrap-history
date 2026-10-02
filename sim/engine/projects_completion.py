@@ -17,6 +17,7 @@ file of their own.
 from sim.constants import declare
 from .data import closure
 from .failure_cause import failure_cause
+from .failure_diagnosis import failure_teaches, note_failure
 from .permanent_benefit import permanent_parts
 
 FAILED_PREFIX = "FAILED at"
@@ -186,6 +187,7 @@ class CompletionMixin:
         if self.rng.random() < _risk_this_attempt:
             _yrs_before = projects.active[node_id]["yrs"]
             projects.failed_attempts[node_id] += 1
+            _diagnosis = note_failure(self, node_id)
             claimed = node_id in projects.bountied
             # A bounty's claimant redoes the work: the poster's prize holds and
             # no hours or money fall on the poster.
@@ -228,26 +230,27 @@ class CompletionMixin:
                        "{:,.0f}".format(max(0.0, _lost)),
                        round(self.FAILURE_RESET_SHARE * 100),
                        projects.failed_attempts[node_id] + 1,
-                       round(_next_risk * 100))))
+                       round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else "")))
                 return
             household.log.append((scenario.year,
                              FAILED_PREFIX + " %s: it did not work. What failed: %s. "
                              "%d%% of the hours "
                              "are to do again (%s of your own) and %s is gone. "
-                             "Attempt %d. What went wrong is now understood well "
-                             "enough that the next attempt's live chance of failing "
+                             "Attempt %d. %s the next attempt's live chance of failing "
                              "(the figure `risk`, `why` and `portfolio` now quote) "
                              "is %d%%, down from the %d%% this attempt "
                              "just faced, and %.1f of the %.1f years already "
-                             "spent count toward next time's wait."
+                             "spent count toward next time's wait. %s"
                              % (node["name"], failure_cause(self, node_id),
                                 round(self.FAILURE_RESET_SHARE * 100),
                                 "{:,.0f}".format(node["ph"] * self.FAILURE_RESET_SHARE),
                                 "{:,.0f}".format(max(0.0, _lost)),
                                 projects.failed_attempts[node_id] + 1,
+                                "What went wrong is now understood well enough that"
+                                if failure_teaches(self, node_id) else "Nothing was learned, so",
                                 round(_next_risk * 100),
                                 round(_risk_this_attempt * 100),
-                                _banked, _yrs_before)))
+                                _banked, _yrs_before, _diagnosis)))
             return
         goal_before = self.goal_snapshot()
         del projects.active[node_id]

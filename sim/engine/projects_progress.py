@@ -20,6 +20,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 import collections
 
 from sim.constants import declare
+from .failure_diagnosis import failure_teaches
 
 
 class ProgressMixin:
@@ -322,7 +323,9 @@ class ProgressMixin:
             "rate, not fitted to any real learning-curve data.")
 
     def _retry_risk_multiplier(self, node_id):
-        attempt_count = self.state.projects.failed_attempts.get(node_id, 0)
+        projects = self.state.projects
+        attempt_count = (projects.failed_attempts.get(node_id, 0)
+                         - projects.uninformed_failures.get(node_id, 0))
         if attempt_count <= 0:
             return 1.0
         return (self.RETRY_RISK_FLOOR
@@ -510,6 +513,8 @@ class ProgressMixin:
         floor = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
         projects = self.state.projects
         initial_failed_attempts = projects.failed_attempts.get(node_id, 0)
+        initial_uninformed = projects.uninformed_failures.get(node_id, 0)
+        teaches = failure_teaches(self, node_id)
         _had_key = node_id in projects.failed_attempts
         _active = projects.active.get(node_id) if node_id in projects.active else None
         total = 0.0
@@ -528,11 +533,15 @@ class ProgressMixin:
                 total += survive * years_this_attempt
                 # Stand in for i failures, read effective_risk, restore in finally.
                 projects.failed_attempts[node_id] = attempt_index
+                # Failures nobody can diagnose add nothing to the learning.
+                projects.uninformed_failures[node_id] = initial_uninformed + (
+                    0 if teaches else attempt_index - initial_failed_attempts)
                 survive *= self.effective_risk(node_id)
                 attempt_index += 1
                 if survive < 1e-12 or attempt_index - initial_failed_attempts > _max_extra_attempts:
                     break
         finally:
+            projects.uninformed_failures[node_id] = initial_uninformed
             if _had_key:
                 projects.failed_attempts[node_id] = initial_failed_attempts
             else:

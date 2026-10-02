@@ -241,7 +241,16 @@
   "sch": 2,
   "art": 8,
   "conf": "B",
-  "note": "Lapping with loose abrasive plus interference fringes to check. Gauge blocks, ball bearings, lens moulds, injector nozzles."
+  "note": "Lapping with loose abrasive plus interference fringes to check. Gauge blocks, ball bearings, lens moulds, injector nozzles.",
+ "mechanics": {
+  "diagnosis_instrument": {
+   "instrument": "cap_measure_light",
+   "quantity": "tolerance",
+   "needed": 0.001,
+   "unit": "mm",
+   "needed_words": "a tolerance of 1 micron"
+  }
+ }
  },
  {
   "id": "cap_tol_100nm",
@@ -473,7 +482,16 @@
   "sch": 20,
   "art": 15,
   "conf": "B",
-  "note": "No chemistry reaches here. A travelling molten zone sweeps impurities to one end because most are more soluble in liquid than in solid. This one trick is what makes semiconductors possible at all."
+  "note": "No chemistry reaches here. A travelling molten zone sweeps impurities to one end because most are more soluble in liquid than in solid. This one trick is what makes semiconductors possible at all.",
+ "mechanics": {
+  "diagnosis_instrument": {
+   "instrument": "in2_mass_spectrograph",
+   "quantity": "impurity",
+   "needed": 1e-9,
+   "unit": "impurity fraction",
+   "needed_words": "purity of 1 part in 1e9"
+  }
+ }
  },
  {
   "id": "cap_power_muscle",
