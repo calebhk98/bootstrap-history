@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Run the agent economy alone for a civilisation and print how prices, wages and money move.
 
-    python3 sim/economy_trace.py rome_100ad 30
-    python3 sim/economy_trace.py england_1300 20 --goods wheat_kg,silver_kg,iron_bar_kg
+    python3 sim/economy_trace.py <civilisation> 30
+    python3 sim/economy_trace.py <civilisation> 20 --goods wheat_kg,silver_kg,iron_bar_kg
 
 `wage/h` is the unskilled wage and `wheat/h` what an hour of it buys in kg of wheat.
 The engine supplies the opening (tiles, people, recipes in use, opening prices and wages); after that
