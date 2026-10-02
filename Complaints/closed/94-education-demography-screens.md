@@ -1,6 +1,6 @@
 # Add dedicated Education and Demography screens
 
-**Status:** partly - `education` and `demography` exist; remains listed below
+**Status:** closed - `education`, `demography` and `commitments` screens, with shocks, recovery, enrolment and saved births and deaths
 
 These systems are fundamental to civilization development but their information is scattered across generic screens and require triangulation.
 
@@ -46,9 +46,9 @@ Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md
 - `education` (aliases `literacy`, `schools`, `schooling`): general and elite literacy with ceiling, exact share of ceiling and next year's value, the schooling flow (new `effective_schooling_flow`, shared with the yearly literacy step), printing's boost, schooling nodes, literate-trade pools, trade schools and trainees.
 - `demography` (took the alias from `population`): cohorts, last year's births and deaths and nutrition ratio, disease burden, epidemics under way, wage index and the trades. Replies list what the model does not hold.
 
-## What remains
+## Also done
 
-- (done: `score` prints literacy as a percentage against its ceiling.) No literacy milestone line exists to show a requirement figure; the `education` screen shows the exact figure.
-- No consolidated view of secondary goals, reserve target and open or closed institutions.
-- No recovery trajectory or recent-shock history (only the last step is held); no per-school enrolment or cause of a literacy change.
-- Births and deaths are not saved, so a freshly loaded session shows none until the next step.
+- `score` prints literacy as a percentage against its ceiling.
+- `commitments`: the goal, literacy against its ceiling, the staff reserve target and every institution open or closed. The game has one goal, so the screen says there are no secondary goals.
+- `demography`: recent population shocks and the recovery from the recorded peak, from a yearly record saved with the game (`yearly_record`), so births and deaths survive a load.
+- `education`: per-school pupils made literate next year (an attribution of the society's gain by each school's share of the flow) and what limits literacy growth (no school, the ceiling, or the flow).

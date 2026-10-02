@@ -2,6 +2,7 @@
 (Complaints/239, 94, 266). Each reply is built by its own screen_* module."""
 
 from .command_registry import command
+from .screen_commitments import commitments_report
 from .screen_demography import demography_report
 from .screen_divergence import divergence_report
 from .screen_education import education_report
@@ -48,3 +49,13 @@ def _cmd_demography(sim, nodes, cmd, ended):
                      "happened, under way or upcoming. Says what the game cannot know.")
 def _cmd_divergence(sim, nodes, cmd, ended):
     return divergence_report(sim)
+
+
+@command("commitments", group="society", aliases=("standing_goals", "institutions"),
+         summary="goal, literacy, staff reserve and open or closed institutions",
+         usage=["commitments"], options={},
+         description="The goal and whether it is reached, literacy against its ceiling, the "
+                     "reserve of spare staff you keep and every institution you built, open "
+                     "or closed. The game has one goal; there are no secondary goals.")
+def _cmd_commitments(sim, nodes, cmd, ended):
+    return commitments_report(sim)

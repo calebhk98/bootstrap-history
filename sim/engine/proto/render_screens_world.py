@@ -80,6 +80,26 @@ def render_education(out):
     return "\n".join(lines)
 
 
+def render_commitments(out):
+    goal = out["goal"]
+    lines = ["GOAL: %s%s" % (goal.get("name") or "withheld until you learn it",
+                            " (reached in %s)" % goal["year_reached"] if goal["reached"] else "")]
+    literacy = out["literacy"]
+    lines.append("literacy: general %s of a ceiling of %s, elite %s of %s"
+                 % (_percent(literacy["general"]), _percent(literacy["general_ceiling"]),
+                    _percent(literacy["elite"]), _percent(literacy["elite_ceiling"])))
+    lines.append(out["secondary_goals_note"])
+    reserve = out["reserve"]
+    lines += ["", "RESERVE: %s craftsmen, %s scholars (policy reserve_staff %s)"
+              % (reserve["craftsmen"], reserve["scholars"], "on" if reserve["policy_on"] else "off"),
+              "", "INSTITUTIONS"]
+    for row in out["institutions"]:
+        lines.append("  %-40s %-7s units %s" % (row["name"], row["state"], _fmt_num(row["units"])))
+    if not out["institutions"]:
+        lines.append("  none built yet")
+    return "\n".join(lines)
+
+
 def render_demography(out):
     cohorts = out["cohorts"]
     lines = ["DEMOGRAPHY",

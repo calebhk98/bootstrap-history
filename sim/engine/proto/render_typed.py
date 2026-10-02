@@ -22,7 +22,7 @@ from .render_screens_economy import (
 )
 from .render_screens_market import render_market
 from .render_screens_world import (
-    render_map, render_education, render_demography, render_divergence,
+    render_map, render_commitments, render_education, render_demography, render_divergence,
 )
 from .render_figures import render_figures
 from .render_screens_groups import render_groups
@@ -49,7 +49,7 @@ _RENDERERS = {
     "automation": render_automation, "audit": render_automation,
     "economy": render_economy, "changes": render_changes,
     "population": render_population,
-    "map": render_map, "education": render_education,
+    "map": render_map, "commitments": render_commitments, "education": render_education,
     "demography": render_demography, "divergence": render_divergence,
     "final": render_final, "finish": render_final, "score": render_score,
     "start": render_start, "begin": render_start, "research": render_start,
