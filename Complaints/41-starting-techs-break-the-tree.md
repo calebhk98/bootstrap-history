@@ -1,8 +1,12 @@
 # Every civilisation holds a technology whose prerequisites it lacks
 
-**Status:** open - the test that pinned the known violations was removed; `python3 sim/simulator.py validate` reports held-without-prereq per civilisation
+**Status:** open - declared per civilisation in prerequisite_gaps; unreviewed entries warn in validate
 
-**Audit note:** the test that pinned the violation count was removed because a pinned count goes stale. The measurement is `python3 sim/simulator.py validate` (held-without-prereq column); fixing means giving the civilisation the prerequisite or correcting the node's `pre`.
+**Audit note:** the pinned-count test was replaced by a `validate` rule. Each civilisation declares every held node whose prerequisites it lacks in `prerequisite_gaps` (node id to reason, see `data/civilizations/_SCHEMA.md`); an undeclared gap is an error and the reason `unreviewed` is a warning. `python3 sim/simulator.py validate | grep unreviewed` lists what is still open. Fixing means giving the civilisation the prerequisite or correcting the node's `pre`, then deleting the entry.
+
+Reviewed (reason written): mexica_1500 `fud_cacao`, `fud_chinampa`, `fud_maize` (gated on a European-contact node; the tree direction is wrong).
+
+Unreviewed (warns): england_1300 `ag2_refrigeration_ice`, `mat_paper`, `sc2_institution_textbook`, `sea_sternpost_rudder`, `tex_indigo`, `water_power_scale`; han_china_100ad `bellows_water_blown`, `blast_furnace`, `fud_heavy_mouldboard_plough_coulter`, `fud_seed_drill`, `mat_paper`; norse_900ad `ag2_refrigeration_ice`, `exp_openocean_navigation`, `med_trepanation`, `med_wound_suturing`; rome_100ad `ag2_refrigeration_ice`, `sc2_institution_textbook`.
 
 Found by the technique-to-node join, and cheap to find once anything pointed
 at the tree at all: `starting_techs` has never been checked against the

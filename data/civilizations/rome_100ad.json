@@ -285,6 +285,10 @@
   "population": 65000000,
   "standing_army": 380000,
   "price_index": 1.0,
+  "prerequisite_gaps": {
+    "ag2_refrigeration_ice": "unreviewed",
+    "sc2_institution_textbook": "unreviewed"
+  },
   "starting_techs": [
     "ag2_composting",
     "ag2_liming",

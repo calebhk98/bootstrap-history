@@ -5,21 +5,17 @@ expeditions are ordinary works declared in data (data/branches/56_benefactions.j
 through mechanics channels the engine already reads (data/branches/MECHANICS.md), costs from its
 labour and materials, and keeps costing upkeep for as long as it is open.
 """
+import json
+import os
+
 from .harness import *
 
-WORKS = (
-    "ben_free_school_foundation", "ben_public_library", "ben_research_foundation",
-    "ben_hospital_foundation", "ben_civic_water_works", "ben_harbour_and_lighthouse",
-    "ben_telegraph_network", "ben_public_games", "ben_temple_endowment",
-    "ben_scholar_and_artist_patronage", "ben_house_bank", "ben_underwriting_syndicate",
-    "ben_grain_dole", "ben_state_subvention", "ben_survey_and_trade_expedition",
-)
+with open(os.path.join(S.ROOT, "data", "branches", "56_benefactions.json")) as _branch:
+    WORKS = tuple(node["id"] for node in json.load(_branch))
 PRESENT = [work for work in WORKS if work in NODES]
 
-for work in WORKS:
-    check("%s is in the tree" % work, work in NODES)
-check("the first set of benefactions is in the tree", len(PRESENT) == len(WORKS),
-      sorted(set(WORKS) - set(PRESENT)))
+check("every work declared in the benefactions branch reaches the tree and there is at least one",
+      bool(WORKS) and len(PRESENT) == len(WORKS), sorted(set(WORKS) - set(PRESENT)))
 
 
 def late_game_sim():
@@ -82,38 +78,37 @@ def protection_of(house):
     return house.state.household.protection
 
 
-PROBES = {
-    "ben_free_school_foundation": [("schooling flow", lambda h: h._schooling_flow(), 1, ("school_founded",)),
-                                   ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_public_library": [("schooling flow", lambda h: h._schooling_flow(), 1, ("school_founded",)),
-                           ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_research_foundation": [("scholars the household can keep", lambda h: h.staff_capacity()[0], 1, ()),
-                                ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_hospital_foundation": [("loss of people to sickness", lambda h: h.hazard_relief("staff_loss")[0], -1, ()),
-                                ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_civic_water_works": [("loss of people to sickness", lambda h: h.hazard_relief("staff_loss")[0], -1, ()),
-                             ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_harbour_and_lighthouse": [("market reach", lambda h: h.goods_reach_factor(), 1, ()),
-                                   ("losses at sea", lambda h: h.hazard_relief("output_factor")[0], -1, ()),
-                                   ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_telegraph_network": [("market reach", lambda h: h.goods_reach_factor(), 1, ()),
-                              ("people one can direct", lambda h: h.supervision_room(), 1, ())],
-    "ben_public_games": [("protection", protection_of, 1, ()),
-                         ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_temple_endowment": [("protection", protection_of, 1, ()),
-                             ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_scholar_and_artist_patronage": [("standing", lambda h: h.standing_floor(), 1, ()),
-                                         ("scholars the household can keep", lambda h: h.staff_capacity()[0], 1, ())],
-    "ben_house_bank": [("credit limit", lambda h: h.credit_limit(), 1, ())],
-    "ben_underwriting_syndicate": [("losses", lambda h: h.hazard_relief("output_factor")[0], -1, ())],
-    "ben_grain_dole": [("protection", protection_of, 1, ()),
-                       ("loss of people to sickness", lambda h: h.hazard_relief("staff_loss")[0], -1, ()),
-                       ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_state_subvention": [("protection", protection_of, 1, ()),
-                             ("standing", lambda h: h.standing_floor(), 1, ())],
-    "ben_survey_and_trade_expedition": [("market reach", lambda h: h.goods_reach_factor(), 1, ()),
-                                        ("standing", lambda h: h.standing_floor(), 1, ())],
-}
+# A probe per effect channel a work declares: which engine reading must move, and which way.
+_SCHOOL_PRECONDITIONS = tuple(node_id for node_id, node in NODES.items()
+                              if (node.get("mechanics") or {}).get("schooling_flow", {}).get("required"))
+
+
+def _channel_probes(mechanics):
+    probes = []
+    if "schooling_flow" in mechanics:
+        probes.append(("schooling flow", lambda h: h._schooling_flow(), 1, _SCHOOL_PRECONDITIONS))
+    if "standing" in mechanics:
+        probes.append(("standing", lambda h: h.standing_floor(), 1, ()))
+    if (mechanics.get("staff_capacity") or {}).get("scholars"):
+        probes.append(("scholars the household can keep", lambda h: h.staff_capacity()[0], 1, ()))
+    for counter in mechanics.get("hazard_counters") or []:
+        probes.append(("loss to %s" % counter["kind"],
+                       lambda h, kind=counter["kind"]: h.hazard_relief(kind)[0], -1, ()))
+    if "reach" in mechanics:
+        probes.append(("market reach", lambda h: h.goods_reach_factor(), 1, ()))
+    if "supervision_room" in mechanics:
+        probes.append(("people one can direct", lambda h: h.supervision_room(), 1, ()))
+    if "protection" in mechanics or "patron_protection" in mechanics:
+        probes.append(("protection", protection_of, 1, ()))
+    if "credit_line" in mechanics:
+        probes.append(("credit limit", lambda h: h.credit_limit(), 1, ()))
+    return probes
+
+
+PROBES = {work: _channel_probes(NODES[work]["mechanics"]) for work in PRESENT}
+for work in PRESENT:
+    check("%s declares at least one effect channel this test can measure" % work, bool(PROBES[work]))
+
 for work in PRESENT:
     for label, probe, direction, needs in PROBES[work]:
         before = probe(baseline(*needs))

@@ -352,6 +352,11 @@
   "population": 5000000,
   "standing_army": 20000,
   "price_index": 0.8,
+  "prerequisite_gaps": {
+    "fud_cacao": "Mesoamerican staple, not derived from European contact; the tree gates it on the contact node exp_americas_factory, which is the wrong direction (Sahagun, Florentine Codex bk 11; Complaints/41)",
+    "fud_chinampa": "Mesoamerican staple, not derived from European contact; the tree gates it on the contact node exp_americas_factory, which is the wrong direction (Sahagun, Florentine Codex bk 11; Complaints/41)",
+    "fud_maize": "Mesoamerican staple, not derived from European contact; the tree gates it on the contact node exp_americas_factory, which is the wrong direction (Sahagun, Florentine Codex bk 11; Complaints/41)"
+  },
   "starting_techs": [
     "cap_heat_0700",
     "cap_power_human",

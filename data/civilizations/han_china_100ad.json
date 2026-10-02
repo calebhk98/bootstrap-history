@@ -241,6 +241,13 @@
   "population": 58000000,
   "standing_army": 200000,
   "price_index": 0.75,
+  "prerequisite_gaps": {
+    "bellows_water_blown": "unreviewed",
+    "blast_furnace": "unreviewed",
+    "fud_heavy_mouldboard_plough_coulter": "unreviewed",
+    "fud_seed_drill": "unreviewed",
+    "mat_paper": "unreviewed"
+  },
   "starting_techs": [
     "bellows_water_blown",
     "blast_furnace",

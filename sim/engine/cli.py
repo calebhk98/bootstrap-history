@@ -28,7 +28,7 @@ import collections, json, math, os, random
 from collections import defaultdict
 
 from .catalog import load_production_catalog
-from . import validate_output_bounds, validate_unheld_gates
+from . import validate_material_gating, validate_output_bounds, validate_unheld_gates
 from .default_civilisation import default_civilisation_id
 from .data import (ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
                    hard_pre, load, load_civ, resolve_goal,
@@ -561,6 +561,7 @@ def cmd_validate(args):
     errs, warns = _validate_nodes(nodes, goods, wages, producible)
     errs += _validate_topo_order(nodes)
     errs += validate_output_bounds.check_output_bounds(nodes, production)
+    errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
     goal_errs, default_goal, goal_rows = _validate_goal_rows(tree, nodes)
@@ -592,6 +593,13 @@ def _validate_civilisation_starts(nodes, production):
                % (name, claim, ", ".join(held))
                for name, found in sorted(results.items())
                for claim, held in found["briefing"].items()]
+    civilisations = civ_start_check.load_civilisations(ROOT)
+    for name, found in sorted(results.items()):
+        gap_errors, gap_warnings = civ_start_check.prerequisite_gap_findings(
+            name, civilisations[name], found["missing_prereq"])
+        errors += gap_errors
+        for message in gap_warnings:
+            print("WARNING: " + message)
     for message in errors:
         print("ERROR: " + message)
     return errors
