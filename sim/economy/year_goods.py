@@ -9,7 +9,7 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import currency, goods_market, households, merchants, producers, settlement, taxes
+from . import currency, goods_market, households, merchants, producers, settlement, state_budget, taxes
 from .market_memory import market_key
 from .protocols import AgentOrders
 from .recipes import input_depth_order
@@ -85,6 +85,7 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
 
 def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> None:
     """The state offers what it holds beyond what its own lines will draw, at what holding it would net."""
+    state_budget.goods_bids(setup, record, view, area_map, order_book)
     rate = view.interest_rate(setup.currency_id)
     from .inventory import holding_reservation
     offers = []

@@ -12,6 +12,7 @@ from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
 from .merchants import Merchant
 from .producers import Producer
+from .state_budget import StateBudget
 from .types import AgentId, CurrencySpec, Loan, LoanRequest, TileId, TradeId
 
 
@@ -32,6 +33,7 @@ class EconomyRecord:
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
     index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
+    state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
 
     def to_record(self) -> Dict[str, Any]:
         return {
@@ -50,6 +52,7 @@ class EconomyRecord:
             "expansion_runs": self.expansion_runs,
             "index_base_prices": self.index_base_prices,
             "worn_runs": self.worn_runs,
+            "state_budget": dataclasses.asdict(self.state_budget),
         }
 
     @classmethod
@@ -70,6 +73,7 @@ class EconomyRecord:
             expansion_runs=dict(record["expansion_runs"]),
             index_base_prices=dict(record["index_base_prices"]),
             worn_runs=dict(record["worn_runs"]),
+            state_budget=StateBudget(**record["state_budget"]),
         )
 
 

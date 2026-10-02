@@ -7,7 +7,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
-from . import credit, labour, producers, unit_cost
+from . import credit, labour, producers, state_budget, unit_cost
 from .market_areas import AreaMap
 from .market_memory import YearView
 from .households_own import hours_for_own_plan, own_production, own_production_options, withhold_hours
@@ -73,6 +73,7 @@ class Economy:
         labour_bids = [bid for plan in plans.values() for bid in plan.labour_bids]
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
+        state_budget.plan_year(setup, record, view, labour_bids)
         offers, kept = withhold_hours(labour_offers(setup, record, view, outside_option_by_tile(setup, record, view)),
                                       self._shortfall_hours())
         clear_labour(setup, record, labour_bids, offers, ledger)

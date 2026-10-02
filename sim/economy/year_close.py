@@ -4,7 +4,8 @@ import dataclasses
 import math
 from typing import Dict, Tuple
 
-from . import currency, households, inventory, merchants, metal_stock, producers, producers_close, taxes
+from . import (currency, households, inventory, merchants, metal_stock, producers, producers_close, state_budget,
+               taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
 from .setup import labour_area
@@ -37,18 +38,20 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
 
 def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     forms = [form for form in setup.tax_forms if not form.paid_in]
-    if not forms:
-        return
-    money = setup.currency_id
-    hours = setup.working_hours_per_year
-    working = {cohort.agent_id: cohort.working_people for cohort in record.cohorts.values()}
-    wage_year = {cohort.agent_id: (view.wage(setup.unskilled_trade, labour_area(cohort.tile)) or 0.0) * hours
-                 for cohort in record.cohorts.values()}
-    cash = {agent: record.book.balance(agent, money) for agent in record.book.agents() if not is_edge(agent)}
-    facts = YearFacts(currency=money, working_people=working, wage_per_labour_year=wage_year, cash=cash)
-    transfers, _moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity)
-    record.book.transfer_many(transfers)
-    ledger.note_postings(transfers)
+    received = 0.0
+    if forms:
+        money = setup.currency_id
+        hours = setup.working_hours_per_year
+        working = {cohort.agent_id: cohort.working_people for cohort in record.cohorts.values()}
+        wage_year = {cohort.agent_id: (view.wage(setup.unskilled_trade, labour_area(cohort.tile)) or 0.0) * hours
+                     for cohort in record.cohorts.values()}
+        cash = {agent: record.book.balance(agent, money) for agent in record.book.agents() if not is_edge(agent)}
+        facts = YearFacts(currency=money, working_people=working, wage_per_labour_year=wage_year, cash=cash)
+        transfers, _moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity)
+        record.book.transfer_many(transfers)
+        ledger.note_postings(transfers)
+        received = math.fsum(transfer.amount for transfer in transfers)
+    state_budget.close_year(setup, record, ledger, received)
 
 
 def wear_and_spoilage(setup, record) -> None:
