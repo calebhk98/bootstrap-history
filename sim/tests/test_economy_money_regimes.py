@@ -48,8 +48,9 @@ check("Mexica's money is made of cacao, a good in the production catalogue",
 
 for civ_id in ("england_1300", "norse_900ad"):
     regime = REGIME_OF[civ_id]
-    base_money, base_level, _record, _setup = play(civ_id, 4)
-    more_money, more_level, record, setup = play(civ_id, 4, mined_share=0.1)
+    # new coin reaches prices with a lag: it lands with mine owners and savers before it is spent
+    base_money, base_level, _record, _setup = play(civ_id, 8)
+    more_money, more_level, record, setup = play(civ_id, 8, mined_share=0.1)
     check("%s (%s): more metal mined raises the money stock" % (civ_id, regime), more_money > 1.2 * base_money,
           (base_money, more_money))
     check("%s (%s): and the price level" % (civ_id, regime), more_level > 1.03 * base_level, (base_level, more_level))

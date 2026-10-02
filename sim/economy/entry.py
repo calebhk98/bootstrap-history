@@ -1,7 +1,7 @@
 """New makers. Where buyers wanted more of a good than was sold last year, a way of making it that the
 society knows (the setup's recipes), and that pays at the price buyers bid, starts a producer on the
-market's main tile, for the part of the gap its makers' idle capacity could not have met (a second
-maker of a recipe can join the first: a workshop with no plant cannot otherwise grow). It starts at a
+market's main tile, for the part of the gap its makers' idle capacity could not have met (newcomers to
+a recipe already worked there join that producer: a workshop with no plant cannot otherwise grow). It starts at a
 share of that gap, with its owner's stake as working cash
 and a loan for its plant through the credit market, like any expansion.
 
@@ -77,6 +77,13 @@ def restake(shortfall: float, owner_cash: float, pays: bool) -> float:
     if not pays or shortfall <= 0.0:
         return 0.0
     return min(shortfall, ENTRANT_OWNER_STAKE_SHARE * max(0.0, owner_cash))
+
+
+def producers_to_close(producers: Mapping[str, Producer], pending, debtors) -> List[str]:
+    """Producers with no capacity, no plant on the way and no debt: a newcomer whose plant was never
+    funded or a maker that exited. They close and hand what they hold to their owner."""
+    return [agent_id for agent_id, producer in sorted(producers.items())
+            if producer.capacity_runs <= 0.0 and agent_id not in pending and agent_id not in debtors]
 
 
 def gap_beyond_spare(unmet: float, spare_output: float) -> float:

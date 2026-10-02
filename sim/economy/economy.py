@@ -12,7 +12,7 @@ from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_memory import YearView
 from .mint import mint_orders, settle_mint
-from .entry_year import open_entrants, restake_owners
+from .entry_year import close_idle_producers, open_entrants, restake_owners
 from .households_own import hours_for_own_plan, own_production, own_production_options, withhold_hours
 from .opening import open_economy
 from .protocols import YearInputs
@@ -106,6 +106,7 @@ class Economy:
         close_agents(setup, record, close_view, ledger, self.area_map)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand)
         restake_owners(setup, record, close_view)
+        close_idle_producers(setup, record)
         for lender, received in interest.items():
             record.property_income[lender] = record.property_income.get(lender, 0.0) + received
         move_workers(setup, record, ledger)

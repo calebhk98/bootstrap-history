@@ -193,6 +193,31 @@ class GoodsOrderTests(unittest.TestCase):
         self.assertLess((time.perf_counter() - start) / 200, 0.01)
 
 
+class SavingTests(unittest.TestCase):
+    # food floor: 200 a person at a price of 1, so 100 people need 20,000 a year
+    def orders(self, cash, income, rate=0.05):
+        view = View()
+        view.interest_rate = lambda currency: rate
+        return households.goods_orders(cohort(), view, cash, income, BASKET, SPECS)
+
+    def funds(self, orders):
+        return sum(offer.amount for offer in orders.funds_offers)
+
+    def test_a_household_with_income_above_subsistence_saves_part_of_it(self):
+        self.assertLess(budget_total(self.orders(cash=100000.0, income=100000.0)), 100000.0 * 0.99)
+
+    def test_what_it_holds_beyond_its_cash_buffer_and_spending_it_lends(self):
+        self.assertGreater(self.funds(self.orders(cash=300000.0, income=100000.0)), 0.0)
+
+    def test_a_household_at_subsistence_saves_nothing(self):
+        orders = self.orders(cash=20000.0, income=20000.0)
+        self.assertGreater(budget_total(orders), 20000.0 * 0.95)
+
+    def test_a_higher_real_rate_draws_more_saving(self):
+        self.assertLess(budget_total(self.orders(100000.0, 100000.0, rate=0.10)),
+                        budget_total(self.orders(100000.0, 100000.0, rate=0.05)))
+
+
 class SubstituteCeilingTests(unittest.TestCase):
     FOOD = households.make_basket({
         "needs": {"food": {"surplus_budget_share": 1.0, "subsistence_per_capita_per_year": 200.0}},

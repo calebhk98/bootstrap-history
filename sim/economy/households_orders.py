@@ -37,6 +37,28 @@ HOUSEHOLD_TIME_PREFERENCE = declare(
     why="A household lends its savings only for at least what it gives up by waiting, on top of what "
         "inflation it expects takes from them. The figure is a common assumption in growth models, "
         "not measured for any society here; default risk is priced separately by the credit market.")
+SAVINGS_YEARS_OF_SURPLUS_INCOME = declare(
+    "SAVINGS_YEARS_OF_SURPLUS_INCOME", 2.0, kind="temporary_heuristic",
+    unit="years of income above subsistence kept as savings when the real rate equals time preference",
+    source=None, confidence="D",
+    why="Households beyond subsistence keep savings against dearth, dowries, old age and burial, and lend "
+        "what they do not hold as cash. How many years of surplus income they kept is not measured for any "
+        "society here; probate inventories and dowry records would bound it.")
+SAVINGS_RATE_RESPONSE_LIMIT = declare(
+    "SAVINGS_RATE_RESPONSE_LIMIT", 2.0, kind="temporary_heuristic",
+    unit="largest multiple of the savings target a high real rate draws", source=None, confidence="D",
+    why="Saving rises with what it earns but not without bound; the bound stands in for the income effect "
+        "that a model of lifetime choice would give.")
+
+
+def savings_target(surplus_income: float, interest_rate: float, expected_inflation: float) -> float:
+    """Wealth a household wants to keep beyond its cash buffer: years of its income above subsistence,
+    more when saving pays more in real terms (bounded); none at subsistence."""
+    if surplus_income <= 0.0:
+        return 0.0
+    real_rate = max(0.0, interest_rate - expected_inflation)
+    response = min(SAVINGS_RATE_RESPONSE_LIMIT, real_rate / HOUSEHOLD_TIME_PREFERENCE)
+    return SAVINGS_YEARS_OF_SURPLUS_INCOME * surplus_income * response
 
 
 def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId, GoodSpec]) -> float:
@@ -79,12 +101,15 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     reference_spending = cohort.last_year_spending or income_this_year
     target = cohort.cash_target or currency.cash_balance_target(
         reference_spending, view.interest_rate(area_currency), cohort.expected_inflation)
-    # what it has lent counts toward the wealth it spends from, so a loss to default cuts its spending
-    claims = claims_of(view, cohort.agent_id, area_currency)
-    spending = max(0.0, min(cash, income_this_year
-                            + currency.spending_adjustment(cash + claims, target, income_this_year)))
     floor_cost = math.fsum(need.price_index * need.spec.subsistence_per_person * cohort.people
                            for need in priced)
+    # what it has lent counts toward the wealth it spends from, so a loss to default cuts its spending;
+    # it spends down only wealth above its cash buffer and the savings it wants to keep
+    claims = claims_of(view, cohort.agent_id, area_currency)
+    keep = target + savings_target(income_this_year - floor_cost, view.interest_rate(area_currency),
+                                   cohort.expected_inflation)
+    spending = max(0.0, min(cash, income_this_year
+                            + currency.spending_adjustment(cash + claims, keep, income_this_year)))
     floors, totals = _need_units(priced, basket, cohort.people, spending - floor_cost)
     rows = []
     for need in priced:

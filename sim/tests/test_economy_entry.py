@@ -64,6 +64,18 @@ class EntrantLoanTests(unittest.TestCase):
         self.assertAlmostEqual(entry.entrant_loan(plant_value=50.0, owner_stake=100.0), 50.0)
 
 
+class RetireTests(unittest.TestCase):
+    def producer(self, agent_id, capacity):
+        from sim.economy.producers import Producer
+        return Producer(agent_id, "owner", "boil_salt", "anchor", capacity)
+
+    def test_a_producer_with_no_capacity_nothing_coming_and_no_debt_closes(self):
+        producers = {"idle": self.producer("idle", 0.0), "working": self.producer("working", 5.0),
+                     "waiting": self.producer("waiting", 0.0), "owing": self.producer("owing", 0.0)}
+        closing = entry.producers_to_close(producers, pending={"waiting"}, debtors={"owing"})
+        self.assertEqual(closing, ["idle"])
+
+
 class RestakeTests(unittest.TestCase):
     def test_an_owner_puts_working_cash_back_into_a_paying_producer_that_ran_out(self):
         # with no cash it buys no inputs and hires nobody, so without its owner it never runs again
