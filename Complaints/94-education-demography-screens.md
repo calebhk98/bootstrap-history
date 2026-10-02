@@ -48,7 +48,7 @@ Also reported (final playtests, A; `Complaints/reports/final-playtests-triage.md
 
 ## What remains
 
-- Literacy and `score` still print the raw fraction; the milestone line does not show the exact figure against its requirement (the `education` screen does).
+- (done: `score` prints literacy as a percentage against its ceiling.) No literacy milestone line exists to show a requirement figure; the `education` screen shows the exact figure.
 - No consolidated view of secondary goals, reserve target and open or closed institutions.
 - No recovery trajectory or recent-shock history (only the last step is held); no per-school enrolment or cause of a literacy change.
 - Births and deaths are not saved, so a freshly loaded session shows none until the next step.

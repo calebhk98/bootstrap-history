@@ -39,6 +39,21 @@ def goods_saturation(sim):
     return rows
 
 
+def goods_demand(sim):
+    """One row per goods category in the game, whether or not you sell there yet."""
+    rows = []
+    for category in sorted(sim.GOODS_CATEGORIES):
+        mine = sum(1 for node_id in sim.state.projects.operating
+                   if sim.nodes[node_id].get("cat") == category)
+        ratios = sim._goods_category_ratios(category) if mine else None
+        rows.append({"category": category, "concerns_of_yours": mine,
+                     "sale_price_vs_opening": round(ratios[0], 3) if ratios else None,
+                     "quantity_vs_opening": round(ratios[1], 3) if ratios else None,
+                     "new_concern_earns_share":
+                         round(sim.goods_category_factor_with_entrants(category, 1), 3)})
+    return rows
+
+
 def material_rows(sim, offset, limit):
     """Buy price and own-supply flag for one page of the priceable materials."""
     materials = priceable_materials(sim)
@@ -70,6 +85,7 @@ def wage_rows(sim):
 
 def market_report(sim, offset=0, limit=DEFAULT_MATERIAL_PAGE):
     return {"ok": True, "goods": goods_saturation(sim),
+            "demand": goods_demand(sim),
             "materials": material_rows(sim, max(0, offset), max(1, limit)),
             "wages": wage_rows(sim)}
 

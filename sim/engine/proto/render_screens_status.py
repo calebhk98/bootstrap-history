@@ -382,6 +382,10 @@ def render_rush(out):
                  "%s a year" % (out.get("count_would_start", 0),
                                 _fmt_num(out.get("total_cost")),
                                 _fmt_num(out.get("total_annual_draw")))]
+        if out.get("filters"):
+            lines.append("  filters: " + ", ".join("%s=%s" % pair for pair in sorted(out["filters"].items())))
+        if "total_founder_hours" in out:
+            lines.append("  founder hours owed: %s" % _fmt_num(out["total_founder_hours"]))
         for row in out.get("would_start") or []:
             lines.append("  WOULD START %s (%s): %s" % (row.get("id"),
                          _fmt_num(row.get("cost")), row.get("name")))
@@ -395,6 +399,8 @@ def render_rush(out):
         return "\n".join(lines)
     lines = ["RUSH: %d started, %d not" % (out.get("count_started", 0),
                                        out.get("count_not_started", 0))]
+    if out.get("filters"):
+        lines.append("  filters: " + ", ".join("%s=%s" % pair for pair in sorted(out["filters"].items())))
     for row in out.get("started") or []:
         lines.append("  STARTED %s (%s): %s" % (row.get("id"), _fmt_num(row.get("cost")),
                                             row.get("name")))

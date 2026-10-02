@@ -433,8 +433,12 @@ def _score_lines(out, indent="  "):
         if component.get("normalized") is None:
             lines.append("%s%-20s withheld: %s" % (indent, label, component.get("withheld", "-")))
             continue
+        raw_text = _fmt_num(component.get("raw"))
+        detail = component.get("raw_detail") or {}
+        if "general_ceiling" in detail:
+            raw_text = "%.2f%% of %.2f%%" % (detail["general"] * 100, detail["general_ceiling"] * 100)
         lines.append("%s%-20s raw %-14s normalized %-6s weight %-5s weighted %s"
-                 % (indent, label, _fmt_num(component.get("raw")),
+                 % (indent, label, raw_text,
                     "%.3f" % component["normalized"], "%.0f%%" % (component["weight"] * 100),
                     "%.4f" % component["weighted"]))
     lines.append("")

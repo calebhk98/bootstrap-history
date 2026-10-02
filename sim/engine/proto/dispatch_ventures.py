@@ -19,6 +19,7 @@ from ..purchase_rule import purchase_budget
 from .nodes import _did_you_mean
 from .saveload import load_state, save_state
 from .util import _flag
+from .rush_filters import parse_rush_filters, passes_rush_filters
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
 
@@ -411,6 +412,8 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
             "would_start": result["started"],
             "total_cost": result["total_cost"],
             "total_annual_draw": result["total_annual_draw"],
+            "total_founder_hours": result["total_founder_hours"],
+            "filters": result["filters"],
             "count_not_started": result["count_not_started"],
             "not_started": result["not_started"],
             "excluded": result.get("excluded", []),
@@ -419,9 +422,13 @@ def _rush_preview(sim, nodes, cmd, ended, confirm=None):
 
 @command("rush", group="projects", aliases=("startall", "start_all", "muster"),
          summary="start everything you could begin today",
-         usage=["rush", "rush limit:5", "rush preview", "rush max_total_cost:<n>"],
+         usage=["rush", "rush limit:5", "rush preview", "rush max_total_cost:<n>",
+                "rush category:textiles max_cost:500 preview"],
          # excluded things are left out; see the 'exclude' command
-         options={"limit": "cap the count", "max_total_cost": "cap total money",
+         options={"category": "only this subject (the node's category)",
+                  "max_cost": "skip projects dearer than this each",
+                  "max_hours": "skip projects needing more founder hours than this each",
+                  "limit": "cap the count", "max_total_cost": "cap total money",
                   "max_annual_draw": "cap yearly draw", "reserve_cash": "keep this much back",
                   "preview": "show what it would start and spend, starting nothing"},
          description="Highest-leverage first. Also spelled 'start all'.")
@@ -447,7 +454,10 @@ def _cmd_rush(sim, nodes, cmd, ended):
     caps, cap_error = _rush_caps(cmd)
     if cap_error:
         return {"ok": False, "error": cap_error}
-    capped = any(value is not None for value in caps.values())
+    filters, filter_error = parse_rush_filters(cmd)
+    if filter_error:
+        return {"ok": False, "error": filter_error}
+    capped = any(value is not None for value in caps.values()) or bool(filters)
     if _flag(cmd.get("preview")):
         return _rush_preview(sim, nodes, cmd, ended)
     _memo = {}
@@ -456,6 +466,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
     excluded_rows = [{"id": node_id, "name": nodes[node_id]["name"], "why": sim.exclusion_reason(node_id)}
                      for node_id in _ok if sim.exclusion_reason(node_id)]
     _ok = [node_id for node_id in _ok if not sim.exclusion_reason(node_id)]
+    _ok = [node_id for node_id in _ok if passes_rush_filters(sim, nodes, node_id, filters)]
     # HIGHEST-LEVERAGE FIRST, INTERNALLY ONLY. This never shows a player
     # a downstream_count - that is a fog spoiler, see _node_explain's own
     # comment on it - it only uses the number to decide which of several
@@ -532,6 +543,8 @@ def _cmd_rush(sim, nodes, cmd, ended):
     return {"ok": True, "started": started, "count_started": len(started),
             "total_cost": round(total_cost, 1),
             "total_annual_draw": round(total_draw, 1),
+            "total_founder_hours": round(_owed, 1),
+            "filters": filters,
             "not_started": not_started,
             "count_not_started": len(not_started),
             "excluded": excluded_rows,
