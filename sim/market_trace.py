@@ -1,6 +1,6 @@
 """Prices the market posts (labour hours), price level, output per head, capital, firms and CPU, by decade.
 
-    python3 sim/market_trace.py rome_100ad [years]
+    python3 sim/market_trace.py <civilisation id> [years]
 
 Seed 1, events on. Used to compare a change to the market against the branch it started from."""
 import os
