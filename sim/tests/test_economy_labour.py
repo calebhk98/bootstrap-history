@@ -53,6 +53,12 @@ class WageMovementTests(unittest.TestCase):
         self.assertAlmostEqual(result.hours_hired, 50)
         self.assertGreaterEqual(result.wage, 1.05)
 
+    def test_with_no_hours_offered_nobody_is_hired_and_the_wage_stays(self):
+        # employers' caps follow the wage; letting an untraded wage jump to them compounds every year
+        result = labour.clear([bid("e", 50, 500.0)], [offer("w", 0, 1.0)], "smith", "a", "coin", 2.0)
+        self.assertEqual(result.hours_hired, 0)
+        self.assertEqual(result.wage, 2.0)
+
     def test_a_high_reservation_worker_stays_idle(self):
         offers = [offer("cheap", 50, 1.0), offer("proud", 50, 5.0)]
         result = labour.clear([bid("e", 100, 2.0)], offers, "smith", "a", "coin", None)

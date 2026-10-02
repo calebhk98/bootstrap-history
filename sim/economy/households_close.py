@@ -58,4 +58,4 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
     return renewed(cohort, expected_inflation=expected, last_price_level=level, cash_target=target,
                    last_year_income=income_received, last_year_spending=spent,
                    unmet_floor_by_need=unmet,
-                   own_plan_by_need=next_own_plan(cohort.own_plan_by_need, unmet)), moves
+                   own_plan_by_need=next_own_plan(cohort.own_plan_by_need, unmet, spent < income_received)), moves

@@ -3,8 +3,8 @@
 Most people in a pre-industrial economy grew much of their own food outside any market. A cohort's
 unsold hours work the land-only recipes (no bought inputs) that serve a need with a subsistence floor,
 on its own tile at the tile's fertility, up to that floor. What it grows it eats; only the rest of its
-needs go to market. A cohort that went short of a floor keeps back from the labour market the
-hours that grow its own-plot plan (the shortfall, kept up and eased off over the years), however high
+needs go to market. A cohort that went short of a floor with money left over keeps back from the
+labour market the hours that grow its own-plot plan (the shortfall, kept up and eased off over the years), however high
 the wage: money does not feed a family where nobody sells food. The land a cohort works is not yet drawn from the tile's arable area, which is
 plentiful against what people can work by hand.
 """
@@ -88,10 +88,12 @@ def hours_for_own_plan(cohort: Cohort, options: Mapping[str, List[Option]], fert
     return hours
 
 
-def next_own_plan(plan: Mapping[str, float], unmet: Mapping[str, float]) -> Dict[str, float]:
+def next_own_plan(plan: Mapping[str, float], unmet: Mapping[str, float], money_left: bool) -> Dict[str, float]:
     """Next year's plan: what it planned to grow, eased off so the household tries the market again,
-    plus what it went short of this year."""
+    plus what it went short of this year if it went short with money left over (nobody sold the food).
+    A household short because it spent all it had needs more paid work, not fewer hours sold."""
     kept = 1.0 - OWN_PLAN_RELEASE_SHARE_PER_YEAR
+    unmet = unmet if money_left else {}
     needs = set(plan) | {need for need, units in unmet.items() if units > 0.0}
     nxt = {need: plan.get(need, 0.0) * kept + max(0.0, unmet.get(need, 0.0)) for need in sorted(needs)}
     return {need: units for need, units in nxt.items() if units > 1e-9}

@@ -119,7 +119,8 @@ def clear(bids: Sequence[LabourBid], offers: Sequence[LabourOffer], trade: Trade
     offers = [offer for offer in offers if offer.trade == trade and offer.area == area and offer.hours > 0]
     target = clearing_point([(offer.reservation_wage, offer.hours) for offer in offers],
                             [(bid.maximum_wage, bid.hours) for bid in bids])
-    if target is None:
+    if target is None or (last_wage is not None and not offers):
+        # with nobody offering hours nothing is hired, and an untraded wage stays where it was
         wage = last_wage if last_wage is not None else 0.0
     elif last_wage is not None and target > last_wage:
         wage = target

@@ -25,13 +25,18 @@ class OwnPlanTests(unittest.TestCase):
 
     def test_the_plan_keeps_what_it_grew_and_adds_this_years_shortfall(self):
         # growing only last year's shortfall would leave it short again the year after
-        plan = next_own_plan({"food": 60.0}, {"food": 20.0})
+        plan = next_own_plan({"food": 60.0}, {"food": 20.0}, money_left=True)
         self.assertAlmostEqual(plan["food"], 60.0 * (1.0 - households_own.OWN_PLAN_RELEASE_SHARE_PER_YEAR) + 20.0)
+
+    def test_a_household_short_because_it_is_poor_grows_no_plan(self):
+        # it spent all it earned: more wage work, not fewer hours sold, is what feeds it
+        plan = next_own_plan({}, {"food": 20.0}, money_left=False)
+        self.assertEqual(plan, {})
 
     def test_with_markets_feeding_it_the_plan_fades(self):
         plan = {"food": 60.0}
         for _year in range(60):
-            plan = next_own_plan(plan, {})
+            plan = next_own_plan(plan, {}, money_left=True)
         self.assertLess(plan.get("food", 0.0), 1.0)
 
 
