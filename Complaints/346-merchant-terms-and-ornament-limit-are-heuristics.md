@@ -1,6 +1,6 @@
 # Merchants' margin, wait, adjustment speed and capital, and the ornament limit, are stated not derived
 
-**Status:** open
+**Status:** partly - merchants' terms now follow from the route's fleet, the labour market and the merchant class's capital (test `merchant_terms`); the ornament limit stays a labelled heuristic; the residue is Complaint 377
 
 Partners are on by default because, with merchants' costs and a partial yearly
 response (`Complaints/339`) and a satiating ornament need (`Complaints/325`),
@@ -28,3 +28,19 @@ moves part of a market, and sourced output for more goods (`Complaints/324`).
 Related: 109, 300, 338, 347, 350, 351, 353.
 
 Owner decision (2026-10-02): should be looked at: merchants' terms should be derived from merchants' actual costs.
+
+## Done (merchants)
+
+`sim/world/merchant_terms.py` and `sim/engine/foreign_traders.py`: the wait is the route's round
+trip over its carriers (a sailing's wait); agents' pay is agents per carrier times carrier-years
+per tonne times the labour market's merchant wage; the markup over cost is the lone merchant's
+over the number of carriers (one merchant each); the speed of change is the share of carriers home
+to change cargo in a year; the capital is the merchant headcount times the modest-merchant kit,
+plus earnings kept, less carriers, plus borrowing against it within lenders' room. Measure with
+`python3 sim/foreign_trade_report.py --years 100 --partner han_china_100ad`.
+
+## Ornament limit
+
+Left as it is: `satiation_per_capita_per_year` for ornament is a household need limit with a
+stated basis (a held stock of a few tens of grams worn or lost at a few per cent a year), not a
+merchant term, and no source for the held stock was found. A held-stock model replaces it.

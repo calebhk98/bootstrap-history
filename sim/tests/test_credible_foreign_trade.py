@@ -170,6 +170,7 @@ def stubbed_pair(simulation, home_makes, partner_makes, price=1000.0, freight=1.
     simulation._foreign_price_pair = lambda commodity, facts: (price, price)
     simulation._foreign_sides = lambda commodity, facts: (home_makes, partner_makes)
     simulation._route_freight_per_tonne = lambda civilization: freight
+    simulation._agent_cost_per_tonne = lambda civilization_id, route: 0.0
     simulation._output_is_sourced = lambda commodity: True
     simulation.foreign_opening = lambda civilization_id, commodity, solved: (
         partner_capacity, partner_demand)

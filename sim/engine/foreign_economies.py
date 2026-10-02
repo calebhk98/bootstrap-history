@@ -294,6 +294,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
             facts = self._foreign_economy_facts(civilization_id)
             if flow:
                 self._pay_for_flow(civilization_id, commodity, flow, home_entry, outcome, facts)
+                self._retain_merchant_earnings(civilization_id, commodity, flow, home_entry, outcome, facts)
             shortfall = unmet.get((commodity, civilization_id), 0.0)
             if flow or shortfall:
                 self._record_lift(civilization_id, facts["route"], flow, shortfall,
