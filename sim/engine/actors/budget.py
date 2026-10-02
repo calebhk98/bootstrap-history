@@ -17,13 +17,16 @@ from .tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
 # What an army wears out, as a material in the tree's own terms.
 EQUIPMENT_MATERIAL = "iron_bar_kg"
 
+# The trade the army is booked in (data/world/trades.json); its people come from the working age.
+SOLDIER_TRADE = "soldier"
+
 
 def army_line(world: Any, soldiers: float) -> List[Line]:
 	if soldiers <= 0.0:
 		return []
 	tonnes = soldiers * world.equipment_kg_per_soldier() / 1000.0
-	return [Line("army", "requisition", {"labourer": soldiers},
-				 soldiers * world.pay_per_person_year("labourer"),
+	return [Line("army", "requisition", {SOLDIER_TRADE: soldiers},
+				 soldiers * world.pay_per_person_year(SOLDIER_TRADE),
 				 {world.commodity_of(EQUIPMENT_MATERIAL): tonnes},
 				 world.material_cost(EQUIPMENT_MATERIAL, tonnes))]
 

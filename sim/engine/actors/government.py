@@ -1,10 +1,11 @@
 """`Government`: a country's state as an actor.
 
-It keeps a budget. Revenue is what its economy yields; spending is what it
+It keeps a budget. Revenue is what its declared forms yield on the bases the economy
+models, in coin or in kind (`revenue.py`, `government_stores.py`); spending is what it
 keeps up (`budget.py`: army, officials, roads, public buildings, court, dole,
 navy), paid from the purse. A deficit comes out of the reserve, then is
-borrowed up to its credit ceiling, and only then is every line cut by the same
-share. What it could not
+borrowed up to its credit ceiling (only once it holds the technology of public
+debt), and only then is every line cut by the same share. What it could not
 pay is what it seeks from the taxpayers it can see. What is left of the purse
 funds copying know-how it values by the gains its civilisation's priorities
 weight (military, infrastructure, prestige, ...), through its policy.
@@ -13,12 +14,13 @@ from typing import Any, Dict, List, Tuple
 
 from . import budget, ledger
 from .base import Actor, RecordedActor
+from .government_stores import StoresMixin
 from .government_surplus import SurplusMixin
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
 from .values import invention_gains, weighted_gain
 
 
-class Government(SurplusMixin, RecordedActor):
+class Government(StoresMixin, SurplusMixin, RecordedActor):
 	kind = "government"
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
@@ -29,6 +31,10 @@ class Government(SurplusMixin, RecordedActor):
 	# ---- what it borrows against -------------------------------------------
 	def credit_earning(self, world: Any) -> float:
 		return world.state_revenue()
+
+	def credit_ceiling(self, world: Any) -> float:
+		"""A state borrows only once it holds a technology declaring the `state_credit` mechanic."""
+		return super().credit_ceiling(world) if world.state_may_borrow(self) else 0.0
 
 	def credit_standing(self, world: Any) -> float:
 		"""Lenders trust a state as far as it can assess and collect."""
@@ -70,10 +76,12 @@ class Government(SurplusMixin, RecordedActor):
 		"""Take the year's revenue, pay what the purse covers of the standing need, and book the rest
 		as unfunded. The goods it bought are this year's demand on the market."""
 		self.pay_interest(world)
-		self.credit(world.state_revenue(), "taxation")
+		self.receive_revenue(world)
 		wanted = world.army_wanted()
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
-		lines = budget.standing_lines(world, soldiers) + budget.concession_lines(world.group_claims())
+		standing = budget.standing_lines(world, soldiers) + budget.concession_lines(world.group_claims())
+		lines = self.draw_stores(standing, world)
+		self.sell_surplus(standing, world)
 		share = budget.funded_share(sum(line.money for line in lines), self.money + self.credit_ceiling(world))
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = {line.name: line.money for line in lines}

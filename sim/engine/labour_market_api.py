@@ -65,7 +65,14 @@ class LabourMarket:
     def _records(self):
         return self._sim.state.household.labour_pressure_records
 
-    def pressure(self, trade):
+    def standing_draw(self, trade):
+        """Hours a year of this trade that soldiers under arms already take out of its pool: they are
+        drawn from the unskilled pool and stay drawn while they serve, so they do not decay."""
+        if trade != "labourer":
+            return 0.0
+        return self._sim.actor_staff_fte("soldier") * self._sim.HOURS_PER_PERSON_YEAR
+
+    def recent_pressure(self, trade):
         """Hours a year of this trade recently leaned on, decayed to this year."""
         record = self._records().get(trade)
         if not record:
@@ -74,6 +81,10 @@ class LabourMarket:
         age = max(0.0, self._sim.state.scenario.year - year)
         return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
 
+    def pressure(self, trade):
+        """Recent pressure plus what the standing army takes from the unskilled pool."""
+        return self.recent_pressure(trade) + self.standing_draw(trade)
+
     def pressured_trades(self):
         """Trades anyone has leaned on, in a stable order."""
         return sorted(self._records())
@@ -81,7 +92,7 @@ class LabourMarket:
     def press(self, trade, hours):
         """Record demand for `hours` a year of a trade that is not a hire (teaching pulls a trade's
         people off their bench, a commission buys their time)."""
-        self._records()[trade] = (self.pressure(trade) + max(0.0, hours), self._sim.state.scenario.year)
+        self._records()[trade] = (self.recent_pressure(trade) + max(0.0, hours), self._sim.state.scenario.year)
 
     def clear_pressure(self):
         self._records().clear()
@@ -203,5 +214,5 @@ class LabourMarket:
         record = self._records().get(trade)
         if not record:
             return
-        remaining = max(0.0, self.pressure(trade) - max(0.0, hours))
+        remaining = max(0.0, self.recent_pressure(trade) - max(0.0, hours))
         self._records()[trade] = (remaining, self._sim.state.scenario.year)

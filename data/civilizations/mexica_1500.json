@@ -580,6 +580,27 @@
   },
   "starting_interest_rate": 0.1,
   "starting_tax_share": 0.2,
+  "state_revenue": [
+    {
+      "form": "tribute_in_grain",
+      "basis": "harvest",
+      "rate": 0.15,
+      "paid_in": "wheat_kg",
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): commoners' tribute in goods to the calpixqui (Codex Mendoza tribute lists name the goods, not a share of the harvest); the share carries over the civilisation's former fitted share and has no source of its own.",
+        "confidence": "D"
+      }
+    },
+    {
+      "form": "market_dues",
+      "basis": "imports_value",
+      "rate": 0.05,
+      "_internal": {
+        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): market and long-distance traders (pochteca) paid dues to the ruler; the rate is unattested.",
+        "confidence": "D"
+      }
+    }
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "Credit was in kind (cacao, cloth, maize) with pledges of labour; no attested monetary interest rate. A placeholder for near-absent formal lending.",
