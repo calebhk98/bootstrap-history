@@ -687,7 +687,7 @@ so that the next person does not silently restart it:
   covers the simulation loop well and covers `protocol.py` not at all,
   and roughly a quarter of the engine's code lives under `sim/ui/proto/`
   (11,246 of 41,746 lines, 27% -
-  `find sim/engine/proto -name "*.py" | xargs wc -l | tail -1` against
+  `find sim/ui/proto -name "*.py" | xargs wc -l | tail -1` against
   `find sim/engine -name "*.py" -not -path "*/__pycache__/*" | xargs wc -l | tail -1`);
 - the payoff is small, for the reason above - the couplings are the
   domain.

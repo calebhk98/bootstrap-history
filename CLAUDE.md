@@ -63,10 +63,13 @@ Check with `ls` before trusting this; directories move.
 | Looking for | Look in |
 |---|---|
 | Engine (the `Sim` object and its mixins) | `sim/engine/` |
-| Standalone domain models (agriculture, demography, land, deposits, transport, demand, labour market, ...) | `sim/world/` |
-| Actors other than the world (households, later firms/states/players) | `sim/agents/` |
+| Walled packages, each reached only through its `api.py` (the rule and how to extend a surface: `docs/architecture/PACKAGE_WALLS.md`) | `sim/economy/`, `sim/agents/`, `sim/labour/`, `sim/geography/`, `sim/ui/` |
+| Standalone domain models (agriculture, demography, land, deposits, demand, ...) | `sim/world/` |
+| Actors (households, firms, states, interest groups) | `sim/agents/` |
+| Labour market: hiring, wages, staff, the trade split | `sim/labour/` |
+| Map, tiles, regions, climate, routes and freight | `sim/geography/` |
 | Price solver | `sim/solve_prices*.py`, `sim/engine/prices.py` |
-| CLI and agent/JSON protocol | `sim/simulator.py`, `sim/engine/cli*.py`, `sim/ui/proto/`, `sim/PROTOCOL.md` |
+| CLI, menus, screens and agent/JSON protocol | `sim/simulator.py`, `sim/ui/`, `sim/PROTOCOL.md` |
 | Tests | `sim/tests/`, run through `sim/test_regressions.py` |
 | Engine shape, measured | `sim/ARCHITECTURE.md` |
 | Design direction, plans, current status | `docs/architecture/` - read its `README.md` first; it names the live plan and the status document |
