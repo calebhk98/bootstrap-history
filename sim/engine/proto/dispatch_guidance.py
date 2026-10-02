@@ -2,7 +2,8 @@
 
 from .command_registry import command
 from .economy import _trade_demand_rows
-from .guidance import LEVERAGE_NOTE, delay_kinds, leverage_points, wait_explanation
+from .guidance import (LEVERAGE_NOTE, delay_kinds, development_program, leverage_points,
+                       training_suggestions, wait_explanation)
 
 
 @command("leverage", group="overview", aliases=("levers",),
@@ -28,7 +29,7 @@ def _cmd_idle(sim, nodes, cmd, ended):
                  if node_id not in sim.done and node_id not in sim.active
                  and (not sim.fog or sim.is_visible(node_id)) and sim.can_start(node_id)]
     kinds = delay_kinds(sim, nodes)
-    short_trades = [row["trade"] for row in _trade_demand_rows(sim) if row["oversubscribed"]]
+    sized_training = training_suggestions(sim, _trade_demand_rows(sim))
     return {
         "ok": True,
         "directed_hours_this_year": round(pool, 1),
@@ -39,7 +40,8 @@ def _cmd_idle(sim, nodes, cmd, ended):
         "potential_uses": {
             "startable_today": len(startable),
             "startable_at_no_cash_cost": sum(1 for node_id in startable if sim.project_cost(node_id) <= 0),
-            "train_oversubscribed_trades": short_trades or "none",
+            "train_oversubscribed_trades": sized_training or "none",
+            "development_program": development_program(sim, nodes, startable),
             "wage_work": "'work <trade> <hours>' sells idle hours for wages; 'allocate' points hours at a project",
         },
         "note": "Hours do not carry into the next year. Nothing here spends them: 'available' lists what could begin.",

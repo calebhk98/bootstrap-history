@@ -4,6 +4,8 @@ Every figure is read from the engine function that computes it; nothing here
 names a content id, and nothing reads the hidden tree.
 """
 
+import math
+
 from .portfolio_bottlenecks import blocker_kind_of
 from .economy import _portfolio_constraint
 from .state import _agent_state
@@ -56,4 +58,38 @@ def wait_explanation(kinds):
                 "exclusive research time and cannot be bought down: start something else alongside it, "
                 "teach, or sell hours; hours do not carry into next year.")
     return ("the delay is not only the calendar: %s. 'portfolio' shows each group's pool."
-            % ", ".join("%s (%d)" % (kind, len(ids)) for kind, ids in sorted(kinds.items())))
+            % delay_phrase(kinds))
+
+
+def delay_phrase(kinds):
+    """The kinds of delay running projects wait on, as a short phrase."""
+    return ", ".join("%s (%d)" % (kind, len(ids)) for kind, ids in sorted(kinds.items())) or "nothing running"
+
+
+def training_suggestions(sim, trade_rows):
+    """One sized teaching suggestion per oversubscribed trade: the people its shortfall needs and the
+    founder-hours teaching them takes. Nothing is spent."""
+    rows = []
+    for row in trade_rows:
+        if not row["oversubscribed"]:
+            continue
+        short = row["demand_hours_this_year"] - row["supply_hours_this_year"]
+        people = max(1, math.ceil(short / sim.HOURS_PER_PERSON_YEAR))
+        rows.append({"trade": row["trade"], "people_short": people,
+                     "teaching_hours": people * sim.TEACHING_HOURS_PER_PERSON,
+                     "command": "train %s %d" % (row["trade"], people)})
+    return rows
+
+
+def development_program(sim, nodes, startable):
+    """The startable project that costs least cash, sized by what it would draw: its own labour hours
+    spread over its years. None when nothing can start."""
+    if not startable:
+        return None
+    node_id = min(startable, key=lambda candidate: (sim.project_cost(candidate), candidate))
+    node = nodes[node_id]
+    years = max(float(node.get("yrs") or 1.0), 1.0)
+    return {"id": node_id, "name": node["name"], "cash_cost": round(sim.project_cost(node_id), 1),
+            "years": years,
+            "directed_hours_per_year": round(sum((node.get("lab") or {}).values()) / years, 1),
+            "command": "start %s" % node_id}
