@@ -695,6 +695,8 @@ class GoodsMixin:
         combined capacity finds buyers for, not what any one concern
         alone would.
         """
+        if self.economy.runs_agent_economy():
+            return 1.0      # the agent economy's prices carry the market (node_output_market_factor)
         projects = self.state.projects
         if node_id not in projects.operating:
             return 1.0

@@ -63,6 +63,11 @@ def _delivery_tile(move: GoodsMove) -> TileId:
     return getattr(move, "receiver_tile", "") or move.tile
 
 
+# Floating-point arithmetic leaves a payer a hair short of what it computed it could pay; a shortfall
+# no bigger than this share of what moves is rounding, not an overdraft.
+ROUNDING_SHARE = 1e-9
+
+
 class Book:
     def __init__(self):
         self._money: Dict[AgentId, Dict[CurrencyId, float]] = {}
@@ -89,7 +94,7 @@ class Book:
         payer = transfer.payer
         if not is_edge(payer):
             balance = self.balance(payer, transfer.currency)
-            if balance < amount:
+            if balance < amount * (1.0 - ROUNDING_SHARE):
                 raise InsufficientFunds("%s holds %.6g %s but must pay %.6g (%s)"
                                         % (payer, balance, transfer.currency, amount, transfer.purpose))
         purses = self._money
@@ -109,7 +114,7 @@ class Book:
             return
         giver = move.giver
         held = self.stock(giver, move.good, move.tile)
-        if not is_edge(giver) and held < quantity:
+        if not is_edge(giver) and held < quantity * (1.0 - ROUNDING_SHARE):
             raise InsufficientGoods("%s holds %.6g %s on %s but must give %.6g (%s)"
                                     % (giver, held, move.good, move.tile, quantity, move.purpose))
         self._set_stock(giver, move.good, move.tile, held - quantity)
@@ -139,6 +144,7 @@ class Book:
 
     def _money_after(self, transfers: Sequence[Transfer]) -> Dict[Tuple[AgentId, CurrencyId], float]:
         after: Dict[Tuple[AgentId, CurrencyId], float] = {}
+        moved: Dict[Tuple[AgentId, CurrencyId], float] = {}
         for transfer in transfers:
             amount = transfer.amount
             if not amount >= 0.0:
@@ -147,13 +153,15 @@ class Book:
                 key = (agent, transfer.currency)
                 current = after[key] if key in after else self.balance(agent, transfer.currency)
                 after[key] = current + signed
+                moved[key] = moved.get(key, 0.0) + amount
         for (agent, currency), value in sorted(after.items()):
-            if value < 0.0 and not is_edge(agent):
+            if value < -ROUNDING_SHARE * moved[(agent, currency)] and not is_edge(agent):
                 raise InsufficientFunds("%s would hold %.6g %s after the batch" % (agent, value, currency))
         return after
 
     def _goods_after(self, moves: Sequence[GoodsMove]) -> Dict[Tuple[AgentId, GoodId, TileId], float]:
         after: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
+        moved: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
         for move in moves:
             quantity = move.quantity
             if not quantity >= 0.0:
@@ -162,8 +170,9 @@ class Book:
                 key = (agent, move.good, tile)
                 current = after[key] if key in after else self.stock(agent, move.good, tile)
                 after[key] = current + signed
+                moved[key] = moved.get(key, 0.0) + quantity
         for (agent, good, tile), value in sorted(after.items()):
-            if value < 0.0 and not is_edge(agent):
+            if value < -ROUNDING_SHARE * moved[(agent, good, tile)] and not is_edge(agent):
                 raise InsufficientGoods("%s would hold %.6g %s on %s after the batch" % (agent, value, good, tile))
         return after
 

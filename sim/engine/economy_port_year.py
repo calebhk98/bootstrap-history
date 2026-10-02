@@ -9,7 +9,8 @@ import os
 
 from sim.constants import declare
 from sim.economy.economy import Economy
-from sim.economy.protocols import YearInputs
+from sim.economy.protocols import AgentOrders, YearInputs
+from sim.economy.types import EDGE_LEGACY, GoodsMove, Offer, Transfer
 from sim.economy.record import EconomyRecord
 from sim.economy.year_close import national_prices
 
@@ -27,6 +28,7 @@ SPIN_UP_MAXIMUM_YEARS = declare(
     unit="years", source=None, confidence="D",
     why="A bound on the hidden years, so a economy that keeps moving still starts in a known time.")
 SPIN_UP_WATCHED_GOODS = 12
+FOUNDER_AGENT = "founder"
 
 
 def switch_requested(cfg) -> bool:
@@ -67,12 +69,56 @@ class AgentEconomy:
     # ---- the year -----------------------------------------------------------------------------
     def run_year(self):
         economy = self.economy()
-        outcome = economy.step(self._inputs())
+        orders = self._founder_orders()
+        outcome = economy.step(self._inputs(orders))
+        self._settle_founder()
         self._answers = None
         self._save()
         return outcome
 
-    def _inputs(self) -> YearInputs:
+    # ---- the founder's concerns sell in the same market ----------------------------------------
+    def _founder_orders(self):
+        """The founder's running concerns' output for the year, handed over from the engine through the
+        legacy edge (the engine's purse is not yet an account in the book: Complaint 382) and offered at
+        what the concern costs to make it."""
+        sim, economy = self._sim, self._economy
+        book, area_map = economy.record.book, economy.area_map
+        tile = sim.base_tile() if sim.base_tile() in economy.setup.tiles else economy.setup.capital_tile
+        projects = sim.state.projects
+        old_prices = sim._material_prices()
+        moves, offers = [], []
+        for node_id in sorted(projects.operating):
+            if node_id in projects.granted or not sim.is_venture(node_id):
+                continue
+            baskets = sim.concern_baskets_now(node_id)
+            if baskets is None:
+                continue
+            ramp = sim.venture_ramp(node_id)
+            for material, units in sorted(baskets.outputs.items()):
+                quantity = units * ramp
+                if quantity <= 0.0 or material not in area_map.goods():
+                    continue
+                moves.append(GoodsMove(EDGE_LEGACY, FOUNDER_AGENT, material, tile, quantity, "concern output"))
+                cost = sim.concern_cost_ratio(node_id, material) * old_prices.get(material, 0.0)
+                offers.append(Offer(FOUNDER_AGENT, material, area_map.area_of(material, tile), tile, quantity, cost))
+        book.move_many(moves)
+        return {FOUNDER_AGENT: AgentOrders(offers=tuple(offers))} if offers else {}
+
+    def _settle_founder(self):
+        """What the founder's goods fetched goes back to the engine; what did not sell goes back too."""
+        record = self._economy.record
+        money = self._economy.setup.currency_id
+        book = record.book
+        proceeds = book.balance(FOUNDER_AGENT, money)
+        if proceeds > 0.0:
+            book.transfer(Transfer(FOUNDER_AGENT, EDGE_LEGACY, money, proceeds, "founder's takings"))
+        returns = [GoodsMove(FOUNDER_AGENT, EDGE_LEGACY, good, tile, quantity, "unsold concern output")
+                   for good, tiles in book.holdings(FOUNDER_AGENT)["goods"].items()
+                   for tile, quantity in tiles.items() if quantity > 0.0]
+        book.move_many(returns)
+        self.stored["founder_takings"] = proceeds
+
+    def _inputs(self, engine_orders) -> YearInputs:
         sim = self._sim
         population = sim.population
         total = float(population.total)
@@ -82,7 +128,7 @@ class AgentEconomy:
                   if economy.setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
-                          yield_factor_by_producer=yields, engine_orders={})
+                          yield_factor_by_producer=yields, engine_orders=engine_orders)
 
     def _spin_up(self):
         """Hidden years from the opening until prices settle; then the price level is rebased to one."""

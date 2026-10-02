@@ -186,7 +186,7 @@ class GoodsMarket(GoodsOffers):
         if per_kg is None:
             return None
         emp_key = sim._material_tag(material)[0]
-        ratio = sim.market_price_ratio(emp_key)
+        ratio = sim.market_price_ratio(material)
         buy = (per_kg / tonnes_per_unit(material) * sim.price_index
                * sim.material_price_factor(emp_key) * ratio)
         return {"material": material, "stock_key": emp_key, "buy_per_tonne": buy,
@@ -208,7 +208,7 @@ class GoodsMarket(GoodsOffers):
             return None
         emp_key, tag = sim._material_tag(material)
         per_tonne = (unit_price / tonnes_per_unit(material) * sim.price_index
-                     * sim.market_price_ratio(emp_key))
+                     * sim.market_price_ratio(material))
         factor = sim._price_factor_across_purchase(emp_key, tag, already, max(0.0, tonnes))
         return per_tonne * factor * max(0.0, tonnes), per_tonne * factor
 
