@@ -81,6 +81,7 @@ class Book:
         self._edge_money_net: Dict[AgentId, Dict[CurrencyId, float]] = {}
         self._edge_goods_volume: Dict[AgentId, Dict[GoodId, float]] = {}
         self._edge_goods_net: Dict[AgentId, Dict[GoodId, float]] = {}
+        self._supply_at_start: Dict[CurrencyId, float] = {}   # money supply when the year began
 
     # ---- postings ------------------------------------------------------------------------------
 
@@ -279,8 +280,20 @@ class Book:
     def edge_goods_net(self, edge_id: AgentId, good: GoodId) -> float:
         return self._edge_goods_net.get(edge_id, {}).get(good, 0.0)
 
+    def currencies(self) -> List[CurrencyId]:
+        return sorted({currency for purse in self._money.values() for currency in purse})
+
+    def supply_at_start(self, currency: CurrencyId) -> float:
+        """The money supply (edge accounts excluded) when the year's flow records were last reset."""
+        return self._supply_at_start.get(currency, 0.0)
+
+    def edge_agents(self) -> List[AgentId]:
+        """Edge accounts that carried money this year."""
+        return sorted(self._edge_money_net)
+
     def start_year(self) -> None:
-        """Reset the yearly flow records; holdings carry."""
+        """Reset the yearly flow records and note the supply; holdings carry."""
+        self._supply_at_start = {currency: self.money_supply(currency) for currency in self.currencies()}
         self._money_by_purpose = {}
         self._goods_by_purpose = {}
         self._edge_money_volume = {}
@@ -310,6 +323,7 @@ class Book:
             "edge_money_net": _sorted_nested(self._edge_money_net),
             "edge_goods_volume": _sorted_nested(self._edge_goods_volume),
             "edge_goods_net": _sorted_nested(self._edge_goods_net),
+            "supply_at_start": dict(sorted(self._supply_at_start.items())),
         }
 
     @classmethod
@@ -328,4 +342,5 @@ class Book:
         book._edge_money_net = _sorted_nested(record["edge_money_net"])
         book._edge_goods_volume = _sorted_nested(record["edge_goods_volume"])
         book._edge_goods_net = _sorted_nested(record["edge_goods_net"])
+        book._supply_at_start = dict(record["supply_at_start"])
         return book

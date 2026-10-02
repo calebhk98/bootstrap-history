@@ -89,7 +89,7 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
         result = labour.clear(trade_bids, trade_offers, trade, area, setup.currency_id, memory.wages.get(key))
         done = settlement.settle_labour(record.book, result)
         ledger.note_postings(done.postings, "wages")
-        ledger.note_labour(result)
+        ledger.note_labour(result, done.postings)
         if result.wage > 0.0:
             memory.wages[key] = result.wage
 
