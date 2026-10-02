@@ -15,6 +15,10 @@ def agent_game(civ, seed=1):
 
 rome = agent_game("rome_100ad")
 check("a game asked for the agent economy runs on it", rome.economy.agent is not None)
+opened = rome.economy.agent.economy().record
+check("after the hidden spin-up households expect stable prices, so the rebased index is not read as inflation",
+      all(cohort.expected_inflation == 0.0 and cohort.last_price_level == 1.0 for cohort in opened.cohorts.values()),
+      sorted({(cohort.expected_inflation, cohort.last_price_level) for cohort in opened.cohorts.values()})[:3])
 off = perf_fingerprint.build(dict(civ="rome_100ad", seed=1, years=1, events=True, fog=False))
 check("a game not asked for it keeps the engine's own economy", off.economy.agent is None
       and not off.state.economy.agent_economy)

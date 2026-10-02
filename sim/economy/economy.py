@@ -7,7 +7,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict
 
-from . import credit, producers, unit_cost
+from . import credit, labour, producers, unit_cost
 from .market_areas import AreaMap
 from .market_memory import YearView
 from .households_own import own_production, own_production_options
@@ -168,7 +168,15 @@ class Economy:
         record, setup = self.record, self.setup
         money = setup.currency_id
         requests, record.loan_requests = record.loan_requests, []
-        if not requests or not funds:
+        if not requests:
+            if funds:
+                # savings on offer and nobody borrowing: lenders compete the rate down toward the lowest
+                # they will lend at, at the market's usual pace
+                floor = min(offer.minimum_rate for offer in funds)
+                record.memory.rates[money] = labour.sticky_move(record.memory.rates.get(money), floor,
+                                                                credit.RATE_ADJUSTMENT_SHARE_PER_YEAR)
+            return {}
+        if not funds:
             return {}
         debt: Dict[str, float] = {}
         for loan in record.loans:

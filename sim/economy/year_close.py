@@ -5,6 +5,7 @@ import math
 from typing import Dict, Tuple
 
 from . import currency, households, inventory, merchants, metal_stock, producers, producers_close, taxes
+from .households_cohort import renewed
 from .market_memory import market_key
 from .setup import labour_area
 from .taxes_bases import YearFacts
@@ -14,15 +15,24 @@ from .year_ledger import YearLedger
 
 
 def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
+    """Merchants carry what they bought. The carriage is the carters' pay: it goes, as wages, to the
+    poorest households of the tile the goods leave. Shortcut until carriers hire hours in the labour
+    market: the carters' hours are not taken from what those households offer."""
     money = setup.currency_id
+    carriers = {}
+    for cohort in record.cohorts.values():
+        held = carriers.get(cohort.tile)
+        if held is None or cohort.income_class < record.cohorts[held].income_class:
+            carriers[cohort.tile] = cohort.agent_id
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         fills = ledger.buy_fills.get(merchant.agent_id, [])
         if not fills:
             continue
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
-                                  record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id))
+                                  record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
+                                  carrier_of=carriers.get)
         record.book.post(done.transfers, done.moves)
-        ledger.note_postings(done.transfers)
+        ledger.note_postings(done.transfers, "wages")
 
 
 def money_taxes(setup, record, view, ledger: YearLedger) -> None:
@@ -137,6 +147,17 @@ def remember_price_level(setup, record) -> float:
                                  record.opening_basket)
     record.memory.note_price_level(setup.currency_id, level)
     return level
+
+
+def rebase_price_level(setup, record) -> None:
+    """Today's prices become the index base (level one) and everyone, the market's memory and each
+    household alike, stops expecting inflation, so the rebase is not read as a jump in prices."""
+    money = setup.currency_id
+    record.index_base_prices = national_prices(record)
+    record.memory.price_levels[money] = 1.0
+    record.memory.expected_inflation[money] = 0.0
+    record.cohorts = {agent: renewed(cohort, last_price_level=1.0, expected_inflation=0.0)
+                      for agent, cohort in record.cohorts.items()}
 
 
 def check_money(record) -> float:

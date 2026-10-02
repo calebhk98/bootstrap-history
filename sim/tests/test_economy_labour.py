@@ -1,4 +1,5 @@
-"""The labour market: a sticky wage that follows vacancies and idle hours toward the clearing wage."""
+"""The labour market: a wage that rises to clear vacancies within the year and falls slowly toward the
+clearing wage when hours are idle."""
 import random
 import unittest
 
@@ -45,6 +46,12 @@ class WageMovementTests(unittest.TestCase):
         self.assertLess(wages[0], 2.0)
         self.assertTrue(all(wage >= 1.0 - 1e-9 for wage in wages))   # idle workers undercut to their floor
         self.assertGreater(results[0].idle_hours, 0)
+
+    def test_employers_short_of_hands_raise_the_wage_within_the_year(self):
+        # a last wage just below every worker's reservation must not leave willing employers with nobody
+        result = labour.clear([bid("e", 50, 5.0)], [offer("w", 100, 1.05)], "smith", "a", "coin", 1.0)
+        self.assertAlmostEqual(result.hours_hired, 50)
+        self.assertGreaterEqual(result.wage, 1.05)
 
     def test_a_high_reservation_worker_stays_idle(self):
         offers = [offer("cheap", 50, 1.0), offer("proud", 50, 5.0)]

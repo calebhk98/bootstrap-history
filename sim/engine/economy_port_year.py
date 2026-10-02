@@ -13,7 +13,7 @@ from sim.economy.protocols import AgentOrders, YearInputs
 from sim.economy.foreign import external_orders
 from sim.economy.types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
 from sim.economy.record import EconomyRecord
-from sim.economy.year_close import national_prices
+from sim.economy.year_close import national_prices, rebase_price_level
 from sim.economy.year_labour import trade_premium
 
 from . import solve_cache
@@ -52,6 +52,7 @@ class AgentEconomy:
         self._sim = sim
         self._economy = None
         self._answers = None
+        self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
 
     @property
     def stored(self):
@@ -64,6 +65,8 @@ class AgentEconomy:
         return self._economy is not None or "record" in self.stored
 
     def economy(self) -> Economy:
+        if self._built_from is not self.stored:
+            self._economy, self._answers = None, None
         if self._economy is None:
             if "record" in self.stored:
                 setup = build_setup(self._sim, self.stored["opening"])
@@ -77,6 +80,7 @@ class AgentEconomy:
                 self._economy = Economy(setup, EconomyRecord.from_record(record))
                 self.stored["opening"] = opening
                 self._save()
+            self._built_from = self.stored
         return self._economy
 
     def _spun_up(self, setup):
@@ -208,10 +212,7 @@ class AgentEconomy:
             if before is not None and max(abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
                 break
             before = now
-        money = economy.setup.currency_id
-        record.index_base_prices = national_prices(record)
-        record.memory.price_levels[money] = 1.0
-        record.memory.expected_inflation[money] = 0.0
+        rebase_price_level(economy.setup, record)
         record.memory.year = 0
 
     def _save(self):
@@ -220,7 +221,7 @@ class AgentEconomy:
     # ---- what the seams read ------------------------------------------------------------------
     def answers(self):
         """(prices by good, mean wage per hour by trade, rate), for this year; built once a year."""
-        if self._answers is None:
+        if self._answers is None or self._built_from is not self.stored:
             record = self.economy().record
             wages = {}
             for key, wage in record.memory.wages.items():

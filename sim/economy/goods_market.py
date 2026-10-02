@@ -21,6 +21,7 @@ from typing import List, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
+from .accounts import ROUNDING_SHARE
 from .goods_market_demand import DemandSchedule
 from .goods_market_fills import buyer_fills, seller_fills
 from .goods_market_solve import solve_price
@@ -88,6 +89,10 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     schedule = DemandSchedule(bids)
 
     demand_at_first = schedule.total_at(effective[0])
+    if math.fsum(offer.quantity for offer in offers) <= ROUNDING_SHARE * demand_at_first:
+        # what is on offer is float residue left in a stock, not supply: clearing it would print a price
+        # set by nothing a seller meant to sell
+        return _empty(good, area, currency, held_price, bids)
     if demand_at_first <= 0.0:
         lowest = offers[0].reservation_price
         price = held_price if last_price is not None and lowest <= last_price else lowest

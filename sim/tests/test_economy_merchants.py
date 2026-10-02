@@ -75,6 +75,16 @@ class GapTests(unittest.TestCase):
         self.assertEqual(plan(merchant(), 2.0, 3.5, good="fish").bids, ())
         self.assertEqual(len(plan(merchant(), 2.0, 8.0, good="fish").bids), 1)
 
+    def test_a_merchant_pays_no_more_than_the_trade_breaks_even_at(self):
+        # at its ceiling the gap just covers carriage, interest, spoilage and margin
+        bid = plan(merchant(), 2.0, 4.0, rate=0.05).bids[0]
+        spec = SPECS["salt"]
+        price_there = 4.0
+        net = price_there - bid.maximum_price - merchants.gap_cost_per_unit(
+            spec, bid.maximum_price, price_there, CARRIAGE_PER_UNIT, 0.05)
+        self.assertAlmostEqual(net, 0.0, places=9)
+        self.assertGreater(bid.maximum_price, 2.0)
+
     def test_a_merchant_with_no_price_information_does_not_trade(self):
         carriage, area_map, _a, _b = world()
         self.assertEqual(merchants.orders(merchant(), View({}), carriage, area_map, 100.0, {}, SPECS, 0.0).bids, ())
@@ -116,6 +126,15 @@ class DispatchAndCloseTests(unittest.TestCase):
         self.assertEqual((result.moves[0].tile, result.moves[0].receiver_tile, result.moves[0].quantity), ("a", "b", 10.0))
         self.assertAlmostEqual(result.transfers[0].amount, 10.0 * CARRIAGE_PER_UNIT)
         self.assertEqual(result.transfers[0].payee, merchants.EDGE_CARRIAGE)
+
+    def test_carriage_is_paid_to_whoever_carries_from_the_source_tile(self):
+        carriage, _m, area_a, _b = world()
+        who = merchant()
+        plan(who, 2.0, 5.0)
+        fills = (Fill("m1", "salt", area_a["salt"], "a", 10.0, 2.0, "buy"),)
+        result = merchants.dispatch(who, fills, carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
+                                    carrier_of={"a": "carters of a"}.get)
+        self.assertEqual(result.transfers[0].payee, "carters of a")
 
     def test_goods_it_cannot_pay_to_carry_are_stranded(self):
         carriage, _m, area_a, _b = world()

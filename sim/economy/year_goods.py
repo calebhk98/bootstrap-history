@@ -166,11 +166,14 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
 
 def _unsold_signal(bids, offers):
     """What a market that cleared nothing tells its sellers: the most any buyer would have paid, which
-    is below every seller's ask. None when nobody bid or nobody offered."""
+    is below every seller's ask. None when nobody bid or nobody offered, or when a seller asked less
+    than that (nothing real was on offer)."""
     if not offers:
         return None
     ceilings = [bid.maximum_price for bid in bids if bid.budget > 0.0 and math.isfinite(bid.maximum_price)]
-    return max(ceilings) if ceilings else None
+    if not ceilings or min(offer.reservation_price for offer in offers) <= max(ceilings):
+        return None
+    return max(ceilings)
 
 
 def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_book, ledger) -> None:

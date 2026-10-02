@@ -8,9 +8,9 @@ The year is annual, so a merchant acts on last year's prices. In one year it
                  of the destination's expected market net of what it already holds there. Many merchants
                  chasing one gap overshoot it: that bullwhip is left in.
   2. `dispatch`  after the markets clear, carries what it bought from the source tile to the
-                 destination tile (`DeliveredMove`) and pays the carriage to a carrier, or to
-                 `EDGE_CARRIAGE` until carriers are agents. Goods it cannot pay to carry stay put and
-                 are offered where they are next year.
+                 destination tile (`DeliveredMove`) and pays the carriage to the carrier the caller
+                 names for the source tile, or to `EDGE_CARRIAGE` when it names none. Goods it
+                 cannot pay to carry stay put and are offered where they are next year.
   3. `close_year` moves its price and volume expectations toward what the year showed and pays its
                  owner a share of the profit over its capital base.
 Goods bought one year are sold the next, so carrying costs one year of interest and spoilage.
@@ -31,7 +31,7 @@ from .protocols import AgentOrders, MarketView
 from .tile_costs import CarriageTable
 from .types import AgentId, AreaId, Bid, CurrencyId, Fill, GoodId, GoodSpec, Offer, TileId, Transfer
 
-EDGE_CARRIAGE = "edge:carriage"          # carriage paid until carriers are agents; the caller creates it
+EDGE_CARRIAGE = "edge:carriage"          # carriage with no named carrier; the caller creates it
 KILOGRAMS_PER_TONNE = 1000.0
 
 MERCHANT_MARGIN_SHARE = declare(
@@ -103,7 +103,7 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
     candidates = _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
     bids: List[Bid] = []
     remaining = max(0.0, cash)
-    for _rank, good, source, destination, price_here, outlay, room in candidates:
+    for _rank, good, source, destination, price_here, outlay, room, ceiling in candidates:
         if remaining <= 0.0:
             break
         quantity = min(remaining / outlay, room)
@@ -111,7 +111,7 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
             continue
         merchant.routes[(good, source.anchor_tile)] = (destination.anchor_tile, destination.area_id)
         bids.append(Bid(merchant.agent_id, good, source.area_id, source.anchor_tile, 0.0, quantity,
-                        price_here, MERCHANT_BID_ELASTICITY, quantity * price_here))
+                        price_here, MERCHANT_BID_ELASTICITY, quantity * price_here, maximum_price=ceiling))
         remaining -= quantity * outlay
     return AgentOrders(bids=tuple(bids), offers=tuple(offers))
 
@@ -131,8 +131,8 @@ def _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate) 
 
 
 def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate):
-    """Rows (rank, good, source, destination, price here, outlay per unit, room), one per profitable
-    (good, source area) at its best destination, best net gap per unit of outlay first."""
+    """Rows (rank, good, source, destination, price here, outlay per unit, room, most it pays), one per
+    profitable (good, source area) at its best destination, best net gap per unit of outlay first."""
     rows = []
     for good in sorted(set(specs) & set(area_map.goods())):
         areas = area_map.areas(good)
@@ -166,10 +166,20 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
             if best is None:
                 continue
             net, destination, per_tonne = best
-            outlay = price_here + per_tonne * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE
+            carriage_per_unit = per_tonne * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE
+            outlay = price_here + carriage_per_unit
             rows.append((-net / outlay, good, source, destination, price_here, outlay,
-                         _room(merchant, good, destination, held_stock)))
+                         _room(merchant, good, destination, held_stock),
+                         _break_even_price(specs[good], prices[destination.area_id], carriage_per_unit,
+                                           interest_rate)))
     return sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id))
+
+
+def _break_even_price(spec: GoodSpec, price_there: float, carriage_per_unit: float, interest_rate: float) -> float:
+    """The source price at which the gap just covers carriage, interest, spoilage and margin
+    (gap_cost_per_unit solved for the price here): above it the trade loses money."""
+    kept = price_there * (1.0 - min(1.0, max(0.0, spec.spoilage_per_year))) - carriage_per_unit
+    return max(0.0, kept) / (1.0 + max(0.0, interest_rate) + MERCHANT_MARGIN_SHARE)
 
 
 def _room(merchant, good, destination, held_stock) -> float:
@@ -185,9 +195,10 @@ def _room(merchant, good, destination, held_stock) -> float:
 def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
              specs: Mapping[GoodId, GoodSpec], currency: CurrencyId, cash: float,
              held_stock: Mapping[Tuple[GoodId, TileId], float],
-             carrier: AgentId = EDGE_CARRIAGE) -> Dispatch:
-    """Carry what the merchant bought to its planned destinations, paying carriage from `cash`. A fill
-    is carried only up to what the merchant actually holds on the source tile (settlement may fall short)."""
+             carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE) -> Dispatch:
+    """Carry what the merchant bought to its planned destinations, paying carriage from `cash` to
+    `carrier_of(source tile)` (the edge when it names nobody). A fill is carried only up to what the
+    merchant actually holds on the source tile (settlement may fall short)."""
     moves, transfers, stranded = [], [], []
     remaining = max(0.0, cash)
     bought = sorted((fill for fill in fills if fill.agent == merchant.agent_id and fill.side == "buy"
@@ -208,7 +219,8 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
                                    "carried to market", route[0]))
         fee = affordable * per_unit
         if fee > 0.0:
-            transfers.append(Transfer(merchant.agent_id, carrier, currency, fee, "carriage of %s" % fill.good))
+            transfers.append(Transfer(merchant.agent_id, carrier_of(fill.tile) or EDGE_CARRIAGE, currency, fee,
+                                      "carriage of %s" % fill.good))
             remaining -= fee
     return Dispatch(tuple(moves), tuple(transfers), tuple(stranded))
 

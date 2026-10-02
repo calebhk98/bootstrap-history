@@ -171,6 +171,18 @@ def by_agent(result, side):
     return sums
 
 
+class RoundingDustTests(unittest.TestCase):
+    def test_an_offer_of_rounding_dust_leaves_the_price_where_it_was(self):
+        # a stock left by float residue is no supply: clearing it would print a price no buyer meant
+        result = run([bid(flexible=1000.0)], [offer(quantity=1e-20, reservation=0.5)], last_price=1.0)
+        self.assertEqual(result.quantity, 0.0)
+        self.assertEqual(result.price, 1.0)
+
+    def test_a_small_real_offer_still_trades(self):
+        result = run([bid(flexible=1000.0)], [offer(quantity=1e-3, reservation=0.5)], last_price=1.0)
+        self.assertGreater(result.quantity, 0.0)
+
+
 class MatchesReferenceTests(unittest.TestCase):
     """The optimised clearing must agree with the plain demand sum and bisection it replaced."""
 

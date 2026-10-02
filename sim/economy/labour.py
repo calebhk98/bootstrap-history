@@ -15,10 +15,11 @@ from .types import AreaId, CurrencyId, Fill, LabourBid, LabourOffer, LabourResul
 
 WAGE_ADJUSTMENT_SHARE_PER_YEAR = declare(
     "WAGE_ADJUSTMENT_SHARE_PER_YEAR", 0.3, kind="temporary_heuristic",
-    unit="share of the gap to the clearing wage closed in a year", source=None, confidence="D",
-    why="Contracts, custom and the cost of searching keep a wage from jumping to the market-clearing "
-        "level in one year. Stands in for explicit contract lengths and search friction, which are not "
-        "modelled; the Lengnick and EURACE wage rule has the same free adjustment rate.")
+    unit="share of the gap to the clearing wage closed in a year, falling", source=None, confidence="D",
+    why="Contracts, custom and the cost of searching keep a wage from falling to the market-clearing "
+        "level in one year; a wage rises within the year, since employers short of hands outbid each "
+        "other over the year's many hirings. Stands in for explicit contract lengths and search friction, "
+        "which are not modelled; the Lengnick and EURACE wage rule has the same free adjustment rate.")
 DANGER_PREMIUM_EXPONENT = declare(
     "DANGER_PREMIUM_EXPONENT", 1.0, kind="temporary_heuristic",
     unit="exponent on the yearly fatality risk", source=None, confidence="D",
@@ -120,6 +121,8 @@ def clear(bids: Sequence[LabourBid], offers: Sequence[LabourOffer], trade: Trade
                             [(bid.maximum_wage, bid.hours) for bid in bids])
     if target is None:
         wage = last_wage if last_wage is not None else 0.0
+    elif last_wage is not None and target > last_wage:
+        wage = target
     else:
         wage = sticky_move(last_wage, target, WAGE_ADJUSTMENT_SHARE_PER_YEAR)
     willing = [offer for offer in offers if offer.reservation_wage <= wage]
