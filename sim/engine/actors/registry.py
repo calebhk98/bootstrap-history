@@ -248,9 +248,13 @@ class ActorRegistry:
 		founder_operates = self.world is not None and self.world.is_public(node_id)
 		return count + (1 if founder_operates else 0)
 
+	def _workforces(self) -> Dict[str, Dict[str, float]]:
+		return {actor_id: dict(actor.workforce) for actor_id, actor in self.actors.items()}
+
 	def advance(self, world: Any) -> None:
 		self.world = world
 		first = True
+		before = self._workforces()
 		for actor_id in sorted(self.actors):
 			actor = self.actors[actor_id]
 			world.market_forget(actor_id)
@@ -273,8 +277,10 @@ class ActorRegistry:
 		self.consider_entry(world)
 		self.consider_groups(world)
 		# entry and group formation change staff after the last count; whatever reads before the next
-		# year's first actor (the founder's own turn) sees what is there, as a reloaded game does
-		self.refresh_staff()
+		# year's first actor (the founder's own turn) sees what is there, as a reloaded game does.
+		# A year in which no actor's staff differs from the year's start leaves the tally standing.
+		if self._workforces() != before:
+			self.refresh_staff()
 		self._bans = None
 
 	def consider_entry(self, world: Any) -> List[str]:

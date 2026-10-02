@@ -101,7 +101,10 @@ def _portfolio_run(auto_hire, years=40):
         sim_state.step()
         reopenings += len((set(sim_state.operating) - before) & set(opened))
     free_scholars, free_artisans = sim_state.venture_staff_free()
+    # only a staffing closure is the staffing rule's to undo; creditors' seizures, loss-making
+    # shutdowns and mothballing have their own reopening terms
     stranded = [node_id for node_id in opened if node_id not in sim_state.operating
+                and sim_state.staff_closure_age(node_id) is not None
                 and sim_state.venture_hands(node_id)[0] <= free_scholars + 0.01
                 and sim_state.venture_hands(node_id)[1] <= free_artisans + 0.01]
     return opened, stranded, reopenings

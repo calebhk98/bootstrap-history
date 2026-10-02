@@ -85,7 +85,11 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 		(real_output.py), in this civilisation's money."""
 		sim = self._sim
 		def compute() -> float:
-			return sim.real_output_hours() * sim.money_per_labour_hour() * sim.state.economy.output_factor
+			# TEMPORARY HEURISTIC (CLAUDE.md 4.4): the market's quantities do not yet fall when
+			# people are drawn off to arms, so the share of working people not under arms scales them
+			working = sim.population.working_age
+			producing = max(0.0, working - self.soldiers_under_arms()) / working if working > 0.0 else 1.0
+			return sim.real_output_hours() * producing * sim.money_per_labour_hour() * sim.state.economy.output_factor
 		return self._once("output", compute)
 
 	def state_revenue(self) -> float:
