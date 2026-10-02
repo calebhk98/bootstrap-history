@@ -1,6 +1,6 @@
 # Generic economy growth per completed technology is too strong and too coarse
 
-**Status:** open - roadmap: approved
+**Status:** closed - the index is gone: `Sim.economy`, `economy_index()`, `ECONOMY_INDEX_PER_*_NODE`, `ECONOMY_OUTPUT_SCALING_EXPONENT` and `output_volume_scale()` are deleted; output is the quantity the market clears at the opening's prices (`sim/engine/real_output.py`, pinned by sim/tests/test_real_output.py). What remains is Complaints 369 and 370.
 
 **Source:** playtest findings document, ECON-002. **Type:** Design/balance
 recommendation, already substantially aligned with CLAUDE.md's own stated
@@ -109,7 +109,24 @@ Also reported (final playtests, A and B; `Complaints/reports/final-playtests-tri
 
 Related: 341, 354.
 
-## Remains list: every reader of the index, and of what derives from it
+## What replaced the index, and what was measured
+
+Every reader listed below was moved to the quantity or price it needs:
+- Takings and upkeep of a concern (`concern_takings`, `upkeep`, `venture_real_upkeep`): the concern's own volume, no index. The ceiling on what the market absorbs follows measured output per head (`Sim.real_output_per_head()`), as does the state's funding ask and, through `LABOUR_PAY_SHARE_OF_OUTPUT_GAIN`, the pay scale.
+- Society output (`SimWorld.society_output`): `Sim.real_output_hours()` times the money an hour is worth.
+- Household demand (`market_demand.py`): the population, and the prices of the opening's goods against the opening's, so a cheaper good is wanted in greater quantity. Income is held in labour hours (Complaint 370).
+- Goods categories' re-equilibration speed, the clearing cache signature and the shared-answer stamp no longer read an index.
+- `EconomyState.economy` is now `EconomyState.output_per_head`, written once a year when the market closes; `perf_fingerprint.BASELINE_FIELDS` follows.
+
+Measured, `_fp/measure.py`, seed 1, 150 years from the opening, recommended strategy:
+- Rome: before, the founder's capital reached 7.2e9 and 612 firms by year 250 (index 112); after, capital stays within a few hundred thousand of zero (4.2e3 at year 250), firms 8 to 11, real output per head flat within a few percent. Takeoff vanishes.
+- Han: before, no takeoff either (capital below zero throughout, 7 firms); after, the same with 5 to 6 firms.
+- Why: the takeoff was the index lifting every concern's takings while a concern's costs stood still (Complaint 354). Without the index the founder's takings are flat, and the techniques completed in 150 years cheapen too few of the opening basket's goods for households to buy much more of them. A founder that is ahead of the society, or concerns whose volume follows their improved entries, would restore a return on technology: Complaint 369.
+- CPU per simulated year (Rome): 4.5 s before, 0.3 s after, because the economy no longer explodes; not a like-for-like speed comparison.
+
+Also fixed on the way: the foreign trading partners' freight facts were remembered until the price table changed, so an unbroken game and a reloaded one disagreed by a few millionths on trade flows; they are now remembered for a year.
+
+## The map of readers, as it stood before the change
 
 Measured with `grep -rn "economy\.economy\b\|ECONOMY_OUTPUT_SCALING_EXPONENT\|output_volume_scale\|concern_running_scale\|concern_takings" sim`. The index is `state.economy.economy` (`Sim.economy`), written once a year by `_step_money` (core_step_phases.py) from `economy_index()` (economy.py).
 
@@ -129,4 +146,3 @@ Readers of `output_volume_scale()` (the index to the 0.75):
 
 Tests that set or read it: test_money_units_one_boundary, test_firm_costs_scale, test_market_engine.
 
-Remains, to be updated as the replacement lands: see the status line.

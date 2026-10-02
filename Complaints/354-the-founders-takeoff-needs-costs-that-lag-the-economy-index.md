@@ -1,6 +1,6 @@
 # The founder's takeoff is the economy index raising takings while costs stand still; with pay following output it stalls
 
-**Status:** open - found making what a firm carries follow the economy (Complaints 345, 341). Measure with `_fp`-style drivers: Rome seeds 1-3, recommended strategy, `Sim.state.economy.economy`, `Sim.labour_pay_scale()`, founder capital and `Sim.actors.active_firms()` per decade; `LABOUR_PAY_SHARE_OF_OUTPUT_GAIN` is the knob.
+**Status:** partly - the index is gone (Complaints 101, 112): takings no longer rise with it, so the founder's takeoff is gone with it. Rome and Han, seed 1, 150 years: Rome's founder capital stays near zero (before, 7.2e9 and 612 firms by year 250), Han's had none either. What would give technology a return again is Complaint 369 (a concern's volume per staff follows its improved entries; its takings follow the goods' current price); the aggregate demand for hands against the working population (below) is still unbuilt. `Sim.state.economy.economy` no longer exists: measure with `Sim.real_output_hours()`, `Sim.real_output_per_head()`
 
 `Sim.market_wage_per_hour` is the wage table times `labour_pay_scale()`, one figure for founder, firms, state and households. Findings:
 

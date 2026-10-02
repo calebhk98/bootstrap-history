@@ -1,6 +1,6 @@
 # Domain-specific diffusion should replace some of the generic technology-count multiplier
 
-**Status:** open - roadmap: approved
+**Status:** closed - the index is gone: `Sim.economy`, `economy_index()`, `ECONOMY_INDEX_PER_*_NODE`, `ECONOMY_OUTPUT_SCALING_EXPONENT` and `output_volume_scale()` are deleted; output is the quantity the market clears at the opening's prices (`sim/engine/real_output.py`, pinned by sim/tests/test_real_output.py). What remains is Complaints 369 and 370.
 
 **Source:** playtest findings document, LATE-010. **Type:** Architecture/
 realism recommendation, the direct companion to `Complaints/101` (ECON-002).
