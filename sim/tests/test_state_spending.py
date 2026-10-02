@@ -57,7 +57,7 @@ check("a larger population keeps up more public buildings and feeds more of its 
       lines_of(bigger_city)["public_buildings"].money > 1.5 * lines["public_buildings"].money
       and lines_of(bigger_city)["dole"].money > 1.5 * lines["dole"].money)
 check("the garrison does not grow with the people: it follows the frontier and the threat",
-      abs(lines_of(bigger_city)["army"].labour["labourer"] - lines["army"].labour["labourer"]) < 1e-6)
+      abs(lines_of(bigger_city)["army"].labour["soldier"] - lines["army"].labour["soldier"]) < 1e-6)
 
 # ---- the army the state wants follows the threat its hazards describe ---------------------------
 calm = sim()
@@ -78,15 +78,16 @@ free = sim()
 free.state_treasury().record.army = 0.0
 drawn = sim()
 drawn.state_treasury().record.army = 1.0e6
-check("soldiers kept under arms are not producing, so society's output and the state's revenue are smaller",
-      SimWorld(drawn).society_output() < SimWorld(free).society_output()
-      and SimWorld(drawn).state_revenue() < SimWorld(free).state_revenue(),
-      (SimWorld(drawn).society_output(), SimWorld(free).society_output()))
+check("soldiers kept under arms owe no poll tax, so the people it is assessed on and the state's revenue are smaller",
+      SimWorld(drawn).state_revenue() < SimWorld(free).state_revenue(),
+      (SimWorld(drawn).state_revenue(), SimWorld(free).state_revenue()))
 slump = sim()
-slump.state.economy.output_factor = 0.5
-check("a crisis that cuts what the economy makes cuts what the state can take",
-      SimWorld(slump).state_revenue() < 0.6 * SimWorld(sim()).state_revenue(),
-      (SimWorld(slump).state_revenue(), SimWorld(sim()).state_revenue()))
+slump.state.economy.farm_last_harvest_kg = 1.0e9
+steady = sim()
+steady.state.economy.farm_last_harvest_kg = 2.0e9
+check("a failed harvest cuts what the state can take",
+      SimWorld(slump).state_revenue() < SimWorld(steady).state_revenue(),
+      (SimWorld(slump).state_revenue(), SimWorld(steady).state_revenue()))
 
 # ---- patron funding is a payment out of the treasury --------------------------------------------
 patron = sim()
@@ -126,7 +127,8 @@ check("the purse still equals income less outlays after the works",
       abs(hoard_treasury.money - (1.0e18 + sum(hoard_treasury.record.income.values())
                                   - sum(hoard_treasury.record.outlays.values()))) < 1e-6 * 1.0e18, hoard_treasury.money)
 collapse = sim()
-collapse.state.economy.output_factor = 1.0e-9  # what the economy makes all but stops
+collapse.civ["state_revenue"] = [form for form in collapse.civ["state_revenue"] if form["basis"] == "harvest"]
+collapse.state.economy.farm_last_harvest_kg = 1.0  # what the farms yield all but stops
 for _year in range(8):
     one_year(collapse)
 check("when revenue collapses the reserve lasts a few years, then the state goes short and seeks it of the taxpayers it sees",

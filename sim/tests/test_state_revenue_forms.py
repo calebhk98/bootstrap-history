@@ -45,7 +45,7 @@ coin = game.civ["coin_standard"]
 coin_value = game.home_coin_stock_units() * coin["kg_per_unit"] * game._material_prices()[coin["material"]]
 expected = {
     "land_tax": 0.1 * HARVEST_KG / 1000.0 * wheat_price,
-    "poll_tax": 0.02 * game.population.working_age * labour_year,
+    "poll_tax": 0.02 * (game.population.working_age - world.soldiers_under_arms()) * labour_year,
     "import_duty": 0.025 * 6.0e9,
     "export_duty": 0.05 * 2.0e9,
     "wealth_tax": 0.01 * coin_value,

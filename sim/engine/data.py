@@ -286,6 +286,11 @@ def load_civ(name: Optional[str] = None) -> JSONDict:
         if not isinstance(civ.get(field), (int, float)) or isinstance(civ.get(field), bool):
             raise ValueError("civilization %r must declare a numeric %s"
                              % (civ.get("id", name), field))
+    for form in civ.get("state_revenue", []):
+        if not (isinstance(form.get("form"), str) and isinstance(form.get("basis"), str)
+                and isinstance(form.get("rate"), (int, float)) and form["rate"] > 0):
+            raise ValueError("civilization %r state_revenue form %r needs a name, a basis and a positive rate"
+                             % (civ.get("id", name), form))
     civ.setdefault("values", {})
     for field, default in (("w_military",0.5),("w_labour_saving",0.0),("w_information",0.0),
                  ("w_novelty",0.0),("w_magic_fear",0.4),("w_religious_rigidity",0.3),

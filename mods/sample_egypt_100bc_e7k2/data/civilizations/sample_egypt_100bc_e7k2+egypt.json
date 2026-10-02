@@ -327,6 +327,12 @@
   "year": -100,
   "starting_interest_rate": 0.24,
   "starting_tax_share": 0.15,
+  "state_revenue": [
+    {"form": "grain_rent", "basis": "harvest", "rate": 0.25, "paid_in": "wheat_kg",
+     "_internal": {"source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): Ptolemaic crown land paid a rent in grain, the largest part of the crown's revenue (Rostovtzeff; Manning, The Last Pharaohs); a quarter of the crop is a placeholder for the whole.", "confidence": "D"}},
+    {"form": "import_duty", "basis": "imports_value", "rate": 0.25,
+     "_internal": {"source": "Ptolemaic import duties were high, up to a quarter on some goods (Rostovtzeff, Social and Economic History of the Hellenistic World).", "confidence": "C"}}
+  ],
   "_internal": {
     "starting_interest_rate": {
       "source": "Ptolemaic private loans at two per cent a month (twenty-four a year) are well attested in the papyri and were the customary ceiling.",

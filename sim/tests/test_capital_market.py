@@ -177,6 +177,7 @@ def deficit(army_multiple):
     game.civ["standing_army"] = army_multiple
     need = sum(line.money for line in budget.standing_lines(world))
     game.state_treasury().money = 0.0
+    game.state_treasury().knowledge.add(game.nodes_with_mechanic("state_credit")[0])  # borrowing needs the technology (316)
     return game, need, world.state_revenue()
 
 

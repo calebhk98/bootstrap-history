@@ -46,6 +46,8 @@ check("the state's soldiers are in its workforce under their own trade",
 
 # ---- soldiers under arms are drawn from the unskilled pool ------------------------------------------
 unarmed, armed = with_army(0.0), with_army(0.2)
+for funded in (unarmed, armed):
+    funded.state_treasury().money = 1.0e15  # both states pay every line, so only the army differs
 one_year(unarmed)
 one_year(armed)
 check("with a fifth of the working age under arms, unskilled labour costs more",

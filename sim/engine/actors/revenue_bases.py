@@ -25,8 +25,9 @@ def harvest(world: Any) -> Base:
 
 
 def adult_labour_years(world: Any) -> Base:
-	"""The working age, each worth a year of unskilled labour at the going wage."""
-	people = world.national_people("labourer")
+	"""The working age less the soldiers under arms (who owe no poll tax), each worth a year of unskilled
+	labour at the going wage."""
+	people = max(0.0, world.national_people("labourer") - world.soldiers_under_arms())
 	return Base(people * world.pay_per_person_year("labourer"))
 
 

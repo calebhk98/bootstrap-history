@@ -53,6 +53,11 @@ def run(civ_id, years, seed, out_path=None):
 			"founder_levy": taken - taken_before,
 			"founder_income": game.revenue(),
 			"outlays": {name: amount - outlays_before.get(name, 0.0) for name, amount in record.outlays.items()},
+			"by_form": dict(record.revenue_by_form),
+			"in_kind": dict(record.revenue_in_kind),
+			"debt": max(0.0, -record.money),
+			"soldier_wage": game.labour_market.quote_annual("soldier"),
+			"labourer_wage": game.labour_market.quote_annual("labourer"),
 		})
 		outlays_before = dict(record.outlays)
 		taken_before = taken
@@ -82,6 +87,18 @@ def show(rows):
 			chunk[0]["year"], mean("revenue"), need, unfunded, mean("requisition_rate"),
 			mean("office_rate"), mean("army"), mean("founder_levy"),
 			" ".join("%.3g" % value for value in per_line)))
+	forms = sorted({name for row in rows for name in row.get("by_form", {})})
+	if forms:
+		print("\nrevenue by form (decade means), share taken in kind, debt, soldier wage, unskilled wage")
+		print("%-6s %s %8s %10s %10s %10s" % ("year", " ".join("%14s" % name[:14] for name in forms), "in_kind", "debt", "soldier", "labourer"))
+		for chunk in decades(rows):
+			count = float(len(chunk))
+			total = sum(sum(row["by_form"].values()) for row in chunk) or 1.0
+			kind = sum(sum(row["in_kind"].values()) for row in chunk) / total
+			print("%-6d %s %8.2f %10.3g %10.5g %10.5g" % (
+				chunk[0]["year"], " ".join("%14.4g" % (sum(row["by_form"].get(name, 0.0) for row in chunk) / count) for name in forms),
+				kind, sum(row["debt"] for row in chunk) / count, sum(row["soldier_wage"] for row in chunk) / count,
+				sum(row["labourer_wage"] for row in chunk) / count))
 	fired = sum(1 for row in rows if row["requisition_rate"] + row["office_rate"] > 0.0)
 	ceiling = sum(1 for row in rows if row["requisition_rate"] + row["office_rate"] >= 0.2999)
 	short = sum(1 for row in rows if sum(row["unfunded"].values()) > 0.0)
