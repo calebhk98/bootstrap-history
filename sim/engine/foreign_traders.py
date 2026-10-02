@@ -12,6 +12,7 @@ import math
 
 from sim.world import cargo_cost, freight_cost, merchant_terms, trader_response
 
+from .data import STARTING_KITS
 from .actors.world_capital import SAVING_SHARE_OF_SURPLUS
 from .foreign_payments import OPENING_CARRIERS_PER_ROUTE
 
@@ -88,18 +89,36 @@ class ForeignTradersMixin:
         spoiling = [material for material in self._commodity_materials(commodity) if material in rates]
         return max(spoiling, key=rates.get) if spoiling else None
 
-    def merchant_capital_left(self, civilization_id):
-        """Home money merchants can still tie up in goods this year: their carriers and retained
-        earnings, and what they borrow against those within lenders' room."""
-        facts = self._foreign_economy_facts(civilization_id)
-        route = facts["route"]
-        ledger = self._foreign_ledger(civilization_id)
+    def _fleet_value(self, civilization_id):
+        """Money sunk in a route's carriers."""
+        route = self._foreign_economy_facts(civilization_id)["route"]
         if self._route_lift_years_per_tonne(route) is None:
+            return 0.0
+        return (self.foreign_lift_capacity_tonnes(civilization_id, route)
+                * self._route_capital_per_lift_tonne(route))
+
+    def merchant_class_capital(self):
+        """Money the home merchant class holds for goods in transit and inventory: each merchant the
+        capital of the modest-merchant kit (the engine's authored capital for one real venture, in
+        labourer-years of the labourer's wage), the earnings merchants have kept, less what is sunk
+        in carriers."""
+        merchants = self.national_trade_population("merchant")
+        each = STARTING_KITS["merchant"]["labourer_years"] * self.labour_market.quote_annual("labourer")
+        ledgers = self.state.economy.foreign_ledger
+        kept = sum(ledger["merchant_retained"] for ledger in ledgers.values())
+        sunk = sum(self._fleet_value(civilization_id) for civilization_id in self.foreign_economies())
+        return max(0.0, merchants * each + kept - sunk)
+
+    def merchant_capital_left(self, civilization_id):
+        """Home money merchants can still tie up in goods this year, over every partner: their own
+        capital and what they borrow against it within lenders' room."""
+        if self._route_lift_years_per_tonne(self._foreign_economy_facts(civilization_id)["route"]) is None:
             return float("inf")
-        own = (self.foreign_lift_capacity_tonnes(civilization_id, route)
-               * self._route_capital_per_lift_tonne(route) + ledger["merchant_retained"])
-        capital = merchant_terms.capital_to_finance(own, self.market_credit_room(MERCHANTS_BORROWER))
-        used = ledger["merchant_capital_used"] if ledger["lift_year"] == self.state.scenario.year else 0.0
+        capital = merchant_terms.capital_to_finance(
+            self.merchant_class_capital(), self.market_credit_room(MERCHANTS_BORROWER))
+        year = self.state.scenario.year
+        used = sum(ledger["merchant_capital_used"] for ledger in self.state.economy.foreign_ledger.values()
+                   if ledger["lift_year"] == year)
         return max(0.0, capital - used)
 
     def trader_terms(self, civilization_id, facts, home_price, foreign_price, commodity=None):
