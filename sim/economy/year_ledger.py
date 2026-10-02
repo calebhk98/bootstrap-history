@@ -49,14 +49,28 @@ class YearLedger:
             if fill.side == "buy":
                 self.buy_fills.setdefault(fill.agent, []).append(fill)
 
-    def note_labour(self, result: LabourResult) -> None:
+    def note_labour(self, result: LabourResult, postings: Iterable[object] = ()) -> None:
+        """Hours count as hired and sold in proportion to the wages actually paid: hours an employer
+        could not pay for are not delivered, so the workers keep them. Without postings the fills count in full."""
         self.labour_results.append(result)
+        postings = list(postings)
+        paid_by: Dict[AgentId, float] = {}
+        paid_to: Dict[AgentId, float] = {}
+        for posting in postings:
+            if isinstance(posting, Transfer):
+                paid_by[posting.payer] = paid_by.get(posting.payer, 0.0) + posting.amount
+                paid_to[posting.payee] = paid_to.get(posting.payee, 0.0) + posting.amount
+        settled = bool(postings) and result.wage > 0.0
         for fill in result.fills:
+            quantity = fill.quantity
+            if settled:
+                money = paid_by.get(fill.agent, 0.0) if fill.side == "buy" else paid_to.get(fill.agent, 0.0)
+                quantity = min(quantity, money / result.wage)
             if fill.side == "buy":
                 trades = self.hours_hired.setdefault(fill.agent, {})
-                trades[result.trade] = trades.get(result.trade, 0.0) + fill.quantity
+                trades[result.trade] = trades.get(result.trade, 0.0) + quantity
             else:
-                self.hours_sold[fill.agent] = self.hours_sold.get(fill.agent, 0.0) + fill.quantity
+                self.hours_sold[fill.agent] = self.hours_sold.get(fill.agent, 0.0) + quantity
 
     def note_output(self, agent: AgentId, moves: Iterable[GoodsMove]) -> None:
         for move in moves:
