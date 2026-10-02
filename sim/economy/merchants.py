@@ -58,8 +58,8 @@ MERCHANT_BID_ELASTICITY = declare(
 MERCHANT_PROFIT_PAYOUT_SHARE = declare(
     "MERCHANT_PROFIT_PAYOUT_SHARE", 0.5, kind="temporary_heuristic", unit="share of the year's profit",
     source=None, confidence="D",
-    why="The rest of a merchant's profit is kept as working capital; an owner's consumption "
-        "and reinvestment choices are not yet modelled.")
+    why="The share of a profitable year an owner takes out while trade beats the interest rate; the "
+        "rest becomes working capital. An owner's own consumption and saving choice is not modelled.")
 
 
 @dataclass
@@ -67,7 +67,7 @@ class Merchant:
     agent_id: AgentId
     home_tile: TileId                    # where it keeps its purse; stocks sit on destination tiles
     owner: AgentId                       # who receives its profit
-    capital_base: float                  # capital the owner staked; profit is wealth above it
+    capital_base: float                  # capital staked in trade; profit is wealth above it
     expected_prices: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)
     expected_volumes: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)
     routes: Dict[Tuple[GoodId, TileId], Tuple[TileId, AreaId]] = field(default_factory=dict)   # (good, source tile) -> (destination tile, area)
@@ -228,17 +228,27 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
 def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float],
                volumes: Mapping[Tuple[GoodId, AreaId], float], cash: float,
                held_stock: Mapping[Tuple[GoodId, TileId], float],
-               area_of: Callable[[GoodId, TileId], AreaId], currency: CurrencyId) -> Tuple[Transfer, ...]:
-    """Update expectations from this year's clearing prices and volumes (by (good, area)), then pay the
-    owner its share of wealth (cash plus stock at expected prices) above the capital base."""
+               area_of: Callable[[GoodId, TileId], AreaId], currency: CurrencyId,
+               interest_rate: float) -> Tuple[Transfer, ...]:
+    """Update expectations from this year's clearing prices and volumes (by (good, area)), then settle
+    the year's profit (wealth, cash plus stock at expected prices, above the capital base). While
+    trading earns more on its capital than the interest rate, the owner takes a share and the rest
+    becomes capital; otherwise the owner takes all of it. A loss shrinks the capital."""
     for expectation, observed in ((merchant.expected_prices, prices), (merchant.expected_volumes, volumes)):
         for key, value in sorted(observed.items()):
             old = expectation.get(key)
             expectation[key] = value if old is None else old + MERCHANT_EXPECTATION_SPEED * (value - old)
     stock_value = math.fsum(quantity * merchant.expected_prices.get((good, area_of(good, tile)), 0.0)
                             for (good, tile), quantity in held_stock.items() if quantity > 0.0)
-    profit = cash + stock_value - merchant.capital_base
-    payout = min(max(0.0, cash), MERCHANT_PROFIT_PAYOUT_SHARE * max(0.0, profit))
+    wealth = cash + stock_value
+    profit = wealth - merchant.capital_base
+    if profit <= 0.0:
+        merchant.capital_base = max(0.0, wealth)
+        return ()
+    earns_more = merchant.capital_base > 0.0 and profit / merchant.capital_base > interest_rate
+    payout = min(max(0.0, cash), (MERCHANT_PROFIT_PAYOUT_SHARE if earns_more else 1.0) * profit)
+    if earns_more:
+        merchant.capital_base = wealth - payout
     if payout <= 0.0:
         return ()
     return (Transfer(merchant.agent_id, merchant.owner, currency, payout, "merchant profit"),)

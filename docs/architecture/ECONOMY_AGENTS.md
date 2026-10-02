@@ -34,6 +34,13 @@ demography to read.
 variable cost; a holder of stock at what it expects to get next year less carrying cost and spoilage; a
 seller short of cash for debts or wages below that; a waste product below zero.
 
+**Prices and wages rise fast and fall slowly.** A wage that a shortage of hands pushes up reaches the
+clearing wage within the year, since employers outbid each other over the year's many hirings; idle
+hours pull it down only by a share of the gap a year. The interest rate moves by a share either way,
+and drifts toward lenders' lowest ask when nobody borrows. A market that traded nothing keeps its price
+unless every seller asked more than any buyer would pay; an offer that is only float residue is no
+supply.
+
 **Clearing order follows the recipes.** A good clears after the goods it is made from, so producers
 sell this year what they made from inputs bought this year. Cycles draw their inputs from stock.
 
@@ -48,7 +55,8 @@ stock is derived: what the opening agents want to hold at the seeded prices.
 
 **Space is tiles.** Regions are being deleted. A good's market area is the set of tiles between which
 carriage costs less than a share of its value, so silver trades across a civilisation and grain within
-a tile or a few.
+a tile or a few. Carriage is the carters' pay: it goes as wages to the poorest households of the tile
+the goods leave, until carriers hire hours in the labour market.
 
 **Stock-flow consistency.** Every movement of money or goods has a counterparty. Money and goods enter
 or leave only through named edge accounts (`types.EDGE_*`). Engine postings that do not yet name a

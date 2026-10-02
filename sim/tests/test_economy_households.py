@@ -193,6 +193,25 @@ class GoodsOrderTests(unittest.TestCase):
         self.assertLess((time.perf_counter() - start) / 200, 0.01)
 
 
+class SubstituteCeilingTests(unittest.TestCase):
+    FOOD = households.make_basket({
+        "needs": {"food": {"surplus_budget_share": 1.0, "subsistence_per_capita_per_year": 200.0}},
+        "goods": {"grain": {"satisfies": {"food": 1.0}}, "meat": {"satisfies": {"food": 1.0}}}}, {})
+    SPECS = {"grain": GoodSpec("grain", 1.0, 0.1, 0.0, "food"), "meat": GoodSpec("meat", 1.0, 0.5, 0.0, "food")}
+
+    def ceilings(self):
+        view = View({"grain": 1.0, "meat": 4.0})
+        orders = households.goods_orders(cohort(), view, 1e6, 1e6, self.FOOD, self.SPECS)
+        return {bid.good: bid.maximum_price for bid in orders.bids}
+
+    def test_the_cheapest_way_to_meet_a_need_is_bought_up_to_the_next_cheapest(self):
+        self.assertAlmostEqual(self.ceilings()["grain"], 4.0)
+
+    def test_a_dearer_good_bought_for_variety_can_still_rise_in_price(self):
+        # a cap at its own current price would let a shortage only ration it, never raise its price
+        self.assertGreater(self.ceilings()["meat"], 4.0)
+
+
 class CloseTests(unittest.TestCase):
     def test_non_durables_are_consumed_and_durables_kept(self):
         view = View(stocks={("household:t:0", "plough", "t"): 3.0})

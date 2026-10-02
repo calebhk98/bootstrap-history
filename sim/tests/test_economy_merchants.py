@@ -148,14 +148,32 @@ class DispatchAndCloseTests(unittest.TestCase):
     def test_close_year_moves_expectations_and_pays_the_owner_half_the_profit(self):
         who = merchant(prices={("salt", "x"): 2.0})
         transfers = merchants.close_year(who, {("salt", "x"): 4.0}, {("salt", "x"): 50.0}, 140.0, {},
-                                         lambda good, tile: "x", "coin")
+                                         lambda good, tile: "x", "coin", 0.05)
         self.assertAlmostEqual(who.expected_prices[("salt", "x")], 2.0 + merchants.MERCHANT_EXPECTATION_SPEED * 2.0)
         self.assertEqual(who.expected_volumes[("salt", "x")], 50.0)
         self.assertAlmostEqual(transfers[0].amount, 0.5 * 40.0)
         self.assertEqual(transfers[0].payee, "owner")
 
     def test_no_payout_without_profit(self):
-        self.assertEqual(merchants.close_year(merchant(), {}, {}, 90.0, {}, lambda good, tile: "x", "coin"), ())
+        self.assertEqual(merchants.close_year(merchant(), {}, {}, 90.0, {}, lambda good, tile: "x", "coin", 0.05), ())
+
+    def test_profit_above_the_interest_rate_is_partly_kept_as_capital(self):
+        who = merchant()
+        transfers = merchants.close_year(who, {}, {}, 140.0, {}, lambda good, tile: "x", "coin", 0.05)
+        self.assertAlmostEqual(transfers[0].amount, merchants.MERCHANT_PROFIT_PAYOUT_SHARE * 40.0)
+        self.assertAlmostEqual(who.capital_base, 140.0 - transfers[0].amount)
+
+    def test_profit_below_the_interest_rate_is_all_paid_out(self):
+        # trading earns less than lending would: the owner takes the money out rather than stake more
+        who = merchant()
+        transfers = merchants.close_year(who, {}, {}, 103.0, {}, lambda good, tile: "x", "coin", 0.05)
+        self.assertAlmostEqual(transfers[0].amount, 3.0)
+        self.assertAlmostEqual(who.capital_base, 100.0)
+
+    def test_a_loss_shrinks_the_capital(self):
+        who = merchant()
+        merchants.close_year(who, {}, {}, 90.0, {}, lambda good, tile: "x", "coin", 0.05)
+        self.assertAlmostEqual(who.capital_base, 90.0)
 
 
 def mint(agent, amount):
@@ -211,7 +229,7 @@ def run_loop(count, years, capital=500.0):
         for who in crowd:
             held = {("salt", "b"): book.stock(who.agent_id, "salt", "b")}
             merchants.close_year(who, prices, volumes, book.balance(who.agent_id, "coin"), held,
-                                 lambda good, tile: area_b, "coin")
+                                 lambda good, tile: area_b, "coin", 0.0)
     return history
 
 

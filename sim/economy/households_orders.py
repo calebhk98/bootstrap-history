@@ -88,9 +88,11 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
         need_id = need.spec.need_id
         cost_per_unit = sorted((price / effect, good) for good, price, effect, _share in need.goods)
         for good, price, effect, share in need.goods:
-            # nobody pays more per need unit for a good than the cheapest other good of the need costs
+            # the cheapest way to meet a need is bought up to the cost of the next cheapest: past that,
+            # people switch. A dearer good is bought for variety; its own elasticity and the budget bound it
             others = [cost for cost, other in cost_per_unit if other != good]
-            ceiling = others[0] * effect if others else math.inf
+            parity = others[0] * effect if others else math.inf
+            ceiling = parity if parity >= price else math.inf
             per_unit = need.price_index * share / price
             floor_quantity = floors[need_id] * per_unit
             flexible_quantity = max(0.0, totals[need_id] - floors[need_id]) * per_unit
@@ -98,7 +100,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                                    view.stock(cohort.agent_id, good, cohort.tile), specs)
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 rows.append((need.spec.subsistence_per_person > 0.0, good, price,
-                             floor_quantity * ratio, flexible_quantity * ratio, max(ceiling, price)))
+                             floor_quantity * ratio, flexible_quantity * ratio, ceiling))
     floor_spend = math.fsum(row[2] * row[3] for row in rows)
     flexible_spend = math.fsum(row[2] * row[4] for row in rows)
     floor_wanted = floor_spend * (1.0 + FLOOR_BUDGET_PRICE_MARGIN)

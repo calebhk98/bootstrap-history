@@ -100,7 +100,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         volumes[(result.good, result.area)] = result.quantity
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
-                                         _held_stock(record.book, merchant.agent_id), area_map.area_of, money)
+                                         _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
+                                         view.interest_rate(money))
         record.book.transfer_many(transfers)
         for transfer in transfers:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount

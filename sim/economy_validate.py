@@ -9,7 +9,8 @@ Distributions and directions, never dated events (CLAUDE.md 4.1, 4.2):
   grain/metal  yearly price volatility of wheat against the median of the metals
   wage     an hour of unskilled work in kg of wheat, median over the run
   harvest  correlation between the harvest weather and the change in the wheat price (expect below 0)
-  hunger   share of years with any household short of its food floor
+  hungry   share of people short of their food floor, mean and worst year
+  money    yearly change in the money stock, mean over the run (log)
   rate     median interest rate; residual: largest money and goods conservation residual
 """
 import argparse
@@ -46,11 +47,14 @@ def play(civ_id, seed, years):
         agent = game.economy.agent
         prices, wages, rate = agent.answers()
         record = agent.economy().record
-        hungry = any(cohort.unmet_floor_by_need.get("food", 0.0) > 0.0 for cohort in record.cohorts.values())
+        people = sum(cohort.people for cohort in record.cohorts.values())
+        hungry = sum(cohort.people for cohort in record.cohorts.values()
+                     if cohort.unmet_floor_by_need.get("food", 0.0) > 0.0) / people if people > 0.0 else 0.0
+        money = record.book.money_supply(agent.economy().setup.currency_id)
         traded = {key.split("|", 1)[0] for key, volume in record.volumes.items() if volume > 0.0}
         residual = record.book.check_conservation(1e-9)
         rows.append(dict(weather=weather, prices=dict(prices), wage=wages.get("labourer"), rate=rate,
-                         hungry=hungry, traded=traded,
+                         hungry=hungry, traded=traded, money=money,
                          residual=max([abs(value) for value in list(residual.money.values()) + list(residual.goods.values())] or [0.0])))
     return rows
 
@@ -79,7 +83,10 @@ def summarise(rows):
                 metal_volatility=statistics.median(metals) if metals else float("nan"),
                 wage_kg_wheat_per_hour=statistics.median(wages) if wages else float("nan"),
                 harvest_correlation=_correlation(weather, wheat_change),
-                hungry_years=sum(row["hungry"] for row in rows) / len(rows),
+                hungry_mean=statistics.fmean(row["hungry"] for row in rows),
+                hungry_worst=max(row["hungry"] for row in rows),
+                money_drift=(math.log(rows[-1]["money"] / rows[0]["money"]) / (len(rows) - 1)
+                             if len(rows) > 1 and rows[0]["money"] > 0.0 and rows[-1]["money"] > 0.0 else float("nan")),
                 rate=statistics.median(row["rate"] or 0.0 for row in rows),
                 residual=max(row["residual"] for row in rows))
 
@@ -105,7 +112,7 @@ def main(argv=None):
     civs = [civ for civ in arguments.civs.split(",") if civ] or sorted(
         name[:-5] for name in os.listdir(data.CIVDIR) if name.endswith(".json") and not name.startswith("_"))
     columns = ("static", "traded", "grain_volatility", "metal_volatility", "wage_kg_wheat_per_hour",
-               "harvest_correlation", "hungry_years", "rate", "residual")
+               "harvest_correlation", "hungry_mean", "hungry_worst", "money_drift", "rate", "residual")
     print("%-18s %4s %6s  " % ("civilisation", "seed", "secs") + "  ".join("%10s" % column[:10] for column in columns))
     for civ in civs:
         for seed in [int(seed) for seed in arguments.seeds.split(",") if seed]:
