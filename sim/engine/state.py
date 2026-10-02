@@ -354,6 +354,8 @@ class EconomyState:
 	output_factor: float = 1.0
 	# real output per person over the opening's, measured when the market closes (real_output.py)
 	output_per_head: float = 1.0
+	# material -> its price in labour hours the first year households were offered it, which values it in real output
+	introduction_prices: Dict[str, float] = field(default_factory=dict)
 	money_real: float = 1.0
 	_material_stock_ledger: Optional[Dict[str, float]] = None
 	_material_stock_opening: Optional[Dict[str, Any]] = None

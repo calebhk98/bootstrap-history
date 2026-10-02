@@ -194,5 +194,7 @@ class MarketClearingMixin:
             entry["price_ratio"] = outcome.price_ratio
             entry["society_sales_tonnes"] = outcome.society_sales_tonnes
             entry["traded_tonnes"] = outcome.quantity_traded_tonnes
+            wanted = outcome.quantity_traded_tonnes + outcome.unmet_demand_tonnes
+            entry["cleared_share"] = outcome.quantity_traded_tonnes / wanted if wanted > 0.0 else 1.0
         self.foreign_fleet_year_end()
         self._close_real_output()

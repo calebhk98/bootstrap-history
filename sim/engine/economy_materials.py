@@ -268,37 +268,27 @@ class MaterialSupplyMixin:
         return cached
 
     def _material_prices(self):
-        """Calculator-backed prices for the technologies currently held.
+        """Calculator-backed prices for the techniques some producer runs (techniques_in_use.py): a
+        technology that is held but run by no one changes no cost, so no price.
 
-        The cache belongs to this simulation and is keyed by completed
-        technologies because completing a production gate can make another
-        recipe solvable.  ``data.calculated_goods_prices`` still has a
-        documented legacy fallback for materials the calculator cannot yet
-        resolve; importantly, this subsystem no longer opens or interprets
-        that legacy file independently.
-        """
-        projects = self.state.projects
-        stamp = (getattr(projects, "_done_ver", 0), len(projects.done))
+        The cache belongs to this simulation and is keyed by the techniques in use because a producer
+        starting to run a production gate can make another recipe solvable.  ``data.calculated_goods_prices``
+        still has a documented legacy fallback for materials the calculator cannot yet resolve."""
+        in_use = self.techniques_in_use()
         cached = getattr(self, "_material_prices_cache", None)
-        # the same done set object at the same version and size: no need to
-        # rebuild and compare the frozenset on every lookup
-        if cached is not None and cached[2] == stamp and cached[3] is projects.done:
+        if cached is not None and cached[0] == in_use:
             return cached[1]
-        held = frozenset(projects.done)
-        if cached is None or cached[0] != held:
-            from .data import calculated_goods_prices
-            prices = calculated_goods_prices(
-                held, civilization_id=self.civ.get("id"), civilization=self.civ,
-                money_per_labour_hour=self.money_per_labour_hour())
-        else:
-            prices = cached[1]
-        self._material_prices_cache = (held, prices, stamp, projects.done)
+        from .data import calculated_goods_prices
+        prices = calculated_goods_prices(
+            in_use, civilization_id=self.civ.get("id"), civilization=self.civ,
+            money_per_labour_hour=self.money_per_labour_hour())
+        self._material_prices_cache = (in_use, prices)
         return prices
 
     def material_price_basis(self, material):
-        """"solved" (a technique this society holds), "gated" (a technique it does not hold),
-        "mature" (nothing in reach makes it) or None (not priced by the solver)."""
-        held = frozenset(self.state.projects.done)
+        """"solved" (a technique a producer here runs), "gated" (one nobody runs yet), "mature" (nothing
+        in reach makes it) or None (not priced by the solver)."""
+        held = self.techniques_in_use()
         cached = getattr(self, "_material_basis_cache", None)
         if cached is None or cached[0] != held:
             from .data import goods_provenance
@@ -307,10 +297,10 @@ class MaterialSupplyMixin:
         return cached[1].get(material)
 
     def _done_memo(self, name, key, compute):
-        """`compute()` remembered per (name, key) while the done set is
-        unchanged; for answers that depend only on what is built."""
+        """`compute()` remembered per (name, key) while the done set and the techniques in use are
+        unchanged; for answers that depend only on what is built and run."""
         projects = self.state.projects
-        stamp = (getattr(projects, "_done_ver", 0), len(projects.done))
+        stamp = (self.price_epoch(), len(projects.done))
         memo = getattr(self, "_done_memo_store", None)
         if memo is None or memo[0] != stamp or memo[1] is not projects.done:
             memo = self._done_memo_store = (stamp, projects.done, {})

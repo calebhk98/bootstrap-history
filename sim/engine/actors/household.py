@@ -131,6 +131,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"market_pressure": "economy",
 	"output_factor": "economy",
 	"output_per_head": "economy",
+	"introduction_prices": "economy",
 	"money_real": "economy",
 	"_material_stock_ledger": "economy",
 	"farm_hectares": "economy",

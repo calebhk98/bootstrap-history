@@ -225,7 +225,8 @@ class SimWorld(BudgetView, GroupView, DisclosureView, CapitalView, CapacityView)
 
 	def concern_output_tonnes(self, node_id: str, material: str, opened_year: int, staffed: float) -> float:
 		return supply.concern_output_tonnes(self.nodes[node_id], node_id, material,
-											self.ramp(opened_year), staffed)
+											self.ramp(opened_year), staffed
+											* self._sim.concern_volume_ratio(node_id))
 
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
 		return self.nodes[node_id]["up"] * self._sim.price_index * capacity
