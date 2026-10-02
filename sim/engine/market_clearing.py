@@ -2,11 +2,11 @@
 
 Each commodity has a book entry: the society's producing capacity, stock held
 over, and the capacity it started with. The year's posted price ratio (spot
-price over the long-run cost the solver gives) comes from `sim/world/market.py`,
-clearing that capacity, the actors' output and stock against household demand
+price over the incumbents' cost, incumbent_prices.py) comes from `sim/world/market.py`,
+clearing that capacity, the stock, the producers' offers (each at its own cost, from
+the entry it runs; producer_costs.py) and the actors' output against household demand
 (population and income, see market_demand.py). Quotes and purchase bills
-multiply their long-run price by this ratio; the long-run price itself is
-untouched and stays the anchor.
+multiply the incumbents' price by this ratio.
 
 Everyone who buys or sells goes through `Sim.goods_market` (goods_market_api.py),
 which writes the year's flows by party. The founder's own workings enter as a
