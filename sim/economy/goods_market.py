@@ -101,6 +101,8 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
         levels.append((reservation, running))
     price = solve_price(levels, schedule.total_at, demand_at_first,
                         schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID <= len(bids) else None)
+    if schedule.price_capped:
+        price = _at_a_ceiling(price, schedule, levels, effective[0])
 
     eligible = [(reservation, offer) for reservation, offer in zip(effective, offers)
                 if reservation <= price]
@@ -115,6 +117,25 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     fills.extend(seller_fills(seller_quantities, good, area, price))
     unmet = math.fsum([max(0.0, bid.floor_quantity - quantity) for bid, quantity in zip(bids, served)])
     return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, tuple(fills))
+
+
+def _at_a_ceiling(price: float, schedule, levels, lowest: float) -> float:
+    """Where demand falls off a buyer's ceiling, the crossing can sit just above it with nothing
+    wanted: then the market clears at that ceiling, with buyers rationed to the supply there."""
+    if schedule.total_at(price) >= _supply_at(levels, price):
+        return price
+    for ceiling in sorted({maximum for maximum in schedule.maximums if maximum < math.inf}, reverse=True):
+        if lowest <= ceiling <= price and schedule.total_at(ceiling) >= _supply_at(levels, ceiling):
+            return ceiling
+    return price
+
+
+def _supply_at(levels, price: float) -> float:
+    supply = 0.0
+    for reservation, running in levels:
+        if reservation <= price:
+            supply = running
+    return supply
 
 
 def _ration_buyers(bids: Sequence[Bid], price: float, available: float) -> List[Tuple[Bid, float]]:

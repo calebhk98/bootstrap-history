@@ -10,7 +10,8 @@ import os
 from sim.constants import declare
 from sim.economy.economy import Economy
 from sim.economy.protocols import AgentOrders, YearInputs
-from sim.economy.types import EDGE_LEGACY, GoodsMove, Offer, Transfer
+from sim.economy.foreign import external_orders
+from sim.economy.types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
 from sim.economy.record import EconomyRecord
 from sim.economy.year_close import national_prices
 
@@ -30,6 +31,12 @@ SPIN_UP_MAXIMUM_YEARS = declare(
     unit="years", source=None, confidence="D",
     why="A bound on the hidden years, so a economy that keeps moving still starts in a known time.")
 SPIN_UP_WATCHED_GOODS = 12
+FOREIGN_TRADE_SHARE = declare(
+    "FOREIGN_TRADE_SHARE", 0.1, kind="temporary_heuristic",
+    unit="share of the home market a good's imports or exports can reach in a year", source=None, confidence="D",
+    why="How much can cross a border in a year is set by ships, carts and merchants on the routes; the "
+        "engine's carrier fleet (foreign_payments, OPENING_CARRIERS_PER_ROUTE) is not yet the economy's. "
+        "A share of the home market stands in so trade is bounded.")
 FOUNDER_AGENT = "founder"
 
 
@@ -82,6 +89,7 @@ class AgentEconomy:
     def run_year(self):
         economy = self.economy()
         orders = self._founder_orders()
+        orders.update(self._external_orders())
         outcome = economy.step(self._inputs(orders))
         self._settle_founder()
         self._answers = None
@@ -115,6 +123,43 @@ class AgentEconomy:
                 offers.append(Offer(FOUNDER_AGENT, material, area_map.area_of(material, tile), tile, quantity, cost))
         book.move_many(moves)
         return {FOUNDER_AGENT: AgentOrders(offers=tuple(offers))} if offers else {}
+
+    # ---- foreign partners trade at the port -----------------------------------------------------
+    def _external_orders(self):
+        """Imports offered at the cheapest partner's landed price and exports bid for at the partner's
+        own price less carriage, on the port tile (sim/economy/foreign.py). How much can cross is a
+        share of the home market, standing in for the carriers' capacity (FOREIGN_TRADE_SHARE)."""
+        sim, economy = self._sim, self._economy
+        partners = sim.foreign_economies()
+        if not partners:
+            return {}
+        from .project_materials import tonnes_per_unit
+        offers_api = sim.goods_market
+        routes = {partner: offers_api._route_from(partner) for partner in partners}
+        volumes = {}
+        for key, volume in economy.record.volumes.items():
+            good = key.split("|", 1)[0]
+            volumes[good] = volumes.get(good, 0.0) + volume
+        landed, export_prices, available, wanted = {}, {}, {}, {}
+        for good in economy.area_map.goods():
+            market = max(volumes.get(good, 0.0), economy.record.opening_basket.get(good, 0.0))
+            if market <= 0.0:
+                continue
+            for partner in partners:
+                route = routes[partner]
+                price = offers_api.landed_price(good, partner, route)
+                if price is not None and price > 0.0 and price < landed.get(good, float("inf")):
+                    landed[good] = price
+                facts = sim._foreign_economy_facts(partner)
+                partner_price = facts["prices_in_home_money"].get(good)
+                if route is not None and partner_price:
+                    net = (partner_price * offers_api.partner_price_level(partner)
+                           - route.cost_per_tonne * tonnes_per_unit(good))
+                    if net > export_prices.get(good, 0.0):
+                        export_prices[good] = net
+            available[good] = wanted[good] = market * FOREIGN_TRADE_SHARE
+        return {EDGE_EXTERNAL: external_orders(landed, export_prices, available, wanted,
+                                               economy.area_map.area_of, economy.setup.port_tile)}
 
     def _settle_founder(self):
         """What the founder's goods fetched goes back to the engine; what did not sell goes back too."""

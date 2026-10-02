@@ -51,7 +51,7 @@ def external_orders(landed_prices: Mapping[GoodId, float], export_prices: Mappin
         wanted = quantities_wanted.get(good, 0.0)
         if net_price > 0.0 and wanted > 0.0:
             bids.append(Bid(EDGE_EXTERNAL, good, area_of(good, port_tile), port_tile, 0.0, wanted,
-                            net_price, EXTERNAL_BID_ELASTICITY, float("inf")))
+                            net_price, EXTERNAL_BID_ELASTICITY, float("inf"), maximum_price=net_price))
     return AgentOrders(bids=tuple(bids), offers=offers)
 
 
