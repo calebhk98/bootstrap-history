@@ -7,7 +7,7 @@ from sim.economy.market_memory import MarketMemory
 from sim.economy.types import Bid, Offer
 from sim.economy.accounts import Book
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
-from sim.economy.year_close import held_only, national_prices
+from sim.economy.year_close import held_only, learned_prices, national_prices
 from sim.economy.year_goods import _unsold_signal
 
 
@@ -44,6 +44,16 @@ class NationalPriceTests(unittest.TestCase):
         memory.note_volume("tin|a", 0.0)
         self.assertGreater(memory.volume_weights["tin|a"], 0.0)
         self.assertLess(memory.volume_weights["tin|a"], 100.0)
+
+
+class LearnedPriceTests(unittest.TestCase):
+    def test_a_market_that_sold_nothing_teaches_the_most_a_buyer_would_pay(self):
+        # the clearing result of a dry market carries last year's price; the memory carries the signal
+        clearing = types.SimpleNamespace(good="tin", area="a", price=20.0, quantity=0.0)
+        memory = MarketMemory(prices={"tin|a": 3.0})
+        prices, volumes = learned_prices([clearing], memory)
+        self.assertEqual(prices[("tin", "a")], 3.0)
+        self.assertEqual(volumes[("tin", "a")], 0.0)
 
 
 class ConsumptionTests(unittest.TestCase):

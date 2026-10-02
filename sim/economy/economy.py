@@ -5,12 +5,12 @@
 """
 import math
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, Optional
 
 from . import credit, labour, producers, unit_cost
 from .market_areas import AreaMap
 from .market_memory import YearView
-from .households_own import own_production, own_production_options
+from .households_own import hours_for_own_plan, own_production, own_production_options, withhold_hours
 from .opening import open_economy
 from .protocols import YearInputs
 from .record import EconomyRecord
@@ -73,9 +73,10 @@ class Economy:
         labour_bids = [bid for plan in plans.values() for bid in plan.labour_bids]
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
-        offers = labour_offers(setup, record, view, outside_option_by_tile(setup, record, view))
+        offers, kept = withhold_hours(labour_offers(setup, record, view, outside_option_by_tile(setup, record, view)),
+                                      self._shortfall_hours())
         clear_labour(setup, record, labour_bids, offers, ledger)
-        self._grow_own(offers, ledger, inputs.harvest_factor)
+        self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         self._service_loans(view.year)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book)
@@ -132,16 +133,33 @@ class Economy:
             if producer is not None and producer.yield_factor != factor:
                 self.record.producers[producer_id] = type(producer)(**{**producer.__dict__, "yield_factor": factor})
 
-    def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0) -> None:
-        """Hours nobody hired go into the household's own plot (households_own.py)."""
-        setup, record = self.setup, self.record
+    def _own_plot_options(self):
         if self._own_options is None:
+            setup = self.setup
             self._own_options = own_production_options(setup.recipes, setup.land_per_run, setup.basket)
+        return self._own_options
+
+    def _shortfall_hours(self) -> Dict[str, float]:
+        """Hours each cohort keeps back for its own-plot plan, at the tile's usual fertility (it plants
+        before it knows the harvest)."""
+        hours = {}
+        for cohort_id, cohort in sorted(self.record.cohorts.items()):
+            tile = self.setup.tiles.get(cohort.tile)
+            hours[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(),
+                                                        tile.fertility if tile else 0.0)
+        return hours
+
+    def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0,
+                  kept: Optional[Dict[str, float]] = None) -> None:
+        """Hours kept back and hours nobody hired go into the household's own plot (households_own.py)."""
+        setup, record = self.setup, self.record
+        self._own_plot_options()
+        kept = kept or {}
         offered: Dict[str, float] = {}
         for offer in offers:
             offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
         for cohort_id, cohort in sorted(record.cohorts.items()):
-            idle = offered.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
+            idle = offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
             tile = setup.tiles.get(cohort.tile)
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,
                                                  (tile.fertility if tile else 0.0) * harvest_factor,

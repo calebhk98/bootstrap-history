@@ -136,6 +136,19 @@ class DispatchAndCloseTests(unittest.TestCase):
                                     carrier_of={"a": "carters of a"}.get)
         self.assertEqual(result.transfers[0].payee, "carters of a")
 
+    def test_stock_worth_more_elsewhere_is_carried_there_not_sold_here(self):
+        # stock sitting where it fetches less than elsewhere after carriage is moved, not dumped locally
+        who = merchant()
+        orders = plan(who, 2.0, 5.0, cash=0.0, held={("salt", "a"): 10.0})
+        self.assertEqual([offer.tile for offer in orders.offers], [])
+        carriage, _m, _a, _b = world()
+        result = merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0})
+        self.assertEqual((result.moves[0].tile, result.moves[0].receiver_tile, result.moves[0].quantity), ("a", "b", 10.0))
+
+    def test_stock_best_sold_where_it_is_is_offered_there(self):
+        orders = plan(merchant(), 5.0, 2.0, cash=0.0, held={("salt", "a"): 10.0})
+        self.assertEqual([offer.tile for offer in orders.offers], ["a"])
+
     def test_goods_it_cannot_pay_to_carry_are_stranded(self):
         carriage, _m, area_a, _b = world()
         who = merchant()

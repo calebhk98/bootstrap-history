@@ -45,6 +45,7 @@ class Cohort:
     last_year_income: float = 0.0
     last_year_spending: float = 0.0
     unmet_floor_by_need: Dict[str, float] = field(default_factory=dict)   # need units short of the floor
+    own_plan_by_need: Dict[str, float] = field(default_factory=dict)      # need units it grows with hours kept back
 
 
 def cohort_id(tile: TileId, income_class: int) -> AgentId:

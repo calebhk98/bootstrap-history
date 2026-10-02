@@ -7,8 +7,8 @@ The year is annual, so a merchant acts on last year's prices. In one year it
                  spoilage of the held stock and a margin. Quantities are limited by cash and by a share
                  of the destination's expected market net of what it already holds there. Many merchants
                  chasing one gap overshoot it: that bullwhip is left in.
-  2. `dispatch`  after the markets clear, carries what it bought from the source tile to the
-                 destination tile (`DeliveredMove`) and pays the carriage to the carrier the caller
+  2. `dispatch`  after the markets clear, carries what it holds on each route's source tile (what
+                 it bought, and older stock worth more elsewhere) to the destination (`DeliveredMove`) and pays the carriage to the carrier the caller
                  names for the source tile, or to `EDGE_CARRIAGE` when it names none. Goods it
                  cannot pay to carry stay put and are offered where they are next year.
   3. `close_year` moves its price and volume expectations toward what the year showed and pays its
@@ -99,8 +99,14 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
            interest_rate: float) -> AgentOrders:
     """The merchant's offers and bids for the year. Sets `merchant.routes`."""
     merchant.routes = {}
-    offers = _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate)
     candidates = _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
+    # stock already held where a route out pays is carried along it, not sold where it sits
+    for _rank, good, source, destination, *_rest in candidates:
+        for (held_good, tile), quantity in sorted(held_stock.items()):
+            if held_good == good and quantity > 0.0 and tile in source.tiles and tile != destination.anchor_tile:
+                merchant.routes[(good, tile)] = (destination.anchor_tile, destination.area_id)
+    offers = [offer for offer in _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate)
+              if (offer.good, offer.tile) not in merchant.routes]
     bids: List[Bid] = []
     remaining = max(0.0, cash)
     for _rank, good, source, destination, price_here, outlay, room, ceiling in candidates:
@@ -196,31 +202,27 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
              specs: Mapping[GoodId, GoodSpec], currency: CurrencyId, cash: float,
              held_stock: Mapping[Tuple[GoodId, TileId], float],
              carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE) -> Dispatch:
-    """Carry what the merchant bought to its planned destinations, paying carriage from `cash` to
-    `carrier_of(source tile)` (the edge when it names nobody). A fill is carried only up to what the
-    merchant actually holds on the source tile (settlement may fall short)."""
+    """Carry what the merchant holds on each route's source tile (this year's purchases and older stock)
+    to the route's destination, paying carriage from `cash` to `carrier_of(source tile)` (the edge when
+    it names nobody). `fills` are not needed: what settled is what is held."""
     moves, transfers, stranded = [], [], []
     remaining = max(0.0, cash)
-    bought = sorted((fill for fill in fills if fill.agent == merchant.agent_id and fill.side == "buy"
-                     and fill.quantity > 0.0), key=lambda fill: (fill.good, fill.tile))
-    for fill in bought:
-        route = merchant.routes.get((fill.good, fill.tile))
-        if route is None or route[0] == fill.tile:
+    for (good, tile), route in sorted(merchant.routes.items()):
+        if route[0] == tile:
             continue
-        per_unit = (carriage.cost_per_tonne(fill.tile, route[0]) * specs[fill.good].unit_mass_kg
-                    / KILOGRAMS_PER_TONNE)
-        quantity = min(fill.quantity, held_stock.get((fill.good, fill.tile), 0.0))
+        per_unit = carriage.cost_per_tonne(tile, route[0]) * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE
+        quantity = held_stock.get((good, tile), 0.0)
         affordable = quantity if per_unit <= 0.0 else min(quantity, remaining / per_unit)
         if affordable < quantity:
-            stranded.append((fill.good, fill.tile, quantity - affordable))
+            stranded.append((good, tile, quantity - affordable))
         if affordable <= 0.0:
             continue
-        moves.append(DeliveredMove(merchant.agent_id, merchant.agent_id, fill.good, fill.tile, affordable,
+        moves.append(DeliveredMove(merchant.agent_id, merchant.agent_id, good, tile, affordable,
                                    "carried to market", route[0]))
         fee = affordable * per_unit
         if fee > 0.0:
-            transfers.append(Transfer(merchant.agent_id, carrier_of(fill.tile) or EDGE_CARRIAGE, currency, fee,
-                                      "carriage of %s" % fill.good))
+            transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
+                                      "carriage of %s" % good))
             remaining -= fee
     return Dispatch(tuple(moves), tuple(transfers), tuple(stranded))
 

@@ -93,11 +93,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
             record.loan_requests.append(closed.loan_request)
             record.expansion_runs[producer_id] = closed.expansion_runs
         record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
-    prices = {}
-    volumes = {}
-    for result in ledger.clearings:
-        prices[(result.good, result.area)] = result.price
-        volumes[(result.good, result.area)] = result.quantity
+    prices, volumes = learned_prices(ledger.clearings, record.memory)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
@@ -116,6 +112,17 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         record.book.move_many(held_only(moves, record.book))
         record.cohorts[cohort_id] = closed
     record.property_income = property_income
+
+
+def learned_prices(clearings, memory):
+    """(prices, volumes) by (good, area) that traders learn from the year: the price the market now
+    remembers, which for a market that sold nothing is what buyers would have paid."""
+    prices, volumes = {}, {}
+    for result in clearings:
+        key = (result.good, result.area)
+        prices[key] = memory.prices.get(market_key(result.good, result.area), result.price)
+        volumes[key] = result.quantity
+    return prices, volumes
 
 
 def held_only(moves, book):

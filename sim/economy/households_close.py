@@ -9,6 +9,7 @@ from typing import Dict, List, Mapping, Tuple
 from . import currency
 from .households_basket import Basket
 from .households_cohort import Cohort, renewed
+from .households_own import next_own_plan
 from .protocols import MarketView
 from .types import EDGE_CONSUMPTION, GoodId, GoodsMove, GoodSpec
 
@@ -56,4 +57,5 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
         target = currency.cash_balance_target(spent or income_received, view.interest_rate(money), expected)
     return renewed(cohort, expected_inflation=expected, last_price_level=level, cash_target=target,
                    last_year_income=income_received, last_year_spending=spent,
-                   unmet_floor_by_need=unmet), moves
+                   unmet_floor_by_need=unmet,
+                   own_plan_by_need=next_own_plan(cohort.own_plan_by_need, unmet)), moves
