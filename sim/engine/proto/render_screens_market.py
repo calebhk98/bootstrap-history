@@ -12,6 +12,17 @@ def render_market(out):
         lines.append("  %-14s %5s of %s/yr quoted   competing: %s"
                      % (row["category"], _pct(row["share_of_quoted_earned"]),
                         _fmt_num(row["quoted_per_year"]), ", ".join(row["concerns"])))
+    demand = out.get("demand") or []
+    if demand:
+        lines += ["", "DEMAND BY GOODS CATEGORY  (sale price and quantity against the day you first sold; "
+                      "NEW = what one more concern would earn of its quoted figure)",
+                  "  %-14s %6s %9s %9s %6s" % ("CATEGORY", "YOURS", "PRICE", "QUANTITY", "NEW")]
+        for row in demand:
+            lines.append("  %-14s %6d %9s %9s %6s"
+                         % (row["category"], row["concerns_of_yours"],
+                            _pct(row["sale_price_vs_opening"]) if row["sale_price_vs_opening"] is not None else "-",
+                            _pct(row["quantity_vs_opening"]) if row["quantity_vs_opening"] is not None else "-",
+                            _pct(row["new_concern_earns_share"])))
     materials = out.get("materials") or {}
     rows = materials.get("rows") or []
     lines += ["", "MATERIAL PRICES  (%s-%s of %s; own = you supply it)"
