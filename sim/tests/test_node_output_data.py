@@ -16,11 +16,14 @@ from sim.world.labour_market import production_data
 # entries add less than their staff cost at solved prices, so a declared output would only
 # derive zero revenue (their entries state no labour and no plant), and Solvay soda, whose product is priced
 # at the dearer incumbent route so its derived payback falls under the floor. Complaints/329.
+# Hopping and pyrethrum gate only a planting-stock nursery line (rhizome, crowns): the stock is grown
+# for the venture's own plantings and held by it, the land is the bound, and no staff or plant is stated.
 STILL_UNBOUNDED = {
     "analytical_chemistry", "chm_caustic_soda", "chm_glycerol", "chm_polyethylene", "chm_superphosphate",
     "gunpowder", "mirror_amalgam", "chm_solvay_process",
     "electrolysis_industrial", "in2_claude_cycle_air_liquefaction",
     "in2_linde_cycle_expansion_engine", "in2_ultracentrifuge", "med_opium_mandrake",
+    "ag2_hopping", "ag2_pyrethrum",
     "met_froth_flotation", "pwr_coal_seam", "pwr_nuclear_fission", "pwr_peat",
 }
 

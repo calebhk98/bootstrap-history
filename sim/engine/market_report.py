@@ -46,7 +46,7 @@ def goods_demand(sim):
         mine = sum(1 for node_id in sim.state.projects.operating
                    if sim.nodes[node_id].get("cat") == category)
         ratios = sim._goods_category_ratios(category) if mine else None
-        rows.append({"category": category, "concerns_of_yours": mine,
+        rows.append({"category": sim.fog_scrub(category), "concerns_of_yours": mine,
                      "sale_price_vs_opening": round(ratios[0], 3) if ratios else None,
                      "quantity_vs_opening": round(ratios[1], 3) if ratios else None,
                      "new_concern_earns_share":
