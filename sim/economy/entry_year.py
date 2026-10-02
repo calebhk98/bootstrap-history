@@ -7,7 +7,7 @@ import math
 from dataclasses import replace
 from typing import Dict, Tuple
 
-from . import households, unit_cost
+from . import ownership, unit_cost
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
                     producers_to_close, restake)
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
@@ -36,7 +36,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         # each producer stands for the tile's workshops of one recipe: newcomers join its capacity
         producer = record.producers.get(producer_id)
         if producer is None:
-            owner = _richest_cohort(record, plan.tile)
+            owner = ownership.owner_cohort(record, plan.tile)
             if owner is None:
                 continue
             producer = Producer(agent_id=producer_id, owner=owner, recipe_id=plan.recipe_id, tile=plan.tile,
@@ -105,13 +105,6 @@ def close_idle_producers(setup, record) -> int:
             record.book.move_many(moves)
         del record.producers[producer_id]
     return len(closing)
-
-
-def _richest_cohort(record, tile):
-    cohorts = [cohort for cohort in record.cohorts.values() if cohort.tile == tile]
-    if not cohorts:
-        return None
-    return households.cohort_id(tile, max(cohort.income_class for cohort in cohorts))
 
 
 def _spare_output(setup, record, view) -> Dict[Tuple[str, str], float]:
