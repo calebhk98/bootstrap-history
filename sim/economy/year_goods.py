@@ -19,6 +19,9 @@ from .year_ledger import YearLedger
 
 OrderBook = Dict[Tuple[str, str], Tuple[List[Bid], List[Offer]]]
 MINT_PRIORITY = 9          # the mint is served after every other buyer at the same price
+# A good sold only at a token price would otherwise be remembered at a thousandth of last year's price
+# every year until it underflows; nothing is remembered below this share of its opening price.
+PRICE_MEMORY_FLOOR_SHARE = 1e-9
 
 
 def add_orders(book: OrderBook, orders: AgentOrders) -> None:
@@ -36,11 +39,11 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         priced = priced_by_tile.get(cohort.tile)
         if priced is None:
-            priced = priced_by_tile[cohort.tile] = households.need_prices(setup.basket, view, cohort.tile)
+            priced = priced_by_tile[cohort.tile] = households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
         orders = households.goods_orders(cohort, view, record.book.balance(cohort.agent_id, money), income,
-                                         setup.basket, setup.specs, priced)
-        add_orders(order_book, _less_what_it_grew(orders, cohort, setup.basket, ledger.grown_units.get(cohort.agent_id)))
+                                         setup.basket_for(cohort.tile), setup.specs, priced)
+        add_orders(order_book, _less_what_it_grew(orders, cohort, setup.basket_for(cohort.tile), ledger.grown_units.get(cohort.agent_id)))
         funds.extend(orders.funds_offers)
     return funds
 
@@ -156,7 +159,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             ledger.note_clearing(result)
             signal = result.price if result.quantity > 0.0 else _unsold_signal(bids, offers)
             if signal is not None and signal > 0.0:
-                record.memory.prices[key] = signal
+                floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
+                record.memory.prices[key] = max(signal, floor)
             record.volumes[key] = result.quantity
 
 

@@ -26,12 +26,21 @@ class EconomyPort:
     @property
     def agent(self):
         """The agent economy when this game runs on it and it has opened; else None."""
-        if not self._sim.state.economy.agent_economy.get("on"):
+        if not self._sim.state.economy.agent_economy.get("on") or not self._has_territory():
             return None
         if self._agent is None:
             from .economy_port_year import AgentEconomy
             self._agent = AgentEconomy(self._sim)
         return self._agent
+
+    def _has_territory(self):
+        """A civilisation that holds no tiles has no markets to run; it stays on the engine's economy."""
+        homes = tuple(self._sim.civ.get("home_regions") or ())
+        cached = self.__dict__.get("_territory")
+        if cached is None or cached[0] != homes:
+            from .economy_port_setup import civilisation_tiles
+            cached = self.__dict__["_territory"] = (homes, bool(civilisation_tiles(self._sim.civ)[0]))
+        return cached[1]
 
     def _answering_agent(self):
         """The agent economy, opened, when it should answer; None while off or while it opens (the

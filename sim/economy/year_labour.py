@@ -4,10 +4,13 @@
 Workers move between trades on their tile toward unfilled hours, a share of the idle a year, so the
 workforce follows the wages with a lag (training is not yet a delay here).
 """
+import dataclasses
 import math
 from typing import Dict, List, Sequence, Tuple
 
 from sim.constants import declare
+
+from sim.world.wages import CAREER_YEARS
 
 from . import households, labour, settlement
 from .market_memory import market_key
@@ -28,7 +31,7 @@ def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
     """Money a person needs a year for the floors of every need, at last year's prices on each tile."""
     costs = {}
     for tile in sorted({cohort.tile for cohort in record.cohorts.values()}):
-        costs[tile] = households.subsistence_cost_per_person(households.need_prices(setup.basket, view, tile))
+        costs[tile] = households.subsistence_cost_per_person(households.need_prices(setup.basket_for(tile), view, tile))
     return costs
 
 
@@ -57,7 +60,19 @@ def labour_offers(setup, record, view, subsistence_by_tile) -> List[LabourOffer]
         workers = {trade: count * share for trade, count in record.workforce.get(cohort.tile, {}).items()}
         offers.extend(households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0),
                                                setup.working_hours_per_year, danger))
-    return offers
+    rate = view.interest_rate(setup.currency_id)
+    premiums = {trade: trade_premium(setup, trade, rate) for trade in {offer.trade for offer in offers}}
+    return [dataclasses.replace(offer, reservation_wage=offer.reservation_wage * (1.0 + premiums[offer.trade]))
+            if premiums[offer.trade] > 0.0 else offer for offer in offers]
+
+
+def trade_premium(setup, trade, rate) -> float:
+    """What a trade's training years add to the pay a worker asks, as a share: the years of income
+    given up to learn it, repaid over a working life at the going rate (labour.training_premium)."""
+    spec = setup.trades.get(trade)
+    if spec is None or spec.training_years <= 0.0:
+        return 0.0
+    return labour.training_premium(spec.training_years, rate, CAREER_YEARS)
 
 
 def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[LabourOffer],

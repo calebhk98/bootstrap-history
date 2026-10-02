@@ -4,6 +4,7 @@ economy_port.py, the only engine modules that import `sim.economy`.
 The tree's knowledge stays here: which production entries the society can run is decided by the
 nodes it holds; the economy only receives the recipes.
 """
+import dataclasses
 import json
 import os
 
@@ -60,6 +61,24 @@ def opening_values(sim):
     }
 
 
+def baskets_by_tile(basket, need_data, geography, tile_ids):
+    """The household basket on each tile, with the floors its climate sets (sim/world/climate_needs.py)
+    for every need whose data names one in `subsistence_from_climate`."""
+    from sim.world import climate_needs
+    climate_field = {need_id: spec.get("subsistence_from_climate")
+                     for need_id, spec in need_data.get("needs", {}).items() if spec.get("subsistence_from_climate")}
+    if not climate_field:
+        return {}
+    tiles = geography["land_tiles"]["tiles"]
+    baskets = {}
+    for tile in tile_ids:
+        floors = climate_needs.floors_for_tile(tiles[tile])
+        needs = tuple(dataclasses.replace(need, subsistence_per_person=float(floors[climate_field[need.need_id]]))
+                      if need.need_id in climate_field else need for need in basket.needs)
+        baskets[tile] = dataclasses.replace(basket, needs=needs)
+    return baskets
+
+
 def build_setup(sim, opening=None):
     """The economy's setup from the opening values (`opening_values(sim)` when none are given)."""
     opening = opening or opening_values(sim)
@@ -101,4 +120,5 @@ def build_setup(sim, opening=None):
         opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
-                      for recipe_id in recipes if production[recipe_id].get("land_hectare_years")})
+                      for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
+        basket_by_tile=baskets_by_tile(basket, need_data, geography, tile_ids))

@@ -94,9 +94,10 @@ def _final_demand(setup, record, view) -> Dict[TileId, Dict[GoodId, float]]:
     final: Dict[TileId, Dict[GoodId, float]] = {}
     priced_by_tile = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        priced = priced_by_tile.setdefault(cohort.tile, households.need_prices(setup.basket, view, cohort.tile))
+        priced = priced_by_tile.setdefault(cohort.tile, households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile))
         income = cohort.last_year_income
-        orders = households.goods_orders(cohort, view, income, income, setup.basket, setup.specs, priced)
+        orders = households.goods_orders(cohort, view, income, income, setup.basket_for(cohort.tile), setup.specs,
+                                         priced)
         demand = final.setdefault(cohort.tile, {})
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)

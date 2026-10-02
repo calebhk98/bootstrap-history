@@ -851,8 +851,10 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
 
     def _farm_year_weather_seed(self, year, region=None):
         """A deterministic seed for one year's harvest weather draw, a pure
-        function of this civilisation's id, an optional region, and the
-        calendar year - NOT one long-lived `random.Random` advanced
+        function of this civilisation's id, an optional region, the
+        calendar year and the game's weather salt (drawn once from the
+        game's dice and kept in the save, so each seed has its own weather
+        history: Complaint 384) - NOT one long-lived `random.Random` advanced
         sequentially year over year.
 
         WHY THIS STAYS A PURE FUNCTION OF (CIVILISATION ID, REGION, YEAR)
@@ -891,8 +893,11 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         region_component = 0 if region is None else sum(
             (index + 1) * ord(character) for index, character
             in enumerate(str(region)))
+        scenario = self.state.scenario
+        if not scenario.weather_salt:
+            scenario.weather_salt = self.rng.getrandbits(30) + 1   # the game's dice, so each seed has its own weather
         return (civ_component * 1000003 + region_component * 7919
-                + int(year) * 97) % (2 ** 32)
+                + int(year) * 97 + scenario.weather_salt * 104729) % (2 ** 32)
 
     _WeatherCell = collections.namedtuple(
         "_WeatherCell", ("cell_id", "lat", "lon", "weight"))

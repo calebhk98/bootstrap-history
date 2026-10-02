@@ -142,7 +142,8 @@ class Economy:
             idle = offered.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
             tile = setup.tiles.get(cohort.tile)
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,
-                                                 (tile.fertility if tile else 0.0) * harvest_factor, setup.basket)
+                                                 (tile.fertility if tile else 0.0) * harvest_factor,
+                                                 setup.basket_for(cohort.tile))
             if moves:
                 record.book.move_many(moves)
                 ledger.grown[cohort_id] = grown

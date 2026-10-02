@@ -55,6 +55,11 @@ class EconomySetup:
     unskilled_trade: TradeId = "labourer"
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
+    basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
+
+    def basket_for(self, tile: TileId):
+        """The needs of people living on a tile: the common basket with that tile's floors."""
+        return self.basket_by_tile.get(tile, self.basket)
 
     @property
     def currency_id(self) -> str:

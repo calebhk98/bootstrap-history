@@ -14,6 +14,7 @@ from sim.economy.foreign import external_orders
 from sim.economy.types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
 from sim.economy.record import EconomyRecord
 from sim.economy.year_close import national_prices
+from sim.economy.year_labour import trade_premium
 
 from . import solve_cache
 from .economy_port_setup import build_setup, opening_values
@@ -237,7 +238,16 @@ class AgentEconomy:
         return None
 
     def wage_per_hour(self, trade):
-        return self.answers()[1].get(trade)
+        """The trade's wage in its labour markets; a trade no producer hires (soldiers, scribes) is paid
+        what its training adds to the unskilled wage, so every wage stands on the same market."""
+        wages = self.answers()[1]
+        if trade in wages:
+            return wages[trade]
+        setup = self._economy.setup
+        unskilled = wages.get(setup.unskilled_trade)
+        if unskilled is None:
+            return None
+        return unskilled * (1.0 + trade_premium(setup, trade, self.rate() or 0.0))
 
     def rate(self):
         return self.answers()[2]

@@ -18,11 +18,10 @@ Option = Tuple[float, str, GoodId, float]      # (hours per need unit, recipe id
 
 def own_production_options(recipes: Mapping[str, Recipe], land_per_run: Mapping[str, float],
                            basket: Basket) -> Dict[str, List[Option]]:
-    """For each need with a floor, the land-only recipes whose output serves it, fewest hours first."""
+    """For each need, the land-only recipes whose output serves it, fewest hours first. Only needs with a
+    floor where the cohort lives are grown (own_production reads the cohort's own floors)."""
     options: Dict[str, List[Option]] = {}
     for need in basket.needs:
-        if need.subsistence_per_person <= 0.0:
-            continue
         rows = []
         for recipe_id, recipe in sorted(recipes.items()):
             hours = math.fsum(recipe.labour_hours.values())
