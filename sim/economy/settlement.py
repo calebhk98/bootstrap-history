@@ -1,21 +1,18 @@
 """Turn a market's clearing result into postings on the book.
 
-Fills are aggregate per agent. Every buyer is matched with every seller in proportion to their
-quantities, so each pays each seller its share and each seller's goods go to each buyer in the same
-shares. When a payer cannot cover what it owes, or a seller no longer holds what it sold, the
-affected pairs settle for the part that can be met: the undelivered quantity stays with the seller
+Fills are aggregate per agent. Buyers and sellers are walked in order and matched greedily, so each
+buyer pays the sellers its quantity falls on and each seller's goods go to those buyers. When a payer
+cannot cover what it owes, or a seller no longer holds what it sold, the affected pairs settle for the part that can be met: the undelivered quantity stays with the seller
 and the unpaid money stays with the payer, and the gap is returned as a `Shortfall`. A negative
 clearing price (a waste someone is paid to take) reverses who pays.
 """
 from dataclasses import dataclass, field
+from operator import attrgetter
 from typing import Dict, List, Sequence, Tuple
 
 from .accounts import Book, DeliveredMove
+from .settlement_limits import CANNOT_DELIVER, CANNOT_PAY, limit_by_purse, limit_by_stock, pair_fills
 from .types import (EDGE_LEGACY, AgentId, ClearingResult, CurrencyId, Fill, LabourResult, Transfer, is_edge)
-
-CANNOT_PAY = "cannot_pay"
-CANNOT_DELIVER = "cannot_deliver"
-
 
 @dataclass(frozen=True)
 class Shortfall:
@@ -59,94 +56,46 @@ def book_legacy(book: Book, agent: AgentId, currency: CurrencyId, amount: float,
 
 def _settle(book: Book, fills: Sequence[Fill], price: float, currency: CurrencyId, item: str,
             purpose: str, delivers_goods: bool) -> Settlement:
-    buys = [fill for fill in fills if fill.side == "buy" and fill.quantity > 0.0]
-    sells = [fill for fill in fills if fill.side == "sell" and fill.quantity > 0.0]
+    order = attrgetter("agent", "tile")
+    buys = sorted((fill for fill in fills if fill.side == "buy" and fill.quantity > 0.0), key=order)
+    sells = sorted((fill for fill in fills if fill.side == "sell" and fill.quantity > 0.0), key=order)
     settlement = Settlement()
-    total_bought = sum(fill.quantity for fill in buys)
-    total_sold = sum(fill.quantity for fill in sells)
-    matched = min(total_bought, total_sold)
-    if matched <= 0.0:
+    buyer_indices, seller_indices, amounts = pair_fills(buys, sells)
+    if not amounts:
         return settlement
-    quantity = {}
-    for buy_index, buy in enumerate(buys):
-        buy_share = buy.quantity / total_bought
-        for sell_index, sell in enumerate(sells):
-            quantity[(buy_index, sell_index)] = buy_share * (sell.quantity / total_sold) * matched
     unsettled: Dict[Tuple[AgentId, str], float] = {}
-    if delivers_goods:
-        _limit_by_stock(book, item, sells, buys, quantity, unsettled)
-    payer_of = (lambda buy, sell: buy.agent) if price >= 0.0 else (lambda buy, sell: sell.agent)
-    payee_of = (lambda buy, sell: sell.agent) if price >= 0.0 else (lambda buy, sell: buy.agent)
-    unpaid = _limit_by_purse(book, currency, buys, sells, quantity, abs(price), payer_of, unsettled)
-    transfers, moves = [], []
-    remaining_cash = {agent: book.balance(agent, currency) for agent in {payer_of(b, s) for b in buys for s in sells}}
     remaining_stock = {(sell.agent, sell.tile): book.stock(sell.agent, item, sell.tile) for sell in sells}
-    for (buy_index, sell_index), amount in sorted(quantity.items()):
-        buy, sell = buys[buy_index], sells[sell_index]
+    if delivers_goods:
+        limit_by_stock(remaining_stock, sells, seller_indices, amounts, unsettled)
+    buyers = [buys[index].agent for index in buyer_indices]
+    sellers = [sells[index].agent for index in seller_indices]
+    payers, payees = (buyers, sellers) if price >= 0.0 else (sellers, buyers)
+    unit_price = abs(price)
+    remaining_cash = {payer: book.balance(payer, currency) for payer in set(payers)}
+    unpaid = limit_by_purse(remaining_cash, payers, amounts, unit_price, unsettled)
+    transfers, moves = [], []
+    edge_payers = {payer for payer in remaining_cash if is_edge(payer)}
+    edge_sellers = {(sell.agent, sell.tile) for sell in sells if is_edge(sell.agent)}
+    for buy_index, sell_index, amount, payer, payee in zip(buyer_indices, seller_indices, amounts, payers, payees):
         if amount <= 0.0:
             continue
+        buy, sell = buys[buy_index], sells[sell_index]
         if delivers_goods:
             key = (sell.agent, sell.tile)
-            if not is_edge(sell.agent):
+            if key not in edge_sellers:
                 amount = min(amount, remaining_stock[key])
                 remaining_stock[key] -= amount
             moves.append(DeliveredMove(sell.agent, buy.agent, item, sell.tile, amount, purpose, buy.tile))
-        payer = payer_of(buy, sell)
-        money = amount * abs(price)
-        if not is_edge(payer):
+        money = amount * unit_price
+        if payer not in edge_payers:
             money = min(money, remaining_cash[payer])
             remaining_cash[payer] -= money
         if money > 0.0:
-            transfers.append(Transfer(payer, payee_of(buy, sell), currency, money, purpose))
+            transfers.append(Transfer(payer, payee, currency, money, purpose))
     book.post(transfers, moves)
     settlement.postings = transfers + moves
     settlement.shortfalls.extend(_shortfalls(item, unsettled, unpaid))
     return settlement
-
-
-def _limit_by_stock(book, good, sells, buys, quantity, unsettled) -> None:
-    """Scale each seller's pairs down to what it holds on its tile."""
-    held = {}
-    for sell_index, sell in enumerate(sells):
-        key = (sell.agent, sell.tile)
-        if key not in held:
-            held[key] = book.stock(sell.agent, good, sell.tile)
-    indices_by_key: Dict[Tuple[AgentId, str], List[int]] = {}
-    for sell_index, sell in enumerate(sells):
-        indices_by_key.setdefault((sell.agent, sell.tile), []).append(sell_index)
-    for key, indices in sorted(indices_by_key.items()):
-        if is_edge(key[0]):
-            continue
-        pairs = [(buy_index, sell_index) for sell_index in indices for buy_index in range(len(buys))]
-        wanted = sum(quantity[pair] for pair in pairs)
-        if wanted > held[key]:
-            scale = max(held[key], 0.0) / wanted
-            for pair in pairs:
-                quantity[pair] *= scale
-            unsettled[(key[0], CANNOT_DELIVER)] = unsettled.get((key[0], CANNOT_DELIVER), 0.0) + wanted * (1.0 - scale)
-
-
-def _limit_by_purse(book, currency, buys, sells, quantity, unit_price, payer_of, unsettled):
-    """Scale each payer's pairs down to what it can pay; returns the money left unpaid per payer."""
-    pairs_by_payer: Dict[AgentId, List[Tuple[int, int]]] = {}
-    for buy_index, buy in enumerate(buys):
-        for sell_index, sell in enumerate(sells):
-            pairs_by_payer.setdefault(payer_of(buy, sell), []).append((buy_index, sell_index))
-    unpaid: Dict[AgentId, float] = {}
-    for payer, pairs in sorted(pairs_by_payer.items()):
-        if is_edge(payer):
-            continue
-        owed = sum(quantity[pair] for pair in pairs) * unit_price
-        balance = book.balance(payer, currency)
-        if owed > balance:
-            scale = max(balance, 0.0) / owed
-            lost = 0.0
-            for pair in pairs:
-                lost += quantity[pair] * (1.0 - scale)
-                quantity[pair] *= scale
-            unsettled[(payer, CANNOT_PAY)] = unsettled.get((payer, CANNOT_PAY), 0.0) + lost
-            unpaid[payer] = owed - max(balance, 0.0)
-    return unpaid
 
 
 def _shortfalls(item: str, unsettled: Dict[Tuple[AgentId, str], float], unpaid: Dict[AgentId, float]) -> List[Shortfall]:
