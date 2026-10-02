@@ -11,8 +11,12 @@ clear supply against household demand). Real output is
 A technique raises it only by lowering the price of a good its production entries make, which
 raises what households buy of it (market_demand.py) and what the market clears.
 
-TEMPORARY HEURISTIC (CLAUDE.md 4.4): a good households were not offered at the opening has no
-opening price, so it adds nothing here until the basket is chained year to year.
+A good households were not offered at the opening has no opening price. Once it is offered and the
+market sells it, it counts at the price it was first offered at (`economy.introduction_prices`), in the
+quantity households want of it times the share of that demand the market cleared.
+
+TEMPORARY HEURISTIC (CLAUDE.md 4.4): a new good counts at its introduction price, standing for a chained
+basket (re-based each year, quantity index linked), which would also credit what it saves.
 """
 from sim.engine import market_demand
 
@@ -62,6 +66,11 @@ class RealOutputMixin:
                 ratios[commodity] = self.traded_ratio(commodity)
             if ratios[commodity] is not None:
                 lines.append((material, units * ratios[commodity], basket["prices"][material]))
+        introduced = self.state.economy.introduction_prices
+        for material, units in self.household_new_goods_units().items():
+            entry = self._market_entry(self._material_tag(material)[0])
+            if entry is not None and material in introduced:
+                lines.append((material, units * entry.get("cleared_share", 1.0), introduced[material]))
         return lines
 
     def real_output_hours(self):
@@ -80,6 +89,10 @@ class RealOutputMixin:
 
     def _close_real_output(self):
         """Measure the year's real output per head once the market has closed."""
+        per_hour = self.money_per_labour_hour()
+        prices = self.goods_market.household_prices()
+        for material in self.household_new_goods_units():
+            self.state.economy.introduction_prices.setdefault(material, prices[material] / per_hour)
         opening = self.opening_output_hours()
         people = float(self.population.total) / self._opening_population()
         if opening > 0.0 and people > 0.0:

@@ -26,6 +26,11 @@ def complete(game, node_id):
     game._done_changed()
 
 
+def run(game, node_id):
+    """A producer runs the node's techniques: only then do they reach a price."""
+    game.state.projects.operating.add(node_id)
+
+
 def close_years(game, years):
     for _year in range(years):
         game._step_market()
@@ -66,6 +71,9 @@ try:
     sold_before = game.state.economy.market_book[GOOD]["traded_tonnes"]
     output_before = game.real_output_hours()
     complete(game, plain)
+    check("a technique that is held but run by no producer changes no price",
+          game.goods_market.household_prices()[GOOD] == price_before)
+    run(game, plain)
     price_after = game.goods_market.household_prices()[GOOD]
     check("a technique that halves a good's labour lowers that good's price",
           price_after < 0.75 * price_before, (price_before, price_after))

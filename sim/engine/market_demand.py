@@ -18,14 +18,16 @@ import os
 from sim.constants import declare
 from sim.world import demand, need_demand
 
+from . import goods_market_offers
+
 MEAN_INCOME_HOURS_PER_CAPITA = declare(
     "MEAN_INCOME_HOURS_PER_CAPITA", 550.0, kind="temporary_heuristic",
     unit="labour-hours/person/year at the opening economy", source=None,
     confidence="D",
     why="Household income scale, the same figure the price solver's demand "
         "anchors use (sim/joint_allocation.py); income then moves with the "
-        "economy index. A labour market that reports what households earn "
-        "would replace both.")
+        "wage the labour market pays (household_income_hours_per_capita). Returns to land and capital "
+        "are not yet in it.")
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _MODEL_CACHE = {}
@@ -59,24 +61,56 @@ class MarketDemandMixin:
     def _opening_population(self):
         return float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
 
-    def household_demand_ratios(self):
-        """{commodity: demand now over demand at the opening}, from population and today's prices
-        against the opening basket (real_output.py); recomputed when the population moves by a
-        tenth of a percent or the price table changes."""
+    def household_income_hours_per_capita(self):
+        """Labour hours a person earns a year: the opening's income, carried by what an hour of the
+        unskilled trade pays now against the opening (the labour market's scarcity of hands and the
+        share of output gain it passes on). Prices here are the solver's own, so cost of living and
+        the price level are left out of the wage. Returns to land and capital are not yet in it."""
+        # TEMPORARY HEURISTIC: every household earns the mean; the spread and the returns are not modelled.
+        return MEAN_INCOME_HOURS_PER_CAPITA * self.labour_market.household_wage_ratio()
+
+    def household_real_income_ratio(self):
+        """What a person's income buys of the opening basket now over what it bought at the opening:
+        income in hours over the opening's, over the basket's cost at today's prices against its cost then."""
+        basket = self.base_basket()
         prices = self.goods_market.household_prices()
-        key = round(float(self.population.total) / self._opening_population(), 3)
+        per_hour = self.money_per_labour_hour()
+        opening_cost = now_cost = 0.0
+        for material, units in basket["units"].items():
+            if prices.get(material, 0.0) > 0.0:
+                opening_cost += units * basket["prices"][material]
+                now_cost += units * prices[material] / per_hour
+        if opening_cost <= 0.0 or now_cost <= 0.0:
+            return 1.0
+        return self.household_income_hours_per_capita() / MEAN_INCOME_HOURS_PER_CAPITA * opening_cost / now_cost
+
+    def household_demand_ratios(self):
+        """{commodity: demand now over demand at the opening}, from population, income and today's
+        prices against the opening basket (real_output.py); recomputed when the population or the wage
+        moves by a tenth of a percent or the price table changes."""
+        return self._household_demand_now()[0]
+
+    def household_new_goods_units(self):
+        """{material: units a year households want} of goods offered now that the opening did not offer."""
+        return self._household_demand_now()[1]
+
+    def _household_demand_now(self):
+        prices = self.goods_market.household_prices()
+        key = (round(float(self.population.total) / self._opening_population(), 3),
+               round(self.household_income_hours_per_capita(), 3))
         cache = getattr(self.household, "_household_demand_cache", None)
         if cache is not None and cache[0] == key and cache[1] is prices:
-            return cache[2]
+            return cache[2], cache[3]
         # computed from the rounded key, so the answer depends on the key and not on when it was last computed
         basket = self.base_basket()
         per_hour = self.money_per_labour_hour()
-        # only goods households were offered at the opening: a good that appears later has no
-        # opening price to value it at, and one only a partner offered is not the home market's
-        prices_in_hours = {material: prices[material] / per_hour for material in basket["prices"]
-                           if prices.get(material, 0.0) > 0.0}
-        now = household_demand_by_material(
-            prices_in_hours, key * self._opening_population(), MEAN_INCOME_HOURS_PER_CAPITA)
+        # the opening's goods and any the home society now makes, so a need a new good serves can turn to
+        # it; a good only a partner offers is not the home market's
+        seller_at_home = goods_market_offers.HOME_SELLER
+        prices_in_hours = {material: price / per_hour for material, price in prices.items()
+                           if price > 0.0 and (material in basket["prices"]
+                                               or self.goods_market.offered_by(material) == seller_at_home)}
+        now = household_demand_by_material(prices_in_hours, key[0] * self._opening_population(), key[1])
         opening_by_commodity, now_by_commodity = {}, {}
         for material, units in basket["units"].items():
             commodity = basket["commodity"][material]
@@ -84,8 +118,10 @@ class MarketDemandMixin:
             now_by_commodity[commodity] = now_by_commodity.get(commodity, 0.0) + now.get(material, 0.0)
         ratios = {commodity: now_by_commodity[commodity] / total
                   for commodity, total in sorted(opening_by_commodity.items()) if total > 0.0}
-        self.household._household_demand_cache = (key, prices, ratios)
-        return ratios
+        new_units = {material: wanted for material, wanted in sorted(now.items())
+                     if wanted > 0.0 and material not in basket["units"]}
+        self.household._household_demand_cache = (key, prices, ratios, new_units)
+        return ratios, new_units
 
     def economy_size_ratio(self):
         """Population over the opening's: what demand follows for a commodity the household model

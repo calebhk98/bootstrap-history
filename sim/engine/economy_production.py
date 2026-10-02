@@ -392,14 +392,19 @@ class ProductionMixin:
 
     def node_output_market_factor(self, node):
         """This year's market over long-run prices for what an output-derived node sells and buys; one otherwise."""
-        if not node.get("_output_per_year"):
+        baskets = self.concern_baskets_now(node["id"])
+        if baskets is None:
             return 1.0
-        return node_revenue_market.market_factor(node, self._material_prices(), self.market_price_ratio)
+        return node_revenue_market.market_factor(
+            {"_output_per_year": baskets.outputs, "_purchases_per_year": baskets.purchases},
+            self._material_prices(), self.market_price_ratio)
 
     def concern_takings(self, node_id, ramp):
-        """Yearly takings of one concern at a given ramp, before market saturation."""
+        """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure
+        carried to the techniques held now (concern_volume.py); callers apply the market's price."""
         economy = self.state.economy
-        return self.nodes[node_id]["rev"] * ramp * economy.output_factor * self.price_index
+        return (self.nodes[node_id]["rev"] * ramp * economy.output_factor * self.price_index
+                * self.concern_value_ratio(node_id))
 
     def ledger_concern_rows(self):
         """Yearly takings of every concern and practice that earns, by node

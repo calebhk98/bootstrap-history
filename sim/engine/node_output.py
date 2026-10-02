@@ -141,12 +141,14 @@ def _line_capacities(node: Mapping[str, Any], lines: List[Dict[str, Any]]) -> Li
 
 def output_baskets(node: Mapping[str, Any], production: Mapping[str, Any], goods: Mapping[str, float],
                    energy: Optional[energy_prices.EnergyPrices] = None,
-                   wages: Optional[Mapping[str, float]] = None) -> Optional[Baskets]:
+                   wages: Optional[Mapping[str, float]] = None,
+                   entries: Optional[List[Dict[str, Any]]] = None) -> Optional[Baskets]:
     """The node's yearly baskets, or None when the data gives it no physical output to derive. A line
     whose batch adds less than its staff cost at `wages` is not run; a node whose lines are all such
-    makes nothing."""
+    makes nothing. `entries` replace the ones the node gates (the techniques a society holds for its lines)."""
     energy = energy or energy_prices.pool_only(goods)
-    lines = _best_entry_per_line(entries_gated_by(node["id"], production), goods, energy)
+    lines = _best_entry_per_line(entries if entries is not None else entries_gated_by(node["id"], production),
+                                 goods, energy)
     runnable = [entry for entry in lines if _covers_its_staff(entry, goods, energy, wages)]
     units = _line_capacities(node, runnable)
     if not units:
