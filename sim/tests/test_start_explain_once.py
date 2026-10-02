@@ -1,7 +1,7 @@
 """start_explain_once: regression checks, run individually with `--only start_explain_once`."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.proto.render_screens_start import render_start
+from sim.ui.proto.render_screens_start import render_start
 
 # Complaint 76: `start` explains the fixed price and the untrained-trade warning once, then points back.
 

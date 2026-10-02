@@ -1,8 +1,8 @@
 """Regression coverage for complaints 192, 193, 206, 213, 217 and 232: finding things
 and reading replies. Searches never reach beyond what a player may see."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.typed import parse_typed
-from sim.engine.proto import tree_filters as _tree_filters
+from sim.ui.proto.typed import parse_typed
+from sim.ui.proto import tree_filters as _tree_filters
 
 _SIMULATOR = os.path.join(HERE, "simulator.py")
 

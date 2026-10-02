@@ -153,7 +153,7 @@ exactly the asymmetry the artisan fix's own comment describes but never
 extended to the other trade family.
 
 **Not fixed here, per instructions** - scope for this trace was
-`sim/engine/cli.py` and `sim/engine/data.py` only, and this bug lives in
+`sim/ui/cli.py` and `sim/engine/data.py` only, and this bug lives in
 neither. The fix, when someone takes it, is likely small and has a working
 precedent to copy: give `effective_scholars()` (or a new
 `effective_scholars_available()` used only at this gate, if scholars should

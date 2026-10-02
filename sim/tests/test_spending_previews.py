@@ -22,7 +22,7 @@ check("the hire reply itemises what was paid now",
       abs(hire_reply.get("paid_now", -1) - hire_quote.get("paid_now", -2)) < 0.06, hire_reply)
 check("the hire reply says what is due from next year",
       hire_reply.get("from_next_year_per_year", 0) > 0, hire_reply)
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.typed import parse_typed
 check("typed 'quote hire smith 2' parses as a hire quote",
       (parse_typed("quote hire smith 2")[0] or {}).get("what") == "hire"
       and (parse_typed("quote hire smith 2")[0] or {}).get("trade") == "smith",

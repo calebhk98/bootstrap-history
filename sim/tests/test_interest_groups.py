@@ -6,7 +6,7 @@ from .harness import *
 from sim.agents import SimWorld, supply
 from sim.engine.goods_market_api import FOUNDER
 from sim.agents.group import state_response
-from sim.engine.proto.saveload import load_state, save_state
+from sim.engine.saveload import load_state, save_state
 
 
 def grievance_game(civ="rome_100ad", share=0.6, capacity=None, purse=1.0e12):

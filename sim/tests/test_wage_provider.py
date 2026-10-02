@@ -132,7 +132,7 @@ class EngineWageTests(unittest.TestCase):
 
     def test_tightness_and_labour_pressure_survive_a_save_and_load(self):
         from .harness import sim
-        from sim.engine.proto.saveload import load_state, save_state
+        from sim.engine.saveload import load_state, save_state
         engine = self.sim
         engine.state.economy.wage_tightness_factors["smith"] = 1.2
         engine.hire("artisan", 1)

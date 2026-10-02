@@ -2,8 +2,8 @@
 show last year, this year and the named causes, read from the engine's own functions."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine import figures as figure_registry
-from sim.engine.proto import command_registry
+from sim.ui import figures as figure_registry
+from sim.ui.proto import command_registry
 
 HEADLINE = ("cash", "recurring_net", "income", "upkeep", "population",
             "literacy_general", "price_index", "hazard")

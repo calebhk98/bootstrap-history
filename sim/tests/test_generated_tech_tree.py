@@ -15,7 +15,8 @@ import unittest
 from unittest import mock
 
 from sim import treetool
-from sim.engine import cli, tree_source
+from sim.engine import tree_source
+from sim.ui import cli
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))

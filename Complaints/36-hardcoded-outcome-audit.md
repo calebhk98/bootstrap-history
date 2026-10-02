@@ -45,8 +45,8 @@ concurrent work (CLAUDE.md's own warning to expect this):
 - `sim/engine/core.py`, `labour.py`, `society.py` - **mid-edit by other
   agents throughout this audit**, working-tree snapshot only (not yet in
   `sim/constants.py`'s `_import_declaring_modules()`, and not committed).
-  74 `declare()` calls present in that snapshot, all read. `sim/engine/cli.py`
-  and `sim/engine/proto/typed.py` were also touched during the audit window
+  74 `declare()` calls present in that snapshot, all read. `sim/ui/cli.py`
+  and `sim/ui/proto/typed.py` were also touched during the audit window
   but carried no `declare()` calls in the diff at the time of reading.
 - `sim/world/demand.py` - a new file that appeared mid-audit (untracked, not
   yet claimed by any commit), 10 `declare()` calls, all read. Added to
@@ -162,8 +162,8 @@ this call:
 ### One thing this audit did NOT have
 
 `declare()` calls not yet written. Six agents are adding them to
-`sim/engine/{society,core,labour,projects,cli}.py` and `sim/engine/proto/`
-concurrently with this task; `projects.py` and `sim/engine/proto/` carried
+`sim/engine/{society,core,labour,projects,cli}.py` and `sim/ui/proto/`
+concurrently with this task; `projects.py` and `sim/ui/proto/` carried
 no `declare()` calls at the time this was written, and whatever lands in the
 files that were mid-edit was read once, as a snapshot, and could still change
 before it settles. This complaint is a photograph of one moment, not a

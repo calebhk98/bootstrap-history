@@ -2,7 +2,7 @@
 quoted figure, from the bill the player actually bears), 248 (a failed bounty
 is not orphaned) and 249 (selling stock faces the market's limits)."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.techtree import _explain_timing_and_risk
+from sim.ui.proto.techtree import _explain_timing_and_risk
 
 
 class _ForcedDraw(random.Random):

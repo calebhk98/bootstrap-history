@@ -23,7 +23,7 @@ nothing to declare.
 THE JUDGEMENT CALL THIS FILE MAKES EXPLICIT: NOT EVERY NUMBER HERE IS
 OUTCOME-INERT, AND EACH ONE SAYS SO. Unlike sim/unit_conversions.py's own
 conversions (which cannot change what a computation returns, only what
-units it is stated in) and sim/presentation.py's own display values (which
+units it is stated in) and sim/ui/presentation.py's own display values (which
 cannot change a simulated result at all), SOME of the numbers below CAN
 change a computed price or a labour allocation if pushed far enough - loosen
 CONVERGENCE_TOLERANCE enough and the solver stops one step earlier, at a
@@ -57,7 +57,7 @@ record could ever confirm or refute), and no other kind fits any better.
 sim/constants.py's own `--burndown` is a progress bar for the MODEL - see
 that module's docstring - and a solver's own knobs are not part of that
 progress in either direction, so this file does not call `declare()` at
-all, the same choice sim/presentation.py makes and for the same reason
+all, the same choice sim/ui/presentation.py makes and for the same reason
 (see that file's own NOT PART OF THE REGISTRY section).
 
 WHY MOVED RATHER THAN LEFT AND MERELY GATHERED BY REFERENCE. The
@@ -86,7 +86,7 @@ future caller) references `labour_market.MAXIMUM_REALLOCATION_PERIODS` or
 
 HOW A CONSUMER USES ONE OF THESE. Imported fully qualified, `from
 sim.algorithm_parameters import DAMPING_FACTOR`, the same convention sim/
-unit_conversions.py and sim/presentation.py both use and for the same
+unit_conversions.py and sim/ui/presentation.py both use and for the same
 reason (see sim/unit_conversions.py's own HOW A CONSUMER USES ONE OF
 THESE section).
 """

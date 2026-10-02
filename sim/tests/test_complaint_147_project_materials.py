@@ -115,7 +115,7 @@ check("no reader of prices.json in the project materials module",
       and "PRICES" not in open(_module).read(), _module)
 
 # --- the bill fixed at the start survives a save and a load, and is not re-priced
-from sim.engine.proto.saveload import save_state, load_state
+from sim.engine.saveload import save_state, load_state
 _frozen = _start_sim.project_cost(_LEAD)
 _path = os.path.join(tempfile.mkdtemp(), "bill.json")
 save_state(_start_sim, _path)
@@ -137,7 +137,7 @@ check("bounty: priced from the same market-priced cost as the build",
       _bounty_sim.bounty_price(_LEAD))
 
 # --- `quote material` charges what `buy material` charges for the same order ---
-from sim.engine.proto.dispatch_money import _cmd_quote
+from sim.ui.proto.dispatch_money import _cmd_quote
 _quote_sim = sim(capital=5e7)
 _quoted = _cmd_quote(_quote_sim, NODES, {"what": "material", "material": "coal", "n": 2000}, None)
 _before = _quote_sim.capital

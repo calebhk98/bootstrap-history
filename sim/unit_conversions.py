@@ -84,7 +84,7 @@ re-multiplies by 100 to pick a round purchase quantity rather than to
 convert a fraction to a percentage - the same number, a different job,
 and CLAUDE.md's own naming section makes the identical argument for
 identifiers generally. Formatting widths, retry counts and "how many rows
-to show" are a different kind of number entirely - see sim/presentation.py
+to show" are a different kind of number entirely - see sim/ui/presentation.py
 for those - and neither belongs on kind="physical_constant" just because
 both are inputs to arithmetic.
 

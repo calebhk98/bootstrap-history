@@ -89,7 +89,7 @@ expected to go away.
 
 WHAT DOES NOT BELONG HERE. Numbers that do not change a simulated outcome.
 Column widths, "show the top 5 slowest", retry counts, buffer sizes -
-gathered instead in `sim/presentation.py`, a DIFFERENT kind of file serving
+gathered instead in `sim/ui/presentation.py`, a DIFFERENT kind of file serving
 a DIFFERENT purpose (see that module's own THE TENSION WITH sim/
 constants.py section for why one stakeholder request to "gather these
 somewhere editable" does not actually conflict with the sentence you are
@@ -308,13 +308,13 @@ def _import_declaring_modules():
     # same "keep the tool running when something else is broken" reason the
     # sim/world/ list below is explicit rather than walked. Whoever adds the
     # next sim/-root file that calls declare() has to add it here by hand.
-    # sim/presentation.py and sim/algorithm_parameters.py are siblings that
+    # sim/ui/presentation.py and sim/algorithm_parameters.py are siblings that
     # do NOT belong in this list, because neither calls declare() at all
     # (see either module's own NOT PART OF THE REGISTRY / kind section for
     # why).
     for module in ("sim.engine.data",
                    "sim.engine.economy",
-                   "sim.engine.cli",
+                   "sim.ui.cli",
                    "sim.engine.core",
                    "sim.engine.society",
                    "sim.labour.labour",

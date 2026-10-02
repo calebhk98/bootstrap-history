@@ -1,9 +1,9 @@
 """market_screen: regression checks, run individually with `--only market_screen`."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.market_report import priceable_materials
-from sim.engine.proto import command_registry as _registry
-from sim.engine.proto.render_typed import render_pretty as _render_pretty
-from sim.engine.proto.typed import parse_typed as _parse_typed
+from sim.ui.market_report import priceable_materials
+from sim.ui.proto import command_registry as _registry
+from sim.ui.proto.render_typed import render_pretty as _render_pretty
+from sim.ui.proto.typed import parse_typed as _parse_typed
 
 # `market`: goods saturation, every priceable material, every trade's wage,
 # on one screen, from numbers the game already computes.

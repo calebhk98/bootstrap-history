@@ -19,7 +19,7 @@ The same principle applies to repeated FTE/supervision explanations.
 
 ## WHERE IT LIVES
 
-`sim/engine/proto/dispatch_money.py` or venture command rendering. Likely also `sim/engine/proto/render.py` or related output formatting for project-start messages.
+`sim/ui/proto/dispatch_money.py` or venture command rendering. Likely also `sim/ui/proto/render.py` or related output formatting for project-start messages.
 
 ## Confidence
 

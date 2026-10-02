@@ -10,7 +10,7 @@ Global notes
 - ~885 constants are registered with `declare(...)` (sim/constants.py); ~714 are `kind="temporary_heuristic"`, 3 are `kind="hardcoded_outcome"` (WAGE_SCARCITY_ELASTICITY in engine/core.py, SLAVE_BASE_PRICE_DENARII in sim/labour/labour_bondage.py, GENERIC_OUTPUT_PRICE_EXPONENT in engine/economy_materials.py). Heavy heuristic files: labour_capacity, society_state_pressure, core, economy_goods, projects_completion, economy_credit, economy_mining.
 - Explicit "placeholder" wording appears in: economy_credit (~457), economy_goods (~684), economy_materials (~391, ~547), economy.py (~296), labour_population (~319-394, ~642), projects_starting (~71), society_state_pressure (~302), world/transport (cart/vessel service lives), world/agriculture (weather/hydrology terms), world/deposits (~211, ~372), world/land (~535), world/military_logistics (~644, ~770).
 - Engine special-cases content ids despite CLAUDE.md 4.7: `patron_imperial`, `patron_senatorial` (core_step_phases eminence branch, economy_credit living cost), `sanitation_antisepsis` (founder mortality), `workshop_first` (auto_buy_people), `corpus_dispersed`/`corpus_written` (core.corpus_hedge), `citizenship`, `DISEASE_BURDEN_TECH_IDS` list, `identity_cover`.
-- Save format carries `SAVE_VERSION = 3` / `state._version = 3` (engine/proto/saveload.py), a version stamp CLAUDE.md 4.6 says not to keep.
+- Save format carries `SAVE_VERSION = 3` / `state._version = 3` (sim/engine/saveload.py), a version stamp CLAUDE.md 4.6 says not to keep.
 - Only a handful of functions in engine/ and world/ have zero live references (list at end).
 
 ================================================================
@@ -116,9 +116,9 @@ Global notes
 
 50. **Needs and goods data** - engine/need_data.py, data/world/needs.json; consumed by world/need_demand via workforce_spinup. Wired at start-up.
 
-51. **Save / load** - engine/state.py (typed state owners, auto-detected fields), engine/proto/saveload.py, cli_interactive_saveload.py, settings.py. Wired (`save` command, `--session` saves and loads every command). RNG state and fog saved.
+51. **Save / load** - engine/state.py (typed state owners, auto-detected fields), sim/engine/saveload.py, cli_interactive_saveload.py, settings.py. Wired (`save` command, `--session` saves and loads every command). RNG state and fog saved.
 
-52. **Protocol, CLI, rendering, help, score** - engine/proto/* (command registry ~40 commands, dispatch_*, typed parser, render_*, help, score.py, techtree.py), engine/cli*.py (menu, play, agent, validate, path, costs, run, compare, sensitivity, sweep, goals, plan, search, why). Wired. Some proto/help.py `_topic_*` functions look unreferenced by name but are dispatched through a table.
+52. **Protocol, CLI, rendering, help, score** - sim/ui/proto/* (command registry ~40 commands, dispatch_*, typed parser, render_*, help, score.py, techtree.py), engine/cli*.py (menu, play, agent, validate, path, costs, run, compare, sensitivity, sweep, goals, plan, search, why). Wired. Some proto/help.py `_topic_*` functions look unreferenced by name but are dispatched through a table.
 
 53. **Settings / config** - engine/settings.py (saves dir, remembered menu choices). Wired in CLI.
 

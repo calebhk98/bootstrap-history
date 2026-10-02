@@ -40,8 +40,8 @@ the function behind the `population` command, confirmed as the sole
 production call site of `reachable_trade_population()`/
 `national_trade_population()`/`home_town_population_estimate()`:
 
-    grep -rn "national_trade_population(\|reachable_trade_population(\|home_town_population_estimate(" sim/engine/proto/*.py
-    sim/engine/proto/dispatch_inspection.py:531:    return {"ok": True, **s.population_report()}
+    grep -rn "national_trade_population(\|reachable_trade_population(\|home_town_population_estimate(" sim/ui/proto/*.py
+    sim/ui/proto/dispatch_inspection.py:531:    return {"ok": True, **s.population_report()}
 
 That is exactly the mechanism `Complaints/56` traces in full: at
 `pop_scale`'s floor of 0.05, `home_town_population_estimate()` is pinned at

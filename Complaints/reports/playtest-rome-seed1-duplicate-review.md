@@ -46,7 +46,7 @@ The tests only assert that preview mutates nothing. 155 says the preview lists n
 ## 156 buy-school-routed-to-mine-parser: OVERLAP, REGRESSION of closed 26 / 87
 - closed/26-economic-levers-demographics-inventory.md: "`buy farm`/`buy housing`/a named trade school all exist (`_cmd_buy`)".
 - closed/87-school-overload-trading-vs-education.md: status "the training mechanic is now 'trade school'; `buy school` was removed".
-Code check: sim/engine/proto/dispatch_money.py registers only "trade_school" and "trade school" (lines ~216-217) while its own help string (~229) and sim/engine/proto/help.py (~223) still advertise `buy school <trade> <n>`. So 156 is real and is fallout from the 87 rename: the documented command falls through to the material parser. Not a duplicate; a regression of the closed items' promise.
+Code check: sim/ui/proto/dispatch_money.py registers only "trade_school" and "trade school" (lines ~216-217) while its own help string (~229) and sim/ui/proto/help.py (~223) still advertise `buy school <trade> <n>`. So 156 is real and is fallout from the 87 rename: the documented command falls through to the material parser. Not a duplicate; a regression of the closed items' promise.
 
 ## 157 bounty-corrupts-save: NEW
 No older `bounty` issue (only an unrelated word hit in closed/63).

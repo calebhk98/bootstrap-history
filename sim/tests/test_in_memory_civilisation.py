@@ -6,7 +6,7 @@ import random
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.protocol import _agent_dispatch, KNOWN_COMMANDS
+from sim.ui.protocol import _agent_dispatch, KNOWN_COMMANDS
 
 _SKIP = ("quit", "save", "load")
 

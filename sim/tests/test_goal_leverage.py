@@ -1,7 +1,7 @@
 """Complaint 98: the goal screen shows system leverage, not only the prerequisite chain."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.proto import command_registry
+from sim.ui.proto import command_registry
 
 
 def ask(test_sim, **command):

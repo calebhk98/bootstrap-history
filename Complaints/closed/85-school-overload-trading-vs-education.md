@@ -23,6 +23,6 @@ Reserve "school" in high-level UI and goal contexts for population education ins
 
 ## Where it lives
 
-Likely in `sim/engine/proto/dispatch.py` and `sim/engine/projects.py` where "school" purchase commands are defined, and in `sim/engine/core.py` where schooling effects compute.
+Likely in `sim/ui/proto/dispatch.py` and `sim/engine/projects.py` where "school" purchase commands are defined, and in `sim/engine/core.py` where schooling effects compute.
 
 **Confidence:** Design recommendation

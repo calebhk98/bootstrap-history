@@ -14,6 +14,6 @@ Found by a code inventory made for the new-player playtest (`playtest_notes/code
 
 Re-checked on the current code by grep over sim, data, mods and tools, with no getattr, dispatch-table or mod access to any of them. Removed: `MineWorking`, `capacity_reserves`, `Ledger.on_hand` (the class the complaint calls `Commodities.on_hand`), `Population.working_age_population`, `consumers_of`, `joint_output_value_shares_for_recipe`, `pack_animals_required_for_daily_delivery`, `granary_projection`, `aggregate_household_demand_all_goods`, and the tests that covered only them. `sim/tests/test_dead_code_removed.py` keeps them gone.
 
-Not dead, kept: `shafts_needed_fractional` (called by `shafts_needed` and the labour-cost helper in `deposits.py`) and `adjusted_tightness_factor` (called from `wages.py`). The "helpers in `state.py`" have callers (`sim/engine/state.py` and `sim/engine/proto/state.py` were both checked).
+Not dead, kept: `shafts_needed_fractional` (called by `shafts_needed` and the labour-cost helper in `deposits.py`) and `adjusted_tightness_factor` (called from `wages.py`). The "helpers in `state.py`" have callers (`sim/engine/state.py` and `sim/ui/proto/state.py` were both checked).
 
 Heuristic backlog: the count has fallen since the inventory (the ~200 unread constants were removed). Current figures come from `python3 sim/constants.py --burndown`: 715 declared, 531 `temporary_heuristic` (74.3%), 3 `hardcoded_outcome`. Re-run the command for today's numbers; they change with every merge.

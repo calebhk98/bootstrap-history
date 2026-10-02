@@ -23,7 +23,7 @@ missing (see What is done and What remains below):
 ## What is done
 
 - `buy living_stock <material> <units> [<partner>]` and `quote living_stock ...` (`sim/engine/living_stock_trade.py`,
-  `sim/engine/proto/stock_purchases.py`): priced at the partner's price in home money plus the merchants' terms and
+  `sim/ui/proto/stock_purchases.py`): priced at the partner's price in home money plus the merchants' terms and
   the route's freight, paid through the goods market (`GoodsMarket.settle_import`), delivered into the held-stock
   ledger. The quote and the charge are one function, `Sim.stock_purchase_quote`; a row in
   `sim/tests/test_quote_matches_charge.py` pins it. A partner that will not sell refuses with its reason

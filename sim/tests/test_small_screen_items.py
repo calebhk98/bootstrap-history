@@ -1,9 +1,9 @@
 """Small screen items: Complaints/92 (hazard hedge timing), 93 (four funding concepts),
 86 (knowledge apart from held living stock), 97 (opening state hierarchy)."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.render_screens_big import render_state, render_why
-from sim.engine.proto.render_screens_economy import render_money
-from sim.engine.proto.render_screens_status import render_risk
+from sim.ui.proto.render_screens_big import render_state, render_why
+from sim.ui.proto.render_screens_economy import render_money
+from sim.ui.proto.render_screens_status import render_risk
 
 # --- 92: every hedge with a calendar floor says whether it finishes before the window opens
 england = sim(civ="england_1300", capital=1e6)

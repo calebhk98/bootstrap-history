@@ -1,7 +1,7 @@
 """Readouts agree with the engine's own checks: Complaints/230, 234, 235, 264."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.proto.economy import _power_status
+from sim.ui.proto.economy import _power_status
 
 # ===========================================================================
 # Complaints/230: the quoted finish is the earliest the payment schedule allows

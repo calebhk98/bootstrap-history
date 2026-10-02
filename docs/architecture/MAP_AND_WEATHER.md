@@ -550,13 +550,13 @@ cubic exponent measured in 3.3.
 `compare` and `sensitivity` all default to `--mc 200` - confirmed:
 
 ```
-grep -n 'add_argument("--mc", type=int, default=200)' sim/engine/cli.py
+grep -n 'add_argument("--mc", type=int, default=200)' sim/ui/cli.py
 -> three matches, one per subcommand
 ```
 
 Each of those 200 trials constructs its own `Sim()` (`res = [Sim(nodes,
 order, random.Random(a.seed + i), ...) for i in range(a.mc)]` in
-`sim/engine/cli.py`), paying the Cholesky factorisation fresh every time -
+`sim/ui/cli.py`), paying the Cholesky factorisation fresh every time -
 nothing caches it across trials today. At 10,000 tiles:
 
     200 * 3.5365 sec = 707.3 sec ~= 11.8 minutes

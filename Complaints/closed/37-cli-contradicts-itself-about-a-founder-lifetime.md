@@ -5,7 +5,7 @@
 **Type:** Bug, player-facing
 **Priority:** Medium. It is two lines apart and it tells the player the opposite of what it just told them.
 
-Found by the agent migrating `sim/engine/cli.py`'s constants, which is the
+Found by the agent migrating `sim/ui/cli.py`'s constants, which is the
 point of that exercise: a literal nobody had to name is a literal nobody had
 to reconcile.
 

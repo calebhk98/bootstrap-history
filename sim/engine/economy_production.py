@@ -630,7 +630,7 @@ class ProductionMixin:
         # allocations are exactly what decide whether an address gets
         # recycled, so a clean probe result proves nothing. It is the
         # removal of a hazard that cannot be cheaply observed, by the same
-        # defence sim/engine/proto/nodes.py uses for the identical reason.
+        # defence sim/ui/proto/nodes.py uses for the identical reason.
         # Holding seq and practice_set alive for as long as the entry may be
         # compared against them makes the collision structurally impossible
         # rather than merely unmeasured.

@@ -9,7 +9,7 @@ import tempfile
 from .harness import *  # noqa: F401,F403
 
 from sim.agents import Household, ledger
-from sim.engine.proto.saveload import load_state, save_state
+from sim.engine.saveload import load_state, save_state
 from sim.engine.state import ActorRecord
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()

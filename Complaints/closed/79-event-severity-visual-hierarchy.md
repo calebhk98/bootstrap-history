@@ -24,7 +24,7 @@ The event stream should optimize attention, not chronological equality.
 
 ## WHERE IT LIVES
 
-Event rendering and styling in `sim/engine/proto/render_screens_big.py` or event-display modules. Event classification logic in core engine or event-generation systems.
+Event rendering and styling in `sim/ui/proto/render_screens_big.py` or event-display modules. Event classification logic in core engine or event-generation systems.
 
 ## Confidence
 
@@ -38,6 +38,6 @@ Also reported (final playtests; `Complaints/reports/final-playtests-triage.md`):
 
 **Done:** every step reply carries `alerts` and the step screen prints an ALERTS block first (deaths, goal reached, credit trouble, sackings, losses, closures, abandoned projects, population collapse, early stops), capped and one line each.
 
-**Fixed:** the event stream itself has eight tiers (`sim/engine/proto/event_severity.py`: run ending, regime/war/sack, demographic catastrophe, economic crisis, major project failure, minor setback, completion, informational). Every `step` event carries `severity`; the text screen lists worst tiers first (stable within a tier) and prefixes them with `***`, `!!` or `!`. Tiers come from message markers, so a new message wording needs a marker added there. Test: `sim/tests/test_event_severity.py`.
+**Fixed:** the event stream itself has eight tiers (`sim/ui/proto/event_severity.py`: run ending, regime/war/sack, demographic catastrophe, economic crisis, major project failure, minor setback, completion, informational). Every `step` event carries `severity`; the text screen lists worst tiers first (stable within a tier) and prefixes them with `***`, `!!` or `!`. Tiers come from message markers, so a new message wording needs a marker added there. Test: `sim/tests/test_event_severity.py`.
 
-**Also done:** ALERTS lines sort by severity tier (`step_alerts.alert_severity`); the staffing closure line replaces the bare closed list; stop reasons live in `sim/engine/proto/step_stops.py`.
+**Also done:** ALERTS lines sort by severity tier (`step_alerts.alert_severity`); the staffing closure line replaces the bare closed list; stop reasons live in `sim/ui/proto/step_stops.py`.

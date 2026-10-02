@@ -78,12 +78,12 @@ if _fh_target:
     # graph produces this field, it must be that call graph, so that `step`'s
     # reply - built from the same _agent_state() call - gets the field
     # without anyone maintaining a second copy.
-    # READ THE DEFINING MODULE, NOT THE SHIM: engine/protocol.py re-exports a
+    # READ THE DEFINING MODULE, NOT THE SHIM: sim/ui/protocol.py re-exports a
     # fixed list of public protocol names and the section helpers are not on
     # it, so gathering them off the shim finds nothing, and this check would
     # then pass on prose alone rather than the real assignment.
-    # engine.proto.state is where they are defined.
-    from sim.engine.proto import state as _state_module
+    # ui.proto.state is where they are defined.
+    from sim.ui.proto import state as _state_module
     _state_source = "".join(
         [_insp.getsource(_state_module._agent_state)]
         + [_insp.getsource(getattr(_state_module, _name))

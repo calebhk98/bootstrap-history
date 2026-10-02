@@ -31,7 +31,7 @@ ROOT = os.path.dirname(HERE)
 # sys.path explicitly rather than trust either caller to have done it.
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
-from sim.presentation import (                                   # noqa: E402
+from sim.ui.presentation import (                                   # noqa: E402
     MERGE_ERRORS_SHOWN, MERGE_WARNINGS_SHOWN,
     JUDGE_UNOBTAINABLE_DEPENDENCIES_SHOWN, JUDGE_NEAR_MATCH_SUGGESTIONS_SHOWN,
     JUDGE_WORST_NODES_SHOWN, JUDGE_NODE_ID_COLUMN_WIDTH_CHARS,

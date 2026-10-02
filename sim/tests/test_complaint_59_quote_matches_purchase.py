@@ -6,7 +6,7 @@ unchanged Sim and must succeed in full.
 Every quoted affordable amount is purchasable as quoted.
 """
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.dispatch_money import _cmd_quote
+from sim.ui.proto.dispatch_money import _cmd_quote
 
 
 def _quoted(quote_cmd, capital):

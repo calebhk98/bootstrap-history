@@ -84,7 +84,7 @@ by reading `perf_fingerprint.py` itself (section 5) rather than by trusting
 the old claim: it hashes `SAVE_FIELDS` after every simulated year across nine
 scenarios, and its own header says nothing about `protocol.py`. This reason
 does not get weaker with age; if anything, `protocol.py`'s share of the code
-has only grown since it was split into `engine/proto/`'s twelve modules
+has only grown since it was split into `sim/ui/proto/`'s twelve modules
 (`sim/ARCHITECTURE.md`, "Layout"). Any stage of a proposal that touches
 `protocol.py` inherits this exact gap, unchanged.
 

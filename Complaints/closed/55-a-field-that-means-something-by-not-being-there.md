@@ -18,7 +18,7 @@ Eight fields work this way. The file names them:
     insolvent_years, wage_hours_this_year, _said_deputies, _said_scandal,
     last_withdrawal, _said_near_limit, _said_autoopen, _said_parallelism
 
-They are the members of `SAVE_FIELDS` (`sim/engine/proto/saveload.py`) for
+They are the members of `SAVE_FIELDS` (`sim/engine/saveload.py`) for
 which absence is load-bearing, and the constructor deliberately leaves them
 out, while the seven trackers listed immediately below them in the same
 constructor DO get real starting values, precisely because they are not in

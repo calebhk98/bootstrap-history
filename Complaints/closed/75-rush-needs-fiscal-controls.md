@@ -28,7 +28,7 @@ The current downstream-count heuristic is useful but should not be the only defi
 
 ## WHERE IT LIVES
 
-`sim/engine/proto/dispatch_money.py` or venture command dispatch for `rush` implementation. Likely in `sim/engine/core.py` or projects module for the actual prioritization and cost calculation.
+`sim/ui/proto/dispatch_money.py` or venture command dispatch for `rush` implementation. Likely in `sim/engine/core.py` or projects module for the actual prioritization and cost calculation.
 
 ## Confidence
 

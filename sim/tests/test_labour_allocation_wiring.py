@@ -70,7 +70,7 @@ class WorkforceAllocationWiringTests(unittest.TestCase):
     def test_workforce_round_trips_through_save_and_load(self):
         import os
         import tempfile
-        from sim.engine.proto import saveload
+        from sim.engine import saveload
         test_sim = _rome_sim()
         for year in range(101, 106):
             test_sim._demographic_recovery(year)

@@ -14,7 +14,7 @@ from sim.agents.policy import IdlePolicy
 from sim.agents.tuning import SECRET_EXPOSURE
 from sim.engine.state import ActorRecord
 from sim.engine.mods import get_ordered_mods, load_mod_tree
-from sim.engine.proto.saveload import load_state, save_state
+from sim.engine.saveload import load_state, save_state
 from sim.geography import settlement
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()

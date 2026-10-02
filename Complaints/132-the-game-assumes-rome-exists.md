@@ -8,7 +8,7 @@ labour hours (`Complaints/140`). The production data still names land in
 iugera (`iugerum_land`, `land_iugera_years`), and the price solver converts at
 that one edge (`Complaints/278`). Most engine messages still spell the money
 word "denarii" and are swapped for the civilisation's own word at the display
-edge (`sim/engine/proto/util.py`); comments and tests that say "Rome" as a
+edge (`sim/ui/proto/util.py`); comments and tests that say "Rome" as a
 calibration baseline remain. Measure with
 `grep -rEoi "denari|iuger" sim/engine sim/world --include=*.py | wc -l` and
 `grep -rEoi "roman|\brome\b" sim/engine sim/world --include=*.py | wc -l`.

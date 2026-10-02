@@ -16,5 +16,5 @@ Also reported (final playtests, C; `Complaints/reports/final-playtests-triage.md
 
 ## Done
 
-- `map` (aliases `country`, `geography`, `atlas`) shows the base, the held tiles by people with name, region, terrain, days from the base and the named deposits on each, and the tiles bordering them (`sim/engine/proto/screen_map.py`). `move` rows carry the same name, region and terrain.
+- `map` (aliases `country`, `geography`, `atlas`) shows the base, the held tiles by people with name, region, terrain, days from the base and the named deposits on each, and the tiles bordering them (`sim/ui/proto/screen_map.py`). `move` rows carry the same name, region and terrain.
 - A tile is named by its country and number from the tile record (`sim/geography/tile_names.py`); the data holds no town or historical place names, filed as Complaints/289.

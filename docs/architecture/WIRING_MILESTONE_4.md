@@ -56,16 +56,16 @@ lines given are anchor-commit lines):
 That is **9 of Sim's 165 instance attributes** (measured count from
 `SIM_STATE_INVENTORY.md` §0, itself AST-derived, not a re-estimate).
 
-Two of these attributes are reached only from `sim/engine/proto/` (`s.X`,
+Two of these attributes are reached only from `sim/ui/proto/` (`s.X`,
 never `self.X` inside the six mixins), which is exactly the class of
 attribute `sim/ARCHITECTURE.md` warns is easy to miss:
 
 ```
-sim/engine/proto/dispatch.py:1365:  "demographic_scarcity": round(s.wage_index, 3),
-sim/engine/proto/dispatch.py:1411:  "wage_per_hour": round(WAGES[t] * s.wage_index ...
-sim/engine/proto/economy.py:598:    "wage_index": round(s.wage_index, 4),
-sim/engine/proto/economy.py:648:    "wage_index": round(s.wage_index, 4),
-sim/engine/proto/economy.py:682:    "demographic_scarcity": round(s.wage_index, 3),
+sim/ui/proto/dispatch.py:1365:  "demographic_scarcity": round(s.wage_index, 3),
+sim/ui/proto/dispatch.py:1411:  "wage_per_hour": round(WAGES[t] * s.wage_index ...
+sim/ui/proto/economy.py:598:    "wage_index": round(s.wage_index, 4),
+sim/ui/proto/economy.py:648:    "wage_index": round(s.wage_index, 4),
+sim/ui/proto/economy.py:682:    "demographic_scarcity": round(s.wage_index, 3),
 ```
 
 Neither `pop_scale` nor `pop_deficit` is read from `proto/` directly — only
@@ -256,7 +256,7 @@ something the plan document's own words do not support.
 ## 3. `SAVE_FIELDS`
 
 **None of the nine attributes in §1.1 are in `SAVE_FIELDS` today.** Verified
-by AST-parsing the tuple (`sim/engine/proto/saveload.py`, 98 distinct field
+by AST-parsing the tuple (`sim/engine/saveload.py`, 98 distinct field
 names across 99 string literals — matches `SIM_STATE_INVENTORY.md`'s own
 count) and grepping it for every name in §1.1: zero hits. This is not a
 hypothesis; it was checked twice, by two different methods.
@@ -265,7 +265,7 @@ hypothesis; it was checked twice, by two different methods.
 wiring, and it needs to be in the document because the wiring must not
 reproduce it.** `--session` play constructs a brand-new `Sim` from the
 civilisation file on every invocation and then calls `load_state` to
-overwrite it with the save (`sim/engine/cli.py:912-921` for `play`,
+overwrite it with the save (`sim/ui/cli.py:912-921` for `play`,
 `:1580-1586` for `agent`) — CLAUDE.md §5's "every single command is a save
 followed by a load" is describing exactly this reconstruct-then-restore
 sequence, and it is how `sim/tests/test_early_playtest.py`'s own save-reload
@@ -582,7 +582,7 @@ milestone4_start.json` at the true starting point, kept outside the repo
 
 **Commit 1 — make the modules reachable, read by nothing.**
 `sim/simulator.py` (and the equivalent guarded inserts in
-`sim/engine/cli.py`) currently put ONLY `sim/` itself on `sys.path`
+`sim/ui/cli.py`) currently put ONLY `sim/` itself on `sys.path`
 (`sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))`), which is
 why running `sim/world/agriculture.py` directly fails outright
 (`ModuleNotFoundError: No module named 'sim'` — reproduced directly). Add a

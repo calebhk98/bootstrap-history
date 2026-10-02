@@ -66,7 +66,7 @@ Materials need no `prices.json` entry (catalog.py:59-70).
    kind needs engine code.
 8. **UI text and currency.** `MONEY_WORDS`, `MONEY_SHORT_WORDS`
    (data.py:244-260), `STARTING_KITS`, `WIN_CONDITION_LABELS` are Python
-   dicts in `data.py`; the protocol/renderers in `sim/engine/proto/` have no
+   dicts in `data.py`; the protocol/renderers in `sim/ui/proto/` have no
    mod hooks. `money_short` falls back to "den" for any unknown currency, so
    a mod currency displays wrongly. Strategies load from `sim/strategies`
    only (`STRATS`).

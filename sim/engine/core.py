@@ -429,7 +429,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # `self._agriculture.Storage` at stock_kg=0.0 every single year regardless
         # of what the previous year harvested, or the starting value would
         # not matter.
-        # SAVE_FIELDS ("farm_stock_kg", sim/engine/proto/saveload.py) is
+        # SAVE_FIELDS ("farm_stock_kg", sim/engine/saveload.py) is
         # what makes that survive a --session save/load, exactly the same
         # concern `pop_children`/`pop_working_age`/`pop_elderly` were added
         # for a milestone earlier - state a hazard or a harvest can move
@@ -874,7 +874,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         no `SAVE_FIELDS` slot of its own, independent of whatever else about
         a year's harvest does or does not round-trip. `self.farm_stock_kg`
         is the thing that actually needs one (see
-        `sim/engine/proto/saveload.py`'s `SAVE_FIELDS` tuple).
+        `sim/engine/saveload.py`'s `SAVE_FIELDS` tuple).
 
         Multiplier/offset are arbitrary mixing constants (not physical
         facts), chosen only so two different years, two regions, or two
@@ -1335,7 +1335,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         feature this engine has turned off: real agrarian societies damp
         exactly this with grain storage, and this wiring has it.
 
-        `self.farm_stock_kg` (`SAVE_FIELDS`, sim/engine/proto/saveload.py)
+        `self.farm_stock_kg` (`SAVE_FIELDS`, sim/engine/saveload.py)
         is the persisted state: each year's `Storage` is constructed at
         THAT stock, not zero, and whatever it holds after this year's
         sowing/harvest/consumption/spoilage/reseeding is written back to it
@@ -1474,7 +1474,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # method's own docstring section on Complaints/44 for why that
         # single word ("carried" rather than "constructed fresh") is the
         # entire fix, and `farm_stock_kg` in SAVE_FIELDS
-        # (sim/engine/proto/saveload.py) for why it survives a save.
+        # (sim/engine/saveload.py) for why it survives a save.
         # `seed=` HERE IS DEFENSIVE, NOT LOAD-BEARING: `farm_storage.
         # step` below is always given an explicit `weather_multiplier`
         # (Complaints/46), so `Storage`'s own internal

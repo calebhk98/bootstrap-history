@@ -1,0 +1,688 @@
+"""Read-only inspection and status commands: state, available, why, path,
+log, score, risk, values, stuck, mines, capacity, portfolio, economy,
+changes, population, materials - every command whose job is to explain the
+current position rather than to change it.
+
+dispatch.py stays the composition point - the command table, the
+dispatcher, and every name protocol.py's shim re-exports - and imports
+these handlers back from here (see dispatch.py's own docstring for why
+these live in a separate file).
+"""
+
+from .command_registry import command
+from sim.ui.figures import FIGURES
+from .dispatch_figures import figure_reply
+from .guidance import LEVERAGE_NOTE, leverage_points
+from .saving_plan import saving_reason
+from sim.ui.market_report import goods_market_line, opening_effect
+from sim.engine.knowledge_warning import knowledge_loss_warning
+from sim.engine.critical_path_remaining import active_years_left, remaining_critical_path_years
+from sim.engine.data import closure, topo_order
+from .economy import (_agent_capacity, _agent_changes, _agent_economy,
+                      _agent_mines, _agent_portfolio, _agent_values)
+from .explain_once import already_explained
+from .nodes import _did_you_mean
+from .score import final_report, score_report
+from .score_change import attach_change_since_last_score
+from .state import _agent_log, _agent_state, _waiting_on
+from .techtree import _agent_available, _brief, _node_explain
+
+
+@command("state", group="overview", aliases=("s", "st", "status"),
+         summary="where you stand",
+         usage=["state", "state full", "state compact"],
+         options={"full": "include every field, not only the headline ones",
+                  "json / compact": "json is the raw reply; compact is a short summary (year, money, net_per_year, founder_hours_free, projects with blockers, concerns, standing, danger, nearest_goal_blocker)"},
+         description="Year, money, income, founder hours, active projects with "
+                     "what each is waiting on, and what to look at next.")
+def _cmd_state(sim, nodes, cmd, ended):
+    out = dict(ok=True, **_agent_state(sim, nodes, cmd))
+    if out.get("you_know_how_to_run_but_have_not_opened") and already_explained(sim, "shut_concerns_pointer", cmd):
+        out["shut_concerns_pointer_seen"] = True
+    return out
+
+
+
+@command("available", group="overview", aliases=("a", "av"),
+         summary="what you could begin today",
+         usage=["available", "available <subject>", "available find <text>",
+                "available state:blocked tag:<topic>", "available sort:price reverse",
+                "available metallurgy sort risk limit 10 offset 10"],
+         options={"subject / find": "narrow by subject word or search text",
+                  "afford": "only what you can pay for now",
+                  "all:true": "every row, not the summary by subject",
+                  "limit / offset": "page through the rows",
+                  "sort": "price, hours, years, earns, upkeep, risk, alpha or fewest_missing",
+                  "reverse": "flip the order",
+                  "state": "startable, blocked, active or done (blocked rows say what is missing)",
+                  "tag / category": "narrow by topic or node category"},
+         description="Summarised by subject, with cost, founder hours and risk. "
+                     "An empty search suggests tags to try. fewest_missing orders the "
+                     "heard-of list by how few of a thing's own prerequisites are "
+                     "missing, not by distance to a goal; see path for that.")
+def _cmd_available(sim, nodes, cmd, ended):
+    return _agent_available(sim, nodes, cmd)
+
+
+
+@command("log", group="overview", aliases=("history", "diary", "logs", "journal"),
+         summary="your own exact history, most recent first",
+         usage=["log", "log failures:true", "log find:<text> since:<year> before:<year>",
+                "log oldest", "log limit:20 offset:20"],
+         options={"failures": "only failures", "find": "text to search for",
+                  "since / before": "year bounds", "oldest": "oldest first",
+                  "limit / offset": "page size and position"},
+         description="Starts, completions, failures, hazards, openings, closures and "
+                     "staffing, paginated; never the whole record at once.")
+def _cmd_log(sim, nodes, cmd, ended):
+    return _agent_log(sim, cmd)
+
+
+
+@command("score", shape="bare", group="overview",
+         summary="what you are optimising, any time",
+         usage=["score"], options={},
+         description="Each ending-score component, raw and weighted. Under fog the "
+                     "technology-coverage share stays withheld until the run is over.")
+def _cmd_score(sim, nodes, cmd, ended):
+    return {"ok": True, **attach_change_since_last_score(sim, score_report(sim, nodes))}
+
+
+
+@command("finish", group="game",
+         summary="end the run and see the score",
+         usage=["finish"], options={},
+         description="Ends the run here and shows the full score, including the "
+                     "technology share fog otherwise withholds. The save still loads, "
+                     "but the run stays ended.")
+def _cmd_finish(sim, nodes, cmd, ended):
+    if not ended:
+        sim.dead_reason = "you finished the run in %d AD and asked for the score" % sim.year
+    return {"ok": True, **final_report(sim, nodes)}
+
+
+@command("why", shape="tech", group="overview", aliases=("explain", "look", "inspect"),
+         summary="everything known about one thing",
+         usage=["why <id or name>", "why <id> compact", "why <id> full"],
+         options={"<id>": "a technology or concern, by id or name",
+                  "compact": "short reply: status, blocked_by, explanation",
+                  "full": "repeat the explanations otherwise shown once per game"},
+         description="Cost, staff, risk, chain, what it unlocks, and exactly why it "
+                     "is or is not startable right now.")
+def _cmd_why(sim, nodes, cmd, ended):
+    node_id = cmd.get("id")
+    if node_id in FIGURES and node_id not in nodes:
+        return figure_reply(sim, node_id)
+    # The goal is the one thing you were told the name of on arrival; see
+    # the _goal_why note on the fog guard above for why it is `why` alone.
+    if (isinstance(node_id, str) and node_id in nodes and not sim.is_visible(node_id)
+            and node_id != sim.goal):
+        return {"ok": False,
+                "error": "you have never heard of that. You know what you have "
+                         "built and what you could begin now; use 'available'."}
+    if not isinstance(node_id, str):
+        return {"ok": False,
+                "error": 'which one? give an id, for example '
+                         '{"cmd":"why","id":"units_standards"}. '
+                         'Use {"cmd":"available"} to see what you could begin.'
+                if node_id is None else
+                "id must be a name in quotes, not %s" % type(node_id).__name__}
+    if node_id not in nodes:
+        # Only blame the fog when there IS any: with fog off, the error must
+        # not claim fog is limiting the suggestions, in a game started with
+        # the whole tree visible.
+        return {"ok": False, "error": "unknown node %r. did you mean: %s"
+                % (node_id, ", ".join(_did_you_mean(node_id, nodes, sim=sim))
+                   or ("no idea, and under fog of war I can only suggest "
+                       "things you have heard of"
+                       if sim.fog
+                       else "no idea - nothing in the tree is spelled much "
+                            "like that"))}
+    explained = _node_explain(sim, nodes, node_id)
+    if explained.get("staff_to_keep_it_open_means"):
+        if already_explained(sim, "staffing_means", cmd):
+            explained["staff_to_keep_it_open_means"] = (
+                "a share of their year, not a headcount, and separate from "
+                "the crew that builds it ('why %s full' explains it again)"
+                % node_id)
+        if already_explained(sim, "staffing_share", cmd):
+            explained["these_are_a_share_of_their_year_not_a_headcount"] = None
+    # The floor still ahead: finished nodes count nothing, active ones what
+    # is left of them. critical_path_years stays the from-scratch floor.
+    explained["critical_path_years_remaining"] = (
+        None if sim.fog else round(remaining_critical_path_years(
+            nodes, node_id, sim.done, active_years_left(nodes, sim.active)), 1))
+    if goods_market_line(sim, node_id):
+        explained["goods_market_line"] = goods_market_line(sim, node_id)
+    if opening_effect(sim, node_id):
+        explained["opening_effect"] = opening_effect(sim, node_id)
+    return dict(ok=True, **explained)
+
+
+
+@command("path", shape="tech", group="overview", aliases=("route", "plan"), fog_hidden=True,
+         summary="the route to one thing",
+         usage=["path <id or name>"], options={"<id>": "the goal or any target"},
+         description="Everything still standing between here and there, and which "
+                     "of those you could start today. Try it on your goal first.")
+def _cmd_path(sim, nodes, cmd, ended):
+    if sim.fog:
+        # THE REASON HAS TO BE THE REAL ONE: the command is switched off
+        # wholesale under fog, regardless of whether this particular node
+        # is already done, and the error must say that rather than implying
+        # any one id has not been discovered.
+        return {"ok": False,
+                "error": "route planning is switched off under fog of war: "
+                         "nobody can lay out a road to somewhere they have "
+                         "not been, whether or not you have built this "
+                         "particular thing already. Use 'available' to see "
+                         "what you could begin now."}
+    node_id = cmd.get("id")
+    if node_id not in nodes:
+        return {"ok": False, "error": "unknown node id %r" % node_id}
+    need = closure(nodes, node_id)
+    order = topo_order(nodes, need)
+    remaining = [node_id for node_id in order if node_id not in sim.done]
+    out = {"ok": True, "id": node_id, "name": nodes[node_id]["name"], "done": node_id in sim.done,
+           "remaining_count": len(remaining), "remaining": remaining,
+           "years_following_the_chain_alone": round(remaining_critical_path_years(
+               nodes, node_id, sim.done, active_years_left(nodes, sim.active)), 1),
+           "years_following_the_chain_alone_means": "the calendar floor of the longest chain, not counting money or hours",
+           "leverage_points": leverage_points(sim), "leverage_note": LEVERAGE_NOTE}
+    warning = knowledge_loss_warning(sim)
+    if warning:
+        out["knowledge_loss_warning"] = warning
+    # THE JOIN: "what the goal still needs" and "what I could start today"
+    # are two separate reports - this one, and `available` - and by
+    # midgame nearly everything on `available`'s several-hundred row list
+    # is irrelevant to any one goal. Do the intersection here, once,
+    # cheapest first, so it never has to be done by eye or by script.
+    _startable = sorted((node_id for node_id in remaining if sim.can_start(node_id)),
+                        key=lambda x: sim.project_cost(x))
+    out["startable_today_count"] = len(_startable)
+    out["startable_today_toward_this"] = (
+        [_brief(sim, nodes, node_id, False) for node_id in _startable[:30]] or "nothing yet")
+    if len(_startable) > 30:
+        out["and_more_startable_today"] = len(_startable) - 30
+    out["still_waiting_on_something_else"] = len(remaining) - len(_startable)
+    if remaining and not _startable:
+        out["note"] = "nothing on the route is startable today"
+        out["nearest_blockers"] = route_blockers(sim, nodes, remaining, 3)
+    # A ROUTE CAN BE ENTIRELY TRUE AND ENTIRELY UNABLE TO PAY THE RENT.
+    # Early in any tree the critical path is almost pure knowledge, zero
+    # revenue; following `path` with no word of that walks a new player
+    # straight into the opening debt trap this engine otherwise warns
+    # about everywhere else, unless this screen says so itself.
+    #
+    # The warning must not be gated on already being insolvent: that
+    # catches the damage, never the cause, and by the time recurring
+    # income actually goes negative the debt is often already taken. It
+    # has to fire every time the route itself cannot pay for itself,
+    # whether or not today's ledger happens to look fine yet - and it has
+    # to be said with the COMBINED bill of everything listed above, not
+    # each item's own affordability, because several individually
+    # affordable path items can be collectively unaffordable: `can_start`
+    # asks "could I begin this, today, on its own", which is a different
+    # and smaller question than "could I finish several of these
+    # together".
+    if _startable and all(nodes[node_id]["rev"] <= 0 for node_id in _startable):
+        _combined = sum(sim.project_cost(node_id) for node_id in _startable)
+        _raise = sim.spending_power("start")
+        out["this_route_pays_for_nothing"] = (
+            "every one of the %d things above is knowledge or "
+            "infrastructure - none earns a denarius by itself. This "
+            "route will not cover your costs; something off it has to. "
+            "{\"cmd\":\"available\",\"sort\":\"earns\",\"reverse\":true} "
+            "finds what actually pays today - building one of those "
+            "alongside the route is not a detour from it, it is how you "
+            "afford to keep walking it." % len(_startable))
+        # THE COMBINED BILL, not each item's own affordability: several
+        # individually-affordable starts are not one affordable start, and
+        # `can_start` has no memory of its own earlier answers, so this is
+        # where the total has to be added up.
+        if _combined > _raise:
+            out["these_together_cost_more_than_you_can_raise"] = (
+                "starting everything listed above would cost %s in "
+                "all, against %s you could actually raise today. Each "
+                "one passed its OWN affordability check when it was "
+                "priced; that is not the same question as whether you "
+                "can afford several of them at once. Pick one, or a few, "
+                "not all of them - and see what pays before spending "
+                "the rest."
+                % ("{:,.0f}".format(_combined), "{:,.0f}".format(_raise)))
+    # A ROUTE THAT DOES NOT SAY "RESTORE" IS A ROUTE YOU CANNOT FOLLOW: a
+    # node you know but have SHUT does not appear above (it is done, so it
+    # is not remaining, and nothing downstream is blocked by it), yet
+    # after a bad century it can be exactly the thing standing between the
+    # route and its income, because its plant is gone and its income with
+    # it. Only `restore` reopens it, so `path` has to say so explicitly or
+    # nothing on this screen points at the right verb.
+    _shut = sorted(node_id for node_id in need
+                   if node_id in getattr(sim, "mothballed", set()) and node_id in sim.done)
+    if _shut:
+        out["on_this_route_but_shut_down"] = _shut[:10]
+        out["reopen_them_with"] = ("'restore <id>' - you still know how, so "
+                                   "putting the plant back costs a fraction "
+                                   "of building it. Nothing downstream is "
+                                   "waiting on them; their income is")
+    return out
+
+
+
+@command("materials", shape="bare", group="overview",
+         summary="material stocks, production and demand",
+         usage=["materials"], options={},
+         description="Stocks on hand, annual production and demand, and current "
+                     "buy and sell values for every tracked material.")
+def _cmd_materials(sim, nodes, cmd, ended):
+    return {"ok": True, "materials": sim.materials_report(),
+            "units": "stocks are tonnes; production and demand are tonnes/year",
+            "how_to_trade": "buy material <name> <tonnes>; sell <name> <tonnes>"}
+
+
+
+@command("risk", group="society", aliases=("hazards", "risks"),
+         summary="what history is about to do to you",
+         usage=["risk", "risk json"], options={"json": "the raw reply"},
+         description="The hazards in play and what blunts them.")
+def _cmd_risk(sim, nodes, cmd, ended):
+    knowledge_risk = sim.knowledge_risk()
+    return {"ok": True, "knowledge_risk": knowledge_risk, "year": sim.year,
+            "confiscation": sim.confiscation_status(),
+            "interest_groups": sim.interest_groups(),
+            "note": "What history is about to do to you, and what you have "
+                    "built that blunts it. Every hazard here is fightable."}
+
+
+
+@command("groups", group="society", aliases=("interest_groups", "factions"),
+         summary="who the economy has organised against you",
+         usage=["groups", "groups json"], options={"json": "the raw reply"},
+         description="The interest groups your doing has created: people whose income you took "
+                     "(producers your sales displace, employers your hiring squeezes), how many, "
+                     "what they lost and to what, and what the state does about it - makes it good "
+                     "from its purse, raises the rest from taxpayers it sees, or forbids the "
+                     "technique.")
+def _cmd_groups(sim, nodes, cmd, ended):
+    report = sim.interest_groups_report()
+    report["ok"] = True
+    return report
+
+
+
+@command("values", shape="bare", group="society", aliases=("beliefs", "traits", "society"),
+         summary="what this society believes, as numbers",
+         usage=["values"], options={},
+         description="The same fields a completion's 'changes the society' line names.")
+def _cmd_values(sim, nodes, cmd, ended):
+    return _agent_values(sim)
+
+
+
+def _stuck_work_in_hand(sim, nodes):
+    if not sim.active:
+        return None
+    _waits = {}
+    _kinds = {}
+    _why_underfunded = {}
+    for node_id, progress in sorted(sim.active.items()):
+        bill = progress.get("cost_left")
+        if bill is None:
+            bill = max(0.0, sim.project_cost(node_id) - progress["spent"])
+        _waits[node_id] = _waiting_on(sim, nodes, node_id, progress, bill)
+        # SAME GAP AS `why` AND `state`: arrears gives unspendable
+        # founder hours back, so this can say "waiting on your hours"
+        # for a project that is really stuck on money, on the exact
+        # screen a player checks first when something is stalled.
+        # why_underfunded, already computed onto st by core.py, is
+        # the real reason - carry it per project, not just the string
+        # above.
+        if progress.get("why_underfunded"):
+            _why_underfunded[node_id] = progress["why_underfunded"]
+            _kinds[node_id] = "money"
+        elif progress.get("ph_left", 0.0) <= 0 and progress.get("yrs", 0.0) < sim.calendar_floor(node_id):
+            _kinds[node_id] = "calendar"
+        else:
+            _kinds[node_id] = "active"
+    return {"what": "work in hand", "kind": "active",
+            "how_many": len(sim.active),
+            "each_waiting_on": _waits,
+            "each_kind": _kinds,
+            **({"each_why_underfunded": _why_underfunded}
+               if _why_underfunded else {})}
+
+
+def route_blockers(sim, nodes, road, count):
+    """The nodes of an unstartable route nearest to being startable, each
+    with the reason start_reason gives; shared by `stuck` and `path`.
+    """
+    near = sorted(road, key=lambda node_id: len(closure(nodes, node_id) - sim.done))
+    rows = []
+    for node_id in near[:count]:
+        blockers = sim.start_blockers(node_id)
+        rows.append({"id": node_id, "why": blockers[0]["text"] if blockers else sim.start_reason(node_id)[1],
+                     "kind": blockers[0]["kind"] if blockers else None,
+                     "kinds": list(dict.fromkeys(blocker["kind"] for blocker in blockers))})
+    return rows
+
+
+def _stuck_road_to_goal(sim, nodes, _fog):
+    # THE ROAD TO THE GOAL, not the tree at large: a report that leans on
+    # whether ANYTHING in the tree is startable is useless when hundreds
+    # of unrelated things are startable but none of them serves the goal.
+    # Nobody is stuck for want of a bottling shed.
+    #
+    # Returns (reason_or_None, goal_routing_off_under_fog) - the caller needs
+    # the flag even on the years this has no reason to report, to explain at
+    # the end why nothing here spoke about the goal at all.
+    _goal = sim.goal
+    _goal_routing_off_under_fog = False
+    if _goal in nodes and not _fog:
+        _road = closure(nodes, _goal) - sim.done
+        _road_open = [node_id for node_id in _road if sim.start_reason(node_id)[0]]
+        if _road and not _road_open:
+            _near = route_blockers(sim, nodes, _road, 5)
+            return ({
+                "what": "the road to the goal", "kind": _near[0]["kind"] or "knowledge",
+                "why": "%d of its nodes are still to build and NONE of them "
+                       "is startable today. The nearest is %s: %s"
+                       % (len(_road), _near[0]["id"], _near[0]["why"]),
+                "the_nearest_few": [row["id"] for row in _near]},
+                _goal_routing_off_under_fog)
+    elif _goal in nodes and _fog:
+        # SAY SO, THE WAY `rush` DOES: the road-to-the-goal branch above is
+        # switched off under fog of war for exactly the reason `path`
+        # gives for doing the same - naming what is left on a route to
+        # something not fully discovered would hand over the hidden tree.
+        # Silence here would read as "everything below is the real answer"
+        # when it is really "the one analysis that could answer this did
+        # not run", so the caller is handed _goal_routing_off_under_fog and
+        # must say so rather than leaving a player to infer it from an
+        # unhelpful reply.
+        _goal_routing_off_under_fog = True
+    return (None, _goal_routing_off_under_fog)
+
+
+def _stuck_started_nothing(sim, _startable, _afford, saving=False):
+    # STARTING NOTHING IS THE COMMONEST WAY TO GET NOWHERE, and this
+    # command - whose whole job is "why you are not getting on" - must not
+    # report "you have work in hand, money to pay for it and people to do
+    # it" when no project is actually active.
+    if sim.active:
+        return None
+    _cheap = (min(_afford or _startable, key=lambda k: sim.project_cost(k))
+              if (_afford or _startable) and not saving else None)
+    if saving:
+        return {"what": "you have started nothing", "kind": "idle",
+                "why": "no project is in hand, which is what the savings plan below intends."}
+    return {"what": "you have started nothing", "kind": "idle",
+            "why": ("no project is in hand, so no year of yours "
+                    "is being spent on one. %s"
+                    % ("'start %s' would begin the cheapest "
+                       "thing you can pay for today." % _cheap
+                       if _cheap else
+                       "and nothing in front of you can be "
+                       "begun, which the rows below explain."))}
+
+
+def _stuck_shut_ventures(sim, nodes):
+    # AND WHAT YOU HAVE BUILT AND NEVER SWITCHED ON: a report of "nothing
+    # you could begin" is incomplete while a finished, closed concern with
+    # revenue above upkeep sits unopened - reopening it needs no new
+    # building at all.
+    _shut = sorted(node_id for node_id in sim.done
+                   if sim.is_venture(node_id) and node_id not in sim.operating
+                   and sim.venture_real_earnings(node_id) > sim.venture_real_upkeep(node_id))
+    if not _shut:
+        return None
+    # DO NOT RECOMMEND A COMMAND THAT WILL FAIL: picking the best-margin
+    # shut concern by revenue minus upkeep alone and telling the player to
+    # 'open' it is not enough, because a household deep in the
+    # credit-exhaustion/named-trade trap (see PATH_SEARCH.md) can have too
+    # little free staff capacity for open_venture to actually succeed.
+    # The recommendation has to check that it would work, not just that
+    # it would pay.
+    _shut_for_staff = getattr(sim, "shut_for_staff", {})
+    def _capex_now(_node_id):
+        _fee = sim.venture_capex(_node_id)
+        if (_node_id in _shut_for_staff
+                and sim.year - _shut_for_staff[_node_id] <= sim.STAFF_CLOSURE_GRACE):
+            _fee *= 0.1
+        return _fee
+    def _openable(_node_id):
+        return (sim.staffing_open_refusal(_node_id, sim.opening_fee(_node_id)[1]) is None
+                and _capex_now(_node_id) <= sim.spending_power("buy"))
+    _really_openable = [node_id for node_id in _shut if _openable(node_id)]
+    if _really_openable:
+        _best = max(_really_openable,
+                   key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
+        return {"what": "things you built and never opened", "kind": "closed",
+                "why": "%d finished concern(s) are shut and "
+                       "earning nothing. The best you could "
+                       "actually open right now is %s, which "
+                       "would earn %s a year against %s of "
+                       "upkeep: 'open %s'"
+                       % (len(_shut), _best,
+                          "{:,.0f}".format(sim.venture_real_earnings(_best)),
+                          "{:,.0f}".format(sim.venture_real_upkeep(_best)),
+                          _best)}
+    _best = max(_shut, key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
+    _staff_refusal = sim.staffing_open_refusal(_best, sim.opening_fee(_best)[1], with_advice=False)
+    if _staff_refusal:
+        _why = _staff_refusal.rstrip(".")
+    else:
+        _why = ("opening it costs %s denarii, and between cash "
+                "and what anyone will advance you can raise %s"
+                % ("{:,.0f}".format(_capex_now(_best)),
+                   "{:,.0f}".format(sim.spending_power("buy"))))
+    return {"what": "things you built and cannot open yet", "kind": "closed",
+            "why": "%d finished concern(s) are shut and "
+                   "earning nothing, and none of them can "
+                   "be opened right now. The best is %s, "
+                   "which would earn %s a year against "
+                   "%s of upkeep, but %s. Hire, teach, or "
+                   "close something to free the hands, "
+                   "or raise the money, and try again"
+                   % (len(_shut), _best,
+                      "{:,.0f}".format(sim.venture_real_earnings(_best)),
+                      "{:,.0f}".format(sim.venture_real_upkeep(_best)),
+                      _why)}
+
+
+def _stuck_nothing_or_money(sim, _startable, _afford):
+    if not _startable:
+        return {"what": "nothing you could begin", "kind": "unavailable",
+                "why": "everything in front of you is either built, "
+                       "already running, or waiting on something. "
+                       "'available' says which."}
+    if not _afford:
+        return {"what": "money", "kind": "money",
+                "why": "%d things are startable and the cheapest of "
+                       "them costs %s, against the %s you could "
+                       "raise"
+                       % (len(_startable),
+                          "{:,.0f}".format(min(sim.project_cost(node_id)
+                                               for node_id in _startable)),
+                          "{:,.0f}".format(sim.spending_power("start")))}
+    return None
+
+
+def _stuck_raw_material(sim):
+    if sim.binding and sim.resource_throttle() < 0.95:
+        return {"what": "a raw material", "kind": "supply",
+                "why": "%s: work is running at %d%% of plan. %s"
+                       % (sim.binding, sim.resource_throttle() * 100,
+                          sim.shortage_remedy(sim.binding))}
+    return None
+
+
+def _stuck_room_for_people(sim):
+    _room = sim.household_room()
+    if _room < 1.0:
+        return {"what": "room for people", "kind": "specialists",
+                "why": "you can take %.2f more people. %s"
+                       % (max(0.0, _room), sim._room_advice())}
+    return None
+
+
+def _stuck_arrears(sim):
+    if sim.capital < 0:
+        return {"what": "arrears", "kind": "money",
+                "why": "you owe %s of the %s anyone will advance "
+                       "you, and the interest is %s a year"
+                       % ("{:,.0f}".format(-sim.capital),
+                          "{:,.0f}".format(sim.credit_limit()),
+                          "{:,.0f}".format(-sim.capital
+                                           * sim.debt_interest_rate()))}
+    return None
+
+
+def _stuck_credit_freeze(sim):
+    if sim.year < sim.credit_frozen_until:
+        return {"what": "a credit freeze", "kind": "money",
+                "why": "nobody will fund new work until %d"
+                       % int(sim.credit_frozen_until)}
+    return None
+
+
+def _stuck_startable_and_afford(sim, nodes, _fog):
+    _startable = [node_id for node_id in nodes
+                  if node_id not in sim.done and node_id not in sim.active
+                  and (not _fog or sim.is_visible(node_id))
+                  and sim.start_reason(node_id)[0]]
+    _afford = [node_id for node_id in _startable
+               if sim.start_refusal(node_id) is None]
+    return _startable, _afford
+
+
+@command("stuck", shape="bare", group="overview", aliases=("blocked", "help_me", "why_stuck"),
+         summary="why you are not getting on",
+         usage=["stuck", "stuck compact"], options={"compact": "short reply: a blockers list"},
+         description="Gathers every kind of stall in one place: work blocked, no road "
+                     "to the goal, nothing started, a shut venture, a binding raw "
+                     "material, no room for people, arrears, a credit freeze.")
+def _cmd_stuck(sim, nodes, cmd, ended):
+    # WHY AM I STUCK: several independent kinds of stall - work blocked, no
+    # road to the goal, nothing started, a shut venture, a binding raw
+    # material, no room for people, arrears, a credit freeze - can each
+    # keep a run motionless for decades, and stall_diagnosis alone only
+    # speaks once insolvency has already set in. This command gathers
+    # every check into one place instead of making a player find each
+    # cause by guessing at `why`.
+    _fog = sim.fog
+    _startable, _afford = _stuck_startable_and_afford(sim, nodes, _fog)
+    _goal_reason, _goal_routing_off_under_fog = _stuck_road_to_goal(sim, nodes, _fog)
+    # Every check below is independent, and GATHERS into `reasons`: each one
+    # that has something to say is kept, none of them stop the others from
+    # running. More than one usually applies at once, and a player deciding
+    # what to fix first needs to see all of them, not just whichever is
+    # checked first - see _compact_stuck in dispatch.py, which already
+    # assumes this list can hold several entries. The order below is the
+    # fixed order a player reads them in: work in hand, the road to the
+    # goal, having started nothing, shut ventures, nothing startable or
+    # unaffordable, a binding raw material, no room for people, arrears, a
+    # credit freeze.
+    _saving = saving_reason(sim)
+    _checks = (
+        _stuck_work_in_hand(sim, nodes),
+        _goal_reason,
+        _stuck_started_nothing(sim, _startable, _afford, saving=bool(_saving)),
+        _saving,
+        _stuck_shut_ventures(sim, nodes),
+        _stuck_nothing_or_money(sim, _startable, _afford),
+        _stuck_raw_material(sim),
+        _stuck_room_for_people(sim),
+        _stuck_arrears(sim),
+        _stuck_credit_freeze(sim),
+    )
+    reasons = [reason for reason in _checks if reason]
+    _stall = sim.stall_diagnosis()
+    out = {"ok": True,
+           "you_could_begin": len(_startable),
+           "and_could_pay_for": len(_afford),
+           "what_is_holding_you_up": reasons or (
+               "nothing: %d project(s) in hand, money to pay for them and "
+               "people to do them" % len(sim.active)),
+           "and_the_cheapest_thing_you_could_start_now": (
+               min(_startable, key=lambda k: sim.project_cost(k))
+               if _startable and not _saving else None)}
+    if _stall:
+        out["and_you_are_in_a_hole"] = _stall
+    if _goal_routing_off_under_fog:
+        out["this_does_not_know_your_goal"] = (
+            "fog of war is on, so this cannot check whether anything "
+            "below is actually on the route to your goal, or name the "
+            "one thing blocking it - that would leak the hidden tree, "
+            "the same reason 'path' refuses outright under fog. "
+            "Everything above is general advice, not goal-directed; "
+            "'why <id>' on anything you have heard of is still the way "
+            "to reason toward the goal by hand.")
+    return out
+
+
+
+@command("mines", shape="bare", group="overview", aliases=("workings", "mine", "pits"),
+         summary="your own workings",
+         usage=["mines"], options={},
+         description="Each mine you own: output, upkeep and what limits it. Buy with "
+                     "buy mine, shut with close.")
+def _cmd_mines(sim, nodes, cmd, ended):
+    # See _agent_mines above: the one place this arithmetic is written,
+    # shared with `capacity`, so the two screens cannot drift apart.
+    return _agent_mines(sim)
+
+
+
+@command("capacity", shape="bare", group="overview",
+         aliases=("overview", "industry", "dashboard", "infrastructure", "power"),
+         summary="why active projects move at their present pace",
+         usage=["capacity"], options={},
+         description="Annual material throughput and shortages, trade-hour demand and "
+                     "supply, power, staffing and finance. Throughput is this year's "
+                     "flow; durable unused material is shown separately by materials "
+                     "as stock on hand.")
+def _cmd_capacity(sim, nodes, cmd, ended):
+    return _agent_capacity(sim, nodes, cmd)
+
+
+
+@command("portfolio", group="overview",
+         summary="every active project and what limits it",
+         usage=["portfolio", "portfolio json"], options={"json": "the raw reply"},
+         description="The founder hours each project actually gets this year and why, "
+                     "the reason it is not moving faster, and each hired trade's "
+                     "demand against supply.")
+def _cmd_portfolio(sim, nodes, cmd, ended):
+    return _agent_portfolio(sim, nodes, cmd)
+
+
+
+@command("economy", group="money", aliases=("prices", "econ"),
+         summary="what things cost and what you can trade",
+         usage=["economy", "economy full"], options={"full": "every row"},
+         description="Current values of goods and inputs as this economy prices them.")
+def _cmd_economy(sim, nodes, cmd, ended):
+    return _agent_economy(sim, cmd)
+
+
+
+@command("changes", group="overview", aliases=("diff", "recap", "summary"),
+         summary="what changed lately",
+         usage=["changes", "changes <years>"],
+         options={"<years>": "how far back to compare (default 5)"},
+         description="A recap of the last few years: what completed, what moved in "
+                     "money, people and the society.")
+def _cmd_changes(sim, nodes, cmd, ended):
+    return _agent_changes(sim, nodes, cmd)
+
+
+
+@command("population", group="society",
+         aliases=("demographics", "census", "pop"),
+         summary="the country's numbers and your reach",
+         usage=["population"], options={},
+         description="The country, the one town your household reaches, and per trade "
+                     "how many exist, how many are within reach and how many you "
+                     "employ. Country-wide and reach figures are estimates.")
+def _cmd_population(sim, nodes, cmd, ended):
+    return {"ok": True, **sim.population_report()}

@@ -1,8 +1,8 @@
 """priority: regression checks, run individually with `--only priority`."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.proto.typed import parse_typed as _parse_typed
-from sim.engine.proto import command_registry as _registry
+from sim.ui.proto.typed import parse_typed as _parse_typed
+from sim.ui.proto import command_registry as _registry
 
 # Complaint 89: a player can say which active project gets founder hours first.
 

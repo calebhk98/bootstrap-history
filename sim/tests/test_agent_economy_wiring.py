@@ -6,7 +6,7 @@ import os
 
 from sim import perf_fingerprint
 from sim.engine.economy_port_year import SWITCH_ENVIRONMENT, switch_requested
-from sim.engine.proto.saveload import save_state, load_state
+from sim.engine.saveload import save_state, load_state
 
 
 def agent_game(civ, seed=1):

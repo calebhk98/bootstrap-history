@@ -51,43 +51,43 @@ Full per-name and per-file counts are reproducible with the scanner at
 ### A.1 Per-file counts, worst first (72 of 83 files have ≥1)
 
 ```
-389  sim/engine/cli.py
+389  sim/ui/cli.py
 344  sim/tests/test_round2_policy_hazards_options.py
 260  sim/treetool.py
 258  sim/engine/economy.py
-225  sim/engine/proto/render.py
+225  sim/ui/proto/render.py
 222  sim/tests/test_scanners_and_scheduling.py
-199  sim/engine/proto/dispatch.py
+199  sim/ui/proto/dispatch.py
 188  sim/engine/projects.py
 186  sim/engine/society.py
 164  sim/tests/test_early_playtest.py
 163  sim/tests/test_round8_fixes.py
 141  sim/tests/test_round9.py
-138  sim/engine/proto/techtree.py
+138  sim/ui/proto/techtree.py
 122  sim/engine/core.py
 119  sim/engine/data.py
 103  sim/labour/labour.py
  92  sim/planner.py
  88  sim/tests/test_labour_productivity.py
- 86  sim/engine/proto/economy.py
+ 86  sim/ui/proto/economy.py
  82  sim/build_index.py
  82  sim/tests/test_round10.py
  72  sim/tests/test_people_attrition_scholars.py
  71  sim/tests/test_craftsmen_wording.py
- 67  sim/engine/proto/state.py
+ 67  sim/ui/proto/state.py
  65  sim/path_search.py
- 61  sim/engine/proto/saveload.py
- 59  sim/engine/proto/typed.py
+ 61  sim/engine/saveload.py
+ 59  sim/ui/proto/typed.py
  59  sim/tests/test_round8g_display.py
  59  sim/tests/test_sort_nearest.py
  50  sim/audit_costs.py
  45  sim/engine/commodities.py
  41  sim/engine/fog.py
  39  sim/tests/harness.py
- 38  sim/engine/proto/nodes.py
+ 38  sim/ui/proto/nodes.py
  36  sim/tests/test_allocate.py
  34  sim/perf_fingerprint.py
- 32  sim/engine/proto/util.py
+ 32  sim/ui/proto/util.py
  32  sim/tests/test_names_and_fog.py
  31  sim/tests/test_interface_honesty.py
  29  sim/repro_nondeterminism.py
@@ -95,7 +95,7 @@ Full per-name and per-file counts are reproducible with the scanner at
  24  sim/engine/settings.py
  23  sim/tests/test_arrears_visibility.py
  23  sim/tests/test_player_log.py
- 22  sim/engine/proto/score.py
+ 22  sim/ui/proto/score.py
  22  sim/tests/test_five_things_winner.py
  22  sim/tests/test_mines.py
  21  sim/tests/__main__.py
@@ -118,7 +118,7 @@ Full per-name and per-file counts are reproducible with the scanner at
   4  sim/tests/test_demographics.py
   4  sim/tests/test_hedge_chain.py
   4  sim/tests/test_realism_part02.py
-  3  sim/engine/proto/help.py
+  3  sim/ui/proto/help.py
   3  sim/tests/test_historical_events.py
   2  sim/tests/test_market_saturation.py
   2  sim/tests/test_realism_part05.py
@@ -126,8 +126,8 @@ Full per-name and per-file counts are reproducible with the scanner at
 ```
 
 The 11 files with zero short bindings: `sim/engine/__init__.py`,
-`sim/engine/proto/__init__.py`, `sim/engine/proto/ventures.py`,
-`sim/engine/protocol.py`, `sim/simulator.py`, `sim/test_regressions.py`,
+`sim/ui/proto/__init__.py`, `sim/ui/proto/ventures.py`,
+`sim/ui/protocol.py`, `sim/simulator.py`, `sim/test_regressions.py`,
 `sim/tests/__init__.py`, `sim/tests/test_commodities_wired_in.py`,
 `sim/tests/test_explicit_starting_techs.py`, `sim/tests/test_realism_part03.py`,
 `sim/tests/test_realism_part04.py`. Nearly half the total (about 2,150 of
@@ -144,10 +144,10 @@ human to read it first.
 **`k` — 976 bindings, 53 files. Verdict: CONSISTENT (role), varies (referent).**
 Always "the current dict key," and in the overwhelming majority of call sites
 that dict is the tech tree, so `k` is a node id.
-- `sim/engine/proto/dispatch.py:75` — `k = cmd.get("id")`, repeated verbatim
+- `sim/ui/proto/dispatch.py:75` — `k = cmd.get("id")`, repeated verbatim
   at lines 119, 235, 518, 644, 912, 1829: the node id named by an incoming
   command.
-- `sim/engine/proto/dispatch.py:300` — `n = nodes[k]`: `k` immediately used
+- `sim/ui/proto/dispatch.py:300` — `n = nodes[k]`: `k` immediately used
   to key into `nodes`.
 - `sim/treetool.py:33` — `return set(k for k in p["wage_rates_denarii_per_hour"] if not k.startswith("_"))`:
   here `k` is a *trade name*, not a node id — same role (dict key), different
@@ -160,13 +160,13 @@ that dict is the tech tree, so `k` is a node id.
   `haversine_km`).
 - `sim/engine/economy.py:412` — `r = 0.12` (a base interest rate, in
   `debt_interest_rate`).
-- `sim/engine/cli.py:528-529` — `n = len(results)` ... `ok = [r for r in results if r.goal_year]`:
+- `sim/ui/cli.py:528-529` — `n = len(results)` ... `ok = [r for r in results if r.goal_year]`:
   here `r` is a completed simulation *run/result object*, unrelated to either
   radius or rate.
 Three incompatible meanings under one letter; every site must be read.
 
 **`m` — 290 bindings, 31 files. Verdict: VARIES.**
-- `sim/engine/cli.py:314` — `for m in dependants.get(k, ())`: `m` is a node id.
+- `sim/ui/cli.py:314` — `for m in dependants.get(k, ())`: `m` is a node id.
 - `sim/planner.py:127` — `for m in need: for p in nodes[m]["pre"]:`: `m` is
   also a node id here — consistent with the line above.
 - `sim/engine/society.py:16` — `m = dict(self.STATE_WEIGHTS)`: `m` is a fresh
@@ -175,7 +175,7 @@ Three incompatible meanings under one letter; every site must be read.
   `m` is a *material* id, a third referent.
 
 **`s` — 272 bindings, 35 files. Verdict: locally consistent, globally VARIES.**
-Inside `sim/engine/proto/dispatch.py`'s command handlers, every one of the
+Inside `sim/ui/proto/dispatch.py`'s command handlers, every one of the
 dispatch functions is literally `def _cmd_x(s, nodes, cmd, ended):` — `s` is
 always the running `Sim`. That convention is real and load-bearing across
 that file and `typed.py`/`render.py`'s handler functions. Outside it:
@@ -190,24 +190,24 @@ that file and `typed.py`/`render.py`'s handler functions. Outside it:
 real second meaning at the CLI/protocol boundary.**
 - `sim/engine/society.py:14` — `def state_interest(self, n):` ... `n.get("traits", [])`.
 - `sim/treetool.py:52-53` — `def normalise_v2(n): for k, v in DEFAULTS.items(): n.setdefault(k, ...)`.
-- `sim/engine/proto/techtree.py:536-538` — `for k in ok: g = groups.setdefault(_subject_of(nodes[k]), [])`
+- `sim/ui/proto/techtree.py:536-538` — `for k in ok: g = groups.setdefault(_subject_of(nodes[k]), [])`
   — note `nodes[k]` is fetched fresh rather than reusing a variable called
   `n` here, which is itself a small tell that `n` "means node" strongly
   enough that authors reach for a fresh `nodes[k]` rather than risk `n`
   meaning something else in that scope.
-- **But**: `sim/engine/cli.py:528` — `n = len(results)` is a count, not a
+- **But**: `sim/ui/cli.py:528` — `n = len(results)` is a count, not a
   node, and the *JSON protocol* has an actual field named `"n"` (quantity —
-  see `sim/engine/proto/dispatch.py:1778`, `n, err = _qty(cmd, "n", 1)`) and
+  see `sim/ui/proto/dispatch.py:1778`, `n, err = _qty(cmd, "n", 1)`) and
   Python's own `difflib.get_close_matches(q, list(nodes), n=limit, ...)`
-  (`sim/engine/proto/nodes.py:175`) takes a keyword argument literally
+  (`sim/ui/proto/nodes.py:175`) takes a keyword argument literally
   called `n`. That stdlib keyword must never be touched by any rename.
 
 **`t` — 211 bindings, 29 files. Verdict: VARIES, "trade" dominant.**
-- `sim/engine/cli.py:337` — `for t in n["lab"]: if t not in wages: ...`: a
+- `sim/ui/cli.py:337` — `for t in n["lab"]: if t not in wages: ...`: a
   trade id.
 - `sim/engine/society.py:21` — `sum(m.get(t, 0.0) for t in n.get("traits", []))`:
   a trait name.
-- `sim/engine/proto/typed.py:105` — `for w in rest: t = str(w)`: a raw
+- `sim/ui/proto/typed.py:105` — `for w in rest: t = str(w)`: a raw
   command token.
 
 **`v` — 200 bindings, 30 files. Verdict: CONSISTENT.**
@@ -223,7 +223,7 @@ to treat as one concept.
   the entire prices *file*, a dict, not an id.
 - `sim/audit_costs.py:98` — `p = producer_of(key, nodes)`: a producer node id
   (or `None`).
-- `sim/engine/cli.py:555` — `q = lambda xs, p: xs[min(len(xs)-1, int(p*len(xs)))]`:
+- `sim/ui/cli.py:555` — `q = lambda xs, p: xs[min(len(xs)-1, int(p*len(xs)))]`:
   `p` is a percentile fraction 0–1, a fourth, numeric meaning.
 
 **`x` — 157 bindings, 28 files. Verdict: CONSISTENT role (generic item), but
@@ -279,9 +279,9 @@ attribute.**
 - `sim/build_index.py:50` — `for f in files:` a file path.
 
 **`a` — 101 bindings, 25 files. Verdict: locally consistent, globally VARIES.**
-Inside `sim/engine/cli.py`, `a` is the argparse `Namespace` and nothing
+Inside `sim/ui/cli.py`, `a` is the argparse `Namespace` and nothing
 else, in every one of `cmd_validate(a)`, `cmd_path(a)`, and roughly two
-dozen more `cmd_*(a)` functions (`sim/engine/cli.py:329`, `:432`, and on).
+dozen more `cmd_*(a)` functions (`sim/ui/cli.py:329`, `:432`, and on).
 Outside that file:
 - `sim/audit_costs.py:146` — `def report(a, show_materials=False): n = a["nodes"]`:
   `a` is the audit-result dict.
@@ -289,7 +289,7 @@ Outside that file:
   `a` is an alias-map dict.
 
 **`h` — 93 bindings, 23 files. Verdict: VARIES between two units.**
-- `sim/engine/cli.py:857`, `:1521` — `h = meta.get("horizon_years")` (an
+- `sim/ui/cli.py:857`, `:1521` — `h = meta.get("horizon_years")` (an
   integer *years* setting), the identical pattern copy-pasted at both sites.
 - `sim/engine/core.py:1933` — `sum(h for _, h in _arrears_hours_lost)` (a
   float *hours* quantity).
@@ -299,7 +299,7 @@ current uses look correct.
 
 **`_k` — 85 bindings, 15 files. Verdict: CONSISTENT — the underscored twin
 of `k`.**
-- `sim/engine/proto/dispatch.py:1202` — `def _capex_now(_k): _fee = s.venture_capex(_k)`:
+- `sim/ui/proto/dispatch.py:1202` — `def _capex_now(_k): _fee = s.venture_capex(_k)`:
   used specifically because an outer `k` already exists in the enclosing
   function and `_k` avoids shadowing it.
 - `sim/engine/core.py:1953` — `for _k, _hr, _why in sorted(_directed_hours_unused):`.
@@ -310,7 +310,7 @@ Same referent as `k` (an id/key), just scope-shadowed.
   a goal record dict.
 - `sim/engine/economy.py:2418` — `for g in (self.nodes[k].get("req_any") or []):`:
   a requirement-group dict.
-- `sim/engine/proto/techtree.py:538` — `g = groups.setdefault(_subject_of(nodes[k]), []); g.append(k)`:
+- `sim/ui/proto/techtree.py:538` — `g = groups.setdefault(_subject_of(nodes[k]), []); g.append(k)`:
   **`g` here is a list**, not a dict — a shape change, not just a different
   referent of the same shape.
 
@@ -326,16 +326,16 @@ Same referent as `k` (an id/key), just scope-shadowed.
 change (a function, not a value).**
 - `sim/engine/commodities.py:101` — `for m, q in (n.get("mat") or {}).items()`:
   a material quantity.
-- `sim/engine/cli.py:555` — `q = lambda xs, p: xs[min(len(xs) - 1, int(p * len(xs)))]`:
+- `sim/ui/cli.py:555` — `q = lambda xs, p: xs[min(len(xs) - 1, int(p * len(xs)))]`:
   **`q` is bound to a function**, not a value — it computes a percentile.
 - `sim/engine/projects.py:1502-1527` — `q = 1.0; for g in groups: ... q *= best`:
   a substitution-quality score accumulator.
-- `sim/engine/proto/dispatch.py:823`, `:1781` — `q = s.slave_quote(...)`,
+- `sim/ui/proto/dispatch.py:823`, `:1781` — `q = s.slave_quote(...)`,
   `q = s.mine_quote(...)`: a price quote.
 
 **`d` — 54 bindings, 14 files. Verdict: VARIES.**
 - `sim/treetool.py:44` — `def _num(v, d=0.0):`: a default value.
-- `sim/engine/proto/economy.py:472` — `d = families.setdefault(fam, [0.0, 0.0])`:
+- `sim/ui/proto/economy.py:472` — `d = families.setdefault(fam, [0.0, 0.0])`:
   a 2-element `[supply, used]` accumulator list.
 - `sim/engine/commodities.py:103` — `d[m] += float(q) / span / 1000.0`: a
   per-material demand `Counter`.
@@ -352,7 +352,7 @@ outlier, and arguably a defensible exemption.**
 - `sim/labour/labour.py:1883` — `ok, _why = self.commission(best, hours); if ok: return (k, best, hours)`.
 Both follow the repo's own `(ok, message)` return-tuple convention used
 throughout `core.py`/`labour.py`/`dispatch.py`. The outlier:
-`sim/engine/cli.py:529` — `ok = [r for r in results if r.goal_year]` — here
+`sim/ui/cli.py:529` — `ok = [r for r in results if r.goal_year]` — here
 `ok` is a **list** of successful runs, not a bool, immediately followed by
 `k = len(ok)`. `ok` is also a real English word, not an abbreviation, so it
 may be worth a fourth exemption alongside `i`/`x`/`y` rather than forcing
@@ -360,13 +360,13 @@ may be worth a fourth exemption alongside `i`/`x`/`y` rather than forcing
 plan, not a technical one.
 
 **`_p` — 38 bindings, 11 files. Verdict: VARIES.**
-- `sim/engine/cli.py:1825` — `tree, _p, nodes, _w, _g = load()`: `_p` is the
+- `sim/ui/cli.py:1825` — `tree, _p, nodes, _w, _g = load()`: `_p` is the
   *discarded* prices dict from a 5-tuple unpack (note `_w`=wages and
   `_g`=goods are discarded the same way in the same line — three different
   domain objects sharing the underscore-prefix throwaway convention).
 - `sim/labour/labour.py:955` — `_p, _l = round(pay), round(lost)`: a rounded
   pay amount.
-- `sim/engine/proto/dispatch.py:279` — `for _t, _p in s.trade_draw_plan(k, None).items()`:
+- `sim/ui/proto/dispatch.py:279` — `for _t, _p in s.trade_draw_plan(k, None).items()`:
   an hours-committed value per trade.
 
 ### A.3 Proposed replacement names
@@ -585,24 +585,24 @@ pick a safe name the first time is sitting in `co_cellvars`.
   attribute-name argument anywhere. This means the AST rename does not have
   to worry about a string secretly meaning the same thing as one of these
   variables — Part B's schema fields are a different story (see below).
-- **`SAVE_FIELDS` (`sim/engine/proto/saveload.py`) has zero entries ≤ 2
+- **`SAVE_FIELDS` (`sim/engine/saveload.py`) has zero entries ≤ 2
   characters** — checked programmatically against all 100 entries. No save
   field is a short code identifier. (`"gov"` is 3 characters and is a
   cross-cutting Part B hazard — see B.3.)
-- **`KNOWN_COMMANDS` (`sim/engine/proto/dispatch.py:30`) has zero entries ≤ 2
+- **`KNOWN_COMMANDS` (`sim/ui/proto/dispatch.py:30`) has zero entries ≤ 2
   characters.** No protocol command token is a short name.
 - **The JSON protocol does have a short field, and it collides with `n`'s
-  dominant code meaning.** `sim/engine/proto/util.py`'s `_qty(cmd, "n", ...)`
+  dominant code meaning.** `sim/ui/proto/util.py`'s `_qty(cmd, "n", ...)`
   reads a literal `"n"` key out of incoming commands (quantity), used at
-  `sim/engine/proto/dispatch.py:697,846,1592,1614,1635,1730,1746,1764,1778`.
+  `sim/ui/proto/dispatch.py:697,846,1592,1614,1635,1730,1746,1764,1778`.
   An AST-based rename of the *variable* `n` never touches this string literal
   (it's a `Constant`, not a `Name`), so it is not a code-rename risk — but it
   is a **documentation/reasoning hazard**: a reader who has just internalised
   "`n` means node" will misread `_qty(cmd, "n", 1)` unless they know the
   protocol field and the Python variable are unrelated.
-- **A confirmed keyword-argument hazard.** `sim/engine/proto/nodes.py:162` —
+- **A confirmed keyword-argument hazard.** `sim/ui/proto/nodes.py:162` —
   `def _did_you_mean(k, nodes, limit=8, s=None):` — is called with an
-  explicit keyword at three sites: `sim/engine/proto/dispatch.py:95`,
+  explicit keyword at three sites: `sim/ui/proto/dispatch.py:95`,
   `:1835`, `:2546`, all `_did_you_mean(k, nodes, s=s)`. Renaming this `s`
   parameter is Tier 2 exactly because of this: any AST tool must find and
   rewrite the keyword at all three call sites, not just the `def`. A plain
@@ -610,7 +610,7 @@ pick a safe name the first time is sitting in `co_cellvars`.
   parameter's own definition-adjacent uses and, separately, these
   keyword-call sites, but a naive tool scoped to one function body would not
   see them).
-- **A stdlib keyword must never be touched.** `sim/engine/proto/nodes.py:175`
+- **A stdlib keyword must never be touched.** `sim/ui/proto/nodes.py:175`
   — `difflib.get_close_matches(q, list(nodes), n=limit, cutoff=0.6)` — the
   `n=` here is `difflib`'s own parameter name, not this codebase's. Any
   rename tool that matches on "keyword argument named n" without checking
@@ -623,7 +623,7 @@ pick a safe name the first time is sitting in `co_cellvars`.
   interface — check for `.w` reads anywhere `self` isn't the receiver, e.g.
   on a passed-in `Sim`, before touching it).
 - **Two units sharing one letter.** `h` means *years* in
-  `sim/engine/cli.py:857,1521` (`h = meta.get("horizon_years")`) and *hours*
+  `sim/ui/cli.py:857,1521` (`h = meta.get("horizon_years")`) and *hours*
   in `sim/engine/core.py:1933` (`sum(h for _, h in _arrears_hours_lost)`).
   Not currently a bug, but exactly the kind of collision a rename should
   eliminate rather than reproduce with longer names that still collide.
@@ -675,7 +675,7 @@ since it travels with this group semantically.)
 
 ### B.2 Save files and the protocol: mostly already insulated
 
-- **Save files do not duplicate the schema.** `sim/engine/proto/saveload.py`'s
+- **Save files do not duplicate the schema.** `sim/engine/saveload.py`'s
   `SAVE_FIELDS` never includes `nodes` or any per-node blob — a save stores
   node **ids** (in `done`, `granted`, `active`, etc.), not node records. A
   save file therefore does not need its own migration for a schema-field
@@ -683,10 +683,10 @@ since it travels with this group semantically.)
   against the newly-shaped tree at load time.
 - **The outward-facing JSON protocol already translates most of these to
   readable names.** Checked every dict-literal construction in
-  `sim/engine/proto/*.py` for a raw short key (`{"ph": ...}`-shaped
+  `sim/ui/proto/*.py` for a raw short key (`{"ph": ...}`-shaped
   literals): none found. What's actually sent to a player/agent renames on
-  the way out — e.g. `sim/engine/proto/state.py:336`:
-  `"founder_hours_total": n["ph"]`, and `sim/engine/proto/techtree.py:298-302`:
+  the way out — e.g. `sim/ui/proto/state.py:336`:
+  `"founder_hours_total": n["ph"]`, and `sim/ui/proto/techtree.py:298-302`:
   `"hours": lambda s, n, k: n[k]["ph"]`, `"earns": ... n[k]["rev"]`,
   `"upkeep": ... n[k]["up"]`. The short keys are read from `n[...]`
   internally and re-emitted under long names. This means **the compatibility
@@ -696,12 +696,12 @@ since it travels with this group semantically.)
   mostly does not need to change at all.
 - **One real cross-artifact collision.** `"gov"` is both the per-node schema
   field (a trait score baked into each tech, e.g.
-  `sim/engine/proto/techtree.py:945` —
+  `sim/ui/proto/techtree.py:945` —
   `"state_interest_trait_score": n.get("gov", 0)`) **and** a `Sim` instance
   attribute of the same name that accumulates it over time
   (`sim/engine/core.py:253` — `self.gov = 0.0`;
   `sim/engine/projects.py:2568` — `self.gov += self.state_interest(n)`) which
-  **is** in `SAVE_FIELDS` (`sim/engine/proto/saveload.py:58`). These are
+  **is** in `SAVE_FIELDS` (`sim/engine/saveload.py:58`). These are
   related but distinct things (a per-tech constant vs. a running total) that
   happen to share a name. A migration must rename them independently and
   must not assume "rename `gov` everywhere" is one operation — it's at least

@@ -11,7 +11,7 @@ import os
 import random
 import tempfile
 
-from sim.engine.protocol import load_state, save_state
+from sim.ui.protocol import load_state, save_state
 from sim.engine.state import ActorRecord  # noqa: F401
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()

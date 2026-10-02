@@ -191,65 +191,65 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
                         package (`sim/agents/`) rather than one more
                         module under `engine/`, for the same reason.
 
-    engine/protocol.py  78 lines: a re-export shim, not touched by the
-                        mixin split above. `wc -l sim/engine/protocol.py`.
-                        The JSON command layer itself is `engine/proto/`,
-                        19 real modules (`ls sim/engine/proto/*.py | wc -l`
+    sim/ui/protocol.py  78 lines: a re-export shim, not touched by the
+                        mixin split above. `wc -l sim/ui/protocol.py`.
+                        The JSON command layer itself is `sim/ui/proto/`,
+                        19 real modules (`ls sim/ui/proto/*.py | wc -l`
                         = 21, of which `__init__.py` is one line of package
                         docstring plumbing and `ventures.py` is a 23-line
                         one-constant module).
-    engine/proto/dispatch.py            the command table (55 entries -
+    sim/ui/proto/dispatch.py            the command table (55 entries -
                         `_AGENT_DISPATCH_TABLE`, several names aliasing the
                         same handler) and the dispatcher that resolves
                         names, guards fog, validates and looks the handler
                         up, plus an import-time assertion tying
                         `KNOWN_COMMANDS` to that table so the two cannot
                         silently drift (655 lines).
-    engine/proto/dispatch_inspection.py  read-only inspection commands:
+    sim/ui/proto/dispatch_inspection.py  read-only inspection commands:
                         state, available, why, path, log, score, risk,
                         values, stuck, mines, capacity, portfolio, economy,
                         changes, population (495 lines).
-    engine/proto/dispatch_labour.py      work, allocate, labour, hire, fire,
+    sim/ui/proto/dispatch_labour.py      work, allocate, labour, hire, fire,
                         train, commission (461 lines).
-    engine/proto/dispatch_money.py       bounty, buy, sell, money, quote,
+    sim/ui/proto/dispatch_money.py       bounty, buy, sell, money, quote,
                         close, withdraw, bribe (455 lines).
-    engine/proto/dispatch_ventures.py    start, stop, rush, mothball,
+    sim/ui/proto/dispatch_ventures.py    start, stop, rush, mothball,
                         restore, open, ventures, policy (733 lines).
-    engine/proto/techtree.py    the tech tree through the protocol:
+    sim/ui/proto/techtree.py    the tech tree through the protocol:
                         why/available, node-explain, subject grouping
                         (1,407 lines).
-    engine/proto/state.py       the state/status screen and the event log
+    sim/ui/proto/state.py       the state/status screen and the event log
                         (1,079 lines).
-    engine/proto/economy.py     portfolio, capacity, mines, economy/changes
+    sim/ui/proto/economy.py     portfolio, capacity, mines, economy/changes
                         reports (892 lines).
-    engine/proto/typed.py       parsing what a person types at `play`'s
+    sim/ui/proto/typed.py       parsing what a person types at `play`'s
                         prompt into the one JSON command dict the protocol
                         already understands (895 lines).
-    engine/proto/help.py        the `{"cmd":"help"}` topic tree (484 lines).
-    engine/proto/saveload.py    reading, writing and validating a save file;
+    sim/ui/proto/help.py        the `{"cmd":"help"}` topic tree (484 lines).
+    sim/engine/saveload.py    reading, writing and validating a save file;
                         `SAVE_FIELDS` (536 lines).
-    engine/proto/score.py       scoring the run, at any point or at the end
+    sim/ui/proto/score.py       scoring the run, at any point or at the end
                         (415 lines).
-    engine/proto/nodes.py       node id/name resolution and small graph
+    sim/ui/proto/nodes.py       node id/name resolution and small graph
                         queries (190 lines).
-    engine/proto/util.py        small dependency-free helpers shared across
+    sim/ui/proto/util.py        small dependency-free helpers shared across
                         the package (291 lines).
-    engine/proto/ventures.py    one shared supervision-hours explanation, so
+    sim/ui/proto/ventures.py    one shared supervision-hours explanation, so
                         every screen that shows it agrees (23 lines).
-    engine/proto/render.py      33 lines: re-exports the render_* pieces
+    sim/ui/proto/render.py      33 lines: re-exports the render_* pieces
                         below. Pure presentation - every function reads an
                         already-built reply dict and returns text, never
                         touching the live `Sim` (render.py's own docstring
                         points back at this file for that claim).
-    engine/proto/render_screens_big.py     render_state, render_why and the
+    sim/ui/proto/render_screens_big.py     render_state, render_why and the
                         other large per-screen renderers (866 lines).
-    engine/proto/render_screens_economy.py render_capacity, render_materials,
+    sim/ui/proto/render_screens_economy.py render_capacity, render_materials,
                         render_portfolio and the other accounting screens
                         (756 lines).
-    engine/proto/render_screens_status.py  render_values, render_final,
+    sim/ui/proto/render_screens_status.py  render_values, render_final,
                         render_score, render_error, render_stuck, render_risk
                         (399 lines).
-    engine/proto/render_typed.py           typed-command rendering and the
+    sim/ui/proto/render_typed.py           typed-command rendering and the
                         `--pretty` entry point (175 lines).
 
     engine/settings.py  where a player's stuff lives on disk, and what they
@@ -258,19 +258,19 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
                         the CLI layer (`cli.py`, `cli_interactive.py`,
                         `cli_agent.py`, `cli_interactive_saveload.py`), not
                         by the engine mixins.
-    engine/cli.py       1,765 lines: argparse and `validate`/`path`/`costs`/
+    sim/ui/cli.py       1,765 lines: argparse and `validate`/`path`/`costs`/
                         `run`/`compare`/`sensitivity`/`sweep`/`goals`, plus
                         shared CLI infrastructure and `main()`. Three more
                         command groups live in their own files, imported at
                         `cli.py`'s own bottom:
-    engine/cli_interactive.py  `play`/`civs`/`menu` - the interactive loop
+    sim/ui/cli_interactive.py  `play`/`civs`/`menu` - the interactive loop
                         (1,513 lines).
-    engine/cli_interactive_saveload.py  mid-game save/load browsing and the
+    sim/ui/cli_interactive_saveload.py  mid-game save/load browsing and the
                         civilisation list, split out of cli_interactive.py
                         as the near-leaf half of it (295 lines).
-    engine/cli_analysis.py     `plan`/`search`/`why` - offline reporting
+    sim/ui/cli_analysis.py     `plan`/`search`/`why` - offline reporting
                         (321 lines).
-    engine/cli_agent.py        `agent` mode's CLI entry point (202 lines).
+    sim/ui/cli_agent.py        `agent` mode's CLI entry point (202 lines).
 
     test_regressions.py a 41-line shim over `sim/tests/`, topic-named
                         modules plus a harness and a runner. `--only
@@ -278,7 +278,7 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
     perf_fingerprint.py proves a change did not alter the simulation.
 
 All line counts above are `wc -l sim/engine/<file>.py` (or
-`sim/engine/proto/<file>.py`), run against this HEAD; re-run the same
+`sim/ui/proto/<file>.py`), run against this HEAD; re-run the same
 command against yours before trusting any of them.
 
 **`engine/__init__.py`'s own docstring still describes "six subject
@@ -373,7 +373,7 @@ fully-qualified.
 Checked by grepping every file's own `from .`/`from ..` lines (the command
 below); re-run it whenever a file moves:
 
-    grep -n "^from \.\|^from \.\." sim/engine/*.py sim/engine/proto/*.py
+    grep -n "^from \.\|^from \.\." sim/engine/*.py sim/ui/proto/*.py
 
 No sub-mixin imports another sub-mixin, another top-level composition
 point, or `core` - they would cycle if they did, so the import graph tells
@@ -444,7 +444,7 @@ that have no meaning for a government or a firm and are waiting for a
 second actor to say what they should become.
 `docs/architecture/SIM_STATE_INVENTORY.md` has a broader "everything `Sim`
 CARRIES" count (adding attributes assigned outside `__init__`, ones reached
-only as `s.X` from `engine/proto/`, and ones hidden behind
+only as `s.X` from `sim/ui/proto/`, and ones hidden behind
 `self.__dict__[...]`) - it is not scripted anywhere, so treat any total it
 gives as unverifiable against today's build rather than re-deriving one by
 arithmetic on it, the same caution CLAUDE.md SS7 gives for the naming
@@ -685,7 +685,7 @@ so that the next person does not silently restart it:
   rewrite of most of the engine;
 - the safety net does not fully exist for it. `perf_fingerprint.py`
   covers the simulation loop well and covers `protocol.py` not at all,
-  and roughly a quarter of the engine's code lives under `engine/proto/`
+  and roughly a quarter of the engine's code lives under `sim/ui/proto/`
   (11,246 of 41,746 lines, 27% -
   `find sim/engine/proto -name "*.py" | xargs wc -l | tail -1` against
   `find sim/engine -name "*.py" -not -path "*/__pycache__/*" | xargs wc -l | tail -1`);
@@ -702,7 +702,7 @@ Code lines, counted as **lines that are neither blank nor comment-only**
 (`economy.py` 604, `labour.py` 49, `projects.py` 202, `society.py` 44) are
 thin now, so they are not among the largest files any more; the table below
 lists the **eight largest files under `sim/engine/` (including
-`engine/proto/`) by total line count**, found fresh rather than assumed:
+`sim/ui/proto/`) by total line count**, found fresh rather than assumed:
 
     find sim/engine -name "*.py" -not -path "*/__pycache__/*" \
         | xargs wc -l | sort -rn | grep -v " total$" | head -8
@@ -722,9 +722,9 @@ changes as the code is split further):
 
     python3 - <<'EOCOUNT'
     import ast
-    engine_files = ["sim/engine/core.py", "sim/engine/cli.py",
-                    "sim/engine/core_step_phases.py", "sim/engine/cli_interactive.py",
-                    "sim/engine/proto/techtree.py", "sim/engine/society_state_pressure.py",
+    engine_files = ["sim/engine/core.py", "sim/ui/cli.py",
+                    "sim/engine/core_step_phases.py", "sim/ui/cli_interactive.py",
+                    "sim/ui/proto/techtree.py", "sim/engine/society_state_pressure.py",
                     "sim/labour/labour_capacity.py", "sim/engine/society_hazards.py"]
     for path in engine_files:
         source = open(path).read()
@@ -782,7 +782,7 @@ stripped to "clean up" regardless of which way a percentage falls.
 
 `test_regressions.py` and `protocol.py` are split for cyclomatic reasons,
 not line-count ones. `protocol.py` itself is a 78-line re-export shim; the
-command dispatcher lives in `engine/proto/dispatch.py`, as
+command dispatcher lives in `sim/ui/proto/dispatch.py`, as
 `_agent_dispatch_inner` - a single function that resolves a command name
 against `_AGENT_DISPATCH_TABLE` (55 dict entries, several names aliasing
 one handler - read the dict literal in that file directly to see which)
@@ -791,7 +791,7 @@ two cannot drift, rather than a flat `if`/`elif` chain over every command:
 
     python3 - <<'EOCOUNT'
     import ast
-    src = open('sim/engine/proto/dispatch.py').read()
+    src = open('sim/ui/proto/dispatch.py').read()
     tree = ast.parse(src)
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) and node.name == '_agent_dispatch_inner':

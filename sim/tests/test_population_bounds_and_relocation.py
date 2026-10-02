@@ -16,8 +16,8 @@ if _REPOSITORY_ROOT not in sys.path:
 from sim import simulator
 from sim.engine.core import Sim
 from sim.engine.invariants import check_labour_market_invariants
-from sim.engine.proto.dispatch import _agent_dispatch
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.dispatch import _agent_dispatch
+from sim.ui.proto.typed import parse_typed
 
 _TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
 

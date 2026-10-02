@@ -64,8 +64,8 @@ check("the front page links every registered topic",
       S.HELP_TOPICS)
 
 # --- a throwaway command registration shows up in help with no other edit
-from sim.engine.proto import command_registry as _registry
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto import command_registry as _registry
+from sim.ui.proto.typed import parse_typed
 
 
 @_registry.command("zz_throwaway", group="game", summary="a throwaway probe",

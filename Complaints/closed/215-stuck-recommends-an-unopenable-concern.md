@@ -8,7 +8,7 @@ right now is hom_toys_dolls, which would earn 281,451 a year against 3,753 of up
 
     printf 'start hom_toys_dolls\nstep\nstuck\nopen hom_toys_dolls\nquit\n' | python3 sim/simulator.py play --civ han_china_100ad --kit poor_scholar --fog --seed 1 --session /tmp/repro.json
 
-Cause: `sim/engine/proto/dispatch_inspection.py` (`_openable`, around line 392) tests free scholars, free craftsmen
+Cause: `sim/ui/proto/dispatch_inspection.py` (`_openable`, around line 392) tests free scholars, free craftsmen
 and the opening fee, but not the specialist foreman that `open` enforces (closed 149 put the foreman on `why`;
 `state` already says "missing 0.25 carpenter ('hire carpenter 1')" for the same concern).
 

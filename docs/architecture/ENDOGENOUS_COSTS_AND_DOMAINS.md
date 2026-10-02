@@ -581,7 +581,7 @@ Recorded so the next person does not repeat it:
   created or mutated either.
 - **The `id()`-keyed cache in `_revenue_upkeep_candidates`** (`economy.py`
   around line 2110). This looked like the answer: `id()` is a memory address,
-  a freed object's address can be reused, and `sim/engine/proto/nodes.py`
+  a freed object's address can be reused, and `sim/ui/proto/nodes.py`
   documents that exact hazard and defends against it by holding a strong
   reference while the three other `id()`-keyed caches in the engine do not.
   A probe that recomputed the true answer on every call and compared it with

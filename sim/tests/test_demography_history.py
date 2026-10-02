@@ -3,8 +3,8 @@ import os
 import tempfile
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.saveload import load_state, save_state
-from sim.engine.proto.render_typed import render_pretty as _render_pretty
+from sim.engine.saveload import load_state, save_state
+from sim.ui.proto.render_typed import render_pretty as _render_pretty
 
 
 def _demography(game):

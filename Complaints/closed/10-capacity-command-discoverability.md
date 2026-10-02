@@ -4,7 +4,7 @@
 
 **Type:** Discoverability  
 **Priority:** Medium
-**Audit (2026-09-18): RESOLVED, verified.** `capacity` is now listed in `help commands` (`sim/engine/proto/help.py`) with an explicit annual-throughput-vs-durable-stock distinction, and a separate `materials` command/report now covers durable stock on hand. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): RESOLVED, verified.** `capacity` is now listed in `help commands` (`sim/ui/proto/help.py`) with an explicit annual-throughput-vs-durable-stock distinction, and a separate `materials` command/report now covers durable stock on hand. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

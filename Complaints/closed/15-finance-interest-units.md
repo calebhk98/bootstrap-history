@@ -4,7 +4,7 @@
 
 **Type:** Units/display bug  
 **Priority:** Medium
-**Audit (2026-09-18): RESOLVED, verified.** An `estimated_annual_interest` field now sits alongside the rate in the credit forecast (`sim/engine/proto/dispatch.py`) - the exact fix suggested here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): RESOLVED, verified.** An `estimated_annual_interest` field now sits alongside the rate in the credit forecast (`sim/ui/proto/dispatch.py`) - the exact fix suggested here. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

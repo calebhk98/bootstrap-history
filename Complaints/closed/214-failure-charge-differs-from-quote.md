@@ -8,7 +8,7 @@ and the bill's age.
 
 Code:
 
-- Quote: `sim/engine/proto/techtree.py` (`failure_costs`) is `sim.project_cost(node_id) * 0.4`, and
+- Quote: `sim/ui/proto/techtree.py` (`failure_costs`) is `sim.project_cost(node_id) * 0.4`, and
   `project_cost` includes `civ_cost_factor`, `opposition_factor`, material market prices and the bill frozen at start.
 - Charge: `sim/engine/projects_completion.py` (`_lost`) is `node["_total_cost"] * FAILURE_RESET_SHARE * cost_money_factor()`,
   none of those factors.

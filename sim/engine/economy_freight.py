@@ -94,7 +94,7 @@ class FreightMixin:
         could drift out of step with the first.
 
         THE CACHE ENTRY HOLDS `demand` ITSELF, NOT JUST `id(demand)` - the
-        same defence `sim/engine/proto/nodes.py`'s own id()-keyed cache
+        same defence `sim/ui/proto/nodes.py`'s own id()-keyed cache
         documents and takes, for the identical reason. `id()` is only
         unique among objects that are still alive: annual_material_demand()
         returns a brand-new Counter every call, the OLD one is dropped as

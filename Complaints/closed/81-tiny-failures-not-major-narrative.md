@@ -20,7 +20,7 @@ Provide multiple verbosity levels - compact for trivial failures, detailed for m
 
 ## WHERE IT LIVES
 
-Failure event rendering and narration logic in `sim/engine/proto/render_screens_big.py` or project-failure modules.
+Failure event rendering and narration logic in `sim/ui/proto/render_screens_big.py` or project-failure modules.
 
 ## Confidence
 

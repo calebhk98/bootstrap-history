@@ -29,7 +29,7 @@ It is a slow_check because even shortened it costs more than the rest of this fi
 The STRUCTURAL one is the real guard. Rather than sampling for the symptom it
 forbids the shape: an `id()` may be used as a dict key for speed, and the entry
 it finds must then be validated by identity against a strong reference to the
-object itself. That is what `sim/engine/proto/nodes.py` has always done and
+object itself. That is what `sim/ui/proto/nodes.py` has always done and
 what the two guilty caches now do. It is deterministic, it costs milliseconds,
 and it catches the whole class rather than the one instance we happened to hit.
 

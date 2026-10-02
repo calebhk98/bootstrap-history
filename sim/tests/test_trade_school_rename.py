@@ -1,6 +1,6 @@
 """Test that 'school' has been renamed to 'trade_school'."""
 from .harness import *
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.typed import parse_typed
 
 
 check("buy trade_school parses correctly",

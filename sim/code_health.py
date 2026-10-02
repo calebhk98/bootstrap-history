@@ -1188,7 +1188,7 @@ def unused_imports_report(files):
     """F401 via ruff, using this repo's OWN ruff.toml (not --isolated, unlike
     test_static_checks.py's F821 check) - deliberately, because ruff.toml's
     per-file-ignores already excuses sim/simulator.py and
-    sim/engine/protocol.py, both documented re-export composition points
+    sim/ui/protocol.py, both documented re-export composition points
     whose "unused" imports are the file doing its job. Running isolated
     would report those as findings and be wrong about it."""
     command = _ruff_command()

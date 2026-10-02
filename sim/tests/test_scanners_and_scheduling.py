@@ -73,7 +73,7 @@ check("no command in KNOWN_COMMANDS prints the raw id of a node this fogged "
 # actually accepts. Generic across every command at once, the same shape
 # as the fog scanner above, so the next stale pointer is caught here.
 # =============================================================================
-from sim.engine.protocol import TYPED_ALIASES as _TYPED_ALIASES
+from sim.ui.protocol import TYPED_ALIASES as _TYPED_ALIASES
 
 
 def _strings_of(obj):
@@ -304,7 +304,7 @@ check("...and the headline itself uses 'spare', which only reads one way "
 # ids and went stale); the menu a player reads stays out of the
 # business of telling them what is reachable, because critical_path already
 # tells them that for the goal they actually picked.
-from sim.engine import cli as _CLI
+from sim.ui import cli as _CLI
 
 _hz_notes = " ".join(note for _node_id, _label, _year, note in _CLI.HORIZON_MODES).lower()
 check("no horizon-mode description quotes the dice-free floor or calls any "
@@ -322,7 +322,7 @@ check("the per-civilisation floor table no longer exists in the engine",
 # strategic mitigation visible": the mitigation was there and the save
 # round-trip was deleting it.
 import collections as _coll
-from sim.engine import protocol as _PROTO
+from sim.ui import protocol as _PROTO
 
 _fa_path = os.path.join(HERE, "_fa_roundtrip.json")
 _s_fa = sim()
@@ -391,10 +391,10 @@ check("every accumulator a fresh Sim carries is either in SAVE_FIELDS or "
 # THE SCORE AND THE ENDING. A player who had just won asked for a score,
 # weighted across seven things, goal-gated ("no score: the goal was not
 # reached"), inspectable mid-run, and respectful of fog - plus a short
-# achievements list. See engine/protocol.py's own block comment above
+# achievements list. See sim/ui/protocol.py's own block comment above
 # SCORE_WEIGHTS for which field feeds each component and why.
 # =============================================================================
-from sim.engine.protocol import (score_report as _SCORE, render_score as _RSCORE,
+from sim.ui.protocol import (score_report as _SCORE, render_score as _RSCORE,
                              SCORE_WEIGHTS as _SW)
 
 check("score is advertised in KNOWN_COMMANDS, the same way capacity/economy/"
@@ -562,7 +562,7 @@ def _score_snapshot(seed_env):
     proc = subprocess.run(
         [sys.executable, "-c",
          "import sys; import random; from sim import simulator as S; "
-         "from sim.engine.protocol import score_report as SC; "
+         "from sim.ui.protocol import score_report as SC; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
          "s = S.Sim(N, O, random.Random(1), events=False, manual=False, "
          "civ=S.load_civ('rome_100ad'), cfg={'start_capital':5000000.0}); "
@@ -934,7 +934,7 @@ check("the free capability nodes the hint exists for are still free: no "
 # render_portfolio (_RPORT) is not used in this file, only _agent_portfolio
 # (_APORT) below - but it IS used by test_arrears_visibility.py, which gets
 # it from harness.py's own re-export rather than importing it here.
-from sim.engine.protocol import _agent_portfolio as _APORT
+from sim.ui.protocol import _agent_portfolio as _APORT
 
 # --- 1. PER-PROJECT ALLOCATION, READ FROM THE ALLOCATOR ITSELF. core.py's
 # step() (5. progress) now writes pool_total/rank/active_count/remaining_
@@ -1084,7 +1084,7 @@ check("...and it does not block the start - overcommitting is still the "
 # weak spot the player named was specifically the labour cases: an absolute
 # staffing shortage and a trade your OWN other work has booked used to
 # share one label and one remedy-less sentence.
-from sim.engine.protocol import _portfolio_constraint as _PCON
+from sim.ui.protocol import _portfolio_constraint as _PCON
 _s_staff = sim(civ="rome_100ad", capital=1e9)
 _staff_k = next(node_id for node_id in NODES if (NODES[node_id].get("lab") or {}).get("chemist"))
 _n_staff = NODES[_staff_k]

@@ -1,6 +1,6 @@
 """market_demand_rows: regression checks, run with `--only market_demand_rows`."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.render_typed import render_pretty as _render_pretty
+from sim.ui.proto.render_typed import render_pretty as _render_pretty
 
 _empty = sim()
 _reply = S._agent_dispatch(_empty, NODES, {"cmd": "market"})

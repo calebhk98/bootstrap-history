@@ -1,7 +1,7 @@
 """commitments_screen: regression checks, run with `--only commitments_screen`."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto import command_registry as _registry
-from sim.engine.proto.render_typed import render_pretty as _render_pretty
+from sim.ui.proto import command_registry as _registry
+from sim.ui.proto.render_typed import render_pretty as _render_pretty
 
 
 def _ask(game):

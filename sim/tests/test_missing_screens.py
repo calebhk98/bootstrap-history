@@ -14,10 +14,10 @@ if _REPOSITORY_ROOT not in sys.path:
     sys.path.insert(0, _REPOSITORY_ROOT)
 from sim import simulator
 from sim.engine.core import Sim
-from sim.engine.proto import command_registry
-from sim.engine.proto.dispatch import _agent_dispatch
-from sim.engine.proto.render import render_pretty
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto import command_registry
+from sim.ui.proto.dispatch import _agent_dispatch
+from sim.ui.proto.render import render_pretty
+from sim.ui.proto.typed import parse_typed
 from sim.world import deposits as deposit_model
 
 _TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()

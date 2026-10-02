@@ -1,8 +1,8 @@
 """step_problems: the end-of-step problem list, the risk screen's confiscation block, lapsed-hedge naming."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto import render_screens_big as _render_big
-from sim.engine.proto.render_screens_status import render_risk
-from sim.engine.proto.step_problems import step_problems, problems_lines, route_nodes, route_startable
+from sim.ui.proto import render_screens_big as _render_big
+from sim.ui.proto.render_screens_status import render_risk
+from sim.ui.proto.step_problems import step_problems, problems_lines, route_nodes, route_startable
 
 events = [{"year": 101, "message": "interest on 330 denarii of arrears at 10.9% a year"},
           {"year": 102, "message": "CREDIT EXHAUSTED: 3 projects stopped"},
@@ -45,7 +45,7 @@ check("the risk screen shows the confiscation chance and its protections",
 
 score_sim = sim()
 score_sim.year = score_sim.cfg["start_year"] + score_sim.cfg["horizon_years"]
-from sim.engine.protocol import score_report, render_score
+from sim.ui.protocol import score_report, render_score
 score_text = render_score(score_report(score_sim, NODES))
 check("score shows a total flagged goal not reached",
       "TOTAL: " in score_text and "TOTAL: --" not in score_text and "goal not reached" in score_text, score_text[-300:])

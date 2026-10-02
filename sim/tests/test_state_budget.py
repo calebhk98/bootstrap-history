@@ -15,7 +15,7 @@ sim = partial(sim, agent_economy=False)   # these checks pin the engine's own lo
 
 from sim.agents import SimWorld
 from sim.agents import budget
-from sim.engine.proto.saveload import load_state, save_state
+from sim.engine.saveload import load_state, save_state
 from sim.engine.state import ActorRecord
 
 

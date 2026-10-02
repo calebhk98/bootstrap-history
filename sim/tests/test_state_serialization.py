@@ -215,7 +215,7 @@ def _make_sim(civ_id="rome_100ad", seed=1, events=False, fog=False):
 
 def _test_cache_reset_after_load():
 	"""Verify economic caches start clean after load."""
-	from sim.engine.proto.saveload import load_state, save_state
+	from sim.engine.saveload import load_state, save_state
 
 	sim = _make_sim("rome_100ad", seed=1, events=False, fog=False)
 	# Prime capability factor cache
@@ -246,7 +246,7 @@ check("Cache reset after load", _ok, _detail)
 
 def _test_save_load_continuation_parity():
 	"""Verify saving a simulation, loading into a fresh instance, and stepping both produces identical states."""
-	from sim.engine.proto.saveload import load_state, save_state
+	from sim.engine.saveload import load_state, save_state
 	from sim.perf_fingerprint import digest, state_of
 
 	sim1 = _make_sim("rome_100ad", seed=42, events=True, fog=False)
@@ -283,7 +283,7 @@ check("Save/load continuation parity", _ok, _detail)
 
 def _test_v3_save_shape_validation():
 	"""Verify _validate_save accepts valid v3 saves and rejects structurally incomplete ones for exact reasons."""
-	from sim.engine.proto.saveload import _validate_save, save_state, load_state
+	from sim.engine.saveload import _validate_save, save_state, load_state
 	import json
 
 	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
@@ -333,9 +333,9 @@ check("v3 save shape validation and rejection", _ok, _detail)
 
 def _test_no_v2_migration():
 	"""Verify _migrate_v2_to_v3 does not exist in proto.saveload per CLAUDE.md §3.5."""
-	from sim.engine.proto import saveload as S
+	from sim.engine import saveload as S
 	if hasattr(S, "_migrate_v2_to_v3"):
-		return False, "_migrate_v2_to_v3 still exists in sim.engine.proto.saveload"
+		return False, "_migrate_v2_to_v3 still exists in sim.engine.saveload"
 	return True, "No _migrate_v2_to_v3 function verified"
 
 
@@ -345,7 +345,7 @@ check("No _migrate_v2_to_v3 migration helper", _ok, _detail)
 
 def _test_flat_legacy_v2_save_rejected_by_validate():
 	"""Verify a legacy flat v2 save is rejected by _validate_save without migration."""
-	from sim.engine.proto.saveload import _validate_save
+	from sim.engine.saveload import _validate_save
 	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
 	flat_v2_blob = {
 		"_civ": "rome_100ad",
@@ -370,7 +370,7 @@ check("Flat legacy v2 save rejected by _validate_save", _ok, _detail)
 def _test_flat_legacy_v2_save_rejected_by_load_state():
 	"""Verify load_state raises ValueError on legacy v2 save and leaves sim untouched."""
 	import json
-	from sim.engine.proto.saveload import load_state
+	from sim.engine.saveload import load_state
 	sim = _make_sim("rome_100ad", seed=10, events=False, fog=False)
 	initial_capital = sim.household.capital
 	flat_v2_blob = {

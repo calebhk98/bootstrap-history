@@ -1,6 +1,6 @@
 """keep_staffed: complaint 126 (name the concerns that must stay staffed through attrition)."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.typed import parse_typed
 
 CONCERN = "mirror_amalgam"   # needs a glassblower foreman
 
@@ -55,7 +55,7 @@ check("...and the log says why",
 # Off clears it, and the flag survives a save/load round trip.
 flagged2 = _lost_foreman_sim()
 _dispatch(flagged2, "keep %s staffed" % CONCERN)
-from sim.engine.proto.saveload import save_state, load_state
+from sim.engine.saveload import save_state, load_state
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "keep.json")
     save_state(flagged2, path)

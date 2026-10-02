@@ -4,8 +4,8 @@ from functools import partial
 
 sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
 
-from sim.engine.proto.render import render_pretty
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.render import render_pretty
+from sim.ui.proto.typed import parse_typed
 
 check("typed economic levers reach their protocol actions",
       parse_typed("buy farm 120")[0] == {"cmd": "buy", "what": "farm", "n": 120}

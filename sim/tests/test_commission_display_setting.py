@@ -6,8 +6,8 @@ The setting controls whether the mine purchase reply and mines screen show:
 - "both" (default, shows both years)
 """
 from .harness import *
-from sim.engine.proto.dispatch_money import _cmd_buy
-from sim.engine.proto.economy import _agent_mines
+from sim.ui.proto.dispatch_money import _cmd_buy
+from sim.ui.proto.economy import _agent_mines
 
 
 # Test that the mine purchase reply includes both commissions_during_year and ready_year
@@ -39,8 +39,8 @@ if _commission_year is not None:
           _ready_screen)
 
 # Rendered text follows the commission_display setting.
-from sim.engine.proto import render_typed as _render_typed
-from sim.engine.proto.render_screens_economy import render_mines
+from sim.ui.proto import render_typed as _render_typed
+from sim.ui.proto.render_screens_economy import render_mines
 from sim.engine.settings import resolve_commission_display
 
 _pending_screen = {"mines_you_own": "none", "still_being_sunk": {"coal": 105}}

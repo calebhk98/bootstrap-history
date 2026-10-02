@@ -1,9 +1,9 @@
 """player_command_fixes: sort words, quote for every buy target, rush preview, buy school."""
 from .harness import *
-from sim.engine.proto import buy_targets
-from sim.engine.proto.dispatch_money import _BUY_HANDLERS
-from sim.engine.proto.render_typed import render_pretty
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto import buy_targets
+from sim.ui.proto.dispatch_money import _BUY_HANDLERS
+from sim.ui.proto.render_typed import render_pretty
+from sim.ui.proto.typed import parse_typed
 
 
 def _run(sim_state, text):

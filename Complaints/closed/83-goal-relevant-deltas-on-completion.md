@@ -23,7 +23,7 @@ Under fog, reveal only effects of the thing just completed, not hidden future de
 
 ## WHERE IT LIVES
 
-Completion message rendering in `sim/engine/proto/render_screens_big.py` or related project-completion handlers. Goal-state tracking and delta calculation.
+Completion message rendering in `sim/ui/proto/render_screens_big.py` or related project-completion handlers. Goal-state tracking and delta calculation.
 
 ## Confidence
 

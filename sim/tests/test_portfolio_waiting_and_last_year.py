@@ -28,7 +28,7 @@ if waiting:
     check("prerequisite-missing work is not waiting work",
           all(group["kind"] != "knowledge" for group in waiting), [group["kind"] for group in waiting])
 
-from sim.engine.proto.render_typed import _RENDERERS
+from sim.ui.proto.render_typed import _RENDERERS
 text = _RENDERERS["portfolio"](screen)
 check("the printed screen names the waiting work", "WAITING TO START" in text, text[:400])
 

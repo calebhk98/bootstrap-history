@@ -81,7 +81,7 @@ class AllocateUseful(unittest.TestCase):
         self.assertEqual(reply["hours_a_year"], 540.0)
 
     def test_typed_words_reach_the_option(self):
-        from sim.engine.proto import typed
+        from sim.ui.proto import typed
         parsed, error = typed._parse_allocate("allocate", "x 540 useful", ["x", "useful"], [540.0], False)
         self.assertIsNone(error)
         self.assertTrue(parsed.get("useful"))

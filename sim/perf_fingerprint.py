@@ -29,7 +29,7 @@ if REPO_ROOT not in sys.path:
 while HERE in sys.path:
 	sys.path.remove(HERE)
 from sim import simulator as S
-from sim.engine.protocol import SAVE_FIELDS
+from sim.ui.protocol import SAVE_FIELDS
 
 TREE, PRICES, NODES, WAGES, GOODS = S.load()
 GOAL = TREE["meta"]["goal_node"]

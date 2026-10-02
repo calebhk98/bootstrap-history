@@ -18,7 +18,7 @@ Found in the final blind playtests of this branch (Rome 100 AD and Mexica 1500 f
 
 ## Done
 
-- `divergence` (aliases `drift`, `baseline`): start values against now for population, wage and price index, both literacies and territory; the technologies the founder built; each dated event as happened, under way, upcoming or before the run began, with `causes_checked` false. It states what it cannot know: no baseline run is held and technologies carry no historical date (`sim/engine/proto/screen_divergence.py`).
+- `divergence` (aliases `drift`, `baseline`): start values against now for population, wage and price index, both literacies and territory; the technologies the founder built; each dated event as happened, under way, upcoming or before the run began, with `causes_checked` false. It states what it cannot know: no baseline run is held and technologies carry no historical date (`sim/ui/proto/screen_divergence.py`).
 
 ## What remains
 

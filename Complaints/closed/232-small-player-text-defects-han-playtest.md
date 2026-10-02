@@ -10,11 +10,11 @@ Each item is tiny and reproduces; grouped so they are fixed in one pass.
 4. The poor_scholar kit says "A few months' subsistence"; 4 labourer-years of wages is more than a year and a half of the household's own living cost (440 thousand a year against 750 thousand), and the tester read it as
    wrong by an order of magnitude. `sim/engine/data.py`, `STARTING_KITS`.
 5. The `absurd` kit description says "It used to make things worse and no longer does" (patch history in a player field; see 122). The mortality question says "one is the honest number", which the tester read as
-   judging the default (`sim/engine/cli_interactive.py`, `_new_game_ask_mortality`).
+   judging the default (`sim/ui/cli_interactive.py`, `_new_game_ask_mortality`).
 6. `labour laborer` is refused; only `labour labourer` is accepted. The refusal lists the right names, but common US and UK spellings could both work.
 7. `help commands` lists every command except `options` (interactive only), although the intro and the submenu text send the player to it. The alias that once pointed at `available` is gone (closed 157).
 8. The "people kept on your own staff" sentence ends several `why` pages with no trade or number and no staff ever arrived (tester, not replayed).
-9. `funding_capacity()` and `your_real_ceiling` appear in the combined-commitment warning (`sim/engine/proto/dispatch_ventures.py`, `what_this_means`) in player text; see 122.
+9. `funding_capacity()` and `your_real_ceiling` appear in the combined-commitment warning (`sim/ui/proto/dispatch_ventures.py`, `what_this_means`) in player text; see 122.
 
 10. The `train` reply says nobody can do the work until the trainees graduate, but industrial hygiene started with no ready chemists completed in the same annual resolution in which two chemists graduated (tester, not replayed).
 11. `ventures closed` silently ignores the word and prints the whole table; there is no closed-only, capability-hidden or trade filter (paging, closed 170, works).

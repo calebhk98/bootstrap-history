@@ -15,7 +15,7 @@ which broke the model in its own way while this fix was being built:
      700,000 people over a century of ordinary weather with no hazard -
      WORSE than Complaints/44's original 21.9%-of-start bug, not better.
   2. `Sim.farm_stock_kg` round-trips through save/load (SAVE_FIELDS,
-     sim/engine/proto/saveload.py) - the field Complaints/44 says is the
+     sim/engine/saveload.py) - the field Complaints/44 says is the
      one thing standing between "carry the granary across years" and it
      actually happening, and per CLAUDE.md SS3.5, a field that fails to
      round-trip breaks the game in normal play the moment `--session` is
@@ -151,7 +151,7 @@ class SaveLoadRoundTripTests(unittest.TestCase):
 
     def test_farm_stock_kg_round_trips_through_save_and_load(self):
         import tempfile, os
-        from sim.engine.proto import saveload as S
+        from sim.engine import saveload as S
 
         test_sim = _rome_sim(events=False)
         for year in range(101, 111):
@@ -182,7 +182,7 @@ class SaveLoadRoundTripTests(unittest.TestCase):
         # comment on REQUIRED_SAVE_FIELDS for why silently accepting a
         # partial shape is worse than refusing the file outright.
         import tempfile, os, json
-        from sim.engine.proto import saveload as S
+        from sim.engine import saveload as S
 
         test_sim = _rome_sim(events=False)
         path = tempfile.mktemp(suffix=".json")

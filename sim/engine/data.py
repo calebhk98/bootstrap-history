@@ -480,7 +480,7 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
     # Complaints/closed/27-nondeterministic-simulation.md. Holding `nodes` itself in
     # the entry keeps that dict alive for as long as the entry can be compared
     # against it, so its address cannot be recycled into a false hit while the
-    # entry lives. sim/engine/proto/nodes.py makes the same argument at length
+    # entry lives. sim/ui/proto/nodes.py makes the same argument at length
     # for the same shape of cache.
     hit = _DESC_CACHE.get(nodes)
     if hit is not None:
