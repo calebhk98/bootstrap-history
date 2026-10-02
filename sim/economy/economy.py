@@ -7,7 +7,8 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
-from . import credit, labour, producers, unit_cost
+from . import credit, credit_claims, labour, lending, merchants_credit, producers, unit_cost
+from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_memory import YearView
 from .households_own import hours_for_own_plan, own_production, own_production_options, withhold_hours
@@ -57,7 +58,8 @@ class Economy:
         self._own_options = None
 
     def view(self) -> YearView:
-        return YearView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area)
+        return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
+                          loans=lambda: self.record.loans)
 
     def step(self, inputs: YearInputs) -> YearOutcome:
         setup, record = self.setup, self.record
@@ -77,10 +79,8 @@ class Economy:
                                       self._shortfall_hours())
         clear_labour(setup, record, labour_bids, offers, ledger)
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
-        self._service_loans(view.year)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book)
-        merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         state_orders(setup, record, view, self.area_map, order_book, {})
         mint_orders(setup, record, self.area_map, order_book)
         for agent, orders in sorted(inputs.engine_orders.items()):
@@ -88,15 +88,20 @@ class Economy:
         for plan in plans.values():
             for bid in plan.bids:
                 order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
-        plant_runs = self._lend(funds, view, order_book)
+        plant_runs = self._lend(funds, view, order_book, ledger)
+        merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
         clear_goods(setup, record, view, self.area_map, order_book, plans, ledger)
+        interest = self._service_loans(view.year)
         dispatch_merchants(setup, record, self.carriage, ledger)
         money_taxes(setup, record, view, ledger)
         self._build_plant(plant_runs)
-        close_view = YearView(record.memory, record.book, self.area_map, money, labour_area)
+        close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
+                                loans=lambda: record.loans)
         close_agents(setup, record, close_view, ledger, self.area_map)
+        for lender, received in interest.items():
+            record.property_income[lender] = record.property_income.get(lender, 0.0) + received
         move_workers(setup, record, ledger)
         wear_and_spoilage(setup, record)
         level = remember_price_level(setup, record)
@@ -169,23 +174,20 @@ class Economy:
                 ledger.grown[cohort_id] = grown
                 ledger.grown_units[cohort_id] = units
 
-    def _service_loans(self, year: int) -> None:
-        record = self.record
-        money = self.setup.currency_id
-        if not record.loans:
-            return
-        cash = {loan.borrower: record.book.balance(loan.borrower, money) for loan in record.loans}
-        transfers, loans, _defaults = credit.service(record.loans, cash, year)
-        record.book.transfer_many(transfers)
-        for transfer in transfers:
-            record.property_income[transfer.payee] = record.property_income.get(transfer.payee, 0.0) + transfer.amount
-        record.loans = loans
+    def _service_loans(self, year: int) -> Dict[str, float]:
+        """Payments due at the year's end, out of the year's sales: before carriage, taxes and the owners'
+        dividends, since a lender is paid ahead of them."""
+        return lending.service(self.record, self.setup.currency_id, year)
 
-    def _lend(self, funds, view, order_book) -> Dict[str, float]:
-        """New loans from savings; a producer that borrowed to build bids for its plant goods."""
+    def _lend(self, funds, view, order_book, ledger) -> Dict[str, float]:
+        """New loans from savings. A producer that borrowed to build bids for its plant goods, a household
+        for its floors; a merchant's cargo is bought from its enlarged cash (merchant_orders follows)."""
         record, setup = self.record, self.setup
         money = setup.currency_id
+        priced_by_tile: Dict[str, list] = {}
         requests, record.loan_requests = record.loan_requests, []
+        requests = (requests + lending.household_requests(setup, record, view, ledger, priced_by_tile)
+                    + lending.merchant_requests(setup, record, view, self.area_map, self.carriage))
         if not requests:
             if funds:
                 # savings on offer and nobody borrowing: lenders compete the rate down toward the lowest
@@ -196,14 +198,15 @@ class Economy:
             return {}
         if not funds:
             return {}
-        debt: Dict[str, float] = {}
-        for loan in record.loans:
-            debt[loan.borrower] = debt.get(loan.borrower, 0.0) + loan.principal
+        debt = credit_claims.principal_by_borrower(record.loans)
         loans, rate, _unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
+                                           credit_claims.arrears_history(record.loans, record.remembered_defaults),
                                            year=view.year)
         record.book.transfer_many(credit.disbursements(loans))
         record.loans.extend(loans)
         record.memory.rates[money] = rate
+        merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
+        lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}
         worth = {request.borrower: request.maximum_rate / max(rate, 1e-9) for request in requests}
         plant_runs: Dict[str, float] = {}

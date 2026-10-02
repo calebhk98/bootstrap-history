@@ -232,3 +232,4 @@ class Loan:
     years_left: float
     collateral_value: float
     arrears: float = 0.0
+    issued_year: int = 0

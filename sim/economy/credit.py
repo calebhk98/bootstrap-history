@@ -2,8 +2,10 @@
 
 Lenders offer funds at the lowest rate they take; a borrower asks at most a maximum rate and pays the base
 rate plus a premium for its own leverage and arrears, so a risky borrower may be unable to borrow at any
-rate (credit rationing). A default kills the lender's claim without moving money; a lender that cannot then
-meet its own obligations falls behind in turn, so cascades need no special rule.
+rate (credit rationing). A default ends the loan without moving money: the lender's claim, which
+credit_claims counts in its wealth, is lost and the borrower's debt is gone. A lender with less income and
+wealth spends and lends less, and may itself fall behind on what it owes, so a cascade follows from
+ordinary rules; credit_claims also keeps the defaulter's record for the next premium.
 """
 from dataclasses import dataclass, replace
 from typing import List, Mapping, Optional, Sequence, Tuple
@@ -102,7 +104,7 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
                 loan_id="loan:%s:%d:%d" % (currency, year, len(loans)), lender=lender_queue[position][1],
                 borrower=request.borrower, currency=currency, principal=piece,
                 rate=base_rate + premiums[index], years_left=request.years,
-                collateral_value=request.collateral_value * piece / request.amount))
+                collateral_value=request.collateral_value * piece / request.amount, issued_year=year))
             owed -= piece
             lender_left -= piece
             if lender_left <= 1e-12:

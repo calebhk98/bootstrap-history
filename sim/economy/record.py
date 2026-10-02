@@ -25,6 +25,8 @@ class EconomyRecord:
     merchants: Dict[AgentId, Merchant] = field(default_factory=dict)
     loans: List[Loan] = field(default_factory=list)
     loan_requests: List[LoanRequest] = field(default_factory=list)       # made at last year's close
+    remembered_defaults: Dict[AgentId, float] = field(default_factory=dict)   # losses a borrower caused, fading
+    credit_losses: Dict[AgentId, float] = field(default_factory=dict)    # what each lender has lost to default
     workforce: Dict[TileId, Dict[TradeId, float]] = field(default_factory=dict)   # workers by tile and trade
     property_income: Dict[AgentId, float] = field(default_factory=dict)  # dividends and interest last year
     volumes: Dict[str, float] = field(default_factory=dict)              # market_key -> last year's quantity
@@ -43,6 +45,8 @@ class EconomyRecord:
             "merchants": {key: _merchant_record(value) for key, value in sorted(self.merchants.items())},
             "loans": [dataclasses.asdict(loan) for loan in self.loans],
             "loan_requests": [dataclasses.asdict(request) for request in self.loan_requests],
+            "remembered_defaults": self.remembered_defaults,
+            "credit_losses": self.credit_losses,
             "workforce": self.workforce,
             "property_income": self.property_income,
             "volumes": self.volumes,
@@ -63,6 +67,8 @@ class EconomyRecord:
             merchants={key: _merchant_from(value) for key, value in record["merchants"].items()},
             loans=[Loan(**loan) for loan in record["loans"]],
             loan_requests=[LoanRequest(**request) for request in record["loan_requests"]],
+            remembered_defaults=dict(record["remembered_defaults"]),
+            credit_losses=dict(record["credit_losses"]),
             workforce={tile: dict(trades) for tile, trades in record["workforce"].items()},
             property_income=dict(record["property_income"]),
             volumes=dict(record["volumes"]),
