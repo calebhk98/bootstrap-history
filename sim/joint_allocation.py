@@ -13,6 +13,7 @@ import warnings
 
 from sim.constants import declare
 from sim.engine.default_civilisation import default_civilisation_id
+from sim.joint_floor import JOINT_BYPRODUCT_FLOOR_SHARE, lift_to_floor  # noqa: F401
 from sim.world import demand, deposits
 
 DEFAULT_CIVILIZATION = default_civilisation_id()
@@ -84,7 +85,8 @@ def allocate_joint_cost(outputs, current_prices, total_cost,
         name: anchors[name] if name in anchored
         else standalone_cost_per_kg * kilograms_per_unit[name]
         for name in split_outputs}
-    prices.update(_split_by_value(split_outputs, reference_prices, total_cost))
+    split = _split_by_value(split_outputs, reference_prices, total_cost)
+    prices.update(lift_to_floor(split, split_outputs, kilograms_per_unit, total_cost))
     return prices
 
 
