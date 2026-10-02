@@ -27,6 +27,7 @@ def _run_suite(*args):
 
 def _without_timing(text):
     # Per-check timings and the summary's total seconds vary run to run.
+    text = re.sub(r"^slowest:\n(?:[ ]+\d+s .*\n)*", "", text, flags=re.MULTILINE)   # which checks ran slow depends on cache warmth
     text = re.sub(r"[ ]+\d+s$", "", text, flags=re.MULTILINE)
     text = re.sub(r"(\d+ failures), \d+s", r"\1", text)
     return re.sub(r"\d+ calls, \d+s waiting", "N calls, Ns waiting", text)

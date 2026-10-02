@@ -42,7 +42,12 @@ FOUNDER_AGENT = "founder"
 
 
 def switch_requested(cfg) -> bool:
-    return bool(cfg.get("agent_economy")) or os.environ.get(SWITCH_ENVIRONMENT) == "1"
+    """On unless config `agent_economy` is explicitly False; the environment variable overrides
+    the config either way ("1" forces on, "0" forces off)."""
+    override = os.environ.get(SWITCH_ENVIRONMENT)
+    if override in ("0", "1"):
+        return override == "1"
+    return cfg.get("agent_economy") is not False
 
 
 class AgentEconomy:

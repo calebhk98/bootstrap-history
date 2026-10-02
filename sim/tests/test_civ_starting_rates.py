@@ -18,7 +18,7 @@ FIELDS = ("starting_interest_rate", "starting_tax_share")
 def build(civ):
     from sim.tests import harness
     return Sim(harness.NODES, harness.ORDER, random.Random(1), events=False,
-               manual=True, civ=civ)
+               manual=True, civ=civ, cfg={"agent_economy": False})   # the engine's own base rate
 
 
 class CivRateFieldTests(unittest.TestCase):

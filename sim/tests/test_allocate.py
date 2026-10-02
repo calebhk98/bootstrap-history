@@ -1,5 +1,9 @@
 """allocate: regression checks, run individually with `--only allocate`."""
 from .harness import *  # noqa: F401,F403
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+
 
 # ===========================================================================
 # `allocate` - a standing instruction for the player's own year of hours.

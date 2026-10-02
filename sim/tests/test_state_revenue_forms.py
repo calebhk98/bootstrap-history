@@ -2,6 +2,10 @@
 (harvest, people, trade, coin held), not a fitted share of labour value. Some forms are paid in kind and
 arrive as goods in the state's stores, to be used or sold through the goods market."""
 from .harness import *  # noqa: F401,F403
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
+
 
 from sim.engine.actors import SimWorld
 from sim.engine.actors import budget_lines, revenue

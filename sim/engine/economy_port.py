@@ -9,8 +9,8 @@ change without them knowing. This is the only engine module that may import `sim
 
 
 def switch_requested(cfg):
-    """True when a new game is asked to run on the agent economy (config `agent_economy`, or the
-    environment variable named in economy_port_year.SWITCH_ENVIRONMENT, for comparing runs)."""
+    """True unless a new game opts out of the agent economy (config `agent_economy` False); the
+    environment variable named in economy_port_year.SWITCH_ENVIRONMENT overrides, for comparing runs."""
     from .economy_port_year import switch_requested as requested
     return requested(cfg)
 

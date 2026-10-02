@@ -2,6 +2,10 @@
 follow the price its goods clear at, wider adoption lowers that price, household income follows the wage and
 output per head, and a good offered after the opening becomes demand when a need it serves exists."""
 from .harness import *  # noqa: F401,F403
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+
 
 import copy
 

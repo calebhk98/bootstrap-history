@@ -2,6 +2,10 @@
 opening prices. A technology raises it only through the production entries it improves and the
 goods those entries make; nothing counts completed technologies."""
 from .harness import *  # noqa: F401,F403
+from functools import partial
+
+sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
+
 
 import copy
 

@@ -75,7 +75,7 @@ check("fin_gambling_house is a real, revenue-bearing tree node - not a "
       and NODES[_ENT_NODE].get("cat") == "luxury", NODES[_ENT_NODE])
 
 def _mk_income_sim(with_cheap_food):
-    income_sim = sim(civ="han_china_100ad", capital=5_000_000.0)
+    income_sim = sim(civ="han_china_100ad", capital=5_000_000.0, agent_economy=False)
     income_sim.artisans = income_sim.scholars = 200.0
     if with_cheap_food:
         income_sim.done.add(_PROC_NODE)
@@ -139,7 +139,7 @@ def _goods_snapshot(seed_env):
          "import sys; import random; from sim import simulator as S; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
          "s = S.Sim(N, O, random.Random(1), events=False, manual=True, "
-         "civ=S.load_civ('rome_100ad'), cfg={'start_capital':5000000.0}); "
+         "civ=S.load_civ('rome_100ad'), cfg={'start_capital':5000000.0, 'agent_economy': False}); "
          "s.artisans = s.scholars = 500.0; s.employees = {t: 10.0 for t in W}; s.done_year = {}; s.year = 100; "
          "cand = sorted(k for k,n in N.items() if n.get('cat')=='textiles' and n.get('rev'))[:5]; "
          "[s.done.add(k) or s.done_year.__setitem__(k, 100) for k in cand]; "
