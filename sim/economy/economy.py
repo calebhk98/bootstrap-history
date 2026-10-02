@@ -203,8 +203,6 @@ class Economy:
                 record.memory.rates[money] = labour.sticky_move(record.memory.rates.get(money), floor,
                                                                 credit.RATE_ADJUSTMENT_SHARE_PER_YEAR)
             return {}
-        if not funds:
-            return {}
         debt = credit_claims.principal_by_borrower(record.loans)
         loans, rate, _unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
