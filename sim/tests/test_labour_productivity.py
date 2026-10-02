@@ -369,8 +369,8 @@ check("a pure-knowledge node (no revenue, no upkeep) carries no "
 # defaulting off for a player, so every restaffing was followed by a manual
 # `open`, for ever. "Most of the mid and late game was a repetitive
 # hire-then-reopen treadmill rather than fresh decisions."
-s = sim(capital=50000.0)
 _node_id = _SUPERVISED
+s = sim(capital=2.0 * sim().opening_fee(_node_id)[0])  # enough to open it, whatever opening costs
 s.done.add(_node_id)
 s._done_changed()
 s.employees["artisan"] = 6.0
