@@ -67,6 +67,26 @@ check("Complaint 383: the state holds the grain it took in tax, and wheat still 
       state_wheat > 0.0 and wheat_traded > 0.0, (state_wheat, wheat_traded))
 check("Complaint 383: wheat is not pinned at a floor price", prices[-1] > 0.0 and len(set(prices)) > 1)
 
+# The founder's concern sells through the market at what its output costs to make at the economy's
+# own prices and wages, never at the engine's old price table (CLAUDE.md 4.5).
+founder = agent_game("rome_100ad")
+founder.state.projects.done.add("finery_puddling")
+founder.state.projects.operating.add("finery_puddling")
+founder.state.projects.opened_year["finery_puddling"] = founder.state.scenario.year - 5
+founder._done_changed()
+
+
+def _no_price_table():
+    raise AssertionError("the founder's offers read the old price table")
+
+
+founder._material_prices = _no_price_table
+founder_orders = founder.economy.agent._founder_orders()
+founder_offers = [offer for orders in founder_orders.values() for offer in orders.offers]
+check("the founder's concern output is offered without the old price table, at a finite reservation",
+      founder_offers and all(0.0 <= offer.reservation_price < float("inf") for offer in founder_offers),
+      founder_offers[:2])
+
 unbroken = agent_game("rome_100ad")
 save_path = os.path.join(tempfile.mkdtemp(), "agent_save.json")
 for _year in range(2):

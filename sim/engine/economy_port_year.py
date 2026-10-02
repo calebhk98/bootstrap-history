@@ -5,14 +5,17 @@ Part of the port (with economy_port.py and economy_port_setup.py, the only engin
 same economy. The engine's own price, wage and rate code asks `answers()` and falls back to its old
 figures while the switch is off or before the economy has opened.
 """
+import math
 import os
 
 from sim.constants import declare
 from sim.economy.economy import Economy
+from sim.economy.producers import Producer, expected_output_prices, live_input_prices, live_wages
 from sim.economy.protocols import AgentOrders, YearInputs
 from sim.economy.foreign import external_orders
 from sim.economy.types import EDGE_EXTERNAL, EDGE_LEGACY, GoodsMove, Offer, Transfer
 from sim.economy.record import EconomyRecord
+from sim.economy.unit_cost import variable_cost_per_run
 from sim.economy.notional import shown_prices
 from sim.economy.year_close import rebase_price_level
 from sim.economy.year_labour import trade_premium
@@ -120,12 +123,12 @@ class AgentEconomy:
     def _founder_orders(self):
         """The founder's running concerns' output for the year, handed over from the engine through the
         legacy edge (the engine's purse is not yet an account in the book: Complaint 382) and offered at
-        what the concern costs to make it."""
+        what the concern costs to make it at the economy's own prices and wages (_concern_reservation)."""
         sim, economy = self._sim, self._economy
         book, area_map = economy.record.book, economy.area_map
         tile = sim.base_tile() if sim.base_tile() in economy.setup.tiles else economy.setup.capital_tile
         projects = sim.state.projects
-        old_prices = sim._material_prices()
+        view = economy.view()
         moves, offers = [], []
         for node_id in sorted(projects.operating):
             if node_id in projects.granted or not sim.is_venture(node_id):
@@ -139,11 +142,33 @@ class AgentEconomy:
                 if quantity <= 0.0 or material not in area_map.goods():
                     continue
                 moves.append(GoodsMove(EDGE_LEGACY, FOUNDER_AGENT, material, tile, quantity, "concern output"))
-                cost = (sim.concern_cost_ratio(node_id, material) * old_prices.get(material, 0.0)
-                        / economy.setup.coin_per_unit)
+                cost = self._concern_reservation(node_id, material, tile, view)
                 offers.append(Offer(FOUNDER_AGENT, material, area_map.area_of(material, tile), tile, quantity, cost))
         book.move_many(moves)
         return {FOUNDER_AGENT: AgentOrders(offers=tuple(offers))} if offers else {}
+
+    def _concern_reservation(self, node_id, material, tile, view) -> float:
+        """The least the founder takes for a unit of a concern's output: the unit's share, by value, of
+        the variable cost of the cheapest technique the concern holds that the economy knows, at the
+        economy's live prices and wages. With no such technique it sells at what the market pays."""
+        from .prices import default_production_entries
+        from .producer_costs import entry_keys_held_for
+        recipes = self._economy.setup.recipes
+        keys = entry_keys_held_for(node_id, default_production_entries(), self._sim.techniques_in_use())
+        best = None
+        for key in sorted(keys):
+            recipe = recipes.get(key)
+            if recipe is None or material not in recipe.outputs:
+                continue
+            probe = Producer(FOUNDER_AGENT, FOUNDER_AGENT, key, tile, 1.0)
+            prices = expected_output_prices(probe, recipe, view) or {}
+            revenue = sum(recipe.outputs[good] * prices.get(good, 0.0) for good in recipe.outputs)
+            cost = variable_cost_per_run(recipe, live_input_prices(probe, recipe, view),
+                                         live_wages(probe, recipe, view))
+            if revenue > 0.0 and math.isfinite(cost) and prices.get(material):
+                per_unit = cost * prices[material] / revenue
+                best = per_unit if best is None else min(best, per_unit)
+        return best if best is not None else 0.0
 
     # ---- foreign partners trade at the port -----------------------------------------------------
     def _external_orders(self):
