@@ -74,7 +74,7 @@ class RealOutputMixin:
         return sum(units * basket["prices"][material] for material, units in basket["units"].items()
                    if self.traded_ratio(basket["commodity"][material]) is not None)
 
-    def output_per_head(self):
+    def real_output_per_head(self):
         """Real output per person over the opening's, as last year's market closed it; one at the opening."""
         return self.state.economy.output_per_head
 

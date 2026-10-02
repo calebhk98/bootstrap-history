@@ -61,7 +61,7 @@ class ProductionMixin:
         """What a patron state would give the founder in a year if its treasury could spare it."""
         if not self.running_with_mechanic("state_funding"):
             return 0.0
-        return (self.STATE_FUNDING_BASE * self.output_per_head() * self.state_capacity
+        return (self.STATE_FUNDING_BASE * self.real_output_per_head() * self.state_capacity
                 * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
                 * (1.0 + max(0.0, self.state.governance.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
                 * self.rep_factor())
@@ -246,7 +246,7 @@ class ProductionMixin:
         economy = self.state.economy
         gross = total_revenue
         ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
-            * self.output_per_head() * self.price_index
+            * self.real_output_per_head() * self.price_index
         gross = gross / (1.0 + gross / max(1.0, ceiling))
         return (gross + self.state_funding()) * economy.output_factor
 

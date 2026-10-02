@@ -44,8 +44,8 @@ check("a technology that improves no production entry leaves the goods' prices a
 check("...and does not raise real output",
       control.real_output_hours() == twin.real_output_hours(),
       (control.real_output_hours(), twin.real_output_hours()))
-check("...nor output per head", control.output_per_head() == twin.output_per_head(),
-      (control.output_per_head(), twin.output_per_head()))
+check("...nor output per head", control.real_output_per_head() == twin.real_output_per_head(),
+      (control.real_output_per_head(), twin.real_output_per_head()))
 
 # --- a technique that halves a good's labour lowers its price and raises what is sold.
 original = price_solver._default_production_entries()
@@ -84,7 +84,7 @@ try:
           game.real_output_hours() > twin.real_output_hours() * 1.0001,
           (twin.real_output_hours(), game.real_output_hours()))
     check("...and output per head with it",
-          game.output_per_head() > 1.0, game.output_per_head())
+          game.real_output_per_head() > 1.0, game.real_output_per_head())
 finally:
     price_solver.reset_caches_for_tests()
 
