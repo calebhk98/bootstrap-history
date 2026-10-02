@@ -117,7 +117,74 @@ both move the cost of grain relative to labour.
 
 ## What was fixed on this branch
 
-(Filled in when the fixes are merged; see the measured before/after table below.)
+Each fix has a test written first, in a new file `sim/tests/test_economy_<topic>.py`.
+
+- **Money audit** (`money_audit.py`, `YearOutcome.money_audit`). It reports each year's net flow
+  through each edge account, the gap between the mint's metal and the metal in the coin, and any money
+  moving through `edge:legacy` or `edge:carriage`. Test: `economy_money_audit`.
+- **Labour is credited by wages paid** (`year_ledger.note_labour`). A cash-short employer gets only
+  the hours it paid for. The workers' unpaid hours go to their own plots. Test: `economy_labour_unpaid`.
+- **Plant is left out of running costs** in the loss and rebuild tests (`YearLedger.running_costs`).
+  Test: `economy_plant_costs`.
+- **Import and export duties are assessed** on money paid through `edge:external`
+  (`year_close.tax_facts`). Test: `economy_foreign_duties`.
+- **Credit with borrowers and no lenders.** The rate moves toward what the borrowers would pay, and
+  the stale expansion requests are cleared. Test: `economy_lend_year`.
+- **Mint.**
+  - Seigniorage is the metal taken in, valued at parity, less the coin actually paid for it.
+  - Coin that leaves through `edge:external` takes its metal with it, and coin that comes in brings
+    its metal. Only the remaining gap is booked as wear.
+  - Test: `economy_mint_ledger`.
+- **Ownership.** Dividends and rents paid to a tile's owner are shared by every cohort of the tile
+  by `ownership_share` (`ownership.spread`). Test: `economy_ownership`.
+- **Land market** (`land_market.py`).
+  - Each tile's arable hectares are split into quality bands (a labelled heuristic). Households' own
+    plots take land first.
+  - Producers pay a Ricardian differential rent, plus a scarcity rent where demand exceeds the
+    arable area. Their runs are capped by the land they are granted.
+  - The rent is paid to the tile's cohorts. It enters unit cost, so entry and expansion slow where
+    land is short.
+  - Tests: `economy_land_market`, `economy_land_rent`.
+
+### Measured after the fixes
+
+Command: `python3 sim/economy_validate.py --years 30 --seeds 1,2`, seeds shown as ranges.
+
+| civ | grain_vola | metal_vola | wage_kg_wh | hungry mean | rate | money_drift |
+|---|---|---|---|---|---|---|
+| england_1300 | 0.09-0.10 (was 0.16-0.17) | 0.32-0.45 (0.22-0.41) | 0.27 (0.25-0.27) | 0 (0.004) | 0.050-0.055 (0.067-0.073) | -0.011 |
+| han_china_100ad | 0.12-0.13 (0.14-0.23) | 0.22-0.29 (0.27-0.32) | 0.30 (0.29) | 0.009-0.014 (0.008-0.009) | 0.050-0.052 (0.075-0.085) | -0.012 |
+| mexica_1500 | 0.06-0.10 (0.09-0.11) | 0.19 (0.15-0.17) | 0.09-0.10 (0.10) | 0.007-0.011 (0.018-0.020) | 0.080-0.082 (0.090) | +0.023 |
+| norse_900ad | 0.15 (0.13-0.15) | 0.51-0.65 (0.57-0.67) | 0.38-0.40 (0.33-0.36) | 0.004 (0.002-0.004) | 0.057 (0.092-0.098) | -0.006 |
+| rome_100ad | 0.09 (0.11) | 0.97-1.25 (0.53-1.18) | 0.13 (0.13-0.14) | 0.016-0.017 (0.025) | 0.062-0.066 (0.075-0.079) | -0.004 |
+
+What the table shows:
+- Grain swings and hunger fell in most civilisations, and the interest rate fell everywhere.
+- Metals still swing more than grain everywhere (387 stays open).
+- Unskilled wages barely moved (388 stays open).
+- The money drift is unchanged, because the 1% wear still has no return flow (385).
+
+A Rome game (seed 1, ten years) shows the following:
+- Rent is charged on about half the tiles, at up to about 50 opening labour-hours per hectare. The
+  number of tiles charging rent jumps between about 40 and 85 from year to year. That flicker needs
+  damping, since the rent read in planning is last year's rent.
+- The money audit reports no unexpected edge flows.
+- It does report a positive metal gap: the mint holds more metal than the coin embodies.
+
+### Tried and not merged: competitive storage
+
+Merchants were given a Williams-Wright storage rule: buy where the price is below the regressed
+expected price less carrying cost. The code is on the branch `worktree-agent-af4b1a419b9ed5566`.
+
+It lowered metal volatility in Rome, Norse and England. It raised metal volatility in Han, doubled the
+worst-year hunger in one Han seed, and roughly doubled Norse grain volatility, because merchants also
+stored grain.
+
+The more useful finding: in Rome, merchants' iron stock grew to more than two years of iron's usual
+volume, and the iron price still alternated between low and high years. The same alternation is in
+the baseline. So the metal swing is not only missing buyers. The likely cause is a cobweb on the
+producer side: output is decided on last year's price, with entry and mothballing on top. That is the
+next thing to measure for 387.
 
 ## Outside `sim/economy/`, not attempted
 

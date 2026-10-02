@@ -11,8 +11,9 @@ Planning uses EXPECTED prices (what the producer last saw, adjusted adaptively),
 supply follows last year's price: the cobweb lag. A producer runs while a run's expected revenue covers
 its variable cost, so it shuts down below average variable cost and may run part of its capacity when
 cash is short. Plant already built is sunk for the run decision; it is charged only in the year's close
-and in the choice to expand or enter. Land and deposits are not inputs: the producer's yield factor
-and capacity carry the site, so rent shows up as profit. Nothing here names a good, trade or place.
+and in the choice to expand or enter. Land is rented each year (land_market.py): last year's rent per run
+is a variable cost and the land granted caps the runs. Deposits are not inputs: the yield factor and
+capacity carry the site, so a deposit's rent shows up as profit. Nothing here names a good, trade or place.
 View lookups: goods by `view.area_of(good, tile)`, labour by `view.area_of(trade, tile)`.
 """
 import math
