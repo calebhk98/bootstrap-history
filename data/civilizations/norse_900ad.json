@@ -183,6 +183,12 @@
   "population": 1500000,
   "standing_army": 2000,
   "price_index": 1.4,
+  "prerequisite_gaps": {
+    "ag2_refrigeration_ice": "unreviewed",
+    "exp_openocean_navigation": "unreviewed",
+    "med_trepanation": "unreviewed",
+    "med_wound_suturing": "unreviewed"
+  },
   "starting_techs": [
     "ag2_composting",
     "ag2_liming",

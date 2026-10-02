@@ -200,3 +200,26 @@ def report_lines(results):
                         len(found["unmakeable"]), len(found["rung_gap"]),
                         len(found["briefing"])))
     return lines
+
+
+UNREVIEWED = "unreviewed"
+MINIMUM_REASON_LENGTH = 20
+
+
+def prerequisite_gap_findings(name, civilisation, missing_prereq):
+    """(errors, warnings) for held nodes whose prerequisites are not held.
+
+    A gap must be declared in the civilisation's `prerequisite_gaps` with a
+    reason. The reason "unreviewed" only warns; a gap with no entry fails."""
+    declared = civilisation.get("prerequisite_gaps") or {}
+    errors, warnings = [], []
+    for node_id, missing in sorted(missing_prereq.items()):
+        reason = declared.get(node_id)
+        text = "%s: holds %s without its prerequisites (%s)" % (name, node_id, ", ".join(missing))
+        if reason is None:
+            errors.append(text + "; hold them, or declare the node in prerequisite_gaps with a reason")
+        elif reason == UNREVIEWED:
+            warnings.append(text + "; reason is unreviewed")
+        elif len(reason) < MINIMUM_REASON_LENGTH:
+            errors.append(text + "; its prerequisite_gaps reason is too short to be a reason")
+    return errors, warnings

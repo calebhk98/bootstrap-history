@@ -593,6 +593,13 @@ def _validate_civilisation_starts(nodes, production):
                % (name, claim, ", ".join(held))
                for name, found in sorted(results.items())
                for claim, held in found["briefing"].items()]
+    civilisations = civ_start_check.load_civilisations(ROOT)
+    for name, found in sorted(results.items()):
+        gap_errors, gap_warnings = civ_start_check.prerequisite_gap_findings(
+            name, civilisations[name], found["missing_prereq"])
+        errors += gap_errors
+        for message in gap_warnings:
+            print("WARNING: " + message)
     for message in errors:
         print("ERROR: " + message)
     return errors
