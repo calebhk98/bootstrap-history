@@ -186,12 +186,24 @@ def _state_founder(out):
     return lines
 
 
+# TEMPORARY HEURISTIC (presentation): how many running projects `state` lists before it summarises the rest.
+RUNNING_LISTED = 12
+
+
 def _state_running(out):
     lines = []
     active = out.get("active") or {}
     lines.append("")
     lines.append("RUNNING (%d):" % len(active) if active else "RUNNING: nothing")
-    for node_id, progress in sorted(active.items(), key=lambda kv: kv[0]):
+    listed = sorted(active.items())
+    hidden = []
+    if len(listed) > RUNNING_LISTED:
+        # the ones with something to act on come first; the rest are summarised by what they wait on
+        listed.sort(key=lambda item: (not (item[1].get("why_underfunded")
+                                           or item[1].get("will_be_abandoned_in_years") is not None), item[0]))
+        hidden = listed[RUNNING_LISTED:]
+        listed = sorted(listed[:RUNNING_LISTED])
+    for node_id, progress in listed:
         total = progress.get("founder_hours_total") or 0
         left = progress.get("founder_hours_left") or 0
         pct = 100.0 * (total - left) / total if total else 100.0
@@ -219,7 +231,17 @@ def _state_running(out):
                         "" if progress["will_be_abandoned_in_years"] == 1 else "S",
                         "an" if _tr[0][0] in "aeiou" else "a",
                         " or ".join(_tr), node_id))
+    if hidden:
+        lines.append(_running_summary(hidden))
     return lines
+
+
+def _running_summary(hidden):
+    waits = {}
+    for _node_id, progress in hidden:
+        waits[progress.get("waiting_on") or "-"] = waits.get(progress.get("waiting_on") or "-", 0) + 1
+    return ("  ... and %d more, waiting on %s ('portfolio' lists every one)"
+            % (len(hidden), ", ".join("%s (%d)" % (kind, count) for kind, count in sorted(waits.items()))))
 
 
 def _state_stuck(out):
@@ -239,9 +261,13 @@ def _state_concerns(out):
     idle_v = out.get("you_know_how_to_run_but_have_not_opened")
     if out.get("concerns_you_run") or idle_v:
         lines.append("")
-        lines.append("RUNNING AS CONCERNS: %s   (you know how to run %s more and "
-                 "have not opened them - 'ventures')"
-                 % (_fmt_num(out.get("concerns_you_run")), _fmt_num(idle_v)))
+        if out.get("shut_concerns_pointer_seen"):
+            lines.append("RUNNING AS CONCERNS: %s   (%s shut: 'ventures')"
+                     % (_fmt_num(out.get("concerns_you_run")), _fmt_num(idle_v)))
+        else:
+            lines.append("RUNNING AS CONCERNS: %s   (you know how to run %s more and "
+                     "have not opened them - 'ventures')"
+                     % (_fmt_num(out.get("concerns_you_run")), _fmt_num(idle_v)))
         if out.get("shut_concerns_would_earn_a_year"):
             lines.append("  those shut concerns would clear %s den/yr between them, "
                      "and earn nothing while they are shut"

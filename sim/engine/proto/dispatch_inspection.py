@@ -36,7 +36,10 @@ from .techtree import _agent_available, _brief, _node_explain
          description="Year, money, income, founder hours, active projects with "
                      "what each is waiting on, and what to look at next.")
 def _cmd_state(sim, nodes, cmd, ended):
-    return dict(ok=True, **_agent_state(sim, nodes, cmd))
+    out = dict(ok=True, **_agent_state(sim, nodes, cmd))
+    if out.get("you_know_how_to_run_but_have_not_opened") and already_explained(sim, "shut_concerns_pointer", cmd):
+        out["shut_concerns_pointer_seen"] = True
+    return out
 
 
 

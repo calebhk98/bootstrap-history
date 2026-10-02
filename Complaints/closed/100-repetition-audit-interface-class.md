@@ -1,6 +1,6 @@
 # Interface repetition is a class of UX problem worth addressing systematically
 
-**Status:** partly - explain-once and the wave summary landed; shortage repeats (77), event fragmentation (78) and fog blockers (70) are now closed; project-start boilerplate (76) remains
+**Status:** closed - items 1, 3, 5, 6 closed as 70, 76, 77, 78; items 2, 4, 9, 10 pinned by sim/tests/test_research_filters.py and sim/tests/test_state_repetition.py
 
 Repetition was a significant UX cost in the playtests. The underlying simulation did not feel repetitive when values and consequences changed; the interface often did.
 
@@ -67,3 +67,6 @@ Distributed across:
 **Confidence:** Design recommendation - this is a class of UX problem, not a single bug. Each instance (UX-008, UX-009, UX-012, etc.) should be addressed individually, but this complaint unifies the observation that interface repetition is a systematic problem worth designing for.
 
 Update: item 7 (large completion waves) has a summary line and item 8 (tiny failures) is marked minor, and some long explanations show once per game. Still repeated: the fixed-price note and committed-total explanation on every `start` (Complaints/76), identical fog blockers (70), yearly shortage messages (77) and one log line per consequence of a disaster (78).
+
+
+Verified against the current screens: item 2 `available` lists only what can start and `state blocked` is its own mode; item 4 the staff-share explanation shows once then a one-line pointer (`ventures`, `why`); item 9 the shut-concerns pointer on `state` is whole once then short; item 10 `state` lists a bounded number of running projects and summarises the rest by what they wait on, pointing at `portfolio`. Items 7 and 8 were already a summary line and a minor note.
