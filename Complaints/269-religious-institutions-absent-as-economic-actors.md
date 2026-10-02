@@ -15,3 +15,5 @@ The point is not a theory of belief. Religious bodies are landlords, millers and
 ## What it would take
 
 Model a religious body as one more actor kind (land, labour, a purse, a rule for what it does with surplus) on the actor model in `docs/architecture/ACTORS.md`, with data per civilisation saying which exist at the start date. No belief mechanics are needed for a first version. Related: 103 (independent firms), 110 (interest groups), 185 (actors that nothing reads).
+
+Owner decision (2026-10-02): should be a mod; deferred.

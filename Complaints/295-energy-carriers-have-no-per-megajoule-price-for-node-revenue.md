@@ -13,3 +13,5 @@ Update (revenue-and-upkeep): `sim/engine/energy_prices.py` recomputes the solver
 What remains: the power, steam, turbine and distribution nodes with no gated production entry (`python3 sim/node_revenue_report.py --list`, the `en_*` names) have no plant capacity or staff hours to derive an output from, so they stay authored under the payback floor. Closing this needs each to gate an energy entry with its capacity (`annual_output_at_basis`), and a demand for energy to sell against.
 
 Related: 140, 283, 317, 318, 329, 335, 336, 337.
+
+Owner decision (2026-10-02): must be fixed: no typed-in revenue.

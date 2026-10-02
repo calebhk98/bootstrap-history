@@ -7,3 +7,5 @@ Interest groups (110) can have the state forbid starting the techniques that mak
 What is needed is a link from the loss to the techniques that cause it that does not depend on production-entry gates: a concern's outputs and the substitutes they replace (the same relation a market clearing uses when the founder's sales displace the society's), and a decision on whether protection should lift a prohibition the state made at an organised group's request or only bargain it down as it does a levy.
 
 See also 110, 311 and 312.
+
+Owner decision (2026-10-02): can be a mod; deferred.

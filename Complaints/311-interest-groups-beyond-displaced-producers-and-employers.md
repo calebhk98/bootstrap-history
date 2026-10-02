@@ -14,3 +14,5 @@ The mechanism group actors use on the state (a budget line, a prohibition at the
 See also 110 and 312.
 
 Related: 313.
+
+Owner decision (2026-10-02): can be a mod; deferred.

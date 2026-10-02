@@ -16,3 +16,5 @@ Fleet growth from the freight margin over the carrier's cost of capital; the
 material passed to `_trader_cost_share` in `living_stock.partner_quote_per_tonne`.
 
 Related: 323, 326.
+
+Owner decision (2026-10-02): somewhat important, lower priority.

@@ -9,3 +9,5 @@ Two ways to close it, and the second is the honest one. Spending that the budget
 All the new line sizes (`tuning_spending.py`) are labelled heuristics, so the ratios above move with them; do not treat the ratios as findings about Rome or Han.
 
 Related: 287, 314.
+
+Owner decision (2026-10-02): should be fixed from actual values: a state can have several revenue forms (land, wealth, trade on imports and exports, people), often paid in kind (a share of food), not only coin.

@@ -21,3 +21,5 @@ What stays authored, and why: no production entry names a product for the equipm
 Update (concern-margins-and-capital-charge): two more makers derive their revenue from output (bleaching powder, hand papermaking); counts from `python3 sim/node_revenue_report.py`. `PUMP_PAYBACK_YEARS_FLOOR` stays at the same value as `MINIMUM_PAYBACK_YEARS`; the guard is not stricter than the heuristic floor it tests.
 
 Related: 140, 317, 329, 335, 336, 337.
+
+Owner decision (2026-10-02): a technology does not make money by itself, and payback is not optimised for. What a concern makes goes into the market as goods to sell, and its income is what the market's supply and demand give it.

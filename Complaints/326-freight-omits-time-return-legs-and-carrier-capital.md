@@ -22,3 +22,5 @@ charges are `Complaints/340`; the domestic return leg wants a flow ledger so it
 need not assume the cart returns empty.
 
 Related: 135, 323, 338.
+
+Owner decision (2026-10-02): can wait a while.

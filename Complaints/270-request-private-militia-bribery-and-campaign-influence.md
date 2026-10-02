@@ -15,3 +15,5 @@ A founder with great wealth and no way to turn it into force or influence has on
 ## What it would take
 
 Make force an ordinary purchase: men with food, equipment and pay, drawn through the labour and supply rules, usable by any actor. Bribery is a transfer to another actor that changes its decision, so it needs an actor with decisions (see 105 and 185). Do not script outcomes (`CLAUDE.md` 4.1, 4.3).
+
+Owner decision (2026-10-02): wait; useful once the economy and multiplayer work.

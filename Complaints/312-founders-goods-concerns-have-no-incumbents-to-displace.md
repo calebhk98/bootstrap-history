@@ -11,3 +11,5 @@ A related gap: displaced-producer groups for materials form only when the player
 See also 110 and 311.
 
 Related: 313.
+
+Owner decision (2026-10-02): can be a mod; deferred.

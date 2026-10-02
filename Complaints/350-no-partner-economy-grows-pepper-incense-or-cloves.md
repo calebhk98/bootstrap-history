@@ -28,3 +28,5 @@ households want, not what its land can bear; a land-limited capacity is
 needed before an economy that grows a luxury can be added honestly.
 
 Related: 109, 300, 324, 338, 339, 346, 347, 351, 353.
+
+Owner decision (2026-10-02): can be a mod (an India partner is content); deferred.

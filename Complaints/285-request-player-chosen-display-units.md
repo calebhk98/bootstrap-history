@@ -44,3 +44,5 @@ Covered: every JSON reply (any field the registry's `field_rules` match gets a `
 - Field rules are name patterns, so a new money field not in the list is not converted; tagging at the point the quantity is produced is still to do.
 - Commands accept native units (hectares, tonnes) whatever is displayed.
 - Civilisation units are listed in the registry with a `civilisations` limit; civ data does not yet reference its own units, and only Rome has any.
+
+Owner decision (2026-10-02): nice to have, longer and lower priority.

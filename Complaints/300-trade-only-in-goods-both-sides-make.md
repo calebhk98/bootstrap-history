@@ -29,3 +29,5 @@ file's opening (`docs/architecture/ACTORS_NEXT.md` increment 7), and tariffs,
 embargoes and exchange rates (`Complaints/109`).
 
 Related: 324, 338, 339, 346, 347, 350, 351, 353.
+
+Owner decision (2026-10-02): can wait. A foreign economy should be another country object sharing every method the home civilisation has.

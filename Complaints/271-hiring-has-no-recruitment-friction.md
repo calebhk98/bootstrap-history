@@ -15,3 +15,5 @@ Instant hiring removes one of the main reasons a skilled workforce takes decades
 ## What it would take
 
 A recruitment rule that depends on how scarce the skill is in reach (`population` already prints per-trade reach, see 172), so a large hire draws wages up, takes years, or pulls trainees from other employers. It must come from labour-market state, not a number tuned to a result, and apply to any actor. Test: the same hire quoted for a common and a rare trade differs in time or price.
+
+Owner decision (2026-10-02): delay; low priority.

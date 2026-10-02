@@ -9,3 +9,5 @@ The state borrows only when its need exceeds its revenue and reserve, which no b
 Update: the discretionary sweep is gone (Complaint 327). A reserve beyond `RESERVE_CEILING_YEARS_OF_NEED` years of need buys works, so the reserve stays within a small multiple of the need and the state's supply stays a small share of the pool; measure with `python3 sim/budget_series.py <civilisation id> <years> <seed>` (works and discretionary lines) and each decade's `market_rate()`. Left: replace `LENDABLE_RESERVE_SHARE` with the state's own lending decision through a policy.
 
 Related: 106, 308, 332.
+
+Owner decision (2026-10-02): can be ignored for a while.

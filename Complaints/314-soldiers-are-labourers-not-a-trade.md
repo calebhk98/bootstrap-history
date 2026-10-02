@@ -9,3 +9,5 @@ The state's army is a `labourer` line in the budget (`sim/engine/actors/budget.p
 3. The state's labourer staff (soldiers, road menders, court servants) enter the founder's pool as a share of the nation's working age (`BudgetView.local_staff`), which is right only while the army is small against the working age.
 
 Related: 315.
+
+Owner decision (2026-10-02): should be fixed.
