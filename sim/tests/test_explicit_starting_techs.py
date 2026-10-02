@@ -5,8 +5,8 @@ from .harness import *  # noqa: F401,F403
 _expected_grants = {
     "rome_100ad": 229,
     "han_china_100ad": 119,
-    "norse_900ad": 151,
-    "england_1300": 207,
+    "norse_900ad": 152,  # 40: peat cutting held at the start
+    "england_1300": 208,  # 40: peat cutting held at the start
     "mexica_1500": 50,  # 301: the hand needle (bone) is held at the start
 }
 for _civ, _count in _expected_grants.items():
