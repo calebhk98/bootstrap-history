@@ -29,14 +29,24 @@ def _credit_lines(text):
     return kept
 
 
-# enough cash for the first start only, so the second and third both draw on credit
-# stated in labour hours so it does not move with what the coin metal costs
-LABOUR_HOURS_FOR_ONE_START = 6900.0
-CASH_FOR_ONE_START = LABOUR_HOURS_FOR_ONE_START * sim().money_per_labour_hour()
+# enough cash for the first start only, so the second and third both draw on credit: what the first
+# start pays at once plus what it still owes afterwards, read off a household with cash to spare.
+# The later two cost more than the first, so what is left after it covers neither.
+FIRST_START = "tr_lateen_sail"
+
+
+def cash_for_one_start():
+    rich = sim(capital=1.0e9)
+    _run(rich, "start " + FIRST_START)
+    paid_at_once = 1.0e9 - rich.capital
+    return paid_at_once + rich.state.projects.active[FIRST_START]["cost_left"] + 1.0
+
+
+CASH_FOR_ONE_START = cash_for_one_start()
 borrower = sim(capital=CASH_FOR_ONE_START)
-first = _run(borrower, "start units_standards")
-second = _run(borrower, "start cn_damp_proof_course")
-third = _run(borrower, "start tr_lateen_sail")
+first = _run(borrower, "start tr_lateen_sail")
+second = _run(borrower, "start units_standards")
+third = _run(borrower, "start cn_damp_proof_course")
 check("set-up: the second and third starts draw on credit",
       all(reply.get("ok") and "on_credit" in reply for reply in (second, third)), (second, third))
 
@@ -54,16 +64,16 @@ check("...and prints only a one-line summary of the block on screen",
       and "borrow" in third_text, third_text)
 
 forced = sim(capital=CASH_FOR_ONE_START)
+_run(forced, "start tr_lateen_sail")
 _run(forced, "start units_standards")
-_run(forced, "start cn_damp_proof_course")
-again = S._agent_dispatch(forced, NODES, {"cmd": "start", "id": "tr_lateen_sail", "full": True})
+again = S._agent_dispatch(forced, NODES, {"cmd": "start", "id": "cn_damp_proof_course", "full": True})
 check("'full' asks for the whole block again",
       again.get("ok") and "what_happens_there" in again.get("on_credit", {}), again)
 
 next_year = sim(capital=CASH_FOR_ONE_START)
+_run(next_year, "start tr_lateen_sail")
 _run(next_year, "start units_standards")
-_run(next_year, "start cn_damp_proof_course")
 next_year.year += 1
-later = _run(next_year, "start tr_lateen_sail")
+later = _run(next_year, "start cn_damp_proof_course")
 check("a new year shows the full block again",
       later.get("ok") and "what_happens_there" in later.get("on_credit", {}), later)
