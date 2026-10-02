@@ -88,3 +88,4 @@ class YearInputs:
     yield_factor_by_producer: Mapping[AgentId, float]       # weather, depletion, technique: 1.0 is the opening
     engine_orders: Mapping[AgentId, AgentOrders]            # the founder, firms, the state: orders the engine decides
     legacy_transfers: Tuple = ()                            # one-sided engine postings, booked against EDGE_LEGACY
+    harvest_factor: float = 1.0                             # this year's growing weather on households' own plots

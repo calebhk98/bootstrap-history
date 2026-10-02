@@ -185,7 +185,7 @@ class AgentEconomy:
                   if economy.setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
-                          yield_factor_by_producer=yields, engine_orders=engine_orders)
+                          yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather)
 
     def _spin_up(self):
         """Hidden years from the opening until prices settle; then the price level is rebased to one."""

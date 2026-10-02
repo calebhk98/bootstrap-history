@@ -75,7 +75,7 @@ class Economy:
             labour_bids.extend(orders.labour_bids)
         offers = labour_offers(setup, record, view, outside_option_by_tile(setup, record, view))
         clear_labour(setup, record, labour_bids, offers, ledger)
-        self._grow_own(offers, ledger)
+        self._grow_own(offers, ledger, inputs.harvest_factor)
         self._service_loans(view.year)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book)
@@ -130,7 +130,7 @@ class Economy:
             if producer is not None and producer.yield_factor != factor:
                 self.record.producers[producer_id] = type(producer)(**{**producer.__dict__, "yield_factor": factor})
 
-    def _grow_own(self, offers, ledger: YearLedger) -> None:
+    def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0) -> None:
         """Hours nobody hired go into the household's own plot (households_own.py)."""
         setup, record = self.setup, self.record
         if self._own_options is None:
@@ -142,7 +142,7 @@ class Economy:
             idle = offered.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
             tile = setup.tiles.get(cohort.tile)
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,
-                                                 tile.fertility if tile else 0.0, setup.basket)
+                                                 (tile.fertility if tile else 0.0) * harvest_factor, setup.basket)
             if moves:
                 record.book.move_many(moves)
                 ledger.grown[cohort_id] = grown
