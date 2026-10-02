@@ -687,7 +687,9 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
         for metal in ("iron", "copper", "tin", "lead", "silver"):
             total = sum(deposit.quantity_tonnes_per_year
                         for deposit in deposits.load_deposits(metal))
-            expected = resources["empire_output_100ad"][metal]["t_per_yr"]
+            # Silver riding with lead is counted once (Complaints/291): the
+            # silver deposits split only what the lead byproduct leaves.
+            expected = deposits.empire_output_net_of_byproducts_tonnes_per_year(metal)
             self.assertAlmostEqual(total / expected, 1.0, delta=0.05,
                                     msg=metal)
 
