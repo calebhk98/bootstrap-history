@@ -169,3 +169,13 @@ _hire_charged = (_ledger_outflow(_hired, "hiring fee and first year's wages")
 check("hire wage: the first year's charge through the ledger is the quoted yearly wage",
       abs(_hire_charged - _hire_quote["from_next_year_per_year"]) <= 0.11,
       (_hire_charged, _hire_quote["from_next_year_per_year"]))
+
+# Living stock: the ledger "stock bought abroad" outflow is exactly the quoted cost.
+_stock_args = {"what": "living_stock", "material": "ramie_stock_kg", "n": 100}
+_stock_quote = S._agent_dispatch(_ledger_game(), NODES, dict(_stock_args, cmd="quote"))
+_stocked = _ledger_game()
+_stock_reply = S._agent_dispatch(_stocked, NODES, dict(_stock_args, cmd="buy"))
+check("living stock: the ledger shows exactly what was quoted",
+      _stock_reply.get("ok") and abs(_ledger_outflow(_stocked, "stock bought abroad")
+                                     - _stock_quote["to_buy_it"]) <= 0.051,
+      (_ledger_outflow(_stocked, "stock bought abroad"), _stock_quote.get("to_buy_it")))
