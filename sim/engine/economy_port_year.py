@@ -197,7 +197,8 @@ class AgentEconomy:
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather)
 
     def _spin_up(self):
-        """Hidden years from the opening until prices settle; then the price level is rebased to one."""
+        """Hidden years from the opening until prices and the interest rate settle; then the price level
+        is rebased to one."""
         economy = self._economy
         record = economy.record
         basket = record.opening_basket
@@ -208,7 +209,8 @@ class AgentEconomy:
         before = None
         for _year in range(int(SPIN_UP_MAXIMUM_YEARS)):
             outcome = economy.step(inputs)
-            now = [outcome.price_level] + [outcome.prices.get(good, 0.0) for good in watched]
+            now = ([outcome.price_level, record.memory.rates.get(economy.setup.currency_id, 0.0)]
+                   + [outcome.prices.get(good, 0.0) for good in watched])
             if before is not None and max(abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0) < SPIN_UP_TOLERANCE:
                 break
             before = now
@@ -253,7 +255,7 @@ class AgentEconomy:
         unskilled = wages.get(setup.unskilled_trade)
         if unskilled is None:
             return None
-        return unskilled * (1.0 + trade_premium(setup, trade, self.rate() or 0.0))
+        return unskilled * (1.0 + trade_premium(setup, trade))
 
     def rate(self):
         return self.answers()[2]

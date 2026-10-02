@@ -8,7 +8,7 @@ from sim.economy.types import Bid, Offer
 from sim.economy.accounts import Book
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
 from sim.economy.year_close import held_only, learned_prices, national_prices
-from sim.economy.year_goods import _unsold_signal
+from sim.economy.year_goods import _unsold_signal, remembered_price
 
 
 def bid(maximum_price):
@@ -29,6 +29,18 @@ class UnsoldSignalTests(unittest.TestCase):
 
     def test_no_offers_no_signal(self):
         self.assertIsNone(_unsold_signal([bid(4.0)], []))
+
+
+class RememberedPriceTests(unittest.TestCase):
+    def test_a_sliver_of_trade_moves_the_remembered_price_a_sliver(self):
+        # a few grams sold against demand for tonnes clears at a price nobody normally pays
+        self.assertAlmostEqual(remembered_price(1.0, 1000.0, 1.0, 100.0), 1.0 + 0.01 * 999.0)
+
+    def test_a_normal_years_trade_sets_the_price(self):
+        self.assertEqual(remembered_price(1.0, 2.0, 150.0, 100.0), 2.0)
+
+    def test_a_market_with_no_history_takes_the_price(self):
+        self.assertEqual(remembered_price(None, 2.0, 1.0, 0.0), 2.0)
 
 
 class NationalPriceTests(unittest.TestCase):

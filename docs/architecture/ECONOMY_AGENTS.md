@@ -34,12 +34,11 @@ demography to read.
 variable cost; a holder of stock at what it expects to get next year less carrying cost and spoilage; a
 seller short of cash for debts or wages below that; a waste product below zero.
 
-**Prices and wages rise fast and fall slowly.** A wage that a shortage of hands pushes up reaches the
-clearing wage within the year, since employers outbid each other over the year's many hirings; idle
-hours pull it down only by a share of the gap a year. The interest rate moves by a share either way,
-and drifts toward lenders' lowest ask when nobody borrows. A market that traded nothing keeps its price
-unless every seller asked more than any buyer would pay; an offer that is only float residue is no
-supply.
+**Wages and the interest rate are sticky.** Each moves by a share of the gap to its clearing level a
+year, but a wage is never left below every worker's ask while an employer would pay it, and a wage
+nobody offered hours at stays where it was. With savings on offer and nobody borrowing, the rate drifts
+toward lenders' lowest ask. A goods market that traded nothing keeps its price unless every seller
+asked more than any buyer would pay; an offer that is only float residue is no supply.
 
 **Clearing order follows the recipes.** A good clears after the goods it is made from, so producers
 sell this year what they made from inputs bought this year. Cycles draw their inputs from stock.

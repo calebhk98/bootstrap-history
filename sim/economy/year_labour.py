@@ -13,6 +13,7 @@ from sim.constants import declare
 from sim.world.wages import CAREER_YEARS
 
 from . import households, labour, settlement
+from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .market_memory import market_key
 from .setup import LABOUR_AREA_PREFIX
 from .types import LabourBid, LabourOffer
@@ -60,19 +61,19 @@ def labour_offers(setup, record, view, subsistence_by_tile) -> List[LabourOffer]
         workers = {trade: count * share for trade, count in record.workforce.get(cohort.tile, {}).items()}
         offers.extend(households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0),
                                                setup.working_hours_per_year, danger))
-    rate = view.interest_rate(setup.currency_id)
-    premiums = {trade: trade_premium(setup, trade, rate) for trade in {offer.trade for offer in offers}}
+    premiums = {trade: trade_premium(setup, trade) for trade in {offer.trade for offer in offers}}
     return [dataclasses.replace(offer, reservation_wage=offer.reservation_wage * (1.0 + premiums[offer.trade]))
             if premiums[offer.trade] > 0.0 else offer for offer in offers]
 
 
-def trade_premium(setup, trade, rate) -> float:
+def trade_premium(setup, trade) -> float:
     """What a trade's training years add to the pay a worker asks, as a share: the years of income
-    given up to learn it, repaid over a working life at the going rate (labour.training_premium)."""
+    given up to learn it, repaid over a working life (labour.training_premium) at the family's own
+    time preference, since the family pays for training by going without, not by borrowing."""
     spec = setup.trades.get(trade)
     if spec is None or spec.training_years <= 0.0:
         return 0.0
-    return labour.training_premium(spec.training_years, rate, CAREER_YEARS)
+    return labour.training_premium(spec.training_years, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS)
 
 
 def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[LabourOffer],

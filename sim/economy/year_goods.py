@@ -157,7 +157,11 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 for shortfall in done_settlement.shortfalls:
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)
-            signal = result.price if result.quantity > 0.0 else _unsold_signal(bids, offers)
+            old = record.memory.prices.get(key)
+            if result.quantity > 0.0:
+                signal = remembered_price(old, result.price, result.quantity, record.memory.volume_weights.get(key, 0.0))
+            else:
+                signal = _unsold_signal(bids, offers)
             if signal is not None and signal > 0.0:
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
@@ -166,6 +170,16 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             cleared.add(key)
     for key in sorted(set(record.memory.volume_weights) - cleared):
         record.memory.note_volume(key, 0.0)
+
+
+def remembered_price(old, cleared, quantity, usual_volume):
+    """The price a market remembers after trading `quantity` at `cleared`: moved from the old price in
+    proportion to the trade against the market's usual volume, so a sliver of trade cleared at a price
+    nobody normally pays does not become the price everyone plans from. A market whose volume stays
+    low learns the new price as its usual volume falls."""
+    if old is None or usual_volume <= 0.0:
+        return cleared
+    return old + min(1.0, quantity / usual_volume) * (cleared - old)
 
 
 def _unsold_signal(bids, offers):

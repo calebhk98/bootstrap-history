@@ -1,9 +1,12 @@
-"""The labour market: a wage that rises to clear vacancies within the year and falls slowly toward the
-clearing wage when hours are idle."""
+"""The labour market: a sticky wage that follows vacancies and idle hours toward the clearing wage,
+never left below every worker's reservation while an employer would pay it."""
 import random
 import unittest
 
-from sim.economy import labour
+import types
+
+from sim.economy import labour, year_labour
+from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE
 from sim.economy.types import LabourBid, LabourOffer
 
 
@@ -47,11 +50,16 @@ class WageMovementTests(unittest.TestCase):
         self.assertTrue(all(wage >= 1.0 - 1e-9 for wage in wages))   # idle workers undercut to their floor
         self.assertGreater(results[0].idle_hours, 0)
 
-    def test_employers_short_of_hands_raise_the_wage_within_the_year(self):
-        # a last wage just below every worker's reservation must not leave willing employers with nobody
+    def test_a_wage_just_below_every_reservation_still_hires_when_employers_pay_more(self):
+        # a sticky wage must not leave willing employers and willing workers unmatched
         result = labour.clear([bid("e", 50, 5.0)], [offer("w", 100, 1.05)], "smith", "a", "coin", 1.0)
         self.assertAlmostEqual(result.hours_hired, 50)
         self.assertGreaterEqual(result.wage, 1.05)
+
+    def test_a_shortage_raises_the_wage_by_a_share_of_the_gap_not_to_the_employers_cap(self):
+        # employers' caps follow output prices that follow the wage; an instant jump compounds
+        result = labour.clear([bid("e", 50, 500.0)], [offer("w", 1, 1.0)], "smith", "a", "coin", 2.0)
+        self.assertLess(result.wage, 500.0 * 0.5)
 
     def test_with_no_hours_offered_nobody_is_hired_and_the_wage_stays(self):
         # employers' caps follow the wage; letting an untraded wage jump to them compounds every year
@@ -77,6 +85,15 @@ class WageMovementTests(unittest.TestCase):
         result = labour.clear([bid("e", 10, 2.0, trade="other")], [offer("w", 10, 1.0)],
                               "smith", "a", "coin", None)
         self.assertEqual(result.hours_hired, 0)
+
+
+class TrainingPremiumTests(unittest.TestCase):
+    def test_the_premium_discounts_training_at_the_familys_own_time_preference(self):
+        # the family gives up consumption to train a child; a spike in the loan market's rate must not
+        # turn into a spike in skilled wages
+        setup = types.SimpleNamespace(trades={"smith": types.SimpleNamespace(training_years=5.0)})
+        self.assertAlmostEqual(year_labour.trade_premium(setup, "smith"),
+                               labour.training_premium(5.0, HOUSEHOLD_TIME_PREFERENCE, year_labour.CAREER_YEARS))
 
 
 class FillTests(unittest.TestCase):
