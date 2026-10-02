@@ -1,6 +1,6 @@
 # Silver chain does not yet charge for what a mine and a smelter actually do
 
-**Status:** partly - mine works are charged (342, 348); slag, roasting fuel and the grade basis are carried in 349; reopened: the remaining work belongs to this complaint too, the related one is a cross-reference, not a replacement
+**Status:** partly - mine works are charged (342, 348) and dressing now uses one rate for every route (Polybius five cycles, throughput conf D); slag, roasting fuel, adit, stripping, lamp oil and supervision remain (349)
 
 Rome's silver solves at about 319 labour hours per kg (`python3 sim/solve_prices.py --civ rome_100ad --why silver_kg`) against about 3,700 hours per kg from Strabo's 40,000 workers and Polybius's daily revenue (see 305). Grade is not the gap (305's update). The physical items the recipes still leave out, each needing a source before a number moves:
 
@@ -15,3 +15,7 @@ Do not move any figure to reach the attested day wage (CLAUDE.md 4.1).
 ## Update (mine-labour-per-tonne)
 
 Labour per tonne of rock checked against Kongsberg and Melle figures and fire-setting wood added to hard rock; silver moved from about 319 to about 335 hours per kg and the gap remains. See 342, 343, 344.
+
+## Update (silver-gold-data-fixes)
+
+Dressing is `sim/world/ore_dressing.py`: Strabo 3.2.10 (read) gives five crush-and-sieve cycles; the throughput per cycle is a labelled conf D heuristic (Agricola VIII not opened). The lead, direct silver (patio), jarosite and lode gold recipes charge the same hours per tonne of rock; `sim/tests/test_silver_gold_routes.py` checks it. Open: the throughput itself needs a source; slag, roasting fuel, hearth wear and the missing works listed above.

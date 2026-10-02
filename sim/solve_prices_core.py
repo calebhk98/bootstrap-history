@@ -999,6 +999,8 @@ RENT_BEARING_ORE_MATERIALS = {
     "galena_kg": ("lead", ("lead_kg",)),
     "silver_ore_kg": ("silver", ("silver_kg",)),
     "cinnabar_kg": ("mercury", ("mercury_kg",)),
+    "gold_gravel_kg": ("gold", ("gold_kg",)),
+    "gold_lode_ore_kg": ("gold", ("gold_lode_kg",)),
 }
 
 
@@ -1092,7 +1094,8 @@ def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
 
         deposits_for_metal = deposits.load_deposits(metal)
         quantity_demanded_tonnes_per_year = (
-            resources_json["empire_output_100ad"][metal]["t_per_yr"])
+            deposits.empire_output_net_of_byproducts_tonnes_per_year(
+                metal, resources_json))
         outcome = deposits.find_marginal_deposit(
             deposits_for_metal, quantity_demanded_tonnes_per_year)
         metal_price_per_kg = outcome.price_at_margin_labour_hours_per_kg

@@ -251,15 +251,14 @@ joint_output_mass_shares and joint_output_value_shares both take as their
 own first argument (see that module's own functions, not imported here -
 see this module's STANDALONE section) - so a caller with real prices in
 hand can run this deposit's joint output straight through Complaints/29's
-own demand-cleared value-share answer instead of a mass split. WHAT THIS
-DOES NOT DO: it does not fold a byproduct's quantity into that metal's OWN
-`load_deposits` accounting or supply curve - britannia_lead's silver
-byproduct, added as this module's own worked example, is not added to
-`load_deposits("silver")`'s britannia_silver_generic entry, and summing
-byproduct output into a metal's real market-clearing supply is future work,
-not this task's - see data/world/deposits.json's own britannia_lead entry
-for why that would double-count against an already-calibrated regional
-share.
+own demand-cleared value-share answer instead of a mass split.
+
+A BYPRODUCT IS COUNTED ONCE: `load_deposits` of the byproduct's metal splits
+only what the empire total leaves after the byproduct
+(`empire_output_net_of_byproducts_tonnes_per_year`), so silver raised with
+lead is not also asked of the silver-only deposits. A byproduct is stated as
+an assay per tonne of the primary metal contained (`kg_per_tonne_of_primary_
+metal` in data/world/deposits.json), one figure per deposit.
 """
 import collections
 import json
@@ -618,7 +617,10 @@ Deposit = collections.namedtuple("Deposit", [
     "note",
     "byproducts",                 # tuple of ByproductSpec, empty for most
                                    # deposits - see POLYMETALLIC DEPOSITS
-], defaults=((),))
+    "ore_type",                   # "primary" for ore smelted or amalgamated
+                                   # as such; "jarosite" for gossan that
+                                   # needs added lead as a collector
+], defaults=((), "primary"))
 
 
 def extraction_cost_labour_hours_per_kg(deposit: "Deposit") -> float:
@@ -955,37 +957,36 @@ def _declare_grade(deposit_entry: Dict[str, Any], metal: str) -> float:
 def _declare_byproduct_grade(
         deposit_entry: Dict[str, Any], byproduct_entry: Dict[str, Any],
         primary_metal: str) -> float:
-    """Run one byproduct's own ore_grade_kg_per_tonne through declare(),
-    exactly as _declare_grade does for the primary metal - a byproduct
-    grade is just as much a physical fact about the rock as the primary
-    one, and just as capable of being confidence D. Shares the "DEPOSIT_
-    GRADE_" name prefix (and therefore sim/tests/test_deposits.py's
-    every_declared_grade_is_engineering_or_heuristic_kind check) rather
-    than inventing a separate prefix nothing already enforces.
-    """
+    """The byproduct's grade in the rock, from its assay per tonne of the
+    primary metal contained (`kg_per_tonne_of_primary_metal`, the figure
+    sources quote) times the deposit's own primary grade. The assay goes
+    through declare() as a physical fact about this deposit's rock, never
+    derived from what either metal sells for; it shares the "DEPOSIT_GRADE_"
+    prefix so sim/tests/test_deposits.py's kind check covers it."""
+    grade = (deposit_entry["ore_grade_kg_per_tonne"]
+             * byproduct_entry["kg_per_tonne_of_primary_metal"] / KILOGRAMS_PER_TONNE)
     name = "DEPOSIT_GRADE_%s_BYPRODUCT_%s_%s" % (
         byproduct_entry["metal"].upper(), primary_metal.upper(),
         deposit_entry["name"].upper())
     if name in _GRADE_DECLARED:
-        return byproduct_entry["ore_grade_kg_per_tonne"]
+        return grade
     _GRADE_DECLARED.add(name)
     confidence = byproduct_entry.get("conf", "D")
     kind = "engineering_estimate" if confidence in ("A", "B", "C") else "temporary_heuristic"
-    return declare(
-        name, byproduct_entry["ore_grade_kg_per_tonne"],
+    declare(
+        name, byproduct_entry["kg_per_tonne_of_primary_metal"],
         kind=kind,
-        unit="kg contained %s / tonne of the SAME rock %s's own "
-             "ore_grade_kg_per_tonne is quoted against"
-             % (byproduct_entry["metal"], deposit_entry["name"]),
+        unit="kg of %s per tonne of %s contained in %s's rock"
+             % (byproduct_entry["metal"], primary_metal, deposit_entry["name"]),
         source=byproduct_entry.get("source"), confidence=confidence,
-        why="A polymetallic by-product grade - %s's %s ore also carries "
-            "%s at this grade, fixed by geology (see the module "
-            "docstring's POLYMETALLIC DEPOSITS section): opening the "
-            "deposit for %s necessarily raises this much %s too, whether "
-            "or not anyone wants it, and never derived from what either "
-            "metal sells for."
+        why="A polymetallic by-product assay - %s's %s ore also carries "
+            "%s, fixed by geology (see the module docstring's POLYMETALLIC "
+            "DEPOSITS section): opening the deposit for %s necessarily "
+            "raises this much %s too, and it is never derived from what "
+            "either metal sells for."
             % (deposit_entry["name"], primary_metal, byproduct_entry["metal"],
                primary_metal, byproduct_entry["metal"]))
+    return grade
 
 
 _SHARE_DECLARED: set = set()
@@ -1012,6 +1013,32 @@ def _declare_explicit_share(deposit_entry: Dict[str, Any], metal: str) -> float:
             "1.0 (see data/world/deposits.json's own _doc)." % metal)
 
 
+def empire_output_net_of_byproducts_tonnes_per_year(
+        metal: str, resources: Optional[Dict[str, Any]] = None,
+        deposits_data: Optional[Dict[str, Any]] = None) -> float:
+    """The empire total of `metal` less what other metals' deposits raise of
+    it as a byproduct (silver riding with lead), so one ounce is counted once:
+    this is what the metal's own deposits must supply and the quantity its
+    own shares split (Complaints/291). Byproduct tonnes are the other
+    deposit's share times its own empire total times the assay, which needs
+    no grade."""
+    resources = resources if resources is not None else _load_json(RESOURCES_FILE)
+    deposits_data = (deposits_data if deposits_data is not None
+                      else _load_json(DEPOSITS_FILE))
+    total = resources["empire_output_100ad"][metal]["t_per_yr"]
+    for other_metal, entries in deposits_data["deposits"].items():
+        if other_metal == metal:
+            continue
+        other_total = resources["empire_output_100ad"][other_metal]["t_per_yr"]
+        for entry in entries:
+            for byproduct_entry in entry.get("byproducts", []):
+                if byproduct_entry["metal"] == metal:
+                    total -= (entry["share_of_empire_output"] * other_total
+                              * byproduct_entry["kg_per_tonne_of_primary_metal"]
+                              / KILOGRAMS_PER_TONNE)
+    return max(0.0, total)
+
+
 def load_deposits(
         metal: str, resources: Optional[Dict[str, Any]] = None,
         deposits_data: Optional[Dict[str, Any]] = None) -> List["Deposit"]:
@@ -1032,7 +1059,8 @@ def load_deposits(
     deposits_data = (deposits_data if deposits_data is not None
                       else _load_json(DEPOSITS_FILE))
 
-    empire_total_tonnes = resources["empire_output_100ad"][metal]["t_per_yr"]
+    empire_total_tonnes = empire_output_net_of_byproducts_tonnes_per_year(
+        metal, resources, deposits_data)
 
     out = []
     for entry in deposits_data["deposits"].get(metal, []):
@@ -1057,7 +1085,8 @@ def load_deposits(
             hardness_class=entry.get("hardness_class"),
             quantity_tonnes_per_year=quantity_tonnes_per_year,
             note=entry.get("source", ""),
-            byproducts=byproducts))
+            byproducts=byproducts,
+            ore_type=entry.get("ore_type", "primary")))
     return out
 
 
@@ -1399,7 +1428,7 @@ if __name__ == "__main__":
     print("=" * 72)
     for metal in METALS:
         deposits = load_deposits(metal)
-        demand = resources["empire_output_100ad"][metal]["t_per_yr"]
+        demand = empire_output_net_of_byproducts_tonnes_per_year(metal)
         outcome = find_marginal_deposit(deposits, demand)
         print("\n%s (stated Roman output: %.4g t/yr)" % (metal.upper(), demand))
         for allocation in sorted(outcome.allocations,
@@ -1423,7 +1452,7 @@ if __name__ == "__main__":
     print("(price now creeps up WITHIN a deposit's life too - the intensive "
           "margin - not only when one is exhausted)")
     silver_deposits = load_deposits("silver")
-    silver_demand = resources["empire_output_100ad"]["silver"]["t_per_yr"]
+    silver_demand = empire_output_net_of_byproducts_tonnes_per_year("silver")
     silver_outcomes = simulate_depletion(
         silver_deposits, silver_demand,
         years=int(DEPOSIT_ASSUMED_WORKING_LIFE_YEARS * 1.2))

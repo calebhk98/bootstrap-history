@@ -175,14 +175,12 @@ class RentHoursPerKgByOreMaterialTests(unittest.TestCase):
         # everywhere would mean the wiring runs but never actually bites.
         self.assertTrue(any(value > 0.0 for value in rent.values()), rent)
 
-    def test_gold_is_not_in_the_table(self):
-        # gold_kg folds extraction and amalgamation into one recipe with no
-        # extracted_from ore stage of its own (see WHAT THIS DOES NOT REACH
-        # in the module docstring) - the seventh metal deposits.py covers,
-        # deliberately left out of RENT_BEARING_ORE_MATERIALS.
+    def test_gold_is_rented_through_its_two_ore_materials_not_gold_kg(self):
+        # gold_kg is a recipe over gold_gravel_kg (hydraulic) or gold_lode_ore_kg
+        # (lode), each an extracted ore drawn from a gold deposit (Complaints/334).
         self.assertNotIn("gold_kg", solve_prices.RENT_BEARING_ORE_MATERIALS)
-        self.assertNotIn("gold", [metal for metal, _recipes in
-                                  solve_prices.RENT_BEARING_ORE_MATERIALS.values()])
+        for ore in ("gold_gravel_kg", "gold_lode_ore_kg"):
+            self.assertEqual(solve_prices.RENT_BEARING_ORE_MATERIALS[ore][0], "gold")
 
 
 class IronFallsBackToTheAvailableSmeltingRouteTests(unittest.TestCase):

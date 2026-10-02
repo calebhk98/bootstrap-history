@@ -32,7 +32,8 @@ HAND_DRESSING_HOURS_PER_TONNE_OF_ROCK_FLOOR = 10.0
 
 
 def _silver_deposits():
-    pool = deposits.load_deposits("silver")
+    pool = [deposit for deposit in deposits.load_deposits("silver")
+            if deposit.ore_type == "primary"]
     total = sum(deposit.quantity_tonnes_per_year for deposit in pool)
     return [(deposit, deposit.quantity_tonnes_per_year / total) for deposit in pool]
 
@@ -80,16 +81,13 @@ class SilverChainPhysics(unittest.TestCase):
         recovered = silver_total / lead_total * SILVER_TO_BULLION_RECOVERY * CUPELLATION_SILVER_RECOVERY
         self.assertAlmostEqual(recipe_silver_per_lead / recovered, 1.0, delta=0.02)
 
-    def test_a_lead_deposit_carries_the_assay_of_the_silver_deposit_in_its_district(self):
-        silver_grade_by_tile = {deposit.tile: deposit.ore_grade_kg_per_tonne
-                                for deposit in deposits.load_deposits("silver")}
+    def test_a_lead_deposit_carries_its_own_assay_not_the_silver_deposits_grade(self):
+        # Complaints/291: silver per tonne of lead is a figure per deposit
+        # (see test_silver_gold_routes.py); a lead deposit with no assay has none.
         for deposit in deposits.load_deposits("lead"):
-            if deposit.tile not in silver_grade_by_tile:
-                self.assertEqual(deposit.byproducts, (), deposit.name)
-                continue
-            self.assertEqual(len(deposit.byproducts), 1, deposit.name)
-            self.assertEqual(deposit.byproducts[0].ore_grade_kg_per_tonne,
-                             silver_grade_by_tile[deposit.tile], deposit.name)
+            self.assertLessEqual(len(deposit.byproducts), 1, deposit.name)
+        gaul = next(d for d in deposits.load_deposits("lead") if d.name == "gaul_germania_lead_generic")
+        self.assertEqual(gaul.byproducts, ())
 
     def test_lead_ore_is_dressed_before_it_is_smelted(self):
         entry = _default_production_entries()["lead_kg"]

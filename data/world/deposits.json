@@ -6,7 +6,7 @@
   "material_moved": "'ore' for rock broken out of a vein or bed; 'gravel' for loose alluvial material moved by panning or hydraulic sluicing rather than broken. The distinction matters because gravel needs no breaking labour at all - see depth_class 'alluvial' and 'alluvial_hydraulic' in sim/world/deposits.py.",
   "position_fields": "lat and lon: where the deposit is, degrees. The land tile that holds it is found at load as the tile with the nearest centre (sim/world/tile_lookup.py), so regenerating the tile grid at another cell size needs no edit here. Until a surveyed position is entered, a deposit carries the centre of the tile it was first assigned to (for a named mine the nearest tile to the site inside the region that held its share; for a generic placeholder a representative tile of that region), so every region total is unchanged. A region is only a label over tiles: geography.json regions[*].minerals keeps just the shares not yet tied to a deposit, and sim/world/mineral_shares.py adds the deposits back by the region their tile belongs to.",
   "conf": "Same A-D scale as data/prices.json and data/world/resources.json: B where a specific ancient source or an unusually well-documented deposit is named, C for a generic estimate of a known ore type, D for a placeholder standing in for a region this file's author could not find a specific ancient mine for.",
-  "byproducts": "Optional list on a deposit entry, each item {metal, material_key, ore_grade_kg_per_tonne, conf, source} - another metal present in the SAME rock, at its OWN grade, that necessarily comes up if the deposit is worked for its primary metal (see sim/world/deposits.py's POLYMETALLIC DEPOSITS section). material_key is the spelling sim.world.demand's own {material_key: quantity} functions use (e.g. 'silver_kg'), defaulting to '%s_kg' % metal if omitted. A byproduct's quantity is DERIVED (byproduct_quantities_tonnes_per_year), never independently stated, and is deliberately NOT added into that byproduct metal's own load_deposits(metal) accounting elsewhere in this file - see britannia_lead's own byproducts entry for why that would double-count against an already regional-share-calibrated total."
+  "byproducts": "Optional list on a deposit entry, each item {metal, material_key, kg_per_tonne_of_primary_metal, conf, source} - another metal present in the SAME rock, at its OWN assay per tonne of the primary metal contained (the grade in the rock is that assay times the deposit's own grade), that necessarily comes up if the deposit is worked for its primary metal (see sim/world/deposits.py's POLYMETALLIC DEPOSITS section). material_key is the spelling sim.world.demand's own {material_key: quantity} functions use (e.g. 'silver_kg'), defaulting to '%s_kg' % metal if omitted. A byproduct's quantity is DERIVED (byproduct_quantities_tonnes_per_year), never independently stated, and the byproduct metal's own deposits split only what remains of the empire total after it (sim/world/deposits.py empire_output_net_of_byproducts_tonnes_per_year), so one ounce is counted once."
  },
  "deposits": {
   "iron": [
@@ -73,8 +73,8 @@
     "ore_grade_kg_per_tonne": 60.0, "depth_class": "shallow_vein", "hardness_class": "medium",
     "conf": "D", "source": "Generic placeholder for geography.json's small 0.02 Italian lead share.",
     "byproducts": [
-     {"metal": "silver", "material_key": "silver_kg", "ore_grade_kg_per_tonne": 0.3, "conf": "D",
-      "source": "Assay taken from italia_silver_generic in the same district (same galena, silver as a trace constituent); generic, no assay of a specific working. Complaints/291."}
+     {"metal": "silver", "material_key": "silver_kg", "kg_per_tonne_of_primary_metal": 2.31, "conf": "D",
+      "source": "Wood 2022 (Archaeometry, read): argentiferous galena carries about 0.2 wt% silver, so 0.002 / 0.866 (lead fraction of PbS) = 2.31 kg of silver per tonne of lead contained. Generic galena of no assayed working, so the generic Wood figure; confidence D. Complaints/291."}
     ]},
    {"name": "gaul_germania_lead_generic", "lat": 49.5124, "lon": 6.021, "share_of_empire_output": 0.15, "material_moved": "ore",
     "ore_grade_kg_per_tonne": 100.0, "depth_class": "shallow_vein", "hardness_class": "medium",
@@ -84,24 +84,24 @@
     "conf": "C",
     "source": "Mendip and Pennine galena veins, extensively worked from the earliest years of the Roman occupation (lead ingots (pigs) stamped with imperial ownership survive); 150 kg/t (15%) is a round figure for a good vein-galena ore.",
     "byproducts": [
-     {"metal": "silver", "material_key": "silver_kg", "ore_grade_kg_per_tonne": 0.5, "conf": "D",
-      "source": "This module's own worked example of sim/world/deposits.py's POLYMETALLIC DEPOSITS mechanism, not a second accounting of silver's own supply: British galena is well attested as argentiferous (silver_kg's own britannia_silver_generic entry below already says so, at the same order-of-magnitude grade, citing no assay either), so opening britannia_lead for its lead necessarily also raises this much silver, fixed by the rock rather than chosen. DELIBERATELY NOT added to load_deposits('silver')'s own accounting: britannia_silver_generic already stands for the region's regional-share-calibrated silver supply, and summing this byproduct into it too would double-count the same silver against data/world/resources.json's empire total. This entry exists so byproduct_quantities_tonnes_per_year and joint_output_quantities_kg have a real, historically-motivated case to compute against, ready for whichever future price solver reads it - not to add a second, uncoordinated source of silver to this project's own numbers."}
+     {"metal": "silver", "material_key": "silver_kg", "kg_per_tonne_of_primary_metal": 2.31, "conf": "D",
+      "source": "Wood 2022 (Archaeometry, read): argentiferous galena carries about 0.2 wt% silver, so 0.002 / 0.866 (lead fraction of PbS) = 2.31 kg of silver per tonne of lead contained. British galena is attested as argentiferous but no assay is given, so the generic Wood figure; confidence D. Complaints/291."}
     ]},
    {"name": "hispania_lead", "lat": 38.0719, "lon": -2.3395, "share_of_empire_output": 0.45, "material_moved": "ore",
     "ore_grade_kg_per_tonne": 180.0, "depth_class": "deep_vein", "hardness_class": "hard",
     "conf": "C",
     "source": "Cartagena/Sierra argentiferous galena, the same deep-worked district as rio_tinto_copper; 180 kg/t (18%) is a round figure for a rich galena vein.",
     "byproducts": [
-     {"metal": "silver", "material_key": "silver_kg", "ore_grade_kg_per_tonne": 1.0, "conf": "C",
-      "source": "Assay taken from hispania_silver in the same district (Strabo 3.2.10 on the New Carthage mines, which raised silver from argentiferous galena): same rock, silver per tonne of the rock the lead is graded against. Complaints/291."}
+     {"metal": "silver", "material_key": "silver_kg", "kg_per_tonne_of_primary_metal": 2.31, "conf": "C",
+      "source": "Wood 2022 (Archaeometry, read): argentiferous galena carries about 0.2 wt% silver, so 0.002 / 0.866 (lead fraction of PbS) = 2.31 kg of silver per tonne of lead contained. Applied to the Cartagena argentiferous galena (Strabo 3.2.10); no assay of the working itself. Complaints/291."}
     ]},
    {"name": "laurion_lead", "lat": 37.9077, "lon": 22.102, "share_of_empire_output": 0.1, "material_moved": "ore",
     "ore_grade_kg_per_tonne": 80.0, "depth_class": "deep_vein", "hardness_class": "medium",
     "conf": "C",
     "source": "Laurion's galena, worked to genuine depth through hundreds of shafts over the Classical and Hellenistic periods; by the Roman era the readily accessible rich ore is long since taken and what remains is leaner and deeper, hence a lower grade than Britain's or Spain's fresher veins.",
     "byproducts": [
-     {"metal": "silver", "material_key": "silver_kg", "ore_grade_kg_per_tonne": 0.4, "conf": "C",
-      "source": "Assay taken from laurion_silver in the same district (Xenophon, Ways and Means: Laurion silver-lead ore): same rock. Complaints/291."}
+     {"metal": "silver", "material_key": "silver_kg", "kg_per_tonne_of_primary_metal": 2.0, "conf": "D",
+      "source": "Laurion ore at about 400 g of silver per tonne with about 20 percent lead (Wood et al., as seen in a search result and not verified in the text read), 400 / 0.20 = 2.0 kg of silver per tonne of lead. Review range 2 to 2.3. Complaints/291."}
     ]}
   ],
   "silver": [
@@ -111,14 +111,18 @@
    {"name": "britannia_silver_generic", "lat": 51.3195, "lon": -1.4847, "share_of_empire_output": 0.05, "material_moved": "ore",
     "ore_grade_kg_per_tonne": 0.5, "depth_class": "shallow_vein", "hardness_class": "medium",
     "conf": "D", "source": "Silver content of British argentiferous lead ore (see britannia_lead); generic figure, no assay."},
-   {"name": "hispania_silver", "lat": 38.0719, "lon": -2.3395, "share_of_empire_output": 0.65, "material_moved": "ore",
+   {"name": "hispania_silver", "lat": 38.0719, "lon": -2.3395, "share_of_empire_output": 0.48, "material_moved": "ore",
     "ore_grade_kg_per_tonne": 1.0, "depth_class": "deep_vein", "hardness_class": "hard",
     "conf": "B",
     "source": "Strabo, Geography 3.2.10, citing Polybius, on the silver mines near New Carthage: on the order of 40,000 workers and revenue to Rome of 25,000 drachmas a day - the single best-attested ancient claim of exceptional richness for any deposit in this file. 1.0 kg/t (0.1% Ag) is a correspondingly generous silver content for argentiferous galena, at the rich end of what such ore can carry."},
    {"name": "laurion_silver", "lat": 37.9077, "lon": 22.102, "share_of_empire_output": 0.3, "material_moved": "ore",
     "ore_grade_kg_per_tonne": 0.4, "depth_class": "deep_vein", "hardness_class": "medium",
     "conf": "C",
-    "source": "Laurion's silver-lead ore funded the Athenian navy centuries before Rome arrived (Xenophon, Ways and Means, describes the mines at length); by the Roman period the field is old and deep-shafted with its richest ore long extracted, hence a lower silver content than Hispania's fresher workings, not a claim it was ever poor."}
+    "source": "Laurion's silver-lead ore funded the Athenian navy centuries before Rome arrived (Xenophon, Ways and Means, describes the mines at length); by the Roman period the field is old and deep-shafted with its richest ore long extracted, hence a lower silver content than Hispania's fresher workings, not a claim it was ever poor."},
+   {"name": "rio_tinto_jarosite", "lat": 38.3304, "lon": -6.021, "share_of_empire_output": 0.15, "material_moved": "ore", "ore_type": "jarosite",
+    "ore_grade_kg_per_tonne": 2.0, "depth_class": "surface", "hardness_class": "medium",
+    "conf": "D",
+    "source": "Rio Tinto silver came largely from jarosite and gossan ores smelted with lead added as a collector (Anguilano et al. 2010, ArcheoSciences 34, read). The 0.2 wt% silver grade (2 kg per tonne) is from an abstract seen in a search, not from the paper, so it is confidence D. The share of the silver-only total is carved from hispania_silver's and is a placeholder: no source gives the split. Surface working in medium rock (gossan is a weathered cap; the hardness is unsourced). Complaints/373."}
   ],
   "tin": [
    {"name": "gaul_germania_tin_generic", "lat": 49.533, "lon": 2.0667, "share_of_empire_output": 0.1, "material_moved": "gravel",
