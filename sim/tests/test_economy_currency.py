@@ -4,7 +4,7 @@ import unittest
 
 from sim.economy import currency, types
 
-SILVER_COIN = {"material": "silver_kg", "kg_per_unit": 0.0027, "source": "test"}
+SILVER_COIN = {"regime": "struck_coin", "material": "silver_kg", "kg_per_unit": 0.0027, "source": "test"}
 
 
 def silver_spec(charge=0.0):
@@ -24,20 +24,32 @@ class RegimeTests(unittest.TestCase):
         self.assertAlmostEqual(spec.backing_per_unit, 0.0027)
         self.assertEqual(spec.currency_id, "denarius")
 
-    def test_explicit_regime_in_data_wins(self):
+    def test_weighed_metal_has_no_issuer_and_no_mint(self):
         spec = currency.currency_from_coin_standard(
             "x", {"material": "silver_kg", "kg_per_unit": 0.025, "regime": "weighed_metal"}, "eyrir")
         self.assertEqual(spec.regime, "weighed_metal")
         self.assertIsNone(spec.issuer)
+        self.assertFalse(currency.has_mint(spec))
 
-    def test_non_metal_is_commodity_money(self):
+    def test_commodity_money_is_the_good_itself(self):
         spec = currency.currency_from_coin_standard(
-            "x", {"material": "cotton_fabric_kg", "kg_per_unit": 0.4}, "quachtli")
-        self.assertEqual(spec.regime, "commodity")
+            "x", {"material": "cacao_kg", "kg_per_unit": 0.001, "regime": "commodity"}, "bean", issuer="state")
+        self.assertEqual((spec.regime, spec.backing_good, spec.issuer), ("commodity", "cacao_kg", None))
 
-    def test_fiat_when_data_says_or_no_backing(self):
+    def test_data_must_name_a_regime(self):
+        with self.assertRaises(ValueError):
+            currency.currency_from_coin_standard("x", {"material": "silver_kg", "kg_per_unit": 0.01}, "coin")
+
+    def test_only_a_struck_coin_has_a_mint_charge(self):
+        data = {"material": "silver_kg", "kg_per_unit": 0.01, "mint_charge_share": 0.02}
+        spec = currency.currency_from_coin_standard("x", dict(data, regime="struck_coin"), "coin", issuer="state")
+        self.assertEqual(spec.mint_charge_share, 0.02)
+        with self.assertRaises(ValueError):
+            currency.currency_from_coin_standard("x", dict(data, regime="weighed_metal"), "coin")
+
+    def test_fiat_needs_no_backing(self):
         self.assertEqual(fiat_spec().regime, "fiat")
-        spec = currency.currency_from_coin_standard("x", {}, "note")
+        spec = currency.currency_from_coin_standard("x", {"regime": "fiat"}, "note")
         self.assertEqual((spec.regime, spec.backing_good, spec.backing_per_unit), ("fiat", None, 0.0))
 
 
@@ -72,52 +84,6 @@ class IssueTests(unittest.TestCase):
             "x", {"material": "silver_kg", "kg_per_unit": 0.025, "regime": "weighed_metal"}, "eyrir")
         with self.assertRaises(ValueError):
             currency.issue(spec, 1.0, "x")
-
-
-class ArbitrageTests(unittest.TestCase):
-    def test_cheap_bullion_goes_to_the_mint_and_seigniorage_to_issuer(self):
-        spec = silver_spec(charge=0.1)
-        transfers, moves = currency.arbitrage(spec, 0.5 * currency.mint_price(spec), {"a": 100.0}, {})
-        self.assertTrue(moves and all(m.receiver == types.EDGE_MINT for m in moves))
-        metal = sum(m.quantity for m in moves)
-        paid = sum(t.amount for t in transfers if t.payee == "a")
-        keep = sum(t.amount for t in transfers if t.payee == "state")
-        self.assertAlmostEqual(paid, metal * 0.9 / 0.0027)
-        self.assertAlmostEqual(keep, metal * 0.1 / 0.0027)
-        self.assertTrue(all(t.payer == types.EDGE_MINT for t in transfers))
-
-    def test_dear_bullion_melts_coin(self):
-        spec = silver_spec()
-        transfers, moves = currency.arbitrage(spec, 2 * currency.mint_parity(spec), {}, {"a": 1000.0})
-        self.assertTrue(all(t.payee == types.EDGE_MINT and t.payer == "a" for t in transfers))
-        coin = sum(t.amount for t in transfers)
-        self.assertAlmostEqual(sum(m.quantity for m in moves), coin * 0.0027)
-        self.assertTrue(all(m.giver == types.EDGE_MINT for m in moves))
-
-    def test_inside_the_band_nothing_moves(self):
-        spec = silver_spec(charge=0.1)
-        price = 0.5 * (currency.mint_price(spec) + currency.mint_parity(spec))
-        self.assertEqual(currency.arbitrage(spec, price, {"a": 5.0}, {"a": 5.0}), ([], []))
-
-    def test_fiat_does_not_arbitrage(self):
-        self.assertEqual(currency.arbitrage(fiat_spec(), 1.0, {"a": 5.0}, {"a": 5.0}), ([], []))
-
-    def test_bullion_price_converges_to_parity_in_a_toy_loop(self):
-        spec = silver_spec()
-        parity = currency.mint_parity(spec)
-        for start in (0.4 * parity, 2.5 * parity):
-            metal, coin = 1000.0, 3000.0 / 0.0027
-            # bullion's price in coin: the value of metal wanted for use, spread over the metal held
-            demand_value = start * metal
-            price = start
-            for _ in range(80):
-                transfers, moves = currency.arbitrage(spec, price, {"a": metal}, {"a": coin})
-                for move in moves:
-                    metal += -move.quantity if move.receiver == types.EDGE_MINT else move.quantity
-                for transfer in transfers:
-                    coin += transfer.amount if transfer.payee == "a" else -transfer.amount
-                price = demand_value / metal
-            self.assertLess(abs(price - parity) / parity, 0.05, (start, price, parity))
 
 
 class MoneyDemandTests(unittest.TestCase):
@@ -190,7 +156,7 @@ class PriceLevelAndRateTests(unittest.TestCase):
 
     def test_exchange_rate_at_metal_parity(self):
         penny = currency.currency_from_coin_standard(
-            "e", {"material": "silver_kg", "kg_per_unit": 0.00135}, "penny", issuer="king")
+            "e", {"regime": "struck_coin", "material": "silver_kg", "kg_per_unit": 0.00135}, "penny", issuer="king")
         self.assertAlmostEqual(currency.exchange_rate(silver_spec(), penny, {"silver_kg": 10.0}), 2.0)
 
     def test_exchange_rate_none_for_fiat(self):

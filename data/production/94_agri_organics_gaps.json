@@ -443,6 +443,26 @@
    "yield_basis": "Human hair for instrument use is cut, degreased and sorted. The animal's or person's keep is charged elsewhere. Labour is borrowed from horsehair_kg's 1.0 hours per kg (cut, sort, clean hair); it understates the cleaning work for gut and shell. Conf C.",
    "conf": "C",
    "requires_node": null
+  },
+  "cacao_kg": {
+   "outputs": {
+    "cacao_kg": 300.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 1000.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "grown_in_climate_classes": [
+    "Af",
+    "Am",
+    "Aw"
+   ],
+   "basis": "per hectare of cacao orchard per year, output as kg of fermented, sun-dried beans",
+   "yield_basis": "GROWN. Theobroma cacao is an understorey tree of the wet lowland tropics, frost-tender and needing year-round warmth and rain, which the Koppen classes Af, Am and Aw describe (Soconusco, the Gulf coast and Tabasco, from which Mexica tribute drew cacao, are Am and Aw), so a territory holding none of them cannot grow it. Traditional shaded orchards under tall trees, without fertiliser, give on the order of 200 to 500 kg of dry beans per hectare a year; 300 is taken. Labour is pruning and weeding, picking and splitting the pods, heap fermentation of the pulp-covered beans for about five days and sun-drying them; about 125 worker-days (1000 hours) per hectare-year is an order of magnitude, as for the pepper garden. The dry bean is about a gram, so a kilogram is about a thousand beans (the bean-counting money of Mesoamerica). LAND: the batch is the one hectare-year of the basis, charged at hectare_land's own rent, which is arable land's rent and so a labelled heuristic for a tropical orchard. SOURCES: agronomic figures from memory of the cacao agronomy literature (Wood and Lass, Cocoa, 4th ed., 1985) and the Florentine Codex book 8 and 10 on cacao use and counting; NONE OF THESE COULD BE OPENED for this entry (Complaints/347). Conf C.",
+   "conf": "C",
+   "requires_node": "fud_cacao"
   }
  }
 }

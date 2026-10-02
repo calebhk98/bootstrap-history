@@ -14,7 +14,7 @@ The year (`economy.Economy.step`), one civilisation's economy:
                  time in input-depth order, so a good clears after the goods it is made from: before
                  a good clears, its producers `produce` from the inputs and hours they obtained and
                  offer the output; cycles in the recipe graph draw their inputs from stock
-    5. money     `currency.arbitrage` mints or melts at the mint's terms; wear and loss
+    5. money     the mint (mint.py) buys metal and sells what it holds in the goods markets; wear and loss
     6. close     each agent closes its year (consumes, records unmet need, updates expectations,
                  idles or exits); `inventory.carry` applies spoilage to every held stock
 

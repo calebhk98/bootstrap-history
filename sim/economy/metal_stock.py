@@ -18,10 +18,15 @@ METAL_GOODS_LOSS_PER_YEAR = declare(
 
 
 def yearly_wear(money_holdings_by_agent: Mapping[AgentId, float], spec: CurrencySpec) -> list:
-    """Coin and weighed metal wear away; commodity money spoils as a good and fiat does not wear."""
-    if spec.regime not in ("struck_coin", "weighed_metal"):
+    """Struck coin wears; weighed metal is lost as metal (clipping, hoarding, burial) and has no coin to
+    wear; commodity money spoils as a good and fiat does not wear."""
+    if spec.regime == "struck_coin":
+        share, purpose = COIN_WEAR_PER_YEAR, "coin wear"
+    elif spec.regime == "weighed_metal":
+        share, purpose = METAL_GOODS_LOSS_PER_YEAR, "metal loss"
+    else:
         return []
-    return [Transfer(agent, types.EDGE_WEAR, spec.currency_id, amount * COIN_WEAR_PER_YEAR, "coin wear")
+    return [Transfer(agent, types.EDGE_WEAR, spec.currency_id, amount * share, purpose)
             for agent, amount in money_holdings_by_agent.items()
             if amount > 0.0 and not types.is_edge(agent)]
 

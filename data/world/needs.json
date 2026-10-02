@@ -56,6 +56,7 @@
   "olive_oil_kg": {"satisfies": {"food": 2.7}},
   "fat_kg": {"satisfies": {"food": 2.4}},
   "mat_sugar": {"satisfies": {"food": 1.2}},
+  "cacao_kg": {"satisfies": {"food": 1.6}},
   "starch_kg": {"satisfies": {"food": 1.05}},
   "wine_common_kg": {"satisfies": {"food": 0.2}},
 

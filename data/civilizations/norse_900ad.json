@@ -23,9 +23,10 @@
   "currency": "hacksilver by weight",
   "currency_words": {"long": "in hacksilver", "short": "hacksilver"},
   "coin_standard": {
+    "regime": "weighed_metal",
     "material": "silver_kg",
     "kg_per_unit": 0.025,
-    "source": "Money was weighed silver (hacksilver, ingots, arm rings) valued by weight. The unit here is the eyrir (ounce) at about 25 g, a later-formalised unit, with reconstructions of 24 to 27 g (Kilger; Graham-Campbell). Confidence medium."
+    "source": "Money was weighed silver (hacksilver, ingots, arm rings) valued by weight. The unit here is the eyrir (ounce) at about 25 g, a later-formalised unit, with reconstructions of 24 to 27 g (Kilger; Graham-Campbell). Confidence medium. Regime: hacksilver and ingots were cut and weighed at each exchange on pocket scales with lead weights, with no issuing authority and no face value; coin was mostly foreign and accepted by weight (Graham-Campbell, Viking Artefacts, 1980; Sheehan, 'The Viking Age silver economy', in Hadley and Richards, Cultures in Contact). Silver is lost as metal (hoarding, burial, clipping), not as coin wear."
   },
   "debt_bondage": true,
   "fire_quarter": "longhouses by the shore",
