@@ -202,8 +202,13 @@ class LabourMarket:
         return hours * premium * self.quote(trade)
 
     def in_current_money(self, schedule_amount):
-        """An amount at the opening schedule's prices, in today's money."""
+        """An amount at the opening schedule's prices, in today's money: on the agent economy, at what
+        the market pays unskilled work against the schedule's unskilled wage."""
         sim = self._sim
+        market_wage = sim.economy.agent_wage_per_hour("labourer")
+        schedule_wage = sim.base_annual_wage("labourer")
+        if market_wage is not None and schedule_wage > 0.0:
+            return schedule_amount * market_wage * sim.HOURS_PER_PERSON_YEAR / schedule_wage
         return schedule_amount * sim.wage_index * sim.price_index
 
     def hire(self, employer, trade, hours):

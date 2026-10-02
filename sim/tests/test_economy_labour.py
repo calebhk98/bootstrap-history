@@ -158,5 +158,90 @@ class ReservationAndTrainingTests(unittest.TestCase):
         self.assertGreater(labour.training_premium(5.0, 0.05, 30.0), labour.training_premium(2.0, 0.05, 30.0))
 
 
+def labour_result(trade, wage, hired_people=0.0, vacant_people=0.0, idle_people=0.0, tile="t", hours=1000.0):
+    from sim.economy.setup import LABOUR_AREA_PREFIX
+    from sim.economy.types import LabourResult
+    return LabourResult(trade, LABOUR_AREA_PREFIX + tile, "coin", wage, hired_people * hours,
+                        vacant_people * hours, idle_people * hours, ())
+
+
+def mobility_world(workforce, results, training_years):
+    setup = types.SimpleNamespace(
+        working_hours_per_year=1000.0, unskilled_trade="labourer",
+        trades={trade: types.SimpleNamespace(training_years=years) for trade, years in training_years.items()})
+    record = types.SimpleNamespace(workforce={"t": dict(workforce)})
+    ledger = types.SimpleNamespace(labour_results=list(results))
+    return setup, record, ledger
+
+
+class TradeMobilityTests(unittest.TestCase):
+    def test_a_trade_paying_far_above_its_training_draws_employed_workers(self):
+        # every labourer employed, no smith vacancy: the gap in pay alone must move people
+        setup, record, ledger = mobility_world(
+            {"labourer": 1000.0, "smith": 10.0},
+            [labour_result("labourer", 1.0, hired_people=1000.0), labour_result("smith", 50.0, hired_people=10.0)],
+            {"labourer": 0.0, "smith": 5.0})
+        year_labour.move_workers(setup, record, ledger)
+        year_labour.follow_pay(setup, record, ledger)
+        workforce = record.workforce["t"]
+        self.assertGreater(workforce["smith"], 10.0)
+        self.assertAlmostEqual(workforce["smith"] + workforce["labourer"], 1010.0)
+
+    def test_a_trade_paying_below_its_training_loses_workers(self):
+        setup, record, ledger = mobility_world(
+            {"labourer": 1000.0, "smith": 10.0},
+            [labour_result("labourer", 1.0, hired_people=1000.0), labour_result("smith", 1.0, hired_people=10.0)],
+            {"labourer": 0.0, "smith": 5.0})
+        year_labour.move_workers(setup, record, ledger)
+        year_labour.follow_pay(setup, record, ledger)
+        workforce = record.workforce["t"]
+        self.assertLess(workforce["smith"], 10.0)
+        self.assertAlmostEqual(workforce["smith"] + workforce["labourer"], 1010.0)
+
+    def test_pay_that_just_repays_the_training_moves_nobody(self):
+        premium = year_labour.trade_premium(types.SimpleNamespace(
+            trades={"smith": types.SimpleNamespace(training_years=5.0)}), "smith")
+        setup, record, ledger = mobility_world(
+            {"labourer": 1000.0, "smith": 10.0},
+            [labour_result("labourer", 1.0, hired_people=1000.0),
+             labour_result("smith", 1.0 + premium, hired_people=10.0)],
+            {"labourer": 0.0, "smith": 5.0})
+        year_labour.move_workers(setup, record, ledger)
+        year_labour.follow_pay(setup, record, ledger)
+        self.assertAlmostEqual(record.workforce["t"]["smith"], 10.0)
+
+
+class NationalWageTests(unittest.TestCase):
+    def world(self, wages, hours):
+        from sim.economy.market_memory import MarketMemory
+        setup = types.SimpleNamespace(unskilled_trade="labourer", trades={
+            "labourer": types.SimpleNamespace(training_years=0.0),
+            "artisan": types.SimpleNamespace(training_years=4.0),
+            "scribe": types.SimpleNamespace(training_years=6.0)})
+        record = types.SimpleNamespace(memory=MarketMemory(wages=dict(wages), hours_hired=dict(hours)))
+        return setup, record
+
+    def test_a_tile_nobody_hires_on_does_not_set_the_national_wage(self):
+        # the opening seeds every tile's wage; only the tile that hires artisans says what they earn
+        setup, record = self.world({"labourer|work@a": 0.02, "artisan|work@a": 0.03, "artisan|work@b": 2.0},
+                                   {"labourer|work@a": 1000.0, "artisan|work@a": 50.0})
+        wages = year_labour.national_wages(setup, record)
+        self.assertAlmostEqual(wages["artisan"], 0.03)
+        self.assertAlmostEqual(wages["labourer"], 0.02)
+
+    def test_a_trade_nobody_hires_is_paid_the_unskilled_wage_and_its_training(self):
+        setup, record = self.world({"labourer|work@a": 0.02, "scribe|work@a": 5.0}, {"labourer|work@a": 1000.0})
+        wages = year_labour.national_wages(setup, record)
+        self.assertAlmostEqual(wages["scribe"], 0.02 * (1.0 + year_labour.trade_premium(setup, "scribe")))
+
+    def test_hours_hired_are_remembered_per_labour_market(self):
+        from sim.economy.market_memory import MarketMemory
+        memory = MarketMemory()
+        memory.note_hours("smith|work@a", 100.0)
+        memory.note_hours("smith|work@a", 0.0)
+        self.assertGreater(memory.hours_hired["smith|work@a"], 0.0)
+        self.assertLess(memory.hours_hired["smith|work@a"], 100.0)
+
+
 if __name__ == "__main__":
     unittest.main()

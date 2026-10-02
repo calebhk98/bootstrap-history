@@ -45,6 +45,7 @@ class MarketMemory:
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
     volume_weights: Dict[str, float] = field(default_factory=dict)      # market_key(good, area), smoothed
     trade_age: Dict[str, int] = field(default_factory=dict)     # market_key(good, area); absent: never cleared
+    hours_hired: Dict[str, float] = field(default_factory=dict)         # market_key(trade, area), smoothed
 
     def years_since_trade(self, key: str) -> Optional[int]:
         return self.trade_age.get(key)
@@ -61,6 +62,11 @@ class MarketMemory:
         """Move a market's usual volume toward what it traded this year."""
         old = self.volume_weights.get(key)
         self.volume_weights[key] = quantity if old is None else old + VOLUME_WEIGHT_SPEED * (quantity - old)
+
+    def note_hours(self, key: str, hours: float) -> None:
+        """Move a labour market's usual hours hired toward this year's."""
+        old = self.hours_hired.get(key)
+        self.hours_hired[key] = hours if old is None else old + VOLUME_WEIGHT_SPEED * (hours - old)
 
     def note_price_level(self, currency: CurrencyId, level: float) -> None:
         """Record this year's price level and move the expectation of inflation after it."""

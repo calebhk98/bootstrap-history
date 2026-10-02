@@ -1,7 +1,8 @@
 """The year's labour market: producers and other employers bid for hours, cohorts offer them, each
 (trade, labour area) clears at a sticky wage and the wages are paid at once.
 
-Workers move between trades on their tile toward unfilled hours, a share of the idle a year, so the
+Workers move between trades on their tile toward unfilled hours, a share of the idle a year, and
+between each trade and unskilled work toward pay above what the trade's training costs, so the
 workforce follows the wages with a lag (training is not yet a delay here).
 """
 import dataclasses
@@ -14,14 +15,16 @@ from sim.world.wages import CAREER_YEARS
 
 from . import households, labour, settlement
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
-from .market_memory import market_key
+from .market_memory import KEY_SEPARATOR, market_key
 from .setup import LABOUR_AREA_PREFIX
 from .types import LabourBid, LabourOffer
 from .year_ledger import YearLedger
 
 TRADE_MOBILITY_SHARE_PER_YEAR = declare(
     "TRADE_MOBILITY_SHARE_PER_YEAR", 0.2, kind="temporary_heuristic",
-    unit="share of a trade's idle workers who move to trades with unfilled hours in a year",
+    unit="share of a trade's idle workers who move to trades with unfilled hours in a year, and of a "
+         "trade's workforce that enters or leaves it in a year when its pay is twice or under what its "
+         "training costs",
     source=None, confidence="D",
     why="People without work drift to where employers want hands, slowed by skill, custom and "
         "guilds. The share stands in for the training and mobility model in sim/world/labour_market.py, "
@@ -76,6 +79,25 @@ def trade_premium(setup, trade) -> float:
     return labour.training_premium(spec.training_years, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS)
 
 
+def national_wages(setup, record) -> Dict[str, float]:
+    """Each trade's wage over its labour markets, weighted by the hours each usually hires; a trade
+    nobody hires is paid the unskilled wage plus what its training costs (trade_premium)."""
+    totals: Dict[str, Tuple[float, float]] = {}
+    for key, wage in record.memory.wages.items():
+        hours = record.memory.hours_hired.get(key, 0.0)
+        if hours > 0.0:
+            trade = key.split(KEY_SEPARATOR, 1)[0]
+            value, total_hours = totals.get(trade, (0.0, 0.0))
+            totals[trade] = (value + wage * hours, total_hours + hours)
+    wages = {trade: value / total_hours for trade, (value, total_hours) in sorted(totals.items())}
+    unskilled = wages.get(setup.unskilled_trade)
+    if unskilled is not None:
+        for trade in sorted(setup.trades):
+            if trade not in wages:
+                wages[trade] = unskilled * (1.0 + trade_premium(setup, trade))
+    return wages
+
+
 def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[LabourOffer],
                  ledger: YearLedger) -> None:
     grouped: Dict[Tuple[str, str], Tuple[List[LabourBid], List[LabourOffer]]] = {}
@@ -84,12 +106,15 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
     for offer in offers:
         grouped.setdefault((offer.trade, offer.area), ([], []))[1].append(offer)
     memory = record.memory
+    for key in set(memory.hours_hired) - {market_key(trade, area) for trade, area in grouped}:
+        memory.note_hours(key, 0.0)
     for (trade, area), (trade_bids, trade_offers) in sorted(grouped.items()):
         key = market_key(trade, area)
         result = labour.clear(trade_bids, trade_offers, trade, area, setup.currency_id, memory.wages.get(key))
         done = settlement.settle_labour(record.book, result)
         ledger.note_postings(done.postings, "wages")
         ledger.note_labour(result)
+        memory.note_hours(key, result.hours_hired)
         if result.wage > 0.0:
             memory.wages[key] = result.wage
 
@@ -120,3 +145,27 @@ def move_workers(setup, record, ledger: YearLedger) -> None:
                 workforce[trade] -= movers * leaving / idle_total
         for trade, count in sorted(wanted.items()):
             workforce[trade] = workforce.get(trade, 0.0) + movers * count / total_wanted
+
+
+def follow_pay(setup, record, ledger: YearLedger) -> None:
+    """Workers move between each trade and the tile's unskilled trade until the trade pays the unskilled
+    wage plus what its training costs (trade_premium): a trade paying more draws people in, one paying
+    less loses them, in proportion to the gap and the trade's size."""
+    unskilled = setup.unskilled_trade
+    wages = {}
+    for result in ledger.labour_results:
+        if result.wage > 0.0:
+            wages[(result.area[len(LABOUR_AREA_PREFIX):], result.trade)] = result.wage
+    for tile, workforce in sorted(record.workforce.items()):
+        unskilled_wage = wages.get((tile, unskilled))
+        if unskilled_wage is None:
+            continue
+        for trade in sorted(workforce):
+            wage = wages.get((tile, trade))
+            if trade == unskilled or wage is None:
+                continue
+            gap = wage / (unskilled_wage * (1.0 + trade_premium(setup, trade))) - 1.0
+            change = TRADE_MOBILITY_SHARE_PER_YEAR * workforce[trade] * max(-1.0, min(1.0, gap))
+            change = max(-workforce[trade], min(change, workforce.get(unskilled, 0.0)))
+            workforce[trade] += change
+            workforce[unskilled] = workforce.get(unskilled, 0.0) - change

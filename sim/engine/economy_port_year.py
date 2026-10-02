@@ -18,7 +18,7 @@ from sim.economy.record import EconomyRecord
 from sim.economy.unit_cost import variable_cost_per_run
 from sim.economy.notional import shown_prices
 from sim.economy.year_close import rebase_price_level
-from sim.economy.year_labour import trade_premium
+from sim.economy.year_labour import national_wages, trade_premium
 
 from . import solve_cache
 from .data import load_civ
@@ -303,19 +303,16 @@ class AgentEconomy:
 
     # ---- what the seams read ------------------------------------------------------------------
     def answers(self):
-        """(prices by good, mean wage per hour by trade, rate), for this year; built once a year. A good
+        """(prices by good, wage per hour by trade over its labour markets, rate), for this year; built once a year. A good
         whose markets have not cleared lately shows what it costs to make at today's prices and wages, or
         its last price when nothing makes it; `stale_goods()` names those."""
         if self._answers is None or self._built_from is not self.stored:
             record = self.economy().record
-            wages = {}
-            for key, wage in record.memory.wages.items():
-                trade = key.split("|", 1)[0]
-                wages.setdefault(trade, []).append(wage)
             coin = self._economy.setup.coin_per_unit
             prices, self._stale = shown_prices(self._economy.setup, record)
             self._answers = ({good: price * coin for good, price in prices.items()},
-                             {trade: sum(rows) / len(rows) * coin for trade, rows in wages.items()},
+                             {trade: wage * coin for trade, wage in
+                              national_wages(self._economy.setup, record).items()},
                              record.memory.rates.get(self._economy.setup.currency_id))
         return self._answers
 

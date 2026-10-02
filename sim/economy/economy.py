@@ -23,7 +23,7 @@ from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .year_labour import clear_labour, labour_offers, move_workers, outside_option_by_tile
+from .year_labour import clear_labour, follow_pay, labour_offers, move_workers, outside_option_by_tile
 from .year_ledger import YearLedger
 
 
@@ -110,6 +110,7 @@ class Economy:
         for lender, received in interest.items():
             record.property_income[lender] = record.property_income.get(lender, 0.0) + received
         move_workers(setup, record, ledger)
+        follow_pay(setup, record, ledger)
         wear_and_spoilage(setup, record)
         level = remember_price_level(setup, record)
         record.memory.year += 1

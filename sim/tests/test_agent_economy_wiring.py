@@ -87,6 +87,16 @@ check("the founder's concern output is offered without the old price table, at a
       founder_offers and all(0.0 <= offer.reservation_price < float("inf") for offer in founder_offers),
       founder_offers[:2])
 
+han = agent_game("han_china_100ad")
+han.step()
+labourer_year = han.labour_market.unscarce_annual("labourer")
+artisan_year = han.labour_market.unscarce_annual("artisan")
+check("a trained trade earns a few times the unskilled wage, not the opening estimate of tiles that never hire it",
+      labourer_year < artisan_year < 10.0 * labourer_year, (labourer_year, artisan_year))
+schedule_labourer = han.labour_market.in_current_money(han.base_annual_wage("labourer"))
+check("an amount at the opening schedule turns into today's money at the market's unskilled wage",
+      abs(schedule_labourer / labourer_year - 1.0) < 1e-9, (schedule_labourer, labourer_year))
+
 unbroken = agent_game("rome_100ad")
 save_path = os.path.join(tempfile.mkdtemp(), "agent_save.json")
 for _year in range(2):
