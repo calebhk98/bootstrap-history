@@ -10,6 +10,7 @@ from typing import Dict
 from . import credit, producers, unit_cost
 from .market_areas import AreaMap
 from .market_memory import YearView
+from .households_own import own_production, own_production_options
 from .opening import open_economy
 from .protocols import YearInputs
 from .record import EconomyRecord
@@ -53,6 +54,7 @@ class Economy:
         self.record = record
         self.area_map = area_map
         self.carriage = carriage
+        self._own_options = None
 
     def view(self) -> YearView:
         return YearView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area)
@@ -73,6 +75,7 @@ class Economy:
             labour_bids.extend(orders.labour_bids)
         offers = labour_offers(setup, record, view, subsistence_cost_by_tile(setup, record, view))
         clear_labour(setup, record, labour_bids, offers, ledger)
+        self._grow_own(offers, ledger)
         self._service_loans(view.year)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book)
@@ -126,6 +129,24 @@ class Economy:
             producer = self.record.producers.get(producer_id)
             if producer is not None and producer.yield_factor != factor:
                 self.record.producers[producer_id] = type(producer)(**{**producer.__dict__, "yield_factor": factor})
+
+    def _grow_own(self, offers, ledger: YearLedger) -> None:
+        """Hours nobody hired go into the household's own plot (households_own.py)."""
+        setup, record = self.setup, self.record
+        if self._own_options is None:
+            self._own_options = own_production_options(setup.recipes, setup.land_per_run, setup.basket)
+        offered: Dict[str, float] = {}
+        for offer in offers:
+            offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
+        for cohort_id, cohort in sorted(record.cohorts.items()):
+            idle = offered.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
+            tile = setup.tiles.get(cohort.tile)
+            moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,
+                                                 tile.fertility if tile else 0.0, setup.basket)
+            if moves:
+                record.book.move_many(moves)
+                ledger.grown[cohort_id] = grown
+                ledger.grown_units[cohort_id] = units
 
     def _service_loans(self, year: int) -> None:
         record = self.record

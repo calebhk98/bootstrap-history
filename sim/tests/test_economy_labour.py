@@ -34,7 +34,7 @@ class WageMovementTests(unittest.TestCase):
         wages = [result.wage for result in results]
         self.assertTrue(all(later >= earlier for earlier, later in zip(wages, wages[1:])))
         self.assertGreater(wages[0], 1.0)
-        self.assertTrue(all(wage <= 1.5 + 1e-9 for wage in wages))
+        self.assertTrue(all(wage <= 2.0 + 1e-9 for wage in wages))   # employers left out bid it to their cap
         self.assertGreater(results[0].vacant_hours, 0)
         self.assertAlmostEqual(results[0].hours_hired, 100)
 
@@ -43,7 +43,7 @@ class WageMovementTests(unittest.TestCase):
         wages = [result.wage for result in results]
         self.assertTrue(all(later <= earlier for earlier, later in zip(wages, wages[1:])))
         self.assertLess(wages[0], 2.0)
-        self.assertTrue(all(wage >= 1.5 - 1e-9 for wage in wages))
+        self.assertTrue(all(wage >= 1.0 - 1e-9 for wage in wages))   # idle workers undercut to their floor
         self.assertGreater(results[0].idle_hours, 0)
 
     def test_a_high_reservation_worker_stays_idle(self):

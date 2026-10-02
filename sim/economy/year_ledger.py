@@ -17,6 +17,9 @@ class YearLedger:
     sales_in: Dict[AgentId, float] = field(default_factory=dict)
     received: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)
     hours_hired: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)
+    hours_sold: Dict[AgentId, float] = field(default_factory=dict)
+    grown: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)       # made for itself
+    grown_units: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)    # need units of that
     buy_fills: Dict[AgentId, List[Fill]] = field(default_factory=dict)
     sold: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
     output: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
@@ -51,6 +54,8 @@ class YearLedger:
             if fill.side == "buy":
                 trades = self.hours_hired.setdefault(fill.agent, {})
                 trades[result.trade] = trades.get(result.trade, 0.0) + fill.quantity
+            else:
+                self.hours_sold[fill.agent] = self.hours_sold.get(fill.agent, 0.0) + fill.quantity
 
     def note_output(self, agent: AgentId, moves: Iterable[GoodsMove]) -> None:
         for move in moves:

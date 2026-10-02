@@ -6,6 +6,7 @@ The wage actually paid is sticky: it moves toward the clearing wage by a share e
 passes it, so vacancies pull it up and idle hours push it down over several years. Nothing here names
 a trade; soldiers, smiths and farmhands are all hours bought by an employer, the state included.
 """
+import math
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from sim.constants import declare
@@ -32,8 +33,10 @@ def clearing_point(floors: Sequence[Tuple[float, float]], caps: Sequence[Tuple[f
     """The price where quantity asked at or above a floor meets quantity bid at or below a cap.
 
     `floors` are (lowest acceptable price, quantity) of the sellers, `caps` (highest acceptable price,
-    quantity) of the buyers. With trade, the price is midway between the last seller and the last buyer
-    matched. With none, it is midway between the cheapest seller and the keenest buyer, or the one side's
+    quantity) of the buyers. With trade, the price is midway across the range no one left out would
+    break: at or above the last seller matched and any buyer left out, at or below the last buyer matched
+    and any seller left out. So a glut of sellers holds the price at their floor, a queue of buyers at
+    their cap. With none, it is midway between the cheapest seller and the keenest buyer, or the one side's
     best limit if the other is absent; None if both are absent.
     """
     live_floors = sorted((price, quantity) for price, quantity in floors if quantity > 0)
@@ -62,7 +65,14 @@ def clearing_point(floors: Sequence[Tuple[float, float]], caps: Sequence[Tuple[f
             buyer_left = live_caps[buyer][1] if buyer < len(live_caps) else 0.0
     if last_floor is None:
         return (live_floors[0][0] + live_caps[0][0]) / 2.0
-    return (last_floor + last_cap) / 2.0
+    # competition among those left out bounds the price: an unmatched seller would undercut above its
+    # floor, an unmatched buyer would outbid below its cap
+    next_floor = live_floors[seller][0] if seller < len(live_floors) else math.inf
+    next_cap = live_caps[buyer][0] if buyer < len(live_caps) else -math.inf
+    low, high = max(last_floor, next_cap), min(last_cap, next_floor)
+    if low > high:
+        return (last_floor + last_cap) / 2.0
+    return (low + high) / 2.0
 
 
 def allocate_in_order(entries: Sequence[Entry], total: float, descending: bool) -> List[float]:

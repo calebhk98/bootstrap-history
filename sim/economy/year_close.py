@@ -65,16 +65,21 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         revenue = ledger.sales_in.get(producer_id, 0.0)
         costs = ledger.money_out.get(producer_id, 0.0)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view)
+        if closed.exited:
+            # a run of losses mothballs the plant rather than scrapping it: it keeps its cash and wears
+            # out unless prices bring it back to work (share_working decides how much of it works)
+            wear = 1.0 / recipe.plant_life_years if recipe.plant_life_years > 0.0 else 0.0
+            record.producers[producer_id] = _with_sales(dataclasses.replace(
+                producer, capacity_runs=producer.capacity_runs * (1.0 - wear), years_of_loss=0,
+                expected_prices=closed.producer.expected_prices), recipe, ledger)
+            continue
         record.book.transfer_many(closed.transfers)
         for transfer in closed.transfers:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
         if closed.loan_request is not None:
             record.loan_requests.append(closed.loan_request)
             record.expansion_runs[producer_id] = closed.expansion_runs
-        if closed.exited:
-            del record.producers[producer_id]
-        else:
-            record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
+        record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
     prices = {}
     volumes = {}
     for result in ledger.clearings:
@@ -87,7 +92,9 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         for transfer in transfers:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
     for cohort_id, cohort in sorted(record.cohorts.items()):
-        received = ledger.received.get(cohort_id, {})
+        received = dict(ledger.received.get(cohort_id, {}))
+        for good, quantity in ledger.grown.get(cohort_id, {}).items():
+            received[good] = received.get(good, 0.0) + quantity
         income = ledger.wages_in.get(cohort_id, 0.0) + record.property_income.get(cohort_id, 0.0)
         spent = ledger.money_out.get(cohort_id, 0.0)
         closed, moves = households.close_year(cohort, received, view, setup.specs, setup.basket, income, spent)

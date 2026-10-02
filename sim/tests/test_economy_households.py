@@ -157,10 +157,11 @@ class GoodsOrderTests(unittest.TestCase):
         self.assertGreater(sum(b.flexible_quantity * b.reference_price for b in rich_in_cash.bids),
                            sum(b.flexible_quantity * b.reference_price for b in base.bids))
 
-    def test_savings_above_target_are_offered_at_expected_inflation(self):
+    def test_savings_above_target_are_offered_at_time_preference_and_expected_inflation(self):
+        from sim.economy.households_orders import HOUSEHOLD_TIME_PREFERENCE
         orders = self.orders(cash=1e6, income=1000.0, cash_target=1000.0, expected_inflation=0.02)
         self.assertEqual(len(orders.funds_offers), 1)
-        self.assertAlmostEqual(orders.funds_offers[0].minimum_rate, 0.02)
+        self.assertAlmostEqual(orders.funds_offers[0].minimum_rate, HOUSEHOLD_TIME_PREFERENCE + 0.02)
         self.assertLessEqual(budget_total(orders) + orders.funds_offers[0].amount, 1e6 + 1e-6)
 
     def test_durable_demand_is_replacement(self):

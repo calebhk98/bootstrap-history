@@ -79,4 +79,6 @@ def build_setup(sim):
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=working,
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
         opening_prices=prices, opening_wages=wages, opening_rate=float(sim.economy.base_rate()),
-        capital_tile=by_people[0], port_tile=(coastal or by_people)[0])
+        capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
+        land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
+                      for recipe_id in recipes if production[recipe_id].get("land_hectare_years")})

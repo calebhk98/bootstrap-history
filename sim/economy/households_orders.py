@@ -30,9 +30,12 @@ FLOOR_BUDGET_PRICE_MARGIN = declare(
         "around, which are not modelled.")
 BUDGET_SAFETY_SHARE = 1e-9
 
-# TEMPORARY HEURISTIC: a household lends savings only at a rate that at least keeps their real value,
-# so its minimum rate is its expected inflation. Real lenders also price default risk and their own
-# alternatives, which the credit market does not yet show them.
+HOUSEHOLD_TIME_PREFERENCE = declare(
+    "HOUSEHOLD_TIME_PREFERENCE", 0.05, kind="temporary_heuristic",
+    unit="share a year", source=None, confidence="D",
+    why="A household lends its savings only for at least what it gives up by waiting, on top of what "
+        "inflation it expects takes from them. The figure is a common assumption in growth models, "
+        "not measured for any society here; default risk is priced separately by the credit market.")
 
 
 def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId, GoodSpec]) -> float:
@@ -117,5 +120,6 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     funds = ()
     savings = cash - budget_total - target
     if savings > 0.0:
-        funds = (FundsOffer(cohort.agent_id, area_currency, savings, max(0.0, cohort.expected_inflation)),)
+        funds = (FundsOffer(cohort.agent_id, area_currency, savings,
+                            max(0.0, HOUSEHOLD_TIME_PREFERENCE + cohort.expected_inflation)),)
     return AgentOrders(bids=tuple(bids), funds_offers=funds)

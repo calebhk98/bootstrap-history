@@ -5,6 +5,7 @@ and sell it the same year (cycles in the recipes draw on stock). Producers make 
 first of their goods comes up, the state takes its tax in kind from what was grown, and then each
 market area of the good clears and settles.
 """
+import dataclasses
 import math
 from typing import Dict, List, Tuple
 
@@ -39,9 +40,34 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
         orders = households.goods_orders(cohort, view, record.book.balance(cohort.agent_id, money), income,
                                          setup.basket, setup.specs, priced)
-        add_orders(order_book, orders)
+        add_orders(order_book, _less_what_it_grew(orders, cohort, setup.basket, ledger.grown_units.get(cohort.agent_id)))
         funds.extend(orders.funds_offers)
     return funds
+
+
+def _less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> AgentOrders:
+    """Floors already met from the household's own plot are not bought: each floor bid of a need is
+    cut by the share of that need's floor the cohort grew."""
+    if not grown_units:
+        return orders
+    need_of_good = {}
+    floor_of_need = {}
+    for need in basket.needs:
+        floor_of_need[need.need_id] = need.subsistence_per_person * cohort.people
+        for good, _effect in need.goods:
+            need_of_good.setdefault(good, need.need_id)
+    bids = []
+    for bid in orders.bids:
+        need_id = need_of_good.get(bid.good)
+        floor_units = floor_of_need.get(need_id, 0.0)
+        met = min(1.0, grown_units.get(need_id, 0.0) / floor_units) if floor_units > 0.0 else 0.0
+        if met > 0.0 and bid.floor_quantity > 0.0:
+            cut = bid.floor_quantity * met
+            share_kept = 1.0 - cut / (bid.floor_quantity + bid.flexible_quantity)
+            bid = dataclasses.replace(bid, floor_quantity=bid.floor_quantity - cut,
+                                      budget=bid.budget * max(0.0, share_kept))
+        bids.append(bid)
+    return dataclasses.replace(orders, bids=tuple(bids))
 
 
 def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBook) -> None:
@@ -128,9 +154,19 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 for shortfall in done_settlement.shortfalls:
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)
-            if result.price > 0.0 and (result.quantity > 0.0 or key not in record.memory.prices):
-                record.memory.prices[key] = result.price
+            signal = result.price if result.quantity > 0.0 else _unsold_signal(bids, offers)
+            if signal is not None and signal > 0.0:
+                record.memory.prices[key] = signal
             record.volumes[key] = result.quantity
+
+
+def _unsold_signal(bids, offers):
+    """What a market that cleared nothing tells its sellers: the most any buyer would have paid, which
+    is below every seller's ask. None when nobody bid or nobody offered."""
+    if not offers:
+        return None
+    ceilings = [bid.maximum_price for bid in bids if bid.budget > 0.0 and math.isfinite(bid.maximum_price)]
+    return max(ceilings) if ceilings else None
 
 
 def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_book, ledger) -> None:

@@ -54,6 +54,7 @@ class EconomySetup:
     port_tile: TileId
     unskilled_trade: TradeId = "labourer"
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
+    land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
 
     @property
     def currency_id(self) -> str:

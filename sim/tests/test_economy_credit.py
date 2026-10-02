@@ -35,7 +35,7 @@ class ClearingTests(unittest.TestCase):
                                                "coin", None, {})
         self.assertAlmostEqual(sum(item.principal for item in loans), 100)
         self.assertEqual(unmet, [])
-        self.assertGreater(base_rate, 0.05)
+        self.assertAlmostEqual(base_rate, 0.05)     # funds left over: lenders compete down to their floor
         transfers = credit.disbursements(loans)
         self.assertEqual({(t.payer, t.payee) for t in transfers}, {("l", "b")})
         self.assertAlmostEqual(sum(t.amount for t in transfers), 100)
