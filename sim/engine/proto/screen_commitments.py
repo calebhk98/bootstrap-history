@@ -8,6 +8,9 @@ def _goal(sim):
     if sim.fog:
         return {"id": None, "name": None, "reached": sim.goal_year is not None,
                 "year_reached": sim.goal_year, "withheld": "the goal's name is fogged until you learn it"}
+    if sim.goal not in sim.nodes:
+        return {"id": sim.goal, "name": None, "reached": sim.goal_year is not None,
+                "year_reached": sim.goal_year, "withheld": "no goal is set"}
     return {"id": sim.goal, "name": sim.nodes[sim.goal]["name"],
             "reached": sim.goal_year is not None, "year_reached": sim.goal_year}
 
