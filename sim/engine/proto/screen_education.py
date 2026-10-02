@@ -23,6 +23,27 @@ def _schools(sim):
     return rows
 
 
+def _enrolment(sim, schools):
+    """Split the whole society's literacy gain between the running schools by their share of the flow."""
+    running = [row for row in schools if row["flow_added"] > 0]
+    total_flow = sum(row["flow_added"] for row in running)
+    next_year = sim.literacy_next_year()
+    gain = (next_year.get("literacy_general", 0.0)
+            - float(sim.civ.get("literacy_general", 0.0))) * sim.population.total
+    for row in schools:
+        share = row["flow_added"] / total_flow if total_flow > 0 and row["flow_added"] > 0 else 0.0
+        row["share_of_schooling_flow"] = round(share, 4)
+        row["people_made_literate_next_year"] = round(share * gain, 1)
+
+
+def _limited_by(sim, general_share):
+    if sim.effective_schooling_flow() <= 0.0:
+        return "no school running"
+    if general_share is not None and general_share >= 0.98:
+        return "the ceiling (farm share and unschooled share)"
+    return "the schooling flow"
+
+
 def _pools(sim):
     return [{"trade": trade, "literacy_factor": round(sim.literacy_factor(trade), 4),
              "most_you_can_ever_have": round(sim.literate_capacity(trade), 2),
@@ -52,6 +73,8 @@ def education_report(sim):
     ceiling_general = sim.literacy_ceiling_general()
     ceiling_elite = sim.literacy_ceiling_elite()
     next_year = sim.literacy_next_year()
+    schools = _schools(sim)
+    _enrolment(sim, schools)
     return {
         "ok": True,
         "literacy": {
@@ -67,13 +90,14 @@ def education_report(sim):
         "effective_schooling_flow": round(sim.effective_schooling_flow(), 4),
         "printing_adopted": round(sim.information_diffusion_index(), 4),
         "farm_share_of_hours": round(sim.farm_share_of_hours(), 4),
-        "schools": _schools(sim),
+        "schools": schools,
+        "literacy_limited_by": _limited_by(sim, _fraction_of(general, ceiling_general)),
         "literate_trades": _pools(sim),
         "trade_schools": {trade: seats for trade, seats
                           in (sim.state.household.trade_schools or {}).items()},
         "trainees": _trainees(sim),
         "not_held": ["the game keeps no record of why literacy moved in a "
                      "given year beyond the census line in `log`",
-                     "no per-school enrolment: schooling is one flow summed "
-                     "over the running institutions"],
+                     "per-school pupils are an attribution of the whole society's gain by "
+                     "each school's share of the flow, not a count of enrolled children"],
     }

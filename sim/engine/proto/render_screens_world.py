@@ -58,11 +58,15 @@ def render_education(out):
                  "farm share of working hours %s"
                  % (_fmt_num(out["schooling_flow"]), _fmt_num(out["effective_schooling_flow"]),
                     _percent(out["printing_adopted"]), _percent(out["farm_share_of_hours"])))
+    if out.get("literacy_limited_by"):
+        lines.append("literacy growth is limited by: %s" % out["literacy_limited_by"])
     lines.append("")
     lines.append("SCHOOLS")
     for row in out.get("schools") or []:
         state = "running" if row["running"] else ("built, shut" if row["built"] else "not built")
-        lines.append("  %-34s %-11s flow %s" % (row["name"], state, _fmt_num(row["flow_added"])))
+        lines.append("  %-34s %-11s flow %s  pupils made literate next year %s"
+                     % (row["name"], state, _fmt_num(row["flow_added"]),
+                        _fmt_num(row.get("people_made_literate_next_year", 0))))
     lines.append("")
     lines.append("LITERATE TRADES (the most you can ever have, and how many you employ)")
     for row in out.get("literate_trades") or []:
@@ -85,11 +89,12 @@ def render_demography(out):
                 _fmt_num(cohorts["elderly"]))]
     last = out.get("last_year")
     if last:
-        lines.append("last year: %s born (%s per thousand), %s died (%s per thousand), "
-                     "net migration %s; nutrition ratio %s"
-                     % (_fmt_num(last["births"]), _fmt_num(last["births_per_thousand"]),
-                        _fmt_num(last["deaths"]), _fmt_num(last["deaths_per_thousand"]),
-                        _fmt_num(last["immigration"] - last["emigration"]),
+        lines.append("last year: %s born%s, %s died%s, net migration %s; nutrition ratio %s"
+                     % (_fmt_num(last["births"]),
+                        " (%s per thousand)" % _fmt_num(last["births_per_thousand"]) if last.get("births_per_thousand") is not None else "",
+                        _fmt_num(last["deaths"]),
+                        " (%s per thousand)" % _fmt_num(last["deaths_per_thousand"]) if last.get("deaths_per_thousand") is not None else "",
+                        _fmt_num(last.get("immigration", 0) - last.get("emigration", 0)),
                         _fmt_num(last["nutrition_ratio"])))
     else:
         lines.append("last year's births and deaths: none simulated yet in this session")
@@ -97,6 +102,23 @@ def render_demography(out):
                  % (_fmt_num(out["disease_burden"]), _fmt_num(out["wage_index"])))
     for event in out.get("epidemics_under_way") or []:
         lines.append("under way: %s (%s-%s)" % (event["name"], *event["years"]))
+    shocks = out.get("recent_shocks") or []
+    if shocks:
+        lines.append("")
+        lines.append("SHOCKS (years the population fell sharply)")
+        for row in shocks[-8:]:
+            lines.append("  %s: %s, %s deaths, nutrition ratio %s" % (
+                row["year"], _percent(row["change_share"]), _fmt_num(row["deaths"]), _fmt_num(row["nutrition_ratio"])))
+    recovery = out.get("recovery")
+    if recovery:
+        lines.append("")
+        lines.append("RECOVERY: peak %s in %s (%s years ago), now %s below it" % (
+            _fmt_num(recovery["peak_population"]), recovery["peak_year"],
+            recovery["years_since_peak"], _percent(recovery["share_below_peak"])))
+        if recovery["years_to_regain_peak_at_recent_rate"] is not None:
+            lines.append("  about %s years to regain it at the recent rate (%s a year); %s" % (
+                _fmt_num(recovery["years_to_regain_peak_at_recent_rate"]),
+                _percent(recovery["recent_growth_rate"]), recovery["basis"]))
     lines.append("")
     lines.append("%-14s %14s %14s" % ("TRADE", "IN THE COUNTRY", "WITHIN REACH"))
     for row in out.get("trades") or []:

@@ -204,6 +204,9 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
         "its members - see _cap_pooled_farm_weather_cells.")
 
 
+YEARLY_RECORD_LIMIT = 300
+
+
 class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin, LivingStockMixin, CoinHoardMixin,
@@ -1551,6 +1554,12 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self._last_demographic_step = self.population.step(
             farm_year.food_available_kcal_per_day, jitter=False,
             disease_burden=self._disease_burden())
+        flows = self._last_demographic_step
+        record = self.state.population.yearly_record
+        record.append({"year": year, "population": round(self.population.total, 1),
+                       "births": round(flows.births), "deaths": round(flows.deaths),
+                       "nutrition_ratio": round(flows.nutrition_ratio, 4)})
+        del record[:-YEARLY_RECORD_LIMIT]
         self._refresh_demographic_indexes(year)
 
     def _disease_burden(self):
