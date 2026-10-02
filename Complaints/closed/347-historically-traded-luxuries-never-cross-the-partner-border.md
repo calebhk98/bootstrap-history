@@ -1,6 +1,6 @@
 # Silk and spices never cross between Rome and Han
 
-**Status:** partly - silk and cassia cross from Han; pepper and the Indian and Arabian spices need a partner whose territory grows them (350)
+**Status:** closed - silk and cassia cross from Han (test luxuries_cross_borders); pepper and the other spices need a partner that grows them, which is 350 (a mod by owner decision)
 
 With the partner on, the measured flows between the default civilisation and
 Han are near zero. That is credible for bulk goods (freight plus merchants'

@@ -11,3 +11,5 @@ What it would take: a supply table per year, kept by the actor registry and inva
 Measured again after complaint 321's shared table (Rome seed 1, two steps from year 250 of a play): `actor_supply` no longer shows among the top costs of a late year; firms are fewer than when this was filed (they expand instead of multiplying). Left open until a profile of a larger firm count shows the walk again.
 
 Related: 181.
+
+Owner decision (2026-10-02): important for speed.

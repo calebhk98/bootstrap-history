@@ -24,3 +24,5 @@ opening stock uses now), read by wages, the debt rate and the market's
 long-run costs.
 
 Related: 109, 300, 324, 326, 339, 346, 347, 350, 351, 353.
+
+Owner decision (2026-10-02): should not be possible; it points at the economic model, where one coin stock should move every price.

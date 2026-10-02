@@ -1,6 +1,6 @@
 # Foreign trade has no balance of payments and no fleet
 
-**Status:** partly - goods in and out are paid in coin that moves between a per-partner ledger and a coin stock (`sim/world/balance_of_payments.py`, `sim/engine/foreign_payments.py`): a persistent deficit drains the stock, never below zero, and lowers the traded-price level so imports get dearer and exports cheaper; each route has a fleet whose yearly lift caps the tonnes that cross, and which grows from what it could not carry within what yards can build; still open: the price level touches only traded prices (338), the opening fleet and yard growth are labelled heuristics
+**Status:** closed - owner decision (2026-10-02): a balance of payments and fleets are built (test foreign_freight_balance); the rest is not pursued
 
 A partner's demand for a good it cannot make is not bounded by what it earns
 from its own exports, and sea tonnage is not bounded by any hulls. Goods with

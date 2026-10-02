@@ -1,6 +1,6 @@
 # Sericulture, pepper and cassia yields and labour are estimates, no source was opened
 
-**Status:** open
+**Status:** closed - owner decision (2026-10-02): the figures stay labelled estimates
 
 The chain `mulberry_leaves_kg` (leaf 20 t a hectare, picking labour),
 `silk_cocoon_kg` (leaf per kg of cocoon, rearing hours), `silk_kg` (cocoons per

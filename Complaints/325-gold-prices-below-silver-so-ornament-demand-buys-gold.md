@@ -19,3 +19,5 @@ the solved gold and silver prices with `python3 sim/audit_costs.py`.
 A gold price from a deposit model or a stated limited supply
 (`supply_per_year` in `needs.json`), so gold clears at what its supply allows
 rather than at labour embodied.
+
+Owner decision (2026-10-02): if households were buying ornamental gold its price should have risen by itself; that it did not points to a bug in the market model.

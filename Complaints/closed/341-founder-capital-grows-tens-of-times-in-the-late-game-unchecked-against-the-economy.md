@@ -1,6 +1,6 @@
 # The founder's capital grows tens of times in the late game, and nothing compares it with the economy it lives in
 
-**Status:** partly - the comparison base was wrong (society output ignored the economy while the founder's takings followed it) and is fixed; no cap on the founder's wealth and no target for it; saturation of the founder's own markets, taxation of visible wealth and interest groups are still unbuilt; after the index was removed (Complaints 101, 112) Rome seed 1 no longer grows the founder's capital tens of times in 150 years (it stays near zero), so the late-game runaway is gone while the cap and the target remain unbuilt; the founder's share of output is now capital over `Sim.real_output_hours()` times the money an hour is worth (`SimWorld.society_output`)
+**Status:** closed - owner decision (2026-10-02): ignored; with a correct economic model a founder cannot hold more than the economy gives, and a large share is expected in this scenario
 
 In a Rome seed-1 run with the recommended strategy the founder's capital rises steeply between years 100 and 150 (measured by the firm-entry and capital-market checks; Han does the same on some seeds). By year 100 the founder holds a few percent of one year's society output at most; nobody has measured the share at year 150. Some seeds stay near zero and others take off between years 75 and 100, so the outcome is bimodal.
 

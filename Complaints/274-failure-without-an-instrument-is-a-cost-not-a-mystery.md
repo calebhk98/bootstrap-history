@@ -15,3 +15,5 @@ Without it the retry learning curve (`_retry_risk_multiplier` in `sim/engine/pro
 ## What it would take
 
 Tag the nodes whose failure modes need an instrument (data on the node, for example a required measurement capability), and let the retry multiplier improve only when a held instrument could have identified the cause; otherwise report the failure as uninformative. Must be data-driven (`CLAUDE.md` 4.7). Test: the same node fails twice with and without the instrument and the second-attempt risk differs.
+
+Owner decision (2026-10-02): important to get right.

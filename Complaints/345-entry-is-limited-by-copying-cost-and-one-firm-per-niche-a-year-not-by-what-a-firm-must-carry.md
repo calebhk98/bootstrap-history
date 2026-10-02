@@ -13,3 +13,5 @@ Related: `330`, `331`, `321`, `181`, `341`.
 Done (firm-costs-scale): `Sim.output_volume_scale()` is the one volume factor takings use, and `concern_running_scale` applies it to the upkeep of a concern that sells (founder, `venture_real_upkeep`, and actors, `SimWorld.upkeep`): inputs are bought per unit sold. `Sim.market_wage_per_hour` is the wage table times `labour_pay_scale()`, one figure for every employer; its share `LABOUR_PAY_SHARE_OF_OUTPUT_GAIN` is zero by default because above zero the founder's takeoff stalls (Complaint 354). With it at zero only upkeep follows the volume, so wages (a rising share of a firm's cost late) still lag it. Measure: `python3 sim/test_regressions.py --only firm_costs_scale`, and firms per decade with `Sim.actors.active_firms()` on Rome seed 1.
 
 Not done: a site rent, management or visibility levy as its own size-dependent cost (the span-of-control exponent of Complaint 331 is still the only one), pay that follows output (Complaint 354), and the rate limit of one entrant per proven concern a year.
+
+Owner decision (2026-10-02): suspected to be game balance rather than realism; re-check against the market model.

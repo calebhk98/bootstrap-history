@@ -13,3 +13,5 @@ The anchor is a second source of position next to the tiles, and it is why `Sim.
 Derive the anchor from tiles and re-derive `RAW_DISTANCE_BANDS` and `route_difficulty` so reach is calibrated against tile geometry, then check the fingerprint and the foreign-trade tests. Related: 136.
 
 Related: 281.
+
+Owner decision (2026-10-02): should not have been possible; reach and freight must come from tiles.

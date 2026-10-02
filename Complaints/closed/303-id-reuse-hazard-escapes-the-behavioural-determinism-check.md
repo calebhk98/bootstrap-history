@@ -10,3 +10,5 @@ What it would take: (aliases of `id` are now checked in `sim/tests/test_determin
 
 
 Resolved: `sim/engine/identity_cache.py` is the one place an address keys a dictionary; a recycled address is a miss (tested by planting a stale entry). The structural guard now also fails any other `id()` call in `sim/engine`.
+
+Owner decision (2026-10-02): a check at run time is not needed; the static guard and the identity cache are enough.
