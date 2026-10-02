@@ -33,7 +33,7 @@ class Basket:
 @dataclass(frozen=True)
 class PricedNeed:
     spec: NeedSpec
-    price_index: float                     # money per need unit at the cheapest mix
+    price_index: float                     # money per need unit of the mix the household buys
     goods: Tuple[Tuple[str, float, float, float], ...]   # (good, price, effectiveness, share of spending)
 
 
@@ -77,9 +77,11 @@ def need_prices(basket: Basket, view: MarketView, tile: TileId) -> List[PricedNe
         if not rows:
             continue
         power = math.fsum(row[3] for row in rows)
-        priced.append(PricedNeed(spec, power ** (1.0 / exponent),
-                                 tuple((good, price, effect, weight / power)
-                                       for good, price, effect, weight in rows)))
+        shares = [(good, price, effect, weight / power) for good, price, effect, weight in rows]
+        # need units add up one for one (a calorie is a calorie): a unit costs what the chosen mix pays
+        # per unit, between the cheapest and dearest good; substitution shapes only the mix
+        units_per_money = math.fsum(share * effect / price for _good, price, effect, share in shares)
+        priced.append(PricedNeed(spec, 1.0 / units_per_money, tuple(shares)))
     return priced
 
 

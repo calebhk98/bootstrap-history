@@ -4,6 +4,7 @@
     python3 sim/economy_trace.py rome_100ad 30
     python3 sim/economy_trace.py england_1300 20 --goods wheat_kg,silver_kg,iron_bar_kg
 
+`wage/h` is the unskilled wage and `wheat/h` what an hour of it buys in kg of wheat.
 The engine supplies the opening (tiles, people, recipes in use, opening prices and wages); after that
 only the economy runs, with population and yields held at the opening.
 """
@@ -17,7 +18,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-DEFAULT_GOODS = "wheat_kg,silver_kg,iron_bar_kg,cloth_kg,salt_kg,olive_oil_kg"
+DEFAULT_GOODS = "wheat_kg,silver_kg,iron_bar_kg,cloth_kg,olive_oil_kg"
 
 
 def opening_sim(civ_id):
@@ -49,15 +50,17 @@ def main(argv=None):
              len(setup.recipes), len(economy.area_map.areas("wheat_kg")) if "wheat_kg" in economy.area_map.goods() else 0,
              opened - started))
     goods = [good for good in arguments.goods.split(",") if good]
-    print("year  level   rate   money       idle%%  " + "  ".join("%12s" % good[:12] for good in goods) + "   residual  secs")
+    print("year  level   rate   money      wage/h  wheat/h  " + "  ".join("%12s" % good[:12] for good in goods)
+          + "   residual  secs")
     for year in range(arguments.years):
         tick = time.time()
         outcome = economy.step(YearInputs(year=year, population_by_tile={}, working_age_share=setup.working_share,
                                           yield_factor_by_producer={}, engine_orders={}))
-        hours = outcome.idle_hours + sum(result.hours_hired for result in [])
-        offered = outcome.idle_hours + sum(outcome.output.values()) * 0.0
-        print("%4d  %5.3f  %5.3f  %10.4g  %5.1f  " % (outcome.year, outcome.price_level, outcome.rate,
-                                                     outcome.money_supply, 0.0)
+        wage = outcome.wages.get(setup.unskilled_trade, float("nan"))
+        wheat = outcome.prices.get("wheat_kg")
+        print("%4d  %5.3f  %5.3f  %10.4g  %7.4g  %7.3g  " % (outcome.year, outcome.price_level, outcome.rate,
+                                                           outcome.money_supply, wage,
+                                                           wage / wheat if wheat else float("nan"))
               + "  ".join("%12.5g" % outcome.prices.get(good, float("nan")) for good in goods)
               + "   %.1e  %.2f" % (outcome.conservation_residual, time.time() - tick))
     return 0

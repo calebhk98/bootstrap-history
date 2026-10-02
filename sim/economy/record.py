@@ -30,6 +30,7 @@ class EconomyRecord:
     volumes: Dict[str, float] = field(default_factory=dict)              # market_key -> last year's quantity
     opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
+    index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
 
     def to_record(self) -> Dict[str, Any]:
         return {
@@ -46,6 +47,7 @@ class EconomyRecord:
             "volumes": self.volumes,
             "opening_basket": self.opening_basket,
             "expansion_runs": self.expansion_runs,
+            "index_base_prices": self.index_base_prices,
         }
 
     @classmethod
@@ -64,6 +66,7 @@ class EconomyRecord:
             volumes=dict(record["volumes"]),
             opening_basket=dict(record["opening_basket"]),
             expansion_runs=dict(record["expansion_runs"]),
+            index_base_prices=dict(record["index_base_prices"]),
         )
 
 

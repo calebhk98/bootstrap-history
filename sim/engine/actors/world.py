@@ -212,6 +212,9 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
 		self._sim.economy.goods.forget(actor_id)
 
+	def runs_agent_economy(self) -> bool:
+		return self._sim.economy.runs_agent_economy()
+
 	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
 		"""An actor sells `tonnes` of a material into the one goods market this year. One whose concerns
 		made it, [(node id, tonnes)], will not sell below what they cost it to make."""

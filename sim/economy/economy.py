@@ -20,7 +20,7 @@ from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_price_level, wear_and_spoilage)
 from .year_goods import (add_orders, clear_goods, cohort_orders, merchant_orders, mint_orders, state_orders)
-from .year_labour import clear_labour, labour_offers, move_workers, subsistence_cost_by_tile
+from .year_labour import clear_labour, labour_offers, move_workers, outside_option_by_tile
 from .year_ledger import YearLedger
 
 
@@ -73,7 +73,7 @@ class Economy:
         labour_bids = [bid for plan in plans.values() for bid in plan.labour_bids]
         for orders in inputs.engine_orders.values():
             labour_bids.extend(orders.labour_bids)
-        offers = labour_offers(setup, record, view, subsistence_cost_by_tile(setup, record, view))
+        offers = labour_offers(setup, record, view, outside_option_by_tile(setup, record, view))
         clear_labour(setup, record, labour_bids, offers, ledger)
         self._grow_own(offers, ledger)
         self._service_loans(view.year)

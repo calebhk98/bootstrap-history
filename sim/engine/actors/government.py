@@ -81,7 +81,8 @@ class Government(StoresMixin, SurplusMixin, RecordedActor):
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		standing = budget.standing_lines(world, soldiers) + budget.concession_lines(world.group_claims())
 		lines = self.draw_stores(standing, world)
-		self.sell_surplus(standing, world)
+		if not world.runs_agent_economy():   # on the agent economy the state's tax grain is in its own book
+			self.sell_surplus(standing, world)
 		share = budget.funded_share(sum(line.money for line in lines), self.money + self.credit_ceiling(world))
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = {line.name: line.money for line in lines}

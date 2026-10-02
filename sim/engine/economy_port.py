@@ -8,11 +8,77 @@ change without them knowing. This is the only engine module that may import `sim
 """
 
 
+def switch_requested(cfg):
+    """True when a new game is asked to run on the agent economy (config `agent_economy`, or the
+    environment variable named in economy_port_year.SWITCH_ENVIRONMENT, for comparing runs)."""
+    from .economy_port_year import switch_requested as requested
+    return requested(cfg)
+
+
 class EconomyPort:
     """Questions and transactions about the economy, for one simulation."""
 
     def __init__(self, sim):
         self._sim = sim
+        self._agent = None
+
+    # ---- the agent economy (economy_port_year.py), when the game runs on it ---------------------
+    @property
+    def agent(self):
+        """The agent economy when this game runs on it and it has opened; else None."""
+        if not self._sim.state.economy.agent_economy.get("on"):
+            return None
+        if self._agent is None:
+            from .economy_port_year import AgentEconomy
+            self._agent = AgentEconomy(self._sim)
+        return self._agent
+
+    def _answering_agent(self):
+        """The agent economy, opened, when it should answer; None while off or while it opens (the
+        opening reads the engine's own figures)."""
+        agent = self.agent
+        if agent is None or self._opening:
+            return None
+        self.open_agent()
+        return agent
+
+    def agent_price_ratio(self, materials):
+        """The agent economy's price over the engine's own cost for a market, or None to use the engine's."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.price_ratio(materials, self._sim._material_prices())
+
+    def agent_wage_per_hour(self, trade):
+        agent = self._answering_agent()
+        return None if agent is None else agent.wage_per_hour(trade)
+
+    def agent_rate(self):
+        agent = self._answering_agent()
+        return None if agent is None else agent.rate()
+
+    def runs_agent_economy(self):
+        return self.agent is not None
+
+    _opening = False
+
+    def run_agent_year(self):
+        """The agent economy's year, in place of the engine's own clearing; False when the switch is off."""
+        agent = self.agent
+        if agent is None:
+            return False
+        self.open_agent()
+        agent.run_year()
+        return True
+
+    def open_agent(self):
+        """Open the agent economy (with its hidden spin-up) on the engine's own opening figures."""
+        agent = self.agent
+        if agent is None or agent.opened():
+            return
+        self._opening = True
+        try:
+            agent.economy()
+        finally:
+            self._opening = False
 
     # ---- goods and labour: the two market facades ------------------------------------------
     @property

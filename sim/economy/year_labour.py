@@ -32,6 +32,19 @@ def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
     return costs
 
 
+def outside_option_by_tile(setup, record, view) -> Dict[str, float]:
+    """What a worker must earn in a year to keep the people he supports at their floors, per tile: the
+    classical floor under wages. Hours nobody hires go to the household's own plot (households_own.py)."""
+    floors = subsistence_cost_by_tile(setup, record, view)
+    people: Dict[str, float] = {}
+    working: Dict[str, float] = {}
+    for cohort in record.cohorts.values():
+        people[cohort.tile] = people.get(cohort.tile, 0.0) + cohort.people
+        working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
+    return {tile: floor * (people[tile] / working[tile] if working.get(tile) else 1.0)
+            for tile, floor in floors.items()}
+
+
 def labour_offers(setup, record, view, subsistence_by_tile) -> List[LabourOffer]:
     danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
     offers: List[LabourOffer] = []

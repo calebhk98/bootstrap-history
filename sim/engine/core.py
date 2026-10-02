@@ -62,7 +62,7 @@ from .society_disclosure import DisclosureMixin
 from .interest_groups import InterestGroupsMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
-from .economy_port import EconomyPortMixin
+from .economy_port import EconomyPortMixin, switch_requested
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from .actors import Household
@@ -315,6 +315,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             actors=ActorsState(),
             _civ=self.civ.get("id"),
         )
+        if switch_requested(self.cfg):
+            self.state.economy.agent_economy["on"] = True
         # SET HERE SO EVERY READER CAN READ THEM DIRECTLY. Both are assigned
         # afterwards by whoever builds the game - cli_interactive, cli_agent,
         # perf_fingerprint - and both round-trip through saveload's `_fog`

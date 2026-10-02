@@ -136,8 +136,13 @@ class MarketClearingMixin:
 
     def market_price_ratio(self, material):
         """This year's posted spot price over the long-run cost for a
-        material; one where no society market exists for it."""
-        result = self._market_outcome(self._material_tag(material)[0])
+        material; one where no society market exists for it. On the agent economy, its price over the
+        same cost."""
+        commodity = self._material_tag(material)[0]
+        ratio = self.economy.agent_price_ratio([material] + self.economy.materials_in(commodity))
+        if ratio is not None:
+            return ratio
+        result = self._market_outcome(commodity)
         return 1.0 if result is None else result[1].price_ratio
 
     def market_state(self, material):
@@ -185,6 +190,9 @@ class MarketClearingMixin:
         """Close the year: capacity follows the price, unsold goods carry on. Every commodity clears at the
         price level the year opened with; the coin the year's trade moves counts from the next year."""
         self._open_market_book()
+        if self.economy.run_agent_year():
+            self._close_real_output()
+            return
         self._price_level_held = self.home_price_level()
         try:
             self._close_commodities()

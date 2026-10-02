@@ -126,7 +126,8 @@ def national_prices(record) -> Dict[str, float]:
 
 
 def remember_price_level(setup, record) -> float:
-    level = currency.price_level(national_prices(record), setup.opening_prices, record.opening_basket)
+    level = currency.price_level(national_prices(record), record.index_base_prices or setup.opening_prices,
+                                 record.opening_basket)
     record.memory.note_price_level(setup.currency_id, level)
     return level
 
