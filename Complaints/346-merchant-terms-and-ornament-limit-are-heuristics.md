@@ -1,6 +1,6 @@
 # Merchants' margin, wait, adjustment speed and capital, and the ornament limit, are stated not derived
 
-**Status:** partly - merchants' terms now follow from the route's fleet, the labour market and the merchant class's capital (test `merchant_terms`); the ornament limit stays a labelled heuristic; the residue is Complaint 377
+**Status:** partly - merchants' terms now follow from the route's fleet, the labour market and the merchant class's capital (test `merchant_terms`); the ornament limit stays a labelled heuristic; the residue is Complaint 379
 
 Partners are on by default because, with merchants' costs and a partial yearly
 response (`Complaints/339`) and a satiating ornament need (`Complaints/325`),
