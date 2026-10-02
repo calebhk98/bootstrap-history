@@ -9,16 +9,15 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import currency, goods_market, households, merchants, producers, settlement, state_budget, taxes
+from . import goods_market, households, merchants, producers, settlement, state_budget, taxes
 from .market_memory import market_key
 from .protocols import AgentOrders
 from .recipes import input_depth_order
 from .taxes_bases import YearFacts
-from .types import Bid, EDGE_MINT, Offer
+from .types import Bid, Offer
 from .year_ledger import YearLedger
 
 OrderBook = Dict[Tuple[str, str], Tuple[List[Bid], List[Offer]]]
-MINT_PRIORITY = 9          # the mint is served after every other buyer at the same price
 # A good sold only at a token price would otherwise be remembered at a thousandth of last year's price
 # every year until it underflows; nothing is remembered below this share of its opening price.
 PRICE_MEMORY_FLOOR_SHARE = 1e-9
@@ -99,26 +98,6 @@ def state_orders(setup, record, view, area_map, order_book: OrderBook, keep) -> 
         offers.append(Offer(setup.state_agent, good, area, tile, surplus,
                             holding_reservation(expected, rate, spoilage, 0.0)))
     add_orders(order_book, AgentOrders(offers=tuple(offers)))
-
-
-def mint_orders(setup, record, area_map, order_book: OrderBook) -> None:
-    """The mint stands in the market for its money's metal: it buys any metal offered at its minting
-    price (striking coin) and sells metal at the coin's own metal value (melting coin), so the metal's
-    price in money stays between the two. Fiat money has no metal and no mint orders."""
-    spec = record.currency
-    metal = spec.backing_good
-    if not metal or spec.backing_per_unit <= 0.0 or metal not in area_map.goods():
-        return
-    melt_price = currency.mint_parity(spec)
-    strike_price = currency.mint_price(spec)
-    coin_metal = record.book.money_supply(spec.currency_id) * spec.backing_per_unit
-    for area in area_map.areas(metal):
-        tile = area.anchor_tile
-        share = len(area.tiles) / max(1, len(setup.tiles))
-        offers = (Offer(EDGE_MINT, metal, area.area_id, tile, coin_metal * share, melt_price),)
-        bids = (Bid(EDGE_MINT, metal, area.area_id, tile, 0.0, coin_metal * share + 1.0, strike_price, 0.0,
-                    math.inf, MINT_PRIORITY, maximum_price=strike_price),)
-        add_orders(order_book, AgentOrders(bids=bids, offers=offers))
 
 
 def _held_stock(book, agent) -> Dict[Tuple[str, str], float]:

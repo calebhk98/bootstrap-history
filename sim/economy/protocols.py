@@ -16,7 +16,8 @@ The year (`economy.Economy.step`), one civilisation's economy:
                  offer the output; cycles in the recipe graph draw their inputs from stock
     5. money     `credit.service` collects interest and principal from the year's sales, ahead of
                  carriage, taxes and dividends, and books defaults (a lender's loss, in credit_claims);
-                 `currency.arbitrage` mints or melts at the mint's terms; wear and loss
+                 the mint (mint.py) has bought metal and sold what it holds in the goods markets; coin wear and metal loss
+                 take their share of the money and metal held
     6. close     each agent closes its year (consumes, records unmet need, updates expectations,
                  idles or exits); `inventory.carry` applies spoilage to every held stock
 

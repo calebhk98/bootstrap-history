@@ -33,9 +33,10 @@
     }
   ],
   "coin_standard": {
+    "regime": "struck_coin",
     "material": "bronze_kg",
     "kg_per_unit": 0.003,
-    "source": "Wu zhu cash were cast copper-alloy coins of about 3.0 g, range 2.5 to 3.5 g (Wikipedia, Wu Zhu; Hartill, Cast Chinese Coins, 2005). Confidence medium."
+    "source": "Wu zhu cash were cast copper-alloy coins of about 3.0 g, range 2.5 to 3.5 g (Wikipedia, Wu Zhu; Hartill, Cast Chinese Coins, 2005). Confidence medium. Regime: the wu zhu was cast in state moulds at the imperial mint (Shanglin) under Emperor Wu and, after AD 40, again by the Eastern Han court, so the state is the issuer of a standard piece circulating by count; no mint charge is attested, so none is set. The cast cash is modelled as struck coin, the regime of a state-made standard piece."
   },
   "debt_bondage": true,
   "fire_quarter": "timber wards of the capital",

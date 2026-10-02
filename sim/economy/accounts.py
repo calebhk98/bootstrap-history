@@ -144,6 +144,7 @@ class Book:
 
     def _money_after(self, transfers: Sequence[Transfer]) -> Dict[Tuple[AgentId, CurrencyId], float]:
         after: Dict[Tuple[AgentId, CurrencyId], float] = {}
+        before: Dict[Tuple[AgentId, CurrencyId], float] = {}
         moved: Dict[Tuple[AgentId, CurrencyId], float] = {}
         for transfer in transfers:
             amount = transfer.amount
@@ -151,16 +152,22 @@ class Book:
                 raise NegativeAmount("transfer of %r %s (%s) is negative" % (amount, transfer.currency, transfer.purpose))
             for agent, signed in ((transfer.payer, -amount), (transfer.payee, amount)):
                 key = (agent, transfer.currency)
-                current = after[key] if key in after else self.balance(agent, transfer.currency)
+                if key not in before:
+                    before[key] = self.balance(agent, transfer.currency)
+                current = after.get(key, before[key])
                 after[key] = current + signed
                 moved[key] = moved.get(key, 0.0) + amount
         for (agent, currency), value in sorted(after.items()):
-            if value < -ROUNDING_SHARE * moved[(agent, currency)] and not is_edge(agent):
+            # only an overdraft this batch makes or deepens fails: a residue an earlier, larger batch
+            # was allowed to leave is not this batch's doing
+            floor = min(0.0, before[(agent, currency)])
+            if value < floor - ROUNDING_SHARE * moved[(agent, currency)] and not is_edge(agent):
                 raise InsufficientFunds("%s would hold %.6g %s after the batch" % (agent, value, currency))
         return after
 
     def _goods_after(self, moves: Sequence[GoodsMove]) -> Dict[Tuple[AgentId, GoodId, TileId], float]:
         after: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
+        before: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
         moved: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
         for move in moves:
             quantity = move.quantity
@@ -168,11 +175,14 @@ class Book:
                 raise NegativeAmount("move of %r %s (%s) is negative" % (quantity, move.good, move.purpose))
             for agent, tile, signed in ((move.giver, move.tile, -quantity), (move.receiver, _delivery_tile(move), quantity)):
                 key = (agent, move.good, tile)
-                current = after[key] if key in after else self.stock(agent, move.good, tile)
+                if key not in before:
+                    before[key] = self.stock(agent, move.good, tile)
+                current = after.get(key, before[key])
                 after[key] = current + signed
                 moved[key] = moved.get(key, 0.0) + quantity
         for (agent, good, tile), value in sorted(after.items()):
-            if value < -ROUNDING_SHARE * moved[(agent, good, tile)] and not is_edge(agent):
+            floor = min(0.0, before[(agent, good, tile)])
+            if value < floor - ROUNDING_SHARE * moved[(agent, good, tile)] and not is_edge(agent):
                 raise InsufficientGoods("%s would hold %.6g %s on %s after the batch" % (agent, value, good, tile))
         return after
 

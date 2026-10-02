@@ -59,6 +59,24 @@ class TransferTests(unittest.TestCase):
         self.assertEqual(book.balance("carol", "coin"), 10.0)
 
 
+class RoundingResidueTests(unittest.TestCase):
+    def test_a_rounding_residue_left_by_a_large_batch_does_not_fail_a_later_small_one(self):
+        # a batch moving a million may leave a hair below zero; a later small payment *to* the agent
+        # must not be refused for the residue it did not make
+        book = Book()
+        book.transfer(Transfer(EDGE_MINT, "m", "coin", 1e6, "stake"))
+        book.post([Transfer("m", "s", "coin", 1e6 + 1e-4, "big purchase")], [])
+        book.post([Transfer("s", "m", "coin", 1e-12, "small sale")], [])
+        self.assertLess(book.balance("m", "coin"), 0.0)
+
+    def test_a_batch_that_deepens_an_overdraft_is_still_refused(self):
+        book = Book()
+        book.transfer(Transfer(EDGE_MINT, "m", "coin", 1e6, "stake"))
+        book.post([Transfer("m", "s", "coin", 1e6 + 1e-4, "big purchase")], [])
+        with self.assertRaises(InsufficientFunds):
+            book.post([Transfer("m", "s", "coin", 1.0, "more than it has")], [])
+
+
 class GoodsTests(unittest.TestCase):
     def setUp(self):
         self.book = Book()

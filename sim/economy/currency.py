@@ -1,30 +1,17 @@
 """Money regimes, minting and melting, issue, money demand and the price level.
 
-Pure functions over `types.CurrencySpec`. Anything that moves money or goods returns `Transfer` and
-`GoodsMove` lists for the caller to book; nothing here touches a book.
+Pure functions over `types.CurrencySpec`. Anything that moves money returns `Transfer` lists for the
+caller to book; nothing here touches a book. The mint's market side is in mint.py.
 """
 import dataclasses
-from typing import Mapping, Optional, Sequence, Tuple
+from typing import Mapping, Optional
 
 from sim.constants import declare
 
 from . import types
-from .types import AgentId, CurrencySpec, GoodId, GoodsMove, Transfer
+from .types import AgentId, CurrencySpec, GoodId, Transfer
 
 REGIMES = ("struck_coin", "weighed_metal", "commodity", "fiat")
-
-# Used only when the civilisation data names no regime: whether a backing material is a metal.
-METAL_MATERIAL_NAMES = declare(
-    "METAL_MATERIAL_NAMES", ("gold", "silver", "copper", "bronze", "brass", "iron", "tin", "lead", "electrum"),
-    kind="temporary_heuristic", unit="material names",
-    why="coin_standard data has no regime field, so a struck or weighed metal is told from a commodity "
-        "money by its material name; replaced by an explicit regime field in the civilisation data.")
-
-ARBITRAGE_SPEED = declare(
-    "ARBITRAGE_SPEED", 0.5, kind="temporary_heuristic", unit="share of holdings per unit of relative gap per year",
-    why="holders bring metal to the mint or melt coin in proportion to the relative gap between bullion's "
-        "price and the mint's terms; the real rate depends on mint access and transport, unmodelled here. "
-        "A mint ledger of coin struck against bullion price would fix it.")
 
 BASE_HOLDING_YEARS = declare(
     "BASE_HOLDING_YEARS", 0.25, kind="temporary_heuristic", unit="years of spending",
@@ -49,33 +36,32 @@ EXPECTATION_ADJUSTMENT_SPEED = declare(
         "modelling convention, no historical source for any period.")
 
 
-def _is_metal(material: str) -> bool:
-    stem = material.split("_")[0]
-    return stem in METAL_MATERIAL_NAMES
-
-
 def currency_from_coin_standard(civ_id: str, coin_standard: Mapping, currency_name: str,
                                 issuer: Optional[AgentId] = None) -> CurrencySpec:
-    """Read a civilisation's `coin_standard` block. Fields used: `regime` (optional, one of REGIMES),
-    `material`, `kg_per_unit`, `mint_charge_share` (optional). Without `regime` the regime is inferred from
-    whether the material is a metal (a struck coin; a weighed metal needs `regime` stated)."""
+    """Read a civilisation's `coin_standard` block. Fields used: `regime` (one of REGIMES, required),
+    `material`, `kg_per_unit`, and `mint_charge_share` (struck coin only: the share of the metal the
+    issuer keeps for striking). A regime with no metal or commodity behind it must be fiat."""
     regime = coin_standard.get("regime")
-    material = coin_standard.get("material")
-    per_unit = float(coin_standard.get("kg_per_unit") or 0.0)
-    if regime is not None and regime not in REGIMES:
-        raise ValueError("%s: unknown money regime %r" % (civ_id, regime))
-    if regime is None:
-        if not material or per_unit <= 0.0:
-            regime = "fiat"
-        else:
-            regime = "struck_coin" if _is_metal(material) else "commodity"
+    if regime not in REGIMES:
+        raise ValueError("%s: coin_standard needs a regime, one of %s (got %r)" % (civ_id, ", ".join(REGIMES), regime))
     if regime == "fiat":
         return CurrencySpec(currency_name, "fiat", None, 0.0, issuer)
+    material = coin_standard.get("material")
+    per_unit = float(coin_standard.get("kg_per_unit") or 0.0)
     if not material or per_unit <= 0.0:
         raise ValueError("%s: %s money needs a material and kg_per_unit" % (civ_id, regime))
-    return CurrencySpec(currency_name, regime, material, per_unit,
-                        issuer if regime == "struck_coin" else None,
-                        float(coin_standard.get("mint_charge_share", 0.0)))
+    charge = float(coin_standard.get("mint_charge_share", 0.0))
+    if charge != 0.0 and regime != "struck_coin":
+        raise ValueError("%s: only a struck coin has a mint charge, not %s" % (civ_id, regime))
+    if not 0.0 <= charge < 1.0:
+        raise ValueError("%s: mint_charge_share must be in [0, 1)" % civ_id)
+    return CurrencySpec(currency_name, regime, material, per_unit, issuer if regime == "struck_coin" else None, charge)
+
+
+def has_mint(spec: CurrencySpec) -> bool:
+    """Only a struck coin has an issuer's mint; weighed metal and commodity money are exchanged with
+    the metal or good at its weight, with no issuer and no charge."""
+    return spec.regime == "struck_coin"
 
 
 def mint_parity(spec: CurrencySpec) -> float:
@@ -86,42 +72,6 @@ def mint_parity(spec: CurrencySpec) -> float:
 def mint_price(spec: CurrencySpec) -> float:
     """Money the mint pays per unit of bullion: parity less the mint charge."""
     return (1.0 - spec.mint_charge_share) / spec.backing_per_unit
-
-
-def arbitrage(spec: CurrencySpec, bullion_price: float, holdings_of_backing: Mapping[AgentId, float],
-              money_holdings: Mapping[AgentId, float],
-              tile: types.TileId = "") -> Tuple[list, list]:
-    """Holders bring bullion to the mint when it sells below what the mint pays, and melt money when
-    bullion is worth more than the money. Weighed metal and commodity money work the same way with the mint
-    standing for the exchange between balance and goods (no charge, no seigniorage). Fiat does nothing.
-    `tile` is where the bullion is delivered or received."""
-    if spec.regime == "fiat" or spec.backing_good is None or bullion_price <= 0.0:
-        return [], []
-    transfers, moves = [], []
-    pay, parity = mint_price(spec), mint_parity(spec)
-    if bullion_price < pay:
-        share = min(1.0, ARBITRAGE_SPEED * (pay - bullion_price) / pay)
-        for agent, metal in holdings_of_backing.items():
-            brought = metal * share
-            if brought <= 0.0 or types.is_edge(agent):
-                continue
-            moves.append(GoodsMove(agent, types.EDGE_MINT, spec.backing_good, tile, brought, "bullion to mint"))
-            struck = brought / spec.backing_per_unit
-            to_holder = struck * (1.0 - spec.mint_charge_share)
-            transfers.append(Transfer(types.EDGE_MINT, agent, spec.currency_id, to_holder, "coin struck"))
-            if spec.issuer is not None and struck - to_holder > 0.0:
-                transfers.append(Transfer(types.EDGE_MINT, spec.issuer, spec.currency_id,
-                                          struck - to_holder, "seigniorage"))
-    elif bullion_price > parity:
-        share = min(1.0, ARBITRAGE_SPEED * (bullion_price - parity) / bullion_price)
-        for agent, coin in money_holdings.items():
-            melted = coin * share
-            if melted <= 0.0 or types.is_edge(agent):
-                continue
-            transfers.append(Transfer(agent, types.EDGE_MINT, spec.currency_id, melted, "coin melted"))
-            moves.append(GoodsMove(types.EDGE_MINT, agent, spec.backing_good, tile,
-                                   melted * spec.backing_per_unit, "bullion from melting"))
-    return transfers, moves
 
 
 def issue(spec: CurrencySpec, amount: float, purpose: str) -> list:

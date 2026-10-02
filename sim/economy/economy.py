@@ -11,6 +11,7 @@ from . import credit, credit_claims, labour, lending, merchants_credit, producer
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_memory import YearView
+from .mint import mint_orders, settle_mint
 from .households_own import hours_for_own_plan, own_production, own_production_options, withhold_hours
 from .opening import open_economy
 from .protocols import YearInputs
@@ -20,7 +21,7 @@ from .tile_costs import carriage_table
 from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_price_level, wear_and_spoilage)
-from .year_goods import (add_orders, clear_goods, cohort_orders, merchant_orders, mint_orders, state_orders)
+from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .year_labour import clear_labour, labour_offers, move_workers, outside_option_by_tile
 from .year_ledger import YearLedger
 
@@ -83,7 +84,7 @@ class Economy:
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book)
         state_orders(setup, record, view, self.area_map, order_book, {})
-        mint_orders(setup, record, self.area_map, order_book)
+        mint_held = mint_orders(setup, record, self.area_map, order_book)
         for agent, orders in sorted(inputs.engine_orders.items()):
             add_orders(order_book, orders)
         for plan in plans.values():
@@ -94,6 +95,7 @@ class Economy:
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
         clear_goods(setup, record, view, self.area_map, order_book, plans, ledger)
+        settle_mint(record, mint_held)
         interest = self._service_loans(view.year)
         dispatch_merchants(setup, record, self.carriage, ledger)
         money_taxes(setup, record, view, ledger)

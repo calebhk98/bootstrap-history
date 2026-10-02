@@ -11,7 +11,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, households, unit_cost
+from . import currency, goods_market, households, mint, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -61,6 +61,7 @@ def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageT
     _open_workforce(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)
+    mint.seed_opening_metal(setup, record)
     record.opening_basket = _national(final_by_tile)
     return record, area_map, carriage
 
