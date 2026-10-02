@@ -283,15 +283,23 @@ class WagesMixin(WageLedgerMixin):
                 "weighted": self.WAGE_SHARE_FOOD * food + self.WAGE_SHARE_HOUSING * housing
                             + self.WAGE_SHARE_TOOLS * tools + self.WAGE_SHARE_SKILL_AND_DIFFICULTY}
 
-    def wage_schedule(self):
-        """This household's labour-market wage schedule. Its tightness
-        factors live in the economy state, so a save carries them."""
+    def _opening_wage_schedule(self):
+        """The wage schedule at the opening's price level; its tightness factors live in the economy
+        state, so a save carries them."""
         factors = self.state.economy.wage_tightness_factors
         cached = getattr(self, "_wage_schedule_cache", None)
         if cached is None or cached.tightness_factors is not factors:
             cached = self._wage_schedule_cache = wage_provider.build_schedule(
                 TRADE_REGISTRY, self.civ, tightness_factors=factors)
+            cached.opening_money_per_labour_hour = cached.money_per_labour_hour
         return cached
+
+    def wage_schedule(self):
+        """This household's labour-market wage schedule, in money at the present price level: one coin
+        stock against the goods moves what an hour is worth, and so every wage and every price."""
+        schedule = self._opening_wage_schedule()
+        schedule.money_per_labour_hour = schedule.opening_money_per_labour_hour * self.home_price_level()
+        return schedule
 
     def money_per_labour_hour(self):
         """Money one hour of the unskilled numeraire trade is worth here."""

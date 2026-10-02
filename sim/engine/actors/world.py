@@ -214,10 +214,12 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		"""An actor's standing sales and purchases in the one goods market end; it deals afresh this year."""
 		self._sim.goods_market.forget(actor_id)
 
-	def market_sale(self, seller_id: str, material: str, tonnes: float) -> None:
-		"""An actor sells `tonnes` of a material into the one goods market this year."""
+	def market_sale(self, seller_id: str, material: str, tonnes: float, from_concerns: Any = None) -> None:
+		"""An actor sells `tonnes` of a material into the one goods market this year. One whose concerns
+		made it, [(node id, tonnes)], will not sell below what they cost it to make."""
 		sim = self._sim
-		sim.goods_market.note_sale(seller_id, sim._material_tag(material)[0], tonnes)
+		reservation = sim.concerns_reservation_ratio(from_concerns, material) if from_concerns else None
+		sim.goods_market.note_sale(seller_id, sim._material_tag(material)[0], tonnes, reservation)
 
 	def market_purchase(self, buyer_id: str, commodity: str, tonnes: float) -> None:
 		"""An actor buys `tonnes` of a commodity at the one goods market this year."""

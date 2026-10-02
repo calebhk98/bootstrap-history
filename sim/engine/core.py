@@ -48,6 +48,8 @@ from .market_demand import MarketDemandMixin
 from .real_output import RealOutputMixin
 from .concern_volume import ConcernVolumeMixin
 from .techniques_in_use import TechniquesInUseMixin
+from .incumbent_prices import IncumbentPricesMixin
+from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
 from .geography import GeographyMixin
@@ -210,7 +212,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 YEARLY_RECORD_LIMIT = 300
 
 
-class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, FogMixin, GeographyMixin, LabourMixin,
+class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyMixin, LabourMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
           StepPhasesMixin, LabourAllocationMixin, LivingStockMixin, CoinHoardMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin):

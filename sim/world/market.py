@@ -1,5 +1,9 @@
 """The year's market for one material: price moves with scarcity around cost.
 
+Producers who put goods on the market name a reservation price (producer_market.py): the cost of
+making a unit by the technique each runs. One that cannot cover it at the clearing price sells nothing
+that year. The market holds no technology: it takes tonnes and prices.
+
 A price solver gives a long-run cost, the price at which building and running
 capacity pays for itself. In any one year the price is set by what is on offer
 against what is wanted, with capacity already built treated as sunk:
@@ -21,8 +25,11 @@ supplies the figures.
 """
 import math
 from dataclasses import dataclass
+from typing import Tuple
 
 from sim.constants import declare
+
+from .producer_market import Offer, offered_tonnes
 
 DEFAULT_DEMAND_PRICE_ELASTICITY = declare(
     "DEFAULT_DEMAND_PRICE_ELASTICITY", 0.5, kind="temporary_heuristic",
@@ -95,6 +102,7 @@ class MarketConditions:
     founder_sales_tonnes: float
     stock_tonnes: float
     actor_demand_tonnes: float = 0.0
+    offers: Tuple[Offer, ...] = ()
     demand_price_elasticity: float = DEFAULT_DEMAND_PRICE_ELASTICITY
     supply_price_elasticity: float = SHORT_RUN_SUPPLY_PRICE_ELASTICITY
     floor_ratio: float = DEFAULT_FLOOR_RATIO
@@ -108,6 +116,7 @@ class MarketOutcome:
     society_sales_tonnes: float
     unsold_tonnes: float
     unmet_demand_tonnes: float
+    offers_sold_tonnes: float = 0.0
 
 
 def _demand_at(conditions: MarketConditions, price_ratio: float) -> float:
@@ -125,6 +134,7 @@ def _society_output_at(conditions: MarketConditions, price_ratio: float) -> floa
 
 def _supply_at(conditions: MarketConditions, price_ratio: float) -> float:
     return (_society_output_at(conditions, price_ratio) + conditions.actor_supply_tonnes
+            + offered_tonnes(conditions.offers, price_ratio)
             + conditions.founder_sales_tonnes + conditions.stock_tonnes)
 
 
@@ -133,7 +143,7 @@ def clearing_price_ratio(conditions: MarketConditions) -> float:
     offer, held between the floor and the ceiling."""
     low, high = conditions.floor_ratio, conditions.ceiling_ratio
     if (conditions.committed_demand_tonnes == 0.0 and conditions.actor_demand_tonnes == 0.0
-            and conditions.actor_supply_tonnes == 0.0
+            and conditions.actor_supply_tonnes == 0.0 and not conditions.offers
             and conditions.founder_sales_tonnes == 0.0 and conditions.stock_tonnes == 0.0
             and conditions.society_capacity_tonnes > 0.0
             and conditions.household_demand_at_anchor_tonnes > 0.0):
@@ -153,7 +163,7 @@ def clearing_price_ratio(conditions: MarketConditions) -> float:
             low = middle
         else:
             high = middle
-    return math.sqrt(low * high)
+    return high     # the side where supply covers demand, so a producer pinned at its cost sells
 
 
 def clear_market(conditions: MarketConditions) -> MarketOutcome:
@@ -165,15 +175,16 @@ def clear_market(conditions: MarketConditions) -> MarketOutcome:
     traded = min(supply, demand)
     # Sellers who cannot idle sell first: the founder, actors, then stock;
     # the society's producers get what is left and carry what does not sell.
+    offers_sold = min(offered_tonnes(conditions.offers, price_ratio), traded)
     after_outsiders = max(0.0, traded - conditions.founder_sales_tonnes
-                          - conditions.actor_supply_tonnes)
+                          - conditions.actor_supply_tonnes - offers_sold)
     from_stock = min(conditions.stock_tonnes, after_outsiders)
     society_sales = min(output, after_outsiders - from_stock)
     return MarketOutcome(
         price_ratio=price_ratio, quantity_traded_tonnes=traded,
         society_sales_tonnes=society_sales,
         unsold_tonnes=max(0.0, supply - traded),
-        unmet_demand_tonnes=max(0.0, demand - supply))
+        unmet_demand_tonnes=max(0.0, demand - supply), offers_sold_tonnes=offers_sold)
 
 
 def society_sales_displaced_by_founder(conditions: MarketConditions) -> float:

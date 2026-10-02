@@ -72,7 +72,7 @@ class ForeignTradersMixin:
     def merchant_capital_left(self, civilization_id):
         """Home money merchants can still tie up in goods this year."""
         coin = self.civ["coin_standard"]
-        coin_price = self._material_prices().get(coin["material"], 0.0)
+        coin_price = self._coin_metal_price(coin["material"]) or 0.0
         capital = (MERCHANT_CAPITAL_SHARE_OF_COIN_STOCK * self.home_coin_stock_units()
                    * coin["kg_per_unit"] * coin_price)
         ledger = self._foreign_ledger(civilization_id)

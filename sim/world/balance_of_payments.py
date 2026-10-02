@@ -2,7 +2,7 @@
 
 An economy holds a stock of coin. Imports are paid for by exports first; what exports do not cover
 leaves as coin and arrives in the partner's stock, and a surplus brings coin in. A stock above or
-below its opening level moves the economy's prices in proportion (more coin chasing the same goods),
+below its opening level moves every price of the economy, and its wages, in proportion (more coin chasing the same goods),
 so a deficit makes its goods cheaper and its imports dearer until flows balance. An economy cannot
 pay out more coin than it holds.
 
@@ -17,10 +17,10 @@ MONEY_STOCK_YEARS_OF_WAGES = declare(
         "is a fixed share of its yearly wage bill. Stands in for the real stock and its velocity.")
 PRICE_LEVEL_PASS_THROUGH = declare(
     "PRICE_LEVEL_PASS_THROUGH", 1.0, kind="temporary_heuristic",
-    unit="proportional change of traded prices per proportional change of the coin stock",
+    unit="proportional change of prices per proportional change of the coin stock",
     source=None, confidence="D",
-    why="Quantity theory with output and velocity held fixed: prices follow the coin stock one for "
-        "one. The domestic revaluation of every price is not built; only traded prices follow.")
+    why="Quantity theory with output and velocity held fixed: every price and wage follows the coin "
+        "stock one for one. A modelled velocity and real output would replace the fixed share.")
 PRICE_LEVEL_FLOOR = declare(
     "PRICE_LEVEL_FLOOR", 0.05, kind="temporary_heuristic",
     unit="share of the opening price level", source=None, confidence="D",
@@ -33,7 +33,7 @@ def opening_stock_units(workers: float, wage_per_year: float) -> float:
 
 
 def price_level(stock_units: float, opening_units: float) -> float:
-    """Traded-price level against the opening one."""
+    """Price level against the opening one."""
     if opening_units <= 0.0:
         return 1.0
     return max(PRICE_LEVEL_FLOOR, stock_units / opening_units) ** PRICE_LEVEL_PASS_THROUGH

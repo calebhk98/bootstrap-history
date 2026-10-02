@@ -41,7 +41,7 @@ class MarketClearingMixin:
         if not flows or flows.get("year") != year:
             previous = flows or {}
             flows = economy.market_flows = {"year": year, "drawn": {}}
-            for kind in ("bought", "sold"):
+            for kind in ("bought", "sold", "reservation"):
                 standing = {commodity: {party: tonnes for party, tonnes in parties.items() if party != FOUNDER}
                             for commodity, parties in (previous.get(kind) or {}).items()}
                 flows[kind] = {commodity: parties for commodity, parties in standing.items() if parties}
@@ -73,19 +73,22 @@ class MarketClearingMixin:
         return entry
 
     def _market_flow_figures(self, commodity, with_flows):
-        """(committed demand, founder sales, actors' supply, actors' demand) from this year's flows.
-        The founder's own orders count only `with_flows`; every other party's always do."""
+        """(committed demand, founder sales, supply of sellers who take any price, actors' demand, offers
+        of producers who name their cost) from this year's flows and the concerns running. The founder's
+        own orders count only `with_flows`; every other party's always do."""
         market_api = self.goods_market
         committed = founder_sales = 0.0
         if with_flows:
             committed = (market_api.bought_tonnes(commodity, FOUNDER)
                          + market_api.drawn_tonnes(commodity))
             founder_sales = market_api.sold_tonnes(commodity, FOUNDER)
-        return (committed, founder_sales, market_api.others_sold_tonnes(commodity),
-                market_api.others_bought_tonnes(commodity))
+        offers = market_api.others_offers(commodity)
+        price_takers = market_api.others_sold_tonnes(commodity) - sum(offer.tonnes for offer in offers)
+        return (committed, founder_sales, max(0.0, price_takers), market_api.others_bought_tonnes(commodity),
+                offers + self.founder_concern_offers(commodity))
 
     def _market_conditions(self, commodity, entry, with_flows):
-        committed, founder_sales, actor_supply, actor_demand = self._market_flow_figures(
+        committed, founder_sales, actor_supply, actor_demand, offers = self._market_flow_figures(
             commodity, with_flows)
         record = self._commodity_ledger().commodities.get(commodity) or {}
         return market.MarketConditions(
@@ -94,7 +97,7 @@ class MarketClearingMixin:
             committed_demand_tonnes=committed,
             society_capacity_tonnes=entry["capacity_tonnes"],
             actor_supply_tonnes=actor_supply,
-            actor_demand_tonnes=actor_demand,
+            actor_demand_tonnes=actor_demand, offers=offers,
             founder_sales_tonnes=founder_sales,
             stock_tonnes=entry["stock_tonnes"],
             floor_ratio=float(record.get("price_floor_factor", market.DEFAULT_FLOOR_RATIO)),

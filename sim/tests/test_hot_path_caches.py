@@ -113,7 +113,7 @@ class _TonnesWorld:
     def materials_made_by(self, node_id):
         return ()
 
-    def market_sale(self, actor_id, material, tonnes):
+    def market_sale(self, actor_id, material, tonnes, from_concerns=None):
         pass
 
 

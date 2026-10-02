@@ -14,6 +14,8 @@ clearing price the same way (`sim/world/market.py`); the posted price leaves out
 orders only, which keep the marginal curves that move a bill as it is filled. The clearing itself
 is in market_clearing.py; who offers what is in goods_market_offers.py.
 """
+from sim.world.producer_market import Offer
+
 from . import purchase_rule
 from .goods_market_offers import GoodsOffers
 from .project_materials import tonnes_per_unit
@@ -64,11 +66,22 @@ class GoodsMarket(GoodsOffers):
 
     # ---- the records: the one place they are written -------------------------------------
 
-    def note_sale(self, seller_id, commodity, tonnes):
-        """`seller_id` sold `tonnes` of a commodity into the market this year."""
+    def note_sale(self, seller_id, commodity, tonnes, reservation_ratio=None):
+        """`seller_id` sold `tonnes` of a commodity into the market this year. A seller that names the
+        lowest price it takes (its cost, as a ratio to the market's reference) sells only at or above
+        it; one that names none takes whatever the market pays."""
         if tonnes > 0:
-            sold = self._sim._market_flows()["sold"].setdefault(commodity, {})
-            sold[seller_id] = sold.get(seller_id, 0.0) + tonnes
+            flows = self._sim._market_flows()
+            sold = flows["sold"].setdefault(commodity, {})
+            before = sold.get(seller_id, 0.0)
+            sold[seller_id] = before + tonnes
+            reservations = flows.setdefault("reservation", {})
+            if reservation_ratio is not None:
+                held = reservations.setdefault(commodity, {})
+                held[seller_id] = (held.get(seller_id, reservation_ratio) * before
+                                   + reservation_ratio * tonnes) / (before + tonnes)
+            elif seller_id in reservations.get(commodity, {}):
+                del reservations[commodity][seller_id]
 
     def note_purchase(self, buyer_id, commodity, tonnes):
         """`buyer_id` bought `tonnes` of a commodity at the market this year."""
@@ -80,7 +93,8 @@ class GoodsMarket(GoodsOffers):
         """A party's entries from earlier years are over: it is about to deal again this year, or has
         stopped. Its sales and purchases of this year are noted afterwards."""
         flows = self._sim._market_flows()
-        for kind in ("sold", "bought"):
+        for kind in ("sold", "bought", "reservation"):
+            flows.setdefault(kind, {})
             for commodity in list(flows[kind]):
                 flows[kind][commodity].pop(party_id, None)
                 if not flows[kind][commodity]:
@@ -123,6 +137,14 @@ class GoodsMarket(GoodsOffers):
 
     def drawn_tonnes(self, commodity):
         return self._sim._market_flows()["drawn"].get(commodity, 0.0)
+
+    def others_offers(self, commodity):
+        """Offers of every seller but the founder that named the lowest price it takes: (tonnes, ratio)."""
+        flows = self._sim._market_flows()
+        sold = flows["sold"].get(commodity, {})
+        reservations = flows.get("reservation", {}).get(commodity, {})
+        return tuple(Offer(sold[party], reservations[party])
+                     for party in sorted(reservations) if party != FOUNDER and sold.get(party, 0.0) > 0.0)
 
     def others_sold_tonnes(self, commodity):
         """What every seller but the founder put on the market this year."""

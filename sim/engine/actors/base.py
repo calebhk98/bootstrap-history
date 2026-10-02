@@ -5,7 +5,7 @@ The shared surface is `money`, `workforce`, `knowledge`, `concerns` and
 delegates to the simulation state; a `RecordedActor` keeps an `ActorRecord`)
 and what they value. Decisions go through the actor's `decision_policy`.
 """
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from sim.engine.state import ActorRecord
 
@@ -87,18 +87,23 @@ class Actor(Borrower):
 		"""How many times its founding size the actor runs a concern at."""
 		return 1.0
 
+	def output_by_concern(self, material: str, world: Any) -> List[Tuple[str, float]]:
+		"""[(node id, tonnes a year)] of `material` each of the actor's concerns puts on the market."""
+		makers = world.concerns_making(material)
+		return [(node_id, world.concern_output_tonnes(node_id, material,
+													  self.opened_year_of(node_id, world.year),
+													  self.staffed_share(node_id) * self.capacity_of(node_id)))
+				for node_id in sorted(node_id for node_id in self.concerns if node_id in makers)]
+
 	def output_of(self, material: str, world: Any) -> float:
 		"""Tonnes a year of `material` the actor's concerns put on the market."""
-		makers = world.concerns_making(material)
-		return sum(world.concern_output_tonnes(node_id, material,
-											   self.opened_year_of(node_id, world.year),
-											   self.staffed_share(node_id) * self.capacity_of(node_id))
-				   for node_id in sorted(node_id for node_id in self.concerns if node_id in makers))
+		return sum(tonnes for _node_id, tonnes in self.output_by_concern(material, world))
 
 	def sell_output(self, world: Any) -> None:
-		"""Put what the actor's concerns make this year into the one goods market."""
+		"""Put what the actor's concerns make this year into the one goods market, each concern at its own cost."""
 		for material in sorted({made for node_id in self.concerns for made in world.materials_made_by(node_id)}):
-			world.market_sale(self.actor_id, material, self.output_of(material, world))
+			by_concern = self.output_by_concern(material, world)
+			world.market_sale(self.actor_id, material, sum(tonnes for _node_id, tonnes in by_concern), by_concern)
 
 	def prominence(self) -> float:
 		"""How prominent the actor is as a person; a business has none."""
