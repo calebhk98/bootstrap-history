@@ -37,6 +37,17 @@ class OrdersTests(unittest.TestCase):
     def test_no_bid_when_carriage_eats_the_partners_price(self):
         self.assertEqual(orders(export_carriage_per_unit={"grain": 5.0}).bids, ())
 
+    def test_the_partners_purchases_are_bounded_by_the_money_it_has(self):
+        # a partner cannot pay out coin it does not hold: its bids share what it can spend, by value
+        bids = orders(export_prices={"grain": 5.0, "oil": 10.0}, quantities_wanted={"grain": 25.0, "oil": 5.0},
+                      export_budget=100.0).bids
+        self.assertAlmostEqual(sum(bid.budget for bid in bids), 100.0)
+        by_good = {bid.good: bid.budget for bid in bids}
+        self.assertAlmostEqual(by_good["grain"] / by_good["oil"], (25.0 * 5.0) / (5.0 * 10.0))
+
+    def test_without_a_stated_budget_the_bids_are_unbounded(self):
+        self.assertEqual(orders().bids[0].budget, float("inf"))
+
     def test_nothing_available_means_no_offer(self):
         self.assertEqual(orders(quantities_available={"wine": 0.0}).offers, ())
 

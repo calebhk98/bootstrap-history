@@ -18,6 +18,7 @@ from sim.economy.year_close import rebase_price_level
 from sim.economy.year_labour import trade_premium
 
 from . import solve_cache
+from .data import load_civ
 from .economy_port_setup import build_setup, in_units, opening_values
 
 SWITCH_ENVIRONMENT = "ROME_AGENT_ECONOMY"
@@ -39,6 +40,12 @@ FOREIGN_TRADE_SHARE = declare(
     why="How much can cross a border in a year is set by ships, carts and merchants on the routes; the "
         "engine's carrier fleet (foreign_payments, OPENING_CARRIERS_PER_ROUTE) is not yet the economy's. "
         "A share of the home market stands in so trade is bounded.")
+PARTNER_SPEND_SHARE_PER_YEAR = declare(
+    "PARTNER_SPEND_SHARE_PER_YEAR", 0.05, kind="temporary_heuristic",
+    unit="share of a partner's coin it can spend on this society's goods in a year", source=None, confidence="D",
+    why="A partner pays for what it buys from the coin it holds, so its purchases fall as it pays coin out "
+        "(price-specie flow). How much of its money a partner spends abroad a year is not measured; the "
+        "partner as a full economy (Complaint 382) would decide it.")
 FOUNDER_AGENT = "founder"
 
 
@@ -104,6 +111,7 @@ class AgentEconomy:
         orders.update(self._external_orders())
         outcome = economy.step(self._inputs(orders))
         self._settle_founder()
+        self._settle_foreign_coin()
         self._answers = None
         self._save()
         return outcome
@@ -175,7 +183,48 @@ class AgentEconomy:
         landed = {good: price / coin for good, price in landed.items()}
         export_prices = {good: price / coin for good, price in export_prices.items()}
         return {EDGE_EXTERNAL: external_orders(landed, export_prices, available, wanted,
-                                               economy.area_map.area_of, economy.setup.port_tile)}
+                                               economy.area_map.area_of, economy.setup.port_tile,
+                                               export_budget=self._partner_spending(partners) / coin)}
+
+    def _partner_spending(self, partners) -> float:
+        """What the partners can spend on this society's goods this year, in home money: a share of the
+        coin each still holds (its opening stock and what the ledger says it gained or paid out)."""
+        sim = self._sim
+        total = 0.0
+        for partner in partners:
+            standard = load_civ(partner)["coin_standard"]
+            metal_price = sim._coin_metal_price(standard["material"])
+            if not metal_price:
+                continue
+            held = (sim._partner_coin_opening_units(partner)
+                    + sim._foreign_ledger(partner)["partner_coin_units"])
+            total += max(0.0, held) * standard["kg_per_unit"] * metal_price
+        return total * PARTNER_SPEND_SHARE_PER_YEAR
+
+    def _settle_foreign_coin(self):
+        """The year's foreign trade paid for in the partners' ledgers (foreign_payments): imports pay coin
+        to them and exports draw coin from them, so a partner paying out coin sees its price level fall
+        and buys less (price-specie flow). Trade with several partners is split evenly among them; the
+        economy's external edge does not yet say which partner each good went to."""
+        sim, economy = self._sim, self._economy
+        partners = sim.foreign_economies()
+        if not partners:
+            return
+        book, money = economy.record.book, economy.setup.currency_id
+        coin = economy.setup.coin_per_unit
+        paid_in = book.edge_net(EDGE_EXTERNAL, money)            # exports less imports
+        volume = book.edge_volume(EDGE_EXTERNAL, money)
+        imports, exports = (volume - paid_in) / 2.0 * coin, (volume + paid_in) / 2.0 * coin
+        for partner in partners:
+            standard = load_civ(partner)["coin_standard"]
+            metal_price = sim._coin_metal_price(standard["material"])
+            if not metal_price:
+                continue
+            per_partner_coin = standard["kg_per_unit"] * metal_price
+            if imports > 0.0:
+                sim._settle_flow(partner, 1.0, imports / len(partners), per_partner_coin)
+            if exports > 0.0:
+                sim._settle_flow(partner, -1.0, exports / len(partners), per_partner_coin)
 
     def _settle_founder(self):
         """What the founder's goods fetched goes back to the engine; what did not sell goes back too."""

@@ -36,22 +36,30 @@ class BalanceOfPayments:
 def external_orders(landed_prices: Mapping[GoodId, float], export_prices: Mapping[GoodId, float],
                     quantities_available: Mapping[GoodId, float], quantities_wanted: Mapping[GoodId, float],
                     area_of: Callable[[GoodId, TileId], AreaId], port_tile: TileId,
-                    export_carriage_per_unit: Optional[Mapping[GoodId, float]] = None) -> AgentOrders:
+                    export_carriage_per_unit: Optional[Mapping[GoodId, float]] = None,
+                    export_budget: Optional[float] = None) -> AgentOrders:
     """Offers of imports at `landed_prices` (per unit, on `port_tile`) up to `quantities_available`;
     bids for exports at `export_prices` less `export_carriage_per_unit`, up to `quantities_wanted`.
-    A good whose net export price is not positive draws no bid."""
+    A good whose net export price is not positive draws no bid. `export_budget`, when given, is what
+    the partners can pay this year, shared among the bids by the value each wants."""
     carriage = export_carriage_per_unit or {}
     offers = tuple(Offer(EDGE_EXTERNAL, good, area_of(good, port_tile), port_tile,
                          quantities_available[good], landed_prices[good])
                    for good in sorted(landed_prices)
                    if quantities_available.get(good, 0.0) > 0.0)
-    bids = []
+    wanted_rows = []
     for good in sorted(export_prices):
         net_price = export_prices[good] - carriage.get(good, 0.0)
         wanted = quantities_wanted.get(good, 0.0)
         if net_price > 0.0 and wanted > 0.0:
-            bids.append(Bid(EDGE_EXTERNAL, good, area_of(good, port_tile), port_tile, 0.0, wanted,
-                            net_price, EXTERNAL_BID_ELASTICITY, float("inf"), maximum_price=net_price))
+            wanted_rows.append((good, net_price, wanted))
+    total_value = sum(net_price * wanted for _good, net_price, wanted in wanted_rows)
+    bids = []
+    for good, net_price, wanted in wanted_rows:
+        budget = (float("inf") if export_budget is None or total_value <= 0.0
+                  else max(0.0, export_budget) * net_price * wanted / total_value)
+        bids.append(Bid(EDGE_EXTERNAL, good, area_of(good, port_tile), port_tile, 0.0, wanted,
+                        net_price, EXTERNAL_BID_ELASTICITY, budget, maximum_price=net_price))
     return AgentOrders(bids=tuple(bids), offers=offers)
 
 
