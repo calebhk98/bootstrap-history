@@ -33,8 +33,9 @@ def labour_cost_per_run(recipe: Recipe, wages: Wages) -> float:
     return _bill(recipe.labour_hours, wages)
 
 
-def variable_cost_per_run(recipe: Recipe, input_prices: Prices, wages: Wages) -> float:
-    return input_cost_per_run(recipe, input_prices) + labour_cost_per_run(recipe, wages)
+def variable_cost_per_run(recipe: Recipe, input_prices: Prices, wages: Wages, rent: float = 0.0) -> float:
+    """Inputs and labour, plus the rent on the land a run works (zero where land is not charged for)."""
+    return input_cost_per_run(recipe, input_prices) + labour_cost_per_run(recipe, wages) + rent
 
 
 def capital_recovery_factor(interest_rate: float, life_years: float) -> float:
@@ -65,19 +66,19 @@ def revenue_per_run(recipe: Recipe, expected_output_prices: Prices) -> float:
 
 
 def expected_margin(recipe: Recipe, expected_output_prices: Prices, input_prices: Prices,
-                    wages: Wages, interest_rate: float) -> float:
+                    wages: Wages, interest_rate: float, rent: float = 0.0) -> float:
     """Revenue over every output, less variable cost and the capital charge, per run."""
     return (revenue_per_run(recipe, expected_output_prices)
-            - variable_cost_per_run(recipe, input_prices, wages)
+            - variable_cost_per_run(recipe, input_prices, wages, rent)
             - capital_charge_per_run(recipe, input_prices, wages, interest_rate))
 
 
 def return_on_capital(recipe: Recipe, expected_output_prices: Prices, input_prices: Prices,
-                      wages: Wages) -> float:
+                      wages: Wages, rent: float = 0.0) -> float:
     """Yearly operating surplus (revenue less variable cost) per run, over the capital a run of yearly
     capacity employs: its plant plus a year's variable cost paid before the sales come in. Compare
     with the live interest rate; zero if nothing is employed or it cannot be priced."""
-    variable = variable_cost_per_run(recipe, input_prices, wages)
+    variable = variable_cost_per_run(recipe, input_prices, wages, rent)
     employed = plant_value_per_run(recipe, input_prices, wages) + variable
     if not math.isfinite(employed) or employed <= 0.0:
         return 0.0

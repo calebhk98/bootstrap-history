@@ -36,6 +36,7 @@ class EconomyRecord:
     index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
+    land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
 
     def to_record(self) -> Dict[str, Any]:
         return {
@@ -57,6 +58,7 @@ class EconomyRecord:
             "index_base_prices": self.index_base_prices,
             "worn_runs": self.worn_runs,
             "state_budget": dataclasses.asdict(self.state_budget),
+            "land_rent": self.land_rent,
         }
 
     @classmethod
@@ -80,6 +82,7 @@ class EconomyRecord:
             index_base_prices=dict(record["index_base_prices"]),
             worn_runs=dict(record["worn_runs"]),
             state_budget=StateBudget(**record["state_budget"]),
+            land_rent=dict(record["land_rent"]),
         )
 
 
