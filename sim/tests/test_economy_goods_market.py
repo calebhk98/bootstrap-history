@@ -2,10 +2,12 @@
 priority, fills that sum exactly, and a famine price that is set by budgets."""
 import math
 import random
+import time
 import unittest
 
 from sim.economy.goods_market import _ration_buyers, clear, quantity_at
 from sim.economy.types import Bid, Offer
+from sim.tests import economy_reference_clearing as reference
 
 
 def bid(buyer="b1", floor=0.0, flexible=0.0, reference=1.0, elasticity=1.0, budget=1e9, priority=0):
@@ -143,6 +145,80 @@ class ClearingTests(unittest.TestCase):
         rng.shuffle(offers)
         second = run(bids, offers, 1.0)
         self.assertEqual(first, second)
+
+
+def random_market(rng, bid_count, offer_count):
+    """Bids sharing a few schedules (so grouping applies) and offers with repeated reservations."""
+    schedules = [(rng.uniform(0.3, 3.0), rng.choice([0.0, 0.3, 1.0, 1.7, 2.5])) for _ in range(rng.randrange(1, 5))]
+    bids = []
+    for index in range(bid_count):
+        reference_price, elasticity = rng.choice(schedules)
+        bids.append(bid("b%03d" % index, floor=rng.choice([0.0, rng.uniform(0.0, 3.0)]),
+                        flexible=rng.choice([0.0, rng.uniform(0.0, 6.0)]), reference=reference_price,
+                        elasticity=elasticity, budget=rng.choice([0.0, rng.uniform(0.5, 30.0), rng.uniform(30.0, 1e4)]),
+                        priority=rng.randrange(3)))
+    reservations = [rng.choice([-1.0, 0.0, rng.uniform(0.05, 4.0)]) for _ in range(max(1, offer_count // 2))]
+    scale = rng.choice([0.05, 0.5, 1.0, 3.0]) * max(1, bid_count) / offer_count
+    offers = [offer("s%02d" % index, rng.uniform(0.2, 2.0) * scale, rng.choice(reservations)) for index in range(offer_count)]
+    return bids, offers
+
+
+def by_agent(result, side):
+    sums = {}
+    for fill in result.fills:
+        if fill.side == side:
+            sums[fill.agent] = sums.get(fill.agent, 0.0) + fill.quantity
+    return sums
+
+
+class MatchesReferenceTests(unittest.TestCase):
+    """The optimised clearing must agree with the plain demand sum and bisection it replaced."""
+
+    def assert_close(self, left, right, label):
+        self.assertAlmostEqual(left, right, delta=1e-9 * max(1.0, abs(right)), msg=label)
+
+    def compare(self, bids, offers, last_price, label):
+        fast = run(bids, offers, last_price)
+        slow = reference.clear(bids, offers, "grain", "area", "coin", last_price)
+        for name in ("price", "quantity", "demand_at_price", "offered_at_price", "unmet_floor"):
+            self.assert_close(getattr(fast, name), getattr(slow, name), "%s %s" % (label, name))
+        for side in ("buy", "sell"):
+            fast_by, slow_by = by_agent(fast, side), by_agent(slow, side)
+            self.assertEqual(sorted(fast_by), sorted(slow_by), "%s %s agents" % (label, side))
+            for agent, quantity in slow_by.items():
+                self.assert_close(fast_by[agent], quantity, "%s %s %s" % (label, side, agent))
+
+    def test_random_markets_of_every_size(self):
+        rng = random.Random(20240611)
+        for case in range(300):
+            bid_count = rng.choice([0, 1, 2, 5, 12, 40, 150, 400])
+            offer_count = rng.choice([1, 2, 3, 6, 15])
+            bids, offers = random_market(rng, bid_count, offer_count)
+            self.compare(bids, offers, rng.choice([None, 0.7, 5.0]), "case %d (%d x %d)" % (case, bid_count, offer_count))
+
+    def test_famine_markets_where_budgets_set_the_price(self):
+        rng = random.Random(5)
+        for case in range(40):
+            count = rng.choice([3, 30, 300])
+            bids = [bid("h%03d" % index, floor=rng.uniform(5.0, 12.0), flexible=rng.uniform(0.0, 3.0),
+                        elasticity=rng.choice([0.2, 1.0]), budget=rng.uniform(20.0, 800.0)) for index in range(count)]
+            offers = [offer("farm%d" % index, rng.uniform(0.1, 0.5) * count, rng.uniform(0.5, 1.5)) for index in range(4)]
+            self.compare(bids, offers, None, "famine %d" % case)
+
+    def test_ties_in_reservation_and_in_bid_order_keys(self):
+        bids = [Bid("b%d" % (index % 4), "grain", "area", "tile", 1.0, 2.0, 1.0, 1.0, 100.0, 0) for index in range(8)]
+        offers = [offer("s%d" % index, 3.0, 1.0) for index in range(3)] + [offer("late", 5.0, 2.0)]
+        self.compare(bids, offers, None, "ties")
+
+
+class SpeedBoundTests(unittest.TestCase):
+    def test_a_thousand_bids_clear_well_inside_a_generous_bound(self):
+        from sim.economy_timing import make_market
+        bids, offers = make_market(1000, 10)
+        start = time.perf_counter()
+        for _ in range(5):
+            run(bids, offers)
+        self.assertLess((time.perf_counter() - start) / 5, 0.25)
 
 
 if __name__ == "__main__":

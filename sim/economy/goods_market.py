@@ -16,11 +16,15 @@ Choices:
 """
 import math
 from itertools import groupby
-from typing import Dict, List, Optional, Sequence, Tuple
+from operator import attrgetter, itemgetter
+from typing import List, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from .types import AreaId, Bid, ClearingResult, CurrencyId, Fill, GoodId, Offer
+from .goods_market_demand import DemandSchedule
+from .goods_market_fills import buyer_fills, seller_fills
+from .goods_market_solve import solve_price
+from .types import AreaId, Bid, ClearingResult, CurrencyId, GoodId, Offer
 
 MINIMUM_PRICE_SHARE_OF_REFERENCE = declare(
     "MINIMUM_PRICE_SHARE_OF_REFERENCE", 1e-3, kind="temporary_heuristic",
@@ -29,9 +33,11 @@ MINIMUM_PRICE_SHARE_OF_REFERENCE = declare(
     why="Prices clear on positive values, so a seller ready to pay to be rid of a good (reservation "
         "at or below zero) is placed at a token price instead. The token is a small share of the "
         "price scale buyers quote; waste disposal charged to the seller is not yet modelled.")
-
-BISECTION_STEPS = 200
-BISECTION_RELATIVE_WIDTH = 1e-11
+_BID_ORDER = attrgetter("priority", "buyer", "tile")
+_OFFER_ORDER = attrgetter("reservation_price", "seller", "tile")
+_PRIORITY = attrgetter("priority")
+_FIRST = itemgetter(0)
+CHEAP_PASSES_PER_BID = 10
 
 
 def quantity_at(bid: Bid, price: float) -> float:
@@ -56,56 +62,9 @@ def _quantity(floor, flexible, reference, elasticity, budget, price):
     return min(wanted, budget / price)
 
 
-def _demand_function(bids: Sequence[Bid]):
-    rows = [(bid.floor_quantity, bid.flexible_quantity, bid.reference_price, bid.elasticity, bid.budget)
-            for bid in bids if bid.budget > 0.0]
-
-    def demand(price: float) -> float:
-        return sum(_quantity(floor, flexible, reference, elasticity, budget, price)
-                         for floor, flexible, reference, elasticity, budget in rows)
-    return demand
-
-
 def _empty(good, area, currency, price, bids, supply_at_price=0.0) -> ClearingResult:
     unmet = math.fsum(max(0.0, bid.floor_quantity) for bid in bids)
     return ClearingResult(good, area, currency, price, 0.0, 0.0, supply_at_price, unmet, ())
-
-
-def _solve_price(levels: List[Tuple[float, float]], demand) -> float:
-    """levels: (reservation, cumulative supply of sellers at or below it), ascending and positive.
-    Returns the price where demand meets the step supply: at a reservation where demand falls
-    inside the step up, or inside a flat stretch of supply by bisection."""
-    for index, (reservation, supply) in enumerate(levels):
-        if demand(reservation) <= supply:
-            return reservation
-        upper = levels[index + 1][0] if index + 1 < len(levels) else None
-        if upper is not None and demand(upper) >= supply:
-            continue
-        high = upper if upper is not None else _find_upper(demand, reservation, supply)
-        return _bisect(demand, reservation, high, supply)
-    return levels[-1][0]
-
-
-def _find_upper(demand, low: float, supply: float) -> float:
-    high = low * 2.0
-    for _ in range(2000):
-        if demand(high) < supply:
-            return high
-        high *= 2.0
-    return high
-
-
-def _bisect(demand, low: float, high: float, supply: float) -> float:
-    log_low, log_high = math.log(low), math.log(high)
-    for _ in range(BISECTION_STEPS):
-        if log_high - log_low < BISECTION_RELATIVE_WIDTH:
-            break
-        middle = 0.5 * (log_low + log_high)
-        if demand(math.exp(middle)) > supply:
-            log_low = middle
-        else:
-            log_high = middle
-    return math.exp(log_high)
 
 
 def _price_scale(bids: Sequence[Bid], last_price: Optional[float]) -> float:
@@ -118,18 +77,18 @@ def _price_scale(bids: Sequence[Bid], last_price: Optional[float]) -> float:
 def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId,
           currency: CurrencyId, last_price: Optional[float]) -> ClearingResult:
     """Clear one market for one year. Deterministic whatever the order of `bids` and `offers`."""
-    bids = sorted(bids, key=lambda bid: (bid.priority, bid.buyer, bid.tile))
-    offers = sorted((offer for offer in offers if offer.quantity > 0.0),
-                    key=lambda offer: (offer.reservation_price, offer.seller, offer.tile))
+    bids = sorted(bids, key=_BID_ORDER)
+    offers = sorted((offer for offer in offers if offer.quantity > 0.0), key=_OFFER_ORDER)
     held_price = last_price if last_price is not None else 0.0
     if not offers:
         return _empty(good, area, currency, held_price, bids)
 
     minimum_price = MINIMUM_PRICE_SHARE_OF_REFERENCE * _price_scale(bids, last_price)
     effective = [max(offer.reservation_price, minimum_price) for offer in offers]
-    demand = _demand_function(bids)
+    schedule = DemandSchedule(bids)
 
-    if demand(effective[0]) <= 0.0:
+    demand_at_first = schedule.total_at(effective[0])
+    if demand_at_first <= 0.0:
         lowest = offers[0].reservation_price
         price = held_price if last_price is not None and lowest <= last_price else lowest
         supply = math.fsum(offer.quantity for offer, reservation in zip(offers, effective)
@@ -137,44 +96,51 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
         return _empty(good, area, currency, price, bids, supply)
 
     levels, running = [], 0.0
-    for reservation, group in groupby(zip(effective, offers), key=lambda pair: pair[0]):
+    for reservation, group in groupby(zip(effective, offers), key=_FIRST):
         running += math.fsum(offer.quantity for _, offer in group)
         levels.append((reservation, running))
-    price = _solve_price(levels, demand)
+    price = solve_price(levels, schedule.total_at, demand_at_first,
+                        schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID <= len(bids) else None)
 
     eligible = [(reservation, offer) for reservation, offer in zip(effective, offers)
                 if reservation <= price]
     supply = math.fsum(offer.quantity for _, offer in eligible)
-    wanted = demand(price)
-    buyer_fills = _ration_buyers(bids, price, min(wanted, supply))
-    traded = math.fsum(quantity for _, quantity in buyer_fills)
-    seller_fills = _fill_sellers(eligible, traded)
+    wants = schedule.each_at(price)
+    wanted = math.fsum(wants)
+    served = _ration(bids, wants, min(wanted, supply))
+    traded = math.fsum(served)
+    seller_quantities = _fill_sellers(eligible, traded)
 
-    fills = tuple(Fill(bid.buyer, good, area, bid.tile, quantity, price, "buy")
-                  for bid, quantity in buyer_fills if quantity > 0.0)
-    fills += tuple(Fill(offer.seller, good, area, offer.tile, quantity, price, "sell")
-                   for offer, quantity in seller_fills if quantity > 0.0)
-    got: Dict[int, float] = {id(bid): quantity for bid, quantity in buyer_fills}
-    unmet = math.fsum(max(0.0, bid.floor_quantity - got.get(id(bid), 0.0)) for bid in bids)
-    return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, fills)
+    fills = buyer_fills(bids, served, good, area, price)
+    fills.extend(seller_fills(seller_quantities, good, area, price))
+    unmet = math.fsum([max(0.0, bid.floor_quantity - quantity) for bid, quantity in zip(bids, served)])
+    return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, tuple(fills))
 
 
 def _ration_buyers(bids: Sequence[Bid], price: float, available: float) -> List[Tuple[Bid, float]]:
-    """Serve each tier in turn; a tier that cannot be served in full shares what is left pro rata."""
-    result: List[Tuple[Bid, float]] = []
+    """Each buyer's served quantity at a price with `available` to share, in the order of `bids`."""
+    served = _ration(bids, [quantity_at(bid, price) for bid in bids], available)
+    return list(zip(bids, served))
+
+
+def _ration(bids: Sequence[Bid], wants: List[float], available: float) -> List[float]:
+    """Serve each priority tier in turn; a tier that cannot be served in full shares what is left pro rata."""
+    result: List[float] = []
     remaining = available
-    for _tier, tier_group in groupby(bids, key=lambda bid: bid.priority):
-        tier_bids = list(tier_group)
-        wants = [quantity_at(bid, price) for bid in tier_bids]
-        total = math.fsum(wants)
+    start = 0
+    for _tier, tier_group in groupby(bids, key=_PRIORITY):
+        end = start + sum(1 for _ in tier_group)
+        tier_wants = wants[start:end]
+        start = end
+        total = math.fsum(tier_wants)
         if total <= 0.0:
-            result.extend((bid, 0.0) for bid in tier_bids)
+            result.extend([0.0] * len(tier_wants))
         elif remaining >= total:
-            result.extend(zip(tier_bids, wants))
+            result.extend(tier_wants)
             remaining -= total
         else:
             share = remaining / total
-            result.extend((bid, want * share) for bid, want in zip(tier_bids, wants))
+            result.extend([want * share for want in tier_wants])
             remaining = 0.0
     return result
 
@@ -183,7 +149,7 @@ def _fill_sellers(eligible: List[Tuple[float, Offer]], traded: float) -> List[Tu
     """Cheapest reservations sell fully; the group at the marginal reservation shares what is left pro rata."""
     result: List[Tuple[Offer, float]] = []
     remaining = traded
-    for _reservation, group in groupby(eligible, key=lambda pair: pair[0]):
+    for _reservation, group in groupby(eligible, key=_FIRST):
         offers = [offer for _, offer in group]
         total = math.fsum(offer.quantity for offer in offers)
         if remaining >= total:
