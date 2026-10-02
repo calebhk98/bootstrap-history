@@ -296,6 +296,7 @@ class ProjectsState:
 	done_year: Optional[Dict[str, int]] = None
 	operating: Set[str] = field(default_factory=set)
 	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
+	uninformed_failures: Dict[str, int] = field(default_factory=dict)
 	mothballed: Set[str] = field(default_factory=set)
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)
