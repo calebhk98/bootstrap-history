@@ -521,7 +521,7 @@ def _climate_allows(entry, civilization_id, home_regions=None):
     """Whether the territory has a climate the entry's crop grows in; entries naming none always do."""
     if not entry or not entry.get("grown_in_climate_classes"):
         return True
-    from sim.geography import crop_climate
+    from sim.geography.api import crop_climate
     return crop_climate.entry_grows_in(entry, civilization_id, home_regions)
 
 

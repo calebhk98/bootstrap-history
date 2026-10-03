@@ -9,7 +9,7 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
-from sim.geography import tile_names
+from sim.geography.api import tile_names
 from .command_registry import command
 from sim.engine.data import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state import _staff_fraction_note

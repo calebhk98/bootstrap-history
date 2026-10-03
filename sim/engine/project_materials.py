@@ -118,7 +118,7 @@ class ProjectMaterialsMixin:
         """Money the start would spend now on the materials the market can
         deliver, or zero when the start could not pay it."""
         _total, up_front = self.project_material_parts(node_id)
-        up_front *= self.opposition_factor(node_id) * self.material_cost_factor(node_id)
+        up_front *= self.opposition_factor(node_id) * self.geography.material_cost_factor(node_id)
         if up_front <= 0 or not purchase_rule.can_pay(self, up_front):
             return 0.0
         return up_front
@@ -172,7 +172,7 @@ class ProjectMaterialsMixin:
     def buy_project_materials(self, node_id):
         """Pay for what the market can deliver now of the missing materials
         and bank it as stock. Returns the money paid."""
-        factor = self.opposition_factor(node_id) * self.material_cost_factor(node_id)
+        factor = self.opposition_factor(node_id) * self.geography.material_cost_factor(node_id)
         market = self.goods_market
         paid = 0.0
         for row in self.project_material_bill(node_id)["rows"]:
@@ -188,7 +188,7 @@ class ProjectMaterialsMixin:
     def project_material_upfront_refusal(self, node_id):
         """Why the money for the materials due at the start cannot be raised."""
         _total, up_front = self.project_material_parts(node_id)
-        up_front *= self.opposition_factor(node_id) * self.material_cost_factor(node_id)
+        up_front *= self.opposition_factor(node_id) * self.geography.material_cost_factor(node_id)
         if purchase_rule.can_pay(self, up_front):
             return None
         return purchase_rule.refusal_text(

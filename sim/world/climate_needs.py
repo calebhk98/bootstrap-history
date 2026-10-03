@@ -16,7 +16,7 @@ Shelter: floor area under a roof everywhere; walls enclose the dwelling where th
 the balance temperature, thick enough that the inner wall surface stays within a few kelvin of the air.
 """
 from sim.constants import declare
-from sim.geography.climate_temperatures import (
+from sim.geography.api import (
     KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS, daily_temperatures, representative_extremes)
 
 HEATING_BALANCE_TEMPERATURE_CELSIUS = declare(

@@ -26,6 +26,7 @@ import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from .identity_cache import IdentityCache
+from sim.geography.api import haversine_km
 from .mods import get_ordered_mods, load_mod_tree
 from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
@@ -134,21 +135,6 @@ def load_geography() -> JSONDict:
     """
     return json.load(open(GEOFILE))
 
-
-def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Great-circle distance between two lat/lon points, in kilometres.
-
-    Coarse on purpose: geography.json's coordinates are region centroids, not
-    ports, so this is a reach ESTIMATE, the same spirit as everything else in
-    this file being an order-of-magnitude model rather than a survey.
-    """
-    earth_radius_km = 6371.0
-    lat1_rad, lat2_rad = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlmb = math.radians(lon2 - lon1)
-    angular_term = (math.sin(dphi / 2) ** 2
-                    + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlmb / 2) ** 2)
-    return 2 * earth_radius_km * math.asin(math.sqrt(angular_term))
 
 def _load_tech_effects() -> JSONDict:
     path = os.path.join(CIVDIR, "_TECH_EFFECTS.json")

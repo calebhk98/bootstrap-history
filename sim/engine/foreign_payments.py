@@ -11,7 +11,7 @@ import functools
 
 from sim.constants import declare
 from sim.world import balance_of_payments
-from sim.geography import freight_cost, sea_freight
+from sim.geography.api import freight_cost, sea_freight
 from sim.labour.wages import HOURS_PER_WORKER_YEAR
 
 from .data import load_civ

@@ -676,7 +676,7 @@ class MaterialSupplyMixin:
         """What the society's own producers can bring to market a year: the
         national output scaled to the territory held (see _material_market_tonnes
         for the same scale)."""
-        scale = self.pop_scale if emp_key == "charcoal" else self.mineral_scale(emp_key)
+        scale = self.pop_scale if emp_key == "charcoal" else self.geography.mineral_scale(emp_key)
         return self._national_output_tonnes(emp_key) * scale
 
     def _material_market_tonnes(self, emp_key):
@@ -718,7 +718,7 @@ class MaterialSupplyMixin:
         # population. Charcoal stays on pop_scale: it is not mined, it is
         # a local wood market, and THAT genuinely does track how much
         # local economic activity there is to buy firewood from.
-        scale = self.pop_scale if emp_key == "charcoal" else self.mineral_scale(emp_key)
+        scale = self.pop_scale if emp_key == "charcoal" else self.geography.mineral_scale(emp_key)
         market = national * share * scale
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
         # This is the single most useful thing in the geography file.

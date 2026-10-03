@@ -7,13 +7,12 @@ civilisation knows how is a separate gate, the entry's `requires_node`.
 """
 import functools
 
-from sim.engine.data import load_civ, load_geography
-
 CLASSES_FIELD = "grown_in_climate_classes"
 
 
 @functools.lru_cache(maxsize=None)
 def _tiles():
+    from sim.engine.data import load_geography
     tiles = load_geography().get("land_tiles") or {}
     return tiles.get("tiles") or {}, tiles.get("region_to_tiles") or {}
 
@@ -30,6 +29,7 @@ def classes_of_regions(home_regions):
 
 def territory_classes(civilization_id):
     """Koppen classes of the tiles of a civilisation's home regions, read from its data file."""
+    from sim.engine.data import load_civ
     return classes_of_regions(tuple(load_civ(civilization_id).get("home_regions") or ()))
 
 
