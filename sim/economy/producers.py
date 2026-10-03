@@ -56,6 +56,21 @@ OUTPUT_CHANGE_SHARE_PER_YEAR = declare(
         "last year's price swings its whole output, and a chain of such producers feeding each other "
         "amplifies the swing every year instead of settling. A model of hiring and training would "
         "derive the speed per trade.")
+UNSOLD_ASK_MARKDOWN_SHARE = declare(
+    "UNSOLD_ASK_MARKDOWN_SHARE", 0.15, kind="temporary_heuristic",
+    unit="share of the expected price a seller drops in a year its stock went unsold", source=None,
+    confidence="D",
+    why="A seller left holding goods nobody bought at its ask lowers the ask and what it expects to get. "
+        "How fast follows how many buyers there are and what holding costs, and the market's memory "
+        "carries no bid it could read, so one rate for every good. A faster markdown slid thin markets "
+        "down and back up by orders of magnitude (frozen_markets probe of limestone prices).")
+UNSOLD_PROBE_SHARE_OF_CAPACITY = declare(
+    "UNSOLD_PROBE_SHARE_OF_CAPACITY", 0.02, kind="temporary_heuristic",
+    unit="share of capacity counted as sales a producer can still hope for", source=None,
+    confidence="D",
+    why="Sales recorded when the ask was above every bid say nothing about what a lower ask would sell, "
+        "so a producer whose sales fell to nothing still plans a small run to test the market. The "
+        "size of the test follows what a workshop can afford to lose, which is not modelled.")
 STORAGE_COST_PER_UNIT = declare(
     "STORAGE_COST_PER_UNIT", 0.0, kind="temporary_heuristic",
     unit="money per unit of good per year", source=None, confidence="D",
@@ -160,7 +175,23 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView) -> D
     if break_even is not None:
         for good in latest_prices:
             updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
+    for good in unsold_outputs(producer, recipe, view):
+        updated[good] = min(updated[good], producer.expected_prices.get(good, updated[good])
+                            * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE))
     return updated
+
+
+def unsold_outputs(producer: Producer, recipe: Recipe, view: MarketView) -> List[GoodId]:
+    """Outputs it still holds after the year's market beyond what it keeps for its own runs and the
+    working stock its sales call for: all of it was on offer, so it went unsold at the ask."""
+    unsold = []
+    for good in sorted(recipe.outputs):
+        spare = (view.stock(producer.agent_id, good, producer.tile)
+                 - recipe.inputs.get(good, 0.0) * producer.capacity_runs
+                 - inventory.target_stock(producer.expected_sales) * recipe.outputs[good])
+        if spare > 0.0:
+            unsold.append(good)
+    return unsold
 
 
 def _break_even_scale(producer, recipe, view, prices) -> Optional[float]:
@@ -208,8 +239,11 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
         return Plan(0.0, expected_margin_per_run=margin, wanted_runs=wanted)
     # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
     labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost + rent, wages)
+    # an input is bid up to the price at which the run breaks even at the input prices seen now, not at the
+    # lagging expectation the run is planned on, or a scarce input's price ratchets up on its own bid
+    live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
-                       revenue / ratio - variable)
+                       revenue / ratio - live_variable)
     return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted)
 
 
@@ -298,10 +332,12 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView) -> floa
         return math.inf
     good = main_output(recipe)
     held = view.stock(producer.agent_id, good, producer.tile) / recipe.outputs[good]
-    target = inventory.target_stock(producer.expected_sales)
+    # sales recorded at an ask above every bid do not bound what a lower ask sells: keep a probe
+    sales = max(producer.expected_sales, UNSOLD_PROBE_SHARE_OF_CAPACITY * producer.capacity_runs)
+    target = inventory.target_stock(sales)
     if held <= target:
         return math.inf
-    return max(0.0, producer.expected_sales - (held - target))
+    return max(0.0, sales - (held - target))
 
 
 def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> List[LabourBid]:

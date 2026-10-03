@@ -11,6 +11,8 @@ from typing import Dict, List, Tuple
 
 from . import goods_market, households, merchants, producers, settlement, state_budget, taxes
 from .market_memory import market_key
+from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
+                                 price_after_resumed_trade, wanted_at)
 from .protocols import AgentOrders
 from .recipes import input_depth_order
 from .taxes_bases import YearFacts
@@ -76,10 +78,13 @@ def _less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agen
 def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBook) -> None:
     money = setup.currency_id
     rate = view.interest_rate(money)
-    for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
+    shares = merchants.RouteShares()
+    ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
+    first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
+    for merchant in ordered[first:] + ordered[:first]:
         held = _held_stock(record.book, merchant.agent_id)
         orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money),
-                                  held, setup.specs, rate)
+                                  held, setup.specs, rate, shares)
         add_orders(order_book, orders)
 
 
@@ -145,10 +150,16 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             if unmet > 0.0:
                 ledger.unmet_demand[(good, area)] = unmet
             old = record.memory.prices.get(key)
+            quiet_years = note_bids(record.memory, key, bids, offers)
+            dry_years = note_offers(record.memory, key, bids, offers)
             if result.quantity > 0.0:
-                signal = remembered_price(old, result.price, result.quantity, record.memory.volume_weights.get(key, 0.0))
+                usual = record.memory.volume_weights.get(key, 0.0)
+                signal = remembered_price(old, result.price, result.quantity, memory_reference_volume(usual, wanted_at(bids, old)))
+                signal = price_after_resumed_trade(old, signal, quiet_years + dry_years)
             else:
                 signal = _unsold_signal(bids, offers)
+                if signal is None:
+                    signal = price_after_no_bids(old, bids, offers)
             if signal is not None and signal > 0.0:
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
@@ -164,9 +175,9 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
 
 def remembered_price(old, cleared, quantity, usual_volume):
     """The price a market remembers after trading `quantity` at `cleared`: moved from the old price in
-    proportion to the trade against the market's usual volume, so a sliver of trade cleared at a price
-    nobody normally pays does not become the price everyone plans from. A market whose volume stays
-    low learns the new price as its usual volume falls."""
+    proportion to the trade against `usual_volume` (the caller passes the larger of the market's usual
+    volume and what buyers wanted at the old price), so a sliver of trade cleared at a price nobody
+    normally pays does not become the price everyone plans from."""
     if old is None or usual_volume <= 0.0:
         return cleared
     return old + min(1.0, quantity / usual_volume) * (cleared - old)
