@@ -37,17 +37,20 @@ def credit_request(merchant, view, carriage, area_map, cash: float, held_stock, 
     candidates = merchants._candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
     remaining = max(0.0, cash)
     wanted, gain = 0.0, 0.0
-    own = merchants.RouteShares()
-    for rank, good, source, destination, _price_here, outlay, _room, _ceiling in candidates:
-        room = merchants.shared_room(merchant, good, destination, held_stock, own, merchants.RouteShares())
+    own, group = merchants.RouteShares(), merchants.RouteShares()
+    for rank, good, source, destination, _price_here, outlay, _ceiling in candidates:
+        room = merchants.shared_room(merchant, good, source, destination, held_stock, own, group)
         paid_by_cash = min(remaining / outlay, room) if outlay > 0.0 else room
         remaining -= paid_by_cash * outlay
         extra = (room - paid_by_cash) * outlay
         if extra <= 0.0 or math.isnan(extra):
-            own.commit(good, destination.area_id, paid_by_cash)
+            own.commit(good, source.area_id, destination.area_id, paid_by_cash)
+            group.commit(good, source.area_id, destination.area_id, paid_by_cash)
             continue
         extra = min(extra, limit - wanted)
-        own.commit(good, destination.area_id, paid_by_cash + (extra / outlay if outlay > 0.0 else 0.0))
+        planned = paid_by_cash + (extra / outlay if outlay > 0.0 else 0.0)
+        own.commit(good, source.area_id, destination.area_id, planned)
+        group.commit(good, source.area_id, destination.area_id, planned)
         wanted += extra
         gain += extra * -rank
         if wanted >= limit:
