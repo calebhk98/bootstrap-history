@@ -233,7 +233,7 @@ class StaffingMixin:
         own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
         founder_fixed = bool(self.cfg.get("immortal")) or not self.state.founder.founder_alive
         SLACK = self.STAFFING_CLOSURE_SLACK   # close_unstaffed_ventures' own hysteresis band
-        sch_room = self.effective_scholars() + SLACK - sch_used
+        sch_room = self.labour.effective_scholars() + SLACK - sch_used
         art_room = household.artisans + own + SLACK - art_used
         if sch_room > self.STAFFING_WARNING_BAND and art_room > self.STAFFING_WARNING_BAND:
             return []
@@ -318,7 +318,7 @@ class StaffingMixin:
                 headline = ("%s has %s spare %s before it closes"
                             % (name, ("%.1f" % room).rstrip("0").rstrip("."),
                                word))
-            held, in_use = ((self.effective_scholars(), sch_used) if word == "scholars"
+            held, in_use = ((self.labour.effective_scholars(), sch_used) if word == "scholars"
                             else (household.artisans + own, art_used))
             explained = ("spare %s = %s held (you included) + %s allowed before a closure - "
                          "%s in use by running concerns, all in full-time equivalents; a "
@@ -629,7 +629,7 @@ class StaffingMixin:
                 if room < self.AUTO_EXPAND_MIN_ROOM_UNITS:
                     continue
                 places_now = self.institution_places(node_id) * have
-                if self.headcount() < places_now * self.AUTO_EXPAND_MIN_OCCUPANCY:
+                if self.labour.headcount() < places_now * self.AUTO_EXPAND_MIN_OCCUPANCY:
                     continue        # not full enough yet to be worth more
                 per_unit = self.nodes[node_id]["up"] - self.nodes[node_id]["rev"]
                 # AT MOST A QUARTER OF THIS YEAR'S REAL SURPLUS, and at most

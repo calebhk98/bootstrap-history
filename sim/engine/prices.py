@@ -176,8 +176,8 @@ if REPO_ROOT not in sys.path:
 
 from sim import joint_allocation, solve_prices, solve_prices_reach  # noqa: E402
 from sim.validate_production import load_production             # noqa: E402
-from sim.labour import wages                                     # noqa: E402
-from sim.labour import wage_provider                # noqa: E402
+from sim.labour.api import wages                                     # noqa: E402
+from sim.labour.api import wage_provider                # noqa: E402
 from sim.engine import solve_cache                              # noqa: E402
 
 

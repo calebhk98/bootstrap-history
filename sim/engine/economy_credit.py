@@ -529,7 +529,7 @@ class CreditMixin:
         # solvent again.
         if household.capital < -limit and (household.slaves or household.freedmen):
             freed = household.slaves + household.freedmen
-            self.manumit(household.slaves)          # you do not sell them on
+            self.labour.manumit(household.slaves)          # you do not sell them on
             household.freedmen = 0
             household.artisans = max(self.HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR,
                                           household.artisans * self.HOUSEHOLD_DISPERSAL_ARTISANS_RETENTION)
@@ -651,22 +651,22 @@ class CreditMixin:
         if net >= 0:
             return None
         ways = []
-        pool = self.director_pool() - household.wage_hours_this_year
+        pool = self.labour.director_pool() - household.wage_hours_this_year
         if pool > 100:
             # Only suggest work if it gains (selling hours pulls from practice).
             # Name the best-paying trade available.
-            trades = [trade for trade in WAGES if self.trade_available(trade)]
-            best_trade = max(trades, key=self.base_annual_wage,
+            trades = [trade for trade in WAGES if self.labour.trade_available(trade)]
+            best_trade = max(trades, key=self.labour.base_annual_wage,
                          default=None)
             if best_trade:
-                rate = self.base_annual_wage(best_trade) / self.HOURS_PER_PERSON_YEAR
+                rate = self.labour.base_annual_wage(best_trade) / self.HOURS_PER_PERSON_YEAR
                 would_earn = (self.labour_market.in_current_money(pool * rate)
                               * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                                            household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
                 # What those same hours are already earning in the practice.
                 practice = sum(self.nodes[node_id]["rev"] for node_id in self._practice_set())
                 would_cost = (practice * self.PRACTICE_SHARE
-                              * (pool / max(1.0, self.director_pool())))
+                              * (pool / max(1.0, self.labour.director_pool())))
                 if would_earn > would_cost:
                     ways.append("work as a %s: %.0f of your own hours are left "
                                 "this year and would bring in about %s against "
@@ -684,9 +684,9 @@ class CreditMixin:
                         % ", ".join("%s (%+.0f a year)"
                                     % (node_id, self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])
                                     for node_id in losers[:3]))
-        if self.wage_bill() > 0:
+        if self.labour.wage_bill() > 0:
             ways.append("let people go: your payroll is %s a year"
-                        % "{:,.0f}".format(self.wage_bill()))
+                        % "{:,.0f}".format(self.labour.wage_bill()))
         if self.mine_operating_cost() > 0:
             ways.append("close a mine: they cost %s a year whether you use them "
                         "or not" % "{:,.0f}".format(self.mine_operating_cost()))
@@ -811,7 +811,7 @@ class CreditMixin:
         # 28,423 calls; living_cost() was responsible for two of every
         # three of those calls. See PERFORMANCE.md.
         rev = self.revenue() if _rev is None else _rev
-        wages = self.wage_bill()
+        wages = self.labour.wage_bill()
         household_state = self.state.household
         base = self.LIVING_COST_BASE_SUBSISTENCE * price_index         # bare subsistence, one person
         household = (self.LIVING_COST_HOUSEHOLD_BASE * price_index

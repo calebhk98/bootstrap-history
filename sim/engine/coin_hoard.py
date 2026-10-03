@@ -5,7 +5,7 @@ hours by the tonne, priced at the unskilled hour like every other labour cost.
 """
 from sim.constants import declare
 
-from sim.labour import wage_provider
+from sim.labour.api import wage_provider
 
 COIN_GUARD_HOURS_PER_TONNE_YEAR = declare(
     "COIN_GUARD_HOURS_PER_TONNE_YEAR", 60.0, kind="temporary_heuristic",
@@ -30,7 +30,7 @@ class CoinHoardMixin:
         return {"metal": wage_provider.coin_standard(self.civ)["material"],
                 "tonnes": tonnes,
                 "keeping_cost_per_year": (tonnes * COIN_GUARD_HOURS_PER_TONNE_YEAR
-                                          * self.money_per_labour_hour()),
+                                          * self.labour.money_per_labour_hour()),
                 "basis": KEEPING_BASIS}
 
     def coin_hoard_report(self):

@@ -13,8 +13,8 @@ def _trade_remedy(sim, row):
     hours_short = row["demand_hours_this_year"] - row["supply_hours_this_year"]
     people = max(1, math.ceil(hours_short / sim.HOURS_PER_PERSON_YEAR))
     trade = row["trade"]
-    commands = ["%s %s %d" % ("hire" if sim.trade_available(trade) else "train", trade, people)]
-    homeless = people - max(0, math.floor(sim.household_room()))
+    commands = ["%s %s %d" % ("hire" if sim.labour.trade_available(trade) else "train", trade, people)]
+    homeless = people - max(0, math.floor(sim.labour.household_room()))
     if homeless > 0:
         commands.append("buy housing %d" % homeless)
     return {"shortage": trade, "short": "%s hours/year" % "{:,.0f}".format(hours_short),

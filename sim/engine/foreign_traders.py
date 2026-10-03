@@ -103,7 +103,7 @@ class ForeignTradersMixin:
         capital of the modest-merchant kit (the engine's authored capital for one real venture, in
         labourer-years of the labourer's wage), the earnings merchants have kept, less what is sunk
         in carriers."""
-        merchants = self.national_trade_population("merchant")
+        merchants = self.labour.national_trade_population("merchant")
         each = STARTING_KITS["merchant"]["labourer_years"] * self.labour_market.quote_annual("labourer")
         ledgers = self.state.economy.foreign_ledger
         kept = sum(ledger["merchant_retained"] for ledger in ledgers.values())

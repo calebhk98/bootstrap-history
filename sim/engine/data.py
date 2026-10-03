@@ -32,7 +32,7 @@ from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
 from . import energy_prices, money_units, node_revenue
-from sim.labour import wage_provider
+from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)

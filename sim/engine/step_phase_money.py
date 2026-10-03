@@ -163,13 +163,13 @@ class MoneyPhaseMixin:
         # that hides it lies about the cost of everything", and hiding the
         # acquisition from a player is the worst version of that.
         if self.state.founder.policy.get("auto_buy_people", False):
-            if self.state.household.capital > self.book_money(6000.0) and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
-                got = self.buy_slaves(min(6, int(self.state.household.capital // self.book_money(1500.0))))
+            if self.state.household.capital > self.labour.book_money(6000.0) and self.state.household.artisans < 12 and self.running_with_mechanic("hosts_bought_people"):
+                got = self.labour.buy_slaves(min(6, int(self.state.household.capital // self.labour.book_money(1500.0))))
                 if got:
                     self.state.household.log.append((self.state.scenario.year, "bought %d people for the workshop" % got))
         if self.state.founder.policy.get("auto_manumit", not self.manual) and self.state.household.slaves:
             if self.rng.random() < self.AUTO_MANUMIT_ANNUAL_CHANCE:
-                freed = self.manumit(max(1, self.state.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
+                freed = self.labour.manumit(max(1, self.state.household.slaves // self.AUTO_MANUMIT_SHARE_DIVISOR))
                 if freed:
                     self.state.household.log.append((self.state.scenario.year, "freed %d people" % freed))
         # currency debasement and war damage now come from the civilization's

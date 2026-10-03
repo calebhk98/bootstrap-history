@@ -178,7 +178,7 @@ class ProgressMixin:
         "booked" when it can but the portfolio's demand exceeds it, else None.
         `total_demand` None means the caller already knows the project fell
         short, so what the society can field decides between the two."""
-        supply = self.hours_you_can_call_on(trade_id)
+        supply = self.labour.hours_you_can_call_on(trade_id)
         if supply < need:
             return "staffing"
         if total_demand is None or total_demand > supply + 1e-6:
@@ -222,7 +222,7 @@ class ProgressMixin:
                 by_trade[trade_id].append(node_id)
         out = {}
         for trade_id in sorted(demand):
-            supply = self.hours_you_can_call_on(trade_id)
+            supply = self.labour.hours_you_can_call_on(trade_id)
             out[trade_id] = {"demand_hours_this_year": round(demand[trade_id], 1),
                       "supply_hours_this_year": round(supply, 1),
                       "oversubscribed": bool(demand[trade_id] > supply + 1e-6),
@@ -262,7 +262,7 @@ class ProgressMixin:
                          for trade_id, entry in plan.items()}
         for trade_id, plan_entry in sorted(plan.items()):
             left, nominal = plan_entry["left"], plan_entry["nominal"]
-            have = max(0.0, self.hours_you_can_call_on(trade_id)
+            have = max(0.0, self.labour.hours_you_can_call_on(trade_id)
                        - projects.trade_hours_used.get(trade_id, 0.0))
             # Ceiling is crew, not calendar. Take what's useful and available.
             drawn = min(left, plan_entry["ceiling"], have)
@@ -278,7 +278,7 @@ class ProgressMixin:
             frac *= worst
             short_trades = sorted(
                 trade_id for trade_id, left in lab_left.items()
-                if left > 0 and (self.hours_you_can_call_on(trade_id)
+                if left > 0 and (self.labour.hours_you_can_call_on(trade_id)
                                   - projects.trade_hours_used.get(trade_id, 0.0))
                 < min(left, node["lab"][trade_id] / max(1.0, node["yrs"])))[:3]
             project_state["short_of_trade"] = short_trades

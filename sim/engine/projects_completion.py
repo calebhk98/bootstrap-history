@@ -301,7 +301,7 @@ class CompletionMixin:
         if not self.policy.get("auto_hire", not self.manual):
             grant = self.mechanic(node_id, "staff_grant")
             if grant:
-                self._grant_staff(**grant)
+                self.labour.grant_staff(**grant)
         if self.is_venture(node_id) and not self.policy.get("auto_open", not self.manual):
             # Built is not open: say what is switched off until it is opened.
             benefit = self.NOT_OPERATING_BENEFIT.get(node_id)

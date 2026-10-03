@@ -294,14 +294,14 @@ class MaterialSupplyMixin:
         commodity = self._commodity_ledger().commodities.get(tag)
         if commodity:
             price = float(commodity.get("base_price_denarii_per_kg", 0.0) or 0.0)
-            return self.book_money(price) or None
+            return self.labour.book_money(price) or None
         return None
 
     def _denarii_price_per_kg(self, tag):
         """The price in book denarii, the unit the output and market-share
         curves below were fitted in."""
         price = self._material_price_per_kg(tag)
-        return None if price is None else price / self.book_money(1.0)
+        return None if price is None else price / self.labour.book_money(1.0)
 
     def _material_tag(self, mat_key):
         """Which (commodity id, supply-pool tag) a raw material key draws

@@ -660,7 +660,7 @@ class StartingMixin:
         # hiring advice: no price or school makes up a missing population.
         if ignore_trade:
             return None
-        shortfall = self.project_staffing_shortfall(node)
+        shortfall = self.labour.project_staffing_shortfall(node)
         if shortfall:
             return False, (shortfall if _why else None)
         return None
@@ -677,7 +677,7 @@ class StartingMixin:
         # Exactly the bug the craft gate below was fixed for, never extended
         # to scholars - see scholar_hands_available() in labour.py, which is
         # craft_hands_available() with the trade family changed.
-        if node["sch"] > self.scholar_hands_available():
+        if node["sch"] > self.labour.scholar_hands_available():
             # _staff_advice is pure (labour.py: no rng, no log, no mutation -
             # it only reads is_venture/is_visible/nodes/artisans/scholars),
             # but it walks STAFF_SOURCES and can itself call is_visible, so
@@ -686,9 +686,9 @@ class StartingMixin:
                             "counting people on your staff and yourself, plus "
                             "any hours already bought under contract as that "
                             "share of one more. %s"
-                           % (node["sch"], self.scholar_hands_available(),
-                              self._staff_advice(
-                                  "scholars", node["sch"] - self.scholar_hands_available())))
+                           % (node["sch"], self.labour.scholar_hands_available(),
+                              self.labour.staff_advice(
+                                  "scholars", node["sch"] - self.labour.scholar_hands_available())))
                            if _why else None)
         return None
 
@@ -710,7 +710,7 @@ class StartingMixin:
         #
         # Buying a jobbing carpenter for a season to raise your workshop is
         # what a person in this position actually did.
-        if node["art"] > self.craft_hands_available():
+        if node["art"] > self.labour.craft_hands_available():
             # A SHARE OF A YEAR, NOT ONLY BODIES. craft_hands_available()
             # adds hours already bought under contract as that fraction of
             # one more craftsman's year (see its own docstring: "a year of
@@ -722,9 +722,9 @@ class StartingMixin:
                            "counting people on your staff plus any hours "
                            "already bought under contract as that share of "
                            "one more. %s"
-                           % (node["art"], self.craft_hands_available(),
-                              self._staff_advice(
-                                  "artisans", node["art"] - self.craft_hands_available())))
+                           % (node["art"], self.labour.craft_hands_available(),
+                              self.labour.staff_advice(
+                                  "artisans", node["art"] - self.labour.craft_hands_available())))
                            if _why else None)
         return None
 
@@ -734,7 +734,7 @@ class StartingMixin:
         # be built by smiths, and in 100 AD there is no such person as a private
         # engineer: the wage table says so itself. You make one by teaching one.
         absent = [] if ignore_trade else sorted(trade_id for trade_id in node["lab"]
-                                                if not self.trade_available(trade_id))
+                                                if not self.labour.trade_available(trade_id))
         if absent:
             return False, (("this needs %s and there are none in this society. "
                            'Teach one: {"cmd":"train","trade":"%s","n":2} '
@@ -755,8 +755,8 @@ class StartingMixin:
         # work that lands the year they qualify is the right thing to do.
         _none_left = [] if ignore_trade else sorted(
             trade_id for trade_id, want in (node["lab"] or {}).items()
-            if want > 0 and self.market_supply(trade_id) <= 0.0
-            and self._trade_headcount_pending(trade_id) <= 0.0)
+            if want > 0 and self.labour.market_supply(trade_id) <= 0.0
+            and self.labour.trade_headcount_pending(trade_id) <= 0.0)
         if _none_left:
             return False, (("this needs %s and there is not one left here to do "
                            "it: you taught the trade and nobody is currently "

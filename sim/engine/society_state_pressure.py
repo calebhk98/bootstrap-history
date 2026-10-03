@@ -820,7 +820,7 @@ class StatePressureMixin:
         times more noticeable than the first.
         """
         household = self.state.household
-        return self.visible_scale(self.headcount(), household.capital, household.eminence)
+        return self.visible_scale(self.labour.headcount(), household.capital, household.eminence)
 
     def visible_scale(self, headcount, wealth, eminence):
         """household_scale's rule for any taxpayer: what an observer can count
@@ -828,7 +828,7 @@ class StatePressureMixin:
         head_s = min(1.0, math.sqrt(max(0.0, headcount)
                                     / self.HOUSEHOLD_HEADCOUNT_SATURATES_AT))
         wealth_s = min(1.0, max(0.0, wealth)
-                       / (self.HOUSEHOLD_WEALTH_SATURATES_AT * self.base_annual_wage("labourer")))
+                       / (self.HOUSEHOLD_WEALTH_SATURATES_AT * self.labour.base_annual_wage("labourer")))
         danger = self.cfg["eminence_danger"]
         emin_s = min(1.0, max(0.0, eminence) / danger)
         return (self.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_s

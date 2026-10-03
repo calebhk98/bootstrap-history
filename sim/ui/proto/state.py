@@ -132,7 +132,7 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
         need = min(want / max(1.0, node["yrs"]), lab_left.get(trade, want))
         if need <= 0:
             continue
-        supply = sim.hours_you_can_call_on(trade)
+        supply = sim.labour.hours_you_can_call_on(trade)
         total_demand = portfolio_demand.get(trade, {}).get(
             "demand_hours_this_year", need)
         # The society's capacity is the durable fact a player can act on;
@@ -221,7 +221,7 @@ def _waiting_on(sim, nodes, node_id, progress, bill):
                 "this year's %s directed hours; 'portfolio' shows what "
                 "each one is getting and why"
                 % (_rank, _count, "{:,.0f}".format(_total or 0.0)))
-    free_hours = max(0.0, sim.director_pool() - sim.director_hours_committed())
+    free_hours = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
     return ("your hours: %s of your own hours of work are still to do, and "
             "you have %s uncommitted this year"
             % ("{:,.0f}".format(progress["ph_left"]), "{:,.0f}".format(free_hours)))
@@ -410,8 +410,8 @@ def _agent_state_headline_money(sim, end_year):
         # under one label would read a growing payroll as a spiralling
         # cost of living to anyone watching only `state`, one of the four
         # screens the welcome text calls essential.
-        "living_cost": round(sim.living_cost() - sim.wage_bill(), 1),
-        "wage_bill": round(sim.wage_bill(), 1),
+        "living_cost": round(sim.living_cost() - sim.labour.wage_bill(), 1),
+        "wage_bill": round(sim.labour.wage_bill(), 1),
         "mine_operating_cost": round(sim.mine_operating_cost(), 1),
     }
 
@@ -449,9 +449,9 @@ def _agent_state_operations(sim, nodes):
         # Which people each shut, profitable concern is short of.
         "shut_for_want_of_staff": shut_for_want_of_staff(sim, nodes),
         # Specialists on the payroll that no project or open concern uses.
-        "idle_specialists": sim.idle_specialists() or None,
+        "idle_specialists": sim.labour.idle_specialists() or None,
         # Open concerns that one death would close.
-        "depends_on_one_person": sim.sole_supervisors() or None,
+        "depends_on_one_person": sim.labour.sole_supervisors() or None,
     }
 
 
@@ -522,7 +522,7 @@ def _agent_state_training_and_hours(sim, active, full):
         # FREE is the pool less the hours already spent on wage work, or
         # this would report free hours that `work` then refuses to honour.
         "founder_hours_available": round(
-            max(0.0, sim.director_pool() - sim.director_hours_committed()), 1),
+            max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed()), 1),
         # FREE HOURS, SHOUTED, WHEN THEY ARE GOING TO WASTE, not one quiet
         # number among fifty: running a single calendar-floor project can
         # leave thousands of founder-hours spent on nothing for a whole
@@ -564,12 +564,12 @@ def _agent_state_training_and_hours(sim, active, full):
              "exclusive research time - start something else alongside "
              "it while it runs. 'available' or 'stuck' says what you "
              "could begin today; 'idle' splits the hours and names the delay."
-             % "{:,.0f}".format(max(0.0, sim.director_pool()
-                                    - sim.director_hours_committed())))
+             % "{:,.0f}".format(max(0.0, sim.labour.director_pool()
+                                    - sim.labour.director_hours_committed())))
             if (active
                 and all(value["founder_hours_left"] <= 0 for value in active.values())
-                and max(0.0, sim.director_pool()
-                        - sim.director_hours_committed()) > 200)
+                and max(0.0, sim.labour.director_pool()
+                        - sim.labour.director_hours_committed()) > 200)
             # AND WHEN NOTHING IS RUNNING AT ALL, which the first branch cannot
             # see because it requires `active` to be non-empty. A player who
             # steps a year with an empty slate loses those hours exactly as
@@ -577,11 +577,11 @@ def _agent_state_training_and_hours(sim, active, full):
             else ("%s founder-hours this year are going into nothing at all: "
                   "you have no work in hand. Hours do not carry to next year. "
                   "'available' or 'stuck' says what you could begin today; 'idle' splits the hours and names the delay."
-                  % "{:,.0f}".format(max(0.0, sim.director_pool()
-                                         - sim.director_hours_committed()))
+                  % "{:,.0f}".format(max(0.0, sim.labour.director_pool()
+                                         - sim.labour.director_hours_committed()))
                   if (not active
-                      and max(0.0, sim.director_pool()
-                              - sim.director_hours_committed()) > 200)
+                      and max(0.0, sim.labour.director_pool()
+                              - sim.labour.director_hours_committed()) > 200)
                   else None)),
         "founder_hours_sold_for_wages_this_year": round(
             sim.wage_hours_this_year, 1),
@@ -661,7 +661,7 @@ def _agent_state_standing(sim):
             "elite": round(float(sim.civ.get("literacy_elite", 0.0)), 3),
             "elite_ceiling": round(sim.literacy_ceiling_elite(), 3),
             "schools_actually_teaching": sim._schooling_flow() > 0.0,
-            "farm_share_of_working_hours": round(sim.farm_share_of_hours(), 3),
+            "farm_share_of_working_hours": round(sim.labour.farm_share_of_hours(), 3),
         },
         # HOW MUCH OF WHAT YOU RUN HAS LEAKED TO COMPETITORS. See
         # SocietyMixin.diffusion_share/diffusion_index (society.py) for what
@@ -695,15 +695,15 @@ def _agent_state_progress(sim, active):
         # to try a staff-gated project never sees it at all. Tell them
         # unprompted.
         "how_to_grow_staff": {
-            "scholars": sim._staff_advice("scholars"),
-            "artisans": sim._staff_advice("artisans"),
+            "scholars": sim.labour.staff_advice("scholars"),
+            "artisans": sim.labour.staff_advice("artisans"),
         },
         "where_the_money_comes_from": sim.revenue_sources(),
         "employees": {trade: round(value, 2) for trade, value in sorted(sim.employees.items()) if value > 0.005},
         "employees_total": round(sum(sim.employees.values()), 2),
         "household_places_used_of_all": "%.1f of %.1f"
-            % (sim.headcount(), sim.headcount() + max(0.0, sim.household_room())),
-        "annual_wage_bill": round(sim.wage_bill(), 1),
+            % (sim.labour.headcount(), sim.labour.headcount() + max(0.0, sim.labour.household_room())),
+        "annual_wage_bill": round(sim.labour.wage_bill(), 1),
         # WHAT THE PROMPT'S sch/art MEAN: those two figures count yourself
         # and any hours you have bought, so the prompt can read "sch 1
         # art 1" on a turn where you employ nobody, which looks like a
@@ -714,7 +714,7 @@ def _agent_state_progress(sim, active):
             "%.1f craft hands. That pair is what the prompt shows and what "
             "'why' and 'start' test a project against; the count above is "
             "people on your payroll."
-            % (sim.effective_scholars(), sim.craft_hands_available())),
+            % (sim.labour.effective_scholars(), sim.labour.craft_hands_available())),
         # FRACTIONS ARE REAL, NOT A DISPLAY GLITCH: staff grow and decay
         # gradually (hiring phases in, training takes years, attrition is
         # a yearly 3.5%), so at any given moment a trade you have IS a
@@ -796,7 +796,7 @@ def _agent_state_risk_and_pressure(sim):
         "forest_ha": round(sim.forest_ha, 1),
         "mine_capacity": {material: round(value, 1) for material, value in sim.mine_capacity.items()},
         "slaves": sim.slaves, "freedmen": sim.freedmen,
-        "scholars_including_you": round(sim.effective_scholars(), 2),
+        "scholars_including_you": round(sim.labour.effective_scholars(), 2),
     }
 
 

@@ -110,7 +110,7 @@ class ProductionMixin:
         # outlives you; what you personally did does not.
         if not self.state.founder.founder_alive:
             return 0.0
-        pool = self.director_pool()
+        pool = self.labour.director_pool()
         if pool <= 0:
             return 1.0
         sold = min(pool, self.state.household.wage_hours_this_year)
@@ -716,7 +716,7 @@ class ProductionMixin:
         places = self.institution_places(node_id) * _units
         if places <= 0:
             return upkeep_amount
-        used = min(1.0, self.headcount() / max(1.0, places))
+        used = min(1.0, self.labour.headcount() / max(1.0, places))
         return upkeep_amount * (self.INSTITUTION_FLOOR
                      + (1.0 - self.INSTITUTION_FLOOR) * used)
 

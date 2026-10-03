@@ -75,7 +75,7 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		visibility = self.base_visibility(node_id)
 		if location is None:
 			return visibility
-		distance = self._sim.distance_to_tile_km(location)
+		distance = self._sim.labour.distance_to_tile_km(location)
 		return visibility / (1.0 + distance / OBSERVATION_RANGE_KM)
 
 	def state_weights(self) -> Dict[str, float]:
@@ -135,9 +135,9 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		"""People of a trade left in the pool for this actor after the founder's staff and
 		everyone else's. None for a trade nobody here practises yet, which has no pool."""
 		sim = self._sim
-		if not sim.trade_available(trade) or trade in TRADES_ABSENT:
+		if not sim.labour.trade_available(trade) or trade in TRADES_ABSENT:
 			return None
-		exist = sim.people_who_exist(trade)
+		exist = sim.labour.people_who_exist(trade)
 		founder = sim.state.household.employees.get(trade, 0.0)
 		return max(0.0, exist - founder - sim.actors.staff_fte(trade, excluding=actor_id))
 

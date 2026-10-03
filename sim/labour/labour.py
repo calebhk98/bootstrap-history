@@ -50,3 +50,13 @@ class LabourMixin(CapacityMixin, PopulationMixin, SettlementMixin, WagesMixin, T
     neither knows nor needs to know that the 50 methods it sees on
     LabourMixin are spread across five files rather than gathered in one.
     """
+
+    @property
+    def labour(self):
+        """The labour port: how code outside sim/labour/ asks about staff, wages and settlement.
+        Cached on the instance and not saved."""
+        port = self.__dict__.get("_labour_port")
+        if port is None:
+            from .port import LabourPort
+            port = self.__dict__["_labour_port"] = LabourPort(self)
+        return port

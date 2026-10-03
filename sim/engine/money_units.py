@@ -32,7 +32,7 @@ class PricedInLabourHours:
 
     def __get__(self, sim, owner=None):
         hours = getattr(owner if sim is None else sim, self.hours_name)
-        return hours if sim is None else hours * sim.money_per_labour_hour()
+        return hours if sim is None else hours * sim.labour.money_per_labour_hour()
 
 
 def _book_to_hours(denarii: float) -> float:
