@@ -6,7 +6,7 @@ In every civilisation only a small share of the hours households offer is hired,
 
 This, not the wage rule, is what Complaint 388 measures: the wage in kg of wheat is the subsistence basket's cost over the wheat price. Wheat is a minor and dear food in Rome and Mexica, so the wheat wage reads low there; in food-need units the civilisations are close. Mexica also has no maize good in the data.
 
-Evidence: shares of hours hired, wage over floor and price over labour cost were measured by decomposition scripts in a scratch directory (not committed; no command prints them yet). The figures are in Complaints/reports/agent-economy-review.md. `python3 sim/economy_validate.py` shows the wheat wage.
+Evidence: shares of hours hired, wage over floor and price over labour cost were measured by decomposition scripts in a scratch directory (not committed; no command prints them yet). The figures are in Complaints/reports/agent-economy-review-round-three.md. `python3 sim/economy_validate.py` shows the wheat wage.
 
 What it would take:
 - Entry that competes margins away without chasing one-year price spikes (an entry-on-price rule was tried; see the review report).
