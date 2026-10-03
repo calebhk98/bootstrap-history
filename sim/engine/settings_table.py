@@ -153,8 +153,8 @@ def display_value(key, cfg):
         return "%d columns (%s)" % (settings.resolve_display_width(cfg),
                                     "override" if overridden else "detected from your terminal")
     if spec.kind == "units":
-        from sim.ui import cli_units_options
-        return cli_units_options.summary_line(cfg)
+        from sim.engine.units_summary import summary_line
+        return summary_line(cfg)
     if spec.kind == "flag":
         return "on" if value else "off"
     if spec.kind == "seed":

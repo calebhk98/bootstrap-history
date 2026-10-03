@@ -6,16 +6,11 @@ writes it. Commands still take the units their help names; this changes only
 what is shown.
 """
 from sim.engine import settings, units
+from sim.engine.units_summary import summary_line  # noqa: F401
 
 
 def apply_saved_preferences(cfg):
     units.set_preferences(settings.resolve_display_units(cfg))
-
-
-def summary_line(cfg):
-    chosen = settings.resolve_display_units(cfg)
-    return ", ".join("%s: %s" % (dimension, chosen.get(dimension, "as the game writes it"))
-                     for dimension in units.registry()["dimensions"])
 
 
 def edit_display_units(cfg, civ_id, ask_line):

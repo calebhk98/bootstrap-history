@@ -131,7 +131,7 @@ from sim.engine.data import TRADES_ABSENT, closure, load, load_civ, resolve_goal
 from sim.engine.core import Sim
 
 from sim.engine.default_civilisation import default_civilisation_id
-from sim.ui.cli import DetRNG, ensure_fixed_hash_seed
+from sim.engine.run_setup import DetRNG, ensure_fixed_hash_seed
 
 from sim import planner as _planner
 
