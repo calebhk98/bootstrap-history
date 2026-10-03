@@ -142,24 +142,42 @@ class PackageWallTests(unittest.TestCase):
             elsewhere = [path for path in every_file if not path.startswith(package_dir)]
             _, methods = defined_names(inside)
             methods.discard(package)
-            methods -= set().union(*(defined_names([path])[1] | self._public_defs(path) for path in elsewhere))
+            methods -= set().union(*(defined_names([path])[1] | self._sim_defs(path) for path in elsewhere))
             for path in outside_files(package):
-                for node in ast.walk(parse(path)):
-                    if (isinstance(node, ast.Attribute) and node.attr in methods
-                            and not (isinstance(node.value, ast.Attribute) and node.value.attr == package)):
+                for node, on_sim in sim_attributes(parse(path)):
+                    if on_sim and node.attr in methods:
                         self.fail("%s:%d calls %s off Sim; use .%s.%s" % (
                             os.path.relpath(path, ROOT), node.lineno, node.attr, package, node.attr))
 
     @staticmethod
-    def _public_defs(path):
-        """Public names defined by classes outside the package, so a shared name is not flagged."""
+    def _sim_defs(path):
+        """Names `class Sim` defines itself, so a name it overrides is not flagged."""
         names = set()
         for node in ast.walk(parse(path)):
-            if isinstance(node, ast.ClassDef):
-                for item in node.body:
-                    if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and not item.name.startswith("_"):
-                        names.add(item.name)
+            if isinstance(node, ast.ClassDef) and node.name == "Sim":
+                names.update(item.name for item in node.body if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)))
         return names
+
+
+SIM_NAMES = {"sim", "_sim"}
+
+
+def sim_attributes(tree):
+    """Every attribute access, with whether its receiver is the Sim: `sim.x`, `self._sim.x`,
+    `self.sim.x`, or `self.x` inside `class Sim` or a `*Mixin` class (which `Sim` inherits)."""
+    def visit(node, in_sim_class):
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, ast.ClassDef):
+                visit(child, child.name == "Sim" or child.name.endswith("Mixin"))
+                continue
+            if isinstance(child, ast.Attribute):
+                receiver = child.value
+                on_sim = ((isinstance(receiver, ast.Name) and (receiver.id in SIM_NAMES
+                                                               or (receiver.id == "self" and in_sim_class)))
+                          or (isinstance(receiver, ast.Attribute) and receiver.attr in SIM_NAMES))
+                yield child, on_sim
+            yield from visit(child, in_sim_class)
+    yield from visit(tree, False)
 
 
 if __name__ == "__main__":

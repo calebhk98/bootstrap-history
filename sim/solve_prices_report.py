@@ -21,7 +21,6 @@ REPO_ROOT = os.path.dirname(HERE)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 from sim import joint_allocation, tool_costs        # noqa: E402
-from sim.tool_costs import wage_document as document_of_wages  # noqa: E402
 from sim.solve_prices_reach import solve_priced_materials  # noqa: E402
 from sim.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
 from sim.world import land                      # noqa: E402  (RENT ON ARABLE LAND, in _print_rent_summary)
@@ -724,7 +723,7 @@ def main(argv=None):
 
     nodes = tool_costs.load_tree_nodes()
     try:
-        wage_document = document_of_wages(tool_costs.runtime_wages())
+        wage_document = tool_costs.wage_document(tool_costs.runtime_wages())
     except tool_costs.CostsUnavailable as problem:
         print("PRICES UNAVAILABLE: %s. The solver takes its wage ratios from the "
               "live wage provider and will not substitute a book value." % problem)

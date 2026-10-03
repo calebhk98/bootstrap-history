@@ -110,10 +110,6 @@ class SimWorld(BudgetView, RevenueView, GroupView, DisclosureView, CapitalView, 
 		"""The one labour market every employer asks: quote, hire, release, read the pressure."""
 		return self._sim.economy.labour
 
-	def hire(self, employer: Any, trade: str, hours: float) -> Any:
-		"""An employer takes on `hours` of a trade: the labour market feels the demand."""
-		return self.labour_market.hire(employer, trade, hours)
-
 	@property
 	def hours_per_person_year(self) -> float:
 		return self._sim.HOURS_PER_PERSON_YEAR

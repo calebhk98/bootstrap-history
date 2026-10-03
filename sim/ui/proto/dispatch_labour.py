@@ -200,14 +200,14 @@ def _cmd_labour(sim, nodes, cmd, ended):
         # THE PRICE YOU ACTUALLY PAY, not the table price: leaning on a
         # trade's local supply bids it up, and the premium has to appear
         # here, not only in the bill.
-        _lpf = sim.labour_market.price_factor(trade)
+        _lpf = sim.labour.market.price_factor(trade)
         entry = {"trade": trade,
-             "a_year_of_one": round(sim.labour_market.quote_annual(trade), 0),
+             "a_year_of_one": round(sim.labour.market.quote_annual(trade), 0),
              "you_employ": round(sim.employees.get(trade, 0.0), 2)}
         if long:
             entry["wage_foundation"] = {
                 "base_for_skill_and_difficulty": round(sim.labour.base_annual_wage(trade), 2),
-                **{factor_key: round(value, 3) for factor_key, value in sim.labour_market.cost_factors(trade).items()},
+                **{factor_key: round(value, 3) for factor_key, value in sim.labour.market.cost_factors(trade).items()},
                 "demographic_scarcity": round(sim.wage_index, 3),
                 "local_trade_scarcity": round(_lpf, 3),
                 "society_price_level": round(sim.price_index, 3),
@@ -252,7 +252,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                             "back down" % trade)
         if long:
             entry.update({"kind": trade_family(trade),
-                      "wage_per_hour": round(sim.labour_market.in_current_money(sim.labour.wage_per_hour(trade)), 3),
+                      "wage_per_hour": round(sim.labour.market.in_current_money(sim.labour.wage_per_hour(trade)), 3),
                       # SPLIT, because the total includes your own people
                       # and calling all of it "the market" made hiring look
                       # like it created smiths out of nothing.
@@ -292,9 +292,9 @@ def _cmd_labour(sim, nodes, cmd, ended):
             # full account; this is that forecast, priced and put on the
             # one screen a player actually reads before committing.
             if sim.labour.trade_available(trade):
-                _lpf_after = sim.labour_market.price_factor_after(trade, 1.0)
+                _lpf_after = sim.labour.market.price_factor_after(trade, 1.0)
                 _rate_after = round(
-                    sim.labour_market.unscarce_annual(trade) * _lpf_after, 0)
+                    sim.labour.market.unscarce_annual(trade) * _lpf_after, 0)
                 # ALWAYS SHOWN, QUIETLY: this is the number the task is
                 # actually about, and it belongs on the screen whether or
                 # not the move is large enough to also earn the banner
