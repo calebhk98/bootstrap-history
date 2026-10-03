@@ -12,7 +12,8 @@ from typing import Any, Mapping, Optional, Tuple
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from sim.world import demand, transport
+from sim.geography.api import transport
+from sim.world import demand
 
 # Units written into an id the way demand reads `_kg`, `_g`, `_t`; the tonne spelled out is one more.
 EXTRA_MASS_UNIT_SUFFIXES = {"_tons": KILOGRAMS_PER_TONNE}

@@ -36,7 +36,8 @@ def untraded_wages(wages: Mapping[str, float], offered_keys: Iterable[str],
 def follow_pay(workforce: Mapping[str, float], pay_over_ask: Mapping[str, float],
                wanted_workers: Mapping[str, float]) -> Dict[str, float]:
     """One tile's workers by trade after a year's moves toward trades paying more over their ask than the
-    tile's workers earn on average, each filling a share of the room its employers bid for."""
+    tile's workers earn on average: each draws a share of its unfilled posts, or of the hands its employers
+    bid for when its posts are filled but its pay is still far over its ask."""
     working = {trade: count for trade, count in workforce.items() if count > 0.0 and trade in pay_over_ask}
     total = math.fsum(working.values())
     if total <= 0.0:
@@ -44,8 +45,11 @@ def follow_pay(workforce: Mapping[str, float], pay_over_ask: Mapping[str, float]
     average = math.fsum(count * pay_over_ask[trade] for trade, count in working.items()) / total
     arrivals: Dict[str, float] = {}
     for trade, ratio in sorted(pay_over_ask.items()):
-        room = wanted_workers.get(trade, 0.0) - workforce.get(trade, 0.0)
-        if room > 0.0 and ratio > average:
+        wanted = wanted_workers.get(trade, 0.0)
+        # a trade paid far over its ask draws hands even with every post filled: the extra supply is what
+        # brings its wage down to the ask, so a filled thin market cannot hold a runaway wage
+        room = max(wanted - workforce.get(trade, 0.0), wanted * min(1.0, ratio / average - 1.0))
+        if wanted > 0.0 and room > 0.0 and ratio > average:
             arrivals[trade] = PAY_MOBILITY_SHARE_PER_YEAR * room * min(1.0, ratio / average - 1.0)
     sources = {trade: count for trade, count in working.items() if pay_over_ask[trade] <= average}
     pool = math.fsum(sources.values())
