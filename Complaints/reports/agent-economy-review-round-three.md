@@ -229,6 +229,41 @@ Over six spin-up draws:
 The remaining limestone cycling traces to merchants bidding in every area at once, for far more than
 local supply, at very high price ceilings. That and the Norse case are being traced.
 
+## Merged: the frozen-market package
+
+On top of the frozen-market fix, three more changes were merged.
+
+- **Merchants' room.** Each merchant bid a destination's whole room once per source area, so nine
+  merchants together bid about 245 units for a market of about 1. The room is now used up across a
+  merchant's own sources and shared among rival merchants, and no source is bid for more than it
+  usually sells (`merchants_shares.py`).
+- **Producers' input ceilings.** A producer's bid ceiling for an input used a margin computed at lagging
+  expected prices. A brass maker could therefore raise its copper bid by 15-17% a year for twenty years
+  while each run lost money. The margin now uses live input prices.
+- **Resumed trade.** A sliver of trade can no longer reset a market's remembered price. A year's
+  trade counts in full only once it reaches a share of what buyers wanted at the remembered price.
+
+Over 54 runs (six spin-up draws, three seeds each; Rome, Norse and England), the package against the
+branch tip:
+
+| | before | after |
+|---|---|---|
+| median metal volatility, all runs | 0.18 | 0.11 |
+| largest metal volatility | 0.38 | 0.43 |
+| runs with metal volatility above 0.3 | 10 | 10 |
+| Rome runs above 0.3 | 3 | 0 |
+| Norse median metal volatility | 0.10 | 0.29 |
+| grain volatility | 0.133 | 0.121 |
+| hungry mean | 0.0059 | 0.0039 |
+
+The largest one-year brass jump in a traced Rome run fell from about 24,000-fold to 2.2-fold.
+
+The root of most remaining metal trouble is on the demand side. Households bid for goods bought "for
+variety", such as brass and bronze, with no price ceiling, so a sliver of supply clears at the price
+where a whole cohort's budget buys it. The owner's rule for the fix: a household cannot pay more for a
+unit than its own disposable budget after floors allows. A tier's price ceiling is therefore one
+household's budget, not the cohort's.
+
 ## Pending
 
-The merchant bids and the Norse metal case on top of the frozen-market fix.
+Budget-limited household price ceilings.
