@@ -18,6 +18,7 @@ from sim.world.need_satiation import apply_satiation
 
 from . import currency
 from .credit_view import claims_of
+from .households_ability import affordable_goods, household_budget_for_need
 from .households_basket import Basket, PricedNeed, need_prices, price_ceilings, satiation_limit
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
@@ -115,8 +116,14 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     for need in priced:
         need_id = need.spec.need_id
         ceilings = need.ceilings or price_ceilings(need.goods)
+        affordable, affordable_share, household_cap = affordable_goods(
+            need.goods, household_budget_for_need(totals[need_id], need.price_index, cohort.people),
+            need.spec.subsistence_per_person > 0.0)
         for (good, price, effect, share), ceiling in zip(need.goods, ceilings):
-            per_unit = need.price_index * share / price
+            if not affordable[good]:
+                continue
+            ceiling = min(ceiling, household_cap)
+            per_unit = need.price_index * share / price / affordable_share
             floor_quantity = floors[need_id] * per_unit
             flexible_quantity = max(0.0, totals[need_id] - floors[need_id]) * per_unit
             ratio = _durable_ratio(good, floor_quantity + flexible_quantity,
