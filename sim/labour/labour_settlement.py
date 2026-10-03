@@ -6,7 +6,7 @@ nation means a smaller town and a poorer tile means a smaller town.
 import math
 
 from sim.constants import declare
-from sim.geography.api import settlement
+from sim.geography.api import Geography, settlement
 
 
 class SettlementMixin:
@@ -86,7 +86,7 @@ class SettlementMixin:
     def relocation_quote(self, tile):
         """(days, hours lost, money) to move the base to `tile`."""
         km = self.distance_to_tile_km(tile)
-        speed = 1.0 + self.REACH_SPEED_COEF * float(self.civ.get("base_reach", 2))
+        speed = 1.0 + Geography.REACH_SPEED_COEF * float(self.civ.get("base_reach", 2))
         days = km / (self.RELOCATION_KM_PER_DAY * speed)
         year_share = min(1.0, days / 365.0)
         hours = year_share * self.director_pool()

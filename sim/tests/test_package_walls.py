@@ -64,6 +64,32 @@ def imported_modules(path, tree):
                 yield module + "." + alias.name
 
 
+def wall_kind(package):
+    """The package's `WALL` declaration in its api.py ("two-way" once it no longer reaches the engine)."""
+    for node in parse(os.path.join(SIM_DIR, package, "api.py")).body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "WALL" for t in node.targets):
+            return node.value.value
+    return "one-way"
+
+
+def sim_base_modules():
+    """The module each base class of `class Sim` (sim/engine/core.py) is imported from."""
+    path = os.path.join(SIM_DIR, "engine", "core.py")
+    tree = parse(path)
+    imported_from = {}
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if node.level:
+                module = "sim.engine" + ("." + module if module else "")
+            for alias in node.names:
+                imported_from[alias.asname or alias.name] = module
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef) and node.name == "Sim":
+            return [imported_from.get(base.id, "sim.engine.core") for base in node.bases if isinstance(base, ast.Name)]
+    return []
+
+
 def outside_files(package):
     package_dir = os.path.join(SIM_DIR, package)
     for path in python_files(SIM_DIR):
@@ -107,6 +133,30 @@ class PackageWallTests(unittest.TestCase):
                     if module.startswith(prefix) and not any(module == a or module.startswith(a + ".")
                                                              for a in allowed - {"sim.%s" % package}):
                         self.fail("%s imports %s; use sim.%s.api" % (os.path.relpath(path, ROOT), module, package))
+
+    def test_two_way_packages_never_reach_into_the_engine(self):
+        """A package whose api.py says `WALL = "two-way"` imports nothing from sim.engine or sim.ui
+        (UI excepted: it may import sim.engine.ui_port), only other packages' api, and puts no class
+        into Sim's bases: the engine hands it what it needs through an adapter of its own."""
+        sim_bases = sim_base_modules()
+        for package in walled_packages():
+            if wall_kind(package) != "two-way":
+                continue
+            allowed = {"sim.engine.ui_port"} if package == "ui" else set()
+            others = [name for name in walled_packages() if name != package] + ["economy"]
+            for path in python_files(os.path.join(SIM_DIR, package)):
+                for module in imported_modules(path, parse(path)):
+                    where = os.path.relpath(path, ROOT)
+                    if any(module == root or module.startswith(root + ".") for root in ("sim.engine", "sim.ui")) \
+                            and not module.startswith("sim.%s" % package) \
+                            and not any(module == ok or module.startswith(ok + ".") for ok in allowed):
+                        self.fail("%s imports %s; ask the engine through this package's adapter" % (where, module))
+                    for other in others:
+                        if module.startswith("sim.%s." % other) and not module.startswith("sim.%s.api" % other) \
+                                and other != "economy":
+                            self.fail("%s imports %s; use sim.%s.api" % (where, module, other))
+            self.assertFalse([module for module in sim_bases if module.startswith("sim.%s" % package)],
+                             "Sim inherits from sim/%s/" % package)
 
     def test_packages_split_from_the_engine_reach_the_economy_only_through_its_port(self):
         """test_economy_imports.py lets only sim/engine/economy_port*.py import sim.economy, but it

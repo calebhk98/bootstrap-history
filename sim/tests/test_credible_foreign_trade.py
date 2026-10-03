@@ -96,7 +96,7 @@ facts = s._foreign_economy_facts(PARTNER)
 route = facts["route"]
 check("the route to the partner is a chain of legs on the map",
       route is not None and route.legs and all(
-          leg.origin in s._regions and leg.destination in s._regions for leg in route.legs),
+          leg.origin in s.geography.regions and leg.destination in s.geography.regions for leg in route.legs),
       route and route.describe())
 check("...joining its regions to this society's",
       route.legs[0].origin in load_civ(PARTNER)["home_regions"]
@@ -122,7 +122,7 @@ check("a partner that cannot sail is reached overland, and dearly",
 # --- capacity comes from the partner's own regions and techniques.
 solved = facts["solved_materials"]
 iron_capacity, iron_demand = s.foreign_opening(PARTNER, "iron", solved)
-han_iron_share = sum(float(s._regions[region]["minerals"].get("iron", 0.0))
+han_iron_share = sum(float(s.geography.regions[region]["minerals"].get("iron", 0.0))
                      for region in load_civ(PARTNER)["home_regions"])
 check("a mined commodity is the national output times its regions' share, not population scaled",
       abs(iron_capacity - s._national_output_tonnes("iron") * han_iron_share) < 1e-6

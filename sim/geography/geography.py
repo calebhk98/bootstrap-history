@@ -1,15 +1,13 @@
-"""Where things are, and what that costs to reach.
+"""Where things are, and what that costs to reach: one simulation's geography (`sim.geography`).
 
-Split out of simulator.py, which had grown to 5,600 lines. These are
-methods of Sim; they are a mixin only so that they can live in a file of
-their own. Behaviour is unchanged and verified byte-identical.
+It reads the civilisation and its population scale through the world it is given (an engine-side
+adapter, sim/engine/geography_port.py) and holds the regions, home centroid and mineral access it
+computes from the geography file.
 """
 
 from typing import Any, cast, Dict, NotRequired, Tuple, TypedDict
 
 from sim.geography.distance import haversine_km
-from sim.geography import regions as region_tables
-from sim.geography.port import GeographyPort
 
 
 JSONDict = Dict[str, Any]
@@ -53,21 +51,17 @@ class RegionRecord(TypedDict):
     note: NotRequired[str]
 
 
-class GeographyMixin:
-    # -- ATTRIBUTES THIS MIXIN READS BUT DOES NOT OWN ----------------------
-    # Set by Sim.__init__ (core.py, not owned by this task - see the
-    # top-level instructions' file list) before any method below runs.
-    # Declared here, type-only (a bare annotation with no assignment binds
-    # nothing at runtime - it only populates GeographyMixin.__annotations__),
-    # purely so mypy knows the shape of every `self.x` this mixin reads
-    # that core.py, not this file, assigns.
-    civ: JSONDict
+class Geography:
+    """The geography of one simulation, opened once from the geography file."""
+
     geo: JSONDict
     _regions: Dict[str, RegionRecord]
     _home_centroid: Tuple[float, float]
     _mat_unlock: Dict[str, str]
     _mineral_scale: Dict[str, float]
-    pop_scale: float
+
+    def __init__(self, world: Any) -> None:
+        self._world = world
 
     def _compute_home_centroid(self) -> Tuple[float, float]:
         """Average lat/lon of this civilization's own home_regions.
@@ -76,7 +70,7 @@ class GeographyMixin:
         this model: regions are already coarse political/geographic blocks,
         not points, so a coarse average of them is the right level of detail.
         """
-        homes = [region_id for region_id in (self.civ.get("home_regions") or []) if region_id in self._regions]
+        homes = [region_id for region_id in (self._world.civ.get("home_regions") or []) if region_id in self._regions]
         if not homes:
             # A civ file with no valid home_regions would otherwise crash
             # region_reach for everyone; falling back to Italy or to
@@ -138,12 +132,12 @@ class GeographyMixin:
         """
         if region_id not in self._regions:
             return 6           # unknown region: treat as maximally far, not a crash
-        if region_id in (self.civ.get("home_regions") or []):
+        if region_id in (self._world.civ.get("home_regions") or []):
             return 0
         reg = self._regions[region_id]
         hlat, hlon = self._home_centroid
         dist = haversine_km(hlat, hlon, reg["lat"], reg["lon"]) * float(reg.get("route_difficulty", 1.0))
-        base_reach = float(self.civ.get("base_reach", 2))
+        base_reach = float(self._world.civ.get("base_reach", 2))
         speed = 1.0 + self.REACH_SPEED_COEF * base_reach
         coastal = bool(reg.get("coastal", True))
         effective = dist / speed if coastal else dist / (speed ** 0.5)
@@ -239,7 +233,7 @@ class GeographyMixin:
         """Fraction of a mined mineral's reference output this civilization
         can draw on: geology and reach, not population.
 
-        Scaling this by self.pop_scale - "how much coal can you buy" tied
+        Scaling this by self._world.pop_scale - "how much coal can you buy" tied
         to HOW MANY PEOPLE YOU HAVE - would be backwards twice over: Norse
         Scandinavia would get 2.3% of Rome's coal because it has 2.3% of
         the people, while England in 1300, precisely where the coal
@@ -257,7 +251,7 @@ class GeographyMixin:
         with no local ore can still buy imported metal, just less of it.
         Floored well above zero so this is a price, never a wall.
         """
-        home = set(self.civ.get("home_regions") or [])
+        home = set(self._world.civ.get("home_regions") or [])
         total = 0.0
         for rid, reg in self._regions.items():
             # MineralShares's own fields are typed float, but looking one
@@ -281,21 +275,14 @@ class GeographyMixin:
         """Cached result of _compute_mineral_scale(). Geology and reach do
         not change during a run, so this is computed once in __init__
         rather than recomputed every simulated year."""
-        return self._mineral_scale.get(material, self.pop_scale)
+        return self._mineral_scale.get(material, self._world.pop_scale)
 
-    @property
-    def geography(self) -> GeographyPort:
-        """The one door to this simulation's geography. Not saved: it holds nothing but the simulation."""
-        port = self.__dict__.get("_geography_port")
-        if port is None:
-            port = self.__dict__["_geography_port"] = GeographyPort(self)
-        return port
-
-    def _open_geography(self, geo: JSONDict) -> None:
+    def open(self, geo: JSONDict) -> None:
         """Real coordinates, a reach computed from THIS civ's own home ground, and a material cost that
         follows from it. All of it depends only on the civ file and the (static) geography file, so it
         is computed once."""
         self.geo = geo
+        from sim.geography import regions as region_tables  # here: regions -> sim.world -> this package's api
         self._regions = region_tables.region_records(self.geo)
         self._home_centroid = self._compute_home_centroid()
         # node id -> located_materials key. Lets material_cost_factor() find
@@ -315,3 +302,18 @@ class GeographyMixin:
         self._mineral_scale = {material: self._compute_mineral_scale(material)
                                 for material in ("iron", "coal", "copper", "lead",
                                           "tin", "silver", "saltpetre")}
+
+    @property
+    def data(self) -> JSONDict:
+        """The raw geography file's contents."""
+        return self.geo
+
+    @property
+    def regions(self) -> Dict[str, RegionRecord]:
+        """Every region's record, by region id."""
+        return self._regions
+
+    @property
+    def home_centroid(self) -> Tuple[float, float]:
+        """(latitude, longitude) averaged over the civilisation's home regions."""
+        return self._home_centroid

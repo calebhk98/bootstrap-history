@@ -83,5 +83,5 @@ class ForestAreaReadsTilesTests(unittest.TestCase):
     def test_region_records_hold_no_land_figures(self):
         from sim.tests.harness import sim
         test_sim = sim(civ="rome_100ad")
-        for region in test_sim._regions.values():
+        for region in test_sim.geography.regions.values():
             self.assertNotIn("land", region)

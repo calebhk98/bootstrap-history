@@ -75,12 +75,12 @@ check("...so the SAME node cost calculation prices coal higher for a "
 # real lat/lon in data/world/geography.json - not a number this crossing
 # made up for the occasion (CLAUDE.md SS3.1).
 # =============================================================================
-_home_lat, _home_lon = s_mexica._home_centroid
-_candidates = [region_id for region_id, region in s_mexica._regions.items()
+_home_lat, _home_lon = s_mexica.geography.home_centroid
+_candidates = [region_id for region_id, region in s_mexica.geography.regions.items()
                if float((region.get("minerals") or {}).get("coal", 0.0)) > 0.0]
 _expected_km = min(
     haversine_km(_home_lat, _home_lon,
-                 s_mexica._regions[_rid]["lat"], s_mexica._regions[_rid]["lon"])
+                 s_mexica.geography.regions[_rid]["lat"], s_mexica.geography.regions[_rid]["lon"])
     for _rid in _candidates)
 check("the freight distance matches an independent haversine calculation "
       "against geography.json's own region coordinates, to the metre",

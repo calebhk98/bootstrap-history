@@ -522,7 +522,10 @@ def _climate_allows(entry, civilization_id, home_regions=None):
     if not entry or not entry.get("grown_in_climate_classes"):
         return True
     from sim.geography.api import crop_climate
-    return crop_climate.entry_grows_in(entry, civilization_id, home_regions)
+    if home_regions is None:
+        from .data import load_civ
+        home_regions = load_civ(civilization_id).get("home_regions")
+    return crop_climate.entry_grows_in(entry, home_regions)
 
 
 def priced_goods_table(held_technology_ids: Iterable[str],

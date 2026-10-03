@@ -26,7 +26,7 @@ import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from .identity_cache import IdentityCache
-from sim.geography.api import haversine_km
+from sim.geography.api import GEOFILE, haversine_km, load_geography
 from .mods import get_ordered_mods, load_mod_tree
 from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
@@ -118,23 +118,9 @@ KNOWLEDGE_DIR = os.path.join(ROOT, "docs", "knowledge")   # the how-to library t
 
 CIVDIR = os.path.join(ROOT, "data", "civilizations")
 RESFILE = os.path.join(ROOT, "data", "world", "resources.json")
-GEOFILE = os.path.join(ROOT, "data", "world", "geography.json")
 
 def load_resources() -> JSONDict:
     return json.load(open(RESFILE))
-
-def load_geography() -> JSONDict:
-    """Where things are, not just what they cost.
-
-    Reach must be computed per civilization from real geography, never a
-    single hard-coded value measured from Italy: Han China's own distance
-    to Malaya, which Chinese and Malay traders already sail to routinely,
-    is not the same as its distance to Italy, a place that civilization has
-    never seen. See Sim.region_reach and Sim.material_reach for where reach
-    is actually computed; this loader just hands back the raw data.
-    """
-    return json.load(open(GEOFILE))
-
 
 def _load_tech_effects() -> JSONDict:
     path = os.path.join(CIVDIR, "_TECH_EFFECTS.json")
