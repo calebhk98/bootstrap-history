@@ -99,7 +99,7 @@ class CapitalMarketMixin:
 
     def update_capital_market(self):
         """The year's meeting: set the rate from the balance and record what lenders will advance."""
-        from sim.agents.api import SimWorld
+        from .agents_port import SimWorld
         world = SimWorld(self)
         self.pay_lenders()
         record = self.capital_market()

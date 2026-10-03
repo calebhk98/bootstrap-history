@@ -66,6 +66,7 @@ from .economy_port import EconomyPortMixin, switch_requested
 from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.agents.api import Household
+from .agents_port_household import HouseholdPort
 
 
 _EARTH_RADIUS_KM = 6371.0
@@ -480,7 +481,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             active_changed=self._active_changed,
             workforce_changed=self._workforce_changed,
             state=self.state,
-            sim=self)
+            port=HouseholdPort())
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # Everything automatic must be controllable: a player can enable or

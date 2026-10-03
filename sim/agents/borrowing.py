@@ -7,7 +7,6 @@ market rate plus a premium for the share of that ceiling it has used, less a dis
 from typing import Any
 
 from sim.constants import declare
-from sim.engine.economy_debt_service import DebtServiceMixin
 from sim.world import capital_market
 
 STANDING_DISCOUNT_CAP = declare(
@@ -43,7 +42,7 @@ class Borrower:
 		"""The most this actor may owe in all: what its earning can carry at the market rate, and no
 		more than lenders hold after the others' loans."""
 		carried = capital_market.serviceable_debt(
-			self.credit_earning(world), max(world.market_rate(), world.starting_rate()), DebtServiceMixin.DEBT_SERVICE_SHARE_OF_SURPLUS)
+			self.credit_earning(world), max(world.market_rate(), world.starting_rate()), world.debt_service_share_of_surplus())
 		room = world.credit_headroom(self.identity())  # type: ignore[attr-defined]
 		return carried if room is None else min(carried, room)
 

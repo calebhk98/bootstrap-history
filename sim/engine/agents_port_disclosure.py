@@ -1,8 +1,7 @@
 """What the world view says about how each invention was disclosed (kept secret, licensed, published)."""
 from typing import Any
 
-from . import ledger, licence
-from .tuning import PROOF_YEARS, SECRET_EXPOSURE
+from sim.agents.api import PROOF_YEARS, SECRET_EXPOSURE, ledger, licence
 
 
 class DisclosureView:

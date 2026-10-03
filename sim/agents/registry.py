@@ -3,7 +3,7 @@ from bisect import bisect_left
 from itertools import accumulate
 from typing import Any, Dict, List, Optional, Set
 
-from sim.engine.state import ActorRecord, ActorsState
+from .records import ActorRecord, ActorsState
 
 from . import imitation
 from .base import RecordedActor
@@ -79,7 +79,7 @@ class ActorRegistry:
 		if isinstance(actor, Firm):
 			actor.rivals_of = self.rivals_of
 			actor.on_capacity_change = self.note_capacity_change
-			from sim.engine.economy import _InvalidatingSet
+			from sim.invalidating import _InvalidatingSet
 			watch = _ConcernWatch(actor_id, self._holders, self.version)
 			record.concerns = _InvalidatingSet(record.concerns, on_change=watch)
 			watch.target = record.concerns

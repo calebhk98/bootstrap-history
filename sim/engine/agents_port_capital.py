@@ -1,20 +1,18 @@
 """What an actor can see of the loanable-funds market of its civilisation, and what households save."""
 from typing import Any, Optional, Tuple
 
-from sim.constants import declare
+from sim.agents.api import SAVING_SHARE_OF_SURPLUS
 from sim.world import demand
 
-SAVING_SHARE_OF_SURPLUS = declare(
-	"SAVING_SHARE_OF_SURPLUS", 0.2, kind="temporary_heuristic",
-	unit="share of income above subsistence", source=None, confidence="D",
-	why="What households put aside rather than consume from the income they have above what keeps them "
-		"fed. Stands in for a saving model with time preference, bequest and risk.")
-
+from .economy_debt_service import DebtServiceMixin
 
 class CapitalView:
 	"""Read-only questions about the market and about saving; mixed into `SimWorld`."""
 
 	_sim: Any
+
+	def debt_service_share_of_surplus(self) -> float:
+		return DebtServiceMixin.DEBT_SERVICE_SHARE_OF_SURPLUS
 
 	def market_rate(self) -> float:
 		return self._sim.economy.base_rate()

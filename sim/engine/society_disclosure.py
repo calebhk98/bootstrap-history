@@ -1,5 +1,6 @@
 """What the founder does with an invention: keep it secret, license it, or publish it."""
-from sim.agents.api import SimWorld, licence
+from sim.agents.api import licence
+from .agents_port import SimWorld
 
 DISCLOSURE_MODES = ("default", "secret", "license", "publish")
 
