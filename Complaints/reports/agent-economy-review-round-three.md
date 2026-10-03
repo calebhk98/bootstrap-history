@@ -1,0 +1,102 @@
+# The agent economy, round three
+
+Follows `agent-economy-review.md`. In this round only `sim/economy/` could change, and new files in
+`Complaints/`. Regression tests therefore ran as scratch unittest files outside the repository. Their
+sources are in `agent-economy-scratch-tests.md`, to be copied into `sim/tests/` (Complaint 396).
+
+Unless a table says otherwise, measurements use
+`python3 sim/economy_validate.py --years 30 --seeds 1,2,3,4,5,6`, summarised as medians over the seeds.
+Two seeds proved too few: metal volatility moves by 30-70% between seeds, so every keep-or-drop
+decision below was taken on six seeds.
+
+## Merged
+
+- **Rent damping** (`land_lease.py`).
+  - Cause: rent jumped from zero to a large value as soon as a tile's use spilled into its second-best
+    land band. Producers planned with last year's rent, so demand and rent chased each other.
+  - Change: the posted rent now closes a share of the gap to the clearing rent each year, like a lease
+    being renegotiated.
+  - Effect (Rome, seed 1, 16 years): the mean year-on-year swing of the maximum rent per hectare fell
+    from about 20 to about 5, and its average level barely moved.
+- **The audit's metal gap is timing, not a leak** (`money_audit.py`). Coin wear is booked at year
+  close, after the mint last matches its metal to the coin; the mint removes that metal early the next
+  year. Each year's gap equalled that year's wear in Rome, England and Norse. The audit now reports the
+  wear separately as `metal_awaiting_wear`.
+- **Speed (390)**, with prices, wages and rate byte-identical before and after:
+  - each good's market areas are cached;
+  - merchants price carriage once per source tile;
+  - ledger posting is faster;
+  - household price ceilings are built once per tile;
+  - the yearly save no longer deep-copies with `asdict`.
+
+  A Rome year went from about 2.8 s to about 1.3 s, measured on a busy machine.
+- **Goods without a mass** (`good_mass.py`):
+  - draught animals weigh their live weight from `sim/world/transport.py`;
+  - land and energy cannot be carried;
+  - a `_tons` unit is a tonne;
+  - one-item recipes take the mass of their inputs;
+  - a 1 kg fallback remains only as a declared heuristic.
+
+  The data gaps are Complaint 399.
+- **Ledger underflow**: a balance left below zero by less than the smallest normal float is rounding
+  residue, not an overdraft. Before this, a -5e-324 residue stopped a Rome year.
+
+## Tried and not merged
+
+- **Entry on price** (`entry_price.py`, branch `price-entry-diagnosis`).
+  - What it does: makers enter where a known recipe's return, rent included, beats the rate, sized at a
+    small share of last year's volume.
+  - Six seeds, baseline → with entry:
+
+    | | England | Han | Mexica | Norse | Rome |
+    |---|---|---|---|---|---|
+    | wage, kg per hour | 0.25 → 0.37 | 0.31 → 0.37 | 0.10 → 0.18 | 0.39 → 0.60 | 0.15 → 0.17 |
+    | hungry mean | | | 0.006 → 0.045 | | 0.025 → 0.014 |
+    | metal volatility | | 0.30 → 0.40 | | 0.38 → 0.78 | 0.85 → 1.02 |
+
+  - Wages rose everywhere, as competition should make them, but Mexica's hunger rose about sevenfold
+    and Norse metal volatility doubled.
+  - At a larger entry share, wheat's price falls most of the way to its cost, but the overshoot doubles
+    grain volatility.
+  - A sizing rule that ties an entrant to the price-over-cost gap and the market's demand slope is the
+    next step.
+  - Price entry is not what makes metals swing: with entry off, Rome metal volatility is about 0.98.
+- **Competitive storage for durable goods** (branch `merchant-storage-durables`).
+  - Storage was limited to goods with low spoilage and a low warehousing cost against their price.
+  - With two seeds the results were mixed. Grain volatility rose in Rome although no grain is stored:
+    storage cash is taken before arbitrage.
+
+## Diagnoses
+
+- **Labour is mostly idle and prices sit far above cost (Complaint 398).**
+  - Hiring: in every civilisation only 5-14% of offered hours are hired, so the unskilled wage sits at
+    the family floor per offered hour.
+  - Income: wages are 10-14% of household income; most of the rest is dividends.
+  - Prices: wheat sells at 11-25 times its labour cost, with rent at 4% of the price or less.
+  - Wheat wage: the low wheat wage in Rome and Mexica (388) is mostly wheat's relative price. In
+    food-need units the civilisations are close. Mexica has no maize good.
+- **Metals swing from the input chain and from forced dumping (387).**
+  - The iron price is mostly the inverse of the same year's quantity, against very steep demand. There
+    is no period-two cobweb on capacity.
+  - Producers cost a run at last year's raw input prices but value its output at smoothed expectations,
+    so an input chain (ore, charcoal, bloom, bar) hands swings down the chain.
+  - Each producer's cash target is a year of costs at full capacity while it works 5-30% of it, so it
+    always looks short of cash and offers its stock at a price of zero.
+  - A fix smoothing input expectations and measuring distress at the scale actually worked lowered
+    metal volatility over five seeds, but raised Rome grain volatility and hunger a little. Its six-seed
+    result is below.
+- **Six-seed baseline of the branch** (before the goods-mass change):
+
+  | | grain | metal (range) | wage kg/h | hungry |
+  |---|---|---|---|---|
+  | england_1300 | 0.155 | 0.48 (0.35-0.72) | 0.25 | 0 |
+  | han_china_100ad | 0.184 | 0.30 (0.24-0.41) | 0.31 | 0.014 |
+  | mexica_1500 | 0.112 | 0.25 (0.23-0.27) | 0.10 | 0.006 |
+  | norse_900ad | 0.148 | 0.38 (0.20-1.34) | 0.39 | 0.004 |
+  | rome_100ad | 0.110 | 0.85 (0.76-1.07) | 0.15 | 0.025 |
+
+  Rome's metal volatility is robust across seeds; it is not noise.
+
+## Pending
+
+(The six-seed cobweb comparison and the producer-growth work are added when they finish.)
