@@ -57,20 +57,21 @@ class LabourMarket:
             "staff without a premium and a mass hiring by many employers does not; a real figure "
             "would come from a dwelling stock and its vacancy, which nothing here models.")
 
-    def __init__(self, sim):
-        self._sim = sim
+    def __init__(self, labour):
+        self._labour = labour
+        self._world = labour._world
 
     # ---- pressure: what recent hiring has done to a trade's local price ----
 
     def _records(self):
-        return self._sim.state.household.labour_pressure_records
+        return self._world.state.household.labour_pressure_records
 
     def standing_draw(self, trade):
         """Hours a year of this trade that soldiers under arms already take out of its pool: they are
         drawn from the unskilled pool and stay drawn while they serve, so they do not decay."""
         if trade != "labourer":
             return 0.0
-        return self._sim.actor_staff_fte("soldier") * self._sim.HOURS_PER_PERSON_YEAR
+        return self._world.actor_staff_fte("soldier") * self._world.HOURS_PER_PERSON_YEAR
 
     def recent_pressure(self, trade):
         """Hours a year of this trade recently leaned on, decayed to this year."""
@@ -78,7 +79,7 @@ class LabourMarket:
         if not record:
             return 0.0
         hours, year = record
-        age = max(0.0, self._sim.state.scenario.year - year)
+        age = max(0.0, self._world.state.scenario.year - year)
         return hours * (self.LABOUR_PRESSURE_DECAY_RATE ** age)
 
     def pressure(self, trade):
@@ -92,7 +93,7 @@ class LabourMarket:
     def press(self, trade, hours):
         """Record demand for `hours` a year of a trade that is not a hire (teaching pulls a trade's
         people off their bench, a commission buys their time)."""
-        self._records()[trade] = (self.recent_pressure(trade) + max(0.0, hours), self._sim.state.scenario.year)
+        self._records()[trade] = (self.recent_pressure(trade) + max(0.0, hours), self._world.state.scenario.year)
 
     def clear_pressure(self):
         self._records().clear()
@@ -105,7 +106,7 @@ class LabourMarket:
     def price_factor(self, trade):
         """What hiring MORE of this trade costs beyond the wage table, from how hard it has recently
         been leaned on against the people the local market has of it."""
-        return self._price_factor_from(self.pressure(trade), self._sim.market_supply(trade))
+        return self._price_factor_from(self.pressure(trade), self._labour.market_supply(trade))
 
     def price_factor_after(self, trade, people):
         """The price factor the instant `people` more are on the books: the hire being weighed, not
@@ -114,65 +115,64 @@ class LabourMarket:
         people = max(0.0, people)
         if people <= 0:
             return self.price_factor(trade)
-        household = self._sim.state.household
+        household = self._world.state.household
         before = household.employees.get(trade, 0.0)
         household.employees[trade] = before + people
         try:
-            supply_after = self._sim.market_supply(trade)
+            supply_after = self._labour.market_supply(trade)
         finally:
             if before:
                 household.employees[trade] = before
             else:
                 household.employees.pop(trade, None)
-        pressure_after = self.pressure(trade) + people * self._sim.HOURS_PER_PERSON_YEAR
+        pressure_after = self.pressure(trade) + people * self._world.HOURS_PER_PERSON_YEAR
         return self._price_factor_from(pressure_after, supply_after)
 
     # ---- the wage ----
 
     def cost_factors(self, trade):
         """The food, housing and tool multipliers behind a trade's wage, for a screen to show."""
-        return self._sim.wage_cost_factors(trade)
+        return self._labour.wage_cost_factors(trade)
 
     def pay_scale(self):
         """What an hour pays against the opening schedule, at this economy's output per hour."""
-        return self._sim.real_output_per_head() ** self._sim.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
+        return self._world.real_output_per_head() ** self._labour.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN
 
     def household_wage_ratio(self):
         """What an hour of the unskilled numeraire pays now against the opening, before the price level and
         the cost of living (the solver's prices carry those): the scarcity of hands against the working
         population, times the share of output gain pay passes on."""
-        sim = self._sim
-        return sim.wage_index / sim._wage_index_base * self.pay_scale()
+        world = self._world
+        return world.wage_index / world.wage_index_base * self.pay_scale()
 
     def town_housing_room(self):
         """People the home town can house beyond those already there: the spare share of its
         dwellings plus the worker housing built in it."""
-        sim = self._sim
-        return (sim.home_town_population_estimate() * self.TOWN_SPARE_HOUSING_SHARE
-                + max(0.0, sim.state.household.worker_housing_places or 0.0))
+        world = self._world
+        return (self._labour.home_town_population_estimate() * self.TOWN_SPARE_HOUSING_SHARE
+                + max(0.0, world.state.household.worker_housing_places or 0.0))
 
     def town_workers(self):
         """People every employer in the town has on its books: the founder's household and every
         firm and government."""
-        return self._sim.headcount() + self._sim.actor_staff_total()
+        return self._labour.headcount() + self._world.actor_staff_total()
 
     def town_housing_factor(self):
         """The housing multiplier on a wage. It reads how full the town's housing is from everyone
         employed in it, so it is the same for every employer hiring there."""
-        sim = self._sim
         occupancy = self.town_workers() / max(1.0, self.town_housing_room())
-        pressure = (occupancy - sim.HOUSING_PRESSURE_START_OCCUPANCY) / sim.HOUSING_PRESSURE_BAND
-        return 1.0 + sim.HOUSING_PRESSURE_MAX_MARKUP * max(0.0, min(1.0, pressure))
+        pressure = (occupancy - self._labour.HOUSING_PRESSURE_START_OCCUPANCY) / self._labour.HOUSING_PRESSURE_BAND
+        return 1.0 + self._labour.HOUSING_PRESSURE_MAX_MARKUP * max(0.0, min(1.0, pressure))
 
     def _annual(self, trade, scarcity):
-        sim = self._sim
-        wage = sim.economy.agent_wage_per_hour(trade)
+        world = self._world
+        wage = world.economy.agent_wage_per_hour(trade)
         if wage is not None:
-            return wage * sim.HOURS_PER_PERSON_YEAR * scarcity
-        base = sim.base_annual_wage(trade)
-        factors = sim.wage_cost_factors(trade)
-        return (base * factors["weighted"] * sim.price_index
-                * sim.wage_index * scarcity * self.pay_scale())
+            return wage * world.HOURS_PER_PERSON_YEAR * scarcity
+        base = self._labour.base_annual_wage(trade)
+        factors = self._labour.wage_cost_factors(trade)
+        return (base * factors["weighted"] * world.price_index
+                * world.wage_index * scarcity * self.pay_scale())
 
     def quote_annual(self, trade, people=0.0, employer=None):
         """Money one person-year of a trade costs `employer` now. `people` more taken on first move
@@ -188,9 +188,9 @@ class LabourMarket:
 
     def quote(self, trade, hours=0.0, employer=None):
         """Money one hour of a trade costs `employer` now, once `hours` a year more are taken on."""
-        sim = self._sim
-        people = hours / sim.HOURS_PER_PERSON_YEAR
-        return self.quote_annual(trade, people, employer) / sim.HOURS_PER_PERSON_YEAR
+        world = self._world
+        people = hours / world.HOURS_PER_PERSON_YEAR
+        return self.quote_annual(trade, people, employer) / world.HOURS_PER_PERSON_YEAR
 
     def hire_cost(self, trade, people):
         """The finder's fee for taking on `people` of a trade: the first year's wage at the table
@@ -203,8 +203,8 @@ class LabourMarket:
 
     def in_current_money(self, schedule_amount):
         """An amount at the opening schedule's prices, in today's money."""
-        sim = self._sim
-        return schedule_amount * sim.wage_index * sim.price_index
+        world = self._world
+        return schedule_amount * world.wage_index * world.price_index
 
     def hire(self, employer, trade, hours):
         """Take on `hours` a year of a trade. Returns the rate an hour cost, and records the pressure."""
@@ -218,4 +218,4 @@ class LabourMarket:
         if not record:
             return
         remaining = max(0.0, self.recent_pressure(trade) - max(0.0, hours))
-        self._records()[trade] = (remaining, self._sim.state.scenario.year)
+        self._records()[trade] = (remaining, self._world.state.scenario.year)

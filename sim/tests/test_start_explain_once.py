@@ -25,7 +25,7 @@ check("`full` shows the fixed-price paragraph again", "Quotes move with prices" 
 
 # The untrained-trade warning keeps its trade names but loses its instructions after the first showing.
 untrained_sim = sim(capital=1_000_000)
-untrained_sim.market_supply = lambda trade: 0.0
+untrained_sim.labour.market_supply = lambda trade: 0.0
 untrained_sim.start_project = lambda node_id: (True, "")
 one = S._agent_dispatch(untrained_sim, NODES, {"cmd": "start", "id": "ag2_composting"})
 two = S._agent_dispatch(untrained_sim, NODES, {"cmd": "start", "id": "ag2_grafting"})

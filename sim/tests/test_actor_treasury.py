@@ -39,7 +39,7 @@ def grown(civ, employees=2000.0, capital=1.0e10, eminence=100.0, events=False):
     """A household large enough that the state has noticed it."""
     game = sim(civ=civ, events=events)
     game.employees["artisan"] = employees
-    game._resync_pools()
+    game.labour._resync_pools()
     game.capital = capital
     game.eminence = eminence
     game.update_protection()

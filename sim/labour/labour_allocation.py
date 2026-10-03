@@ -1,7 +1,7 @@
 """Yearly allocation of a society's working hours between farm work and the
 rest of the economy, through sim.labour.labour_market.
 
-Sim mixin. The state is an hours-by-trade dict on the economy state, so any
+Labour mixin. The state is an hours-by-trade dict on the economy state, so any
 actor that owns one can be stepped with the same functions.
 """
 from sim.world import agriculture
@@ -95,19 +95,19 @@ def reallocate(hours_by_trade, total_hours, needed_by_trade):
 
 
 class LabourAllocationMixin:
-    """Sim method that sizes this year's farm workforce."""
+    """Labour method that sizes this year's farm workforce."""
 
     def _non_farm_need_shares(self):
         """Each non-farm trade's share of need from household demand through
         the recipe graph; with no recipe available, the current split."""
-        reached = frozenset(self.civ["starting_techs"]) | frozenset(self.state.projects.done)
+        reached = frozenset(self._world.civ["starting_techs"]) | frozenset(self._world.state.projects.done)
         cached = getattr(self, "_need_shares_cache", None)
         if cached is None or cached[0] != reached:
             shares = workforce_spinup.need_shares_by_trade(labour_market.production_data(), reached)
             cached = self._need_shares_cache = (reached, shares)
         if cached[1]:
             return cached[1]
-        hours = self.state.economy.society_labour_hours
+        hours = self._world.state.economy.society_labour_hours
         rest = sum(value for trade, value in hours.items() if trade != FARM_TRADE)
         return {trade: value / rest for trade, value in hours.items()
                 if trade != FARM_TRADE and rest > 0.0}
@@ -115,7 +115,7 @@ class LabourAllocationMixin:
     def _hours_needed_by_trade(self, total_hours=None):
         """Hours each trade is needed for, read by both the labour
         allocation and the wage rule."""
-        economy = self.state.economy
+        economy = self._world.state.economy
         hours = economy.society_labour_hours
         if total_hours is None:
             total_hours = sum(hours.values())
@@ -125,17 +125,17 @@ class LabourAllocationMixin:
 
     def _clearable_hectares(self):
         """Arable ground held but not yet cleared."""
-        ceiling = self._farm_arable_ceiling
+        ceiling = self._world.farm_arable_ceiling
         if ceiling is None:
             return 0.0
-        return max(0.0, ceiling - self.farm_land.hectares)
+        return max(0.0, ceiling - self._world.farm_land.hectares)
 
     def _set_farm_area(self, hectares):
         """Cleared area and the quality of the best-first ground it covers."""
-        quality = (land.ladder_quality(self._farm_ladder, hectares)
-                   if self._farm_ladder else 1.0)
-        self.farm_land = agriculture.Land(hectares, quality)
-        self.state.economy.farm_cleared_hectares = hectares
+        quality = (land.ladder_quality(self._world.farm_ladder, hectares)
+                   if self._world.farm_ladder else 1.0)
+        self._world.farm_land = agriculture.Land(hectares, quality)
+        self._world.state.economy.farm_cleared_hectares = hectares
 
     def _apply_land_clearing(self):
         """Hands beyond what the farm can crop spent the year clearing;
@@ -144,17 +144,17 @@ class LabourAllocationMixin:
         cleared = min(hours / agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE,
                       self._clearable_hectares())
         if cleared > 0.0:
-            self._set_farm_area(self.farm_land.hectares + cleared)
+            self._set_farm_area(self._world.farm_land.hectares + cleared)
 
     def _farming_technique(self):
         """This society's farming technique from the technologies it holds,
         each weighted by how far it has spread."""
-        projects = self.state.projects
-        year = self.state.scenario.year
-        starting = set(self.civ.get("starting_techs", ()))
+        projects = self._world.state.projects
+        year = self._world.state.scenario.year
+        starting = set(self._world.civ.get("starting_techs", ()))
         adoption = {}
-        declarations = {node_id: self.mechanic(node_id, "farming_technique")
-                        for node_id in self.nodes_with_mechanic("farming_technique")}
+        declarations = {node_id: self._world.mechanic(node_id, "farming_technique")
+                        for node_id in self._world.nodes_with_mechanic("farming_technique")}
         for node_id in declarations:
             if node_id not in projects.done:
                 continue
@@ -167,14 +167,14 @@ class LabourAllocationMixin:
 
     def farm_share_of_hours(self):
         """Share of the society's working hours spent farming."""
-        hours = self.state.economy.society_labour_hours
+        hours = self._world.state.economy.society_labour_hours
         if hours:
             return hours[FARM_TRADE] / sum(hours.values())
-        adult_equivalent = self._adult_equivalent_population(self.population)
+        adult_equivalent = self._world.adult_equivalent_population(self._world.population)
         technique = self._farming_technique()
         farm_fte = self._expected_year_farm_need(
             self._share_farm_fte(adult_equivalent, technique), adult_equivalent, technique)
-        return min(1.0, farm_fte / max(1e-9, self.population.working_age))
+        return min(1.0, farm_fte / max(1e-9, self._world.population.working_age))
 
     @staticmethod
     def _share_farm_fte(adult_equivalent_population, technique):
@@ -196,12 +196,12 @@ class LabourAllocationMixin:
     def _food_balance_step(self, baseline_fte, adult_equivalent_population, technique):
         hectares_per_worker = agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit)
-        hectares_worked = min(self.farm_land.hectares, baseline_fte * hectares_per_worker)
-        worked_land = agriculture.Land(hectares_worked, quality=self.farm_land.quality)
+        hectares_worked = min(self._world.farm_land.hectares, baseline_fte * hectares_per_worker)
+        worked_land = agriculture.Land(hectares_worked, quality=self._world.farm_land.quality)
         reserve_kg = agriculture.granary_capacity_kg(
             adult_equivalent_population
             * agriculture.annual_food_demand_kg_per_person(technique.crop))
-        stock_kg = self.farm_stock_kg
+        stock_kg = self._world.farm_stock_kg
         year = agriculture.Storage(stock_kg=stock_kg, seed=0).step(
             worked_land, hectares_worked * farming_technique.hours_per_hectare(technique),
             adult_equivalent_population, crop=technique.crop,
@@ -213,24 +213,24 @@ class LabourAllocationMixin:
                       - year.food_demand_kg - rebuild_kg)
         return farm_workers_needed(
             baseline_fte, baseline_fte, max(0.0, -balance_kg),
-            year.marginal_product_last_hour_kg_per_hour, self.farm_land.hectares,
+            year.marginal_product_last_hour_kg_per_hour, self._world.farm_land.hectares,
             self._clearable_hectares(), surplus_kg=max(0.0, balance_kg),
             technique=technique)
 
     def _allocate_farm_workforce(self, adult_equivalent_population):
         """Farm FTE for this year, after the labour market reacts to last
         year's harvest."""
-        economy = self.state.economy
+        economy = self._world.state.economy
         technique = self._farming_technique()
         baseline_fte = self._expected_year_farm_need(
             self._share_farm_fte(adult_equivalent_population, technique),
             adult_equivalent_population, technique)
-        total_hours = self.population.working_age * HOURS_PER_FARM_WORKER_YEAR
+        total_hours = self._world.population.working_age * HOURS_PER_FARM_WORKER_YEAR
         if not economy.society_labour_hours:
             # Start from the food balance for this land.
             farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)
             economy.society_labour_hours = starting_hours(
-                labour_market.production_data(), self.civ["starting_techs"],
+                labour_market.production_data(), self._world.civ["starting_techs"],
                 total_hours, farm_hours)
         last_shortfall_kg = economy.farm_last_shortfall_kg
         current_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
@@ -240,15 +240,15 @@ class LabourAllocationMixin:
             need_fte = farm_workers_needed(
                 baseline_fte, current_fte, last_shortfall_kg,
                 economy.farm_last_marginal_product,
-                self.farm_land.hectares, self._clearable_hectares(),
+                self._world.farm_land.hectares, self._clearable_hectares(),
                 technique=technique)
         economy.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
         economy.society_labour_hours = reallocate(
             economy.society_labour_hours, total_hours,
             self._hours_needed_by_trade(total_hours))
         farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
-        crop_limit_fte = (self.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
+        crop_limit_fte = (self._world.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit))
         self._clearing_hours_this_year = max(0.0, farm_fte - crop_limit_fte) * HOURS_PER_FARM_WORKER_YEAR
-        self._farm_technique_this_year = technique
+        self._world.farm_technique_this_year = technique
         return farm_fte

@@ -22,7 +22,7 @@ def crowded_sim(smith_concerns, other_concerns):
 	test_sim.employees["scholar"] = 50.0
 	test_sim.employees["carpenter"] = 50.0
 	test_sim.employees["machinist"] = 50.0
-	test_sim._resync_pools()
+	test_sim.labour._resync_pools()
 	run_it(test_sim, *(smith_concerns + other_concerns))
 	return test_sim
 
@@ -36,7 +36,7 @@ crowded = crowded_sim(smiths, others)
 check("set-up: everything is covered, nothing closes",
       crowded.close_unstaffed_ventures(crowded.year) == [])
 crowded.employees["smith"] -= 2 * crowded.VENTURE_FOREMAN_SHARE
-crowded._resync_pools()
+crowded.labour._resync_pools()
 closed = crowded.close_unstaffed_ventures(crowded.year)
 check("a smith shortfall of two concerns' worth closes exactly two concerns",
       len(closed) == 2, closed)
@@ -71,7 +71,7 @@ check("nothing closed for craftsmen would be accepted by open with the same staf
 # --- a shortage of one trade does not close concerns that hold nothing of it
 lone = crowded_sim(smiths, others)
 lone.employees["smith"] = 0.0
-lone._resync_pools()
+lone.labour._resync_pools()
 lone_closed = lone.close_unstaffed_ventures(lone.year)
 check("losing every smith closes the smith concerns and only those",
       sorted(lone_closed) == sorted(smiths) and all(node_id in lone.operating for node_id in others),

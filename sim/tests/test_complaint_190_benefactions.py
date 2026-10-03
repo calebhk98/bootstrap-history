@@ -30,7 +30,7 @@ def late_game_sim():
             late.employees[trade] = max(late.employees.get(trade, 0.0), 20.0)
     late.employees["scholar"] = 40.0
     late.employees["artisan"] = 80.0
-    late._resync_pools()
+    late.labour._resync_pools()
     return late
 
 
@@ -90,14 +90,14 @@ def _channel_probes(mechanics):
     if "standing" in mechanics:
         probes.append(("standing", lambda h: h.standing_floor(), 1, ()))
     if (mechanics.get("staff_capacity") or {}).get("scholars"):
-        probes.append(("scholars the household can keep", lambda h: h.staff_capacity()[0], 1, ()))
+        probes.append(("scholars the household can keep", lambda h: h.labour.staff_capacity()[0], 1, ()))
     for counter in mechanics.get("hazard_counters") or []:
         probes.append(("loss to %s" % counter["kind"],
                        lambda h, kind=counter["kind"]: h.hazard_relief(kind)[0], -1, ()))
     if "reach" in mechanics:
         probes.append(("market reach", lambda h: h.goods_reach_factor(), 1, ()))
     if "supervision_room" in mechanics:
-        probes.append(("people one can direct", lambda h: h.supervision_room(), 1, ()))
+        probes.append(("people one can direct", lambda h: h.labour.supervision_room(), 1, ()))
     if "protection" in mechanics or "patron_protection" in mechanics:
         probes.append(("protection", protection_of, 1, ()))
     if "credit_line" in mechanics:

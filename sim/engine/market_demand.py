@@ -67,7 +67,7 @@ class MarketDemandMixin:
         share of output gain it passes on). Prices here are the solver's own, so cost of living and
         the price level are left out of the wage. Returns to land and capital are not yet in it."""
         # TEMPORARY HEURISTIC: every household earns the mean; the spread and the returns are not modelled.
-        return MEAN_INCOME_HOURS_PER_CAPITA * self.labour_market.household_wage_ratio()
+        return MEAN_INCOME_HOURS_PER_CAPITA * self.labour.market.household_wage_ratio()
 
     def household_real_income_ratio(self):
         """What a person's income buys of the opening basket now over what it bought at the opening:

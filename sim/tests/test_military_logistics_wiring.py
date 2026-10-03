@@ -84,7 +84,7 @@ def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     another topic's private helper."""
     grown_sim = sim(civ=civ, events=True)
     grown_sim.employees["artisan"] = employees
-    grown_sim._resync_pools()
+    grown_sim.labour._resync_pools()
     grown_sim.capital = capital
     grown_sim.eminence = eminence
     grown_sim.update_protection()

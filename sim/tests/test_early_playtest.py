@@ -29,7 +29,7 @@ check("no node is missing a required field", not missing, str(missing[:4]))
 # --- Rome WEIRD: buy+manumit minted labour from money
 s = sim(capital=200000.0)
 a0 = s.artisans
-s.buy_slaves(10); s.manumit(10)
+s.labour.buy_slaves(10); s.labour.manumit(10)
 check("manumission does not double-count the same person",
       s.artisans - a0 < 5.0, "gained %.1f artisans from 10 people" % (s.artisans - a0))
 
@@ -42,7 +42,7 @@ def spend(slices, per):
     run_it(spend_sim, "workshop_first", "freedman_staff")
     starting_capital = spend_sim.capital
     for _ in range(slices):
-        spend_sim.buy_slaves(per)
+        spend_sim.labour.buy_slaves(per)
     return starting_capital - spend_sim.capital
 one, four, twelve = spend(1, 12), spend(4, 3), spend(12, 1)
 check("buying in slices costs the same as buying at once",
@@ -52,7 +52,7 @@ check("buying in slices costs the same as buying at once",
 # --- Rome WEIRD: manumitting untrained people skipped the training lag
 s = sim(capital=200000.0)
 a0 = s.artisans
-s.buy_slaves(10); s.manumit(10)
+s.labour.buy_slaves(10); s.labour.manumit(10)
 check("freeing untrained people does not skip the training lag",
       s.artisans - a0 < 0.01, "instant gain %.2f" % (s.artisans - a0))
 
@@ -115,7 +115,7 @@ s = sim(civ="norse_900ad", capital=1000000.0)
 s.start_project("identity_cover")
 for _ in range(4):
     s.step()
-s.buy_slaves(150)
+s.labour.buy_slaves(150)
 for _ in range(40):
     s.step()
 check("bankruptcy never abandons a persona or institution",
@@ -173,7 +173,7 @@ check("a debased currency does not collapse prices",
 #     Two hundred simulated years; the single most expensive check here.
 def _ruin_run():
     ruin_sim = sim(manual=False, capital=book_money(1e6))
-    ruin_sim.buy_slaves(400)
+    ruin_sim.labour.buy_slaves(400)
     worst = 0.0
     for _ in range(200):
         ruin_sim.step()
@@ -234,20 +234,20 @@ check("you arrive with no employees and no slaves",
 
 # --- the user: a skilled smith is not a skilled writer
 s = sim()
-ok_hire, err = s.hire("engineer", 1)
+ok_hire, err = s.labour.hire("engineer", 1)
 check("a trade this society does not have cannot be hired",
       not ok_hire and "no engineer" in (err or "").lower(),
       "hire engineer -> %s / %s" % (ok_hire, err))
 s.capital = 20000.0
-ok_train, _ = s.train("machinist", 2)
+ok_train, _ = s.labour.train("machinist", 2)
 check("you can teach a trade into existence",
-      ok_train and "machinist" in s.trades_created and not s.trade_available("chemist"),
+      ok_train and "machinist" in s.trades_created and not s.labour.trade_available("chemist"),
       "trained %s created %r" % (ok_train, sorted(s.trades_created)))
 
 # --- the user: hire a job, not a person
 s = sim(capital=5000.0)
 before = s.capital
-ok_job, _ = s.commission("smith", 200)
+ok_job, _ = s.labour.commission("smith", 200)
 check("you can buy a job without employing anybody",
       ok_job and not s.employees and s.capital < before,
       "ok %s employees %r" % (ok_job, s.employees))
@@ -262,7 +262,7 @@ check("every automatic behaviour has a switch",
 
 # --- naive B/C: there must be a way to shed the upkeep of a finished work
 s = sim(capital=200000.0)
-s.hire("artisan", 2)
+s.labour.hire("artisan", 2)
 s.done.add("fin_restaurant")
 s._done_changed()
 # OPEN IT FIRST. Upkeep follows what you RUN, not what you know, so a node

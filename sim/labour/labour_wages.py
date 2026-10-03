@@ -1,6 +1,6 @@
 """What staff actually cost, every year, and what it costs to be one.
 
-These are methods of Sim; they are a mixin only so that they can live in
+These are methods of Labour; they are a mixin only so that they can live in
 a file of their own (see labour.py's own docstring for the split).
 
 work_for_wages and wage_bill are the two directions of the same trade: a
@@ -14,9 +14,6 @@ that is labour_population.py's market depth and labour_capacity.py's
 household-room ceiling; this file only prices the trade once a person is
 in it.
 """
-from . import wage_provider
-from sim.engine import money_units
-from sim.engine.data import TRADE_REGISTRY, WAGES
 from .labour_market_api import LabourMarket
 from .labour_wage_ledger import WageLedgerMixin
 from sim.constants import declare
@@ -67,12 +64,12 @@ class WagesMixin(WageLedgerMixin):
         usually a bad one once you have anything better to do. That is the
         honest shape of wage labour.
         """
-        if not self.state.founder.founder_alive:
+        if not self._world.state.founder.founder_alive:
             return 0.0, ("there is nobody left to do the work: these are YOUR "
                          "hours, and the founder is dead. What you built goes "
                          "on; you do not.")
-        if trade not in WAGES:
-            here = sorted(candidate_trade for candidate_trade in WAGES if self.trade_available(candidate_trade))
+        if trade not in self._world.wages:
+            here = sorted(candidate_trade for candidate_trade in self._world.wages if self.trade_available(candidate_trade))
             return 0.0, ("no such trade. you could work as: " + ", ".join(here))
         # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU
         # FOR: this has to gate on trade_available(), the same test `hire`
@@ -105,12 +102,12 @@ class WagesMixin(WageLedgerMixin):
         # It has to be derived from the labour market quote, not a separate hourly
         # column, or the two disagree and the docstring's "no arbitrage in
         # either direction" claim becomes false.
-        household = self.state.household
-        rate = self.labour_market.quote_annual(trade) / self.HOURS_PER_PERSON_YEAR
+        household = self._world.state.household
+        rate = self.labour_market.quote_annual(trade) / self._world.HOURS_PER_PERSON_YEAR
         pay = (hours * rate
                * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                             household.reputation / self.WAGE_REPUTATION_SCALE)))
-        before_practice = self.revenue()
+        before_practice = self._world.revenue()
         household.credit(pay, "wages for your own work")
         household.wage_hours_this_year = household.wage_hours_this_year + hours
         household.wages_earned = (household.wages_earned or 0.0) + pay
@@ -129,7 +126,7 @@ class WagesMixin(WageLedgerMixin):
         # itself uses to hand out the pool, so this can never warn about a
         # shortfall step() would not also produce.
         _starve = None
-        _wanted = self.active_hours_still_wanted()
+        _wanted = self._world.active_hours_still_wanted()
         if _wanted:
             _after = max(0.0, self.director_pool() - self.director_hours_committed())
             _short = {trade_id: hours_wanted for trade_id, hours_wanted in _wanted.items() if hours_wanted > _after + 0.5}
@@ -149,7 +146,7 @@ class WagesMixin(WageLedgerMixin):
                        else "these still want more than that",
                        "; ".join(_bits),
                        (", and %d more" % _more) if _more else ""))
-        lost = before_practice - self.revenue()
+        lost = before_practice - self._world.revenue()
         self.log_wage_work(trade, hours, pay, lost)
         if lost > pay:
             # THE THREE NUMBERS HAVE TO SUBTRACT: rounding each separately
@@ -182,7 +179,7 @@ class WagesMixin(WageLedgerMixin):
         or the supply of smiths genuinely grows.
         """
         total = 0.0
-        for trade, count in self.state.household.employees.items():
+        for trade, count in self._world.state.household.employees.items():
             total += count * self.labour_market.quote_annual(trade)
         return total
 
@@ -273,10 +270,10 @@ class WagesMixin(WageLedgerMixin):
         would have caught it happened to sit behind a stray sys.exit in
         another test module and had never run.
         """
-        food = self.essential_price_ratio()
+        food = self._world.essential_price_ratio()
         housing = self.labour_market.town_housing_factor()
         basket = self.TRADE_TOOL_BASKETS.get(trade, ())
-        tools = (sum(self.material_price_factor(material) for material in basket) / len(basket)
+        tools = (sum(self._world.material_price_factor(material) for material in basket) / len(basket)
                  if basket else 1.0)
         return {"food": food, "housing": housing, "tools": tools,
                 "skill_and_difficulty": 1.0,
@@ -286,11 +283,11 @@ class WagesMixin(WageLedgerMixin):
     def _opening_wage_schedule(self):
         """The wage schedule at the opening's price level; its tightness factors live in the economy
         state, so a save carries them."""
-        factors = self.state.economy.wage_tightness_factors
+        factors = self._world.state.economy.wage_tightness_factors
         cached = getattr(self, "_wage_schedule_cache", None)
         if cached is None or cached.tightness_factors is not factors:
-            cached = self._wage_schedule_cache = wage_provider.build_schedule(
-                TRADE_REGISTRY, self.civ, tightness_factors=factors)
+            cached = self._wage_schedule_cache = self._world.build_wage_schedule(
+                self._world.civ, tightness_factors=factors)
             cached.opening_money_per_labour_hour = cached.money_per_labour_hour
         return cached
 
@@ -298,7 +295,7 @@ class WagesMixin(WageLedgerMixin):
         """This household's labour-market wage schedule, in money at the present price level: one coin
         stock against the goods moves what an hour is worth, and so every wage and every price."""
         schedule = self._opening_wage_schedule()
-        schedule.money_per_labour_hour = schedule.opening_money_per_labour_hour * self.home_price_level()
+        schedule.money_per_labour_hour = schedule.opening_money_per_labour_hour * self._world.home_price_level()
         return schedule
 
     def money_per_labour_hour(self):
@@ -307,7 +304,7 @@ class WagesMixin(WageLedgerMixin):
 
     def book_money(self, denarii):
         """An authored book-denarii amount in this civilisation's coin."""
-        return money_units.book_to_money(denarii, self.money_per_labour_hour())
+        return self._world.book_to_money(denarii, self.money_per_labour_hour())
 
     LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = declare(
         "LABOUR_PAY_SHARE_OF_OUTPUT_GAIN", 0.0, kind="temporary_heuristic",
@@ -337,7 +334,7 @@ class WagesMixin(WageLedgerMixin):
 
     def update_wages(self):
         """One year of wage adjustment toward the trades that are short."""
-        hours = self.state.economy.society_labour_hours
+        hours = self._world.state.economy.society_labour_hours
         if not hours:
             return
         self.wage_schedule().step(self._hours_needed_by_trade(), hours)

@@ -9,7 +9,7 @@ from sim.engine.catalog import (load_production_catalog, load_trade_registry,
                                 validate_mod_material_paths)
 from sim.engine.mods import get_ordered_mods, load_mod_tree
 from sim.engine.tree_source import load_base_tree
-from sim.engine import data, prices
+from sim.engine import data, prices, wage_schedule
 from sim.labour import wage_provider
 from sim.validate_production import check
 from sim.world import demand
@@ -97,7 +97,7 @@ class ModEconomicCatalogTests(unittest.TestCase):
         self.assertIn("test_acme_k3f9:clockmaker", registry)
         self.assertTrue(registry["test_acme_k3f9:clockmaker"].initially_absent)
         self.assertIn("established", registry["test_acme_k3f9:clockmaker"].note)
-        schedule = wage_provider.build_schedule(registry, data.load_civ("rome_100ad"))
+        schedule = wage_schedule.build_schedule(registry, data.load_civ("rome_100ad"))
         self.assertGreater(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), 0)
 
     def test_base_trade_registry_owns_identity_and_availability(self):

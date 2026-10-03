@@ -23,7 +23,7 @@ may import it). `sim/tests/test_economy_imports.py` holds the economy's own wall
 | Package | Import door | Port on `Sim` |
 |---|---|---|
 | `sim/economy/` | none; the engine reaches it through `sim/engine/economy_port*.py` | `sim.economy` |
-| `sim/labour/` | `sim/labour/api.py` | `sim.labour` (`sim/labour/port.py`); the labour market every employer asks is `sim.labour.market` |
+| `sim/labour/` | `sim/labour/api.py` | `sim.labour` (a `Labour`, built by `sim/engine/labour_port.py`); the labour market every employer asks is `sim.labour.market` |
 | `sim/geography/` | `sim/geography/api.py` | `sim.geography` (`sim/geography/port.py`) |
 | `sim/agents/` | `sim/agents/api.py` | none; the engine adapters (`society_actors.py`, `society_disclosure.py`, `interest_groups.py`) consume the api |
 | `sim/ui/` | `sim/ui/api.py` | none; the UI is a consumer. `sim/simulator.py` is the entry point |

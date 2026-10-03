@@ -54,7 +54,7 @@ check("the labour ceiling label is per trade, not one shared total",
 # --- 233: departures are split by cause; the workforce block exists
 staffed = sim(capital=10000000.0, events=False)
 run_it(staffed, "workshop_first", "school_founded", "freedman_staff")
-staffed.hire("scholar", 8)
+staffed.labour.hire("scholar", 8)
 for _ in range(40):
     staffed.step()
 loss_lines = [message for _, message in staffed.log if message.startswith("you lose ")]

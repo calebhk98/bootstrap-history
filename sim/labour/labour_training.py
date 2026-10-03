@@ -1,7 +1,7 @@
 """Buying and teaching trades into existence: hiring, firing, teaching,
 commissioning, and what a technology does to an hour once bought.
 
-These are methods of Sim; they are a mixin only so that they can live in
+These are methods of Labour; they are a mixin only so that they can live in
 a file of their own (see labour.py's own docstring for the split).
 
 hire, fire, train and commission are the four verbs a player actually
@@ -18,9 +18,7 @@ worth, without hiring anyone new.
 """
 import math
 
-from sim.engine.data import (TRADES_ABSENT, TRADE_NOTES, WAGES, closure, trade_family)
 from sim.constants import declare
-from sim.engine import purchase_rule
 
 
 class TrainingMixin:
@@ -115,8 +113,8 @@ class TrainingMixin:
         why each figure is what it is.
         """
         bonus = 0.0
-        projects = self.state.projects
-        for node, row_trade, add in self.LABOUR_PRODUCTIVITY_SOURCES:
+        projects = self._world.state.projects
+        for node, row_trade, add in self._world.LABOUR_PRODUCTIVITY_SOURCES:
             if row_trade == trade and node in projects.done:
                 bonus += add
         return min(self.LABOUR_PRODUCTIVITY_CAP, 1.0 + bonus)
@@ -148,12 +146,12 @@ class TrainingMixin:
         # out of the hours it can call on, which is this number, not how
         # many people the town could in principle hire (market_supply, still
         # unchanged, still governs hiring capacity and labour market price_factor).
-        return ((self.market_supply(trade) + self.state.household.contract_hours.get(trade, 0.0))
+        return ((self.market_supply(trade) + self._world.state.household.contract_hours.get(trade, 0.0))
                 * self.labour_productivity(trade))
 
     def hours_reserved(self, trade):
         """Hours of this trade you have already bought from an outside shop."""
-        return self.state.household.contract_hours.get(trade, 0.0)
+        return self._world.state.household.contract_hours.get(trade, 0.0)
 
     def market_supply_split(self, trade):
         """(the town's hours, your own people's hours). Same total, said honestly.
@@ -166,9 +164,9 @@ class TrainingMixin:
         reading is wrong: the town's own share has not moved at all, only
         yours has grown, so the two have to be reported apart.
         """
-        mine = self.state.household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR
+        mine = self._world.state.household.employees.get(trade, 0.0) * self._world.HOURS_PER_PERSON_YEAR
         total = self.market_supply(trade)
-        if trade in TRADES_ABSENT:
+        if trade in self._world.trades_absent:
             # There is no market in these at all; every hour is somebody you
             # taught, or somebody they taught.
             return 0.0, total
@@ -179,7 +177,7 @@ class TrainingMixin:
         money. A wage or fee is spent outright, so it draws on the purchase
         budget; purchase_rule states that rule, the budget and the shortfall,
         the same text `start` and `buy` give."""
-        return purchase_rule.refusal_text(self, what, fee)
+        return self._world.refusal_text(what, fee)
 
     def hire_fee(self, trade, count):
         """Paid the moment people are taken on: a finder's fee that is also
@@ -195,9 +193,9 @@ class TrainingMixin:
         """Everything `hire` and `quote hire` agree on before money moves: the
         whole-person count and the fee, or a refusal. Returns (count, fee, refusal)."""
         trade = str(trade or "").strip().lower()
-        if trade not in WAGES:
+        if trade not in self._world.wages:
             return None, None, ("no such trade: %s. Trades: %s"
-                           % (trade, ", ".join(sorted(WAGES))))
+                           % (trade, ", ".join(sorted(self._world.wages))))
         if isinstance(count, str) or isinstance(count, bool):
             # `buy` and `start` both type-check and `hire` did not, so "5"
             # walked straight in where 5 was meant.
@@ -218,11 +216,11 @@ class TrainingMixin:
         if not self.trade_available(trade):
             return None, None, ("there are no %ss to hire in this society at any price: %s "
                            'Teach one: {"cmd":"train","trade":"%s","n":1}'
-                           % (trade, TRADE_NOTES.get(trade, ""), trade))
-        if trade not in TRADES_ABSENT:
+                           % (trade, self._world.trade_notes.get(trade, ""), trade))
+        if trade not in self._world.trades_absent:
             exist = self.people_who_exist(trade)
-            on_books = self.state.household.employees.get(trade, 0.0)
-            rivals = self.actor_staff_fte(trade)
+            on_books = self._world.state.household.employees.get(trade, 0.0)
+            rivals = self._world.actor_staff_fte(trade)
             if on_books + rivals + count > exist + 1e-6:
                 return None, None, ("only about %.1f %ss exist in this country and you "
                                "already employ %.1f%s: there is nobody left to hire."
@@ -245,7 +243,7 @@ class TrainingMixin:
         # back down).
         _lpf_now = self.labour_market.price_factor(trade)
         fee = self.hire_fee(trade, count)
-        if fee > self.spending_power("buy"):
+        if fee > self._world.spending_power("buy"):
             _msg = self._cash_in_hand_refusal(
                 "hiring %g %s%s" % (count, trade, "" if count == 1 else "s"), fee)
             # SAY WHOSE MARKET THIS IS, where the player actually feels it.
@@ -287,13 +285,13 @@ class TrainingMixin:
         count, fee, refusal = self.hire_check(trade, count)
         if refusal:
             return False, refusal
-        household = self.state.household
+        household = self._world.state.household
         household.debit(fee, "hiring fee and first year's wages")
         # CARRIED FORWARD, so the next step does not bill the same year twice.
         # See step() 2, where it is netted off living_cost.
         household.wages_prepaid = (household.wages_prepaid or 0.0) + fee
         household.employees[trade] = household.employees.get(trade, 0.0) + float(count)
-        self.labour_market.hire(self.state.household, trade, float(count) * self.HOURS_PER_PERSON_YEAR)
+        self.labour_market.hire(self._world.state.household, trade, float(count) * self._world.HOURS_PER_PERSON_YEAR)
         self._resync_pools()
         # SAY HOW MANY, AND HOW MANY YOU NOW HAVE: a reply that only names
         # the trade, with no number, gives a player no way to notice a
@@ -317,7 +315,7 @@ class TrainingMixin:
         is, and they do not arrive.
         """
         trade = str(trade or "").strip().lower()
-        household = self.state.household
+        household = self._world.state.household
         have = household.employees.get(trade, 0.0)
         pending = sum(record[3] for record in household.training
                       if len(record) > 3 and record[2] == trade)
@@ -336,7 +334,7 @@ class TrainingMixin:
         note = None
         if have > 0:
             gone = min(count, have)
-            self.labour_market.release(household, trade, gone * self.HOURS_PER_PERSON_YEAR)
+            self.labour_market.release(household, trade, gone * self._world.HOURS_PER_PERSON_YEAR)
             household.employees[trade] = have - gone
             if household.employees[trade] <= 1e-9:
                 household.employees.pop(trade)
@@ -394,7 +392,7 @@ class TrainingMixin:
         move. Returns (plan, refusal); the plan holds the whole-person count,
         the source trade, the founder hours and the keep paid now."""
         trade = str(trade or "").strip().lower()
-        if trade not in WAGES:
+        if trade not in self._world.wages:
             return None, "no such trade: %s" % trade
         if count <= 0:
             return None, "n must be greater than zero. Nothing was changed."
@@ -410,7 +408,7 @@ class TrainingMixin:
                        else "glassblower" if trade == "optician"
                        else "scribe" if trade == "chemist"
                        else "smith")).strip().lower()
-        if frm in TRADES_ABSENT and frm not in self.state.household.trades_created:
+        if frm in self._world.trades_absent and frm not in self._world.state.household.trades_created:
             return None, "you cannot teach from %ss; there are none" % frm
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:
         # engineer, chemist, machinist and optician can ONLY be had this way
@@ -450,7 +448,7 @@ class TrainingMixin:
         # `frm` you have already pulled recently, the dearer feeding the next
         # batch while they learn.
         fee = count * self.labour_market.quote_annual(frm) * self.TEACHING_FEE_MULTIPLIER
-        if fee > self.spending_power("buy"):
+        if fee > self._world.spending_power("buy"):
             return None, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
                 % (count, trade, "" if count == 1 else "s"), fee)
@@ -474,13 +472,13 @@ class TrainingMixin:
         if refusal:
             return False, refusal
         count, frm, hours, fee = plan["count"], plan["from"], plan["hours"], plan["fee"]
-        household = self.state.household
-        current_year = self.state.scenario.year
+        household = self._world.state.household
+        current_year = self._world.state.scenario.year
         household.debit(fee, "training fees")
         household.teaching_hours_this_year = (household.teaching_hours_this_year or 0.0) + hours
         household.trades_created.add(trade)
         household.training.append([0.0, current_year + self.TEACHING_MATURATION_YEARS, trade, float(count)])
-        self.labour_market.press(frm, float(count) * self.HOURS_PER_PERSON_YEAR)
+        self.labour_market.press(frm, float(count) * self._world.HOURS_PER_PERSON_YEAR)
         # SAY WHAT IT TOOK: teaching can quietly eat most of a year's
         # founder-hours, with nothing left afterward to supervise what it
         # just cost elsewhere to run - the reply has to report the actual
@@ -525,37 +523,37 @@ class TrainingMixin:
         # of its staff and it never opened another concern. commission() does
         # its own affordability check against cash AND credit, which is the
         # check that should govern here too.
-        if self.spending_power("buy") <= 0:
+        if self._world.spending_power("buy") <= 0:
             return None
-        need = getattr(self, "_goal_closure", None)
+        need = getattr(self._world, "goal_closure", None)
         if need is None:
             try:
-                need = self._goal_closure = closure(self.nodes, self.goal)
+                need = self._world.goal_closure = self._world.closure(self._world.nodes, self._world.goal)
             except Exception:
-                need = self._goal_closure = set()
+                need = self._world.goal_closure = set()
         seen = 0
-        projects = self.state.projects
-        household = self.state.household
-        for node_id in self.order:
+        projects = self._world.state.projects
+        household = self._world.state.household
+        for node_id in self._world.order:
             if seen >= look:
                 break
             if node_id in projects.done or node_id in projects.active or node_id not in need:
                 continue
-            if self.exclusion_reason(node_id):
+            if self._world.exclusion_reason(node_id):
                 continue
-            node = self.nodes[node_id]
+            node = self._world.nodes[node_id]
             if any(prereq_id not in projects.done for prereq_id in node["pre"]):
                 continue
             seen += 1
             short = node["art"] - self.craft_hands_available()
             if short <= 0 or node["sch"] > self.effective_scholars():
                 continue
-            hours = short * self.HOURS_PER_PERSON_YEAR
+            hours = short * self._world.HOURS_PER_PERSON_YEAR
             # The cheapest craft trade this society actually has that can
             # spare the time: a workshop needs hands, not a particular guild.
             best = None
-            for trade in sorted(WAGES):
-                if trade_family(trade) != "craft" or not self.trade_available(trade):
+            for trade in sorted(self._world.wages):
+                if self._world.trade_family(trade) != "craft" or not self.trade_available(trade):
                     continue
                 spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
                 if spare < hours:
@@ -577,9 +575,9 @@ class TrainingMixin:
         year of a carpenter's time IS a carpenter, for the purposes of whether
         you can attempt a thing that needs one, and buying a job rather than a
         person is the whole point of `commission`."""
-        household = self.state.household
+        household = self._world.state.household
         contracted = sum(hours for trade, hours in getattr(household, "contract_hours", {}).items()
-                         if trade_family(trade) == "craft")
+                         if self._world.trade_family(trade) == "craft")
         # AND YOURSELF. effective_scholars() has always counted the founder as
         # one of the scholars - "you are your own natural philosopher" - and
         # nothing counted them as a pair of hands, though the premise of the
@@ -588,8 +586,8 @@ class TrainingMixin:
         # and a Norse run that could field one could never build the place
         # craftsmen work, so it ended six hundred years later with 136
         # technologies and no staff at all.
-        own = 1.0 if self.state.founder.founder_alive else 0.0
-        return household.artisans + own + contracted / self.HOURS_PER_PERSON_YEAR
+        own = 1.0 if self._world.state.founder.founder_alive else 0.0
+        return household.artisans + own + contracted / self._world.HOURS_PER_PERSON_YEAR
 
     COMMISSION_PREMIUM_MULTIPLIER = declare(
         "COMMISSION_PREMIUM_MULTIPLIER", 1.6, kind="temporary_heuristic",
@@ -616,14 +614,14 @@ class TrainingMixin:
         """What `commission` and `quote commission` agree on before money
         moves. Returns (fee, refusal)."""
         trade = str(trade or "").strip().lower()
-        if trade not in WAGES:
+        if trade not in self._world.wages:
             return None, "no such trade: %s" % trade
         if hours <= 0:
             return None, "hours must be greater than zero. Nothing was changed."
         if not self.trade_available(trade):
             return None, ("no %s will take the work; the trade does not exist here: %s"
-                           % (trade, TRADE_NOTES.get(trade, "")))
-        household = self.state.household
+                           % (trade, self._world.trade_notes.get(trade, "")))
+        household = self._world.state.household
         spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
         if hours > spare:
             return None, ("the %ss here can spare %.0f more hours this year, not %.0f"
@@ -632,7 +630,7 @@ class TrainingMixin:
         # year, and more again if you are buying deep into what the local
         # market can spare this year (see labour market price_factor).
         fee = self.commission_fee(trade, hours)
-        if fee > self.spending_power("buy"):
+        if fee > self._world.spending_power("buy"):
             return None, self._cash_in_hand_refusal(
                 "%.0f hours of a %s" % (hours, trade), fee)
         return fee, None
@@ -649,7 +647,7 @@ class TrainingMixin:
         fee, refusal = self.commission_check(trade, hours)
         if refusal:
             return False, refusal
-        household = self.state.household
+        household = self._world.state.household
         household.debit(fee, "commissioned craftsmen")
         household.contract_hours[trade] = household.contract_hours.get(trade, 0.0) + hours
         household.commissioned[trade] = household.commissioned.get(trade, 0.0) + hours

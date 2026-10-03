@@ -12,9 +12,9 @@ test_sim = sim(capital=1_000_000.0)
 idle = ask(test_sim, cmd="idle")
 check("idle answers", idle.get("ok"), idle)
 check("directed capacity is the engine's director pool",
-      abs(idle["directed_hours_this_year"] - test_sim.director_pool()) < 1, idle)
+      abs(idle["directed_hours_this_year"] - test_sim.labour.director_pool()) < 1, idle)
 check("committed is the engine's committed hours",
-      abs(idle["committed_hours"] - test_sim.director_hours_committed()) < 1, idle)
+      abs(idle["committed_hours"] - test_sim.labour.director_hours_committed()) < 1, idle)
 check("idle is capacity less committed",
       abs(idle["idle_hours"] - max(0.0, idle["directed_hours_this_year"] - idle["committed_hours"])) < 1, idle)
 uses = idle.get("potential_uses", {})
@@ -25,7 +25,7 @@ check("potential uses count what is startable today", uses.get("startable_today"
 check("potential uses count the free ones", uses.get("startable_at_no_cash_cost")
       == sum(1 for node_id in startable if test_sim.project_cost(node_id) <= 0), uses)
 check("it offers selling hours for wages as a use", "work" in str(uses.get("wage_work", "")), uses)
-check("it never spends hours itself", test_sim.director_hours_committed() == idle["committed_hours"])
+check("it never spends hours itself", test_sim.labour.director_hours_committed() == idle["committed_hours"])
 
 target = next((node_id for node_id in test_sim.order
                if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 0 and test_sim.can_start(node_id)), None)

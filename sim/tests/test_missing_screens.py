@@ -62,10 +62,10 @@ class MapTests(unittest.TestCase):
         reply = _ask(sim, "map", full=True)
         self.assertTrue(reply["ok"], reply)
         base = reply["you_are_based_at"]
-        self.assertEqual(base["tile"], sim.base_tile())
+        self.assertEqual(base["tile"], sim.labour.base_tile())
         self.assertNotEqual(base["name"], base["tile"])
         self.assertTrue(base["region"])
-        held = sim.settlement_tiles()
+        held = sim.labour.settlement_tiles()
         self.assertEqual({row["tile"] for row in reply["tiles"]}, set(held))
         for row in reply["tiles"]:
             self.assertEqual(row["people"], round(held[row["tile"]]))
@@ -76,14 +76,14 @@ class MapTests(unittest.TestCase):
         sim = _fresh_sim()
         reply = _ask(sim, "map")
         self.assertEqual(reply["you_are_based_at"]["town_people"],
-                         round(sim.home_town_population_estimate()))
+                         round(sim.labour.home_town_population_estimate()))
 
     def test_deposits_on_held_tiles_are_listed(self):
         sim = _fresh_sim("rome_100ad")
         reply = _ask(sim, "map", full=True)
         listed = {(deposit["name"], row["tile"])
                   for row in reply["tiles"] for deposit in row["deposits"]}
-        held = set(sim.settlement_tiles())
+        held = set(sim.labour.settlement_tiles())
         expected = {(deposit.name, deposit.tile)
                     for metal in deposit_model.METALS
                     for deposit in deposit_model.load_deposits(metal)
@@ -94,7 +94,7 @@ class MapTests(unittest.TestCase):
     def test_reach_lists_neighbours_not_held(self):
         sim = _fresh_sim()
         reply = _ask(sim, "map", full=True)
-        held = set(sim.settlement_tiles())
+        held = set(sim.labour.settlement_tiles())
         self.assertTrue(reply["next_door"])
         for row in reply["next_door"]:
             self.assertNotIn(row["tile"], held)
@@ -138,7 +138,7 @@ class EducationTests(unittest.TestCase):
                          round(sim.literacy_ceiling_elite(), 4))
         self.assertEqual(reply["schooling_flow"], round(sim._schooling_flow(), 4))
         self.assertEqual(reply["farm_share_of_hours"],
-                         round(sim.farm_share_of_hours(), 4))
+                         round(sim.labour.farm_share_of_hours(), 4))
 
     def test_effective_flow_has_one_definition(self):
         sim = _fresh_sim()
@@ -202,7 +202,7 @@ class DemographyTests(unittest.TestCase):
     def test_trades_come_from_population_report(self):
         sim = _fresh_sim()
         reply = _ask(sim, "demography")
-        report = sim.population_report()
+        report = sim.labour.population_report()
         self.assertEqual([row["trade"] for row in reply["trades"]],
                          [row["trade"] for row in report["trades"]])
 

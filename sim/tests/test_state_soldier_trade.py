@@ -20,8 +20,8 @@ def with_army(share_of_working_age):
 
 game = with_army(0.001)
 world = SimWorld(game)
-check("soldier is a trade the labour market prices and the founder could hire", "soldier" in game.available_trades(),
-      game.available_trades())
+check("soldier is a trade the labour market prices and the founder could hire", "soldier" in game.labour.available_trades(),
+      game.labour.available_trades())
 army = {line.name: line for line in budget.standing_lines(world)}["army"]
 check("the army is people of the soldier trade, not labourers", set(army.labour) == {"soldier"}, army.labour)
 check("army pay is the soldier trade's wage in the one labour market",
@@ -31,18 +31,18 @@ check("soldiers come from the whole working age, as unskilled labour does",
 
 # ---- conscription moves the soldier wage ------------------------------------------------------------
 small, large = with_army(0.002), with_army(0.2)
-wage_small, wage_large = (g.labour_market.quote_annual("soldier") for g in (small, large))
+wage_small, wage_large = (g.labour.market.quote_annual("soldier") for g in (small, large))
 check("before the state hires, the soldier wage does not depend on the army it will raise",
       abs(wage_small - wage_large) < 1e-9 * wage_small, (wage_small, wage_large))
 for funded in (small, large):
     funded.state_treasury().money = 1.0e15  # both states pay in full, so the levy size is the only difference
 one_year(small)
 one_year(large)
-check("soldiers hired by the state raise the soldier wage", small.labour_market.quote_annual("soldier") > wage_small,
-      (small.labour_market.quote_annual("soldier"), wage_small))
+check("soldiers hired by the state raise the soldier wage", small.labour.market.quote_annual("soldier") > wage_small,
+      (small.labour.market.quote_annual("soldier"), wage_small))
 check("a larger levy raises it further",
-      large.labour_market.quote_annual("soldier") / wage_large > small.labour_market.quote_annual("soldier") / wage_small,
-      (large.labour_market.quote_annual("soldier"), small.labour_market.quote_annual("soldier")))
+      large.labour.market.quote_annual("soldier") / wage_large > small.labour.market.quote_annual("soldier") / wage_small,
+      (large.labour.market.quote_annual("soldier"), small.labour.market.quote_annual("soldier")))
 check("the state's soldiers are in its workforce under their own trade",
       large.state_treasury().workforce.get("soldier", 0.0) > 0.0, large.state_treasury().workforce)
 
@@ -53,5 +53,5 @@ for funded in (unarmed, armed):
 one_year(unarmed)
 one_year(armed)
 check("with a fifth of the working age under arms, unskilled labour costs more",
-      armed.labour_market.quote_annual("labourer") > unarmed.labour_market.quote_annual("labourer"),
-      (armed.labour_market.quote_annual("labourer"), unarmed.labour_market.quote_annual("labourer")))
+      armed.labour.market.quote_annual("labourer") > unarmed.labour.market.quote_annual("labourer"),
+      (armed.labour.market.quote_annual("labourer"), unarmed.labour.market.quote_annual("labourer")))

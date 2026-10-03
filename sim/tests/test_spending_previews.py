@@ -65,7 +65,7 @@ advance_sim = sim(capital=1e7)
 net_before_hire = _ask(advance_sim, cmd="money")["net_per_year"]
 _ask(advance_sim, cmd="hire", trade="smith", n=1)
 money_after = _ask(advance_sim, cmd="money")
-expected_drop = advance_sim.wage_bill()
+expected_drop = advance_sim.labour.wage_bill()
 check("recurring net falls by the whole wage after a hire",
       (net_before_hire - money_after["net_per_year"]) > 0.9 * expected_drop,
       (net_before_hire, money_after["net_per_year"], expected_drop))

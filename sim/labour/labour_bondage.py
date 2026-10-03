@@ -1,6 +1,6 @@
 """Buying people, freeing them, and keeping the two staff pools honest.
 
-These are methods of Sim; they are a mixin only so that they can live in a
+These are methods of Labour; they are a mixin only so that they can live in a
 file of their own (see labour.py's own docstring for the split).
 
 buy_slaves and manumit are the two sides of the model CLAUDE.md 3.1 asks
@@ -16,10 +16,7 @@ granted so _resync_pools - which runs unconditionally every step() and
 rebuilds self.household.scholars/artisans from the trades actually on the
 books - does not overwrite the grant out of existence.
 """
-from sim.engine.data import trade_family
-from sim.engine import purchase_rule
 from sim.constants import declare
-from sim.engine import money_units
 
 
 class BondageMixin:
@@ -44,7 +41,7 @@ class BondageMixin:
         those two fields: an addition that bypasses this record is silently
         overwritten and discarded the next time `_resync_pools()` runs.
         """
-        household = self.state.household
+        household = self._world.state.household
         granted = getattr(household, "granted_staff", None)
         if granted is None:
             granted = household.granted_staff = {"scholars": 0.0, "artisans": 0.0}
@@ -103,8 +100,8 @@ class BondageMixin:
         self.household.artisans what they are, so it is the one place that has to add
         the grant back rather than let it be overwritten out of existence.
         """
-        household = self.state.household
-        craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
+        household = self._world.state.household
+        craft = sum(count for trade, count in household.employees.items() if self._world.trade_family(trade) == "craft")
         schol = household.employees.get("scholar", 0.0)
         granted = getattr(household, "granted_staff", None) or {}
         # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. This function
@@ -200,7 +197,10 @@ class BondageMixin:
             "from. A real mechanism would price a person the way "
             "labour.py now prices free labour: from local supply, risk "
             "and what the buyer can actually enforce.")
-    SLAVE_BASE_PRICE = money_units.PricedInLabourHours("SLAVE_BASE_PRICE_LABOUR_HOURS")
+    @property
+    def SLAVE_BASE_PRICE(self):
+        """The base price in this civilisation's coin: the declared hours times what one unskilled hour is worth."""
+        return self.SLAVE_BASE_PRICE_LABOUR_HOURS * self.money_per_labour_hour()
 
     def slave_quote(self, n_people):
         """What buying this many people actually costs, here, today.
@@ -216,16 +216,16 @@ class BondageMixin:
         # year as sellers restock, so buying in slices is priced as one
         # large purchase unless you actually wait between them.
         depth = max(self.SLAVE_MARKET_DEPTH_FLOOR,
-                    self.SLAVE_MARKET_DEPTH_SCALE * self.pop_scale ** self.SLAVE_MARKET_DEPTH_POP_EXPONENT)
+                    self.SLAVE_MARKET_DEPTH_SCALE * self._world.pop_scale ** self.SLAVE_MARKET_DEPTH_POP_EXPONENT)
         # Integrate the rising price ACROSS the purchase instead of applying
         # one end-price surcharge to the whole block, so grouping does not
         # change the per-head cost: the nth head costs what the nth head
         # costs however you group the purchase into calls.
-        already = getattr(self.household, "market_pressure", 0.0)
+        already = getattr(self._world.household, "market_pressure", 0.0)
         people_count = float(n_people)
         exponent = self.SLAVE_PRICE_CONGESTION_EXPONENT
         integral = (((already + people_count) ** exponent) - (already ** exponent)) / (exponent * (depth ** (exponent - 1.0)))
-        return self.SLAVE_BASE_PRICE * (people_count + integral) * self.price_index
+        return self.SLAVE_BASE_PRICE * (people_count + integral) * self._world.price_index
 
     def buy_slaves(self, n_people):
         """The option the model refuses to hide, and refuses to make costless.
@@ -260,7 +260,7 @@ class BondageMixin:
         # hire rather than bypassing it under a different verb.
         room = self.household_room()
         if n_people > room:
-            self.household._last_buy_refusal = (
+            self._world.household._last_buy_refusal = (
                 "you can supervise, house and teach %.2f more people, not %g - "
                 "and a person you own needs feeding and housing exactly as much "
                 "as one you pay. %s"
@@ -268,16 +268,16 @@ class BondageMixin:
             return 0
         # A town's slave market has a depth. Buying beyond it bids the price up.
         price = self.slave_quote(n_people)
-        household = self.state.household
-        economy = self.state.economy
-        if not purchase_rule.can_pay(self, price):
-            household._last_buy_refusal = purchase_rule.refusal_text(self, "%d slaves" % n_people, price)
+        household = self._world.state.household
+        economy = self._world.state.economy
+        if not self._world.can_pay(price):
+            household._last_buy_refusal = self._world.refusal_text("%d slaves" % n_people, price)
             return 0
         household.debit(price, "slaves bought")
         household.slaves += n_people
         economy.market_pressure = economy.market_pressure + n_people
         # Untrained on arrival. They become productive through household.training.
-        household.training.append([n_people * self.WORKER_EQUIVALENT_UNTRAINED, self.state.scenario.year + self.TRAINING_YEARS])
+        household.training.append([n_people * self.WORKER_EQUIVALENT_UNTRAINED, self._world.state.scenario.year + self.TRAINING_YEARS])
         return n_people
 
     WORKER_EQUIVALENT_UNTRAINED = declare(
@@ -326,7 +326,7 @@ class BondageMixin:
             "measured.")
 
     def manumit(self, n_people):
-        household = self.state.household
+        household = self._world.state.household
         n_people = min(n_people, household.slaves)
         if not n_people:
             return 0

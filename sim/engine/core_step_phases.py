@@ -226,7 +226,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             _tr_upkeep = self.upkeep()
             _spare_tr = _tr_rev - _tr_upkeep - self.living_cost(_rev=_tr_rev, _upkeep=_tr_upkeep)
             for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
-                _wages = 2.0 * self.labour_market.quote_annual(trade_id)
+                _wages = 2.0 * self.labour.market.quote_annual(trade_id)
                 _budget = (max(0.0, _spare_tr) + max(0.0, self.state.household.capital) * 0.10
                            if _score >= 500 else max(0.0, _spare_tr) * 0.5)
                 if _wages > _budget:
@@ -327,7 +327,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             year_hours = max(1.0, self.labour.director_pool())
             practice_lost = self.revenue() * (hours / year_hours) * (
                 1.0 if self.practice_attention() > 0 else 0.0)
-            rate = (self.labour_market.quote_annual(trade) / self.HOURS_PER_PERSON_YEAR
+            rate = (self.labour.market.quote_annual(trade) / self.HOURS_PER_PERSON_YEAR
                     * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                                  self.state.household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
             if hours * rate > practice_lost:
@@ -496,7 +496,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         if self.state.household.bondage_years_left > 0:
             self.state.household.bondage_years_left -= 1
             paid = (self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE
-                    * self.BONDAGE_WAGE_MARKUP * self.labour_market.quote("labourer"))
+                    * self.BONDAGE_WAGE_MARKUP * self.labour.market.quote("labourer"))
             self.state.household.bondage_debt = max(0.0, self.state.household.bondage_debt - paid)
             if self.state.household.bondage_debt <= 0 and self.state.household.bondage_years_left > 0:
                 self.state.household.bondage_years_left = 0     # paid early

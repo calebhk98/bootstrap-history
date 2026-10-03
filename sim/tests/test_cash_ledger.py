@@ -44,9 +44,9 @@ rich.end_year = rich.cfg["start_year"] + rich.cfg["horizon_years"]
 check("a new game's book reconciles", reconciles(rich), cash_book.unaccounted(rich))
 
 for label, action in (
-        ("hire", lambda: rich.hire("smith", 1)),
-        ("train", lambda: rich.train("smith", 1)),
-        ("commission", lambda: rich.commission("smith", 200)),
+        ("hire", lambda: rich.labour.hire("smith", 1)),
+        ("train", lambda: rich.labour.train("smith", 1)),
+        ("commission", lambda: rich.labour.commission("smith", 200)),
         ("bribe", lambda: rich.bribe(500.0)),
         ("farm", lambda: rich.invest_farm(5)),
         ("housing", lambda: rich.build_worker_housing(2)),

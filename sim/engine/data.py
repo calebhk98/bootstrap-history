@@ -35,6 +35,7 @@ from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_st
 from . import energy_prices, money_units, node_revenue
 from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
+from . import wage_schedule
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
 
@@ -156,7 +157,7 @@ TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family
 
 # Starting wages: the labour-market schedule before any year has passed.
 # Sim carries the live schedule; these serve tools and validation.
-_STARTING_SCHEDULE = wage_provider.build_schedule(
+_STARTING_SCHEDULE = wage_schedule.build_schedule(
     _TRADE_REGISTRY, wage_provider.reference_civilisation())
 WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
 ANNUAL_WAGE: Dict[str, float] = {
@@ -190,7 +191,7 @@ def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wa
     """The opening wage schedule of a civilisation (the default one if none)."""
     if civilization_id is None:
         return _STARTING_SCHEDULE
-    return wage_provider.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
+    return wage_schedule.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
 
 
 _HELD_CIVILISATION_SCHEDULES: Dict[str, wage_provider.wages.WageSchedule] = {}
@@ -202,14 +203,14 @@ def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
     key = json.dumps(civ, sort_keys=True, default=str)
     schedule = _HELD_CIVILISATION_SCHEDULES.get(key)
     if schedule is None:
-        schedule = _HELD_CIVILISATION_SCHEDULES[key] = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+        schedule = _HELD_CIVILISATION_SCHEDULES[key] = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
     return schedule
 
 
 def kit_capital(kit_id: str, civ: JSONDict) -> float:
     """Opening money of a kit for a civilisation: its labourer-years times the
     civilisation's opening annual labourer wage."""
-    schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    schedule = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
     return STARTING_KITS[kit_id]["labourer_years"] * schedule.annual_wage("labourer")
 
 
@@ -410,7 +411,7 @@ def calculated_goods_table(held_technology_ids: Iterable[str] = (),
 
 def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
     """The tree with every money field in the civilisation's coin."""
-    schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    schedule = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
     first = next(iter(nodes.values()), None)
     if first is not None and civ.get("id") and first.get("_derived_for") != civ["id"]:
         nodes = node_revenue.for_civilisation(nodes, civ, schedule)

@@ -62,26 +62,26 @@ HOURS = S.Sim.HOURS_PER_PERSON_YEAR
 # ---- labour: a firm's staff come out of the pool the founder hires from ------------------
 game = actor_sim([])
 trade = "smith"
-supply_before = game.market_supply(trade)
-exist_before = game.people_who_exist(trade)
-price_before = game.labour_market.price_factor(trade)
+supply_before = game.labour.market_supply(trade)
+exist_before = game.labour.people_who_exist(trade)
+price_before = game.labour.market.price_factor(trade)
 firm = game.actors.add("firm:smiths", ActorRecord(kind="firm", money=1.0e6))
 firm.workforce[trade] = 5.0
 game.actors.refresh_staff()
 check("a firm's staff are counted against the same trade's pool",
       abs(game.actor_staff_fte(trade) - 5.0) < 1e-9, game.actor_staff_fte(trade))
 check("the reachable pool the founder hires from shrinks by what a firm employs",
-      game.market_supply(trade) < supply_before
-      and abs((supply_before - game.market_supply(trade)) - 5.0 * HOURS) < 1e-6
-      or game.market_supply(trade) == 0.0,
-      (supply_before, game.market_supply(trade)))
+      game.labour.market_supply(trade) < supply_before
+      and abs((supply_before - game.labour.market_supply(trade)) - 5.0 * HOURS) < 1e-6
+      or game.labour.market_supply(trade) == 0.0,
+      (supply_before, game.labour.market_supply(trade)))
 check("a firm's employees are not available to the founder to hire",
-      game.hire_check(trade, exist_before - 3.0)[2] is not None,
-      game.hire_check(trade, exist_before - 3.0))
+      game.labour.hire_check(trade, exist_before - 3.0)[2] is not None,
+      game.labour.hire_check(trade, exist_before - 3.0))
 firm.workforce[trade] = 0.0
 game.actors.refresh_staff()
 check("when the firm lets them go the pool is the founder's again",
-      abs(game.market_supply(trade) - supply_before) < 1e-6, (game.market_supply(trade), supply_before))
+      abs(game.labour.market_supply(trade) - supply_before) < 1e-6, (game.labour.market_supply(trade), supply_before))
 
 # ---- labour: a firm hiring bids up the wage the founder pays -----------------------------
 mill = make_node("test_mill", revenue=5000.0, lab={"labourer": 100.0, "smith": 40.0, "artisan": 20.0})
@@ -89,7 +89,7 @@ game = actor_sim([mill])
 founder_runs(game, "test_mill", opened_ago=6)
 trade_held, _fte = game.venture_foreman("test_mill")
 check("the test concern needs a skilled foreman trade", trade_held == "smith", trade_held)
-price_before = game.labour_market.price_factor("smith")
+price_before = game.labour.market.price_factor("smith")
 firm = firm_runs(game, "firm:mill", "test_mill")
 next_year(game)
 check("a firm running a concern holds the staff that concern needs",
@@ -97,8 +97,8 @@ check("a firm running a concern holds the staff that concern needs",
 check("those staff count in the pool the founder competes in",
       game.actor_staff_fte("smith") >= firm.workforce["smith"] - 1e-9)
 check("a firm hiring raises what the founder pays for the same trade",
-      game.labour_market.price_factor("smith") > price_before,
-      (game.labour_market.price_factor("smith"), price_before))
+      game.labour.market.price_factor("smith") > price_before,
+      (game.labour.market.price_factor("smith"), price_before))
 staff_year_one = dict(firm.workforce)
 next_year(game)
 check("keeping the same staff the next year is not hiring more",
@@ -113,7 +113,7 @@ next_year(game)
 full_takings = well_staffed.record.income.get("takings", 0.0)
 game = actor_sim([mill])
 founder_runs(game, "test_mill", opened_ago=6)
-game.people_who_exist = lambda trade: 0.0
+game.labour.people_who_exist = lambda trade: 0.0
 short = firm_runs(game, "firm:short", "test_mill")
 next_year(game)
 check("a firm that cannot find its staff in the pool earns less than one that can",
@@ -129,7 +129,7 @@ check("scale is one function of headcount, wealth and eminence for any taxpayer"
       and game.visible_scale(10.0, 100.0, 0.0) < scale_of_founder)
 check("the founder's own scale is that same function",
       abs(game.household_scale() - game.visible_scale(
-          game.headcount(), game.state.household.capital, game.state.household.eminence)) == 0.0)
+          game.labour.headcount(), game.state.household.capital, game.state.household.eminence)) == 0.0)
 rich_firm = game.actors.add("firm:rich", ActorRecord(kind="firm", money=60000000.0))
 rich_firm.workforce["artisan"] = 2000.0
 twin_firm = game.actors.add("firm:twin", ActorRecord(kind="firm", money=60000000.0))

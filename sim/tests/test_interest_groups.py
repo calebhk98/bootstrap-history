@@ -113,7 +113,7 @@ reasons = broke.group_levy_reasons()
 check("the levy names the group it is for and the cause",
       reasons and "producers of iron" in reasons[0] and "your sales of iron" in reasons[0], reasons)
 broke.employees["artisan"] = 2000.0
-broke._resync_pools()
+broke.labour._resync_pools()
 broke.capital = 60000000.0
 broke.eminence = 25.0
 broke.update_protection()
@@ -177,7 +177,7 @@ for civ_id in ("england_1300", "han_china_100ad", "norse_900ad"):
 
 # ---- employers squeezed by the founder's hiring ----------------------------------------------
 squeezed = sim()
-squeezed.labour_market.press("artisan", squeezed.market_supply("artisan") * 3.0)
+squeezed.labour.market.press("artisan", squeezed.labour.market_supply("artisan") * 3.0)
 squeezed.state_treasury().money = 1.0e12
 world = SimWorld(squeezed)
 sectors = {sector.subject: sector for sector in world.squeezed_employers()}

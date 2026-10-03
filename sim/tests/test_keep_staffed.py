@@ -13,7 +13,7 @@ def _lost_foreman_sim():
     test_sim.operating.add(CONCERN)
     test_sim._done_changed()
     test_sim.employees.pop("glassblower", None)
-    test_sim._resync_pools()
+    test_sim.labour._resync_pools()
     return test_sim
 
 

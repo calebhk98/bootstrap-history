@@ -48,7 +48,7 @@ def _pools(sim):
     return [{"trade": trade, "literacy_factor": round(sim.labour.literacy_factor(trade), 4),
              "most_you_can_ever_have": round(sim.labour.literate_capacity(trade), 2),
              "you_employ": round(sim.state.household.employees.get(trade, 0.0), 2)}
-            for trade in sorted(sim.LITERATE_TRADES) if sim.labour.trade_available(trade)]
+            for trade in sorted(sim.labour.LITERATE_TRADES) if sim.labour.trade_available(trade)]
 
 
 def _trainees(sim):

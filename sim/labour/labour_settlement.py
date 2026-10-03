@@ -33,38 +33,38 @@ class SettlementMixin:
 
     def settlement_tiles(self):
         """{tile id: people living there} for the tiles this nation holds."""
-        homes = self.civ.get("home_regions") or []
-        total = self.population.total
+        homes = self._world.civ.get("home_regions") or []
+        total = self._world.population.total
         return {tile: total * settlement.population_share(homes, tile)
                 for tile in settlement.tile_ids(homes)}
 
     def base_tile(self):
         """The tile the household operates from."""
-        chosen = getattr(self.state.household, "base_tile", None)
-        homes = self.civ.get("home_regions") or []
+        chosen = getattr(self._world.state.household, "base_tile", None)
+        homes = self._world.civ.get("home_regions") or []
         if chosen and chosen in settlement.tile_ids(homes):
             return chosen
         return settlement.default_base_tile(homes)
 
     def distance_to_tile_km(self, tile):
         return settlement.distance_km(
-            self.civ.get("home_regions") or [], self.base_tile(), tile)
+            self._world.civ.get("home_regions") or [], self.base_tile(), tile)
 
     def _nominal_town_population(self):
         """The town the reference size and civilisation scale give here,
         before the people who actually live nearby bound it."""
-        homes = self.civ.get("home_regions") or []
+        homes = self._world.civ.get("home_regions") or []
         place = settlement.relative_capacity(homes, self.base_tile())
         return (self.TOWN_POPULATION_REFERENCE * place
                 * (self.POP_SCALE_FLOOR_SHARE
-                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
+                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
 
     def home_town_population_estimate(self):
         """People in the base's town: the nominal town, never more than a
         set share of the tile's own people (and so never more than the
         nation's)."""
-        homes = self.civ.get("home_regions") or []
-        tile_people = self.population.total * settlement.population_share(
+        homes = self._world.civ.get("home_regions") or []
+        tile_people = self._world.population.total * settlement.population_share(
             homes, self.base_tile())
         return min(self._nominal_town_population(),
                    tile_people * self.TOWN_MAX_SHARE_OF_TILE)
@@ -75,18 +75,18 @@ class SettlementMixin:
         sized straight from the town's headcount."""
         full = (self.TOWN_POPULATION_REFERENCE
                 * (self.POP_SCALE_FLOOR_SHARE
-                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
+                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
         return self.home_town_population_estimate() / full if full > 0 else 0.0
 
     def _relocation_wage_bill_per_year(self):
-        household = self.state.household
+        household = self._world.state.household
         return sum(count * self.labour_market.unscarce_annual(trade)
                    for trade, count in household.employees.items())
 
     def relocation_quote(self, tile):
         """(days, hours lost, money) to move the base to `tile`."""
         km = self.distance_to_tile_km(tile)
-        speed = 1.0 + Geography.REACH_SPEED_COEF * float(self.civ.get("base_reach", 2))
+        speed = 1.0 + Geography.REACH_SPEED_COEF * float(self._world.civ.get("base_reach", 2))
         days = km / (self.RELOCATION_KM_PER_DAY * speed)
         year_share = min(1.0, days / 365.0)
         hours = year_share * self.director_pool()
@@ -106,7 +106,7 @@ class SettlementMixin:
         if people[tile] < 1.0:
             return False, "nobody lives at %s: no cultivable land feeds anyone there." % tile
         days, hours, money = self.relocation_quote(tile)
-        household = self.state.household
+        household = self._world.state.household
         if money > household.capital:
             return False, ("moving to %s takes about %d days and would cost %s in "
                            "wages while your household travels; you have %s."

@@ -12,7 +12,7 @@ from .harness import *  # noqa: F401,F403
 _plague = sim(civ="rome_100ad")
 _plague._apply_population_mortality_shock(0.28)
 _plague._refresh_demographic_indexes(_plague.year)
-_population = _plague.population_report()
+_population = _plague.labour.population_report()
 check("plague mortality immediately lowers displayed current population",
       _population["population"] <
       _population["reference_population_before_simulated_changes"], _population)

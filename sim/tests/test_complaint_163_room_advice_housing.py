@@ -4,8 +4,8 @@ uses, and only then the tech nodes."""
 from .harness import *  # noqa: F401,F403
 
 _room_sim = sim(capital=1000000.0)
-_advice = _room_sim._room_advice()
-_ok_hire, _refusal = _room_sim.hire("smith", 20)
+_advice = _room_sim.labour._room_advice()
+_ok_hire, _refusal = _room_sim.labour.hire("smith", 20)
 _unit_price = _room_sim.HOUSING_COST_PER_PLACE * _room_sim.price_index
 
 check("room advice offers 'buy housing' before any tech node",

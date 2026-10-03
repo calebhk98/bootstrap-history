@@ -10,7 +10,7 @@ def _lone_project_beyond_supply():
     for node_id, node in NODES.items():
         for trade_id, want in (node.get("lab") or {}).items():
             pace = want / max(1.0, node["yrs"])
-            if 0 < household.hours_you_can_call_on(trade_id) < pace:
+            if 0 < household.labour.hours_you_can_call_on(trade_id) < pace:
                 household.active[node_id] = dict(
                     ph_left=float(node["ph"]), yrs=0.0, spent=0.0,
                     cost_left=household.project_cost(node_id), lab_left=dict(node["lab"]))
@@ -32,7 +32,7 @@ class TradeShortageKind(unittest.TestCase):
 
     def test_booked_by_a_second_project_is_booked(self):
         household, node_id, trade_id = _lone_project_beyond_supply()
-        supply = household.hours_you_can_call_on(trade_id)
+        supply = household.labour.hours_you_can_call_on(trade_id)
         node = NODES[node_id]
         household.trade_hours_used = {trade_id: supply}
         project_state = household.active[node_id]

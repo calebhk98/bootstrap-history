@@ -111,10 +111,10 @@ class StaffPhaseMixin:
             gone = 0.0
             _before_shed = self.labour.staff_snapshot()
             # shed, dearest first, until the wages you are left with fit
-            for trade_id in sorted(self.state.household.employees, key=lambda t: -self.labour_market.quote_annual(t)):
+            for trade_id in sorted(self.state.household.employees, key=lambda t: -self.labour.market.quote_annual(t)):
                 if short <= 0:
                     break
-                wage = self.labour_market.quote_annual(trade_id)
+                wage = self.labour.market.quote_annual(trade_id)
                 if wage <= 0:
                     continue
                 # A WHOLE PERSON, ROUNDED UP. `short / wage` is a quantity of
@@ -243,10 +243,10 @@ class StaffPhaseMixin:
                 have = self.state.household.employees.get(trade_id, 0.0)
                 want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.state.household.trades_created else 0.0)
                 short = want - have
-                if short > 0.02 and self.state.household.capital > self.labour_market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
+                if short > 0.02 and self.state.household.capital > self.labour.market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
                     _before = self.state.household.capital
                     self.state.household.employees[trade_id] = have + short
-                    self.state.household.debit(short * self.labour_market.quote_annual(trade_id), "wages advanced for replacement staff")
+                    self.state.household.debit(short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff")
                     automation_audit.record(
                         self, "auto_hire", "replace", "%.1f %s" % (short, trade_id),
                         "something draws on the trade and %.1f are held against a target of %.1f" % (have, want), _before)

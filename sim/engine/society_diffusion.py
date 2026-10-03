@@ -149,7 +149,7 @@ class DiffusionMixin:
         pace *= (self.LITERACY_DIFFUSION_PACE_BASE
                  + self.LITERACY_DIFFUSION_PACE_SPAN
                  * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,
-                       gen_lit / max(0.02, self.LITERACY_REFERENCE_GENERAL)))
+                       gen_lit / max(0.02, self.labour.LITERACY_REFERENCE_GENERAL)))
         half_life = self.VENTURE_DIFFUSION_HALF_LIFE_YEARS / max(self.DIFFUSION_PACE_FLOOR, pace)
         share = 1.0 - 0.5 ** (age / half_life)
         return min(self.VENTURE_DIFFUSION_CAP, max(0.0, share))
@@ -294,7 +294,7 @@ class DiffusionMixin:
             pace *= (self.LITERACY_DIFFUSION_PACE_BASE
                      + self.LITERACY_DIFFUSION_PACE_SPAN
                      * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,
-                           gen_lit / max(0.02, self.LITERACY_REFERENCE_GENERAL)))
+                           gen_lit / max(0.02, self.labour.LITERACY_REFERENCE_GENERAL)))
         return pace
 
     def civ_diffusion(self, node_id):
