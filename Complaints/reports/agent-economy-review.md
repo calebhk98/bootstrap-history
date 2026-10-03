@@ -171,6 +171,55 @@ A Rome game (seed 1, ten years) shows the following:
 - The money audit reports no unexpected edge flows.
 - It does report a positive metal gap: the mint holds more metal than the coin embodies.
 
+### Wages and credit (second round)
+
+The full suite caught three Han failures after the fixes above, and they traced to an existing wage
+defect that the fixes had made larger. It had three parts:
+- On every tile where a skilled trade never traded, its wage sat at the opening seed, about a hundred
+  times a labourer's.
+- Thin markets ran away. A Han smith market reached tens of thousands of labourer wages, because a
+  few smiths faced employers bidding up to their revenue per hour.
+- The engine quotes a trade's wage as the plain mean over tiles (`sim/engine/economy_port_year.py`,
+  outside this folder), so the outliers set the national figure.
+
+To see each trade's wage by tile in a game at the opening, read `record.memory.wages` (keys
+`<trade>|work@<tile>`). No command does this yet; the scratch script used here was not committed.
+
+Fixed in `labour_asks.py` and `year_labour.follow_asks`:
+- An untraded labour market's wage moves toward the trade's ask: subsistence per working hour, plus
+  danger pay, plus the pay that repays training.
+- Workers move toward trades paid above the tile's average over their ask, filling a share of the
+  room employers bid for. This is a compensating differential: a trade's premium is bounded by what
+  its training and danger cost.
+- Test: `economy_labour_asks`.
+
+The same run exposed a frozen credit market. The sticky rate crept toward lenders' lowest ask from
+below and never reached it, so no loan was made at all. The labour market already had the guard for
+this; credit now has it too. Test: `economy_credit_floor`.
+
+Two existing tests pinned outcomes that these changes move:
+- `player_guidance_commands` asserted that Norse's chain is the dearest. It now checks that the chains
+  differ in labourer-years.
+- `money_units_one_boundary` asserted that Han's payback is no faster than a third of Rome's. Only the
+  "no slower" bound is kept.
+
+After this round, with the same command:
+
+| civ | grain_vola | metal_vola | wage_kg_wh | hungry mean | rate |
+|---|---|---|---|---|---|
+| england_1300 | 0.10-0.11 | 0.36-0.42 | 0.24-0.25 | 0 | 0.045-0.046 |
+| han_china_100ad | 0.15-0.17 | 0.29-0.37 | 0.38 | 0.007-0.010 | 0.076-0.080 |
+| mexica_1500 | 0.10-0.11 | 0.24-0.25 | 0.10 | 0.005-0.010 | 0.10 |
+| norse_900ad | 0.16-0.23 | 0.16-0.40 | 0.47-0.72 | 0.005-0.006 | 0.075-0.085 |
+| rome_100ad | 0.09-0.10 | 0.43-0.88 | 0.13 | 0.019-0.023 | 0.10-0.11 |
+
+What changed:
+- Rome's metal volatility fell, and in one Norse seed metals swung less than grain for the first time.
+- Han's unskilled wage rose.
+- Norse's wage now varies a lot between seeds.
+- Rates rose where credit had been frozen.
+- Rome and Mexica are still the low-wage pair, and a source is still needed to say whether that is wrong (388).
+
 ### Tried and not merged: competitive storage
 
 Merchants were given a Williams-Wright storage rule: buy where the price is below the regressed
