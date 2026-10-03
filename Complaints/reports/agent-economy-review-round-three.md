@@ -124,7 +124,34 @@ Two results went the wrong way:
 The goods-mass change alone (first six-seed baseline → current branch) halved Han's hunger and cut
 Rome's by a third.
 
+## Tried and not merged: growth from retained profit
+
+Branch: `producer-growth-from-profits`.
+
+The diagnosis, from Rome seed 1:
+- Producers whose recipe has no plant (`plant_life_years` 0) cannot expand at all. `_expansion` in
+  `producers_close.py` makes no request for them, so they grow only through entry, and entry fires
+  only where buyers are turned away.
+- In each year, about a quarter of all producers earn above the rate and work at least 90% of
+  capacity. About 95% of those have no plant.
+- Plant-recipe expansion does reach the credit market. It is limited by borrowers' rate ceilings, not
+  by lenders.
+
+The trial let a sold-out, profitable plantless producer grow from retained profit before paying
+dividends, capped at a share of capacity a year (results below are seeds 1-3, Rome, England and
+Mexica):
+- The unskilled wage roughly tripled.
+- Grain volatility roughly tripled.
+- England's hunger rose from zero.
+- The limestone spread did not narrow.
+
+So more capacity without a demand-side brake reproduces the cobweb.
+
+The high limestone prices are a different trap: a stale ask. Those areas hold unsold stock, produce
+nothing (`runs_for_stock` caps runs at near-zero expected sales) and trade nothing, so their
+remembered price freezes. The cure is in `producers.py`: cut an ask far above any bid, and let the
+expectation fall while stock sits unsold.
+
 ## Pending
 
-The producer-growth work (profitable makers that never grow) and the Norse metals trace are added when
-they finish.
+The Norse metals trace is added when it finishes.
