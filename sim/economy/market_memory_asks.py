@@ -49,7 +49,7 @@ RESUMED_TRADE_MEMORY_SHARE = declare(
 
 
 REPRESENTATIVE_TRADE_SHARE = declare(
-    "REPRESENTATIVE_TRADE_SHARE", 0.25, kind="temporary_heuristic",
+    "REPRESENTATIVE_TRADE_SHARE", 0.02, kind="temporary_heuristic",
     unit="share of what buyers wanted at the remembered price that a trade must reach to count in full",
     source=None, confidence="D",
     why="A trade of a few units in a market where buyers want far more is priced by those few units' "
