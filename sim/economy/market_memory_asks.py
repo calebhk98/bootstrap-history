@@ -9,6 +9,7 @@ from typing import Optional, Sequence
 
 from sim.constants import declare
 
+from .goods_market_demand import DemandSchedule
 from .types import Bid, Offer
 
 NO_BID_MEMORY_SHARE = declare(
@@ -57,9 +58,37 @@ def note_bids(memory, key: str, bids: Sequence[Bid], offers: Sequence[Offer]) ->
     return before
 
 
+def note_offers(memory, key: str, bids: Sequence[Bid], offers: Sequence[Offer]) -> int:
+    """Count the years a market with bids has had no seller; returns the count before this year."""
+    before = memory.years_without_offers.get(key, 0)
+    if not any(offer.quantity > 0.0 for offer in offers) and not has_no_bids(bids):
+        memory.years_without_offers[key] = before + 1
+    else:
+        memory.years_without_offers.pop(key, None)
+    return before
+
+
+def dry_trade_weight(quantity: float, usual_volume: float, wanted_at_old_price: float, dormant: bool) -> float:
+    """How much of the gap to the cleared price a trade moves the memory, in a market that did not trade
+    last year (years with buyers and no seller, or never cleared). Against the market's usual volume,
+    which has decayed to nothing, any sliver would count in full; against what buyers wanted at the
+    remembered price it counts for its size. 1.0 when the market traded last year."""
+    if not dormant:
+        return 1.0
+    reference = max(usual_volume, wanted_at_old_price)
+    return min(1.0, quantity / reference) if reference > 0.0 else 1.0
+
+
 def price_after_resumed_trade(old: Optional[float], volume_rule_price: float, years_without_bids: int) -> float:
     """After trade resumes, the remembered price moves only part of the way from the price the quiet
     market drifted to."""
     if old is None or years_without_bids <= 0:
         return volume_rule_price
     return old + RESUMED_TRADE_MEMORY_SHARE * (volume_rule_price - old)
+
+
+def wanted_at(bids: Sequence[Bid], price: Optional[float]) -> float:
+    """What the buyers would have taken at a price (budgets and ceilings applied); zero without a price."""
+    if not price or price <= 0.0 or not bids:
+        return 0.0
+    return DemandSchedule(sorted(bids, key=lambda bid: (bid.priority, bid.buyer, bid.tile))).total_at(price)

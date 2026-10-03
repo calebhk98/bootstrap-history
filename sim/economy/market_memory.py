@@ -46,6 +46,7 @@ class MarketMemory:
     volume_weights: Dict[str, float] = field(default_factory=dict)      # market_key(good, area), smoothed
     trade_age: Dict[str, int] = field(default_factory=dict)     # market_key(good, area); absent: never cleared
     years_without_bids: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: bids last year
+    years_without_offers: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: offers last year
 
     def years_since_trade(self, key: str) -> Optional[int]:
         return self.trade_age.get(key)
