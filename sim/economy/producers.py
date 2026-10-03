@@ -239,8 +239,11 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
         return Plan(0.0, expected_margin_per_run=margin, wanted_runs=wanted)
     # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
     labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost + rent, wages)
+    # an input is bid up to the price at which the run breaks even at the input prices seen now, not at the
+    # lagging expectation the run is planned on, or a scarce input's price ratchets up on its own bid
+    live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
-                       revenue / ratio - variable)
+                       revenue / ratio - live_variable)
     return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted)
 
 
