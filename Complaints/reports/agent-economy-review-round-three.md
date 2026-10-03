@@ -185,6 +185,34 @@ The robust fixes left for metals are in entry sizing and plant purchase. A Rome 
 about 12,000 runs, and a copper entrant that could buy too little clay to build its plant, both
 decide the draw.
 
+## Merged: newcomers sized to the trade they can see
+
+`entry_sizing.py`, called from `entry.entry_plans`, sizes a new maker by the smallest of four limits:
+- its old share of the unmet demand;
+- a share of what its market traded last year;
+- a share of what each input's and plant good's market traded, per unit the maker would use;
+- where its market or an input's traded nothing, a small trial size.
+
+Before, 39% of new makers in a Rome game (seed 2, spin-up included) went into markets that had
+traded nothing, at sizes up to about 10^16 times the trade. Mean and worst metal volatility over five
+spin-up draws (seeds 1-3 each), before → after:
+- Rome: 0.55 and 1.11 → 0.20 and 0.23.
+- England: 0.24 and 0.34 → 0.18 and 0.28.
+- Norse: the mean is unchanged (0.23), but the worst draw went from 0.29 to 0.57.
+
+Grain volatility and wages were unchanged. Rome's hunger rose slightly, from 0.016 to 0.018. This is
+the first change whose metal gain holds over every draw.
+
+## The stale-ask trap needs the market side
+
+A producer holding unsold stock now marks its expected price down (branch `producer-stale-ask`). That
+alone did not unfreeze the limestone markets. In those markets nobody bids at all, so
+`year_goods._unsold_signal` has no signal and the remembered price never moves. Buyers plan from that
+frozen price, find their runs do not pay, and never bid: a circular trap.
+
+Making a no-bid market remember the lowest ask unfroze the markets, but the prices then cycled. That
+combined fix is being built.
+
 ## Pending
 
-The stale-ask trap and entry sizing.
+The frozen-market fix.
