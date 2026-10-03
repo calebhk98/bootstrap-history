@@ -27,6 +27,7 @@ class YearLedger:
     labour_results: List[LabourResult] = field(default_factory=list)
     unpaid: Dict[AgentId, float] = field(default_factory=dict)
     unmet_demand: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): quantity
+    bids_by_market: Dict[Tuple[GoodId, str], Tuple[tuple, float]] = field(default_factory=dict)   # (good, area): (bids, sold)
 
     def note_postings(self, postings: Iterable[object], purpose_kind: str = "") -> None:
         for posting in postings:

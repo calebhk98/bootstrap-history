@@ -104,7 +104,7 @@ class Economy:
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
                                 loans=lambda: record.loans)
         close_agents(setup, record, close_view, ledger, self.area_map)
-        open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand)
+        open_entrants(setup, record, close_view, self.area_map, ledger)
         restake_owners(setup, record, close_view)
         close_idle_producers(setup, record)
         for lender, received in interest.items():

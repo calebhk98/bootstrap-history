@@ -41,6 +41,24 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(entry.gap_beyond_spare(100.0, 120.0), 0.0)
         self.assertEqual(entry.gap_beyond_spare(100.0, 30.0), 70.0)
 
+    def test_buyers_priced_out_far_above_cost_bring_a_maker_sized_to_what_they_take_at_its_cost(self):
+        # the market cleared at the dearest buyer's ceiling, serving all it wanted there; ten more units
+        # are wanted by a buyer who stops at 3, well above the 0.2 a panel costs to make
+        bids = [Bid("dear", "panel", "area", "anchor", 10.0, 0.0, 5.0, 0.0, 1e9, 0, maximum_price=5.0),
+                Bid("cheap", "panel", "area", "anchor", 10.0, 0.0, 3.0, 0.0, 1e9, 0, maximum_price=3.0)]
+        markets = {("panel", "area"): entry.UnmetDemand("panel", "area", "anchor", 0.0, tuple(bids), 10.0)}
+        view = View(prices={"panel": 5.0}, wages={"hand": 0.2})
+        chosen = entry.entry_plans({"make_panel": PANEL}, view, markets)
+        self.assertEqual(len(chosen), 1)
+        self.assertAlmostEqual(chosen[0].runs, 10.0 * entry.ENTRY_SHARE_OF_UNMET_DEMAND)
+
+    def test_a_maker_on_land_enters_only_for_buyers_turned_away_at_the_price(self):
+        bids = [Bid("dear", "panel", "area", "anchor", 10.0, 0.0, 5.0, 0.0, 1e9, 0, maximum_price=5.0),
+                Bid("cheap", "panel", "area", "anchor", 10.0, 0.0, 3.0, 0.0, 1e9, 0, maximum_price=3.0)]
+        markets = {("panel", "area"): entry.UnmetDemand("panel", "area", "anchor", 0.0, tuple(bids), 10.0)}
+        view = View(prices={"panel": 5.0}, wages={"hand": 0.2})
+        self.assertEqual(entry.entry_plans({"make_panel": PANEL}, view, markets, {"make_panel": 1.0}), [])
+
     def test_no_unmet_demand_no_entry(self):
         self.assertEqual(plans({"boil_salt": SALT}, self.view(1.0), market(unmet=0.0)), [])
 

@@ -1,4 +1,4 @@
-"""The year's entry: the markets with unmet demand become new producers (entry.py), each owned by the
+"""The year's entry: markets with demand a known recipe could serve at a profit become new producers (entry.py), each owned by the
 richest household of its tile (newcomers to a recipe already worked on the tile join that producer's
 capacity), which stakes part of its cash as working cash; one with plant to build
 asks the credit market for it, and its capacity grows as the plant goods arrive. Owners also put working
@@ -16,19 +16,22 @@ from .setup import recipe_tile_key
 from .types import GoodsMove, LoanRequest, Transfer
 
 
-def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, str], float]) -> int:
+def open_entrants(setup, record, view, area_map, ledger) -> int:
     """Start the year's new producers; returns how many started."""
     spare = _spare_output(setup, record, view)
     unmet = {}
-    for (good, area_id), quantity in sorted(unmet_by_market.items()):
+    for good, area_id in sorted(set(ledger.unmet_demand) | set(ledger.bids_by_market)):
         area = next((each for each in area_map.areas(good) if each.area_id == area_id), None) \
             if good in area_map.goods() else None
-        gap = gap_beyond_spare(quantity, spare.get((good, area_id), 0.0))
-        if area is not None and gap > 0.0:
-            unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
+        if area is None:
+            continue
+        idle = spare.get((good, area_id), 0.0)
+        bids, sold = ledger.bids_by_market.get((good, area_id), ((), 0.0))
+        gap = gap_beyond_spare(ledger.unmet_demand.get((good, area_id), 0.0), idle)
+        unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap, bids, sold, idle)
     money = setup.currency_id
     started = 0
-    for plan in entry_plans(setup.recipes, view, unmet):
+    for plan in entry_plans(setup.recipes, view, unmet, setup.land_per_run):
         recipe = setup.recipes[plan.recipe_id]
         key = recipe_tile_key(plan.recipe_id, plan.tile)
         producer_id = "producer:" + key

@@ -10,7 +10,7 @@ deposit, a climate) is not modelled here; the recipes are already only those the
 """
 import math
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
@@ -45,7 +45,10 @@ class UnmetDemand:
     good: GoodId
     area: AreaId
     anchor_tile: TileId
-    quantity: float                  # what buyers wanted at the year's price beyond what was sold
+    quantity: float                  # what buyers wanted at the year's price beyond what was sold, less spare
+    bids: Tuple[Bid, ...] = ()       # the year's bids, to ask what buyers would take at a maker's cost
+    sold: float = 0.0
+    spare: float = 0.0               # what the market's makers could have added from idle capacity
 
 
 @dataclass(frozen=True)
@@ -92,9 +95,14 @@ def gap_beyond_spare(unmet: float, spare_output: float) -> float:
 
 
 def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
-                unmet: Mapping[Tuple[GoodId, AreaId], UnmetDemand]) -> List[EntryPlan]:
-    """At most one new maker per market with unmet demand: the known recipe making the good with the
-    best return on capital at last year's prices, if that return beats the interest rate."""
+                unmet: Mapping[Tuple[GoodId, AreaId], UnmetDemand],
+                land_per_run: Optional[Mapping[str, float]] = None) -> List[EntryPlan]:
+    """At most one new maker per market: the known recipe making the good with the best return on
+    capital at last year's prices, if that return beats the interest rate. A maker on no land is built
+    for what buyers would take at its own full cost beyond what was sold, so a price held far above
+    cost draws makers in; one on land only for buyers turned away at the price, until land carries a
+    rent (Complaint 393). Idle capacity in the market comes off either."""
+    land_per_run = land_per_run or {}
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(recipes):
         for good in recipes[recipe_id].outputs:
@@ -102,21 +110,43 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
     plans = []
     for key in sorted(unmet):
         demand = unmet[key]
-        if demand.quantity <= 0.0:
-            continue
         best = None
         for recipe_id in makers.get(demand.good, ()):
-            yearly_return = _return_at(recipes[recipe_id], recipe_id, demand.anchor_tile, view)
-            currency = view.currency_of(demand.area)
-            if yearly_return > view.interest_rate(currency) and (best is None or yearly_return > best[0]):
-                best = (yearly_return, recipe_id)
+            recipe = recipes[recipe_id]
+            yearly_return = _return_at(recipe, recipe_id, demand.anchor_tile, view)
+            if not yearly_return > view.interest_rate(view.currency_of(demand.area)):
+                continue
+            quantity = demand.quantity
+            if land_per_run.get(recipe_id, 0.0) <= 0.0 and demand.bids:
+                cost = _full_cost_per_unit(recipe, recipe_id, demand.good, demand.anchor_tile, view)
+                if cost is not None:
+                    quantity = max(quantity, gap_beyond_spare(unmet_quantity(demand.bids, cost, demand.sold),
+                                                              demand.spare))
+            if quantity > 0.0 and (best is None or yearly_return > best[0]):
+                best = (yearly_return, recipe_id, quantity)
         if best is None:
             continue
-        recipe = recipes[best[1]]
-        runs = demand.quantity * ENTRY_SHARE_OF_UNMET_DEMAND / recipe.outputs[demand.good]
+        yearly_return, recipe_id, quantity = best
+        runs = quantity * ENTRY_SHARE_OF_UNMET_DEMAND / recipes[recipe_id].outputs[demand.good]
         if runs > 0.0 and math.isfinite(runs):
-            plans.append(EntryPlan(best[1], demand.anchor_tile, demand.good, runs, best[0]))
+            plans.append(EntryPlan(recipe_id, demand.anchor_tile, demand.good, runs, yearly_return))
     return plans
+
+
+def _full_cost_per_unit(recipe: Recipe, recipe_id: str, good: GoodId, tile: TileId, view: MarketView
+                        ) -> Optional[float]:
+    """What a unit of `good` costs a new maker at live prices: the run's variable cost and plant charge,
+    shared over its outputs by value; None when it cannot be priced."""
+    probe = Producer("probe", "probe", recipe_id, tile, 1.0)
+    inputs, wages = live_input_prices(probe, recipe, view), live_wages(probe, recipe, view)
+    rate = view.interest_rate(view.currency_of(view.area_of(good, tile)))
+    cost = (unit_cost.variable_cost_per_run(recipe, inputs, wages)
+            + unit_cost.capital_charge_per_run(recipe, inputs, wages, rate))
+    outputs = expected_output_prices(probe, recipe, view) or {}
+    value = unit_cost.revenue_per_run(recipe, outputs)
+    if not (math.isfinite(cost) and cost > 0.0 and value > 0.0 and outputs.get(good, 0.0) > 0.0):
+        return None
+    return cost * outputs[good] / value
 
 
 def _return_at(recipe: Recipe, recipe_id: str, tile: TileId, view: MarketView) -> float:
