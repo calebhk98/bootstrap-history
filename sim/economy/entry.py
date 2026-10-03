@@ -15,6 +15,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 from sim.constants import declare
 
 from . import unit_cost
+from .entry_sizing import Traded, sized_runs
 from .goods_market import quantity_at
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import MarketView
@@ -94,10 +95,13 @@ def gap_beyond_spare(unmet: float, spare_output: float) -> float:
 def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 unmet: Mapping[Tuple[GoodId, AreaId], UnmetDemand],
                 rent_by_tile: Optional[Mapping[TileId, float]] = None,
-                land_per_run: Optional[Mapping[str, float]] = None) -> List[EntryPlan]:
+                land_per_run: Optional[Mapping[str, float]] = None,
+                traded: Optional[Traded] = None) -> List[EntryPlan]:
     """At most one new maker per market with unmet demand: the known recipe making the good with the
     best return on capital at last year's prices, if that return beats the interest rate. Rent per
-    hectare last year on the tile, times the land a run takes, is part of a run's cost."""
+    hectare last year on the tile, times the land a run takes, is part of a run's cost. With `traded`,
+    the size is held to the trade the market and its suppliers' markets carried (entry_sizing.py), and
+    a recipe whose size comes to nothing gives way to the next best."""
     rent_by_tile, land_per_run = rent_by_tile or {}, land_per_run or {}
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(recipes):
@@ -108,19 +112,21 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
         demand = unmet[key]
         if demand.quantity <= 0.0:
             continue
-        best = None
+        currency = view.currency_of(demand.area)
+        ranked = []
         for recipe_id in makers.get(demand.good, ()):
             rent = rent_by_tile.get(demand.anchor_tile, 0.0) * land_per_run.get(recipe_id, 0.0)
             yearly_return = _return_at(recipes[recipe_id], recipe_id, demand.anchor_tile, view, rent)
-            currency = view.currency_of(demand.area)
-            if yearly_return > view.interest_rate(currency) and (best is None or yearly_return > best[0]):
-                best = (yearly_return, recipe_id)
-        if best is None:
-            continue
-        recipe = recipes[best[1]]
-        runs = demand.quantity * ENTRY_SHARE_OF_UNMET_DEMAND / recipe.outputs[demand.good]
-        if runs > 0.0 and math.isfinite(runs):
-            plans.append(EntryPlan(best[1], demand.anchor_tile, demand.good, runs, best[0]))
+            if yearly_return > view.interest_rate(currency):
+                ranked.append((-yearly_return, recipe_id))
+        for negative_return, recipe_id in sorted(ranked):
+            recipe = recipes[recipe_id]
+            whole_gap_runs = demand.quantity / recipe.outputs[demand.good]
+            runs = sized_runs(recipe, demand.good, whole_gap_runs * ENTRY_SHARE_OF_UNMET_DEMAND, whole_gap_runs,
+                              demand.anchor_tile, traded)
+            if runs > 0.0 and math.isfinite(runs):
+                plans.append(EntryPlan(recipe_id, demand.anchor_tile, demand.good, runs, -negative_return))
+                break
     return plans
 
 
