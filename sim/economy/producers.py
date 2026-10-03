@@ -57,12 +57,13 @@ OUTPUT_CHANGE_SHARE_PER_YEAR = declare(
         "amplifies the swing every year instead of settling. A model of hiring and training would "
         "derive the speed per trade.")
 UNSOLD_ASK_MARKDOWN_SHARE = declare(
-    "UNSOLD_ASK_MARKDOWN_SHARE", 0.3, kind="temporary_heuristic",
+    "UNSOLD_ASK_MARKDOWN_SHARE", 0.15, kind="temporary_heuristic",
     unit="share of the expected price a seller drops in a year its stock went unsold", source=None,
     confidence="D",
     why="A seller left holding goods nobody bought at its ask lowers the ask and what it expects to get. "
         "How fast follows how many buyers there are and what holding costs, and the market's memory "
-        "carries no bid it could read, so one rate for every good.")
+        "carries no bid it could read, so one rate for every good. A faster markdown slid thin markets "
+        "down and back up by orders of magnitude (frozen_markets probe of limestone prices).")
 UNSOLD_PROBE_SHARE_OF_CAPACITY = declare(
     "UNSOLD_PROBE_SHARE_OF_CAPACITY", 0.02, kind="temporary_heuristic",
     unit="share of capacity counted as sales a producer can still hope for", source=None,
