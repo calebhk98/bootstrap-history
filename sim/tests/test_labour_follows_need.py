@@ -68,7 +68,7 @@ class TrainingPremiumUsesCivilisationRateTests(unittest.TestCase):
             civ["starting_interest_rate"] = rate
             engine = S.Sim(NODES, ORDER, random.Random(1), events=False,
                            manual=True, civ=civ)
-            premiums[rate] = engine.wage_schedule().premium("smith")
+            premiums[rate] = engine.labour.wage_schedule().premium("smith")
         self.assertGreater(premiums[0.30], premiums[0.05])
 
     def test_the_default_constant_is_gone(self):

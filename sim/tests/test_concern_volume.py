@@ -138,7 +138,7 @@ try:
           game.household_income_hours_per_capita() > income_before,
           (income_before, game.household_income_hours_per_capita()))
     income_before = game.household_income_hours_per_capita()
-    game.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = 1.0
+    game.labour.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = 1.0
     game.state.economy.output_per_head = 1.2
     check("...and so does pay that follows output per head",
           game.household_income_hours_per_capita() > 1.19 * income_before,

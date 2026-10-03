@@ -24,7 +24,7 @@ class HireAdviceMatchesDeficit(unittest.TestCase):
 
     def test_two_scholars_short_says_hire_two(self):
         household = sim(civ="rome_100ad", capital=1e6)
-        self.assertIn('"n":2', household._staff_advice("scholars", deficit=2))
+        self.assertIn('"n":2', household.labour._staff_advice("scholars", deficit=2))
 
 
 class ImmortalFounderScholarWarning(unittest.TestCase):

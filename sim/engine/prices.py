@@ -82,7 +82,7 @@ LABOUR-HOURS TO DENARII. `sim/solve_prices.py` prices everything in
 labour-hours - one hour of `labourer`, its numeraire, equals 1.0 - because a
 recipe graph can produce relative amounts of unskilled effort. Money enters
 only here, at the edge: the wage document carries `money_per_labour_hour`,
-which `sim.labour.wage_provider.build_schedule` derives from the
+which `sim.engine.wage_schedule.build_schedule` derives from the
 civilisation's coin (the coin material's solved labour hours per kg times the
 coin's mass), so a price in money is its labour hours times that rate.
 `denarii_per_labour_hour` is the one place the rate is read.

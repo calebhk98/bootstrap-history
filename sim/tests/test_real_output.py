@@ -130,7 +130,7 @@ check("...and the lines it is made of add up to it",
           - game.real_output_hours()) <= 1e-9 * total)
 _world = SimWorld(game)
 _producing = max(0.0, game.population.working_age - _world.soldiers_under_arms()) / game.population.working_age
-_expected = total * _producing * game.money_per_labour_hour() * game.state.economy.output_factor
+_expected = total * _producing * game.labour.money_per_labour_hour() * game.state.economy.output_factor
 check("society output is that, less the share of working people under arms, in this civilisation's money",
       abs(_world.society_output() - _expected) <= 1e-9 * _expected, (_world.society_output(), _expected))
 check("no field of the economy still counts technologies",

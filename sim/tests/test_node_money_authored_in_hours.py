@@ -30,7 +30,7 @@ class NodeMoneyAuthoredInHours(unittest.TestCase):
         authored = {node["id"]: node for node in authored_nodes()}
         for civ in BASE_CIVS:
             sim = build(data.load_civ(civ))
-            rate = sim.money_per_labour_hour()
+            rate = sim.labour.money_per_labour_hour()
             checked = 0
             for node_id, node in sim.nodes.items():
                 if node_id not in authored:

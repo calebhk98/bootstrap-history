@@ -110,7 +110,7 @@ class StatePressureMixin:
     def state_trait_weights(self):
         """What the state cares about, per trait, for this civilisation."""
         weights = self.value_weights
-        state_weights = dict(self.STATE_WEIGHTS)
+        state_weights = dict(self.labour.STATE_WEIGHTS)
         state_weights.update({"military": weights["w_military"], "labour_saving": weights["w_labour_saving"],
                   "information": weights["w_information"], "commerce": weights["w_commerce"],
                   "religious_adjacent": STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT * weights["w_religious_rigidity"]})

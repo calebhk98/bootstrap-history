@@ -384,7 +384,7 @@ _soc_room = {}
 for _civ in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300",
              "mexica_1500"):
     _s_soc = sim(civ=_civ)
-    _soc_room[_civ] = (_s_soc.has("fin_societas"), _s_soc.supervision_room())
+    _soc_room[_civ] = (_s_soc.has("fin_societas"), _s_soc.labour.supervision_room())
 check("Rome alone starts with a partnership, and so oversees more people in "
       "its first year than the four civilisations that must build one",
       _soc_room["rome_100ad"][0]
@@ -407,12 +407,12 @@ check("the capacity screen says where the headroom comes from, and names the "
       any(source_row.get("source") == "fin_societas" for source_row in _soc_rows), _soc_rows)
 check("...and the rows add up to exactly the figure they explain, for every "
       "civilisation, so the breakdown cannot drift from the total",
-      all(abs(sum(source_row["people"] for source_row in sim(civ=civ_id).supervision_room_from())
-              - sim(civ=civ_id).supervision_room()) < 1e-9
+      all(abs(sum(source_row["people"] for source_row in sim(civ=civ_id).labour.supervision_room_from())
+              - sim(civ=civ_id).labour.supervision_room()) < 1e-9
           for civ_id in ("rome_100ad", "han_china_100ad", "norse_900ad",
                      "england_1300", "mexica_1500")),
-      [(civ_id, sum(source_row["people"] for source_row in sim(civ=civ_id).supervision_room_from()),
-        sim(civ=civ_id).supervision_room())
+      [(civ_id, sum(source_row["people"] for source_row in sim(civ=civ_id).labour.supervision_room_from()),
+        sim(civ=civ_id).labour.supervision_room())
        for civ_id in ("rome_100ad", "norse_900ad")])
 
 # HOW A SCRIPT DRIVES THIS GAME, said where a script author will find it. Every

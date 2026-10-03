@@ -123,7 +123,7 @@ class FoodBalanceWorkforceTests(unittest.TestCase):
         test_sim = sim("norse_900ad", events=False)
         test_sim.farm_land.hectares *= 0.5
         cap = ((test_sim.farm_land.hectares
-                + test_sim._clearable_hectares()
+                + test_sim.labour._clearable_hectares()
                 * agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE
                 / labour_allocation.HOURS_PER_FARM_WORKER_YEAR
                 * agriculture.hectares_cropped_per_farm_worker())

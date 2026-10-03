@@ -33,7 +33,7 @@ check("domestic freight per tonne-km is the cart's rate with its capital and the
       abs(s.land_freight_money_per_tonne_km() - cart_one_sided) < 1e-12, None)
 inputs = s._land_freight_physical_inputs()
 running = (inputs.feed_kg_per_tonne_km * s._material_price_per_kg(s.FREIGHT_FEED_PRICE_MATERIAL)
-           + inputs.driver_hours_per_tonne_km * s.wage_per_hour(s.FREIGHT_DRIVER_WAGE_TRADE))
+           + inputs.driver_hours_per_tonne_km * s.labour.wage_per_hour(s.FREIGHT_DRIVER_WAGE_TRADE))
 check("...which is more than twice its feed and driver, since oxen and cart are capital",
       s.land_freight_money_per_tonne_km() > 2.0 * running, (s.land_freight_money_per_tonne_km(), running))
 check("domestic freight with balanced flows is cheaper than with a one-sided flow",

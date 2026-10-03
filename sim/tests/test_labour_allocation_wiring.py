@@ -23,9 +23,9 @@ class WorkforceAllocationWiringTests(unittest.TestCase):
     def test_unshocked_first_year_starts_at_the_food_balance_workforce(self):
         test_sim = _rome_sim()
         adult_equivalent = test_sim._adult_equivalent_population(test_sim.population)
-        technique = test_sim._farming_technique()
-        baseline_fte = test_sim._expected_year_farm_need(
-            test_sim._share_farm_fte(adult_equivalent, technique),
+        technique = test_sim.labour._farming_technique()
+        baseline_fte = test_sim.labour._expected_year_farm_need(
+            test_sim.labour._share_farm_fte(adult_equivalent, technique),
             adult_equivalent, technique)
         test_sim._demographic_recovery(101)
         fte = _farm_hours(test_sim) / labour_allocation.HOURS_PER_FARM_WORKER_YEAR

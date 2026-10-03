@@ -41,7 +41,7 @@ def one_year(game):
 
 def grown(game, employees=2000.0, capital=60000000.0, eminence=25.0):
     game.employees["artisan"] = employees
-    game._resync_pools()
+    game.labour._resync_pools()
     game.capital = capital
     game.eminence = eminence
     game.update_protection()
@@ -58,7 +58,7 @@ soldiers = lines["army"].labour.get("soldier", 0.0)
 check("the army is the civilisation's opening standing force, held at the same share of the people",
       abs(soldiers - game.civ["standing_army"]) < 1e-6 * soldiers, (soldiers, game.civ.get("standing_army")))
 check("army pay is the soldiers' hours at the soldier trade's wage",
-      abs(lines["army"].wages - soldiers * game.HOURS_PER_PERSON_YEAR * game.labour_market.quote("soldier"))
+      abs(lines["army"].wages - soldiers * game.HOURS_PER_PERSON_YEAR * game.labour.market.quote("soldier"))
       < 1e-6 * lines["army"].wages, lines["army"].wages)
 check("the army's iron comes from military logistics: tonnes follow the soldiers and their equipment",
       lines["army"].materials and all(tonnes > 0.0 for tonnes in lines["army"].materials.values()),
@@ -120,14 +120,14 @@ check("a reserve big enough finances the whole deficit and leaves nothing unfund
 
 # ---- spending reaches the labour pool --------------------------------------------------------
 game, treasury = budget_sim()
-soldiers_free_before = game.market_supply("soldier")
+soldiers_free_before = game.labour.market_supply("soldier")
 scribes_before = game.actor_staff_fte("scribe")
 one_year(game)
 check("the army's and the officials' staff are held in the government's workforce",
       treasury.workforce.get("soldier", 0.0) > 0.0 and treasury.workforce.get("scribe", 0.0) > 0.0,
       treasury.workforce)
-reach = game.reachable_trade_population("soldier") + game.actor_staff_fte("soldier")
-labour_reach = game.reachable_trade_population("labourer") + game.actor_staff_fte("labourer")
+reach = game.labour.reachable_trade_population("soldier") + game.actor_staff_fte("soldier")
+labour_reach = game.labour.reachable_trade_population("labourer") + game.actor_staff_fte("labourer")
 share_of_nation = game.civ["standing_army"] / game.civ["population"] * game.population.total / game.population.working_age
 army_share = lines["army"].labour["soldier"] / game.population.working_age
 other_labourers = sum(line.labour.get("labourer", 0.0) for line in budget.standing_lines(SimWorld(game))[1:])
@@ -136,12 +136,12 @@ check("the state takes the same share of the founder's local pool as of the nati
       and abs(treasury.workforce["labourer"] - other_labourers / game.population.working_age * labour_reach) < 1e-6 * labour_reach,
       (treasury.workforce, share_of_nation, reach))
 check("what the state employs is no longer on offer to the founder",
-      game.actor_staff_fte("scribe") > scribes_before and game.market_supply("soldier") < soldiers_free_before,
-      (game.actor_staff_fte("scribe"), game.market_supply("soldier"), soldiers_free_before))
+      game.actor_staff_fte("scribe") > scribes_before and game.labour.market_supply("soldier") < soldiers_free_before,
+      (game.actor_staff_fte("scribe"), game.labour.market_supply("soldier"), soldiers_free_before))
 unfunded_game, unfunded_treasury = budget_sim(army=1.0e8, purse=0.0)
 one_year(unfunded_game)
 check("a state that cut its spending employs correspondingly fewer people",
-      unfunded_treasury.workforce["soldier"] < 0.5 * (unfunded_game.reachable_trade_population("soldier")
+      unfunded_treasury.workforce["soldier"] < 0.5 * (unfunded_game.labour.reachable_trade_population("soldier")
                                                      + unfunded_game.actor_staff_fte("soldier")),
       unfunded_treasury.workforce)
 

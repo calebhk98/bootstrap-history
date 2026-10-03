@@ -2,7 +2,7 @@
 household can reach.
 
 Split out of labour.py (see that file's own docstring for why). These are
-methods of Sim; they are a mixin only so that they can live in a file of
+methods of Labour; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and moved verbatim.
 
 What leaning on a trade does to its price lives in labour_market_api.py.
@@ -22,7 +22,6 @@ can this household actually put to work this year", the population-side
 half of the same question hours_you_can_call_on (labour_training.py)
 answers for craft hours.
 """
-from sim.engine.data import (TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family)
 from sim.constants import declare, REGISTRY
 
 
@@ -35,7 +34,7 @@ class PopulationMixin:
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""
-        return self.state.household.scholars + (1.0 if self.state.founder.founder_alive else 0.0)
+        return self._world.state.household.scholars + (1.0 if self._world.state.founder.founder_alive else 0.0)
 
     def scholar_hands_available(self):
         """Scholars you can actually put on a project this year: the ones on
@@ -62,10 +61,10 @@ class PopulationMixin:
         somebody in this position actually did.
         """
         contracted = sum(hours for trade, hours
-                         in getattr(self.household, "contract_hours", {}).items()
-                         if trade_family(trade) == "scholar")
+                         in getattr(self._world.household, "contract_hours", {}).items()
+                         if self._world.trade_family(trade) == "scholar")
         return (self.effective_scholars()
-                + contracted / self.HOURS_PER_PERSON_YEAR)
+                + contracted / self._world.HOURS_PER_PERSON_YEAR)
 
     def trade_available(self, trade):
         """Can this trade be had here at all, at any price?
@@ -74,20 +73,20 @@ class PopulationMixin:
         An absent trade is not expensive, it is absent, and the only way to have
         one is to teach somebody the trade yourself.
         """
-        if trade not in TRADES_ABSENT:
+        if trade not in self._world.trades_absent:
             return True
-        household = self.state.household
+        household = self._world.state.household
         return (trade in household.trades_created
                 or (household.trade_schools or {}).get(trade, 0.0) > 0)
 
     def found_trade_school(self, trade, seats):
         """Create durable local training capacity for one named trade."""
-        if trade not in WAGES or not self.trade_available(trade):
+        if trade not in self._world.wages or not self.trade_available(trade):
             return False, ("the trade must exist before a school can reproduce "
                            "it; teach or discover %s first" % trade)
         seats = float(seats)
-        cost = seats * self.trade_school_price_per_seat()
-        household = self.state.household
+        cost = seats * self._world.trade_school_price_per_seat()
+        household = self._world.state.household
         if seats <= 0 or cost > household.capital:
             return False, "cannot afford that trade school"
         household.debit(cost, "trade schools")
@@ -110,12 +109,12 @@ class PopulationMixin:
         Unchanged in substance from the keyword/list check this replaced;
         only pulled out to one place instead of being reasoned about twice.
         """
-        note = TRADE_NOTES.get(trade, "").lower()
+        note = self._world.trade_notes.get(trade, "").lower()
         if "abundance" in note or "abundant" in note or "numerous" in note:
             return "abundant"
         if "scarcest" in note:
             return "scarce"
-        if trade_family(trade) == "scholar":
+        if self._world.trade_family(trade) == "scholar":
             return "scholar"
         if trade in ("labourer", "artisan", "carpenter", "mason", "potter", "smith",
                  "sailor", "miner", "furnaceman", "soldier"):
@@ -136,7 +135,7 @@ class PopulationMixin:
             return "SCRIBE_ENGAGEMENT_FRACTION"
         if trade == "merchant":
             return "MERCHANT_DENSITY"
-        if trade in TRADES_ABSENT:
+        if trade in self._world.trades_absent:
             # Taught trades have their own density not yet declared
             return None
         # Craft trades use TRADE_DENSITY
@@ -340,9 +339,9 @@ class PopulationMixin:
     def _hiring_cap_before_actors(self, trade):
         """Hours a year of a trade the town's people offer, before firms' and governments' staff
         are taken out of it."""
-        base = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
+        base = (self._world.cfg["hired_hours_cap_base"] * self.local_market_share()
                 * (self.POP_SCALE_FLOOR_SHARE
-                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
+                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
         cls = self._trade_market_class(trade)
         if cls in ("abundant", "common"):
             # A REAL TOWN'S WORTH, not base's village-sized share of it (see
@@ -350,14 +349,14 @@ class PopulationMixin:
             # TOWN_POPULATION_REFERENCE for the full account and its
             # citation).
             town = self.home_town_population_estimate()
-            cap = town * self.TRADE_DENSITY[cls] * self.HOURS_PER_PERSON_YEAR
+            cap = town * self.TRADE_DENSITY[cls] * self._world.HOURS_PER_PERSON_YEAR
         elif cls == "scholar":
             cap = base * self.SCHOLAR_MARKET_SHARE   # literate men are a small fraction of anywhere
         elif cls == "scarce":
             cap = base * self.SCARCE_TRADE_HIRING_SHARE
         else:
             cap = base * self.UNCOMMON_TRADE_HIRING_SHARE   # uncommon: glassblowers, engravers, masters
-        cap = self.effect_factor("market_hiring_factor", cap, self.HIRING_MULTIPLIER_EXPONENT)
+        cap = self._world.effect_factor("market_hiring_factor", cap, self.HIRING_MULTIPLIER_EXPONENT)
         # A trade that needs reading cannot be bought past how many people
         # here can read (FINDINGS_ROUND2 section Q). scholar and scribe are
         # the only literate trades that reach this branch - the taught ones
@@ -381,18 +380,18 @@ class PopulationMixin:
         """
         if not self.trade_available(trade):
             return 0.0
-        household = self.state.household
+        household = self._world.state.household
         school_hours = ((household.trade_schools or {}).get(trade, 0.0)
-                        * self.HOURS_PER_PERSON_YEAR)
-        if trade in TRADES_ABSENT:
-            return self._taught_trade_people(trade) * self.HOURS_PER_PERSON_YEAR
-        cap = self._shared_answer(
-            ("hiring_cap", trade), (self.civ.get("literacy_elite"), self.civ.get("literacy_general")),
+                        * self._world.HOURS_PER_PERSON_YEAR)
+        if trade in self._world.trades_absent:
+            return self._taught_trade_people(trade) * self._world.HOURS_PER_PERSON_YEAR
+        cap = self._world.shared_answer(
+            ("hiring_cap", trade), (self._world.civ.get("literacy_elite"), self._world.civ.get("literacy_general")),
             lambda: self._hiring_cap_before_actors(trade))
         # firms and governments hire from the same pool, so what they employ is not on offer
-        cap = max(0.0, cap - self.actor_staff_fte(trade) * self.HOURS_PER_PERSON_YEAR)
-        hours = cap + household.employees.get(trade, 0.0) * self.HOURS_PER_PERSON_YEAR + school_hours
-        return min(hours, self.people_who_exist(trade) * self.HOURS_PER_PERSON_YEAR)
+        cap = max(0.0, cap - self._world.actor_staff_fte(trade) * self._world.HOURS_PER_PERSON_YEAR)
+        hours = cap + household.employees.get(trade, 0.0) * self._world.HOURS_PER_PERSON_YEAR + school_hours
+        return min(hours, self.people_who_exist(trade) * self._world.HOURS_PER_PERSON_YEAR)
 
     def reachable_trade_population(self, trade):
         """What this household's own labour market actually holds of this
@@ -413,12 +412,12 @@ class PopulationMixin:
         """
         if trade in ("scholar", "scribe"):
             return self.literate_capacity(trade)
-        return self.market_supply(trade) / self.HOURS_PER_PERSON_YEAR
+        return self.market_supply(trade) / self._world.HOURS_PER_PERSON_YEAR
 
     def _taught_trade_people(self, trade):
         """People in a trade only you teach: your staff, their own students
         (approximated as a multiple of your headcount) and school places."""
-        household = self.state.household
+        household = self._world.state.household
         return (household.employees.get(trade, 0.0) * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
                 + (household.trade_schools or {}).get(trade, 0.0))
 
@@ -426,11 +425,11 @@ class PopulationMixin:
         """People in this trade who exist in the country, counting your own
         staff even if a collapse has left the estimate below them."""
         return max(self.national_trade_population(trade),
-                   self.state.household.employees.get(trade, 0.0))
+                   self._world.state.household.employees.get(trade, 0.0))
 
     def available_trades(self):
         """Every trade this society has that the labour market can supply."""
-        return [trade for trade in sorted(WAGES) if self.trade_available(trade)]
+        return [trade for trade in sorted(self._world.wages) if self.trade_available(trade)]
 
     def project_staffing_shortfall(self, node):
         """A sentence when the country lacks the people this project needs at
@@ -438,9 +437,9 @@ class PopulationMixin:
         least one person in every trade it draws hours from; supply is the
         people who exist in those trades."""
         trades = sorted(trade for trade, hours in (node["lab"] or {}).items()
-                        if hours > 0 and trade not in TRADES_ABSENT
+                        if hours > 0 and trade not in self._world.trades_absent
                         and self.trade_available(trade))
-        working_age = self.population.working_age
+        working_age = self._world.population.working_age
         craft_supply = sum(self.people_who_exist(trade) for trade in trades)
         scholar_supply = self.people_who_exist("scholar")
         empty = [trade for trade in trades if self.people_who_exist(trade) < 1.0]
@@ -486,18 +485,18 @@ class PopulationMixin:
         if not self.trade_available(trade):
             return 0.0
         # The age-cohort model's running headcount is the actual population.
-        pop = self.population.total
-        urban = pop * float(self.civ.get("urban_fraction", 0.0))
+        pop = self._world.population.total
+        urban = pop * float(self._world.civ.get("urban_fraction", 0.0))
         if trade == "soldier":
             # any of the working age may be called up
-            return self.population.working_age
+            return self._world.population.working_age
         if trade == "scholar":
-            return pop * float(self.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
+            return pop * float(self._world.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
         if trade == "scribe":
-            return pop * float(self.civ.get("literacy_general", 0.0)) * self.SCRIBE_ENGAGEMENT_FRACTION
+            return pop * float(self._world.civ.get("literacy_general", 0.0)) * self.SCRIBE_ENGAGEMENT_FRACTION
         if trade == "merchant":
             return urban * self.MERCHANT_DENSITY
-        if trade in TRADES_ABSENT:
+        if trade in self._world.trades_absent:
             return self._taught_trade_people(trade)
         return urban * self.TRADE_DENSITY.get(self._trade_market_class(trade), 0.0)
 
@@ -522,15 +521,15 @@ class PopulationMixin:
         # `reference_pop`/`scale_from_baseline` are kept as the screen's
         # own "before simulated changes" comparison, not as inputs to
         # `pop`.
-        reference_pop = float(self.civ.get("population", 0.0))
-        pop = self.population.total
+        reference_pop = float(self._world.civ.get("population", 0.0))
+        pop = self._world.population.total
         scale_from_baseline = (pop / reference_pop) if reference_pop else 1.0
-        urban_frac = float(self.civ.get("urban_fraction", 0.0))
+        urban_frac = float(self._world.civ.get("urban_fraction", 0.0))
         trades = []
-        for trade in sorted(WAGES):
+        for trade in sorted(self._world.wages):
             national = self.national_trade_population(trade)
             reach = self.reachable_trade_population(trade) if self.trade_available(trade) else 0.0
-            have = self.state.household.employees.get(trade, 0.0)
+            have = self._world.state.household.employees.get(trade, 0.0)
             trades.append({
                 "trade": trade,
                 "exists_here": self.trade_available(trade),
@@ -542,7 +541,7 @@ class PopulationMixin:
                 "is_placeholder": self._density_is_placeholder(trade),
             })
         return {
-            "civilisation": self.civ.get("short_name", self.civ.get("name", self.civ.get("id", ""))),
+            "civilisation": self._world.civ.get("short_name", self._world.civ.get("name", self._world.civ.get("id", ""))),
             "population": round(pop),
             "reference_population_before_simulated_changes": round(reference_pop),
             "population_change_from_reference": round(scale_from_baseline - 1.0, 4),

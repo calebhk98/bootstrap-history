@@ -27,11 +27,11 @@ from sim.ui.protocol import _short_of_staff
 _s_star = sim()
 check("...and marks exactly the ones the start gate would refuse for staff",
       all(bool(row.get("short_of_staff"))
-          == (NODES[row["id"]]["art"] > _s_star.craft_hands_available() + 1e-9
-              or NODES[row["id"]]["sch"] > _s_star.effective_scholars() + 1e-9)
+          == (NODES[row["id"]]["art"] > _s_star.labour.craft_hands_available() + 1e-9
+              or NODES[row["id"]]["sch"] > _s_star.labour.effective_scholars() + 1e-9)
           for row in _rows),
       [(row["id"], row.get("short_of_staff"), NODES[row["id"]]["art"],
-        _s_star.craft_hands_available()) for row in _rows][:3])
+        _s_star.labour.craft_hands_available()) for row in _rows][:3])
 _big = [node_id for node_id in sorted(NODES) if NODES[node_id]["art"] > 20][:1]
 if _big:
     check("...and a job wanting twenty craftsmen IS starred on turn one",

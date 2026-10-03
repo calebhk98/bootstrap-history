@@ -75,12 +75,12 @@ def settled(growth=1.0, years=40, rate=0.12):
 # ---- one wage for every employer; pay follows output per hour as far as the share says ------------
 game = actor_sim([NODE])
 founder_runs(game, "zz_scale", opened_ago=10)
-game.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = 1.0
+game.labour.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = 1.0
 next_year(game)
 world = SimWorld(game)
 wage_before = world.concern_wage_bill("zz_scale")
 hour_before = world.labour_market.quote("labourer")
-founder_before = game.labour_market.quote_annual("artisan")
+founder_before = game.labour.market.quote_annual("artisan")
 game.state.economy.output_per_head *= 10.0
 game._revenue_cache_key = None
 world = SimWorld(game)
@@ -89,7 +89,7 @@ check("when pay follows output a concern's wage bill grows with the economy",
 check("the wage an hour of labour earns rises with output per hour",
       world.labour_market.quote("labourer") > 2.0 * hour_before, (hour_before, world.labour_market.quote("labourer")))
 check("the founder pays the same rise a firm does: one wage for every employer",
-      abs(game.labour_market.quote_annual("artisan") / founder_before - world.labour_market.quote("labourer") / hour_before) < 1e-6)
+      abs(game.labour.market.quote_annual("artisan") / founder_before - world.labour_market.quote("labourer") / hour_before) < 1e-6)
 check("what the society makes does not follow a figure someone sets: it is the quantities its market clears",
       world.society_output() == SimWorld(actor_sim([NODE])).society_output())
 

@@ -16,7 +16,7 @@ check("idle offers a development program sized by its own hours and cost", isins
 check("the program is something startable today", program and test_sim.can_start(program["id"]), program)
 check("the program's cash cost is the engine's project cost",
       program and abs(program["cash_cost"] - test_sim.project_cost(program["id"])) < 1.0, program)
-check("it never spends hours itself", test_sim.director_hours_committed() == idle["committed_hours"])
+check("it never spends hours itself", test_sim.labour.director_hours_committed() == idle["committed_hours"])
 
 # a sized training suggestion for each oversubscribed trade
 crowded = sim(capital=1_000_000.0)
@@ -30,7 +30,7 @@ if isinstance(sized, list) and sized:
     check("it names the trade, the people the shortfall needs and the hours teaching them takes",
           row["trade"] == "machinist"
           and row["people_short"] == -(-4000 // int(crowded.HOURS_PER_PERSON_YEAR))
-          and abs(row["teaching_hours"] - row["people_short"] * crowded.TEACHING_HOURS_PER_PERSON) < 1e-6
+          and abs(row["teaching_hours"] - row["people_short"] * crowded.labour.TEACHING_HOURS_PER_PERSON) < 1e-6
           and row["command"].startswith("train machinist"), row)
 
 # the pre-step warning names the delay kind

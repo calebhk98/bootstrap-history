@@ -59,7 +59,7 @@ _slaves_people = _slaves_quote["you_can_afford_about"]
 check("slaves: the quote gives a positive affordable amount",
       _slaves_people > 0, _slaves_quote)
 check("slaves: the quoted affordable people are bought in full",
-      _slaves_sim.buy_slaves(_slaves_people) == _slaves_people, _slaves_people)
+      _slaves_sim.labour.buy_slaves(_slaves_people) == _slaves_people, _slaves_people)
 
 # Affordability with credit: household with little cash but enough credit can buy
 _credit_sim = sim(capital=_CAPITAL)

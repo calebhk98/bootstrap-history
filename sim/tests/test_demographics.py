@@ -20,17 +20,17 @@ from .harness import *  # noqa: F401,F403
 # bare "> 11.25", so a future recalibration of the constants moves this
 # check's expectation with it instead of silently drifting out of sync.
 s_dm = sim(capital=1e9)
-_expect_common = (s_dm.TOWN_POPULATION_REFERENCE * s_dm.TRADE_DENSITY["common"]
+_expect_common = (s_dm.labour.TOWN_POPULATION_REFERENCE * s_dm.labour.TRADE_DENSITY["common"]
                   * s_dm.HOURS_PER_PERSON_YEAR)
 check("a common trade's reachable pool is a real town's worth, not the old "
       "11.25-person village",
-      abs(s_dm.market_supply("smith") - s_dm.employees.get("smith", 0.0)
+      abs(s_dm.labour.market_supply("smith") - s_dm.employees.get("smith", 0.0)
           * s_dm.HOURS_PER_PERSON_YEAR - _expect_common) < 1.0,
-      (s_dm.market_supply("smith"), _expect_common))
+      (s_dm.labour.market_supply("smith"), _expect_common))
 check("...which is at least two orders of magnitude above the pre-fix "
       "figure of 22,500 hours, not a marginal tweak",
-      s_dm.market_supply("smith") > 22500.0 * 10,
-      s_dm.market_supply("smith"))
+      s_dm.labour.market_supply("smith") > 22500.0 * 10,
+      s_dm.labour.market_supply("smith"))
 
 # --- the SAME curve (_labour_price_factor_from is untouched), fed a
 # realistic denominator: hiring ten smiths against Rome's own reachable
@@ -39,33 +39,33 @@ check("...which is at least two orders of magnitude above the pre-fix "
 # spikes hard, and a literacy-bound trade (scribe) still hits ITS ceiling
 # (literate_capacity, not market depth) rather than being waved through.
 s_rip = sim(capital=1e9)
-s_rip.labour_market.press("smith", 10 * s_rip.HOURS_PER_PERSON_YEAR)
+s_rip.labour.market.press("smith", 10 * s_rip.HOURS_PER_PERSON_YEAR)
 check("ten more smiths barely moves the going wage in a city this size",
-      s_rip.labour_market.price_factor("smith") < 1.03,
-      s_rip.labour_market.price_factor("smith"))
+      s_rip.labour.market.price_factor("smith") < 1.03,
+      s_rip.labour.market.price_factor("smith"))
 s_spike = sim(capital=1e9)
-s_spike.labour_market.press("millwright", 10 * s_spike.HOURS_PER_PERSON_YEAR)
+s_spike.labour.market.press("millwright", 10 * s_spike.HOURS_PER_PERSON_YEAR)
 check("...while the same ten against a genuinely scarce trade still spikes",
-      s_spike.labour_market.price_factor("millwright") > 2.0,
-      s_spike.labour_market.price_factor("millwright"))
+      s_spike.labour.market.price_factor("millwright") > 2.0,
+      s_spike.labour.market.price_factor("millwright"))
 
 # --- reachable_trade_population and national_trade_population: the two
 # numbers 'population' shows side by side. Reach well above the old
 # 11.25-person figure, and the country's own total bigger again than one
 # household's reach into it (a trade is not entirely HELD by one town).
 s_pop = sim(capital=1e9)
-_reach_smith = s_pop.reachable_trade_population("smith")
-_nat_smith = s_pop.national_trade_population("smith")
+_reach_smith = s_pop.labour.reachable_trade_population("smith")
+_nat_smith = s_pop.labour.national_trade_population("smith")
 check("reachable_trade_population reads market_supply as people, not hours",
-      abs(_reach_smith - s_pop.market_supply("smith") / s_pop.HOURS_PER_PERSON_YEAR) < 1e-6,
+      abs(_reach_smith - s_pop.labour.market_supply("smith") / s_pop.HOURS_PER_PERSON_YEAR) < 1e-6,
       _reach_smith)
 check("the country holds more smiths than one household's own town reaches",
       _nat_smith > _reach_smith, (_nat_smith, _reach_smith))
 check("a trade that does not exist here at all has no national population "
       "either - trade_available() already says so, read once rather than "
       "claiming a pool for a trade this society cannot have at any price",
-      s_pop.national_trade_population("chemist") == 0.0,
-      s_pop.national_trade_population("chemist"))
+      s_pop.labour.national_trade_population("chemist") == 0.0,
+      s_pop.labour.national_trade_population("chemist"))
 
 # --- scholar and scribe: reachable_trade_population reads the SAME wall
 # hire()/train() actually enforce (literate_capacity, floored at 1.5), not
@@ -77,10 +77,10 @@ check("a trade that does not exist here at all has no national population "
 s_lit_pop = sim(civ="norse_900ad", capital=1e9)
 check("a literate trade's reachable figure matches the real hiring wall, "
       "not the unfloored market-share number beneath it",
-      s_lit_pop.reachable_trade_population("scribe")
-      == s_lit_pop.literate_capacity("scribe"),
-      (s_lit_pop.reachable_trade_population("scribe"),
-       s_lit_pop.market_supply("scribe") / s_lit_pop.HOURS_PER_PERSON_YEAR))
+      s_lit_pop.labour.reachable_trade_population("scribe")
+      == s_lit_pop.labour.literate_capacity("scribe"),
+      (s_lit_pop.labour.reachable_trade_population("scribe"),
+       s_lit_pop.labour.market_supply("scribe") / s_lit_pop.HOURS_PER_PERSON_YEAR))
 
 # --- the 'population' command itself: every trade in WAGES accounted for,
 # the country's own numbers present, and the framing sentence actually
@@ -107,8 +107,8 @@ check("'population' is in KNOWN_COMMANDS and survives the fog/pointer "
 # actually feels a price premium bite (not only in the literate-wall text,
 # which already said this before this fix existed).
 s_fr = sim(capital=50.0, agent_economy=False)
-s_fr.labour_market.press("millwright", 10 * s_fr.HOURS_PER_PERSON_YEAR)
-ok_fr, msg_fr = s_fr.hire("millwright", 3)
+s_fr.labour.market.press("millwright", 10 * s_fr.HOURS_PER_PERSON_YEAR)
+ok_fr, msg_fr = s_fr.labour.hire("millwright", 3)
 check("a cash refusal driven by a real price premium says this is one "
       "household's reach into one town's market, not a national figure",
       ok_fr is False and "population command" in msg_fr and "one town" in msg_fr,

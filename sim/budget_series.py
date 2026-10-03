@@ -56,8 +56,8 @@ def run(civ_id, years, seed, out_path=None):
 			"by_form": dict(record.revenue_by_form),
 			"in_kind": dict(record.revenue_in_kind),
 			"debt": max(0.0, -record.money),
-			"soldier_wage": game.labour_market.quote_annual("soldier"),
-			"labourer_wage": game.labour_market.quote_annual("labourer"),
+			"soldier_wage": game.labour.market.quote_annual("soldier"),
+			"labourer_wage": game.labour.market.quote_annual("labourer"),
 		})
 		outlays_before = dict(record.outlays)
 		taken_before = taken

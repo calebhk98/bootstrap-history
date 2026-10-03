@@ -1,20 +1,16 @@
-"""Builds the wage schedule from what the engine already knows: the trade
-registry, the civilisation, the price solver and the population's age
-structure.
+"""The inputs to a wage schedule that need no engine: the reference civilisation, its coin standard,
+the population's age structure and each trade's training years.
 
-The schedule itself lives in sim.labour.wages and is actor-agnostic; this is
-the glue that supplies its inputs.
+The schedule itself lives in sim.labour.wages and is actor-agnostic; the engine builds it from
+these and the price solver (sim/engine/wage_schedule.py).
 """
 import functools
 import json
 import os
-import warnings
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping
 
-from sim.world import demand, demography
+from sim.world import demography
 from sim.labour import wages
-
-from sim.engine.default_civilisation import CIVILISATION_DIRECTORY, default_civilisation_id
 
 # The staple the subsistence basket is priced in.
 FOOD_PRICE_MATERIAL = "wheat_kg"
@@ -27,7 +23,8 @@ REFERENCE_POPULATION = 10000.0
 def reference_civilisation() -> Dict[str, Any]:
     """The default civilisation's own file, for the context-free wage table
     tools and the price solver use when no civilisation is in play."""
-    path = os.path.join(CIVILISATION_DIRECTORY, default_civilisation_id() + ".json")
+    from sim.solve_prices_core import DEFAULT_LAND_CIVILIZATION, REPO_ROOT
+    path = os.path.join(REPO_ROOT, "data", "civilizations", DEFAULT_LAND_CIVILIZATION + ".json")
     with open(path, encoding="utf-8") as handle:
         return json.load(handle)
 
@@ -71,47 +68,3 @@ def training_years_by_trade(registry: Mapping[str, Any]) -> Dict[str, float]:
     return wages.training_years_with_family_default(
         {trade_id: trade.training_years for trade_id, trade in registry.items()},
         {trade_id: trade.family for trade_id, trade in registry.items()})
-
-
-def build_schedule(registry: Mapping[str, Any], civ: Mapping[str, Any],
-                   tightness_factors: Optional[Dict[str, float]] = None,
-                   production_entries: Optional[Mapping[str, Any]] = None
-                   ) -> wages.WageSchedule:
-    """The civilisation's opening wage schedule.
-
-    Costs are solved in labour hours, the numeraire being one hour of the
-    unskilled trade, so no money enters until the last step. Closure: the
-    wage floor needs the staple's cost, and that cost is built from labour
-    at wages, but in numeraire hours the unskilled wage is 1 by definition,
-    so the staple solves once from the training premiums alone. The real-wage
-    condition is then a plain number: the hours of work needed to buy the
-    subsistence basket per hour worked. Below 1 the market wage clears it;
-    above 1 the floor lifts the unskilled wage. Money is anchored to the
-    coin: one unit is `kg_per_unit` of the coin material, worth its solved
-    labour hours, so a labour hour is the reciprocal of that in money.
-    """
-    from sim.engine import prices as price_solver
-    standard = coin_standard(civ)
-    civilisation_id = civ.get("id")
-    opening = wages.WageSchedule(
-        training_years_by_trade(registry), 1.0, 0.0, civ["starting_interest_rate"])
-    with warnings.catch_warnings():
-        # Catalogue diagnostics belong to the solver tools, not to every start-up.
-        warnings.simplefilter("ignore")
-        solved = price_solver.solved_prices(
-            civ["starting_techs"], opening.ratio_document(),
-            production_entries=production_entries, civilization_id=civilisation_id,
-            civilization=civ)
-    for role, material in (("staple", FOOD_PRICE_MATERIAL), ("coin", standard["material"])):
-        if material not in solved.resolvable_materials:
-            raise ValueError(
-                "civilization %r cannot price its %s %s with its starting technologies"
-                % (civilisation_id, role, material))
-    hours_per_kg = solved.prices_in_labour_hours
-    coin_hours = standard["kg_per_unit"] * hours_per_kg[standard["material"]]
-    subsistence_hours = wages.subsistence_wage_per_hour(
-        demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR,
-        hours_per_kg[FOOD_PRICE_MATERIAL], people_fed_per_worker())
-    return wages.WageSchedule(
-        training_years_by_trade(registry), 1.0 / coin_hours, subsistence_hours,
-        civ["starting_interest_rate"], tightness_factors=tightness_factors)

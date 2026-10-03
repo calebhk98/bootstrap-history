@@ -20,6 +20,12 @@ from sim.constants import declare
 from sim.world import demand
 from sim.world.need_satiation import apply_satiation
 
+def load_needs(root: str) -> Dict[str, Any]:
+    """The base-and-enabled-mod needs and goods under `root` (sim/engine/need_data.py)."""
+    from sim.engine import need_data
+    return need_data.load_needs(root)
+
+
 NEED_SUBSTITUTION_ELASTICITY = declare(
     "NEED_SUBSTITUTION_ELASTICITY", 2.0,
     kind="temporary_heuristic",

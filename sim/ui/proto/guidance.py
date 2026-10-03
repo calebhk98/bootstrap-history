@@ -76,7 +76,7 @@ def training_suggestions(sim, trade_rows):
         short = row["demand_hours_this_year"] - row["supply_hours_this_year"]
         people = max(1, math.ceil(short / sim.HOURS_PER_PERSON_YEAR))
         rows.append({"trade": row["trade"], "people_short": people,
-                     "teaching_hours": people * sim.TEACHING_HOURS_PER_PERSON,
+                     "teaching_hours": people * sim.labour.TEACHING_HOURS_PER_PERSON,
                      "command": "train %s %d" % (row["trade"], people)})
     return rows
 

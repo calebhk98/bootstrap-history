@@ -15,7 +15,7 @@ def staffed_sim():
 	test_sim.done.add(CLOSING_NODE)
 	test_sim._done_changed()
 	test_sim.employees["artisan"] = 6.0
-	test_sim._resync_pools()
+	test_sim.labour._resync_pools()
 	test_sim.open_venture(CLOSING_NODE)
 	return test_sim
 
@@ -27,7 +27,7 @@ def new_messages(test_sim, start):
 # --- 233: the closure line says why, how many are still shut, and names the remedies
 closing_sim = staffed_sim()
 closing_sim.employees["artisan"] = 0.0
-closing_sim._resync_pools()
+closing_sim.labour._resync_pools()
 log_start = len(closing_sim.log)
 closed = closing_sim.close_unstaffed_ventures(closing_sim.year)
 closure_text = " ".join(new_messages(closing_sim, log_start))
@@ -40,7 +40,7 @@ check("the closure summary counts closed, reopened and still shut",
       summary is not None and re.search(r"closed 1\b", summary) and re.search(r"reopened 0\b", summary)
       and re.search(r"still shut 1\b", summary), summary)
 closing_sim.employees["artisan"] = 6.0
-closing_sim._resync_pools()
+closing_sim.labour._resync_pools()
 log_start = len(closing_sim.log)
 closing_sim.reopen_restaffed_ventures(closing_sim.year)
 reopen_text = " ".join(new_messages(closing_sim, log_start))

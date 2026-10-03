@@ -162,14 +162,14 @@ class LiteracyCostTests(unittest.TestCase):
 
 class TechniqueTests(unittest.TestCase):
     def test_default_technique_is_the_reference_one(self):
-        self.assertEqual(_rome()._farming_technique().toolkit, agriculture.DEFAULT_TOOLKIT)
+        self.assertEqual(_rome().labour._farming_technique().toolkit, agriculture.DEFAULT_TOOLKIT)
 
     def test_adoption_grows_with_age(self):
         test_sim = _rome()
         _complete(test_sim, ("fud_mechanical_reaper",))
-        early = test_sim._farming_technique().toolkit.reaping_rate_multiplier
+        early = test_sim.labour._farming_technique().toolkit.reaping_rate_multiplier
         test_sim.state.scenario.year += 60
-        late = test_sim._farming_technique().toolkit.reaping_rate_multiplier
+        late = test_sim.labour._farming_technique().toolkit.reaping_rate_multiplier
         self.assertGreater(late, early)
 
 

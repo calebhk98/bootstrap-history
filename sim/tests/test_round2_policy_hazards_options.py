@@ -157,7 +157,7 @@ s.artisans, s.scholars = 10.0, 10.0
 r0 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
 check("start refuses outright when a needed trade has never been taught",
       not r0["ok"] and "engineer" in r0.get("error", ""), r0)
-s.train("engineer", 2)          # training begun; nobody is ready for two years
+s.labour.train("engineer", 2)          # training begun; nobody is ready for two years
 r1 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
 check("start accepts work nobody can do yet only WITH a warning naming the trade",
       r1["ok"] and "engineer" in r1.get("warning", ""), r1)
@@ -1002,35 +1002,35 @@ check("you cannot be paid for a trade this society does not have",
 # third of the way into a credit line nobody has withdrawn. A household with
 # credit left borrows and makes payroll; that is what credit is for.
 # (a) A payroll the remaining credit COVERS costs you nobody but attrition.
-s = sim(capital=22400.0 * sim().money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
+s = sim(capital=22400.0 * sim().labour.money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
 # One labourer: wages track labour tightness now, so a smith or two people
 # would exceed the credit line and rightly be trimmed. The precondition on
 # the check keeps the case honest.
-s.hire("labourer", 1)
+s.labour.hire("labourer", 1)
 s.capital = -s.credit_limit() * 0.35
 _before = sum(s.employees.values())
 # What the household can still spend on wages: income plus remaining credit,
 # after the costs that are not wages.
 _room = (s.revenue() + s.capital + s.credit_limit()
-         - (s.living_cost() - s.wage_bill()) - s.upkeep())
-_payroll_before = s.wage_bill()
+         - (s.living_cost() - s.labour.wage_bill()) - s.upkeep())
+_payroll_before = s.labour.wage_bill()
 s.step()
 _after = sum(s.employees.values())
 check("staff are not let go while there is still credit to pay them",
       _room > _payroll_before and _after > _before * 0.95,
       "%.2f -> %.2f with %.0f still to spend against a %.0f payroll"
-      % (_before, _after, _room, s.wage_bill()))
+      % (_before, _after, _room, s.labour.wage_bill()))
 
 # (b) A payroll it only PARTLY covers costs you part of the staff, not all of
 #     it. The tester's five went to zero in one step with two thirds of the
 #     credit line untouched; what should happen is that you keep as many as
 #     your remaining means will pay for.
-s = sim(capital=22400.0 * sim().money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
+s = sim(capital=22400.0 * sim().labour.money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
-s.hire("smith", 5)
+s.labour.hire("smith", 5)
 # Means that cover living costs and a bit over half the payroll.
-s.capital = -s.credit_limit() + (s.living_cost() - s.wage_bill()) + 0.6 * s.wage_bill()
+s.capital = -s.credit_limit() + (s.living_cost() - s.labour.wage_bill()) + 0.6 * s.labour.wage_bill()
 _b3 = sum(s.employees.values())
 s.step()
 check("an unaffordable payroll is trimmed to what you can pay, not emptied",
@@ -1039,9 +1039,9 @@ check("an unaffordable payroll is trimmed to what you can pay, not emptied",
 
 # ...and when they DO go, because there is genuinely no money left to borrow,
 # it is said. The old code logged only in the branch that never happened.
-s = sim(capital=22400.0 * sim().money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
+s = sim(capital=22400.0 * sim().labour.money_per_labour_hour())  # 6000 coin at the old coin value, in labour hours
 s.policy["auto_hire"] = False
-s.hire("smith", 5)
+s.labour.hire("smith", 5)
 s.capital = -s.credit_limit() * 1.5
 _b2 = sum(s.employees.values())
 s.step()
@@ -1095,8 +1095,8 @@ def _starved(cost_left, supply=0.02, arrears=0.8, capital=20000.0):
     starved_sim = sim(capital=capital)
     starved_sim.start_project("identity_cover")
     starved_sim.active["identity_cover"]["cost_left"] = cost_left
-    _real = starved_sim.market_supply
-    starved_sim.market_supply = lambda trade, _fallback=_real: _fallback(trade) * supply
+    _real = starved_sim.labour.market_supply
+    starved_sim.labour.market_supply = lambda trade, _fallback=_real: _fallback(trade) * supply
     starved_sim.capital = -starved_sim.credit_limit() * arrears      # in arrears, inside the limit
     return starved_sim
 
@@ -1240,7 +1240,7 @@ check("a save the game promised exists even if you type nothing",
 # Derived from the pool, not a literal: this check hardcoded 2,300 hours and
 # started failing the moment the founder's year came down to 2,000, because
 # `work` correctly refused to sell hours that no longer existed.
-_pool = sim().director_pool()
+_pool = sim().labour.director_pool()
 _sell = _pool - 100
 _st2, _, _ = proto([{"cmd": "work", "trade": "scholar", "hours": _sell},
                     {"cmd": "state"}])
@@ -1265,7 +1265,7 @@ _PRACTICE_BOOM = 5.0
 s = sim()
 s.output_factor = _PRACTICE_BOOM
 _rev_before = s.revenue()
-_earned, _note = s.work_for_wages("labourer", s.director_pool())
+_earned, _note = s.labour.work_for_wages("labourer", s.labour.director_pool())
 check("hours sold as a labourer are not also spent practising medicine",
       _earned > 0 and _rev_before > 0 and s.revenue() < _rev_before * 0.05,
       "revenue %.1f -> %.1f having sold every hour" % (_rev_before, s.revenue()))
@@ -1277,7 +1277,7 @@ check("selling your hours at a loss says so, and still happens",
       _note and "cost you" in _note, _note)
 s2 = sim()
 s2.output_factor = _PRACTICE_BOOM
-s2.work_for_wages("labourer", s2.director_pool() * 0.5)
+s2.labour.work_for_wages("labourer", s2.labour.director_pool() * 0.5)
 check("selling half your hours costs you half the practice, not all of it",
       abs(s2.revenue() - _rev_before * 0.5) < _rev_before * 0.06,
       "%.1f against half of %.1f" % (s2.revenue(), _rev_before))
@@ -1535,7 +1535,7 @@ check("opening the doors is what pays you",
       _after.get("where_the_money_comes_from"))
 
 s2 = sim(capital=200000.0)
-s2.hire("artisan", 2)
+s2.labour.hire("artisan", 2)
 s2.done.add("fin_restaurant")
 s2._done_changed()
 _cap0 = s2.capital
@@ -1560,7 +1560,7 @@ if _heavy:
 
 # Shutting it stops both sides and keeps the knowledge.
 s4 = sim(capital=200000.0)
-s4.hire("artisan", 2)
+s4.labour.hire("artisan", 2)
 s4.done.add("fin_restaurant"); s4._done_changed()
 s4.open_venture("fin_restaurant")
 _rev_on, _up_on = s4.revenue(), s4.upkeep()
@@ -1596,7 +1596,7 @@ check("what you are running survives a save and reload",
 # stopped or that it was escapable. It WAS escapable - they got out by working
 # for wages - which is exactly why silence was the defect.
 s = sim(civ="norse_900ad", capital=40000.0)
-s.hire("smith", 3)
+s.labour.hire("smith", 3)
 _loser = [node_id for node_id in NODES if NODES[node_id]["up"] > NODES[node_id]["rev"] > 0][:1]
 if _loser:
     s.done.add(_loser[0]); s._done_changed(); s.open_venture(_loser[0])
@@ -1646,14 +1646,14 @@ for _p in NODES["workshop_first"]["pre"]:
 s._done_changed()
 _ok0, _why0 = s.start_reason("workshop_first")
 _blocked_on_staff = "craftsmen" in (_why0 or "")
-s.commission("carpenter", 4000)
+s.labour.commission("carpenter", 4000)
 _ok1, _why1 = s.start_reason("workshop_first")
 check("craftsmen you have under contract count toward what a project needs",
       _blocked_on_staff and "craftsmen" not in (_why1 or ""),
       "before: %s | after: %s" % ((_why0 or "")[:60], (_why1 or "")[:60]))
 check("commission can unblock the gate whose own advice is to commission",
-      s.craft_hands_available() >= 2.0,
-      "%.2f craft hands from 4,000 contracted hours" % s.craft_hands_available())
+      s.labour.craft_hands_available() >= 2.0,
+      "%.2f craft hands from 4,000 contracted hours" % s.labour.craft_hands_available())
 
 # --- the invariant behind a whole class of contradiction ---------------------
 # A weird-play tester reached, in seven years from a fresh start, a node that
@@ -1793,11 +1793,11 @@ for _ in range(4):
 #    step happened to record instead of being worked out against today.
 s = sim(civ="han_china_100ad")
 # Enough of Han's own money for the hires, so the stall is about scribes.
-s.capital = 1000 * s.labour_market.quote_annual("scholar")
+s.capital = 1000 * s.labour.market.quote_annual("scholar")
 for _p in NODES["logarithms"]["pre"]:
     s.done.add(_p)
 s._done_changed()
-s.hire("scholar", 2)
+s.labour.hire("scholar", 2)
 s.start_project("logarithms")
 s.step()
 _w = S._waiting_on(s, NODES, "logarithms", s.active["logarithms"], 0)
@@ -1829,7 +1829,7 @@ check("auto_hire on a poor household hires nobody and stays solvent",
       % (s.capital, sum(s.employees.values()), s.bondage_years_left))
 s = sim(civ="han_china_100ad")
 # Han's coin is small, so a fixed purse is a fraction of a labourer-year.
-s.capital = 1000 * s.labour_market.quote_annual("labourer")
+s.capital = 1000 * s.labour.market.quote_annual("labourer")
 s.policy["auto_hire"] = True
 for _ in range(10):
     s.step()
@@ -1918,14 +1918,14 @@ check("a hazard that took nothing from you says so",
 #    income RISE - seventeen concerns running against "EMPLOY: 0 people", and
 #    the same loom still paying 435 a year in 1800 through the Black Death.
 s = sim(civ="england_1300", capital=book_money(500000.0, "england_1300"))
-s.hire("artisan", 6)
+s.labour.hire("artisan", 6)
 _big = [node_id for node_id in NODES if book_money(2000.0) <= NODES[node_id]["rev"] <= book_money(9000.0)][:4]
 for _k in _big:
     s.done.add(_k)
 s._done_changed()
 _opened = [node_id for node_id in _big if s.open_venture(node_id)[0]]
 _rev_staffed = s.revenue()
-s.fire("artisan", 6)
+s.labour.fire("artisan", 6)
 s.step()
 check("a concern nobody is left to watch stops trading",
       _opened and not s.operating and s.revenue() < _rev_staffed * 0.2,
@@ -1973,13 +1973,13 @@ check("a name you have not heard of and a name that does not exist read alike",
 #    craftsmen fall from 35 to 3.8 at the moment the training finished.
 s = sim(capital=500000.0)
 run_it(s, "workshop_first", "freedman_staff")
-s.buy_slaves(12)
+s.labour.buy_slaves(12)
 _at_purchase = s.artisans
 for _ in range(4):
     s.step()
 _trained = s.artisans
-s.manumit(12)
-s._resync_pools()
+s.labour.manumit(12)
+s.labour._resync_pools()
 check("people you buy are worth nothing until they have learned the work",
       _at_purchase < 0.5, "%.2f craftsmen the day 12 were bought" % _at_purchase)
 check("...and are worth something once they have, and do not vanish",
@@ -2013,8 +2013,8 @@ s_lie = sim(capital=10000000.0)
 for _p in NODES["logarithms"]["pre"]:
     s_lie.done.add(_p)
 s_lie._done_changed()
-s_lie.hire("scholar", 2)
-s_lie.commission("scribe", 500.0)
+s_lie.labour.hire("scholar", 2)
+s_lie.labour.commission("scribe", 500.0)
 _r_start = S._agent_dispatch(s_lie, NODES, {"cmd": "start", "id": "logarithms"})
 _r_stuck = S._agent_dispatch(s_lie, NODES, {"cmd": "stuck"})
 _but = _r_start.get("but") or ""
@@ -2072,14 +2072,14 @@ check("ventures is rendered as a table, not as raw Python",
 # place craftsmen work.
 s = sim(civ="norse_900ad")
 check("the founder is one of the craftsmen as well as one of the scholars",
-      s.craft_hands_available() >= 1.0 and s.effective_scholars() >= 1.0,
+      s.labour.craft_hands_available() >= 1.0 and s.labour.effective_scholars() >= 1.0,
       "%.1f hands, %.1f scholars, with nobody hired"
-      % (s.craft_hands_available(), s.effective_scholars()))
+      % (s.labour.craft_hands_available(), s.labour.effective_scholars()))
 s2 = sim(civ="norse_900ad")
 for _p in NODES["workshop_first"]["pre"]:
     s2.done.add(_p)
 s2._done_changed()
-s2.hire("carpenter", 1)
+s2.labour.hire("carpenter", 1)
 check("...so one hired hand is enough to raise your first workshop",
       s2.start_reason("workshop_first")[0],
       s2.start_reason("workshop_first")[1])
@@ -2098,15 +2098,15 @@ s_gr = sim(capital=10000000.0, manual=True)
 s_gr.done.add("school_founded")
 s_gr._done_changed()
 s_gr.operating.add("school_founded")
-s_gr._grant_staff(scholars=4)
+s_gr.labour._grant_staff(scholars=4)
 _after_grant = s_gr.scholars
 s_gr.step()
 check("founding the school still leaves you its scholars a year later",
       s_gr.scholars >= _after_grant - 1e-6,
       (_after_grant, s_gr.scholars))
 check("...and a project that needed exactly what it granted can now start",
-      s_gr.effective_scholars() >= 4.0,
-      s_gr.effective_scholars())
+      s_gr.labour.effective_scholars() >= 4.0,
+      s_gr.labour.effective_scholars())
 
 # A break tester summed what the ledger listed - 7,101.9 - against a stated
 # revenue of 6,738 and reported that the accounts do not add up. They were
@@ -2222,13 +2222,13 @@ check("the net counts interest on arrears, which is a cost like any other",
 # 2. "Told to my face I could take 6 more people, I took 7 with a different
 #    verb." buy went round the feed/house/oversee cap that hire enforces.
 s = sim(capital=1000000.0)
-_room = s.household_room()
-_ok_over = s.buy_slaves(int(_room) + 5)
+_room = s.labour.household_room()
+_ok_over = s.labour.buy_slaves(int(_room) + 5)
 check("buying people obeys the same household cap as hiring them",
       _ok_over == 0 and s.slaves == 0,
       "room %.2f, bought %s" % (_room, _ok_over))
 check("...and buying within it still works",
-      s.buy_slaves(max(1, int(_room) - 1)) > 0, "room %.2f" % _room)
+      s.labour.buy_slaves(max(1, int(_room) - 1)) > 0, "room %.2f" % _room)
 
 # 3. Ten people bought showed as "ON YOUR STAFF: nobody" and "EMPLOY: 0
 #    people" while the prompt said art 7, and IN TRAINING printed the trade as

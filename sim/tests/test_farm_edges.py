@@ -66,7 +66,7 @@ def _run(test_sim, years, first_year=101):
 def _food_ratio_with_everyone_farming(test_sim, fertility):
     """Food one year's harvest yields, net of seed, over the year's food need,
     with every working-age person farming on unlimited land of `fertility`."""
-    technique = test_sim._farming_technique()
+    technique = test_sim.labour._farming_technique()
     workers = test_sim.population.working_age
     hectares = workers * agriculture.hectares_cropped_per_farm_worker(
         technique.crop, technique.toolkit)
@@ -101,7 +101,7 @@ def _ample_land_sim(fertility):
     test_sim = probe
     test_sim._farm_ladder = [(fertility, huge)]
     test_sim._farm_arable_ceiling = huge
-    test_sim._set_farm_area(min(probe.farm_land.hectares, huge))
+    test_sim.labour._set_farm_area(min(probe.farm_land.hectares, huge))
     return test_sim
 
 
@@ -168,10 +168,10 @@ class TechnologyRescueTests(unittest.TestCase):
         decline = _run(test_sim, 40)
         trough = decline[-1][0]
         self.assertLess(trough, decline[5][0])
-        base = test_sim._farming_technique()
+        base = test_sim.labour._farming_technique()
         doubled = base._replace(toolkit=base.toolkit._replace(
             reaping_rate_multiplier=base.toolkit.reaping_rate_multiplier * 2.0))
-        test_sim._farming_technique = lambda: doubled
+        test_sim.labour._farming_technique = lambda: doubled
         recovery = _run(test_sim, 60, first_year=141)
         populations = [row[0] for row in recovery]
         self.assertGreater(max(populations), trough * 1.05)

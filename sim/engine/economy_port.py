@@ -98,7 +98,7 @@ class EconomyPort:
     @property
     def labour(self):
         """The labour market every employer asks (labour_market_api.LabourMarket)."""
-        return self._sim.labour_market
+        return self._sim.labour.market
 
     def material_price(self, material):
         """Money for one tonne of a material at today's market quote; 0.0 when it has no price."""

@@ -55,8 +55,7 @@ SPIN_UP_SHARE_TOLERANCE = declare(
 
 
 def _needs() -> Dict[str, Any]:
-    from sim.engine import need_data
-    return need_data.load_needs(_REPOSITORY_ROOT)
+    return need_demand.load_needs(_REPOSITORY_ROOT)
 
 
 def _dominant_output(entry: Mapping[str, Any]) -> Optional[str]:

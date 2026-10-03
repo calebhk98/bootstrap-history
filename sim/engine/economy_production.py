@@ -296,7 +296,7 @@ class ProductionMixin:
         household = self.state.household
         craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
         craft += household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE
-        market = self.labour_market
+        market = self.labour.market
         wage = 0.0
         for trade, count in household.employees.items():
             if trade_family(trade) == "craft":

@@ -18,21 +18,21 @@ def stressed_game():
     game = sim()
     game.price_index = 1.5
     game._wage_index_base = 1.3
-    game.labour_market.press(TRADE, game.market_supply(TRADE) * 0.8)
-    game.labour_market.press("labourer", game.market_supply("labourer") * 0.8)
-    game.labour_market.press("scribe", game.market_supply("scribe") * 0.8)
+    game.labour.market.press(TRADE, game.labour.market_supply(TRADE) * 0.8)
+    game.labour.market.press("labourer", game.labour.market_supply("labourer") * 0.8)
+    game.labour.market.press("scribe", game.labour.market_supply("scribe") * 0.8)
     return game
 
 
 # ---- one rate for every kind of employer -----------------------------------------------------------
 game = stressed_game()
-market = game.labour_market
+market = game.labour.market
 hours_per_year = game.HOURS_PER_PERSON_YEAR
 check("the stressed market has a scarcity premium above one", market.price_factor(TRADE) > 1.05, market.price_factor(TRADE))
 check("the stressed market has a price level above one", game.price_index > 1.4 and game.wage_index > 1.2)
 game.state.household.employees = {TRADE: 1.0}
 rate = market.quote(TRADE, 0.0)
-founder_rate = game.wage_bill() / hours_per_year
+founder_rate = game.labour.wage_bill() / hours_per_year
 check("the founder's household is quoted the market rate", abs(founder_rate - rate) < 1e-9 * rate, (founder_rate, rate))
 
 world = SimWorld(game)
@@ -58,11 +58,11 @@ check("more hours taken on cost more once the premium has risen", market.quote(T
 # ---- the hire quote is what payroll charges --------------------------------------------------------
 hiring = stressed_game()
 hiring.state.household.employees = {}
-fee_quoted = hiring.labour_market.quote_annual(TRADE)
+fee_quoted = hiring.labour.market.quote_annual(TRADE)
 quote = _quote_hire(hiring, hiring.nodes, {"trade": TRADE, "n": 1})
 check("the hire quote answers", quote.get("ok"), quote)
-ok, _message = hiring.hire(TRADE, 1)
-payroll_per_year = hiring.wage_bill() / hiring.state.household.employees[TRADE]
+ok, _message = hiring.labour.hire(TRADE, 1)
+payroll_per_year = hiring.labour.wage_bill() / hiring.state.household.employees[TRADE]
 check("the quote's wage from next year is what payroll charges once hired",
       abs(quote["from_next_year_per_year"] - payroll_per_year) < 0.1,
       (quote["from_next_year_per_year"], payroll_per_year))
@@ -74,12 +74,12 @@ check("no employer reaches a wage through the engine's own methods",
 
 # ---- hire and release record and ease the pressure -------------------------------------------------
 fresh = sim()
-pressure_before = fresh.labour_market.pressure(TRADE)
-paid_rate = fresh.labour_market.hire("a firm", TRADE, 2 * hours_per_year)
-check("hiring returns the rate it paid, the one quoted before it", paid_rate == sim().labour_market.quote(TRADE, 0.0) and paid_rate > 0)
-check("hiring records the pressure", fresh.labour_market.pressure(TRADE) > pressure_before + 1.9 * hours_per_year)
-fresh.labour_market.release("a firm", TRADE, 2 * hours_per_year)
-check("releasing eases the pressure", fresh.labour_market.pressure(TRADE) < 1.0, fresh.labour_market.pressure(TRADE))
+pressure_before = fresh.labour.market.pressure(TRADE)
+paid_rate = fresh.labour.market.hire("a firm", TRADE, 2 * hours_per_year)
+check("hiring returns the rate it paid, the one quoted before it", paid_rate == sim().labour.market.quote(TRADE, 0.0) and paid_rate > 0)
+check("hiring records the pressure", fresh.labour.market.pressure(TRADE) > pressure_before + 1.9 * hours_per_year)
+fresh.labour.market.release("a firm", TRADE, 2 * hours_per_year)
+check("releasing eases the pressure", fresh.labour.market.pressure(TRADE) < 1.0, fresh.labour.market.pressure(TRADE))
 
 # ---- no module outside the labour market computes a wage -------------------------------------------
 # The names only the labour market (and the schedule it reads) may touch.

@@ -37,7 +37,7 @@ class HourStandingIsLive(unittest.TestCase):
         household, node_ids = _household_with_projects(2)
         _stale_record(household)
         active = proto_state._agent_state_active_projects(household, household.nodes)
-        live_pool = max(0.0, household.director_pool() - household.director_hours_committed())
+        live_pool = max(0.0, household.labour.director_pool() - household.labour.director_hours_committed())
         self.assertAlmostEqual(active[node_ids[0]]["pool_total_this_year"], live_pool)
 
     def test_waiting_line_does_not_quote_the_stale_pool(self):

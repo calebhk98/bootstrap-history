@@ -78,7 +78,7 @@ check("a cart costs more than its feed and driver alone: the oxen and the cart a
       balanced["cart"] > (s._land_freight_physical_inputs().feed_kg_per_tonne_km
                           * s._material_price_per_kg("wheat_kg")
                           + s._land_freight_physical_inputs().driver_hours_per_tonne_km
-                          * s.wage_per_hour("labourer")), None)
+                          * s.labour.wage_per_hour("labourer")), None)
 check("the sea is still far cheaper than land per tonne-km",
       balanced["sea"] < 0.2 * balanced["cart"], balanced)
 _market_rate = s.market_rate

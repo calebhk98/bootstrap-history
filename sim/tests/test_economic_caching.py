@@ -334,7 +334,7 @@ def _test_rapid_workforce_invalidation():
 	for count in range(1, 6):
 		sim_inst.household.employees["smith"] = count * 5.0
 		vers.append(getattr(sim_inst.household, "_workforce_ver", 0))
-		wages.append(sim_inst.wage_bill())
+		wages.append(sim_inst.labour.wage_bill())
 
 	# Ensure every workforce increment yielded an increased version and wage
 	if len(set(vers)) != len(vers):

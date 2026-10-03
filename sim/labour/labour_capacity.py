@@ -2,7 +2,7 @@
 and the founder's own hours, the one resource behind all of it.
 
 Split out of labour.py (see that file's own docstring for why). These are
-methods of Sim; they are a mixin only so that they can live in a file of
+methods of Labour; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and moved verbatim.
 
 Three ceilings live here together because they answer the same question
@@ -24,7 +24,6 @@ onto a whole person without biasing which way growth heads.
 """
 import math
 
-from sim.engine.data import TRADES_ABSENT, WAGES, closure
 from sim.constants import declare
 from .wage_provider import reference_civilisation
 
@@ -58,7 +57,7 @@ class CapacityMixin:
         """
         x = max(0.0, x)
         whole = math.floor(x)
-        if self.rng.random() < x - whole:
+        if self._world.rng.random() < x - whole:
             whole += 1
         return float(whole)
 
@@ -75,15 +74,15 @@ class CapacityMixin:
 
     def director_pool(self):
         total_hours = 0.0
-        if self.state.founder.founder_alive:
-            own = self.cfg["founder_hours_per_year"]
+        if self._world.state.founder.founder_alive:
+            own = self._world.cfg["founder_hours_per_year"]
             # In bondage most of your hours are owed to somebody else. Not all
             # of them: nobody worked every waking hour, and the evenings are
             # where the work gets done. This is the cost, and it is temporary.
-            if self.state.household.bondage_years_left > 0:
+            if self._world.state.household.bondage_years_left > 0:
                 own *= self.BONDAGE_HOURS_SHARE
             total_hours += own
-        total_hours += self.state.household.directors_extra * self.cfg["director_hours_per_year"]
+        total_hours += self._world.state.household.directors_extra * self._world.cfg["director_hours_per_year"]
         return total_hours
 
     # ---- literacy bounds who you can hire ----------------------------------
@@ -149,9 +148,9 @@ class CapacityMixin:
         if trade not in self.LITERATE_TRADES:
             return 1.0
         if trade == "scholar":
-            lit, ref = self.civ.get("literacy_elite", 0.0), self.LITERACY_REFERENCE_ELITE
+            lit, ref = self._world.civ.get("literacy_elite", 0.0), self.LITERACY_REFERENCE_ELITE
         else:
-            lit, ref = self.civ.get("literacy_general", 0.0), self.LITERACY_REFERENCE_GENERAL
+            lit, ref = self._world.civ.get("literacy_general", 0.0), self.LITERACY_REFERENCE_GENERAL
         # NOT CLAMPED AT ONE: Rome starts AT the reference, so clamping here
         # would return exactly 1.0 for Rome for ever, no matter how much
         # printing, movable type, schools and academies raise
@@ -256,10 +255,10 @@ class CapacityMixin:
         """
         if trade not in self.LITERATE_TRADES:
             return float("inf")
-        base = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
+        base = (self._world.cfg["hired_hours_cap_base"] * self.local_market_share()
                 * (self.POP_SCALE_FLOOR_SHARE
-                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
-        people = base * self.SCHOLAR_MARKET_SHARE / self.HOURS_PER_PERSON_YEAR
+                   + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
+        people = base * self.SCHOLAR_MARKET_SHARE / self._world.HOURS_PER_PERSON_YEAR
         # A FLOOR OF TWO, because the unfloored number said something false.
         # Norse elite literacy is a sixth of Rome's, which took this ceiling to
         # 0.2 people: not "scarce" but "there is no such person in Scandinavia,
@@ -291,7 +290,7 @@ class CapacityMixin:
             # which is why a fresh household still sees exactly the
             # market-share figure above and no more.
             cap += self.staff_capacity()[0]
-        if trade not in TRADES_ABSENT:
+        if trade not in self._world.trades_absent:
             cap = min(cap, self.people_who_exist(trade))
         return cap
 
@@ -342,7 +341,7 @@ class CapacityMixin:
         """People already on the books in this trade, plus people already
         being taught into it who are not ready yet - what a fresh hire or a
         fresh training run would be added ON TOP OF."""
-        household = self.state.household
+        household = self._world.state.household
         pending = sum(row[3] for row in household.training
                       if len(row) > 2 and row[2] == trade)
         return household.employees.get(trade, 0.0) + pending
@@ -396,20 +395,20 @@ class CapacityMixin:
         # a player who hit the ceiling it had been holding up to build
         # endowment_land or court an imperial patron, instead of simply
         # reopening what they already own.
-        projects = self.state.projects
-        reopen = [(node_id, add) for node_id, add in self.ROOM_SOURCES
-                  if node_id in projects.done and node_id in self.nodes and node_id not in projects.operating
-                  and self.is_venture(node_id)]
+        projects = self._world.state.projects
+        reopen = [(node_id, add) for node_id, add in self._world.ROOM_SOURCES
+                  if node_id in projects.done and node_id in self._world.nodes and node_id not in projects.operating
+                  and self._world.is_venture(node_id)]
         reopen.sort(key=lambda kv: -kv[1])
-        want = [(node_id, add) for node_id, add in self.ROOM_SOURCES
-                if node_id not in projects.done and node_id in self.nodes
-                and self.is_visible(node_id)]
+        want = [(node_id, add) for node_id, add in self._world.ROOM_SOURCES
+                if node_id not in projects.done and node_id in self._world.nodes
+                and self._world.is_visible(node_id)]
         # NEAREST FIRST, and nearest means how much of the tree stands between
         # you and it. Sorted on size alone this offered power_grid (+130) to a
         # founder with six places - the last node in the game, true and
         # useless - while workshop_first, one prerequisite away, went unnamed.
         def _distance(node_id):
-            return len(closure(self.nodes, node_id) - projects.done)
+            return len(self._world.closure(self._world.nodes, node_id) - projects.done)
         want.sort(key=lambda kv: (_distance(kv[0]), -kv[1]))
         _reopen_bit = (
             ("you already have %s, shut: reopening %s is cheaper than "
@@ -418,7 +417,7 @@ class CapacityMixin:
                 "it" if len(reopen) == 1 else "them"))
             if reopen else "")
         _housing_bit = ("Housing is bought: 'buy housing N' adds N places at %s each. "
-                        % "{:,.0f}".format(self.housing_price_per_place()))
+                        % "{:,.0f}".format(self._world.housing_price_per_place()))
         if not want:
             if reopen:
                 return ("%sThe rest is built - or in this case, "
@@ -428,7 +427,7 @@ class CapacityMixin:
                     "industry, and you have every one of them this society "
                     "offers; what is left grows on its own as they run."
                     % _housing_bit)
-        _now = [(node_id, places) for node_id, places in want if self.start_reason(node_id, _why=False)[0]]
+        _now = [(node_id, places) for node_id, places in want if self._world.start_reason(node_id, _why=False)[0]]
         return ("%sMore room is built: %s%s. Each is somewhere for "
                 "people to work and somebody to oversee them.%s"
                 % (_housing_bit, _reopen_bit,
@@ -491,8 +490,8 @@ class CapacityMixin:
     def staff_wage_reference(self):
         """Blended annual wage of the trades that exist from the start, used
         to turn an affordability budget into a headcount."""
-        wages = [self.base_annual_wage(trade) for trade in sorted(WAGES)
-                 if trade not in TRADES_ABSENT]
+        wages = [self.base_annual_wage(trade) for trade in sorted(self._world.wages)
+                 if trade not in self._world.trades_absent]
         return sum(wages) / len(wages) if wages else self.base_annual_wage("labourer")
 
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(
@@ -570,10 +569,10 @@ class CapacityMixin:
         # until the horizon runs out, unless the planner can read the same
         # table this function reads rather than an if-chain only this
         # function could see.
-        for key, _sc, _ar, _di, scaled, must_run in self.STAFF_CAPACITY_SOURCES:
-            if not (self.running(key) if must_run else self.has(key)):
+        for key, _sc, _ar, _di, scaled, must_run in self._world.STAFF_CAPACITY_SOURCES:
+            if not (self._world.running(key) if must_run else self._world.has(key)):
                 continue
-            units = self.institution_units(key) if scaled else 1.0
+            units = self._world.institution_units(key) if scaled else 1.0
             scholars += _sc * units
             artisans += _ar * units
             directors += _di * units
@@ -603,9 +602,9 @@ class CapacityMixin:
         # can pay for" has to mean if it is to mean anything: money already
         # going to rent and to people already employed is not there to
         # hire more people with.
-        spare = max(0.0, (self.revenue() - self.upkeep() - self.living_cost())
-                    * self.rep_factor()
-                    + max(0.0, self.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
+        spare = max(0.0, (self._world.revenue() - self._world.upkeep() - self._world.living_cost())
+                    * self._world.rep_factor()
+                    + max(0.0, self._world.state.household.capital) * self.STAFF_CAPITAL_INCOME_RATE)
         budget = spare * self.STAFF_BUDGET_SHARE_OF_SPARE
         afford = budget / self.labour_market.in_current_money(self.staff_wage_reference())
         # EXTRA is supervision_room(), the headroom auto_hire adds on top of
@@ -625,7 +624,7 @@ class CapacityMixin:
         # pay" has to be able to mean nobody.
         scale = min(1.0, afford / max(1.0, scholars + artisans
                                       + extra * self.STAFF_EXTRA_HEADROOM_WEIGHT))
-        self.household._staff_scale = scale     # step() applies this to `extra` too
+        self._world.household._staff_scale = scale     # step() applies this to `extra` too
         # A civilization of 1.5 million simply cannot field the trained people a
         # civilization of 65 million can, however rich you are. This is the single
         # biggest structural difference between playing Rome and playing Norway.
@@ -633,7 +632,7 @@ class CapacityMixin:
         # programme, it just has to grow into it: making that impossible
         # would be a modelling error, not a finding.
         pop = (self.STAFF_POP_SCALE_FLOOR
-               + self.STAFF_POP_SCALE_VARIABLE * min(1.0, self.pop_scale ** self.STAFF_POP_SCALE_EXPONENT))
+               + self.STAFF_POP_SCALE_VARIABLE * min(1.0, self._world.pop_scale ** self.STAFF_POP_SCALE_EXPONENT))
         return (base_sc + scholars * scale * pop, base_ar + artisans * scale * pop,
                 directors * min(1.0, scale * self.DIRECTOR_SCALE_HEADROOM) * pop)
 
@@ -668,11 +667,11 @@ class CapacityMixin:
         could ever cross. This is that honest headroom. You hire them,
         you pay them every year, and you can only supervise so many.
         """
-        household = self.state.household
+        household = self._world.state.household
         room = (self.SUPERVISION_ROOM_SELF
                 + self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra
                 + max(0.0, household.worker_housing_places or 0.0))
-        room = self.effect_sum("supervision_room", room)
+        room = self._world.effect_sum("supervision_room", room)
         # A SECOND TOWN, NOT A SECOND SCHOOLROOM. workshop_first, school_founded
         # and academy_network above are each a single PLACE a founder can stand
         # in; fin_chain_store is the tree's own word for the thing that is not
@@ -703,16 +702,16 @@ class CapacityMixin:
         """
         rows = [{"source": "yourself", "people": self.SUPERVISION_ROOM_SELF,
                  "what_it_is": "what one person can keep an eye on"}]
-        household = self.state.household
+        household = self._world.state.household
         if household.directors_extra > 0.005:
             rows.append({"source": "your deputies", "people":
                          round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra, 2),
                          "what_it_is": "people you have trained to direct work"})
-        for key, spec in self._effect_terms("supervision_room"):
-            if self.effect_holds(key, spec):
+        for key, spec in self._world.effect_terms("supervision_room"):
+            if self._world.effect_holds(key, spec):
                 rows.append({"source": key,
-                             "people": (round(self.effect_value(key, spec), 2) if "per_unit" in spec
-                                        else self.effect_value(key, spec)),
+                             "people": (round(self._world.effect_value(key, spec), 2) if "per_unit" in spec
+                                        else self._world.effect_value(key, spec)),
                              "what_it_is": spec["words"]})
         return rows
 
@@ -742,9 +741,9 @@ class CapacityMixin:
 
     def hired_cap(self):
         # a civilization of 1.5 million cannot staff what one of 65 million can
-        cap = (self.cfg["hired_hours_cap_base"] * self.local_market_share()
+        cap = (self._world.cfg["hired_hours_cap_base"] * self.local_market_share()
                * (self.POP_SCALE_FLOOR_SHARE
-                  + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self.pop_scale)))
+                  + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
         # 1.0 + (mult - 1.0) * sqrt(units): exactly the old `cap *= mult` at
         # units 1.0 (a run that never expands sees the identical multiplier),
         # and SQRT rather than linear beyond that - because these multipliers
@@ -757,7 +756,7 @@ class CapacityMixin:
         # already do on what it costs to found (institution_unit_cost) - a
         # second school teaches nearly as many more people as the first
         # did; a ninth does not teach nine times as many as one did.
-        cap = self.effect_factor("hiring_factor", cap, self.HIRING_MULTIPLIER_EXPONENT)
+        cap = self._world.effect_factor("hiring_factor", cap, self.HIRING_MULTIPLIER_EXPONENT)
         return cap
 
     # ---- how a SOCIETY reacts to a TECHNOLOGY -------------------------------
@@ -824,9 +823,9 @@ class CapacityMixin:
         advice is sized to it.
         """
         bits = []
-        for node, why in self.STAFF_SOURCES.get(kind, []):
+        for node, why in self._world.STAFF_SOURCES.get(kind, []):
             if node == "HIRE" and deficit:
-                bits.append(self.staff_hire_advice(kind, math.ceil(deficit - 1e-9)))
+                bits.append(self._world.staff_hire_advice(kind, math.ceil(deficit - 1e-9)))
             elif node in ("BUY", "HIRE"):
                 bits.append(why)
             # CLOSED IS NOT MISSING. market_supply() only applies a source's
@@ -836,10 +835,10 @@ class CapacityMixin:
             # `node not in self.household.done`, fell silent about it rather than
             # naming the actual remedy. Reopening costs a supervisor, not a
             # second institution; say that first.
-            elif node in self.state.projects.done and node not in self.state.projects.operating and self.is_venture(node):
+            elif node in self._world.state.projects.done and node not in self._world.state.projects.operating and self._world.is_venture(node):
                 bits.append("reopen %s ('open %s') - you already built this; "
                             "it is only shut" % (node, node))
-            elif node not in self.state.projects.done and self.is_visible(node):
+            elif node not in self._world.state.projects.done and self._world.is_visible(node):
                 # NOT A CIRCLE. `why workshop_first` says it is blocked for want
                 # of artisans, and the advice on how to get artisans said "build
                 # workshop_first (you need somewhere for them to work)" - a play
@@ -850,8 +849,8 @@ class CapacityMixin:
                 # Asked DIRECTLY of the node's own requirement, never through
                 # start_reason - which calls this function, so the obvious
                 # version of this test recurses until the stack gives out.
-                _node = self.nodes[node]
-                _short = (_node["art"] > self.state.household.artisans + 1e-9 if kind == "artisans"
+                _node = self._world.nodes[node]
+                _short = (_node["art"] > self._world.state.household.artisans + 1e-9 if kind == "artisans"
                           else _node["sch"] > self.effective_scholars() + 1e-9)
                 if _short:
                     bits.append("build %s eventually (%s) - but it is itself "
@@ -864,7 +863,7 @@ class CapacityMixin:
         return "To get more %s: %s." % (kind, "; ".join(bits[:3]))
 
     def headcount(self):
-        household = self.state.household
+        household = self._world.state.household
         return sum(household.employees.values()) + household.slaves + household.freedmen
 
     def director_hours_committed(self):
@@ -876,9 +875,9 @@ class CapacityMixin:
         a free second year inside every year. There is one year, and one
         pair of hands.
         """
-        return (getattr(self.household, "teaching_hours_this_year", 0.0)
-                + (getattr(self.household, "relocation_hours_this_year", 0.0) or 0.0)
-                + self.household.wage_hours_this_year)
+        return (getattr(self._world.household, "teaching_hours_this_year", 0.0)
+                + (getattr(self._world.household, "relocation_hours_this_year", 0.0) or 0.0)
+                + self._world.household.wage_hours_this_year)
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.

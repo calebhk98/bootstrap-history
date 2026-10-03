@@ -228,7 +228,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
         # something only discoverable by walking into a refusal deep into
         # a run. A wall you can only discover by walking into it is not a
         # wall, it is a trap.
-        if trade in sim.LITERATE_TRADES:
+        if trade in sim.labour.LITERATE_TRADES:
             entry["most_this_society_can_ever_supply"] = round(
                 sim.labour.literate_capacity(trade), 1)
             entry["you_have_or_are_teaching"] = round(
@@ -377,7 +377,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                 "their own budget; the other trades rise with printing, "
                 "paper and libraries, which widen literacy itself."
                 % ", ".join("%s %.1f" % (trade, sim.labour.literate_capacity(trade))
-                            for trade in sorted(sim.LITERATE_TRADES))),
+                            for trade in sorted(sim.labour.LITERATE_TRADES))),
             "workforce": sim.labour.workforce_report(),
             "slaves": sim.slaves, "freedmen": sim.freedmen,
             "annual_wage_bill": round(sim.labour.wage_bill(), 1),

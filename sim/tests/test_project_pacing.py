@@ -158,14 +158,14 @@ _wk_id = next(node_id for node_id in NODES
 _wk_n = NODES[_wk_id]
 _s_wk.active[_wk_id] = dict(ph_left=float(_wk_n["ph"]), yrs=0.0, spent=0.0,
                             cost_left=100.0)
-_wk_pay, _wk_err = _s_wk.work_for_wages("scholar", 2000)
+_wk_pay, _wk_err = _s_wk.labour.work_for_wages("scholar", 2000)
 check("selling every founder-hour is still allowed - this is not a block",
       _wk_pay > 0, _wk_pay)
 check("...but it warns, naming the project and the hours it still wants",
       _wk_err and _wk_id in _wk_err and "hours" in _wk_err, _wk_err)
 # The same sale with no active project at all draws no such warning.
 _s_wk2 = sim(capital=500000.0)
-_wk2_pay, _wk2_err = _s_wk2.work_for_wages("scholar", 2000)
+_wk2_pay, _wk2_err = _s_wk2.labour.work_for_wages("scholar", 2000)
 check("...and says nothing about starving work when nothing is active",
       "for the rest of the year" not in (_wk2_err or ""), _wk2_err)
 # Selling only a few hours, leaving plenty for a SMALL-paced project, warns
@@ -178,7 +178,7 @@ check("the small-paced project used for this test really is small-paced "
       _wk3_n["ph"] / max(1.0, _wk3_n["yrs"]) < 100, _wk3_n)
 _s_wk3.active[_wk3_id] = dict(ph_left=float(_wk3_n["ph"]), yrs=0.0, spent=0.0,
                               cost_left=100.0)
-_wk3_pay, _wk3_err = _s_wk3.work_for_wages("scholar", 10)
+_wk3_pay, _wk3_err = _s_wk3.labour.work_for_wages("scholar", 10)
 check("...and selling only a few idle hours does not warn either",
       "for the rest of the year" not in (_wk3_err or ""), _wk3_err)
 
@@ -215,7 +215,7 @@ _s_eng.active[_eng_id] = dict(ph_left=50.0, yrs=0.0, spent=0.0, cost_left=100.0,
                               lab_left={"engineer": 0.0})
 check("no engineers exist here, so the trade this project once needed is "
       "genuinely gone from the market",
-      _s_eng.market_supply("engineer") <= 0.0, _s_eng.market_supply("engineer"))
+      _s_eng.labour.market_supply("engineer") <= 0.0, _s_eng.labour.market_supply("engineer"))
 _eng_log_before = len(_s_eng.log)
 _s_eng.step()
 check("a project that has already drawn everything it needed from a trade "
@@ -267,10 +267,10 @@ _s_multi.active[_multi_id] = _multi_st
 # "booked" trade's own supply to something another active project consumes
 # first, so one trade is a real absolute shortage and the other only a
 # booking conflict.
-_orig_market_supply = _s_multi.market_supply
+_orig_market_supply = _s_multi.labour.market_supply
 def _fake_supply(trade, _orig=_orig_market_supply, _absent=_t_absent):
     return 0.0 if trade == _absent else _orig(trade)
-_s_multi.market_supply = _fake_supply
+_s_multi.labour.market_supply = _fake_supply
 # Model a real portfolio-wide booking conflict.  _waiting_on deliberately uses
 # this same aggregate as `portfolio`, rather than a stale consumed-hours tally.
 _orig_trade_demand = _s_multi.trade_demand_vs_supply

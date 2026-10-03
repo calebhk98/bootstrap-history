@@ -13,7 +13,7 @@ check("help text mentions trade school",
 
 test_sim = sim(capital=1_000_000)
 test_sim.trades_created.add("chemist")
-test_sim.labour_market.press("chemist", 100)
+test_sim.labour.market.press("chemist", 100)
 
 reply = S._agent_dispatch(test_sim, NODES,
                           {"cmd": "buy", "what": "trade_school",
