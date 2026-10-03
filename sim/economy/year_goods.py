@@ -77,10 +77,13 @@ def _less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> Agen
 def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBook) -> None:
     money = setup.currency_id
     rate = view.interest_rate(money)
-    for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
+    shares = merchants.RouteShares()
+    ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
+    first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
+    for merchant in ordered[first:] + ordered[:first]:
         held = _held_stock(record.book, merchant.agent_id)
         orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money),
-                                  held, setup.specs, rate)
+                                  held, setup.specs, rate, shares)
         add_orders(order_book, orders)
 
 

@@ -28,6 +28,7 @@ from . import inventory
 from .accounts import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
+from .merchants_shares import RouteShares, room_left
 from .protocols import AgentOrders, MarketView
 from .tile_costs import CarriageTable
 from .types import AgentId, AreaId, Bid, CurrencyId, Fill, GoodId, GoodSpec, Offer, TileId, Transfer
@@ -97,8 +98,11 @@ def gap_cost_per_unit(spec: GoodSpec, price_here: float, price_there: float,
 
 def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_map: AreaMap, cash: float,
            held_stock: Mapping[Tuple[GoodId, TileId], float], specs: Mapping[GoodId, GoodSpec],
-           interest_rate: float) -> AgentOrders:
-    """The merchant's offers and bids for the year. Sets `merchant.routes`."""
+           interest_rate: float, shares: Optional[RouteShares] = None) -> AgentOrders:
+    """The merchant's offers and bids for the year. Sets `merchant.routes`. `shares` is what rival
+    merchants have already committed this year; this merchant adds its own to it."""
+    shares = shares if shares is not None else RouteShares()
+    own = RouteShares()
     merchant.routes = {}
     candidates = _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
     # stock already held where a route out pays is carried along it, not sold where it sits
@@ -110,12 +114,14 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
               if (offer.good, offer.tile) not in merchant.routes]
     bids: List[Bid] = []
     remaining = max(0.0, cash) * (1.0 - BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
-    for _rank, good, source, destination, price_here, outlay, room, ceiling in candidates:
+    for _rank, good, source, destination, price_here, outlay, _room, ceiling in candidates:
         if remaining <= 0.0:
             break
-        quantity = min(remaining / outlay, room)
+        quantity = min(remaining / outlay, shared_room(merchant, good, destination, held_stock, own, shares))
         if quantity <= 0.0:
             continue
+        own.commit(good, destination.area_id, quantity)
+        shares.commit(good, destination.area_id, quantity)
         merchant.routes[(good, source.anchor_tile)] = (destination.anchor_tile, destination.area_id)
         bids.append(Bid(merchant.agent_id, good, source.area_id, source.anchor_tile, 0.0, quantity,
                         price_here, MERCHANT_BID_ELASTICITY, quantity * price_here, maximum_price=ceiling))
@@ -219,6 +225,14 @@ def _room(merchant, good, destination, held_stock) -> float:
     held = sum(quantity for (held_good, tile), quantity in held_stock.items()
                if held_good == good and tile in destination.tiles)
     return max(0.0, MERCHANT_MARKET_SHARE * volume - held)
+
+
+def shared_room(merchant, good, destination, held_stock, own: RouteShares, group: RouteShares) -> float:
+    """Units this merchant may still bid for into a destination: its share of the expected volume less
+    what it holds there and has bid for already, and merchants' share of it less what they have bid."""
+    held = sum(quantity for (held_good, tile), quantity in held_stock.items()
+               if held_good == good and tile in destination.tiles)
+    return room_left(merchant.expected_volumes, (good, destination.area_id), MERCHANT_MARKET_SHARE, own, group, held)
 
 
 def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
