@@ -517,11 +517,11 @@ def _stuck_raw_material(sim):
 
 
 def _stuck_room_for_people(sim):
-    _room = sim.household_room()
+    _room = sim.labour.household_room()
     if _room < 1.0:
         return {"what": "room for people", "kind": "specialists",
                 "why": "you can take %.2f more people. %s"
-                       % (max(0.0, _room), sim._room_advice())}
+                       % (max(0.0, _room), sim.labour.room_advice())}
     return None
 
 
@@ -685,4 +685,4 @@ def _cmd_changes(sim, nodes, cmd, ended):
                      "how many exist, how many are within reach and how many you "
                      "employ. Country-wide and reach figures are estimates.")
 def _cmd_population(sim, nodes, cmd, ended):
-    return {"ok": True, **sim.population_report()}
+    return {"ok": True, **sim.labour.population_report()}

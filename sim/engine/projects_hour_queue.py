@@ -23,7 +23,7 @@ class HourQueueMixin:
 
     def hour_pool_now(self):
         """Founder and deputy hours this year not already committed."""
-        return max(0.0, self.director_pool() - self.director_hours_committed())
+        return max(0.0, self.labour.director_pool() - self.labour.director_hours_committed())
 
     def hour_standing(self, node_id):
         """(rank, active count, pool) for a project in hand, from today's

@@ -213,7 +213,7 @@ class Actor(Borrower):
 		for trade, people in sorted(self.workforce.items()):
 			added = people - held.get(trade, 0.0)
 			if added > 0:
-				world.labour_market.hire(self, trade, added * world.hours_per_person_year)
+				world.hire(self, trade, added * world.hours_per_person_year)
 		for trade, people in sorted(held.items()):
 			shed = people - self.workforce.get(trade, 0.0)
 			if shed > 0:

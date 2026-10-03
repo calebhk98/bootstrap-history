@@ -80,7 +80,7 @@ class GroupView:
 			factor = sim.economy.labour.price_factor(trade)
 			if factor <= 1.0 + 1e-9:
 				continue
-			pool = sim.market_supply(trade) / sim.HOURS_PER_PERSON_YEAR
+			pool = sim.labour.market_supply(trade) / sim.HOURS_PER_PERSON_YEAR
 			priced_out = pool * (1.0 - 1.0 / factor)
 			wage = sim.economy.labour.unscarce_annual(trade)
 			sectors.append(Sector(
@@ -88,7 +88,7 @@ class GroupView:
 				"hiring by you and the firms has raised the going price of %s by %d%% and priced out about %s hands"
 				% (trade, round((factor - 1.0) * 100), "{:,.0f}".format(priced_out)),
 				priced_out * wage, pool * wage * factor, priced_out * wage / self._annual_labourer_wage(),
-				sim.local_market_share()))
+				sim.labour.local_market_share()))
 		return sectors
 
 	def sectors(self) -> Dict[str, Sector]:

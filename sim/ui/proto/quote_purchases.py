@@ -39,7 +39,7 @@ def _quote_school(sim, cmd, quantity):
         sim, "school", "seats", sim.trade_school_price_per_seat(),
         quantity, "Each seat widens the annual supply of that trade locally.",
         trade=trade)
-    if not sim.trade_available(trade):
+    if not sim.labour.trade_available(trade):
         reply["warning"] = ("%s is not available here yet, so a school for it "
                             "would be refused; teach or discover it first" % trade)
     return reply

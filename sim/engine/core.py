@@ -3,7 +3,7 @@ import collections, copy, math, os, random, sys
 
 from sim.constants import book_money_names, declare
 from .money_units import book_money_factor
-from sim.labour.wage_provider import build_schedule
+from sim.labour.api import build_schedule
 from . import automation_audit
 from sim.engine.state import SimulationState, ActiveProjectState
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
@@ -53,8 +53,8 @@ from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
 from sim.geography.geography import GeographyMixin
-from sim.labour.labour import LabourMixin
-from sim.labour.labour_allocation import LabourAllocationMixin
+from sim.labour.api import LabourMixin
+from sim.labour.api import LabourAllocationMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
@@ -389,7 +389,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         sized = self._agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population),
             arable_hectares_ceiling=self._farm_arable_ceiling)
-        self._set_farm_area(sized.hectares)
+        self.labour.set_farm_area(sized.hectares)
         # WIRING THREE (Complaints/49-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
         # weights` (Complaints/46): this civilisation's territory is broken
@@ -654,7 +654,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         )
         cleared = getattr(self.state.economy, "farm_cleared_hectares", None)
         if cleared is not None:
-            self._set_farm_area(cleared)
+            self.labour.set_farm_area(cleared)
         # Ensure version counters exist on state owners
         if getattr(self.state.projects, "_operating_ver", None) is None:
             self.state.projects._operating_ver = 0
@@ -1446,7 +1446,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         within-hectare labour intensification beyond reference technique.
         """
         adult_equivalent_population = self._adult_equivalent_population(self.population)
-        farm_workers_fte = self._allocate_farm_workforce(adult_equivalent_population)
+        farm_workers_fte = self.labour.allocate_farm_workforce(adult_equivalent_population)
         technique = self._farm_technique_this_year
         hectares_per_worker = self._agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit)
@@ -1550,7 +1550,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # A granary cannot hold less than nothing: seed sown beyond the stock is not a debt.
         self.farm_stock_kg = max(0.0, min(
             self._agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg))
-        self._apply_land_clearing()
+        self.labour.apply_land_clearing()
         # Kept for tests and diagnostics only (e.g. `state`'s founder-facing
         # reply never reads this) - NOT a SAVE_FIELDS member and does not
         # need to be one: it is recomputed fresh every year from state that
@@ -1562,7 +1562,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.state.economy.farm_last_harvest_kg = farm_year.gross_harvest_kg
         self.state.economy.farm_last_marginal_product = (
             farm_year.marginal_product_last_hour_kg_per_hour)
-        self.update_wages()
+        self.labour.update_wages()
 
         # Same diagnostic-only status as `_last_farm_year` just above (not a
         # SAVE_FIELDS member, recomputed fresh every year) - kept so a test

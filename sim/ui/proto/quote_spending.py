@@ -68,7 +68,7 @@ def _quote_hire(sim, nodes, cmd):
     count, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err}
-    count, fee, refusal = sim.hire_check(trade, count)
+    count, fee, refusal = sim.labour.hire_check(trade, count)
     if refusal:
         return {"ok": False, "error": refusal}
     per_year = sim.labour_market.quote_annual(trade, count) * count
@@ -85,7 +85,7 @@ def _quote_commission(sim, nodes, cmd):
     hours, err = _qty(cmd, "hours") if "hours" in cmd else _qty(cmd, "n")
     if err:
         return {"ok": False, "error": err}
-    fee, refusal = sim.commission_check(trade, hours)
+    fee, refusal = sim.labour.commission_check(trade, hours)
     if refusal:
         return {"ok": False, "error": refusal}
     return {"ok": True, "what": "commission", "trade": trade, "hours": hours,
@@ -98,14 +98,14 @@ def _quote_train(sim, nodes, cmd):
     count, err = _qty(cmd, "n", 1)
     if err:
         return {"ok": False, "error": err}
-    plan, refusal = sim.train_check(trade, count, cmd.get("from"))
+    plan, refusal = sim.labour.train_check(trade, count, cmd.get("from"))
     if refusal:
         return {"ok": False, "error": refusal}
     return {"ok": True, "what": "train", "trade": trade, "people": plan["count"],
             "paid_now": round(plan["fee"], 1),
             "your_hours": round(plan["hours"], 1),
             "wage_bill_added_per_year": round(
-                sim.trainee_wage_bill(trade, plan["count"]), 1),
+                sim.labour.trainee_wage_bill(trade, plan["count"]), 1),
             "you_have": round(sim.capital, 1),
             "note": "Teaching pays their keep now and takes your own hours. "
                     "When they finish they join the payroll automatically and "

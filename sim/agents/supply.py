@@ -11,7 +11,7 @@ _INDEXES: List[Any] = [None, None, None]
 
 
 def _indexes() -> Any:
-	from sim.labour.labour_market import production_data
+	from sim.labour.api import production_data
 	production = production_data()
 	if _INDEXES[0] is not production:
 		made_by = {}

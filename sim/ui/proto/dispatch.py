@@ -137,7 +137,7 @@ def _cmd_step(sim, nodes, cmd, ended):
     # warning and that field can never disagree about what "idle" means.
     # Non-blocking: it says so and proceeds, it does not refuse the step.
     multi_year_hours_warning = None
-    lone_dependencies = sim.sole_supervisors() if years > 1 else []
+    lone_dependencies = sim.labour.sole_supervisors() if years > 1 else []
     if years > 1:
         _pre_state = _agent_state(sim, nodes)
         _idle_note = _pre_state.get("free_hours_going_unused")

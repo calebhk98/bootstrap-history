@@ -71,7 +71,7 @@ class ForeignCapacityMixin:
         prices = self.goods_market.household_prices()
         cache = getattr(self.household, "_home_final_tonnes_cache", None)
         if cache is None or cache[0] is not prices:
-            per_hour = self.money_per_labour_hour()
+            per_hour = self.labour.money_per_labour_hour()
             tonnes = budget_scaled_final_tonnes(
                 {material: price / per_hour for material, price in prices.items() if price > 0.0},
                 self._opening_population())

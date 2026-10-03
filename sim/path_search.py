@@ -186,7 +186,7 @@ def diagnose_scarce_trades(sim, nodes, outstanding, backlog_ratio=6.0):
         if len(contested) < 2:
             continue
         backlog = sum(nodes[node_id]["lab"][trade] for node_id in contested)
-        supply = max(1.0, sim.hours_you_can_call_on(trade))
+        supply = max(1.0, sim.labour.hours_you_can_call_on(trade))
         if backlog / supply > backlog_ratio:
             scarce[trade] = {"contested": contested, "backlog": backlog,
                          "supply_per_year": supply,

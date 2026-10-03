@@ -110,7 +110,7 @@ class MiningMixin:
             price = self._material_price_per_kg(mat)
             if price is None or price <= 0:
                 return None, None
-        wage = self.wage_per_hour(self.MINE_TRADE)
+        wage = self.labour.wage_per_hour(self.MINE_TRADE)
         build_hours, running_hours = self._mine_labour_hours_per_tonne(mat)
         return build_hours * wage, running_hours * wage
 

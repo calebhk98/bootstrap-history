@@ -177,7 +177,7 @@ class VenturesMixin:
         WHICH to run is a decision rather than an accounting formality."""
         sch_used, art_used = self.venture_staff_used()
         own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
-        return (max(0.0, self.effective_scholars() - sch_used),
+        return (max(0.0, self.labour.effective_scholars() - sch_used),
                 max(0.0, self.state.household.artisans + own - art_used))
 
 

@@ -75,8 +75,8 @@ class ForeignRoutesMixin:
         rate, hull losses, and the return leg (`imbalance` 0 when flows balance, 1 when the
         carrier comes back empty). The same function prices foreign legs and domestic hauls."""
         feed_price = self._material_price_per_kg(self.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
-        land_wage = self.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
-        sea_wage = self.wage_per_hour(SEA_CREW_WAGE_TRADE)
+        land_wage = self.labour.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
+        sea_wage = self.labour.wage_per_hour(SEA_CREW_WAGE_TRADE)
         rate = self.market_rate()
         return {mode: freight_cost.freight_money_per_tonne_km(
                     inputs, feed_price, sea_wage if mode == "sea" else land_wage, prices, rate,
@@ -116,7 +116,7 @@ class ForeignRoutesMixin:
     def _freight_handling_costs(self):
         """{mode: home money per tonne} charged once per leg of that mode."""
         return {"sea": (sea_freight.PORT_HANDLING_HOURS_PER_TONNE
-                        * self.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE))}
+                        * self.labour.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE))}
 
     def _foreign_route(self, civilization, imbalance=None):
         """The cheapest `trade_routes.Route` from the foreign economy's home

@@ -87,10 +87,10 @@ def _cmd_start(sim, nodes, cmd, ended):
     _frac0 = min(1.0, 1.0 / max(1.0, _n0["yrs"]))
     for _trade, _want in (_n0["lab"] or {}).items():
         _need = _want * _frac0
-        if _need > 0 and sim.hours_you_can_call_on(_trade) < _need:
+        if _need > 0 and sim.labour.hours_you_can_call_on(_trade) < _need:
             _impossible.append("%s (wants %.0f hours a year; this society can "
                                "field %.0f at most)"
-                               % (_trade, _need, max(0.0, sim.hours_you_can_call_on(_trade))))
+                               % (_trade, _need, max(0.0, sim.labour.hours_you_can_call_on(_trade))))
             _impossible_trades.add(_trade)
     # OVERSUBSCRIBED IS NOT THE SAME AS IMPOSSIBLE. The society may be
     # able to field the trade this wants and STILL not have enough of
@@ -109,7 +109,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     for _trade, _plan in sim.trade_draw_plan(node_id, None).items():
         if _trade in _impossible_trades:
             continue          # already said, and said more plainly
-        _supply = sim.hours_you_can_call_on(_trade)
+        _supply = sim.labour.hours_you_can_call_on(_trade)
         if _supply <= 0:
             continue
         _existing = _demand_now.get(_trade, {}).get("demand_hours_this_year", 0.0)
@@ -314,7 +314,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # here, not let a project needing a trade nobody can yet do come back
     # ok:true only to be HALTED years later with everything spent on it
     # lost and no earlier warning to act on. Name it here instead.
-    short = sorted(trade for trade in node["lab"] if sim.market_supply(trade) <= 0.0)
+    short = sorted(trade for trade in node["lab"] if sim.labour.market_supply(trade) <= 0.0)
     if short:
         out["warning"] = (
             "no one can do this work YET: %s. (Instructions given earlier; `full` shows them again.)"
@@ -497,9 +497,9 @@ def _cmd_rush(sim, nodes, cmd, ended):
     #
     # Committing a couple of years of everyone's attention is a decision a
     # player might reasonably make. Committing four centuries of it is not.
-    _hours_room = max(0.0, sim.director_pool() - sim.director_hours_committed())
+    _hours_room = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
     _HORIZON_YEARS = 2.0
-    _budget = sim.director_pool() * _HORIZON_YEARS
+    _budget = sim.labour.director_pool() * _HORIZON_YEARS
     started, not_started = [], []
     _owed = 0.0
     total_cost = total_draw = 0.0
@@ -524,7 +524,7 @@ def _cmd_rush(sim, nodes, cmd, ended):
                        "Beginning more would not make them go faster, only "
                        "leave them all standing still"
                        % (len(started), "{:,.0f}".format(_owed),
-                          "{:,.0f}".format(sim.director_pool()))})
+                          "{:,.0f}".format(sim.labour.director_pool()))})
             continue
         ok2, why = sim.start_project(node_id)
         if ok2:
@@ -763,7 +763,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                "Concerns remain open until held staff exceeds effective "
                "capacity by more than the 0.50-FTE anti-churn margin."),
            "you_have_in_all": {
-               "scholars": round(sim.effective_scholars(), 2),
+               "scholars": round(sim.labour.effective_scholars(), 2),
                "craftsmen": round(sim.artisans
                                   + (sim.FOUNDER_IS_WORTH if sim.founder_alive
                                      else 0.0), 2)},

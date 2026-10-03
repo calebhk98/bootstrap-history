@@ -163,7 +163,7 @@ class AdoptionMixin:
     def literacy_ceiling_general(self):
         """The most of the general population schooling could make literate
         now: everyone but the unable, less the farm children kept at work."""
-        kept_home = self.FARM_CHILDREN_KEPT_FROM_SCHOOL * self.farm_share_of_hours()
+        kept_home = self.FARM_CHILDREN_KEPT_FROM_SCHOOL * self.labour.farm_share_of_hours()
         return (1.0 - self.UNABLE_TO_READ_SHARE) * (1.0 - kept_home)
 
     GENERATION_YEARS = declare(
@@ -417,7 +417,7 @@ class AdoptionMixin:
         protocol.py), so this is consistent with a number the player already
         sees fluctuate this way from hiring, training and attrition alike.
         """
-        ceiling = self.literate_capacity(trade)
+        ceiling = self.labour.literate_capacity(trade)
         if not (ceiling < float("inf")):
             return
         household = self.state.household
@@ -426,7 +426,7 @@ class AdoptionMixin:
         if room <= 1e-6:
             return
         household.employees[trade] = have + room * self.TRADE_DIFFUSION_APPROACH_RATE
-        self._resync_pools()
+        self.labour.resync_pools()
 
     def advance_society(self, year):
         """Once a year: everything in this file that moves on the society's

@@ -94,7 +94,7 @@ class ProjectProgressPhaseMixin:
             _lab_left = node["lab"]
         blocked = [trade_id for trade_id, want in node["lab"].items()
                    if want > 0 and _lab_left.get(trade_id, want) > 0
-                   and self.market_supply(trade_id) <= 0.0]
+                   and self.labour.market_supply(trade_id) <= 0.0]
         if blocked:
             project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
             project_state["blocked_on_trades"] = blocked

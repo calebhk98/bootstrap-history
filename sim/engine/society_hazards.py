@@ -575,10 +575,10 @@ class HazardsMixin:
             household = self.state.household
             _people_before = (household.scholars + household.artisans
                               + sum(household.employees.values()))
-            _staff_before = self.staff_snapshot()
+            _staff_before = self.labour.staff_snapshot()
             self.apply_staff_survival(1 - loss)
             household.directors_extra *= (1 - loss)
-            self.log_staff_reduction(hazard.get("name", "a plague"), _staff_before)
+            self.labour.log_staff_reduction(hazard.get("name", "a plague"), _staff_before)
             # Cash goes with the trade that stopped.
             cash = self.lose_capital(loss * self.PLAGUE_CASH_LOSS_SHARE, "plague losses")
             self._apply_population_mortality_shock(raw)
@@ -660,9 +660,9 @@ class HazardsMixin:
                     + sum(household.employees.values()))
         _act0 = len(projects.active)
         self.lose_capital(self.SACK_CAPITAL_LOSS, "sack and plunder")
-        _staff_before = self.staff_snapshot()
+        _staff_before = self.labour.staff_snapshot()
         self.apply_staff_survival(self.SACK_STAFF_RETENTION)
-        self.log_staff_reduction("the sack of a site", _staff_before)
+        self.labour.log_staff_reduction("the sack of a site", _staff_before)
         household.directors_extra *= self.SACK_DIRECTORS_RETENTION
         for node_id in sorted(projects.active):
             projects.active[node_id]["ph_left"] = self.nodes[node_id]["ph"]
