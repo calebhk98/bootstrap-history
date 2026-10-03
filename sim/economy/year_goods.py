@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 
 from . import goods_market, households, merchants, producers, settlement, state_budget, taxes
 from .market_memory import market_key
-from .market_memory_asks import (note_bids, note_offers, price_after_no_bids,
+from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
                                  price_after_resumed_trade, wanted_at)
 from .protocols import AgentOrders
 from .recipes import input_depth_order
@@ -154,7 +154,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             dry_years = note_offers(record.memory, key, bids, offers)
             if result.quantity > 0.0:
                 usual = record.memory.volume_weights.get(key, 0.0)
-                signal = remembered_price(old, result.price, result.quantity, max(usual, wanted_at(bids, old)))
+                signal = remembered_price(old, result.price, result.quantity, memory_reference_volume(usual, wanted_at(bids, old)))
                 signal = price_after_resumed_trade(old, signal, quiet_years + dry_years)
             else:
                 signal = _unsold_signal(bids, offers)

@@ -48,6 +48,17 @@ RESUMED_TRADE_MEMORY_SHARE = declare(
         "had drifted to. Unmeasured.")
 
 
+REPRESENTATIVE_TRADE_SHARE = declare(
+    "REPRESENTATIVE_TRADE_SHARE", 0.25, kind="temporary_heuristic",
+    unit="share of what buyers wanted at the remembered price that a trade must reach to count in full",
+    source=None, confidence="D",
+    why="A trade of a few units in a market where buyers want far more is priced by those few units' "
+        "scarcity, not by what buyers pay for the volume they want, and a market that has only ever "
+        "traded slivers has a usual volume that is itself a sliver. Against the usual volume alone the "
+        "memory would adopt such a price whole. How small a trade must be to say little has no measured "
+        "basis.")
+
+
 def note_bids(memory, key: str, bids: Sequence[Bid], offers: Sequence[Offer]) -> int:
     """Count the years a market with offers has had nobody bidding; returns the count before this year."""
     before = memory.years_without_bids.get(key, 0)
@@ -66,6 +77,12 @@ def note_offers(memory, key: str, bids: Sequence[Bid], offers: Sequence[Offer]) 
     else:
         memory.years_without_offers.pop(key, None)
     return before
+
+
+def memory_reference_volume(usual_volume: float, wanted_at_old_price: float) -> float:
+    """The volume a trade is weighed against: the market's usual volume, or when that is a sliver next
+    to what buyers wanted at the remembered price, a share of what they wanted."""
+    return max(usual_volume, REPRESENTATIVE_TRADE_SHARE * wanted_at_old_price)
 
 
 def price_after_resumed_trade(old: Optional[float], volume_rule_price: float, years_without_bids: int) -> float:
