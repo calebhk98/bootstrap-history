@@ -25,7 +25,7 @@ may import it). `sim/tests/test_economy_imports.py` holds the economy's own wall
 | `sim/economy/` | none; the engine reaches it through `sim/engine/economy_port*.py` | `sim.economy` |
 | `sim/labour/` | `sim/labour/api.py` | `sim.labour` (`sim/labour/port.py`); the labour market every employer asks is `sim.labour.market` |
 | `sim/geography/` | `sim/geography/api.py` | `sim.geography` (`sim/geography/port.py`) |
-| `sim/agents/` | `sim/agents/api.py` | none; the engine adapters (`society_actors.py`, `society_disclosure.py`, `interest_groups.py`) consume the api |
+| `sim/agents/` | `sim/agents/api.py` (two-way) | none; the engine adapters (`society_actors.py`, `society_disclosure.py`, `interest_groups.py`) consume the api, and `sim/engine/agents_port*.py` (`SimWorld`) is what actors ask of the world (`sim/agents/protocols.py`) |
 | `sim/ui/` | `sim/ui/api.py` | none; the UI is a consumer. `sim/simulator.py` is the entry point |
 
 Each port is a plain class with one explicit member per thing outside code uses, delegating to
