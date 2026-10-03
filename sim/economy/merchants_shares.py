@@ -14,7 +14,7 @@ from .types import AreaId, GoodId
 Key = Tuple[GoodId, AreaId]
 
 MERCHANT_GROUP_SHARE = declare(
-    "MERCHANT_GROUP_SHARE", 1.0, kind="temporary_heuristic",
+    "MERCHANT_GROUP_SHARE", 2.0, kind="temporary_heuristic",
     unit="share of the destination's expected yearly volume", source=None, confidence="D",
     why="All merchants together stop bidding for a destination once their cargo would equal this "
         "share of what it usually trades; a market taking much more than it usually does sells below "

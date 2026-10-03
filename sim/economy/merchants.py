@@ -5,8 +5,9 @@ The year is annual, so a merchant acts on last year's prices. In one year it
                  it expects there; bids in cheap areas for goods whose expected price in another area
                  exceeds the price here plus carriage, a year's interest on the money tied up, the
                  spoilage of the held stock and a margin. Quantities are limited by cash and by a share
-                 of the destination's expected market net of what it already holds there. Many merchants
-                 chasing one gap overshoot it: that bullwhip is left in.
+                 of the destination's expected market net of what it already holds there and has bid for
+                 from other sources; merchants sizing one after another also share the destination
+                 (`merchants_shares`). Merchants chasing one gap still overshoot it within those limits.
   2. `dispatch`  after the markets clear, carries what it holds on each route's source tile (what
                  it bought, and older stock worth more elsewhere) to the destination (`DeliveredMove`) and pays the carriage to the carrier the caller
                  names for the source tile, or to `EDGE_CARRIAGE` when it names none. Goods it
@@ -44,9 +45,9 @@ MERCHANT_MARGIN_SHARE = declare(
 MERCHANT_MARKET_SHARE = declare(
     "MERCHANT_MARKET_SHARE", 0.3, kind="temporary_heuristic",
     unit="share of the destination's expected yearly volume", source=None, confidence="D",
-    why="How much of a destination's market one merchant dares supply. Each sizes its cargo alone, so "
-        "several merchants together can exceed the market and overshoot. A merchant's own estimate "
-        "of rivals is not yet modelled.")
+    why="How much of a destination's market one merchant dares supply, over all the sources it buys "
+        "from. A merchant's own estimate of rivals is not yet modelled; the group share in "
+        "merchants_shares stands in for it.")
 MERCHANT_EXPECTATION_SPEED = declare(
     "MERCHANT_EXPECTATION_SPEED", 0.7, kind="temporary_heuristic", unit="share of the gap closed a year",
     source=None, confidence="D",
