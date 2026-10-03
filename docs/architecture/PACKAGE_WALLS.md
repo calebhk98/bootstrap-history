@@ -19,9 +19,9 @@ Every package also declares `WALL = "two-way"` in its `api.py`: inside it, nothi
 another package except through its `api`, and `Sim` inherits nothing from it. What a package needs
 from the engine is handed to it by an engine-side adapter.
 
-`sim/tests/test_package_walls.py` checks all of this for every package it finds with an `api.py`,
-and keeps the packages split from the engine off `sim.economy` (only `sim/engine/economy_port*.py`
-may import it). `sim/tests/test_economy_imports.py` holds the economy's own wall.
+Nothing checks these rules automatically: keep to them by review. The packages split from the
+engine stay off `sim.economy` too (only `sim/engine/economy_port*.py` may import it);
+`sim/tests/test_economy_imports.py` holds that rule for `sim/engine/` only.
 
 ## The surfaces
 
@@ -45,13 +45,12 @@ When code outside a package needs something new from it:
 1. Add the name to the package's `api.py` (for an import) or a public member to the package's
    object (for a question asked of the running simulation).
 2. Call it through the door from outside.
-3. Run `python3 -m unittest sim.tests.test_package_walls`.
 
 When a package needs something new from the engine, add a member to its engine adapter
 (`LabourWorld`, `GeographyWorld`, `SimWorld`, `ui_port`) rather than importing the engine.
 
-Do not widen the wall test's exclusions to make a call pass. A test failure means the call should
-go through the surface.
+Do not reach past a surface because it is quicker: a call that needs a package's internals means
+the surface is missing a member.
 
 ## What still crosses the wall
 
