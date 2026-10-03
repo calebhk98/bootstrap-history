@@ -13,7 +13,7 @@ from sim.world import demography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
-from sim.geography import regions
+from sim.geography.api import regions
 # Weather is drawn per geography.json land_tiles cell (see
 # `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
@@ -52,7 +52,7 @@ from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
-from sim.geography.geography import GeographyMixin
+from sim.geography.api import GeographyMixin
 from sim.labour.api import LabourMixin
 from sim.labour.api import LabourAllocationMixin
 from .projects import ProjectsMixin
@@ -568,35 +568,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # existence somewhere does not mean an unlimited quantity of it is
         # available.
         self.res = load_resources()
-        # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY -----
-        # See load_geography() and region_reach()/material_reach() below:
-        # real coordinates, a reach computed from THIS civ's own home
-        # ground, and a material cost that follows from it. All of the
-        # below depends only on the civ file and the (static) geography
-        # file, so it is computed once.
-        self.geo = load_geography()
-        self._regions = regions.region_records(self.geo)
-        self._home_centroid = self._compute_home_centroid()
-        # node id -> located_materials key. Lets material_cost_factor() find
-        # the geography entry for a location-gated tech node (mat_gutta_percha,
-        # mat_natural_rubber, ...) without the tech tree needing to know
-        # anything about geography itself.
-        self._mat_unlock = {}
-        for material_key, material_data in (self.geo.get("located_materials") or {}).items():
-            if material_key.startswith("_"):
-                continue
-            for nid in (material_data.get("unlocks") or []):
-                self._mat_unlock[nid] = material_key
-        # Mineral market access is geography, not demography: "how much coal
-        # can you buy" must scale with where the deposits ARE, not with how
-        # many people this civilisation has - England in 1300 gets a large
-        # share of Europe's coal market access because England is where the
-        # coal is, independent of its population. See _compute_mineral_scale()
-        # below. It depends only on home_regions and reach, neither of which change
-        # during a run, so it is computed once here rather than every year.
-        self._mineral_scale = {material: self._compute_mineral_scale(material)
-                                for material in ("iron", "coal", "copper", "lead",
-                                          "tin", "silver", "saltpetre")}
+        # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
+        self.geography.open(load_geography())
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned: it must never count in done_earned as though
         # the founder had built it, and it must never be "forgotten" in a

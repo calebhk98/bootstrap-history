@@ -12,8 +12,8 @@ import functools
 
 from sim.constants import declare
 from sim.world import trader_response
-from sim.geography import cargo_cost, freight_cost, sea_freight, trade_routes
-from sim.geography import transport as freight_physics
+from sim.geography.api import cargo_cost, freight_cost, sea_freight, trade_routes
+from sim.geography.api import transport as freight_physics
 
 from .data import haversine_km, load_civ
 
@@ -129,7 +129,7 @@ class ForeignRoutesMixin:
         if imbalance is None:
             imbalance = self._foreign_flow_imbalance(civilization_record.get("id"))
         return trade_routes.cheapest_route(
-            network, self._regions,
+            network, self.geography.regions,
             civilization_record.get("home_regions") or [], self.civ.get("home_regions") or [],
             trade_routes.usable_modes(network, (home_techs, foreign_techs)),
             home_techs | foreign_techs, haversine_km,

@@ -14,7 +14,7 @@ from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 from sim.economy.types import TileId, TileSpec
-from sim.geography import freight_cost, sea_freight, transport
+from sim.geography.api import freight_cost, sea_freight, transport
 
 DRAUGHT_MODE = "draught"
 PACK_MODE = "pack"

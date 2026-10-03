@@ -2,7 +2,7 @@
 from typing import Any, List, Tuple
 
 from sim.world import demand
-from sim.geography import territory
+from sim.geography.api import territory
 
 from .tuning_spending import THREAT_ARMY_RESPONSE
 

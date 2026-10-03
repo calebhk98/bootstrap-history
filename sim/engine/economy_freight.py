@@ -65,7 +65,7 @@ from . import money_units
 from . import purchase_rule
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from sim.geography import transport as freight_physics
+from sim.geography.api import transport as freight_physics
 
 
 class FreightMixin:
@@ -239,7 +239,7 @@ class FreightMixin:
         freight: it is the same geology this file already uses to decide
         how much of a material you can buy, now also asked what buying it
         should cost."""
-        return [region_id for region_id, region in self._regions.items()
+        return [region_id for region_id, region in self.geography.regions.items()
                 if float((region.get("minerals") or {}).get(material, 0.0)) > 0.0]
 
     def material_freight_distance_km(self, material):
@@ -281,11 +281,11 @@ class FreightMixin:
             if home_regions & set(regions):
                 distance_km = 0.0
             else:
-                home_lat, home_lon = self._home_centroid
+                home_lat, home_lon = self.geography.home_centroid
                 distance_km = min(
                     haversine_km(home_lat, home_lon,
-                                 self._regions[region_id]["lat"],
-                                 self._regions[region_id]["lon"])
+                                 self.geography.regions[region_id]["lat"],
+                                 self.geography.regions[region_id]["lon"])
                     for region_id in regions)
         cache[material] = distance_km
         return distance_km

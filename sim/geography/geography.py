@@ -5,9 +5,14 @@ methods of Sim; they are a mixin only so that they can live in a file of
 their own. Behaviour is unchanged and verified byte-identical.
 """
 
-from typing import cast, Dict, NotRequired, Tuple, TypedDict
+from typing import Any, cast, Dict, NotRequired, Tuple, TypedDict
 
-from sim.engine.data import (haversine_km, JSONDict)
+from sim.geography.distance import haversine_km
+from sim.geography import regions as region_tables
+from sim.geography.port import GeographyPort
+
+
+JSONDict = Dict[str, Any]
 
 
 class MineralShares(TypedDict):
@@ -277,3 +282,36 @@ class GeographyMixin:
         not change during a run, so this is computed once in __init__
         rather than recomputed every simulated year."""
         return self._mineral_scale.get(material, self.pop_scale)
+
+    @property
+    def geography(self) -> GeographyPort:
+        """The one door to this simulation's geography. Not saved: it holds nothing but the simulation."""
+        port = self.__dict__.get("_geography_port")
+        if port is None:
+            port = self.__dict__["_geography_port"] = GeographyPort(self)
+        return port
+
+    def _open_geography(self, geo: JSONDict) -> None:
+        """Real coordinates, a reach computed from THIS civ's own home ground, and a material cost that
+        follows from it. All of it depends only on the civ file and the (static) geography file, so it
+        is computed once."""
+        self.geo = geo
+        self._regions = region_tables.region_records(self.geo)
+        self._home_centroid = self._compute_home_centroid()
+        # node id -> located_materials key. Lets material_cost_factor() find
+        # the geography entry for a location-gated tech node (mat_gutta_percha,
+        # mat_natural_rubber, ...) without the tech tree needing to know
+        # anything about geography itself.
+        self._mat_unlock = {}
+        for material_key, material_data in (self.geo.get("located_materials") or {}).items():
+            if material_key.startswith("_"):
+                continue
+            for nid in (material_data.get("unlocks") or []):
+                self._mat_unlock[nid] = material_key
+        # Mineral market access is geography, not demography: "how much coal
+        # can you buy" must scale with where the deposits ARE, not with how
+        # many people this civilisation has. See _compute_mineral_scale(). It depends only on
+        # home_regions and reach, neither of which change during a run, so it is computed once.
+        self._mineral_scale = {material: self._compute_mineral_scale(material)
+                                for material in ("iron", "coal", "copper", "lead",
+                                          "tin", "silver", "saltpetre")}

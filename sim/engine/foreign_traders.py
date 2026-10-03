@@ -11,7 +11,7 @@ can borrow.
 import math
 
 from sim.world import merchant_terms, trader_response
-from sim.geography import cargo_cost, freight_cost
+from sim.geography.api import cargo_cost, freight_cost
 
 from .data import STARTING_KITS
 from sim.agents.api import SAVING_SHARE_OF_SURPLUS

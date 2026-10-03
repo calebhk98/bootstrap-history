@@ -269,7 +269,7 @@ from typing import Any, Dict, List, Optional
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import mine_fire_setting, mine_works
-from sim.geography import tile_lookup
+from sim.geography.api import tile_lookup
 
 # ============================================================================
 # DATA FILE LOCATIONS

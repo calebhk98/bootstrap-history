@@ -913,7 +913,7 @@ def _explain_cost(sim, nodes, node_id, node):
                  "base_total": round(node["_labour_cost"] + node["cap"]
                                      + bill["cost_of_missing"], 1),
                  "civ_domain_factor": round(sim.civ_cost_factor(node_id), 3),
-                 "material_distance_factor": round(sim.material_cost_factor(node_id), 3),
+                 "material_distance_factor": round(sim.geography.material_cost_factor(node_id), 3),
                  "opposition_factor": round(sim.opposition_factor(node_id), 3),
                  # THE FACTOR ACTUALLY MULTIPLIED IN, not a decoy:
                  # project_cost multiplies by cost_money_factor()
