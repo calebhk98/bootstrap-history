@@ -153,7 +153,7 @@ Touches economy code; needs the demand wiring in `Complaints/102`.
 ### 5. The state's demand and labour (done)
 
 Built: the government keeps a budget (`sim/agents/budget.py`,
-`world_budget.py`): an army and officials, paid at market wages and equipped
+`sim/engine/agents_port_budget.py`): an army and officials, paid at market wages and equipped
 through `military_logistics`; its staff come out of the shared labour pool and
 its iron purchases reach the market as `actor_demand_tonnes`. Its spending
 covers only those two lines, so every state runs a surplus (`Complaints/286`).

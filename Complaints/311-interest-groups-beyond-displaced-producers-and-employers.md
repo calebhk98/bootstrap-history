@@ -9,7 +9,7 @@ Complaint 110's first increment builds interest groups as actors (`sim/agents/gr
 - **Owners of the firms in a sector** whose margin the founder or another firm erodes (`Firm.record.last_margin`, `exited_year`). Firms already exist as actors; they could be the members of a group and ask for protection or a monopoly.
 - **Clergy, military, bureaucracy, urban poor, academics.** Each needs an income or a status that something in the economy moves.
 
-The mechanism group actors use on the state (a budget line, a prohibition at the start gate, blame on the founder) is general; adding a kind is a new measuring method on `GroupView` (`sim/agents/world_groups.py`) returning `Sector`s, and a decision on whether `state_response` should let that kind demand a prohibition.
+The mechanism group actors use on the state (a budget line, a prohibition at the start gate, blame on the founder) is general; adding a kind is a new measuring method on `GroupView` (`sim/engine/agents_port_groups.py`) returning `Sector`s, and a decision on whether `state_response` should let that kind demand a prohibition.
 
 See also 110 and 312.
 
