@@ -12,6 +12,8 @@ Distributions and directions, never dated events (CLAUDE.md 4.1, 4.2):
   hungry   share of people short of their food floor, mean and worst year
   money    yearly change in the money stock, mean over the run (log)
   rate     median interest rate; residual: largest money and goods conservation residual
+  cost     traded goods' price over what the cheapest known recipe costs, capital included
+           (sim/economy/price_cost.py): median over the run, and the farthest from one in any year
 """
 import argparse
 import math
@@ -24,6 +26,10 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
+
+from sim.economy import price_cost  # noqa: E402
+from sim.economy.national_prices import national_prices  # noqa: E402
+from sim.economy.year_labour import national_wages  # noqa: E402
 
 METALS = ("iron_bar_kg", "copper_kg", "lead_kg", "bronze_kg", "tin_kg")
 STATIC_BAND = 0.05
@@ -58,8 +64,12 @@ def play(civ_id, seed, years):
         money = record.book.money_supply(agent.economy().setup.currency_id)
         traded = {key.split("|", 1)[0] for key, volume in record.volumes.items() if volume > 0.0}
         residual = record.book.check_conservation(1e-9)
+        economy = agent.economy()
+        ratios = price_cost.price_to_cost(economy.setup.recipes, national_prices(record),
+                                          national_wages(economy.setup, record), rate or 0.0)
+        ratios = {good: ratio for good, ratio in ratios.items() if good in traded}
         rows.append(dict(weather=weather, prices=dict(prices), wage=wages.get("labourer"), rate=rate,
-                         hungry=hungry, traded=traded, money=money,
+                         hungry=hungry, traded=traded, money=money, price_cost=ratios,
                          residual=max([abs(value) for value in list(residual.money.values()) + list(residual.goods.values())] or [0.0])))
     return rows
 
@@ -93,6 +103,9 @@ def summarise(rows):
                 money_drift=(math.log(rows[-1]["money"] / rows[0]["money"]) / (len(rows) - 1)
                              if len(rows) > 1 and rows[0]["money"] > 0.0 and rows[-1]["money"] > 0.0 else float("nan")),
                 rate=statistics.median(row["rate"] or 0.0 for row in rows),
+                cost_median=statistics.median(price_cost.summary(row["price_cost"])["median"] for row in rows),
+                cost_worst=max((price_cost.summary(row["price_cost"]) for row in rows),
+                               key=lambda each: abs(math.log(each["worst"])) if each["worst"] > 0.0 else math.inf)["worst"],
                 residual=max(row["residual"] for row in rows))
 
 
@@ -112,19 +125,27 @@ def main(argv=None):
     parser.add_argument("--years", type=int, default=40)
     parser.add_argument("--seeds", default="1,2,3")
     parser.add_argument("--civs", default="", help="comma-separated; every civilisation when empty")
+    parser.add_argument("--detail", action="store_true", help="also name the five goods farthest from cost "
+                                                                  "in the last year")
     arguments = parser.parse_args(argv)
     from sim.engine import data
     civs = [civ for civ in arguments.civs.split(",") if civ] or sorted(
         name[:-5] for name in os.listdir(data.CIVDIR) if name.endswith(".json") and not name.startswith("_"))
     columns = ("static", "traded", "grain_volatility", "metal_volatility", "wage_kg_wheat_per_hour",
-               "harvest_correlation", "hungry_mean", "hungry_worst", "money_drift", "rate", "residual")
+               "harvest_correlation", "hungry_mean", "hungry_worst", "money_drift", "rate", "residual",
+               "cost_median", "cost_worst")
     print("%-18s %4s %6s  " % ("civilisation", "seed", "secs") + "  ".join("%10s" % column[:10] for column in columns))
     for civ in civs:
         for seed in [int(seed) for seed in arguments.seeds.split(",") if seed]:
             started = time.time()
-            summary = summarise(play(civ, seed, arguments.years))
+            rows = play(civ, seed, arguments.years)
+            summary = summarise(rows)
             print("%-18s %4d %6.0f  " % (civ, seed, time.time() - started)
                   + "  ".join("%10.3g" % summary[column] for column in columns))
+            if arguments.detail and rows:
+                last = rows[-1]["price_cost"]
+                farthest = sorted(last, key=lambda good: -abs(math.log(last[good])) if last[good] > 0.0 else -math.inf)[:5]
+                print("    farthest from cost: " + ", ".join("%s %.3g" % (good, last[good]) for good in farthest))
     return 0
 
 
