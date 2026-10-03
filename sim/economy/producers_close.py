@@ -83,6 +83,12 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     return YearClose(survivor, _dividend(producer, currency, surplus), request, rebuilt)
 
 
+def plant_bid_ceiling(price: float, yearly_return: float) -> float:
+    """The most a producer pays for a unit of plant good: last price plus what building a year later
+    would forgo, a year's return on it. Dearer than that, it waits for makers to catch up."""
+    return price * (1.0 + max(0.0, yearly_return))
+
+
 def _dividend(producer: Producer, currency: str, amount: float) -> Tuple[Transfer, ...]:
     if amount <= 0.0:
         return ()

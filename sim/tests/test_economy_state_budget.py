@@ -81,11 +81,14 @@ class StateBudgetTests(unittest.TestCase):
         self.assertGreater(rows[-1][1], 3.0 * control[-1][1])
         self.assertGreater(rows[-1][2], control[-1][2] + 0.05)
         self.assertGreater(rows[-1][3], 3.0 * control[-1][3])
-        # runaway: prices keep rising fast to the end instead of settling (a deficit that grows with prices)
+        # runaway: prices keep rising fast to the end instead of settling (a deficit that grows with
+        # prices); how fast follows how much of the programme the markets can supply, which grows with price
         yearly = math.log(rows[-1][1] / rows[0][1]) / (len(rows) - 1)
-        self.assertGreater(yearly, math.log(1.3))
+        control_yearly = math.log(control[-1][1] / control[0][1]) / (len(control) - 1)
+        self.assertGreater(yearly, math.log(1.2))
+        self.assertGreater(yearly, 3.0 * max(control_yearly, 0.0))
         late = math.log(rows[-1][1] / rows[-4][1]) / 3.0
-        self.assertGreater(late, math.log(1.3))                  # still rising fast in the last years
+        self.assertGreater(late, math.log(1.2))                  # still rising fast in the last years
         self.assertTrue(printing.record.book.check_conservation(1e-9).ok)
         self.assertGreater(printing.record.state_budget.issued_total, 0.0)
 

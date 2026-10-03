@@ -265,6 +265,13 @@ class CloseYearTests(unittest.TestCase):
         result = producers_close.close_year(farmer(last_runs=10.0), FARM, 72.0, 70.0, farm_view(0.72))
         self.assertAlmostEqual(result.producer.capacity_runs, 10.0)
 
+    def test_plant_is_bid_for_no_dearer_than_waiting_a_year_would_cost(self):
+        # building now rather than next year gains one year's return on the plant, so that is the most
+        # a buyer adds to the price, however far its return beats the interest rate
+        self.assertAlmostEqual(producers_close.plant_bid_ceiling(2.0, 0.5), 3.0)
+        self.assertAlmostEqual(producers_close.plant_bid_ceiling(2.0, 100.0), 202.0)
+        self.assertAlmostEqual(producers_close.plant_bid_ceiling(2.0, -0.1), 2.0)
+
     def test_expected_prices_move_toward_the_latest_price(self):
         view = farm_view(3.0)
         result = producers_close.close_year(farmer(expected_prices={"grain": 1.0}), FARM, 100.0, 10.0, view)

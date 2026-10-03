@@ -59,6 +59,14 @@ class EntryTests(unittest.TestCase):
         view = View(prices={"panel": 5.0}, wages={"hand": 0.2})
         self.assertEqual(entry.entry_plans({"make_panel": PANEL}, view, markets, {"make_panel": 1.0}), [])
 
+    def test_entry_on_cost_grows_a_market_by_no_more_than_it_already_trades(self):
+        bids = [Bid("dear", "panel", "area", "anchor", 10.0, 0.0, 5.0, 0.0, 1e9, 0, maximum_price=5.0),
+                Bid("many", "panel", "area", "anchor", 1000.0, 0.0, 3.0, 0.0, 1e9, 0, maximum_price=3.0)]
+        markets = {("panel", "area"): entry.UnmetDemand("panel", "area", "anchor", 0.0, tuple(bids), 10.0)}
+        view = View(prices={"panel": 5.0}, wages={"hand": 0.2})
+        chosen = entry.entry_plans({"make_panel": PANEL}, view, markets)
+        self.assertAlmostEqual(chosen[0].runs, 10.0 * entry.ENTRY_SHARE_OF_UNMET_DEMAND)
+
     def test_no_unmet_demand_no_entry(self):
         self.assertEqual(plans({"boil_salt": SALT}, self.view(1.0), market(unmet=0.0)), [])
 

@@ -99,8 +99,8 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 land_per_run: Optional[Mapping[str, float]] = None) -> List[EntryPlan]:
     """At most one new maker per market: the known recipe making the good with the best return on
     capital at last year's prices, if that return beats the interest rate. A maker on no land is built
-    for what buyers would take at its own full cost beyond what was sold, so a price held far above
-    cost draws makers in; one on land only for buyers turned away at the price, until land carries a
+    for what buyers would take at its own full cost beyond what was sold, at most what the market
+    already trades, so a price held far above cost draws makers in; one on land only for buyers turned away at the price, until land carries a
     rent (Complaint 393). Idle capacity in the market comes off either."""
     land_per_run = land_per_run or {}
     makers: Dict[GoodId, List[str]] = {}
@@ -120,8 +120,9 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
             if land_per_run.get(recipe_id, 0.0) <= 0.0 and demand.bids:
                 cost = _full_cost_per_unit(recipe, recipe_id, demand.good, demand.anchor_tile, view)
                 if cost is not None:
-                    quantity = max(quantity, gap_beyond_spare(unmet_quantity(demand.bids, cost, demand.sold),
-                                                              demand.spare))
+                    # no more than the market already trades: entry grows a market, it does not refound it
+                    at_cost = min(unmet_quantity(demand.bids, cost, demand.sold), demand.sold)
+                    quantity = max(quantity, gap_beyond_spare(at_cost, demand.spare))
             if quantity > 0.0 and (best is None or yearly_return > best[0]):
                 best = (yearly_return, recipe_id, quantity)
         if best is None:

@@ -7,7 +7,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
-from . import credit, credit_claims, labour, lending, merchants_credit, producers, state_budget, unit_cost
+from . import credit, credit_claims, labour, lending, merchants_credit, producers, producers_close, state_budget, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_memory import YearView
@@ -216,7 +216,7 @@ class Economy:
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}
-        worth = {request.borrower: request.maximum_rate / max(rate, 1e-9) for request in requests}
+        worth = {request.borrower: request.maximum_rate for request in requests}
         plant_runs: Dict[str, float] = {}
         for loan in loans:
             producer = record.producers.get(loan.borrower)
@@ -225,14 +225,14 @@ class Economy:
                 continue
             funded_runs = runs * min(1.0, loan.principal / asked[loan.borrower])
             plant_runs[loan.borrower] = plant_runs.get(loan.borrower, 0.0) + funded_runs
-            # no dearer than the price at which the new plant would earn just the loan's rate
-            self._bid_for_plant(producer, funded_runs, loan.principal, worth.get(loan.borrower, 1.0), view, order_book)
+            # no dearer than waiting a year for the plant would cost
+            self._bid_for_plant(producer, funded_runs, loan.principal, worth.get(loan.borrower, 0.0), view, order_book)
         record.expansion_runs = {}
         return plant_runs
 
     def _rebuild_worn_plant(self, view, order_book) -> Dict[str, float]:
         """Producers that covered their costs bid, from their own cash, for the plant goods that rebuild
-        what wore out last year, no dearer than the price at which the plant still earns the live rate."""
+        what wore out last year, no dearer than waiting a year for it would cost."""
         record, setup = self.record, self.setup
         money = setup.currency_id
         rate = max(view.interest_rate(money), 1e-9)
@@ -250,11 +250,11 @@ class Economy:
             cash = record.book.balance(producer_id, money)
             if not earning > rate or cash <= 0.0:
                 continue
-            self._bid_for_plant(producer, runs, cash, earning / rate, view, order_book)
+            self._bid_for_plant(producer, runs, cash, earning, view, order_book)
             rebuilt[producer_id] = runs
         return rebuilt
 
-    def _bid_for_plant(self, producer, runs, budget, worth_ratio, view, order_book) -> None:
+    def _bid_for_plant(self, producer, runs, budget, yearly_return, view, order_book) -> None:
         recipe = self.setup.recipes[producer.recipe_id]
         for good, per_run in sorted(recipe.plant_goods.items()):
             if good not in self.area_map.goods():
@@ -265,7 +265,7 @@ class Economy:
                 continue
             order_book.setdefault((good, area), ([], []))[0].append(
                 Bid(producer.agent_id, good, area, producer.tile, per_run * runs, 0.0, price, 0.0,
-                    budget, maximum_price=price * max(1.0, worth_ratio)))
+                    budget, maximum_price=producers_close.plant_bid_ceiling(price, yearly_return)))
 
     def _build_plant(self, plant_runs: Dict[str, float]) -> None:
         """Plant goods a producer received are built in; capacity grows by the share that arrived."""
