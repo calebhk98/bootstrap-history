@@ -508,8 +508,8 @@ class MaterialSupplyMixin:
         # Serialized: no
         projects = self.state.projects
         cache_key = (
-            getattr(projects, "_active_ver", 0),
-            getattr(projects, "_done_ver", 0),
+            self.household.active_version,
+            self.household.done_version,
         )
         cache = getattr(self.household, "_annual_mat_demand_cache", None)
         if cache is not None and cache[0] == cache_key:
@@ -547,7 +547,7 @@ class MaterialSupplyMixin:
         """(material, tonnes per year) for every finished installation that
         keeps drawing material, in done order; depends only on what is done."""
         projects = self.state.projects
-        version = getattr(projects, "_done_ver", 0)
+        version = self.household.done_version
         cached = getattr(self, "_standing_terms_cache", None)
         if cached is not None and cached[0] == version and cached[1] is projects.done:
             return cached[2]

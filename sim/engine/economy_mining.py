@@ -420,7 +420,7 @@ class MiningMixin:
         """A dict for derived values that depend only on which nodes are built, granted and
         operating (what `running` reads); it starts empty whenever that changes."""
         projects = self.state.projects
-        stamp = (getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
+        stamp = (self.household.done_version, self.household.operating_version,
                  len(projects.done), len(projects.granted), len(projects.operating))
         kept = self.__dict__.get("_running_kept_tables")
         if kept is None or kept[0] is not projects or kept[1] != stamp or kept[2] is not self.nodes:

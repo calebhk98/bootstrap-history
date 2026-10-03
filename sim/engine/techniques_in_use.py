@@ -16,7 +16,7 @@ class TechniquesInUseMixin:
     def techniques_epoch(self):
         """Changes whenever the techniques in use might."""
         projects = self.state.projects
-        return (getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
+        return (self.household.done_version, self.household.operating_version,
                 self.actor_market_version())
 
     def price_epoch(self):

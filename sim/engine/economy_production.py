@@ -161,10 +161,10 @@ class ProductionMixin:
             scenario.year,
             self.pop_scale,
             economy.output_per_head,
-            getattr(projects, "_operating_ver", 0),
-            getattr(projects, "_done_ver", 0),
-            getattr(household, "_workforce_ver", 0),
-            getattr(governance, "_inst_units_ver", 0),
+            self.household.operating_version,
+            self.household.done_version,
+            self.household.workforce_version,
+            self.household.institution_units_version,
             household.wage_hours_this_year,
             getattr(economy, "farm_hectares", 0.0) or 0.0,
             getattr(household, "freedmen", 0.0) or 0.0,
@@ -635,7 +635,7 @@ class ProductionMixin:
         # compared against them makes the collision structurally impossible
         # rather than merely unmeasured.
         projects = self.state.projects
-        operating_version = getattr(projects, "_operating_ver", 0)
+        operating_version = self.household.operating_version
         cached = getattr(self.household, "_rev_up_candidates_cache", None)
         if (cached is not None and cached[0] is seq
                 and cached[1] is practice_set and cached[2] == operating_version):

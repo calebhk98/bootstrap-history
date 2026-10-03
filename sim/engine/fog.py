@@ -6,7 +6,7 @@ a file of their own.
 import re
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-from sim.agents import Household
+from sim.agents.api import Household
 from .data import closure, JSONDict, Nodes
 from .hazard_window import hazards_not_yet_past
 from .hazard_hedge_timing import add_timing_to_steps

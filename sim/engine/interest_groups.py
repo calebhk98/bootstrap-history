@@ -4,7 +4,7 @@ many people they speak for, what they lost and to what, and what the state is do
 Methods of Sim. The groups themselves are actors (`sim/agents/group.py`); this is the
 reading side, plus the one prohibition check the start gate calls.
 """
-from sim.agents import supply
+from sim.agents.api import supply
 from .blockers import blocker_kind
 
 

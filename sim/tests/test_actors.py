@@ -7,7 +7,7 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
-from sim.agents import (Actor, ActorRegistry, CallbackPolicy, Firm, Government,
+from sim.agents.api import (Actor, ActorRegistry, CallbackPolicy, Firm, Government,
                                Household, RecordedActor, SimWorld, register_policy)
 from sim.agents import imitation
 from sim.agents.policy import IdlePolicy

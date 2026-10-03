@@ -8,7 +8,7 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
-from sim.agents import Household, ledger
+from sim.agents.api import Household, ledger
 from sim.engine.saveload import load_state, save_state
 from sim.engine.state import ActorRecord
 

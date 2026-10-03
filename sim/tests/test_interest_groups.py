@@ -3,7 +3,7 @@ organise in proportion to what they lost, press the state, and the state answers
 its purse. Every effect names its group and its cause."""
 from .harness import *
 
-from sim.agents import SimWorld, supply
+from sim.agents.api import SimWorld, supply
 from sim.engine.goods_market_api import FOUNDER
 from sim.agents.group import state_response
 from sim.engine.saveload import load_state, save_state

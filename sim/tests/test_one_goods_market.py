@@ -7,7 +7,7 @@ home technique in reach and no partner offers draws no household spending.
 """
 from .harness import *  # noqa: F401,F403
 
-from sim.agents import SimWorld
+from sim.agents.api import SimWorld
 from sim.engine.goods_market_api import FOUNDER
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.state import ActorRecord

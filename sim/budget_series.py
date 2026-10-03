@@ -19,7 +19,7 @@ if REPO_ROOT not in sys.path:
 	sys.path.insert(0, REPO_ROOT)
 
 from sim import simulator as S  # noqa: E402
-from sim.agents import SimWorld  # noqa: E402
+from sim.agents.api import SimWorld  # noqa: E402
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 
 

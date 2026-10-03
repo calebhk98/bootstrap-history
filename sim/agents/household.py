@@ -259,16 +259,7 @@ class Household(Actor):
 			)
 
 		# Version counters attached to owning subsystems
-		if getattr(self._state.projects, "_operating_ver", None) is None:
-			self._state.projects._operating_ver = 0  # type: ignore[attr-defined]
-		if getattr(self._state.projects, "_done_ver", None) is None:
-			self._state.projects._done_ver = 0  # type: ignore[attr-defined]
-		if getattr(self._state.projects, "_active_ver", None) is None:
-			self._state.projects._active_ver = 0  # type: ignore[attr-defined]
-		if getattr(self._state.household, "_workforce_ver", None) is None:
-			self._state.household._workforce_ver = 0  # type: ignore[attr-defined]
-		if self._state.governance is not None and getattr(self._state.governance, "_inst_units_ver", None) is None:
-			self._state.governance._inst_units_ver = 0  # type: ignore[attr-defined]
+		self.start_version_counters(self._state)
 
 		# Transient caches and runtime-only trackers
 		self.contract_projects: Set[str] = set()
@@ -450,6 +441,54 @@ class Household(Actor):
 	def _inst_units_ver(self, value: int) -> None:
 		if self._state.governance is not None:
 			setattr(self._state.governance, "_inst_units_ver", int(value))
+
+	@property
+	def operating_version(self) -> int:
+		return self._operating_ver
+
+	@property
+	def done_version(self) -> int:
+		return self._done_ver
+
+	@property
+	def active_version(self) -> int:
+		return self._active_ver
+
+	@property
+	def workforce_version(self) -> int:
+		return self._workforce_ver
+
+	@property
+	def institution_units_version(self) -> int:
+		return self._inst_units_ver
+
+	def bump_done_version(self) -> None:
+		self._done_ver = self._done_ver + 1
+
+	def bump_operating_version(self) -> None:
+		self._operating_ver = self._operating_ver + 1
+
+	def bump_active_version(self) -> None:
+		self._active_ver = self._active_ver + 1
+
+	def bump_workforce_version(self) -> None:
+		self._workforce_ver = self._workforce_ver + 1
+
+	def bump_institution_units_version(self) -> None:
+		self._inst_units_ver = self._inst_units_ver + 1
+
+	def start_version_counters(self, state: Any) -> None:
+		"""Give each version counter on `state`'s owning subsystems a zero where it has none."""
+		if getattr(state.projects, "_operating_ver", None) is None:
+			state.projects._operating_ver = 0  # type: ignore[attr-defined]
+		if getattr(state.projects, "_done_ver", None) is None:
+			state.projects._done_ver = 0  # type: ignore[attr-defined]
+		if getattr(state.projects, "_active_ver", None) is None:
+			state.projects._active_ver = 0  # type: ignore[attr-defined]
+		if getattr(state.household, "_workforce_ver", None) is None:
+			state.household._workforce_ver = 0  # type: ignore[attr-defined]
+		if state.governance is not None and getattr(state.governance, "_inst_units_ver", None) is None:
+			state.governance._inst_units_ver = 0  # type: ignore[attr-defined]
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
 		return (self._state.projects.opened_year or {}).get(node_id, default)

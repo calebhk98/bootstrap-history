@@ -5,7 +5,7 @@ price times volume shared out, and the number of firms in a niche is set by the 
 a firm's, so it stops growing when the market stops growing."""
 from .harness import *  # noqa: F401,F403
 
-from sim.agents import SimWorld
+from sim.agents.api import SimWorld
 
 import copy
 import random

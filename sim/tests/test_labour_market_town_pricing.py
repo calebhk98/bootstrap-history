@@ -6,7 +6,7 @@ from functools import partial
 sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
 
 
-from sim.agents import SimWorld
+from sim.agents.api import SimWorld
 from sim.engine.state import ActorRecord
 
 TRADE = "artisan"
