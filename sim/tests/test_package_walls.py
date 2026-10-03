@@ -101,9 +101,13 @@ def outside_files(package):
 
 
 def defined_names(paths):
-    """(private names, mixin method names) defined by classes in these files."""
+    """(private names, mixin method names) defined by classes, or privately at module level, in these files."""
     private, mixin_methods = set(), set()
     for path in paths:
+        for node in parse(path).body:  # module-level private functions and names count too
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) \
+                    and node.name.startswith("_") and not node.name.startswith("__"):
+                private.add(node.name)
         for node in ast.walk(parse(path)):
             if not isinstance(node, ast.ClassDef):
                 continue

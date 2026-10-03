@@ -30,6 +30,11 @@ def _region_names() -> Dict[str, str]:
             if isinstance(record, dict)}
 
 
+def region_names() -> Dict[str, str]:
+    """Each region's display name, by region id."""
+    return _region_names()
+
+
 def tile_name(tile_id: str) -> str:
     """'<Country> <number>', e.g. 'China 10'; the id itself for an unknown tile."""
     record = _tiles().get(tile_id)

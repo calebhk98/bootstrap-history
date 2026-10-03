@@ -58,7 +58,7 @@ def map_report(sim, full=False):
     return {
         "civilisation": sim.civ.get("short_name", sim.civ.get("name", "")),
         "population": round(sim.population.total),
-        "regions": [tile_names._region_names().get(region_id, region_id)
+        "regions": [tile_names.region_names().get(region_id, region_id)
                     for region_id in sim.civ.get("home_regions") or []],
         "you_are_based_at": dict(
             tile_place(base), people=round(base_people),
