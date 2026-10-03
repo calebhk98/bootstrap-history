@@ -230,13 +230,26 @@ def next_years_runs_ceiling(producer: Producer) -> float:
     return min(producer.capacity_runs, scale + OUTPUT_CHANGE_SHARE_PER_YEAR * producer.capacity_runs)
 
 
-def shortfall_at_working_scale(producer: Producer, cash_shortfall: float) -> float:
-    """The cash it lacks for the runs it could plan next year. The cash target covers the whole plant;
-    a producer working a small part of it is not pressed to sell stock at any price for want of
-    working capital it has no use for."""
+def share_that_pays(producer: Producer, recipe: Recipe, view: MarketView) -> float:
+    """Share of the plant a run pays at the prices it plans with (the share `plan` would work at no cash
+    limit): none when a run's expected revenue does not cover its variable cost or an input cannot be
+    priced."""
+    outputs = expected_output_prices(producer, recipe, view)
+    variable = (unit_cost.variable_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
+                                                live_wages(producer, recipe, view), producer.land_rent_per_run))
+    if not math.isfinite(variable):
+        return 0.0
+    return share_working(unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor, variable)
+
+
+def shortfall_at_working_scale(producer: Producer, recipe: Recipe, view: MarketView, cash_shortfall: float) -> float:
+    """The cash it lacks for the runs it could plan next year and that would pay. The cash target covers
+    the whole plant; a producer working a small part of it, or none because a run does not pay, is not
+    pressed to sell stock at any price for want of working capital it has no use for."""
     if producer.capacity_runs <= 0.0:
         return cash_shortfall
-    unused_share = 1.0 - next_years_runs_ceiling(producer) / producer.capacity_runs
+    scale = next_years_runs_ceiling(producer) * share_that_pays(producer, recipe, view)
+    unused_share = 1.0 - scale / producer.capacity_runs
     return max(0.0, cash_shortfall - unused_share * producer.cash_target)
 
 
@@ -369,7 +382,7 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
                                                     STORAGE_COST_PER_UNIT)
         rows.append((good, quantity, reservation))
     stock_value = sum(quantity * max(reservation, 0.0) for _good, quantity, reservation in rows)
-    cash_shortfall = shortfall_at_working_scale(producer, cash_shortfall)
+    cash_shortfall = shortfall_at_working_scale(producer, recipe, view, cash_shortfall)
     return [Offer(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile, quantity,
                   inventory.distressed_reservation(reservation, cash_shortfall, stock_value))
             for good, quantity, reservation in rows]
