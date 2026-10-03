@@ -3,7 +3,6 @@
 The book holds money and goods; the agents' records hold what they expect and plan; the memory
 holds last year's market outcomes. Nothing else survives a year.
 """
-import dataclasses
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple
 
@@ -12,6 +11,7 @@ from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
 from .merchants import Merchant
 from .producers import Producer
+from .record_plain import plain
 from .state_budget import StateBudget
 from .types import AgentId, CurrencySpec, Loan, LoanRequest, TileId, TradeId
 
@@ -41,13 +41,13 @@ class EconomyRecord:
     def to_record(self) -> Dict[str, Any]:
         return {
             "book": self.book.to_record(),
-            "memory": dataclasses.asdict(self.memory),
-            "currency": dataclasses.asdict(self.currency),
-            "cohorts": {key: dataclasses.asdict(value) for key, value in sorted(self.cohorts.items())},
-            "producers": {key: dataclasses.asdict(value) for key, value in sorted(self.producers.items())},
+            "memory": plain(self.memory),
+            "currency": plain(self.currency),
+            "cohorts": {key: plain(value) for key, value in sorted(self.cohorts.items())},
+            "producers": {key: plain(value) for key, value in sorted(self.producers.items())},
             "merchants": {key: _merchant_record(value) for key, value in sorted(self.merchants.items())},
-            "loans": [dataclasses.asdict(loan) for loan in self.loans],
-            "loan_requests": [dataclasses.asdict(request) for request in self.loan_requests],
+            "loans": [plain(loan) for loan in self.loans],
+            "loan_requests": [plain(request) for request in self.loan_requests],
             "remembered_defaults": self.remembered_defaults,
             "credit_losses": self.credit_losses,
             "workforce": self.workforce,
@@ -57,7 +57,7 @@ class EconomyRecord:
             "expansion_runs": self.expansion_runs,
             "index_base_prices": self.index_base_prices,
             "worn_runs": self.worn_runs,
-            "state_budget": dataclasses.asdict(self.state_budget),
+            "state_budget": plain(self.state_budget),
             "land_rent": self.land_rent,
         }
 
