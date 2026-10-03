@@ -67,11 +67,29 @@ class PlanTests(unittest.TestCase):
     def test_orders_follow_the_plan_and_budgets_stay_within_cash(self):
         plan = producers.plan(farmer(), FARM, farm_view(2.0), 100.0)         # 7 a run: cash allows 14, cap 10
         self.assertAlmostEqual(plan.runs, 10.0, places=2)                    # nearly every workplace pays
-        self.assertAlmostEqual(plan.bids[0].floor_quantity, 2.0 * plan.runs)
+        self.assertAlmostEqual(sum(bid.floor_quantity for bid in plan.bids), 2.0 * plan.runs)
         self.assertAlmostEqual(plan.labour_bids[0].hours, 5.0 * plan.runs)
         self.assertGreaterEqual(plan.labour_bids[0].maximum_wage, (20.0 - 2.0) / 5.0 - 1e-9)
         spent = sum(bid.budget for bid in plan.bids) + plan.runs * 5.0
         self.assertLessEqual(spent, 100.0 + 1e-9)
+
+    def test_an_input_is_wanted_less_as_it_gets_dearer(self):
+        # workplaces differ in cost; a dearer input stops the dearest ones first, so demand falls in steps
+        from sim.economy.goods_market import quantity_at
+        plan = producers.plan(farmer(), FARM, farm_view(2.0), 1000.0)
+        wanted = lambda price: sum(quantity_at(bid, price) for bid in plan.bids)
+        self.assertAlmostEqual(wanted(1.0), 2.0 * plan.runs)
+        dearer = min(bid.maximum_price for bid in plan.bids) * 1.01
+        self.assertLess(wanted(dearer), wanted(1.0))
+        self.assertGreater(wanted(dearer), 0.0)
+
+    def test_the_dearest_working_tranche_stops_buying_first(self):
+        # each tranche pays up to where its own workplaces stop covering their cost, so the ceilings differ
+        plan = producers.plan(farmer(), FARM, farm_view(2.0), 1000.0)
+        ceilings = sorted(bid.maximum_price for bid in plan.bids)
+        self.assertEqual(len(ceilings), producers.INPUT_DEMAND_TRANCHES)
+        self.assertLess(ceilings[0], ceilings[-1])
+        self.assertGreater(ceilings[0], 1.0)
 
     def test_cash_limits_the_runs(self):
         plan = producers.plan(farmer(), FARM, farm_view(2.0), 21.0)

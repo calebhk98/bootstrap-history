@@ -16,6 +16,7 @@ and capacity carry the site, so rent shows up as profit. Nothing here names a go
 View lookups: goods by `view.area_of(good, tile)`, labour by `view.area_of(trade, tile)`.
 """
 import math
+import statistics
 from dataclasses import dataclass, field, replace
 from typing import Dict, List, Mapping, Optional, Tuple
 
@@ -39,6 +40,7 @@ REGRESSIVE_EXPECTATION_WEIGHT = declare(
     why="Producers who expect only last year's price chase every swing, and a chain of them feeding each "
         "other swings wider every year (the divergent cobweb). Producers also know that prices far from "
         "cost do not last; regressive expectations (Nerlove 1958) weigh that in. The weight is unmeasured.")
+INPUT_DEMAND_TRANCHES = 4   # steps in a producer's demand for an input, one per quarter of its working workplaces
 COST_SPREAD_WITHIN_PRODUCER = declare(
     "COST_SPREAD_WITHIN_PRODUCER", 0.3, kind="temporary_heuristic",
     unit="standard deviation of the log of unit cost across the workplaces one producer stands for",
@@ -180,7 +182,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
     labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost, wages)
     bids = _input_bids(producer, recipe, view, runs, inputs, max(cash, 0.0) - runs * labour_cost,
-                       revenue / ratio - variable)
+                       revenue, variable)
     return Plan(runs, tuple(labour_bids), tuple(bids), margin)
 
 
@@ -257,24 +259,42 @@ def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> Li
     return bids
 
 
-def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_per_run) -> List[Bid]:
-    """Inputs for the planned runs, net of what is held: a floor, not price-sensitive. The budget is
-    the cash left after wages, split by cost share, so the bids never add up to more than the cash.
-    No input is bought above the price at which the run would just cover its variable cost."""
+def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, revenue, variable) -> List[Bid]:
+    """Inputs for the planned runs, net of what is held, in INPUT_DEMAND_TRANCHES tranches of the
+    workplaces that work: each tranche buys at any price up to where its own workplaces stop covering
+    their cost (COST_SPREAD_WITHIN_PRODUCER), so a dearer input is wanted less, the dearest workplaces
+    dropping out first. The budget is the cash left after wages, split by cost share, so the bids never
+    add up to more than the cash."""
     needs = {}
     for good, per_run in sorted(recipe.inputs.items()):
         short = runs * per_run - view.stock(producer.agent_id, good, producer.tile)
         if short > 0.0:
             needs[good] = short
     total_cost = sum(quantity * prices[good] for good, quantity in needs.items())
+    costs = _tranche_costs(revenue, variable)
     bids = []
     for good, quantity in needs.items():
         share = quantity * prices[good] / total_cost if total_cost > 0.0 else 0.0
-        worth = prices[good] + max(0.0, margin_per_run) / recipe.inputs[good]
-        bids.append(Bid(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile,
-                        quantity, 0.0, prices[good], 0.0, max(0.0, budget_for_inputs) * share,
-                        maximum_price=worth))
+        budget = max(0.0, budget_for_inputs) * share / len(costs)
+        for cost in costs:
+            worth = prices[good] + max(0.0, revenue - cost) / recipe.inputs[good]
+            bids.append(Bid(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile,
+                            quantity / len(costs), 0.0, prices[good], 0.0, budget, maximum_price=worth))
     return bids
+
+
+def _tranche_costs(revenue: float, variable: float) -> List[float]:
+    """The run cost of the middle workplace in each tranche of those that work: workplace costs are
+    log-normal about `variable` with COST_SPREAD_WITHIN_PRODUCER, and those costing more than `revenue`
+    are idle."""
+    if variable <= 0.0 or revenue <= 0.0:
+        return [variable] * INPUT_DEMAND_TRANCHES
+    spread = COST_SPREAD_WITHIN_PRODUCER
+    centre = math.log(variable) - spread * spread / 2.0
+    working = _normal_below(_standard_score(revenue, variable))
+    standard = statistics.NormalDist()
+    return [math.exp(centre + spread * standard.inv_cdf(min(1.0 - 1e-12, max(1e-12, working * (index + 0.5) / INPUT_DEMAND_TRANCHES))))
+            for index in range(INPUT_DEMAND_TRANCHES)]
 
 
 def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, float],
