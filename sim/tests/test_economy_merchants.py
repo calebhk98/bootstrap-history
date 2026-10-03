@@ -85,6 +85,30 @@ class GapTests(unittest.TestCase):
         self.assertAlmostEqual(net, 0.0, places=9)
         self.assertGreater(bid.maximum_price, 2.0)
 
+    def test_a_merchant_takes_its_cargo_at_any_price_up_to_its_ceiling(self):
+        # a price-taker up to break-even: a source dearer than expected still sells it its cargo,
+        # as far as the cash set aside for the route stretches
+        bid = plan(merchant(), 2.0, 5.0, cash=1e6).bids[0]
+        cargo = goods_market.quantity_at(bid, 2.0)
+        between = (2.0 + bid.maximum_price) / 2.0
+        self.assertAlmostEqual(goods_market.quantity_at(bid, between), cargo)
+        self.assertEqual(goods_market.quantity_at(bid, bid.maximum_price * 1.01), 0.0)
+
+    def test_a_full_destination_sends_the_cargo_to_the_next_best_one(self):
+        tiles = ("a", "b", "c")
+        carriage = CarriageTable(tiles, [Edge("a", "b", ("land",), 100.0), Edge("a", "c", ("land",), 100.0)],
+                                 {"land": 0.01})
+        area_map = AreaMap(tiles, carriage, [(SPECS["salt"], 2.0)], {"a": 10.0, "b": 5.0, "c": 5.0},
+                           threshold_share=0.01)
+        area = {tile: area_map.area_of("salt", tile) for tile in tiles}
+        who = merchant()
+        who.expected_prices = {("salt", area["a"]): 2.0, ("salt", area["b"]): 6.0, ("salt", area["c"]): 5.0}
+        who.expected_volumes = {("salt", area["b"]): 100.0, ("salt", area["c"]): 100.0}
+        full = {("salt", "b"): merchants.MERCHANT_MARKET_SHARE * 100.0}
+        orders = merchants.orders(who, View({}), carriage, area_map, 1e6, full, SPECS, 0.0)
+        self.assertEqual(len(orders.bids), 1)
+        self.assertEqual(who.routes[("salt", "a")], ("c", area["c"]))
+
     def test_a_merchant_with_no_price_information_does_not_trade(self):
         carriage, area_map, _a, _b = world()
         self.assertEqual(merchants.orders(merchant(), View({}), carriage, area_map, 100.0, {}, SPECS, 0.0).bids, ())
@@ -94,7 +118,8 @@ class LimitTests(unittest.TestCase):
     def test_capital_binds(self):
         small = plan(merchant(), 2.0, 5.0, cash=6.0).bids[0]
         big = plan(merchant(), 2.0, 5.0, cash=600.0).bids[0]
-        self.assertAlmostEqual(small.flexible_quantity, 6.0 / (2.0 + CARRIAGE_PER_UNIT))
+        # cash covers the cargo at the most the merchant would pay, plus carriage
+        self.assertAlmostEqual(small.flexible_quantity, 6.0 / (small.maximum_price + CARRIAGE_PER_UNIT))
         self.assertLess(small.flexible_quantity, big.flexible_quantity)
 
     def test_no_cash_no_bid(self):

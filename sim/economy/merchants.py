@@ -51,11 +51,6 @@ MERCHANT_EXPECTATION_SPEED = declare(
     source=None, confidence="D",
     why="Adaptive expectation: the share of the gap between expectation and the year's outcome that "
         "is closed. Fast, because a merchant sees its own markets; not yet fitted.")
-MERCHANT_BID_ELASTICITY = declare(
-    "MERCHANT_BID_ELASTICITY", 6.0, kind="temporary_heuristic", unit="dimensionless",
-    source=None, confidence="D",
-    why="A merchant's demand falls steeply as the price rises above what it expected, since its "
-        "margin is thin. The schedule form cannot express a hard price ceiling, so a steep curve stands in.")
 MERCHANT_PROFIT_PAYOUT_SHARE = declare(
     "MERCHANT_PROFIT_PAYOUT_SHARE", 0.5, kind="temporary_heuristic", unit="share of the year's profit",
     source=None, confidence="D",
@@ -113,13 +108,15 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
     for _rank, good, source, destination, price_here, outlay, room, ceiling in candidates:
         if remaining <= 0.0:
             break
-        quantity = min(remaining / outlay, room)
+        # a price-taker up to break-even: cash is set aside for the cargo at that price plus carriage
+        at_ceiling = ceiling + (outlay - price_here)
+        quantity = min(remaining / at_ceiling, room)
         if quantity <= 0.0:
             continue
         merchant.routes[(good, source.anchor_tile)] = (destination.anchor_tile, destination.area_id)
         bids.append(Bid(merchant.agent_id, good, source.area_id, source.anchor_tile, 0.0, quantity,
-                        price_here, MERCHANT_BID_ELASTICITY, quantity * price_here, maximum_price=ceiling))
-        remaining -= quantity * outlay
+                        price_here, 0.0, quantity * ceiling, maximum_price=ceiling))
+        remaining -= quantity * at_ceiling
     return AgentOrders(bids=tuple(bids), offers=tuple(offers))
 
 
@@ -155,13 +152,14 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
                 continue
             best = None
             floor_cost = price_here * (1.0 + max(0.0, interest_rate) + MERCHANT_MARGIN_SHARE)
+            # the best destination with room left for this merchant's cargo
             for destination in dearest_first:
                 price_there = prices[destination.area_id]
                 # carriage only adds cost, so no cheaper destination can beat this bound
                 bound = price_there * keep - floor_cost
                 if bound <= 0.0 or (best is not None and bound <= best[0]):
                     break
-                if destination.area_id == source.area_id:
+                if destination.area_id == source.area_id or _room(merchant, good, destination, held_stock) <= 0.0:
                     continue
                 per_tonne = carriage.cost_per_tonne(source.anchor_tile, destination.anchor_tile)
                 if math.isinf(per_tonne):
