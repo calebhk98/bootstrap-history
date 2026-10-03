@@ -25,7 +25,7 @@ from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .year_labour import clear_labour, labour_offers, move_workers, outside_option_by_tile
+from .year_labour import clear_labour, follow_asks, labour_offers, move_workers, outside_option_by_tile
 from .year_ledger import YearLedger
 
 
@@ -119,6 +119,7 @@ class Economy:
         for payment in rent:
             record.property_income[payment.payee] = record.property_income.get(payment.payee, 0.0) + payment.amount
         move_workers(setup, record, ledger)
+        follow_asks(setup, record, view, ledger)
         wear_and_spoilage(setup, record)
         level = remember_price_level(setup, record)
         record.memory.year += 1
