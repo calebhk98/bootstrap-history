@@ -1,7 +1,7 @@
 """What a state asks the simulated world when it assesses revenue: its declared forms and the bases they read."""
 from typing import Any, Dict, List
 
-from . import revenue
+from sim.agents.api import revenue
 
 
 class RevenueView:

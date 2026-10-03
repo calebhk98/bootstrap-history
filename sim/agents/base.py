@@ -7,7 +7,7 @@ and what they value. Decisions go through the actor's `decision_policy`.
 """
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from sim.engine.state import ActorRecord
+from .records import ActorRecord
 
 from . import imitation, ledger
 from .borrowing import Borrower

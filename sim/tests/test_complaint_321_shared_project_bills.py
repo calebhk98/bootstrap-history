@@ -2,7 +2,8 @@
 pricing it, so a yearly turn computes each project's material bill once however
 many firms price it, and never serves a bill the market has since moved under."""
 from .harness import *  # noqa: F401,F403
-from sim.agents.api import SimWorld, Firm
+from sim.agents.api import Firm
+from sim.engine.agents_port import SimWorld
 from sim.agents import imitation
 from sim.engine.project_materials import ProjectMaterialsMixin
 from sim.engine.state import ActorRecord

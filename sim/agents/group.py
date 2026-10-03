@@ -13,7 +13,7 @@ from .base import RecordedActor
 from .group_tuning import (GRIEVANCE_RETENTION, GROUP_BAN_PULL, GROUP_DISBANDING_SHARE,
 						   GROUP_LOG_INTERVAL_YEARS, GROUP_ORGANISING_WEIGHT, GROUP_PULL_SCALE,
 						   SCANDAL_PER_PETITION)
-from .world_groups import CONCESSION_PREFIX, Sector, sector_key
+from .sector import CONCESSION_PREFIX, Sector, sector_key
 
 # however well protected, public blame never falls below this share of what it would be
 BLAME_PROTECTION_FLOOR = 0.15

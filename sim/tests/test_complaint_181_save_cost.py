@@ -92,7 +92,7 @@ check("a save is a handful of lines, not one line per value", save_line_count < 
 
 # --- imitation scan: the society's baseline knowledge is read once per scan,
 # --- not once per invention per actor ---------------------------------------
-from sim.agents.api import SimWorld
+from sim.engine.agents_port import SimWorld
 from sim.engine.state import ActorRecord
 
 scan_sim = sim(capital=1e9)

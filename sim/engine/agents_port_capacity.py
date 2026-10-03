@@ -1,8 +1,7 @@
 """What it is worth to a firm to run a concern at a larger size: the view behind its expansion."""
 from typing import Any
 
-from . import imitation
-from .tuning import MANAGEMENT_SPAN_EXPONENT
+from sim.agents.api import MANAGEMENT_SPAN_EXPONENT, imitation
 
 
 class CapacityView:

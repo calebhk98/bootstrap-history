@@ -19,20 +19,9 @@ from collections import defaultdict
 from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
 					 Optional, Set, Tuple)
 
-from sim.engine.economy import _InvalidatingSet, _InvalidatingDict
+from sim.invalidating import ActiveProjectState, _InvalidatingSet, _InvalidatingDict
 from .base import Actor
 from .policy import IdlePolicy
-from sim.engine.state import (
-	ActiveProjectState,
-	SimulationState,
-	HouseholdState,
-	ProjectsState,
-	EconomyState,
-	GovernanceState,
-	FounderState,
-	ScenarioState,
-	PopulationState,
-)
 
 
 _SUBSYSTEM_MAP: Dict[str, str] = {
@@ -215,28 +204,17 @@ class Household(Actor):
 		operating_changed: Optional[Callable[[], None]] = None,
 		active_changed: Optional[Callable[[], None]] = None,
 		workforce_changed: Optional[Callable[[], None]] = None,
-		state: Optional[SimulationState] = None,
-		sim: Optional[Any] = None,
+		state: Optional[Any] = None,
+		port: Optional[Any] = None,
 	) -> None:
 		# The founder's choices arrive as commands, so the household idles.
 		Actor.__init__(self, IdlePolicy())
-		self._sim = sim
+		self._port = port
 		if state is not None:
 			self._state = state
 			self._state.household.capital = float(starting_capital)
-		elif sim is not None and hasattr(sim, "state") and sim.state is not None:
-			self._state = sim.state
-			self._state.household.capital = float(starting_capital)
 		else:
-			self._state = SimulationState(
-				household=HouseholdState(capital=float(starting_capital)),
-				projects=ProjectsState(),
-				economy=EconomyState(),
-				governance=GovernanceState(),
-				founder=FounderState(),
-				scenario=ScenarioState(),
-				population=PopulationState(),
-			)
+			self._state = port.fresh_state(starting_capital)
 
 		self._state.household.cash_mark = float(starting_capital)
 
@@ -518,7 +496,7 @@ class Household(Actor):
 		raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
 	def __setattr__(self, name: str, value: Any) -> None:
-		if (name in ("_state", "_sim", "contract_projects")
+		if (name in ("_state", "_port", "contract_projects")
 				or name.startswith("_cap_factor")
 				or name.startswith("_staff_scale")
 				or name.startswith("_spend_this_year")

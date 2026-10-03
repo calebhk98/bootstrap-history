@@ -3,7 +3,7 @@ expand. When the pooled capital cannot fund an entrant's stake, the founder rais
 bounded by the entrant's expected earning, at the borrower's rate."""
 from .harness import *  # noqa: F401,F403
 
-from sim.agents.api import SimWorld
+from sim.engine.agents_port import SimWorld
 from sim.agents import registry as actor_registry
 from sim.engine.state import ActorRecord
 from sim.agents.firm import Firm
