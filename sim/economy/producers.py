@@ -11,8 +11,9 @@ Planning uses EXPECTED prices (what the producer last saw, adjusted adaptively),
 supply follows last year's price: the cobweb lag. A producer runs while a run's expected revenue covers
 its variable cost, so it shuts down below average variable cost and may run part of its capacity when
 cash is short. Plant already built is sunk for the run decision; it is charged only in the year's close
-and in the choice to expand or enter. Land and deposits are not inputs: the producer's yield factor
-and capacity carry the site, so rent shows up as profit. Nothing here names a good, trade or place.
+and in the choice to expand or enter. Land is rented each year (land_market.py): last year's rent per run
+is a variable cost and the land granted caps the runs. Deposits are not inputs: the yield factor and
+capacity carry the site, so a deposit's rent shows up as profit. Nothing here names a good, trade or place.
 View lookups: goods by `view.area_of(good, tile)`, labour by `view.area_of(trade, tile)`.
 """
 import math
@@ -75,6 +76,8 @@ class Producer:
     cash_target: float = 0.0                # cash it keeps; the rest is paid out as dividends
     expected_sales: float = 0.0             # runs' worth of output it expects to sell a year; 0 unknown
     last_runs: float = -1.0                 # runs it worked last year; below zero before its first year
+    land_rent_per_run: float = 0.0          # rent on the land a run works, set yearly by the land market
+    land_run_cap: float = -1.0              # runs the land it was granted allows; below zero for no limit
 
 
 @dataclass(frozen=True)
@@ -83,6 +86,7 @@ class Plan:
     labour_bids: Tuple[LabourBid, ...] = ()
     bids: Tuple[Bid, ...] = ()
     expected_margin_per_run: float = 0.0    # before the capital charge; what an idle producer weighs
+    wanted_runs: float = 0.0                # runs it wanted before the land it was granted capped them
 
 
 def expected_price(producer: Producer, good: GoodId, view: MarketView) -> Optional[float]:
@@ -148,7 +152,7 @@ def _break_even_scale(producer, recipe, view, prices) -> Optional[float]:
     wages = live_wages(producer, recipe, view)
     revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
     rate = view.interest_rate(view.currency_of(view.area_of(sorted(recipe.outputs)[0], producer.tile)))
-    cost = unit_cost.variable_cost_per_run(recipe, inputs, wages) + unit_cost.capital_charge_per_run(
+    cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run) + unit_cost.capital_charge_per_run(
         recipe, inputs, wages, rate)
     if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):
         return None
@@ -164,24 +168,29 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     revenue = unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor
     input_cost = unit_cost.input_cost_per_run(recipe, inputs)
     labour_cost = unit_cost.labour_cost_per_run(recipe, wages)
-    variable = input_cost + labour_cost
+    rent = producer.land_rent_per_run
+    variable = input_cost + labour_cost + rent
     margin = revenue - variable
     if producer.capacity_runs <= 0.0 or revenue <= 0.0 or not math.isfinite(variable):
         return Plan(0.0, expected_margin_per_run=margin)
     held_value = sum(min(view.stock(producer.agent_id, good, producer.tile), quantity * producer.capacity_runs)
                      * inputs[good] for good, quantity in recipe.inputs.items())
-    affordable = (max(cash, 0.0) + held_value) / variable if variable > 0.0 else producer.capacity_runs
+    paid_now = variable - rent                  # rent falls due at the year's end, out of the sales
+    affordable = (max(cash, 0.0) + held_value) / paid_now if paid_now > 0.0 else producer.capacity_runs
     runs = max(0.0, min(producer.capacity_runs * share_working(revenue, variable), affordable,
                         runs_for_stock(producer, recipe, view)))
     runs = within_a_years_change(producer, runs)
+    wanted = runs
+    if producer.land_run_cap >= 0.0:
+        runs = min(runs, producer.land_run_cap)
     ratio = working_cost_ratio(revenue, variable)
     if runs <= 0.0 or ratio <= 0.0:
-        return Plan(0.0, expected_margin_per_run=margin)
+        return Plan(0.0, expected_margin_per_run=margin, wanted_runs=wanted)
     # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
-    labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost, wages)
+    labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost + rent, wages)
     bids = _input_bids(producer, recipe, view, runs, inputs, max(cash, 0.0) - runs * labour_cost,
                        revenue / ratio - variable)
-    return Plan(runs, tuple(labour_bids), tuple(bids), margin)
+    return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted)
 
 
 def within_a_years_change(producer: Producer, runs: float) -> float:

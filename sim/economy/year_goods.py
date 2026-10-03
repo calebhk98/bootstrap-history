@@ -121,6 +121,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     order += sorted({good for good, _area in order_book} - listed)
     done, cleared, traded = set(), set(), set()
     in_kind = [form for form in setup.tax_forms if form.paid_in]
+    plant_goods = {producer_id: set(setup.recipes[producer.recipe_id].plant_goods)
+                   for producer_id, producer in record.producers.items()}
     for good in order:
         for producer_id in by_output.get(good, ()):
             if producer_id not in done:
@@ -135,6 +137,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             if result.quantity > 0.0:
                 done_settlement = settlement.settle_goods(record.book, result)
                 ledger.note_postings(done_settlement.postings, "sales")
+                ledger.note_plant_purchases(done_settlement.postings, result.price, plant_goods)
                 for shortfall in done_settlement.shortfalls:
                     ledger.unpaid[shortfall.agent] = ledger.unpaid.get(shortfall.agent, 0.0) + shortfall.unpaid_amount
             ledger.note_clearing(result)

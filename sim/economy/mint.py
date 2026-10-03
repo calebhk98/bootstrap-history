@@ -12,7 +12,7 @@ from typing import Dict
 from sim.constants import declare
 
 from . import currency
-from .types import EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid, GoodsMove, Offer, Transfer
+from .types import EDGE_EXTERNAL, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid, GoodsMove, Offer, Transfer
 
 MINT_PRIORITY = 9          # the mint is served after every other buyer at the same price
 
@@ -43,9 +43,31 @@ def seed_opening_metal(setup, record) -> None:
                            for tile, count in sorted(setup.opening_population_by_tile.items()) if count > 0.0])
 
 
-def _lose_worn_metal(record) -> None:
-    """Metal beyond what the money in circulation holds is what wear and loss took out of it."""
+def _book_foreign_coin_metal(record) -> None:
+    """Coin that left through edge:external took its metal with it; coin that came in brought its metal.
+    Only as much as the mint's stock is out of line with the metal in the money is booked."""
     spec = record.currency
+    held = stock_by_tile(record.book, spec.backing_good)
+    total = math.fsum(held.values())
+    embodied = record.book.money_supply(spec.currency_id) * spec.backing_per_unit
+    coin_in = record.book.edge_net(EDGE_EXTERNAL, spec.currency_id)
+    if total > embodied and coin_in < 0.0 and total > 0.0:
+        share = min(total - embodied, -coin_in * spec.backing_per_unit) / total
+        record.book.move_many([GoodsMove(EDGE_MINT, EDGE_EXTERNAL, spec.backing_good, tile, quantity * share,
+                                         "metal of coin sent abroad")
+                               for tile, quantity in sorted(held.items())])
+    elif total < embodied and coin_in > 0.0 and total > 0.0:
+        share = min(embodied - total, coin_in * spec.backing_per_unit) / total
+        record.book.move_many([GoodsMove(EDGE_EXTERNAL, EDGE_MINT, spec.backing_good, tile, quantity * share,
+                                         "metal of coin from abroad")
+                               for tile, quantity in sorted(held.items())])
+
+
+def _lose_worn_metal(record) -> None:
+    """Metal beyond what the money in circulation holds, once coin sent abroad is accounted for, is what
+    wear and loss took out of it."""
+    spec = record.currency
+    _book_foreign_coin_metal(record)
     held = stock_by_tile(record.book, spec.backing_good)
     total = math.fsum(held.values())
     embodied = record.book.money_supply(spec.currency_id) * spec.backing_per_unit
@@ -79,13 +101,16 @@ def mint_orders(setup, record, area_map, order_book) -> Dict[str, float]:
 
 
 def settle_mint(record, held_before: Dict[str, float]) -> None:
-    """After the goods markets: the seller of metal to a struck-coin mint was paid only the mint price,
-    so the charge on what the mint bought is coin owed to the issuer (seigniorage)."""
+    """After the goods markets: the coin value of the metal the mint took in, less the coin it paid out net
+    for it, is owed to the issuer (seigniorage); then coin that crossed the border is matched with metal."""
     spec = record.currency
-    if not currency.has_mint(spec) or spec.mint_charge_share <= 0.0 or spec.issuer is None:
+    if not spec.backing_good or spec.backing_per_unit <= 0.0:
         return
-    bought = math.fsum(max(0.0, quantity - held_before.get(tile, 0.0))
-                       for tile, quantity in stock_by_tile(record.book, spec.backing_good).items())
-    owed = bought * spec.mint_charge_share / spec.backing_per_unit
-    if owed > 0.0:
-        record.book.transfer(Transfer(EDGE_MINT, spec.issuer, spec.currency_id, owed, "seigniorage"))
+    if currency.has_mint(spec) and spec.issuer is not None:
+        taken_in = (math.fsum(stock_by_tile(record.book, spec.backing_good).values())
+                    - math.fsum(held_before.values()))
+        paid_out = record.book.edge_net(EDGE_MINT, spec.currency_id)
+        owed = taken_in * currency.mint_parity(spec) - paid_out
+        if owed > 0.0:
+            record.book.transfer(Transfer(EDGE_MINT, spec.issuer, spec.currency_id, owed, "seigniorage"))
+    _book_foreign_coin_metal(record)

@@ -5,8 +5,8 @@ unsold hours work the land-only recipes (no bought inputs) that serve a need wit
 on its own tile at the tile's fertility, up to that floor. What it grows it eats; only the rest of its
 needs go to market. A cohort that went short of a floor with money left over keeps back from the
 labour market the hours that grow its own-plot plan (the shortfall, kept up and eased off over the years), however high
-the wage: money does not feed a family where nobody sells food. The land a cohort works is not yet drawn from the tile's arable area, which is
-plentiful against what people can work by hand.
+the wage: money does not feed a family where nobody sells food. `plot_hectares` says how much land the
+plots take, for the land market to draw from the tile's arable area.
 """
 import dataclasses
 import math
@@ -86,6 +86,23 @@ def hours_for_own_plan(cohort: Cohort, options: Mapping[str, List[Option]], fert
         if rows and units > 0.0:
             hours += units * rows[0][0] / fertility
     return hours
+
+
+def plot_hectares(units_by_need: Mapping[str, float], options: Mapping[str, List[Option]],
+                  recipes: Mapping[str, Recipe], land_per_run: Mapping[str, float], fertility: float) -> float:
+    """Hectare-years of land a household works to grow these need units: the hours they take at this
+    fertility, in runs of the recipe that grows them, each run on the land the recipe takes."""
+    if fertility <= 0.0:
+        return 0.0
+    hectares = 0.0
+    for need_id, units in sorted(units_by_need.items()):
+        rows = options.get(need_id)
+        if not rows or units <= 0.0:
+            continue
+        hours_per_unit, recipe_id, _good, _effect = rows[0]
+        hours_per_run = math.fsum(recipes[recipe_id].labour_hours.values())
+        hectares += units * hours_per_unit / fertility / hours_per_run * land_per_run.get(recipe_id, 0.0)
+    return hectares
 
 
 def next_own_plan(plan: Mapping[str, float], unmet: Mapping[str, float], money_left: bool) -> Dict[str, float]:
