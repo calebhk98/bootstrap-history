@@ -5,6 +5,7 @@ posting has a counterparty. Edge accounts (types.is_edge) are the only ones that
 they are where the model meets what it does not simulate, and the sum over all accounts stays zero.
 """
 import math
+import sys
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Sequence, Tuple
 
@@ -66,6 +67,7 @@ def _delivery_tile(move: GoodsMove) -> TileId:
 # Floating-point arithmetic leaves a payer a hair short of what it computed it could pay; a shortfall
 # no bigger than this share of what moves is rounding, not an overdraft.
 ROUNDING_SHARE = 1e-9
+UNDERFLOW = sys.float_info.min   # below the smallest normal float a balance is rounding residue
 
 
 class Book:
@@ -171,7 +173,7 @@ class Book:
         # only an overdraft this batch makes or deepens fails: a residue an earlier, larger batch
         # was allowed to leave is not this batch's doing
         failing = [key for key, value in after.items()
-                   if value < min(0.0, before[key]) - ROUNDING_SHARE * moved[key] and not is_edge(key[0])]
+                   if value < min(0.0, before[key]) - max(ROUNDING_SHARE * moved[key], UNDERFLOW) and not is_edge(key[0])]
         if failing:
             agent, currency = min(failing)
             raise InsufficientFunds("%s would hold %.6g %s after the batch" % (agent, after[(agent, currency)], currency))
@@ -197,7 +199,7 @@ class Book:
                     after[key] = start + signed
                     moved[key] = quantity
         failing = [key for key, value in after.items()
-                   if value < min(0.0, before[key]) - ROUNDING_SHARE * moved[key] and not is_edge(key[0])]
+                   if value < min(0.0, before[key]) - max(ROUNDING_SHARE * moved[key], UNDERFLOW) and not is_edge(key[0])]
         if failing:
             agent, good, tile = min(failing)
             raise InsufficientGoods("%s would hold %.6g %s on %s after the batch" % (agent, after[(agent, good, tile)], good, tile))
