@@ -8,6 +8,7 @@ wealth spends and lends less, and may itself fall behind on what it owes, so a c
 ordinary rules; credit_claims also keeps the defaulter's record for the next premium.
 """
 from dataclasses import dataclass, replace
+import math
 from typing import List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
@@ -79,7 +80,11 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
         base_rate = last_rate if last_rate is not None else 0.0
     else:
         base_rate = sticky_move(last_rate, target, RATE_ADJUSTMENT_SHARE_PER_YEAR)
-    lending = [offer for offer in offers if offer.minimum_rate <= base_rate]
+        lowest_ask = min((offer.minimum_rate for offer in offers), default=None)
+        if lowest_ask is not None and base_rate < lowest_ask <= max(ceilings, default=-math.inf):
+            # a sticky rate below every lender's ask would lend nothing while a borrower would pay it
+            base_rate = lowest_ask
+    lending =[offer for offer in offers if offer.minimum_rate <= base_rate]
     asking = [index for index, ceiling in enumerate(ceilings) if ceiling >= base_rate]
     supply = sum(offer.amount for offer in sorted(lending, key=lambda o: (o.lender, o.amount)))
     demand = sum(requests[index].amount for index in asking)

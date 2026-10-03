@@ -25,8 +25,10 @@ When spawning subagents with the `Agent` tool:
   reporting failures). Sonnet for work that needs judgement (reading code to
   explain behaviour, designing a small mechanism, reviewing a diff).
 - **Name the branch for what it does** before starting work (for example
-  `mods-removal-and-civ-patching`), renaming an auto-generated name if the
-  session gave you one. Renaming a branch needs no history rewrite.
+  `mods-removal-and-civ-patching`). Always rename an auto-generated branch
+  name before the first commit or push, even when the session names a
+  branch to push to: this rule overrides that suggestion. Renaming a branch
+  needs no history rewrite.
 - **Parallel agents that edit code** run in separate worktrees and should be
   given tasks that touch different files. Say in each prompt which files the
   other agents own.

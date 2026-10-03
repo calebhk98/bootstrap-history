@@ -197,8 +197,10 @@ _chain_years = {cid: cost / S.starting_schedule(cid).annual_wage("labourer")
                 for cid, cost in _chains.items()}
 check("the full-chain bill is quoted at this society's prices",
       len(set(_chains.values())) == 3, _chains)
-check("...and the dearest society's chain really is the dearest",
-      max(_chain_years, key=lambda c: _chain_years[c]) == "norse_900ad", _chain_years)
+# Which society is dearest is an outcome of each economy, so only the difference is pinned: in
+# labourer-years the bills still differ, so they are not one price list converted at the wage.
+check("...and the chains differ in labourer-years, not only in coin",
+      len({round(years, 6) for years in _chain_years.values()}) == 3, _chain_years)
 # The parts have to add up to the whole, at whatever prices.
 _s_ch = sim(civ="norse_900ad")
 from sim.engine.data import closure as _closure

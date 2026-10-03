@@ -12,9 +12,10 @@ from sim.constants import declare
 
 from sim.labour.api import CAREER_YEARS
 
-from . import households, labour, settlement
+from . import households, labour, labour_asks, settlement
+from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
-from .market_memory import market_key
+from .market_memory import KEY_SEPARATOR, market_key
 from .setup import LABOUR_AREA_PREFIX
 from .types import LabourBid, LabourOffer
 from .year_ledger import YearLedger
@@ -89,7 +90,7 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
         result = labour.clear(trade_bids, trade_offers, trade, area, setup.currency_id, memory.wages.get(key))
         done = settlement.settle_labour(record.book, result)
         ledger.note_postings(done.postings, "wages")
-        ledger.note_labour(result)
+        ledger.note_labour(result, done.postings)
         if result.wage > 0.0:
             memory.wages[key] = result.wage
 
@@ -120,3 +121,41 @@ def move_workers(setup, record, ledger: YearLedger) -> None:
                 workforce[trade] -= movers * leaving / idle_total
         for trade, count in sorted(wanted.items()):
             workforce[trade] = workforce.get(trade, 0.0) + movers * count / total_wanted
+
+
+def trade_ask(setup, trade, outside_option: float) -> float:
+    """What a worker asks an hour to take up a trade on a tile with this outside option (a year's floors)."""
+    spec = setup.trades.get(trade)
+    danger = spec.fatality_risk_per_year if spec is not None else 0.0
+    ask = labour.reservation_wage(outside_option, setup.working_hours_per_year, danger,
+                                  VALUE_OF_LIFE_YEARS_OF_INCOME)
+    return ask * (1.0 + trade_premium(setup, trade))
+
+
+def follow_asks(setup, record, view, ledger: YearLedger) -> None:
+    """Untraded wages move toward the ask; workers drift toward trades paying well over theirs."""
+    outside = outside_option_by_tile(setup, record, view)
+    asks: Dict[str, float] = {}
+    for key in record.memory.wages:
+        trade, _separator, area = key.partition(KEY_SEPARATOR)
+        tile = area[len(LABOUR_AREA_PREFIX):] if area.startswith(LABOUR_AREA_PREFIX) else None
+        if tile in outside:
+            asks[key] = trade_ask(setup, trade, outside[tile])
+    offered = {market_key(result.trade, result.area) for result in ledger.labour_results
+               if result.hours_hired + result.idle_hours > 0.0}
+    record.memory.wages = labour_asks.untraded_wages(record.memory.wages, offered, asks)
+    hours = setup.working_hours_per_year
+    wanted: Dict[str, Dict[str, float]] = {}
+    for result in ledger.labour_results:
+        tile = result.area[len(LABOUR_AREA_PREFIX):]
+        wanted.setdefault(tile, {})[result.trade] = (result.hours_hired + result.vacant_hours) / hours
+    for tile, workforce in sorted(record.workforce.items()):
+        if tile not in outside or tile not in wanted:
+            continue
+        pay = {}
+        for trade in set(workforce) | set(wanted[tile]):
+            key = market_key(trade, LABOUR_AREA_PREFIX + tile)
+            ask = asks.get(key) or trade_ask(setup, trade, outside[tile])
+            if key in record.memory.wages and ask > 0.0:
+                pay[trade] = record.memory.wages[key] / ask
+        record.workforce[tile] = labour_asks.follow_pay(workforce, pay, wanted[tile])

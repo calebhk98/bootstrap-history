@@ -10,6 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import demand
 
+from .good_mass import unit_mass_and_source
 from .state_policy import StatePolicy
 from .tile_costs import Edge
 from .types import AgentId, CurrencySpec, GoodId, GoodSpec, Recipe, TileId, TileSpec, TradeId
@@ -75,14 +76,15 @@ def recipe_tile_key(recipe_id: str, tile: TileId) -> str:
 
 def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, Mapping[str, Any]],
                 service_lives: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, GoodSpec]:
-    """A `GoodSpec` per good from its unit (mass where the unit says), the spoilage table and any
-    stated service life. `goods` maps each good to a category label from data."""
+    """A `GoodSpec` per good (its unit mass from `good_mass`), the spoilage table and any stated
+    service life. `goods` maps each good to a category label from data."""
     service_lives = service_lives or {}
+    production = demand.production_data()
     specs = {}
     for good, category in sorted(goods.items()):
-        mass = demand.mass_in_kg_or_none(good, 1.0)
+        mass, _source = unit_mass_and_source(good, production)
         decay_rate = float((spoilage_rates.get(good) or {}).get("rate", 0.0))   # continuous, per year
-        specs[good] = GoodSpec(good_id=good, unit_mass_kg=mass if mass is not None else 1.0,
+        specs[good] = GoodSpec(good_id=good, unit_mass_kg=mass,
                                spoilage_per_year=1.0 - math.exp(-decay_rate),
                                service_life_years=float(service_lives.get(good, 0.0)),
                                category=category)

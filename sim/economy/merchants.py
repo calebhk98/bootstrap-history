@@ -5,8 +5,9 @@ The year is annual, so a merchant acts on last year's prices. In one year it
                  it expects there; bids in cheap areas for goods whose expected price in another area
                  exceeds the price here plus carriage, a year's interest on the money tied up, the
                  spoilage of the held stock and a margin. Quantities are limited by cash and by a share
-                 of the destination's expected market net of what it already holds there. Many merchants
-                 chasing one gap overshoot it: that bullwhip is left in.
+                 of the destination's expected market net of what it already holds there and has bid for
+                 from other sources; merchants sizing one after another also share the destination
+                 (`merchants_shares`). Merchants chasing one gap still overshoot it within those limits.
   2. `dispatch`  after the markets clear, carries what it holds on each route's source tile (what
                  it bought, and older stock worth more elsewhere) to the destination (`DeliveredMove`) and pays the carriage to the carrier the caller
                  names for the source tile, or to `EDGE_CARRIAGE` when it names none. Goods it
@@ -28,6 +29,7 @@ from . import inventory
 from .accounts import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
+from .merchants_shares import RouteShares, room_left
 from .protocols import AgentOrders, MarketView
 from .tile_costs import CarriageTable
 from .types import AgentId, AreaId, Bid, CurrencyId, Fill, GoodId, GoodSpec, Offer, TileId, Transfer
@@ -43,9 +45,9 @@ MERCHANT_MARGIN_SHARE = declare(
 MERCHANT_MARKET_SHARE = declare(
     "MERCHANT_MARKET_SHARE", 0.3, kind="temporary_heuristic",
     unit="share of the destination's expected yearly volume", source=None, confidence="D",
-    why="How much of a destination's market one merchant dares supply. Each sizes its cargo alone, so "
-        "several merchants together can exceed the market and overshoot. A merchant's own estimate "
-        "of rivals is not yet modelled.")
+    why="How much of a destination's market one merchant dares supply, over all the sources it buys "
+        "from. A merchant's own estimate of rivals is not yet modelled; the group share in "
+        "merchants_shares stands in for it.")
 MERCHANT_EXPECTATION_SPEED = declare(
     "MERCHANT_EXPECTATION_SPEED", 0.7, kind="temporary_heuristic", unit="share of the gap closed a year",
     source=None, confidence="D",
@@ -97,8 +99,11 @@ def gap_cost_per_unit(spec: GoodSpec, price_here: float, price_there: float,
 
 def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_map: AreaMap, cash: float,
            held_stock: Mapping[Tuple[GoodId, TileId], float], specs: Mapping[GoodId, GoodSpec],
-           interest_rate: float) -> AgentOrders:
-    """The merchant's offers and bids for the year. Sets `merchant.routes`."""
+           interest_rate: float, shares: Optional[RouteShares] = None) -> AgentOrders:
+    """The merchant's offers and bids for the year. Sets `merchant.routes`. `shares` is what rival
+    merchants have already committed this year; this merchant adds its own to it."""
+    shares = shares if shares is not None else RouteShares()
+    own = RouteShares()
     merchant.routes = {}
     candidates = _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
     # stock already held where a route out pays is carried along it, not sold where it sits
@@ -110,12 +115,14 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
               if (offer.good, offer.tile) not in merchant.routes]
     bids: List[Bid] = []
     remaining = max(0.0, cash) * (1.0 - BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
-    for _rank, good, source, destination, price_here, outlay, room, ceiling in candidates:
+    for _rank, good, source, destination, price_here, outlay, ceiling in candidates:
         if remaining <= 0.0:
             break
-        quantity = min(remaining / outlay, room)
+        quantity = min(remaining / outlay, shared_room(merchant, good, source, destination, held_stock, own, shares))
         if quantity <= 0.0:
             continue
+        own.commit(good, source.area_id, destination.area_id, quantity)
+        shares.commit(good, source.area_id, destination.area_id, quantity)
         merchant.routes[(good, source.anchor_tile)] = (destination.anchor_tile, destination.area_id)
         bids.append(Bid(merchant.agent_id, good, source.area_id, source.anchor_tile, 0.0, quantity,
                         price_here, MERCHANT_BID_ELASTICITY, quantity * price_here, maximum_price=ceiling))
@@ -138,47 +145,59 @@ def _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate) 
 
 
 def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate):
-    """Rows (rank, good, source, destination, price here, outlay per unit, room, most it pays), one per
+    """Rows (rank, good, source, destination, price here, outlay per unit, most it pays), one per
     profitable (good, source area) at its best destination, best net gap per unit of outlay first."""
     rows = []
+    interest = max(0.0, interest_rate)
+    expected_prices = merchant.expected_prices
     for good in sorted(set(specs) & set(area_map.goods())):
         areas = area_map.areas(good)
         if len(areas) < 2:
             continue
-        prices = {area.area_id: expected_price(merchant, view, good, area.area_id) for area in areas}
-        dearest_first = sorted((area for area in areas if prices[area.area_id]),
-                               key=lambda area: (-prices[area.area_id], area.area_id))
-        keep = 1.0 - min(1.0, max(0.0, specs[good].spoilage_per_year))
+        spec = specs[good]
+        prices = {}
+        for area in areas:
+            price = expected_prices.get((good, area.area_id))
+            prices[area.area_id] = price if price is not None else view.price(good, area.area_id)
+        spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
+        keep = 1.0 - spoilage
+        unit_mass = spec.unit_mass_kg
+        # (price there, price there kept after spoilage, its spoilage cost, anchor tile, area id, area), dearest first
+        dearest_first = [(prices[area.area_id], prices[area.area_id] * keep, prices[area.area_id] * spoilage,
+                          area.anchor_tile, area.area_id, area)
+                         for area in sorted((area for area in areas if prices[area.area_id]),
+                                            key=lambda area: (-prices[area.area_id], area.area_id))]
         for source in areas:
             price_here = prices[source.area_id]
             if not price_here or price_here <= 0.0:
                 continue
             best = None
-            floor_cost = price_here * (1.0 + max(0.0, interest_rate) + MERCHANT_MARGIN_SHARE)
-            for destination in dearest_first:
-                price_there = prices[destination.area_id]
+            best_net = None
+            floor_cost = price_here * (1.0 + interest + MERCHANT_MARGIN_SHARE)
+            interest_here = price_here * interest              # the terms of gap_cost_per_unit, hoisted
+            margin_here = MERCHANT_MARGIN_SHARE * price_here
+            cost_to = carriage.costs_from(source.anchor_tile)
+            for price_there, kept_there, spoilage_there, anchor_tile, area_id, destination in dearest_first:
                 # carriage only adds cost, so no cheaper destination can beat this bound
-                bound = price_there * keep - floor_cost
-                if bound <= 0.0 or (best is not None and bound <= best[0]):
+                bound = kept_there - floor_cost
+                if bound <= 0.0 or (best_net is not None and bound <= best_net):
                     break
-                if destination.area_id == source.area_id:
+                if area_id == source.area_id:
                     continue
-                per_tonne = carriage.cost_per_tonne(source.anchor_tile, destination.anchor_tile)
-                if math.isinf(per_tonne):
+                per_tonne = cost_to.get(anchor_tile, math.inf)
+                if per_tonne == math.inf:
                     continue
-                net = price_there - price_here - gap_cost_per_unit(specs[good], price_here, price_there,
-                                                                   per_tonne, interest_rate)
-                if net > 0.0 and (best is None or net > best[0]):
-                    best = (net, destination, per_tonne)
+                net = price_there - price_here - (per_tonne * unit_mass / KILOGRAMS_PER_TONNE
+                                                  + interest_here + spoilage_there + margin_here)
+                if net > 0.0 and (best_net is None or net > best_net):
+                    best, best_net = (destination, per_tonne), net
             if best is None:
                 continue
-            net, destination, per_tonne = best
-            carriage_per_unit = per_tonne * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE
+            destination, per_tonne = best
+            carriage_per_unit = per_tonne * unit_mass / KILOGRAMS_PER_TONNE
             outlay = price_here + carriage_per_unit
-            rows.append((-net / outlay, good, source, destination, price_here, outlay,
-                         _room(merchant, good, destination, held_stock),
-                         _break_even_price(specs[good], prices[destination.area_id], carriage_per_unit,
-                                           interest_rate)))
+            rows.append((-best_net / outlay, good, source, destination, price_here, outlay,
+                         _break_even_price(spec, prices[destination.area_id], carriage_per_unit, interest_rate)))
     return sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id))
 
 
@@ -189,14 +208,13 @@ def _break_even_price(spec: GoodSpec, price_there: float, carriage_per_unit: flo
     return max(0.0, kept) / (1.0 + max(0.0, interest_rate) + MERCHANT_MARGIN_SHARE)
 
 
-def _room(merchant, good, destination, held_stock) -> float:
-    """Units the destination can take from this merchant: its share of the expected volume less what it holds there."""
-    volume = merchant.expected_volumes.get((good, destination.area_id))
-    if volume is None:
-        return math.inf
+def shared_room(merchant, good, source, destination, held_stock, own: RouteShares, group: RouteShares) -> float:
+    """Units this merchant may still bid for into a destination: its share of the expected volume less
+    what it holds there and has bid for already, and merchants' share of it less what they have bid."""
     held = sum(quantity for (held_good, tile), quantity in held_stock.items()
                if held_good == good and tile in destination.tiles)
-    return max(0.0, MERCHANT_MARKET_SHARE * volume - held)
+    return room_left(merchant.expected_volumes, good, source.area_id, destination.area_id, MERCHANT_MARKET_SHARE,
+                     own, group, held)
 
 
 def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,

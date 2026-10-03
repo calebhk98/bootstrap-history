@@ -5,6 +5,7 @@ posting has a counterparty. Edge accounts (types.is_edge) are the only ones that
 they are where the model meets what it does not simulate, and the sum over all accounts stays zero.
 """
 import math
+import sys
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Sequence, Tuple
 
@@ -66,6 +67,7 @@ def _delivery_tile(move: GoodsMove) -> TileId:
 # Floating-point arithmetic leaves a payer a hair short of what it computed it could pay; a shortfall
 # no bigger than this share of what moves is rounding, not an overdraft.
 ROUNDING_SHARE = 1e-9
+UNDERFLOW = sys.float_info.min   # below the smallest normal float a balance is rounding residue
 
 
 class Book:
@@ -81,6 +83,7 @@ class Book:
         self._edge_money_net: Dict[AgentId, Dict[CurrencyId, float]] = {}
         self._edge_goods_volume: Dict[AgentId, Dict[GoodId, float]] = {}
         self._edge_goods_net: Dict[AgentId, Dict[GoodId, float]] = {}
+        self._supply_at_start: Dict[CurrencyId, float] = {}   # money supply when the year began
 
     # ---- postings ------------------------------------------------------------------------------
 
@@ -133,8 +136,12 @@ class Book:
         transfers, moves = list(transfers), list(moves)
         money_after = self._money_after(transfers)
         goods_after = self._goods_after(moves)
+        purses = self._money
         for (agent, currency), value in money_after.items():
-            _nested(self._money, agent)[currency] = value
+            purse = purses.get(agent)
+            if purse is None:
+                purse = purses[agent] = {}
+            purse[currency] = value
         for (agent, good, tile), value in goods_after.items():
             self._set_stock(agent, good, tile, value)
         for transfer in transfers:
@@ -146,23 +153,30 @@ class Book:
         after: Dict[Tuple[AgentId, CurrencyId], float] = {}
         before: Dict[Tuple[AgentId, CurrencyId], float] = {}
         moved: Dict[Tuple[AgentId, CurrencyId], float] = {}
+        purses = self._money
         for transfer in transfers:
             amount = transfer.amount
+            currency = transfer.currency
             if not amount >= 0.0:
-                raise NegativeAmount("transfer of %r %s (%s) is negative" % (amount, transfer.currency, transfer.purpose))
+                raise NegativeAmount("transfer of %r %s (%s) is negative" % (amount, currency, transfer.purpose))
             for agent, signed in ((transfer.payer, -amount), (transfer.payee, amount)):
-                key = (agent, transfer.currency)
-                if key not in before:
-                    before[key] = self.balance(agent, transfer.currency)
-                current = after.get(key, before[key])
-                after[key] = current + signed
-                moved[key] = moved.get(key, 0.0) + amount
-        for (agent, currency), value in sorted(after.items()):
-            # only an overdraft this batch makes or deepens fails: a residue an earlier, larger batch
-            # was allowed to leave is not this batch's doing
-            floor = min(0.0, before[(agent, currency)])
-            if value < floor - ROUNDING_SHARE * moved[(agent, currency)] and not is_edge(agent):
-                raise InsufficientFunds("%s would hold %.6g %s after the batch" % (agent, value, currency))
+                key = (agent, currency)
+                if key in after:
+                    after[key] += signed
+                    moved[key] += amount
+                else:
+                    purse = purses.get(agent)
+                    start = purse.get(currency, 0.0) if purse else 0.0
+                    before[key] = start
+                    after[key] = start + signed
+                    moved[key] = amount
+        # only an overdraft this batch makes or deepens fails: a residue an earlier, larger batch
+        # was allowed to leave is not this batch's doing
+        failing = [key for key, value in after.items()
+                   if value < min(0.0, before[key]) - max(ROUNDING_SHARE * moved[key], UNDERFLOW) and not is_edge(key[0])]
+        if failing:
+            agent, currency = min(failing)
+            raise InsufficientFunds("%s would hold %.6g %s after the batch" % (agent, after[(agent, currency)], currency))
         return after
 
     def _goods_after(self, moves: Sequence[GoodsMove]) -> Dict[Tuple[AgentId, GoodId, TileId], float]:
@@ -171,51 +185,78 @@ class Book:
         moved: Dict[Tuple[AgentId, GoodId, TileId], float] = {}
         for move in moves:
             quantity = move.quantity
+            good = move.good
             if not quantity >= 0.0:
-                raise NegativeAmount("move of %r %s (%s) is negative" % (quantity, move.good, move.purpose))
+                raise NegativeAmount("move of %r %s (%s) is negative" % (quantity, good, move.purpose))
             for agent, tile, signed in ((move.giver, move.tile, -quantity), (move.receiver, _delivery_tile(move), quantity)):
-                key = (agent, move.good, tile)
-                if key not in before:
-                    before[key] = self.stock(agent, move.good, tile)
-                current = after.get(key, before[key])
-                after[key] = current + signed
-                moved[key] = moved.get(key, 0.0) + quantity
-        for (agent, good, tile), value in sorted(after.items()):
-            floor = min(0.0, before[(agent, good, tile)])
-            if value < floor - ROUNDING_SHARE * moved[(agent, good, tile)] and not is_edge(agent):
-                raise InsufficientGoods("%s would hold %.6g %s on %s after the batch" % (agent, value, good, tile))
+                key = (agent, good, tile)
+                if key in after:
+                    after[key] += signed
+                    moved[key] += quantity
+                else:
+                    start = self.stock(agent, good, tile)
+                    before[key] = start
+                    after[key] = start + signed
+                    moved[key] = quantity
+        failing = [key for key, value in after.items()
+                   if value < min(0.0, before[key]) - max(ROUNDING_SHARE * moved[key], UNDERFLOW) and not is_edge(key[0])]
+        if failing:
+            agent, good, tile = min(failing)
+            raise InsufficientGoods("%s would hold %.6g %s on %s after the batch" % (agent, after[(agent, good, tile)], good, tile))
         return after
 
     def _set_stock(self, agent: AgentId, good: GoodId, tile: TileId, value: float) -> None:
-        _nested(_nested(self._goods, agent), good)[tile] = value
+        by_good = self._goods.get(agent)
+        if by_good is None:
+            by_good = self._goods[agent] = {}
+        by_tile = by_good.get(good)
+        if by_tile is None:
+            by_tile = by_good[good] = {}
+        by_tile[tile] = value
         holders = self._holders.get(good)
         if holders is None:
             holders = self._holders[good] = set()
         holders.add(agent)
 
     def _record_money(self, transfer: Transfer) -> None:
-        amount, currency = transfer.amount, transfer.currency
-        self._gross_money[currency] = self._gross_money.get(currency, 0.0) + amount
-        by_purpose = _nested(self._money_by_purpose, currency)
-        by_purpose[transfer.purpose] = by_purpose.get(transfer.purpose, 0.0) + amount
-        for agent, signed in ((transfer.payer, amount), (transfer.payee, -amount)):
-            if agent.startswith(EDGE_PREFIX):
-                volume = _nested(self._edge_money_volume, agent)
-                volume[currency] = volume.get(currency, 0.0) + amount
-                net = _nested(self._edge_money_net, agent)
-                net[currency] = net.get(currency, 0.0) + signed
+        amount, currency, payer, payee = transfer.amount, transfer.currency, transfer.payer, transfer.payee
+        gross = self._gross_money
+        gross[currency] = gross.get(currency, 0.0) + amount
+        by_purpose = self._money_by_purpose.get(currency)
+        if by_purpose is None:
+            by_purpose = self._money_by_purpose[currency] = {}
+        purpose = transfer.purpose
+        by_purpose[purpose] = by_purpose.get(purpose, 0.0) + amount
+        if payer.startswith(EDGE_PREFIX):
+            self._record_edge_money(payer, currency, amount, amount)
+        if payee.startswith(EDGE_PREFIX):
+            self._record_edge_money(payee, currency, amount, -amount)
+
+    def _record_edge_money(self, agent: AgentId, currency: CurrencyId, amount: float, signed: float) -> None:
+        volume = _nested(self._edge_money_volume, agent)
+        volume[currency] = volume.get(currency, 0.0) + amount
+        net = _nested(self._edge_money_net, agent)
+        net[currency] = net.get(currency, 0.0) + signed
 
     def _record_goods(self, move: GoodsMove) -> None:
-        quantity, good = move.quantity, move.good
-        self._gross_goods[good] = self._gross_goods.get(good, 0.0) + quantity
-        by_purpose = _nested(self._goods_by_purpose, good)
-        by_purpose[move.purpose] = by_purpose.get(move.purpose, 0.0) + quantity
-        for agent, signed in ((move.giver, quantity), (move.receiver, -quantity)):
-            if agent.startswith(EDGE_PREFIX):
-                volume = _nested(self._edge_goods_volume, agent)
-                volume[good] = volume.get(good, 0.0) + quantity
-                net = _nested(self._edge_goods_net, agent)
-                net[good] = net.get(good, 0.0) + signed
+        quantity, good, giver, receiver = move.quantity, move.good, move.giver, move.receiver
+        gross = self._gross_goods
+        gross[good] = gross.get(good, 0.0) + quantity
+        by_purpose = self._goods_by_purpose.get(good)
+        if by_purpose is None:
+            by_purpose = self._goods_by_purpose[good] = {}
+        purpose = move.purpose
+        by_purpose[purpose] = by_purpose.get(purpose, 0.0) + quantity
+        if giver.startswith(EDGE_PREFIX):
+            self._record_edge_goods(giver, good, quantity, quantity)
+        if receiver.startswith(EDGE_PREFIX):
+            self._record_edge_goods(receiver, good, quantity, -quantity)
+
+    def _record_edge_goods(self, agent: AgentId, good: GoodId, quantity: float, signed: float) -> None:
+        volume = _nested(self._edge_goods_volume, agent)
+        volume[good] = volume.get(good, 0.0) + quantity
+        net = _nested(self._edge_goods_net, agent)
+        net[good] = net.get(good, 0.0) + signed
 
     # ---- reads ---------------------------------------------------------------------------------
 
@@ -279,8 +320,20 @@ class Book:
     def edge_goods_net(self, edge_id: AgentId, good: GoodId) -> float:
         return self._edge_goods_net.get(edge_id, {}).get(good, 0.0)
 
+    def currencies(self) -> List[CurrencyId]:
+        return sorted({currency for purse in self._money.values() for currency in purse})
+
+    def supply_at_start(self, currency: CurrencyId) -> float:
+        """The money supply (edge accounts excluded) when the year's flow records were last reset."""
+        return self._supply_at_start.get(currency, 0.0)
+
+    def edge_agents(self) -> List[AgentId]:
+        """Edge accounts that carried money this year."""
+        return sorted(self._edge_money_net)
+
     def start_year(self) -> None:
-        """Reset the yearly flow records; holdings carry."""
+        """Reset the yearly flow records and note the supply; holdings carry."""
+        self._supply_at_start = {currency: self.money_supply(currency) for currency in self.currencies()}
         self._money_by_purpose = {}
         self._goods_by_purpose = {}
         self._edge_money_volume = {}
@@ -310,6 +363,7 @@ class Book:
             "edge_money_net": _sorted_nested(self._edge_money_net),
             "edge_goods_volume": _sorted_nested(self._edge_goods_volume),
             "edge_goods_net": _sorted_nested(self._edge_goods_net),
+            "supply_at_start": dict(sorted(self._supply_at_start.items())),
         }
 
     @classmethod
@@ -328,4 +382,5 @@ class Book:
         book._edge_money_net = _sorted_nested(record["edge_money_net"])
         book._edge_goods_volume = _sorted_nested(record["edge_goods_volume"])
         book._edge_goods_net = _sorted_nested(record["edge_goods_net"])
+        book._supply_at_start = dict(record["supply_at_start"])
         return book

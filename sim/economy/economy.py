@@ -7,13 +7,15 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
-from . import credit, credit_claims, labour, lending, merchants_credit, producers, state_budget, unit_cost
+from . import credit, credit_claims, labour, land_market, lending, merchants_credit, producers, state_budget, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_memory import YearView
 from .mint import mint_orders, settle_mint
+from .money_audit import MoneyAudit, year_report
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from .households_own import hours_for_own_plan, own_production, own_production_options, withhold_hours
+from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
+                             withhold_hours)
 from .opening import open_economy
 from .protocols import YearInputs
 from .record import EconomyRecord
@@ -23,7 +25,7 @@ from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .year_labour import clear_labour, labour_offers, move_workers, outside_option_by_tile
+from .year_labour import clear_labour, follow_asks, labour_offers, move_workers, outside_option_by_tile
 from .year_ledger import YearLedger
 
 
@@ -41,6 +43,7 @@ class YearOutcome:
     vacant_hours: float = 0.0
     conservation_residual: float = 0.0
     state_cash: float = 0.0
+    money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
 
 
 class Economy:
@@ -58,6 +61,7 @@ class Economy:
         self.area_map = area_map
         self.carriage = carriage
         self._own_options = None
+        self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
 
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
@@ -97,6 +101,9 @@ class Economy:
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
         clear_goods(setup, record, view, self.area_map, order_book, plans, ledger)
         settle_mint(record, mint_held)
+        rent = land_market.settle_year(setup, record, view,
+                                       {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
+                                       self._own_hectares)
         interest = self._service_loans(view.year)
         dispatch_merchants(setup, record, self.carriage, ledger)
         money_taxes(setup, record, view, ledger)
@@ -109,7 +116,10 @@ class Economy:
         close_idle_producers(setup, record)
         for lender, received in interest.items():
             record.property_income[lender] = record.property_income.get(lender, 0.0) + received
+        for payment in rent:
+            record.property_income[payment.payee] = record.property_income.get(payment.payee, 0.0) + payment.amount
         move_workers(setup, record, ledger)
+        follow_asks(setup, record, view, ledger)
         wear_and_spoilage(setup, record)
         level = remember_price_level(setup, record)
         record.memory.year += 1
@@ -167,6 +177,7 @@ class Economy:
         setup, record = self.setup, self.record
         self._own_plot_options()
         kept = kept or {}
+        self._own_hectares = {}
         offered: Dict[str, float] = {}
         for offer in offers:
             offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
@@ -180,6 +191,9 @@ class Economy:
                 record.book.move_many(moves)
                 ledger.grown[cohort_id] = grown
                 ledger.grown_units[cohort_id] = units
+                hectares = plot_hectares(units, self._own_options, setup.recipes, setup.land_per_run,
+                                         (tile.fertility if tile else 0.0) * harvest_factor)
+                self._own_hectares[cohort.tile] = self._own_hectares.get(cohort.tile, 0.0) + hectares
 
     def _service_loans(self, year: int) -> Dict[str, float]:
         """Payments due at the year's end, out of the year's sales: before carriage, taxes and the owners'
@@ -202,8 +216,6 @@ class Economy:
                 floor = min(offer.minimum_rate for offer in funds)
                 record.memory.rates[money] = labour.sticky_move(record.memory.rates.get(money), floor,
                                                                 credit.RATE_ADJUSTMENT_SHARE_PER_YEAR)
-            return {}
-        if not funds:
             return {}
         debt = credit_claims.principal_by_borrower(record.loans)
         loans, rate, _unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
@@ -310,5 +322,5 @@ class Economy:
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
                            output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant,
-                           conservation_residual=check_money(record),
+                           conservation_residual=check_money(record), money_audit=year_report(record),
                            state_cash=record.book.balance(setup.state_agent, money))

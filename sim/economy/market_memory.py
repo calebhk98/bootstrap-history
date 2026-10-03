@@ -45,6 +45,8 @@ class MarketMemory:
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
     volume_weights: Dict[str, float] = field(default_factory=dict)      # market_key(good, area), smoothed
     trade_age: Dict[str, int] = field(default_factory=dict)     # market_key(good, area); absent: never cleared
+    years_without_bids: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: bids last year
+    years_without_offers: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: offers last year
 
     def years_since_trade(self, key: str) -> Optional[int]:
         return self.trade_age.get(key)
@@ -86,10 +88,10 @@ class YearView:
         self._goods = set(area_map.goods())
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
-        return self._memory.prices.get(market_key(good, area))
+        return self._memory.prices.get(good + KEY_SEPARATOR + area)
 
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
-        return self._memory.wages.get(market_key(trade, area))
+        return self._memory.wages.get(trade + KEY_SEPARATOR + area)
 
     def interest_rate(self, currency: CurrencyId) -> float:
         return self._memory.rates.get(currency, 0.0)
