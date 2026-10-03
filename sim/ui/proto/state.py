@@ -1,10 +1,11 @@
 """The state/status screen and the event log: what has happened, what ended the run (or why it has not), and the small per-founder and per-goal accounting behind them."""
 
+import sim.engine.ui_port as ui_port
 import math, re
 
-from sim.engine.data import closure
-from sim.engine import shortage_conditions
-from sim.engine.knowledge_warning import knowledge_loss_warning
+from sim.engine.ui_port import closure
+from sim.engine.ui_port import shortage_conditions
+from sim.engine.ui_port import knowledge_loss_warning
 from .state_shut_staffing import shut_for_want_of_staff
 from .step_alerts import demographic_emergency
 from .state_succession import succession_block
@@ -236,10 +237,11 @@ def _goal_progress_count(sim, nodes):
     goal = sim.goal
     if not goal or goal not in nodes:
         return None
-    need = getattr(sim, "_goal_closure", None)
+    need = ui_port.goal_closure(sim)
     if need is None:
         try:
-            need = sim._goal_closure = closure(nodes, goal)
+            need = closure(nodes, goal)
+            ui_port.set_goal_closure(sim, need)
         except Exception:
             return None
     return sum(1 for node_id in need if node_id in sim.done)
@@ -265,17 +267,17 @@ def _founder_death_info(sim):
     """
     if sim.founder_alive:
         return None
-    aged = getattr(sim, "_founder_death_aged", None)
+    aged = ui_port.founder_death_aged(sim)
     if aged is not None:
-        return {"year": getattr(sim, "_founder_death_year", None), "aged_about": aged}
-    cache = getattr(sim, "_founder_death_cache", None)
+        return {"year": ui_port.founder_death_year(sim), "aged_about": aged}
+    cache = ui_port.founder_death_cache(sim)
     if cache is not None:
         return cache
     for year, msg in sim.log:
         if "founder dies" in msg.lower():
             match = re.search(r"aged about (\d+)", msg)
             cache = {"year": year, "aged_about": int(match.group(1)) if match else None}
-            sim._founder_death_cache = cache
+            ui_port.set_founder_death_cache(sim, cache)
             return cache
     return None
 
@@ -296,11 +298,11 @@ def _worth_knowing_early(sim):
     existing game never springs a first-timer's tip on somebody who has long
     since found all of this themselves.
     """
-    if getattr(sim, "_said_command_index", False):
+    if ui_port.said_command_index(sim):
         return None
     if sim.year > sim.cfg.get("start_year", sim.year) + 3:
         return None
-    sim._said_command_index = True
+    ui_port.set_said_command_index(sim, True)
     return ("{\"cmd\":\"help\",\"topic\":\"commands\"} lists the entire "
             "command surface, not only the five you started with - log, "
             "values, money, automation, save/load and more, one line each. "
@@ -660,7 +662,7 @@ def _agent_state_standing(sim):
             "general_ceiling_now": round(sim.literacy_ceiling_general(), 3),
             "elite": round(float(sim.civ.get("literacy_elite", 0.0)), 3),
             "elite_ceiling": round(sim.literacy_ceiling_elite(), 3),
-            "schools_actually_teaching": sim._schooling_flow() > 0.0,
+            "schools_actually_teaching": ui_port.schooling_flow(sim) > 0.0,
             "farm_share_of_working_hours": round(sim.labour.farm_share_of_hours(), 3),
         },
         # HOW MUCH OF WHAT YOU RUN HAS LEAKED TO COMPETITORS. See

@@ -10,10 +10,10 @@ helpers cli.py also hands to the human-facing `play` command.
 """
 import json, os, random, sys
 
-from sim.engine.data import load, load_civ, STARTING_KITS
-from sim.engine.core import Sim
+from sim.engine.ui_port import load, load_civ, STARTING_KITS
+from sim.engine.ui_port import Sim
 from .protocol import _agent_dispatch, _agent_help, load_state, render_pretty, save_state
-from sim.engine import settings
+from sim.engine.ui_port import settings
 from sim.ui.proto import step_progress
 
 # Session helpers: shared with cli_interactive.py's cmd_play for the same
@@ -51,7 +51,7 @@ def cmd_agent(args):
     # no matter what was asked for.
     cfg = {"start_kit": args.kit, "horizon_years": args.horizon,
            "immortal": not getattr(args, "mortal", False)}
-    from sim.engine.settings_table import normal_seed
+    from sim.engine.ui_port import normal_seed
     seed = normal_seed(args.seed)
     sim = Sim(nodes, order,
             DetRNG(seed) if getattr(args, "deterministic", False) else random.Random(seed),

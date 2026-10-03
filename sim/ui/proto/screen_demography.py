@@ -2,12 +2,13 @@
 and deaths, disease and food pressure, and the trades, read from the
 population model and from population_report.
 """
+import sim.engine.ui_port as ui_port
 from .demography_history import recent_shocks, recovery
-from sim.engine.hazard_window import hazards_not_yet_past
+from sim.engine.ui_port import hazards_not_yet_past
 
 
 def _last_year(sim):
-    flows = sim._last_demographic_step
+    flows = ui_port.last_demographic_step(sim)
     if flows is None:
         return _last_year_from_record(sim)
     start = flows.start_total
@@ -54,7 +55,7 @@ def demography_report(sim):
         "reference_population_at_start": round(float(sim.civ.get("population", 0.0))),
         "change_in_the_last_step": change,
         "last_year": _last_year(sim),
-        "disease_burden": round(sim._disease_burden(), 4),
+        "disease_burden": round(ui_port.disease_burden(sim), 4),
         "epidemics_under_way": _hazards_costing_people(sim),
         "recent_shocks": recent_shocks(sim.state.population.yearly_record),
         "recovery": recovery(sim.state.population.yearly_record, total, sim.year),

@@ -1,5 +1,5 @@
 """Reasons a multi-year step stops early beyond the warnings it already stops for."""
-from sim.engine.projects_completion import FAILED_PREFIX, MINOR_MARK
+from sim.engine.ui_port import FAILED_PREFIX, MINOR_MARK
 
 
 def newly_startable_goal(sim, was_startable):

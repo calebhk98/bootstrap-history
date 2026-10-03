@@ -13,7 +13,7 @@ table of startable-today nodes, the one place here that reaches into the
 """
 
 from .score import _score_lines
-from sim.engine.knowledge_warning import warning_lines
+from sim.engine.ui_port import warning_lines
 from .util import _factor, _fmt_num, _pct, _wrap
 from .hazard_words import advice_header
 from .render_screens_big import _available_row, available_header

@@ -1,6 +1,7 @@
 """`figures`: why a headline number changed (Complaints/95). The figures register
 themselves in sim/ui/figures_headline.py; this only reads the registry."""
 
+import sim.engine.ui_port as ui_port
 from sim.ui import figures_headline  # noqa: F401  (registers the figures)
 from sim.ui.figures import FIGURES, explain_figure
 from .command_registry import command
@@ -18,7 +19,7 @@ def figure_reply(sim, name):
     if name not in FIGURES:
         return {"ok": False,
                 "error": "no figure called %r. Figures: %s" % (name, ", ".join(sorted(FIGURES)))}
-    return explain_figure(sim, name, getattr(sim, "_dashboard_history", None))
+    return explain_figure(sim, name, ui_port.dashboard_history(sim))
 
 
 @command("figures", group="overview", aliases=("whychanged", "numbers"),

@@ -1,7 +1,7 @@
 """The exclude and include commands: what rush and the automatic policies must never begin."""
 
 from .command_registry import command
-from sim.engine.projects_exclusions import CATEGORY_PREFIX, TRAIT_PREFIX
+from sim.engine.ui_port import CATEGORY_PREFIX, TRAIT_PREFIX
 
 
 def _listing(sim):

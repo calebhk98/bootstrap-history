@@ -7,7 +7,7 @@ so instead of being hidden. `agent` games reach the same table through the
 """
 import os
 
-from sim.engine import settings, settings_table
+from sim.engine.ui_port import settings, settings_table
 from . import cli_units_options
 from .cli import _apply_display_prefs, _wrap
 

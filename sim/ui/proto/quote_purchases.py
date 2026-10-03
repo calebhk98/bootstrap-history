@@ -4,7 +4,7 @@ Each quoter mirrors the price its `buy` handler charges and the rule that
 handler refuses on, and returns a reply dict (or an error dict).
 """
 
-from sim.engine import purchase_rule
+from sim.engine.ui_port import purchase_rule
 from .stock_purchases import quote_living_stock
 
 

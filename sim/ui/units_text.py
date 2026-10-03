@@ -8,7 +8,7 @@ for any heading or column label it writes itself.
 import re
 from typing import Any, Dict, Mapping
 
-from sim.engine import units
+from sim.engine.ui_port import units
 
 # Unit symbols of the screen being rendered, by dimension.
 TEXT_LABELS: Dict[str, str] = {}

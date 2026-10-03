@@ -4,7 +4,7 @@
 turn needs, built from that reply. Builders take the plain reply (and, where
 they must look at the tree, the sim) and return a new small dict.
 """
-from sim.engine.data import closure
+from sim.engine.ui_port import closure
 
 
 def _short(text, limit=160):

@@ -5,8 +5,8 @@ options. Nothing chosen means every quantity is shown exactly as the game
 writes it. Commands still take the units their help names; this changes only
 what is shown.
 """
-from sim.engine import settings, units
-from sim.engine.units_summary import summary_line  # noqa: F401
+from sim.engine.ui_port import settings, units
+from sim.engine.ui_port import summary_line
 
 
 def apply_saved_preferences(cfg):

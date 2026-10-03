@@ -1,12 +1,13 @@
 """The command table: every accepted command name (and alias) mapped to the small handler that answers it, and the dispatcher that resolves names, guards fog, validates the command, and looks the handler up."""
 
+import sim.engine.ui_port as ui_port
 import importlib
 import os
 import pkgutil
 import re
 
-from sim.engine.data import money_word
-from sim.engine import fuzzy_estimates, units
+from sim.engine.ui_port import money_word
+from sim.engine.ui_port import fuzzy_estimates, units
 
 from .economy import _dashboard_snapshot
 from . import command_registry
@@ -14,7 +15,7 @@ from .command_registry import command
 from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
-from sim.engine.saveload import load_state, save_state
+from sim.engine.ui_port import load_state, save_state
 from .score import victory_report
 from .state import (_agent_end_reason, _agent_state)
 from .wave_summary import wave_summary
@@ -226,7 +227,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         # own diff can still be taken, cheaply, before it is gone.
         before_revealed = set(getattr(sim, "revealed", set()))
         before_operating = set(sim.operating)
-        _arrival_snapshot = None if getattr(sim, "_dashboard_history", None) else _dashboard_snapshot(sim)
+        _arrival_snapshot = None if ui_port.dashboard_history(sim) else _dashboard_snapshot(sim)
         stalled_before = set(stalled_projects(sim))
         goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
         population_before = sim.population.total
@@ -234,9 +235,10 @@ def _cmd_step(sim, nodes, cmd, ended):
         ran += 1
         population_change = sim.population.total / population_before - 1.0 if population_before > 0 else 0.0
         sim.state.population.population_change_last_year = round(population_change, 4)
-        hist = getattr(sim, "_dashboard_history", None)
+        hist = ui_port.dashboard_history(sim)
         if hist is None:
-            hist = sim._dashboard_history = []
+            hist = []
+            ui_port.set_dashboard_history(sim, hist)
         if not hist:
             # the arrival year is the first point `changes` can measure from
             hist.append({**_arrival_snapshot, "revealed_added": [], "concerns_opened": [],
@@ -290,7 +292,7 @@ def _cmd_step(sim, nodes, cmd, ended):
                 # SAVED, NOT ONLY LOGGED - see _founder_death_info's own
                 # comment on why the log alone cannot be trusted to
                 # survive a save and a resume.
-                sim._founder_death_aged, sim._founder_death_year = _age_n, year
+                ui_port.set_founder_death(sim, _age_n, year)
         # AND STOP THE YEAR YOU WIN: reaching the goal does not end the
         # run, so without this a `step 50` that crosses the finish line
         # would run on for the remaining years and mention it only in

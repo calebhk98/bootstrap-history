@@ -3,9 +3,9 @@
 Each reads the engine function that produces the number; nothing is
 recomputed here. Registration is the whole of adding a figure.
 """
-from sim.engine import cash_book
+from sim.engine.ui_port import cash_book
 from .figures import figure
-from sim.engine.hazard_window import hazards_not_yet_past
+from sim.engine.ui_port import hazards_not_yet_past
 
 HAZARD_KINDS = ("staff_loss", "sack_chance", "output_factor", "real_erosion")
 

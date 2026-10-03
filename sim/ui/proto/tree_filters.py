@@ -6,7 +6,7 @@ or a search can never reveal what fog hides.
 
 import difflib
 
-from sim.engine import topic_tags
+from sim.engine.ui_port import topic_tags
 
 STATES = ("startable", "blocked", "active", "done")
 _STATE_ALIASES = {"completed": "done", "complete": "done", "finished": "done",

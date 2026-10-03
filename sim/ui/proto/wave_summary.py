@@ -1,5 +1,5 @@
 """One-line summary of what a step completed and failed, shown before the detail."""
-from sim.engine.projects_completion import FAILED_PREFIX, MINOR_MARK, goal_movement
+from sim.engine.ui_port import FAILED_PREFIX, MINOR_MARK, goal_movement
 
 # Waves at least this long lead with the summary line.
 SUMMARY_MIN_ITEMS = 5

@@ -16,7 +16,7 @@ def after_year(sim, summary):
 
 def commit_and_report(session, stream):
     """A callback that saves the game to `session` (when there is one) and prints one line per year to `stream`."""
-    from sim.engine.saveload import save_state
+    from sim.engine.ui_port import save_state
 
     def commit(sim, summary):
         # a one-year step is saved once by the caller after the command

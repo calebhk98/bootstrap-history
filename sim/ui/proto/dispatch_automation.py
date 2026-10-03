@@ -1,7 +1,7 @@
 """The automation command: what the automatic policies did, and why."""
 
 from .command_registry import command
-from sim.engine import automation_audit
+from sim.engine.ui_port import automation_audit
 
 
 @command("automation", group="money", aliases=("audit", "autolog"),

@@ -3,7 +3,7 @@
 The quote and the charge are one figure, `Sim.stock_purchase_quote`; a partner that will not sell
 refuses with its reason in both.
 """
-from sim.engine import purchase_rule
+from sim.engine.ui_port import purchase_rule
 
 
 def _stock_request(sim, cmd, quantity):

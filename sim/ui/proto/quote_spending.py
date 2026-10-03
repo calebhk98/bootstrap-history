@@ -7,7 +7,7 @@ an amount.
 """
 
 from .util import _qty
-from sim.engine import purchase_rule
+from sim.engine.ui_port import purchase_rule
 
 
 def bounty_refusal(sim, nodes, node_id):
