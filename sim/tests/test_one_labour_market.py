@@ -6,7 +6,7 @@ import os
 
 from .harness import *  # noqa: F401,F403
 
-from sim.agents import SimWorld
+from sim.agents.api import SimWorld
 from sim.ui.proto.quote_spending import _quote_hire
 from .source_dirs import engine_side_dirs
 

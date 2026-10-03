@@ -1,5 +1,5 @@
 """Actors other than the founder, run once a year inside the simulation."""
-from sim.agents import ActorRegistry, SimWorld, ledger
+from sim.agents.api import ActorRegistry, SimWorld, ledger
 from .state import ActorsState
 
 

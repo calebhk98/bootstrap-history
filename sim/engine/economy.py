@@ -411,12 +411,12 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         """
         self.household._done_seq = None
         self.household._cap_factor = None
-        self.state.projects._done_ver = getattr(self.state.projects, "_done_ver", 0) + 1
+        self.household.bump_done_version()
 
     def _operating_changed(self):
         """Call after anything adds to or removes from self.household.operating."""
         self.household._cap_factor = None
-        self.state.projects._operating_ver = getattr(self.state.projects, "_operating_ver", 0) + 1
+        self.household.bump_operating_version()
 
     def _reset_operating(self):
         """Re-wrap operating in a fresh `_InvalidatingSet` and invalidate once."""
@@ -425,7 +425,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
 
     def _active_changed(self):
         """Call after anything adds to, removes from, or updates self.state.projects.active."""
-        self.state.projects._active_ver = getattr(self.state.projects, "_active_ver", 0) + 1
+        self.household.bump_active_version()
 
     def _reset_active(self):
         """Re-wrap active in a fresh `_InvalidatingDict` and invalidate once."""
@@ -437,7 +437,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
 
     def _workforce_changed(self):
         """Call after anything mutates workforce state."""
-        self.state.household._workforce_ver = getattr(self.state.household, "_workforce_ver", 0) + 1
+        self.household.bump_workforce_version()
 
     def _reset_workforce(self):
         """Re-wrap employees in a fresh `_InvalidatingDict` and invalidate once."""

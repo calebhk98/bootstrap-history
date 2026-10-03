@@ -11,7 +11,7 @@ import copy
 
 from sim.engine import node_output
 from sim.engine import prices as price_solver
-from sim.agents import SimWorld
+from sim.agents.api import SimWorld
 
 
 def complete(game, node_id):

@@ -3,7 +3,7 @@ its own output and that of the entrants already waiting reaches the market, and 
 that covers the capital it ties up at the market's rate; nothing caps the number of firms."""
 from .harness import *  # noqa: F401,F403
 
-from sim.agents import SimWorld
+from sim.agents.api import SimWorld
 
 import copy
 import random

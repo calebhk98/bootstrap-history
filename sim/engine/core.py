@@ -65,7 +65,7 @@ from .core_step_phases import StepContext, StepPhasesMixin
 from .economy_port import EconomyPortMixin, switch_requested
 from .data import trade_family
 from .invariants import check_simulation_invariants
-from sim.agents import Household
+from sim.agents.api import Household
 
 
 _EARTH_RADIUS_KM = 6371.0
@@ -656,16 +656,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         if cleared is not None:
             self.labour.set_farm_area(cleared)
         # Ensure version counters exist on state owners
-        if getattr(self.state.projects, "_operating_ver", None) is None:
-            self.state.projects._operating_ver = 0
-        if getattr(self.state.projects, "_done_ver", None) is None:
-            self.state.projects._done_ver = 0
-        if getattr(self.state.projects, "_active_ver", None) is None:
-            self.state.projects._active_ver = 0
-        if getattr(self.state.household, "_workforce_ver", None) is None:
-            self.state.household._workforce_ver = 0
-        if self.state.governance is not None and getattr(self.state.governance, "_inst_units_ver", None) is None:
-            self.state.governance._inst_units_ver = 0
+        self.household.start_version_counters(self.state)
 
         # Synchronize demographic cohort floats
         if self.state.population is not None and hasattr(self, "population"):
