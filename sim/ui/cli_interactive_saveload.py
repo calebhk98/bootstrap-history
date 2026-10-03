@@ -28,8 +28,8 @@ with a workaround.
 
 import json, os
 
-from sim.engine.data import CIVDIR, civilization_ids, closure, load, load_civ
-from sim.engine import settings
+from sim.engine.ui_port import CIVDIR, civilization_ids, closure, load, load_civ
+from sim.engine.ui_port import settings
 from .protocol import load_state, save_state
 
 from .cli import _pick_session_filename, _wrap

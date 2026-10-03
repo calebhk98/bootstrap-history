@@ -8,6 +8,7 @@ these handlers back from here (see dispatch.py's own docstring for why
 these live in a separate file).
 """
 
+import sim.engine.ui_port as ui_port
 from .command_registry import command
 from .explain_once import already_explained
 from .util import _qty
@@ -15,7 +16,7 @@ from .buy_targets import canonical_target, target_names, usage_lines
 from .quote_purchases import FLAT_QUOTERS
 from .stock_purchases import buy_living_stock
 from .quote_spending import SPENDING_QUOTERS, bounty_refusal
-from sim.engine import cash_book, purchase_rule
+from sim.engine.ui_port import cash_book, purchase_rule
 
 
 @command("bounty", shape="tech", group="projects",
@@ -100,7 +101,7 @@ def _buy_material(sim, cmd, quantity):
     if got <= 0:
         return {"ok": False, "error": "cannot buy that quantity at the current material quote"}
     return {"ok": True, "material": material, "bought_tonnes": got,
-            "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
+            "stock_on_hand_tonnes": sim.material_stock_t(ui_port.material_tag(sim, material)[0]),
             "capital": round(sim.capital, 1)}
 
 
@@ -157,10 +158,10 @@ def _buy_mine(sim, cmd, quantity):
 
 
 def _buy_slaves(sim, cmd, quantity):
-    sim._last_buy_refusal = None
+    ui_port.set_last_buy_refusal(sim, None)
     got = sim.labour.buy_slaves(int(quantity))
-    if got <= 0 and getattr(sim, "_last_buy_refusal", None):
-        return {"ok": False, "error": sim._last_buy_refusal}
+    if got <= 0 and ui_port.last_buy_refusal(sim):
+        return {"ok": False, "error": ui_port.last_buy_refusal(sim)}
     if got <= 0:
         # Quote the price actually asked, not a flat per-head figure: a
         # large purchase bids the local market up, and saying "300 each"
@@ -244,7 +245,7 @@ def _cmd_sell(sim, nodes, cmd, ended):
                 "market has taken all of it that it will absorb this year"}
     return {"ok": True, "material": material, "sold_tonnes": sold,
             "asked_tonnes": quantity,
-            "stock_on_hand_tonnes": sim.material_stock_t(sim._material_tag(material)[0]),
+            "stock_on_hand_tonnes": sim.material_stock_t(ui_port.material_tag(sim, material)[0]),
             "capital": round(sim.capital, 1)}
 
 

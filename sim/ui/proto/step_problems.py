@@ -1,5 +1,5 @@
 """What went wrong across a multi-year step, read off the events and yearly snapshots the step already made."""
-from sim.engine.data import closure
+from sim.engine.ui_port import closure
 
 # (lowercase marker in an event message, key) - first match wins per event.
 _EVENT_KINDS = (

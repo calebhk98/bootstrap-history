@@ -7,6 +7,8 @@ because importing them pulls in the engine.
 import importlib
 from typing import TYPE_CHECKING
 
+WALL = "two-way"  # sim/ui/ reaches the engine only through sim/engine/ui_port.py
+
 from sim.ui.presentation import (  # noqa: F401
     MERGE_ERRORS_SHOWN, MERGE_WARNINGS_SHOWN,
     JUDGE_UNOBTAINABLE_DEPENDENCIES_SHOWN, JUDGE_NEAR_MATCH_SUGGESTIONS_SHOWN,

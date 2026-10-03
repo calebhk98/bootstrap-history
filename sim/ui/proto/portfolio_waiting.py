@@ -5,7 +5,8 @@ disagree with the gate. Work missing prerequisites is not listed: that is
 the tree's business (`available`, `path`), not a bottleneck on what is open.
 """
 
-from sim.engine.blockers import BLOCKER_MEANING
+import sim.engine.ui_port as ui_port
+from sim.engine.ui_port import BLOCKER_MEANING
 
 WAITING_KIND_ORDER = ("specialists", "supply", "money", "power", "politics", "closed", "calendar")
 _NOT_WAITING = ("knowledge", "goal", "done", "active", "unavailable")
@@ -21,7 +22,7 @@ def waiting_to_start(sim, nodes):
     for node_id in nodes:
         if node_id in sim.done or node_id in sim.active or any(pre not in sim.done for pre in nodes[node_id]["pre"]):
             continue
-        if not sim._visible_to_player(node_id):
+        if not ui_port.visible_to_player(sim, node_id):
             continue
         blockers = sim.start_blockers(node_id)
         if not blockers or any(blocker["kind"] in _NOT_WAITING for blocker in blockers):

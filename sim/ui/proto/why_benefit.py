@@ -1,7 +1,8 @@
 """The BENEFIT block of `why`: what a node gives for good, what only while it
 runs, what running it costs and what shutting it loses, read from the node's
 mechanics and the engine's own lost-benefit table."""
-from sim.engine.permanent_benefit import permanent_parts
+import sim.engine.ui_port as ui_port
+from sim.engine.ui_port import permanent_parts
 
 
 def benefit_block(sim, node_id):
@@ -10,7 +11,7 @@ def benefit_block(sim, node_id):
     node = sim.nodes[node_id]
     capability = (node.get("mechanics") or {}).get("capability") or {}
     lost_benefit = capability.get("lost_benefit")
-    permanent = permanent_parts(node, sim._tech_effects.get(node_id) or {})
+    permanent = permanent_parts(node, ui_port.tech_effects(sim).get(node_id) or {})
     is_venture = sim.is_venture(node_id)
     if not permanent and not lost_benefit:
         return None

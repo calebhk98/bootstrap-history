@@ -1,8 +1,9 @@
 """Scoring the run, at any point or at the end: score_report, final_report, and the components behind them."""
 
+import sim.engine.ui_port as ui_port
 import math
 
-from sim.engine.data import closure, critical_path, topo_order
+from sim.engine.ui_port import closure, critical_path, topo_order
 
 from .state import _agent_end_reason
 from .util import _fmt_num, _wrap
@@ -81,7 +82,7 @@ def _score_goal_floor_years(sim, nodes):
     `_goal_closure` already caches the goal's prerequisite set, because this
     walks the whole closure and `score` is meant to be called often.
     """
-    cached = getattr(sim, "_goal_critical_floor", None)
+    cached = ui_port.goal_critical_floor(sim)
     if cached is not None:
         return cached
     goal = sim.goal
@@ -91,7 +92,7 @@ def _score_goal_floor_years(sim, nodes):
         yrs, _chain = critical_path(nodes, goal)
     except Exception:
         return None
-    sim._goal_critical_floor = yrs
+    ui_port.set_goal_critical_floor(sim, yrs)
     return yrs
 
 

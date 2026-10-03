@@ -31,16 +31,18 @@ the same reason: it is called from here (`cmd_menu`, `cmd_play`) but also
 from `_save_listing` over there, so keeping it here would have made the
 save/load module import back from this one.
 """
+import sim.engine.ui_port as ui_port
 import json, os, random, re, sys, time
 
-from sim.engine.data import (CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
-                   load, load_civ, load_geography, money_short, money_unit_note, money_word,
-                   STARTING_KITS, win_condition_describe)
-from sim.engine.core import Sim
+from sim.engine.ui_port import (
+    CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
+    load, load_civ, load_geography, money_short, money_unit_note, money_word, STARTING_KITS,
+    win_condition_describe)
+from sim.engine.ui_port import Sim
 from . import protocol as _protocol
-from sim.engine import settings
+from sim.engine.ui_port import settings
 from . import cli_options, cli_units_options
-from sim.engine.settings_table import normal_seed, valid_seed_text  # noqa: F401
+from sim.engine.ui_port import normal_seed, valid_seed_text
 from sim.ui.proto import step_progress
 from sim.ui.proto import util as proto_util
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
@@ -459,7 +461,7 @@ def _manual_save_note(resp, session):
         "live file and leaves the snapshot as it is. To move it to another "
         "machine or container, copy that file (and %s next to it) there and "
         "run: python3 sim/simulator.py play --session <the copy>"
-        % (landed, os.path.abspath(session), os.path.basename(settings._meta_path(saved))))
+        % (landed, os.path.abspath(session), os.path.basename(ui_port.settings_meta_path(saved))))
 
 
 def _play_run_one_command(sim, nodes, cmd, session):

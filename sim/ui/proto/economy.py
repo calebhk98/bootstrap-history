@@ -1,9 +1,10 @@
 """Money and industry: the portfolio, capacity, mines, and the economy/changes reports read off the running Sim."""
 
-from sim.engine.data import WAGES, trade_family
+import sim.engine.ui_port as ui_port
+from sim.engine.ui_port import WAGES, trade_family
 from sim.ui.market_report import goods_demand
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
-from sim.engine import cash_book
+from sim.engine.ui_port import cash_book
 from sim.ui.figures import figure_snapshot
 
 from .state import _agent_state
@@ -88,12 +89,12 @@ def _material_capacity_rows(sim):
     out for every material instead of only the worst.
     """
     demand = sim.annual_material_demand()
-    by_tag = sim._demand_by_supply_tag(demand)
+    by_tag = ui_port.demand_by_supply_tag(sim, demand)
     rows = {}
     # One row per material: firewood and charcoal draw on the same forest,
     # so their demands are combined rather than one overwriting the other.
     for emp_key, (need, own) in sim.demand_and_own_supply_by_material(by_tag).items():
-        market = sim._material_market_tonnes(emp_key)
+        market = ui_port.material_market_tonnes(sim, emp_key)
         rows[emp_key] = {
             "material": emp_key,
             "capacity_t_per_yr": round(own + market, 1),
@@ -107,8 +108,8 @@ def _material_capacity_rows(sim):
     for mat in sim.mine_capacity:
         if mat in rows:
             continue
-        own = sim._own_material_supply("mine:" + mat)
-        market = sim._material_market_tonnes(mat)
+        own = ui_port.own_material_supply(sim, "mine:" + mat)
+        market = ui_port.material_market_tonnes(sim, mat)
         rows[mat] = {
             "material": mat,
             "capacity_t_per_yr": round(own + market, 1),
@@ -174,7 +175,7 @@ def _power_generation_block(sim):
     they are safe to show under fog; this only reads them.
     """
     gen = sim.generation_breakdown_kw()
-    demand_kw = sim._electricity_demand_kw()
+    demand_kw = ui_port.electricity_demand_kw(sim)
     total_kw = gen["total_kw"]
     block = {
         "generation_kw": {"local_workshop_scale": round(gen["local_kw"], 1),
@@ -608,7 +609,7 @@ def _trade_demand_rows(sim):
 
 def _add_last_year_hours(sim, rows):
     """Each row's effective hours in the year before the latest, from the yearly snapshots."""
-    history = getattr(sim, "_dashboard_history", None) or []
+    history = ui_port.dashboard_history(sim) or []
     earlier = history[-2].get("project_hours_effective") if len(history) >= 3 else None
     for row in rows:
         row["hours_effective_last_year"] = (earlier or {}).get(row["id"])
@@ -721,7 +722,7 @@ def _agent_economy(sim, cmd=None):
     snapshots `changes` reads.
     """
     full = bool((cmd or {}).get("full"))
-    hist = getattr(sim, "_dashboard_history", None) or []
+    hist = ui_port.dashboard_history(sim) or []
     moved = {}
     if hist:
         now = hist[-1]
@@ -929,7 +930,7 @@ def _agent_changes(sim, nodes, cmd=None):
     years, error = _parse_changes_years(raw)
     if error:
         return error
-    hist = getattr(sim, "_dashboard_history", None) or []
+    hist = ui_port.dashboard_history(sim) or []
     cutoff = sim.year - years
     now, baseline, error = _changes_baseline(hist, cutoff, sim.year)
     if error:

@@ -13,11 +13,11 @@ from .util import _coin_hoard_line, _factor, _fmt_num, _fmt_range, _pct, _wrap
 from .tree_filters import render_state_rows, stock_line
 from .wave_summary import summary_line
 from .step_problems import problems_lines
-from sim.engine.shortage_conditions import condition_line
+from sim.engine.ui_port import condition_line
 from .event_severity import event_marker, order_events
 from .step_alerts import alert_lines
 from .render_screens_market import why_goods_market_lines
-from sim.engine.knowledge_warning import warning_lines
+from sim.engine.ui_port import warning_lines
 from .state_shut_staffing import render_shut_for_want_of_staff
 from .hazard_words import why_hazard_lines, why_standing_lines
 # DISPLAY_WIDTH is NOT imported here: cli.py patches ui.protocol.DISPLAY_WIDTH

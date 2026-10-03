@@ -27,19 +27,21 @@ tested reason `cmd_sweep` cannot move into cli_analysis.py alongside
 import collections, json, math, os, random
 from collections import defaultdict
 
-from sim.engine.catalog import load_production_catalog
-from sim.engine import validate_material_gating, validate_output_bounds, validate_unheld_gates
-from sim.engine.default_civilisation import default_civilisation_id
-from sim.engine.data import (ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog, selectable_goals,
-                   hard_pre, load, load_civ, resolve_goal,
-                   STARTING_KITS, STRATS, topo_order, win_condition_describe)
+from sim.engine.ui_port import load_production_catalog
+from sim.engine.ui_port import (
+    validate_material_gating, validate_output_bounds, validate_unheld_gates)
+from sim.engine.ui_port import default_civilisation_id
+from sim.engine.ui_port import (
+    ROOT, MODDIR, CIVDIR, civilization_ids, closure, critical_path, DEFAULTS, goal_catalog,
+    selectable_goals, hard_pre, load, load_civ, resolve_goal, STARTING_KITS, STRATS, topo_order,
+    win_condition_describe)
 
 
 import argparse, sys
 
-from sim.engine.core import Sim
+from sim.engine.ui_port import Sim
 from . import protocol as _protocol
-from sim.engine import settings
+from sim.engine.ui_port import settings
 from . import cli_units_options
 # civ_of_save/goal_of_save are the only names this file reads from
 # .protocol; `cmd_agent` and everything else that needs
@@ -51,7 +53,7 @@ from .protocol import civ_of_save, goal_of_save
 from sim.constants import declare
 
 
-from sim.engine.run_setup import DetRNG, ensure_fixed_hash_seed, load_strategy, topo_stable  # noqa: F401
+from sim.engine.ui_port import DetRNG, ensure_fixed_hash_seed, load_strategy, topo_stable
 
 # ----------------------------------------------------------------------------
 # DIFFICULTY, PRESENTED HONESTLY, AS WHAT IT ACTUALLY IS HERE: how long you

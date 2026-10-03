@@ -20,8 +20,9 @@ comments on `DetRNG` and `Sim` for the general shape of this hazard.
 """
 import os, random, sys
 
-from sim.engine.data import KNOWLEDGE_DIR, ROOT, closure, critical_path, load, load_civ, resolve_goal, topo_order
-from sim.engine.core import Sim
+from sim.engine.ui_port import (
+    KNOWLEDGE_DIR, ROOT, closure, critical_path, load, load_civ, resolve_goal, topo_order)
+from sim.engine.ui_port import Sim
 from sim.constants import declare
 from sim.unit_conversions import PERCENT_SCALE
 from sim.ui.presentation import EXPLAIN_NEAR_MATCH_SUGGESTIONS_SHOWN

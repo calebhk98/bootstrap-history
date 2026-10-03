@@ -1,9 +1,10 @@
 """The tech tree itself, viewed through the protocol: why/available and node-explain, and the subject grouping they share."""
 
+import sim.engine.ui_port as ui_port
 import hashlib
 
-from sim.engine.data import closure, critical_path, downstream_count, is_downstream
-from sim.engine.fog import strip_self_play_advice
+from sim.engine.ui_port import closure, critical_path, downstream_count, is_downstream
+from sim.engine.ui_port import strip_self_play_advice
 
 from . import available_economics, tree_filters
 from .nodes import _downstream_of, _unlocked_by
@@ -651,9 +652,9 @@ def _digest_stack_caution(sim, leverage):
     this game, None afterward - the same one-shot guard the original's
     inline check kept on s._said_stack_caution, moved here with it.
     """
-    if not leverage or getattr(sim, "_said_stack_caution", False):
+    if not leverage or ui_port.said_stack_caution(sim):
         return None
-    sim._said_stack_caution = True
+    ui_port.set_said_stack_caution(sim, True)
     # SHORT ON PURPOSE - this reply has a byte budget (see the "wall of
     # text" check) and 'start' itself carries the full explanation once
     # it actually matters (its own "total_committed_across_active_work"
@@ -999,11 +1000,11 @@ def _explain_revenue(sim, nodes, node_id, node):
         # overstates practice income threefold.
         "but_it_pays_YOU": (
             round(node["rev"] * sim.PRACTICE_SHARE * sim.practice_attention(), 1)
-            if node_id in sim._practice_set() and node["rev"] else None),
+            if node_id in ui_port.practice_set(sim) and node["rev"] else None),
         "because": ("this is your own practice, not a concern: it pays about a "
                     "third of what the tree quotes for the trade, and selling "
                     "your hours for wages takes another bite"
-                    if node_id in sim._practice_set() and node["rev"] else None),
+                    if node_id in ui_port.practice_set(sim) and node["rev"] else None),
     }
 
 
@@ -1403,7 +1404,7 @@ def _explain_status(sim, nodes, node_id, node):
         # in someone else's sentence either.
         "start_blocked_reason": None if started else sim.fog_scrub(sim.start_reason(node_id)[1]),
         **_blocker_fields(sim, node_id, started),
-        "living_stock": [dict(gate, brought_by=gate["brought_by"] if sim._visible_to_player(gate["brought_by"])
+        "living_stock": [dict(gate, brought_by=gate["brought_by"] if ui_port.visible_to_player(sim, gate["brought_by"])
                               else None) if gate["brought_by"] else gate for gate in sim.stock_gates(node_id)],
     }
 

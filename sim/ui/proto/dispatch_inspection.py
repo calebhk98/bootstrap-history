@@ -15,9 +15,9 @@ from .dispatch_figures import figure_reply
 from .guidance import LEVERAGE_NOTE, leverage_points
 from .saving_plan import saving_reason
 from sim.ui.market_report import goods_market_line, opening_effect
-from sim.engine.knowledge_warning import knowledge_loss_warning
-from sim.engine.critical_path_remaining import active_years_left, remaining_critical_path_years
-from sim.engine.data import closure, topo_order
+from sim.engine.ui_port import knowledge_loss_warning
+from sim.engine.ui_port import active_years_left, remaining_critical_path_years
+from sim.engine.ui_port import closure, topo_order
 from .economy import (_agent_capacity, _agent_changes, _agent_economy,
                       _agent_mines, _agent_portfolio, _agent_values)
 from .explain_once import already_explained

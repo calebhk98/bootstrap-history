@@ -3,6 +3,8 @@ schools that are running, the pools literacy limits and the trainees in the
 pipeline. Every figure is read from the functions the engine already uses.
 """
 
+import sim.engine.ui_port as ui_port
+
 
 def _fraction_of(value, ceiling):
     return round(value / ceiling, 4) if ceiling > 1e-9 else None
@@ -10,7 +12,7 @@ def _fraction_of(value, ceiling):
 
 def _schools(sim):
     rows = []
-    for node_id, spec in sim._effect_terms("schooling_flow"):
+    for node_id, spec in ui_port.effect_terms(sim, "schooling_flow"):
         if sim.fog and not sim.is_visible(node_id):
             continue
         holds = sim.effect_holds(node_id, spec)
@@ -59,7 +61,7 @@ def _trainees(sim):
 def _recent_change(sim):
     from .economy import _changes_baseline, _changes_moved
     now, baseline, error = _changes_baseline(
-        getattr(sim, "_dashboard_history", None) or [], sim.year - 10, sim.year)
+        ui_port.dashboard_history(sim) or [], sim.year - 10, sim.year)
     if error:
         return {"note": error["error"]}
     moved = _changes_moved(baseline, now)
@@ -86,7 +88,7 @@ def education_report(sim):
             "elite_next_year": round(next_year.get("literacy_elite", elite), 4),
         },
         "recent_change": _recent_change(sim),
-        "schooling_flow": round(sim._schooling_flow(), 4),
+        "schooling_flow": round(ui_port.schooling_flow(sim), 4),
         "effective_schooling_flow": round(sim.effective_schooling_flow(), 4),
         "printing_adopted": round(sim.information_diffusion_index(), 4),
         "farm_share_of_hours": round(sim.labour.farm_share_of_hours(), 4),

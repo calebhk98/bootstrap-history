@@ -5,15 +5,16 @@ Everything here is read from figures the engine already computes
 economics.
 """
 
-from sim.engine.data import WAGES
+import sim.engine.ui_port as ui_port
+from sim.engine.ui_port import WAGES
 
 DEFAULT_MATERIAL_PAGE = 40
 
 
 def priceable_materials(sim):
     """Every material key the game can quote a price for, sorted."""
-    keys = set(sim._material_prices()) | set(sim._commodity_ledger().commodities)
-    keys |= set(sim._material_stock()) | set(sim.mine_capacity)
+    keys = set(ui_port.material_prices(sim)) | set(ui_port.commodity_ledger(sim).commodities)
+    keys |= set(ui_port.material_stock(sim)) | set(sim.mine_capacity)
     keys |= {pair[0] for pair in sim.MATERIAL_CHECKS.values()}
     return sorted(key for key in keys if sim.material_trade_quote(key) is not None)
 
@@ -45,7 +46,7 @@ def goods_demand(sim):
     for category in sorted(sim.GOODS_CATEGORIES):
         mine = sum(1 for node_id in sim.state.projects.operating
                    if sim.nodes[node_id].get("cat") == category)
-        ratios = sim._goods_category_ratios(category) if mine else None
+        ratios = ui_port.goods_category_ratios(sim, category) if mine else None
         rows.append({"category": sim.fog_scrub(category), "concerns_of_yours": mine,
                      "sale_price_vs_opening": round(ratios[0], 3) if ratios else None,
                      "quantity_vs_opening": round(ratios[1], 3) if ratios else None,
@@ -57,8 +58,8 @@ def goods_demand(sim):
 def material_rows(sim, offset, limit):
     """Buy price and own-supply flag for one page of the priceable materials."""
     materials = priceable_materials(sim)
-    own_keys = {emp for emp, tag in sim._own_production_tags()
-                if sim._own_material_supply(tag) > 0}
+    own_keys = {emp for emp, tag in ui_port.own_production_tags(sim)
+                if ui_port.own_material_supply(sim, tag) > 0}
     own = own_keys | {key for key, (emp, _tag) in sim.MATERIAL_CHECKS.items()
                       if emp in own_keys}
     rows = []

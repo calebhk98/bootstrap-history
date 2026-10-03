@@ -9,15 +9,16 @@ name protocol.py's shim re-exports - and imports these handlers back from
 here. Behaviour is unchanged and moved verbatim.
 """
 
+import sim.engine.ui_port as ui_port
 from .command_registry import command
 from .explain_once import already_explained
 import os
 import tempfile
 
-from sim.engine.data import TRADE_FAMILY, downstream_count
-from sim.engine.purchase_rule import purchase_budget
+from sim.engine.ui_port import TRADE_FAMILY, downstream_count
+from sim.engine.ui_port import purchase_budget
 from .nodes import _did_you_mean
-from sim.engine.saveload import load_state, save_state
+from sim.engine.ui_port import load_state, save_state
 from .util import _flag
 from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
 from .ventures import _VENTURE_SUPERVISION_NOTE
@@ -44,11 +45,11 @@ def _shorten_credit_forecast(sim, cmd, out):
     if not blocks:
         return
     scenario = sim.state.scenario
-    said = scenario._said_explanations or {}
+    said = ui_port.said_explanations(scenario) or {}
     full = bool(cmd.get("full")) or said.get("credit_forecast") != sim.year
     if full:
         said["credit_forecast"] = sim.year
-        scenario._said_explanations = said
+        ui_port.set_said_explanations(scenario, said)
     else:
         for key in blocks:
             for prose_key in _CREDIT_PROSE[key]:
@@ -183,8 +184,8 @@ def _cmd_start(sim, nodes, cmd, ended):
     # calendar floor is long enough that it cannot be the only thing in
     # hand for a while - not every multi-year start, which would be noise
     # by the fifth one.
-    if node["yrs"] >= 2 and sim._said_parallelism is None:
-        sim._said_parallelism = True
+    if node["yrs"] >= 2 and ui_port.said_parallelism(sim) is None:
+        ui_port.set_said_parallelism(sim, True)
         out["a_calendar_floor_is_not_exclusive_research_time"] = (
             "%s will take at least %d year%s, whatever else you do. That "
             "time is not spent watching it: your founder-hours and staff "

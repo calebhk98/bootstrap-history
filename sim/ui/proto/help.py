@@ -8,8 +8,8 @@ command_registry.py); topics register with @help_topic below.
 
 import json
 
-from sim.engine.data import money_unit_note
-from sim.engine.core import Sim
+from sim.engine.ui_port import money_unit_note
+from sim.engine.ui_port import Sim
 from . import command_registry
 
 TOPICS = {}          # topic name -> builder(sim) returning the page dict

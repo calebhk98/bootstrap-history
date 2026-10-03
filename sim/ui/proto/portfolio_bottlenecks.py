@@ -5,7 +5,7 @@ translated from the constraint `portfolio` already reads off `waiting_on`; the
 pools are the engine's own demand and supply figures.
 """
 
-from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND
+from sim.engine.ui_port import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND
 
 # Triage order: what only the player can fix first, pace last.
 KIND_ORDER = ("specialists", "supply", "money", "hours", "calendar", "idle")

@@ -3,8 +3,8 @@
 import re
 from collections import defaultdict
 
-from sim.engine.data import load
-from sim.engine.identity_cache import IdentityCache
+from sim.engine.ui_port import load
+from sim.engine.ui_port import IdentityCache
 
 # The real ids, and a case-folded index onto them. Built once: parse_typed has
 # no Sim to ask and runs on every line a player types. One load(), not two -

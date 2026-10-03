@@ -1,6 +1,6 @@
 """`options`: read or change the saved program settings, from the same table as the menu."""
 
-from sim.engine import settings, settings_table
+from sim.engine.ui_port import settings, settings_table
 from .command_registry import command
 
 
