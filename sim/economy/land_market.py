@@ -21,6 +21,7 @@ from typing import Dict, List, Mapping, Optional, Sequence
 from sim.constants import declare
 
 from . import ownership, unit_cost
+from .land_lease import LAND_RENT_ADJUSTMENT_SHARE, posted_rents  # noqa: F401
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import AgentId, CurrencyId, TileId, Transfer
 
@@ -156,12 +157,15 @@ def demands_of(setup, record, view, wanted_runs: Mapping[AgentId, float]) -> Lis
 
 def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
                 own_plot_hectares: Optional[Mapping[TileId, float]] = None) -> List[Transfer]:
-    """Clear each tile's land for the runs producers want, set next year's rent and caps on the record
+    """Clear each tile's land for the runs producers want, set next year's rent (land_lease.posted_rents
+    follows the clearing rent slowly) and caps on the record
     and its producers, and book the rent: producers pay the tile's owner, shared by ownership.spread.
     Returns the payments made (to cohorts), for the year's property income."""
     demands = demands_of(setup, record, view, wanted_runs)
     arable = {tile_id: arable_hectares(tile) for tile_id, tile in setup.tiles.items()}
-    result = clear_land(arable, demands, own_plot_hectares)
+    cleared = clear_land(arable, demands, own_plot_hectares)
+    result = dataclasses.replace(cleared, rent_per_hectare_by_tile=posted_rents(record.land_rent,
+                                                                              cleared.rent_per_hectare_by_tile))
     record.land_rent = dict(result.rent_per_hectare_by_tile)
     for producer_id, producer in list(record.producers.items()):
         land_per_run = setup.land_per_run.get(producer.recipe_id, 0.0)

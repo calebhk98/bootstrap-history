@@ -35,6 +35,7 @@ class PricedNeed:
     spec: NeedSpec
     price_index: float                     # money per need unit of the mix the household buys
     goods: Tuple[Tuple[str, float, float, float], ...]   # (good, price, effectiveness, share of spending)
+    ceilings: Tuple[float, ...] = ()       # per good: the price a buyer stops buying it above (inf if none)
 
 
 def make_basket(need_data: Mapping[str, Any], production: Mapping[str, Any],
@@ -81,8 +82,20 @@ def need_prices(basket: Basket, view: MarketView, tile: TileId) -> List[PricedNe
         # need units add up one for one (a calorie is a calorie): a unit costs what the chosen mix pays
         # per unit, between the cheapest and dearest good; substitution shapes only the mix
         units_per_money = math.fsum(share * effect / price for _good, price, effect, share in shares)
-        priced.append(PricedNeed(spec, 1.0 / units_per_money, tuple(shares)))
+        priced.append(PricedNeed(spec, 1.0 / units_per_money, tuple(shares), price_ceilings(shares)))
     return priced
+
+
+def price_ceilings(shares) -> Tuple[float, ...]:
+    """The cheapest way to meet a need is bought up to the cost of the next cheapest: past that,
+    people switch. A dearer good has no ceiling (it is bought for variety)."""
+    costs = [price / effect for _good, price, effect, _share in shares]
+    ceilings = []
+    for index, (_good, price, effect, _share) in enumerate(shares):
+        others = costs[:index] + costs[index + 1:]
+        parity = min(others) * effect if others else math.inf
+        ceilings.append(parity if parity >= price else math.inf)
+    return tuple(ceilings)
 
 
 def subsistence_cost_per_person(priced: List[PricedNeed]) -> float:

@@ -86,10 +86,10 @@ class YearView:
         self._goods = set(area_map.goods())
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
-        return self._memory.prices.get(market_key(good, area))
+        return self._memory.prices.get(good + KEY_SEPARATOR + area)
 
     def wage(self, trade: TradeId, area: AreaId) -> Optional[float]:
-        return self._memory.wages.get(market_key(trade, area))
+        return self._memory.wages.get(trade + KEY_SEPARATOR + area)
 
     def interest_rate(self, currency: CurrencyId) -> float:
         return self._memory.rates.get(currency, 0.0)
