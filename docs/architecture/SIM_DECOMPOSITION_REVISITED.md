@@ -84,7 +84,7 @@ by reading `perf_fingerprint.py` itself (section 5) rather than by trusting
 the old claim: it hashes `SAVE_FIELDS` after every simulated year across nine
 scenarios, and its own header says nothing about `protocol.py`. This reason
 does not get weaker with age; if anything, `protocol.py`'s share of the code
-has only grown since it was split into `engine/proto/`'s twelve modules
+has only grown since it was split into `sim/ui/proto/`'s twelve modules
 (`sim/ARCHITECTURE.md`, "Layout"). Any stage of a proposal that touches
 `protocol.py` inherits this exact gap, unchanged.
 
@@ -214,7 +214,7 @@ template for what follows, not a new idea:
   the old enclosing scope, dead from the moment it was extracted and
   unfindable while it was buried.
 * **The household extraction.** Roughly eighty founder-specific attributes
-  moved off `Sim` onto `sim/engine/actors/household.py`'s `Household`
+  moved off `Sim` onto `sim/agents/household.py`'s `Household`
   object (`docs/architecture/HOUSEHOLD_EXTRACTION.md`; confirmed live at
   `sim/engine/core.py:377`, `self.household = Household(...)`, with 109
   forwarding properties measured by `grep -c "@property" sim/engine/

@@ -3,7 +3,7 @@ refusal states the rule and the amount short."""
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto import dispatch_inspection
+from sim.ui.proto import dispatch_inspection
 
 
 def _in_debt(capital):

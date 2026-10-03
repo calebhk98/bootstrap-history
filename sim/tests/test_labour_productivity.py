@@ -1,5 +1,6 @@
 """labour_productivity: regression checks, run individually with `--only labour_productivity`."""
 from .harness import *  # noqa: F401,F403
+from sim.labour.api import Labour
 
 # =============================================================================
 # THE USER'S THREE QUESTIONS. Q1: does training ten times as many smiths
@@ -15,21 +16,21 @@ from .harness import *  # noqa: F401,F403
 # PRICING mechanism (labour_pressure vs market_supply), which is orthogonal
 # to the household-capacity gate hire() also enforces; nothing else in this
 # file, and no other check, depends on the patch.
-_orig_room = S.Sim.household_room
-_orig_supervision_room = S.Sim.supervision_room
-S.Sim.household_room = lambda self: 10_000.0
-S.Sim.supervision_room = lambda self: 10_000.0
+_orig_room = Labour.household_room
+_orig_supervision_room = Labour.supervision_room
+Labour.household_room = lambda self: 10_000.0
+Labour.supervision_room = lambda self: 10_000.0
 try:
     small = sim(capital=1e9)
-    small.hire("smith", 5)
+    small.labour.hire("smith", 5)
     small.year += 10                 # let the hiring-day pressure fully decay
     big = sim(capital=1e9)
-    big.hire("smith", 50)            # TEN TIMES as many smiths
+    big.labour.hire("smith", 50)            # TEN TIMES as many smiths
     big.year += 10                   # same decay, same settling time
     cost_small = (S.ANNUAL_WAGE["smith"] * small.wage_index * small.price_index
-                  * small.labour_market.price_factor("smith"))
+                  * small.labour.market.price_factor("smith"))
     cost_big = (S.ANNUAL_WAGE["smith"] * big.wage_index * big.price_index
-                * big.labour_market.price_factor("smith"))
+                * big.labour.market.price_factor("smith"))
     check("once the market has settled, a smith costs the SAME base wage "
           "whether the trade has 5 people in it or 50 - training ten times "
           "as many smiths does not cut the price below the wage table, it "
@@ -43,14 +44,14 @@ try:
     # than expanding a small one by the same amount - this is the real
     # content of "brings the price back down", not a below-base discount.
     thin = sim(capital=1e9)
-    thin.hire("smith", 5)
+    thin.labour.hire("smith", 5)
     thin.year += 10
     thick = sim(capital=1e9)
-    thick.hire("smith", 50)
+    thick.labour.hire("smith", 50)
     thick.year += 10
     thin_capital_before, thick_capital_before = thin.capital, thick.capital
-    thin.hire("smith", 10)
-    thick.hire("smith", 10)
+    thin.labour.hire("smith", 10)
+    thick.labour.hire("smith", 10)
     fee_thin = thin_capital_before - thin.capital
     fee_thick = thick_capital_before - thick.capital
     check("expanding an already-large trade by a fixed amount costs no more "
@@ -60,8 +61,8 @@ try:
           "itself - only the NEXT one)",
           abs(fee_thick - fee_thin) < 1.0, (fee_thin, fee_thick))
 
-    per_head_thin = thin.wage_bill() / thin.employees["smith"]
-    per_head_thick = thick.wage_bill() / thick.employees["smith"]
+    per_head_thin = thin.labour.wage_bill() / thin.employees["smith"]
+    per_head_thick = thick.labour.wage_bill() / thick.employees["smith"]
     check("the standing payroll's per-head cost, measured immediately after "
           "each identical top-up batch, is lower for the bigger trade - the "
           "same recent pressure is diluted across more existing people",
@@ -69,21 +70,21 @@ try:
           "per head, base=5->15: %.2f   base=50->60: %.2f"
           % (per_head_thin, per_head_thick))
 finally:
-    S.Sim.household_room = _orig_room
-    S.Sim.supervision_room = _orig_supervision_room
+    Labour.household_room = _orig_room
+    Labour.supervision_room = _orig_supervision_room
 
 # --- Q2: technology that raises output per worker without replacing them.
 s = sim(capital=1e9)
 check("with nothing built, an hour of a trade's time is worth exactly an "
       "hour - labour_productivity changes nothing until a real technology "
       "earns it",
-      s.labour_productivity("smith") == 1.0, s.labour_productivity("smith"))
+      s.labour.labour_productivity("smith") == 1.0, s.labour.labour_productivity("smith"))
 
-before_call_on = s.hours_you_can_call_on("smith")
-before_supply = s.market_supply("smith")
+before_call_on = s.labour.hours_you_can_call_on("smith")
+before_supply = s.labour.market_supply("smith")
 s.done.add("met_trip_hammer")
-after_call_on = s.hours_you_can_call_on("smith")
-after_supply = s.market_supply("smith")
+after_call_on = s.labour.hours_you_can_call_on("smith")
+after_supply = s.labour.market_supply("smith")
 check("a real productivity technology (the trip hammer, whose note says "
       "'much faster than hand hammering') raises the WORK a smith's hours "
       "can produce this year",
@@ -94,7 +95,7 @@ check("...without changing market_supply - the technology makes the "
       after_supply == before_supply, (before_supply, after_supply))
 check("...and leaves an UNRELATED trade's productivity at exactly 1.0 - a "
       "trip hammer for smiths does not make carpenters faster too",
-      s.labour_productivity("carpenter") == 1.0, s.labour_productivity("carpenter"))
+      s.labour.labour_productivity("carpenter") == 1.0, s.labour.labour_productivity("carpenter"))
 
 s2 = sim(capital=1e9)
 for _node, _tr, _add in s2.LABOUR_PRODUCTIVITY_SOURCES:
@@ -102,9 +103,9 @@ for _node, _tr, _add in s2.LABOUR_PRODUCTIVITY_SOURCES:
 check("stacking every productivity technology this run has wired in never "
       "pushes any trade's multiplier past the cap, however many technologies "
       "a civilization eventually builds",
-      all(s2.labour_productivity(trade) <= s2.LABOUR_PRODUCTIVITY_CAP + 1e-9
+      all(s2.labour.labour_productivity(trade) <= s2.labour.LABOUR_PRODUCTIVITY_CAP + 1e-9
           for _, trade, _ in s2.LABOUR_PRODUCTIVITY_SOURCES),
-      [(trade, s2.labour_productivity(trade)) for _, trade, _ in sorted(
+      [(trade, s2.labour.labour_productivity(trade)) for _, trade, _ in sorted(
           s2.LABOUR_PRODUCTIVITY_SOURCES, key=lambda r: r[1])])
 
 check("every node named in LABOUR_PRODUCTIVITY_SOURCES is a real node in "
@@ -119,7 +120,7 @@ check("every trade named in LABOUR_PRODUCTIVITY_SOURCES is a real trade in "
 # country's literacy rates improve? What if we make 5,000 schools and
 # tractors and food production... can I create a 90%+ literate population?"
 # See SocietyMixin.advance_society (society.py).
-from sim.engine.labour_allocation import FARM_TRADE as _FARM_TRADE
+from sim.labour.labour_allocation import FARM_TRADE as _FARM_TRADE
 
 s_noschool = sim(capital=2000000.0, manual=False)
 _gen0 = s_noschool.civ["literacy_general"]
@@ -227,9 +228,9 @@ check("...and goes on to actually produce its own electricians, for free, "
       "bounded by the exact same literate_capacity() wall a founder hiring "
       "or teaching them by hand is bounded by",
       0 < s_teach.employees.get("electrician", 0.0)
-      <= s_teach.literate_capacity("electrician") + 1e-6,
+      <= s_teach.labour.literate_capacity("electrician") + 1e-6,
       (round(s_teach.employees.get("electrician", 0.0), 2),
-       round(s_teach.literate_capacity("electrician"), 2)))
+       round(s_teach.labour.literate_capacity("electrician"), 2)))
 
 _sess_edu = os.path.join(ROOT, _rel("education.json"))
 S.save_state(s_teach, _sess_edu)
@@ -374,17 +375,17 @@ s = sim(capital=2.0 * sim().opening_fee(_node_id)[0])  # enough to open it, what
 s.done.add(_node_id)
 s._done_changed()
 s.employees["artisan"] = 6.0
-s._resync_pools()
+s.labour._resync_pools()
 ok, _ = s.open_venture(_node_id)
 check("set-up: the supervised concern opens with six craftsmen on staff", ok)
 s.employees["artisan"] = 0.0
-s._resync_pools()
+s.labour._resync_pools()
 closed = s.close_unstaffed_ventures(s.year)
 check("losing every craftsman shuts a concern that needs them to supervise",
       closed == [_node_id] and _node_id in s.mothballed and _node_id in getattr(s, "shut_for_staff", {}),
       closed)
 s.employees["artisan"] = 6.0
-s._resync_pools()
+s.labour._resync_pools()
 reopened = s.reopen_restaffed_ventures(s.year)
 check("...and it comes back on its own once restaffed, with no 'open' typed",
       reopened == [_node_id] and _node_id in s.operating and _node_id not in s.mothballed
@@ -407,10 +408,10 @@ s_rg.done.update(NODES[_kg]["pre"])
 s_rg.done.add(_kg)
 s_rg._done_changed()
 s_rg.employees["artisan"] = 6.0
-s_rg._resync_pools()
+s_rg.labour._resync_pools()
 s_rg.open_venture(_kg)
 s_rg.employees["artisan"] = 0.0
-s_rg._resync_pools()
+s_rg.labour._resync_pools()
 s_rg.close_unstaffed_ventures(s_rg.year)
 check("set-up: the closure is recorded as staffing-caused, with the year "
       "it happened",
@@ -426,10 +427,10 @@ s_rg2.done.update(NODES[_kg]["pre"])
 s_rg2.done.add(_kg)
 s_rg2._done_changed()
 s_rg2.employees["artisan"] = 6.0
-s_rg2._resync_pools()
+s_rg2.labour._resync_pools()
 s_rg2.open_venture(_kg)
 s_rg2.employees["artisan"] = 0.0
-s_rg2._resync_pools()
+s_rg2.labour._resync_pools()
 s_rg2.close_unstaffed_ventures(s_rg2.year)
 s_rg2.year += s_rg2.STAFF_CLOSURE_GRACE + 1
 _ok_rg2, _msg_rg2 = s_rg2.restore_work(_kg)
@@ -488,7 +489,7 @@ check("...while a first-ever settlement, with nothing to extend, says "
 s_nr = sim(capital=100000.0)
 _net_before = S._agent_dispatch(s_nr, NODES, {"cmd": "state"}).get("net_per_year")
 _capital_before_work = s_nr.capital
-_pay_nr, _ = s_nr.work_for_wages("scholar", 1500)
+_pay_nr, _ = s_nr.labour.work_for_wages("scholar", 1500)
 check("set-up: selling founder-hours for wages actually registers as this "
       "year's wage_hours_this_year",
       s_nr.wage_hours_this_year > 0 and _pay_nr > 0,
@@ -511,7 +512,7 @@ check("...while net_after_project_spend - explicitly THIS year's figure - "
 s_nr2 = sim(capital=100000.0)
 _money_before = S._agent_dispatch(s_nr2, NODES, {"cmd": "money"}).get("net_per_year")
 _capital_before_work2 = s_nr2.capital
-s_nr2.work_for_wages("scholar", 1500)
+s_nr2.labour.work_for_wages("scholar", 1500)
 s_nr2.capital = _capital_before_work2
 _money_after = S._agent_dispatch(s_nr2, NODES, {"cmd": "money"}).get("net_per_year")
 check("`money`'s net_per_year is insulated from the same one-year swing, "
@@ -540,7 +541,7 @@ check("set-up: this household really is stalled, so stall_diagnosis "
       "returns a real diagnosis to compare",
       bool(_diag_before), _diag_before)
 _capital_before_stall_work = s_stall.capital
-s_stall.work_for_wages("scholar", 1500)
+s_stall.labour.work_for_wages("scholar", 1500)
 s_stall.capital = _capital_before_stall_work
 _diag_after = s_stall.stall_diagnosis()
 check("stall_diagnosis's own net is insulated from a one-year wage sale "

@@ -123,7 +123,7 @@ check("no developer change-log marker is shipped in player-facing prose",
 # hull - which really has 466 nodes behind it - the Norse bog-iron bloomery,
 # and the Mexica's chinampa. A play tester filed this against the Norse
 # starting kit as "flagship technologies are dead ends in the graph".
-from sim.engine.protocol import _unlocked_by as _UB, _downstream_of as _DS
+from sim.ui.protocol import _unlocked_by as _UB, _downstream_of as _DS
 _ra_cases = ("sea_clinker_hull", "met_bloomery_bog_iron", "fud_chinampa")
 for _k_ra in _ra_cases:
     _un = _UB(_k_ra, NODES)
@@ -237,9 +237,9 @@ _s_rush = sim(capital=5000000.0)
 _r_rush = S._agent_dispatch(_s_rush, NODES, {"cmd": "rush", "limit": 1000})
 _owed_rush = sum(NODES[entry["id"]]["ph"] for entry in (_r_rush.get("started") or []))
 check("`rush` does not commit more hours than a couple of years can hold",
-      _owed_rush <= _s_rush.director_pool() * 2.0 + max(
+      _owed_rush <= _s_rush.labour.director_pool() * 2.0 + max(
           NODES[entry["id"]]["ph"] for entry in (_r_rush.get("started") or [{"id": GOAL}])),
-      (_owed_rush, _s_rush.director_pool()))
+      (_owed_rush, _s_rush.labour.director_pool()))
 check("...and says why it stopped rather than silently starting fewer",
       any("would not make them go faster" in str(entry.get("why"))
           for entry in (_r_rush.get("not_started") or [])),
@@ -252,7 +252,7 @@ check("...and says why it stopped rather than silently starting fewer",
 # exactly like staff vanishing.
 _s_att = sim(capital=10000000.0, events=False)
 run_it(_s_att, "workshop_first", "school_founded", "freedman_staff")
-_s_att.hire("scholar", 8)
+_s_att.labour.hire("scholar", 8)
 for _ in range(12):
     _s_att.step()
 check("losing people to death and better offers is announced, not silent",

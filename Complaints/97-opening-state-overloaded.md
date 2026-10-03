@@ -56,7 +56,7 @@ None in next 10 years
 
 ## Where it lives
 
-Likely in `sim/engine/proto/state.py` where the opening state is rendered, with structure decisions in `sim/engine/proto/dispatch.py`.
+Likely in `sim/ui/proto/state.py` where the opening state is rendered, with structure decisions in `sim/ui/proto/dispatch.py`.
 
 **Confidence:** Design recommendation
 

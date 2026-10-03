@@ -16,4 +16,4 @@ Related: 281.
 
 Owner decision (2026-10-02): should not have been possible; reach and freight must come from tiles.
 
-Done: no region record in `data/world/geography.json` carries lat/lon; `sim/world/regions.py` computes each anchor as the land-area-weighted centre of the region's tiles. Measured by recomputing `Sim.region_reach` for every civilisation before and after: thirteen civilisation-region pairs moved one band, as predicted. Remaining: 378.
+Done: no region record in `data/world/geography.json` carries lat/lon; `sim/geography/regions.py` computes each anchor as the land-area-weighted centre of the region's tiles. Measured by recomputing `Sim.region_reach` for every civilisation before and after: thirteen civilisation-region pairs moved one band, as predicted. Remaining: 378.

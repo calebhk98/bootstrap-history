@@ -2,7 +2,7 @@
 """Prove a rename changed nothing but names.
 
     python3 sim/prove_rename_safe.py <git-ref>          every .py file, vs that ref
-    python3 sim/prove_rename_safe.py <git-ref> sim/engine/labour.py ...
+    python3 sim/prove_rename_safe.py <git-ref> sim/labour/labour.py ...
     python3 sim/prove_rename_safe.py --verbose HEAD
 
 Exit 0 means: for every file compared, the only thing that changed is the

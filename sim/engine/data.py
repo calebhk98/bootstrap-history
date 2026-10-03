@@ -26,13 +26,16 @@ import collections
 from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from .identity_cache import IdentityCache
+from sim.geography.api import GEOFILE, haversine_km, load_geography
 from .mods import get_ordered_mods, load_mod_tree
 from .tree_source import load_base_tree
 from .mods_ids import is_mod_content
 from .mods_civ import (apply_mod_civilization, check_all_civilizations, check_starting_techs,
                        is_hidden, mod_civ_ids)
-from . import energy_prices, money_units, node_revenue, wage_provider
+from . import energy_prices, money_units, node_revenue
+from sim.labour.api import wage_provider
 from .default_civilisation import default_civilisation_id
+from . import wage_schedule
 from .catalog import (load_mod_tree_nodes, load_production_catalog,
                       load_trade_registry, validate_mod_material_paths)
 
@@ -116,38 +119,9 @@ KNOWLEDGE_DIR = os.path.join(ROOT, "docs", "knowledge")   # the how-to library t
 
 CIVDIR = os.path.join(ROOT, "data", "civilizations")
 RESFILE = os.path.join(ROOT, "data", "world", "resources.json")
-GEOFILE = os.path.join(ROOT, "data", "world", "geography.json")
 
 def load_resources() -> JSONDict:
     return json.load(open(RESFILE))
-
-def load_geography() -> JSONDict:
-    """Where things are, not just what they cost.
-
-    Reach must be computed per civilization from real geography, never a
-    single hard-coded value measured from Italy: Han China's own distance
-    to Malaya, which Chinese and Malay traders already sail to routinely,
-    is not the same as its distance to Italy, a place that civilization has
-    never seen. See Sim.region_reach and Sim.material_reach for where reach
-    is actually computed; this loader just hands back the raw data.
-    """
-    return json.load(open(GEOFILE))
-
-
-def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Great-circle distance between two lat/lon points, in kilometres.
-
-    Coarse on purpose: geography.json's coordinates are region centroids, not
-    ports, so this is a reach ESTIMATE, the same spirit as everything else in
-    this file being an order-of-magnitude model rather than a survey.
-    """
-    earth_radius_km = 6371.0
-    lat1_rad, lat2_rad = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlmb = math.radians(lon2 - lon1)
-    angular_term = (math.sin(dphi / 2) ** 2
-                    + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlmb / 2) ** 2)
-    return 2 * earth_radius_km * math.asin(math.sqrt(angular_term))
 
 def _load_tech_effects() -> JSONDict:
     path = os.path.join(CIVDIR, "_TECH_EFFECTS.json")
@@ -183,7 +157,7 @@ TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family
 
 # Starting wages: the labour-market schedule before any year has passed.
 # Sim carries the live schedule; these serve tools and validation.
-_STARTING_SCHEDULE = wage_provider.build_schedule(
+_STARTING_SCHEDULE = wage_schedule.build_schedule(
     _TRADE_REGISTRY, wage_provider.reference_civilisation())
 WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
 ANNUAL_WAGE: Dict[str, float] = {
@@ -217,7 +191,7 @@ def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wa
     """The opening wage schedule of a civilisation (the default one if none)."""
     if civilization_id is None:
         return _STARTING_SCHEDULE
-    return wage_provider.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
+    return wage_schedule.build_schedule(_TRADE_REGISTRY, load_civ(civilization_id))
 
 
 _HELD_CIVILISATION_SCHEDULES: Dict[str, wage_provider.wages.WageSchedule] = {}
@@ -229,14 +203,14 @@ def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
     key = json.dumps(civ, sort_keys=True, default=str)
     schedule = _HELD_CIVILISATION_SCHEDULES.get(key)
     if schedule is None:
-        schedule = _HELD_CIVILISATION_SCHEDULES[key] = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+        schedule = _HELD_CIVILISATION_SCHEDULES[key] = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
     return schedule
 
 
 def kit_capital(kit_id: str, civ: JSONDict) -> float:
     """Opening money of a kit for a civilisation: its labourer-years times the
     civilisation's opening annual labourer wage."""
-    schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    schedule = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
     return STARTING_KITS[kit_id]["labourer_years"] * schedule.annual_wage("labourer")
 
 
@@ -437,7 +411,7 @@ def calculated_goods_table(held_technology_ids: Iterable[str] = (),
 
 def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
     """The tree with every money field in the civilisation's coin."""
-    schedule = wage_provider.build_schedule(_TRADE_REGISTRY, civ)
+    schedule = wage_schedule.build_schedule(_TRADE_REGISTRY, civ)
     first = next(iter(nodes.values()), None)
     if first is not None and civ.get("id") and first.get("_derived_for") != civ["id"]:
         nodes = node_revenue.for_civilisation(nodes, civ, schedule)
@@ -479,7 +453,7 @@ def descendants(nodes: Nodes) -> Tuple[Dict[str, int], Dict[str, int]]:
     # Complaints/closed/27-nondeterministic-simulation.md. Holding `nodes` itself in
     # the entry keeps that dict alive for as long as the entry can be compared
     # against it, so its address cannot be recycled into a false hit while the
-    # entry lives. sim/engine/proto/nodes.py makes the same argument at length
+    # entry lives. sim/ui/proto/nodes.py makes the same argument at length
     # for the same shape of cache.
     hit = _DESC_CACHE.get(nodes)
     if hit is not None:

@@ -61,7 +61,7 @@ s = sim(capital=50000.0)
 s.done.add(_node_id)
 s._done_changed()
 s.employees["artisan"] = 6.0
-s._resync_pools()
+s.labour._resync_pools()
 s.open_venture(_node_id)
 s.mothball_work(_node_id)
 reopened = s.reopen_restaffed_ventures(s.year)
@@ -93,7 +93,7 @@ def _portfolio_run(auto_hire, years=40):
     sim_state._done_changed()
     sim_state.employees["scholar"] = round(need_sch) + 1
     sim_state.employees["artisan"] = round(need_art) + 2
-    sim_state._resync_pools()
+    sim_state.labour._resync_pools()
     opened = [node_id for node_id in chosen if sim_state.open_venture(node_id)[0]]
     reopenings = 0
     for _ in range(years):

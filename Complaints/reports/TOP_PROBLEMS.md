@@ -93,7 +93,7 @@ This felt less like historical difficulty than a repeated dice roll. Eventually 
 
 ## 5. Bounty commands leak fog-hidden prerequisite IDs, and one bounty message directly suggests an impossible action
 
-**Disposition:** Fixed in current code: `bounty` uses the same fog filter as `why` (`missing_prereq_message`, `sim/engine/fog.py`) and checks eligibility before suggesting a switch (`sim/engine/proto/dispatch_money.py`).
+**Disposition:** Fixed in current code: `bounty` uses the same fog filter as `why` (`missing_prereq_message`, `sim/engine/fog.py`) and checks eligibility before suggesting a switch (`sim/ui/proto/dispatch_money.py`).
 
 **Damage: High for fog integrity; medium for run outcome.** Normal `why` correctly hides unknown prerequisites, but `bounty` sometimes names them.
 
@@ -129,7 +129,7 @@ Without that realization, repeated late-game failures could easily have pushed t
 
 ## 7. `available sort nearest` is misleading for goal navigation, and `stuck` becomes nearly useless near the endgame
 
-**Disposition:** Partly fixed: the misleading sort was renamed `fewest_missing` (`sim/engine/proto/techtree.py`; `nearest` stays as a silent alias). Goal-aware guidance is `Complaints/100`; `stuck` refuses to name the goal blocker under fog by design.
+**Disposition:** Partly fixed: the misleading sort was renamed `fewest_missing` (`sim/ui/proto/techtree.py`; `nearest` stays as a silent alias). Goal-aware guidance is `Complaints/100`; `stuck` refuses to name the goal blocker under fog by design.
 
 **Damage: High/Medium.** With the explicit goal set to junction transistors, `available sort nearest` repeatedly began with agriculture. Near the end, `stuck` told me I had hundreds of affordable things and suggested cheap/profitable work rather than identifying the one actual goal blocker.
 
@@ -202,7 +202,7 @@ The `why` page does display both numbers, which is good, but in a huge descripti
 
 ## 13. The selected merchant start appeared as 4,000 den, but the playable state began with 3,000 cash without explanation
 
-**Disposition:** Fixed in current code: the kit is converted to the chosen civilisation's prices and the game says so (`sim/engine/cli_interactive.py`).
+**Disposition:** Fixed in current code: the kit is converted to the chosen civilisation's prices and the game says so (`sim/ui/cli_interactive.py`).
 
 **Damage: Low/Medium early-game trust issue.** I chose the merchant option because it was the recommended middle-ish income. The first playable prompt then said I arrived with 3,000 cash. If 1,000 is intentionally consumed by setup/travel, the game should say so.
 

@@ -60,7 +60,7 @@ check("...and the goods wait less to be shipped",
 check("agents' pay comes from the labour market: a dearer merchant costs more per tonne",
       few._agent_cost_per_tonne(PARTNER, facts["route"]) > 0.0, None)
 dearer_agents = stubbed(sim(civ="rome_100ad", capital=1e9))
-dearer_agents.labour_market.quote = lambda trade, hours=0.0, employer=None: 2.0 * few.labour_market.quote(trade)
+dearer_agents.labour.market.quote = lambda trade, hours=0.0, employer=None: 2.0 * few.labour.market.quote(trade)
 check("...and doubling merchants' wage doubles it",
       abs(dearer_agents._agent_cost_per_tonne(PARTNER, facts["route"])
           - 2.0 * few._agent_cost_per_tonne(PARTNER, facts["route"])) < 1e-9, None)

@@ -12,7 +12,7 @@ by one.
 2.2 is stale); deposits carry a latitude and longitude and the holding tile is
 found at load (`data/world/deposits.json`; section 2.3 and the deposit stage of
 section 5 are done); the forest ceiling sums tile areas; the stage-1 weather
-cell cap exists. The region layer is now a derived view (`sim/world/regions.py`):
+cell cap exists. The region layer is now a derived view (`sim/geography/regions.py`):
 region land is a sum over tiles and region records hold no land. Reach and
 freight still read each region's hand-set anchor point (`Complaints/328`);
 the other remains are in `Complaints/136`.
@@ -162,7 +162,7 @@ grep -n "land_tiles" sim/world/land.py sim/solve_prices.py
 | Price solver's land-rent wiring | `sim/solve_prices.py` | `regions`, via `land.py` | grep for `land_tiles` (none), `from sim.world import land` at line 779 |
 | Mineral deposit locations and rent | `sim/world/deposits.py` | `regions` (`geography["regions"].get(region)`, lines 825, 957) | direct read |
 | Forest/coppice land ceiling | `sim/engine/economy_mining.py` `home_land_area_km2`/`forest_land_ceiling` | `regions`, summed by `land_area_km2` (NOT region count) | direct read, see 1.3 |
-| Home centroid, region-name lookups | `sim/engine/geography.py` | `regions` (`self._regions`) | direct read |
+| Home centroid, region-name lookups | `sim/geography/geography.py` | `regions` (`self._regions`) | direct read |
 | Freight distance between civilisations | `sim/engine/economy_freight.py` | `regions` centroids (`self._regions[region_id]["lat"/"lon"]`) | direct read |
 | Growing-season weather pooling | `sim/engine/core.py` `_compute_farm_weather_cells` | `land_tiles` directly (falls back to a region's own centroid only for an unmapped region) | direct read, quoted in 1.3 |
 
@@ -550,13 +550,13 @@ cubic exponent measured in 3.3.
 `compare` and `sensitivity` all default to `--mc 200` - confirmed:
 
 ```
-grep -n 'add_argument("--mc", type=int, default=200)' sim/engine/cli.py
+grep -n 'add_argument("--mc", type=int, default=200)' sim/ui/cli.py
 -> three matches, one per subcommand
 ```
 
 Each of those 200 trials constructs its own `Sim()` (`res = [Sim(nodes,
 order, random.Random(a.seed + i), ...) for i in range(a.mc)]` in
-`sim/engine/cli.py`), paying the Cholesky factorisation fresh every time -
+`sim/ui/cli.py`), paying the Cholesky factorisation fresh every time -
 nothing caches it across trials today. At 10,000 tiles:
 
     200 * 3.5365 sec = 707.3 sec ~= 11.8 minutes

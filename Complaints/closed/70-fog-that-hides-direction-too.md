@@ -26,7 +26,7 @@ Only improve the hint when the player has discovered enough nearby knowledge to 
 
 ## WHERE IT LIVES
 
-`sim/engine/fog.py::fog_scrub()` and related fog rendering logic. Also affects `sim/engine/proto/techtree.py` where capability reasons are constructed.
+`sim/engine/fog.py::fog_scrub()` and related fog rendering logic. Also affects `sim/ui/proto/techtree.py` where capability reasons are constructed.
 
 ## Confidence
 

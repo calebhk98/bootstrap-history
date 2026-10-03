@@ -18,7 +18,7 @@ early-modern warfare was actually bounded by, which is why campaigns hugged
 rivers and coasts and sieges starved besiegers as often as the besieged.
 
 BUILT STANDALONE; NOW WIRED IN, ONE CROSSING ONLY. Nothing here imports
-from sim/engine/, sim/world/agriculture.py or sim/world/transport.py, and
+from sim/engine/, sim/world/agriculture.py or sim/geography/transport.py, and
 that remains true - this module still has no engine dependency in this
 direction, for the reason below. But sim/engine/society.py now imports
 THIS module (military_equipment_burden_kg_per_soldier_per_year(), which
@@ -35,9 +35,9 @@ society.py reports - see that function's own docstring before changing
 IRON_KG_PER_EQUIPPED_SOLDIER, ANNUAL_EQUIPMENT_REPLACEMENT_FRACTION or
 either Firearm's numbers.
 
-STILL STANDALONE FROM sim/world/agriculture.py AND sim/world/transport.py,
+STILL STANDALONE FROM sim/world/agriculture.py AND sim/geography/transport.py,
 FOR THE SAME REASON AS BEFORE. Other agents are editing sim/engine/core.py,
-sim/engine/economy.py, sim/world/agriculture.py, sim/world/transport.py,
+sim/engine/economy.py, sim/world/agriculture.py, sim/geography/transport.py,
 sim/treetool.py and sim/constants.py concurrently with this crossing's
 construction; a module that does not import those paths cannot be broken
 by their edits or break their tests, whichever lands first. society.py

@@ -8,7 +8,7 @@ Reproduces on the current branch:
 
     printf 'step 10\nrisk\nquit\n' | python3 sim/simulator.py play --civ england_1300 --kit poor_scholar --fog --seed 1 --session /tmp/repro.json
 
-The text comes from `sim/engine/proto/render_screens_status.py` (`"%s%s: you take %s of it"`). What it would take: say "output falls to 80% of normal" for the output factor and "you lose N% of your staff in a wave" for staff loss, using the wording the event message already uses.
+The text comes from `sim/ui/proto/render_screens_status.py` (`"%s%s: you take %s of it"`). What it would take: say "output falls to 80% of normal" for the output factor and "you lose N% of your staff in a wave" for staff loss, using the wording the event message already uses.
 
 Found in an England 1300 blind playtest (fog on, poor_scholar kit, 1300 to 1375). Reports: `Complaints/reports/playtest-england-1300-fog-tester-notes.md`, `Complaints/reports/playtest-england-1300-fog-yearly-log.md`; triage: `Complaints/reports/playtest-england-1300-fog-triage.md`.
 

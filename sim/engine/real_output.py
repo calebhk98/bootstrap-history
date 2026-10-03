@@ -89,7 +89,7 @@ class RealOutputMixin:
 
     def _close_real_output(self):
         """Measure the year's real output per head once the market has closed."""
-        per_hour = self.money_per_labour_hour()
+        per_hour = self.labour.money_per_labour_hour()
         prices = self.goods_market.household_prices()
         for material in self.household_new_goods_units():
             self.state.economy.introduction_prices.setdefault(material, prices[material] / per_hour)

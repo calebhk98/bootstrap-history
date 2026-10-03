@@ -177,7 +177,7 @@ class VenturesMixin:
         WHICH to run is a decision rather than an accounting formality."""
         sch_used, art_used = self.venture_staff_used()
         own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
-        return (max(0.0, self.effective_scholars() - sch_used),
+        return (max(0.0, self.labour.effective_scholars() - sch_used),
                 max(0.0, self.state.household.artisans + own - art_used))
 
 
@@ -323,7 +323,7 @@ class VenturesMixin:
         if inst_units is None:
             inst_units = governance.inst_units = {}
         inst_units[node_id] = have + add_units
-        governance._inst_units_ver = getattr(governance, "_inst_units_ver", 0) + 1
+        self.household.bump_institution_units_version()
         rev_now, up_now = node["rev"] * inst_units[node_id], node["up"] * inst_units[node_id]
         return True, ("%s expanded from %.2f to %.2f units for %s denarii: it "
                       "now earns about %s a year and costs about %s to run"

@@ -71,7 +71,7 @@ class ForeignCapacityMixin:
         prices = self.goods_market.household_prices()
         cache = getattr(self.household, "_home_final_tonnes_cache", None)
         if cache is None or cache[0] is not prices:
-            per_hour = self.money_per_labour_hour()
+            per_hour = self.labour.money_per_labour_hour()
             tonnes = budget_scaled_final_tonnes(
                 {material: price / per_hour for material, price in prices.items() if price > 0.0},
                 self._opening_population())
@@ -85,13 +85,13 @@ class ForeignCapacityMixin:
     def _tracked_mineral(self, commodity):
         """Whether the geography file gives regional shares for it."""
         return any(commodity in (region.get("minerals") or {})
-                   for region in self._regions.values())
+                   for region in self.geography.regions.values())
 
     def _foreign_mineral_share(self, civilization_id, commodity):
         """Sum of its home regions' shares of a mined commodity."""
-        return sum(float((self._regions[region_id].get("minerals") or {}).get(commodity, 0.0))
+        return sum(float((self.geography.regions[region_id].get("minerals") or {}).get(commodity, 0.0))
                    for region_id in load_civ(civilization_id).get("home_regions") or []
-                   if region_id in self._regions)
+                   if region_id in self.geography.regions)
 
     def _foreign_can_make(self, civilization_id, material, solved, _seen=None):
         """Whether its techniques and regions supply the material: it holds

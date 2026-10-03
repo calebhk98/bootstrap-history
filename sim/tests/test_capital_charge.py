@@ -10,7 +10,7 @@ from unittest import mock
 from sim import solve_prices
 from sim.engine import data, energy_prices, node_output, node_revenue
 from sim.world import capital_market
-from sim.world.labour_market import production_data
+from sim.labour.labour_market import production_data
 
 # Entries that state a plant and gate a node, whose inputs at solved prices cost more than what they
 # make: a technique dearer than the one that sets the price, so it adds nothing a staff could be paid from.
@@ -83,7 +83,7 @@ class ConcernEarnsItsReturn(unittest.TestCase):
                 "art": 0.0, "annual_output_t": 0.0}
         goods = {"ore_kg": 1.0, "widget_kg": unit_price(rate)}
         table = {"widget_works_entry": works_entry()}
-        with mock.patch("sim.world.labour_market.production_data", return_value=table):
+        with mock.patch("sim.labour.labour_market.production_data", return_value=table):
             node_revenue.apply_revenue([node], goods, WAGES, 1.0, energy_prices.pool_only(goods))
         self.assertEqual(node["_revenue_basis"], "output")
         staff = node["_upkeep_hours_parts"]["staff"]

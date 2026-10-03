@@ -10,4 +10,4 @@ What it would take: one "BENEFIT" block in `why` generated from the node's mecha
 
 Found in a Han China 100 AD blind playtest (fog on, poor_scholar kit, immortal founder, goal reached in 399 AD, tester item(s) 32, 50, 107). Reports: `Complaints/reports/playtest-han-china-100ad-fog-tester-notes.md`, `Complaints/reports/playtest-han-china-100ad-fog-yearly-journal.md`; triage: `Complaints/reports/playtest-han-china-100ad-fog-triage.md`.
 
-Fixed: `why` carries a BENEFIT block (permanent, while open, cost of opening, if shut) built from the node's mechanics, its tech-effects entries and the engine's lost-benefit table (`sim/engine/proto/why_benefit.py`); nodes that declare nothing show no block.
+Fixed: `why` carries a BENEFIT block (permanent, while open, cost of opening, if shut) built from the node's mechanics, its tech-effects entries and the engine's lost-benefit table (`sim/ui/proto/why_benefit.py`); nodes that declare nothing show no block.

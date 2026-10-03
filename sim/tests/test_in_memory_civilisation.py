@@ -6,7 +6,7 @@ import random
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.protocol import _agent_dispatch, KNOWN_COMMANDS
+from sim.ui.protocol import _agent_dispatch, KNOWN_COMMANDS
 
 _SKIP = ("quit", "save", "load")
 
@@ -47,12 +47,12 @@ class InMemoryCivilisation(unittest.TestCase):
                          civ=S.load_civ("rome_100ad"))
         held = frozenset(sim.state.projects.done)
         own = S.calculated_goods_prices(held, civilization_id=variant["id"], civilization=variant,
-                                        money_per_labour_hour=sim.money_per_labour_hour())
+                                        money_per_labour_hour=sim.labour.money_per_labour_hour())
         self.assertTrue(sim._material_prices() == own)
         self.assertTrue(sim._material_prices() != original._material_prices())
         self.assertNotAlmostEqual(
-            sim._material_prices()["hectare_land"] / sim.money_per_labour_hour(),
-            original._material_prices()["hectare_land"] / original.money_per_labour_hour())
+            sim._material_prices()["hectare_land"] / sim.labour.money_per_labour_hour(),
+            original._material_prices()["hectare_land"] / original.labour.money_per_labour_hour())
 
     def test_divergence_start_values_are_the_variants_own(self):
         sim = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=False,

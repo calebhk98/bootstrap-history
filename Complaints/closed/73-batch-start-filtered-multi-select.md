@@ -30,7 +30,7 @@ This is not automation of strategy if the player explicitly defines the filter a
 
 ## WHERE IT LIVES
 
-`sim/engine/proto/dispatch.py` for command parsing, `sim/engine/proto/dispatch_money.py` or venture management code for batch start logic. `sim/engine/proto/render.py` for preview rendering.
+`sim/ui/proto/dispatch.py` for command parsing, `sim/ui/proto/dispatch_money.py` or venture management code for batch start logic. `sim/ui/proto/render.py` for preview rendering.
 
 ## Confidence
 
@@ -40,6 +40,6 @@ Design recommendation
 
 Related to UX-006 (mature play needs development-program abstraction), UX-008 (project-start boilerplate), and UX-031 (idle directed hours handling).
 
-Update: `rush preview` and `rush limit:N max_total_cost:N max_annual_draw:N reserve_cash:N` (sim/engine/proto/dispatch_ventures.py) give the confirmed, capped bulk start with a preview. What remains is choosing the set by filter (subject, cost, hours) and showing founder hours, specialist bottlenecks and risk exposure in the preview.
+Update: `rush preview` and `rush limit:N max_total_cost:N max_annual_draw:N reserve_cash:N` (sim/ui/proto/dispatch_ventures.py) give the confirmed, capped bulk start with a preview. What remains is choosing the set by filter (subject, cost, hours) and showing founder hours, specialist bottlenecks and risk exposure in the preview.
 
-Update: `rush category:<subject> max_cost:N max_hours:N` (sim/engine/proto/rush_filters.py) choose the set; the preview totals founder hours and echoes the filters. Remains: specialist bottlenecks and risk exposure in the preview; selecting an explicit list of ids.
+Update: `rush category:<subject> max_cost:N max_hours:N` (sim/ui/proto/rush_filters.py) choose the set; the preview totals founder hours and echoes the filters. Remains: specialist bottlenecks and risk exposure in the preview; selecting an explicit list of ids.

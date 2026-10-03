@@ -117,22 +117,22 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
                         `data/world/commodities.json`. Imported by
                         `economy_materials.py` and `economy_freight.py`.
 
-    engine/labour.py    49-line composition point:
+    sim/labour/labour.py    49-line composition point:
                         `LabourMixin(CapacityMixin, PopulationMixin,
                         WagesMixin, TrainingMixin, BondageMixin)`.
-    engine/labour_capacity.py    literacy, institutional and supervisory
+    sim/labour/labour_capacity.py    literacy, institutional and supervisory
                                   ceilings on hiring, teaching, owning or
                                   directing people, plus the founder's own
                                   hour budget (1,263 lines).
-    engine/labour_population.py  the local labour market: depth, price
+    sim/labour/labour_population.py  the local labour market: depth, price
                                   response to recent hiring, population
                                   estimates (626 lines).
-    engine/labour_wages.py       what staff cost every year, and what it
+    sim/labour/labour_wages.py       what staff cost every year, and what it
                                   costs to be one yourself (299 lines).
-    engine/labour_training.py    hiring, firing, teaching, commissioning,
+    sim/labour/labour_training.py    hiring, firing, teaching, commissioning,
                                   what a technology does to an hour once
                                   bought (703 lines).
-    engine/labour_bondage.py     buying people, freeing them, and the pool
+    sim/labour/labour_bondage.py     buying people, freeing them, and the pool
                                   bookkeeping that keeps trained/granted
                                   staff honest (350 lines).
 
@@ -180,76 +180,76 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
                         - one shared function, used by both callers, instead
                         of two drifting copies.
     engine/fog.py       what the player is allowed to see (521 lines).
-    engine/geography.py where things are, per civilisation (282 lines).
+    sim/geography/geography.py where things are, per civilisation (282 lines).
 
-    engine/actors/household.py  `Household`: the founder's money, staff,
+    sim/agents/household.py  `Household`: the founder's money, staff,
                         knowledge, plant and standing, extracted off `Sim`
                         so a second economic actor (a firm, a government)
                         can use the same class later without importing the
                         whole engine. 339 lines, 68 `__init__` attributes
                         (script under "The runtime graph" below). Its own
-                        package (`engine/actors/`) rather than one more
+                        package (`sim/agents/`) rather than one more
                         module under `engine/`, for the same reason.
 
-    engine/protocol.py  78 lines: a re-export shim, not touched by the
-                        mixin split above. `wc -l sim/engine/protocol.py`.
-                        The JSON command layer itself is `engine/proto/`,
-                        19 real modules (`ls sim/engine/proto/*.py | wc -l`
+    sim/ui/protocol.py  78 lines: a re-export shim, not touched by the
+                        mixin split above. `wc -l sim/ui/protocol.py`.
+                        The JSON command layer itself is `sim/ui/proto/`,
+                        19 real modules (`ls sim/ui/proto/*.py | wc -l`
                         = 21, of which `__init__.py` is one line of package
                         docstring plumbing and `ventures.py` is a 23-line
                         one-constant module).
-    engine/proto/dispatch.py            the command table (55 entries -
+    sim/ui/proto/dispatch.py            the command table (55 entries -
                         `_AGENT_DISPATCH_TABLE`, several names aliasing the
                         same handler) and the dispatcher that resolves
                         names, guards fog, validates and looks the handler
                         up, plus an import-time assertion tying
                         `KNOWN_COMMANDS` to that table so the two cannot
                         silently drift (655 lines).
-    engine/proto/dispatch_inspection.py  read-only inspection commands:
+    sim/ui/proto/dispatch_inspection.py  read-only inspection commands:
                         state, available, why, path, log, score, risk,
                         values, stuck, mines, capacity, portfolio, economy,
                         changes, population (495 lines).
-    engine/proto/dispatch_labour.py      work, allocate, labour, hire, fire,
+    sim/ui/proto/dispatch_labour.py      work, allocate, labour, hire, fire,
                         train, commission (461 lines).
-    engine/proto/dispatch_money.py       bounty, buy, sell, money, quote,
+    sim/ui/proto/dispatch_money.py       bounty, buy, sell, money, quote,
                         close, withdraw, bribe (455 lines).
-    engine/proto/dispatch_ventures.py    start, stop, rush, mothball,
+    sim/ui/proto/dispatch_ventures.py    start, stop, rush, mothball,
                         restore, open, ventures, policy (733 lines).
-    engine/proto/techtree.py    the tech tree through the protocol:
+    sim/ui/proto/techtree.py    the tech tree through the protocol:
                         why/available, node-explain, subject grouping
                         (1,407 lines).
-    engine/proto/state.py       the state/status screen and the event log
+    sim/ui/proto/state.py       the state/status screen and the event log
                         (1,079 lines).
-    engine/proto/economy.py     portfolio, capacity, mines, economy/changes
+    sim/ui/proto/economy.py     portfolio, capacity, mines, economy/changes
                         reports (892 lines).
-    engine/proto/typed.py       parsing what a person types at `play`'s
+    sim/ui/proto/typed.py       parsing what a person types at `play`'s
                         prompt into the one JSON command dict the protocol
                         already understands (895 lines).
-    engine/proto/help.py        the `{"cmd":"help"}` topic tree (484 lines).
-    engine/proto/saveload.py    reading, writing and validating a save file;
+    sim/ui/proto/help.py        the `{"cmd":"help"}` topic tree (484 lines).
+    sim/engine/saveload.py    reading, writing and validating a save file;
                         `SAVE_FIELDS` (536 lines).
-    engine/proto/score.py       scoring the run, at any point or at the end
+    sim/ui/proto/score.py       scoring the run, at any point or at the end
                         (415 lines).
-    engine/proto/nodes.py       node id/name resolution and small graph
+    sim/ui/proto/nodes.py       node id/name resolution and small graph
                         queries (190 lines).
-    engine/proto/util.py        small dependency-free helpers shared across
+    sim/ui/proto/util.py        small dependency-free helpers shared across
                         the package (291 lines).
-    engine/proto/ventures.py    one shared supervision-hours explanation, so
+    sim/ui/proto/ventures.py    one shared supervision-hours explanation, so
                         every screen that shows it agrees (23 lines).
-    engine/proto/render.py      33 lines: re-exports the render_* pieces
+    sim/ui/proto/render.py      33 lines: re-exports the render_* pieces
                         below. Pure presentation - every function reads an
                         already-built reply dict and returns text, never
                         touching the live `Sim` (render.py's own docstring
                         points back at this file for that claim).
-    engine/proto/render_screens_big.py     render_state, render_why and the
+    sim/ui/proto/render_screens_big.py     render_state, render_why and the
                         other large per-screen renderers (866 lines).
-    engine/proto/render_screens_economy.py render_capacity, render_materials,
+    sim/ui/proto/render_screens_economy.py render_capacity, render_materials,
                         render_portfolio and the other accounting screens
                         (756 lines).
-    engine/proto/render_screens_status.py  render_values, render_final,
+    sim/ui/proto/render_screens_status.py  render_values, render_final,
                         render_score, render_error, render_stuck, render_risk
                         (399 lines).
-    engine/proto/render_typed.py           typed-command rendering and the
+    sim/ui/proto/render_typed.py           typed-command rendering and the
                         `--pretty` entry point (175 lines).
 
     engine/settings.py  where a player's stuff lives on disk, and what they
@@ -258,19 +258,19 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
                         the CLI layer (`cli.py`, `cli_interactive.py`,
                         `cli_agent.py`, `cli_interactive_saveload.py`), not
                         by the engine mixins.
-    engine/cli.py       1,765 lines: argparse and `validate`/`path`/`costs`/
+    sim/ui/cli.py       1,765 lines: argparse and `validate`/`path`/`costs`/
                         `run`/`compare`/`sensitivity`/`sweep`/`goals`, plus
                         shared CLI infrastructure and `main()`. Three more
                         command groups live in their own files, imported at
                         `cli.py`'s own bottom:
-    engine/cli_interactive.py  `play`/`civs`/`menu` - the interactive loop
+    sim/ui/cli_interactive.py  `play`/`civs`/`menu` - the interactive loop
                         (1,513 lines).
-    engine/cli_interactive_saveload.py  mid-game save/load browsing and the
+    sim/ui/cli_interactive_saveload.py  mid-game save/load browsing and the
                         civilisation list, split out of cli_interactive.py
                         as the near-leaf half of it (295 lines).
-    engine/cli_analysis.py     `plan`/`search`/`why` - offline reporting
+    sim/ui/cli_analysis.py     `plan`/`search`/`why` - offline reporting
                         (321 lines).
-    engine/cli_agent.py        `agent` mode's CLI entry point (202 lines).
+    sim/ui/cli_agent.py        `agent` mode's CLI entry point (202 lines).
 
     test_regressions.py a 41-line shim over `sim/tests/`, topic-named
                         modules plus a harness and a runner. `--only
@@ -278,7 +278,7 @@ excluding `__pycache__`), grouped by what it does rather than alphabetically:
     perf_fingerprint.py proves a change did not alter the simulation.
 
 All line counts above are `wc -l sim/engine/<file>.py` (or
-`sim/engine/proto/<file>.py`), run against this HEAD; re-run the same
+`sim/ui/proto/<file>.py`), run against this HEAD; re-run the same
 command against yours before trusting any of them.
 
 **`engine/__init__.py`'s own docstring still describes "six subject
@@ -373,7 +373,7 @@ fully-qualified.
 Checked by grepping every file's own `from .`/`from ..` lines (the command
 below); re-run it whenever a file moves:
 
-    grep -n "^from \.\|^from \.\." sim/engine/*.py sim/engine/proto/*.py
+    grep -n "^from \.\|^from \.\." sim/engine/*.py sim/ui/proto/*.py
 
 No sub-mixin imports another sub-mixin, another top-level composition
 point, or `core` - they would cycle if they did, so the import graph tells
@@ -404,7 +404,7 @@ properties (87 `@property`/`@x.setter` pairs in `core_properties.py`'s
 attribute rather than one-line-forwarding a single field, and moving them
 would put real logic in a file whose whole point is that everything in it
 is inert boilerplate; 1 more, `mine_capacity`, defined on `MiningMixin` in
-`economy_mining.py`). `Household` (`sim/engine/actors/household.py`) holds
+`economy_mining.py`). `Household` (`sim/agents/household.py`) holds
 **68** of its own `__init__` attributes.
 
     python3 - <<'EOCOUNT'
@@ -427,7 +427,7 @@ is inert boilerplate; 1 more, `mine_capacity`, defined on `MiningMixin` in
                                         attrs.add(t.attr)
                         return len(attrs)
     print("Sim.__init__ attrs:", self_init_attrs('sim/engine/core.py', 'Sim'))
-    print("Household.__init__ attrs:", self_init_attrs('sim/engine/actors/household.py', 'Household'))
+    print("Household.__init__ attrs:", self_init_attrs('sim/agents/household.py', 'Household'))
     EOCOUNT
 
     grep -c "^    @property" sim/engine/core_properties.py   # 87
@@ -436,7 +436,7 @@ is inert boilerplate; 1 more, `mine_capacity`, defined on `MiningMixin` in
     grep -c "^\s*@property" sim/engine/economy_mining.py      # 1 (mine_capacity)
 
 `Household` exists because the founder's money, staff, knowledge,
-inventory and standing left `Sim` for `sim/engine/actors/household.py`
+inventory and standing left `Sim` for `sim/agents/household.py`
 (`docs/architecture/HOUSEHOLD_EXTRACTION.md`); what stayed directly on
 `Sim` is the world, the scenario, and a handful of fields biographical to
 one mortal person (`founder_alive`, `life_left`, `dead_reason` and kin)
@@ -444,7 +444,7 @@ that have no meaning for a government or a firm and are waiting for a
 second actor to say what they should become.
 `docs/architecture/SIM_STATE_INVENTORY.md` has a broader "everything `Sim`
 CARRIES" count (adding attributes assigned outside `__init__`, ones reached
-only as `s.X` from `engine/proto/`, and ones hidden behind
+only as `s.X` from `sim/ui/proto/`, and ones hidden behind
 `self.__dict__[...]`) - it is not scripted anywhere, so treat any total it
 gives as unverifiable against today's build rather than re-deriving one by
 arithmetic on it, the same caution CLAUDE.md SS7 gives for the naming
@@ -566,12 +566,12 @@ undercounting.
         ('sim/engine/economy_mining.py', 'MiningMixin'),
         ('sim/engine/economy_credit.py', 'CreditMixin'),
         ('sim/engine/economy_production.py', 'ProductionMixin'),
-        ('sim/engine/labour.py', 'LabourMixin'),
-        ('sim/engine/labour_capacity.py', 'CapacityMixin'),
-        ('sim/engine/labour_population.py', 'PopulationMixin'),
-        ('sim/engine/labour_wages.py', 'WagesMixin'),
-        ('sim/engine/labour_training.py', 'TrainingMixin'),
-        ('sim/engine/labour_bondage.py', 'BondageMixin'),
+        ('sim/labour/labour.py', 'LabourMixin'),
+        ('sim/labour/labour_capacity.py', 'CapacityMixin'),
+        ('sim/labour/labour_population.py', 'PopulationMixin'),
+        ('sim/labour/labour_wages.py', 'WagesMixin'),
+        ('sim/labour/labour_training.py', 'TrainingMixin'),
+        ('sim/labour/labour_bondage.py', 'BondageMixin'),
         ('sim/engine/projects.py', 'ProjectsMixin'),
         ('sim/engine/projects_capability.py', 'CapabilityMixin'),
         ('sim/engine/projects_ventures.py', 'VenturesMixin'),
@@ -585,7 +585,7 @@ undercounting.
         ('sim/engine/society_adoption.py', 'AdoptionMixin'),
         ('sim/engine/society_diffusion.py', 'DiffusionMixin'),
         ('sim/engine/fog.py', 'FogMixin'),
-        ('sim/engine/geography.py', 'GeographyMixin'),
+        ('sim/geography/geography.py', 'GeographyMixin'),
     ]
     total = sum(count_class_methods(fname, cname) for fname, cname in pieces)
     print(total)
@@ -685,9 +685,9 @@ so that the next person does not silently restart it:
   rewrite of most of the engine;
 - the safety net does not fully exist for it. `perf_fingerprint.py`
   covers the simulation loop well and covers `protocol.py` not at all,
-  and roughly a quarter of the engine's code lives under `engine/proto/`
+  and roughly a quarter of the engine's code lives under `sim/ui/proto/`
   (11,246 of 41,746 lines, 27% -
-  `find sim/engine/proto -name "*.py" | xargs wc -l | tail -1` against
+  `find sim/ui/proto -name "*.py" | xargs wc -l | tail -1` against
   `find sim/engine -name "*.py" -not -path "*/__pycache__/*" | xargs wc -l | tail -1`);
 - the payoff is small, for the reason above - the couplings are the
   domain.
@@ -702,7 +702,7 @@ Code lines, counted as **lines that are neither blank nor comment-only**
 (`economy.py` 604, `labour.py` 49, `projects.py` 202, `society.py` 44) are
 thin now, so they are not among the largest files any more; the table below
 lists the **eight largest files under `sim/engine/` (including
-`engine/proto/`) by total line count**, found fresh rather than assumed:
+`sim/ui/proto/`) by total line count**, found fresh rather than assumed:
 
     find sim/engine -name "*.py" -not -path "*/__pycache__/*" \
         | xargs wc -l | sort -rn | grep -v " total$" | head -8
@@ -722,10 +722,10 @@ changes as the code is split further):
 
     python3 - <<'EOCOUNT'
     import ast
-    engine_files = ["sim/engine/core.py", "sim/engine/cli.py",
-                    "sim/engine/core_step_phases.py", "sim/engine/cli_interactive.py",
-                    "sim/engine/proto/techtree.py", "sim/engine/society_state_pressure.py",
-                    "sim/engine/labour_capacity.py", "sim/engine/society_hazards.py"]
+    engine_files = ["sim/engine/core.py", "sim/ui/cli.py",
+                    "sim/engine/core_step_phases.py", "sim/ui/cli_interactive.py",
+                    "sim/ui/proto/techtree.py", "sim/engine/society_state_pressure.py",
+                    "sim/labour/labour_capacity.py", "sim/engine/society_hazards.py"]
     for path in engine_files:
         source = open(path).read()
         lines = source.splitlines()
@@ -782,7 +782,7 @@ stripped to "clean up" regardless of which way a percentage falls.
 
 `test_regressions.py` and `protocol.py` are split for cyclomatic reasons,
 not line-count ones. `protocol.py` itself is a 78-line re-export shim; the
-command dispatcher lives in `engine/proto/dispatch.py`, as
+command dispatcher lives in `sim/ui/proto/dispatch.py`, as
 `_agent_dispatch_inner` - a single function that resolves a command name
 against `_AGENT_DISPATCH_TABLE` (55 dict entries, several names aliasing
 one handler - read the dict literal in that file directly to see which)
@@ -791,7 +791,7 @@ two cannot drift, rather than a flat `if`/`elif` chain over every command:
 
     python3 - <<'EOCOUNT'
     import ast
-    src = open('sim/engine/proto/dispatch.py').read()
+    src = open('sim/ui/proto/dispatch.py').read()
     tree = ast.parse(src)
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) and node.name == '_agent_dispatch_inner':
@@ -925,7 +925,7 @@ simulation. An "obviously safe" cleanup - promoting `getattr(self, x,
 default)` calls to real `__init__` attributes - once passed the entire
 suite while silently breaking save-file semantics, because several of
 those names are in `SAVE_FIELDS` where a _missing_ attribute is
-meaningful; `Household.__init__`'s own docstring (`sim/engine/actors/
+meaningful; `Household.__init__`'s own docstring (`sim/agents/
 household.py`) still calls this out by name for exactly the fields it
 deliberately leaves unassigned. `perf_fingerprint.py` catches this
 class of bug and the suite alone does not. Run it:
@@ -1030,7 +1030,7 @@ Save/load is derived directly from authoritative state definitions:
 To preserve existing callers and compatibility while enforcing a single authoritative source of truth:
 
 - `ForwardingPropertiesMixin` (`sim/engine/core_properties.py`) provides 106 forwarding properties on `Sim` that delegate directly to `self.state.<subsystem>.<field>`.
-- `Household` (`sim/engine/actors/household.py`) serves as a live façade delegating property and attribute access directly to `self._state.<subsystem>`.
+- `Household` (`sim/agents/household.py`) serves as a live façade delegating property and attribute access directly to `self._state.<subsystem>`.
 - `ActiveProjectState` provides typed attributes, dictionary compatibility, and deep change notification bubbling to `self.state.projects._active_ver`.
 - Invalidation hooks and version counters attach directly to the respective subsystem state owners (`ProjectsState`, `HouseholdState`, `GovernanceState`).
 
@@ -1043,7 +1043,7 @@ To preserve existing callers and compatibility while enforcing a single authorit
 
 ### 1. Internal Engine State Access Architecture
 
-All internal simulation code across all engine mixins (`sim/engine/geography.py`, `fog.py`, `economy_*.py`, `labour_*.py`, `projects_*.py`, `society_*.py`, `core_step_phases.py`, and `core.py`) accesses persistent live simulation state exclusively through its authoritative subsystem owner:
+All internal simulation code across all engine mixins (`sim/geography/geography.py`, `fog.py`, `economy_*.py`, `labour_*.py`, `projects_*.py`, `society_*.py`, `core_step_phases.py`, and `core.py`) accesses persistent live simulation state exclusively through its authoritative subsystem owner:
 
 - `sim.state.household` (`HouseholdState`): Capital, workforce, wages, financial ledgers, debt, standing, and household capacity.
 - `sim.state.projects` (`ProjectsState`): Active, done, revealed, operating, mothballed, and shut projects, attempts, and work trackers.

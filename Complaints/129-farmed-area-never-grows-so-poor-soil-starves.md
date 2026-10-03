@@ -5,7 +5,7 @@
 Soil now changes only how much food a hectare yields (Complaints/50). Less food
 should make food scarcer and pull workers onto the farm, and it does, but the
 response stops at the cleared farm area: `farm_workers_needed`
-(`sim/engine/labour_allocation.py`) caps workers at `farm_land.hectares` over
+(`sim/labour/labour_allocation.py`) caps workers at `farm_land.hectares` over
 hectares per worker, and `farm_land.hectares` is fixed at construction from the
 population alone. On poorer ground the labour cap is reached in the first years and
 the shortfall then persists, so the civilisation shrinks.

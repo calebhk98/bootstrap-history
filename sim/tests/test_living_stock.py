@@ -87,7 +87,7 @@ check("a good the partner cannot make is not for sale",
 _foreign_module.exports_refused = _shipped_refused
 
 # --- stock survives a save and load within a build.
-from sim.engine.proto.saveload import load_state, save_state
+from sim.engine.saveload import load_state, save_state
 with tempfile.TemporaryDirectory() as _folder:
     _path = os.path.join(_folder, "save.json")
     save_state(buyer, _path)

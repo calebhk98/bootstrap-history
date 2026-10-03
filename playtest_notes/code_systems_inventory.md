@@ -7,10 +7,10 @@ Paths are relative to /home/user/bootstrap-history/sim unless noted. "step" = `S
 Wiring vocabulary: WIRED = reached from step()/play/CLI. PARTIAL = runs but only a slice is reached, or reached only in one mode, or its output feeds nothing back. UNUSED = no live call site.
 
 Global notes
-- ~885 constants are registered with `declare(...)` (sim/constants.py); ~714 are `kind="temporary_heuristic"`, 3 are `kind="hardcoded_outcome"` (WAGE_SCARCITY_ELASTICITY in engine/core.py, SLAVE_BASE_PRICE_DENARII in engine/labour_bondage.py, GENERIC_OUTPUT_PRICE_EXPONENT in engine/economy_materials.py). Heavy heuristic files: labour_capacity, society_state_pressure, core, economy_goods, projects_completion, economy_credit, economy_mining.
+- ~885 constants are registered with `declare(...)` (sim/constants.py); ~714 are `kind="temporary_heuristic"`, 3 are `kind="hardcoded_outcome"` (WAGE_SCARCITY_ELASTICITY in engine/core.py, SLAVE_BASE_PRICE_DENARII in sim/labour/labour_bondage.py, GENERIC_OUTPUT_PRICE_EXPONENT in engine/economy_materials.py). Heavy heuristic files: labour_capacity, society_state_pressure, core, economy_goods, projects_completion, economy_credit, economy_mining.
 - Explicit "placeholder" wording appears in: economy_credit (~457), economy_goods (~684), economy_materials (~391, ~547), economy.py (~296), labour_population (~319-394, ~642), projects_starting (~71), society_state_pressure (~302), world/transport (cart/vessel service lives), world/agriculture (weather/hydrology terms), world/deposits (~211, ~372), world/land (~535), world/military_logistics (~644, ~770).
 - Engine special-cases content ids despite CLAUDE.md 4.7: `patron_imperial`, `patron_senatorial` (core_step_phases eminence branch, economy_credit living cost), `sanitation_antisepsis` (founder mortality), `workshop_first` (auto_buy_people), `corpus_dispersed`/`corpus_written` (core.corpus_hedge), `citizenship`, `DISEASE_BURDEN_TECH_IDS` list, `identity_cover`.
-- Save format carries `SAVE_VERSION = 3` / `state._version = 3` (engine/proto/saveload.py), a version stamp CLAUDE.md 4.6 says not to keep.
+- Save format carries `SAVE_VERSION = 3` / `state._version = 3` (sim/engine/saveload.py), a version stamp CLAUDE.md 4.6 says not to keep.
 - Only a handful of functions in engine/ and world/ have zero live references (list at end).
 
 ================================================================
@@ -24,17 +24,17 @@ Global notes
 
 4. **Farm weather** - engine/core.py `_farm_year_weather_seed`, `_compute_farm_weather_cells`, `_cap_pooled_farm_weather_cells`, `_compute_farm_weather_correlation_cholesky`, `_pooled_farm_weather_multiplier`; world/agriculture `draw_weather_multiplier`. Wired via `_demographic_recovery`. Correlated regional cells, deterministic per-year seed, not a scripted event.
 
-5. **Farming technique from held technology** - world/farming_technique.py; engine/labour_allocation.py `_farming_technique`. Wired (core and labour_allocation import it). Technique is a mix weighted by adoption of technologies that name agriculture-table entries; data-driven.
+5. **Farming technique from held technology** - world/farming_technique.py; sim/labour/labour_allocation.py `_farming_technique`. Wired (core and labour_allocation import it). Technique is a mix weighted by adoption of technologies that name agriculture-table entries; data-driven.
 
 6. **Disease burden from technology** - engine/core.py `_disease_burden`, `DISEASE_BURDEN_TECH_IDS`, `_tech_effects` (population weights). Wired: passed into `Population.step`. Hardcoded list of eight tech ids (violates dynamic-over-enumerated).
 
-7. **Farmland and land clearing** - world/land.py `territory_farmland`, `RegionLand`; engine/core.py (sizes `farm_land`), engine/labour_allocation.py `_apply_land_clearing`, `_set_farm_area`, `_clearable_hectares`. Wired (called end of `_demographic_recovery`). Land RENT half of land.py is used only by the price solver (see 21).
+7. **Farmland and land clearing** - world/land.py `territory_farmland`, `RegionLand`; engine/core.py (sizes `farm_land`), sim/labour/labour_allocation.py `_apply_land_clearing`, `_set_farm_area`, `_clearable_hectares`. Wired (called end of `_demographic_recovery`). Land RENT half of land.py is used only by the price solver (see 21).
 
-8. **Labour allocation between farm and trades** - world/labour_market.py (`Workforce.step`, hours by trade responding to need), world/workforce_spinup.py (starting split by spin-up), world/need_demand.py (demand from needs), engine/labour_allocation.py (`_allocate_farm_workforce`, `_food_balance_step`, `_hours_needed_by_trade`, `reallocate`). Wired: `_allocate_farm_workforce` in `_demographic_recovery`; spin-up at start. Notable: workforce_spinup splits each need's budget equally (temporary_heuristic).
+8. **Labour allocation between farm and trades** - sim/labour/labour_market.py (`Workforce.step`, hours by trade responding to need), sim/labour/workforce_spinup.py (starting split by spin-up), world/need_demand.py (demand from needs), sim/labour/labour_allocation.py (`_allocate_farm_workforce`, `_food_balance_step`, `_hours_needed_by_trade`, `reallocate`). Wired: `_allocate_farm_workforce` in `_demographic_recovery`; spin-up at start. Notable: workforce_spinup splits each need's budget equally (temporary_heuristic).
 
-9. **Wage schedule and tightness** - world/wages.py `WageSchedule` (floor from subsistence basket, training premium, tightness adjust), engine/wage_provider.py `build_schedule`, engine/labour_wages.py (`wage_per_hour`, `annual_wage`, `wage_cost_factors`, `update_wages`, `wage_bill`). Wired: `update_wages()` each year (core.py ~1555), wage_bill in living_cost. `adjusted_tightness_factor` has no live caller.
+9. **Wage schedule and tightness** - sim/labour/wages.py `WageSchedule` (floor from subsistence basket, training premium, tightness adjust), sim/labour/wage_provider.py `build_schedule`, sim/labour/labour_wages.py (`wage_per_hour`, `annual_wage`, `wage_cost_factors`, `update_wages`, `wage_bill`). Wired: `update_wages()` each year (core.py ~1555), wage_bill in living_cost. `adjusted_tightness_factor` has no live caller.
 
-10. **Money units / coin standard** - engine/money_units.py, engine/wage_provider.py `coin_standard`, core `book_money`. Wired. Book denarii -> labour hours -> civ coin; civ must declare `coin_standard` material and mass.
+10. **Money units / coin standard** - engine/money_units.py, sim/labour/wage_provider.py `coin_standard`, core `book_money`. Wired. Book denarii -> labour hours -> civ coin; civ must declare `coin_standard` material and mass.
 
 11. **Credit, interest, arrears, insolvency** - engine/economy_credit.py (`credit_limit`, `committed_spend`, `funding_capacity`, `debt_interest_rate`, `charge_interest`, `warn_near_the_limit`, `enforce_credit_limit`, `shed_loss_makers`, `stall_diagnosis`, `spending_power`); engine/purchase_rule.py; step `_step_money` (staff bleed, abandonment of loss-making works, creditor seizure). Wired. Many placeholder-labelled thresholds.
 
@@ -44,15 +44,15 @@ Global notes
 
 14. **Goods market saturation and income effect** - engine/economy_goods.py (`goods_market_factor`, category state/elasticity/tau per category, cross-elasticity between own concerns, `income_factor`, `essential_price_ratio`, `goods_reach_factor`, `invest_farm`, `build_worker_housing`). Wired via revenue. ~13 near-identical per-category `declare`d tau/elasticity blocks (heuristic). `invest_farm` / `build_worker_housing` are player commands only (proto/dispatch_money.py).
 
-15. **Local labour market for hiring (depth, saturation)** - engine/labour_population.py (`labour_pressure`, `labour_price_factor`, `market_supply`, `trade_available`, `found_trade_school`, `reachable_trade_population`, `population_report`). Wired: used by hire/train/teach and auto-train. Town size and trade density labelled order-of-magnitude placeholders.
+15. **Local labour market for hiring (depth, saturation)** - sim/labour/labour_population.py (`labour_pressure`, `labour_price_factor`, `market_supply`, `trade_available`, `found_trade_school`, `reachable_trade_population`, `population_report`). Wired: used by hire/train/teach and auto-train. Town size and trade density labelled order-of-magnitude placeholders.
 
-16. **Staff: hire, fire, train, teach, commission, attrition** - engine/labour_training.py, engine/labour_bondage.py `_resync_pools`, core_step_phases `_step_apprenticeships`, `_step_staff`, `_step_teach_trades`. Wired. Attrition rolled per person on `self.rng`; auto_hire / auto_train / auto_commission policies; staff let go when payroll cannot be met after credit.
+16. **Staff: hire, fire, train, teach, commission, attrition** - sim/labour/labour_training.py, sim/labour/labour_bondage.py `_resync_pools`, core_step_phases `_step_apprenticeships`, `_step_staff`, `_step_teach_trades`. Wired. Attrition rolled per person on `self.rng`; auto_hire / auto_train / auto_commission policies; staff let go when payroll cannot be met after credit.
 
-17. **Slavery, purchase of people, manumission** - engine/labour_bondage.py (`slave_quote`, `buy_slaves`, `manumit`), step auto_buy_people / auto_manumit. Wired. `SLAVE_BASE_PRICE_DENARII` is flat and labelled hardcoded_outcome; rising congestion surcharge.
+17. **Slavery, purchase of people, manumission** - sim/labour/labour_bondage.py (`slave_quote`, `buy_slaves`, `manumit`), step auto_buy_people / auto_manumit. Wired. `SLAVE_BASE_PRICE_DENARII` is flat and labelled hardcoded_outcome; rising congestion surcharge.
 
-18. **Founder hours, deputies, supervision and household room** - engine/labour_capacity.py (`director_pool`, `directors_extra`, `staff_capacity`, `supervision_room`, `household_room`, `headcount`, `hired_cap`, `literate_capacity`, `director_hours_committed`). Wired. 87 heuristic constants in this file (largest concentration).
+18. **Founder hours, deputies, supervision and household room** - sim/labour/labour_capacity.py (`director_pool`, `directors_extra`, `staff_capacity`, `supervision_room`, `household_room`, `headcount`, `hired_cap`, `literate_capacity`, `director_hours_committed`). Wired. 87 heuristic constants in this file (largest concentration).
 
-19. **Wage work, standing hour directives, wage fallback** - engine/labour_wages.py `work_for_wages`; core_step_phases `_step_standing_work_directive`, `_step_wage_fallback`; proto `allocate`, `work`. Wired.
+19. **Wage work, standing hour directives, wage fallback** - sim/labour/labour_wages.py `work_for_wages`; core_step_phases `_step_standing_work_directive`, `_step_wage_fallback`; proto `allocate`, `work`. Wired.
 
 20. **Bounties** - engine/projects_starting.py `bounty_eligible`, `post_bounty`; proto `bounty`. Wired (player command; also `bounty_set` in path search). Money converted to someone else's hours; conversion rate labelled placeholder.
 
@@ -62,15 +62,15 @@ Global notes
 
 23. **Materials supply, stock and resource throttle** - engine/economy_materials.py (nine curated commodities + generic fitted fallback for other keys, `annual_material_demand`, stock/flow, `resource_throttle` inputs), engine/economy_electricity.py `resource_throttle`, `project_resource_throttle`; step `_step_materials`. Wired: throttle scales work done each year. GENERIC_OUTPUT_* fit is hardcoded_outcome.
 
-24. **Freight and material price factor** - engine/economy_freight.py (`material_freight_cost_per_kg`, `material_price_factor`, `material_market_factor`, `shortage_remedy`); physics from world/transport.py (ox + cart + dirt track only). Wired via project_cost.
+24. **Freight and material price factor** - engine/economy_freight.py (`material_freight_cost_per_kg`, `material_price_factor`, `material_market_factor`, `shortage_remedy`); physics from sim/geography/transport.py (ox + cart + dirt track only). Wired via project_cost.
 
 25. **Mining, depletion, forests, nitre** - engine/economy_mining.py (`open_mine`, `commission_mines`, `_advance_mine_depletion`, `mine_land_ceiling`, `buy_forest`, `mothball_mines`, `mine_operating_cost`), world/deposits.py (`load_deposits`, `Deposit`, build and extraction labour), economy_freight `build_nitre`; step `_step_materials`, `_step_money`. Wired. Auto_mine, auto_forest, auto_mothball policies. Stock/land ceilings depend on standing and state capacity.
 
 26. **Electricity** - engine/economy_electricity.py (`generation_capacity_kw`, `_electricity_demand_kw`). Wired: part of `resource_throttle`. Heuristic-labelled duty cycles.
 
-27. **Geography and reach** - engine/geography.py (`region_reach`, `material_reach`, `material_cost_factor`, `mineral_scale`, `_compute_home_centroid`); data/world/geography.json. Wired (used by material supply and freight).
+27. **Geography and reach** - sim/geography/geography.py (`region_reach`, `material_reach`, `material_cost_factor`, `mineral_scale`, `_compute_home_centroid`); data/world/geography.json. Wired (used by material supply and freight).
 
-28. **Settlement, town and moving base** - world/settlement.py, engine/labour_settlement.py (`base_tile`, `move_base`, tile population share); proto `move_base` (costs founder hours: `relocation_hours_this_year`). Wired (town population feeds hiring market). Tile share of nation = share of cultivable capacity (temporary_heuristic).
+28. **Settlement, town and moving base** - sim/geography/settlement.py, sim/labour/labour_settlement.py (`base_tile`, `move_base`, tile population share); proto `move_base` (costs founder hours: `relocation_hours_this_year`). Wired (town population feeds hiring market). Tile share of nation = share of cultivable capacity (temporary_heuristic).
 
 29. **Society values** - `value_weights` (w_magic_fear, w_religious_rigidity, w_military, adaptation_rate, bribability, ...), engine/society_hazards.py `_shock_values` (values drift across a hazard's window); read by alarm, state interest, familiarity. Wired. Weights come from civ data.
 
@@ -116,9 +116,9 @@ Global notes
 
 50. **Needs and goods data** - engine/need_data.py, data/world/needs.json; consumed by world/need_demand via workforce_spinup. Wired at start-up.
 
-51. **Save / load** - engine/state.py (typed state owners, auto-detected fields), engine/proto/saveload.py, cli_interactive_saveload.py, settings.py. Wired (`save` command, `--session` saves and loads every command). RNG state and fog saved.
+51. **Save / load** - engine/state.py (typed state owners, auto-detected fields), sim/engine/saveload.py, cli_interactive_saveload.py, settings.py. Wired (`save` command, `--session` saves and loads every command). RNG state and fog saved.
 
-52. **Protocol, CLI, rendering, help, score** - engine/proto/* (command registry ~40 commands, dispatch_*, typed parser, render_*, help, score.py, techtree.py), engine/cli*.py (menu, play, agent, validate, path, costs, run, compare, sensitivity, sweep, goals, plan, search, why). Wired. Some proto/help.py `_topic_*` functions look unreferenced by name but are dispatched through a table.
+52. **Protocol, CLI, rendering, help, score** - sim/ui/proto/* (command registry ~40 commands, dispatch_*, typed parser, render_*, help, score.py, techtree.py), engine/cli*.py (menu, play, agent, validate, path, costs, run, compare, sensitivity, sweep, goals, plan, search, why). Wired. Some proto/help.py `_topic_*` functions look unreferenced by name but are dispatched through a table.
 
 53. **Settings / config** - engine/settings.py (saves dir, remembered menu choices). Wired in CLI.
 
@@ -129,11 +129,11 @@ Global notes
 
 55. **Military logistics** - world/military_logistics.py: only `annual_iron_and_ammunition_burden_kg_per_soldier` and `MODERN_SERVICE_RIFLE` are called by the engine (society_state_pressure.py ~286). Rest is standalone/test-only; `foraging_corridor_width_km` has no caller; two CALIBRATION_LEGION_* constants unreferenced.
 
-56. **Transport physics** - world/transport.py: engine reads only the ox/cart/dirt-track draught-freight inputs (economy_freight ~227). `required_tractive_force_newtons`, `distance_per_day_km` unreferenced; other vehicles/surfaces reachable only from tests/tools.
+56. **Transport physics** - sim/geography/transport.py: engine reads only the ox/cart/dirt-track draught-freight inputs (economy_freight ~227). `required_tractive_force_newtons`, `distance_per_day_km` unreferenced; other vehicles/surfaces reachable only from tests/tools.
 
 57. **Commodity ledger** - engine/commodities.py: `CommodityLedger` used by economy_materials for national output/market share and `propagate_demand` in `wire_chain_report`. The stock class `Ledger` (and `on_hand`) are not used by the engine ("Sim has no inventory" per its docstring). Sim keeps its own Counter stock.
 
-58. **Actors: Government and Firm** - engine/actors/*, engine/society_actors.py `advance_actors` (called every year in `_step_money`); governments accrue discretionary money, firms are founded by `consider_entry`, copy proven concerns via imitation, operate, and exit after loss years. Evidence of no feedback: `self.actors` / `ActorRegistry` is referenced only from society_actors.py; nothing in economy/revenue/labour/proto reads firms or governments, so their results do not change founder revenue, prices or reports. State is persisted. `Household` (actors/household.py) itself is fully wired as the founder's state facade.
+58. **Actors: Government and Firm** - sim/agents/*, engine/society_actors.py `advance_actors` (called every year in `_step_money`); governments accrue discretionary money, firms are founded by `consider_entry`, copy proven concerns via imitation, operate, and exit after loss years. Evidence of no feedback: `self.actors` / `ActorRegistry` is referenced only from society_actors.py; nothing in economy/revenue/labour/proto reads firms or governments, so their results do not change founder revenue, prices or reports. State is persisted. `Household` (actors/household.py) itself is fully wired as the founder's state facade.
 
 59. **Need-based and household demand** - world/need_demand.py, world/demand.py: used for workforce spin-up (wired) and joint-cost allocation in the solver; `aggregate_household_demand_all_goods` unreferenced; `goods_attributes` unused outside module.
 
@@ -143,7 +143,7 @@ Global notes
 ## C. PRESENT BUT UNUSED / OFFLINE ONLY
 
 61. **Offline planners and strategies** - planner.py (CPM/backward plan), path_search.py, strategies/*.json; reached only from CLI `plan`, `search`, `sweep` (not the play loop); they drive Sim through `bounty_set` and ordered project lists.
-62. **Dead functions/classes with no live caller (from an AST reference scan of engine/ and world/)** - engine/actors/household.py `MineWorking` (TypedDict); economy_materials `capacity_reserves`; state.py `add_reputation`, `add_scandal`, `deduct_reputation`, `done_keys_sorted`, `operating_keys_sorted`, `record_spend` (used only by tests or nowhere); commodities `on_hand`; world/demography `working_age_population`; world/demand `consumers_of`, `joint_output_value_shares_for_recipe`, `aggregate_household_demand_all_goods`; world/military_logistics `pack_animals_required_for_daily_delivery`; world/deposits `shafts_needed_fractional`; world/wages `adjusted_tightness_factor`; engine/cli_analysis `granary_projection`.
+62. **Dead functions/classes with no live caller (from an AST reference scan of engine/ and world/)** - sim/agents/household.py `MineWorking` (TypedDict); economy_materials `capacity_reserves`; state.py `add_reputation`, `add_scandal`, `deduct_reputation`, `done_keys_sorted`, `operating_keys_sorted`, `record_spend` (used only by tests or nowhere); commodities `on_hand`; world/demography `working_age_population`; world/demand `consumers_of`, `joint_output_value_shares_for_recipe`, `aggregate_household_demand_all_goods`; world/military_logistics `pack_animals_required_for_daily_delivery`; world/deposits `shafts_needed_fractional`; world/wages `adjusted_tightness_factor`; engine/cli_analysis `granary_projection`.
 63. **Unused constants** - `MINE_OPEX_PER_T_*` per-metal constants are referenced once (probably assembled via a table); military_logistics CALIBRATION_LEGION_MARCH_RATE_* and demand HOUSEHOLD_FOOD_BUDGET_SHARE_HIGH, SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL are declared but read only in tests.
 
 ================================================================

@@ -6,7 +6,7 @@ import unittest
 from unittest import mock
 
 from sim.engine.mods import ModError, get_ordered_mods, load_mod_production, load_mod_tree
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.typed import parse_typed
 
 STEAM = "ana_steam_k3f9"
 STEAM_POWER = "ana_steam_power_x7y2"

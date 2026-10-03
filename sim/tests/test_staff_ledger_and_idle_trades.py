@@ -19,7 +19,7 @@ def _machinist_sim(manual=False):
     s = sim(capital=5_000_000, manual=manual)
     s.trades_created.add("machinist")
     s.employees.pop("machinist", None)
-    s._resync_pools()
+    s.labour._resync_pools()
     return s
 
 
@@ -43,8 +43,8 @@ check("auto_hire still replaces a taught trade an open concern draws on",
 # 171: idle specialists are surfaced with their wage bill.
 s = sim(capital=5_000_000)
 s.employees["machinist"] = 2.0
-s._resync_pools()
-idle = s.idle_specialists()
+s.labour._resync_pools()
+idle = s.labour.idle_specialists()
 check("idle_specialists lists an unused machinist with a wage bill",
       any(row["trade"] == "machinist" and row["wage_bill_per_year"] > 0 for row in idle), idle)
 state = S._agent_dispatch(s, NODES, {"cmd": "state"})
@@ -55,11 +55,11 @@ s.done.add("mirror_amalgam")
 s.operating.add("mirror_amalgam")
 s.employees["glassblower"] = 2.0
 check("a specialist an open concern draws on is not idle",
-      all(row["trade"] != "glassblower" for row in s.idle_specialists()), s.idle_specialists())
+      all(row["trade"] != "glassblower" for row in s.labour.idle_specialists()), s.labour.idle_specialists())
 
 # 168: every staff reduction is logged with its cause.
 s = sim(capital=5_000_000, events=False)
-s.hire("artisan", 10)
+s.labour.hire("artisan", 10)
 before_headcount = s.employees.get("artisan", 0.0)
 mark = len(s.log)
 s.STAFF_LOSS_HAZARD_ANNUAL_CHANCE = 1.0
@@ -74,7 +74,7 @@ check("the plague line's count matches the drop",
       (_lost_from_log(s.log, mark), before_headcount - after_headcount))
 
 s = sim(capital=5_000_000, events=False)
-s.hire("artisan", 10)
+s.labour.hire("artisan", 10)
 start = s.employees["artisan"]
 mark = len(s.log)
 for _ in range(15):
@@ -96,12 +96,12 @@ s.trades_created.add("glassblower")
 s.done.add("mirror_amalgam")
 s.operating.add("mirror_amalgam")
 s.employees["glassblower"] = 1.0
-s._resync_pools()
+s.labour._resync_pools()
 warned = S._agent_dispatch(s, NODES, {"cmd": "state"}).get("depends_on_one_person")
 check("state warns when an open concern hangs on one specialist",
       bool(warned) and warned[0]["trade"] == "glassblower", warned)
 s.employees.pop("glassblower")
-s.replace_lost_foremen()
+s.labour.replace_lost_foremen()
 check("replace_lost_foremen hires the missing foreman", s.employees.get("glassblower", 0.0) >= 1.0,
       dict(s.employees))
 s.employees.pop("glassblower")

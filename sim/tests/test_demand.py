@@ -592,7 +592,7 @@ class NoLoneLetterMathsNotationTests(unittest.TestCase):
     match pre-existing, out-of-scope notation this task was never asked to
     touch: sim/world/agriculture.py's `harvest = TFP * H^(1-a) * L^a`
     (Cobb-Douglas notation, itself introduced by name a few lines above)
-    and sim/world/transport.py's `C = (team_pull / GRAVITY - T * g) / (r +
+    and sim/geography/transport.py's `C = (team_pull / GRAVITY - T * g) / (r +
     g) - V` (introduced by "writing V for vehicle mass, C for cargo
     mass..." immediately above it). Those two modules are not this task's
     to fix, and CLAUDE.md's own instruction is to prefer a narrow, certain
@@ -683,9 +683,9 @@ class NoLoneLetterMathsNotationTests(unittest.TestCase):
         self.assertEqual(hits, [])
 
     def test_no_offending_notation_in_any_shipped_sim_world_module(self):
-        world_dir = os.path.join(_REPO_ROOT, "sim", "world")
         offenders = []
-        for path in sorted(glob.glob(os.path.join(world_dir, "*.py"))):
+        for path in sorted(path for name in ("world", "geography", "labour")
+                           for path in glob.glob(os.path.join(_REPO_ROOT, "sim", name, "*.py"))):
             # STRICT EVERYWHERE, WITH NO PER-FILE EXEMPTION: agriculture.py
             # and transport.py each once carried one pre-existing algebra
             # block a rename task had no mandate to touch, but both are now

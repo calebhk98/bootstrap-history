@@ -8,10 +8,11 @@ import tempfile
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import labour_allocation
+from sim.labour import labour_allocation
 from sim.engine.catalog import load_production_catalog
 from sim.solve_prices_core import techniques_available_to
-from sim.world import agriculture, workforce_spinup
+from sim.world import agriculture
+from sim.labour import workforce_spinup
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _CIV_PATHS = sorted(glob.glob(os.path.join(_ROOT, "data", "civilizations", "*.json")))
@@ -148,9 +149,9 @@ class EngineStartTests(unittest.TestCase):
         for civ in _civilisations():
             test_sim = sim(civ=civ["id"], events=False)
             adult_equivalent = test_sim._adult_equivalent_population(test_sim.population)
-            technique = test_sim._farming_technique()
-            baseline_fte = test_sim._expected_year_farm_need(
-                test_sim._share_farm_fte(adult_equivalent, technique),
+            technique = test_sim.labour._farming_technique()
+            baseline_fte = test_sim.labour._expected_year_farm_need(
+                test_sim.labour._share_farm_fte(adult_equivalent, technique),
                 adult_equivalent, technique)
             total_hours = (test_sim.population.working_age
                            * labour_allocation.HOURS_PER_FARM_WORKER_YEAR)

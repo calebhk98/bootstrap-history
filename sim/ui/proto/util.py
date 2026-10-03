@@ -1,0 +1,308 @@
+"""Small, dependency-free helpers shared across the protocol package: command-argument parsing (_qty/_num/_clean/_flag), save-path safety, and money-word localisation."""
+
+import os, re
+
+# ----------------------------------------------------------------------------
+# A rendering for a person, alongside the JSON one, not instead of it: the
+# JSON is precise and correct and a wall to read. Everything below turns an
+# outgoing reply dict - the exact same dict that gets json.dumps()'d to
+# stdout - into text a
+# person can scan. It NEVER changes what goes to stdout; see cli.py's --pretty
+# handling, which prints this to stderr, alongside the unmodified JSON line,
+# only when asked. The renderer reads the reply dict only, never the live Sim,
+# so what a person reads and what a script reads are guaranteed to agree -
+# there is only one source of truth for any number in here.
+# ----------------------------------------------------------------------------
+
+def _factor(raw_value):
+    """A multiplier, at the precision a player would need to reproduce a total.
+
+    _fmt_num drops to one decimal above 1, which turned an opposition factor
+    of 1.15 into "x1.1" and made 200 x 1.15 = 230 look like arithmetic the
+    game had got wrong. A factor is not a quantity; it is a term in a product
+    somebody is going to multiply out.
+    """
+    if not isinstance(raw_value, (int, float)) or isinstance(raw_value, bool):
+        return _fmt_num(raw_value)
+    value = float(raw_value)
+    if abs(value - round(value)) < 5e-4:
+        return "%d" % round(value)
+    return ("%.3f" % value).rstrip("0")
+
+
+def _fmt_num(raw_value):
+    """A number the way a person reads it: thousands separated, and no more
+    precision than is useful. 12345.6 -> "12,346". 4.0 -> "4". 0.375 -> "0.38".
+
+    Whole-feeling numbers (anything 1 and up) carry no decimal at all once
+    they are the size a player actually deals in: raw JSON precision here
+    invites double-checking arithmetic that a rounded, comma'd figure does
+    not.
+    """
+    if raw_value is None:
+        return "-"
+    if isinstance(raw_value, bool):
+        return str(raw_value)
+    if isinstance(raw_value, (int, float)):
+        value = float(raw_value)
+        if value != value or value in (float("inf"), float("-inf")):
+            return str(raw_value)
+        if value == 0:
+            return "0"
+        if abs(value) >= 1000:
+            return "{:,.0f}".format(value)
+        if abs(value) >= 1:
+            return "{:,.0f}".format(value) if float(value).is_integer() else "{:,.1f}".format(value)
+        return "{:,.2f}".format(value)
+    return str(raw_value)
+
+
+def _fmt_range(value):
+    """earns_per_year, under fog, for a thing you have never run: [lo, hi]
+    rather than a bare number - see _fog_revenue_estimate. One column had to
+    read both shapes, so this reads either and falls back to _fmt_num for
+    the ordinary case.
+    """
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return "%s-%s" % (_fmt_num(value[0]), _fmt_num(value[1]))
+    return _fmt_num(value)
+
+
+def _pct(value):
+    """A 0..1 fraction as a percentage a person reads at a glance.
+
+    NEVER ROUND A FATAL CHANCE TO ZERO: a number that means "this can kill
+    you" and prints as "this cannot happen" is the one number in the game
+    that must not be rounded down. Anything that can happen at all prints
+    as at least "<1%".
+    """
+    if value is None:
+        return "-"
+    try:
+        percent = 100.0 * float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if percent <= 0.0:
+        return "0%"
+    if percent < 0.5:
+        return "<1%"
+    return "%.0f%%" % percent
+
+
+def _wrap(text, width=None, indent=""):
+    # WIDTH DEFAULTS TO DISPLAY_WIDTH, NOT A LITERAL NUMBER, so the one
+    # player-facing preference for it (cli.py's Options screen, "display
+    # width") reaches every caller that does not ask for a specific width of
+    # its own - see DISPLAY_WIDTH's own comment, near TYPED_HINTS, for who
+    # sets it and why `agent` never does.
+    if width is None:
+        # LIVE, NOT A SNAPSHOT: cli.py's _apply_display_prefs patches
+        # ui.protocol.DISPLAY_WIDTH directly (a module attribute, not a
+        # call) - see DISPLAY_WIDTH's own comment in sim/ui/proto/util.py.
+        # Reading it back through the protocol module itself, rather than a
+        # plain name this file would otherwise bind, is what makes that
+        # patch visible here.
+        from sim.ui import protocol as _protocol
+        width = _protocol.DISPLAY_WIDTH
+    if not text:
+        return ""
+    words, lines, cur = str(text).split(), [], ""
+    for word in words:
+        if len(cur) + len(word) + 1 > width:
+            lines.append(indent + cur)
+            cur = word
+        else:
+            cur = (cur + " " + word).strip()
+    if cur:
+        lines.append(indent + cur)
+    return "\n".join(lines)
+
+# HOW WIDE A LINE IS, AND HOW MANY ROWS A PAGE SHOWS, BEFORE A PLAYER ASKS
+# FOR SOMETHING ELSE. A single shared value for _wrap's own default,
+# _available_row's column floor and _agent_available's page slice, so no
+# caller assumes its own terminal size and page length: a player whose
+# terminal is narrower must not lose ids off the edge of a table they
+# meant to copy one out of.
+# These are APPLICATION preferences (cli.py's main-menu Options screen,
+# "display width" and "rows per table"; see settings.py's module docstring
+# for why they are application-level and not part of any one save), set
+# once at the top of cli.py's human-facing entry points - the menu and
+# `play` - via cli.py's _apply_display_prefs. `agent` never calls it: its
+# JSON protocol (and the --pretty rendering alongside it) is a stable
+# machine interface and must render exactly the same regardless of
+# whichever human happens to be running the script, on whatever terminal.
+# The values below are the default every caller uses, so a process that
+# never touches these (every `agent` invocation, and any `play`/menu
+# session before a player has opened Options) always renders with them.
+DISPLAY_WIDTH = 76
+DEFAULT_AVAILABLE_LIMIT = 30
+
+
+SAVE_SUFFIXES = (".json", ".save")
+
+# True while a person is typing at the keyboard (`play`): they own the machine,
+# so a typed save may go to any path. The JSON protocol keeps the sandbox.
+HUMAN_AT_KEYBOARD = False
+
+
+def _unsafe_path(path):
+    """None if this is a reasonable place for a save file; a refusal if not.
+
+    Deliberately conservative rather than clever: a save must be a .json or
+    .save file, must not be absolute, and must not climb out of where the
+    game was started - covering an attempt to write into /etc, for example
+    - without pretending to be a security boundary: anyone who can send
+    commands to this process can already run code as this user. It is here
+    so the ordinary accident does not happen, not because a sandbox exists.
+    """
+    if HUMAN_AT_KEYBOARD:
+        if not os.path.normpath(path).lower().endswith(SAVE_SUFFIXES):
+            return "a save file should end in %s" % " or ".join(SAVE_SUFFIXES)
+        return None
+    if os.path.isabs(path) or path.startswith(("/", "\\")):
+        return ("a save file must be a relative path, not an absolute one. "
+                "Try {\"cmd\":\"save\",\"file\":\"mygame.json\"}")
+    norm = os.path.normpath(path)
+    if norm.startswith(".." + os.sep) or norm == "..":
+        return "a save file cannot be written outside the directory you started in"
+    if not norm.lower().endswith(SAVE_SUFFIXES):
+        return "a save file should end in %s" % " or ".join(SAVE_SUFFIXES)
+    return None
+
+
+def _qty(cmd, key, default=None):
+    """Read a quantity, or say why it is not one. Returns (value, error).
+
+    _num() silently substitutes a default for anything it cannot read, which
+    meant {"cmd":"hire","trade":"smith","n":"banana"} hired one smith and
+    echoed "n": "banana" back in the reply as though that had been honoured.
+    A number that cannot be read is a mistake, and the useful thing to do with
+    a mistake is name it. A numeric string is still accepted, because "5" is
+    unambiguous and refusing it helps nobody.
+    """
+    value = cmd.get(key, default)
+    if value is None:
+        return None, "%s is required" % key
+    if isinstance(value, bool):
+        return None, "%s must be a number, not true or false" % key
+    if isinstance(value, (int, float)):
+        quantity = float(value)
+    elif isinstance(value, str):
+        try:
+            quantity = float(value.strip())
+        except ValueError:
+            return None, "%s must be a number, not %r" % (key, value)
+    else:
+        return None, "%s must be a number, not %s" % (key, type(value).__name__)
+    if quantity != quantity or quantity in (float("inf"), float("-inf")):
+        return None, ("%s must be a real number; NaN and Infinity are not "
+                      "quantities" % key)
+    # A QUANTITY, NOT A FLOAT EXPERIMENT. `hire smith 999999999999999999999`
+    # was answered with "hiring 1e+21 smiths costs 281250000000000012058624
+    # denarii" - a refusal, but one written in scientific notation and binary
+    # rounding error, which is the game losing its composure rather than
+    # keeping it. Nothing in this world comes in more than a billion.
+    if abs(quantity) > 1e9:
+        return None, ("%s must be a quantity of something real. There are not "
+                      "a thousand million of anything here" % key)
+    return quantity, None
+
+
+def _num(value, default=0.0):
+    """Read a number from a command without ever raising at the player.
+
+    NaN AND INFINITY ARE NOT NUMBERS FOR THIS PURPOSE: Python's json accepts
+    bare NaN and Infinity as an extension, float() accepts the strings, and
+    every comparison against NaN is False, so an unrejected NaN would walk
+    through every "must be greater than zero" guard in the game, set
+    capital to NaN permanently, make everything free, and then get written
+    into the save file as bare NaN, which is not legal JSON and cannot be
+    read back by anything else.
+    """
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return float(default)
+    if number != number or number in (float("inf"), float("-inf")):
+        return float(default)
+    return number
+
+
+def _clean(value):
+    """True if this is a real, finite number (or something that is not a number
+    at all and will be rejected elsewhere). False only for NaN and infinity."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return True
+    return value == value and value not in (float("inf"), float("-inf"))
+
+
+def _flag(value, default=False):
+    """Read a switch. "false", "no", "0" and "" are all off.
+
+    bool("false") is true in Python, so a policy set to the STRING "false"
+    must not be read with bare bool(). Every other language on earth has
+    this bug too and it is still a bug.
+    """
+    if isinstance(value, str):
+        return value.strip().lower() not in ("", "false", "no", "off", "0", "none")
+    return bool(default if value is None else value)
+
+
+_MONEY_RE = re.compile(r"\bdenarii\b|\bdenarius\b")
+
+
+def _localise_words(obj, pairs):
+    """Rewrite the phrases this civilisation says differently.
+
+    Same mechanism as _localise_money and the same reason: the tree is written
+    from Rome 100 AD and stays that way, and a player in Han China should
+    not be told they are writing their corpus "in plain quantitative Greek and
+    Latin" and seeking "Senatorial patronage". Only phrases specific enough to
+    occur nowhere else; a historical note ABOUT Rome is left alone, because it
+    is about Rome.
+    """
+    if not pairs:
+        return obj
+    if isinstance(obj, str):
+        for old_phrase, new_phrase in pairs:
+            if old_phrase in obj:
+                obj = obj.replace(old_phrase, new_phrase)
+        return obj
+    if isinstance(obj, list):
+        return [_localise_words(item, pairs) for item in obj]
+    if isinstance(obj, dict):
+        # Keys are protocol; only the values a person reads get rewritten.
+        return {key: _localise_words(value, pairs) for key, value in obj.items()}
+    return obj
+
+
+def _localise_money(obj, word):
+    """Rewrite the unit of account in anything a player is about to read.
+
+    Every message in the engine is written in denarii because the whole price
+    model is calibrated to Rome 100 AD, which is a real modelling decision and
+    stays. What does not have to stay is telling a player in 1300 England, or
+    in Tenochtitlan, that they are counting Roman coins. This is the one place
+    every reply passes through, so the substitution happens once here rather
+    than in the twenty-odd messages that mention money.
+    """
+    if word in ("denarii", "denarius"):
+        return obj
+    if isinstance(obj, str):
+        return _MONEY_RE.sub(word, obj)
+    if isinstance(obj, list):
+        return [_localise_money(item, word) for item in obj]
+    if isinstance(obj, dict):
+        # KEYS ARE NOT PROSE. A field name is part of the protocol and scripts
+        # match on it; only the values a person reads get rewritten.
+        return {key: _localise_money(value, word) for key, value in obj.items()}
+    return obj
+
+
+def _coin_hoard_line(out):
+    hoard = out.get("coin_hoard")
+    if not hoard or not hoard.get("tonnes"):
+        return []
+    return ["  held as coin that is %s tonnes of %s; keeping it under guard costs about %s den/yr"
+            % (_fmt_num(hoard["tonnes"]), str(hoard["metal"]).replace("_kg", "").replace("_", " "),
+               _fmt_num(hoard["keeping_cost_per_year"]))]

@@ -8,10 +8,10 @@ Multiplayer, and other countries as players, need every actor to be able to own 
 - **Households are not actors.** Population is three national floats (`sim/world/demography.py`, `Population`). Wages, taxes and interest owed to households have no purse to land in.
 - **Nothing is located.** `ActorRecord.location` exists (`sim/engine/state.py:453`) and is never set; the founder's base tile is a household field.
 - **Money has no currency.** Purses are bare floats in the home coin; foreign amounts are converted by a scalar at the point of use (`sim/engine/foreign_payments.py`).
-- **Money moves one-sided.** `ledger.transfer` (`sim/engine/actors/ledger.py`) is the only two-sided posting and few call sites use it. Examples of one-sided postings:
-  - Firm takings come from a formula, and wages and upkeep go to nobody (`sim/engine/actors/firm.py:70-72`).
-  - State tax revenue is credited from a modelled base, not paid by anyone (`sim/engine/actors/government_stores.py:31`).
-  - State budget lines are debited to nobody, and purchases only note tonnes (`sim/engine/actors/government.py:91-93`).
+- **Money moves one-sided.** `ledger.transfer` (`sim/agents/ledger.py`) is the only two-sided posting and few call sites use it. Examples of one-sided postings:
+  - Firm takings come from a formula, and wages and upkeep go to nobody (`sim/agents/firm.py:70-72`).
+  - State tax revenue is credited from a modelled base, not paid by anyone (`sim/agents/government_stores.py:31`).
+  - State budget lines are debited to nobody, and purchases only note tonnes (`sim/agents/government.py:91-93`).
   - The founder's yearly revenue, upkeep and living cost post as one net amount.
   - About forty other founder postings name a purpose but no payee.
 

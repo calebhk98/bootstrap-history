@@ -10,10 +10,11 @@ can borrow.
 """
 import math
 
-from sim.world import cargo_cost, freight_cost, merchant_terms, trader_response
+from sim.world import merchant_terms, trader_response
+from sim.geography.api import cargo_cost, freight_cost
 
 from .data import STARTING_KITS
-from .actors.world_capital import SAVING_SHARE_OF_SURPLUS
+from sim.agents.api import SAVING_SHARE_OF_SURPLUS
 from .foreign_payments import OPENING_CARRIERS_PER_ROUTE
 
 MERCHANTS_BORROWER = "merchants"
@@ -54,7 +55,7 @@ class ForeignTradersMixin:
         if years_per_tonne is None:
             return 0.0
         return (merchant_terms.AGENTS_PER_CARRIER * years_per_tonne * self.HOURS_PER_PERSON_YEAR
-                * self.labour_market.quote("merchant"))
+                * self.labour.market.quote("merchant"))
 
     @staticmethod
     def _route_cargo_loss_share(route):
@@ -102,8 +103,8 @@ class ForeignTradersMixin:
         capital of the modest-merchant kit (the engine's authored capital for one real venture, in
         labourer-years of the labourer's wage), the earnings merchants have kept, less what is sunk
         in carriers."""
-        merchants = self.national_trade_population("merchant")
-        each = STARTING_KITS["merchant"]["labourer_years"] * self.labour_market.quote_annual("labourer")
+        merchants = self.labour.national_trade_population("merchant")
+        each = STARTING_KITS["merchant"]["labourer_years"] * self.labour.market.quote_annual("labourer")
         ledgers = self.state.economy.foreign_ledger
         kept = sum(ledger["merchant_retained"] for ledger in ledgers.values())
         sunk = sum(self._fleet_value(civilization_id) for civilization_id in self.foreign_economies())

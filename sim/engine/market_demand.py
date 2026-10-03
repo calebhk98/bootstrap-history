@@ -67,14 +67,14 @@ class MarketDemandMixin:
         share of output gain it passes on). Prices here are the solver's own, so cost of living and
         the price level are left out of the wage. Returns to land and capital are not yet in it."""
         # TEMPORARY HEURISTIC: every household earns the mean; the spread and the returns are not modelled.
-        return MEAN_INCOME_HOURS_PER_CAPITA * self.labour_market.household_wage_ratio()
+        return MEAN_INCOME_HOURS_PER_CAPITA * self.labour.market.household_wage_ratio()
 
     def household_real_income_ratio(self):
         """What a person's income buys of the opening basket now over what it bought at the opening:
         income in hours over the opening's, over the basket's cost at today's prices against its cost then."""
         basket = self.base_basket()
         prices = self.goods_market.household_prices()
-        per_hour = self.money_per_labour_hour()
+        per_hour = self.labour.money_per_labour_hour()
         opening_cost = now_cost = 0.0
         for material, units in basket["units"].items():
             if prices.get(material, 0.0) > 0.0:
@@ -103,7 +103,7 @@ class MarketDemandMixin:
             return cache[2], cache[3]
         # computed from the rounded key, so the answer depends on the key and not on when it was last computed
         basket = self.base_basket()
-        per_hour = self.money_per_labour_hour()
+        per_hour = self.labour.money_per_labour_hour()
         # the opening's goods and any the home society now makes, so a need a new good serves can turn to
         # it; a good only a partner offers is not the home market's
         seller_at_home = goods_market_offers.HOME_SELLER

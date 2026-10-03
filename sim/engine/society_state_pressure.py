@@ -110,7 +110,7 @@ class StatePressureMixin:
     def state_trait_weights(self):
         """What the state cares about, per trait, for this civilisation."""
         weights = self.value_weights
-        state_weights = dict(self.STATE_WEIGHTS)
+        state_weights = dict(self.labour.STATE_WEIGHTS)
         state_weights.update({"military": weights["w_military"], "labour_saving": weights["w_labour_saving"],
                   "information": weights["w_information"], "commerce": weights["w_commerce"],
                   "religious_adjacent": STATE_INTEREST_RELIGIOUS_ADJACENT_WEIGHT * weights["w_religious_rigidity"]})
@@ -241,7 +241,7 @@ class StatePressureMixin:
 
           - PROJECTION RANGE (pack_animal_max_one_way_range_km()) needs a
             supply base and a distance from it - real coordinates and a
-            campaign location - which live in sim/engine/geography.py
+            campaign location - which live in sim/geography/geography.py
             (region_reach() and friends), a file this crossing is not
             permitted to touch and which has no notion of a military
             campaign either. The range figure itself does not vary with
@@ -820,7 +820,7 @@ class StatePressureMixin:
         times more noticeable than the first.
         """
         household = self.state.household
-        return self.visible_scale(self.headcount(), household.capital, household.eminence)
+        return self.visible_scale(self.labour.headcount(), household.capital, household.eminence)
 
     def visible_scale(self, headcount, wealth, eminence):
         """household_scale's rule for any taxpayer: what an observer can count
@@ -828,7 +828,7 @@ class StatePressureMixin:
         head_s = min(1.0, math.sqrt(max(0.0, headcount)
                                     / self.HOUSEHOLD_HEADCOUNT_SATURATES_AT))
         wealth_s = min(1.0, max(0.0, wealth)
-                       / (self.HOUSEHOLD_WEALTH_SATURATES_AT * self.base_annual_wage("labourer")))
+                       / (self.HOUSEHOLD_WEALTH_SATURATES_AT * self.labour.base_annual_wage("labourer")))
         danger = self.cfg["eminence_danger"]
         emin_s = min(1.0, max(0.0, eminence) / danger)
         return (self.HOUSEHOLD_SCALE_HEADCOUNT_WEIGHT * head_s

@@ -3,7 +3,7 @@ founder hours (Complaints/153), the save carries no version stamp
 (Complaints/184), and a credit freeze still allows starts paid from cash
 (Complaints/150)."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.saveload import save_state, load_state
+from sim.engine.saveload import save_state, load_state
 
 
 def _bounty_node(test_sim):
@@ -53,7 +53,7 @@ with open(_stamp_path) as _stamp_handle:
     _stamp_blob = json.load(_stamp_handle)
 check("the save carries no version stamp", "_version" not in _stamp_blob,
       _stamp_blob.get("_version"))
-import sim.engine.proto.saveload as _saveload_module
+import sim.engine.saveload as _saveload_module
 check("saveload has no SAVE_VERSION", not hasattr(_saveload_module, "SAVE_VERSION"))
 
 # --- 154: a credit freeze allows what cash in hand covers -------------------

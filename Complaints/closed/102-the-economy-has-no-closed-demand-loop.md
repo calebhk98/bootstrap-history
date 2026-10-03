@@ -54,11 +54,11 @@ through the solved-price path, which is off by default
 (demand, labour_market) are wired into nothing at all. `demand.py` is one of
 those two.
 
-`sim/world/labour_market.py` is the companion piece the player's ECON-004
+`sim/labour/labour_market.py` is the companion piece the player's ECON-004
 write-up does not name directly but which the same architecture document
 identifies as the other half of a closed loop: it computes hours a trade
 NEEDS from planned output versus hours the workforce actually HAS, and
-nothing in the live engine calls it either. `sim/engine/labour.py` still
+nothing in the live engine calls it either. `sim/labour/labour.py` still
 prices every trade off a static `TRADE_DENSITY` classification that never
 moves with another trade's fortunes.
 
@@ -67,7 +67,7 @@ moves with another trade's fortunes.
 This is not a gap the project has overlooked; it is a gap the project has
 already measured and sequenced. `docs/architecture/STATE_OF_THE_PROJECT.md`
 ("What to do next, in order") lists wiring
-`sim/world/labour_market.py` into the engine as its #1 recommendation and
+`sim/labour/labour_market.py` into the engine as its #1 recommendation and
 wiring `sim/world/demand.py` into `sim/solve_prices.py` (replacing the
 current mass-split joint-byproduct allocation) as its #2, both described as
 "a wiring job, not a design job" because the modules are already built and
@@ -96,7 +96,7 @@ reviews whether the household-demand model holds outside Roman Egypt.
 ## Size
 
 This is a multi-month wiring and calibration effort even though the core
-mechanism already exists in code: it touches `sim/engine/labour.py`,
+mechanism already exists in code: it touches `sim/labour/labour.py`,
 `sim/solve_prices.py`, `SAVE_FIELDS`, and needs new engine-side calls
 (comparable in scope to the Milestone 4 agriculture/demography wiring the
 architecture document describes). Treat this as a roadmap entry that already
@@ -113,7 +113,7 @@ then capacity, from the society's own producers; its purchases add demand.
 Capacity follows the price, so the loop closes through the producers.
 
 Remains: income is the economy index, not what households earn from wages and
-the founder's payroll (`sim/world/labour_market.py` is still unwired); only
+the founder's payroll (`sim/labour/labour_market.py` is still unwired); only
 materials clear, not finished goods or the founder's venture revenue; firm
 and state output enter through `actor_supply`, a stub that returns zero until
 actors produce goods; demand elasticity and capacity adjustment are labelled

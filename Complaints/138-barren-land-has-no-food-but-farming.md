@@ -16,7 +16,7 @@ Fixed part: the labour allocator used to read the gross marginal product of
 an hour of farm work, so it kept sowing land whose harvest per hectare is
 below the seed it takes. `farm_workers_needed` now reads the marginal product
 net of seed (`net_marginal_product_kg_per_hour` in
-`sim/engine/labour_allocation.py`) in the shortfall response, the surplus
+`sim/labour/labour_allocation.py`) in the shortfall response, the surplus
 response, the food-balance step and the clearing decision. At or below zero,
 no extra hands are drawn for food and no ground is cleared. Pinned in
 `sim/tests/test_farm_edges.py` (`NetMarginalProductTests`).

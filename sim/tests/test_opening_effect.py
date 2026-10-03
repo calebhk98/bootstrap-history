@@ -1,6 +1,6 @@
 """opening_effect: regression checks, run with `--only opening_effect`."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.render_typed import render_pretty as _render_pretty
+from sim.ui.proto.render_typed import render_pretty as _render_pretty
 
 _loom_sim, _loom_ids = _mk_loom_sim(2, 60)
 _candidate = next(node_id for node_id, node in sorted(NODES.items())

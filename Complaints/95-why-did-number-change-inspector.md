@@ -1,6 +1,6 @@
 # Add a generic "why did this number change?" inspector
 
-**Status:** partly - `figures` / `why <figure>` (sim/engine/figures.py, figures_headline.py) show last year, this year and named causes for cash, income, upkeep, recurring net, population, literacy, price index and one hazard, and the cash figure's causes come from the cash book (292, closed); still open: causes for wages, state notice, epidemic severity, project throughput and venture shutdowns
+**Status:** partly - `figures` / `why <figure>` (sim/ui/figures.py, figures_headline.py) show last year, this year and named causes for cash, income, upkeep, recurring net, population, literacy, price index and one hazard, and the cash figure's causes come from the cash book (292, closed); still open: causes for wages, state notice, epidemic severity, project throughput and venture shutdowns
 
 Many important numbers change significantly each turn. A player trying to understand the civilization's trajectory needs to see what caused each major change.
 
@@ -45,7 +45,7 @@ The game's central design is that systems feed back into each other. A player tr
 
 ## Where it lives
 
-Likely a new command or enhancement in `sim/engine/proto/dispatch.py` and `sim/engine/proto/state.py` where change accounting could be added.
+Likely a new command or enhancement in `sim/ui/proto/dispatch.py` and `sim/ui/proto/state.py` where change accounting could be added.
 
 **Confidence:** Design recommendation
 

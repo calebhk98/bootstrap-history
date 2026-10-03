@@ -1,7 +1,7 @@
 """Complaint 91: automation leaves a per-turn audit trail of what it did, why and at what cost."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.proto.render_typed import _RENDERERS
+from sim.ui.proto.render_typed import _RENDERERS
 
 
 def ask(test_sim, **command):

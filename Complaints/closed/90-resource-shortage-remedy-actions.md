@@ -27,6 +27,6 @@ The player should not have to manually translate a shortage into a quote or dril
 
 ## Where it lives
 
-Likely in `sim/engine/proto/render_screens_economy.py` where the capacity screen is rendered, and `sim/engine/proto/dispatch.py` where commands are dispatched.
+Likely in `sim/ui/proto/render_screens_economy.py` where the capacity screen is rendered, and `sim/ui/proto/dispatch.py` where commands are dispatched.
 
 **Confidence:** Design recommendation

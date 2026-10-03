@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from .source_dirs import engine_and_world_dirs
 
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 SIM_DIR = os.path.dirname(TESTS_DIR)
@@ -57,8 +58,8 @@ class NoCivilisationIdInCode(unittest.TestCase):
     def test_engine_and_world_name_no_civilisation(self):
         pattern = self.pattern()
         found = []
-        for sub in ("engine", "world"):
-            for path in python_files(os.path.join(SIM_DIR, sub), True):
+        for directory in engine_and_world_dirs():
+            for path in python_files(directory, True):
                 if os.path.relpath(path, SIM_DIR) in ENGINE_ALLOW_LIST:
                     continue
                 found += [(os.path.relpath(path, SIM_DIR), number, text)

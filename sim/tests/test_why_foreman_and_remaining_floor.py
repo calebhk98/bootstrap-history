@@ -1,7 +1,7 @@
 """Complaints 145 and 154: `why` names the specialist foreman `open` will
 demand, and its serial floor counts only what is still unbuilt."""
 from .harness import *
-from sim.engine.proto.render import render_pretty
+from sim.ui.proto.render import render_pretty
 from sim.engine.critical_path_remaining import remaining_critical_path_years
 from sim.engine.data import closure, critical_path
 

@@ -294,14 +294,14 @@ class MaterialSupplyMixin:
         commodity = self._commodity_ledger().commodities.get(tag)
         if commodity:
             price = float(commodity.get("base_price_denarii_per_kg", 0.0) or 0.0)
-            return self.book_money(price) or None
+            return self.labour.book_money(price) or None
         return None
 
     def _denarii_price_per_kg(self, tag):
         """The price in book denarii, the unit the output and market-share
         curves below were fitted in."""
         price = self._material_price_per_kg(tag)
-        return None if price is None else price / self.book_money(1.0)
+        return None if price is None else price / self.labour.book_money(1.0)
 
     def _material_tag(self, mat_key):
         """Which (commodity id, supply-pool tag) a raw material key draws
@@ -508,8 +508,8 @@ class MaterialSupplyMixin:
         # Serialized: no
         projects = self.state.projects
         cache_key = (
-            getattr(projects, "_active_ver", 0),
-            getattr(projects, "_done_ver", 0),
+            self.household.active_version,
+            self.household.done_version,
         )
         cache = getattr(self.household, "_annual_mat_demand_cache", None)
         if cache is not None and cache[0] == cache_key:
@@ -547,7 +547,7 @@ class MaterialSupplyMixin:
         """(material, tonnes per year) for every finished installation that
         keeps drawing material, in done order; depends only on what is done."""
         projects = self.state.projects
-        version = getattr(projects, "_done_ver", 0)
+        version = self.household.done_version
         cached = getattr(self, "_standing_terms_cache", None)
         if cached is not None and cached[0] == version and cached[1] is projects.done:
             return cached[2]
@@ -676,7 +676,7 @@ class MaterialSupplyMixin:
         """What the society's own producers can bring to market a year: the
         national output scaled to the territory held (see _material_market_tonnes
         for the same scale)."""
-        scale = self.pop_scale if emp_key == "charcoal" else self.mineral_scale(emp_key)
+        scale = self.pop_scale if emp_key == "charcoal" else self.geography.mineral_scale(emp_key)
         return self._national_output_tonnes(emp_key) * scale
 
     def _material_market_tonnes(self, emp_key):
@@ -718,7 +718,7 @@ class MaterialSupplyMixin:
         # population. Charcoal stays on pop_scale: it is not mined, it is
         # a local wood market, and THAT genuinely does track how much
         # local economic activity there is to buy firewood from.
-        scale = self.pop_scale if emp_key == "charcoal" else self.mineral_scale(emp_key)
+        scale = self.pop_scale if emp_key == "charcoal" else self.geography.mineral_scale(emp_key)
         market = national * share * scale
         # Bengal saltpetre: an existing annual sea route, not a nitre bed.
         # This is the single most useful thing in the geography file.

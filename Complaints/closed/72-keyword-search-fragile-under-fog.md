@@ -27,7 +27,7 @@ Fog can safely expose a visible node's broad category without exposing hidden de
 
 ## WHERE IT LIVES
 
-`sim/engine/proto/techtree.py` for research tree, `sim/engine/proto/dispatch.py` for search command handling. Tag/category metadata would live in `data/` tree structure or tech node definitions.
+`sim/ui/proto/techtree.py` for research tree, `sim/ui/proto/dispatch.py` for search command handling. Tag/category metadata would live in `data/` tree structure or tech node definitions.
 
 ## Confidence
 

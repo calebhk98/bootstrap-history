@@ -1,6 +1,6 @@
 """score_literacy_percent: regression checks, run with `--only score_literacy_percent`."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.render_typed import render_pretty as _render_pretty
+from sim.ui.proto.render_typed import render_pretty as _render_pretty
 
 _game = sim()
 _game.civ["literacy_general"] = 0.0749

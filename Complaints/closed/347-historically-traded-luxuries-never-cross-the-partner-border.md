@@ -29,7 +29,7 @@ price gap and the partner's capacity exist before the trade rule runs.
 Silk (322) and cassia cross from Han to Rome through the ordinary trade rule.
 A crop that grows only in some climates carries `grown_in_climate_classes` in
 its production entry, read against the Koppen classes of the territory's tiles
-(`sim/engine/crop_climate.py`); a home that lacks the climate does not "solve"
+(`sim/geography/crop_climate.py`); a home that lacks the climate does not "solve"
 the good, so a partner that has it offers it. Households want spices through
 the `seasoning` need. Pepper has an entry and a technology node
 (`fud_pepper_cultivation`), but no economy in

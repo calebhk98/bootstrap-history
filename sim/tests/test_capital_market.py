@@ -11,9 +11,9 @@ from functools import partial
 sim = partial(sim, agent_economy=False)   # these checks pin the engine's own loanable-funds market, wage table and state budget
 
 
-from sim.engine.actors import SimWorld
-from sim.engine.actors import budget
-from sim.engine.proto.saveload import load_state, save_state
+from sim.engine.agents_port import SimWorld
+from sim.agents import budget
+from sim.engine.saveload import load_state, save_state
 from sim.engine.state import ActorRecord
 from sim.world import capital_market
 

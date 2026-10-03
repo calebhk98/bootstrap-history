@@ -34,7 +34,7 @@ tree nodes already in `data/`, not a new bespoke bonus table.
 ## What already exists
 
 Nothing in the live engine models organisational overhead on directed hours.
-`sim/engine/labour.py` and the founder's own hour-allocation machinery treat
+`sim/labour/labour.py` and the founder's own hour-allocation machinery treat
 directed hours as a single pool with no layered structure. `docs/
 architecture/HISTORICAL_SIM_ARCHITECTURE.md` lists "Organizations" (states,
 armies, firms, guilds, temples, universities, religious institutions) among

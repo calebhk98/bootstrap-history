@@ -19,7 +19,7 @@ the player's wording ("start/status output") most closely matches, and say
 exactly why below.
 
 **The start-time oversubscription check is already fixed, and cites this
-exact failure mode.** `sim/engine/proto/dispatch_ventures.py:51-82`
+exact failure mode.** `sim/ui/proto/dispatch_ventures.py:51-82`
 computes `_oversub` for the `start` command's `this_oversubscribes_a_trade`
 field, and its own comment names the identical bug shape:
 

@@ -80,7 +80,7 @@ from sim.engine.data import (STRATS, closure, downstream_count, hard_pre, load, 
 from sim.engine.core import Sim
 from sim.engine.default_civilisation import default_civilisation_id
 from sim.engine.mechanics import staff_capacity_sources
-from sim.engine.cli import load_strategy
+from sim.engine.run_setup import load_strategy
 
 
 # ----------------------------------------------------------------------------

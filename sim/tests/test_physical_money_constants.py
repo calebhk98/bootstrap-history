@@ -51,8 +51,8 @@ class PhysicalConstantsAreInHours(unittest.TestCase):
             sim = build(civ_name)
             for money_name, hours_name in PHYSICAL_COSTS.items():
                 self.assertAlmostEqual(
-                    getattr(sim, money_name),
-                    REGISTRY[hours_name]["value"] * sim.money_per_labour_hour(),
+                    getattr(sim.labour if hasattr(sim.labour, money_name) else sim, money_name),
+                    REGISTRY[hours_name]["value"] * sim.labour.money_per_labour_hour(),
                     delta=1e-9, msg=(civ_name, money_name))
 
     def test_no_curated_mining_opex_remains(self):
@@ -64,7 +64,7 @@ class PhysicalConstantsAreInHours(unittest.TestCase):
             hours = sum(weight * KILOGRAMS_PER_TONNE
                         * deposits.extraction_cost_labour_hours_per_kg(deposit)
                         for deposit, weight in sim._mine_reference_deposits(metal))
-            self.assertAlmostEqual(sim._mine_opex(metal), hours * sim.wage_per_hour("miner"),
+            self.assertAlmostEqual(sim._mine_opex(metal), hours * sim.labour.wage_per_hour("miner"),
                                    delta=1e-6, msg=metal)
 
 

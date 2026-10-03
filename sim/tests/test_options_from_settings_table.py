@@ -86,8 +86,8 @@ check("...and a yes/no setting given as a JSON boolean",
       _off.get("ok") and _settings.load_config()["default_events"] is False, _off)
 
 # --- events and deterministic reach a typed game
-from sim.engine import cli_interactive as _play  # noqa: E402
-from sim.engine.cli import DetRNG  # noqa: E402
+from sim.ui import cli_interactive as _play  # noqa: E402
+from sim.ui.cli import DetRNG  # noqa: E402
 _args = argparse.Namespace(strategy="recommended", goal=None, civ="rome_100ad", session=None,
                            horizon=100, seed=3, kit=None, mortal=False, fog=False, deterministic=False)
 _play_sim = _play._play_build_sim(_args)[0]

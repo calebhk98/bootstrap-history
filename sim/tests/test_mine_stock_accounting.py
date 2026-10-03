@@ -1,6 +1,6 @@
 """mine_stock_accounting: complaint 148, banked stock is the mine's yearly flow, once per year."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.economy import _mine_rows_for_material
+from sim.ui.proto.economy import _mine_rows_for_material
 
 _MATERIAL = "galena"
 _KEY = "galena_kg"
@@ -39,7 +39,7 @@ check("selling 1 t twenty-five times in one year removes 25 t and banks nothing 
       (stock_before, mine_sim.material_stock_t(_KEY)))
 
 # A saved and reloaded game keeps the same stock through the same recomputation.
-from sim.engine.proto.saveload import save_state, load_state
+from sim.engine.saveload import save_state, load_state
 save_path = os.path.join(tempfile.mkdtemp(), "mine_stock.json")
 save_state(mine_sim, save_path)
 reloaded = sim(capital=1.0)

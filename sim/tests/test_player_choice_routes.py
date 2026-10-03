@@ -6,8 +6,8 @@
 """
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import closure
-from sim.engine.proto.typed import parse_typed
-from sim.engine.proto.saveload import load_state, save_state
+from sim.ui.proto.typed import parse_typed
+from sim.engine.saveload import load_state, save_state
 
 
 def _dispatch(test_sim, line):

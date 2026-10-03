@@ -12,7 +12,7 @@ lazily-created field and every field hidden behind `self.__dict__[...]`
 (rather than `self.name`) is counted. `sim/ARCHITECTURE.md`'s "~157" is in the
 right neighbourhood but is not this number; the difference is almost entirely
 the attributes that a naive grep for `self.name = ...` alone would miss -
-because they are only ever touched from `sim/engine/proto/` (via the `s`
+because they are only ever touched from `sim/ui/proto/` (via the `s`
 parameter, not `self`), or hidden behind `self.__dict__[...]` entirely (see
 §1).
 
@@ -25,11 +25,11 @@ parameter, not `self`), or hidden behind `self.__dict__[...]` entirely (see
   `ProjectsMixin`, `SocietyMixin`) in `sim/engine/{core,economy,fog,geography,
   labour,projects,society}.py`, and separately to the parameter conventionally
   named `s` (occasionally `sim`/`s0`) that every file under
-  `sim/engine/proto/` and `sim/engine/cli.py` uses for the `Sim` instance
+  `sim/ui/proto/` and `sim/ui/cli.py` uses for the `Sim` instance
   passed in. This second half matters: several `SAVE_FIELDS` members
   (`_dashboard_history`, `_founder_death_aged`, `_founder_death_year`,
   `_said_command_index`, `_said_parallelism`) are never assigned inside the
-  six mixin files at all - they are only ever set from `sim/engine/proto/
+  six mixin files at all - they are only ever set from `sim/ui/proto/
   dispatch.py` and `state.py` via `s.name = ...`. A scan of `self.` alone
   would have missed them.
 - **Scoping check**: `economy.py` defines a second class, `_InvalidatingSet`,
@@ -39,7 +39,7 @@ parameter, not `self`), or hidden behind `self.__dict__[...]` entirely (see
 - **`getattr(self, "name", default)` sites**: collected the same way, giving
   the lazy-creation call sites the brief describes.
 - **`SAVE_FIELDS`**: read directly out of the `SAVE_FIELDS` tuple in
-  `sim/engine/proto/saveload.py` by parsing that one assignment with `ast`,
+  `sim/engine/saveload.py` by parsing that one assignment with `ast`,
   not by eyeballing it. **Finding, in passing**: the tuple's source lists
   `"teaching_hours_this_year"` twice (once after `"commissioned"`, again
   after `"wage_hours_this_year"`); it is 99 string literals naming 98 distinct
@@ -76,7 +76,7 @@ parameter, not `self`), or hidden behind `self.__dict__[...]` entirely (see
 - **Column 4/5 (files / sites)**: every `self.name`, `s.name` (proto/cli),
   read or write, plus every `getattr`/`setattr`/`hasattr`/`del` call naming
   it, across the 23 files of `sim/engine/` (the 7 above plus the 16 files
-  under `sim/engine/proto/`) and `sim/engine/cli.py`. `sim/engine/protocol.py`
+  under `sim/ui/proto/`) and `sim/ui/cli.py`. `sim/ui/protocol.py`
   is a pure re-export shim (confirmed by reading it) and contributes nothing;
   `commodities.py`, `data.py`, and `settings.py` were checked and confirmed to
   never reference a `Sim` instance directly, so they are correctly absent
@@ -95,7 +95,7 @@ assignment. That is **154** names visible from `self`-scope alone. A further
 `_founder_death_cache`, `_founder_death_year`, `_goal_critical_floor`,
 `_said_command_index`, `_said_parallelism`, `_said_stack_caution`) are never
 touched via `self` anywhere in the six mixins or `core.py` at all - they only
-exist via `s.name = ...` / `getattr(s, ...)` in `sim/engine/proto/`. That is
+exist via `s.name = ...` / `getattr(s, ...)` in `sim/ui/proto/`. That is
 **162** names from static+dynamic scanning of ordinary attribute syntax
 across every file in the package. The remaining **3**
 (`_revealed`/`_foreign_institution_cache`/`_foreign_only_cache`) are the
@@ -108,7 +108,7 @@ total every count below is built from.
 | Name | First set | In `SAVE_FIELDS`? | Files | Sites | Category | Notes / non-person-owner flag |
 |---|---|---|---|---|---|---|
 | `_cap_factor` | `__init__` (sim/engine/core.py:92) | no | 2 | 5 | INTERNAL (keyed off household (done/granted/practice/operating)) | capability_factor() memo |
-| `_dashboard_history` | lazy via getattr (sim/engine/proto/dispatch.py:2295) | yes | 2 | 4 | INTERNAL (keyed off household (snapshots of household portfolio)) | one portfolio snapshot per year, for `changes`/`economy` |
+| `_dashboard_history` | lazy via getattr (sim/ui/proto/dispatch.py:2295) | yes | 2 | 4 | INTERNAL (keyed off household (snapshots of household portfolio)) | one portfolio snapshot per year, for `changes`/`economy` |
 | `_demand_by_emp_key_cache` | lazy via getattr (sim/engine/economy.py:3391) | no | 1 | 2 | INTERNAL (keyed off household) | material demand grouped by employment key |
 | `_demand_by_tag_cache` | lazy via getattr (sim/engine/economy.py:3320) | no | 1 | 2 | INTERNAL (keyed off household) | material demand grouped by supply tag |
 | `_diffusible_ids_cache` | set outside `__init__`, no getattr guard (sim/engine/society.py:1314, in `_diffusible_ids`) | no | 1 | 1 | INTERNAL (keyed off world/scenario (nodes only)) | fixed set of diffusible-tech node ids, derived only from the static tree |
@@ -117,15 +117,15 @@ total every count below is built from.
 | `_food_diffusion_said` | `__init__` (sim/engine/core.py:250) | no | 2 | 3 | INTERNAL (keyed off world (population-wide)) | last year a food-diffusion note fired |
 | `_foreign_institution_cache` | special (see note) (sim/engine/society.py:1561) | no | 1 | 1 | INTERNAL (keyed off world/scenario (civ+nodes only)) | per-node memo of a string match against civ id + node name |
 | `_foreign_only_cache` | special (see note) (sim/engine/society.py:1577) | no | 1 | 1 | INTERNAL (keyed off world/scenario (civ+nodes only)) | per-node memo of a string match against civ id + node name |
-| `_founder_death_aged` | lazy via getattr (sim/engine/proto/state.py:279) | yes | 2 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | founder's age at death, cached for --session resume |
-| `_founder_death_cache` | lazy via getattr (sim/engine/proto/state.py:282) | no | 1 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | fallback: founder's death year/age recovered by scanning the log |
-| `_founder_death_year` | lazy via getattr (sim/engine/proto/state.py:281) | yes | 2 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | year the founder died, cached for --session resume |
-| `_goal_closure` | lazy via getattr (sim/engine/labour.py:1850) | no | 4 | 11 | INTERNAL (keyed off household (via the chosen goal)) | prerequisite closure of self.goal, cached |
-| `_goal_critical_floor` | lazy via getattr (sim/engine/proto/score.py:94) | no | 1 | 2 | INTERNAL (keyed off household (via the chosen goal)) | cached critical-path floor for self.goal |
+| `_founder_death_aged` | lazy via getattr (sim/ui/proto/state.py:279) | yes | 2 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | founder's age at death, cached for --session resume |
+| `_founder_death_cache` | lazy via getattr (sim/ui/proto/state.py:282) | no | 1 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | fallback: founder's death year/age recovered by scanning the log |
+| `_founder_death_year` | lazy via getattr (sim/ui/proto/state.py:281) | yes | 2 | 2 | INTERNAL (keyed off household (and person-specific, see summary)) | year the founder died, cached for --session resume |
+| `_goal_closure` | lazy via getattr (sim/labour/labour.py:1850) | no | 4 | 11 | INTERNAL (keyed off household (via the chosen goal)) | prerequisite closure of self.goal, cached |
+| `_goal_critical_floor` | lazy via getattr (sim/ui/proto/score.py:94) | no | 1 | 2 | INTERNAL (keyed off household (via the chosen goal)) | cached critical-path floor for self.goal |
 | `_goods_cat_state_cache` | lazy via getattr (sim/engine/economy.py:1249) | no | 1 | 2 | INTERNAL (keyed off household) | cache keyed on (year, _operating_ver) |
 | `_home_centroid` | `__init__` (sim/engine/core.py:304) | no | 2 | 2 | INTERNAL (keyed off world/scenario) | this civilisation's home coordinate, fixed for the run |
-| `_labour_pressure` | lazy via getattr (sim/engine/labour.py:253) | no | 1 | 3 | INTERNAL (keyed off household) | per-trade record of how hard THIS household has recently bid up a trade's wage |
-| `_last_buy_refusal` | lazy via getattr (sim/engine/proto/dispatch.py:817) | no | 2 | 4 | INTERNAL (keyed off household (this household's last buy attempt)) | reason the last `buy slaves` call refused, for the next error message |
+| `_labour_pressure` | lazy via getattr (sim/labour/labour.py:253) | no | 1 | 3 | INTERNAL (keyed off household) | per-trade record of how hard THIS household has recently bid up a trade's wage |
+| `_last_buy_refusal` | lazy via getattr (sim/ui/proto/dispatch.py:817) | no | 2 | 4 | INTERNAL (keyed off household (this household's last buy attempt)) | reason the last `buy slaves` call refused, for the next error message |
 | `_last_subst_gap` | lazy via getattr (sim/engine/projects.py:1657) | no | 1 | 3 | INTERNAL (keyed off household (this household's own project explanation)) | cached substitution-gap explanation for `why` |
 | `_literacy_said` | `__init__` (sim/engine/core.py:249) | no | 2 | 3 | INTERNAL (keyed off world (civ literacy)) | last year a literacy-census note fired |
 | `_mat_unlock` | `__init__` (sim/engine/core.py:309) | no | 2 | 3 | INTERNAL (keyed off world/scenario) | node id -> located_materials key index |
@@ -140,7 +140,7 @@ total every count below is built from.
 | `_rev_up_candidates_cache` | lazy via getattr (sim/engine/economy.py:2111) | no | 1 | 2 | INTERNAL (keyed off household) | candidate nodes for revenue/upkeep, keyed on operating/practice |
 | `_revealed` | special (see note) (sim/engine/fog.py:112) | no | 1 | 3 | INTERNAL (keyed off household (fog-of-war visibility)) | the real backing set for the `revealed` property; only ever touched via self.__dict__, never self._revealed |
 | `_said_autoopen` | lazy via getattr (sim/engine/projects.py:1194) | yes | 1 | 2 | INTERNAL (keyed off household (operating/done)) | which nodes auto-open has already announced, per node |
-| `_said_command_index` | lazy via getattr (sim/engine/proto/state.py:312) | yes | 1 | 2 | INTERNAL (keyed off session (command count, not economic)) | whether the 'you have now typed N commands' note has fired |
+| `_said_command_index` | lazy via getattr (sim/ui/proto/state.py:312) | yes | 1 | 2 | INTERNAL (keyed off session (command count, not economic)) | whether the 'you have now typed N commands' note has fired |
 | `_said_condition` | `__init__` (sim/engine/core.py:251) | no | 2 | 2 | INTERNAL (keyed off world (society-wide hazards, mostly)) | hazard-condition messages already printed once |
 | `_said_confiscation_band` | `__init__` (sim/engine/core.py:248) | no | 2 | 4 | INTERNAL (keyed off household (confiscation_risk scales with household wealth/eminence)) | last confiscation-risk band warned about for this household |
 | `_said_debasement` | lazy via getattr (sim/engine/society.py:2499) | yes | 1 | 3 | INTERNAL (keyed off world (money_real)) | last year a debasement note fired |
@@ -149,10 +149,10 @@ total every count below is built from.
 | `_said_near_limit` | lazy via getattr (sim/engine/economy.py:462) | yes | 1 | 5 | INTERNAL (keyed off household (credit_limit)) | whether 'near credit limit' was already warned about |
 | `_said_notice_approach` | `__init__` (sim/engine/core.py:246) | no | 2 | 3 | INTERNAL (keyed off household (state_notice scales with household size)) | last state-notice band warned about for this household |
 | `_said_output` | lazy via getattr (sim/engine/society.py:2475) | yes | 1 | 2 | INTERNAL (keyed off world (output_factor)) | which output-factor drops have already been announced |
-| `_said_parallelism` | lazy via getattr (sim/engine/proto/dispatch.py:357) | yes | 1 | 2 | INTERNAL (keyed off household (this household's own active projects)) | whether the >=2-year-project parallelism note has fired |
+| `_said_parallelism` | lazy via getattr (sim/ui/proto/dispatch.py:357) | yes | 1 | 2 | INTERNAL (keyed off household (this household's own active projects)) | whether the >=2-year-project parallelism note has fired |
 | `_said_requisition` | `__init__` (sim/engine/core.py:245) | no | 2 | 3 | INTERNAL (keyed off household (state_notice/requisition scale with household wealth)) | last year a state-requisition note fired for this household |
 | `_said_scandal` | lazy via getattr (sim/engine/core.py:2110) | yes | 1 | 3 | INTERNAL (keyed off household (scandal)) | last scandal band already warned about |
-| `_said_stack_caution` | lazy via getattr (sim/engine/proto/techtree.py:611) | no | 1 | 2 | INTERNAL (keyed off household (this household's own portfolio)) | whether a tech-stacking leverage caution has fired |
+| `_said_stack_caution` | lazy via getattr (sim/ui/proto/techtree.py:611) | no | 1 | 2 | INTERNAL (keyed off household (this household's own portfolio)) | whether a tech-stacking leverage caution has fired |
 | `_said_wage_cascade` | `__init__` (sim/engine/core.py:244) | no | 1 | 3 | INTERNAL (keyed off world (wage_index)) | last year a wage-cascade note fired |
 | `_spend_this_year` | `__init__` (sim/engine/core.py:242) | no | 1 | 5 | INTERNAL (keyed off household) | running tally this year, promoted to spend_last_year at year end |
 | `_staff_scale` | `__init__` (sim/engine/core.py:241) | no | 2 | 3 | INTERNAL (keyed off household) | pre-first-step default for staff_capacity(); overwritten every step |
@@ -181,28 +181,28 @@ total every count below is built from.
 | `director_hours_spent_founder` | `__init__` (sim/engine/core.py:261) | yes | 1 | 2 | HOUSEHOLD | hours the founder personally spent directing -- **FLAG: named for a single director/founder; a firm/government has no one person whose hours this is** |
 | `directors_extra` | `__init__` (sim/engine/core.py:105) | yes | 5 | 18 | HOUSEHOLD | owned staff pool (management capacity) |
 | `done` | `__init__` (sim/engine/core.py:90) | yes | 11 | 106 | HOUSEHOLD | tech/institutions this household possesses (own work + granted) |
-| `done_year` | set outside `__init__`, no getattr guard (sim/engine/cli.py:916, in `cmd_play`) | yes | 7 | 11 | HOUSEHOLD | year each of the household's done nodes was completed |
+| `done_year` | set outside `__init__`, no getattr guard (sim/ui/cli.py:916, in `cmd_play`) | yes | 7 | 11 | HOUSEHOLD | year each of the household's done nodes was completed |
 | `economy` | `__init__` (sim/engine/core.py:259) | yes | 3 | 10 | WORLD | size of the imperial economy relative to 100 AD |
 | `eminence` | `__init__` (sim/engine/core.py:280) | yes | 5 | 21 | HOUSEHOLD | standing: how conspicuous the household has become |
 | `employees` | `__init__` (sim/engine/core.py:107) | yes | 8 | 62 | HOUSEHOLD | owned staff by trade |
-| `end_year` | lazy via getattr (sim/engine/cli.py:1244) | no | 5 | 12 | SCENARIO | computed horizon (start_year+horizon), a session parameter set by cli.py, not saved |
+| `end_year` | lazy via getattr (sim/ui/cli.py:1244) | no | 5 | 12 | SCENARIO | computed horizon (start_year+horizon), a session parameter set by cli.py, not saved |
 | `events` | `__init__` (sim/engine/core.py:40) | no | 2 | 7 | SCENARIO | whether random events fire this run, set at construction |
 | `failed_attempts` | `__init__` (sim/engine/core.py:96) | yes | 5 | 14 | HOUSEHOLD | count of failed attempts per node, for this household's retry-risk math |
 | `familiarity` | `__init__` (sim/engine/core.py:281) | yes | 3 | 5 | HOUSEHOLD | standing: how used to this actor the world has become |
 | `farm_hectares` | lazy via getattr (sim/engine/economy.py:1373) | yes | 2 | 4 | HOUSEHOLD | owned farmland |
-| `fog` | lazy via getattr (sim/engine/cli.py:1253) | no | 10 | 43 | SCENARIO | fog-of-war on/off, a menu choice for the whole playthrough (see also 'revealed' which IS household state) |
+| `fog` | lazy via getattr (sim/ui/cli.py:1253) | no | 10 | 43 | SCENARIO | fog-of-war on/off, a menu choice for the whole playthrough (see also 'revealed' which IS household state) |
 | `forest_ha` | `__init__` (sim/engine/core.py:326) | yes | 4 | 12 | HOUSEHOLD | owned coppice, hectares |
 | `forgotten` | `__init__` (sim/engine/core.py:147) | yes | 5 | 8 | HOUSEHOLD | household nodes destroyed by a sacking, with the year |
 | `founder_alive` | `__init__` (sim/engine/core.py:252) | yes | 10 | 23 | HOUSEHOLD | whether the founder is alive -- **FLAG: literally a single mortal person's vital status; meaningless for a firm or government as written** |
 | `freedmen` | `__init__` (sim/engine/core.py:285) | yes | 5 | 16 | HOUSEHOLD | former slaves the household has freed |
 | `geo` | `__init__` (sim/engine/core.py:301) | no | 2 | 4 | SCENARIO | geography.json, loaded once |
-| `goal` | lazy via getattr (sim/engine/proto/dispatch.py:79) | no | 12 | 33 | SCENARIO | the chosen win-condition node id for this playthrough (AMBIGUOUS - see summary: a multi-actor world would want this per-actor) |
+| `goal` | lazy via getattr (sim/ui/proto/dispatch.py:79) | no | 12 | 33 | SCENARIO | the chosen win-condition node id for this playthrough (AMBIGUOUS - see summary: a multi-actor world would want this per-actor) |
 | `goal_year` | `__init__` (sim/engine/core.py:256) | yes | 6 | 24 | HOUSEHOLD | the year THIS household reached its goal |
 | `gov` | `__init__` (sim/engine/core.py:253) | yes | 3 | 3 | HOUSEHOLD | standing/political capital with the state, accrued via state_interest() from institutions the household runs |
 | `granted` | `__init__` (sim/engine/core.py:94) | yes | 10 | 36 | HOUSEHOLD | starting techs this civilisation already had for free (AMBIGUOUS - see summary: this is a civ fact mirrored per-Sim, not really per-actor) |
-| `granted_staff` | lazy via getattr (sim/engine/labour.py:1979) | yes | 1 | 3 | HOUSEHOLD | staff granted outright by an institution (kept separate from scholars/artisans totals) |
+| `granted_staff` | lazy via getattr (sim/labour/labour.py:1979) | yes | 1 | 3 | HOUSEHOLD | staff granted outright by an institution (kept separate from scholars/artisans totals) |
 | `hour_allocations` | `__init__` (sim/engine/core.py:139) | yes | 3 | 12 | HOUSEHOLD | the household's standing per-project hour directives |
-| `hours_this_year` | lazy via getattr (sim/engine/proto/state.py:612) | yes | 2 | 2 | HOUSEHOLD | last year's founder-hours accounting -- **FLAG: 'founder-hours' - needs a generalised 'owner labour hours' framing for a non-person owner** |
+| `hours_this_year` | lazy via getattr (sim/ui/proto/state.py:612) | yes | 2 | 2 | HOUSEHOLD | last year's founder-hours accounting -- **FLAG: 'founder-hours' - needs a generalised 'owner labour hours' framing for a non-person owner** |
 | `insolvent_years` | lazy via getattr (sim/engine/core.py:882) | yes | 4 | 16 | HOUSEHOLD | consecutive years the household has run at a loss |
 | `inst_units` | lazy via getattr (sim/engine/projects.py:203) | yes | 1 | 6 | HOUSEHOLD | how many units of each scalable institution the household has founded |
 | `interest_paid` | lazy via getattr (sim/engine/economy.py:428) | yes | 4 | 5 | HOUSEHOLD | interest the household has paid on debt |
@@ -241,12 +241,12 @@ total every count below is built from.
 | `revealed` | lazy via getattr (sim/engine/fog.py:126) | yes | 4 | 11 | HOUSEHOLD | fog-of-war: which nodes are visible to this household (ratchet property; real store is _revealed, see note) |
 | `rng` | `__init__` (sim/engine/core.py:39) | no | 6 | 16 | SCENARIO | the shared random generator; mutable state but an engine resource, not economic-actor state |
 | `scandal` | `__init__` (sim/engine/core.py:279) | yes | 7 | 33 | HOUSEHOLD | standing: accumulated unexplained/alarming behaviour |
-| `scandal_last_year` | lazy via getattr (sim/engine/proto/state.py:759) | no | 2 | 6 | HOUSEHOLD | last year's scandal reading, used to report this year's delta |
+| `scandal_last_year` | lazy via getattr (sim/ui/proto/state.py:759) | no | 2 | 6 | HOUSEHOLD | last year's scandal reading, used to report this year's delta |
 | `scholars` | `__init__` (sim/engine/core.py:103) | yes | 5 | 20 | HOUSEHOLD | owned staff pool |
 | `shortages` | `__init__` (sim/engine/core.py:338) | yes | 3 | 4 | HOUSEHOLD | tally of which material bound in which year for this household (diagnostic, but per-household - see summary) |
 | `closures` | ProjectsState field, work id to reason and year | yes | n/a | n/a | HOUSEHOLD | why and since when each shut work was closed (`shut_for_staff` is now a read-only view of the staffing ones) |
 | `slaves` | `__init__` (sim/engine/core.py:284) | yes | 6 | 21 | HOUSEHOLD | owned slaves |
-| `spend_last_year` | lazy via getattr (sim/engine/proto/dispatch.py:1065) | yes | 3 | 5 | HOUSEHOLD | last year's spend (spend_this_year, promoted at year end) |
+| `spend_last_year` | lazy via getattr (sim/ui/proto/dispatch.py:1065) | yes | 3 | 5 | HOUSEHOLD | last year's spend (spend_this_year, promoted at year end) |
 | `stalled` | `__init__` (sim/engine/core.py:262) | yes | 1 | 7 | HOUSEHOLD | count of stalled years |
 | `state_capacity` | `__init__` (sim/engine/core.py:58) | no | 4 | 7 | WORLD | the state's own administrative/fiscal capacity, explicitly named in the WORLD example set |
 | `teaching_hours_this_year` | `__init__` (sim/engine/core.py:123) | yes | 3 | 7 | HOUSEHOLD | hours the household spent teaching this year |
@@ -254,7 +254,7 @@ total every count below is built from.
 | `total_spend` | `__init__` (sim/engine/core.py:266) | yes | 2 | 3 | HOUSEHOLD | lifetime spend |
 | `trade_hours_used` | `__init__` (sim/engine/core.py:145) | yes | 3 | 7 | HOUSEHOLD | hours consumed by the household's projects this year, by trade |
 | `trade_introduced_year` | `__init__` (sim/engine/core.py:117) | yes | 2 | 3 | HOUSEHOLD | when the household first taught a trade (companion to trades_created) |
-| `trade_schools` | lazy via getattr (sim/engine/labour.py:1060) | yes | 2 | 5 | HOUSEHOLD | owned trade-school capacity |
+| `trade_schools` | lazy via getattr (sim/labour/labour.py:1060) | yes | 2 | 5 | HOUSEHOLD | owned trade-school capacity |
 | `trades_created` | `__init__` (sim/engine/core.py:109) | yes | 5 | 11 | HOUSEHOLD | trades the household has taught into existence (AMBIGUOUS - see summary: becomes a society-wide fact once taught) |
 | `trades_endemic` | `__init__` (sim/engine/core.py:118) | yes | 3 | 4 | HOUSEHOLD | which taught trades the society has since supplied on its own (companion to trades_created) |
 | `training` | `__init__` (sim/engine/core.py:93) | yes | 4 | 15 | HOUSEHOLD | [artisan_capacity, year_matures] pairs the household has queued |
@@ -262,7 +262,7 @@ total every count below is built from.
 | `w` | `__init__` (sim/engine/core.py:51) | no | 5 | 23 | SCENARIO | alias for civ['values'], the scoring/weights table |
 | `wage_hours_this_year` | lazy via getattr (sim/engine/core.py:1185) | yes | 5 | 13 | HOUSEHOLD | hours the household has sold as wages this year (prevents double-selling) |
 | `wage_index` | `__init__` (sim/engine/core.py:56) | no | 6 | 16 | WORLD | this civilisation's wage level, moved by demography/scarcity, applies to every hire in the world, not just the household |
-| `wages_earned` | lazy via getattr (sim/engine/labour.py:907) | yes | 1 | 2 | HOUSEHOLD | wages the household earned selling its own hours |
+| `wages_earned` | lazy via getattr (sim/labour/labour.py:907) | yes | 1 | 2 | HOUSEHOLD | wages the household earned selling its own hours |
 | `wages_paid` | `__init__` (sim/engine/core.py:120) | yes | 1 | 1 | HOUSEHOLD | wages paid out this year |
 | `wages_prepaid` | `__init__` (sim/engine/core.py:151) | yes | 4 | 10 | HOUSEHOLD | first-year wages already advanced by `hire` |
 | `work_trade` | `__init__` (sim/engine/core.py:144) | yes | 2 | 8 | HOUSEHOLD | which trade the household's 'work' allocation sells hours as |
@@ -312,7 +312,7 @@ getattr guard (see §1); and **3** are the `self.__dict__[...]`-hidden ones.
 Six of the ten are SCENARIO/config-shaped, not HOUSEHOLD - unsurprising,
 since `nodes`/`civ`/`cfg`/`goal`/`fog` are read defensively (often via
 `getattr` with a fallback) from almost every command handler in
-`sim/engine/proto/`, simply to know what game is being played, before any
+`sim/ui/proto/`, simply to know what game is being played, before any
 household-specific logic runs. `nodes` has the single most read/write
 **sites** (180) of anything in the object, though it never changes after
 construction - it is looked up constantly, not mutated. Among genuinely
@@ -335,7 +335,7 @@ checks it or moves it.
   `_practice_cache` inherits this ambiguity, since it is keyed on
   `len(self.granted)`.
 - **`goal`** (and, more weakly, `goal_year`, `end_year`, `fog`) - `goal` is
-  read from `sim/engine/proto/dispatch.py` and `cli.py` as a single,
+  read from `sim/ui/proto/dispatch.py` and `cli.py` as a single,
   session-wide choice ("the one thing you were told the name of on arrival"),
   which reads as SCENARIO/session-config today. But a win condition is
   naturally a property of *whoever is playing*, not of the world: a

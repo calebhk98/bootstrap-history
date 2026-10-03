@@ -23,200 +23,7 @@ from .project_materials import ProjectMaterialsMixin
 from .view_share import ViewShareMixin
 
 
-class _InvalidatingSet(set):
-    """A set that calls `on_change` after every mutation, with no exceptions.
-
-    Backs `Sim.operating` (see the `operating` property on `EconomyMixin`
-    below) so that a cache keyed off operating's exact membership -
-    `capability_factor()`'s - cannot go stale, no matter which of the nine
-    call sites across core.py/projects.py/economy.py/society.py adds to or
-    discards from it, and without asking any of them to remember a second
-    line. The `done`/`_done_changed()` convention this project already has
-    relies on every one of ITS mutation sites remembering to call
-    `_done_changed()` by hand; that is a real convention and it has held,
-    but a second one just like it - one more rule written down at every call
-    site instead of enforced at one - is exactly the shape that has already
-    produced three drifted-apart bugs elsewhere in this codebase today. This
-    set makes the equivalent mistake impossible for `operating` specifically:
-    there is only one `.add`, only one `.discard`, and they are these. It is
-    the same reasoning that made `revealed` (engine/fog.py) a property rather
-    than a plain attribute, extended to a set instead of a ratchet.
-
-    Every mutating method a plain `set` exposes is overridden so that
-    swapping this in for `set()` changes nothing observable except that
-    `on_change` now fires. Non-mutating methods (`copy`, `union`, membership
-    tests, iteration, `len`) are inherited unchanged.
-    """
-
-    def __init__(self, iterable=(), on_change=None):
-        set.__init__(self, iterable)
-        self._on_change = on_change
-
-    def _fire(self):
-        if self._on_change is not None:
-            self._on_change()
-
-    def add(self, item):
-        if item not in self:
-            set.add(self, item)
-            self._fire()
-
-    def discard(self, item):
-        if item in self:
-            set.discard(self, item)
-            self._fire()
-
-    def remove(self, item):
-        set.remove(self, item)      # raises KeyError, same as a plain set
-        self._fire()
-
-    def pop(self):
-        item = set.pop(self)
-        self._fire()
-        return item
-
-    def clear(self):
-        if self:
-            set.clear(self)
-            self._fire()
-
-    def update(self, *others):
-        before = len(self)
-        set.update(self, *others)
-        if len(self) != before:
-            self._fire()
-
-    def difference_update(self, *others):
-        before = len(self)
-        set.difference_update(self, *others)
-        if len(self) != before:
-            self._fire()
-
-    def intersection_update(self, *others):
-        before = len(self)
-        set.intersection_update(self, *others)
-        if len(self) != before:
-            self._fire()
-
-    def symmetric_difference_update(self, other):
-        before = frozenset(self)
-        set.symmetric_difference_update(self, other)
-        if frozenset(self) != before:
-            self._fire()
-
-    def __ior__(self, other):
-        before = len(self)
-        result = set.__ior__(self, other)
-        if len(self) != before:
-            self._fire()
-        return result
-
-    def __iand__(self, other):
-        before = len(self)
-        result = set.__iand__(self, other)
-        if len(self) != before:
-            self._fire()
-        return result
-
-    def __isub__(self, other):
-        before = len(self)
-        result = set.__isub__(self, other)
-        if len(self) != before:
-            self._fire()
-        return result
-
-    def __ixor__(self, other):
-        before = frozenset(self)
-        result = set.__ixor__(self, other)
-        if frozenset(self) != before:
-            self._fire()
-        return result
-
-
-class _InvalidatingDict(dict):
-    """A dictionary that calls `on_change` after every mutation.
-
-    Follows the exact pattern of _InvalidatingSet above. Used for
-    `self.household.active` and `self.household.employees` so that
-    derived-state caches keyed on active project membership or workforce
-    changes are reliably invalidated whenever keys or values mutate,
-    without requiring scattered callers across the engine to remember
-    manual cache resets.
-
-    Nested dictionary values (such as project states in active projects and
-    their nested lab_left trade requirements) are recursively wrapped so that
-    in-place modifications, field updates, and alias mutations automatically
-    bubble invalidation up to the root container's on_change listener.
-    """
-
-    def __init__(self, *args, on_change=None, **kwargs):
-        self._on_change = on_change
-        super().__init__()
-        if args or kwargs:
-            for key, value in dict(*args, **kwargs).items():
-                super().__setitem__(key, self._wrap_value(value))
-
-    def _fire(self):
-        if self._on_change is not None:
-            self._on_change()
-
-    def _wrap_value(self, value):
-        from sim.engine.state import ActiveProjectState
-        if isinstance(value, ActiveProjectState):
-            value._on_change = self._fire
-            return value
-        if isinstance(value, _InvalidatingDict):
-            value._on_change = self._fire
-            return value
-        if isinstance(value, dict):
-            if "ph_left" in value:
-                return ActiveProjectState.from_dict(value, _on_change=self._fire)
-            return _InvalidatingDict(value, on_change=self._fire)
-        return value
-
-    def __setitem__(self, key, value):
-        super().__setitem__(key, self._wrap_value(value))
-        self._fire()
-
-    def __delitem__(self, key):
-        super().__delitem__(key)
-        self._fire()
-
-    def pop(self, *args, **kwargs):
-        result = super().pop(*args, **kwargs)
-        self._fire()
-        return result
-
-    def popitem(self):
-        result = super().popitem()
-        self._fire()
-        return result
-
-    def clear(self):
-        if self:
-            super().clear()
-            self._fire()
-
-    def update(self, *args, **kwargs):
-        other_items = dict(*args, **kwargs)
-        if not other_items:
-            return
-        for key, value in other_items.items():
-            super().__setitem__(key, self._wrap_value(value))
-        self._fire()
-
-    def setdefault(self, key, default=None):
-        if key not in self:
-            wrapped = self._wrap_value(default)
-            result = super().setdefault(key, wrapped)
-            self._fire()
-            return result
-        return super().__getitem__(key)
-
-    def __ior__(self, other):
-        self.update(other)
-        return self
-
+from sim.invalidating import _InvalidatingDict, _InvalidatingSet  # noqa: F401
 
 
 # ---- REPUTATION/STANDING: a scoreboard, not yet a social mechanism --------
@@ -398,7 +205,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         the materials you do not already hold at current market prices."""
         materials, _up_front = self.project_material_parts(node_id)
         return ((self.project_cost_without_materials(node_id) + materials)
-                * self.material_cost_factor(node_id) * self.opposition_factor(node_id))
+                * self.geography.material_cost_factor(node_id) * self.opposition_factor(node_id))
 
     def _done_changed(self):
         """Call after anything adds to or removes from self.household.done.
@@ -411,12 +218,12 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
         """
         self.household._done_seq = None
         self.household._cap_factor = None
-        self.state.projects._done_ver = getattr(self.state.projects, "_done_ver", 0) + 1
+        self.household.bump_done_version()
 
     def _operating_changed(self):
         """Call after anything adds to or removes from self.household.operating."""
         self.household._cap_factor = None
-        self.state.projects._operating_ver = getattr(self.state.projects, "_operating_ver", 0) + 1
+        self.household.bump_operating_version()
 
     def _reset_operating(self):
         """Re-wrap operating in a fresh `_InvalidatingSet` and invalidate once."""
@@ -425,7 +232,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
 
     def _active_changed(self):
         """Call after anything adds to, removes from, or updates self.state.projects.active."""
-        self.state.projects._active_ver = getattr(self.state.projects, "_active_ver", 0) + 1
+        self.household.bump_active_version()
 
     def _reset_active(self):
         """Re-wrap active in a fresh `_InvalidatingDict` and invalidate once."""
@@ -437,7 +244,7 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, ElectricityMixin, FreightMix
 
     def _workforce_changed(self):
         """Call after anything mutates workforce state."""
-        self.state.household._workforce_ver = getattr(self.state.household, "_workforce_ver", 0) + 1
+        self.household.bump_workforce_version()
 
     def _reset_workforce(self):
         """Re-wrap employees in a fresh `_InvalidatingDict` and invalidate once."""

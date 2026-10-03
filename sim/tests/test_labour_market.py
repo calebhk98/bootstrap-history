@@ -1,4 +1,4 @@
-"""Regression tests for sim/world/labour_market.py.
+"""Regression tests for sim/labour/labour_market.py.
 
 Written as unittest.TestCase classes, like sim/tests/test_deposits.py,
 sim/tests/test_land.py and sim/tests/test_demand.py: this module has no
@@ -15,7 +15,7 @@ discipline sim/tests/test_deposits.py's own ExtractionCostMechanicsTests
 docstring states for ore data), and EXACT ARITHMETIC wherever the input is
 a small, hand-built synthetic fixture this file controls itself.
 
-sim/world/labour_market.py: fixed point over trade allocation in labour-hours, needing no wages.
+sim/labour/labour_market.py: fixed point over trade allocation in labour-hours, needing no wages.
 """
 import ast
 import os
@@ -23,7 +23,7 @@ import subprocess
 import sys
 import unittest
 
-from sim.world import labour_market
+from sim.labour import labour_market
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
@@ -908,7 +908,7 @@ class MobilityFrictionConstantsTests(unittest.TestCase):
 # ============================================================================
 
 class StandaloneImportTests(unittest.TestCase):
-    """sim/world/labour_market.py must not import sim/engine/, sim/
+    """sim/labour/labour_market.py must not import sim/engine/, sim/
     solve_prices.py, or any other sim/world/ module AS PART OF ITS
     IMPORTABLE SURFACE - see its own docstring's STANDALONE section and
     sim/world/__init__.py for why every module in this package holds to
@@ -921,7 +921,7 @@ class StandaloneImportTests(unittest.TestCase):
     """
 
     def _top_level_imports(self):
-        path = os.path.join(_REPO_ROOT, "sim", "world", "labour_market.py")
+        path = os.path.join(_REPO_ROOT, "sim", "labour", "labour_market.py")
         with open(path) as handle:
             tree = ast.parse(handle.read(), filename=path)
         imported = set()
@@ -938,18 +938,18 @@ class StandaloneImportTests(unittest.TestCase):
         for name in imported:
             self.assertFalse(
                 name.startswith("sim.engine"),
-                "sim/world/labour_market.py imports %r at module level" % name)
+                "sim/labour/labour_market.py imports %r at module level" % name)
             self.assertFalse(
-                name.startswith("sim.world.") and name != "sim.world.labour_market",
-                "sim/world/labour_market.py imports another sim/world/ "
+                name.startswith("sim.world.") and name != "sim.labour.labour_market",
+                "sim/labour/labour_market.py imports another sim/world/ "
                 "module at module level: %r" % name)
             self.assertNotEqual(
                 name, "sim.solve_prices",
-                "sim/world/labour_market.py imports the price solver "
+                "sim/labour/labour_market.py imports the price solver "
                 "directly at module level")
 
     def test_the_only_other_sim_world_import_is_inside_the_main_guard(self):
-        path = os.path.join(_REPO_ROOT, "sim", "world", "labour_market.py")
+        path = os.path.join(_REPO_ROOT, "sim", "labour", "labour_market.py")
         with open(path) as handle:
             tree = ast.parse(handle.read(), filename=path)
         top_level_kinds = {type(node) for node in tree.body}
@@ -971,14 +971,14 @@ class StandaloneImportTests(unittest.TestCase):
 
 
 # ============================================================================
-# python3 -m sim.world.labour_market MUST RUN CLEANLY
+# python3 -m sim.labour.labour_market MUST RUN CLEANLY
 # ============================================================================
 
 class ModuleRunsCleanlyTests(unittest.TestCase):
 
     def test_main_block_runs_and_tells_both_scenarios(self):
         result = subprocess.run(
-            [sys.executable, "-m", "sim.world.labour_market"],
+            [sys.executable, "-m", "sim.labour.labour_market"],
             cwd=_REPO_ROOT, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("SCENARIO 1", result.stdout)

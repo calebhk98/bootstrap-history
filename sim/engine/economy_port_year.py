@@ -126,7 +126,7 @@ class AgentEconomy:
         what the concern costs to make it at the economy's own prices and wages (_concern_reservation)."""
         sim, economy = self._sim, self._economy
         book, area_map = economy.record.book, economy.area_map
-        tile = sim.base_tile() if sim.base_tile() in economy.setup.tiles else economy.setup.capital_tile
+        tile = sim.labour.base_tile() if sim.labour.base_tile() in economy.setup.tiles else economy.setup.capital_tile
         projects = sim.state.projects
         view = economy.view()
         moves, offers = [], []
@@ -273,7 +273,7 @@ class AgentEconomy:
         economy = self._economy
         yields = {producer_id: weather for producer_id, producer in economy.record.producers.items()
                   if economy.setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
-        return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.settlement_tiles(),
+        return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather)
 

@@ -62,7 +62,7 @@ it. The agent that wired this refused to do it, correctly, and said so.
 ## The real fix, which is small and blocked on one field
 
 Carry `Storage` across years instead of rebuilding it, which needs a
-`farm_stock_kg` entry in `SAVE_FIELDS` (`sim/engine/proto/saveload.py`). That
+`farm_stock_kg` entry in `SAVE_FIELDS` (`sim/engine/saveload.py`). That
 file was outside the wiring agent's scope while other agents were editing
 adjacent engine files, which is the only reason it is not already done.
 

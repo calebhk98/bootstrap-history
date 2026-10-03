@@ -25,7 +25,7 @@ profit, copies it, and takes `takings / (1 + rivals)` less upkeep.
 
 **What reads their results.** Nothing outside `actors/` and `tests/`:
 
-    grep -rn "\.actors\b\|of_kind\|active_firms\|\.government(" sim --include=*.py | grep -v "sim/engine/actors/\|sim/tests/"
+    grep -rn "\.actors\b\|of_kind\|active_firms\|\.government(" sim --include=*.py | grep -v "sim/agents/\|sim/tests/"
 
 Specific disconnects, each with the player-visible behaviour it duplicates:
 
@@ -152,15 +152,15 @@ Touches economy code; needs the demand wiring in `Complaints/102`.
 
 ### 5. The state's demand and labour (done)
 
-Built: the government keeps a budget (`sim/engine/actors/budget.py`,
-`world_budget.py`): an army and officials, paid at market wages and equipped
+Built: the government keeps a budget (`sim/agents/budget.py`,
+`sim/engine/agents_port_budget.py`): an army and officials, paid at market wages and equipped
 through `military_logistics`; its staff come out of the shared labour pool and
 its iron purchases reach the market as `actor_demand_tonnes`. Its spending
 covers only those two lines, so every state runs a surplus (`Complaints/286`).
 
 Reads: the state's outlays by purpose from 1.
 Changes: what the state spends on wages and goods is demand: staff hired by
-any actor are drawn from the labour pool (`sim/world/labour_market.py`), and
+any actor are drawn from the labour pool (`sim/labour/labour_market.py`), and
 the state's purchases enter the goods market. Patron funding to the founder
 becomes a payment from the treasury to the founder, replacing
 `state_funding` and its labelled constants.

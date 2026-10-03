@@ -102,7 +102,7 @@ if venture is not None:
 
 # --- one coin stock moves every price, traded or not (Complaint 338).
 game, twin = sim(civ="rome_100ad"), sim(civ="rome_100ad")
-before_prices, before_wage = dict(game._material_prices()), game.wage_per_hour("labourer")
+before_prices, before_wage = dict(game._material_prices()), game.labour.wage_per_hour("labourer")
 game._foreign_ledger("probe_partner", create=True)["home_coin_units"] += game.home_coin_stock_units()
 after_prices = game._material_prices()
 check("the coin stock has doubled", abs(game.home_price_level() - 2.0) < 1e-9, game.home_price_level())
@@ -110,7 +110,7 @@ check("doubling the coin stock with goods fixed doubles every price",
       all(abs(after_prices[material] / before_prices[material] - 2.0) < 1e-9 for material in before_prices))
 check("...a good that crosses no border included",
       abs(after_prices["hectare_land"] / before_prices["hectare_land"] - 2.0) < 1e-9)
-check("...and the wage", abs(game.wage_per_hour("labourer") / before_wage - 2.0) < 1e-9)
+check("...and the wage", abs(game.labour.wage_per_hour("labourer") / before_wage - 2.0) < 1e-9)
 check("...while what households buy in real terms does not change",
       all(abs(game.household_demand_ratio(c) - twin.household_demand_ratio(c)) < 1e-9
           for c in ("fat_kg", "wheat_kg")))

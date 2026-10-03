@@ -24,6 +24,6 @@ This pattern can generalize to any technology that depends on biological or geog
 
 ## Where it lives
 
-Likely in `sim/engine/proto/techtree.py` and capability display sections where technology effects are shown.
+Likely in `sim/ui/proto/techtree.py` and capability display sections where technology effects are shown.
 
 **Confidence:** Design recommendation

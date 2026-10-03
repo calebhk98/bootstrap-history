@@ -108,7 +108,7 @@ _wages = [reason for reason in (_dw or {}).get("what_would_change_it", [])
           if reason.startswith("work as a ")]
 if _wages:
     _trade = _wages[0].split("work as a ")[1].split(":")[0].strip()
-    _pay, _note = sim(capital=-4000.0).work_for_wages(_trade, 2000)
+    _pay, _note = sim(capital=-4000.0).labour.work_for_wages(_trade, 2000)
     check("the trade the banner names is one that actually gains",
           not (_note and "cost you" in _note), (_trade, _note))
 else:
@@ -165,7 +165,7 @@ check("the ledger says how much of the credit line is used",
 # refused, however deep in debt the household already is.
 s_asym = sim(capital=0.0)
 s_asym.capital = -50000.0   # deep in debt - room does not depend on how deep
-_ok_h, _msg_h = s_asym.hire("smith", 3)   # 3 smiths: between half and whole the line
+_ok_h, _msg_h = s_asym.labour.hire("smith", 3)   # 3 smiths: between half and whole the line
 check("a cash-short hire is still refused (the asymmetry itself is kept, "
       "not loosened)", _ok_h is False, (_ok_h, _msg_h))
 check("...but the refusal now says WHICH rule this is: half the credit "
@@ -174,7 +174,7 @@ check("...but the refusal now says WHICH rule this is: half the credit "
 check("...and WHY: a lender funds work under way (what starting a project "
       "can point to), not a payroll or a one-off fee",
       "lender advances against a purchase" in _msg_h, _msg_h)
-_fee_h = s_asym.hire_fee("smith", 3)
+_fee_h = s_asym.labour.hire_fee("smith", 3)
 check("...and still states the plain facts a refusal always has: the exact "
       "cost hire() actually computed",
       "{:,.0f}".format(round(_fee_h)) in _msg_h, (_fee_h, _msg_h))
@@ -182,14 +182,14 @@ check("...and still states the plain facts a refusal always has: the exact "
 # the SAME wording, written once, so the three cannot drift apart from each
 # other or from the reasoning behind them (rather than each re-deriving its
 # own spending_power comparison AND its own separate explanation).
-_ok_t, _msg_t = s_asym.train("machinist", 3, None)
+_ok_t, _msg_t = s_asym.labour.train("machinist", 3, None)
 check("train's cash-short refusal uses the identical reasoning as hire's, "
       "not a second wording for the same rule",
       _ok_t is False and "50%" in _msg_t and "lender advances against a purchase" in _msg_t,
       _msg_t)
 s_asym2 = sim(capital=0.0)
 s_asym2.capital = -50000.0
-_ok_c, _msg_c = s_asym2.commission("smith", 3500.0)
+_ok_c, _msg_c = s_asym2.labour.commission("smith", 3500.0)
 check("commission's cash-short refusal uses the same reasoning too",
       _ok_c is False and "50%" in _msg_c and "lender advances against a purchase" in _msg_c,
       _msg_c)
@@ -252,12 +252,12 @@ def _spending_power_spy(sim_state, forced=None):
 # rather than by making the household actually poor (which would leave open
 # the question of whether some OTHER poverty-linked check did the refusing).
 s_hire_ok = sim(capital=1e9)
-_ok_hire, _ = s_hire_ok.hire("smith", 1)
+_ok_hire, _ = s_hire_ok.labour.hire("smith", 1)
 check("hire() really does succeed on a rich household (the baseline the "
       "starved case below is a variant of)", _ok_hire is True, _ok_hire)
 s_hire_no = sim(capital=1e9)
 _calls_hire = _spending_power_spy(s_hire_no, forced=0.0)
-_ok_hire_no, _msg_hire_no = s_hire_no.hire("smith", 1)
+_ok_hire_no, _msg_hire_no = s_hire_no.labour.hire("smith", 1)
 check("hire() asks spending_power('buy') and its refusal actually follows "
       "that answer, on the same rich household that succeeded above",
       _ok_hire_no is False and _calls_hire and _calls_hire[0] == "buy",
@@ -265,12 +265,12 @@ check("hire() asks spending_power('buy') and its refusal actually follows "
 
 # train(): same shape.
 s_train_ok = sim(capital=1e9)
-_ok_train, _ = s_train_ok.train("machinist", 1, "smith")
+_ok_train, _ = s_train_ok.labour.train("machinist", 1, "smith")
 check("train() really does succeed on a rich household",
       _ok_train is True, _ok_train)
 s_train_no = sim(capital=1e9)
 _calls_train = _spending_power_spy(s_train_no, forced=0.0)
-_ok_train_no, _msg_train_no = s_train_no.train("machinist", 1, "smith")
+_ok_train_no, _msg_train_no = s_train_no.labour.train("machinist", 1, "smith")
 check("train() asks spending_power('buy') and its refusal actually follows "
       "that answer",
       _ok_train_no is False and _calls_train and _calls_train[0] == "buy",
@@ -278,12 +278,12 @@ check("train() asks spending_power('buy') and its refusal actually follows "
 
 # commission(): same shape.
 s_comm_ok = sim(capital=1e9)
-_ok_comm, _ = s_comm_ok.commission("smith", 10.0)
+_ok_comm, _ = s_comm_ok.labour.commission("smith", 10.0)
 check("commission() really does succeed on a rich household",
       _ok_comm is True, _ok_comm)
 s_comm_no = sim(capital=1e9)
 _calls_comm = _spending_power_spy(s_comm_no, forced=0.0)
-_ok_comm_no, _msg_comm_no = s_comm_no.commission("smith", 10.0)
+_ok_comm_no, _msg_comm_no = s_comm_no.labour.commission("smith", 10.0)
 check("commission() asks spending_power('buy') and its refusal actually "
       "follows that answer",
       _ok_comm_no is False and _calls_comm and _calls_comm[0] == "buy",
@@ -295,7 +295,7 @@ check("commission() asks spending_power('buy') and its refusal actually "
 # recomputation that could silently disagree with it.
 s_cir = sim(capital=1000.0)
 _calls_cir = _spending_power_spy(s_cir, forced=777.0)
-_msg_cir = s_cir._cash_in_hand_refusal("a test fee", 1000.0)
+_msg_cir = s_cir.labour._cash_in_hand_refusal("a test fee", 1000.0)
 check("_cash_in_hand_refusal asks spending_power('buy') and prints the "
       "exact number it got back, not a number of its own",
       _calls_cir and _calls_cir[0] == "buy" and "777" in _msg_cir,
@@ -307,7 +307,7 @@ check("_cash_in_hand_refusal asks spending_power('buy') and prints the "
 # immediately, on a household that is otherwise rich enough to do anything.
 s_acfb = sim(capital=1e9)
 _calls_acfb = _spending_power_spy(s_acfb, forced=0.0)
-_result_acfb = s_acfb.auto_commission_for_blocked()
+_result_acfb = s_acfb.labour.auto_commission_for_blocked()
 check("auto_commission_for_blocked asks spending_power('buy') and a zero "
       "answer really does shut the function down immediately",
       _result_acfb is None and _calls_acfb and _calls_acfb[0] == "buy",
@@ -401,11 +401,11 @@ check("...and it is still capital plus half the line when there is no hole "
       abs(_sp_solvent.spending_power("buy") - 505.0) < 1e-9,
       _sp_solvent.spending_power("buy"))
 _fph_bug = WAGES["smith"] * 1.6 * s_bug.wage_index * s_bug.price_index \
-    * s_bug.labour_market.price_factor("smith")
+    * s_bug.labour.market.price_factor("smith")
 s_bug_u = sim(capital=0.0)
 s_bug_u.capital = -500.0
 s_bug_u.credit_limit = lambda: 210.0
-_ok_bu, _msg_bu = s_bug_u.commission("smith", 1.0)
+_ok_bu, _msg_bu = s_bug_u.labour.commission("smith", 1.0)
 check("...and commission() refuses a household already past its line, which "
       "is what it always did - the fix made the SCREEN agree with it, not "
       "the other way round",
@@ -414,7 +414,7 @@ s_bug_o = sim(capital=0.0)
 s_bug_o.capital = -500.0
 s_bug_o.credit_limit = lambda: 210.0
 s_bug_o.capital = 400.0            # out of the hole, same 210 line
-_ok_bo, _msg_bo = s_bug_o.commission("smith", 9999.0)
+_ok_bo, _msg_bo = s_bug_o.labour.commission("smith", 9999.0)
 check("...and still refuses a fee over the half-line once the household is "
       "solvent again - the rule itself is unchanged, only how it is computed",
       _ok_bo is False, (_ok_bo, _msg_bo))
@@ -429,7 +429,7 @@ check("auto_commission_for_blocked refuses outright the moment "
       "spending_power('buy') is exactly zero - the same threshold hire, "
       "train and commission use, not a separately-drifting zero-credit case",
       s_gate.spending_power("buy") == 0.0
-      and s_gate.auto_commission_for_blocked() is None,
+      and s_gate.labour.auto_commission_for_blocked() is None,
       s_gate.spending_power("buy"))
 
 # protocol.py's stalled-project "why": a household 50,000 in debt but with a
@@ -461,25 +461,25 @@ check("the affordability figure the quote screen shows while in debt "
       abs(_quoted - s_sym.spending_power("buy")) < 0.05,
       (_quoted, s_sym.spending_power("buy")))
 _pph_sym = S.ANNUAL_WAGE.get("smith", 375.0) * s_sym.wage_index * s_sym.price_index \
-    * s_sym.labour_market.price_factor("smith")
+    * s_sym.labour.market.price_factor("smith")
 _n_under_sym = max(1, int(_quoted // _pph_sym))
 _n_over_sym = _n_under_sym + 2
 s_sym_u = sim(capital=0.0)
 s_sym_u.capital = -50000.0
-_ok_su, _msg_su = s_sym_u.hire("smith", _n_under_sym)
+_ok_su, _msg_su = s_sym_u.labour.hire("smith", _n_under_sym)
 check("...and when that figure is zero because the household is past its "
       "line, hire() refuses too - screen and command say the same no",
       (_quoted <= 0.0) == (_ok_su is False), (_quoted, _ok_su, _msg_su))
 s_sym_ok = sim(capital=0.0)
 s_sym_ok.capital = 20000.0
 _quoted_ok = _protocol._spare_capacity(s_sym_ok, {})["you_could_raise_right_now"]
-_ok_sok, _msg_sok = s_sym_ok.hire("smith", 1)
+_ok_sok, _msg_sok = s_sym_ok.labour.hire("smith", 1)
 check("...and a solvent household the screen says can raise thousands really "
       "is let through by hire(), so the agreement is not just 'both refuse'",
       _quoted_ok > 1000.0 and _ok_sok is True, (_quoted_ok, _ok_sok, _msg_sok))
 s_sym_o = sim(capital=0.0)
 s_sym_o.capital = -50000.0
-_ok_so, _msg_so = s_sym_o.hire("smith", _n_over_sym)
+_ok_so, _msg_so = s_sym_o.labour.hire("smith", _n_over_sym)
 check("...and a hire past what the quote screen says the household could "
       "raise really is refused, so the two numbers cannot silently disagree "
       "again",
@@ -546,7 +546,7 @@ check("...and a household that can afford the show still pays for it",
 # exist.
 # 20000 coin was about 74,600 labour hours of debt; stated in hours so the
 # test does not move with what the coin metal costs.
-s_bd = sim(capital=-74600.0 * sim().money_per_labour_hour(), manual=False)
+s_bd = sim(capital=-74600.0 * sim().labour.money_per_labour_hour(), manual=False)
 s_bd.insolvent_years = 20
 _before = len(s_bd.active)
 s_bd.step()
@@ -571,7 +571,7 @@ check("...and does not take your whole reputation with it",
       _rd[-1].get("reputation", 0) > 1.0, _rd[-1].get("reputation"))
 s_cc = sim()
 _full = s_cc.credit_limit()
-s_cc.wage_hours_this_year = s_cc.director_pool()
+s_cc.wage_hours_this_year = s_cc.labour.director_pool()
 check("a lender does not cut your line because you took a job this year",
       abs(s_cc.credit_limit() - _full) < 1e-6, (_full, s_cc.credit_limit()))
 

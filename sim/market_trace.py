@@ -25,7 +25,7 @@ def run(civ, years, marks):
             break
         sim.step()
         if year in marks:
-            mph = sim.money_per_labour_hour()
+            mph = sim.labour.money_per_labour_hour()
             prices = sim._material_prices()
             posted = {m: round(prices[m] * sim.market_price_ratio(m) / mph, 4) for m in STAPLES if m in prices}
             firms = len(sim.actors.active_firms()) if sim.state.actors is not None else 0

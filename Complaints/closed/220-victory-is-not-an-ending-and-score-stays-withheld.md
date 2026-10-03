@@ -3,7 +3,7 @@
 **Status:** closed
 
 The tester won (junction transistor, 399 AD) and `score` still printed "TOTAL: -- (not computable until the run ends under fog)"
-with technology coverage withheld. Winning is deliberately not an ending (`sim/engine/proto/state.py`, `_agent_end_reason`: the run continues to the
+with technology coverage withheld. Winning is deliberately not an ending (`sim/ui/proto/state.py`, `_agent_end_reason`: the run continues to the
 horizon or the founder's death), and under fog the coverage share is only revealed once the run has ended. The only ways to end are to step to
 the horizon (hundreds of simulated years, see complaint 221) or die. `quit` ends a session, not a run; `withdraw` is political.
 

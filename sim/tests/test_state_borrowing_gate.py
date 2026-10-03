@@ -2,7 +2,8 @@
 `state_credit` mechanic). Before it holds one, a deficit beyond the reserve cuts spending."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld, budget
+from sim.engine.agents_port import SimWorld
+from sim.agents import budget
 
 
 def one_year(game):

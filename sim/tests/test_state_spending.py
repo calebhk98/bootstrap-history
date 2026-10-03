@@ -4,9 +4,9 @@ civilisation's own hazards describe; soldiers are out of production; and patron 
 the treasury."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld
-from sim.engine.actors import budget
-from sim.world import territory
+from sim.engine.agents_port import SimWorld
+from sim.agents import budget
+from sim.geography import territory
 
 
 def one_year(game):

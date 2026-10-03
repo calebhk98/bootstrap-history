@@ -19,7 +19,7 @@ if REPO_ROOT not in sys.path:
 	sys.path.insert(0, REPO_ROOT)
 
 from sim import simulator as S  # noqa: E402
-from sim.engine.actors import SimWorld  # noqa: E402
+from sim.engine.agents_port import SimWorld  # noqa: E402
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: E402
 
 
@@ -56,8 +56,8 @@ def run(civ_id, years, seed, out_path=None):
 			"by_form": dict(record.revenue_by_form),
 			"in_kind": dict(record.revenue_in_kind),
 			"debt": max(0.0, -record.money),
-			"soldier_wage": game.labour_market.quote_annual("soldier"),
-			"labourer_wage": game.labour_market.quote_annual("labourer"),
+			"soldier_wage": game.labour.market.quote_annual("soldier"),
+			"labourer_wage": game.labour.market.quote_annual("labourer"),
 		})
 		outlays_before = dict(record.outlays)
 		taken_before = taken

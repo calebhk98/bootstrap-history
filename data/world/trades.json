@@ -1,5 +1,5 @@
 {
-  "_doc": "Canonical trade identity, availability and training time. training_years is the years of apprenticeship or schooling before a person is productive in the trade (an estimate of the skill, not a wage); a trade that states none takes its family's median. Wages are not stored here: sim/world/wages.py derives them.",
+  "_doc": "Canonical trade identity, availability and training time. training_years is the years of apprenticeship or schooling before a person is productive in the trade (an estimate of the skill, not a wage); a trade that states none takes its family's median. Wages are not stored here: sim/labour/wages.py derives them.",
   "trades": {
     "artisan": {
       "family": "craft",

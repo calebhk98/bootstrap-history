@@ -23,7 +23,7 @@ The player remains the strategist; the program handles clerical scheduling.
 
 ## WHERE IT LIVES
 
-`sim/engine/proto/dispatch.py` for command parsing and program definition, `sim/engine/core.py` or project management systems for program execution and scheduling logic.
+`sim/ui/proto/dispatch.py` for command parsing and program definition, `sim/engine/core.py` or project management systems for program execution and scheduling logic.
 
 ## Confidence
 

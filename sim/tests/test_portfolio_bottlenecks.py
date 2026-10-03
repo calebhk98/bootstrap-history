@@ -38,7 +38,7 @@ check("pools come from the engine's own trade demand and supply",
           and pool["demand_hours_this_year"] == supply_by_trade[pool["trade"]]["demand_hours_this_year"]
           for pool in pool_rows), pool_rows[:2])
 
-from sim.engine.proto.render_typed import _RENDERERS
+from sim.ui.proto.render_typed import _RENDERERS
 text = _RENDERERS["portfolio"](portfolio)
 check("the printed screen shows the bottlenecks before the project list",
       "BOTTLENECKS" in text and text.index("BOTTLENECKS") < text.index(portfolio["projects"][0]["name"]), text[:300])

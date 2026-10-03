@@ -24,7 +24,7 @@ ROOT = os.path.dirname(HERE)
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 from sim import tool_costs
-from sim.presentation import (
+from sim.ui.api import (
     AUDIT_BAR_WIDTH_CHARS, AUDIT_UNPRICED_MATERIALS_SHOWN,
     AUDIT_RECIPE_LIST_TRUNCATE_CHARS)
 

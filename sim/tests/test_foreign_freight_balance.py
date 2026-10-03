@@ -13,7 +13,8 @@ sim = partial(sim, agent_economy=False)   # these checks pin the engine's own ye
 
 
 from sim.engine.data import load_civ
-from sim.world import balance_of_payments, freight_cost, sea_freight, trade_between, trade_routes, transport
+from sim.world import balance_of_payments, trade_between
+from sim.geography import freight_cost, sea_freight, trade_routes, transport
 from sim.world.market import MarketConditions
 
 PARTNER = "han_china_100ad"
@@ -77,7 +78,7 @@ check("a cart costs more than its feed and driver alone: the oxen and the cart a
       balanced["cart"] > (s._land_freight_physical_inputs().feed_kg_per_tonne_km
                           * s._material_price_per_kg("wheat_kg")
                           + s._land_freight_physical_inputs().driver_hours_per_tonne_km
-                          * s.wage_per_hour("labourer")), None)
+                          * s.labour.wage_per_hour("labourer")), None)
 check("the sea is still far cheaper than land per tonne-km",
       balanced["sea"] < 0.2 * balanced["cart"], balanced)
 _market_rate = s.market_rate

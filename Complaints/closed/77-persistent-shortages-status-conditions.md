@@ -25,7 +25,7 @@ Only generate a new event when the condition materially changes.
 
 ## WHERE IT LIVES
 
-`sim/engine/proto/render_screens_economy.py` for capacity/shortage display, `sim/engine/proto/render_screens_status.py` for status condition rendering. Also event generation logic that creates shortage messages.
+`sim/ui/proto/render_screens_economy.py` for capacity/shortage display, `sim/ui/proto/render_screens_status.py` for status condition rendering. Also event generation logic that creates shortage messages.
 
 ## Confidence
 

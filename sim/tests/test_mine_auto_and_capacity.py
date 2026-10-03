@@ -8,8 +8,8 @@
 Complaints 63, 64, 65 and the zero-cost mine guard.
 """
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.economy import _agent_mines, _material_capacity_rows
-from sim.engine.proto.dispatch_money import _cmd_buy
+from sim.ui.proto.economy import _agent_mines, _material_capacity_rows
+from sim.ui.proto.dispatch_money import _cmd_buy
 
 
 def _auto_mine_sim(pending_tonnes):

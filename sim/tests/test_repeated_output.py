@@ -5,8 +5,8 @@ import subprocess
 import sys
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import protocol as _protocol
-from sim.engine.proto.render_screens_big import (
+from sim.ui import protocol as _protocol
+from sim.ui.proto.render_screens_big import (
     _available_row, _state_completed_head_lines, _state_founder)
 
 _STAFF_PARAGRAPH = "not the crew that"

@@ -2,7 +2,7 @@
 would. State the next year reads must be in the save: the material demand the
 last throttle left behind, and the order of every dict (float sums follow it)."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.saveload import save_state, load_state
+from sim.engine.saveload import save_state, load_state
 
 
 def _round_trip(game):

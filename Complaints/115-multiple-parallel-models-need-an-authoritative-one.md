@@ -10,7 +10,7 @@ than duplicate the answer.
 ## The player's reasoning
 
 The repository contains rich standalone modules (`sim/world/demand.py`,
-`sim/world/labour_market.py`, `sim/world/deposits.py`) while the live engine
+`sim/labour/labour_market.py`, `sim/world/deposits.py`) while the live engine
 has separate labour, demand/revenue and mining paths of its own. Standalone
 modules are useful for development, but duplicate concepts drift. Their
 recommendation: for each domain, document the authoritative live model, the
@@ -45,7 +45,7 @@ Ricardian-rent mechanism only takes over when `use_solved_prices` is flipped
 on, which it is not. Two (`demand.py`, `labour_market.py`) are wired into
 nothing at all - the live engine has its own separate revenue path
 (`sim/engine/economy_production.py`) and its own separate labour-pricing
-path (`sim/engine/labour.py`, the static `TRADE_DENSITY` classification the
+path (`sim/labour/labour.py`, the static `TRADE_DENSITY` classification the
 `labour_market.py` docstring itself names as what it is meant to replace),
 and neither reads the standalone module.
 

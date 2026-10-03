@@ -7,12 +7,12 @@ sim/tests: dead-code removal guard (unittest-style).
 """
 import importlib
 
-import sim.engine.cli  # noqa: F401  (loads cli_analysis in the order the app does)
+import sim.ui.cli  # noqa: F401  (loads cli_analysis in the order the app does)
 import unittest
 
 # (module, dotted attribute path) that must no longer exist.
 DELETED = (
-    ("sim.engine.actors.household", "MineWorking"),
+    ("sim.agents.household", "MineWorking"),
     ("sim.engine.economy_materials", "MaterialSupplyMixin.capacity_reserves"),
     ("sim.engine.commodities", "Ledger.on_hand"),
     ("sim.world.demography", "Population.working_age_population"),
@@ -20,7 +20,7 @@ DELETED = (
     ("sim.world.demand", "joint_output_value_shares_for_recipe"),
     ("sim.world.demand", "aggregate_household_demand_all_goods"),
     ("sim.world.military_logistics", "pack_animals_required_for_daily_delivery"),
-    ("sim.engine.cli_analysis", "granary_projection"),
+    ("sim.ui.cli_analysis", "granary_projection"),
 )
 
 

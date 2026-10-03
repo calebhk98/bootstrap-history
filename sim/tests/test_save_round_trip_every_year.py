@@ -6,7 +6,7 @@ A defect that only shows once the economy is large is outside this short run;
 `sim/perf_fingerprint.py` with a long scenario is where those are found."""
 from .harness import *  # noqa: F401,F403
 from sim import perf_fingerprint
-from sim.engine.proto.saveload import save_state, load_state
+from sim.engine.saveload import save_state, load_state
 
 SCENARIO = dict(civ="rome_100ad", seed=1, years=40, events=True, fog=False)
 unbroken = perf_fingerprint.build(SCENARIO)

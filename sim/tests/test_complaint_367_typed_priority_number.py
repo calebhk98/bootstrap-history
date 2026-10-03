@@ -1,6 +1,6 @@
 """Complaint 367: typed `priority 5` (no id) must refuse with usage, not crash."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.typed import parse_typed
 
 for line in ("priority 5", "priority", "priority 2 first"):
     try:

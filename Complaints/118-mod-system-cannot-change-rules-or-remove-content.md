@@ -30,7 +30,7 @@ Materials need no `prices.json` entry (catalog.py:59-70).
    file printing a marker inside a throwaway mod; `validate` never ran it.
    There is no hook, event or extension-point API.
 2. **New species or agents (elves, dragons).** There is one actor,
-   `sim/engine/actors/household.py`; population and labour are human-only
+   `sim/agents/household.py`; population and labour are human-only
    aggregates (`labour_population.py`). A node with extra keys such as
    `mana` or `kind` is accepted silently and ignored (tested: only
    `missing required field 'cat'` is enforced; unknown keys pass). A mod
@@ -66,7 +66,7 @@ Materials need no `prices.json` entry (catalog.py:59-70).
    kind needs engine code.
 8. **UI text and currency.** `MONEY_WORDS`, `MONEY_SHORT_WORDS`
    (data.py:244-260), `STARTING_KITS`, `WIN_CONDITION_LABELS` are Python
-   dicts in `data.py`; the protocol/renderers in `sim/engine/proto/` have no
+   dicts in `data.py`; the protocol/renderers in `sim/ui/proto/` have no
    mod hooks. `money_short` falls back to "den" for any unknown currency, so
    a mod currency displays wrongly. Strategies load from `sim/strategies`
    only (`STRATS`).

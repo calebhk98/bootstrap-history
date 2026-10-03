@@ -15,10 +15,10 @@ Find them with:
   id is Rome. The foreign-institution test matches name markers written from
   a Roman point of view, so Rome is exempted by id rather than by what the
   node is. A mod civilisation, or Rome renamed by a mod, gets the wrong answer.
-- `sim/engine/cli.py`, `DICE_FREE_FLOOR_YEARS`: a hand-updated table of
+- `sim/ui/cli.py`, `DICE_FREE_FLOOR_YEARS`: a hand-updated table of
   measured years keyed by civilisation id. It goes stale when the tree changes
   and says nothing for any other civilisation.
-- `sim/engine/cli.py` fallbacks to `"rome_100ad"` when no civilisation is
+- `sim/ui/cli.py` fallbacks to `"rome_100ad"` when no civilisation is
   given, instead of the `default_civ` setting in `sim/engine/settings.py`.
 
 ## Why it matters

@@ -73,7 +73,7 @@ check("no command in KNOWN_COMMANDS prints the raw id of a node this fogged "
 # actually accepts. Generic across every command at once, the same shape
 # as the fog scanner above, so the next stale pointer is caught here.
 # =============================================================================
-from sim.engine.protocol import TYPED_ALIASES as _TYPED_ALIASES
+from sim.ui.protocol import TYPED_ALIASES as _TYPED_ALIASES
 
 
 def _strings_of(obj):
@@ -304,7 +304,7 @@ check("...and the headline itself uses 'spare', which only reads one way "
 # ids and went stale); the menu a player reads stays out of the
 # business of telling them what is reachable, because critical_path already
 # tells them that for the goal they actually picked.
-from sim.engine import cli as _CLI
+from sim.ui import cli as _CLI
 
 _hz_notes = " ".join(note for _node_id, _label, _year, note in _CLI.HORIZON_MODES).lower()
 check("no horizon-mode description quotes the dice-free floor or calls any "
@@ -322,7 +322,7 @@ check("the per-civilisation floor table no longer exists in the engine",
 # strategic mitigation visible": the mitigation was there and the save
 # round-trip was deleting it.
 import collections as _coll
-from sim.engine import protocol as _PROTO
+from sim.ui import protocol as _PROTO
 
 _fa_path = os.path.join(HERE, "_fa_roundtrip.json")
 _s_fa = sim()
@@ -391,10 +391,10 @@ check("every accumulator a fresh Sim carries is either in SAVE_FIELDS or "
 # THE SCORE AND THE ENDING. A player who had just won asked for a score,
 # weighted across seven things, goal-gated ("no score: the goal was not
 # reached"), inspectable mid-run, and respectful of fog - plus a short
-# achievements list. See engine/protocol.py's own block comment above
+# achievements list. See sim/ui/protocol.py's own block comment above
 # SCORE_WEIGHTS for which field feeds each component and why.
 # =============================================================================
-from sim.engine.protocol import (score_report as _SCORE, render_score as _RSCORE,
+from sim.ui.protocol import (score_report as _SCORE, render_score as _RSCORE,
                              SCORE_WEIGHTS as _SW)
 
 check("score is advertised in KNOWN_COMMANDS, the same way capacity/economy/"
@@ -562,7 +562,7 @@ def _score_snapshot(seed_env):
     proc = subprocess.run(
         [sys.executable, "-c",
          "import sys; import random; from sim import simulator as S; "
-         "from sim.engine.protocol import score_report as SC; "
+         "from sim.ui.protocol import score_report as SC; "
          "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
          "s = S.Sim(N, O, random.Random(1), events=False, manual=False, "
          "civ=S.load_civ('rome_100ad'), cfg={'start_capital':5000000.0}); "
@@ -934,7 +934,7 @@ check("the free capability nodes the hint exists for are still free: no "
 # render_portfolio (_RPORT) is not used in this file, only _agent_portfolio
 # (_APORT) below - but it IS used by test_arrears_visibility.py, which gets
 # it from harness.py's own re-export rather than importing it here.
-from sim.engine.protocol import _agent_portfolio as _APORT
+from sim.ui.protocol import _agent_portfolio as _APORT
 
 # --- 1. PER-PROJECT ALLOCATION, READ FROM THE ALLOCATOR ITSELF. core.py's
 # step() (5. progress) now writes pool_total/rank/active_count/remaining_
@@ -1012,8 +1012,8 @@ for _k in _dem_targets:
     _s_dem.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0,
                              cost_left=_s_dem.project_cost(_k),
                              lab_left=dict(_n["lab"]))
-_dem_real_hycco = _s_dem.hours_you_can_call_on
-_s_dem.hours_you_can_call_on = (
+_dem_real_hycco = _s_dem.labour.hours_you_can_call_on
+_s_dem.labour.hours_you_can_call_on = (
     lambda trade, _fallback=_dem_real_hycco: 1500.0 if trade == "chemist" else _fallback(trade))
 # INDEPENDENTLY DERIVED, from trade_draw_plan (the same read-only formula
 # lab_year_draw itself uses for the demand side) called once per project -
@@ -1057,9 +1057,9 @@ check("`portfolio`'s own trade-demand table reads the identical numbers, "
 _s_over = sim(civ="rome_100ad", capital=5_000_000.0)
 _s_over.trades_created.add("chemist")
 _s_over.employees["chemist"] = 20.0
-_s_over._resync_pools()
-_over_real_hycco = _s_over.hours_you_can_call_on
-_s_over.hours_you_can_call_on = (
+_s_over.labour._resync_pools()
+_over_real_hycco = _s_over.labour.hours_you_can_call_on
+_s_over.labour.hours_you_can_call_on = (
     lambda trade, _fallback=_over_real_hycco: 150.0 if trade == "chemist" else _fallback(trade))
 _s_over.done.update(NODES["md2_local_anaesthesia"]["pre"])
 _s_over.done.update(NODES["md2_staining_methylene"]["pre"])
@@ -1084,7 +1084,7 @@ check("...and it does not block the start - overcommitting is still the "
 # weak spot the player named was specifically the labour cases: an absolute
 # staffing shortage and a trade your OWN other work has booked used to
 # share one label and one remedy-less sentence.
-from sim.engine.protocol import _portfolio_constraint as _PCON
+from sim.ui.protocol import _portfolio_constraint as _PCON
 _s_staff = sim(civ="rome_100ad", capital=1e9)
 _staff_k = next(node_id for node_id in NODES if (NODES[node_id].get("lab") or {}).get("chemist"))
 _n_staff = NODES[_staff_k]
@@ -1101,7 +1101,7 @@ check("an ABSOLUTE staffing shortage (this society can field none of the "
 _s_book = sim(civ="rome_100ad", capital=1e9)
 _s_book.trades_created.add("chemist")
 _s_book.employees["chemist"] = 0.8
-_s_book._resync_pools()
+_s_book.labour._resync_pools()
 _n_book = NODES[_staff_k]
 _s_book.active[_staff_k] = dict(ph_left=float(_n_book["ph"]), yrs=0.0,
                                 spent=0.0, cost_left=_s_book.project_cost(_staff_k),
@@ -1114,7 +1114,7 @@ _other_book = next(node_id for node_id in NODES
                    and (NODES[node_id]["lab"]["chemist"] / max(1.0, NODES[node_id]["yrs"])
                         + NODES[_staff_k]["lab"]["chemist"]
                         / max(1.0, NODES[_staff_k]["yrs"])
-                        > _s_book.hours_you_can_call_on("chemist")))
+                        > _s_book.labour.hours_you_can_call_on("chemist")))
 _n_other_book = NODES[_other_book]
 _s_book.active[_other_book] = dict(
     ph_left=float(_n_other_book["ph"]), yrs=0.0, spent=0.0,
@@ -1174,8 +1174,8 @@ _year_before_multi_step = _s_idle.year
 # CAPTURED BEFORE THE STEP RUNS. Once step(years=5) executes it changes the
 # pool this year's idle-hours figure was about; the warning has to be
 # checked against what the pool was BEFORE any of the five years ran.
-_pre_idle_hours = max(0.0, _s_idle.director_pool()
-                      - _s_idle.director_hours_committed())
+_pre_idle_hours = max(0.0, _s_idle.labour.director_pool()
+                      - _s_idle.labour.director_hours_committed())
 _resp_idle = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 5})
 check("a multi-year step warns, up front, when this year alone already has "
       "substantial founder-hours going to waste and something is genuinely "
@@ -1637,7 +1637,7 @@ def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     """
     grown_sim = sim(civ=civ, events=True)
     grown_sim.employees["artisan"] = employees
-    grown_sim._resync_pools()
+    grown_sim.labour._resync_pools()
     grown_sim.capital = capital
     grown_sim.eminence = eminence
     grown_sim.update_protection()
@@ -1694,7 +1694,7 @@ check("...but the FIRST working gun (one military-branch node, not a "
 
 _tiny_notice = sim(civ="rome_100ad")
 _tiny_notice.employees["artisan"] = 2.0
-_tiny_notice._resync_pools()
+_tiny_notice.labour._resync_pools()
 check("military demand still needs SOME visible scale - a founder who has "
       "merely studied cannon, with no household to speak of, is not yet "
       "worth a state's letter",
@@ -1704,7 +1704,7 @@ check("military demand still needs SOME visible scale - a founder who has "
 
 # 60 million coin at the old coin value, stated in labour hours so it does not
 # move with what the coin metal costs
-HUGE_CAPITAL_ROME = 2.24e8 * sim(civ="rome_100ad").money_per_labour_hour()
+HUGE_CAPITAL_ROME = 2.24e8 * sim(civ="rome_100ad").labour.money_per_labour_hour()
 _huge = _grown("rome_100ad", employees=2000.0, capital=HUGE_CAPITAL_ROME, eminence=25.0)
 check("confiscation is a TAIL risk: it stays at zero until well past the "
       "general notice line, not the moment requisition starts",
@@ -1729,7 +1729,7 @@ check("confiscation is mitigable, by exactly the things that mitigated it "
 
 _norse_extreme = sim(civ="norse_900ad")
 _norse_extreme.employees["artisan"] = 2000.0
-_norse_extreme._resync_pools()
+_norse_extreme.labour._resync_pools()
 _norse_extreme.capital = 60000000.0
 _norse_extreme.eminence = 30.0
 check("Norse state_capacity (0.15) caps notice so low that even an "
@@ -1743,7 +1743,7 @@ _norse_built = state_seeking(sim(civ="norse_900ad"))
 _norse_built.civ["state_capacity"] = 0.9          # as if centuries of kings,
 _norse_built.state_capacity = 0.9                 # bishops and taxes arrived
 _norse_built.employees["artisan"] = 2000.0
-_norse_built._resync_pools()
+_norse_built.labour._resync_pools()
 _norse_built.capital = 60000000.0
 _norse_built.eminence = 30.0
 check("...but a Norse state that DID build up state_capacity (the same "

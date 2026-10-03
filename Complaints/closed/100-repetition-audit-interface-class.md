@@ -59,8 +59,8 @@ DETAILS
 ## Where it lives
 
 Distributed across:
-- `sim/engine/proto/state.py` (state structure and output)
-- `sim/engine/proto/dispatch.py` (default summaries)
+- `sim/ui/proto/state.py` (state structure and output)
+- `sim/ui/proto/dispatch.py` (default summaries)
 - `sim/engine/proto/render_screens_*.py` (various screens)
 - All related complaint instances (71-86, 87-101) for specific examples
 
