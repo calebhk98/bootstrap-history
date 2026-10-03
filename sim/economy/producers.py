@@ -308,10 +308,13 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
            keep_back: Optional[Mapping[GoodId, float]] = None) -> List[Offer]:
     """Held output on each output's own market. The reservation is what carrying a unit to next year
     would net at the expected price, lowered when cash is short; what was spent making it does not
-    enter. A perishable's reservation falls to or below zero, so it sells at any price. `keep_back`
-    holds stock the producer needs as input for its own planned runs."""
+    enter. Stock beyond the cover its expected sales call for is worth only the making it saves next
+    year, so a maker with a glut offers it at that avoided cost and competes the price down toward it.
+    A perishable's reservation falls to or below zero, so it sells at any price. `keep_back` holds
+    stock the producer needs as input for its own planned runs."""
     keep_back = keep_back or {}
     expected = expected_output_prices(producer, recipe, view)
+    avoided = _avoided_cost_per_unit(producer, recipe, view, expected)
     rows = []
     for good in sorted(recipe.outputs):
         quantity = stock_by_good.get(good, 0.0) - keep_back.get(good, 0.0)
@@ -320,11 +323,31 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
         spoilage = specs[good].spoilage_per_year if good in specs else 0.0
         reservation = inventory.holding_reservation(expected.get(good, 0.0), interest_rate, spoilage,
                                                     STORAGE_COST_PER_UNIT)
-        rows.append((good, quantity, reservation))
+        surplus = 0.0
+        if producer.expected_sales > 0.0 and good in avoided:
+            cover = inventory.target_stock(producer.expected_sales) * recipe.outputs[good] * producer.yield_factor
+            surplus = max(0.0, quantity - cover)
+        if surplus > 0.0:
+            glut = inventory.holding_reservation(avoided[good], interest_rate, spoilage, STORAGE_COST_PER_UNIT)
+            rows.append((good, surplus, min(reservation, glut)))
+        if quantity - surplus > 0.0:
+            rows.append((good, quantity - surplus, reservation))
     stock_value = sum(quantity * max(reservation, 0.0) for _good, quantity, reservation in rows)
     return [Offer(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile, quantity,
                   inventory.distressed_reservation(reservation, cash_shortfall, stock_value))
             for good, quantity, reservation in rows]
+
+
+def _avoided_cost_per_unit(producer, recipe, view, expected) -> Dict[GoodId, float]:
+    """What a unit of each output costs to make at live prices and wages, the run's variable cost shared
+    over its outputs by expected value; empty when the run cannot be costed."""
+    variable = unit_cost.variable_cost_per_run(recipe, live_input_prices(producer, recipe, view),
+                                               live_wages(producer, recipe, view))
+    value = unit_cost.revenue_per_run(recipe, expected)
+    if not math.isfinite(variable) or value <= 0.0 or producer.yield_factor <= 0.0:
+        return {}
+    return {good: variable * expected.get(good, 0.0) / value / producer.yield_factor
+            for good, quantity in recipe.outputs.items() if quantity > 0.0}
 
 
 def with_capacity(producer: Producer, capacity_runs: float) -> Producer:

@@ -149,6 +149,26 @@ class OfferTests(unittest.TestCase):
         rows = producers.offers(farmer(expected_prices={"fish": 3.0}), fish, View(), {"fish": 4.0}, 0.0, 0.05, SPECS)
         self.assertLessEqual(rows[0].reservation_price, 0.0)
 
+    def test_stock_beyond_the_target_cover_is_offered_at_what_making_it_next_year_would_cost(self):
+        # a glut is worth only the making it saves next year, so a maker with more than it can sell
+        # competes the price down toward cost; the stock it means to hold keeps the holding reservation
+        from sim.economy import inventory
+        grower = farmer(expected_prices={"grain": 3.0}, expected_sales=2.0)
+        rows = producers.offers(grower, FARM, farm_view(3.0), {"grain": 100.0}, 0.0, 0.05, SPECS)
+        target = inventory.target_stock(2.0) * 10.0
+        held = [row for row in rows if row.reservation_price > 1.0]
+        surplus = [row for row in rows if row.reservation_price <= 1.0]
+        self.assertAlmostEqual(sum(row.quantity for row in held), target)
+        self.assertAlmostEqual(sum(row.quantity for row in surplus), 100.0 - target)
+        self.assertAlmostEqual(surplus[0].reservation_price, 0.7 / 1.05)
+        self.assertAlmostEqual(held[0].reservation_price, 3.0 / 1.05)
+
+    def test_a_maker_with_no_record_of_sales_keeps_the_holding_reservation_for_all_it_holds(self):
+        rows = producers.offers(farmer(expected_prices={"grain": 3.0}), FARM, farm_view(3.0), {"grain": 100.0},
+                                0.0, 0.05, SPECS)
+        self.assertEqual(len(rows), 1)
+        self.assertAlmostEqual(rows[0].reservation_price, 3.0 / 1.05)
+
     def test_stock_kept_back_for_inputs_is_not_offered(self):
         rows = producers.offers(self.smelter(), SMELT, View(), {"metal": 5.0}, 0.0, 0.05, SPECS, {"metal": 5.0})
         self.assertEqual(rows, [])
@@ -201,6 +221,31 @@ class CloseYearTests(unittest.TestCase):
         # growth only: plant that wore out is rebuilt from the producer's own cash, not borrowed for
         self.assertAlmostEqual(result.expansion_runs, producers_close.EXPANSION_SHARE_PER_YEAR * farmer().capacity_runs)
         self.assertAlmostEqual(request.amount, result.expansion_runs * 10.0)
+
+    def test_a_workshop_without_plant_or_land_grows_while_its_full_runs_pay(self):
+        # a run costs 7 and sells for 30: well above the rate, and it worked all its capacity
+        result = producers_close.close_year(farmer(last_runs=10.0), FARM, 300.0, 70.0, farm_view(3.0))
+        self.assertAlmostEqual(result.producer.capacity_runs, 10.0 * (1.0 + producers_close.EXPANSION_SHARE_PER_YEAR))
+        self.assertIsNone(result.loan_request)
+
+    def test_a_maker_on_land_does_not_grow_on_price_alone(self):
+        result = producers_close.close_year(farmer(last_runs=10.0), FARM, 300.0, 70.0, farm_view(3.0),
+                                            uses_land=True)
+        self.assertAlmostEqual(result.producer.capacity_runs, 10.0)
+
+    def test_a_workshop_holding_unsold_output_does_not_grow(self):
+        view = View({"grain": 3.0, "seed": 1.0}, {"hand": 1.0}, stock={"grain": 1000.0})
+        result = producers_close.close_year(farmer(last_runs=6.0, expected_sales=6.0), FARM, 180.0, 42.0, view)
+        self.assertAlmostEqual(result.producer.capacity_runs, 10.0)
+
+    def test_a_workshop_that_sells_what_it_makes_grows_though_cash_kept_its_runs_short(self):
+        result = producers_close.close_year(farmer(last_runs=6.0, expected_sales=6.0), FARM, 180.0, 42.0,
+                                            farm_view(3.0))
+        self.assertGreater(result.producer.capacity_runs, 10.0)
+
+    def test_a_workshop_whose_runs_do_not_beat_the_rate_does_not_grow(self):
+        result = producers_close.close_year(farmer(last_runs=10.0), FARM, 72.0, 70.0, farm_view(0.72))
+        self.assertAlmostEqual(result.producer.capacity_runs, 10.0)
 
     def test_expected_prices_move_toward_the_latest_price(self):
         view = farm_view(3.0)

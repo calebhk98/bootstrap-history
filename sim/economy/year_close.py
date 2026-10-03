@@ -79,7 +79,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         recipe = setup.recipes[producer.recipe_id]
         revenue = ledger.sales_in.get(producer_id, 0.0)
         costs = ledger.money_out.get(producer_id, 0.0)
-        closed = producers_close.close_year(producer, recipe, revenue, costs, view)
+        closed = producers_close.close_year(producer, recipe, revenue, costs, view,
+                                            uses_land=setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0)
         if closed.exited:
             # a run of losses mothballs the plant rather than scrapping it: it keeps its cash and wears
             # out unless prices bring it back to work (share_working decides how much of it works)

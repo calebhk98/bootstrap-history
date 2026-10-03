@@ -4,7 +4,8 @@
     pays the owner the cash above the producer's target, applies wear to the plant, counts a loss
     year when revenue did not cover the costs paid plus the plant's charge at the live rate, exits
     after enough of them, and asks for a loan to rebuild and grow when new plant would earn more than
-    the live rate. A funded loan becomes capacity through `producers.with_capacity`.
+    the live rate. A funded loan becomes capacity through `producers.with_capacity`; a maker with no
+    plant and no land grows its capacity directly while its full runs pay.
 `entrants(recipes, view, sites, occupied)` -> new `Producer`s where the expected return beats the live
     rate, best first, at most a declared number a year. Owners and sites come from the caller.
 """
@@ -16,7 +17,7 @@ from sim.constants import declare
 
 from . import unit_cost
 from .producers import (Producer, expected_output_prices, live_input_prices, live_wages,
-                        next_expectations)
+                        next_expectations, runs_for_stock)
 from .protocols import MarketView
 from .types import AgentId, LoanRequest, Recipe, TileId, Transfer
 
@@ -53,8 +54,8 @@ def working_capital_target(recipe: Recipe, capacity_runs: float, input_prices, w
     return cost * capacity_runs * WORKING_CAPITAL_YEARS_OF_VARIABLE_COST
 
 
-def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float, view: MarketView
-               ) -> YearClose:
+def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float, view: MarketView,
+               uses_land: bool = False) -> YearClose:
     first_output = sorted(recipe.outputs)[0]
     currency = view.currency_of(view.area_of(first_output, producer.tile))
     rate = view.interest_rate(currency)
@@ -74,6 +75,8 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     capacity = producer.capacity_runs - wear
     target = working_capital_target(recipe, capacity, inputs, wages)
     request, rebuilt = _expansion(producer, recipe, view, currency, rate, wear, inputs, wages)
+    if _grows_without_plant(producer, recipe, view, rate, inputs, wages, uses_land):
+        capacity *= 1.0 + EXPANSION_SHARE_PER_YEAR
     survivor = replace(producer, capacity_runs=capacity, years_of_loss=losses,
                        expected_prices=expectations, cash_target=target)
     surplus = max(0.0, cash - target)
@@ -84,6 +87,19 @@ def _dividend(producer: Producer, currency: str, amount: float) -> Tuple[Transfe
     if amount <= 0.0:
         return ()
     return (Transfer(producer.agent_id, producer.owner, currency, amount, "dividend"),)
+
+
+def _grows_without_plant(producer, recipe, view, rate, inputs, wages, uses_land) -> bool:
+    """A maker with no plant to build and no land to find takes on more hands and room while it sells
+    what it makes (it holds no more than its target stock) and its runs pay more than the live rate;
+    one on land waits for land to carry a rent (Complaint 393), since free land would let it grow
+    without bound."""
+    if uses_land or recipe.plant_goods or recipe.plant_labour_hours or producer.capacity_runs <= 0.0:
+        return False
+    if math.isfinite(runs_for_stock(producer, recipe, view)):
+        return False
+    return unit_cost.return_on_capital(recipe, expected_output_prices(producer, recipe, view) or {},
+                                       inputs, wages) > rate
 
 
 def _expansion(producer, recipe, view, currency, rate, wear, inputs, wages):
