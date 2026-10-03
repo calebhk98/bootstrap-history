@@ -611,6 +611,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
         from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
         from sim.engine.state import ActiveProjectState
+        # Household façade first, so version bumps fired while reconnecting land on this state
+        if hasattr(self, "household"):
+            self.household._state = self.state
         # Reconnect invalidation wrappers
         self.state.projects.operating = _InvalidatingSet(
             self.state.projects.operating or set(),
@@ -641,10 +644,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
                 self.state.population.pop_children = float(self.population.children)
                 self.state.population.pop_working_age = float(self.population.working_age)
                 self.state.population.pop_elderly = float(self.population.elderly)
-
-        # Synchronize household façade state pointer
-        if hasattr(self, "household"):
-            self.household._state = self.state
 
         # Sync civ live state and metadata
         if self.state._civ_live:
