@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 
 from . import goods_market, households, merchants, producers, settlement, state_budget, taxes
 from .market_memory import market_key
-from .market_memory_asks import (dry_trade_weight, note_bids, note_offers, price_after_no_bids,
+from .market_memory_asks import (note_bids, note_offers, price_after_no_bids,
                                  price_after_resumed_trade, wanted_at)
 from .protocols import AgentOrders
 from .recipes import input_depth_order
@@ -154,11 +154,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             dry_years = note_offers(record.memory, key, bids, offers)
             if result.quantity > 0.0:
                 usual = record.memory.volume_weights.get(key, 0.0)
-                signal = remembered_price(old, result.price, result.quantity, usual)
-                dormant = dry_years > 0 or record.memory.years_since_trade(key) != 0
-                if old is not None and dormant:
-                    weight = dry_trade_weight(result.quantity, usual, wanted_at(bids, old), dormant)
-                    signal = old + weight * (result.price - old)
+                signal = remembered_price(old, result.price, result.quantity, max(usual, wanted_at(bids, old)))
                 signal = price_after_resumed_trade(old, signal, quiet_years + dry_years)
             else:
                 signal = _unsold_signal(bids, offers)
@@ -179,9 +175,9 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
 
 def remembered_price(old, cleared, quantity, usual_volume):
     """The price a market remembers after trading `quantity` at `cleared`: moved from the old price in
-    proportion to the trade against the market's usual volume, so a sliver of trade cleared at a price
-    nobody normally pays does not become the price everyone plans from. A market whose volume stays
-    low learns the new price as its usual volume falls."""
+    proportion to the trade against `usual_volume` (the caller passes the larger of the market's usual
+    volume and what buyers wanted at the old price), so a sliver of trade cleared at a price nobody
+    normally pays does not become the price everyone plans from."""
     if old is None or usual_volume <= 0.0:
         return cleared
     return old + min(1.0, quantity / usual_volume) * (cleared - old)

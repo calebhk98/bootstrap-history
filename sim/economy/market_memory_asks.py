@@ -68,17 +68,6 @@ def note_offers(memory, key: str, bids: Sequence[Bid], offers: Sequence[Offer]) 
     return before
 
 
-def dry_trade_weight(quantity: float, usual_volume: float, wanted_at_old_price: float, dormant: bool) -> float:
-    """How much of the gap to the cleared price a trade moves the memory, in a market that did not trade
-    last year (years with buyers and no seller, or never cleared). Against the market's usual volume,
-    which has decayed to nothing, any sliver would count in full; against what buyers wanted at the
-    remembered price it counts for its size. 1.0 when the market traded last year."""
-    if not dormant:
-        return 1.0
-    reference = max(usual_volume, wanted_at_old_price)
-    return min(1.0, quantity / reference) if reference > 0.0 else 1.0
-
-
 def price_after_resumed_trade(old: Optional[float], volume_rule_price: float, years_without_bids: int) -> float:
     """After trade resumes, the remembered price moves only part of the way from the price the quiet
     market drifted to."""
