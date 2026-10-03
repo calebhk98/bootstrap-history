@@ -97,6 +97,7 @@ class AreaMap:
         self._partitions: Dict[str, Tuple[MarketArea, ...]] = {}
         self._bucket_of_good: Dict[GoodId, str] = {}
         self._area_of_tile: Dict[str, Dict[TileId, AreaId]] = {}
+        self._areas_of_good: Dict[GoodId, Tuple[MarketArea, ...]] = {}
         unit = carriage_unit(tile_ids, carriage)
         for spec, price in goods:
             label, representative = bucket_of(value_per_tonne(spec, price), bucket_width_ln, unit)
@@ -114,8 +115,12 @@ class AreaMap:
         return len(self._partitions)
 
     def areas(self, good: GoodId) -> Tuple[MarketArea, ...]:
-        label = self._bucket_of_good[good]
-        return tuple(replace(area, good_id=good) for area in self._partitions[label])
+        cached = self._areas_of_good.get(good)
+        if cached is None:
+            label = self._bucket_of_good[good]
+            cached = tuple(replace(area, good_id=good) for area in self._partitions[label])
+            self._areas_of_good[good] = cached
+        return cached
 
     def area_of(self, good: GoodId, tile: TileId) -> AreaId:
         """The id of the area holding `tile` for `good`; KeyError if either is unknown."""
