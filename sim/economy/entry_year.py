@@ -12,6 +12,7 @@ from .entry import (ENTRANT_OWNER_STAKE_SHARE, UnmetDemand, entrant_loan, entry_
                     producers_to_close, restake)
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .producers_close import working_capital_target
+from .market_memory import market_key
 from .setup import recipe_tile_key
 from .types import GoodsMove, LoanRequest, Transfer
 
@@ -28,7 +29,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
             unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
     money = setup.currency_id
     started = 0
-    for plan in entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run):
+    for plan in entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run,
+                         _traded_volume(record, view, area_map)):
         recipe = setup.recipes[plan.recipe_id]
         key = recipe_tile_key(plan.recipe_id, plan.tile)
         producer_id = "producer:" + key
@@ -61,6 +63,15 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                                                         recipe.plant_life_years, loan, "enter"))
                 record.expansion_runs[producer_id] = loan / per_run
     return started
+
+
+def _traded_volume(record, view, area_map):
+    """What a good's market (on a tile) carried last year; None for a good with no market."""
+    goods = set(area_map.goods())
+
+    def traded(good, tile):
+        return record.volumes.get(market_key(good, view.area_of(good, tile)), 0.0) if good in goods else None
+    return traded
 
 
 def restake_owners(setup, record, view) -> None:
