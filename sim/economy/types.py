@@ -4,6 +4,7 @@ Every module in `sim/economy/` speaks these types and nothing else, so each can 
 tested alone. Quantities are in the good's own unit (a `*_kg` good is counted in kg); money is in
 the currency named beside it. Nothing here names a particular good, trade, place or currency.
 """
+import math
 from dataclasses import dataclass, field
 from typing import Mapping, Optional, Tuple
 
@@ -41,6 +42,11 @@ class GoodSpec:
     spoilage_per_year: float         # share of a held stock lost in a year
     service_life_years: float        # 0: used up within the year; above 0: a durable that serves
     category: str                    # a data label (food, fuel, ...); code never branches on a good id
+
+    @property
+    def portable(self) -> bool:
+        """False for a unit with no mass to carry (ground, a flow of energy): infinite unit mass."""
+        return math.isfinite(self.unit_mass_kg)
 
 
 @dataclass(frozen=True)
