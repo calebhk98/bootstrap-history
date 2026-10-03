@@ -27,6 +27,6 @@ protect PROJECTID
 
 ## Where it lives
 
-Likely in `sim/engine/proto/dispatch.py` and `sim/engine/projects.py` where project state is managed.
+Likely in `sim/ui/proto/dispatch.py` and `sim/engine/projects.py` where project state is managed.
 
 **Confidence:** Design recommendation

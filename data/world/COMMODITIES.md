@@ -535,7 +535,7 @@ actually binds a plan.
 - **No labour throughput ceiling on manufacturing.** `copper_wire`'s supply
   is capped by copper availability and by a flat technology multiplier, not
   by how many smiths exist to draw it. The wage/labour-market machinery in
-  `sim/engine/labour.py` is a whole parallel system this framework does not
+  `sim/labour/labour.py` is a whole parallel system this framework does not
   touch. A finished good that is short on LABOUR rather than material is a
   real and common failure mode this pass cannot represent.
 - **No competing buyers.** `national_supply` minus `market_share` is "what

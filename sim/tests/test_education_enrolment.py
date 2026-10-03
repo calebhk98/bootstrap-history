@@ -1,6 +1,6 @@
 """education_enrolment: regression checks, run with `--only education_enrolment`."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.render_typed import render_pretty as _render_pretty
+from sim.ui.proto.render_typed import render_pretty as _render_pretty
 
 
 def _education(game):

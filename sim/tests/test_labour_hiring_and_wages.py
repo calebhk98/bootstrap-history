@@ -33,9 +33,9 @@ check("a concern you opened is NOT described as your practice",
 # thinner revenue than their wages, and turning the policy off did not stop
 # what was in flight. No command anywhere could.
 s_tr = sim(capital=200000.0)
-ok_t, _ = s_tr.train("machinist", 3)
+ok_t, _ = s_tr.labour.train("machinist", 3)
 check("teaching a trade puts people in training", ok_t and s_tr.training, s_tr.training)
-ok_f, note_f = s_tr.fire("machinist", 3)
+ok_f, note_f = s_tr.labour.fire("machinist", 3)
 check("dismissing a trade you are teaching cancels the apprenticeship",
       ok_f and not [record for record in s_tr.training if len(record) > 3 and record[2] == "machinist"],
       (note_f, s_tr.training))
@@ -43,7 +43,7 @@ check("...and says so, because what you paid to feed them is spent",
       note_f and "stopped teaching" in note_f, note_f)
 s_tr2 = sim(capital=200000.0)
 check("firing a trade you neither employ nor teach is still refused",
-      s_tr2.fire("machinist", 1)[0] is False, s_tr2.fire("machinist", 1)[1])
+      s_tr2.labour.fire("machinist", 1)[0] is False, s_tr2.labour.fire("machinist", 1)[1])
 
 # --- BREAK: `work` silently took the hours out of the practice. 500 hours as
 # a scribe paid 80.1 and cost 58.3 of practice income the same instant.
@@ -72,7 +72,7 @@ s_wg = sim(capital=2000000.0)
 _r0, _, _ = proto([{"cmd": "labour", "trade": "millwright"}])
 _base = _r0[0]["trade"]["a_year_of_one"]
 for _ in range(6):
-    s_wg.hire("millwright", 3)
+    s_wg.labour.hire("millwright", 3)
 _dear = S._agent_dispatch(s_wg, NODES, {"cmd": "labour", "trade": "millwright"})["trade"]
 check("leaning on a trade shows up in its quoted price, not only in the bill",
       _dear["a_year_of_one"] > _base, (_base, _dear["a_year_of_one"]))
@@ -136,7 +136,7 @@ check("...and a trade says which of the two it is",
 # - no separate `hire` is needed for THEM - but nothing said so, and nothing
 # said they cannot work a day before that year either.
 s_tr = sim(capital=100000.0)
-_ok_tr, _msg_tr = s_tr.train("machinist", 2, None)
+_ok_tr, _msg_tr = s_tr.labour.train("machinist", 2, None)
 check("the training confirmation says what is STILL needed: nothing, for "
       "these apprentices - they join staff on their own, no 'hire' required",
       _ok_tr and "join your staff automatically" in _msg_tr
@@ -166,18 +166,18 @@ check("...and this is not just a promise: they really are on the books, "
 # 17,500); collapsed into one it made commissioning buy byte-identical
 # progress and be pointless. Both statements have to be on the screen.
 s_cm = sim(capital=5000000.0)
-_ceiling = s_cm.market_supply("scribe")
-s_cm.commission("scribe", _ceiling * 0.9)
+_ceiling = s_cm.labour.market_supply("scribe")
+s_cm.labour.commission("scribe", _ceiling * 0.9)
 check("commissioning does not raise how many of a trade LIVE here",
-      abs(s_cm.market_supply_split("scribe")[0]
-          - sim(capital=5000000.0).market_supply_split("scribe")[0]) < 1e-6,
-      s_cm.market_supply_split("scribe")[0])
+      abs(s_cm.labour.market_supply_split("scribe")[0]
+          - sim(capital=5000000.0).labour.market_supply_split("scribe")[0]) < 1e-6,
+      s_cm.labour.market_supply_split("scribe")[0])
 check("...and it does add hours you can actually call on",
-      s_cm.hours_you_can_call_on("scribe") > _ceiling, 
-      (_ceiling, s_cm.hours_you_can_call_on("scribe")))
+      s_cm.labour.hours_you_can_call_on("scribe") > _ceiling, 
+      (_ceiling, s_cm.labour.hours_you_can_call_on("scribe")))
 check("...and you cannot commission past what the trade here can spare",
-      s_cm.commission("scribe", _ceiling)[0] is False,
-      s_cm.commission("scribe", _ceiling)[1])
+      s_cm.labour.commission("scribe", _ceiling)[0] is False,
+      s_cm.labour.commission("scribe", _ceiling)[1])
 _rc2, _, _ = proto([{"cmd": "labour", "trade": "scribe"}])
 check("...and `labour` names both channels, not one ceiling",
       _rc2[0]["trade"].get("hours_you_could_still_commission") is not None
@@ -194,24 +194,24 @@ check("...and `labour` names both channels, not one ceiling",
 s_rt = sim(capital=2000000.0, manual=False)
 s_rt.trades_created.add("machinist")          # taught once, long ago
 s_rt.employees.pop("machinist", None)
-s_rt._resync_pools()
+s_rt.labour._resync_pools()
 # A project in hand needs a machinist: auto_hire replaces only trades that
 # something draws on (complaint 167).
 s_rt.initialize_project("air_artificial_horizon")
 check("a trade taught and then lost counts as gone, not as available",
-      s_rt.trade_available("machinist")
-      and s_rt.market_supply("machinist") <= 0.0,
-      (s_rt.trade_available("machinist"), s_rt.market_supply("machinist")))
+      s_rt.labour.trade_available("machinist")
+      and s_rt.labour.market_supply("machinist") <= 0.0,
+      (s_rt.labour.trade_available("machinist"), s_rt.labour.market_supply("machinist")))
 for _ in range(6):
     if "air_artificial_horizon" not in s_rt.active:
         s_rt.initialize_project("air_artificial_horizon")
     s_rt.step()
 check("...and the engine teaches it again rather than skipping every node "
       "that needs it",
-      s_rt.market_supply("machinist") > 0
-      or s_rt._trade_headcount_pending("machinist") > 0,
-      (s_rt.market_supply("machinist"),
-       s_rt._trade_headcount_pending("machinist")))
+      s_rt.labour.market_supply("machinist") > 0
+      or s_rt.labour._trade_headcount_pending("machinist") > 0,
+      (s_rt.labour.market_supply("machinist"),
+       s_rt.labour._trade_headcount_pending("machinist")))
 # But not every year: teaching two costs about 900 of a 2,000-hour year.
 # FOUR SECONDS: forty years of an optimizer run to watch a cooldown that only
 # has meaning across decades. Per TRADE: teaching four different trades over
@@ -251,8 +251,8 @@ s_dd.founder_alive = False
 check("a dead physician has no practice",
       _alive > 0 and s_dd.revenue() == 0.0, (_alive, s_dd.revenue()))
 check("...and cannot sell hours he does not have",
-      s_dd.work_for_wages("scholar", 100)[0] == 0.0,
-      s_dd.work_for_wages("scholar", 100)[1])
+      s_dd.labour.work_for_wages("scholar", 100)[0] == 0.0,
+      s_dd.labour.work_for_wages("scholar", 100)[1])
 check("...and cannot take anyone on with no deputy to direct them",
       S._agent_dispatch(s_dd, NODES,
                         {"cmd": "hire", "trade": "smith", "n": 1}).get("ok") is False,

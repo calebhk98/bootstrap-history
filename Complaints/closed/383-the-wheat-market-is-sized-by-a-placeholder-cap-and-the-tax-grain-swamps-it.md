@@ -2,7 +2,7 @@
 
 **Status:** closed - the agent economy is the default: every market is sized by producers' real output and the state's tax grain is held and spent through the markets, not dumped as a price-taker (regression in sim/tests/test_agent_economy_wiring.py)
 
-Rome, seed 1. The state's land tax takes a tenth of the harvest in wheat (`data/civilizations/rome_100ad.json`, form `land_tax`). It sells what its budget lines will not draw (`sim/engine/actors/government_stores.py`, `sell_surplus`), as a price-taker, through `world.market_sale`. The harvest is the farm model's whole gross harvest (`harvest_tonnes`, `sim/engine/actors/world_revenue.py`).
+Rome, seed 1. The state's land tax takes a tenth of the harvest in wheat (`data/civilizations/rome_100ad.json`, form `land_tax`). It sells what its budget lines will not draw (`sim/agents/government_stores.py`, `sell_surplus`), as a price-taker, through `world.market_sale`. The harvest is the farm model's whole gross harvest (`harvest_tonnes`, `sim/agents/world_revenue.py`).
 
 The wheat market book opens at `_society_output_tonnes`, which for wheat falls through to `_generic_national_output_uncached` (`sim/engine/economy_materials.py`). That formula, for a cheap material, binds at `GENERIC_OUTPUT_CEILING_T_PER_YR`, a defensive cap labelled as not fitted. Household demand is sized from that reference too. The state's tax grain alone is several times the whole reference market.
 

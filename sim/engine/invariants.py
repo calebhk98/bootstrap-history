@@ -47,13 +47,13 @@ def check_simulation_invariants(state):
 def check_labour_market_invariants(sim):
     """Assert the labour market never holds more people than exist."""
     nation = sim.population.total
-    town = sim.home_town_population_estimate()
+    town = sim.labour.home_town_population_estimate()
     assert town <= nation + 1e-6, \
         "home town of %.1f people exceeds the nation of %.1f" % (town, nation)
     employees = sim.state.household.employees
-    for trade in sim.available_trades():
-        reachable = sim.reachable_trade_population(trade)
-        people = sim.people_who_exist(trade)
+    for trade in sim.labour.available_trades():
+        reachable = sim.labour.reachable_trade_population(trade)
+        people = sim.labour.people_who_exist(trade)
         assert reachable <= people + 1e-6, \
             "reachable %s %.2f exceed the %.2f people in that trade" % (trade, reachable, people)
         assert reachable <= nation + 1e-6, \

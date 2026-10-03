@@ -20,7 +20,7 @@ does not name.
 ## What it would take
 
 Give a foreign economy the same mineral and land inputs the home society has
-(`sim/engine/geography.py`, `sim/world/land.py`) from its own `home_regions`,
+(`sim/geography/geography.py`, `sim/world/land.py`) from its own `home_regions`,
 and its own household demand from its population and income (`Complaints/102`).
 
 ## Resolved

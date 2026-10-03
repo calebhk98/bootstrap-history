@@ -164,9 +164,9 @@ class CapabilityMixin:
             return 1.0
         if self.mechanic(node_id, "capability").get("scalable") == "literacy":
             lit = max(self.LITERACY_GENERAL_FLOOR,
-                      float(self.civ.get("literacy_general", self.LITERACY_REFERENCE_GENERAL)))
+                      float(self.civ.get("literacy_general", self.labour.LITERACY_REFERENCE_GENERAL)))
             return max(1.0, self.SCHOOL_CEILING_BASE_UNITS * self.pop_scale ** self.INSTITUTION_CEILING_POP_EXPONENT
-                       * (lit / self.LITERACY_REFERENCE_GENERAL) ** self.INSTITUTION_CEILING_POP_EXPONENT)
+                       * (lit / self.labour.LITERACY_REFERENCE_GENERAL) ** self.INSTITUTION_CEILING_POP_EXPONENT)
         # Workshops, collegia and a freedman staff draw on craftsmen rather
         # than the literate few, so population alone bounds them, not literacy.
         return max(1.0, self.WORKSHOP_CEILING_BASE_UNITS * self.pop_scale ** self.INSTITUTION_CEILING_POP_EXPONENT)

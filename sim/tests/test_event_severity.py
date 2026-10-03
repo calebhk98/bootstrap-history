@@ -2,8 +2,8 @@
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto import event_severity
-from sim.engine.proto.render_screens_big import render_step
+from sim.ui.proto import event_severity
+from sim.ui.proto.render_screens_big import render_step
 
 
 class EventTiers(unittest.TestCase):
@@ -58,7 +58,7 @@ class StepScreenStyling(unittest.TestCase):
 class StepReplyCarriesSeverity(unittest.TestCase):
 
     def test_every_step_event_has_a_severity_name(self):
-        from sim.engine.protocol import _agent_dispatch
+        from sim.ui.protocol import _agent_dispatch
         household = sim(civ="rome_100ad", capital=1e5)
         household.end_year = household.cfg["start_year"] + 50
         reply = _agent_dispatch(household, NODES, {"cmd": "step", "years": 3})

@@ -110,7 +110,7 @@ class ProductionMixin:
         # outlives you; what you personally did does not.
         if not self.state.founder.founder_alive:
             return 0.0
-        pool = self.director_pool()
+        pool = self.labour.director_pool()
         if pool <= 0:
             return 1.0
         sold = min(pool, self.state.household.wage_hours_this_year)
@@ -161,10 +161,10 @@ class ProductionMixin:
             scenario.year,
             self.pop_scale,
             economy.output_per_head,
-            getattr(projects, "_operating_ver", 0),
-            getattr(projects, "_done_ver", 0),
-            getattr(household, "_workforce_ver", 0),
-            getattr(governance, "_inst_units_ver", 0),
+            self.household.operating_version,
+            self.household.done_version,
+            self.household.workforce_version,
+            self.household.institution_units_version,
             household.wage_hours_this_year,
             getattr(economy, "farm_hectares", 0.0) or 0.0,
             getattr(household, "freedmen", 0.0) or 0.0,
@@ -296,7 +296,7 @@ class ProductionMixin:
         household = self.state.household
         craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
         craft += household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE
-        market = self.labour_market
+        market = self.labour.market
         wage = 0.0
         for trade, count in household.employees.items():
             if trade_family(trade) == "craft":
@@ -630,12 +630,12 @@ class ProductionMixin:
         # allocations are exactly what decide whether an address gets
         # recycled, so a clean probe result proves nothing. It is the
         # removal of a hazard that cannot be cheaply observed, by the same
-        # defence sim/engine/proto/nodes.py uses for the identical reason.
+        # defence sim/ui/proto/nodes.py uses for the identical reason.
         # Holding seq and practice_set alive for as long as the entry may be
         # compared against them makes the collision structurally impossible
         # rather than merely unmeasured.
         projects = self.state.projects
-        operating_version = getattr(projects, "_operating_ver", 0)
+        operating_version = self.household.operating_version
         cached = getattr(self.household, "_rev_up_candidates_cache", None)
         if (cached is not None and cached[0] is seq
                 and cached[1] is practice_set and cached[2] == operating_version):
@@ -716,7 +716,7 @@ class ProductionMixin:
         places = self.institution_places(node_id) * _units
         if places <= 0:
             return upkeep_amount
-        used = min(1.0, self.headcount() / max(1.0, places))
+        used = min(1.0, self.labour.headcount() / max(1.0, places))
         return upkeep_amount * (self.INSTITUTION_FLOOR
                      + (1.0 - self.INSTITUTION_FLOOR) * used)
 

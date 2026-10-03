@@ -43,15 +43,15 @@ class ContractedScholarHoursCountTests(unittest.TestCase):
         # is what made this bug hard to see. The fix is a SECOND function,
         # not a changed one.
         sim = _fresh_sim()
-        before = sim.effective_scholars()
+        before = sim.labour.effective_scholars()
         sim.household.contract_hours = {"scholar": 4000.0}
-        self.assertEqual(sim.effective_scholars(), before)
+        self.assertEqual(sim.labour.effective_scholars(), before)
 
     def test_contracted_hours_become_hands(self):
         sim = _fresh_sim()
-        before = sim.scholar_hands_available()
+        before = sim.labour.scholar_hands_available()
         sim.household.contract_hours = {"scholar": 4000.0}
-        after = sim.scholar_hands_available()
+        after = sim.labour.scholar_hands_available()
         # 4,000 hours at 2,000 hours a person-year is two more scholars.
         self.assertAlmostEqual(
             after - before, 4000.0 / sim.HOURS_PER_PERSON_YEAR, places=9)
@@ -64,7 +64,7 @@ class ContractedScholarHoursCountTests(unittest.TestCase):
         # unchanged message for the wrong reason, which is worth recording:
         # a gate test that never reaches the gate proves nothing.
         sim = _fresh_sim()
-        needed = int(sim.effective_scholars()) + 2
+        needed = int(sim.labour.effective_scholars()) + 2
         target = None
         for node_id, node in _NODES.items():
             if node.get("sch") != needed:
@@ -99,10 +99,10 @@ class ContractedScholarHoursCountTests(unittest.TestCase):
             "carpenter": sim.HOURS_PER_PERSON_YEAR,
         }
         self.assertAlmostEqual(
-            sim.scholar_hands_available() - sim.effective_scholars(),
+            sim.labour.scholar_hands_available() - sim.labour.effective_scholars(),
             1.0, places=9)
         self.assertGreater(
-            sim.craft_hands_available(), sim.household.artisans)
+            sim.labour.craft_hands_available(), sim.household.artisans)
 
 
 if __name__ == "__main__":

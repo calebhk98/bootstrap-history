@@ -3,7 +3,7 @@ import collections, copy, math, os, random, sys
 
 from sim.constants import book_money_names, declare
 from .money_units import book_money_factor
-from .wage_provider import build_schedule
+from .wage_schedule import build_schedule
 from . import automation_audit
 from sim.engine.state import SimulationState, ActiveProjectState
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
@@ -13,7 +13,7 @@ from sim.world import demography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
-from sim.world import regions
+from sim.geography.api import regions
 # Weather is drawn per geography.json land_tiles cell (see
 # `_compute_farm_weather_cells`).
 # Imported FULLY QUALIFIED (`sim.world.shared_constants`), not the bare
@@ -52,9 +52,8 @@ from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
-from .geography import GeographyMixin
-from .labour import LabourMixin
-from .labour_allocation import LabourAllocationMixin
+from .geography_port import GeographyPortMixin
+from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
@@ -65,7 +64,8 @@ from .core_step_phases import StepContext, StepPhasesMixin
 from .economy_port import EconomyPortMixin, switch_requested
 from .data import trade_family
 from .invariants import check_simulation_invariants
-from .actors import Household
+from sim.agents.api import Household
+from .agents_port_household import HouseholdPort
 
 
 _EARTH_RADIUS_KM = 6371.0
@@ -213,9 +213,9 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 YEARLY_RECORD_LIMIT = 300
 
 
-class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyMixin, LabourMixin,
+class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, LabourPortMixin,
           ProjectsMixin, SocietyMixin, ActorsMixin, DisclosureMixin, InterestGroupsMixin, ForwardingPropertiesMixin,
-          StepPhasesMixin, LabourAllocationMixin, LivingStockMixin, CoinHoardMixin,
+          StepPhasesMixin, LivingStockMixin, CoinHoardMixin,
           LivingStockTradeMixin, LivingStockYearlyMixin, EconomyPortMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
@@ -389,7 +389,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         sized = self._agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population),
             arable_hectares_ceiling=self._farm_arable_ceiling)
-        self._set_farm_area(sized.hectares)
+        self.labour.set_farm_area(sized.hectares)
         # WIRING THREE (Complaints/49-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
         # weights` (Complaints/46): this civilisation's territory is broken
@@ -429,7 +429,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # `self._agriculture.Storage` at stock_kg=0.0 every single year regardless
         # of what the previous year harvested, or the starting value would
         # not matter.
-        # SAVE_FIELDS ("farm_stock_kg", sim/engine/proto/saveload.py) is
+        # SAVE_FIELDS ("farm_stock_kg", sim/engine/saveload.py) is
         # what makes that survive a --session save/load, exactly the same
         # concern `pop_children`/`pop_working_age`/`pop_elderly` were added
         # for a milestone earlier - state a hazard or a harvest can move
@@ -447,7 +447,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         config = self.cfg
         # THE FOUNDER'S HOUSEHOLD: money, staff, knowledge, plant and standing,
         # as its own object rather than eighty-odd attributes of this one. See
-        # sim/engine/actors/household.py for what it holds and
+        # sim/agents/household.py for what it holds and
         # docs/architecture/HOUSEHOLD_EXTRACTION.md for why: making this an
         # object of its own, rather than more state on `Sim`, is what would let
         # a government, a rival household or a firm exist someday, each owning
@@ -480,7 +480,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
             active_changed=self._active_changed,
             workforce_changed=self._workforce_changed,
             state=self.state,
-            sim=self)
+            port=HouseholdPort())
         # EVERY AUTOMATIC BEHAVIOUR, IN ONE PLACE, SWITCHABLE.
         #
         # Everything automatic must be controllable: a player can enable or
@@ -568,35 +568,8 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # existence somewhere does not mean an unlimited quantity of it is
         # available.
         self.res = load_resources()
-        # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY -----
-        # See load_geography() and region_reach()/material_reach() below:
-        # real coordinates, a reach computed from THIS civ's own home
-        # ground, and a material cost that follows from it. All of the
-        # below depends only on the civ file and the (static) geography
-        # file, so it is computed once.
-        self.geo = load_geography()
-        self._regions = regions.region_records(self.geo)
-        self._home_centroid = self._compute_home_centroid()
-        # node id -> located_materials key. Lets material_cost_factor() find
-        # the geography entry for a location-gated tech node (mat_gutta_percha,
-        # mat_natural_rubber, ...) without the tech tree needing to know
-        # anything about geography itself.
-        self._mat_unlock = {}
-        for material_key, material_data in (self.geo.get("located_materials") or {}).items():
-            if material_key.startswith("_"):
-                continue
-            for nid in (material_data.get("unlocks") or []):
-                self._mat_unlock[nid] = material_key
-        # Mineral market access is geography, not demography: "how much coal
-        # can you buy" must scale with where the deposits ARE, not with how
-        # many people this civilisation has - England in 1300 gets a large
-        # share of Europe's coal market access because England is where the
-        # coal is, independent of its population. See _compute_mineral_scale()
-        # below. It depends only on home_regions and reach, neither of which change
-        # during a run, so it is computed once here rather than every year.
-        self._mineral_scale = {material: self._compute_mineral_scale(material)
-                                for material in ("iron", "coal", "copper", "lead",
-                                          "tin", "silver", "saltpetre")}
+        # --- GEOGRAPHY: where things are, FOR THE CIVILIZATION IN PLAY (computed once; see sim/geography/)
+        self.geography.open(load_geography())
         # Whatever this civilization already has is free and already done, and it
         # is GRANTED, not earned: it must never count in done_earned as though
         # the founder had built it, and it must never be "forgotten" in a
@@ -638,6 +611,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         """Reconnect transient cache state, version counters, and invalidating wrappers after save/load."""
         from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
         from sim.engine.state import ActiveProjectState
+        # Household façade first, so version bumps fired while reconnecting land on this state
+        if hasattr(self, "household"):
+            self.household._state = self.state
         # Reconnect invalidation wrappers
         self.state.projects.operating = _InvalidatingSet(
             self.state.projects.operating or set(),
@@ -654,18 +630,9 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         )
         cleared = getattr(self.state.economy, "farm_cleared_hectares", None)
         if cleared is not None:
-            self._set_farm_area(cleared)
+            self.labour.set_farm_area(cleared)
         # Ensure version counters exist on state owners
-        if getattr(self.state.projects, "_operating_ver", None) is None:
-            self.state.projects._operating_ver = 0
-        if getattr(self.state.projects, "_done_ver", None) is None:
-            self.state.projects._done_ver = 0
-        if getattr(self.state.projects, "_active_ver", None) is None:
-            self.state.projects._active_ver = 0
-        if getattr(self.state.household, "_workforce_ver", None) is None:
-            self.state.household._workforce_ver = 0
-        if self.state.governance is not None and getattr(self.state.governance, "_inst_units_ver", None) is None:
-            self.state.governance._inst_units_ver = 0
+        self.household.start_version_counters(self.state)
 
         # Synchronize demographic cohort floats
         if self.state.population is not None and hasattr(self, "population"):
@@ -677,10 +644,6 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
                 self.state.population.pop_children = float(self.population.children)
                 self.state.population.pop_working_age = float(self.population.working_age)
                 self.state.population.pop_elderly = float(self.population.elderly)
-
-        # Synchronize household façade state pointer
-        if hasattr(self, "household"):
-            self.household._state = self.state
 
         # Sync civ live state and metadata
         if self.state._civ_live:
@@ -874,7 +837,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         no `SAVE_FIELDS` slot of its own, independent of whatever else about
         a year's harvest does or does not round-trip. `self.farm_stock_kg`
         is the thing that actually needs one (see
-        `sim/engine/proto/saveload.py`'s `SAVE_FIELDS` tuple).
+        `sim/engine/saveload.py`'s `SAVE_FIELDS` tuple).
 
         Multiplier/offset are arbitrary mixing constants (not physical
         facts), chosen only so two different years, two regions, or two
@@ -1335,7 +1298,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         feature this engine has turned off: real agrarian societies damp
         exactly this with grain storage, and this wiring has it.
 
-        `self.farm_stock_kg` (`SAVE_FIELDS`, sim/engine/proto/saveload.py)
+        `self.farm_stock_kg` (`SAVE_FIELDS`, sim/engine/saveload.py)
         is the persisted state: each year's `Storage` is constructed at
         THAT stock, not zero, and whatever it holds after this year's
         sowing/harvest/consumption/spoilage/reseeding is written back to it
@@ -1446,7 +1409,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         within-hectare labour intensification beyond reference technique.
         """
         adult_equivalent_population = self._adult_equivalent_population(self.population)
-        farm_workers_fte = self._allocate_farm_workforce(adult_equivalent_population)
+        farm_workers_fte = self.labour.allocate_farm_workforce(adult_equivalent_population)
         technique = self._farm_technique_this_year
         hectares_per_worker = self._agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit)
@@ -1474,7 +1437,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # method's own docstring section on Complaints/44 for why that
         # single word ("carried" rather than "constructed fresh") is the
         # entire fix, and `farm_stock_kg` in SAVE_FIELDS
-        # (sim/engine/proto/saveload.py) for why it survives a save.
+        # (sim/engine/saveload.py) for why it survives a save.
         # `seed=` HERE IS DEFENSIVE, NOT LOAD-BEARING: `farm_storage.
         # step` below is always given an explicit `weather_multiplier`
         # (Complaints/46), so `Storage`'s own internal
@@ -1550,7 +1513,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         # A granary cannot hold less than nothing: seed sown beyond the stock is not a debt.
         self.farm_stock_kg = max(0.0, min(
             self._agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg))
-        self._apply_land_clearing()
+        self.labour.apply_land_clearing()
         # Kept for tests and diagnostics only (e.g. `state`'s founder-facing
         # reply never reads this) - NOT a SAVE_FIELDS member and does not
         # need to be one: it is recomputed fresh every year from state that
@@ -1562,7 +1525,7 @@ class Sim(MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMix
         self.state.economy.farm_last_harvest_kg = farm_year.gross_harvest_kg
         self.state.economy.farm_last_marginal_product = (
             farm_year.marginal_product_last_hour_kg_per_hour)
-        self.update_wages()
+        self.labour.update_wages()
 
         # Same diagnostic-only status as `_last_farm_year` just above (not a
         # SAVE_FIELDS member, recomputed fresh every year) - kept so a test

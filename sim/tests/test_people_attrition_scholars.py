@@ -20,7 +20,7 @@ from .harness import *  # noqa: F401,F403
 s = sim(capital=50_000_000.0)
 s.policy["auto_hire"] = False
 s.employees["artisan"] = 500.0
-s._resync_pools()
+s.labour._resync_pools()
 _whole_every_year, _never_grew, _prev = True, True, 500.0
 for _ in range(150):
     s.step()
@@ -48,7 +48,7 @@ for _seed in range(1, 31):
     _s.goal, _s.done_year = GOAL, {}
     _s.policy["auto_hire"] = False
     _s.employees["artisan"] = 2000.0
-    _s._resync_pools()
+    _s.labour._resync_pools()
     _s.step()
     _before_att += 2000.0
     _after_att += _s.employees.get("artisan", 0.0)
@@ -59,13 +59,13 @@ check("whole-person attrition still averages the nominal 3.5% a year, over "
 
 # HIRE AND TRAIN LAND WHOLE PEOPLE.
 s = sim(capital=1e6)
-ok_frac_h, why_frac_h = s.hire("smith", 2.5)
+ok_frac_h, why_frac_h = s.labour.hire("smith", 2.5)
 check("hire refuses a fractional number of people",
       not ok_frac_h and "whole" in why_frac_h, why_frac_h)
-ok_frac_t, why_frac_t = s.train("machinist", 1.5)
+ok_frac_t, why_frac_t = s.labour.train("machinist", 1.5)
 check("...and so does train",
       not ok_frac_t and "whole" in why_frac_t, why_frac_t)
-ok_whole_h, _ = s.hire("smith", 2)
+ok_whole_h, _ = s.labour.hire("smith", 2)
 check("...but a whole number still goes through, and lands exactly that many",
       ok_whole_h and s.employees.get("smith") == 2.0, s.employees.get("smith"))
 
@@ -95,14 +95,14 @@ check("...but a whole number still goes through, and lands exactly that many",
 # first check fails.)
 def _scholars_asked_for(wall):
     household = sim(capital=1e9, manual=False)
-    household.literate_capacity = lambda trade: wall
-    household.hire("scholar", 2)
+    household.labour.literate_capacity = lambda trade: wall
+    household.labour.hire("scholar", 2)
     asked = []
-    original = household._stochastic_round
+    original = household.labour._stochastic_round
     def recording_round(value, *args, **kwargs):
         asked.append(value)
         return original(value, *args, **kwargs)
-    household._stochastic_round = recording_round
+    household.labour._stochastic_round = recording_round
     household.step()
     return asked[-1] if asked else None
 
@@ -117,19 +117,19 @@ check("... though the same household asks for more when the wall is open, so "
 # The bare, no-institution ceiling a fresh household sees is unchanged...
 s0 = sim()
 check("the market-reach ceiling for a fresh household is the same as before",
-      5.5 < s0.literate_capacity("scholar") < 6.5, s0.literate_capacity("scholar"))
+      5.5 < s0.labour.literate_capacity("scholar") < 6.5, s0.labour.literate_capacity("scholar"))
 # ...and grows once the institutions auto_hire was already trusted to grow
 # toward are actually running - not from literacy alone, which is the
 # mechanism that lets a household eventually reach the tree's 25.
 s1 = run_it(sim(capital=1e9), "interchangeable_parts", "power_grid")
 check("building the institutions auto_hire already credited widens the wall "
       "hire() enforces, which used to move only with literacy",
-      s1.literate_capacity("scholar") > 20.0, s1.literate_capacity("scholar"))
+      s1.labour.literate_capacity("scholar") > 20.0, s1.labour.literate_capacity("scholar"))
 
 # The refusal is honest about what is actually binding: a household's reach
 # into the labour market, narrowed by literacy, not literacy by itself.
 s2 = sim()
-ok2, why2 = s2.hire("scholar", 12)
+ok2, why2 = s2.labour.hire("scholar", 12)
 check("the refusal names the household's market reach, not literacy alone",
       not ok2 and "reach" in why2 and "literacy" in why2, why2)
 
@@ -148,17 +148,17 @@ check("the refusal names the household's market reach, not literacy alone",
 # =============================================================================
 
 s = sim(capital=1e6)
-_before_sch = s.effective_scholars()
-ok_scribe, _ = s.hire("scribe", 3)
+_before_sch = s.labour.effective_scholars()
+ok_scribe, _ = s.labour.hire("scribe", 3)
 check("(three scribes were actually hired)", ok_scribe, s.employees)
 check("hiring scribes does not inflate the trained-scholar headcount any more",
-      abs(s.effective_scholars() - _before_sch) < 1e-6,
-      (s.effective_scholars(), _before_sch))
+      abs(s.labour.effective_scholars() - _before_sch) < 1e-6,
+      (s.labour.effective_scholars(), _before_sch))
 s.capital = 1e6
-ok_sch, _ = s.hire("scholar", 2)
+ok_sch, _ = s.labour.hire("scholar", 2)
 check("...but hiring an actual scholar still does",
-      ok_sch and s.effective_scholars() >= _before_sch + 2 - 1e-6,
-      s.effective_scholars())
+      ok_sch and s.labour.effective_scholars() >= _before_sch + 2 - 1e-6,
+      s.labour.effective_scholars())
 check("the advice on how to get scholars never points at a different trade "
       "family's trade, which would not even count",
       all("scribe" not in why and "chemist" not in why and "merchant" not in why
@@ -355,10 +355,10 @@ check("...and the markers were moved rather than destroyed, so the "
           if "FIXED after independent audit" in (node.get("_internal") or "")))
 check("nothing in the engine reads _internal, which is what makes it safe "
       "to keep developer notes there",
-      not any("_internal" in open(os.path.join(HERE, "engine", filename)).read()
-              for filename in ("core.py", "economy.py", "projects.py", "labour.py",
-                         "society.py", "protocol.py", "cli.py", "fog.py",
-                         "data.py")),
+      not any("_internal" in open(os.path.join(HERE, filename)).read()
+              for filename in ("engine/core.py", "engine/economy.py", "engine/projects.py", "labour/labour.py",
+                         "engine/society.py", "ui/protocol.py", "ui/cli.py", "engine/fog.py",
+                         "engine/data.py")),
       "engine files mentioning _internal")
 
 # --- THE SAME HOLE IN A SECOND COMMAND. `available`'s parser read bare words

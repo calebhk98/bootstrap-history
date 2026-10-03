@@ -110,7 +110,7 @@ class MiningMixin:
             price = self._material_price_per_kg(mat)
             if price is None or price <= 0:
                 return None, None
-        wage = self.wage_per_hour(self.MINE_TRADE)
+        wage = self.labour.wage_per_hour(self.MINE_TRADE)
         build_hours, running_hours = self._mine_labour_hours_per_tonne(mat)
         return build_hours * wage, running_hours * wage
 
@@ -191,7 +191,7 @@ class MiningMixin:
         else:
             base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
         base *= 1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE, max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII)
-        geo = self.mineral_scale(mat)
+        geo = self.geography.mineral_scale(mat)
         yld, _cost = self.mining_tech(mat)
         return base * geo * yld
 
@@ -420,7 +420,7 @@ class MiningMixin:
         """A dict for derived values that depend only on which nodes are built, granted and
         operating (what `running` reads); it starts empty whenever that changes."""
         projects = self.state.projects
-        stamp = (getattr(projects, "_done_ver", 0), getattr(projects, "_operating_ver", 0),
+        stamp = (self.household.done_version, self.household.operating_version,
                  len(projects.done), len(projects.granted), len(projects.operating))
         kept = self.__dict__.get("_running_kept_tables")
         if kept is None or kept[0] is not projects or kept[1] != stamp or kept[2] is not self.nodes:
@@ -917,11 +917,11 @@ class MiningMixin:
         Italia's tiles, as _compute_home_centroid() falls back to Italia,
         for a civ file with no resolvable home_regions, so this never
         divides by zero or crashes on a malformed civ file."""
-        area = land.territory_land_area_km2(self.civ.get("home_regions") or [], self.geo)
+        area = land.territory_land_area_km2(self.civ.get("home_regions") or [], self.geography.data)
         if area > 0.0:
             return area
-        fallback = "italia" if "italia" in self._regions else next(iter(self._regions), None)
-        return land.territory_land_area_km2([fallback], self.geo) or 1.0
+        fallback = "italia" if "italia" in self.geography.regions else next(iter(self.geography.regions), None)
+        return land.territory_land_area_km2([fallback], self.geography.data) or 1.0
 
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""

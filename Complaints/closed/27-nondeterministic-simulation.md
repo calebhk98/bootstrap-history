@@ -96,7 +96,7 @@ Recorded so the next person does not spend the afternoon twice.
   its four attributes changes across a 60-year run.
 - **The `id()`-keyed cache in `_revenue_upkeep_candidates`** (`economy.py`
   ~2110). The best-looking hypothesis: `id()` is a memory address, a freed
-  object's address is reusable, and `sim/engine/proto/nodes.py` documents that
+  object's address is reusable, and `sim/ui/proto/nodes.py` documents that
   exact hazard and defends against it by holding a strong reference, while the
   three other `id()`-keyed caches in the engine do not. A probe recomputing
   the true answer on every call found **0 stale answers in 64,157 calls**.
@@ -160,7 +160,7 @@ anything in the simulation.
 
 ## The fix
 
-The defence `sim/engine/proto/nodes.py` already documents for the identical
+The defence `sim/ui/proto/nodes.py` already documents for the identical
 hazard: hold a **strong reference** to the object in the cache entry and
 compare with `is`, rather than comparing two bare integers. Keeping the old
 Counter alive for as long as the entry might be checked against it means its

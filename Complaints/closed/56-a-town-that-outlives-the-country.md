@@ -18,7 +18,7 @@ plainly do: the local abstraction is bigger than the surviving country.
 
 The mechanism is exactly what the player's own hypothesis pointed at, one
 level deeper. Everything under `population` is built in
-`sim/engine/labour_population.py` (split out of the old `labour.py`, which is
+`sim/labour/labour_population.py` (split out of the old `labour.py`, which is
 where the player's notes still name it).
 
 `home_town_population_estimate()`:
@@ -41,7 +41,7 @@ POP_SCALE_VARIABLE_SHARE * min(1.0, pop_scale))` expression for the
 `POP_SCALE_FLOOR` is declared at 0.05 (`core.py:245`) - "so a tiny starting
 civilisation population never divides a formula by something vanishingly
 small." `POP_SCALE_FLOOR_SHARE` (0.25) and `POP_SCALE_VARIABLE_SHARE` (0.75)
-are declared in `sim/engine/labour_capacity.py:175-193`.
+are declared in `sim/labour/labour_capacity.py:175-193`.
 
 Put together: no matter how far `self.population.total` (the real, live
 age-cohort headcount) falls, `pop_scale` never drops below 0.05, so

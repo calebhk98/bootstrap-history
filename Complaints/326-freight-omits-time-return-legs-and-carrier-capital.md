@@ -1,6 +1,6 @@
 # Freight omits travel time, empty returns and the carriers' capital
 
-**Status:** partly - freight from the carrier is one function (`freight_money_per_tonne_km` in `sim/world/freight_cost.py`) for foreign legs and domestic hauls: travel days from the carrier's pace, the empty return, the carrier's capital at the society's market rate, hulls lost at sea; domestic freight (`economy_freight.py`, through `land_freight_money_per_tonne_km`) now carries the capital and the empty return too (a labelled heuristic: no domestic flow ledger, so the cart returns empty); still open: tolls and port dues, authored river reaches
+**Status:** partly - freight from the carrier is one function (`freight_money_per_tonne_km` in `sim/geography/freight_cost.py`) for foreign legs and domestic hauls: travel days from the carrier's pace, the empty return, the carrier's capital at the society's market rate, hulls lost at sea; domestic freight (`economy_freight.py`, through `land_freight_money_per_tonne_km`) now carries the capital and the empty return too (a labelled heuristic: no domestic flow ledger, so the cart returns empty); still open: tolls and port dues, authored river reaches
 
 Route freight (`sim/engine/foreign_routes.py`) prices feed, crew rations and
 hours per tonne-km and a port handling charge per sea leg. It leaves out: goods

@@ -351,7 +351,7 @@ class GoodsMixin:
         # self.year (step), _operating_ver (add/discard), opened_year (open_venture).
         scenario = self.state.scenario
         projects = self.state.projects
-        key = (scenario.year, getattr(projects, "_operating_ver", 0), self.actor_market_version())
+        key = (scenario.year, self.household.operating_version, self.actor_market_version())
         cache = getattr(self.household, "_goods_cat_state_cache", None)
         if cache is None or cache[0] != key:
             cache = (key, {})
@@ -429,8 +429,8 @@ class GoodsMixin:
             scenario.year,
             getattr(self, "pop_scale", 1.0),
             economy.output_per_head,
-            getattr(projects, "_operating_ver", 0),
-            getattr(projects, "_done_ver", 0),
+            self.household.operating_version,
+            self.household.done_version,
             self.actor_market_version(),
         )
         cache = getattr(self.household, "_goods_category_ratios_cache", None)
@@ -628,8 +628,8 @@ class GoodsMixin:
             scenario.year,
             getattr(self, "pop_scale", 1.0),
             economy.output_per_head,
-            getattr(projects, "_operating_ver", 0),
-            getattr(projects, "_done_ver", 0),
+            self.household.operating_version,
+            self.household.done_version,
             getattr(economy, "farm_hectares", 0.0) or 0.0,
             self.actor_market_version(),
         )
@@ -722,8 +722,8 @@ class GoodsMixin:
             scenario.year,
             getattr(self, "pop_scale", 1.0),
             economy.output_per_head,
-            getattr(projects, "_operating_ver", 0),
-            getattr(projects, "_done_ver", 0),
+            self.household.operating_version,
+            self.household.done_version,
             getattr(economy, "farm_hectares", 0.0) or 0.0,
             self.actor_market_version(),
         )

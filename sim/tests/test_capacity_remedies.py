@@ -1,7 +1,7 @@
 """capacity_remedies: regression checks, run individually with `--only capacity_remedies`."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.proto.render_screens_economy import render_capacity
+from sim.ui.proto.render_screens_economy import render_capacity
 
 # Complaint 90: the capacity screen offers the commands that would end each shortage.
 
@@ -33,7 +33,7 @@ check("the rendered capacity screen shows the commands under the shortage",
 
 # A trade short of hours: hire it, and house the hires when there is no room.
 try:
-    from sim.engine.proto.capacity_remedies import capacity_remedies
+    from sim.ui.proto.capacity_remedies import capacity_remedies
 except ImportError:
     def capacity_remedies(*_args):
         return []

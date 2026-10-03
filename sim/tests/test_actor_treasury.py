@@ -8,8 +8,8 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import Household, ledger
-from sim.engine.proto.saveload import load_state, save_state
+from sim.agents.api import Household, ledger
+from sim.engine.saveload import load_state, save_state
 from sim.engine.state import ActorRecord
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
@@ -39,7 +39,7 @@ def grown(civ, employees=2000.0, capital=1.0e10, eminence=100.0, events=False):
     """A household large enough that the state has noticed it."""
     game = sim(civ=civ, events=events)
     game.employees["artisan"] = employees
-    game._resync_pools()
+    game.labour._resync_pools()
     game.capital = capital
     game.eminence = eminence
     game.update_protection()

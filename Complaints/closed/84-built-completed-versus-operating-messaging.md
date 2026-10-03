@@ -22,7 +22,7 @@ Do the same for any capability institution whose effects are running-only.
 
 ## WHERE IT LIVES
 
-Completion message rendering in `sim/engine/proto/render_screens_big.py` or project-completion handlers. Institution lifecycle and status display logic.
+Completion message rendering in `sim/ui/proto/render_screens_big.py` or project-completion handlers. Institution lifecycle and status display logic.
 
 ## Confidence
 

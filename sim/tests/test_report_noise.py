@@ -1,9 +1,9 @@
 """Complaints 70, 77, 78, 97, 100: a report says a thing once, as one event, with direction."""
 from .harness import *  # noqa: F401,F403
 from sim.engine import shortage_conditions
-from sim.engine.protocol import _agent_dispatch
-from sim.engine.proto.event_groups import group_disaster_events
-from sim.engine.proto.render_screens_big import render_state
+from sim.ui.protocol import _agent_dispatch
+from sim.ui.proto.event_groups import group_disaster_events
+from sim.ui.proto.render_screens_big import render_state
 
 # --- 79: a shortage that persists is one standing condition, not a message a year
 shortage_sim = sim()
@@ -75,7 +75,7 @@ hazard_game.end_year = hazard_game.cfg["start_year"] + 500
 step_reply = _agent_dispatch(hazard_game, NODES, {"cmd": "step", "years": 3})
 check("a step with hazards on still returns events and alerts", step_reply.get("ok") and "events" in step_reply)
 
-from sim.engine.cli_interactive import _play_print_welcome
+from sim.ui.cli_interactive import _play_print_welcome
 import io, contextlib
 welcome = io.StringIO()
 with contextlib.redirect_stdout(welcome):

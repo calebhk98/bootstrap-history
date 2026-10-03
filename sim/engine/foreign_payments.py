@@ -10,11 +10,12 @@ yards can build, and its capital is paid for through the freight rate (`foreign_
 import functools
 
 from sim.constants import declare
-from sim.world import balance_of_payments, freight_cost, sea_freight
-from sim.world.wages import HOURS_PER_WORKER_YEAR
+from sim.world import balance_of_payments
+from sim.geography.api import freight_cost, sea_freight
+from sim.labour.api import HOURS_PER_WORKER_YEAR
 
 from .data import load_civ
-from .wage_provider import people_fed_per_worker
+from sim.labour.api import people_fed_per_worker
 
 OPENING_CARRIERS_PER_ROUTE = declare(
     "OPENING_CARRIERS_PER_ROUTE", 10.0, kind="temporary_heuristic",
@@ -70,7 +71,7 @@ class ForeignPaymentsMixin:
         opening = self.__dict__.get("_opening_coin_value")
         if opening is None:
             opening = self._opening_coin_value = self._opening_coin_units(
-                self._opening_wage_schedule().opening_money_per_labour_hour * HOURS_PER_WORKER_YEAR)
+                self.labour.opening_wage_schedule().opening_money_per_labour_hour * HOURS_PER_WORKER_YEAR)
         return opening
 
     def home_coin_stock_units(self):

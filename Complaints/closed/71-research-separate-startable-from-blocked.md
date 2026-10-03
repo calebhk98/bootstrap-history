@@ -23,7 +23,7 @@ If the current filter intentionally includes blocked items, make that visually e
 
 ## WHERE IT LIVES
 
-`sim/engine/proto/dispatch.py` for command dispatch, `sim/engine/proto/techtree.py` for research/capability view rendering, likely `sim/engine/proto/render.py` or `render_screens_big.py` for the tree display.
+`sim/ui/proto/dispatch.py` for command dispatch, `sim/ui/proto/techtree.py` for research/capability view rendering, likely `sim/ui/proto/render.py` or `render_screens_big.py` for the tree display.
 
 ## Confidence
 

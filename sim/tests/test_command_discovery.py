@@ -5,15 +5,15 @@ derived from the argument shape a command declares, the id-taking lists come
 from the registry, and every command parses its documented typed usage.
 """
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto import command_registry as _registry
-from sim.engine.proto import dispatch as _dispatch
-from sim.engine.proto import typed as _typed
+from sim.ui.proto import command_registry as _registry
+from sim.ui.proto import dispatch as _dispatch
+from sim.ui.proto import typed as _typed
 
 # --- every dispatch_*.py file on disk was loaded, with no hand import list
 _proto_dir = os.path.dirname(_dispatch.__file__)
 _on_disk = sorted(name[:-3] for name in os.listdir(_proto_dir)
                   if name.startswith("dispatch_") and name.endswith(".py"))
-_not_loaded = [name for name in _on_disk if "sim.engine.proto." + name not in sys.modules
+_not_loaded = [name for name in _on_disk if "sim.ui.proto." + name not in sys.modules
                and "engine.proto." + name not in sys.modules
                and not any(module.endswith("proto." + name) for module in sys.modules)]
 check("every dispatch_*.py module is loaded by discovery", not _not_loaded, _not_loaded)
@@ -76,7 +76,7 @@ finally:
 
 # --- the help pages' hand text names only commands that exist, and the
 # command index shows each command's registered text (no hand override)
-from sim.engine.proto import help as _help
+from sim.ui.proto import help as _help
 _help_sim = sim()
 _index = _help._topic_commands(_help_sim)
 _hand_overrides = [name for name in _registry.COMMANDS

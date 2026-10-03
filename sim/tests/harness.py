@@ -10,7 +10,7 @@ changes nothing about how a check runs, only how the source is organised on
 disk.
 
 A few names below (_hazard, _rel/_LOADTEST_DIR, and the whole
-family of `from engine.protocol import X as _Y` mid-file imports) are
+family of `from ui.protocol import X as _Y` mid-file imports) are
 reusable, side-effect-free pieces (pure functions, pure imports, or a plain
 string constant + an idempotent os.makedirs) that topic modules import
 through the harness rather than defining local copies.
@@ -433,15 +433,15 @@ def _mk_loom_sim(n_looms, age_years):
 # _re_rem/_re_names/_shutil/_coll/_IL/_IO/_CTX/_time and the bare hashlib and
 # duplicate shutil) had no such consumer anywhere in sim/tests - genuinely
 # dead, not a re-export, so removed rather than kept "just in case".
-from sim.engine import cli as _CLI
-from sim.engine import protocol as _protocol
-from sim.engine.protocol import render_pretty as _RP
-from sim.engine.protocol import _waiting_on as _WO
-from sim.engine.protocol import final_report as _FRPT, render_final as _RF
-from sim.engine.protocol import parse_typed as _PT
-from sim.engine.protocol import render_state as _RSTATE, render_why as _RWHY
-from sim.engine import protocol as _PROTO
-from sim.engine.protocol import render_portfolio as _RPORT
+from sim.ui import cli as _CLI
+from sim.ui import protocol as _protocol
+from sim.ui.protocol import render_pretty as _RP
+from sim.ui.protocol import _waiting_on as _WO
+from sim.ui.protocol import final_report as _FRPT, render_final as _RF
+from sim.ui.protocol import parse_typed as _PT
+from sim.ui.protocol import render_state as _RSTATE, render_why as _RWHY
+from sim.ui import protocol as _PROTO
+from sim.ui.protocol import render_portfolio as _RPORT
 
 # `from .harness import *` must hand every topic module everything the old
 # flat script had at global scope, including the (many) leading-underscore

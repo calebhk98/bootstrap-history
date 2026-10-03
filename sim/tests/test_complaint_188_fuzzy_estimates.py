@@ -5,8 +5,8 @@ Only the display is fuzzy; the start check, hiring, supervision and bills use
 the real numbers.
 """
 from .harness import *
-from sim.engine.proto.render import render_pretty
-from sim.engine.proto import saveload as _saveload
+from sim.ui.proto.render import render_pretty
+from sim.engine import saveload as _saveload
 
 NODE = "fin_lottery"          # a going concern with staff, a foreman-free crew and two hired trades
 

@@ -12,8 +12,8 @@ Prices are solved as a damped fixed point over the recipes in
 `labourer` trade as numeraire, plus two rent mechanisms (ore deposits, arable
 land). Joint outputs split the shared cost using demand anchors
 (`sim/joint_allocation.py`, `sim/world/demand.py`). Labour moves between trades
-through a gap-driven, skill-distance-weighted flow (`sim/world/labour_market.py`,
-`sim/engine/labour_allocation.py`): NEED comes from planned output, HAVE from a
+through a gap-driven, skill-distance-weighted flow (`sim/labour/labour_market.py`,
+`sim/labour/labour_allocation.py`): NEED comes from planned output, HAVE from a
 workforce that drifts toward the gap. There is no wage bargaining, no
 per-trade starting workforce (one temporary heuristic pools non-farm hours
 into one trade), and household demand is a separate anchor rather than part of

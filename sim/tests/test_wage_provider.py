@@ -8,9 +8,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from sim.engine import catalog, data, prices as engine_prices, wage_provider
+from sim.engine import catalog, data, prices as engine_prices, wage_schedule
+from sim.labour import wage_provider
 from sim.solve_prices_core import wage_ratios_by_trade
-from sim.world import wages
+from sim.labour import wages
+from .source_dirs import engine_and_world_dirs
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -91,7 +93,7 @@ class ProviderTests(unittest.TestCase):
                 "test_acme_k3f9:clockmaker": {"family": "craft"},
                 "test_acme_k3f9:surveyor": {"family": "craft", "training_years": 9}}}))
             registry = catalog.load_trade_registry(str(root), mods_dir=str(root / "mods"))
-        schedule = wage_provider.build_schedule(registry, data.load_civ("rome_100ad"))
+        schedule = wage_schedule.build_schedule(registry, data.load_civ("rome_100ad"))
         self.assertGreater(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), schedule.floor_per_hour)
         # A trade that states no training takes its family's median.
         self.assertEqual(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), schedule.wage_per_hour("smith"))
@@ -108,46 +110,46 @@ class EngineWageTests(unittest.TestCase):
     def test_solver_and_payroll_read_the_same_wage(self):
         engine = self.sim
         engine.state.economy.wage_tightness_factors["smith"] = 1.3
-        ratios = wage_ratios_by_trade(engine.wage_document())
+        ratios = wage_ratios_by_trade(engine.labour.wage_document())
         for trade in ("labourer", "smith", "scribe"):
             self.assertAlmostEqual(
-                ratios[trade], engine.wage_per_hour(trade) / engine.wage_per_hour("labourer"))
+                ratios[trade], engine.labour.wage_per_hour(trade) / engine.labour.wage_per_hour("labourer"))
         # Payroll's annual figure is that same hourly wage over a working year.
         self.assertAlmostEqual(
-            engine.labour_market.unscarce_annual("smith"),
-            engine.wage_per_hour("smith") * engine.HOURS_PER_PERSON_YEAR
-            * engine.labour_market.cost_factors("smith")["weighted"]
+            engine.labour.market.unscarce_annual("smith"),
+            engine.labour.wage_per_hour("smith") * engine.HOURS_PER_PERSON_YEAR
+            * engine.labour.market.cost_factors("smith")["weighted"]
             * engine.price_index * engine.wage_index)
         # The price solver's money conversion is the schedule's coin-anchored rate.
-        self.assertEqual(engine_prices.denarii_per_labour_hour(engine.wage_document()),
-                         engine.wage_schedule().money_per_labour_hour)
+        self.assertEqual(engine_prices.denarii_per_labour_hour(engine.labour.wage_document()),
+                         engine.labour.wage_schedule().money_per_labour_hour)
 
     def test_a_tight_trade_pays_more_next_year(self):
         engine = self.sim
-        before = engine.wage_per_hour("smith")
+        before = engine.labour.wage_per_hour("smith")
         engine.state.economy.society_labour_hours["smith"] = 1.0
-        engine.update_wages()
-        self.assertGreater(engine.wage_per_hour("smith"), before)
+        engine.labour.update_wages()
+        self.assertGreater(engine.labour.wage_per_hour("smith"), before)
 
     def test_tightness_and_labour_pressure_survive_a_save_and_load(self):
         from .harness import sim
-        from sim.engine.proto.saveload import load_state, save_state
+        from sim.engine.saveload import load_state, save_state
         engine = self.sim
         engine.state.economy.wage_tightness_factors["smith"] = 1.2
-        engine.hire("artisan", 1)
-        pressure = engine.labour_market.pressure("artisan")
+        engine.labour.hire("artisan", 1)
+        pressure = engine.labour.market.pressure("artisan")
         self.assertGreater(pressure, 0.0)
         with tempfile.TemporaryDirectory() as directory:
             path = os.path.join(directory, "save.json")
             save_state(engine, path)
             fresh = sim(civ="rome_100ad", events=False, agent_economy=False)
             load_state(fresh, path)
-        self.assertEqual(fresh.wage_schedule().tightness_factors["smith"], 1.2)
-        self.assertAlmostEqual(fresh.labour_market.pressure("artisan"), pressure)
+        self.assertEqual(fresh.labour.wage_schedule().tightness_factors["smith"], 1.2)
+        self.assertAlmostEqual(fresh.labour.market.pressure("artisan"), pressure)
 
     def test_start_is_at_equilibrium(self):
         engine = self.sim
-        engine.update_wages()
+        engine.labour.update_wages()
         hours = engine.state.economy.society_labour_hours
         total = sum(hours.values())
         for trade, factor in engine.state.economy.wage_tightness_factors.items():
@@ -161,8 +163,8 @@ from sim import simulator as S
 tree, prices, nodes, wages, goods = S.load()
 _lab, order, _b = S.load_strategy("recommended", nodes, tree["meta"]["goal_node"])
 engine = S.Sim(nodes, order, random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
-print(json.dumps({"labourer": engine.wage_per_hour("labourer"),
-                  "smith": engine.wage_per_hour("smith"), "annual": engine.labour_market.quote_annual("smith")}))
+print(json.dumps({"labourer": engine.labour.wage_per_hour("labourer"),
+                  "smith": engine.labour.wage_per_hour("smith"), "annual": engine.labour.market.quote_annual("smith")}))
 """
 
 
@@ -180,10 +182,10 @@ class NoBookWagesTests(unittest.TestCase):
         # The solver reads wages through a document in the book's shape, so
         # its builder and reader name the key; the loader must not.
         offenders = []
-        for directory in ("sim/engine", "sim/world"):
-            for name in sorted(os.listdir(os.path.join(ROOT, directory))):
+        for directory in engine_and_world_dirs():
+            for name in sorted(os.listdir(directory)):
                 if name.endswith(".py"):
-                    with open(os.path.join(ROOT, directory, name), encoding="utf-8") as source:
+                    with open(os.path.join(directory, name), encoding="utf-8") as source:
                         if "wage_rates_denarii_per_hour" in source.read():
                             offenders.append(name)
         self.assertLessEqual(set(offenders), {"prices.py", "wages.py"})

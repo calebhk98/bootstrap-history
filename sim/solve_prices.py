@@ -21,7 +21,7 @@ system of equations rather than a lookup, solved for the fixed point where
 every price is consistent with every other. `data/production/` supplies
 `quantity_per_unit` (its `inputs`) and `hours_per_unit` (its `labour_hours`)
 for 182 materials once byproducts are counted; the labour-market wage
-provider (`sim/world/wages.py`) supplies the wage ratios. Nothing here is a
+provider (`sim/labour/wages.py`) supplies the wage ratios. Nothing here is a
 lookup of a finished price - only of the physical recipe and the relative
 wage, which is what the mechanism is allowed to take as given.
 

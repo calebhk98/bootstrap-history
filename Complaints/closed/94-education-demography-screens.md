@@ -33,7 +33,7 @@ Literacy and population are central to the game's loop: literacy affects economi
 
 ## Where it lives
 
-Likely new screens in `sim/engine/proto/render_screens_big.py` or similar, with data from `sim/engine/society.py`, `sim/engine/core.py`, and literacy/population subsystems.
+Likely new screens in `sim/ui/proto/render_screens_big.py` or similar, with data from `sim/engine/society.py`, `sim/engine/core.py`, and literacy/population subsystems.
 
 **Confidence:** Design recommendation
 

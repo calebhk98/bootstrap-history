@@ -9,8 +9,9 @@ ALLOWED = {
     ("sim/engine/economy_goods.py", "photography"),
 }
 _found = []
-for _pattern in ("engine", "world"):
-    for _path in sorted(glob.glob(os.path.join(ROOT, "sim", _pattern, "**", "*.py"), recursive=True)):
+from .source_dirs import engine_and_world_dirs
+for _directory in engine_and_world_dirs():
+    for _path in sorted(glob.glob(os.path.join(_directory, "**", "*.py"), recursive=True)):
         _relative = os.path.relpath(_path, ROOT)
         _tree = ast.parse(open(_path, encoding="utf-8").read())
         for _node in ast.walk(_tree):

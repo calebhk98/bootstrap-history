@@ -10,7 +10,7 @@ import unittest
 
 from sim.economy import tile_costs
 from sim.economy.types import TileSpec
-from sim.world.freight_cost import CarrierPrices
+from sim.geography.freight_cost import CarrierPrices
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GEOGRAPHY_PATH = os.path.join(ROOT, "data", "world", "geography.json")

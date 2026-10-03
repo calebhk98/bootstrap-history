@@ -134,7 +134,7 @@ Two fixes, usable separately or together:
                                                     named parts leave out is a cause called
                                                     "not itemised". previous is null until a
                                                     year has been stepped. Figures register in
-                                                    sim/engine/figures_headline.py. The cash
+                                                    sim/ui/figures_headline.py. The cash
                                                     figure takes its causes from the cash book
                                                     (below), so for cash nothing is left "not
                                                     itemised" beyond rounding.
@@ -300,7 +300,7 @@ Two fixes, usable separately or together:
 
       THE COMMAND LIST IS NOT MAINTAINED HERE. The examples above are a tour;
       `help` is the complete list, generated from the command registry
-      (engine/proto/command_registry.py). Each handler declares its own
+      (sim/ui/proto/command_registry.py). Each handler declares its own
       summary, usage, options, description and aliases with @command, and the
       dispatch table, typed aliases and help are all read from that one
       registry, so a command cannot run without being documented. The suite
@@ -319,7 +319,7 @@ Two fixes, usable separately or together:
 
       A `step` reply also carries `completed` (each record has `kind`:
       "technology", "concern" or "granted"), `events` (each row has `severity`, one of
-      the eight tiers in `sim/engine/proto/event_severity.py`, run_ending first and
+      the eight tiers in `sim/ui/proto/event_severity.py`, run_ending first and
       informational last; the text rendering lists the worst tiers first and
       marks them), and, when anything
       completed or failed, `summary`: `completed`, `by_kind`, `failed`,
@@ -426,7 +426,7 @@ Which fields are quantities is data: `field_rules` in `data/world/units.json`
 Units, their symbols and conversions are data in the same file; a mod adds
 `<mod_id>:<name>` units in its own `data/world/units.json`. Code: `sim/engine/units.py`
 (registry, one `format_<dimension>` per dimension, `add_display`),
-`sim/engine/units_text.py` (text screens), `sim/engine/cli_units_options.py` (the
+`sim/ui/units_text.py` (text screens), `sim/ui/cli_units_options.py` (the
 options entry). Text screens show the chosen unit's value and symbol.
 Compound units (price per tonne, yield per hectare) are not converted yet.
 

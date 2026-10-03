@@ -35,9 +35,9 @@ class PerCivilisation(unittest.TestCase):
 
     def test_two_civilisations_do_not_share_a_derived_figure_when_their_prices_differ(self):
         rome, han = sim_for("rome_100ad"), sim_for("han_china_100ad")
-        rome_hours = {node_id: node["rev"] / rome.money_per_labour_hour()
+        rome_hours = {node_id: node["rev"] / rome.labour.money_per_labour_hour()
                       for node_id, node in rome.nodes.items() if node.get("_revenue_basis") == "output"}
-        han_hours = {node_id: han.nodes[node_id]["rev"] / han.money_per_labour_hour() for node_id in rome_hours}
+        han_hours = {node_id: han.nodes[node_id]["rev"] / han.labour.money_per_labour_hour() for node_id in rome_hours}
         self.assertTrue(any(abs(rome_hours[node_id] - han_hours[node_id]) > 1e-6 * max(1.0, rome_hours[node_id])
                             for node_id in rome_hours))
 

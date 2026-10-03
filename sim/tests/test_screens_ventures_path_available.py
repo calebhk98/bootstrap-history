@@ -1,8 +1,8 @@
 """Complaints 170, 175, 145, 158: ventures paging, path blockers, foreman and net/payback on available."""
 from .harness import *
-from sim.engine.proto.render_screens_big import render_available
-from sim.engine.proto.render_screens_economy import render_ventures
-from sim.engine.proto.render_screens_status import render_path
+from sim.ui.proto.render_screens_big import render_available
+from sim.ui.proto.render_screens_economy import render_ventures
+from sim.ui.proto.render_screens_status import render_path
 
 # --- 174: ventures pages like available and log
 many = sim(capital=1_000_000.0)

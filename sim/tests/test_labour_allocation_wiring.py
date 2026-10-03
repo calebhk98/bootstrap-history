@@ -1,9 +1,9 @@
-"""The engine steps sim/world/labour_market.py every simulated year, so the
+"""The engine steps sim/labour/labour_market.py every simulated year, so the
 share of working hours on the farm responds to food scarcity."""
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import labour_allocation
+from sim.labour import labour_allocation
 
 
 def _rome_sim():
@@ -17,15 +17,15 @@ def _farm_hours(test_sim):
 class WorkforceAllocationWiringTests(unittest.TestCase):
 
     def test_engine_imports_the_labour_market(self):
-        import sim.engine.labour_allocation as module
+        import sim.labour.labour_allocation as module
         self.assertTrue(hasattr(module, "labour_market"))
 
     def test_unshocked_first_year_starts_at_the_food_balance_workforce(self):
         test_sim = _rome_sim()
         adult_equivalent = test_sim._adult_equivalent_population(test_sim.population)
-        technique = test_sim._farming_technique()
-        baseline_fte = test_sim._expected_year_farm_need(
-            test_sim._share_farm_fte(adult_equivalent, technique),
+        technique = test_sim.labour._farming_technique()
+        baseline_fte = test_sim.labour._expected_year_farm_need(
+            test_sim.labour._share_farm_fte(adult_equivalent, technique),
             adult_equivalent, technique)
         test_sim._demographic_recovery(101)
         fte = _farm_hours(test_sim) / labour_allocation.HOURS_PER_FARM_WORKER_YEAR
@@ -70,7 +70,7 @@ class WorkforceAllocationWiringTests(unittest.TestCase):
     def test_workforce_round_trips_through_save_and_load(self):
         import os
         import tempfile
-        from sim.engine.proto import saveload
+        from sim.engine import saveload
         test_sim = _rome_sim()
         for year in range(101, 106):
             test_sim._demographic_recovery(year)

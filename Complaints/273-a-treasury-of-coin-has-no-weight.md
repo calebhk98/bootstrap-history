@@ -6,7 +6,7 @@ Source: `Complaints/reports/playthrough-review-han-china-100-to-400ad.md`, item 
 
 ## What is wrong
 
-A fortune held as bronze cash coin is a large mass, yet holding it costs nothing in storage, guarding or transport. The review's arithmetic: a late-game treasury of tens of millions of cash is many tonnes of bronze. Coin mass is physical in the money model (`sim/engine/money_units.py`, 144) and `sim/world/transport.py` prices moving mass, but no screen or rule charges for keeping or moving money.
+A fortune held as bronze cash coin is a large mass, yet holding it costs nothing in storage, guarding or transport. The review's arithmetic: a late-game treasury of tens of millions of cash is many tonnes of bronze. Coin mass is physical in the money model (`sim/engine/money_units.py`, 144) and `sim/geography/transport.py` prices moving mass, but no screen or rule charges for keeping or moving money.
 
 ## Why it matters
 
@@ -18,4 +18,4 @@ Compute the mass of the coin held from the coin metal and the amount, charge sto
 
 ## Done and remains
 
-`Sim.coin_hoard` (`sim/engine/coin_hoard.py`) gives the money held as tonnes of the civilisation's coin metal and a yearly keeping cost from guard hours per tonne (a labelled heuristic, `COIN_GUARD_HOURS_PER_TONNE_YEAR`); both screens show it (`sim/tests/test_coin_hoard_mass.py`). Remains: the cost is shown, not yet charged to the purse; large transfers pay no freight (`sim/world/transport.py` prices mass, nothing calls it for money); the sack hazard (`SACK_CAPITAL_LOSS` in `sim/engine/society_hazards.py`) takes a fixed share of capital and does not read the mass, so there is no hook yet for a hoard's exposure to depend on how it is kept.
+`Sim.coin_hoard` (`sim/engine/coin_hoard.py`) gives the money held as tonnes of the civilisation's coin metal and a yearly keeping cost from guard hours per tonne (a labelled heuristic, `COIN_GUARD_HOURS_PER_TONNE_YEAR`); both screens show it (`sim/tests/test_coin_hoard_mass.py`). Remains: the cost is shown, not yet charged to the purse; large transfers pay no freight (`sim/geography/transport.py` prices mass, nothing calls it for money); the sack hazard (`SACK_CAPITAL_LOSS` in `sim/engine/society_hazards.py`) takes a fixed share of capital and does not read the mass, so there is no hook yet for a hoard's exposure to depend on how it is kept.

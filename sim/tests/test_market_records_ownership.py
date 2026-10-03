@@ -12,13 +12,15 @@ from .harness import *  # noqa: F401,F403
 
 RECORDS = {"market_flows", "market_book", "foreign_market_book", "market_offers"}
 MUTATORS = {"setdefault", "update", "pop", "clear", "append", "extend", "remove", "popitem", "__setitem__"}
+from .source_dirs import SIM_DIR, engine_and_world_dirs
+
 MARKET_MODULES = {
     "state.py",              # declares them
     "market_clearing.py",    # the clearing of the home book
     "goods_market_api.py",   # the one door sellers and buyers use
     "foreign_economies.py",  # the partners' books and the trade between them and the home book
 }
-SCANNED = (os.path.join("sim", "engine"), os.path.join("sim", "world"))
+SCANNED = tuple(os.path.relpath(directory, os.path.dirname(SIM_DIR)) for directory in engine_and_world_dirs())
 
 
 def _record_root(node):

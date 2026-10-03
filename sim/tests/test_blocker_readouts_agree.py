@@ -1,7 +1,7 @@
 """One classifier names every blocker: Complaints/125, 263 (and 234, 238, 239, 268 below)."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.proto.render_screens_big import render_why
+from sim.ui.proto.render_screens_big import render_why
 
 SUPPLY_NODE = "mat_bulk_steel"
 

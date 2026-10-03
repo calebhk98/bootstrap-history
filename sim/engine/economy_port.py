@@ -98,7 +98,7 @@ class EconomyPort:
     @property
     def labour(self):
         """The labour market every employer asks (labour_market_api.LabourMarket)."""
-        return self._sim.labour_market
+        return self._sim.labour.market
 
     def material_price(self, material):
         """Money for one tonne of a material at today's market quote; 0.0 when it has no price."""
@@ -141,11 +141,11 @@ class EconomyPort:
 
     def money_per_labour_hour(self):
         """Money one hour of unskilled work is worth now."""
-        return self._sim.money_per_labour_hour()
+        return self._sim.labour.money_per_labour_hour()
 
     def book_money(self, amount):
         """A book-coin amount in this civilisation's money now."""
-        return self._sim.book_money(amount)
+        return self._sim.labour.book_money(amount)
 
     def price_level(self):
         """The level of money prices against the opening year (1.0 at the opening)."""
@@ -185,7 +185,7 @@ class EconomyPort:
     def output_value(self):
         """Money's worth of the society's yearly output at today's prices."""
         sim = self._sim
-        return sim.real_output_hours() * sim.money_per_labour_hour() * sim.state.economy.output_factor
+        return sim.real_output_hours() * sim.labour.money_per_labour_hour() * sim.state.economy.output_factor
 
     def concern_gross(self, node_id):
         """Yearly takings of a concern once ramped up, with the market's price for its goods applied."""

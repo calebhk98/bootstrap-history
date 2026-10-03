@@ -1,6 +1,6 @@
 """failure_roll_matches_display: complaint 161, the risk shown is the risk rolled."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.techtree import _explain_timing_and_risk
+from sim.ui.proto.techtree import _explain_timing_and_risk
 
 
 class _RecordingRandom(random.Random):

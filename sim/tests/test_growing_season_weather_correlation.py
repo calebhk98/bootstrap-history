@@ -79,7 +79,7 @@ class WeatherCellsTests(unittest.TestCase):
         # directly instead by feeding a region name geography.json's own
         # `regions` block has but `land_tiles.region_to_tiles` does not.
         test_sim = _rome_sim()
-        fake_geo = dict(test_sim.geo)
+        fake_geo = dict(test_sim.geography.data)
         land_tiles = dict(fake_geo["land_tiles"])
         region_to_tiles = dict(land_tiles["region_to_tiles"])
         region_to_tiles.pop("italia", None)
@@ -92,7 +92,7 @@ class WeatherCellsTests(unittest.TestCase):
         # for every one of Rome's seven home regions, which is what makes
         # the degrade path's own "should not happen for any of the 21
         # shipped regions" claim true today rather than merely asserted.
-        real_region_to_tiles = test_sim.geo["land_tiles"]["region_to_tiles"]
+        real_region_to_tiles = test_sim.geography.data["land_tiles"]["region_to_tiles"]
         for region in test_sim.civ["home_regions"]:
             self.assertIn(region, real_region_to_tiles, region)
             self.assertGreater(len(real_region_to_tiles[region]), 0, region)
@@ -136,7 +136,7 @@ class SpatialCorrelationTests(unittest.TestCase):
         # hand-picking new coordinates, so this test tracks the actual
         # data this mechanism runs on.
         test_sim = _rome_sim()
-        regions = test_sim.geo["regions"]
+        regions = test_sim.geography.data["regions"]
         gaul, hispania = regions["gaul_germania"], regions["hispania"]
         britannia, levant = regions["britannia"], regions["levant_mesopotamia"]
         cells = [

@@ -25,7 +25,7 @@ Expandable list for every project.
 
 ## WHERE IT LIVES
 
-Event aggregation and rendering logic in `sim/engine/proto/render_screens_big.py` or completion-event handling. Project-completion notification system.
+Event aggregation and rendering logic in `sim/ui/proto/render_screens_big.py` or completion-event handling. Project-completion notification system.
 
 ## Confidence
 

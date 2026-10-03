@@ -12,8 +12,8 @@ import json as _json
 import re as _re
 import tempfile as _tempfile
 from sim.engine import units as U
-from sim.engine.proto.dispatch import _agent_dispatch
-from sim.engine.proto.render_typed import render_pretty
+from sim.ui.proto.dispatch import _agent_dispatch
+from sim.ui.proto.render_typed import render_pretty
 
 # Screens covered, by dimension: (render command name, command dict).
 COVERED = {

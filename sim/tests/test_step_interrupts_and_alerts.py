@@ -1,9 +1,9 @@
 """A multi-year step commits each year as it goes; step replies carry a short ALERTS block."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.protocol import _agent_dispatch, save_state, load_state
-from sim.engine.proto import step_progress
-from sim.engine.proto.step_alerts import step_alerts, alert_lines
-from sim.engine.proto import render_screens_big as _render_big
+from sim.ui.protocol import _agent_dispatch, save_state, load_state
+from sim.ui.proto import step_progress
+from sim.ui.proto.step_alerts import step_alerts, alert_lines
+from sim.ui.proto import render_screens_big as _render_big
 
 def playable():
     live_sim = sim()
@@ -87,7 +87,7 @@ check("a multi-year step prints one progress line per year; a single year prints
 
 # ---- the per-year hook belongs to one command: a played command clears it afterwards,
 # so a later step in the same process does not also save into that command's session file
-from sim.engine import cli_interactive as _interactive
+from sim.ui import cli_interactive as _interactive
 _hook_sim = sim()
 _hook_session = os.path.join(tempfile.mkdtemp(), "hooked.json")
 _interactive._play_run_one_command(_hook_sim, _hook_sim.nodes, {"cmd": "step", "years": 1}, _hook_session)

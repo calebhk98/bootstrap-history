@@ -17,7 +17,7 @@ def _test_canonical_module_identities():
 	import sim.constants as sim_constants
 	import sim.engine.core as sim_core
 	import sim.world.demography as sim_demography
-	import sim.engine.proto.saveload as sim_saveload
+	import sim.engine.saveload as sim_saveload
 
 	# Disallowed bare top-level identities
 	disallowed_bare_names = ("constants", "engine", "world", "simulator", "data")
@@ -30,7 +30,7 @@ def _test_canonical_module_identities():
 		"sim.constants",
 		"sim.engine.core",
 		"sim.world.demography",
-		"sim.engine.proto.saveload",
+		"sim.engine.saveload",
 	)
 	missing_canonical = [name for name in expected_canonical if name not in sys.modules]
 	if missing_canonical:

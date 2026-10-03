@@ -14,7 +14,7 @@ all four.
 A new package, so this is not more state in the same files:
 
 ```text
-sim/engine/actors/
+sim/agents/
     __init__.py       what a caller imports
     household.py      class Household - the founder/family as an economic actor
 ```
@@ -121,7 +121,7 @@ property body is indistinguishable from the intended one, and gets silently
 swallowed by any caller using `getattr` with a default. Keep these property
 bodies to a single attribute access and nothing else.
 
-`SAVE_FIELDS` in `sim/engine/proto/saveload.py` is the authoritative list of
+`SAVE_FIELDS` in `sim/engine/saveload.py` is the authoritative list of
 which fields this applies to.
 
 ---

@@ -3,7 +3,7 @@
 Complaints/360. Word seeds are kept as the word, number seeds as the number.
 """
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.saveload import load_state
+from sim.engine.saveload import load_state
 
 _scratch = tempfile.mkdtemp()
 _SIMULATOR = os.path.join(HERE, "simulator.py")

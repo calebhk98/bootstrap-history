@@ -12,7 +12,7 @@ so a fully dice-free trial needs a seeded rng whose `random()` always returns
 1.0, never below any probability threshold anywhere in the engine (a
 project's failure risk, the 3.5% yearly attrition roll, the 25% manumission
 roll, the fractional-headcount rounding in `_stochastic_round`). See
-`DetRNG` in `engine/cli.py` - shared from there because `--deterministic` on
+`DetRNG` in `sim/ui/cli.py` - shared from there because `--deterministic` on
 `run`/`compare`/`play`/`agent` needs the exact same rng, for the exact same
 reason. Nothing in `core.py`, `projects.py`, `labour.py`, `society.py` or
 `economy.py` is edited to get this - the same rules run, against a
@@ -131,7 +131,7 @@ from sim.engine.data import TRADES_ABSENT, closure, load, load_civ, resolve_goal
 from sim.engine.core import Sim
 
 from sim.engine.default_civilisation import default_civilisation_id
-from sim.engine.cli import DetRNG, ensure_fixed_hash_seed
+from sim.engine.run_setup import DetRNG, ensure_fixed_hash_seed
 
 from sim import planner as _planner
 
@@ -186,7 +186,7 @@ def diagnose_scarce_trades(sim, nodes, outstanding, backlog_ratio=6.0):
         if len(contested) < 2:
             continue
         backlog = sum(nodes[node_id]["lab"][trade] for node_id in contested)
-        supply = max(1.0, sim.hours_you_can_call_on(trade))
+        supply = max(1.0, sim.labour.hours_you_can_call_on(trade))
         if backlog / supply > backlog_ratio:
             scarce[trade] = {"contested": contested, "backlog": backlog,
                          "supply_per_year": supply,
@@ -536,7 +536,7 @@ def plan_and_write(civ=default_civilisation_id(), goal=None, out=None, side_bran
     `out`.
 
     ONE BODY, TWO FRONT DOORS. This module's own `main()` above and
-    `simulator.py search` (engine/cli.py's `cmd_search`) both call this
+    `simulator.py search` (sim/ui/cli.py's `cmd_search`) both call this
     instead of each independently turning `search()`'s return value into a
     written file and a printed rationale - the same principle `cmd_plan`
     already applies to `planner.plan()`, and for the same reason: two places

@@ -157,7 +157,7 @@ REFERENCE_LABOUR_HOURS_PER_HECTARE = declare(
            "about 150 hours/ha. sim/world/agriculture.py (as "
            "REFERENCE_LABOUR_HOURS_PER_HECTARE), sim/world/land.py (as "
            "LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE) and "
-           "sim/world/labour_market.py all import this declaration, so all "
+           "sim/labour/labour_market.py all import this declaration, so all "
            "four sites are one number.",
     confidence="B",
     why="The labour intensity the reference yield is quoted at, and the "

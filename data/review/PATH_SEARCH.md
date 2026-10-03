@@ -207,7 +207,7 @@ concurrency cap on how many closure nodes may be simultaneously active) -
 might still find something these two moves do not; that is future work, not
 a claim made here.
 
-`--search-rounds` is wired into `simulator.py plan` (see `engine/cli.py`
+`--search-rounds` is wired into `simulator.py plan` (see `sim/ui/cli.py`
 `cmd_plan`) precisely so this is re-runnable rather than a one-off claim:
 `plan --search-rounds N --search-horizon H --out FILE` diagnoses and
 relaxes for real, on demand, against whatever the tree says today.
@@ -574,7 +574,7 @@ Both prior numbers in this document (1,017/1,121 for Rome, 555 for Han)
 have drifted slightly - now 1,119 and 551 - purely from the tree having
 moved under other agents' hands since section 1 was written; re-measured
 fresh, this session, the same way section 1's own warning insists on. The
-`DICE_FREE_FLOOR_YEARS` table in `engine/cli.py` (used only for the New
+`DICE_FREE_FLOOR_YEARS` table in `sim/ui/cli.py` (used only for the New
 Game difficulty menu's wording, never for anything this module or
 `planner.py` computes) is updated to match: `rome_100ad: 1019`,
 `han_china_100ad: 451`.

@@ -3,7 +3,7 @@
 Per person per year, in the units of data/world/needs.json: warmth_mj is megajoules of fuel heat,
 clothing_kg is kg of cloth equivalent, shelter_m3 is cubic metres of wall or frame. Nothing here is
 authored per civilisation: a tile's Koppen class and latitude give a sinusoidal year
-(sim/world/climate_temperatures.py) and the floors follow from heat balance.
+(sim/geography/climate_temperatures.py) and the floors follow from heat balance.
 
 Warmth: heat the dwelling loses below the balance temperature, divided by how much of a hearth's fuel
 heat stays in the dwelling. The balance temperature is the outdoor temperature below which heating is
@@ -16,7 +16,7 @@ Shelter: floor area under a roof everywhere; walls enclose the dwelling where th
 the balance temperature, thick enough that the inner wall surface stays within a few kelvin of the air.
 """
 from sim.constants import declare
-from sim.world.climate_temperatures import (
+from sim.geography.api import (
     KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS, daily_temperatures, representative_extremes)
 
 HEATING_BALANCE_TEMPERATURE_CELSIUS = declare(

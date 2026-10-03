@@ -12,11 +12,11 @@ s_hi = sim(civ="rome_100ad", capital=1e9)
 s_lo = sim(civ="norse_900ad", capital=1e9)
 check("a low-literacy society's literate-trade pool is smaller than a "
       "high-literacy one's",
-      s_lo.literate_capacity("scribe") < s_hi.literate_capacity("scribe"),
-      "norse=%.2f rome=%.2f" % (s_lo.literate_capacity("scribe"),
-                                s_hi.literate_capacity("scribe")))
-ok_hi, why_hi = s_hi.hire("scribe", 3)
-ok_lo, why_lo = s_lo.hire("scribe", 3)
+      s_lo.labour.literate_capacity("scribe") < s_hi.labour.literate_capacity("scribe"),
+      "norse=%.2f rome=%.2f" % (s_lo.labour.literate_capacity("scribe"),
+                                s_hi.labour.literate_capacity("scribe")))
+ok_hi, why_hi = s_hi.labour.hire("scribe", 3)
+ok_lo, why_lo = s_lo.labour.hire("scribe", 3)
 check("money alone cannot hire scribes a low-literacy society has nobody to "
       "supply, at any price",
       ok_hi and not ok_lo and "literacy" in why_lo,
@@ -25,11 +25,11 @@ check("money alone cannot hire scribes a low-literacy society has nobody to "
 # --- Q: the same wall applies to TEACHING a trade into existence, the only
 # way engineer/chemist/machinist/optician can ever exist at all (hire()
 # refuses them outright until train() has made them real).
-ok_lo, why_lo = sim(civ="norse_900ad", capital=1e9).train("machinist", 2)
+ok_lo, why_lo = sim(civ="norse_900ad", capital=1e9).labour.train("machinist", 2)
 check("a society that cannot read cannot be taught machinists into "
       "existence either",
       not ok_lo and "literacy" in why_lo, why_lo)
-ok_hi, why_hi = sim(civ="rome_100ad", capital=1e9).train("machinist", 2)
+ok_hi, why_hi = sim(civ="rome_100ad", capital=1e9).labour.train("machinist", 2)
 check("the same teaching succeeds where enough people can read",
       ok_hi, why_hi)
 
@@ -38,7 +38,7 @@ check("the same teaching succeeds where enough people can read",
 # named `scholar`/`scribe` trades hired one at a time.
 s_hi = run_it(sim(civ="rome_100ad", capital=1e9), "school_founded")
 s_lo = run_it(sim(civ="norse_900ad", capital=1e9), "school_founded")
-sc_hi, sc_lo = s_hi.staff_capacity()[0], s_lo.staff_capacity()[0]
+sc_hi, sc_lo = s_hi.labour.staff_capacity()[0], s_lo.labour.staff_capacity()[0]
 check("a school trains fewer scholars where fewer of the propertied class "
       "can read",
       sc_lo < sc_hi, "norse sc=%.2f rome sc=%.2f" % (sc_lo, sc_hi))
@@ -48,10 +48,10 @@ check("a school trains fewer scholars where fewer of the propertied class "
 # there is room for it to move; Rome starts at this file's own reference
 # literacy and is not expected to move much.
 s = sim(civ="norse_900ad", capital=1e9)
-cap0 = s.literate_capacity("scribe")
+cap0 = s.labour.literate_capacity("scribe")
 s.apply_tech_effects("rag_paper")
 s.apply_tech_effects("printing_press")
-cap1 = s.literate_capacity("scribe")
+cap1 = s.labour.literate_capacity("scribe")
 # THRESHOLD CHANGED, deliberately, and the reason belongs here rather than in
 # a commit message. This asserted cap1 > cap0 * 2, which was true of the
 # original implementation because the pool was purely multiplicative: Norse
@@ -76,13 +76,13 @@ check("a literate person can always be found, even before any teaching",
 # (labour_price_factor), the same principle market_pressure already applies
 # to slaves -- and it decays, the same way.
 s = sim(civ="rome_100ad", capital=1e9)
-f0 = s.labour_market.price_factor("millwright")
-s.labour_market.press("millwright", 6 * s.HOURS_PER_PERSON_YEAR)
-f1 = s.labour_market.price_factor("millwright")
+f0 = s.labour.market.price_factor("millwright")
+s.labour.market.press("millwright", 6 * s.HOURS_PER_PERSON_YEAR)
+f1 = s.labour.market.price_factor("millwright")
 check("leaning hard on a scarce trade's local supply raises what it costs",
       f1 > f0 * 1.5, "before=%.3f after=%.3f" % (f0, f1))
 s.year += 5
-f2 = s.labour_market.price_factor("millwright")
+f2 = s.labour.market.price_factor("millwright")
 check("recent demand pressure decays: the same trade is not dearer forever",
       f2 < f1 and f2 < 1.3, "immediate=%.3f +5yr=%.3f" % (f1, f2))
 
@@ -94,13 +94,13 @@ thin = sim(civ="rome_100ad", capital=1e9)
 thick = sim(civ="rome_100ad", capital=1e9)
 thick.employees["millwright"] = 20.0
 pressure_hours = 6 * thin.HOURS_PER_PERSON_YEAR
-thin.labour_market.press("millwright", pressure_hours)
-thick.labour_market.press("millwright", pressure_hours)
+thin.labour.market.press("millwright", pressure_hours)
+thick.labour.market.press("millwright", pressure_hours)
 check("a bigger trained workforce in a trade makes the same recent demand "
       "cheaper to satisfy",
-      thick.labour_market.price_factor("millwright") < thin.labour_market.price_factor("millwright"),
+      thick.labour.market.price_factor("millwright") < thin.labour.market.price_factor("millwright"),
       "thin supply=%.3f thick supply=%.3f"
-      % (thin.labour_market.price_factor("millwright"), thick.labour_market.price_factor("millwright")))
+      % (thin.labour.market.price_factor("millwright"), thick.labour.market.price_factor("millwright")))
 
 # --- R, end to end: hiring the same trade repeatedly through `hire` really
 # does cost more each time, not only in the internal factor.
@@ -109,7 +109,7 @@ run_it(s, "workshop_first", "school_founded", "academy_network", "patron_imperia
 fees = []
 for _ in range(3):
     before = s.capital
-    ok, msg = s.hire("millwright", 10)
+    ok, msg = s.labour.hire("millwright", 10)
     if not ok:
         break
     fees.append(before - s.capital)

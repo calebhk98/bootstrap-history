@@ -9,7 +9,7 @@ computation runs, not what it claims about the simulated world.
 WHAT BELONGS HERE. A fixed-point solver's damping factor, its convergence
 tolerance, its iteration cap; a search's maximum period count. Gathered
 from sim/solve_prices_core.py (the price solver's own damped-Jacobi loop)
-and sim/world/labour_market.py (the labour-reallocation fixed point), the
+and sim/labour/labour_market.py (the labour-reallocation fixed point), the
 two places in this project that run an iterative numerical search rather
 than a closed-form calculation. The strongly-connected-components pass
 sim/solve_prices_core.py's own resolvability check runs
@@ -23,7 +23,7 @@ nothing to declare.
 THE JUDGEMENT CALL THIS FILE MAKES EXPLICIT: NOT EVERY NUMBER HERE IS
 OUTCOME-INERT, AND EACH ONE SAYS SO. Unlike sim/unit_conversions.py's own
 conversions (which cannot change what a computation returns, only what
-units it is stated in) and sim/presentation.py's own display values (which
+units it is stated in) and sim/ui/presentation.py's own display values (which
 cannot change a simulated result at all), SOME of the numbers below CAN
 change a computed price or a labour allocation if pushed far enough - loosen
 CONVERGENCE_TOLERANCE enough and the solver stops one step earlier, at a
@@ -57,7 +57,7 @@ record could ever confirm or refute), and no other kind fits any better.
 sim/constants.py's own `--burndown` is a progress bar for the MODEL - see
 that module's docstring - and a solver's own knobs are not part of that
 progress in either direction, so this file does not call `declare()` at
-all, the same choice sim/presentation.py makes and for the same reason
+all, the same choice sim/ui/presentation.py makes and for the same reason
 (see that file's own NOT PART OF THE REGISTRY section).
 
 WHY MOVED RATHER THAN LEFT AND MERELY GATHERED BY REFERENCE. The
@@ -79,14 +79,14 @@ number. sim/solve_prices_core.py therefore re-imports each moved name from
 this file and keeps it bound at its own old attribute name (see that
 file's own comment at the import), so `solve_prices_core.DAMPING_FACTOR`
 still resolves exactly as it always did and neither sibling file needed to
-change at all. sim/world/labour_market.py does the same for its own two
+change at all. sim/labour/labour_market.py does the same for its own two
 names, on the chance anything outside this file's own edits (a test, a
 future caller) references `labour_market.MAXIMUM_REALLOCATION_PERIODS` or
 `labour_market.CONVERGENCE_TOLERANCE_HOURS` directly.
 
 HOW A CONSUMER USES ONE OF THESE. Imported fully qualified, `from
 sim.algorithm_parameters import DAMPING_FACTOR`, the same convention sim/
-unit_conversions.py and sim/presentation.py both use and for the same
+unit_conversions.py and sim/ui/presentation.py both use and for the same
 reason (see sim/unit_conversions.py's own HOW A CONSUMER USES ONE OF
 THESE section).
 """
@@ -160,9 +160,9 @@ INITIAL_PRICE_GUESS_HOURS = 1.0
 GROWTH_BOUND_HOURS = 1e9
 
 # ============================================================================
-# sim/world/labour_market.py - the labour-reallocation fixed point
+# sim/labour/labour_market.py - the labour-reallocation fixed point
 # ============================================================================
-# Moved here verbatim, comments included, from sim/world/labour_market.py's
+# Moved here verbatim, comments included, from sim/labour/labour_market.py's
 # own "THE FIXED POINT: REPEAT THE STEP UNTIL THE ALLOCATION STOPS MOVING"
 # section. See that file's own import of these two names for why its own
 # module attributes still work unchanged.

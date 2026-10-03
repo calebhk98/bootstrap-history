@@ -7,15 +7,16 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import (Actor, ActorRegistry, CallbackPolicy, Firm, Government,
-                               Household, RecordedActor, SimWorld, register_policy)
-from sim.engine.actors import imitation
-from sim.engine.actors.policy import IdlePolicy
-from sim.engine.actors.tuning import SECRET_EXPOSURE
+from sim.agents.api import (Actor, ActorRegistry, CallbackPolicy, Firm, Government,
+                               Household, RecordedActor, register_policy)
+from sim.engine.agents_port import SimWorld
+from sim.agents import imitation
+from sim.agents.policy import IdlePolicy
+from sim.agents.tuning import SECRET_EXPOSURE
 from sim.engine.state import ActorRecord
 from sim.engine.mods import get_ordered_mods, load_mod_tree
-from sim.engine.proto.saveload import load_state, save_state
-from sim.world import settlement
+from sim.engine.saveload import load_state, save_state
+from sim.geography import settlement
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
                     if node["rev"] > 0 and not node["pre"] and node["cap"] >= 0)
@@ -159,7 +160,7 @@ check("an invention kept out of public use is less exposed",
       abs(offers["test_hidden"].worth / offers["test_visible"].worth - SECRET_EXPOSURE) < 1e-9,
       (offers["test_hidden"].worth, offers["test_visible"].worth))
 homes = game.civ.get("home_regions") or []
-farthest = max(settlement.tile_ids(homes), key=game.distance_to_tile_km)
+farthest = max(settlement.tile_ids(homes), key=game.labour.distance_to_tile_km)
 government.record.location = farthest
 far_offer = {option.subject: option for option in government.imitation_options(world)}["test_visible"]
 check("a distant observer sees less of what the founder does", far_offer.worth < offers["test_visible"].worth)

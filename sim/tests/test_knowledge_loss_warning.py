@@ -2,7 +2,7 @@
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import closure
 from sim.engine.knowledge_warning import knowledge_loss_warning
-from sim.engine.proto.render_typed import render_pretty as _render_pretty
+from sim.ui.proto.render_typed import render_pretty as _render_pretty
 
 def _with_built_technologies(test_sim):
     """Give the sim technologies it built itself (not granted), so a sack has something to take."""

@@ -1,7 +1,7 @@
 """Complaints 79, 125, 201, 229, 231, 237: blocker kinds declared, luckless nodes, alert tiers and stop reasons."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.step_alerts import step_alerts, alert_severity
-from sim.engine.proto.step_stops import severe_stop_reason
+from sim.ui.proto.step_alerts import step_alerts, alert_severity
+from sim.ui.proto.step_stops import severe_stop_reason
 
 # --- 129: every start check declares the kind of blocker it reports
 live = sim()
@@ -44,8 +44,8 @@ check("a newly blocked project stops the step",
       "blocked" in (severe_stop_reason([], [], ["Loom"], []) or ""))
 
 # --- 235: the lettered-trades label says each trade has its own ceiling
-from sim.engine.protocol import _agent_dispatch
-from sim.engine.proto.render_screens_economy import render_labour
+from sim.ui.protocol import _agent_dispatch
+from sim.ui.proto.render_screens_economy import render_labour
 labour_reply = _agent_dispatch(sim(), NODES, {"cmd": "labour"})
 label = labour_reply.get("and_how_many_of_the_lettered_trades_this_society_supplies", "")
 check("the labour ceiling label is per trade, not one shared total",
@@ -54,7 +54,7 @@ check("the labour ceiling label is per trade, not one shared total",
 # --- 233: departures are split by cause; the workforce block exists
 staffed = sim(capital=10000000.0, events=False)
 run_it(staffed, "workshop_first", "school_founded", "freedman_staff")
-staffed.hire("scholar", 8)
+staffed.labour.hire("scholar", 8)
 for _ in range(40):
     staffed.step()
 loss_lines = [message for _, message in staffed.log if message.startswith("you lose ")]

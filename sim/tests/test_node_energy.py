@@ -5,7 +5,7 @@ price; a producer of a carrier earns the carrier at the grade its reach clears."
 import unittest
 
 from sim.engine import data, energy_prices, node_output, node_revenue_market
-from sim.world.labour_market import production_data
+from sim.labour.labour_market import production_data
 
 
 class GradedEnergy(unittest.TestCase):

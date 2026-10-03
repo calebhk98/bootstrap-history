@@ -11,17 +11,17 @@ def staffed_sim():
 	test_sim.done.add(NODE_ID)
 	test_sim._done_changed()
 	test_sim.employees["artisan"] = 6.0
-	test_sim._resync_pools()
+	test_sim.labour._resync_pools()
 	test_sim.open_venture(NODE_ID)
 	return test_sim
 
 
 def staff_close(test_sim):
 	test_sim.employees["artisan"] = 0.0
-	test_sim._resync_pools()
+	test_sim.labour._resync_pools()
 	closed = test_sim.close_unstaffed_ventures(test_sim.year)
 	test_sim.employees["artisan"] = 6.0
-	test_sim._resync_pools()
+	test_sim.labour._resync_pools()
 	return closed
 
 

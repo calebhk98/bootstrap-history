@@ -30,14 +30,14 @@ for _civ_name in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300"
 # --- BREAK: "market can supply 22,500 hours", then 24,500 after hiring one
 # smith. market_supply is hours available TO YOU, your own staff included.
 s_ms = sim(capital=200000.0)
-_town0, _mine0 = s_ms.market_supply_split("smith")
-s_ms.hire("smith", 1)
-_town1, _mine1 = s_ms.market_supply_split("smith")
+_town0, _mine0 = s_ms.labour.market_supply_split("smith")
+s_ms.labour.hire("smith", 1)
+_town1, _mine1 = s_ms.labour.market_supply_split("smith")
 check("hiring does not conjure more of a trade into the town",
       abs(_town0 - _town1) < 1e-6, (_town0, _town1))
 check("...and what your own people add is counted separately",
-      _mine1 > _mine0 and abs(_town1 + _mine1 - s_ms.market_supply("smith")) < 1e-6,
-      (_mine0, _mine1, s_ms.market_supply("smith")))
+      _mine1 > _mine0 and abs(_town1 + _mine1 - s_ms.labour.market_supply("smith")) < 1e-6,
+      (_mine0, _mine1, s_ms.labour.market_supply("smith")))
 
 # --- BREAK: after `hire smith 1`, `labour` dropped smith from YOU COULD HIRE,
 # which reads as "no more smiths available" - and `hire smith 1` still worked.
@@ -132,11 +132,11 @@ check("...and its NEEDS column is the supervision the engine charges",
 # reported the game as having lost count of their household.
 s_cn = sim(capital=20000.0)
 _kn = next(node_id for node_id in sorted(NODES) if NODES[node_id]["art"] >= 2 and NODES[node_id]["sch"] == 0)
-s_cn.commission("mason", 4000.0)
+s_cn.labour.commission("mason", 4000.0)
 _why_cn = S._node_explain(s_cn, NODES, _kn)
 check("`why` counts the same artisans `start` does: yourself and hours bought",
-      abs(_why_cn["you_have"]["artisans"] - round(s_cn.craft_hands_available(), 1)) < 0.05,
-      (_why_cn["you_have"], s_cn.craft_hands_available(), s_cn.artisans))
+      abs(_why_cn["you_have"]["artisans"] - round(s_cn.labour.craft_hands_available(), 1)) < 0.05,
+      (_why_cn["you_have"], s_cn.labour.craft_hands_available(), s_cn.artisans))
 check("...and says which people it is counting",
       "yourself" in str(_why_cn.get("you_have_counts")), _why_cn.get("you_have_counts"))
 check("...and it is more than the bare payroll, having bought a mason's year",

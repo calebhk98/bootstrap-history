@@ -101,13 +101,13 @@ check("population: has legend line for asterisk marker",
 # This test imports the engine and checks that is_placeholder matches the
 # kind field of the constant that computes the trade's density, so the
 # answer stays in sync with declarations rather than being hand-copied.
-from ..engine.labour_population import PopulationMixin
+from sim.labour.labour_population import PopulationMixin
 from ..constants import REGISTRY
 from .harness import *
 
 # Create a minimal test sim instance
 test_sim = sim(civ="rome_100ad")
-pop_report = test_sim.population_report()
+pop_report = test_sim.labour.population_report()
 trades = pop_report.get("trades", [])
 
 is_placeholder_mismatches = []
@@ -116,7 +116,7 @@ for trade_row in trades:
     is_placeholder = trade_row.get("is_placeholder")
 
     # Get the source constant name
-    source_name = test_sim._trade_density_source(trade)
+    source_name = test_sim.labour._trade_density_source(trade)
 
     if source_name is None:
         # Taught trades or unavailable trades have no source

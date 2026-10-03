@@ -28,7 +28,7 @@ Generalize to every non-research/measurement goal with the question: "What contr
 
 ## WHERE IT LIVES
 
-Likely `sim/engine/proto/render_screens_big.py` or `render_screens_status.py` for goal presentation. May need new screen in `sim/engine/proto/` to handle goal-specific anatomy views.
+Likely `sim/ui/proto/render_screens_big.py` or `render_screens_status.py` for goal presentation. May need new screen in `sim/ui/proto/` to handle goal-specific anatomy views.
 
 ## Confidence
 

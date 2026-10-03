@@ -36,7 +36,7 @@ At large scale, idle capacity represents lost opportunity. The current subtle fi
 
 ## Where it lives
 
-Likely in `sim/engine/proto/state.py` where the `free_hours_going_unused` field is already implemented, and `sim/engine/proto/dispatch.py` for actionable suggestions tied to idle capacity.
+Likely in `sim/ui/proto/state.py` where the `free_hours_going_unused` field is already implemented, and `sim/ui/proto/dispatch.py` for actionable suggestions tied to idle capacity.
 
 **Confidence:** Design recommendation
 

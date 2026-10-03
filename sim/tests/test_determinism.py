@@ -29,7 +29,7 @@ It is a slow_check because even shortened it costs more than the rest of this fi
 The STRUCTURAL one is the real guard. Rather than sampling for the symptom it
 forbids the shape: an `id()` may be used as a dict key for speed, and the entry
 it finds must then be validated by identity against a strong reference to the
-object itself. That is what `sim/engine/proto/nodes.py` has always done and
+object itself. That is what `sim/ui/proto/nodes.py` has always done and
 what the two guilty caches now do. It is deterministic, it costs milliseconds,
 and it catches the whole class rather than the one instance we happened to hit.
 
@@ -89,7 +89,8 @@ def _id_call_report(path):
 
 
 _engine_files = []
-for _dirpath, _dirnames, _filenames in os.walk(os.path.join(ROOT, "sim", "engine")):
+from .source_dirs import engine_side_dirs
+for _dirpath, _dirnames, _filenames in (_entry for _directory in engine_side_dirs() for _entry in os.walk(_directory)):
     _dirnames[:] = [dirname for dirname in _dirnames if dirname != "__pycache__"]
     for _filename in sorted(_filenames):
         if _filename.endswith(".py"):

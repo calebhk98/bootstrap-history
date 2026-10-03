@@ -8,9 +8,9 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld
-from sim.engine.actors.tuning import PROOF_YEARS, SECRET_EXPOSURE
-from sim.engine.proto.saveload import load_state, save_state
+from sim.engine.agents_port import SimWorld
+from sim.agents.tuning import PROOF_YEARS, SECRET_EXPOSURE
+from sim.engine.saveload import load_state, save_state
 from sim.engine.state import ActorRecord
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()

@@ -4,7 +4,7 @@
 
 **Type:** Financial UI/rules inconsistency  
 **Priority:** High
-**Audit (2026-09-18): RESOLVED, verified.** `sim/engine/proto/dispatch.py` now computes an aggregate `total_committed_across_active_work` from `committed_spend()`/`funding_capacity()`, explicitly built as "the real ceiling, not a second formula that could drift from it" - harmonizing the two checks this complaint found disagreeing. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
+**Audit (2026-09-18): RESOLVED, verified.** `sim/ui/proto/dispatch.py` now computes an aggregate `total_committed_across_active_work` from `committed_spend()`/`funding_capacity()`, explicitly built as "the real ceiling, not a second formula that could drift from it" - harmonizing the two checks this complaint found disagreeing. See `docs/architecture/STATE_OF_THE_PROJECT.md`.
 
 ## Player evidence
 

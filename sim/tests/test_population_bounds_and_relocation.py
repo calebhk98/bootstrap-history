@@ -16,8 +16,8 @@ if _REPOSITORY_ROOT not in sys.path:
 from sim import simulator
 from sim.engine.core import Sim
 from sim.engine.invariants import check_labour_market_invariants
-from sim.engine.proto.dispatch import _agent_dispatch
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.dispatch import _agent_dispatch
+from sim.ui.proto.typed import parse_typed
 
 _TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
 
@@ -38,9 +38,9 @@ class TownShrinksWithNationTests(unittest.TestCase):
 
     def test_town_falls_below_the_old_floor_after_collapse(self):
         sim = _fresh_sim()
-        before = sim.home_town_population_estimate()
+        before = sim.labour.home_town_population_estimate()
         _shrink_nation(sim, 5000)
-        after = sim.home_town_population_estimate()
+        after = sim.labour.home_town_population_estimate()
         self.assertLess(after, before * 0.25 * 0.5)
         self.assertLessEqual(after, sim.population.total)
 
@@ -48,7 +48,7 @@ class TownShrinksWithNationTests(unittest.TestCase):
         for total in (5000000, 50000, 500, 30, 3):
             sim = _fresh_sim()
             _shrink_nation(sim, total)
-            self.assertLessEqual(sim.home_town_population_estimate(), total)
+            self.assertLessEqual(sim.labour.home_town_population_estimate(), total)
 
     def test_reachable_tradesmen_never_exceed_people_in_trade(self):
         for civ in ("rome_100ad", "norse_900ad"):
@@ -57,10 +57,10 @@ class TownShrinksWithNationTests(unittest.TestCase):
                 if total is not None:
                     _shrink_nation(sim, total)
                 for trade in sorted(_WAGES):
-                    if not sim.trade_available(trade):
+                    if not sim.labour.trade_available(trade):
                         continue
-                    reach = sim.reachable_trade_population(trade)
-                    limit = max(sim.national_trade_population(trade),
+                    reach = sim.labour.reachable_trade_population(trade)
+                    limit = max(sim.labour.national_trade_population(trade),
                                 sim.state.household.employees.get(trade, 0.0))
                     self.assertLessEqual(reach, limit + 1e-6,
                                          "%s %s at %s" % (civ, trade, total))
@@ -69,7 +69,7 @@ class TownShrinksWithNationTests(unittest.TestCase):
     def test_invariant_checker_flags_a_town_larger_than_the_nation(self):
         sim = _fresh_sim()
         self.assertTrue(check_labour_market_invariants(sim))
-        sim.home_town_population_estimate = lambda: sim.population.total * 2
+        sim.labour.home_town_population_estimate = lambda: sim.population.total * 2
         with self.assertRaises(AssertionError):
             check_labour_market_invariants(sim)
 
@@ -84,19 +84,19 @@ class MoveBaseTests(unittest.TestCase):
 
     def test_move_changes_town_and_trades(self):
         sim = _fresh_sim()
-        home = sim.base_tile()
-        town_before = sim.home_town_population_estimate()
-        supply_before = sim.market_supply("smith")
-        people = sim.settlement_tiles()
+        home = sim.labour.base_tile()
+        town_before = sim.labour.home_town_population_estimate()
+        supply_before = sim.labour.market_supply("smith")
+        people = sim.labour.settlement_tiles()
         others = [tile for tile in people if tile != home and people[tile] >= 1.0]
         sim.state.household.capital = 1e9
         # A poorer tile hosts a smaller town, and so fewer reachable smiths.
         poorest = min(others, key=lambda tile: people[tile])
-        ok, message = sim.move_base(poorest)
+        ok, message = sim.labour.move_base(poorest)
         self.assertTrue(ok, message)
-        self.assertEqual(sim.base_tile(), poorest)
-        self.assertLess(sim.home_town_population_estimate(), town_before)
-        self.assertLess(sim.market_supply("smith"), supply_before)
+        self.assertEqual(sim.labour.base_tile(), poorest)
+        self.assertLess(sim.labour.home_town_population_estimate(), town_before)
+        self.assertLess(sim.labour.market_supply("smith"), supply_before)
 
     def test_move_costs_hours_money_and_local_contracts(self):
         sim = _fresh_sim()
@@ -105,9 +105,9 @@ class MoveBaseTests(unittest.TestCase):
         household.commissioned["smith"] = 400.0
         household.familiarity = 0.5
         capital = household.capital
-        far = max((tile for tile in sim.settlement_tiles() if tile != sim.base_tile()),
-                  key=lambda tile: sim.distance_to_tile_km(tile))
-        ok, message = sim.move_base(far)
+        far = max((tile for tile in sim.labour.settlement_tiles() if tile != sim.labour.base_tile()),
+                  key=lambda tile: sim.labour.distance_to_tile_km(tile))
+        ok, message = sim.labour.move_base(far)
         self.assertTrue(ok, message)
         self.assertLess(household.capital, capital)
         self.assertLess(household.familiarity, 0.5)
@@ -116,8 +116,8 @@ class MoveBaseTests(unittest.TestCase):
 
     def test_move_refuses_unknown_and_same_tile(self):
         sim = _fresh_sim()
-        self.assertFalse(sim.move_base("atlantis_01")[0])
-        self.assertFalse(sim.move_base(sim.base_tile())[0])
+        self.assertFalse(sim.labour.move_base("atlantis_01")[0])
+        self.assertFalse(sim.labour.move_base(sim.labour.base_tile())[0])
 
     def test_move_command_and_typed_parser(self):
         command, error = parse_typed("move italia_01")
@@ -131,9 +131,9 @@ class MoveBaseTests(unittest.TestCase):
 
     def test_base_is_stored_on_the_household(self):
         sim = _fresh_sim()
-        target = next(tile for tile in sim.settlement_tiles() if tile != sim.base_tile())
+        target = next(tile for tile in sim.labour.settlement_tiles() if tile != sim.labour.base_tile())
         sim.state.household.capital = 1e9
-        sim.move_base(target)
+        sim.labour.move_base(target)
         self.assertEqual(sim.state.household.base_tile, target)
 
 
@@ -156,7 +156,7 @@ class TooSmallToStaffTests(unittest.TestCase):
         sim = _fresh_sim()
         _shrink_nation(sim, 200)
         sim.state.household.capital = 1e9
-        ok, message = sim.hire("smith", 5)
+        ok, message = sim.labour.hire("smith", 5)
         self.assertFalse(ok)
         self.assertIn("exist", message)
 

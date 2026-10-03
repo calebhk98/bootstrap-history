@@ -5,9 +5,9 @@ survives), 237 (failures say what failed, and which risk is live), 238
 objective)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import closure as _closure_of
-from sim.engine.proto.techtree import _node_explain
-from sim.engine.proto.state import _agent_state_founder
-from sim.engine.proto.economy import _agent_portfolio
+from sim.ui.proto.techtree import _node_explain
+from sim.ui.proto.state import _agent_state_founder
+from sim.ui.proto.economy import _agent_portfolio
 
 
 def _forgotten_sim(node_id, forgotten=True):

@@ -7,7 +7,7 @@ home technique in reach and no partner offers draws no household spending.
 """
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld
+from sim.engine.agents_port import SimWorld
 from sim.engine.goods_market_api import FOUNDER
 from sim.engine.market_demand import household_demand_by_material
 from sim.engine.state import ActorRecord
@@ -104,7 +104,7 @@ check("no home technique in reach and no partner offers pepper", market.offered_
       market.offered_by("pepper_kg"))
 prices = market.household_prices()
 check("so households are given no price for it", "pepper_kg" not in prices)
-per_hour = rome.money_per_labour_hour()
+per_hour = rome.labour.money_per_labour_hour()
 wanted = household_demand_by_material({material: price / per_hour for material, price in prices.items() if price > 0.0},
                                       rome._opening_population(), 550.0)
 check("and the need it served draws no spending on it", wanted.get("pepper_kg", 0.0) == 0.0, wanted.get("pepper_kg"))

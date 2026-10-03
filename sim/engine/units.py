@@ -87,7 +87,7 @@ def unit_context(sim: Any) -> Dict[str, float]:
     """The per-game numbers some units need; none for no game."""
     if sim is None:
         return {}
-    return {"hours_per_coin": 1.0 / sim.money_per_labour_hour()}
+    return {"hours_per_coin": 1.0 / sim.labour.money_per_labour_hour()}
 
 
 def unit_factor(spec: Mapping[str, Any], context: Mapping[str, float]) -> float:

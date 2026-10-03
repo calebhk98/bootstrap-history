@@ -28,6 +28,6 @@ Show both years until the hazard window and earliest completion time for each kn
 
 ## Where it lives
 
-Likely in `sim/engine/proto/state.py` or a dedicated hazard display module where risk/mitigation information is rendered.
+Likely in `sim/ui/proto/state.py` or a dedicated hazard display module where risk/mitigation information is rendered.
 
 **Confidence:** Design recommendation

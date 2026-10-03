@@ -1,4 +1,4 @@
-"""Regression tests for sim/world/transport.py.
+"""Regression tests for sim/geography/transport.py.
 
 Written as unittest.TestCase classes, like sim/tests/test_agriculture.py and
 sim/tests/test_demography.py, rather than the flat check()-at-import style
@@ -19,11 +19,11 @@ targets WITHOUT retuning anything to close a gap if one shows up - see that
 class and transport.py's own CALIBRATION TARGETS docstring section for the
 reading of where the two do and do not agree.
 
-sim/world/transport.py standalone: freight cost per tonne-km from animal metabolism, rolling resistance and gradient (unittest-style).
+sim/geography/transport.py standalone: freight cost per tonne-km from animal metabolism, rolling resistance and gradient (unittest-style).
 """
 import unittest
 
-from sim.world import transport
+from sim.geography import transport
 
 
 class RollingResistanceOrdersSurfacesTests(unittest.TestCase):

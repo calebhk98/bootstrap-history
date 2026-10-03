@@ -24,7 +24,7 @@ This is one of the most important facts in the civilization.
 
 ## WHERE IT LIVES
 
-`sim/engine/proto/render_screens_status.py` or main state screen rendering. Population change detection and alert priority logic.
+`sim/ui/proto/render_screens_status.py` or main state screen rendering. Population change detection and alert priority logic.
 
 ## Confidence
 
@@ -34,4 +34,4 @@ Design recommendation
 
 Related to BUG-001 (local labor market larger than surviving civilization), BUG-013 (event quantities impossible after demographic collapse), and UX-014 in the findings.
 
-**Resolved:** a one-year population fall past `DEMOGRAPHIC_EMERGENCY_DROP` (`sim/engine/proto/step_alerts.py`) adds `demographic_emergency` to the state reply, and the state screen leads with a DEMOGRAPHIC EMERGENCY banner. The working-age and wage-pressure figures the issue sketched are not shown. Test: `sim/tests/test_step_interrupts_and_alerts.py`.
+**Resolved:** a one-year population fall past `DEMOGRAPHIC_EMERGENCY_DROP` (`sim/ui/proto/step_alerts.py`) adds `demographic_emergency` to the state reply, and the state screen leads with a DEMOGRAPHIC EMERGENCY banner. The working-age and wage-pressure figures the issue sketched are not shown. Test: `sim/tests/test_step_interrupts_and_alerts.py`.

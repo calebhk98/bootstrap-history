@@ -2,8 +2,8 @@
 uses Sim.venture_real_earnings / venture_real_upkeep, and `ventures` shows
 the market-saturation line the `money` screen promises."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.render_typed import render_pretty
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.render_typed import render_pretty
+from sim.ui.proto.typed import parse_typed
 
 
 def _run(sim_state, text):

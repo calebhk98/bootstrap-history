@@ -1,9 +1,9 @@
 """Hazard, risk and score screens agree with what the engine applies: Complaints/194, 195, 196, 197, 198, 199, 200, 219."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import money_word
-from sim.engine.proto.render_screens_big import render_why
-from sim.engine.proto.render_screens_status import render_risk, render_score
-from sim.engine.proto.score import _score_achievements, score_report
+from sim.ui.proto.render_screens_big import render_why
+from sim.ui.proto.render_screens_status import render_risk, render_score
+from sim.ui.proto.score import _score_achievements, score_report
 
 
 class FixedDraws:
@@ -89,7 +89,7 @@ check("risk agrees with the completion message about the hedge",
 cash_sim = sim()
 cash_sim.state.household.capital = 50_000.0
 cash_sim.state.household.employees = {"clerk": 10.0}
-cash_sim._resync_pools()
+cash_sim.labour._resync_pools()
 cash_sim.rng = FixedDraws(0.0, *([0.0] * 60))
 log_before = len(cash_sim.log)
 cash_sim._shock_staff_loss({"name": "Test plague", "staff_loss": 0.3, "years": [100, 110]}, cash_sim.year)
@@ -129,7 +129,7 @@ national_sim.done_year[built_medical] = national_sim.year - 400
 national_sim._done_changed()
 national_sim.rng = FixedDraws(0.0, *([0.99] * 60))
 national_sim.state.household.employees = {"clerk": 10.0}
-national_sim._resync_pools()
+national_sim.labour._resync_pools()
 log_before = len(national_sim.log)
 national_sim._shock_staff_loss({"name": "Test plague", "staff_loss": 0.3, "years": [100, 110]}, national_sim.year)
 national_text = " ".join(message for _year, message in national_sim.log[log_before:])

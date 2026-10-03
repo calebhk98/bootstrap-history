@@ -1,6 +1,6 @@
 # One historical disaster should be one expandable event
 
-**Status:** closed - a disaster year folds its log lines into one event carrying them under `details` (sim/engine/proto/event_groups.py), printed as a headline with the consequences beneath it.
+**Status:** closed - a disaster year folds its log lines into one event carrying them under `details` (sim/ui/proto/event_groups.py), printed as a headline with the consequences beneath it.
 
 The 1519 invasion and the 410 Sack of Rome each manifested as several separate log entries: seizure, staff loss, project reset, knowledge loss, value changes, arrears, etc. Reconstructing "what just happened?" required scanning multiple entries.
 
@@ -26,7 +26,7 @@ Keep sub-events expandable for debugging.
 
 ## WHERE IT LIVES
 
-Event generation and rendering logic in `sim/engine/proto/render_screens_big.py` or `render_screens_status.py`. Event aggregation would likely be in `sim/engine/` event system or hazard-related modules.
+Event generation and rendering logic in `sim/ui/proto/render_screens_big.py` or `render_screens_status.py`. Event aggregation would likely be in `sim/engine/` event system or hazard-related modules.
 
 ## Confidence
 

@@ -15,7 +15,7 @@ because the purchase itself checks cash alone.
 Confirmed, both sides read directly, unchanged in substance from the
 player's report, only moved to different files during the module split.
 
-`_cmd_quote()` moved from `dispatch.py` to `sim/engine/proto/dispatch_money.py:369`.
+`_cmd_quote()` moved from `dispatch.py` to `sim/ui/proto/dispatch_money.py:369`.
 Its forest branch (`dispatch_money.py:377-392`):
 
     per = s.FOREST_COST_PER_HA * s.price_index

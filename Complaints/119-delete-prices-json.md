@@ -24,7 +24,7 @@ Deletion is complete only when all of these are true:
 
 ### 1. Replace the wage inputs (done)
 
-- [x] `sim/world/wages.py` is the wage provider: wage per hour is a subsistence
+- [x] `sim/labour/wages.py` is the wage provider: wage per hour is a subsistence
   floor times a training premium times a tightness factor. The floor is the
   cost of feeding a worker and dependants from the food model; the premium
   repays training years forgone (`training_years` in `data/world/trades.json`,
@@ -42,7 +42,7 @@ Deletion is complete only when all of these are true:
   of the book removed.
 
 What still limits it: only `Sim.update_wages` moves tightness, and
-`sim/engine/labour_allocation.py` reallocates non-farm hours toward their
+`sim/labour/labour_allocation.py` reallocates non-farm hours toward their
 current split rather than toward the need `update_wages` measures, so wages
 signal scarcity but hours do not yet answer. Feeding the need shares into
 `reallocate` closes that loop. The discount rate is a labelled default; a

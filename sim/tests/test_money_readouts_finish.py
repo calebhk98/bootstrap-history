@@ -1,9 +1,9 @@
 """money_readouts_finish: each preview and the action it previews call one
 function for the amount (Complaints 261, 216, 236, 210, 240, 212)."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.render_screens_big import render_state
-from sim.engine.proto.render_screens_economy import render_money
-from sim.engine.proto.state import _waiting_on
+from sim.ui.proto.render_screens_big import render_state
+from sim.ui.proto.render_screens_economy import render_money
+from sim.ui.proto.state import _waiting_on
 
 
 def _ask(test_sim, **command):
@@ -46,7 +46,7 @@ check("the train reply repeats the wage bill to come",
 too_many = _ask(sim(capital=1e8), cmd="quote", what="train", trade="machinist", n=500)
 check("quote train refuses more than the household can take and changes nothing",
       too_many.get("ok") is False and too_many.get("error"), too_many)
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto.typed import parse_typed
 check("typed 'quote train machinist 2' parses as a train quote",
       (parse_typed("quote train machinist 2")[0] or {}).get("what") == "train",
       parse_typed("quote train machinist 2"))

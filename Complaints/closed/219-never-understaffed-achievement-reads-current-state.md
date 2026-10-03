@@ -5,7 +5,7 @@
 At the end of the run `score` marked "no concern ever closed for want of staff" as achieved although the tester's
 reports show closures of 10 to 95 concerns in many years.
 
-Cause: `sim/engine/proto/score.py` (`_score_achievements`, `never_understaffed`) reads
+Cause: `sim/ui/proto/score.py` (`_score_achievements`, `never_understaffed`) reads
 `len(sim.shut_for_staff) == 0`. `shut_for_staff` (`sim/engine/core_properties.py`) is a view of `projects.closures` with reason
 "staff", and `projects_staffing.py` deletes the record when the concern reopens. So the achievement means "nothing is shut for staff at
 the moment you win", not "never". The function's own docstring says each achievement is "true of the WHOLE run".

@@ -1,10 +1,10 @@
 """What the founder sees of the interest groups the economy has made: who is organised, how
 many people they speak for, what they lost and to what, and what the state is doing about it.
 
-Methods of Sim. The groups themselves are actors (`sim/engine/actors/group.py`); this is the
+Methods of Sim. The groups themselves are actors (`sim/agents/group.py`); this is the
 reading side, plus the one prohibition check the start gate calls.
 """
-from .actors import supply
+from sim.agents.api import supply
 from .blockers import blocker_kind
 
 

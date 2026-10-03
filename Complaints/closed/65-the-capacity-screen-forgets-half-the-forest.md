@@ -36,7 +36,7 @@ charcoal short when `charcoal_kg` demand is high, even though `firewood_kg`
 demand (a different tag, same emp_key) is low.
 
 `_material_capacity_rows()` - the function behind the `capacity` command,
-`sim/engine/proto/economy.py:70-112` - does not do the equivalent:
+`sim/ui/proto/economy.py:70-112` - does not do the equivalent:
 
     for (emp_key, tag), need in by_tag.items():
         own = s._own_material_supply(tag)

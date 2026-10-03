@@ -1,7 +1,7 @@
 """Complaint 98: the goal screen shows system leverage, not only the prerequisite chain."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.proto import command_registry
+from sim.ui.proto import command_registry
 
 
 def ask(test_sim, **command):
@@ -17,7 +17,7 @@ check("the levers are literacy, labour, finance, institutions, knowledge and mat
 check("every lever shows a figure from the engine and what it unlocks",
       all(point.get("figures") and point.get("why_it_matters") for point in points.values()), points)
 check("labour reads the engine's director pool",
-      abs(points["labour"]["figures"]["directed_hours_this_year"] - test_sim.director_pool()) < 1, points["labour"])
+      abs(points["labour"]["figures"]["directed_hours_this_year"] - test_sim.labour.director_pool()) < 1, points["labour"])
 check("finance reads the engine's recurring net",
       abs(points["finance"]["figures"]["recurring_net_per_year"] - test_sim.recurring_net()) < 1, points["finance"])
 check("the reply says a broad approach can be cheaper without prescribing a route",

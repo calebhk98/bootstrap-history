@@ -59,7 +59,7 @@ class StaffingShortfallMixin:
         household = self.state.household
         own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
         slack = 0.0 if strict else self.STAFFING_CLOSURE_SLACK
-        allowances = {"scholars": self.effective_scholars() + slack,
+        allowances = {"scholars": self.labour.effective_scholars() + slack,
                       "craftsmen": household.artisans + own + slack}
         for trade in trades:
             allowances[trade] = household.employees.get(trade, 0.0) + (0.0 if strict else 0.01)

@@ -37,7 +37,7 @@ check("a standing allocation gets its project the hours it asked for, even "
 check("...and the higher-`order` project gets only what is left of the "
       "pool once the standing order has taken its share, not the whole "
       "pool first",
-      s.active[_kA]["hours_offered_this_year"] == s.director_pool() - 500.0,
+      s.active[_kA]["hours_offered_this_year"] == s.labour.director_pool() - 500.0,
       s.active[_kA]["hours_offered_this_year"])
 check("`portfolio`/`state` read the standing order back from the exact "
       "field step() wrote, never a second guess at it",
@@ -69,7 +69,7 @@ check("a directive bigger than a project's own calendar-floor pace only "
 check("...and the hours the directive could not place there are not lost: "
       "the other active project actually received them this same year",
       s.active[_kD]["hours_offered_this_year"]
-      == s.director_pool() - s.active[_kC]["hours_offered_this_year"],
+      == s.labour.director_pool() - s.active[_kC]["hours_offered_this_year"],
       s.active[_kD]["hours_offered_this_year"])
 _new = [message for _, message in s.log[_before:]]
 check("...and the player is told BY NAME that the directive could not be "
@@ -171,7 +171,7 @@ check("allocate accepts a standing work-for-wages order naming a trade",
 _rate_per_hour = (S.ANNUAL_WAGE.get("labourer", 375.0) / s.HOURS_PER_PERSON_YEAR
                  * s.price_index * s.wage_index
                  * (1.0 + min(0.5, s.reputation / 200.0)))
-_pay_by_hand, _err = s.work_for_wages("labourer", 40.0)
+_pay_by_hand, _err = s.labour.work_for_wages("labourer", 40.0)
 s.step()
 check("a standing work order tops up to the full directive rather than "
       "selling it twice on top of hours already sold by hand this year",

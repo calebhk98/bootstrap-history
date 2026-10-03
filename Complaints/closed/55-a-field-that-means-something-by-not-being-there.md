@@ -2,7 +2,7 @@
 
 **Status:** closed - the eight fields are declared on their state dataclasses (counters start at a real zero, the rest at None), read by plain attribute access, and guarded by test_household_never_happened_fields.
 
-`sim/engine/actors/household.py` says this about itself, in its own class
+`sim/agents/household.py` says this about itself, in its own class
 docstring:
 
     A NOTE ON WHAT IS *ABSENT* HERE, NOT JUST WHAT IS SET: several fields
@@ -18,7 +18,7 @@ Eight fields work this way. The file names them:
     insolvent_years, wage_hours_this_year, _said_deputies, _said_scandal,
     last_withdrawal, _said_near_limit, _said_autoopen, _said_parallelism
 
-They are the members of `SAVE_FIELDS` (`sim/engine/proto/saveload.py`) for
+They are the members of `SAVE_FIELDS` (`sim/engine/saveload.py`) for
 which absence is load-bearing, and the constructor deliberately leaves them
 out, while the seven trackers listed immediately below them in the same
 constructor DO get real starting values, precisely because they are not in

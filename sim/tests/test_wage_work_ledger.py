@@ -42,7 +42,7 @@ _wage = _standing_money.get("wage_work_last_year") or {}
 check("a standing `allocate work` order also appears in `money` after the step",
       _wage.get("hours", 0) > 0 and _wage.get("wage_income", 0) > 0, _wage)
 
-from sim.engine.proto.render_screens_economy import render_money
+from sim.ui.proto.render_screens_economy import render_money
 _text = render_money(_standing_money)
 check("the money text shows the wage rows and no longer claims the rows "
       "add up to revenue while omitting wages",

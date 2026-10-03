@@ -21,6 +21,6 @@ This is much more actionable than a generic "you know how to run 6 more concerns
 
 ## Where it lives
 
-Likely in `sim/engine/proto/state.py` where the main state summary is built, and `sim/engine/projects_staffing.py` where specialist requirements are tracked.
+Likely in `sim/ui/proto/state.py` where the main state summary is built, and `sim/engine/projects_staffing.py` where specialist requirements are tracked.
 
 **Confidence:** Design recommendation

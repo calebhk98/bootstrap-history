@@ -119,7 +119,7 @@ the exact numbers above are quoted from the equestrian run.)
         return False, (("needs %d trained scholars, you have %.1f (you are
                         one of them). %s" % ...))
 
-`effective_scholars()` (`sim/engine/labour.py:1674`) is
+`effective_scholars()` (`sim/labour/labour.py:1674`) is
 `self.household.scholars + (1.0 if self.founder_alive else 0.0)` - a pure
 headcount of standing employees plus the founder. It does not read
 `self.household.contract_hours` at all, so hours bought under `commission()`
@@ -153,7 +153,7 @@ exactly the asymmetry the artisan fix's own comment describes but never
 extended to the other trade family.
 
 **Not fixed here, per instructions** - scope for this trace was
-`sim/engine/cli.py` and `sim/engine/data.py` only, and this bug lives in
+`sim/ui/cli.py` and `sim/engine/data.py` only, and this bug lives in
 neither. The fix, when someone takes it, is likely small and has a working
 precedent to copy: give `effective_scholars()` (or a new
 `effective_scholars_available()` used only at this gate, if scholars should

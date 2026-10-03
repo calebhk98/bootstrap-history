@@ -3,7 +3,7 @@ added capacity earns more than the capital costs expands, an entrant expects wha
 and a market that stops growing stops gaining capacity and firms."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.actors import SimWorld
+from sim.engine.agents_port import SimWorld
 
 import copy
 import json
@@ -11,7 +11,7 @@ import os
 import random
 import tempfile
 
-from sim.engine.protocol import load_state, save_state
+from sim.ui.protocol import load_state, save_state
 from sim.engine.state import ActorRecord  # noqa: F401
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()

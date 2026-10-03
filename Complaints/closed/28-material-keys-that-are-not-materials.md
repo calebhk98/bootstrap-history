@@ -108,7 +108,7 @@ one batch burns.
 valuation (8 people at the 1000 denarii/head `data/prices.json` already
 carried) now sits in `cap` (2000 to 10000) instead, since acquiring people is
 a one-time capital outlay, not a material - exactly how `buy_slaves()` in
-`sim/engine/labour.py` already treats the identical transaction (a straight
+`sim/labour/labour.py` already treats the identical transaction (a straight
 `household.capital` deduction, no `lab` hours). This node has NO branch
 source at all - it is a `"_src": "core"` node, one of the ones that predate
 `data/branches/` - so the edit went into `data/tech_tree.json` directly,

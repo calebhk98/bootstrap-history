@@ -8,7 +8,8 @@ Standalone: reads data files only, never the engine.
 """
 from typing import Any, Dict, Optional
 
-from sim.world import deposits, tile_lookup
+from sim.world import deposits
+from sim.geography.api import tile_lookup
 
 
 def regional_mineral_shares(

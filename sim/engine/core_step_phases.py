@@ -67,7 +67,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                         self.state.household.employees[trade] = self.state.household.employees.get(trade, 0.0) + count
                         self.state.household.log.append((self.state.scenario.year, "%g %s%s finish their training"
                                          % (count, trade, "s" if count != 1 else "")))
-                        self._resync_pools()
+                        self.labour.resync_pools()
                     else:
                         # They are trained now, so _resync_pools counts them
                         # from the people you actually hold - see the note
@@ -82,7 +82,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             # learning off this very list, so recomputing while the matured row
             # was still on it cost a whole extra year of everybody's time.
             self.state.household.training = still
-            self._resync_pools()
+            self.labour.resync_pools()
 
     def _step_dated_shocks(self):
         # 3. dated shocks
@@ -121,12 +121,12 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             def _market_supply(trade):
                 value = _ms_memo.get(trade)
                 if value is None:
-                    value = _ms_memo[trade] = self.market_supply(trade)
+                    value = _ms_memo[trade] = self.labour.market_supply(trade)
                 return value
             def _trade_avail(trade):
                 value = _ta_memo.get(trade)
                 if value is None:
-                    value = _ta_memo[trade] = self.trade_available(trade)
+                    value = _ta_memo[trade] = self.labour.trade_available(trade)
                 return value
             # Anything already in hand that has lost its trade comes FIRST: those
             # projects are burning a slot and will be halted if nobody turns up.
@@ -188,7 +188,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                     value = _gone_memo[trade] = (
                         not _trade_avail(trade)
                         or (_market_supply(trade) <= 0.0
-                            and self._trade_headcount_pending(trade) <= 0.0))
+                            and self.labour.trade_headcount_pending(trade) <= 0.0))
                 return value
             for node_id in self.order:
                 if node_id in self.state.projects.done or node_id in self.state.projects.active:
@@ -226,13 +226,13 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             _tr_upkeep = self.upkeep()
             _spare_tr = _tr_rev - _tr_upkeep - self.living_cost(_rev=_tr_rev, _upkeep=_tr_upkeep)
             for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
-                _wages = 2.0 * self.labour_market.quote_annual(trade_id)
+                _wages = 2.0 * self.labour.market.quote_annual(trade_id)
                 _budget = (max(0.0, _spare_tr) + max(0.0, self.state.household.capital) * 0.10
                            if _score >= 500 else max(0.0, _spare_tr) * 0.5)
                 if _wages > _budget:
                     continue
                 _first = trade_id not in self.state.household.trades_created
-                taught, _msg = self.train(trade_id, 2)
+                taught, _msg = self.labour.train(trade_id, 2)
                 # THE COOLDOWN IS ON TEACHING, NOT ON TRYING. Recording the
                 # attempt meant a refusal - no room in the household, no hours
                 # left, nobody to teach from - burned the trade's whole
@@ -264,11 +264,11 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             _already = self.state.household.wage_hours_this_year
             _want = max(0.0, _wd - _already)
             if _want > 0.5:
-                _room = max(0.0, self.director_pool() - self.director_hours_committed())
+                _room = max(0.0, self.labour.director_pool() - self.labour.director_hours_committed())
                 _take = min(_want, _room)
                 _got = 0.0
                 if _take > 0.5:
-                    _pay, _werr = self.work_for_wages(self.state.household.work_trade, _take)
+                    _pay, _werr = self.labour.work_for_wages(self.state.household.work_trade, _take)
                     # pay > 0 with an error is a WARNING (a bad trade, or
                     # starving an active project of its last hours), not a
                     # refusal - see work_for_wages's own docstring. The sale
@@ -309,7 +309,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         if (not self.manual and remaining > self.WAGE_FALLBACK_MIN_HOURS
                 and (self.state.household.capital < self.living_cost() * self.WAGE_FALLBACK_LIVING_COST_YEARS
                      or not self.state.projects.active)):
-            trade = ("scholar" if self.effective_scholars() >= 1 else "scribe")
+            trade = ("scholar" if self.labour.effective_scholars() >= 1 else "scribe")
             hours = min(remaining, self.WAGE_FALLBACK_MAX_HOURS)
             # ONLY IF IT PAYS BETTER THAN THE PRACTICE IT DISPLACES. Wage hours
             # now cost you the share of your practice they were sold out of
@@ -324,14 +324,14 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             # against the WHOLE year instead of against the project budget,
             # letting a year's hours add up to more than what was actually
             # available.
-            year_hours = max(1.0, self.director_pool())
+            year_hours = max(1.0, self.labour.director_pool())
             practice_lost = self.revenue() * (hours / year_hours) * (
                 1.0 if self.practice_attention() > 0 else 0.0)
-            rate = (self.labour_market.quote_annual(trade) / self.HOURS_PER_PERSON_YEAR
+            rate = (self.labour.market.quote_annual(trade) / self.HOURS_PER_PERSON_YEAR
                     * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP,
                                  self.state.household.reputation / self.WAGE_REPUTATION_BONUS_SCALE)))
             if hours * rate > practice_lost:
-                _, err = self.work_for_wages(trade, hours)
+                _, err = self.labour.work_for_wages(trade, hours)
                 # Kept in step with `remaining` so hours_this_year (below) does
                 # not count hours sold for wages here as still unused.
                 if err is None:
@@ -362,7 +362,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         # breakdown as `hours_this_year` in `state` rather than only a
         # final hours-left figure with no way to tell where the rest went.
         self.hours_this_year = {
-            "available": round(self.director_pool(), 1),
+            "available": round(self.labour.director_pool(), 1),
             "wage_work": round(self.state.household.wage_hours_this_year, 1),
             "teaching": round(self.state.household.teaching_hours_this_year, 1),
             "moving": round(self.state.household.relocation_hours_this_year or 0.0, 1),
@@ -378,7 +378,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         }
         # Reset AFTER the progress pass above, which is where the hours you sold
         # are subtracted from the hours you have left to direct.
-        self.close_wage_year()
+        self.labour.close_wage_year()
         # Contracted work is bought for a year and expires with it: hours you
         # paid a shop for in 142 are not still sitting there in 143.
         self.state.household.contract_hours = {}
@@ -496,7 +496,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         if self.state.household.bondage_years_left > 0:
             self.state.household.bondage_years_left -= 1
             paid = (self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE
-                    * self.BONDAGE_WAGE_MARKUP * self.labour_market.quote("labourer"))
+                    * self.BONDAGE_WAGE_MARKUP * self.labour.market.quote("labourer"))
             self.state.household.bondage_debt = max(0.0, self.state.household.bondage_debt - paid)
             if self.state.household.bondage_debt <= 0 and self.state.household.bondage_years_left > 0:
                 self.state.household.bondage_years_left = 0     # paid early

@@ -37,7 +37,7 @@ them.
 Several domain-specific links already exist and work, per the playtest: the
 Mexica literacy run saw the literacy ceiling respond to agricultural
 mechanisation through `agrarian_slack()`, and actual literacy responded to
-operating schools and later printing. `sim/engine/labour.py`'s
+operating schools and later printing. `sim/labour/labour.py`'s
 `wage_cost_factors()` already builds the wage from food/housing/tool-input
 scarcity, independent of the price solver, per `docs/architecture/STATE_OF_
 THE_PROJECT.md`'s Milestone 5 entry. What does not yet exist: a domain-

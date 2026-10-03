@@ -60,7 +60,7 @@ for _name, _quote_args, _action, _action_args, _key in _ROWS:
           (_charged, _quote.get(_key)))
 
 # Every buy target is in the table (manumit costs nothing and is quoted as free).
-from sim.engine.proto.buy_targets import BUY_TARGETS as _BUY_TARGETS  # noqa: E402
+from sim.ui.proto.buy_targets import BUY_TARGETS as _BUY_TARGETS  # noqa: E402
 _covered = {row[3].get("what") for row in _ROWS if row[2] == "buy"}
 _uncovered = [target for target in _BUY_TARGETS if target not in _covered | {"manumit"}]
 check("every buy target has a row in the quote-equals-charge table",

@@ -3,9 +3,9 @@ must not pay for rewriting the whole save, and writing a save must not go
 through the slow pure-Python JSON encoder. Counted work, not clock time."""
 from .harness import *  # noqa: F401,F403
 import json.encoder as _json_encoder
-import sim.engine.proto.saveload as _saveload
-from sim.engine.proto.saveload import save_state, load_state
-from sim.engine.cli_interactive import _play_run_one_command
+import sim.engine.saveload as _saveload
+from sim.engine.saveload import save_state, load_state
+from sim.ui.cli_interactive import _play_run_one_command
 
 
 def _running_venture_sim():
@@ -92,7 +92,7 @@ check("a save is a handful of lines, not one line per value", save_line_count < 
 
 # --- imitation scan: the society's baseline knowledge is read once per scan,
 # --- not once per invention per actor ---------------------------------------
-from sim.engine.actors import SimWorld
+from sim.engine.agents_port import SimWorld
 from sim.engine.state import ActorRecord
 
 scan_sim = sim(capital=1e9)

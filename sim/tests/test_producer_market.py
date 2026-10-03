@@ -95,7 +95,7 @@ class MarketKnowsNothingOfTheTreeTests(unittest.TestCase):
             leaked = self.imported(path) & set(self.TREE_MODULES)
             self.assertFalse(leaked, "%s imports %s" % (path, sorted(leaked)))
             self.assertNotIn("sim.engine", open(os.path.join(ROOT, path)).read().replace(
-                "sim.engine.protocol", "") if path in self.PURE else "")
+                "sim.ui.protocol", "") if path in self.PURE else "")
 
     def test_market_modules_never_name_tree_things(self):
         for path in self.PURE + self.ENGINE_MARKET:

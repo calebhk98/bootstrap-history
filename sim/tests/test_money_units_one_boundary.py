@@ -42,7 +42,7 @@ def reference_concern(sim):
 
 
 def labourer_annual_wage(sim):
-    return sim.wage_schedule().annual_wage("labourer")
+    return sim.labour.wage_schedule().annual_wage("labourer")
 
 
 def takings_per_wage(sim, node_id):
@@ -71,7 +71,7 @@ class RevenueIsInTheCivilisationsCoin(unittest.TestCase):
     def test_node_revenue_in_labour_hours_is_the_same_in_every_civilisation(self):
         sims = {name: build(data.load_civ(name)) for name in ALL_CIVS}
         node_id = reference_concern(sims["rome_100ad"])
-        hours = {name: sim.nodes[node_id]["rev"] / sim.wage_schedule().money_per_labour_hour
+        hours = {name: sim.nodes[node_id]["rev"] / sim.labour.wage_schedule().money_per_labour_hour
                  for name, sim in sims.items()}
         for name, value in hours.items():
             self.assertAlmostEqual(value, hours["rome_100ad"],
@@ -103,9 +103,9 @@ class MaterialPricesAreInHours(unittest.TestCase):
         prices, heavier_prices = rome._material_prices(), heavier._material_prices()
         checked = 0
         for material in sorted(prices):
-            expected = prices[material] / rome.wage_per_hour("labourer")
+            expected = prices[material] / rome.labour.wage_per_hour("labourer")
             self.assertAlmostEqual(
-                heavier_prices[material] / heavier.wage_per_hour("labourer"),
+                heavier_prices[material] / heavier.labour.wage_per_hour("labourer"),
                 expected, delta=1e-6 * max(expected, 1e-9), msg=material)
             checked += 1
         self.assertGreater(checked, 100)
@@ -175,7 +175,7 @@ class CoinMassRescalesEveryFigure(unittest.TestCase):
             "revenue": lambda sim: sim.revenue(),
             "wheat": lambda sim: sim._material_prices()["wheat_kg"],
             "forest per hectare": lambda sim: sim.FOREST_COST_PER_HA,
-            "slave base price": lambda sim: sim.SLAVE_BASE_PRICE,
+            "slave base price": lambda sim: sim.labour.SLAVE_BASE_PRICE,
             "node upkeep": lambda sim: sim.nodes[node_id]["up"],
             "node capital": lambda sim: sim.nodes[node_id]["cap"],
         }

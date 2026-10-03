@@ -1,8 +1,8 @@
 """Regression coverage for complaints 192, 193, 206, 213, 217 and 232: finding things
 and reading replies. Searches never reach beyond what a player may see."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.typed import parse_typed
-from sim.engine.proto import tree_filters as _tree_filters
+from sim.ui.proto.typed import parse_typed
+from sim.ui.proto import tree_filters as _tree_filters
 
 _SIMULATOR = os.path.join(HERE, "simulator.py")
 
@@ -139,7 +139,7 @@ check("236.4: the poor_scholar kit does not claim a few months",
 check("236.5: the absurd kit description has no patch history",
       "used to" not in _KITS["absurd"]["desc"], _KITS["absurd"]["desc"])
 check("236.9: player text does not name internal functions",
-      "funding_capacity" not in open(os.path.join(HERE, "engine", "proto", "dispatch_ventures.py")).read().split("what_this_means")[1].split("%")[0])
+      "funding_capacity" not in open(os.path.join(HERE, "ui", "proto", "dispatch_ventures.py")).read().split("what_this_means")[1].split("%")[0])
 _ventures = proto([{"cmd": "ventures", "closed": True}], civ="han_china_100ad", kit="poor_scholar")[0][-1]
 check("236.11: 'ventures closed' says what it shows instead of silently ignoring the word",
       "closed" in json.dumps(_ventures).lower(), list(_ventures))

@@ -4,10 +4,10 @@ material_freight_factor, and their effect on material_price_factor().
 
 Uses the flat check()-at-import style most topics use (see harness.py),
 because this exercises a live Sim through the engine, unlike sim/tests/
-test_transport.py, which tests sim/world/transport.py entirely standalone
+test_transport.py, which tests sim/geography/transport.py entirely standalone
 (see that module's own docstring for why it is written differently).
 
-WHAT THIS GUARDS. sim/world/transport.py derives freight cost per tonne-km
+WHAT THIS GUARDS. sim/geography/transport.py derives freight cost per tonne-km
 from animal metabolism and road physics but had nothing in the engine
 calling it (see docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md's
 milestone table, "partly built, none wired"). These checks pin the crossing
@@ -24,7 +24,7 @@ Wires transport.py into economy.py through a live Sim and geography mineral tabl
 """
 from .harness import *  # noqa: F401,F403
 
-from sim.world import transport as _transport
+from sim.geography import transport as _transport
 from sim.engine.data import haversine_km
 
 # =============================================================================
@@ -75,12 +75,12 @@ check("...so the SAME node cost calculation prices coal higher for a "
 # real lat/lon in data/world/geography.json - not a number this crossing
 # made up for the occasion (CLAUDE.md SS3.1).
 # =============================================================================
-_home_lat, _home_lon = s_mexica._home_centroid
-_candidates = [region_id for region_id, region in s_mexica._regions.items()
+_home_lat, _home_lon = s_mexica.geography.home_centroid
+_candidates = [region_id for region_id, region in s_mexica.geography.regions.items()
                if float((region.get("minerals") or {}).get("coal", 0.0)) > 0.0]
 _expected_km = min(
     haversine_km(_home_lat, _home_lon,
-                 s_mexica._regions[_rid]["lat"], s_mexica._regions[_rid]["lon"])
+                 s_mexica.geography.regions[_rid]["lat"], s_mexica.geography.regions[_rid]["lon"])
     for _rid in _candidates)
 check("the freight distance matches an independent haversine calculation "
       "against geography.json's own region coordinates, to the metre",
@@ -98,7 +98,7 @@ _inputs = _transport.draught_freight_physical_inputs(
     _transport.OX, int(s_mexica.LAND_FREIGHT_TEAM_SIZE),
     _transport.CART, _transport.DIRT_TRACK)
 _feed_price = s_mexica._material_price_per_kg(s_mexica.FREIGHT_FEED_PRICE_MATERIAL)
-_wage = s_mexica.wage_per_hour(s_mexica.FREIGHT_DRIVER_WAGE_TRADE)
+_wage = s_mexica.labour.wage_per_hour(s_mexica.FREIGHT_DRIVER_WAGE_TRADE)
 _expected_denarii_per_tonne_km = s_mexica.land_freight_money_per_tonne_km()
 _running_denarii_per_tonne_km = (_inputs.feed_kg_per_tonne_km * _feed_price
                                  + _inputs.driver_hours_per_tonne_km * _wage)

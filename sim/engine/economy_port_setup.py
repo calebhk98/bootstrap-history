@@ -11,7 +11,8 @@ import os
 from sim.economy import households, taxes, tile_costs
 from sim.economy.currency import currency_from_coin_standard
 from sim.economy.setup import EconomySetup, TradeSpec, goods_specs
-from sim.world import demand, land, settlement
+from sim.world import demand, land
+from sim.geography.api import settlement
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
 FREIGHT_MODE_OF_CARRIER = {"cart": tile_costs.DRAUGHT_MODE, "caravan": tile_costs.PACK_MODE,

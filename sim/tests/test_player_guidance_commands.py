@@ -23,15 +23,15 @@ check("available says what standing staff a project needs",
 # anything under contract included - so on turn one, when the founder can do a
 # one-craftsman job themselves, nothing is starred. A break tester read "* means
 # the work waits" beside projects that built at full speed with nobody hired.
-from sim.engine.protocol import _short_of_staff
+from sim.ui.protocol import _short_of_staff
 _s_star = sim()
 check("...and marks exactly the ones the start gate would refuse for staff",
       all(bool(row.get("short_of_staff"))
-          == (NODES[row["id"]]["art"] > _s_star.craft_hands_available() + 1e-9
-              or NODES[row["id"]]["sch"] > _s_star.effective_scholars() + 1e-9)
+          == (NODES[row["id"]]["art"] > _s_star.labour.craft_hands_available() + 1e-9
+              or NODES[row["id"]]["sch"] > _s_star.labour.effective_scholars() + 1e-9)
           for row in _rows),
       [(row["id"], row.get("short_of_staff"), NODES[row["id"]]["art"],
-        _s_star.craft_hands_available()) for row in _rows][:3])
+        _s_star.labour.craft_hands_available()) for row in _rows][:3])
 _big = [node_id for node_id in sorted(NODES) if NODES[node_id]["art"] > 20][:1]
 if _big:
     check("...and a job wanting twenty craftsmen IS starred on turn one",
@@ -40,7 +40,7 @@ _av2, _, _ = proto([{"cmd": "available", "find": "zzzznosuchthing"}])
 check("a search that matches nothing says so instead of printing '1-0'",
       _av2[0].get("nothing_matched") and "1-0" not in str(_av2[0].get("showing")),
       _av2[0].get("showing"))
-from sim.engine.protocol import render_pretty as _RP
+from sim.ui.protocol import render_pretty as _RP
 _pretty = _RP("available", _av2[0])
 check("...and the empty result prints no column headings over no rows",
       "COST" not in _pretty and "matches" in _pretty, _pretty[:120])
@@ -61,7 +61,7 @@ check("why states that a prerequisite must be finished, and stays finished",
 # learn how far along the road they had died.
 s_fin = sim()
 s_fin.year = 600
-from sim.engine.protocol import final_report as _FRPT, render_final as _RF
+from sim.ui.protocol import final_report as _FRPT, render_final as _RF
 _fr = _FRPT(s_fin, NODES)
 check("the end of a run reports how far along the road it got",
       _fr.get("the_whole_road_was", 0) > 100

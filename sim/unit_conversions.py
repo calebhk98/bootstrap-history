@@ -76,7 +76,7 @@ WHAT DOES NOT BELONG HERE. A conversion used at exactly one call site,
 where a bare literal is already perfectly readable and does not repeat
 anywhere else, does not need to move here just because it happens to be a
 unit conversion - this task's own report names two examples deliberately
-left alone: sim/world/transport.py's GRAVITATIONAL_ACCELERATION_M_PER_S2
+left alone: sim/geography/transport.py's GRAVITATIONAL_ACCELERATION_M_PER_S2
 (already its own `declare()`, next to the one function that uses it, and
 not touched by this module) and a rounding-to-the-nearest-hundred step in
 sim/engine/economy_freight.py's own nitre-bed sizing, which divides and
@@ -84,7 +84,7 @@ re-multiplies by 100 to pick a round purchase quantity rather than to
 convert a fraction to a percentage - the same number, a different job,
 and CLAUDE.md's own naming section makes the identical argument for
 identifiers generally. Formatting widths, retry counts and "how many rows
-to show" are a different kind of number entirely - see sim/presentation.py
+to show" are a different kind of number entirely - see sim/ui/presentation.py
 for those - and neither belongs on kind="physical_constant" just because
 both are inputs to arithmetic.
 
@@ -184,7 +184,7 @@ KILOGRAMS_PER_GRAM = declare(
     confidence="A",
     why="Turns a *_g-suffixed quantity into a kilogram-equivalent by "
         "MULTIPLICATION - the direction sim/world/demand.py's and "
-        "sim/world/labour_market.py's own (until this task, independently "
+        "sim/labour/labour_market.py's own (until this task, independently "
         "declared) _KG_EQUIVALENT_PER_UNIT_SUFFIX dictionaries already "
         "used, mapping a material key's unit suffix to the multiplier that "
         "makes every material comparable by mass regardless of which unit "
@@ -200,7 +200,7 @@ METERS_PER_KILOMETER = declare(
     unit="m/km",
     source="SI definition: 1 km = 1000 m, exact.",
     confidence="A",
-    why="sim/world/transport.py's freight physics work in SI base units "
+    why="sim/geography/transport.py's freight physics work in SI base units "
         "(newtons, joules, metres) internally because that is what the "
         "tractive-force and lifting-work equations are stated in, but "
         "every route this project prices is a distance in kilometres - "

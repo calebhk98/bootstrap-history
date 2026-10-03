@@ -9,8 +9,8 @@ class ProjectStartPhaseMixin:
 
     def _step_start_projects(self):
         # 4b. start new projects
-        pool = max(0.0, self.director_pool() - self.director_hours_committed())
-        hired_left = self.hired_cap()
+        pool = max(0.0, self.labour.director_pool() - self.labour.director_hours_committed())
+        hired_left = self.labour.hired_cap()
         # MANUAL MODE STOPS HERE. This loop is "the optimizer": it walks
         # `order` and starts whatever it judges best, which is exactly the
         # behaviour a free-choice player must NOT get. The old `play` command
@@ -30,7 +30,7 @@ class ProjectStartPhaseMixin:
             # payments, so everything crawls and nothing finishes. Spreading
             # a fixed budget across more work is not more work.
             max_active = int(self.MAX_ACTIVE_PROJECTS_BASE
-                             + self.director_pool() / self.MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS
+                             + self.labour.director_pool() / self.MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS
                              + self.state.household.scholars / self.MAX_ACTIVE_PROJECTS_PER_SCHOLAR
                              + self.state.household.artisans / self.MAX_ACTIVE_PROJECTS_PER_ARTISAN)
             # EARN A LIVING FIRST: now that a project must actually be paid
@@ -217,7 +217,7 @@ class ProjectStartPhaseMixin:
                 # Iron and the base metals are smelted with charcoal, so the
                 # ore is only half the answer.
                 if self.state.economy.binding in ("iron", "copper", "lead"):
-                    self.buy_forest(min(200.0, self.state.household.capital / self.book_money(1800.0)))
+                    self.buy_forest(min(200.0, self.state.household.capital / self.labour.book_money(1800.0)))
             elif (self.state.economy.binding == "saltpetre"
                     and self.state.founder.policy.get("auto_mine", not self.manual)):
                 # GATED, like every other automatic purchase: ungated, this
@@ -234,7 +234,7 @@ class ProjectStartPhaseMixin:
                 #
                 # The shortage is real and unresolved; more money is not the
                 # answer to it.
-                spend = min(self.state.household.capital * 0.05, self.book_money(2000.0))
+                spend = min(self.state.household.capital * 0.05, self.labour.book_money(2000.0))
                 self.state.household.debit(spend, "nitre beds laid down")
                 self.state.economy.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
                 automation_audit.record(

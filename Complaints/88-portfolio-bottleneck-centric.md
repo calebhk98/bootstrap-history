@@ -26,7 +26,7 @@ Let the player drill into the projects consuming each bottleneck to pause, repri
 
 ## Where it lives
 
-Likely in `sim/engine/proto/dispatch.py` and `sim/engine/proto/render_screens_economy.py` where the portfolio command is rendered.
+Likely in `sim/ui/proto/dispatch.py` and `sim/ui/proto/render_screens_economy.py` where the portfolio command is rendered.
 
 **Confidence:** Design recommendation
 

@@ -4,7 +4,7 @@ A player of this game who is itself an AI agent asked for "an explicit
 agent-oriented compact mode that can return highly structured state without
 losing the human-readable explanations... I wouldn't rush to remove the
 prose." This tests the two pieces that answer it, both confined to
-sim/engine/proto/*.py:
+sim/ui/proto/*.py:
 
   'json'    - a PRESENTATION switch, generalised from three commands
               (state/risk/portfolio) to every command a typed line can
@@ -15,7 +15,7 @@ sim/engine/proto/*.py:
               'compact' are two different fields rather than one spelled
               two ways.
   'compact' - a SHORT SUMMARY of the reply on 'state', 'step', 'why' and
-              'stuck' (see sim/engine/proto/compact.py): only the fields a
+              'stuck' (see sim/ui/proto/compact.py): only the fields a
               turn needs, far smaller than 'json' and than the text screen.
               Implies 'json'. Complaints/169.
 
@@ -35,11 +35,11 @@ from .harness import *  # noqa: F401,F403
 # of the engine is in on any given day in this shared checkout.
 # ===========================================================================
 
-from sim.engine.proto.typed import parse_typed as _PT, _split_json_flag
-from sim.engine.proto.dispatch import _add_compact_fields
-from sim.engine.proto.compact import compact_why as _compact_why
-from sim.engine.proto.compact import compact_state as _compact_state
-from sim.engine.proto.compact import compact_stuck as _compact_stuck
+from sim.ui.proto.typed import parse_typed as _PT, _split_json_flag
+from sim.ui.proto.dispatch import _add_compact_fields
+from sim.ui.proto.compact import compact_why as _compact_why
+from sim.ui.proto.compact import compact_state as _compact_state
+from sim.ui.proto.compact import compact_stuck as _compact_stuck
 
 
 # --- the three commands that already had their own hand-rolled 'json' scan
@@ -334,7 +334,7 @@ check("typed 'why <id> compact' end to end gives the same blocked_by",
 # vocabulary.
 # ===========================================================================
 import inspect
-from sim.engine.proto import dispatch as _dispatch_mod
+from sim.ui.proto import dispatch as _dispatch_mod
 
 _dispatch_src = inspect.getsource(_dispatch_mod._agent_dispatch)
 _i_money = _dispatch_src.index("_localise_money")

@@ -1,8 +1,8 @@
 """Complaint 294: an actor can mark a planned project and savings target; `stuck` respects it."""
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.proto.typed import parse_typed
-from sim.engine.proto.render_typed import _RENDERERS
+from sim.ui.proto.typed import parse_typed
+from sim.ui.proto.render_typed import _RENDERERS
 
 
 def ask(test_sim, **command):

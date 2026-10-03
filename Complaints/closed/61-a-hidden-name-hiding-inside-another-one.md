@@ -101,9 +101,9 @@ command whose structured/JSON fields are *not* passed through `fog_scrub`
 at all). What I can confirm structurally: `fog_scrub` itself is called from
 only two files in the whole protocol layer -
 
-    grep -rln "fog_scrub(" sim/engine/proto/*.py
-    sim/engine/proto/state.py
-    sim/engine/proto/techtree.py
+    grep -rln "fog_scrub(" sim/ui/proto/*.py
+    sim/ui/proto/state.py
+    sim/ui/proto/techtree.py
 
 three call sites total. Every other command's JSON response is not passed
 through this function at all, so any command that echoes a raw prerequisite

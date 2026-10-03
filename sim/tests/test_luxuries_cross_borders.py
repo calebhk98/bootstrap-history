@@ -12,7 +12,7 @@ from functools import partial
 sim = partial(sim, agent_economy=False)   # these checks pin the engine's own yearly material market
 
 
-from sim.engine import crop_climate
+from sim.geography import crop_climate
 from sim.engine import foreign_economies as _foreign_module
 from sim.engine.data import goods_provenance, load_civ
 from sim.engine.prices import default_production_entries
@@ -59,10 +59,10 @@ check("...and refuses one that holds none",
 check("an entry that names no classes grows anywhere",
       crop_climate.territory_suits({}, {"Csa"}), None)
 check("a territory's classes follow its home regions' tiles",
-      "Csa" in crop_climate.territory_classes(HOME) and "Aw" not in crop_climate.territory_classes(HOME), None)
+      "Csa" in crop_climate.territory_classes(load_civ(HOME)["home_regions"]) and "Aw" not in crop_climate.territory_classes(load_civ(HOME)["home_regions"]), None)
 check("the pepper entry names tropical classes and the home territory has none",
       entries["pepper_kg"]["grown_in_climate_classes"]
-      and not crop_climate.entry_grows_in(entries["pepper_kg"], HOME), None)
+      and not crop_climate.entry_grows_in(entries["pepper_kg"], load_civ(HOME)["home_regions"]), None)
 provenance = goods_provenance(frozenset(rome_techs), civilization_id=HOME)
 check("a crop the home climate cannot grow is not solved at home, but still priced",
       provenance.get("cassia_kg") not in (None, "solved"), provenance.get("cassia_kg"))

@@ -101,7 +101,7 @@ ignore = [
 #
 #   ARG (unused-function-argument; 178 findings, dominated by ARG001).
 #   Measured: the great majority are `def cmd_something(a):` in
-#   sim/engine/cli.py and sim/engine/proto/ - every CLI command handler is
+#   sim/ui/cli.py and sim/ui/proto/ - every CLI command handler is
 #   called through one dispatcher with a fixed `(a)` signature, so a handler
 #   that does not read its own argparse namespace is not a bug, it is the
 #   uniform shape the dispatcher requires. Same "one deliberate decision"
@@ -141,9 +141,9 @@ ignore = [
 # names so that `import simulator` keeps giving callers what it always gave
 # them, so an "unused" import there is the file doing its job.
 "sim/simulator.py" = ["F401"]
-# sim/engine/protocol.py is a re-export shim for the engine/proto/ package
+# sim/ui/protocol.py is a re-export shim for the sim/ui/proto/ package
 # split. All 178 of its imports are its public surface.
-"sim/engine/protocol.py" = ["F401"]
+"sim/ui/protocol.py" = ["F401"]
 # sim/solve_prices.py became the third file of exactly this shape when the
 # 2,761-line price solver split into solve_prices_core.py (the algebra) and
 # solve_prices_report.py (the reporting front end). It keeps the name every

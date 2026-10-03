@@ -1,6 +1,6 @@
 {
   "_doc": {
-    "purpose": "The map freight moves over between regions of data/world/geography.json: which regions border by land or share a sea, and which carrying modes can serve each link. A route between two economies is the cheapest chain of links, each leg by the cheapest mode both economies can use (sim/world/trade_routes.py).",
+    "purpose": "The map freight moves over between regions of data/world/geography.json: which regions border by land or share a sea, and which carrying modes can serve each link. A route between two economies is the cheapest chain of links, each leg by the cheapest mode both economies can use (sim/geography/trade_routes.py).",
     "modes": "requires_node: the tech-tree node an economy must hold to use the mode. A mode is usable on a route only when both ends hold it. needs_ports: the leg runs between two regions whose geography entry is coastal.",
     "links": "from, to: region ids (undirected). modes: modes that serve the link. km: optional leg length; absent means the great-circle distance between the region centroids. requires_node: optional extra node for the leg (a route across open water such as the monsoon passage), satisfied when either end holds it, since the carriers on a leg need not be the end economies."
   },

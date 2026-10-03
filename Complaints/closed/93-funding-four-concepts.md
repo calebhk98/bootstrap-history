@@ -30,6 +30,6 @@ This makes it explicit what can be spent now versus what requires future revenue
 
 ## Where it lives
 
-Likely in `sim/engine/proto/state.py` where the main state view is built, and `sim/engine/economy.py` where spending power is calculated.
+Likely in `sim/ui/proto/state.py` where the main state view is built, and `sim/engine/economy.py` where spending power is calculated.
 
 **Confidence:** Design recommendation

@@ -1,7 +1,7 @@
 """research_filters: `available` state and tag filters, and search under fog."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.proto.tree_filters import tags_of
-from sim.engine.proto.typed import parse_typed as _parse_typed_line
+from sim.ui.proto.tree_filters import tags_of
+from sim.ui.proto.typed import parse_typed as _parse_typed_line
 
 
 def _ask(test_sim, **cmd):

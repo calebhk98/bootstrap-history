@@ -9,7 +9,7 @@ Two different things share this file, and the difference matters:
 
   2. PER-SESSION META - a couple of fields (right now, just the horizon) that
      belong to one save file but are not part of the save format the engine
-     itself owns (sim/engine/protocol.py: SAVE_FIELDS, save_state,
+     itself owns (sim/ui/protocol.py: SAVE_FIELDS, save_state,
      load_state). That file is rewritten from a fixed field list after every
      single command, so anything written here is not preserved there. It
      gets a small sidecar of its own instead.

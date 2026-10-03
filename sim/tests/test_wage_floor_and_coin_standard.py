@@ -5,7 +5,8 @@ import json
 import os
 import unittest
 
-from sim.engine import catalog, data, prices as engine_prices, wage_provider
+from sim.engine import catalog, data, prices as engine_prices, wage_schedule
+from sim.labour import wage_provider
 from sim.validate_production import load_production
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,7 +19,7 @@ def _registry():
 
 
 def _schedule(civ, production_entries=None):
-    return wage_provider.build_schedule(_registry(), civ, production_entries=production_entries)
+    return wage_schedule.build_schedule(_registry(), civ, production_entries=production_entries)
 
 
 def _entries():
@@ -205,7 +206,7 @@ class OpeningCapitalTests(unittest.TestCase):
                     continue
                 engine = self._sim(civ_name, kit)
                 self.assertGreaterEqual(
-                    engine.household.capital, engine.labour_market.quote_annual("smith"), (civ_name, kit))
+                    engine.household.capital, engine.labour.market.quote_annual("smith"), (civ_name, kit))
 
 
 class NoBookFoodTests(unittest.TestCase):

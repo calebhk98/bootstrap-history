@@ -21,6 +21,7 @@ import ast
 import os
 from typing import List, Tuple
 from .harness import *  # noqa: F401,F403
+from .source_dirs import engine_side_dirs
 
 # Path to the simulation engine source code relative to repository root
 ENGINE_RELATIVE_PATH = os.path.join("sim", "engine")
@@ -125,11 +126,9 @@ def _scan_engine_codebase() -> List[Tuple[str, int, str]]:
 	"""Recursively scan sim/engine files for state ownership violations."""
 	violations: List[Tuple[str, int, str]] = []
 	repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-	target_dir = os.path.join(repo_root, ENGINE_RELATIVE_PATH)
-
-	for root, _dirs, files in os.walk(target_dir):
+	for root, _dirs, files in (entry for directory in engine_side_dirs() for entry in os.walk(directory)):
 		# Exclude compatibility proxy actors and JSON protocol entrypoints
-		if "actors" in root or "proto" in root:
+		if os.path.basename(root) in ("agents", "proto"):
 			continue
 		for file_name in files:
 			if not file_name.endswith(".py") or file_name in EXEMPT_SCAN_FILES:

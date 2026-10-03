@@ -49,7 +49,7 @@ class IncumbentPricesMixin:
         """{material: money per unit}: the incumbents' cost in this coin. The market's price is this
         times `market_price_ratio`."""
         hours = self._price_tables()[0]
-        per_hour = self.money_per_labour_hour()
+        per_hour = self.labour.money_per_labour_hour()
         cached = getattr(self, "_material_prices_cache", None)
         if cached is not None and cached[0] is hours and cached[1] == per_hour:
             return cached[2]

@@ -1,9 +1,9 @@
 """player_command_fixes: sort words, quote for every buy target, rush preview, buy school."""
 from .harness import *
-from sim.engine.proto import buy_targets
-from sim.engine.proto.dispatch_money import _BUY_HANDLERS
-from sim.engine.proto.render_typed import render_pretty
-from sim.engine.proto.typed import parse_typed
+from sim.ui.proto import buy_targets
+from sim.ui.proto.dispatch_money import _BUY_HANDLERS
+from sim.ui.proto.render_typed import render_pretty
+from sim.ui.proto.typed import parse_typed
 
 
 def _run(sim_state, text):
@@ -75,7 +75,7 @@ check("unbounded rush still only previews and renders as one",
 # --- 156: buy school <trade> <n> works, as do `trade school` and `trade_school`
 school_sim = sim(capital=1_000_000)
 school_sim.trades_created.add("chemist")
-school_sim.labour_market.press("chemist", 100)
+school_sim.labour.market.press("chemist", 100)
 for text in ("buy school chemist 1", "buy trade school chemist 1", "buy trade_school chemist 1"):
     reply = _run(school_sim, text)
     check("%r founds a school" % text, reply.get("ok") and reply["trade"] == "chemist", reply)

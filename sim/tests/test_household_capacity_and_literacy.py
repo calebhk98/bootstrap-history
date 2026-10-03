@@ -8,6 +8,7 @@ test-file reorganisation note. Checks moved verbatim; each one's own comment
 explains the break it guards.
 """
 from .harness import *  # noqa: F401,F403
+from sim.labour.api import Labour
 
 
 # --- BREAK: the advice on how to get artisans said "build workshop_first (you
@@ -16,13 +17,13 @@ from .harness import *  # noqa: F401,F403
 # other.
 s_circ = sim()
 s_circ.done.add("patron_local"); s_circ._done_changed()
-_adv = s_circ._staff_advice("artisans")
+_adv = s_circ.labour._staff_advice("artisans")
 check("advice never points at a remedy waiting on the thing it supplies",
       "workshop_first" not in _adv or "waiting on artisans" in _adv, _adv)
 s_circ.artisans = 20.0
 check("...and names it plainly once it is actually reachable",
-      "waiting on artisans" not in s_circ._staff_advice("artisans"),
-      s_circ._staff_advice("artisans"))
+      "waiting on artisans" not in s_circ.labour._staff_advice("artisans"),
+      s_circ.labour._staff_advice("artisans"))
 check("giving that advice does not recurse into itself",
       isinstance(sim().start_reason("workshop_first")[1], str), "no RecursionError")
 
@@ -47,26 +48,26 @@ slow_check("gaining a deputy is announced with what it does to your year, "
 # a university and three academies. The factor was clamped at 1.0 and Rome
 # starts AT the reference, so for Rome the whole mechanism was inert.
 s_lit = sim()
-_cap0 = s_lit.literate_capacity("machinist")
+_cap0 = s_lit.labour.literate_capacity("machinist")
 for _k in ("rag_paper", "printing_press", "if_movable_type", "school_founded",
            "academy_network", "corpus_written"):
     if _k in NODES:
         s_lit.apply_tech_effects(_k)
-_cap1 = s_lit.literate_capacity("machinist")
+_cap1 = s_lit.labour.literate_capacity("machinist")
 check("teaching a society to read raises what it can staff",
       _cap1 > _cap0 * 1.5, (_cap0, _cap1))
 check("...but not without bound",
       _cap1 < _cap0 * 5, (_cap0, _cap1))
 check("a trade that needs no letters is not capped by literacy at all",
-      s_lit.literate_capacity("smith") == float("inf"),
-      s_lit.literate_capacity("smith"))
+      s_lit.labour.literate_capacity("smith") == float("inf"),
+      s_lit.labour.literate_capacity("smith"))
 # --- BREAK: `train electrician 20` gave 27 while machinists stopped at 5.9.
 check("every taught trade is bounded by literacy, electrician included",
-      not (set(S.Sim.LITERATE_TRADES) ^ set(S.Sim.LITERATE_TRADES))
-      and all(trade in S.Sim.LITERATE_TRADES for trade in S.TRADES_ABSENT),
-      sorted(set(S.TRADES_ABSENT) - set(S.Sim.LITERATE_TRADES)))
+      not (set(Labour.LITERATE_TRADES) ^ set(Labour.LITERATE_TRADES))
+      and all(trade in Labour.LITERATE_TRADES for trade in S.TRADES_ABSENT),
+      sorted(set(S.TRADES_ABSENT) - set(Labour.LITERATE_TRADES)))
 s_el = sim(capital=2000000.0)
-_ok_el, _why_el = s_el.train("electrician", 20)
+_ok_el, _why_el = s_el.labour.train("electrician", 20)
 check("...so twenty electricians cannot be taught into a society of twelve",
       not _ok_el and "literacy" in str(_why_el), _why_el)
 
@@ -75,7 +76,7 @@ check("...so twenty electricians cannot be taught into a society of twelve",
 # ceiling of 166.9 against a node wanting 200 craftsmen wrote that none of the
 # three remedies the message suggests works.
 s_rm = sim(capital=1000000.0)
-_ok_rm, _why_rm = s_rm.hire("smith", 20)
+_ok_rm, _why_rm = s_rm.labour.hire("smith", 20)
 check("a room refusal names what raises the room, not what buys people",
       not _ok_rm and "built" in _why_rm and "hire" not in _why_rm.split(".")[1],
       _why_rm)
@@ -90,7 +91,7 @@ s_rm2.done.update(NODES); s_rm2._done_changed()
 # running, the same distinction run_it exists to set up everywhere else.
 s_rm2.operating.update(node_id for node_id, _ in s_rm2.ROOM_SOURCES if node_id in NODES)
 check("...and says so plainly when you already hold every one of them",
-      "every one of them" in s_rm2._room_advice(), s_rm2._room_advice())
+      "every one of them" in s_rm2.labour._room_advice(), s_rm2.labour._room_advice())
 
 # --- BREAK: a ROOM_SOURCES institution built and then SHUT (attrition, a
 # bad year, or the player's own `mothball`) vanished from this advice
@@ -100,9 +101,9 @@ check("...and says so plainly when you already hold every one of them",
 # dearer institution instead of reopening the one already paid for.
 s_rm3 = sim(capital=1000000.0)
 run_it(s_rm3, "workshop_first", "school_founded")
-_advice_open = s_rm3._room_advice()
+_advice_open = s_rm3.labour._room_advice()
 s_rm3.operating.discard("school_founded")
-_advice_shut = s_rm3._room_advice()
+_advice_shut = s_rm3.labour._room_advice()
 check("a shut room-source is offered back as the cheap fix, not silently "
       "dropped from the advice",
       "school_founded" in _advice_shut and "reopen" in _advice_shut.lower(),
@@ -117,7 +118,7 @@ check("...and it is not also still claimed as an open place in the same "
 s_sa = sim(capital=1000000.0)
 run_it(s_sa, "school_founded")
 s_sa.operating.discard("school_founded")
-_staff_shut = s_sa._staff_advice("scholars")
+_staff_shut = s_sa.labour._staff_advice("scholars")
 check("the scholar-pool advice offers to reopen a shut school rather than "
       "silently treating it as already covered",
       "school_founded" in _staff_shut and "reopen" in _staff_shut.lower(),
@@ -146,17 +147,17 @@ s_tr3 = sim(capital=2000000.0)
 for _k in ("rag_paper", "printing_press", "if_movable_type", "academy_network"):
     if _k in NODES:
         s_tr3.apply_tech_effects(_k)
-_room0 = s_tr3.household_room()
+_room0 = s_tr3.labour.household_room()
 check("a fresh household has room for a few people and no more",
       0 < _room0 < 20, _room0)
 check("...and the literacy ceiling is not what binds here",
-      s_tr3.literate_capacity("machinist") > _room0 + 1,
-      (s_tr3.literate_capacity("machinist"), _room0))
+      s_tr3.labour.literate_capacity("machinist") > _room0 + 1,
+      (s_tr3.labour.literate_capacity("machinist"), _room0))
 # Fill the household first, which is the state the tester was in: the hours
 # check bites long before the room does at any larger number, because teaching
 # costs 450 founder-hours a head.
-s_tr3.hire("smith", int(_room0))
-_ok_t3, _why_t3 = s_tr3.train("machinist", 1)
+s_tr3.labour.hire("smith", int(_room0))
+_ok_t3, _why_t3 = s_tr3.labour.train("machinist", 1)
 check("teaching past what you can feed and house is refused",
       not _ok_t3 and "feed, house and oversee" in _why_t3, _why_t3)
 check("...and it says there is no room for even one",
@@ -165,16 +166,16 @@ check("...and what makes room, which is not what buys people",
       "built" in _why_t3, _why_t3)
 s_tr4 = sim(capital=2000000.0)
 check("...and teaching within the room still works",
-      s_tr4.train("machinist", 1)[0], s_tr4.train("machinist", 1)[1])
+      s_tr4.labour.train("machinist", 1)[0], s_tr4.labour.train("machinist", 1)[1])
 # The three verbs must agree, which is the whole reason household_room exists.
 s_ag = sim(capital=2000000.0)
-_r = s_ag.household_room()
-s_ag.hire("smith", int(_r))          # fill it exactly
+_r = s_ag.labour.household_room()
+s_ag.labour.hire("smith", int(_r))          # fill it exactly
 check("hire, buy and train are all bounded by the same one number",
-      s_ag.hire("smith", 1)[0] is False
-      and s_ag.train("machinist", 1)[0] is False
-      and s_ag.buy_slaves(1) <= 0,
-      (_r, s_ag.household_room()))
+      s_ag.labour.hire("smith", 1)[0] is False
+      and s_ag.labour.train("machinist", 1)[0] is False
+      and s_ag.labour.buy_slaves(1) <= 0,
+      (_r, s_ag.labour.household_room()))
 
 # --- BREAK: "this society's literacy will not supply more than 6.4 scholars
 # in total, ever" gates the GOAL, which wants twenty-five, and appeared in no
