@@ -97,6 +97,34 @@ decision below was taken on six seeds.
 
   Rome's metal volatility is robust across seeds; it is not noise.
 
+## Merged after the six-seed comparison: input smoothing and distress at working scale
+
+`producers.py` now does two things differently:
+- A producer plans with smoothed expectations of its input prices, while still bidding at the live
+  market price.
+- It judges cash distress against the scale it can reach next year, not its whole plant, so it holds
+  stock instead of offering it at zero.
+
+Six seeds, current branch (with the goods-mass change) → with this change:
+
+| | grain | metal | wage kg/h | hungry |
+|---|---|---|---|---|
+| england_1300 | 0.16 → 0.15 | 0.50 → 0.29 | 0.25 → 0.27 | 0 → 0 |
+| han_china_100ad | 0.13 → 0.11 | 0.28 → 0.27 | 0.36 → 0.48 | 0.007 → 0.014 |
+| mexica_1500 | 0.095 → 0.100 | 0.24 → 0.23 | 0.094 → 0.099 | 0.004 → 0.006 |
+| norse_900ad | 0.15 → 0.16 | 0.47 → 0.69 | 0.36 → 0.38 | 0.002 → 0.001 |
+| rome_100ad | 0.099 → 0.097 | 0.94 → 0.22 | 0.150 → 0.159 | 0.017 → 0.012 |
+
+Rome's metal volatility fell by three quarters and England's by 40%, without raising grain volatility.
+
+Two results went the wrong way:
+- Norse metals got worse; this is being traced.
+- Han's hunger went back to the level of the first six-seed baseline.
+
+The goods-mass change alone (first six-seed baseline → current branch) halved Han's hunger and cut
+Rome's by a third.
+
 ## Pending
 
-(The six-seed cobweb comparison and the producer-growth work are added when they finish.)
+The producer-growth work (profitable makers that never grow) and the Norse metals trace are added when
+they finish.
