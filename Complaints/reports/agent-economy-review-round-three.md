@@ -213,6 +213,22 @@ frozen price, find their runs do not pay, and never bid: a circular trap.
 Making a no-bid market remember the lowest ask unfroze the markets, but the prices then cycled. That
 combined fix is being built.
 
+## The frozen-market fix, not yet merged
+
+The change is on branch `frozen-markets`. A market with offers and no bids now moves its remembered
+price part of the way toward the lowest ask. The first trade after quiet years also moves the
+remembered price only part of the way. In Rome (seed 1, 30 years), the limestone markets that traded
+within the year went from 4 of 88 to 82 of 88.
+
+Over six spin-up draws:
+- Grain volatility, wage and hunger were flat or slightly better.
+- Metal volatility worsened:
+  - Rome: mean 0.24 → 0.31, worst draw 0.30 → 0.51.
+  - Norse: mean 0.10 → 0.22, and one seed reached 1.10.
+
+The remaining limestone cycling traces to merchants bidding in every area at once, for far more than
+local supply, at very high price ceilings. That and the Norse case are being traced.
+
 ## Pending
 
-The frozen-market fix.
+The merchant bids and the Norse metal case on top of the frozen-market fix.
