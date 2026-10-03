@@ -115,7 +115,9 @@ Six seeds, current branch (with the goods-mass change) → with this change:
 | norse_900ad | 0.15 → 0.16 | 0.47 → 0.69 | 0.36 → 0.38 | 0.002 → 0.001 |
 | rome_100ad | 0.099 → 0.097 | 0.94 → 0.22 | 0.150 → 0.159 | 0.017 → 0.012 |
 
-Rome's metal volatility fell by three quarters and England's by 40%, without raising grain volatility.
+Correction: these six seeds share one spin-up per civilisation (Complaint 400), so this table is one
+draw of the economy each civilisation starts from. Rome's 0.94 to 0.22 was largely luck in that draw.
+The draws-based result is in the next section.
 
 Two results went the wrong way:
 - Norse metals got worse; this is being traced.
@@ -152,6 +154,37 @@ nothing (`runs_for_stock` caps runs at near-zero expected sales) and trade nothi
 remembered price freezes. The cure is in `producers.py`: cut an ask far above any bid, and let the
 expectation fall while stock sits unsold.
 
+## Merged: an idle producer is not pressed to dump stock
+
+The Norse trace found three things:
+- Norse's metal chain barely exists after the spin-up. Copper, lead and tin makers have almost no
+  capacity, so their prices sit at opening values until a thin market prints one.
+- The copper maker dumped its stock at zero while holding plenty of cash. Its working-capital target
+  was priced at the shadow price of an input nobody makes.
+- Whether a chain exists at all is a spin-up lottery: a copper entrant got its plant built in one code
+  version and not in another.
+
+Fix (`producers.py`): the cash a producer lacks is measured against the share of its next-year runs
+that would pay. A producer whose runs do not pay, or cannot be priced, needs no working capital and
+keeps its holding reservation.
+
+Since six seeds are one spin-up draw, the change was measured over six draws instead: Rome, Norse and
+England, seeds 1-3, with an expectation constant set to six values between 0.4 and 0.65, each giving
+a different spin-up. Mean (max) metal volatility over those draws:
+
+| | before | after |
+|---|---|---|
+| norse | 0.45 (0.86) | 0.28 (0.40) |
+| england | 0.26 (0.47) | 0.22 (0.34) |
+| rome | 0.64 (1.07) | 0.57 (1.11) |
+
+On the shipped constant alone, Rome reads 0.95 after, against 0.22 before. That is a draw lost, not a
+systematic effect. Han's hunger rose slightly, from 0.014 to 0.017.
+
+The robust fixes left for metals are in entry sizing and plant purchase. A Rome bronze entrant of
+about 12,000 runs, and a copper entrant that could buy too little clay to build its plant, both
+decide the draw.
+
 ## Pending
 
-The Norse metals trace is added when it finishes.
+The stale-ask trap and entry sizing.
