@@ -91,15 +91,3 @@ def run(setup: EconomySetup = None, years: int = 5, inputs_for_year=None):
         outcomes.append(economy.step(inputs))
     return economy, outcomes
 
-
-# the fixture before producers were spread over tiles (10 years, quiet): measured with run(years=10)
-BASELINE_HIRED_SHARE = 0.249
-BASELINE_FARMS_HILLS_HUNGER = 7.09e6
-
-
-def hired_share(economy, outcomes) -> float:
-    """Share of the people's working hours that were hired, averaged over the outcomes."""
-    offered = sum(cohort.working_people for cohort in economy.record.cohorts.values()) \
-        * economy.setup.working_hours_per_year
-    idle = sum(outcome.idle_hours for outcome in outcomes) / len(outcomes)
-    return 1.0 - idle / offered

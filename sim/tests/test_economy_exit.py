@@ -110,7 +110,8 @@ class ExitBooksTests(unittest.TestCase):
         record, money = economy.record, setup.currency_id
         producer_id = next(agent for agent, each in sorted(record.producers.items()) if each.recipe_id == MINE)
         owner = record.producers[producer_id].owner
-        lender = next(agent for agent in sorted(record.cohorts) if agent != owner)
+        tile = record.producers[producer_id].tile
+        lender = next(agent for agent, cohort in sorted(record.cohorts.items()) if cohort.tile != tile)  # shares no dividend
         held = record.book.balance(producer_id, money)
         record.loans.append(Loan("loan-1", lender, producer_id, money, 0.5 * held, 0.05, 5.0, 0.0))
         owner_before = record.book.balance(owner, money)

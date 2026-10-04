@@ -16,9 +16,12 @@ class SetupContentIdTests(unittest.TestCase):
 class HungerNeedTests(unittest.TestCase):
     def test_hunger_counts_the_need_the_setup_names(self):
         from sim.tests import economy_fixture
-        _economy, named_food = economy_fixture.run(economy_fixture.small_setup(), years=3)
+        basket = economy_fixture.basket()
+        famine = dataclasses.replace(basket, needs=tuple(  # a floor no harvest can meet
+            dataclasses.replace(need, subsistence_per_person=100.0 * need.subsistence_per_person) for need in basket.needs))
+        _economy, named_food = economy_fixture.run(economy_fixture.small_setup(basket=famine), years=3)
         _economy, named_other = economy_fixture.run(
-            economy_fixture.small_setup(hunger_need=economy_fixture.ORNAMENT), years=3)
+            economy_fixture.small_setup(basket=famine, hunger_need=economy_fixture.ORNAMENT), years=3)
         self.assertGreater(sum(named_food[-1].hunger_by_tile.values()), 0.0)
         self.assertEqual(sum(named_other[-1].hunger_by_tile.values()), 0.0)
 

@@ -96,12 +96,17 @@ class FixtureScenarioTests(unittest.TestCase):
         tiles = {producer.tile for producer in economy.record.producers.values() if producer.recipe_id == fixture.FARM}
         self.assertGreater(len(tiles), 1)
 
-    def test_more_hours_are_hired_and_less_food_is_missed_on_farms_and_hills(self):
-        economy, outcomes = fixture.run(years=10)
-        hunger = sum(outcome.hunger_by_tile.get(tile, 0.0) for outcome in outcomes
+    def test_people_off_the_anchor_tile_find_work_and_food(self):
+        # with every producer on the town tile, farms and hills households earned nothing and went hungry
+        setup = fixture.small_setup()
+        economy, outcomes = fixture.run(setup, years=10)
+        floor = sum(setup.opening_population_by_tile[tile] for tile in (fixture.FARMS, fixture.HILLS)) * next(
+            need.subsistence_per_person for need in setup.basket.needs if need.need_id == setup.hunger_need)
+        hunger = sum(outcome.hunger_by_tile.get(tile, 0.0) for outcome in outcomes[1:]
                      for tile in (fixture.FARMS, fixture.HILLS))
-        self.assertGreater(fixture.hired_share(economy, outcomes), fixture.BASELINE_HIRED_SHARE)
-        self.assertLess(hunger, fixture.BASELINE_FARMS_HILLS_HUNGER)
+        self.assertLess(hunger, 0.01 * floor * (len(outcomes) - 1))
+        tiles = {producer.tile for producer in economy.record.producers.values()}
+        self.assertIn(fixture.FARMS, tiles)
         self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
 
 

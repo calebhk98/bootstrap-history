@@ -5,9 +5,9 @@
 """
 import math
 from dataclasses import dataclass, field, replace
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
-from . import credit, credit_claims, labour, land_market, lending, merchants_credit, producers, state_budget, unit_cost
+from . import credit, credit_claims, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_memory import YearView
@@ -41,6 +41,8 @@ class YearOutcome:
     output: Dict[str, float] = field(default_factory=dict)
     idle_hours: float = 0.0
     vacant_hours: float = 0.0
+    hired_hours: float = 0.0
+    extraction: Dict[Tuple[str, str], float] = field(default_factory=dict)   # runs worked per (recipe, tile) on a site
     conservation_residual: float = 0.0
     state_cash: float = 0.0
     money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
@@ -84,6 +86,7 @@ class Economy:
         ledger = YearLedger()
         self._follow_population(inputs)
         self._follow_yields(inputs)
+        sites.apply_site_limits(record, setup, inputs.site_limits)
         view = self.view()
         money = setup.currency_id
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
@@ -122,8 +125,9 @@ class Economy:
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
                                 loans=lambda: record.loans)
         close_agents(setup, record, close_view, ledger, self.area_map)
-        open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand)
+        open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage)
         restake_owners(setup, record, close_view)
+        extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)
         for lender, received in interest.items():
             record.property_income[lender] = record.property_income.get(lender, 0.0) + received
@@ -134,7 +138,7 @@ class Economy:
         wear_and_spoilage(setup, record)
         level = remember_price_level(setup, record)
         record.memory.year += 1
-        return self._outcome(ledger, level)
+        return self._outcome(ledger, level, extraction)
 
     # ---- the year's pieces ------------------------------------------------------------------
     def _follow_population(self, inputs: YearInputs) -> None:
@@ -314,13 +318,14 @@ class Economy:
                                    for good, per_run in sorted(recipe.plant_goods.items()) if per_run * runs * share > 0.0])
             record.producers[producer_id] = producers.with_capacity(producer, producer.capacity_runs + runs * share)
 
-    def _outcome(self, ledger: YearLedger, level: float) -> YearOutcome:
+    def _outcome(self, ledger: YearLedger, level: float, extraction) -> YearOutcome:
         record, setup = self.record, self.setup
         money = setup.currency_id
         wages: Dict[str, list] = {}
-        idle = vacant = 0.0
+        idle = vacant = hired = 0.0
         for result in ledger.labour_results:
             wages.setdefault(result.trade, []).append((result.wage, result.hours_hired))
+            hired += result.hours_hired
             idle += result.idle_hours
             vacant += result.vacant_hours
         mean_wages = {trade: (math.fsum(wage * hours for wage, hours in rows) / math.fsum(hours for _w, hours in rows)
@@ -337,6 +342,6 @@ class Economy:
         return YearOutcome(year=record.memory.year, price_level=level, prices=national_prices(record),
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
-                           output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant,
+                           output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired, extraction=extraction,
                            conservation_residual=check_money(record), money_audit=year_report(record),
                            state_cash=record.book.balance(setup.state_agent, money))
