@@ -127,9 +127,13 @@ class ExitBooksTests(unittest.TestCase):
 class ScenarioTests(unittest.TestCase):
     def test_a_mine_whose_labour_costs_more_than_its_ore_is_worth_leaves_and_money_is_conserved(self):
         setup = small_setup(opening_wages={LABOURER: 1.0, MINER: 40.0, SMITH: 1.5})
-        economy, _outcomes = run(setup, YEARS)
-        recipes = {producer.recipe_id for producer in economy.record.producers.values()}
-        self.assertNotIn(MINE, recipes)
+        economy = Economy(setup)
+        mines_by_year = []
+        for _year in range(YEARS):
+            economy.step(quiet_year(setup))
+            mines_by_year.append(sum(producer.capacity_runs for producer in economy.record.producers.values()
+                                     if producer.recipe_id == MINE))
+        self.assertIn(0.0, mines_by_year)       # it left; it may come back once miners' wages fall
         self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
 
     def test_plantless_idle_capacity_falls_when_nothing_buys_the_output(self):
