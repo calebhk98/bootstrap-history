@@ -9,6 +9,7 @@ states every figure it depends on.
 import dataclasses
 
 from sim.economy.economy import Economy
+from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
 from sim.economy.households_basket import Basket, NeedSpec
 from sim.economy.protocols import YearInputs
 from sim.economy.setup import EconomySetup, TradeSpec
@@ -50,7 +51,7 @@ def basket():
     needs = (NeedSpec(FOOD, 250.0, 0.6, ((GRAIN, 1.0),)),
              NeedSpec(ORNAMENT, 0.0, 0.05, ((METAL, 1.0),)))
     need_data = {FOOD: {"surplus_budget_share": 0.6}, ORNAMENT: {"surplus_budget_share": 0.05}}
-    return Basket(needs, 0.5, need_data)
+    return Basket(needs, NEED_SUBSTITUTION_ELASTICITY, need_data)
 
 
 def small_setup(**changes) -> EconomySetup:

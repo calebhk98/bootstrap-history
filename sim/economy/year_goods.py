@@ -13,6 +13,8 @@ from . import goods_market, households, merchants, producers, settlement, state_
 from .market_memory import market_key
 from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
                                  price_after_resumed_trade, wanted_at)
+from .market_memory_offers import price_after_no_offers
+from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
 from .taxes_bases import YearFacts
@@ -125,6 +127,7 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     listed = set(order)
     order += sorted({good for good, _area in order_book} - listed)
     done, cleared, traded = set(), set(), set()
+    costs = None                                  # what each good costs to make, worked out when first needed
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     plant_goods = {producer_id: set(setup.recipes[producer.recipe_id].plant_goods)
                    for producer_id, producer in record.producers.items()}
@@ -161,6 +164,10 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 signal = _unsold_signal(bids, offers)
                 if signal is None:
                     signal = price_after_no_bids(old, bids, offers)
+                if signal is None and bids and not any(offer.quantity > 0.0 for offer in offers):
+                    if costs is None:
+                        costs = making_costs(setup, record)
+                    signal = price_after_no_offers(old, costs.get(good))
             if signal is not None and signal > 0.0:
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
