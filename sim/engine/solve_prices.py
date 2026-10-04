@@ -493,8 +493,7 @@ and grades the price behind the name rather than the name itself. If a
 future round DOES own every consumer (or the split is judged worth a
 coordinated rewrite anyway), separate band materials remain available
 and would give each band its own resolvable price for `--why` to show directly, rather than the graded price computed on
-demand the way this round shows it (see print_why's own ENERGY section
-below) - a real trade-off, not a decision this round claims to have
+demand the way this round shows it - a real trade-off, not a decision this round claims to have
 closed.
 
 A SECOND PHYSICAL LIMIT SLOTS IN THE SAME WAY, WITHOUT REDESIGN (the

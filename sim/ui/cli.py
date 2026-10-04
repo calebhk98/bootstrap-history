@@ -369,6 +369,12 @@ def _print_validate_ok(errs):
               "closure and critical path compute cleanly.")
 
 
+def _data_source_errors(nodes):
+    """Malformed production entries, and branch-merge collisions or data-loss events."""
+    return (["data/production: " + problem for problem in validate_production.production_problems(nodes)]
+            + ["data/branches: " + problem for problem in tree_merge.merge_problems(tree_merge.build_tree())])
+
+
 def cmd_validate(args):
     tree, prices, nodes, wages, goods = load()
     production = load_production_catalog(ROOT, MODDIR)
@@ -378,8 +384,7 @@ def cmd_validate(args):
     errs, warns = _validate_nodes(nodes, goods, wages, producible)
     errs += _validate_topo_order(nodes)
     errs += validate_output_bounds.check_output_bounds(nodes, production)
-    errs += ["data/production: " + problem for problem in validate_production.production_problems(nodes)]
-    errs += ["data/branches: " + problem for problem in tree_merge.merge_problems(tree_merge.build_tree())]
+    errs += _data_source_errors(nodes)
     errs += validate_material_gating.check_material_gating(nodes, validate_material_gating.load_gating(ROOT))
     from sim.engine.ui_port import civ_start_check
     errs += validate_unheld_gates.check_unheld_gates(nodes, civ_start_check.load_civilisations(ROOT), production)
