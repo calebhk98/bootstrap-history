@@ -88,6 +88,10 @@ def render_commitments(out):
     lines.append("literacy: general %s of a ceiling of %s, elite %s of %s"
                  % (_percent(literacy["general"]), _percent(literacy["general_ceiling"]),
                     _percent(literacy["elite"]), _percent(literacy["elite_ceiling"])))
+    for row in out.get("secondary_goals") or []:
+        lines.append("also watching: %s, %s of %s done%s" % (
+            row.get("name") or "a goal you have not learned the name of", row["done"], row["total"],
+            " (reached)" if row.get("reached") else ""))
     lines.append(out["secondary_goals_note"])
     reserve = out["reserve"]
     lines += ["", "RESERVE: %s craftsmen, %s scholars (policy reserve_staff %s)"
